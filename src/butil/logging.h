@@ -1162,15 +1162,8 @@ inline std::ostream& operator<<(std::ostream& out, const std::wstring& wstr) {
 
 // Helper macro included by all *_EVERY_SECOND macros.
 #define BAIDU_LOG_IF_EVERY_SECOND_IMPL(logifmacro, severity, condition) \
-    static std::atomic<int32_t> BAIDU_CONCAT(logeverys_, __LINE__){0}; \
-    const int64_t BAIDU_CONCAT(logeverys_ts_, __LINE__) = ::butil::gettimeofday_us(); \
-    const int64_t BAIDU_CONCAT(logeverys_seen_, __LINE__) = BAIDU_CONCAT(logeverys_, __LINE__); \
-    logifmacro(severity, (condition) && BAIDU_CONCAT(logeverys_ts_, __LINE__) >= \
-               (BAIDU_CONCAT(logeverys_seen_, __LINE__) + 1000000L) &&  \
-                   BAIDU_CONCAT(logeverys_, __LINE__).atomic_compare_exchange_strong                 \
-                   BAIDU_CONCAT(logeverys_seen_, __LINE__),             \
-                   BAIDU_CONCAT(logeverys_ts_, __LINE__))               \
-               == BAIDU_CONCAT(logeverys_seen_, __LINE__))
+    static butil::EveryManyUS BAIDU_CONCAT(logeverys_, __LINE__)(1000); \
+    logifmacro(severity, (condition) && BAIDU_CONCAT(logeverys_, __LINE__))
 
 // ===============================================================
 
