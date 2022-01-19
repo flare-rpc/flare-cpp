@@ -20,7 +20,7 @@
 #include <gflags/gflags.h>
 #include <butil/logging.h>
 #include <brpc/server.h>
-#include <butil/atomicops.h>
+#include <butil/static_atomic.h>
 #include <butil/time.h>
 #include <butil/logging.h>
 #include <json2pb/json_to_pb.h>
@@ -76,8 +76,8 @@ void DisplayStage(const test::Stage& stage) {
     LOG(INFO) << ss.str();
 }
 
-butil::atomic<int> cnt(0);
-butil::atomic<int> atomic_sleep_time(0);
+std::atomic<int> cnt(0);
+std::atomic<int> atomic_sleep_time(0);
 bvar::PassiveStatus<int> atomic_sleep_time_bvar(cast_func, &atomic_sleep_time);
 
 namespace bthread {
@@ -131,9 +131,9 @@ public:
         response->set_message("hello");
         ::usleep(FLAGS_server_sync_sleep_us);
         if (FLAGS_use_usleep) {
-            ::usleep(_latency.load(butil::memory_order_relaxed));
+            ::usleep(_latency.load(std::memory_order_relaxed));
         } else {
-            bthread_usleep(_latency.load(butil::memory_order_relaxed));
+            bthread_usleep(_latency.load(std::memory_order_relaxed));
         }
     }
 
@@ -152,9 +152,9 @@ public:
                 _test_case.latency_stage_list(_stage_index - 1);
             if (latency_stage.type() == test::ChangeType::FLUCTUATE) {
                 _latency.store((latency_stage.lower_bound() + latency_stage.upper_bound()) / 2,
-                               butil::memory_order_relaxed);
+                               std::memory_order_relaxed);
             } else if (latency_stage.type() == test::ChangeType::SMOOTH) {
-                _latency.store(latency_stage.upper_bound(), butil::memory_order_relaxed);
+                _latency.store(latency_stage.upper_bound(), std::memory_order_relaxed);
             }
             return;
         }
@@ -164,13 +164,13 @@ public:
         const int upper_bound = latency_stage.upper_bound();
         if (latency_stage.type() == test::FLUCTUATE) {
             _latency.store(butil::fast_rand_less_than(upper_bound - lower_bound) + lower_bound,
-                           butil::memory_order_relaxed); 
+                           std::memory_order_relaxed);
         } else if (latency_stage.type() == test::SMOOTH) {
             int latency = lower_bound + (upper_bound - lower_bound) / 
                 double(latency_stage.duration_sec()) * 
                 (latency_stage.duration_sec() - _next_stage_start + 
                 butil::gettimeofday_s());
-            _latency.store(latency, butil::memory_order_relaxed);
+            _latency.store(latency, std::memory_order_relaxed);
         } else {
             LOG(FATAL) << "Wrong Type:" << latency_stage.type();
         }
@@ -179,7 +179,7 @@ public:
 private:
     int _stage_index;
     int _next_stage_start;
-    butil::atomic<int> _latency;
+    std::atomic<int> _latency;
     test::TestCase _test_case;
     bool _running_case;
 };

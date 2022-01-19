@@ -124,11 +124,11 @@ static void handle_response(brpc::Controller* cntl, int64_t start_time,
     delete cntl;
 }
 
-butil::atomic<int> g_thread_offset(0);
+std::atomic<int> g_thread_offset(0);
 
 static void* replay_thread(void* arg) {
     ChannelGroup* chan_group = static_cast<ChannelGroup*>(arg);
-    const int thread_offset = g_thread_offset.fetch_add(1, butil::memory_order_relaxed);
+    const int thread_offset = g_thread_offset.fetch_add(1, std::memory_order_relaxed);
     double req_rate = FLAGS_qps / (double)FLAGS_thread_num;
     brpc::SerializedRequest req;
     std::deque<int64_t> timeq;

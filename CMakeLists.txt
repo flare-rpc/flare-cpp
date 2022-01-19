@@ -246,7 +246,6 @@ set(BUTIL_SOURCES
     ${PROJECT_SOURCE_DIR}/src/butil/third_party/murmurhash3/murmurhash3.cpp
     ${PROJECT_SOURCE_DIR}/src/butil/arena.cpp
     ${PROJECT_SOURCE_DIR}/src/butil/at_exit.cc
-    ${PROJECT_SOURCE_DIR}/src/butil/atomicops_internals_x86_gcc.cc
     ${PROJECT_SOURCE_DIR}/src/butil/base64.cc
     ${PROJECT_SOURCE_DIR}/src/butil/big_endian.cc
     ${PROJECT_SOURCE_DIR}/src/butil/debug/alias.cc
@@ -299,7 +298,6 @@ set(BUTIL_SOURCES
     ${PROJECT_SOURCE_DIR}/src/butil/strings/utf_offset_string_conversions.cc
     ${PROJECT_SOURCE_DIR}/src/butil/strings/utf_string_conversion_utils.cc
     ${PROJECT_SOURCE_DIR}/src/butil/strings/utf_string_conversions.cc
-    ${PROJECT_SOURCE_DIR}/src/butil/synchronization/cancellation_flag.cc
     ${PROJECT_SOURCE_DIR}/src/butil/synchronization/condition_variable_posix.cc
     ${PROJECT_SOURCE_DIR}/src/butil/synchronization/waitable_event_posix.cc
     ${PROJECT_SOURCE_DIR}/src/butil/threading/non_thread_safe_impl.cc

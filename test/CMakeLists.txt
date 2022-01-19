@@ -124,7 +124,6 @@ SET(TEST_BUTIL_SOURCES
     ${PROJECT_SOURCE_DIR}/test/sys_string_conversions_unittest.cc
     ${PROJECT_SOURCE_DIR}/test/utf_offset_string_conversions_unittest.cc
     ${PROJECT_SOURCE_DIR}/test/utf_string_conversions_unittest.cc
-    ${PROJECT_SOURCE_DIR}/test/cancellation_flag_unittest.cc
     ${PROJECT_SOURCE_DIR}/test/condition_variable_unittest.cc
     ${PROJECT_SOURCE_DIR}/test/lock_unittest.cc
     ${PROJECT_SOURCE_DIR}/test/waitable_event_unittest.cc

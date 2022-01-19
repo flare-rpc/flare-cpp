@@ -20,24 +20,24 @@
 #define BUTIL_MEMORY_SINGLETON_H_
 
 #include "butil/at_exit.h"
-#include "butil/atomicops.h"
+#include "butil/static_atomic.h"
 #include "butil/base_export.h"
 #include "butil/memory/aligned_memory.h"
 #include "butil/third_party/dynamic_annotations/dynamic_annotations.h"
 #include "butil/threading/thread_restrictions.h"
 
 namespace butil {
-namespace internal {
+    namespace internal {
 
 // Our AtomicWord doubles as a spinlock, where a value of
 // kBeingCreatedMarker means the spinlock is being held for creation.
-static const subtle::AtomicWord kBeingCreatedMarker = 1;
+        static const intptr_t kBeingCreatedMarker = 1;
 
 // We pull out some of the functionality into a non-templated function, so that
 // we can implement the more complicated pieces out of line in the .cc file.
-BUTIL_EXPORT subtle::AtomicWord WaitForInstance(subtle::AtomicWord* instance);
+        BUTIL_EXPORT intptr_t WaitForInstance(std::atomic<intptr_t> *instance);
 
-}  // namespace internal
+    }  // namespace internal
 }  // namespace butil
 
 // TODO(joth): Move more of this file into namespace butil
@@ -47,27 +47,27 @@ BUTIL_EXPORT subtle::AtomicWord WaitForInstance(subtle::AtomicWord* instance);
 // Overload if you need arguments or another memory allocation function.
 template<typename Type>
 struct DefaultSingletonTraits {
-  // Allocates the object.
-  static Type* New() {
-    // The parenthesis is very important here; it forces POD type
-    // initialization.
-    return new Type();
-  }
+    // Allocates the object.
+    static Type *New() {
+        // The parenthesis is very important here; it forces POD type
+        // initialization.
+        return new Type();
+    }
 
-  // Destroys the object.
-  static void Delete(Type* x) {
-    delete x;
-  }
+    // Destroys the object.
+    static void Delete(Type *x) {
+        delete x;
+    }
 
-  // Set to true to automatically register deletion of the object on process
-  // exit. See below for the required call that makes this happen.
-  static const bool kRegisterAtExit;
+    // Set to true to automatically register deletion of the object on process
+    // exit. See below for the required call that makes this happen.
+    static const bool kRegisterAtExit;
 
 #ifndef NDEBUG
-  // Set to false to disallow access on a non-joinable thread.  This is
-  // different from kRegisterAtExit because StaticMemorySingletonTraits allows
-  // access on non-joinable threads, and gracefully handles this.
-  static const bool kAllowedToAccessOnNonjoinableThread;
+    // Set to false to disallow access on a non-joinable thread.  This is
+    // different from kRegisterAtExit because StaticMemorySingletonTraits allows
+    // access on non-joinable threads, and gracefully handles this.
+    static const bool kAllowedToAccessOnNonjoinableThread;
 #endif
 };
 
@@ -85,9 +85,9 @@ const bool DefaultSingletonTraits<Type>::kAllowedToAccessOnNonjoinableThread = f
 // at exit.
 template<typename Type>
 struct LeakySingletonTraits : public DefaultSingletonTraits<Type> {
-  static const bool kRegisterAtExit;
+    static const bool kRegisterAtExit;
 #ifndef NDEBUG
-  static const bool kAllowedToAccessOnNonjoinableThread;
+    static const bool kAllowedToAccessOnNonjoinableThread;
 #endif
 };
 
@@ -119,41 +119,42 @@ const bool LeakySingletonTraits<Type>::kAllowedToAccessOnNonjoinableThread = tru
 // possibility of loading briefly into someone else's process space, and
 // so leaking is not an option, as that would sabotage the state of your host
 // process once you've unloaded.
-template <typename Type>
+template<typename Type>
 struct StaticMemorySingletonTraits {
-  // WARNING: User has to deal with get() in the singleton class
-  // this is traits for returning NULL.
-  static Type* New() {
-    // Only constructs once and returns pointer; otherwise returns NULL.
-    if (butil::subtle::NoBarrier_AtomicExchange(&dead_, 1))
-      return NULL;
+    // WARNING: User has to deal with get() in the singleton class
+    // this is traits for returning NULL.
+    static Type *New() {
+        // Only constructs once and returns pointer; otherwise returns NULL.
+        int32_t old = 0;
+        if (!dead_.compare_exchange_weak(old, 1))
+            return NULL;
 
-    return new(buffer_.void_data()) Type();
-  }
+        return new(buffer_.void_data()) Type();
+    }
 
-  static void Delete(Type* p) {
-    if (p != NULL)
-      p->Type::~Type();
-  }
+    static void Delete(Type *p) {
+        if (p != NULL)
+            p->Type::~Type();
+    }
 
-  static const bool kRegisterAtExit = true;
-  static const bool kAllowedToAccessOnNonjoinableThread = true;
+    static const bool kRegisterAtExit = true;
+    static const bool kAllowedToAccessOnNonjoinableThread = true;
 
-  // Exposed for unittesting.
-  static void Resurrect() {
-    butil::subtle::NoBarrier_Store(&dead_, 0);
-  }
+    // Exposed for unittesting.
+    static void Resurrect() {
+        dead_.store(0);
+    }
 
- private:
-  static butil::AlignedMemory<sizeof(Type), ALIGNOF(Type)> buffer_;
-  // Signal the object was already deleted, so it is not revived.
-  static butil::subtle::Atomic32 dead_;
+private:
+    static butil::AlignedMemory<sizeof(Type), ALIGNOF(Type)> buffer_;
+    // Signal the object was already deleted, so it is not revived.
+    static std::atomic<int32_t> dead_;
 };
 
-template <typename Type> butil::AlignedMemory<sizeof(Type), ALIGNOF(Type)>
-    StaticMemorySingletonTraits<Type>::buffer_;
-template <typename Type> butil::subtle::Atomic32
-    StaticMemorySingletonTraits<Type>::dead_ = 0;
+template<typename Type> butil::AlignedMemory<sizeof(Type), ALIGNOF(Type)>
+        StaticMemorySingletonTraits<Type>::buffer_;
+template<typename Type> std::atomic<int32_t>
+        StaticMemorySingletonTraits<Type>::dead_ = 0;
 
 // The Singleton<Type, Traits, DifferentiatingType> class manages a single
 // instance of Type which will be created on first use and will be destroyed at
@@ -224,77 +225,77 @@ template <typename Type> butil::subtle::Atomic32
 // (b) Your factory function must never throw an exception. This class is not
 //     exception-safe.
 //
-template <typename Type,
-          typename Traits = DefaultSingletonTraits<Type>,
-          typename DifferentiatingType = Type>
+template<typename Type,
+        typename Traits = DefaultSingletonTraits<Type>,
+        typename DifferentiatingType = Type>
 class Singleton {
- private:
-  // Classes using the Singleton<T> pattern should declare a GetInstance()
-  // method and call Singleton::get() from within that.
-  friend Type* Type::GetInstance();
+private:
+    // Classes using the Singleton<T> pattern should declare a GetInstance()
+    // method and call Singleton::get() from within that.
+    friend Type *Type::GetInstance();
 
-  // Allow TraceLog tests to test tracing after OnExit.
-  friend class DeleteTraceLogForTesting;
+    // Allow TraceLog tests to test tracing after OnExit.
+    friend class DeleteTraceLogForTesting;
 
-  // This class is safe to be constructed and copy-constructed since it has no
-  // member.
+    // This class is safe to be constructed and copy-constructed since it has no
+    // member.
 
-  // Return a pointer to the one true instance of the class.
-  static Type* get() {
-    // The load has acquire memory ordering as the thread which reads the
-    // instance_ pointer must acquire visibility over the singleton data.
-    butil::subtle::AtomicWord value = butil::subtle::Acquire_Load(&instance_);
-    if (value != 0 && value != butil::internal::kBeingCreatedMarker) {
-      // See the corresponding HAPPENS_BEFORE below.
-      ANNOTATE_HAPPENS_AFTER(&instance_);
-      return reinterpret_cast<Type*>(value);
+    // Return a pointer to the one true instance of the class.
+    static Type *get() {
+        // The load has acquire memory ordering as the thread which reads the
+        // instance_ pointer must acquire visibility over the singleton data.
+        intptr_t value = instance_.load(std::memory_order_acquire);
+        if (value != 0 && value != butil::internal::kBeingCreatedMarker) {
+            // See the corresponding HAPPENS_BEFORE below.
+            ANNOTATE_HAPPENS_AFTER(&instance_);
+            return reinterpret_cast<Type *>(value);
+        }
+
+        // Object isn't created yet, maybe we will get to create it, let's try...
+        intptr_t old = 0;
+        if (instance_.compare_exchange_weak(old, butil::internal::kBeingCreatedMarker, std::memory_order_acquire)) {
+            // instance_ was NULL and is now kBeingCreatedMarker.  Only one thread
+            // will ever get here.  Threads might be spinning on us, and they will
+            // stop right after we do this store.
+            Type *newval = Traits::New();
+
+            // This annotation helps race detectors recognize correct lock-less
+            // synchronization between different threads calling get().
+            // See the corresponding HAPPENS_AFTER below and above.
+            ANNOTATE_HAPPENS_BEFORE(&instance_);
+            // Releases the visibility over instance_ to the readers.
+            instance_.store(reinterpret_cast<intptr_t>(newval));
+
+            if (newval != NULL && Traits::kRegisterAtExit)
+                butil::AtExitManager::RegisterCallback(OnExit, NULL);
+
+            return newval;
+        }
+
+        // We hit a race. Wait for the other thread to complete it.
+        value = butil::internal::WaitForInstance(&instance_);
+
+        // See the corresponding HAPPENS_BEFORE above.
+        ANNOTATE_HAPPENS_AFTER(&instance_);
+        return reinterpret_cast<Type *>(value);
     }
 
-    // Object isn't created yet, maybe we will get to create it, let's try...
-    if (butil::subtle::Acquire_CompareAndSwap(
-          &instance_, 0, butil::internal::kBeingCreatedMarker) == 0) {
-      // instance_ was NULL and is now kBeingCreatedMarker.  Only one thread
-      // will ever get here.  Threads might be spinning on us, and they will
-      // stop right after we do this store.
-      Type* newval = Traits::New();
-
-      // This annotation helps race detectors recognize correct lock-less
-      // synchronization between different threads calling get().
-      // See the corresponding HAPPENS_AFTER below and above.
-      ANNOTATE_HAPPENS_BEFORE(&instance_);
-      // Releases the visibility over instance_ to the readers.
-      butil::subtle::Release_Store(
-          &instance_, reinterpret_cast<butil::subtle::AtomicWord>(newval));
-
-      if (newval != NULL && Traits::kRegisterAtExit)
-        butil::AtExitManager::RegisterCallback(OnExit, NULL);
-
-      return newval;
+    // Adapter function for use with AtExit().  This should be called single
+    // threaded, so don't use atomic operations.
+    // Calling OnExit while singleton is in use by other threads is a mistake.
+    static void OnExit(void * /*unused*/) {
+        // AtExit should only ever be register after the singleton instance was
+        // created.  We should only ever get here with a valid instance_ pointer.
+        Traits::Delete(
+                reinterpret_cast<Type *>(instance_.load()));
+        instance_ = 0;
     }
 
-    // We hit a race. Wait for the other thread to complete it.
-    value = butil::internal::WaitForInstance(&instance_);
-
-    // See the corresponding HAPPENS_BEFORE above.
-    ANNOTATE_HAPPENS_AFTER(&instance_);
-    return reinterpret_cast<Type*>(value);
-  }
-
-  // Adapter function for use with AtExit().  This should be called single
-  // threaded, so don't use atomic operations.
-  // Calling OnExit while singleton is in use by other threads is a mistake.
-  static void OnExit(void* /*unused*/) {
-    // AtExit should only ever be register after the singleton instance was
-    // created.  We should only ever get here with a valid instance_ pointer.
-    Traits::Delete(
-        reinterpret_cast<Type*>(butil::subtle::NoBarrier_Load(&instance_)));
-    instance_ = 0;
-  }
-  static butil::subtle::AtomicWord instance_;
+    static std::atomic<intptr_t> instance_;
 };
 
-template <typename Type, typename Traits, typename DifferentiatingType>
-butil::subtle::AtomicWord Singleton<Type, Traits, DifferentiatingType>::
-    instance_ = 0;
+template<typename Type, typename Traits, typename DifferentiatingType>
+std::atomic<intptr_t> Singleton<Type, Traits, DifferentiatingType>::
+        instance_ = 0;
 
 #endif  // BUTIL_MEMORY_SINGLETON_H_

@@ -5,12 +5,12 @@
 #ifndef BUTIL_ATOMIC_SEQUENCE_NUM_H_
 #define BUTIL_ATOMIC_SEQUENCE_NUM_H_
 
-#include "butil/atomicops.h"
+#include "butil/static_atomic.h"
 #include "butil/basictypes.h"
 
 namespace butil {
 
-class AtomicSequenceNumber;
+    class AtomicSequenceNumber;
 
 // Static (POD) AtomicSequenceNumber that MUST be used in global scope (or
 // non-function scope) ONLY. This implementation does not generate any static
@@ -19,41 +19,41 @@ class AtomicSequenceNumber;
 // data section (.data in ELF). If you want to allocate an atomic sequence
 // number on the stack (or heap), please use the AtomicSequenceNumber class
 // declared below.
-class StaticAtomicSequenceNumber {
- public:
-  inline int GetNext() {
-    return static_cast<int>(
-        butil::subtle::NoBarrier_AtomicIncrement(&seq_, 1) - 1);
-  }
+    class StaticAtomicSequenceNumber {
+    public:
+        inline int GetNext() {
+            return static_cast<int>(
+                    seq_.fetch_add(1));
+        }
 
- private:
-  friend class AtomicSequenceNumber;
+    private:
+        friend class AtomicSequenceNumber;
 
-  inline void Reset() {
-    butil::subtle::Release_Store(&seq_, 0);
-  }
+        inline void Reset() {
+            seq_.store(0);
+        }
 
-  butil::subtle::Atomic32 seq_;
-};
+        std::atomic<int32_t> seq_;
+    };
 
 // AtomicSequenceNumber that can be stored and used safely (i.e. its fields are
 // always initialized as opposed to StaticAtomicSequenceNumber declared above).
 // Please use StaticAtomicSequenceNumber if you want to declare an atomic
 // sequence number in the global scope.
-class AtomicSequenceNumber {
- public:
-  AtomicSequenceNumber() {
-    seq_.Reset();
-  }
+    class AtomicSequenceNumber {
+    public:
+        AtomicSequenceNumber() {
+            seq_.Reset();
+        }
 
-  inline int GetNext() {
-    return seq_.GetNext();
-  }
+        inline int GetNext() {
+            return seq_.GetNext();
+        }
 
- private:
-  StaticAtomicSequenceNumber seq_;
-  DISALLOW_COPY_AND_ASSIGN(AtomicSequenceNumber);
-};
+    private:
+        StaticAtomicSequenceNumber seq_;
+        DISALLOW_COPY_AND_ASSIGN(AtomicSequenceNumber);
+    };
 
 }  // namespace butil
 
