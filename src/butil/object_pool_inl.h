@@ -517,7 +517,7 @@ template <typename T>
 pthread_mutex_t ObjectPool<T>::_singleton_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 template <typename T>
-static_atomic<long> ObjectPool<T>::_nlocal = FLARE_STATIC_ATOMIC_INIT(0);
+flare::static_atomic<long> ObjectPool<T>::_nlocal = FLARE_STATIC_ATOMIC_INIT(0);
 
 template <typename T>
 flare::static_atomic<size_t> ObjectPool<T>::_ngroup = FLARE_STATIC_ATOMIC_INIT(0);
