@@ -46,13 +46,13 @@ public:
             return true;
         }
         c->add_flag(Controller::FLAGS_ADDED_CONCURRENCY);
-        return (butil::subtle::NoBarrier_AtomicIncrement(&_server->_concurrency, 1)
+        return ((server->_concurrency.fetch_add(1) +1)
                 <= _server->options().max_concurrency);
     }
 
     void RemoveConcurrency(const Controller* c) {
         if (c->has_flag(Controller::FLAGS_ADDED_CONCURRENCY)) {
-            butil::subtle::NoBarrier_AtomicIncrement(&_server->_concurrency, -1);
+            _server->_concurrency.fetch_add(-1);
         }
     }
 
