@@ -78,7 +78,6 @@ SET(TEST_BUTIL_SOURCES
     ${PROJECT_SOURCE_DIR}/test/popen_unittest.cpp
     ${PROJECT_SOURCE_DIR}/test/bounded_queue_unittest.cc
     ${PROJECT_SOURCE_DIR}/test/at_exit_unittest.cc
-    ${PROJECT_SOURCE_DIR}/test/atomicops_unittest.cc
     ${PROJECT_SOURCE_DIR}/test/base64_unittest.cc
     ${PROJECT_SOURCE_DIR}/test/big_endian_unittest.cc
     ${PROJECT_SOURCE_DIR}/test/bits_unittest.cc

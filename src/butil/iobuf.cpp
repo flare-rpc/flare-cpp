@@ -30,7 +30,7 @@
 #include <limits.h>                        // CHAR_BIT
 #include <stdexcept>                       // std::invalid_argument
 #include "butil/build_config.h"             // ARCH_CPU_X86_64
-#include "butil/atomicops.h"                // butil::atomic
+#include "butil/static_atomic.h"                // std::atomic
 #include "butil/thread_local.h"             // thread_atexit
 #include "butil/macros.h"                   // BAIDU_CASSERT
 #include "butil/logging.h"                  // CHECK, LOG
@@ -169,22 +169,22 @@ void reset_blockmem_allocate_and_deallocate() {
     blockmem_deallocate = ::free;
 }
 
-butil::static_atomic<size_t> g_nblock = BUTIL_STATIC_ATOMIC_INIT(0);
-butil::static_atomic<size_t> g_blockmem = BUTIL_STATIC_ATOMIC_INIT(0);
-butil::static_atomic<size_t> g_newbigview = BUTIL_STATIC_ATOMIC_INIT(0);
+flare::static_atomic<size_t> g_nblock = FLARE_STATIC_ATOMIC_INIT(0);
+flare::static_atomic<size_t> g_blockmem = FLARE_STATIC_ATOMIC_INIT(0);
+flare::static_atomic<size_t> g_newbigview = FLARE_STATIC_ATOMIC_INIT(0);
 
 }  // namespace iobuf
 
 size_t IOBuf::block_count() {
-    return iobuf::g_nblock.load(butil::memory_order_relaxed);
+    return iobuf::g_nblock.load(std::memory_orderrelaxed);
 }
 
 size_t IOBuf::block_memory() {
-    return iobuf::g_blockmem.load(butil::memory_order_relaxed);
+    return iobuf::g_blockmem.load(std::memory_orderrelaxed);
 }
 
 size_t IOBuf::new_bigview_count() {
-    return iobuf::g_newbigview.load(butil::memory_order_relaxed);
+    return iobuf::g_newbigview.load(std::memory_orderrelaxed);
 }
 
 const uint16_t IOBUF_BLOCK_FLAGS_USER_DATA = 0x1;
@@ -195,7 +195,7 @@ struct UserDataExtension {
 };
 
 struct IOBuf::Block {
-    butil::atomic<int> nshared;
+    std::atomic<int> nshared;
     uint16_t flags;
     uint16_t abi_check;  // original cap, never be zero.
     uint32_t size;
@@ -214,9 +214,9 @@ struct IOBuf::Block {
         , cap(data_size)
         , portal_next(NULL)
         , data(data_in) {
-        iobuf::g_nblock.fetch_add(1, butil::memory_order_relaxed);
+        iobuf::g_nblock.fetch_add(1, std::memory_orderrelaxed);
         iobuf::g_blockmem.fetch_add(data_size + sizeof(Block),
-                                    butil::memory_order_relaxed);
+                                    std::memory_orderrelaxed);
     }
 
     Block(char* data_in, uint32_t data_size, UserDataDeleter deleter)
@@ -247,17 +247,17 @@ struct IOBuf::Block {
 
     void inc_ref() {
         check_abi();
-        nshared.fetch_add(1, butil::memory_order_relaxed);
+        nshared.fetch_add(1, std::memory_orderrelaxed);
     }
         
     void dec_ref() {
         check_abi();
-        if (nshared.fetch_sub(1, butil::memory_order_release) == 1) {
-            butil::atomic_thread_fence(butil::memory_order_acquire);
+        if (nshared.fetch_sub(1, std::memory_orderrelease) == 1) {
+            std::atomic_thread_fence(std::memory_orderacquire);
             if (!flags) {
-                iobuf::g_nblock.fetch_sub(1, butil::memory_order_relaxed);
+                iobuf::g_nblock.fetch_sub(1, std::memory_orderrelaxed);
                 iobuf::g_blockmem.fetch_sub(cap + sizeof(Block),
-                                            butil::memory_order_relaxed);
+                                            std::memory_orderrelaxed);
                 this->~Block();
                 iobuf::blockmem_deallocate(this);
             } else if (flags & IOBUF_BLOCK_FLAGS_USER_DATA) {
@@ -269,7 +269,7 @@ struct IOBuf::Block {
     }
 
     int ref_count() const {
-        return nshared.load(butil::memory_order_relaxed);
+        return nshared.load(std::memory_orderrelaxed);
     }
 
     bool full() const { return size >= cap; }
@@ -335,7 +335,7 @@ int get_tls_block_count() { return g_tls_data.num_blocks; }
 // Number of blocks that can't be returned to TLS which has too many block
 // already. This counter should be 0 in most scenarios, otherwise performance
 // of appending functions in IOPortal may be lowered.
-static butil::static_atomic<size_t> g_num_hit_tls_threshold = BUTIL_STATIC_ATOMIC_INIT(0);
+static flare::static_atomic<size_t> g_num_hit_tls_threshold = FLARE_STATIC_ATOMIC_INIT(0);
 
 // Called in UT.
 void remove_tls_block_chain() {
@@ -398,7 +398,7 @@ inline void release_tls_block(IOBuf::Block *b) {
         b->dec_ref();
     } else if (tls_data.num_blocks >= MAX_BLOCKS_PER_THREAD) {
         b->dec_ref();
-        g_num_hit_tls_threshold.fetch_add(1, butil::memory_order_relaxed);
+        g_num_hit_tls_threshold.fetch_add(1, std::memory_orderrelaxed);
     } else {
         b->portal_next = tls_data.block_head;
         tls_data.block_head = b;
@@ -422,7 +422,7 @@ void release_tls_block_chain(IOBuf::Block* b) {
             b->dec_ref();
             b = saved_next;
         } while (b);
-        g_num_hit_tls_threshold.fetch_add(n, butil::memory_order_relaxed);
+        g_num_hit_tls_threshold.fetch_add(n, std::memory_orderrelaxed);
         return;
     }
     IOBuf::Block* first_b = b;
@@ -469,7 +469,7 @@ IOBuf::Block* acquire_tls_block() {
 }
 
 inline IOBuf::BlockRef* acquire_blockref_array(size_t cap) {
-    iobuf::g_newbigview.fetch_add(1, butil::memory_order_relaxed);
+    iobuf::g_newbigview.fetch_add(1, std::memory_orderrelaxed);
     return new IOBuf::BlockRef[cap];
 }
 
@@ -484,7 +484,7 @@ inline void release_blockref_array(IOBuf::BlockRef* refs, size_t cap) {
 }  // namespace iobuf
 
 size_t IOBuf::block_count_hit_tls_threshold() {
-    return iobuf::g_num_hit_tls_threshold.load(butil::memory_order_relaxed);
+    return iobuf::g_num_hit_tls_threshold.load(std::memory_orderrelaxed);
 }
 
 BAIDU_CASSERT(sizeof(IOBuf::SmallView) == sizeof(IOBuf::BigView),

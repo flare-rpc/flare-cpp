@@ -25,7 +25,7 @@
 #include <iostream>                      // std::ostream
 #include <pthread.h>                     // pthread_mutex_t
 #include <algorithm>                     // std::max, std::min
-#include "butil/atomicops.h"              // butil::atomic
+#include "butil/static_atomic.h"              // std::atomic
 #include "butil/macros.h"                 // BAIDU_CACHELINE_ALIGNMENT
 #include "butil/scoped_lock.h"            // BAIDU_SCOPED_LOCK
 #include "butil/thread_local.h"           // BAIDU_THREAD_LOCAL
@@ -33,9 +33,9 @@
 
 #ifdef BUTIL_OBJECT_POOL_NEED_FREE_ITEM_NUM
 #define BAIDU_OBJECT_POOL_FREE_ITEM_NUM_ADD1                    \
-    (_global_nfree.fetch_add(1, butil::memory_order_relaxed))
+    (_global_nfree.fetch_add(1, std::memory_order_relaxed))
 #define BAIDU_OBJECT_POOL_FREE_ITEM_NUM_SUB1                    \
-    (_global_nfree.fetch_sub(1, butil::memory_order_relaxed))
+    (_global_nfree.fetch_sub(1, std::memory_order_relaxed))
 #else
 #define BAIDU_OBJECT_POOL_FREE_ITEM_NUM_ADD1
 #define BAIDU_OBJECT_POOL_FREE_ITEM_NUM_SUB1
@@ -107,14 +107,14 @@ public:
     // each BlockGroup addresses at most OP_GROUP_NBLOCK blocks. So an
     // object addresses at most OP_MAX_BLOCK_NGROUP * OP_GROUP_NBLOCK Blocks.
     struct BlockGroup {
-        butil::atomic<size_t> nblock;
-        butil::atomic<Block*> blocks[OP_GROUP_NBLOCK];
+        std::atomic<size_t> nblock;
+        std::atomic<Block*> blocks[OP_GROUP_NBLOCK];
 
         BlockGroup() : nblock(0) {
             // We fetch_add nblock in add_block() before setting the entry,
             // thus address_resource() may sees the unset entry. Initialize
             // all entries to NULL makes such address_resource() return NULL.
-            memset(static_cast<void*>(blocks), 0, sizeof(butil::atomic<Block*>) * OP_GROUP_NBLOCK);
+            memset(static_cast<void*>(blocks), 0, sizeof(std::atomic<Block*>) * OP_GROUP_NBLOCK);
         }
     };
 
@@ -274,26 +274,26 @@ public:
     // Number of all allocated objects, including being used and free.
     ObjectPoolInfo describe_objects() const {
         ObjectPoolInfo info;
-        info.local_pool_num = _nlocal.load(butil::memory_order_relaxed);
-        info.block_group_num = _ngroup.load(butil::memory_order_acquire);
+        info.local_pool_num = _nlocal.load(std::memory_order_relaxed);
+        info.block_group_num = _ngroup.load(std::memory_order_acquire);
         info.block_num = 0;
         info.item_num = 0;
         info.free_chunk_item_num = free_chunk_nitem();
         info.block_item_num = BLOCK_NITEM;
 #ifdef BUTIL_OBJECT_POOL_NEED_FREE_ITEM_NUM
-        info.free_item_num = _global_nfree.load(butil::memory_order_relaxed);
+        info.free_item_num = _global_nfree.load(std::memory_order_relaxed);
 #endif
 
         for (size_t i = 0; i < info.block_group_num; ++i) {
-            BlockGroup* bg = _block_groups[i].load(butil::memory_order_consume);
+            BlockGroup* bg = _block_groups[i].load(std::memory_order_consume);
             if (NULL == bg) {
                 break;
             }
-            size_t nblock = std::min(bg->nblock.load(butil::memory_order_relaxed),
+            size_t nblock = std::min(bg->nblock.load(std::memory_order_relaxed),
                                      OP_GROUP_NBLOCK);
             info.block_num += nblock;
             for (size_t j = 0; j < nblock; ++j) {
-                Block* b = bg->blocks[j].load(butil::memory_order_consume);
+                Block* b = bg->blocks[j].load(std::memory_order_consume);
                 if (NULL != b) {
                     info.item_num += b->nitem;
                 }
@@ -304,15 +304,15 @@ public:
     }
 
     static inline ObjectPool* singleton() {
-        ObjectPool* p = _singleton.load(butil::memory_order_consume);
+        ObjectPool* p = _singleton.load(std::memory_order_consume);
         if (p) {
             return p;
         }
         pthread_mutex_lock(&_singleton_mutex);
-        p = _singleton.load(butil::memory_order_consume);
+        p = _singleton.load(std::memory_order_consume);
         if (!p) {
             p = new ObjectPool();
-            _singleton.store(p, butil::memory_order_release);
+            _singleton.store(p, std::memory_order_release);
         }
         pthread_mutex_unlock(&_singleton_mutex);
         return p;
@@ -336,19 +336,19 @@ private:
         }
         size_t ngroup;
         do {
-            ngroup = _ngroup.load(butil::memory_order_acquire);
+            ngroup = _ngroup.load(std::memory_order_acquire);
             if (ngroup >= 1) {
                 BlockGroup* const g =
-                    _block_groups[ngroup - 1].load(butil::memory_order_consume);
+                    _block_groups[ngroup - 1].load(std::memory_order_consume);
                 const size_t block_index =
-                    g->nblock.fetch_add(1, butil::memory_order_relaxed);
+                    g->nblock.fetch_add(1, std::memory_order_relaxed);
                 if (block_index < OP_GROUP_NBLOCK) {
                     g->blocks[block_index].store(
-                        new_block, butil::memory_order_release);
+                        new_block, std::memory_order_release);
                     *index = (ngroup - 1) * OP_GROUP_NBLOCK + block_index;
                     return new_block;
                 }
-                g->nblock.fetch_sub(1, butil::memory_order_relaxed);
+                g->nblock.fetch_sub(1, std::memory_order_relaxed);
             }
         } while (add_block_group(ngroup));
 
@@ -362,7 +362,7 @@ private:
     static bool add_block_group(size_t old_ngroup) {
         BlockGroup* bg = NULL;
         BAIDU_SCOPED_LOCK(_block_group_mutex);
-        const size_t ngroup = _ngroup.load(butil::memory_order_acquire);
+        const size_t ngroup = _ngroup.load(std::memory_order_acquire);
         if (ngroup != old_ngroup) {
             // Other thread got lock and added group before this thread.
             return true;
@@ -372,8 +372,8 @@ private:
             if (NULL != bg) {
                 // Release fence is paired with consume fence in add_block()
                 // to avoid un-constructed bg to be seen by other threads.
-                _block_groups[ngroup].store(bg, butil::memory_order_release);
-                _ngroup.store(ngroup + 1, butil::memory_order_release);
+                _block_groups[ngroup].store(bg, std::memory_order_release);
+                _ngroup.store(ngroup + 1, std::memory_order_release);
             }
         }
         return bg != NULL;
@@ -391,7 +391,7 @@ private:
         BAIDU_SCOPED_LOCK(_change_thread_mutex); //avoid race with clear()
         _local_pool = lp;
         butil::thread_atexit(LocalPool::delete_local_pool, lp);
-        _nlocal.fetch_add(1, butil::memory_order_relaxed);
+        _nlocal.fetch_add(1, std::memory_order_relaxed);
         return lp;
     }
 
@@ -400,7 +400,7 @@ private:
         _local_pool = NULL;
 
         // Do nothing if there're active threads.
-        if (_nlocal.fetch_sub(1, butil::memory_order_relaxed) != 1) {
+        if (_nlocal.fetch_sub(1, std::memory_order_relaxed) != 1) {
             return;
         }
 
@@ -412,7 +412,7 @@ private:
 #ifdef BAIDU_CLEAR_OBJECT_POOL_AFTER_ALL_THREADS_QUIT
         BAIDU_SCOPED_LOCK(_change_thread_mutex);  // including acquire fence.
         // Do nothing if there're active threads.
-        if (_nlocal.load(butil::memory_order_relaxed) != 0) {
+        if (_nlocal.load(std::memory_order_relaxed) != 0) {
             return;
         }
         // All threads exited and we're holding _change_thread_mutex to avoid
@@ -423,16 +423,16 @@ private:
         while (pop_free_chunk(dummy));
 
         // Delete all memory
-        const size_t ngroup = _ngroup.exchange(0, butil::memory_order_relaxed);
+        const size_t ngroup = _ngroup.exchange(0, std::memory_order_relaxed);
         for (size_t i = 0; i < ngroup; ++i) {
-            BlockGroup* bg = _block_groups[i].load(butil::memory_order_relaxed);
+            BlockGroup* bg = _block_groups[i].load(std::memory_order_relaxed);
             if (NULL == bg) {
                 break;
             }
-            size_t nblock = std::min(bg->nblock.load(butil::memory_order_relaxed),
+            size_t nblock = std::min(bg->nblock.load(std::memory_order_relaxed),
                                      OP_GROUP_NBLOCK);
             for (size_t j = 0; j < nblock; ++j) {
-                Block* b = bg->blocks[j].load(butil::memory_order_relaxed);
+                Block* b = bg->blocks[j].load(std::memory_order_relaxed);
                 if (NULL == b) {
                     continue;
                 }
@@ -484,20 +484,20 @@ private:
         return true;
     }
     
-    static butil::static_atomic<ObjectPool*> _singleton;
+    static std::static_atomic<ObjectPool*> _singleton;
     static pthread_mutex_t _singleton_mutex;
     static BAIDU_THREAD_LOCAL LocalPool* _local_pool;
-    static butil::static_atomic<long> _nlocal;
-    static butil::static_atomic<size_t> _ngroup;
+    static std::static_atomic<long> _nlocal;
+    static std::static_atomic<size_t> _ngroup;
     static pthread_mutex_t _block_group_mutex;
     static pthread_mutex_t _change_thread_mutex;
-    static butil::static_atomic<BlockGroup*> _block_groups[OP_MAX_BLOCK_NGROUP];
+    static std::static_atomic<BlockGroup*> _block_groups[OP_MAX_BLOCK_NGROUP];
 
     std::vector<DynamicFreeChunk*> _free_chunks;
     pthread_mutex_t _free_chunks_mutex;
 
 #ifdef BUTIL_OBJECT_POOL_NEED_FREE_ITEM_NUM
-    static butil::static_atomic<size_t> _global_nfree;
+    static std::static_atomic<size_t> _global_nfree;
 #endif
 };
 
@@ -511,16 +511,16 @@ BAIDU_THREAD_LOCAL typename ObjectPool<T>::LocalPool*
 ObjectPool<T>::_local_pool = NULL;
 
 template <typename T>
-butil::static_atomic<ObjectPool<T>*> ObjectPool<T>::_singleton = BUTIL_STATIC_ATOMIC_INIT(NULL);
+std::static_atomic<ObjectPool<T>*> ObjectPool<T>::_singleton = FLARE_STATIC_ATOMIC_INIT(NULL);
 
 template <typename T>
 pthread_mutex_t ObjectPool<T>::_singleton_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 template <typename T>
-static_atomic<long> ObjectPool<T>::_nlocal = BUTIL_STATIC_ATOMIC_INIT(0);
+static_atomic<long> ObjectPool<T>::_nlocal = FLARE_STATIC_ATOMIC_INIT(0);
 
 template <typename T>
-butil::static_atomic<size_t> ObjectPool<T>::_ngroup = BUTIL_STATIC_ATOMIC_INIT(0);
+std::static_atomic<size_t> ObjectPool<T>::_ngroup = FLARE_STATIC_ATOMIC_INIT(0);
 
 template <typename T>
 pthread_mutex_t ObjectPool<T>::_block_group_mutex = PTHREAD_MUTEX_INITIALIZER;
@@ -529,12 +529,12 @@ template <typename T>
 pthread_mutex_t ObjectPool<T>::_change_thread_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 template <typename T>
-butil::static_atomic<typename ObjectPool<T>::BlockGroup*>
+std::static_atomic<typename ObjectPool<T>::BlockGroup*>
 ObjectPool<T>::_block_groups[OP_MAX_BLOCK_NGROUP] = {};
 
 #ifdef BUTIL_OBJECT_POOL_NEED_FREE_ITEM_NUM
 template <typename T>
-butil::static_atomic<size_t> ObjectPool<T>::_global_nfree = BUTIL_STATIC_ATOMIC_INIT(0);
+std::static_atomic<size_t> ObjectPool<T>::_global_nfree = FLARE_STATIC_ATOMIC_INIT(0);
 #endif
 
 inline std::ostream& operator<<(std::ostream& os,
