@@ -266,7 +266,7 @@ inline void Socket::CheckEOF() {
 inline void Socket::CheckEOFInternal() {
     uint32_t nref = _ninprocess.fetch_sub(1, std::memory_order_release);
     if ((nref & ~EOF_FLAG) == 1) {
-        butil::atomic_thread_fence(std::memory_order_acquire);
+        std::atomic_thread_fence(std::memory_order_acquire);
         // It's safe to call `SetFailed' each time `_ninprocess' hits 0
         SetFailed(EEOF, "Got EOF of %s", description().c_str());
     }

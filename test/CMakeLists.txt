@@ -80,13 +80,9 @@ SET(TEST_BUTIL_SOURCES
     ${PROJECT_SOURCE_DIR}/test/at_exit_unittest.cc
     ${PROJECT_SOURCE_DIR}/test/base64_unittest.cc
     ${PROJECT_SOURCE_DIR}/test/big_endian_unittest.cc
-    ${PROJECT_SOURCE_DIR}/test/bits_unittest.cc
     ${PROJECT_SOURCE_DIR}/test/hash_tables_unittest.cc
     ${PROJECT_SOURCE_DIR}/test/linked_list_unittest.cc
-    ${PROJECT_SOURCE_DIR}/test/mru_cache_unittest.cc
     ${PROJECT_SOURCE_DIR}/test/small_map_unittest.cc
-    ${PROJECT_SOURCE_DIR}/test/stack_container_unittest.cc
-    ${PROJECT_SOURCE_DIR}/test/cpu_unittest.cc
     ${PROJECT_SOURCE_DIR}/test/crash_logging_unittest.cc
     ${PROJECT_SOURCE_DIR}/test/leak_tracker_unittest.cc
     ${PROJECT_SOURCE_DIR}/test/stack_trace_unittest.cc
@@ -108,7 +104,6 @@ SET(TEST_BUTIL_SOURCES
     ${PROJECT_SOURCE_DIR}/test/singleton_unittest.cc
     ${PROJECT_SOURCE_DIR}/test/weak_ptr_unittest.cc
     ${PROJECT_SOURCE_DIR}/test/observer_list_unittest.cc
-    ${PROJECT_SOURCE_DIR}/test/file_descriptor_shuffle_unittest.cc
     ${PROJECT_SOURCE_DIR}/test/rand_util_unittest.cc
     ${PROJECT_SOURCE_DIR}/test/safe_numerics_unittest.cc
     ${PROJECT_SOURCE_DIR}/test/scoped_clear_errno_unittest.cc

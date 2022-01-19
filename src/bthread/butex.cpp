@@ -613,7 +613,7 @@ int butex_wait(void* arg, int expected_value, const timespec* abstime) {
         errno = EWOULDBLOCK;
         // Sometimes we may take actions immediately after unmatched butex,
         // this fence makes sure that we see changes before changing butex.
-        butil::atomic_thread_fence(std::memory_order_acquire);
+        std::atomic_thread_fence(std::memory_order_acquire);
         return -1;
     }
     TaskGroup* g = tls_task_group;
