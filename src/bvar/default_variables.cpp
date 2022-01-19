@@ -38,6 +38,7 @@
 #include "butil/process_util.h"            // ReadCommandLine
 #include "butil/popen.h"                   // read_command_output
 #include "bvar/passive_status.h"
+#include "butil/static_atomic.h"
 
 namespace bvar {
 
