@@ -484,20 +484,20 @@ private:
         return true;
     }
     
-    static std::static_atomic<ObjectPool*> _singleton;
+    static flare::static_atomic<ObjectPool*> _singleton;
     static pthread_mutex_t _singleton_mutex;
     static BAIDU_THREAD_LOCAL LocalPool* _local_pool;
-    static std::static_atomic<long> _nlocal;
-    static std::static_atomic<size_t> _ngroup;
+    static flare::static_atomic<long> _nlocal;
+    static flare::static_atomic<size_t> _ngroup;
     static pthread_mutex_t _block_group_mutex;
     static pthread_mutex_t _change_thread_mutex;
-    static std::static_atomic<BlockGroup*> _block_groups[OP_MAX_BLOCK_NGROUP];
+    static flare::static_atomic<BlockGroup*> _block_groups[OP_MAX_BLOCK_NGROUP];
 
     std::vector<DynamicFreeChunk*> _free_chunks;
     pthread_mutex_t _free_chunks_mutex;
 
 #ifdef BUTIL_OBJECT_POOL_NEED_FREE_ITEM_NUM
-    static std::static_atomic<size_t> _global_nfree;
+    static flare::static_atomic<size_t> _global_nfree;
 #endif
 };
 
@@ -511,7 +511,7 @@ BAIDU_THREAD_LOCAL typename ObjectPool<T>::LocalPool*
 ObjectPool<T>::_local_pool = NULL;
 
 template <typename T>
-std::static_atomic<ObjectPool<T>*> ObjectPool<T>::_singleton = FLARE_STATIC_ATOMIC_INIT(NULL);
+flare::static_atomic<ObjectPool<T>*> ObjectPool<T>::_singleton = FLARE_STATIC_ATOMIC_INIT(NULL);
 
 template <typename T>
 pthread_mutex_t ObjectPool<T>::_singleton_mutex = PTHREAD_MUTEX_INITIALIZER;
@@ -520,7 +520,7 @@ template <typename T>
 static_atomic<long> ObjectPool<T>::_nlocal = FLARE_STATIC_ATOMIC_INIT(0);
 
 template <typename T>
-std::static_atomic<size_t> ObjectPool<T>::_ngroup = FLARE_STATIC_ATOMIC_INIT(0);
+flare::static_atomic<size_t> ObjectPool<T>::_ngroup = FLARE_STATIC_ATOMIC_INIT(0);
 
 template <typename T>
 pthread_mutex_t ObjectPool<T>::_block_group_mutex = PTHREAD_MUTEX_INITIALIZER;
@@ -529,12 +529,12 @@ template <typename T>
 pthread_mutex_t ObjectPool<T>::_change_thread_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 template <typename T>
-std::static_atomic<typename ObjectPool<T>::BlockGroup*>
+flare::static_atomic<typename ObjectPool<T>::BlockGroup*>
 ObjectPool<T>::_block_groups[OP_MAX_BLOCK_NGROUP] = {};
 
 #ifdef BUTIL_OBJECT_POOL_NEED_FREE_ITEM_NUM
 template <typename T>
-std::static_atomic<size_t> ObjectPool<T>::_global_nfree = FLARE_STATIC_ATOMIC_INIT(0);
+flare::static_atomic<size_t> ObjectPool<T>::_global_nfree = FLARE_STATIC_ATOMIC_INIT(0);
 #endif
 
 inline std::ostream& operator<<(std::ostream& os,
