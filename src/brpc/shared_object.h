@@ -48,7 +48,7 @@ public:
     // Same as butil::intrusive_ptr<T>(obj, false).reset(NULL)
     void RemoveRefManually() {
         if (_nref.fetch_sub(1, std::memory_order_release) == 1) {
-            butil::atomic_thread_fence(std::memory_order_acquire);
+            std::atomic_thread_fence(std::memory_order_acquire);
             delete this;
         }
     }

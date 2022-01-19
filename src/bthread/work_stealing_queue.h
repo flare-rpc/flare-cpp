@@ -94,7 +94,7 @@ public:
         }
         const size_t newb = b - 1;
         _bottom.store(newb, std::memory_order_relaxed);
-        butil::atomic_thread_fence(std::memory_order_seq_cst);
+        std::atomic_thread_fence(std::memory_order_seq_cst);
         t = _top.load(std::memory_order_relaxed);
         if (t > newb) {
             _bottom.store(b, std::memory_order_relaxed);
@@ -122,7 +122,7 @@ public:
             return false;
         }
         do {
-            butil::atomic_thread_fence(std::memory_order_seq_cst);
+            std::atomic_thread_fence(std::memory_order_seq_cst);
             b = _bottom.load(std::memory_order_acquire);
             if (t >= b) {
                 return false;

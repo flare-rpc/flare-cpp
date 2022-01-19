@@ -278,7 +278,7 @@ public:
                 return;
             }
         }
-        butil::atomic_thread_fence(std::memory_order_acquire);
+        std::atomic_thread_fence(std::memory_order_acquire);
 
         if (fin != NULL &&
             !_cntl->is_done_allowed_to_run_in_place() &&
