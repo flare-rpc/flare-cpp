@@ -46,7 +46,7 @@ public:
             return true;
         }
         c->add_flag(Controller::FLAGS_ADDED_CONCURRENCY);
-        return ((server->_concurrency.fetch_add(1) +1)
+        return ((_server->_concurrency.fetch_add(1) +1)
                 <= _server->options().max_concurrency);
     }
 
