@@ -21,7 +21,7 @@
 #define  BVAR_STATUS_H
 
 #include <string>                       // std::string
-#include <atomic>
+#include "butil/static_atomic.h"
 #include "butil/type_traits.h"
 #include "butil/string_printf.h"
 #include "butil/synchronization/lock.h"

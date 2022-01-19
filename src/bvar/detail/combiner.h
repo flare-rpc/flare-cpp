@@ -22,7 +22,7 @@
 
 #include <string>                       // std::string
 #include <vector>                       // std::vector
-#include <atomic>
+#include "butil/static_atomic.h"
 #include "butil/scoped_lock.h"           // BAIDU_SCOPED_LOCK
 #include "butil/type_traits.h"           // butil::add_cr_non_integral
 #include "butil/synchronization/lock.h"  // butil::Lock
