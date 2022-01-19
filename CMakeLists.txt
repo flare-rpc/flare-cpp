@@ -281,7 +281,6 @@ set(BUTIL_SOURCES
     ${PROJECT_SOURCE_DIR}/src/butil/memory/ref_counted_memory.cc
     ${PROJECT_SOURCE_DIR}/src/butil/memory/singleton.cc
     ${PROJECT_SOURCE_DIR}/src/butil/memory/weak_ptr.cc
-    ${PROJECT_SOURCE_DIR}/src/butil/posix/global_descriptors.cc
     ${PROJECT_SOURCE_DIR}/src/butil/process_util.cc
     ${PROJECT_SOURCE_DIR}/src/butil/rand_util.cc
     ${PROJECT_SOURCE_DIR}/src/butil/rand_util_posix.cc
