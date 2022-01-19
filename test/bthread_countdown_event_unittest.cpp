@@ -19,18 +19,18 @@
 
 #include <gtest/gtest.h>
 #include <bthread/countdown_event.h>
-#include "butil/atomicops.h"
+#include "butil/static_atomic.h"
 #include "butil/time.h"
 
 namespace {
 struct Arg {
     bthread::CountdownEvent event;
-    butil::atomic<int> num_sig;
+    std::atomic<int> num_sig;
 };
 
 void *signaler(void *arg) {
     Arg* a = (Arg*)arg;
-    a->num_sig.fetch_sub(1, butil::memory_order_relaxed);
+    a->num_sig.fetch_sub(1, std::memory_order_relaxed);
     a->event.signal();
     return NULL;
 }
@@ -45,7 +45,7 @@ TEST(CountdonwEventTest, sanity) {
             ASSERT_EQ(0, bthread_start_urgent(&tid, NULL, signaler, &a));
         }
         a.event.wait();
-        ASSERT_EQ(0, a.num_sig.load(butil::memory_order_relaxed));
+        ASSERT_EQ(0, a.num_sig.load(std::memory_order_relaxed));
     }
 }
 

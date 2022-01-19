@@ -18,7 +18,7 @@
 
 #include "bthread/bthread.h"                  // bthread_id_xx
 #include "bthread/unstable.h"                 // bthread_timer_add
-#include "butil/atomicops.h"
+#include "butil/static_atomic.h"
 #include "butil/time.h"
 #include "butil/macros.h"
 #include "brpc/details/controller_private_accessor.h"
@@ -222,7 +222,7 @@ public:
 
             // Count failed sub calls, if fail_limit is reached, cancel others.
             if (fin->cntl.FailedInline() &&
-                _current_fail.fetch_add(1, butil::memory_order_relaxed) + 1
+                _current_fail.fetch_add(1, std::memory_order_relaxed) + 1
                 == _fail_limit) {
                 for (int i = 0; i < _ndone; ++i) {
                     SubDone* sd = sub_done(i);
@@ -239,7 +239,7 @@ public:
             // The release fence is matched with acquire fence below to
             // guarantee visibilities of all other variables.
             const uint32_t val =
-                _current_done.fetch_add(1, butil::memory_order_release);
+                _current_done.fetch_add(1, std::memory_order_release);
             // Lower 31 bits are number of finished sub calls. If caller is not
             // the last call that finishes, return.
             if ((val & 0x7fffffff) + 1 != saved_ndone) {
@@ -258,7 +258,7 @@ public:
             // of reading the value relaxly (and CPU cache is not sync yet).
             // It's OK and we have to, because sub_done can't be accessed
             // after fetch_or.
-            uint32_t val = _current_done.load(butil::memory_order_relaxed);
+            uint32_t val = _current_done.load(std::memory_order_relaxed);
             // Lower 31 bits are number of finished sub calls. Cancel sub calls
             // if not all of them finish.
             if ((val & 0x7fffffff) != (uint32_t)_ndone) {
@@ -272,13 +272,13 @@ public:
             // Modify MSB to mark that this->Run() run.
             // The release fence is matched with acquire fence below to
             // guarantee visibilities of all other variables.
-            val = _current_done.fetch_or(0x80000000, butil::memory_order_release);
+            val = _current_done.fetch_or(0x80000000, std::memory_order_release);
             // If not all sub calls finish, return.
             if ((val & 0x7fffffff) != (uint32_t)saved_ndone) {
                 return;
             }
         }
-        butil::atomic_thread_fence(butil::memory_order_acquire);
+        butil::atomic_thread_fence(std::memory_order_acquire);
 
         if (fin != NULL &&
             !_cntl->is_done_allowed_to_run_in_place() &&
@@ -308,7 +308,7 @@ public:
         // NOTE: Don't forget to set "nfailed = _ndone" when the _cntl is set
         // to be failed since the RPC is still considered to be successful if
         // nfailed is less than fail_limit
-        int nfailed = _current_fail.load(butil::memory_order_relaxed);
+        int nfailed = _current_fail.load(std::memory_order_relaxed);
         if (nfailed < _fail_limit) {
             for (int i = 0; i < _ndone; ++i) {
                 SubDone* sd = sub_done(i);
@@ -430,8 +430,8 @@ private:
 #else
     int _memsize;
 #endif
-    butil::atomic<int> _current_fail;
-    butil::atomic<uint32_t> _current_done;
+    std::atomic<int> _current_fail;
+    std::atomic<uint32_t> _current_done;
     Controller* _cntl;
     google::protobuf::Closure* _user_done;
     bthread_t _callmethod_bthread;

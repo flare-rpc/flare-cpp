@@ -197,7 +197,7 @@ private:
     void DoRun();
 friend void ProcessThriftRequest(InputMessageBase* msg_base);
 
-    butil::atomic<int> _run_counter;
+    std::atomic<int> _run_counter;
     int64_t _received_us;
     ThriftFramedMessage _request;
     ThriftFramedMessage _response;
@@ -213,17 +213,17 @@ ThriftClosure::~ThriftClosure() {
 }
 
 inline void ThriftClosure::SuspendRunning() {
-    _run_counter.fetch_add(1, butil::memory_order_relaxed);
+    _run_counter.fetch_add(1, std::memory_order_relaxed);
 }
 
 inline void ThriftClosure::ResumeRunning() {
-    if (_run_counter.fetch_sub(1, butil::memory_order_relaxed) == 1) {
+    if (_run_counter.fetch_sub(1, std::memory_order_relaxed) == 1) {
         DoRun();
     }
 }
 
 void ThriftClosure::Run() {
-    if (_run_counter.fetch_sub(1, butil::memory_order_relaxed) == 1) {
+    if (_run_counter.fetch_sub(1, std::memory_order_relaxed) == 1) {
         DoRun();
     }
 }

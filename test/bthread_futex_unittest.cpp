@@ -24,7 +24,7 @@
 #include "butil/macros.h"
 #include "butil/errno.h"
 #include <limits.h>                            // INT_MAX
-#include "butil/atomicops.h"
+#include "butil/static_atomic.h"
 #include "bthread/bthread.h"
 #include <bthread/sys_futex.h>
 #include <bthread/processor.h>
@@ -32,10 +32,10 @@
 namespace {
 volatile bool stop = false;
 
-butil::atomic<int> nthread(0);
+std::atomic<int> nthread(0);
 
 void* read_thread(void* arg) {
-    butil::atomic<int>* m = (butil::atomic<int>*)arg;
+    std::atomic<int>* m = (std::atomic<int>*)arg;
     int njob = 0;
     while (!stop) {
         int x;
@@ -65,7 +65,7 @@ void* read_thread(void* arg) {
 
 TEST(FutexTest, rdlock_performance) {
     const size_t N = 100000;
-    butil::atomic<int> lock1(0);
+    std::atomic<int> lock1(0);
     pthread_t rth[8];
     for (size_t i = 0; i < ARRAY_SIZE(rth); ++i) {
         ASSERT_EQ(0, pthread_create(&rth[i], NULL, read_thread, &lock1));
@@ -147,7 +147,7 @@ TEST(FutexTest, futex_wake_many_waiters_perf) {
     printf("futex_wake nop = %" PRId64 "ns\n", tm.n_elapsed() / REP);
 }
 
-butil::atomic<int> nevent(0);
+std::atomic<int> nevent(0);
 
 void* waker(void* lock) {
     bthread_usleep(10000);
@@ -171,12 +171,12 @@ void* batch_waker(void* lock) {
     butil::Timer tm;
     tm.start();
     for (size_t i = 0; i < REP; ++i) {
-        if (nevent.fetch_add(1, butil::memory_order_relaxed) == 0) {
+        if (nevent.fetch_add(1, std::memory_order_relaxed) == 0) {
             nwakeup += bthread::futex_wake_private(lock, 1);
             int expected = 1;
             while (1) {
                 int last_expected = expected;
-                if (nevent.compare_exchange_strong(expected, 0, butil::memory_order_relaxed)) {
+                if (nevent.compare_exchange_strong(expected, 0, std::memory_order_relaxed)) {
                     break;
                 }
                 nwakeup += bthread::futex_wake_private(lock, expected - last_expected);

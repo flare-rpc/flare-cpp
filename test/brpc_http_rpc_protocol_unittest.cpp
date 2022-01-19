@@ -1028,7 +1028,7 @@ TEST_F(HttpTest, http2_sanity) {
     EXPECT_EQ(brpc::Socket::Address(channel._server_id, &main_ptr), 0);
     EXPECT_EQ(main_ptr->GetAgentSocket(&agent_ptr, NULL), 0);
     brpc::policy::H2Context* ctx = static_cast<brpc::policy::H2Context*>(agent_ptr->parsing_context());
-    ASSERT_GT(ctx->_remote_window_left.load(butil::memory_order_relaxed),
+    ASSERT_GT(ctx->_remote_window_left.load(std::memory_order_relaxed),
              brpc::H2Settings::DEFAULT_INITIAL_WINDOW_SIZE / 2);
 }
 
@@ -1232,7 +1232,7 @@ TEST_F(HttpTest, http2_not_closing_socket_when_rpc_timeout) {
 
     brpc::SocketUniquePtr main_ptr;
     EXPECT_EQ(brpc::Socket::Address(channel._server_id, &main_ptr), 0);
-    brpc::SocketId agent_id = main_ptr->_agent_socket_id.load(butil::memory_order_relaxed);
+    brpc::SocketId agent_id = main_ptr->_agent_socket_id.load(std::memory_order_relaxed);
 
     for (int i = 0; i < 4; i++) {
         brpc::Controller cntl;
@@ -1243,7 +1243,7 @@ TEST_F(HttpTest, http2_not_closing_socket_when_rpc_timeout) {
         ASSERT_TRUE(cntl.Failed());
 
         brpc::SocketUniquePtr ptr;
-        brpc::SocketId id = main_ptr->_agent_socket_id.load(butil::memory_order_relaxed);
+        brpc::SocketId id = main_ptr->_agent_socket_id.load(std::memory_order_relaxed);
         EXPECT_EQ(id, agent_id);
     }
 
@@ -1256,7 +1256,7 @@ TEST_F(HttpTest, http2_not_closing_socket_when_rpc_timeout) {
         ASSERT_FALSE(cntl.Failed());
         ASSERT_EQ(EXP_RESPONSE, res.message());
         brpc::SocketUniquePtr ptr;
-        brpc::SocketId id = main_ptr->_agent_socket_id.load(butil::memory_order_relaxed);
+        brpc::SocketId id = main_ptr->_agent_socket_id.load(std::memory_order_relaxed);
         EXPECT_EQ(id, agent_id);
     }
 }

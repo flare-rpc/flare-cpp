@@ -214,8 +214,8 @@ public:
         touch_count.fetch_add(1);
     }
 
-    butil::atomic<int64_t> list_names_count;
-    butil::atomic<int64_t> touch_count;
+    std::atomic<int64_t> list_names_count;
+    std::atomic<int64_t> touch_count;
 };
 
 TEST(NamingServiceTest, remotefile) {
@@ -391,8 +391,8 @@ public:
         touch_count.fetch_add(1);
     }
 
-    butil::atomic<int64_t> list_names_count;
-    butil::atomic<int64_t> touch_count;
+    std::atomic<int64_t> list_names_count;
+    std::atomic<int64_t> touch_count;
 };
 
 TEST(NamingServiceTest, consul_with_backup_file) {

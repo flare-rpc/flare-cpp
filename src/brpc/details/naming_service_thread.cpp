@@ -208,7 +208,7 @@ void NamingServiceThread::Actions::ResetServers(
 void NamingServiceThread::Actions::EndWait(int error_code) {
     if (bthread_id_trylock(_wait_id, NULL) == 0) {
         _wait_error = error_code;
-        _has_wait_error.store(true, butil::memory_order_release);
+        _has_wait_error.store(true, std::memory_order_release);
         bthread_id_unlock_and_destroy(_wait_id);
     }
 }
@@ -216,7 +216,7 @@ void NamingServiceThread::Actions::EndWait(int error_code) {
 int NamingServiceThread::Actions::WaitForFirstBatchOfServers() {
     // Wait can happen before signal in which case it returns non-zero,
     // so we ignore return value here and use `_wait_error' instead
-    if (!_has_wait_error.load(butil::memory_order_acquire)) {
+    if (!_has_wait_error.load(std::memory_order_acquire)) {
         bthread_id_join(_wait_id);
     }
     return _wait_error;

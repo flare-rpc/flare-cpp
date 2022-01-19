@@ -76,18 +76,18 @@ static void *thread_counter(void *arg) {
 }
 
 void *add_atomic(void *arg) {
-    butil::atomic<uint64_t> *counter = (butil::atomic<uint64_t> *)arg;
+    std::atomic<uint64_t> *counter = (std::atomic<uint64_t> *)arg;
     butil::Timer timer;
     timer.start();
     for (size_t i = 0; i < OPS_PER_THREAD / 100; ++i) {
-        counter->fetch_add(2, butil::memory_order_relaxed);
+        counter->fetch_add(2, std::memory_order_relaxed);
     }
     timer.stop();
     return (void *)(timer.n_elapsed());
 }
 
 static long start_perf_test_with_atomic(size_t num_thread) {
-    butil::atomic<uint64_t> counter(0);
+    std::atomic<uint64_t> counter(0);
     pthread_t threads[num_thread];
     for (size_t i = 0; i < num_thread; ++i) {
         pthread_create(&threads[i], NULL, &add_atomic, (void *)&counter);

@@ -17,7 +17,7 @@
 
 #include <gtest/gtest.h>
 #include <gflags/gflags.h>
-#include "butil/atomicops.h"
+#include "butil/static_atomic.h"
 #include "butil/time.h"
 #include "butil/macros.h"
 #include "butil/logging.h"
@@ -56,13 +56,13 @@ TEST(BthreadTest, setconcurrency) {
     ASSERT_EQ(BTHREAD_MIN_CONCURRENCY + 5, bthread_getconcurrency());
 }
 
-static butil::atomic<int> *odd;
-static butil::atomic<int> *even;
+static std::atomic<int> *odd;
+static std::atomic<int> *even;
 
-static butil::atomic<int> nbthreads(0);
-static butil::atomic<int> npthreads(0);
+static std::atomic<int> nbthreads(0);
+static std::atomic<int> npthreads(0);
 static BAIDU_THREAD_LOCAL bool counted = false;
-static butil::atomic<bool> stop (false);
+static std::atomic<bool> stop (false);
 
 static void *odd_thread(void *) {
     nbthreads.fetch_add(1);
@@ -91,8 +91,8 @@ static void *even_thread(void *) {
 }
 
 TEST(BthreadTest, setconcurrency_with_running_bthread) {
-    odd = bthread::butex_create_checked<butil::atomic<int> >();
-    even = bthread::butex_create_checked<butil::atomic<int> >();
+    odd = bthread::butex_create_checked<std::atomic<int> >();
+    even = bthread::butex_create_checked<std::atomic<int> >();
     ASSERT_TRUE(odd != NULL && even != NULL);
     *odd = 0;
     *even = 0;

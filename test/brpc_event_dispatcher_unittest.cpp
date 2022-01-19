@@ -46,9 +46,9 @@ TEST_F(EventDispatcherTest, has_epollrdhup) {
 }
 
 TEST_F(EventDispatcherTest, versioned_ref) {
-    butil::atomic<uint64_t> versioned_ref(2);
+    std::atomic<uint64_t> versioned_ref(2);
     versioned_ref.fetch_add(brpc::MakeVRef(0, -1),
-                            butil::memory_order_release);
+                            std::memory_order_release);
     ASSERT_EQ(brpc::MakeVRef(1, 1), versioned_ref);
 }
 

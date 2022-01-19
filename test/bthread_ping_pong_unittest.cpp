@@ -28,7 +28,7 @@
 #include <bthread/sys_futex.h>
 #include <bthread/butex.h>
 #include "bthread/bthread.h"
-#include "butil/atomicops.h"
+#include "butil/static_atomic.h"
 
 namespace {
 DEFINE_int32(thread_num, 1, "#pairs of threads doing ping pong");

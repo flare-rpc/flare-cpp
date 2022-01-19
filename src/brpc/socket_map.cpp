@@ -51,7 +51,7 @@ DEFINE_bool(show_socketmap_in_vars, false,
 BRPC_VALIDATE_GFLAG(show_socketmap_in_vars, PassValidate);
 
 static pthread_once_t g_socket_map_init = PTHREAD_ONCE_INIT;
-static butil::static_atomic<SocketMap*> g_socket_map = BUTIL_STATIC_ATOMIC_INIT(NULL);
+static flare::static_atomic<SocketMap*> g_socket_map = FLARE_STATIC_ATOMIC_INIT(NULL);
 
 class GlobalSocketCreator : public SocketCreator {
 public:
@@ -72,18 +72,18 @@ static void CreateClientSideSocketMap() {
         LOG(FATAL) << "Fail to init SocketMap";
         exit(1);
     }
-    g_socket_map.store(socket_map, butil::memory_order_release);
+    g_socket_map.store(socket_map, std::memory_order_release);
 }
 
 SocketMap* get_client_side_socket_map() {
     // The consume fence makes sure that we see a NULL or a fully initialized
     // SocketMap.
-    return g_socket_map.load(butil::memory_order_consume);
+    return g_socket_map.load(std::memory_order_consume);
 }
 SocketMap* get_or_new_client_side_socket_map() {
     get_or_new_client_side_messenger();
     pthread_once(&g_socket_map_init, CreateClientSideSocketMap);
-    return g_socket_map.load(butil::memory_order_consume);
+    return g_socket_map.load(std::memory_order_consume);
 }
 
 int SocketMapInsert(const SocketMapKey& key, SocketId* id,

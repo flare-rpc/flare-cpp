@@ -2072,7 +2072,7 @@ void RtmpClientStream::OnStatus(const RtmpInfo& info) {
             // the memory fence makes sure that if _is_server_accepted is true, 
             // publish request must be sent (so that SendXXX functions can
             // be enabled)
-            _is_server_accepted.store(true, butil::memory_order_release);
+            _is_server_accepted.store(true, std::memory_order_release);
         }
     }
 }
@@ -2237,14 +2237,14 @@ RtmpRetryingClientStream::~RtmpRetryingClientStream() {
 void RtmpRetryingClientStream::CallOnStopIfNeeded() {
     // CallOnStop uses locks, we don't need memory fence on _called_on_stop,
     // atomic ops is enough.
-    if (!_called_on_stop.load(butil::memory_order_relaxed) &&
-        !_called_on_stop.exchange(true, butil::memory_order_relaxed)) {
+    if (!_called_on_stop.load(std::memory_order_relaxed) &&
+        !_called_on_stop.exchange(true, std::memory_order_relaxed)) {
         CallOnStop();
     }
 }        
 
 void RtmpRetryingClientStream::Destroy() {
-    if (_destroying.exchange(true, butil::memory_order_relaxed)) {
+    if (_destroying.exchange(true, std::memory_order_relaxed)) {
         // Destroy() was already called.
         return;
     }
@@ -2284,7 +2284,7 @@ void RtmpRetryingClientStream::Init(
         return CallOnStopIfNeeded();
     }
     _sub_stream_creator = sub_stream_creator;
-    if (_destroying.load(butil::memory_order_relaxed)) {
+    if (_destroying.load(std::memory_order_relaxed)) {
         LOG(WARNING) << "RtmpRetryingClientStream=" << this << " was already "
             "Destroy()-ed, stop Init()";
         return;
@@ -2343,7 +2343,7 @@ void RtmpRetryingClientStream::Recreate() {
         // Note: the load of _destroying and the setting of _using_sub_stream 
         // must be in the same lock, otherwise current bthread may be scheduled
         // and Destroy() may be called, making new sub_stream leaked.
-        destroying = _destroying.load(butil::memory_order_relaxed);
+        destroying = _destroying.load(std::memory_order_relaxed);
         if (!destroying) {
             _using_sub_stream.swap(old_sub_stream);
             _using_sub_stream = sub_stream;
@@ -2384,8 +2384,8 @@ void RtmpRetryingClientStream::OnSubStreamStop(RtmpStreamBase* sub_stream) {
         }
     }
     if (removed_sub_stream == NULL ||
-        _destroying.load(butil::memory_order_relaxed) ||
-        _called_on_stop.load(butil::memory_order_relaxed)) {
+        _destroying.load(std::memory_order_relaxed) ||
+        _called_on_stop.load(std::memory_order_relaxed)) {
         return;
     }
     // Update _is_server_accepted_ever

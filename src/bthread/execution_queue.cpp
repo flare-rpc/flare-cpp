@@ -75,9 +75,9 @@ void ExecutionQueueBase::start_execute(TaskNode* node) {
         // task is in the queue. Althouth there might be some useless for 
         // loops in _execute_tasks if this thread is scheduled out at this 
         // point, we think it's just fine.
-        _high_priority_tasks.fetch_add(1, butil::memory_order_relaxed);
+        _high_priority_tasks.fetch_add(1, std::memory_order_relaxed);
     }
-    TaskNode* const prev_head = _head.exchange(node, butil::memory_order_release);
+    TaskNode* const prev_head = _head.exchange(node, std::memory_order_release);
     if (prev_head != NULL) {
         node->next = prev_head;
         return;
@@ -95,7 +95,7 @@ void ExecutionQueueBase::start_execute(TaskNode* node) {
         TaskNode* tmp = node;
         // return if no more
         if (node->high_priority) {
-            _high_priority_tasks.fetch_sub(niterated, butil::memory_order_relaxed);
+            _high_priority_tasks.fetch_sub(niterated, std::memory_order_relaxed);
         }
         if (!_more_tasks(tmp, &tmp, !node->iterated)) {
             vars->execq_active_count << -1;
@@ -137,12 +137,12 @@ void* ExecutionQueueBase::_execute_tasks(void* arg) {
             m->return_task_node(saved_head);
         }
         int rc = 0;
-        if (m->_high_priority_tasks.load(butil::memory_order_relaxed) > 0) {
+        if (m->_high_priority_tasks.load(std::memory_order_relaxed) > 0) {
             int nexecuted = 0;
             // Don't care the return value
             rc = m->_execute(head, true, &nexecuted);
             m->_high_priority_tasks.fetch_sub(
-                    nexecuted, butil::memory_order_relaxed);
+                    nexecuted, std::memory_order_relaxed);
             if (nexecuted == 0) {
                 // Some high_priority tasks are not in queue
                 sched_yield();
@@ -172,7 +172,7 @@ void* ExecutionQueueBase::_execute_tasks(void* arg) {
         }
     }
     if (destroy_queue) {
-        CHECK(m->_head.load(butil::memory_order_relaxed) == NULL);
+        CHECK(m->_head.load(std::memory_order_relaxed) == NULL);
         CHECK(m->_stopped);
         // Add _join_butex by 2 to make it equal to the next version of the
         // ExecutionQueue from the same slot so that join with old id would
@@ -180,7 +180,7 @@ void* ExecutionQueueBase::_execute_tasks(void* arg) {
         // 
         // 1: release fence to make join sees the newst changes when it sees
         //    the newst _join_butex
-        m->_join_butex->fetch_add(2, butil::memory_order_release/*1*/);
+        m->_join_butex->fetch_add(2, std::memory_order_release/*1*/);
         butex_wake_all(m->_join_butex);
         vars->execq_count << -1;
         butil::return_resource(slot_of_id(m->_this_id));
@@ -221,7 +221,7 @@ int ExecutionQueueBase::join(uint64_t id) {
     }
     int expected = _version_of_id(id);
     // acquire fence makes this thread see changes before changing _join_butex.
-    while (expected == m->_join_butex->load(butil::memory_order_acquire)) {
+    while (expected == m->_join_butex->load(std::memory_order_acquire)) {
         if (butex_wait(m->_join_butex, expected, NULL) < 0 &&
             errno != EWOULDBLOCK && errno != EINTR) {
             return errno;
@@ -232,7 +232,7 @@ int ExecutionQueueBase::join(uint64_t id) {
 
 int ExecutionQueueBase::stop() {
     const uint32_t id_ver = _version_of_id(_this_id);
-    uint64_t vref = _versioned_ref.load(butil::memory_order_relaxed);
+    uint64_t vref = _versioned_ref.load(std::memory_order_relaxed);
     for (;;) {
         if (_version_of_vref(vref) != id_ver) {
             return EINVAL;
@@ -241,10 +241,10 @@ int ExecutionQueueBase::stop() {
         // retry on fail.
         if (_versioned_ref.compare_exchange_strong(
                     vref, _make_vref(id_ver + 1, _ref_of_vref(vref)),
-                    butil::memory_order_release,
-                    butil::memory_order_relaxed)) {
+                    std::memory_order_release,
+                    std::memory_order_relaxed)) {
             // Set _stopped to make lattern execute() fail immediately
-            _stopped.store(true, butil::memory_order_release);
+            _stopped.store(true, std::memory_order_release);
             // Deref additionally which is added at creation so that this
             // queue's reference will hit 0(recycle) when no one addresses it.
             _release_additional_reference();
@@ -296,7 +296,7 @@ ExecutionQueueBase::scoped_ptr_t ExecutionQueueBase::address(uint64_t id) {
         // acquire fence makes sure this thread sees latest changes before
         // _dereference()
         const uint64_t vref1 = m->_versioned_ref.fetch_add(
-            1, butil::memory_order_acquire);
+            1, std::memory_order_acquire);
         const uint32_t ver1 = _version_of_vref(vref1);
         if (ver1 == _version_of_id(id)) {
             ret.reset(m);
@@ -304,7 +304,7 @@ ExecutionQueueBase::scoped_ptr_t ExecutionQueueBase::address(uint64_t id) {
         }
 
         const uint64_t vref2 = m->_versioned_ref.fetch_sub(
-            1, butil::memory_order_release);
+            1, std::memory_order_release);
         const int32_t nref = _ref_of_vref(vref2);
         if (nref > 1) {
             return ret.Pass();
@@ -315,8 +315,8 @@ ExecutionQueueBase::scoped_ptr_t ExecutionQueueBase::address(uint64_t id) {
                     uint64_t expected_vref = vref2 - 1;
                     if (m->_versioned_ref.compare_exchange_strong(
                             expected_vref, _make_vref(ver2 + 1, 0),
-                            butil::memory_order_acquire,
-                            butil::memory_order_relaxed)) {
+                            std::memory_order_acquire,
+                            std::memory_order_relaxed)) {
                         m->_on_recycle();
                         // We don't return m immediatly when the reference count
                         // reaches 0 as there might be in processing tasks. Instead
@@ -353,17 +353,17 @@ int ExecutionQueueBase::create(uint64_t* id, const ExecutionQueueOptions* option
         m->_clear_func = clear_func;
         m->_meta = meta;
         m->_type_specific_function = type_specific_function;
-        CHECK(m->_head.load(butil::memory_order_relaxed) == NULL);
-        CHECK_EQ(0, m->_high_priority_tasks.load(butil::memory_order_relaxed));
+        CHECK(m->_head.load(std::memory_order_relaxed) == NULL);
+        CHECK_EQ(0, m->_high_priority_tasks.load(std::memory_order_relaxed));
         ExecutionQueueOptions opt;
         if (options != NULL) {
             opt = *options;   
         }
         m->_options = opt;
-        m->_stopped.store(false, butil::memory_order_relaxed);
+        m->_stopped.store(false, std::memory_order_relaxed);
         m->_this_id = make_id(
                 _version_of_vref(m->_versioned_ref.fetch_add(
-                                    1, butil::memory_order_release)), slot);
+                                    1, std::memory_order_release)), slot);
         *id = m->_this_id;
         get_execq_vars()->execq_count << 1;
         return 0;
@@ -373,7 +373,7 @@ int ExecutionQueueBase::create(uint64_t* id, const ExecutionQueueOptions* option
 
 inline bool TaskIteratorBase::should_break_for_high_priority_tasks() {
     if (!_high_priority && 
-            _q->_high_priority_tasks.load(butil::memory_order_relaxed) > 0) {
+            _q->_high_priority_tasks.load(std::memory_order_relaxed) > 0) {
         _should_break = true;
         return true;
     }

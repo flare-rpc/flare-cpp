@@ -60,7 +60,7 @@ public:
                       google::protobuf::Closure* done) {
         brpc::ClosureGuard done_guard(done);
         brpc::Controller* cntl = (brpc::Controller*)cntl_base;
-        count.fetch_add(1, butil::memory_order_relaxed);
+        count.fetch_add(1, std::memory_order_relaxed);
         EXPECT_EQ(EXP_REQUEST, request->message());
         EXPECT_TRUE(cntl->is_ssl());
 
@@ -72,7 +72,7 @@ public:
         }
     }
 
-    butil::atomic<int64_t> count;
+    std::atomic<int64_t> count;
 };
 
 class SSLTest : public ::testing::Test{

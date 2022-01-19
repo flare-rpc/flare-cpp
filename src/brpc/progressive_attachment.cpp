@@ -43,11 +43,11 @@ ProgressiveAttachment::ProgressiveAttachment(SocketUniquePtr& movable_httpsock,
 
 ProgressiveAttachment::~ProgressiveAttachment() {
     if (_httpsock) {
-        CHECK(_rpc_state.load(butil::memory_order_relaxed) != RPC_RUNNING);
+        CHECK(_rpc_state.load(std::memory_order_relaxed) != RPC_RUNNING);
         CHECK(_saved_buf.empty());
         if (!_before_http_1_1) {
             // note: _httpsock may already be failed.
-            if (_rpc_state.load(butil::memory_order_relaxed) == RPC_SUCCEED) {
+            if (_rpc_state.load(std::memory_order_relaxed) == RPC_SUCCEED) {
                 butil::IOBuf tmpbuf;
                 tmpbuf.append("0\r\n\r\n", 5);
                 Socket::WriteOptions wopt;
@@ -123,10 +123,10 @@ int ProgressiveAttachment::Write(const butil::IOBuf& data) {
         return 0;
     }
 
-    int rpc_state = _rpc_state.load(butil::memory_order_acquire);
+    int rpc_state = _rpc_state.load(std::memory_order_acquire);
     if (rpc_state == RPC_RUNNING) {
         std::unique_lock<butil::Mutex> mu(_mutex);
-        rpc_state = _rpc_state.load(butil::memory_order_acquire);
+        rpc_state = _rpc_state.load(std::memory_order_acquire);
         if (rpc_state == RPC_RUNNING) {
             if (_saved_buf.size() >= (size_t)FLAGS_socket_max_unwritten_bytes ||
                 _pause_from_mark_rpc_as_done) {
@@ -156,10 +156,10 @@ int ProgressiveAttachment::Write(const void* data, size_t n) {
             " of the chunk before calling ProgressiveAttachment.Write()";
         return 0;
     }
-    int rpc_state = _rpc_state.load(butil::memory_order_acquire);
+    int rpc_state = _rpc_state.load(std::memory_order_acquire);
     if (rpc_state == RPC_RUNNING) {
         std::unique_lock<butil::Mutex> mu(_mutex);
-        rpc_state = _rpc_state.load(butil::memory_order_relaxed);
+        rpc_state = _rpc_state.load(std::memory_order_relaxed);
         if (rpc_state == RPC_RUNNING) {
             if (_saved_buf.size() >= (size_t)FLAGS_socket_max_unwritten_bytes ||
                 _pause_from_mark_rpc_as_done) {
@@ -206,7 +206,7 @@ void ProgressiveAttachment::MarkRPCAsDone(bool rpc_failed) {
             tmp.swap(_saved_buf); // Clear _saved_buf outside lock.
             _pause_from_mark_rpc_as_done = false;
             _rpc_state.store((rpc_failed? RPC_FAILED: RPC_SUCCEED),
-                             butil::memory_order_release);
+                             std::memory_order_release);
             mu.unlock();
             return;
         }

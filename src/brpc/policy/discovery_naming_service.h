@@ -62,7 +62,7 @@ private:
 
 private:
     bthread_t _th;
-    butil::atomic<bool> _registered;
+    std::atomic<bool> _registered;
     DiscoveryRegisterParam _params;
     butil::EndPoint _current_discovery_server;
 };

@@ -62,7 +62,7 @@ const size_t MAX_ONCE_READ = 524288;
 ParseResult InputMessenger::CutInputMessage(
         Socket* m, size_t* index, bool read_eof) {
     const int preferred = m->preferred_index();
-    const int max_index = (int)_max_index.load(butil::memory_order_acquire);
+    const int max_index = (int)_max_index.load(std::memory_order_acquire);
     // Try preferred handler first. The preferred_index is set on last
     // selection or by client.
     if (preferred >= 0 && preferred <= max_index
@@ -225,7 +225,7 @@ void InputMessenger::OnNewMessages(Socket* m) {
         m->AddInputBytes(nr);
 
         // Avoid this socket to be closed due to idle_timeout_s
-        m->_last_readtime_us.store(received_us, butil::memory_order_relaxed);
+        m->_last_readtime_us.store(received_us, std::memory_order_relaxed);
         
         size_t last_size = m->_read_buf.length();
         int num_bthread_created = 0;
@@ -344,7 +344,7 @@ InputMessenger::InputMessenger(size_t capacity)
 InputMessenger::~InputMessenger() {
     delete[] _handlers;
     _handlers = NULL;        
-    _max_index.store(-1, butil::memory_order_relaxed);
+    _max_index.store(-1, std::memory_order_relaxed);
     _capacity = 0;
 }
 
@@ -387,8 +387,8 @@ int InputMessenger::AddHandler(const InputMessageHandler& handler) {
         CHECK(_handlers[index].process == handler.process);
         return -1;
     }
-    if (index > _max_index.load(butil::memory_order_relaxed)) {
-        _max_index.store(index, butil::memory_order_release);
+    if (index > _max_index.load(std::memory_order_relaxed)) {
+        _max_index.store(index, std::memory_order_release);
     }
     return 0;
 }
@@ -413,9 +413,9 @@ int InputMessenger::AddNonProtocolHandler(const InputMessageHandler& handler) {
         CHECK(false) << "AddHandler was invoked";
         return -1;
     }
-    const int index = _max_index.load(butil::memory_order_relaxed) + 1;
+    const int index = _max_index.load(std::memory_order_relaxed) + 1;
     _handlers[index] = handler;
-    _max_index.store(index, butil::memory_order_release);
+    _max_index.store(index, std::memory_order_release);
     return 0;
 }
 

@@ -50,7 +50,7 @@ private:
     butil::Mutex _mutex;
     unsigned _capacity;
     unsigned _size;
-    butil::atomic<unsigned> _ncreated;
+    std::atomic<unsigned> _ncreated;
     void** _pool;
     const DataFactory* _factory;
 };

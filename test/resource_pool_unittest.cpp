@@ -77,13 +77,13 @@ protected:
 TEST_F(ResourcePoolTest, atomic_array_init) {
     for (int i = 0; i < 2; ++i) {
         if (i == 0) {
-            butil::atomic<int> a[2];
+            std::atomic<int> a[2];
             a[0] = 1;
             // The folowing will cause compile error with gcc3.4.5 and the
             // reason is unknown
             // a[1] = 2;
         } else if (i == 2) {
-            butil::atomic<int> a[2];
+            std::atomic<int> a[2];
             ASSERT_EQ(0, a[0]);
             ASSERT_EQ(0, a[1]);
         }

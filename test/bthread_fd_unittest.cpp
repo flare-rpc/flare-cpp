@@ -39,7 +39,7 @@
 
 #ifndef NDEBUG
 namespace bthread {
-extern butil::atomic<int> break_nums;
+extern std::atomic<int> break_nums;
 extern TaskControl* global_task_control;
 int stop_and_join_epoll_threads();
 }

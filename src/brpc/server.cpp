@@ -104,7 +104,7 @@ const char* status_str(Server::Status s) {
     return "UNKNOWN_STATUS";
 }
 
-butil::static_atomic<int> g_running_server_count = BUTIL_STATIC_ATOMIC_INIT(0);
+flare::static_atomic<int> g_running_server_count = FLARE_STATIC_ATOMIC_INIT(0);
 
 // Following services may have security issues and are disabled by default.
 DEFINE_bool(enable_dir_service, false, "Enable /dir");
@@ -978,7 +978,7 @@ int Server::StartInternal(const butil::ip_t& ip,
         _status = RUNNING;
         time(&_last_start_time);
         GenerateVersionIfNeeded();
-        g_running_server_count.fetch_add(1, butil::memory_order_relaxed);
+        g_running_server_count.fetch_add(1, std::memory_order_relaxed);
 
         // Pass ownership of `sockfd' to `_am'
         if (_am->StartAccept(sockfd, _options.idle_timeout_sec,
@@ -1156,7 +1156,7 @@ int Server::Join() {
         _derivative_thread = INVALID_BTHREAD;
     }
 
-    g_running_server_count.fetch_sub(1, butil::memory_order_relaxed);
+    g_running_server_count.fetch_sub(1, std::memory_order_relaxed);
     _status = READY;
     return 0;
 }

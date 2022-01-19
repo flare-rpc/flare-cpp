@@ -141,7 +141,7 @@ DiscoveryClient::DiscoveryClient()
     , _registered(false) {}
 
 DiscoveryClient::~DiscoveryClient() {
-    if (_registered.load(butil::memory_order_acquire)) {
+    if (_registered.load(std::memory_order_acquire)) {
         bthread_stop(_th);
         bthread_join(_th, NULL);
         DoCancel();
@@ -241,8 +241,8 @@ void* DiscoveryClient::PeriodicRenew(void* arg) {
 }
 
 int DiscoveryClient::Register(const DiscoveryRegisterParam& params) {
-    if (_registered.load(butil::memory_order_relaxed) ||
-            _registered.exchange(true, butil::memory_order_release)) {
+    if (_registered.load(std::memory_order_relaxed) ||
+            _registered.exchange(true, std::memory_order_release)) {
         return 0;
     }
     if (!params.IsValid()) {

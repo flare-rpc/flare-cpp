@@ -53,7 +53,7 @@ struct BAIDU_CACHELINE_ALIGNMENT TimerThread::Task {
     // initial_version + 1: running
     // initial_version + 2: removed (also the version of next Task reused
     //                      this struct)
-    butil::atomic<uint32_t> version;
+    std::atomic<uint32_t> version;
 
     Task() : version(2/*skip 0*/) {}
 
@@ -193,9 +193,9 @@ TimerThread::Bucket::schedule(void (*fn)(void*), void* arg,
     task->fn = fn;
     task->arg = arg;
     task->run_time = butil::timespec_to_microseconds(abstime);
-    uint32_t version = task->version.load(butil::memory_order_relaxed);
+    uint32_t version = task->version.load(std::memory_order_relaxed);
     if (version == 0) {  // skip 0.
-        task->version.fetch_add(2, butil::memory_order_relaxed);
+        task->version.fetch_add(2, std::memory_order_relaxed);
         version = 2;
     }
     const TaskId id = make_task_id(slot_id, version);
@@ -216,7 +216,7 @@ TimerThread::Bucket::schedule(void (*fn)(void*), void* arg,
 
 TimerThread::TaskId TimerThread::schedule(
     void (*fn)(void*), void* arg, const timespec& abstime) {
-    if (_stop.load(butil::memory_order_relaxed) || !_started) {
+    if (_stop.load(std::memory_order_relaxed) || !_started) {
         // Not add tasks when TimerThread is about to stop.
         return INVALID_TASK_ID;
     }
@@ -265,7 +265,7 @@ int TimerThread::unschedule(TaskId task_id) {
     // to make sure that we see all changes brought by fn(arg).
     if (task->version.compare_exchange_strong(
             expected_version, id_version + 2,
-            butil::memory_order_acquire)) {
+            std::memory_order_acquire)) {
         return 0;
     }
     return (expected_version == id_version + 1) ? 1 : -1;
@@ -276,11 +276,11 @@ bool TimerThread::Task::run_and_delete() {
     uint32_t expected_version = id_version;
     // This CAS is rarely contended, should be fast.
     if (version.compare_exchange_strong(
-            expected_version, id_version + 1, butil::memory_order_relaxed)) {
+            expected_version, id_version + 1, std::memory_order_relaxed)) {
         fn(arg);
         // The release fence is paired with acquire fence in
         // TimerThread::unschedule to make changes of fn(arg) visible.
-        version.store(id_version + 2, butil::memory_order_release);
+        version.store(id_version + 2, std::memory_order_release);
         butil::return_resource(slot_of_task_id(task_id));
         return true;
     } else if (expected_version == id_version + 2) {
@@ -297,8 +297,8 @@ bool TimerThread::Task::run_and_delete() {
 
 bool TimerThread::Task::try_delete() {
     const uint32_t id_version = version_of_task_id(task_id);
-    if (version.load(butil::memory_order_relaxed) != id_version) {
-        CHECK_EQ(version.load(butil::memory_order_relaxed), id_version + 2);
+    if (version.load(std::memory_order_relaxed) != id_version) {
+        CHECK_EQ(version.load(std::memory_order_relaxed), id_version + 2);
         butil::return_resource(slot_of_task_id(task_id));
         return true;
     }
@@ -339,7 +339,7 @@ void TimerThread::run() {
         busy_seconds_second.expose_as(_options.bvar_prefix, "usage");
     }
     
-    while (!_stop.load(butil::memory_order_relaxed)) {
+    while (!_stop.load(std::memory_order_relaxed)) {
         // Clear _nearest_run_time before consuming tasks from buckets.
         // This helps us to be aware of earliest task of the new tasks before we
         // would run the consumed tasks.
@@ -435,7 +435,7 @@ void TimerThread::run() {
 }
 
 void TimerThread::stop_and_join() {
-    _stop.store(true, butil::memory_order_relaxed);
+    _stop.store(true, std::memory_order_relaxed);
     if (_started) {
         {
             BAIDU_SCOPED_LOCK(_mutex);

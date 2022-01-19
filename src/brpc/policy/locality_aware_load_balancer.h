@@ -108,7 +108,7 @@ private:
 
     struct ServerInfo {
         SocketId server_id;
-        butil::atomic<int64_t>* left;
+        std::atomic<int64_t>* left;
         Weight* weight;
     };
     
@@ -138,13 +138,13 @@ private:
     static bool RemoveAll(Servers& bg, const Servers& fg);
 
     // Add a entry to _left_weights.
-    butil::atomic<int64_t>* PushLeft() {
+    std::atomic<int64_t>* PushLeft() {
         _left_weights.push_back(0);
-        return (butil::atomic<int64_t>*)&_left_weights.back();
+        return (std::atomic<int64_t>*)&_left_weights.back();
     }
     void PopLeft() { _left_weights.pop_back(); }
 
-    butil::atomic<int64_t> _total;
+    std::atomic<int64_t> _total;
     butil::DoublyBufferedData<Servers> _db_servers;
     std::deque<int64_t> _left_weights;
     ServerId2SocketIdMapper _id_mapper;
@@ -156,7 +156,7 @@ inline void LocalityAwareLoadBalancer::Servers::UpdateParentWeights(
         const size_t parent_index = (index - 1) >> 1;
         if ((parent_index << 1) + 1 == index) {  // left child
             weight_tree[parent_index].left->fetch_add(
-                diff, butil::memory_order_relaxed);
+                diff, std::memory_order_relaxed);
         }
         index = parent_index;
     }

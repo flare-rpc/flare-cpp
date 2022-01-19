@@ -67,7 +67,7 @@ friend class Server;
     void SetConcurrencyLimiter(ConcurrencyLimiter* cl);
 
     std::unique_ptr<ConcurrencyLimiter> _cl;
-    butil::atomic<int> _nconcurrency;
+    std::atomic<int> _nconcurrency;
     bvar::Adder<int64_t>  _nerror_bvar;
     bvar::LatencyRecorder _latency_rec;
     bvar::PassiveStatus<int>  _nconcurrency_bvar;
@@ -90,7 +90,7 @@ private:
 };
 
 inline bool MethodStatus::OnRequested(int* rejected_cc) {
-    const int cc = _nconcurrency.fetch_add(1, butil::memory_order_relaxed) + 1;
+    const int cc = _nconcurrency.fetch_add(1, std::memory_order_relaxed) + 1;
     if (NULL == _cl || _cl->OnRequested(cc)) {
         return true;
     } 
@@ -101,7 +101,7 @@ inline bool MethodStatus::OnRequested(int* rejected_cc) {
 }
 
 inline void MethodStatus::OnResponded(int error_code, int64_t latency) {
-    _nconcurrency.fetch_sub(1, butil::memory_order_relaxed);
+    _nconcurrency.fetch_sub(1, std::memory_order_relaxed);
     if (0 == error_code) {
         _latency_rec << latency;
     } else {

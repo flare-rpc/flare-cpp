@@ -23,7 +23,7 @@
 #include <execinfo.h>
 #include <dlfcn.h>                               // dlsym
 #include <fcntl.h>                               // O_RDONLY
-#include "butil/atomicops.h"
+#include "butil/static_atomic.h"
 #include "bvar/bvar.h"
 #include "bvar/collector.h"
 #include "butil/macros.h"                         // BAIDU_CASSERT
@@ -274,7 +274,7 @@ static pthread_mutex_t g_cp_mutex = PTHREAD_MUTEX_INITIALIZER;
 const size_t MUTEX_MAP_SIZE = 1024;
 BAIDU_CASSERT((MUTEX_MAP_SIZE & (MUTEX_MAP_SIZE - 1)) == 0, must_be_power_of_2);
 struct BAIDU_CACHELINE_ALIGNMENT MutexMapEntry {
-    butil::static_atomic<uint64_t> versioned_mutex;
+    flare::static_atomic<uint64_t> versioned_mutex;
     bthread_contention_site_t csite;
 };
 static MutexMapEntry g_mutex_map[MUTEX_MAP_SIZE] = {}; // zero-initialize
@@ -298,9 +298,9 @@ void SampledContention::destroy() {
 }
 
 // Remember the conflict hashes for troubleshooting, should be 0 at most of time.
-static butil::static_atomic<int64_t> g_nconflicthash = BUTIL_STATIC_ATOMIC_INIT(0);
+static flare::static_atomic<int64_t> g_nconflicthash = FLARE_STATIC_ATOMIC_INIT(0);
 static int64_t get_nconflicthash(void*) {
-    return g_nconflicthash.load(butil::memory_order_relaxed);
+    return g_nconflicthash.load(std::memory_order_relaxed);
 }
 
 // Start profiling contention.
@@ -466,26 +466,26 @@ const int PTR_BITS = 48;
 inline bthread_contention_site_t*
 add_pthread_contention_site(pthread_mutex_t* mutex) {
     MutexMapEntry& entry = g_mutex_map[hash_mutex_ptr(mutex) & (MUTEX_MAP_SIZE - 1)];
-    butil::static_atomic<uint64_t>& m = entry.versioned_mutex;
-    uint64_t expected = m.load(butil::memory_order_relaxed);
+    flare::static_atomic<uint64_t>& m = entry.versioned_mutex;
+    uint64_t expected = m.load(std::memory_order_relaxed);
     // If the entry is not used or used by previous profiler, try to CAS it.
     if (expected == 0 ||
         (expected >> PTR_BITS) != (g_cp_version & ((1 << (64 - PTR_BITS)) - 1))) {
         uint64_t desired = (g_cp_version << PTR_BITS) | (uint64_t)mutex;
         if (m.compare_exchange_strong(
-                expected, desired, butil::memory_order_acquire)) {
+                expected, desired, std::memory_order_acquire)) {
             return &entry.csite;
         }
     }
-    g_nconflicthash.fetch_add(1, butil::memory_order_relaxed);
+    g_nconflicthash.fetch_add(1, std::memory_order_relaxed);
     return NULL;
 }
 
 inline bool remove_pthread_contention_site(
     pthread_mutex_t* mutex, bthread_contention_site_t* saved_csite) {
     MutexMapEntry& entry = g_mutex_map[hash_mutex_ptr(mutex) & (MUTEX_MAP_SIZE - 1)];
-    butil::static_atomic<uint64_t>& m = entry.versioned_mutex;
-    if ((m.load(butil::memory_order_relaxed) & ((((uint64_t)1) << PTR_BITS) - 1))
+    flare::static_atomic<uint64_t>& m = entry.versioned_mutex;
+    if ((m.load(std::memory_order_relaxed) & ((((uint64_t)1) << PTR_BITS) - 1))
         != (uint64_t)mutex) {
         // This branch should be the most common case since most locks are
         // neither contended nor sampled. We have one memory indirection and
@@ -498,7 +498,7 @@ inline bool remove_pthread_contention_site(
     // makes profiling result less accurate.
     *saved_csite = entry.csite;
     make_contention_site_invalid(&entry.csite);
-    m.store(0, butil::memory_order_release);
+    m.store(0, std::memory_order_release);
     return true;
 }
 
@@ -613,8 +613,8 @@ BUTIL_FORCE_INLINE int pthread_mutex_unlock_impl(pthread_mutex_t* mutex) {
 
 // Implement bthread_mutex_t related functions
 struct MutexInternal {
-    butil::static_atomic<unsigned char> locked;
-    butil::static_atomic<unsigned char> contended;
+    flare::static_atomic<unsigned char> locked;
+    flare::static_atomic<unsigned char> contended;
     unsigned short padding;
 };
 
@@ -629,7 +629,7 @@ BAIDU_CASSERT(sizeof(unsigned) == sizeof(MutexInternal),
               sizeof_mutex_internal_must_equal_unsigned);
 
 inline int mutex_lock_contended(bthread_mutex_t* m) {
-    butil::atomic<unsigned>* whole = (butil::atomic<unsigned>*)m->butex;
+    std::atomic<unsigned>* whole = (std::atomic<unsigned>*)m->butex;
     while (whole->exchange(BTHREAD_MUTEX_CONTENDED) & BTHREAD_MUTEX_LOCKED) {
         if (bthread::butex_wait(whole, BTHREAD_MUTEX_CONTENDED, NULL) < 0 &&
             errno != EWOULDBLOCK && errno != EINTR/*note*/) {
@@ -643,7 +643,7 @@ inline int mutex_lock_contended(bthread_mutex_t* m) {
 
 inline int mutex_timedlock_contended(
     bthread_mutex_t* m, const struct timespec* __restrict abstime) {
-    butil::atomic<unsigned>* whole = (butil::atomic<unsigned>*)m->butex;
+    std::atomic<unsigned>* whole = (std::atomic<unsigned>*)m->butex;
     while (whole->exchange(BTHREAD_MUTEX_CONTENDED) & BTHREAD_MUTEX_LOCKED) {
         if (bthread::butex_wait(whole, BTHREAD_MUTEX_CONTENDED, abstime) < 0 &&
             errno != EWOULDBLOCK && errno != EINTR/*note*/) {
@@ -659,7 +659,7 @@ inline int mutex_timedlock_contended(
 namespace internal {
 
 int FastPthreadMutex::lock_contended() {
-    butil::atomic<unsigned>* whole = (butil::atomic<unsigned>*)&_futex;
+    std::atomic<unsigned>* whole = (std::atomic<unsigned>*)&_futex;
     while (whole->exchange(BTHREAD_MUTEX_CONTENDED) & BTHREAD_MUTEX_LOCKED) {
         if (futex_wait_private(whole, BTHREAD_MUTEX_CONTENDED, NULL) < 0
             && errno != EWOULDBLOCK) {
@@ -671,19 +671,19 @@ int FastPthreadMutex::lock_contended() {
 
 void FastPthreadMutex::lock() {
     bthread::MutexInternal* split = (bthread::MutexInternal*)&_futex;
-    if (split->locked.exchange(1, butil::memory_order_acquire)) {
+    if (split->locked.exchange(1, std::memory_order_acquire)) {
         (void)lock_contended();
     }
 }
 
 bool FastPthreadMutex::try_lock() {
     bthread::MutexInternal* split = (bthread::MutexInternal*)&_futex;
-    return !split->locked.exchange(1, butil::memory_order_acquire);
+    return !split->locked.exchange(1, std::memory_order_acquire);
 }
 
 void FastPthreadMutex::unlock() {
-    butil::atomic<unsigned>* whole = (butil::atomic<unsigned>*)&_futex;
-    const unsigned prev = whole->exchange(0, butil::memory_order_release);
+    std::atomic<unsigned>* whole = (std::atomic<unsigned>*)&_futex;
+    const unsigned prev = whole->exchange(0, std::memory_order_release);
     // CAUTION: the mutex may be destroyed, check comments before butex_create
     if (prev != BTHREAD_MUTEX_LOCKED) {
         futex_wake_private(whole, 1);
@@ -715,7 +715,7 @@ int bthread_mutex_destroy(bthread_mutex_t* m) {
 
 int bthread_mutex_trylock(bthread_mutex_t* m) {
     bthread::MutexInternal* split = (bthread::MutexInternal*)m->butex;
-    if (!split->locked.exchange(1, butil::memory_order_acquire)) {
+    if (!split->locked.exchange(1, std::memory_order_acquire)) {
         return 0;
     }
     return EBUSY;
@@ -727,7 +727,7 @@ int bthread_mutex_lock_contended(bthread_mutex_t* m) {
 
 int bthread_mutex_lock(bthread_mutex_t* m) {
     bthread::MutexInternal* split = (bthread::MutexInternal*)m->butex;
-    if (!split->locked.exchange(1, butil::memory_order_acquire)) {
+    if (!split->locked.exchange(1, std::memory_order_acquire)) {
         return 0;
     }
     // Don't sample when contention profiler is off.
@@ -754,7 +754,7 @@ int bthread_mutex_lock(bthread_mutex_t* m) {
 int bthread_mutex_timedlock(bthread_mutex_t* __restrict m,
                             const struct timespec* __restrict abstime) {
     bthread::MutexInternal* split = (bthread::MutexInternal*)m->butex;
-    if (!split->locked.exchange(1, butil::memory_order_acquire)) {
+    if (!split->locked.exchange(1, std::memory_order_acquire)) {
         return 0;
     }
     // Don't sample when contention profiler is off.
@@ -784,13 +784,13 @@ int bthread_mutex_timedlock(bthread_mutex_t* __restrict m,
 }
 
 int bthread_mutex_unlock(bthread_mutex_t* m) {
-    butil::atomic<unsigned>* whole = (butil::atomic<unsigned>*)m->butex;
+    std::atomic<unsigned>* whole = (std::atomic<unsigned>*)m->butex;
     bthread_contention_site_t saved_csite = {0, 0};
     if (bthread::is_contention_site_valid(m->csite)) {
         saved_csite = m->csite;
         bthread::make_contention_site_invalid(&m->csite);
     }
-    const unsigned prev = whole->exchange(0, butil::memory_order_release);
+    const unsigned prev = whole->exchange(0, std::memory_order_release);
     // CAUTION: the mutex may be destroyed, check comments before butex_create
     if (prev == BTHREAD_MUTEX_LOCKED) {
         return 0;

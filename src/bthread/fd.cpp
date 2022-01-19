@@ -26,7 +26,7 @@
 #include <sys/types.h>                           // struct kevent
 #include <sys/event.h>                           // kevent(), kqueue()
 #endif
-#include "butil/atomicops.h"
+#include "butil/static_atomic.h"
 #include "butil/time.h"
 #include "butil/fd_utility.h"                     // make_non_blocking
 #include "butil/logging.h"
@@ -44,46 +44,46 @@ extern BAIDU_THREAD_LOCAL TaskGroup* tls_task_group;
 template <typename T, size_t NBLOCK, size_t BLOCK_SIZE>
 class LazyArray {
     struct Block {
-        butil::atomic<T> items[BLOCK_SIZE];
+        std::atomic<T> items[BLOCK_SIZE];
     };
 
 public:
     LazyArray() {
-        memset(static_cast<void*>(_blocks), 0, sizeof(butil::atomic<Block*>) * NBLOCK);
+        memset(static_cast<void*>(_blocks), 0, sizeof(std::atomic<Block*>) * NBLOCK);
     }
 
-    butil::atomic<T>* get_or_new(size_t index) {
+    std::atomic<T>* get_or_new(size_t index) {
         const size_t block_index = index / BLOCK_SIZE;
         if (block_index >= NBLOCK) {
             return NULL;
         }
         const size_t block_offset = index - block_index * BLOCK_SIZE;
-        Block* b = _blocks[block_index].load(butil::memory_order_consume);
+        Block* b = _blocks[block_index].load(std::memory_order_consume);
         if (b != NULL) {
             return b->items + block_offset;
         }
         b = new (std::nothrow) Block;
         if (NULL == b) {
-            b = _blocks[block_index].load(butil::memory_order_consume);
+            b = _blocks[block_index].load(std::memory_order_consume);
             return (b ? b->items + block_offset : NULL);
         }
         // Set items to default value of T.
         std::fill(b->items, b->items + BLOCK_SIZE, T());
         Block* expected = NULL;
         if (_blocks[block_index].compare_exchange_strong(
-                expected, b, butil::memory_order_release,
-                butil::memory_order_consume)) {
+                expected, b, std::memory_order_release,
+                std::memory_order_consume)) {
             return b->items + block_offset;
         }
         delete b;
         return expected->items + block_offset;
     }
 
-    butil::atomic<T>* get(size_t index) const {
+    std::atomic<T>* get(size_t index) const {
         const size_t block_index = index / BLOCK_SIZE;
         if (__builtin_expect(block_index < NBLOCK, 1)) {
             const size_t block_offset = index - block_index * BLOCK_SIZE;
-            Block* const b = _blocks[block_index].load(butil::memory_order_consume);
+            Block* const b = _blocks[block_index].load(std::memory_order_consume);
             if (__builtin_expect(b != NULL, 1)) {
                 return b->items + block_offset;
             }
@@ -92,15 +92,15 @@ public:
     }
 
 private:
-    butil::atomic<Block*> _blocks[NBLOCK];
+    std::atomic<Block*> _blocks[NBLOCK];
 };
 
-typedef butil::atomic<int> EpollButex;
+typedef std::atomic<int> EpollButex;
 
 static EpollButex* const CLOSING_GUARD = (EpollButex*)(intptr_t)-1L;
 
 #ifndef NDEBUG
-butil::static_atomic<int> break_nums = BUTIL_STATIC_ATOMIC_INIT(0);
+flare::static_atomic<int> break_nums = FLARE_STATIC_ATOMIC_INIT(0);
 #endif
 
 // Able to address 67108864 file descriptors, should be enough.
@@ -197,23 +197,23 @@ public:
     }
 
     int fd_wait(int fd, unsigned events, const timespec* abstime) {
-        butil::atomic<EpollButex*>* p = fd_butexes.get_or_new(fd);
+        std::atomic<EpollButex*>* p = fd_butexes.get_or_new(fd);
         if (NULL == p) {
             errno = ENOMEM;
             return -1;
         }
 
-        EpollButex* butex = p->load(butil::memory_order_consume);
+        EpollButex* butex = p->load(std::memory_order_consume);
         if (NULL == butex) {
             // It is rare to wait on one file descriptor from multiple threads
             // simultaneously. Creating singleton by optimistic locking here
             // saves mutexes for each butex.
             butex = butex_create_checked<EpollButex>();
-            butex->store(0, butil::memory_order_relaxed);
+            butex->store(0, std::memory_order_relaxed);
             EpollButex* expected = NULL;
             if (!p->compare_exchange_strong(expected, butex,
-                                            butil::memory_order_release,
-                                            butil::memory_order_consume)) {
+                                            std::memory_order_release,
+                                            std::memory_order_consume)) {
                 butex_destroy(butex);
                 butex = expected;
             }
@@ -223,12 +223,12 @@ public:
             if (sched_yield() < 0) {
                 return -1;
             }
-            butex = p->load(butil::memory_order_consume);
+            butex = p->load(std::memory_order_consume);
         }
         // Save value of butex before adding to epoll because the butex may
         // be changed before butex_wait. No memory fence because EPOLL_CTL_MOD
         // and EPOLL_CTL_ADD shall have release fence.
-        const int expected_val = butex->load(butil::memory_order_relaxed);
+        const int expected_val = butex->load(std::memory_order_relaxed);
 
 #if defined(OS_LINUX)
 # ifdef BAIDU_KERNEL_FIXED_EPOLLONESHOT_BUG
@@ -272,20 +272,20 @@ public:
             errno = EBADF;
             return -1;
         }
-        butil::atomic<EpollButex*>* pbutex = bthread::fd_butexes.get(fd);
+        std::atomic<EpollButex*>* pbutex = bthread::fd_butexes.get(fd);
         if (NULL == pbutex) {
             // Did not call bthread_fd functions, close directly.
             return close(fd);
         }
         EpollButex* butex = pbutex->exchange(
-            CLOSING_GUARD, butil::memory_order_relaxed);
+            CLOSING_GUARD, std::memory_order_relaxed);
         if (butex == CLOSING_GUARD) {
             // concurrent double close detected.
             errno = EBADF;
             return -1;
         }
         if (butex != NULL) {
-            butex->fetch_add(1, butil::memory_order_relaxed);
+            butex->fetch_add(1, std::memory_order_relaxed);
             butex_wake_all(butex);
         }
 #if defined(OS_LINUX)
@@ -298,7 +298,7 @@ public:
         kevent(_epfd, &evt, 1, NULL, 0, NULL);
 #endif
         const int rc = close(fd);
-        pbutex->exchange(butex, butil::memory_order_relaxed);
+        pbutex->exchange(butex, std::memory_order_relaxed);
         return rc;
     }
 
@@ -344,7 +344,7 @@ private:
             if (n < 0) {
                 if (errno == EINTR) {
 #ifndef NDEBUG
-                    break_nums.fetch_add(1, butil::memory_order_relaxed);
+                    break_nums.fetch_add(1, std::memory_order_relaxed);
                     int* p = &errno;
                     const char* b = berror();
                     const char* b2 = berror(errno);
@@ -370,15 +370,15 @@ private:
 # ifdef BAIDU_KERNEL_FIXED_EPOLLONESHOT_BUG
                 EpollButex* butex = static_cast<EpollButex*>(e[i].data.ptr);
 # else
-                butil::atomic<EpollButex*>* pbutex = fd_butexes.get(e[i].data.fd);
+                std::atomic<EpollButex*>* pbutex = fd_butexes.get(e[i].data.fd);
                 EpollButex* butex = pbutex ?
-                    pbutex->load(butil::memory_order_consume) : NULL;
+                    pbutex->load(std::memory_order_consume) : NULL;
 # endif
 #elif defined(OS_MACOSX)
                 EpollButex* butex = static_cast<EpollButex*>(e[i].udata);
 #endif
                 if (butex != NULL && butex != CLOSING_GUARD) {
-                    butex->fetch_add(1, butil::memory_order_relaxed);
+                    butex->fetch_add(1, std::memory_order_relaxed);
                     butex_wake_all(butex);
                 }
             }

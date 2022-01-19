@@ -22,7 +22,7 @@
 #ifndef BTHREAD_PARKING_LOT_H
 #define BTHREAD_PARKING_LOT_H
 
-#include "butil/atomicops.h"
+#include "butil/static_atomic.h"
 #include "bthread/sys_futex.h"
 
 namespace bthread {
@@ -45,13 +45,13 @@ public:
     // Wake up at most `num_task' workers.
     // Returns #workers woken up.
     int signal(int num_task) {
-        _pending_signal.fetch_add((num_task << 1), butil::memory_order_release);
+        _pending_signal.fetch_add((num_task << 1), std::memory_order_release);
         return futex_wake_private(&_pending_signal, num_task);
     }
 
     // Get a state for later wait().
     State get_state() {
-        return _pending_signal.load(butil::memory_order_acquire);
+        return _pending_signal.load(std::memory_order_acquire);
     }
 
     // Wait for tasks.
@@ -67,7 +67,7 @@ public:
     }
 private:
     // higher 31 bits for signalling, LSB for stopping.
-    butil::atomic<int> _pending_signal;
+    std::atomic<int> _pending_signal;
 };
 
 }  // namespace bthread

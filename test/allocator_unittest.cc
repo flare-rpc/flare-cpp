@@ -6,7 +6,7 @@
 #include <stdlib.h>
 #include <algorithm>   // for min()
 
-#include "butil/atomicops.h"
+#include "butil/static_atomic.h"
 #include <gtest/gtest.h>
 
 // Number of bits in a size_t.

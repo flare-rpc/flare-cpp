@@ -202,7 +202,7 @@ private:
         return NULL;
     }
 
-    butil::atomic<State> _state;
+    std::atomic<State> _state;
     bthread_t _play_thread;
     int64_t _sleep_ms;
 };

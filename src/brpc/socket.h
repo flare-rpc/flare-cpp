@@ -22,7 +22,7 @@
 #include <iostream>                            // std::ostream
 #include <deque>                               // std::deque
 #include <set>                                 // std::set
-#include "butil/atomicops.h"                    // butil::atomic
+#include "butil/static_atomic.h"                    // std::atomic
 #include "bthread/types.h"                      // bthread_id_t
 #include "butil/iobuf.h"                        // butil::IOBuf, IOPortal
 #include "butil/macros.h"                       // DISALLOW_COPY_AND_ASSIGN
@@ -274,7 +274,7 @@ public:
     int Write(SocketMessagePtr<>& msg, const WriteOptions* options = NULL);
 
     // The file descriptor
-    int fd() const { return _fd.load(butil::memory_order_relaxed); }
+    int fd() const { return _fd.load(std::memory_order_relaxed); }
 
     // ip/port of the local end of the connection
     butil::EndPoint local_side() const { return _local_side; }
@@ -301,7 +301,7 @@ public:
     void reset_parsing_context(Destroyable*);
     Destroyable* release_parsing_context();
     Destroyable* parsing_context() const
-    { return _parsing_context.load(butil::memory_order_consume); }
+    { return _parsing_context.load(std::memory_order_consume); }
     // Try to set _parsing_context to *ctx when _parsing_context is NULL.
     // If _parsing_context is NULL, the set is successful and true is returned.
     // Otherwise, *ctx is Destroy()-ed and replaced with the value of
@@ -356,7 +356,7 @@ public:
     bool Failed() const;
 
     bool DidReleaseAdditionalRereference() const
-    { return _recycle_flag.load(butil::memory_order_relaxed); }
+    { return _recycle_flag.load(std::memory_order_relaxed); }
 
     // Notify `id' object (by calling bthread_id_error) when this Socket
     // has been `SetFailed'. If it already has, notify `id' immediately
@@ -516,8 +516,8 @@ public:
     // Last cpuwide-time at when this socket was read or write.
     int64_t last_active_time_us() const {
         return std::max(
-            _last_readtime_us.load(butil::memory_order_relaxed),
-            _last_writetime_us.load(butil::memory_order_relaxed));
+            _last_readtime_us.load(std::memory_order_relaxed),
+            _last_writetime_us.load(std::memory_order_relaxed));
     }
 
     // A brief description of this socket, consistent with os << *this
@@ -670,25 +670,25 @@ private:
     //   also the version encoded in SocketId.
     // * Failed version: = created version + 1, SetFailed()-ed but returned.
     // * Other versions: the socket is already recycled.
-    butil::atomic<uint64_t> _versioned_ref;
+    std::atomic<uint64_t> _versioned_ref;
 
     // In/Out bytes/messages, SocketPool etc
     // _shared_part is shared by a main socket and all its pooled sockets.
     // Can't use intrusive_ptr because the creation is based on optimistic
     // locking and relies on atomic CAS. We manage references manually.
-    butil::atomic<SharedPart*> _shared_part;
+    std::atomic<SharedPart*> _shared_part;
 
     // [ Set in dispatcher ]
     // To keep the callback in at most one bthread at any time. Read comments
     // about ProcessEvent in socket.cpp to understand the tricks.
-    butil::atomic<int> _nevent;
+    std::atomic<int> _nevent;
 
     // May be set by Acceptor to share keytables between reading threads
     // on sockets created by the Acceptor.
     bthread_keytable_pool_t* _keytable_pool;
 
     // [ Set in ResetFileDescriptor ]
-    butil::atomic<int> _fd;  // -1 when not connected.
+    std::atomic<int> _fd;  // -1 when not connected.
     int _tos;                // Type of service which is actually only 8bits.
     int64_t _reset_fd_real_us; // When _fd was reset, in microseconds.
 
@@ -734,10 +734,10 @@ private:
     butil::IOPortal _read_buf;
 
     // Set with cpuwide_time_us() at last read operation
-    butil::atomic<int64_t> _last_readtime_us;
+    std::atomic<int64_t> _last_readtime_us;
 
     // Saved context for parsing, reset before trying other protocols.
-    butil::atomic<Destroyable*> _parsing_context;
+    std::atomic<Destroyable*> _parsing_context;
 
     // Saving the correlation_id of RPC on protocols that cannot put
     // correlation_id on-wire and do not send multiple requests on one
@@ -752,7 +752,7 @@ private:
     // +-------+------------+
     // 1-bit flag to ensure `SetEOF' to be called only once
     // 31-bit counter of requests that are currently being processed
-    butil::atomic<uint32_t> _ninprocess;
+    std::atomic<uint32_t> _ninprocess;
 
     // +---32 bit---+---32 bit---+
     // |  auth flag | auth error |
@@ -761,7 +761,7 @@ private:
     // 0 - not authenticated yet
     // 1 - authentication completed (whether it succeeded or not
     //     depends on `auth error')
-    butil::atomic<uint64_t> _auth_flag_error;
+    std::atomic<uint64_t> _auth_flag_error;
     bthread_id_t _auth_id;
 
     // Stores authentication result/context of this socket. This only
@@ -774,7 +774,7 @@ private:
 
     // Pass from controller, for progressive reading.
     ConnectionType _connection_type_for_progressive_read;
-    butil::atomic<bool> _controller_released_socket;
+    std::atomic<bool> _controller_released_socket;
 
     // True if the socket is too full to write.
     volatile bool _overcrowded;
@@ -782,11 +782,11 @@ private:
     bool _fail_me_at_server_stop;
 
     // Set by SetLogOff
-    butil::atomic<bool> _logoff_flag;
+    std::atomic<bool> _logoff_flag;
 
     // Flag used to mark whether additional reference has been decreased
     // by either `SetFailed' or `SetRecycle'
-    butil::atomic<bool> _recycle_flag;
+    std::atomic<bool> _recycle_flag;
 
     // Concrete error information from SetFailed()
     // Accesses to these 2 fields(especially _error_text) must be protected
@@ -794,7 +794,7 @@ private:
     int _error_code;
     std::string _error_text;
 
-    butil::atomic<SocketId> _agent_socket_id;
+    std::atomic<SocketId> _agent_socket_id;
 
     butil::Mutex _pipeline_mutex;
     std::deque<PipelinedInfo>* _pipeline_q;
@@ -804,20 +804,20 @@ private:
     bthread_id_list_t _id_wait_list;
 
     // Set with cpuwide_time_us() at last write operation
-    butil::atomic<int64_t> _last_writetime_us;
+    std::atomic<int64_t> _last_writetime_us;
     // Queued but written
-    butil::atomic<int64_t> _unwritten_bytes;
+    std::atomic<int64_t> _unwritten_bytes;
 
     // Butex to wait for EPOLLOUT event
-    butil::atomic<int>* _epollout_butex;
+    std::atomic<int>* _epollout_butex;
 
     // Storing data that are not flushed into `fd' yet.
-    butil::atomic<WriteRequest*> _write_head;
+    std::atomic<WriteRequest*> _write_head;
 
     butil::Mutex _stream_mutex;
     std::set<StreamId> *_stream_set;
 
-    butil::atomic<int64_t> _ninflight_app_health_check;
+    std::atomic<int64_t> _ninflight_app_health_check;
 };
 
 } // namespace brpc

@@ -73,12 +73,12 @@ private:
     double _explore_ratio;
   
     // modified per sample.
-    butil::atomic<int64_t> BAIDU_CACHELINE_ALIGNMENT _last_sampling_time_us;
+    std::atomic<int64_t> BAIDU_CACHELINE_ALIGNMENT _last_sampling_time_us;
     butil::Mutex _sw_mutex;
     SampleWindow _sw;
 
     // modified per request.
-    butil::atomic<int32_t> BAIDU_CACHELINE_ALIGNMENT _total_succ_req;
+    std::atomic<int32_t> BAIDU_CACHELINE_ALIGNMENT _total_succ_req;
 };
 
 }  // namespace policy

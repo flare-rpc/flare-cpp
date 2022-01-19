@@ -75,7 +75,7 @@ class NamingServiceThread : public SharedObject, public Describable {
     private:
         NamingServiceThread* _owner;
         bthread_id_t _wait_id;
-        butil::atomic<bool> _has_wait_error;
+        std::atomic<bool> _has_wait_error;
         int _wait_error;
         std::vector<ServerNode> _last_servers;
         std::vector<ServerNode> _servers;

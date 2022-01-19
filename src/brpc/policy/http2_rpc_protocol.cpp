@@ -265,12 +265,12 @@ static size_t SerializeH2SettingsFrameAndWU(const H2Settings& in, void* out) {
     return static_cast<size_t>(p - (uint8_t*)out);
 }
 
-inline bool AddWindowSize(butil::atomic<int64_t>* window_size, int64_t diff) {
+inline bool AddWindowSize(std::atomic<int64_t>* window_size, int64_t diff) {
     // A sender MUST NOT allow a flow-control window to exceed 2^31 - 1.
     // If a sender receives a WINDOW_UPDATE that causes a flow-control window 
     // to exceed this maximum, it MUST terminate either the stream or the connection,
     // as appropriate.
-    int64_t before_add = window_size->fetch_add(diff, butil::memory_order_relaxed);
+    int64_t before_add = window_size->fetch_add(diff, std::memory_order_relaxed);
     if ((((before_add | diff) >> 31) & 1) == 0) {
         // two positive int64_t, check positive overflow
         if ((before_add + diff) & (1 << 31)) {
@@ -287,14 +287,14 @@ inline bool AddWindowSize(butil::atomic<int64_t>* window_size, int64_t diff) {
     return true;
 }
 
-inline bool MinusWindowSize(butil::atomic<int64_t>* window_size, int64_t size) {
-    if (window_size->load(butil::memory_order_relaxed) < size) {
+inline bool MinusWindowSize(std::atomic<int64_t>* window_size, int64_t size) {
+    if (window_size->load(std::memory_order_relaxed) < size) {
         // false negative is OK.
         return false;
     }
-    int64_t before_sub = window_size->fetch_sub(size, butil::memory_order_relaxed);
+    int64_t before_sub = window_size->fetch_sub(size, std::memory_order_relaxed);
     if (before_sub < size) {
-        window_size->fetch_add(size, butil::memory_order_relaxed);
+        window_size->fetch_add(size, std::memory_order_relaxed);
         return false;
     }
     return true;
@@ -743,7 +743,7 @@ H2ParseResult H2StreamContext::OnData(
         }
     }
 
-    const int64_t acc = _deferred_window_update.fetch_add(frag_size, butil::memory_order_relaxed) + frag_size;
+    const int64_t acc = _deferred_window_update.fetch_add(frag_size, std::memory_order_relaxed) + frag_size;
     if (acc >= _conn_ctx->local_settings().stream_window_size / 2) {
         if (acc > _conn_ctx->local_settings().stream_window_size) {
             LOG(ERROR) << "Fail to satisfy the stream-level flow control policy";
@@ -751,7 +751,7 @@ H2ParseResult H2StreamContext::OnData(
         }
         // Rarely happen for small messages.
         const int64_t stream_wu =
-            _deferred_window_update.exchange(0, butil::memory_order_relaxed);
+            _deferred_window_update.exchange(0, std::memory_order_relaxed);
         
         if (stream_wu > 0) {
             char winbuf[(FRAME_HEAD_SIZE + 4) * 2];
@@ -879,7 +879,7 @@ H2ParseResult H2Context::OnSettings(
         _remote_settings = tmp_settings;
         _remote_window_left.fetch_sub(
                 H2Settings::MAX_WINDOW_SIZE - H2Settings::DEFAULT_INITIAL_WINDOW_SIZE,
-                butil::memory_order_relaxed);
+                std::memory_order_relaxed);
         _remote_settings_received = true;
     } else {
         if (!ParseH2Settings(&_remote_settings, it, frame_head.payload_size)) {
@@ -1028,7 +1028,7 @@ H2ParseResult H2Context::OnWindowUpdate(
         }
         if (!AddWindowSize(&sctx->_remote_window_left, inc)) {
             LOG(ERROR) << "Invalid stream-level window_size_increment=" << inc
-                << " to remote_window_left=" << sctx->_remote_window_left.load(butil::memory_order_relaxed);
+                << " to remote_window_left=" << sctx->_remote_window_left.load(std::memory_order_relaxed);
             return MakeH2Error(H2_FLOW_CONTROL_ERROR);
         }
         return MakeH2Message(NULL);
@@ -1044,9 +1044,9 @@ void H2Context::Describe(std::ostream& os, const DescribeOptions& opt) const {
     os << sep << "last_received_stream_id=" << _last_received_stream_id
        << sep << "last_sent_stream_id=" << _last_sent_stream_id;
     os << sep << "deferred_window_update="
-       << _deferred_window_update.load(butil::memory_order_relaxed)
+       << _deferred_window_update.load(std::memory_order_relaxed)
        << sep << "remote_conn_window_left="
-       << _remote_window_left.load(butil::memory_order_relaxed)
+       << _remote_window_left.load(std::memory_order_relaxed)
        << sep << "remote_settings=" << _remote_settings
        << sep << "remote_settings_received=" << _remote_settings_received
        << sep << "local_settings=" << _local_settings
@@ -1067,20 +1067,20 @@ void H2Context::Describe(std::ostream& os, const DescribeOptions& opt) const {
 }
 
 inline int64_t H2Context::ReleaseDeferredWindowUpdate() {
-    if (_deferred_window_update.load(butil::memory_order_relaxed) == 0) {
+    if (_deferred_window_update.load(std::memory_order_relaxed) == 0) {
         return 0;
     }
-    return _deferred_window_update.exchange(0, butil::memory_order_relaxed);
+    return _deferred_window_update.exchange(0, std::memory_order_relaxed);
 }
 
 void H2Context::DeferWindowUpdate(int64_t size) {
     if (size <= 0) {
         return;
     }
-    const int64_t acc = _deferred_window_update.fetch_add(size, butil::memory_order_relaxed) + size;
+    const int64_t acc = _deferred_window_update.fetch_add(size, std::memory_order_relaxed) + size;
     if (acc >= local_settings().stream_window_size / 2) {
         // Rarely happen for small messages.
-        const int64_t conn_wu = _deferred_window_update.exchange(0, butil::memory_order_relaxed);
+        const int64_t conn_wu = _deferred_window_update.exchange(0, std::memory_order_relaxed);
         if (conn_wu > 0) {
             char winbuf[FRAME_HEAD_SIZE + 4];
             SerializeFrameHead(winbuf, 4, H2_FRAME_WINDOW_UPDATE, 0, 0);
@@ -1179,7 +1179,7 @@ void H2StreamContext::Init(H2Context* conn_ctx, int stream_id) {
     _conn_ctx = conn_ctx;
     _stream_id = stream_id;
     _remote_window_left.store(conn_ctx->remote_settings().stream_window_size,
-                              butil::memory_order_relaxed);
+                              std::memory_order_relaxed);
 }
 
 H2StreamContext::~H2StreamContext() {
@@ -1205,16 +1205,16 @@ bool H2StreamContext::ConsumeWindowSize(int64_t size) {
     // AppendAndDestroySelf() are not run yet.
     // This fact is important to make window_size changes to stream and
     // connection contexts transactionally.
-    if (_remote_window_left.load(butil::memory_order_relaxed) < size) {
+    if (_remote_window_left.load(std::memory_order_relaxed) < size) {
         return false;
     }
     if (!MinusWindowSize(&_conn_ctx->_remote_window_left, size)) {
         return false;
     }
-    int64_t after_sub = _remote_window_left.fetch_sub(size, butil::memory_order_relaxed) - size;
+    int64_t after_sub = _remote_window_left.fetch_sub(size, std::memory_order_relaxed) - size;
     if (after_sub < 0) {
         LOG(FATAL) << "Impossible, the http2 impl is buggy";
-        _remote_window_left.fetch_add(size, butil::memory_order_relaxed);
+        _remote_window_left.fetch_add(size, std::memory_order_relaxed);
         return false;
     }
     return true;

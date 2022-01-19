@@ -64,12 +64,12 @@ struct UserCodeBackupPool {
 static pthread_mutex_t s_usercode_mutex = PTHREAD_MUTEX_INITIALIZER;
 static pthread_cond_t s_usercode_cond = PTHREAD_COND_INITIALIZER;
 static pthread_once_t s_usercode_init = PTHREAD_ONCE_INIT;
-butil::static_atomic<int> g_usercode_inplace = BUTIL_STATIC_ATOMIC_INIT(0);
+flare::static_atomic<int> g_usercode_inplace = FLARE_STATIC_ATOMIC_INIT(0);
 bool g_too_many_usercode = false;
 static UserCodeBackupPool* s_usercode_pool = NULL;
 
 static int GetUserCodeInPlace(void*) {
-    return g_usercode_inplace.load(butil::memory_order_relaxed);
+    return g_usercode_inplace.load(std::memory_order_relaxed);
 }
 
 static size_t GetUserCodeQueueSize(void*) {
@@ -159,7 +159,7 @@ void InitUserCodeBackupPoolOnceOrDie() {
 void EndRunningUserCodeInPool(void (*fn)(void*), void* arg) {
     InitUserCodeBackupPoolOnceOrDie();
     
-    g_usercode_inplace.fetch_sub(1, butil::memory_order_relaxed);
+    g_usercode_inplace.fetch_sub(1, std::memory_order_relaxed);
 
     // Not enough idle workers, run the code in backup threads to prevent
     // all workers from being blocked and no responses will be processed

@@ -139,11 +139,11 @@ public:
     void Print(std::ostream& os) const;
 
     int AddRefManually()
-    { return _nref.fetch_add(1, butil::memory_order_relaxed); }
+    { return _nref.fetch_add(1, std::memory_order_relaxed); }
 
     void RemoveRefManually() {
-        if (_nref.fetch_sub(1, butil::memory_order_release) == 1) {
-            butil::atomic_thread_fence(butil::memory_order_acquire);
+        if (_nref.fetch_sub(1, std::memory_order_release) == 1) {
+            butil::atomic_thread_fence(std::memory_order_acquire);
             Destroy();
         }
     }
@@ -184,7 +184,7 @@ private:
     void Destroy();
 
 private:
-    butil::atomic<int> _nref;
+    std::atomic<int> _nref;
     uint32_t _size;
     int _stream_id;
     mutable butil::Mutex _mutex;
@@ -252,10 +252,10 @@ public:
     int stream_id() const { return _stream_id; }
 
     int64_t ReleaseDeferredWindowUpdate() {
-        if (_deferred_window_update.load(butil::memory_order_relaxed) == 0) {
+        if (_deferred_window_update.load(std::memory_order_relaxed) == 0) {
             return 0;
         }
-        return _deferred_window_update.exchange(0, butil::memory_order_relaxed);
+        return _deferred_window_update.exchange(0, std::memory_order_relaxed);
     }
 
     bool ConsumeWindowSize(int64_t size);
@@ -272,8 +272,8 @@ friend class H2Context;
 #endif
     int _stream_id;
     bool _stream_ended;
-    butil::atomic<int64_t> _remote_window_left;
-    butil::atomic<int64_t> _deferred_window_update;
+    std::atomic<int64_t> _remote_window_left;
+    std::atomic<int64_t> _deferred_window_update;
     uint64_t _correlation_id;
     butil::IOBuf _remaining_header_fragment;
 };
@@ -379,7 +379,7 @@ friend void InitFrameHandlers();
     // True if the connection is established by client, otherwise it's
     // accepted by server.
     Socket* _socket;
-    butil::atomic<int64_t> _remote_window_left;
+    std::atomic<int64_t> _remote_window_left;
     H2ConnectionState _conn_state;
     int _last_received_stream_id;
     uint32_t _last_sent_stream_id;
@@ -394,7 +394,7 @@ friend void InitFrameHandlers();
     typedef butil::FlatMap<int, H2StreamContext*> StreamMap;
     mutable butil::Mutex _stream_mutex;
     StreamMap _pending_streams;
-    butil::atomic<int64_t> _deferred_window_update;
+    std::atomic<int64_t> _deferred_window_update;
 };
 
 inline int H2Context::AllocateClientStreamId() {

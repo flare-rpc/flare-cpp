@@ -129,14 +129,14 @@ public:
     
     bool AddServer(const ServerId& server) {
         if (_lb->AddServer(server)) {
-            _weight_sum.fetch_add(1, butil::memory_order_relaxed);
+            _weight_sum.fetch_add(1, std::memory_order_relaxed);
             return true;
         }
         return false;
     }
     bool RemoveServer(const ServerId& server) {
         if (_lb->RemoveServer(server)) {
-            _weight_sum.fetch_sub(1, butil::memory_order_relaxed);
+            _weight_sum.fetch_sub(1, std::memory_order_relaxed);
             return true;
         }
         return false;
@@ -145,7 +145,7 @@ public:
     size_t AddServersInBatch(const std::vector<ServerId>& servers) {
         size_t n = _lb->AddServersInBatch(servers);
         if (n) {
-            _weight_sum.fetch_add(n, butil::memory_order_relaxed);
+            _weight_sum.fetch_add(n, std::memory_order_relaxed);
         }
         return n;
     }
@@ -153,7 +153,7 @@ public:
     size_t RemoveServersInBatch(const std::vector<ServerId>& servers) {
         size_t n = _lb->RemoveServersInBatch(servers);
         if (n) {
-            _weight_sum.fetch_sub(n, butil::memory_order_relaxed);
+            _weight_sum.fetch_sub(n, std::memory_order_relaxed);
         }
         return n;
     }
@@ -161,7 +161,7 @@ public:
     virtual void Describe(std::ostream& os, const DescribeOptions&);
 
     virtual int Weight() {
-        return _weight_sum.load(butil::memory_order_relaxed);
+        return _weight_sum.load(std::memory_order_relaxed);
     }
 
 private:
@@ -172,7 +172,7 @@ private:
     void ExposeLB();
 
     LoadBalancer* _lb;
-    butil::atomic<int> _weight_sum;
+    std::atomic<int> _weight_sum;
     volatile bool _exposed;
     butil::Mutex _st_mutex;
     bvar::PassiveStatus<std::string> _st;

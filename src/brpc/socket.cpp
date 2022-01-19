@@ -125,8 +125,8 @@ private:
     butil::Mutex _mutex;
     std::vector<SocketId> _pool;
     butil::EndPoint _remote_side;
-    butil::atomic<int> _numfree; // #free sockets in all sub pools.
-    butil::atomic<int> _numinflight; // #inflight sockets in all sub pools.
+    std::atomic<int> _numfree; // #free sockets in all sub pools.
+    std::atomic<int> _numinflight; // #inflight sockets in all sub pools.
 };
 
 // NOTE: sizeof of this class is 1200 bytes. If we have 10K sockets, total
@@ -165,27 +165,27 @@ public:
     // Before rev <= r32136, the pool is managed globally in socket_map.cpp
     // which has the disadvantage that accesses to different pools contend
     // with each other.
-    butil::atomic<SocketPool*> socket_pool;
+    std::atomic<SocketPool*> socket_pool;
     
     // The socket newing this object.
     SocketId creator_socket_id;
 
     // Counting number of continuous ETIMEDOUT
-    butil::atomic<int> num_continuous_connect_timeouts;
+    std::atomic<int> num_continuous_connect_timeouts;
 
     // _in_size, _in_num_messages, _out_size, _out_num_messages of pooled
     // sockets are counted into the corresponding fields in their _main_socket.
-    butil::atomic<size_t> in_size;
-    butil::atomic<size_t> in_num_messages;
-    butil::atomic<size_t> out_size;
-    butil::atomic<size_t> out_num_messages;
+    std::atomic<size_t> in_size;
+    std::atomic<size_t> in_num_messages;
+    std::atomic<size_t> out_size;
+    std::atomic<size_t> out_num_messages;
 
     // For computing stats.
     ExtendedSocketStat* extended_stat;
 
     CircuitBreaker circuit_breaker;
 
-    butil::atomic<uint64_t> recent_error_count;
+    std::atomic<uint64_t> recent_error_count;
 
     explicit SharedPart(SocketId creator_socket_id);
     ~SharedPart();
@@ -209,7 +209,7 @@ Socket::SharedPart::SharedPart(SocketId creator_socket_id2)
 Socket::SharedPart::~SharedPart() {
     delete extended_stat;
     extended_stat = NULL;
-    delete socket_pool.exchange(NULL, butil::memory_order_relaxed);
+    delete socket_pool.exchange(NULL, std::memory_order_relaxed);
 }
 
 void Socket::SharedPart::UpdateStatsEverySecond(int64_t now_ms) {
@@ -223,10 +223,10 @@ void Socket::SharedPart::UpdateStatsEverySecond(int64_t now_ms) {
     }
 
     // Save volatile counters.
-    const size_t in_sz = in_size.load(butil::memory_order_relaxed);
-    const size_t in_nmsg = in_num_messages.load(butil::memory_order_relaxed);
-    const size_t out_sz = out_size.load(butil::memory_order_relaxed);
-    const size_t out_nmsg = out_num_messages.load(butil::memory_order_relaxed);
+    const size_t in_sz = in_size.load(std::memory_order_relaxed);
+    const size_t in_nmsg = in_num_messages.load(std::memory_order_relaxed);
+    const size_t out_sz = out_size.load(std::memory_order_relaxed);
+    const size_t out_nmsg = out_num_messages.load(std::memory_order_relaxed);
 
     // Notice that we don't normalize any data, mainly because normalization
     // often make data inaccurate and confuse users. This assumes that this
@@ -364,7 +364,7 @@ void Socket::WriteRequest::Setup(Socket* s) {
             }
         }
         const int64_t before_write =
-            s->_unwritten_bytes.fetch_add(data.size(), butil::memory_order_relaxed);
+            s->_unwritten_bytes.fetch_add(data.size(), std::memory_order_relaxed);
         if (before_write + (int64_t)data.size() >= FLAGS_socket_max_unwritten_bytes) {
             s->_overcrowded = true;
         }
@@ -457,7 +457,7 @@ Socket::Socket(Forbidden)
 {
     CreateVarsOnce();
     pthread_mutex_init(&_id_wait_list_mutex, NULL);
-    _epollout_butex = bthread::butex_create_checked<butil::atomic<int> >();
+    _epollout_butex = bthread::butex_create_checked<std::atomic<int> >();
 }
 
 Socket::~Socket() {
@@ -522,7 +522,7 @@ int Socket::ResetFileDescriptor(int fd) {
     _avg_msg_size = 0;
     // MUST store `_fd' before adding itself into epoll device to avoid
     // race conditions with the callback function inside epoll
-    _fd.store(fd, butil::memory_order_release);
+    _fd.store(fd, std::memory_order_release);
     _reset_fd_real_us = butil::gettimeofday_us();
     if (!ValidFileDescriptor(fd)) {
         return 0;
@@ -572,7 +572,7 @@ int Socket::ResetFileDescriptor(int fd) {
         if (GetGlobalEventDispatcher(fd).AddConsumer(id(), fd) != 0) {
             PLOG(ERROR) << "Fail to add SocketId=" << id() 
                         << " into EventDispatcher";
-            _fd.store(-1, butil::memory_order_release);
+            _fd.store(-1, std::memory_order_release);
             return -1;
         }
     }
@@ -590,8 +590,8 @@ int Socket::Create(const SocketOptions& options, SocketId* id) {
         return -1;
     }
     g_vars->nsocket << 1;
-    CHECK(NULL == m->_shared_part.load(butil::memory_order_relaxed));
-    m->_nevent.store(0, butil::memory_order_relaxed);
+    CHECK(NULL == m->_shared_part.load(std::memory_order_relaxed));
+    m->_nevent.store(0, std::memory_order_relaxed);
     m->_keytable_pool = options.keytable_pool;
     m->_tos = 0;
     m->_remote_side = options.remote_side;
@@ -605,17 +605,17 @@ int Socket::Create(const SocketOptions& options, SocketId* id) {
     // to put the id into SocketUniquePtr.
     m->_this_id = MakeSocketId(
             VersionOfVRef(m->_versioned_ref.fetch_add(
-                    1, butil::memory_order_release)), slot);
+                    1, std::memory_order_release)), slot);
     m->_preferred_index = -1;
     m->_hc_count = 0;
     CHECK(m->_read_buf.empty());
     const int64_t cpuwide_now = butil::cpuwide_time_us();
-    m->_last_readtime_us.store(cpuwide_now, butil::memory_order_relaxed);
+    m->_last_readtime_us.store(cpuwide_now, std::memory_order_relaxed);
     m->reset_parsing_context(options.initial_parsing_context);
     m->_correlation_id = 0;
     m->_health_check_interval_s = options.health_check_interval_s;
-    m->_ninprocess.store(1, butil::memory_order_relaxed);
-    m->_auth_flag_error.store(0, butil::memory_order_relaxed);
+    m->_ninprocess.store(1, std::memory_order_relaxed);
+    m->_auth_flag_error.store(0, std::memory_order_relaxed);
     const int rc2 = bthread_id_create(&m->_auth_id, NULL, NULL);
     if (rc2) {
         LOG(ERROR) << "Fail to create auth_id: " << berror(rc2);
@@ -627,16 +627,16 @@ int Socket::Create(const SocketOptions& options, SocketId* id) {
     m->_ssl_session = NULL;
     m->_ssl_ctx = options.initial_ssl_ctx;
     m->_connection_type_for_progressive_read = CONNECTION_TYPE_UNKNOWN;
-    m->_controller_released_socket.store(false, butil::memory_order_relaxed);
+    m->_controller_released_socket.store(false, std::memory_order_relaxed);
     m->_overcrowded = false;
     // May be non-zero for RTMP connections.
     m->_fail_me_at_server_stop = false;
-    m->_logoff_flag.store(false, butil::memory_order_relaxed);
-    m->_recycle_flag.store(false, butil::memory_order_relaxed);
+    m->_logoff_flag.store(false, std::memory_order_relaxed);
+    m->_recycle_flag.store(false, std::memory_order_relaxed);
     m->_error_code = 0;
     m->_error_text.clear();
-    m->_agent_socket_id.store(INVALID_SOCKET_ID, butil::memory_order_relaxed);
-    m->_ninflight_app_health_check.store(0, butil::memory_order_relaxed);
+    m->_agent_socket_id.store(INVALID_SOCKET_ID, std::memory_order_relaxed);
+    m->_ninflight_app_health_check.store(0, std::memory_order_relaxed);
     // NOTE: last two params are useless in bthread > r32787
     const int rc = bthread_id_list_init(&m->_id_wait_list, 512, 512);
     if (rc) {
@@ -644,9 +644,9 @@ int Socket::Create(const SocketOptions& options, SocketId* id) {
         m->SetFailed(rc, "Fail to init _id_wait_list: %s", berror(rc));
         return -1;
     }
-    m->_last_writetime_us.store(cpuwide_now, butil::memory_order_relaxed);
-    m->_unwritten_bytes.store(0, butil::memory_order_relaxed);
-    CHECK(NULL == m->_write_head.load(butil::memory_order_relaxed));
+    m->_last_writetime_us.store(cpuwide_now, std::memory_order_relaxed);
+    m->_unwritten_bytes.store(0, std::memory_order_relaxed);
+    CHECK(NULL == m->_write_head.load(std::memory_order_relaxed));
     // Must be last one! Internal fields of this Socket may be access
     // just after calling ResetFileDescriptor.
     if (m->ResetFileDescriptor(options.fd) != 0) {
@@ -667,7 +667,7 @@ int Socket::WaitAndReset(int32_t expected_nref) {
     while (1) {
         // The acquire fence pairs with release fence in Dereference to avoid
         // inconsistent states to be seen by others.
-        vref = _versioned_ref.load(butil::memory_order_acquire);
+        vref = _versioned_ref.load(std::memory_order_acquire);
         if (VersionOfVRef(vref) != id_ver + 1) {
             LOG(WARNING) << "SocketId=" << _this_id << " is already alive or recycled";
             return -1;
@@ -687,7 +687,7 @@ int Socket::WaitAndReset(int32_t expected_nref) {
     }
 
     // It's safe to close previous fd (provided expected_nref is correct).
-    const int prev_fd = _fd.exchange(-1, butil::memory_order_relaxed);
+    const int prev_fd = _fd.exchange(-1, std::memory_order_relaxed);
     if (ValidFileDescriptor(prev_fd)) {
         if (_on_edge_triggered_events != NULL) {
             GetGlobalEventDispatcher(prev_fd).RemoveConsumer(prev_fd);
@@ -703,15 +703,15 @@ int Socket::WaitAndReset(int32_t expected_nref) {
         _ssl_session = NULL;
     }        
     _ssl_state = SSL_UNKNOWN;
-    _nevent.store(0, butil::memory_order_relaxed);
+    _nevent.store(0, std::memory_order_relaxed);
     // parsing_context is very likely to be associated with the fd,
     // removing it is a safer choice and required by http2.
     reset_parsing_context(NULL);
     // Must clear _read_buf otehrwise even if the connections is recovered,
     // the kept old data is likely to make parsing fail.
     _read_buf.clear();
-    _ninprocess.store(1, butil::memory_order_relaxed);
-    _auth_flag_error.store(0, butil::memory_order_relaxed);
+    _ninprocess.store(1, std::memory_order_relaxed);
+    _auth_flag_error.store(0, std::memory_order_relaxed);
     bthread_id_error(_auth_id, 0);
     const int rc = bthread_id_create(&_auth_id, NULL, NULL);
     if (rc != 0) {
@@ -720,9 +720,9 @@ int Socket::WaitAndReset(int32_t expected_nref) {
     }
 
     const int64_t cpuwide_now = butil::cpuwide_time_us();
-    _last_readtime_us.store(cpuwide_now, butil::memory_order_relaxed);
-    _last_writetime_us.store(cpuwide_now, butil::memory_order_relaxed);
-    _logoff_flag.store(false, butil::memory_order_relaxed);
+    _last_readtime_us.store(cpuwide_now, std::memory_order_relaxed);
+    _last_writetime_us.store(cpuwide_now, std::memory_order_relaxed);
+    _logoff_flag.store(false, std::memory_order_relaxed);
     {
         BAIDU_SCOPED_LOCK(_pipeline_mutex);
         if (_pipeline_q) {
@@ -733,7 +733,7 @@ int Socket::WaitAndReset(int32_t expected_nref) {
     SharedPart* sp = GetSharedPart();
     if (sp) {
         sp->circuit_breaker.Reset();
-        sp->recent_error_count.store(0, butil::memory_order_relaxed);
+        sp->recent_error_count.store(0, std::memory_order_relaxed);
     }
     return 0;
 }
@@ -741,7 +741,7 @@ int Socket::WaitAndReset(int32_t expected_nref) {
 // We don't care about the return value of Revive.
 void Socket::Revive() {
     const uint32_t id_ver = VersionOfSocketId(_this_id);
-    uint64_t vref = _versioned_ref.load(butil::memory_order_relaxed);
+    uint64_t vref = _versioned_ref.load(std::memory_order_relaxed);
     while (1) {
         CHECK_EQ(id_ver + 1, VersionOfVRef(vref));
         
@@ -755,10 +755,10 @@ void Socket::Revive() {
         // remove this additional nref someday.
         if (_versioned_ref.compare_exchange_weak(
                 vref, MakeVRef(id_ver, nref + 1/*note*/),
-                butil::memory_order_release,
-                butil::memory_order_relaxed)) {
+                std::memory_order_release,
+                std::memory_order_relaxed)) {
             // Set this flag to true since we add additional ref again
-            _recycle_flag.store(false, butil::memory_order_relaxed);
+            _recycle_flag.store(false, std::memory_order_relaxed);
             if (_user) {
                 _user->AfterRevived(this);
             } else {
@@ -774,8 +774,8 @@ int Socket::ReleaseAdditionalReference() {
     // Use `relaxed' fence here since `Dereference' has `released' fence
     if (_recycle_flag.compare_exchange_strong(
             expect, true,
-            butil::memory_order_relaxed,
-            butil::memory_order_relaxed)) {
+            std::memory_order_relaxed,
+            std::memory_order_relaxed)) {
         return Dereference();
     }
     return -1;
@@ -784,14 +784,14 @@ int Socket::ReleaseAdditionalReference() {
 void Socket::AddRecentError() {
     SharedPart* sp = GetSharedPart();
     if (sp) {
-        sp->recent_error_count.fetch_add(1, butil::memory_order_relaxed);
+        sp->recent_error_count.fetch_add(1, std::memory_order_relaxed);
     }
 }
 
 int64_t Socket::recent_error_count() const {
     SharedPart* sp = GetSharedPart();
     if (sp) {
-        return sp->recent_error_count.load(butil::memory_order_relaxed);
+        return sp->recent_error_count.load(std::memory_order_relaxed);
     }
     return 0;
 }
@@ -810,7 +810,7 @@ int Socket::SetFailed(int error_code, const char* error_fmt, ...) {
         error_code = EFAILEDSOCKET;
     }
     const uint32_t id_ver = VersionOfSocketId(_this_id);
-    uint64_t vref = _versioned_ref.load(butil::memory_order_relaxed);
+    uint64_t vref = _versioned_ref.load(std::memory_order_relaxed);
     for (;;) {  // need iteration to retry compare_exchange_strong
         if (VersionOfVRef(vref) != id_ver) {
             return -1;
@@ -819,8 +819,8 @@ int Socket::SetFailed(int error_code, const char* error_fmt, ...) {
         // retry on fail.
         if (_versioned_ref.compare_exchange_strong(
                 vref, MakeVRef(id_ver + 1, NRefOfVRef(vref)),
-                butil::memory_order_release,
-                butil::memory_order_relaxed)) {
+                std::memory_order_release,
+                std::memory_order_relaxed)) {
             // Update _error_text
             std::string error_text;
             if (error_fmt != NULL) {
@@ -843,7 +843,7 @@ int Socket::SetFailed(int error_code, const char* error_fmt, ...) {
                         GetOrNewSharedPart()->circuit_breaker.isolation_duration_ms());
             }
             // Wake up all threads waiting on EPOLLOUT when closing fd
-            _epollout_butex->fetch_add(1, butil::memory_order_relaxed);
+            _epollout_butex->fetch_add(1, std::memory_order_relaxed);
             bthread::butex_wake_all(_epollout_butex);
 
             // Wake up all unresponded RPC.
@@ -930,7 +930,7 @@ int Socket::Status(SocketId id, int32_t* nref) {
     const butil::ResourceId<Socket> slot = SlotOfSocketId(id);
     Socket* const m = address_resource(slot);
     if (m != NULL) {
-        const uint64_t vref = m->_versioned_ref.load(butil::memory_order_relaxed);
+        const uint64_t vref = m->_versioned_ref.load(std::memory_order_relaxed);
         if (VersionOfVRef(vref) == VersionOfSocketId(id)) {
             if (nref) {
                 *nref = NRefOfVRef(vref);
@@ -963,11 +963,11 @@ void Socket::OnRecycle() {
         _user = NULL;
         saved_user->BeforeRecycle(this);
     }
-    SharedPart* sp = _shared_part.exchange(NULL, butil::memory_order_acquire);
+    SharedPart* sp = _shared_part.exchange(NULL, std::memory_order_acquire);
     if (sp) {
         sp->RemoveRefManually();
     }
-    const int prev_fd = _fd.exchange(-1, butil::memory_order_relaxed);
+    const int prev_fd = _fd.exchange(-1, std::memory_order_relaxed);
     if (ValidFileDescriptor(prev_fd)) {
         if (_on_edge_triggered_events != NULL) {
             GetGlobalEventDispatcher(prev_fd).RemoveConsumer(prev_fd);
@@ -980,7 +980,7 @@ void Socket::OnRecycle() {
     reset_parsing_context(NULL);
     _read_buf.clear();
 
-    _auth_flag_error.store(0, butil::memory_order_relaxed);
+    _auth_flag_error.store(0, std::memory_order_relaxed);
     bthread_id_error(_auth_id, 0);
     
     bthread_id_list_destroy(&_id_wait_list);
@@ -1001,7 +1001,7 @@ void Socket::OnRecycle() {
     delete _stream_set;
     _stream_set = NULL;
 
-    const SocketId asid = _agent_socket_id.load(butil::memory_order_relaxed);
+    const SocketId asid = _agent_socket_id.load(std::memory_order_relaxed);
     if (asid != INVALID_SOCKET_ID) {
         SocketUniquePtr ptr;
         if (Socket::Address(asid, &ptr) == 0) {
@@ -1041,7 +1041,7 @@ bool Socket::IsWriteComplete(Socket::WriteRequest* old_head,
         return_when_no_more = false;
     }
     if (_write_head.compare_exchange_strong(
-            new_head, desired, butil::memory_order_acquire)) {
+            new_head, desired, std::memory_order_acquire)) {
         // No one added new requests.
         if (new_tail) {
             *new_tail = old_head;
@@ -1088,7 +1088,7 @@ int Socket::WaitEpollOut(int fd, bool pollin, const timespec* abstime) {
     }
     // Do not need to check addressable since it will be called by
     // health checker which called `SetFailed' before
-    const int expected_val = _epollout_butex->load(butil::memory_order_relaxed);
+    const int expected_val = _epollout_butex->load(std::memory_order_relaxed);
     EventDispatcher& edisp = GetGlobalEventDispatcher(fd);
     if (edisp.AddEpollOut(id(), fd, pollin) != 0) {
         return -1;
@@ -1232,7 +1232,7 @@ int Socket::CheckConnected(int sockfd) {
 }
 
 int Socket::ConnectIfNot(const timespec* abstime, WriteRequest* req) {
-    if (_fd.load(butil::memory_order_consume) >= 0) {
+    if (_fd.load(std::memory_order_consume) >= 0) {
        return 0;
     }
 
@@ -1271,7 +1271,7 @@ int Socket::HandleEpollOut(SocketId id) {
     
     // Currently `WaitEpollOut' needs `_epollout_butex'
     // TODO(jiangrujie): Remove this in the future
-    s->_epollout_butex->fetch_add(1, butil::memory_order_relaxed);
+    s->_epollout_butex->fetch_add(1, std::memory_order_relaxed);
     bthread::butex_wake_except(s->_epollout_butex, 0);  
     return 0;
 }
@@ -1309,7 +1309,7 @@ void Socket::AfterAppConnected(int err, void* data) {
         Socket* const s = req->socket;
         SharedPart* sp = s->GetSharedPart();
         if (sp) {
-            sp->num_continuous_connect_timeouts.store(0, butil::memory_order_relaxed);
+            sp->num_continuous_connect_timeouts.store(0, std::memory_order_relaxed);
         }
         // requests are not setup yet. check the comment on Setup() in Write()
         req->Setup(s);
@@ -1324,12 +1324,12 @@ void Socket::AfterAppConnected(int err, void* data) {
         if (err == ETIMEDOUT) {
             SharedPart* sp = s->GetOrNewSharedPart();
             if (sp->num_continuous_connect_timeouts.fetch_add(
-                    1, butil::memory_order_relaxed) + 1 >=
+                    1, std::memory_order_relaxed) + 1 >=
                 FLAGS_connect_timeout_as_unreachable) {
                 // the race between store and fetch_add(in another thread) is
                 // OK since a critial error is about to return.
                 sp->num_continuous_connect_timeouts.store(
-                    0, butil::memory_order_relaxed);
+                    0, std::memory_order_relaxed);
                 err = ENETUNREACH;
             }
         }
@@ -1504,7 +1504,7 @@ int Socket::Write(SocketMessagePtr<>& msg, const WriteOptions* options_in) {
 int Socket::StartWrite(WriteRequest* req, const WriteOptions& opt) {
     // Release fence makes sure the thread getting request sees *req
     WriteRequest* const prev_head =
-        _write_head.exchange(req, butil::memory_order_release);
+        _write_head.exchange(req, std::memory_order_release);
     if (prev_head != NULL) {
         // Someone is writing to the fd. The KeepWrite thread may spin
         // until req->next to be non-UNCONNECTED. This process is not
@@ -1874,7 +1874,7 @@ ssize_t Socket::DoRead(size_t size_hint) {
 int Socket::FightAuthentication(int* auth_error) {
     // Use relaxed fence since `bthread_id_trylock' ensures thread safety
     // Here `flag_error' just acts like a cache information
-    uint64_t flag_error = _auth_flag_error.load(butil::memory_order_relaxed);
+    uint64_t flag_error = _auth_flag_error.load(std::memory_order_relaxed);
     if (flag_error & AUTH_FLAG) {
         // Already authenticated
         *auth_error = (int32_t)(flag_error & 0xFFFFFFFFul);
@@ -1887,7 +1887,7 @@ int Socket::FightAuthentication(int* auth_error) {
         // Use relaxed fence since `bthread_id_join' has acquire fence to ensure
         // `_auth_flag_error' to be the latest value
         bthread_id_join(_auth_id);
-        flag_error = _auth_flag_error.load(butil::memory_order_relaxed);
+        flag_error = _auth_flag_error.load(std::memory_order_relaxed);
         *auth_error = (int32_t)(flag_error & 0xFFFFFFFFul);
         return EINVAL;
     }
@@ -1899,7 +1899,7 @@ void Socket::SetAuthentication(int error_code) {
     // reordered after it.
     if (_auth_flag_error.compare_exchange_strong(
                 expected, (AUTH_FLAG | error_code),
-                butil::memory_order_relaxed)) {
+                std::memory_order_relaxed)) {
         // As expected
         if (error_code != 0) {
             SetFailed(error_code, "Fail to authenticate %s", description().c_str());
@@ -1945,7 +1945,7 @@ int Socket::StartInputEvent(SocketId id, uint32_t events,
     // Passing e[i].events causes complex visibility issues and
     // requires stronger memory fences, since reading the fd returns
     // error as well, we don't pass the events.
-    if (s->_nevent.fetch_add(1, butil::memory_order_acq_rel) == 0) {
+    if (s->_nevent.fetch_add(1, std::memory_order_acq_rel) == 0) {
         // According to the stats, above fetch_add is very effective. In a
         // server processing 1 million requests per second, this counter
         // is just 1500~1700/s
@@ -2011,7 +2011,7 @@ void Socket::DebugSocket(std::ostream& os, SocketId id) {
         // }
         os << "# This is a broken Socket\n";
     }
-    const uint64_t vref = ptr->_versioned_ref.load(butil::memory_order_relaxed);
+    const uint64_t vref = ptr->_versioned_ref.load(std::memory_order_relaxed);
     size_t npipelined = 0;
     size_t idsizes[4];
     size_t nidsize = 0;
@@ -2034,7 +2034,7 @@ void Socket::DebugSocket(std::ostream& os, SocketId id) {
     if (sp) {
         os << "\nshared_part={\n  ref_count=" << sp->ref_count()
            << "\n  socket_pool=";
-        SocketPool* pool = sp->socket_pool.load(butil::memory_order_consume);
+        SocketPool* pool = sp->socket_pool.load(std::memory_order_consume);
         if (pool) {
             os << '[';
             std::vector<SocketId> pooled_sockets;
@@ -2046,24 +2046,24 @@ void Socket::DebugSocket(std::ostream& os, SocketId id) {
                 os << pooled_sockets[i];
             }
             os << "]\n  numfree="
-               << pool->_numfree.load(butil::memory_order_relaxed)
+               << pool->_numfree.load(std::memory_order_relaxed)
                << "\n  numinflight="
-               << pool->_numinflight.load(butil::memory_order_relaxed);
+               << pool->_numinflight.load(std::memory_order_relaxed);
         } else {
             os << "null";
         }
         os << "\n  creator_socket=" << sp->creator_socket_id
-           << "\n  in_size=" << sp->in_size.load(butil::memory_order_relaxed)
-           << "\n  in_num_messages=" << sp->in_num_messages.load(butil::memory_order_relaxed)
-           << "\n  out_size=" << sp->out_size.load(butil::memory_order_relaxed)
-           << "\n  out_num_messages=" << sp->out_num_messages.load(butil::memory_order_relaxed)
+           << "\n  in_size=" << sp->in_size.load(std::memory_order_relaxed)
+           << "\n  in_num_messages=" << sp->in_num_messages.load(std::memory_order_relaxed)
+           << "\n  out_size=" << sp->out_size.load(std::memory_order_relaxed)
+           << "\n  out_num_messages=" << sp->out_num_messages.load(std::memory_order_relaxed)
            << "\n}";
     }
-    const int fd = ptr->_fd.load(butil::memory_order_relaxed);
+    const int fd = ptr->_fd.load(std::memory_order_relaxed);
     os << "\nnref=" << NRefOfVRef(vref) - 1
         //                                ^
         // minus the ref of current callsite(calling PrintSocket)
-       << "\nnevent=" << ptr->_nevent.load(butil::memory_order_relaxed)
+       << "\nnevent=" << ptr->_nevent.load(std::memory_order_relaxed)
        << "\nfd=" << fd
        << "\ntos=" << ptr->_tos
        << "\nreset_fd_to_now=" << butil::gettimeofday_us() - ptr->_reset_fd_real_us << "us"
@@ -2109,23 +2109,23 @@ void Socket::DebugSocket(std::ostream& os, SocketId id) {
     const SSLState ssl_state = ptr->ssl_state();
     os << "\npipeline_q=" << npipelined
        << "\nhc_interval_s=" << ptr->_health_check_interval_s
-       << "\nninprocess=" << ptr->_ninprocess.load(butil::memory_order_relaxed)
-       << "\nauth_flag_error=" << ptr->_auth_flag_error.load(butil::memory_order_relaxed)
+       << "\nninprocess=" << ptr->_ninprocess.load(std::memory_order_relaxed)
+       << "\nauth_flag_error=" << ptr->_auth_flag_error.load(std::memory_order_relaxed)
        << "\nauth_id=" << ptr->_auth_id.value
        << "\nauth_context=" << ptr->_auth_context
-       << "\nlogoff_flag=" << ptr->_logoff_flag.load(butil::memory_order_relaxed)
-       << "\nrecycle_flag=" << ptr->_recycle_flag.load(butil::memory_order_relaxed)
+       << "\nlogoff_flag=" << ptr->_logoff_flag.load(std::memory_order_relaxed)
+       << "\nrecycle_flag=" << ptr->_recycle_flag.load(std::memory_order_relaxed)
        << "\nninflight_app_health_check="
-       << ptr->_ninflight_app_health_check.load(butil::memory_order_relaxed)
+       << ptr->_ninflight_app_health_check.load(std::memory_order_relaxed)
        << "\nagent_socket_id=";
-    const SocketId asid = ptr->_agent_socket_id.load(butil::memory_order_relaxed);
+    const SocketId asid = ptr->_agent_socket_id.load(std::memory_order_relaxed);
     if (asid != INVALID_SOCKET_ID) {
         os << asid;
     } else {
         os << "(none)";
     }
     os << "\ncid=" << ptr->_correlation_id
-       << "\nwrite_head=" << ptr->_write_head.load(butil::memory_order_relaxed)
+       << "\nwrite_head=" << ptr->_write_head.load(std::memory_order_relaxed)
        << "\nssl_state=" << SSLStateToString(ssl_state);
     const SocketSSLContext* ssl_ctx = ptr->_ssl_ctx.get();
     if (ssl_ctx) {
@@ -2309,11 +2309,11 @@ inline int SocketPool::GetSocket(SocketUniquePtr* ptr) {
                 sid = _pool.back();
                 _pool.pop_back();
             }
-            _numfree.fetch_sub(1, butil::memory_order_relaxed);
+            _numfree.fetch_sub(1, std::memory_order_relaxed);
             // Not address inside the lock since at most time the pooled socket
             // is likely to be valid.
             if (Socket::Address(sid, ptr) == 0) {
-                _numinflight.fetch_add(1, butil::memory_order_relaxed);
+                _numinflight.fetch_add(1, std::memory_order_relaxed);
                 return 0;
             }
         }
@@ -2323,7 +2323,7 @@ inline int SocketPool::GetSocket(SocketUniquePtr* ptr) {
     opt.health_check_interval_s = -1;
     if (get_client_side_messenger()->Create(opt, &sid) == 0 &&
         Socket::Address(sid, ptr) == 0) {
-        _numinflight.fetch_add(1, butil::memory_order_relaxed);
+        _numinflight.fetch_add(1, std::memory_order_relaxed);
         return 0;
     }
     return -1;
@@ -2334,17 +2334,17 @@ inline void SocketPool::ReturnSocket(Socket* sock) {
     const int connection_pool_size = FLAGS_max_connection_pool_size;
 
     // Check if the pool is full.
-    if (_numfree.fetch_add(1, butil::memory_order_relaxed) <
+    if (_numfree.fetch_add(1, std::memory_order_relaxed) <
         connection_pool_size) {
         const SocketId sid = sock->id();
         BAIDU_SCOPED_LOCK(_mutex);
         _pool.push_back(sid);
     } else {
         // Cancel the addition and close the pooled socket.
-        _numfree.fetch_sub(1, butil::memory_order_relaxed);
+        _numfree.fetch_sub(1, std::memory_order_relaxed);
         sock->SetFailed(EUNUSED, "Close unused pooled socket");
     }
-    _numinflight.fetch_sub(1, butil::memory_order_relaxed);
+    _numinflight.fetch_sub(1, std::memory_order_relaxed);
 }
 
 inline void SocketPool::ListSockets(std::vector<SocketId>* out, size_t max_count) {
@@ -2379,7 +2379,7 @@ Socket::SharedPart* Socket::GetOrNewSharedPartSlower() {
         shared_part->AddRefManually();
         SharedPart* expected = NULL;
         if (!_shared_part.compare_exchange_strong(
-                expected, shared_part, butil::memory_order_acq_rel)) {
+                expected, shared_part, std::memory_order_acq_rel)) {
             shared_part->RemoveRefManually();
             CHECK(expected);
             shared_part = expected;
@@ -2392,7 +2392,7 @@ void Socket::ShareStats(Socket* main_socket) {
     SharedPart* main_sp = main_socket->GetOrNewSharedPart();
     main_sp->AddRefManually();
     SharedPart* my_sp =
-        _shared_part.exchange(main_sp, butil::memory_order_acq_rel);
+        _shared_part.exchange(main_sp, std::memory_order_acq_rel);
     if (my_sp) {
         my_sp->RemoveRefManually();
     }
@@ -2409,7 +2409,7 @@ int Socket::GetPooledSocket(SocketUniquePtr* pooled_socket) {
         return -1;
     }
     // Create socket_pool optimistically.
-    SocketPool* socket_pool = main_sp->socket_pool.load(butil::memory_order_consume);
+    SocketPool* socket_pool = main_sp->socket_pool.load(std::memory_order_consume);
     if (socket_pool == NULL) {
         SocketOptions opt;
         opt.remote_side = remote_side();
@@ -2421,7 +2421,7 @@ int Socket::GetPooledSocket(SocketUniquePtr* pooled_socket) {
         socket_pool = new SocketPool(opt);
         SocketPool* expected = NULL;
         if (!main_sp->socket_pool.compare_exchange_strong(
-                expected, socket_pool, butil::memory_order_acq_rel)) {
+                expected, socket_pool, std::memory_order_acq_rel)) {
             delete socket_pool;
             CHECK(expected);
             socket_pool = expected;
@@ -2439,13 +2439,13 @@ int Socket::GetPooledSocket(SocketUniquePtr* pooled_socket) {
 }
 
 int Socket::ReturnToPool() {
-    SharedPart* sp = _shared_part.exchange(NULL, butil::memory_order_acquire);
+    SharedPart* sp = _shared_part.exchange(NULL, std::memory_order_acquire);
     if (sp == NULL) {
         LOG(ERROR) << "_shared_part is NULL";
         SetFailed(EINVAL, "_shared_part is NULL");
         return -1;
     }
-    SocketPool* pool = sp->socket_pool.load(butil::memory_order_consume);
+    SocketPool* pool = sp->socket_pool.load(std::memory_order_consume);
     if (pool == NULL) {
         LOG(ERROR) << "_shared_part->socket_pool is NULL";
         SetFailed(EINVAL, "_shared_part->socket_pool is NULL");
@@ -2460,7 +2460,7 @@ int Socket::ReturnToPool() {
     // - related fields must be reset before returning to pool
     // - sp must be released after returning to pool because it owns pool
     _connection_type_for_progressive_read = CONNECTION_TYPE_UNKNOWN;
-    _controller_released_socket.store(false, butil::memory_order_relaxed);
+    _controller_released_socket.store(false, std::memory_order_relaxed);
     pool->ReturnSocket(this);
     sp->RemoveRefManually();
     return 0;
@@ -2469,7 +2469,7 @@ int Socket::ReturnToPool() {
 bool Socket::HasSocketPool() const {
     SharedPart* sp = GetSharedPart();
     if (sp != NULL) {
-        return sp->socket_pool.load(butil::memory_order_consume) != NULL;
+        return sp->socket_pool.load(std::memory_order_consume) != NULL;
     }
     return false;
 }
@@ -2480,7 +2480,7 @@ void Socket::ListPooledSockets(std::vector<SocketId>* out, size_t max_count) {
     if (sp == NULL) {
         return;
     }
-    SocketPool* pool = sp->socket_pool.load(butil::memory_order_consume);
+    SocketPool* pool = sp->socket_pool.load(std::memory_order_consume);
     if (pool == NULL) {
         return;
     }
@@ -2492,12 +2492,12 @@ bool Socket::GetPooledSocketStats(int* numfree, int* numinflight) {
     if (sp == NULL) {
         return false;
     }
-    SocketPool* pool = sp->socket_pool.load(butil::memory_order_consume);
+    SocketPool* pool = sp->socket_pool.load(std::memory_order_consume);
     if (pool == NULL) {
         return false;
     }
-    *numfree = pool->_numfree.load(butil::memory_order_relaxed);
-    *numinflight = pool->_numinflight.load(butil::memory_order_relaxed);
+    *numfree = pool->_numfree.load(std::memory_order_relaxed);
+    *numinflight = pool->_numinflight.load(std::memory_order_relaxed);
     return true;
 }
     
@@ -2523,7 +2523,7 @@ int Socket::GetShortSocket(SocketUniquePtr* short_socket) {
 }
 
 int Socket::GetAgentSocket(SocketUniquePtr* out, bool (*checkfn)(Socket*)) {
-    SocketId id = _agent_socket_id.load(butil::memory_order_relaxed);
+    SocketId id = _agent_socket_id.load(std::memory_order_relaxed);
     SocketUniquePtr tmp_sock;
     do {
         if (Socket::Address(id, &tmp_sock) == 0) {
@@ -2545,7 +2545,7 @@ int Socket::GetAgentSocket(SocketUniquePtr* out, bool (*checkfn)(Socket*)) {
         } while (1);
 
         if (_agent_socket_id.compare_exchange_strong(
-                id, tmp_sock->id(), butil::memory_order_acq_rel)) {
+                id, tmp_sock->id(), std::memory_order_acq_rel)) {
             out->swap(tmp_sock);
             return 0;
         }
@@ -2555,7 +2555,7 @@ int Socket::GetAgentSocket(SocketUniquePtr* out, bool (*checkfn)(Socket*)) {
 }
 
 int Socket::PeekAgentSocket(SocketUniquePtr* out) const {
-    SocketId id = _agent_socket_id.load(butil::memory_order_relaxed);
+    SocketId id = _agent_socket_id.load(std::memory_order_relaxed);
     if (id == INVALID_SOCKET_ID) {
         return -1;
     }
@@ -2575,26 +2575,26 @@ void Socket::GetStat(SocketStat* s) const {
 }
 
 void Socket::AddInputBytes(size_t bytes) {
-    GetOrNewSharedPart()->in_size.fetch_add(bytes, butil::memory_order_relaxed);
+    GetOrNewSharedPart()->in_size.fetch_add(bytes, std::memory_order_relaxed);
 }
 void Socket::AddInputMessages(size_t count) {
-    GetOrNewSharedPart()->in_num_messages.fetch_add(count, butil::memory_order_relaxed);
+    GetOrNewSharedPart()->in_num_messages.fetch_add(count, std::memory_order_relaxed);
 }
 void Socket::CancelUnwrittenBytes(size_t bytes) {
     const int64_t before_minus =
-        _unwritten_bytes.fetch_sub(bytes, butil::memory_order_relaxed);
+        _unwritten_bytes.fetch_sub(bytes, std::memory_order_relaxed);
     if (before_minus < (int64_t)bytes + FLAGS_socket_max_unwritten_bytes) {
         _overcrowded = false;
     }
 }
 void Socket::AddOutputBytes(size_t bytes) {
-    GetOrNewSharedPart()->out_size.fetch_add(bytes, butil::memory_order_relaxed);
+    GetOrNewSharedPart()->out_size.fetch_add(bytes, std::memory_order_relaxed);
     _last_writetime_us.store(butil::cpuwide_time_us(),
-                             butil::memory_order_relaxed);
+                             std::memory_order_relaxed);
     CancelUnwrittenBytes(bytes);
 }
 void Socket::AddOutputMessages(size_t count) {
-    GetOrNewSharedPart()->out_num_messages.fetch_add(count, butil::memory_order_relaxed);
+    GetOrNewSharedPart()->out_num_messages.fetch_add(count, std::memory_order_relaxed);
 }
 
 SocketId Socket::main_socket_id() const {
@@ -2607,9 +2607,9 @@ SocketId Socket::main_socket_id() const {
 
 void Socket::OnProgressiveReadCompleted() {
     if (is_read_progressive() &&
-        (_controller_released_socket.load(butil::memory_order_relaxed) ||
+        (_controller_released_socket.load(std::memory_order_relaxed) ||
          _controller_released_socket.exchange(
-             true, butil::memory_order_relaxed))) {
+             true, std::memory_order_relaxed))) {
         if (_connection_type_for_progressive_read == CONNECTION_TYPE_POOLED) {
             ReturnToPool();
         } else if (_connection_type_for_progressive_read == CONNECTION_TYPE_SHORT) {

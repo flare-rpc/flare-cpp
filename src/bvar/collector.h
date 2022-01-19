@@ -23,7 +23,7 @@
 #include "butil/containers/linked_list.h"
 #include "butil/fast_rand.h"
 #include "butil/time.h"
-#include "butil/atomicops.h"
+#include "butil/static_atomic.h"
 #include "bvar/passive_status.h"
 
 namespace bvar {
@@ -33,14 +33,14 @@ struct CollectorSpeedLimit {
     // [Managed by Collector, don't change!]
     size_t sampling_range;
     bool ever_grabbed;
-    butil::static_atomic<int> count_before_grabbed;
+    flare::static_atomic<int> count_before_grabbed;
     int64_t first_sample_real_us;
 };
 
 static const size_t COLLECTOR_SAMPLING_BASE = 16384;
 
 #define BVAR_COLLECTOR_SPEED_LIMIT_INITIALIZER                          \
-    { ::bvar::COLLECTOR_SAMPLING_BASE, false, BUTIL_STATIC_ATOMIC_INIT(0), 0 }
+    { ::bvar::COLLECTOR_SAMPLING_BASE, false, FLARE_STATIC_ATOMIC_INIT(0), 0 }
 
 class Collected;
 

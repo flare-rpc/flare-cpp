@@ -55,7 +55,7 @@ const int ALLOW_UNUSED register_FLAGS_bthread_min_concurrency =
     ::GFLAGS_NS::RegisterFlagValidator(&FLAGS_bthread_min_concurrency,
                                     validate_bthread_min_concurrency);
 
-BAIDU_CASSERT(sizeof(TaskControl*) == sizeof(butil::atomic<TaskControl*>), atomic_size_match);
+BAIDU_CASSERT(sizeof(TaskControl*) == sizeof(std::atomic<TaskControl*>), atomic_size_match);
 
 pthread_mutex_t g_task_control_mutex = PTHREAD_MUTEX_INITIALIZER;
 // Referenced in rpc, needs to be extern.
@@ -71,13 +71,13 @@ inline TaskControl* get_task_control() {
 }
 
 inline TaskControl* get_or_new_task_control() {
-    butil::atomic<TaskControl*>* p = (butil::atomic<TaskControl*>*)&g_task_control;
-    TaskControl* c = p->load(butil::memory_order_consume);
+    std::atomic<TaskControl*>* p = (std::atomic<TaskControl*>*)&g_task_control;
+    TaskControl* c = p->load(std::memory_order_consume);
     if (c != NULL) {
         return c;
     }
     BAIDU_SCOPED_LOCK(g_task_control_mutex);
-    c = p->load(butil::memory_order_consume);
+    c = p->load(std::memory_order_consume);
     if (c != NULL) {
         return c;
     }
@@ -93,7 +93,7 @@ inline TaskControl* get_or_new_task_control() {
         delete c;
         return NULL;
     }
-    p->store(c, butil::memory_order_release);
+    p->store(c, std::memory_order_release);
     return c;
 }
 

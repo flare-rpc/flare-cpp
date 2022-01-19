@@ -1229,9 +1229,9 @@ int Controller::HandleSocketFailed(bthread_id_t id, void* data, int error_code,
 }
 
 CallId Controller::call_id() {
-    butil::atomic<uint64_t>* target =
-        (butil::atomic<uint64_t>*)&_correlation_id.value;
-    uint64_t loaded = target->load(butil::memory_order_relaxed);
+    std::atomic<uint64_t>* target =
+        (std::atomic<uint64_t>*)&_correlation_id.value;
+    uint64_t loaded = target->load(std::memory_order_relaxed);
     if (loaded) {
         const CallId id = { loaded };
         return id;
@@ -1241,7 +1241,7 @@ CallId Controller::call_id() {
     // The range of this id will be reset in Channel::CallMethod
     CHECK_EQ(0, bthread_id_create2(&cid, this, HandleSocketFailed));
     if (!target->compare_exchange_strong(loaded, cid.value,
-                                         butil::memory_order_relaxed)) {
+                                         std::memory_order_relaxed)) {
         bthread_id_cancel(cid);
         cid.value = loaded;
     }

@@ -20,7 +20,7 @@
 #define BRPC_PROGRESSIVE_ATTACHMENT_H
 
 #include "brpc/callback.h"
-#include "butil/atomicops.h"
+#include "butil/static_atomic.h"
 #include "butil/iobuf.h"
 #include "butil/endpoint.h"       // butil::EndPoint
 #include "bthread/types.h"        // bthread_id_t
@@ -65,7 +65,7 @@ protected:
     
     bool _before_http_1_1;
     bool _pause_from_mark_rpc_as_done;
-    butil::atomic<int> _rpc_state;
+    std::atomic<int> _rpc_state;
     butil::Mutex _mutex;
     SocketUniquePtr _httpsock;
     butil::IOBuf _saved_buf;

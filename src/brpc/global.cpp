@@ -194,9 +194,9 @@ static int64_t GetIOBufBlockMemory(void*) {
 }
 
 // Defined in server.cpp
-extern butil::static_atomic<int> g_running_server_count;
+extern flare::static_atomic<int> g_running_server_count;
 static int GetRunningServerCount(void*) {
-    return g_running_server_count.load(butil::memory_order_relaxed);
+    return g_running_server_count.load(std::memory_order_relaxed);
 }
 
 // Update global stuff periodically.
@@ -247,7 +247,7 @@ static void* GlobalUpdate(void*) {
         TrackMe();
 
         if (!IsDummyServerRunning()
-            && g_running_server_count.load(butil::memory_order_relaxed) == 0
+            && g_running_server_count.load(std::memory_order_relaxed) == 0
             && fw.check_and_consume() > 0) {
             long port = ReadPortOfDummyServer(DUMMY_SERVER_PORT_FILE);
             if (port >= 0) {
