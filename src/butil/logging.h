@@ -29,7 +29,7 @@
 #include <cstring>
 #include <sstream>
 #include "butil/macros.h"    // BAIDU_CONCAT
-#include "butil/atomicops.h" // Used by LOG_EVERY_N, LOG_FIRST_N etc
+#include "butil/static_atomic.h" // Used by LOG_EVERY_N, LOG_FIRST_N etc
 #include "butil/time.h"      // gettimeofday_us()
 
 #if BRPC_WITH_GLOG
@@ -1146,28 +1146,28 @@ inline std::ostream& operator<<(std::ostream& out, const std::wstring& wstr) {
 
 // Helper macro included by all *_EVERY_N macros.
 #define BAIDU_LOG_IF_EVERY_N_IMPL(logifmacro, severity, condition, N)   \
-    static ::butil::subtle::Atomic32 BAIDU_CONCAT(logeveryn_, __LINE__) = -1; \
+    static int32_t BAIDU_CONCAT(logeveryn_, __LINE__) = -1; \
     const static int BAIDU_CONCAT(logeveryn_sc_, __LINE__) = (N);       \
     const int BAIDU_CONCAT(logeveryn_c_, __LINE__) =                    \
-        ::butil::subtle::NoBarrier_AtomicIncrement(&BAIDU_CONCAT(logeveryn_, __LINE__), 1); \
+        std::atomic_fetch_add(&BAIDU_CONCAT(logeveryn_, __LINE__), 1) + 1; \
     logifmacro(severity, (condition) && BAIDU_CONCAT(logeveryn_c_, __LINE__) / \
                BAIDU_CONCAT(logeveryn_sc_, __LINE__) * BAIDU_CONCAT(logeveryn_sc_, __LINE__) \
                == BAIDU_CONCAT(logeveryn_c_, __LINE__))
 
 // Helper macro included by all *_FIRST_N macros.
 #define BAIDU_LOG_IF_FIRST_N_IMPL(logifmacro, severity, condition, N)   \
-    static ::butil::subtle::Atomic32 BAIDU_CONCAT(logfstn_, __LINE__) = 0; \
+    static int32_t BAIDU_CONCAT(logfstn_, __LINE__) = 0; \
     logifmacro(severity, (condition) && BAIDU_CONCAT(logfstn_, __LINE__) < N && \
-               ::butil::subtle::NoBarrier_AtomicIncrement(&BAIDU_CONCAT(logfstn_, __LINE__), 1) <= N)
+               std::atomic_fetch_add(&BAIDU_CONCAT(logfstn_, __LINE__), 1) + 1 <= N)
 
 // Helper macro included by all *_EVERY_SECOND macros.
 #define BAIDU_LOG_IF_EVERY_SECOND_IMPL(logifmacro, severity, condition) \
-    static ::butil::subtle::Atomic64 BAIDU_CONCAT(logeverys_, __LINE__) = 0; \
+    static int32_t BAIDU_CONCAT(logeverys_, __LINE__) = 0; \
     const int64_t BAIDU_CONCAT(logeverys_ts_, __LINE__) = ::butil::gettimeofday_us(); \
     const int64_t BAIDU_CONCAT(logeverys_seen_, __LINE__) = BAIDU_CONCAT(logeverys_, __LINE__); \
     logifmacro(severity, (condition) && BAIDU_CONCAT(logeverys_ts_, __LINE__) >= \
                (BAIDU_CONCAT(logeverys_seen_, __LINE__) + 1000000L) &&  \
-               ::butil::subtle::NoBarrier_CompareAndSwap(                \
+               std::atomic_compare_exchange_strong(                \
                    &BAIDU_CONCAT(logeverys_, __LINE__),                 \
                    BAIDU_CONCAT(logeverys_seen_, __LINE__),             \
                    BAIDU_CONCAT(logeverys_ts_, __LINE__))               \
