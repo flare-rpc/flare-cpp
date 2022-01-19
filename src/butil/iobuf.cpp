@@ -176,15 +176,15 @@ flare::static_atomic<size_t> g_newbigview = FLARE_STATIC_ATOMIC_INIT(0);
 }  // namespace iobuf
 
 size_t IOBuf::block_count() {
-    return iobuf::g_nblock.load(std::memory_orderrelaxed);
+    return iobuf::g_nblock.load(std::memory_order_relaxed);
 }
 
 size_t IOBuf::block_memory() {
-    return iobuf::g_blockmem.load(std::memory_orderrelaxed);
+    return iobuf::g_blockmem.load(std::memory_order_relaxed);
 }
 
 size_t IOBuf::new_bigview_count() {
-    return iobuf::g_newbigview.load(std::memory_orderrelaxed);
+    return iobuf::g_newbigview.load(std::memory_order_relaxed);
 }
 
 const uint16_t IOBUF_BLOCK_FLAGS_USER_DATA = 0x1;
@@ -214,9 +214,9 @@ struct IOBuf::Block {
         , cap(data_size)
         , portal_next(NULL)
         , data(data_in) {
-        iobuf::g_nblock.fetch_add(1, std::memory_orderrelaxed);
+        iobuf::g_nblock.fetch_add(1, std::memory_order_relaxed);
         iobuf::g_blockmem.fetch_add(data_size + sizeof(Block),
-                                    std::memory_orderrelaxed);
+                                    std::memory_order_relaxed);
     }
 
     Block(char* data_in, uint32_t data_size, UserDataDeleter deleter)
@@ -247,17 +247,17 @@ struct IOBuf::Block {
 
     void inc_ref() {
         check_abi();
-        nshared.fetch_add(1, std::memory_orderrelaxed);
+        nshared.fetch_add(1, std::memory_order_relaxed);
     }
         
     void dec_ref() {
         check_abi();
-        if (nshared.fetch_sub(1, std::memory_orderrelease) == 1) {
-            std::atomic_thread_fence(std::memory_orderacquire);
+        if (nshared.fetch_sub(1, std::memory_order_release) == 1) {
+            std::atomic_thread_fence(std::memory_order_acquire);
             if (!flags) {
-                iobuf::g_nblock.fetch_sub(1, std::memory_orderrelaxed);
+                iobuf::g_nblock.fetch_sub(1, std::memory_order_relaxed);
                 iobuf::g_blockmem.fetch_sub(cap + sizeof(Block),
-                                            std::memory_orderrelaxed);
+                                            std::memory_order_relaxed);
                 this->~Block();
                 iobuf::blockmem_deallocate(this);
             } else if (flags & IOBUF_BLOCK_FLAGS_USER_DATA) {
@@ -269,7 +269,7 @@ struct IOBuf::Block {
     }
 
     int ref_count() const {
-        return nshared.load(std::memory_orderrelaxed);
+        return nshared.load(std::memory_order_relaxed);
     }
 
     bool full() const { return size >= cap; }
@@ -398,7 +398,7 @@ inline void release_tls_block(IOBuf::Block *b) {
         b->dec_ref();
     } else if (tls_data.num_blocks >= MAX_BLOCKS_PER_THREAD) {
         b->dec_ref();
-        g_num_hit_tls_threshold.fetch_add(1, std::memory_orderrelaxed);
+        g_num_hit_tls_threshold.fetch_add(1, std::memory_order_relaxed);
     } else {
         b->portal_next = tls_data.block_head;
         tls_data.block_head = b;
@@ -422,7 +422,7 @@ void release_tls_block_chain(IOBuf::Block* b) {
             b->dec_ref();
             b = saved_next;
         } while (b);
-        g_num_hit_tls_threshold.fetch_add(n, std::memory_orderrelaxed);
+        g_num_hit_tls_threshold.fetch_add(n, std::memory_order_relaxed);
         return;
     }
     IOBuf::Block* first_b = b;
@@ -469,7 +469,7 @@ IOBuf::Block* acquire_tls_block() {
 }
 
 inline IOBuf::BlockRef* acquire_blockref_array(size_t cap) {
-    iobuf::g_newbigview.fetch_add(1, std::memory_orderrelaxed);
+    iobuf::g_newbigview.fetch_add(1, std::memory_order_relaxed);
     return new IOBuf::BlockRef[cap];
 }
 
@@ -484,7 +484,7 @@ inline void release_blockref_array(IOBuf::BlockRef* refs, size_t cap) {
 }  // namespace iobuf
 
 size_t IOBuf::block_count_hit_tls_threshold() {
-    return iobuf::g_num_hit_tls_threshold.load(std::memory_orderrelaxed);
+    return iobuf::g_num_hit_tls_threshold.load(std::memory_order_relaxed);
 }
 
 BAIDU_CASSERT(sizeof(IOBuf::SmallView) == sizeof(IOBuf::BigView),
