@@ -249,7 +249,6 @@ set(BUTIL_SOURCES
     ${PROJECT_SOURCE_DIR}/src/butil/atomicops_internals_x86_gcc.cc
     ${PROJECT_SOURCE_DIR}/src/butil/base64.cc
     ${PROJECT_SOURCE_DIR}/src/butil/big_endian.cc
-    ${PROJECT_SOURCE_DIR}/src/butil/cpu.cc
     ${PROJECT_SOURCE_DIR}/src/butil/debug/alias.cc
     ${PROJECT_SOURCE_DIR}/src/butil/debug/asan_invalid_access.cc
     ${PROJECT_SOURCE_DIR}/src/butil/debug/crash_logging.cc
@@ -282,7 +281,6 @@ set(BUTIL_SOURCES
     ${PROJECT_SOURCE_DIR}/src/butil/memory/ref_counted_memory.cc
     ${PROJECT_SOURCE_DIR}/src/butil/memory/singleton.cc
     ${PROJECT_SOURCE_DIR}/src/butil/memory/weak_ptr.cc
-    ${PROJECT_SOURCE_DIR}/src/butil/posix/file_descriptor_shuffle.cc
     ${PROJECT_SOURCE_DIR}/src/butil/posix/global_descriptors.cc
     ${PROJECT_SOURCE_DIR}/src/butil/process_util.cc
     ${PROJECT_SOURCE_DIR}/src/butil/rand_util.cc
