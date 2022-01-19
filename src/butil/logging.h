@@ -1146,23 +1146,23 @@ inline std::ostream& operator<<(std::ostream& out, const std::wstring& wstr) {
 
 // Helper macro included by all *_EVERY_N macros.
 #define BAIDU_LOG_IF_EVERY_N_IMPL(logifmacro, severity, condition, N)   \
-    static int32_t BAIDU_CONCAT(logeveryn_, __LINE__) = -1; \
+    static std::atomic<int32_t> BAIDU_CONCAT(logeveryn_, __LINE__){-1}; \
     const static int BAIDU_CONCAT(logeveryn_sc_, __LINE__) = (N);       \
     const int BAIDU_CONCAT(logeveryn_c_, __LINE__) =                    \
-        BAIDU_CONCAT(logeveryn_, __LINE__).fectch_add( 1) + 1; \
+        BAIDU_CONCAT(logeveryn_, __LINE__).fetch_add( 1) + 1; \
     logifmacro(severity, (condition) && BAIDU_CONCAT(logeveryn_c_, __LINE__) / \
                BAIDU_CONCAT(logeveryn_sc_, __LINE__) * BAIDU_CONCAT(logeveryn_sc_, __LINE__) \
                == BAIDU_CONCAT(logeveryn_c_, __LINE__))
 
 // Helper macro included by all *_FIRST_N macros.
 #define BAIDU_LOG_IF_FIRST_N_IMPL(logifmacro, severity, condition, N)   \
-    static int32_t BAIDU_CONCAT(logfstn_, __LINE__) = 0; \
+    static std::atomic<int32_t> BAIDU_CONCAT(logfstn_, __LINE__){0}; \
     logifmacro(severity, (condition) && BAIDU_CONCAT(logfstn_, __LINE__) < N && \
                BAIDU_CONCAT(logfstn_, __LINE__).fetch_add( 1) + 1 <= N)
 
 // Helper macro included by all *_EVERY_SECOND macros.
 #define BAIDU_LOG_IF_EVERY_SECOND_IMPL(logifmacro, severity, condition) \
-    static int32_t BAIDU_CONCAT(logeverys_, __LINE__) = 0; \
+    static std::atomic<int32_t> BAIDU_CONCAT(logeverys_, __LINE__){0}; \
     const int64_t BAIDU_CONCAT(logeverys_ts_, __LINE__) = ::butil::gettimeofday_us(); \
     const int64_t BAIDU_CONCAT(logeverys_seen_, __LINE__) = BAIDU_CONCAT(logeverys_, __LINE__); \
     logifmacro(severity, (condition) && BAIDU_CONCAT(logeverys_ts_, __LINE__) >= \
