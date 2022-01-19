@@ -46,7 +46,7 @@ namespace flare {
         T fetch_xor(T v, std::memory_order o) { return ref().fetch_xor(v, o); }
 
         static_atomic &operator=(T v) {
-            store(v, memory_order_seq_cst);
+            store(v, std::memory_order_seq_cst);
             return *this;
         }
 
