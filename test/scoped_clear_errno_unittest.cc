@@ -4,7 +4,7 @@
 
 #include <errno.h>
 
-#include "butil/scoped_clear_errno.h"
+#include "flare/butil/scoped_clear_errno.h"
 #include <gtest/gtest.h>
 
 namespace butil {

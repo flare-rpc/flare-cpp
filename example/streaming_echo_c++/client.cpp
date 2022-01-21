@@ -18,9 +18,9 @@
 // A client sending requests to server in batch every 1 second.
 
 #include <gflags/gflags.h>
-#include <butil/logging.h>
-#include <brpc/channel.h>
-#include <brpc/stream.h>
+#include <flare/butil/logging.h>
+#include <flare/brpc/channel.h>
+#include <flare/brpc/stream.h>
 #include "echo.pb.h"
 
 DEFINE_bool(send_attachment, true, "Carry attachment along with requests");

@@ -2,16 +2,16 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "butil/strings/string_util.h"
+#include "flare/butil/strings/string_util.h"
 
 #include <math.h>
 #include <stdarg.h>
 
 #include <algorithm>
 
-#include "butil/basictypes.h"
-#include "butil/strings/string16.h"
-#include "butil/strings/utf_string_conversions.h"
+#include "flare/butil/basictypes.h"
+#include "flare/butil/strings/string16.h"
+#include "flare/butil/strings/utf_string_conversions.h"
 #include <gtest/gtest.h>
 
 namespace butil {

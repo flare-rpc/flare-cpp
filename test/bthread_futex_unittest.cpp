@@ -20,14 +20,14 @@
 #include <stdio.h>
 #include <signal.h>
 #include <gtest/gtest.h>
-#include "butil/time.h"
-#include "butil/macros.h"
-#include "butil/errno.h"
+#include "flare/butil/time.h"
+#include "flare/butil/macros.h"
+#include "flare/butil/errno.h"
 #include <limits.h>                            // INT_MAX
-#include "butil/static_atomic.h"
-#include "bthread/bthread.h"
-#include <bthread/sys_futex.h>
-#include <bthread/processor.h>
+#include "flare/butil/static_atomic.h"
+#include "flare/bthread/bthread.h"
+#include <flare/bthread/sys_futex.h>
+#include <flare/bthread/processor.h>
 
 namespace {
 volatile bool stop = false;

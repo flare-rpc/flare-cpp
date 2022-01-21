@@ -21,9 +21,9 @@
 
 #include <gtest/gtest.h>
 #include <gflags/gflags.h>
-#include "brpc/socket.h"
-#include "brpc/socket_map.h"
-#include "brpc/reloadable_flags.h"
+#include "flare/brpc/socket.h"
+#include "flare/brpc/socket_map.h"
+#include "flare/brpc/reloadable_flags.h"
 
 namespace brpc {
 DECLARE_int32(idle_timeout_second);

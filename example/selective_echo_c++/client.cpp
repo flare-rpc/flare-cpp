@@ -18,10 +18,10 @@
 // A client sending requests to server in parallel by multiple threads.
 
 #include <gflags/gflags.h>
-#include <bthread/bthread.h>
-#include <butil/logging.h>
-#include <brpc/selective_channel.h>
-#include <brpc/parallel_channel.h>
+#include <flare/bthread/bthread.h>
+#include <flare/butil/logging.h>
+#include <flare/brpc/selective_channel.h>
+#include <flare/brpc/parallel_channel.h>
 #include "echo.pb.h"
 
 DEFINE_int32(thread_num, 50, "Number of threads to send requests");

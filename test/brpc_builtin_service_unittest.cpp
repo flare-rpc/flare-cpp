@@ -25,33 +25,33 @@
 #include <gtest/gtest.h>
 #include <gflags/gflags.h>
 #include <google/protobuf/descriptor.h>
-#include "butil/gperftools_profiler.h"
-#include "butil/time.h"
-#include "butil/macros.h"
-#include "brpc/socket.h"
-#include "brpc/server.h"
-#include "brpc/channel.h"
-#include "brpc/controller.h"
-#include "brpc/span.h"
-#include "brpc/reloadable_flags.h"
-#include "brpc/builtin/version_service.h"
-#include "brpc/builtin/health_service.h"
-#include "brpc/builtin/list_service.h"
-#include "brpc/builtin/status_service.h"
-#include "brpc/builtin/threads_service.h"
-#include "brpc/builtin/vlog_service.h"
-#include "brpc/builtin/index_service.h"        // IndexService
-#include "brpc/builtin/connections_service.h"  // ConnectionsService
-#include "brpc/builtin/flags_service.h"        // FlagsService
-#include "brpc/builtin/vars_service.h"         // VarsService
-#include "brpc/builtin/rpcz_service.h"         // RpczService
-#include "brpc/builtin/dir_service.h"          // DirService
-#include "brpc/builtin/pprof_service.h"        // PProfService
-#include "brpc/builtin/bthreads_service.h"     // BthreadsService
-#include "brpc/builtin/ids_service.h"          // IdsService
-#include "brpc/builtin/sockets_service.h"      // SocketsService
-#include "brpc/builtin/common.h"
-#include "brpc/builtin/bad_method_service.h"
+#include "flare/butil/gperftools_profiler.h"
+#include "flare/butil/time.h"
+#include "flare/butil/macros.h"
+#include "flare/brpc/socket.h"
+#include "flare/brpc/server.h"
+#include "flare/brpc/channel.h"
+#include "flare/brpc/controller.h"
+#include "flare/brpc/span.h"
+#include "flare/brpc/reloadable_flags.h"
+#include "flare/brpc/builtin/version_service.h"
+#include "flare/brpc/builtin/health_service.h"
+#include "flare/brpc/builtin/list_service.h"
+#include "flare/brpc/builtin/status_service.h"
+#include "flare/brpc/builtin/threads_service.h"
+#include "flare/brpc/builtin/vlog_service.h"
+#include "flare/brpc/builtin/index_service.h"        // IndexService
+#include "flare/brpc/builtin/connections_service.h"  // ConnectionsService
+#include "flare/brpc/builtin/flags_service.h"        // FlagsService
+#include "flare/brpc/builtin/vars_service.h"         // VarsService
+#include "flare/brpc/builtin/rpcz_service.h"         // RpczService
+#include "flare/brpc/builtin/dir_service.h"          // DirService
+#include "flare/brpc/builtin/pprof_service.h"        // PProfService
+#include "flare/brpc/builtin/bthreads_service.h"     // BthreadsService
+#include "flare/brpc/builtin/ids_service.h"          // IdsService
+#include "flare/brpc/builtin/sockets_service.h"      // SocketsService
+#include "flare/brpc/builtin/common.h"
+#include "flare/brpc/builtin/bad_method_service.h"
 #include "echo.pb.h"
 
 DEFINE_bool(foo, false, "Flags for UT");

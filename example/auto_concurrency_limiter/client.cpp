@@ -18,11 +18,11 @@
 // A client sending requests to server asynchronously every 1 second.
 
 #include <gflags/gflags.h>
-#include <butil/logging.h>
-#include <butil/time.h>
-#include <brpc/channel.h>
-#include <bvar/bvar.h>
-#include <bthread/timer_thread.h>
+#include <flare/butil/logging.h>
+#include <flare/butil/time.h>
+#include <flare/brpc/channel.h>
+#include <flare/bvar/bvar.h>
+#include <flare/bthread/timer_thread.h>
 #include <json2pb/json_to_pb.h>
 
 #include <fstream>

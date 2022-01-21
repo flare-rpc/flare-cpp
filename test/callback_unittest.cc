@@ -2,12 +2,12 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "butil/bind.h"
-#include "butil/callback.h"
-#include "butil/callback_helpers.h"
-#include "butil/callback_internal.h"
-#include "butil/memory/ref_counted.h"
-#include "butil/memory/scoped_ptr.h"
+#include "flare/butil/bind.h"
+#include "flare/butil/callback.h"
+#include "flare/butil/callback_helpers.h"
+#include "flare/butil/callback_internal.h"
+#include "flare/butil/memory/ref_counted.h"
+#include "flare/butil/memory/scoped_ptr.h"
 #include <gtest/gtest.h>
 
 namespace butil {

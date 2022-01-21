@@ -18,14 +18,14 @@
 // A server to receive EchoRequest and send back EchoResponse.
 
 #include <gflags/gflags.h>
-#include <butil/logging.h>
-#include <brpc/server.h>
-#include <butil/static_atomic.h>
-#include <butil/time.h>
-#include <butil/logging.h>
+#include <flare/butil/logging.h>
+#include <flare/brpc/server.h>
+#include <flare/butil/static_atomic.h>
+#include <flare/butil/time.h>
+#include <flare/butil/logging.h>
 #include <json2pb/json_to_pb.h>
-#include <bthread/timer_thread.h>
-#include <bthread/bthread.h>
+#include <flare/bthread/timer_thread.h>
+#include <flare/bthread/bthread.h>
 
 #include <cstdlib>
 #include <fstream>

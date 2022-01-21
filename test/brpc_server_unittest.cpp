@@ -24,33 +24,33 @@
 #include <fstream>
 #include <gtest/gtest.h>
 #include <google/protobuf/descriptor.h>
-#include "butil/time.h"
-#include "butil/macros.h"
-#include "butil/fd_guard.h"
-#include "butil/files/scoped_file.h"
-#include "brpc/socket.h"
-#include "brpc/builtin/version_service.h"
-#include "brpc/builtin/health_service.h"
-#include "brpc/builtin/list_service.h"
-#include "brpc/builtin/status_service.h"
-#include "brpc/builtin/threads_service.h"
-#include "brpc/builtin/vlog_service.h"
-#include "brpc/builtin/index_service.h"        // IndexService
-#include "brpc/builtin/connections_service.h"  // ConnectionsService
-#include "brpc/builtin/flags_service.h"        // FlagsService
-#include "brpc/builtin/vars_service.h"         // VarsService
-#include "brpc/builtin/rpcz_service.h"         // RpczService
-#include "brpc/builtin/dir_service.h"          // DirService
-#include "brpc/builtin/pprof_service.h"        // PProfService
-#include "brpc/builtin/bthreads_service.h"     // BthreadsService
-#include "brpc/builtin/ids_service.h"          // IdsService
-#include "brpc/builtin/sockets_service.h"      // SocketsService
-#include "brpc/builtin/bad_method_service.h"
-#include "brpc/server.h"
-#include "brpc/restful.h"
-#include "brpc/channel.h"
-#include "brpc/socket_map.h"
-#include "brpc/controller.h"
+#include "flare/butil/time.h"
+#include "flare/butil/macros.h"
+#include "flare/butil/fd_guard.h"
+#include "flare/butil/files/scoped_file.h"
+#include "flare/brpc/socket.h"
+#include "flare/brpc/builtin/version_service.h"
+#include "flare/brpc/builtin/health_service.h"
+#include "flare/brpc/builtin/list_service.h"
+#include "flare/brpc/builtin/status_service.h"
+#include "flare/brpc/builtin/threads_service.h"
+#include "flare/brpc/builtin/vlog_service.h"
+#include "flare/brpc/builtin/index_service.h"        // IndexService
+#include "flare/brpc/builtin/connections_service.h"  // ConnectionsService
+#include "flare/brpc/builtin/flags_service.h"        // FlagsService
+#include "flare/brpc/builtin/vars_service.h"         // VarsService
+#include "flare/brpc/builtin/rpcz_service.h"         // RpczService
+#include "flare/brpc/builtin/dir_service.h"          // DirService
+#include "flare/brpc/builtin/pprof_service.h"        // PProfService
+#include "flare/brpc/builtin/bthreads_service.h"     // BthreadsService
+#include "flare/brpc/builtin/ids_service.h"          // IdsService
+#include "flare/brpc/builtin/sockets_service.h"      // SocketsService
+#include "flare/brpc/builtin/bad_method_service.h"
+#include "flare/brpc/server.h"
+#include "flare/brpc/restful.h"
+#include "flare/brpc/channel.h"
+#include "flare/brpc/socket_map.h"
+#include "flare/brpc/controller.h"
 #include "echo.pb.h"
 #include "v1.pb.h"
 #include "v2.pb.h"

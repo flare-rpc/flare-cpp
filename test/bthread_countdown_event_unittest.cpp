@@ -18,9 +18,9 @@
 // Date: 2016/06/03 13:25:44
 
 #include <gtest/gtest.h>
-#include <bthread/countdown_event.h>
-#include "butil/static_atomic.h"
-#include "butil/time.h"
+#include <flare/bthread/countdown_event.h>
+#include "flare/butil/static_atomic.h"
+#include "flare/butil/time.h"
 
 namespace {
 struct Arg {

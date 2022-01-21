@@ -18,10 +18,10 @@
 // A server to receive EchoRequest and send back EchoResponse.
 
 #include <gflags/gflags.h>
-#include <butil/logging.h>
-#include <brpc/server.h>
+#include <flare/butil/logging.h>
+#include <flare/brpc/server.h>
 #include "echo.pb.h"
-#include <brpc/stream.h>
+#include <flare/brpc/stream.h>
 
 DEFINE_bool(send_attachment, true, "Carry attachment along with response");
 DEFINE_int32(port, 8001, "TCP Port of this server");

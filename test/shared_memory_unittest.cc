@@ -2,21 +2,21 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "butil/basictypes.h"
-#include "butil/memory/scoped_ptr.h"
-#include "butil/memory/shared_memory.h"
-#include "butil/process/kill.h"
-#include "butil/rand_util.h"
-#include "butil/strings/string_number_conversions.h"
-#include "butil/sys_info.h"
+#include "flare/butil/basictypes.h"
+#include "flare/butil/memory/scoped_ptr.h"
+#include "flare/butil/memory/shared_memory.h"
+#include "flare/butil/process/kill.h"
+#include "flare/butil/rand_util.h"
+#include "flare/butil/strings/string_number_conversions.h"
+#include "flare/butil/sys_info.h"
 #include "multiprocess_test.h"
-#include "butil/threading/platform_thread.h"
-#include "butil/time/time.h"
+#include "flare/butil/threading/platform_thread.h"
+#include "flare/butil/time/time.h"
 #include <gtest/gtest.h>
 #include "multiprocess_func_list.h"
 
 #if defined(OS_MACOSX)
-#include "butil/mac/scoped_nsautorelease_pool.h"
+#include "flare/butil/mac/scoped_nsautorelease_pool.h"
 #endif
 
 #if defined(OS_POSIX)
@@ -29,7 +29,7 @@
 #endif
 
 #if defined(OS_WIN)
-#include "butil/win/scoped_handle.h"
+#include "flare/butil/win/scoped_handle.h"
 #endif
 
 static const int kNumThreads = 5;

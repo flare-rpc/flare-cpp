@@ -18,8 +18,8 @@
 // A server sleeping for even-th requests to trigger backup request of client.
 
 #include <gflags/gflags.h>
-#include <butil/logging.h>
-#include <brpc/server.h>
+#include <flare/butil/logging.h>
+#include <flare/brpc/server.h>
 #include "echo.pb.h"
 
 DEFINE_bool(echo_attachment, true, "Echo attachment as well");

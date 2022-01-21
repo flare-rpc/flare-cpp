@@ -16,11 +16,11 @@
 // under the License.
 
 #include <gtest/gtest.h>
-#include "butil/time.h"
-#include "butil/macros.h"
-#include "butil/logging.h"
-#include "bthread/task_group.h"
-#include "bthread/bthread.h"
+#include "flare/butil/time.h"
+#include "flare/butil/macros.h"
+#include "flare/butil/logging.h"
+#include "flare/bthread/task_group.h"
+#include "flare/bthread/bthread.h"
 
 namespace {
 void* sleeper(void* arg) {

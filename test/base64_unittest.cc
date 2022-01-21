@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "butil/base64.h"
+#include "flare/butil/base64.h"
 
 #include <gtest/gtest.h>
 

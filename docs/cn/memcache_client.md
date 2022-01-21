@@ -18,8 +18,8 @@
 创建一个访问memcached的Channel：
 
 ```c++
-#include <brpc/memcache.h>
-#include <brpc/channel.h>
+#include <flare/brpc/memcache.h>
+#include <flare/brpc/channel.h>
  
 brpc::ChannelOptions options;
 options.protocol = brpc::PROTOCOL_MEMCACHE;

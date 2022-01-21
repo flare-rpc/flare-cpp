@@ -17,7 +17,7 @@
 
 // Date: 2015/08/27 17:12:38
 
-#include "bvar/reducer.h"
+#include "flare/bvar/reducer.h"
 #include <gtest/gtest.h>
 #include <gflags/gflags.h>
 #include <stdlib.h>

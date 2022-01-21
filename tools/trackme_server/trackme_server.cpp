@@ -20,11 +20,11 @@
 
 #include <gflags/gflags.h>
 #include <memory>
-#include <butil/logging.h>
-#include <brpc/server.h>
-#include <butil/files/file_watcher.h>
-#include <butil/files/scoped_file.h>
-#include <brpc/trackme.pb.h>
+#include <flare/butil/logging.h>
+#include <flare/brpc/server.h>
+#include <flare/butil/files/file_watcher.h>
+#include <flare/butil/files/scoped_file.h>
+#include <flare/brpc/trackme.pb.h>
 
 DEFINE_string(bug_file, "./bugs", "A file containing revision and information of bugs");
 DEFINE_int32(port, 8877, "TCP Port of this server");

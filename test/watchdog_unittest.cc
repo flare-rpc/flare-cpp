@@ -2,12 +2,12 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "butil/threading/watchdog.h"
+#include "flare/butil/threading/watchdog.h"
 
-#include "butil/logging.h"
-#include "butil/synchronization/spin_wait.h"
-#include "butil/threading/platform_thread.h"
-#include "butil/time/time.h"
+#include "flare/butil/logging.h"
+#include "flare/butil/synchronization/spin_wait.h"
+#include "flare/butil/threading/platform_thread.h"
+#include "flare/butil/time/time.h"
 #include <gtest/gtest.h>
 
 namespace butil {

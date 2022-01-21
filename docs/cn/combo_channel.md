@@ -172,7 +172,7 @@ SelectiveChannel的重试独立于其中的sub channel，当SelectiveChannel访�
 SelectiveChannel的初始化和普通Channel基本一样，但Init不需要指定命名服务，因为SelectiveChannel通过AddChannel动态添加sub channel，而普通Channel通过命名服务动态管理server。
 
 ```c++
-#include <brpc/selective_channel.h>
+#include <flare/brpc/selective_channel.h>
 ...
 brpc::SelectiveChannel schan;
 brpc::ChannelOptions schan_options;
@@ -254,7 +254,7 @@ ParititonChannel只能处理一种分库方法，当用户需要多种分库方�
 首先定制PartitionParser。这个例子中tag的形式是N/M，N代表分库的index，M是分库的个数。比如0/3代表一共3个分库，这是第一个。
 
 ```c++
-#include <brpc/partition_channel.h>
+#include <flare/brpc/partition_channel.h>
 ...
 class MyPartitionParser : public brpc::PartitionParser {
 public:
@@ -284,7 +284,7 @@ public:
 然后初始化PartitionChannel。
 
 ```c++
-#include <brpc/partition_channel.h>
+#include <flare/brpc/partition_channel.h>
 ...
 brpc::PartitionChannel channel;
  

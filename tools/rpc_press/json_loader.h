@@ -23,7 +23,7 @@
 #include <google/protobuf/message.h>
 #include <google/protobuf/compiler/importer.h>
 #include <google/protobuf/dynamic_message.h>
-#include <butil/iobuf.h>
+#include <flare/butil/iobuf.h>
 
 namespace brpc {
 

@@ -18,8 +18,8 @@
 创建一个访问redis的Channel：
 
 ```c++
-#include <brpc/redis.h>
-#include <brpc/channel.h>
+#include <flare/brpc/redis.h>
+#include <flare/brpc/channel.h>
   
 brpc::ChannelOptions options;
 options.protocol = brpc::PROTOCOL_REDIS;

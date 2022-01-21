@@ -19,7 +19,7 @@
 #define BRPC_RPC_REPLAY_INFO_THREAD_H
 
 #include <pthread.h>
-#include <bvar/bvar.h>
+#include <flare/bvar/bvar.h>
 
 namespace brpc {
 

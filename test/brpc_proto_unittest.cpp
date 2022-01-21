@@ -22,7 +22,7 @@
 #include <google/protobuf/descriptor.h>
 #include <google/protobuf/descriptor.pb.h>
 #include <google/protobuf/dynamic_message.h>
-#include "brpc/policy/baidu_rpc_meta.pb.h"
+#include "flare/brpc/policy/baidu_rpc_meta.pb.h"
 #include "echo.pb.h"
 
 namespace {

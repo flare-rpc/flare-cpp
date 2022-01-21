@@ -18,9 +18,9 @@
 // A server to receive HttpRequest and send back HttpResponse.
 
 #include <gflags/gflags.h>
-#include <butil/logging.h>
-#include <brpc/server.h>
-#include <brpc/restful.h>
+#include <flare/butil/logging.h>
+#include <flare/brpc/server.h>
+#include <flare/brpc/restful.h>
 #include "http.pb.h"
 
 DEFINE_int32(port, 8010, "TCP Port of this server");

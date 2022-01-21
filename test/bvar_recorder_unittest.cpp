@@ -22,10 +22,10 @@
 #include <cstddef>
 #include <memory>
 #include <iostream>
-#include "butil/time.h"
-#include "butil/macros.h"
-#include "bvar/recorder.h"
-#include "bvar/latency_recorder.h"
+#include "flare/butil/time.h"
+#include "flare/butil/macros.h"
+#include "flare/bvar/recorder.h"
+#include "flare/bvar/latency_recorder.h"
 #include <gtest/gtest.h>
 
 namespace {

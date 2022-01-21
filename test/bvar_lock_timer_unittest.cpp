@@ -22,8 +22,8 @@
 #include <condition_variable>
 #endif
 #include <gtest/gtest.h>
-#include "butil/gperftools_profiler.h"
-#include "bvar/utils/lock_timer.h"
+#include "flare/butil/gperftools_profiler.h"
+#include "flare/bvar/utils/lock_timer.h"
 
 namespace {
 struct DummyMutex {};

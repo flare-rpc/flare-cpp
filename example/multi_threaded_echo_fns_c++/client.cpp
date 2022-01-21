@@ -18,13 +18,13 @@
 // A client sending requests to servers(discovered by naming service) by multiple threads.
 
 #include <gflags/gflags.h>
-#include <bthread/bthread.h>
-#include <butil/logging.h>
-#include <butil/string_printf.h>
-#include <butil/time.h>
-#include <butil/macros.h>
-#include <brpc/channel.h>
-#include <brpc/server.h>
+#include <flare/bthread/bthread.h>
+#include <flare/butil/logging.h>
+#include <flare/butil/string_printf.h>
+#include <flare/butil/time.h>
+#include <flare/butil/macros.h>
+#include <flare/brpc/channel.h>
+#include <flare/brpc/server.h>
 #include <deque>
 #include "echo.pb.h"
 

@@ -21,11 +21,11 @@
 #include <memory>
 #include <iostream>
 
-#include "butil/time.h"
-#include "butil/macros.h"
+#include "flare/butil/time.h"
+#include "flare/butil/macros.h"
 
-#include "bvar/detail/agent_group.h"
-#include "butil/static_atomic.h"
+#include "flare/bvar/detail/agent_group.h"
+#include "flare/butil/static_atomic.h"
 
 #include <gtest/gtest.h>
 

@@ -18,9 +18,9 @@
 #include <algorithm>
 #include <random>
 #include <gtest/gtest.h>
-#include "butil/find_cstr.h"
-#include "butil/time.h"
-#include "butil/logging.h"
+#include "flare/butil/find_cstr.h"
+#include "flare/butil/time.h"
+#include "flare/butil/logging.h"
 
 namespace {
     class FindCstrTest : public ::testing::Test {

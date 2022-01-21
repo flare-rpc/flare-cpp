@@ -20,10 +20,10 @@
 
 #include <gflags/gflags.h>
 #include <deque>
-#include <bthread/bthread.h>
-#include <butil/logging.h>
-#include <butil/files/scoped_file.h>
-#include <brpc/channel.h>
+#include <flare/bthread/bthread.h>
+#include <flare/butil/logging.h>
+#include <flare/butil/files/scoped_file.h>
+#include <flare/brpc/channel.h>
 
 DEFINE_string(url_file, "", "The file containing urls to fetch. If this flag is"
               " empty, read urls from stdin");

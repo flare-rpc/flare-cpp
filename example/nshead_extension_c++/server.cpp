@@ -18,9 +18,9 @@
 // A server to receive EchoRequest and send back EchoResponse.
 
 #include <gflags/gflags.h>
-#include <butil/logging.h>
-#include <brpc/server.h>
-#include <brpc/nshead_service.h>
+#include <flare/butil/logging.h>
+#include <flare/brpc/server.h>
+#include <flare/brpc/nshead_service.h>
 
 DEFINE_int32(port, 8010, "TCP Port of this server");
 DEFINE_int32(idle_timeout_s, -1, "Connection will be closed if there is no "

@@ -25,22 +25,22 @@
 #include <gtest/gtest.h>
 #include <gflags/gflags.h>
 #include <google/protobuf/descriptor.h>
-#include "butil/time.h"
-#include "butil/macros.h"
-#include "butil/files/scoped_file.h"
-#include "butil/fd_guard.h"
-#include "brpc/socket.h"
-#include "brpc/acceptor.h"
-#include "brpc/server.h"
-#include "brpc/channel.h"
-#include "brpc/policy/most_common_message.h"
-#include "brpc/controller.h"
+#include "flare/butil/time.h"
+#include "flare/butil/macros.h"
+#include "flare/butil/files/scoped_file.h"
+#include "flare/butil/fd_guard.h"
+#include "flare/brpc/socket.h"
+#include "flare/brpc/acceptor.h"
+#include "flare/brpc/server.h"
+#include "flare/brpc/channel.h"
+#include "flare/brpc/policy/most_common_message.h"
+#include "flare/brpc/controller.h"
 #include "echo.pb.h"
-#include "brpc/policy/http_rpc_protocol.h"
-#include "brpc/policy/http2_rpc_protocol.h"
+#include "flare/brpc/policy/http_rpc_protocol.h"
+#include "flare/brpc/policy/http2_rpc_protocol.h"
 #include "json2pb/pb_to_json.h"
 #include "json2pb/json_to_pb.h"
-#include "brpc/details/method_status.h"
+#include "flare/brpc/details/method_status.h"
 
 int main(int argc, char* argv[]) {
     testing::InitGoogleTest(&argc, argv);

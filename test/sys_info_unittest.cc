@@ -2,11 +2,11 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "butil/environment.h"
-#include "butil/file_util.h"
-#include "butil/sys_info.h"
-#include "butil/threading/platform_thread.h"
-#include "butil/time/time.h"
+#include "flare/butil/environment.h"
+#include "flare/butil/file_util.h"
+#include "flare/butil/sys_info.h"
+#include "flare/butil/threading/platform_thread.h"
+#include "flare/butil/time/time.h"
 #include <gtest/gtest.h>
 #include <gtest/gtest.h>
 

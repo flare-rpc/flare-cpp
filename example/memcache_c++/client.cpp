@@ -18,12 +18,12 @@
 // A multi-threaded client getting keys from a memcache server constantly.
 
 #include <gflags/gflags.h>
-#include <bthread/bthread.h>
-#include <butil/logging.h>
-#include <butil/string_printf.h>
-#include <brpc/channel.h>
-#include <brpc/memcache.h>
-#include <brpc/policy/couchbase_authenticator.h>
+#include <flare/bthread/bthread.h>
+#include <flare/butil/logging.h>
+#include <flare/butil/string_printf.h>
+#include <flare/brpc/channel.h>
+#include <flare/brpc/memcache.h>
+#include <flare/brpc/policy/couchbase_authenticator.h>
 
 DEFINE_int32(thread_num, 10, "Number of threads to send requests");
 DEFINE_bool(use_bthread, false, "Use bthread to send requests");

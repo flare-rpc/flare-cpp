@@ -22,9 +22,9 @@
 #include <readline/readline.h>
 #include <readline/history.h>
 #include <gflags/gflags.h>
-#include <butil/logging.h>
-#include <brpc/channel.h>
-#include <brpc/redis.h>
+#include <flare/butil/logging.h>
+#include <flare/brpc/channel.h>
+#include <flare/brpc/redis.h>
 
 DEFINE_string(connection_type, "", "Connection type. Available values: single, pooled, short");
 DEFINE_string(server, "127.0.0.1:6379", "IP Address of server");

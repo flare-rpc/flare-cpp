@@ -20,12 +20,12 @@
 #include "gen-cpp/echo_types.h"
 
 #include <gflags/gflags.h>
-#include <bthread/bthread.h>
-#include <butil/logging.h>
-#include <brpc/server.h>
-#include <brpc/channel.h>
-#include <brpc/thrift_message.h>
-#include <bvar/bvar.h>
+#include <flare/bthread/bthread.h>
+#include <flare/butil/logging.h>
+#include <flare/brpc/server.h>
+#include <flare/brpc/channel.h>
+#include <flare/brpc/thrift_message.h>
+#include <flare/bvar/bvar.h>
 
 DEFINE_int32(thread_num, 50, "Number of threads to send requests");
 DEFINE_bool(use_bthread, false, "Use bthread to send requests");

@@ -17,12 +17,12 @@
 
 #include <gtest/gtest.h>
 
-#include <bthread/execution_queue.h>
-#include <bthread/sys_futex.h>
-#include <bthread/countdown_event.h>
-#include "butil/time.h"
-#include "butil/fast_rand.h"
-#include "butil/gperftools_profiler.h"
+#include <flare/bthread/execution_queue.h>
+#include <flare/bthread/sys_futex.h>
+#include <flare/bthread/countdown_event.h>
+#include "flare/butil/time.h"
+#include "flare/butil/fast_rand.h"
+#include "flare/butil/gperftools_profiler.h"
 
 namespace {
 bool stopped = false;

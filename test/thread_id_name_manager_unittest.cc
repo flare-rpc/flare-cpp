@@ -2,9 +2,9 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "butil/threading/thread_id_name_manager.h"
+#include "flare/butil/threading/thread_id_name_manager.h"
 
-#include "butil/threading/platform_thread.h"
+#include "flare/butil/threading/platform_thread.h"
 #include <gtest/gtest.h>
 
 typedef testing::Test ThreadIdNameManagerTest;

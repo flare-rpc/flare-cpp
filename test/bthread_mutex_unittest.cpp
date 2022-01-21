@@ -16,16 +16,16 @@
 // under the License.
 
 #include <gtest/gtest.h>
-#include "butil/compat.h"
-#include "butil/time.h"
-#include "butil/macros.h"
-#include "butil/string_printf.h"
-#include "butil/logging.h"
-#include "bthread/bthread.h"
-#include "bthread/butex.h"
-#include "bthread/task_control.h"
-#include "bthread/mutex.h"
-#include "butil/gperftools_profiler.h"
+#include "flare/butil/compat.h"
+#include "flare/butil/time.h"
+#include "flare/butil/macros.h"
+#include "flare/butil/string_printf.h"
+#include "flare/butil/logging.h"
+#include "flare/bthread/bthread.h"
+#include "flare/bthread/butex.h"
+#include "flare/bthread/task_control.h"
+#include "flare/bthread/mutex.h"
+#include "flare/butil/gperftools_profiler.h"
 
 namespace {
 inline unsigned* get_butex(bthread_mutex_t & m) {

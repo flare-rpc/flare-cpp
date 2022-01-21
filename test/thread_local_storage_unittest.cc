@@ -7,8 +7,8 @@
 #include <process.h>
 #endif
 
-#include "butil/threading/simple_thread.h"
-#include "butil/threading/thread_local_storage.h"
+#include "flare/butil/threading/simple_thread.h"
+#include "flare/butil/threading/thread_local_storage.h"
 #include <gtest/gtest.h>
 
 #if defined(OS_WIN)

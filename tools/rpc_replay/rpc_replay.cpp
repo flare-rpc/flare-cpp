@@ -17,16 +17,16 @@
 
 
 #include <gflags/gflags.h>
-#include <butil/logging.h>
-#include <butil/time.h>
-#include <butil/macros.h>
-#include <butil/file_util.h>
-#include <bvar/bvar.h>
-#include <bthread/bthread.h>
-#include <brpc/channel.h>
-#include <brpc/server.h>
-#include <brpc/rpc_dump.h>
-#include <brpc/serialized_request.h>
+#include <flare/butil/logging.h>
+#include <flare/butil/time.h>
+#include <flare/butil/macros.h>
+#include <flare/butil/file_util.h>
+#include <flare/bvar/bvar.h>
+#include <flare/bthread/bthread.h>
+#include <flare/brpc/channel.h>
+#include <flare/brpc/server.h>
+#include <flare/brpc/rpc_dump.h>
+#include <flare/brpc/serialized_request.h>
 #include "info_thread.h"
 
 DEFINE_string(dir, "", "The directory of dumped requests");

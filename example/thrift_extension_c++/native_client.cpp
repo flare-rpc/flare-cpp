@@ -24,7 +24,7 @@
 #include <thrift/transport/TBufferTransports.h>
 #include <thrift/protocol/TBinaryProtocol.h>
 
-#include <butil/logging.h>
+#include <flare/butil/logging.h>
 
 // _THRIFT_STDCXX_H_ is defined by thrift/stdcxx.h which was added since thrift 0.11.0
 #ifndef THRIFT_STDCXX

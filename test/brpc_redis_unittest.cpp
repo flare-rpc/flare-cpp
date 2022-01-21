@@ -18,13 +18,13 @@
 
 #include <iostream>
 #include <unordered_map>
-#include <butil/time.h>
-#include <butil/logging.h>
-#include <brpc/redis.h>
-#include <brpc/channel.h>
-#include <brpc/policy/redis_authenticator.h>
-#include <brpc/server.h>
-#include <brpc/redis_command.h>
+#include <flare/butil/time.h>
+#include <flare/butil/logging.h>
+#include <flare/brpc/redis.h>
+#include <flare/brpc/channel.h>
+#include <flare/brpc/policy/redis_authenticator.h>
+#include <flare/brpc/server.h>
+#include <flare/brpc/redis_command.h>
 #include <gtest/gtest.h>
 
 namespace brpc {

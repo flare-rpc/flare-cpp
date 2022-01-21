@@ -557,7 +557,7 @@ Controller.set_max_retry(0)或ChannelOptions.max_retry=0关闭重试。
 用户可以通过继承[brpc::RetryPolicy](https://github.com/brpc/brpc/blob/master/src/brpc/retry_policy.h)自定义重试条件。比如brpc默认不重试http/h2相关的错误，而你的程序中希望在碰到HTTP_STATUS_FORBIDDEN (403)时重试，可以这么做：
 
 ```c++
-#include <brpc/retry_policy.h>
+#include <flare/brpc/retry_policy.h>
  
 class MyRetryPolicy : public brpc::RetryPolicy {
 public:

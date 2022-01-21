@@ -16,12 +16,12 @@
 // under the License.
 
 #include <gtest/gtest.h>
-#include "butil/time.h"
-#include "butil/macros.h"
-#include "butil/fast_rand.h"
+#include "flare/butil/time.h"
+#include "flare/butil/macros.h"
+#include "flare/butil/fast_rand.h"
 
 #define BAIDU_CLEAR_RESOURCE_POOL_AFTER_ALL_THREADS_QUIT
-#include "butil/resource_pool.h"
+#include "flare/butil/resource_pool.h"
 
 namespace {
 struct MyObject {};

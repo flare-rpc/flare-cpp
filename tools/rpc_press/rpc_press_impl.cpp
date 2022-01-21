@@ -22,12 +22,12 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include <fcntl.h>
-#include <bthread/bthread.h>
-#include <butil/file_util.h>                     // butil::FilePath
-#include <butil/time.h>
-#include <brpc/channel.h>
-#include <brpc/controller.h>
-#include <butil/logging.h>
+#include <flare/bthread/bthread.h>
+#include <flare/butil/file_util.h>                     // butil::FilePath
+#include <flare/butil/time.h>
+#include <flare/brpc/channel.h>
+#include <flare/brpc/controller.h>
+#include <flare/butil/logging.h>
 #include <json2pb/pb_to_json.h>
 #include "json_loader.h"
 #include "rpc_press_impl.h"

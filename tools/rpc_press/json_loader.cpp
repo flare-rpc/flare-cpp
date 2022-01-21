@@ -16,7 +16,7 @@
 // under the License.
 
 #include <algorithm>
-#include <butil/logging.h>
+#include <flare/butil/logging.h>
 #include <json2pb/pb_to_json.h>
 #include <json2pb/json_to_pb.h>
 #include "pb_util.h"

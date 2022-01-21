@@ -21,14 +21,14 @@
 #include <signal.h>
 #include <gflags/gflags.h>
 #include <gtest/gtest.h>
-#include "butil/compat.h"
-#include "butil/time.h"
-#include "butil/macros.h"
-#include "butil/errno.h"
-#include <bthread/sys_futex.h>
-#include <bthread/butex.h>
-#include "bthread/bthread.h"
-#include "butil/static_atomic.h"
+#include "flare/butil/compat.h"
+#include "flare/butil/time.h"
+#include "flare/butil/macros.h"
+#include "flare/butil/errno.h"
+#include <flare/bthread/sys_futex.h>
+#include <flare/bthread/butex.h>
+#include "flare/bthread/bthread.h"
+#include "flare/butil/static_atomic.h"
 
 namespace {
 DEFINE_int32(thread_num, 1, "#pairs of threads doing ping pong");

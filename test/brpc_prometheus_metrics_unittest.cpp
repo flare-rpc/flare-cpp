@@ -18,10 +18,10 @@
 // brpc - A framework to host and access services throughout Baidu.
 
 #include <gtest/gtest.h>
-#include "brpc/server.h"
-#include "brpc/channel.h"
-#include "brpc/controller.h"
-#include "butil/strings/string_piece.h"
+#include "flare/brpc/server.h"
+#include "flare/brpc/channel.h"
+#include "flare/brpc/controller.h"
+#include "flare/butil/strings/string_piece.h"
 #include "echo.pb.h"
 
 int main(int argc, char* argv[]) {

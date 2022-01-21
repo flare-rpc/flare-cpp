@@ -18,9 +18,9 @@
 // A server to receive HelloRequest and send back HelloReply
 
 #include <gflags/gflags.h>
-#include <butil/logging.h>
-#include <brpc/server.h>
-#include <brpc/restful.h>
+#include <flare/butil/logging.h>
+#include <flare/brpc/server.h>
+#include <flare/brpc/restful.h>
 #include "helloworld.pb.h"
 
 DEFINE_int32(port, 50051, "TCP Port of this server");

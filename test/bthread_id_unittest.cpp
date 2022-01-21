@@ -17,11 +17,11 @@
 
 #include <iostream>
 #include <gtest/gtest.h>
-#include "butil/time.h"
-#include "butil/macros.h"
-#include "bthread/bthread.h"
-#include "bthread/task_group.h"
-#include "bthread/butex.h"
+#include "flare/butil/time.h"
+#include "flare/butil/macros.h"
+#include "flare/bthread/bthread.h"
+#include "flare/bthread/task_group.h"
+#include "flare/bthread/butex.h"
 
 namespace bthread {
 void id_status(bthread_id_t, std::ostream &);

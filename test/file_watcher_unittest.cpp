@@ -16,8 +16,8 @@
 // under the License.
 
 #include <gtest/gtest.h>
-#include "butil/files/file_watcher.h"
-#include "butil/logging.h"
+#include "flare/butil/files/file_watcher.h"
+#include "flare/butil/logging.h"
 
 namespace {
 class FileWatcherTest : public ::testing::Test{

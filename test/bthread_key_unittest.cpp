@@ -16,14 +16,14 @@
 // under the License.
 
 #include <algorithm>                         // std::sort
-#include "butil/static_atomic.h"
+#include "flare/butil/static_atomic.h"
 #include <gtest/gtest.h>
-#include "butil/time.h"
-#include "butil/macros.h"
-#include "butil/scoped_lock.h"
-#include "butil/logging.h"
-#include "bthread/bthread.h"
-#include "bthread/unstable.h"
+#include "flare/butil/time.h"
+#include "flare/butil/macros.h"
+#include "flare/butil/scoped_lock.h"
+#include "flare/butil/logging.h"
+#include "flare/bthread/bthread.h"
+#include "flare/bthread/unstable.h"
 
 extern "C" {
 int bthread_keytable_pool_size(bthread_keytable_pool_t* pool) {

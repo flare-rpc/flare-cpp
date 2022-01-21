@@ -2,9 +2,9 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "butil/basictypes.h"
-#include "butil/files/file_path.h"
-#include "butil/strings/utf_string_conversions.h"
+#include "flare/butil/basictypes.h"
+#include "flare/butil/files/file_path.h"
+#include "flare/butil/strings/utf_string_conversions.h"
 #include <gtest/gtest.h>
 #include <gtest/gtest.h>
 

@@ -18,20 +18,20 @@
 #include <stdio.h>
 #include <gtest/gtest.h>
 #include <vector>
-#include "butil/string_printf.h"
-#include "butil/files/temp_file.h"
-#include "bthread/bthread.h"
+#include "flare/butil/string_printf.h"
+#include "flare/butil/files/temp_file.h"
+#include "flare/bthread/bthread.h"
 #ifdef BAIDU_INTERNAL
-#include "brpc/policy/baidu_naming_service.h"
+#include "flare/brpc/policy/baidu_naming_service.h"
 #endif
-#include "brpc/policy/consul_naming_service.h"
-#include "brpc/policy/domain_naming_service.h"
-#include "brpc/policy/file_naming_service.h"
-#include "brpc/policy/list_naming_service.h"
-#include "brpc/policy/remote_file_naming_service.h"
-#include "brpc/policy/discovery_naming_service.h"
+#include "flare/brpc/policy/consul_naming_service.h"
+#include "flare/brpc/policy/domain_naming_service.h"
+#include "flare/brpc/policy/file_naming_service.h"
+#include "flare/brpc/policy/list_naming_service.h"
+#include "flare/brpc/policy/remote_file_naming_service.h"
+#include "flare/brpc/policy/discovery_naming_service.h"
 #include "echo.pb.h"
-#include "brpc/server.h"
+#include "flare/brpc/server.h"
 
 
 namespace brpc {

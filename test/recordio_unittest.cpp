@@ -17,10 +17,10 @@
 
 #include <map>
 #include <gtest/gtest.h>
-#include "butil/recordio.h"
-#include "butil/fast_rand.h"
-#include "butil/string_printf.h"
-#include "butil/file_util.h"
+#include "flare/butil/recordio.h"
+#include "flare/butil/fast_rand.h"
+#include "flare/butil/string_printf.h"
+#include "flare/butil/file_util.h"
 
 namespace {
 

@@ -80,7 +80,7 @@ brpc的服务都会自动统计延时分布，用户不用自己加了。如下�
 你可以用bvar::LatencyRecorder统计任何代码的延时，这么做(更具体的使用方法请查看[bvar-c++](bvar_c++.md)):
 
 ```c++
-#include <bvar/bvar.h>
+#include <flare/bvar/bvar.h>
 
 ...
 bvar::LatencyRecorder g_latency_recorder("client");  // expose this recorder

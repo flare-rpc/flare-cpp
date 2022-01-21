@@ -18,11 +18,11 @@
 // Benchmark http-server by multiple threads.
 
 #include <gflags/gflags.h>
-#include <bthread/bthread.h>
-#include <butil/logging.h>
-#include <brpc/channel.h>
-#include <brpc/server.h>
-#include <bvar/bvar.h>
+#include <flare/bthread/bthread.h>
+#include <flare/butil/logging.h>
+#include <flare/brpc/channel.h>
+#include <flare/brpc/server.h>
+#include <flare/bvar/bvar.h>
 
 DEFINE_string(data, "", "POST this data to the http server");
 DEFINE_int32(thread_num, 50, "Number of threads to send requests");

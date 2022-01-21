@@ -304,7 +304,7 @@ Call `Controller::set_response_compress_type(brpc::COMPRESS_TYPE_GZIP)` to **try
 Due to generality, brpc does not decompress request bodies automatically, but users can do the job by themselves as follows:
 
 ```c++
-#include <brpc/policy/gzip_compress.h>
+#include <flare/brpc/policy/gzip_compress.h>
 ...
 const std::string* encoding = cntl->http_request().GetHeader("Content-Encoding");
 if (encoding != NULL && *encoding == "gzip") {
@@ -336,7 +336,7 @@ brpc server is capable of sending large or infinite sized body, in following ste
 
 1. Call `Controller::CreateProgressiveAttachment()` to create a body that can be written progressively. The returned `ProgressiveAttachment` object should be managed by `intrusive_ptr`
   ```c++
-  #include <brpc/progressive_attachment.h>
+  #include <flare/brpc/progressive_attachment.h>
   ...
   butil::intrusive_ptr<brpc::ProgressiveAttachment> pa = cntl->CreateProgressiveAttachment();
   ```

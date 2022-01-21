@@ -2,10 +2,10 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "butil/atomic_sequence_num.h"
-#include "butil/strings/string_number_conversions.h"
-#include "butil/synchronization/waitable_event.h"
-#include "butil/threading/simple_thread.h"
+#include "flare/butil/atomic_sequence_num.h"
+#include "flare/butil/strings/string_number_conversions.h"
+#include "flare/butil/synchronization/waitable_event.h"
+#include "flare/butil/threading/simple_thread.h"
 #include <gtest/gtest.h>
 
 namespace butil {

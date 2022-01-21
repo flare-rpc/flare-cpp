@@ -2,12 +2,12 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "butil/compiler_specific.h"
-#include "butil/memory/scoped_ptr.h"
-#include "butil/synchronization/lock.h"
-#include "butil/threading/platform_thread.h"
-#include "butil/threading/simple_thread.h"
-#include "butil/threading/thread_collision_warner.h"
+#include "flare/butil/compiler_specific.h"
+#include "flare/butil/memory/scoped_ptr.h"
+#include "flare/butil/synchronization/lock.h"
+#include "flare/butil/threading/platform_thread.h"
+#include "flare/butil/threading/simple_thread.h"
+#include "flare/butil/threading/thread_collision_warner.h"
 #include <gtest/gtest.h>
 
 // '' : local class member function does not have a body

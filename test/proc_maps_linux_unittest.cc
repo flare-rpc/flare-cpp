@@ -2,10 +2,10 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "butil/debug/proc_maps_linux.h"
-#include "butil/files/file_path.h"
-#include "butil/strings/stringprintf.h"
-#include "butil/third_party/dynamic_annotations/dynamic_annotations.h"
+#include "flare/butil/debug/proc_maps_linux.h"
+#include "flare/butil/files/file_path.h"
+#include "flare/butil/strings/stringprintf.h"
+#include "flare/butil/third_party/dynamic_annotations/dynamic_annotations.h"
 #include <gtest/gtest.h>
 
 namespace butil {

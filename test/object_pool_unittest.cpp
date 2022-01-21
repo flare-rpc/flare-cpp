@@ -16,13 +16,13 @@
 // under the License.
 
 #include <gtest/gtest.h>
-#include "butil/time.h"
-#include "butil/macros.h"
+#include "flare/butil/time.h"
+#include "flare/butil/macros.h"
 #include <random>
 
 #define BAIDU_CLEAR_OBJECT_POOL_AFTER_ALL_THREADS_QUIT
 
-#include "butil/object_pool.h"
+#include "flare/butil/object_pool.h"
 
 namespace {
     std::random_device rd;

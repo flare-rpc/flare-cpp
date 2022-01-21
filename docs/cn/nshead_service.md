@@ -113,7 +113,7 @@ public:
 ## 设置ServerOptions.nshead_service
 
 ```c++
-#include <brpc/ubrpc2pb_protocol.h>
+#include <flare/brpc/ubrpc2pb_protocol.h>
 ...
 brpc::ServerOptions option;
 option.nshead_service = new brpc::policy::UbrpcCompackAdaptor; // mcpack2用UbrpcMcpack2Adaptor

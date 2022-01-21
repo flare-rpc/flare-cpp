@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "butil/basictypes.h"
-#include "butil/containers/linked_list.h"
+#include "flare/butil/basictypes.h"
+#include "flare/butil/containers/linked_list.h"
 #include <gtest/gtest.h>
 
 namespace butil {

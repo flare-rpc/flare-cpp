@@ -21,14 +21,14 @@
 #include <map>
 #include <random>
 #include <vector>
-#include "butil/time.h"
-#include "butil/macros.h"
-#include "butil/string_printf.h"
-#include "butil/logging.h"
-#include "butil/containers/hash_tables.h"
-#include "butil/containers/flat_map.h"
-#include "butil/containers/pooled_map.h"
-#include "butil/containers/case_ignored_flat_map.h"
+#include "flare/butil/time.h"
+#include "flare/butil/macros.h"
+#include "flare/butil/string_printf.h"
+#include "flare/butil/logging.h"
+#include "flare/butil/containers/hash_tables.h"
+#include "flare/butil/containers/flat_map.h"
+#include "flare/butil/containers/pooled_map.h"
+#include "flare/butil/containers/case_ignored_flat_map.h"
 
 namespace {
     class FlatMapTest : public ::testing::Test {

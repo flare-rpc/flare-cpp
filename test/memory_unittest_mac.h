@@ -8,7 +8,7 @@
 #ifndef BUTIL_PROCESS_MEMORY_UNITTEST_MAC_H_
 #define BUTIL_PROCESS_MEMORY_UNITTEST_MAC_H_
 
-#include "butil/basictypes.h"
+#include "flare/butil/basictypes.h"
 
 namespace butil {
 

@@ -4,13 +4,13 @@
 
 #define _CRT_SECURE_NO_WARNINGS
 
-#include "butil/process/memory.h"
+#include "flare/butil/process/memory.h"
 
 #include <limits>
 
-#include "butil/compiler_specific.h"
-#include "butil/debug/alias.h"
-#include "butil/strings/stringprintf.h"
+#include "flare/butil/compiler_specific.h"
+#include "flare/butil/debug/alias.h"
+#include "flare/butil/strings/stringprintf.h"
 #include <gtest/gtest.h>
 
 #if defined(OS_WIN)
@@ -21,7 +21,7 @@
 #endif
 #if defined(OS_MACOSX)
 #include <malloc/malloc.h>
-#include "butil/process/memory_unittest_mac.h"
+#include "flare/butil/process/memory_unittest_mac.h"
 #endif
 #if defined(OS_LINUX)
 #include <malloc.h>

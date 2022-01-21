@@ -20,8 +20,8 @@
 #include <stdio.h>
 #include <signal.h>
 #include <gtest/gtest.h>
-#include "butil/time.h"
-#include "butil/macros.h"
+#include "flare/butil/time.h"
+#include "flare/butil/macros.h"
 
 namespace {
 void* read_thread(void* arg) {

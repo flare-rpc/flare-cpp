@@ -2,13 +2,13 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "butil/observer_list.h"
+#include "flare/butil/observer_list.h"
 
 #include <vector>
 
-#include "butil/compiler_specific.h"
-#include "butil/memory/weak_ptr.h"
-#include "butil/threading/platform_thread.h"
+#include "flare/butil/compiler_specific.h"
+#include "flare/butil/memory/weak_ptr.h"
+#include "flare/butil/threading/platform_thread.h"
 #include <gtest/gtest.h>
 
 namespace butil {

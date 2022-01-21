@@ -197,7 +197,7 @@ When server returns a non-2xx HTTP status code, the HTTP RPC is considered to be
 brpc does not decompress bodies of responses automatically due to universality. The decompression code is not complicated and users can do it by themselves. The code is as follows:
 
 ```c++
-#include <brpc/policy/gzip_compress.h>
+#include <flare/brpc/policy/gzip_compress.h>
 ...
 const std::string* encoding = cntl->http_response().GetHeader("Content-Encoding");
 if (encoding != NULL && *encoding == "gzip") {
@@ -222,7 +222,7 @@ How to use:
 1. Implement ProgressiveReader below:
 
    ```c++
-   #include <brpc/progressive_reader.h>
+   #include <flare/brpc/progressive_reader.h>
    ...
    class ProgressiveReader {
    public:

@@ -18,9 +18,9 @@
 // A client to send 2 requests to server and accept the first returned response.
 
 #include <gflags/gflags.h>
-#include <butil/logging.h>
-#include <butil/time.h>
-#include <brpc/channel.h>
+#include <flare/butil/logging.h>
+#include <flare/butil/time.h>
+#include <flare/brpc/channel.h>
 #include "echo.pb.h"
 
 DEFINE_string(protocol, "baidu_std", "Protocol type. Defined in src/brpc/options.proto");

@@ -18,12 +18,12 @@
 #include <stdio.h>
 #include <gtest/gtest.h>
 #include <vector>
-#include "butil/string_printf.h"
-#include "butil/files/temp_file.h"
-#include "brpc/socket.h"
-#include "brpc/channel.h"
-#include "brpc/load_balancer.h"
-#include "brpc/policy/file_naming_service.h"
+#include "flare/butil/string_printf.h"
+#include "flare/butil/files/temp_file.h"
+#include "flare/brpc/socket.h"
+#include "flare/brpc/channel.h"
+#include "flare/brpc/load_balancer.h"
+#include "flare/brpc/policy/file_naming_service.h"
 
 class NamingServiceFilterTest : public testing::Test {
 protected:

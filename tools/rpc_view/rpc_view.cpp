@@ -17,9 +17,9 @@
 
 
 #include <gflags/gflags.h>
-#include <butil/logging.h>
-#include <brpc/server.h>
-#include <brpc/channel.h>
+#include <flare/butil/logging.h>
+#include <flare/brpc/server.h>
+#include <flare/brpc/channel.h>
 #include "view.pb.h"
 
 DEFINE_int32(port, 8888, "TCP Port of this server");

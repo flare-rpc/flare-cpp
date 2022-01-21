@@ -23,8 +23,8 @@
 //   ./http_client www.foo.com
 
 #include <gflags/gflags.h>
-#include <butil/logging.h>
-#include <brpc/channel.h>
+#include <flare/butil/logging.h>
+#include <flare/brpc/channel.h>
 
 DEFINE_string(d, "", "POST this data to the http server");
 DEFINE_string(load_balancer, "", "The algorithm for load balancing");

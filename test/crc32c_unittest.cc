@@ -8,7 +8,7 @@
 // found in the LICENSE file. See the AUTHORS file for names of contributors.
 
 #include <gtest/gtest.h>
-#include "butil/crc32c.h"
+#include "flare/butil/crc32c.h"
 
 namespace butil {
 namespace crc32c {

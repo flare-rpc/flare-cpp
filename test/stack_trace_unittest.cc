@@ -6,8 +6,8 @@
 #include <sstream>
 #include <string>
 
-#include "butil/debug/stack_trace.h"
-#include "butil/logging.h"
+#include "flare/butil/debug/stack_trace.h"
+#include "flare/butil/logging.h"
 #include <gtest/gtest.h>
 
 namespace butil {

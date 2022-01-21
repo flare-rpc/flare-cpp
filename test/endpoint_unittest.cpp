@@ -16,10 +16,10 @@
 // under the License.
 
 #include <gtest/gtest.h>
-#include "butil/errno.h"
-#include "butil/endpoint.h"
-#include "butil/logging.h"
-#include "butil/containers/flat_map.h"
+#include "flare/butil/errno.h"
+#include "flare/butil/endpoint.h"
+#include "flare/butil/logging.h"
+#include "flare/butil/containers/flat_map.h"
 
 namespace {
 

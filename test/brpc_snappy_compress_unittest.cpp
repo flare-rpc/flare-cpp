@@ -20,14 +20,14 @@
 // Date: 2015/01/20 19:01:06
 
 #include <gtest/gtest.h>
-#include "butil/gperftools_profiler.h"
-#include "butil/third_party/snappy/snappy.h"
-#include "butil/macros.h"
-#include "butil/iobuf.h"
-#include "butil/time.h"
+#include "flare/butil/gperftools_profiler.h"
+#include "flare/butil/third_party/snappy/snappy.h"
+#include "flare/butil/macros.h"
+#include "flare/butil/iobuf.h"
+#include "flare/butil/time.h"
 #include "snappy_message.pb.h"
-#include "brpc/policy/snappy_compress.h"
-#include "brpc/policy/gzip_compress.h"
+#include "flare/brpc/policy/snappy_compress.h"
+#include "flare/brpc/policy/gzip_compress.h"
 
 typedef bool (*Compress)(const google::protobuf::Message&, butil::IOBuf*);
 typedef bool (*Decompress)(const butil::IOBuf&, google::protobuf::Message*);

@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "butil/environment.h"
-#include "butil/memory/scoped_ptr.h"
+#include "flare/butil/environment.h"
+#include "flare/butil/memory/scoped_ptr.h"
 #include <gtest/gtest.h>
 #include <gtest/gtest.h>
 

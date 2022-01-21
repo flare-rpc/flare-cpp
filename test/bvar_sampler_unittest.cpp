@@ -16,9 +16,9 @@
 // under the License.
 
 #include <limits>                           //std::numeric_limits
-#include "bvar/detail/sampler.h"
-#include "butil/time.h"
-#include "butil/logging.h"
+#include "flare/bvar/detail/sampler.h"
+#include "flare/butil/time.h"
+#include "flare/butil/logging.h"
 #include <gtest/gtest.h>
 
 namespace {

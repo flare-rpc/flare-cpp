@@ -18,9 +18,9 @@
 #include <gflags/gflags.h>
 #include <google/protobuf/dynamic_message.h>
 #include <google/protobuf/compiler/importer.h>
-#include <brpc/server.h>
-#include <butil/logging.h>
-#include <butil/string_splitter.h>
+#include <flare/brpc/server.h>
+#include <flare/butil/logging.h>
+#include <flare/butil/string_splitter.h>
 #include <string.h>
 #include "rpc_press_impl.h"
 

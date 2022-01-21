@@ -18,13 +18,13 @@
 // A multi-threaded client getting keys from a redis-server constantly.
 
 #include <gflags/gflags.h>
-#include <bthread/bthread.h>
-#include <butil/logging.h>
-#include <butil/string_printf.h>
-#include <bvar/bvar.h>
-#include <brpc/channel.h>
-#include <brpc/server.h>
-#include <brpc/redis.h>
+#include <flare/bthread/bthread.h>
+#include <flare/butil/logging.h>
+#include <flare/butil/string_printf.h>
+#include <flare/bvar/bvar.h>
+#include <flare/brpc/channel.h>
+#include <flare/brpc/server.h>
+#include <flare/brpc/redis.h>
 
 DEFINE_int32(thread_num, 50, "Number of threads to send requests");
 DEFINE_bool(use_bthread, false, "Use bthread to send requests");
