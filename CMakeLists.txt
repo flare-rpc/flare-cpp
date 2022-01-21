@@ -422,14 +422,17 @@ if(BUILD_UNIT_TESTS)
 endif()
 add_subdirectory(tools)
 
-file(COPY ${CMAKE_CURRENT_BINARY_DIR}/brpc/
-        DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/output/include/brpc/
+#[[
+file(COPY ${CMAKE_CURRENT_BINARY_DIR}/flare/
+        DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/output/include/flare/
         FILES_MATCHING
         PATTERN "*.h"
         PATTERN "*.hpp"
         )
+]]
+
 file(COPY ${PROJECT_SOURCE_DIR}/flare/
-        DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/output/include/
+        DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/output/include/flare/
         FILES_MATCHING
         PATTERN "*.h"
         PATTERN "*.hpp"
