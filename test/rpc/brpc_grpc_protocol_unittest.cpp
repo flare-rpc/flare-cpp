@@ -23,6 +23,7 @@
 #include "flare/brpc/channel.h"
 #include "flare/brpc/grpc.h"
 #include "flare/butil/time.h"
+#include "flare/base/strings.h"
 #include "grpc.pb.h"
 
 int main(int argc, char* argv[]) {
@@ -172,7 +173,7 @@ TEST_F(GrpcTest, return_error) {
     stub.Method(&cntl, &req, &res, NULL);
     EXPECT_TRUE(cntl.Failed());
     EXPECT_EQ(cntl.ErrorCode(), brpc::EINTERNAL);
-    EXPECT_TRUE(butil::StringPiece(cntl.ErrorText()).ends_with(butil::string_printf("%s", g_prefix.c_str())));
+    EXPECT_TRUE(flare::base::ends_with(cntl.ErrorText(), butil::string_printf("%s", g_prefix.c_str())));
 }
 
 TEST_F(GrpcTest, RpcTimedOut) {
@@ -205,7 +206,7 @@ TEST_F(GrpcTest, MethodNotExist) {
     stub.MethodNotExist(&cntl, &req, &res, NULL);
     EXPECT_TRUE(cntl.Failed());
     EXPECT_EQ(cntl.ErrorCode(), brpc::EINTERNAL);
-    ASSERT_TRUE(butil::StringPiece(cntl.ErrorText()).ends_with("Method MethodNotExist() not implemented."));
+    ASSERT_TRUE(flare::base::ends_with(cntl.ErrorText(), "Method MethodNotExist() not implemented."));
 }
 
 TEST_F(GrpcTest, GrpcTimeOut) {

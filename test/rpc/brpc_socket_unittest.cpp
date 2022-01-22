@@ -28,6 +28,7 @@
 #include "flare/butil/time.h"
 #include "flare/butil/macros.h"
 #include "flare/butil/fd_utility.h"
+#include "flare/base/strings.h"
 #include "flare/bthread/unstable.h"
 #include "flare/bthread/task_control.h"
 #include "flare/brpc/socket.h"
@@ -527,7 +528,7 @@ TEST_F(SocketTest, not_health_check_when_nref_hits_0) {
         ASSERT_EQ(0, bthread_id_join(wait_id));
         ASSERT_EQ(wait_id.value, data.id.value);
         ASSERT_EQ(ECONNREFUSED, data.error_code);
-        ASSERT_TRUE(butil::StringPiece(data.error_text).starts_with(
+        ASSERT_TRUE(flare::base::starts_with(data.error_text,
                         "Fail to connect "));
 #else
         ASSERT_EQ(-1, s->Write(&src));
@@ -690,7 +691,7 @@ TEST_F(SocketTest, health_check) {
     ASSERT_EQ(0, bthread_id_join(wait_id));
     ASSERT_EQ(wait_id.value, data.id.value);
     ASSERT_EQ(ECONNREFUSED, data.error_code);
-    ASSERT_TRUE(butil::StringPiece(data.error_text).starts_with(
+    ASSERT_TRUE(flare::base::starts_with(data.error_text,
                     "Fail to connect "));
     if (use_my_message) {
         ASSERT_TRUE(appended_msg);

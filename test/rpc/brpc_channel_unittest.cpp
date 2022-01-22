@@ -42,6 +42,7 @@
 #include "flare/brpc/controller.h"
 #include "echo.pb.h"
 #include "flare/brpc/options.pb.h"
+#include "flare/base/strings.h"
 
 namespace brpc {
 DECLARE_int32(idle_timeout_second);
@@ -764,7 +765,7 @@ protected:
         CallMethod(&subchans[0], &cntl, &req, &res, false);
         ASSERT_TRUE(cntl.Failed());
         ASSERT_EQ(brpc::EINTERNAL, cntl.ErrorCode()) << cntl.ErrorText();
-        ASSERT_TRUE(butil::StringPiece(cntl.ErrorText()).ends_with("Method ComboEcho() not implemented."));
+        ASSERT_TRUE(flare::base::ends_with(cntl.ErrorText(), "Method ComboEcho() not implemented."));
 
         // do the rpc call.
         cntl.Reset();
