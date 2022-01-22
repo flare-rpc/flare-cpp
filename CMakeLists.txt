@@ -356,6 +356,13 @@ elseif(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
         ${PROJECT_SOURCE_DIR}/flare/butil/mac/scoped_mach_port.cc)
 endif()
 
+set(FLARE_BASE_SRC
+        ${PROJECT_SOURCE_DIR}/flare/base/ascii.cc
+        ${PROJECT_SOURCE_DIR}/flare/base/strings.cc
+        ${PROJECT_SOURCE_DIR}/flare/base/str_split.cc
+
+        )
+
 file(GLOB_RECURSE BVAR_SOURCES "${PROJECT_SOURCE_DIR}/flare/bvar/*.cpp")
 file(GLOB_RECURSE BTHREAD_SOURCES "${PROJECT_SOURCE_DIR}/flare/bthread/*.cpp")
 file(GLOB_RECURSE JSON2PB_SOURCES "${PROJECT_SOURCE_DIR}/flare/json2pb/*.cpp")
