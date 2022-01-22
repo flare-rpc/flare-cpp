@@ -41,6 +41,7 @@
 #include "json2pb/pb_to_json.h"
 #include "json2pb/json_to_pb.h"
 #include "flare/brpc/details/method_status.h"
+#include "flare/base/strings.h"
 
 int main(int argc, char* argv[]) {
     testing::InitGoogleTest(&argc, argv);
@@ -1144,7 +1145,7 @@ TEST_F(HttpTest, http2_window_used_up) {
             // the last message should fail according to flow control policy.
             ASSERT_FALSE(st.ok());
             ASSERT_TRUE(st.error_code() == brpc::ELIMIT);
-            ASSERT_TRUE(butil::StringPiece(st.error_str()).starts_with("remote_window_left is not enough"));
+            ASSERT_TRUE(flare::base::starts_with(st.error_str(), "remote_window_left is not enough"));
         } else {
             ASSERT_TRUE(st.ok());
         }
