@@ -25,7 +25,7 @@
 #include <sstream>
 #include "flare/butil/time.h"
 #include "flare/butil/macros.h"
-
+#include "flare/base/strings.h"
 #include "flare/bvar/bvar.h"
 
 #include <gflags/gflags.h>
@@ -194,8 +194,8 @@ TEST_F(VariableTest, expose) {
 class MyDumper : public bvar::Dumper {
 public:
     bool dump(const std::string& name,
-              const butil::StringPiece& description) {
-        _list.push_back(std::make_pair(name, description.as_string()));
+              const std::string_view& description) {
+        _list.push_back(std::make_pair(name, flare::base::as_string(description)));
         return true;
     }
 

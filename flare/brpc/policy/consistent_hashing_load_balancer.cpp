@@ -272,7 +272,7 @@ size_t ConsistentHashingLoadBalancer::RemoveServersInBatch(
     return n;
 }
 
-LoadBalancer *ConsistentHashingLoadBalancer::New(const butil::StringPiece& params) const {
+LoadBalancer *ConsistentHashingLoadBalancer::New(const std::string_view& params) const {
     ConsistentHashingLoadBalancer* lb = 
         new (std::nothrow) ConsistentHashingLoadBalancer(_type);
     if (lb && !lb->SetParameters(params)) {
@@ -378,7 +378,7 @@ void ConsistentHashingLoadBalancer::GetLoads(
     }
 }
 
-bool ConsistentHashingLoadBalancer::SetParameters(const butil::StringPiece& params) {
+bool ConsistentHashingLoadBalancer::SetParameters(const std::string_view& params) {
     for (butil::KeyValuePairsSplitter sp(params.begin(), params.end(), ' ', '=');
             sp; ++sp) {
         if (sp.value().empty()) {

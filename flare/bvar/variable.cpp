@@ -31,6 +31,7 @@
 #include "flare/butil/file_util.h"                     // butil::FilePath
 #include "flare/bvar/gflag.h"
 #include "flare/bvar/variable.h"
+#include "flare/base/strings.h"
 
 namespace bvar {
 
@@ -126,8 +127,8 @@ Variable::~Variable() {
         " dtors to avoid displaying a variable that is just destructing";
 }
 
-int Variable::expose_impl(const butil::StringPiece& prefix,
-                          const butil::StringPiece& name,
+int Variable::expose_impl(const std::string_view& prefix,
+                          const std::string_view& name,
                           DisplayFilter display_filter) {
     if (name.empty()) {
         LOG(ERROR) << "Parameter[name] is empty";
@@ -320,8 +321,8 @@ public:
     int overflow(int ch) override;
     int sync() override;
     void reset();
-    butil::StringPiece data() {
-        return butil::StringPiece(pbase(), pptr() - pbase());
+    std::string_view data() {
+        return std::string_view(pbase(), pptr() - pbase());
     }
 
 private:
@@ -553,7 +554,7 @@ std::string read_command_name() {
         butil::back_char(command_name) == ')') {
         // remove parenthesis.
         to_underscored_name(&s,
-                            butil::StringPiece(command_name.data() + 1, 
+                            std::string_view(command_name.data() + 1,
                                               command_name.size() - 2UL));
     } else {
         to_underscored_name(&s, command_name);
@@ -563,7 +564,7 @@ std::string read_command_name() {
 
 class FileDumper : public Dumper {
 public:
-    FileDumper(const std::string& filename, butil::StringPiece s/*prefix*/)
+    FileDumper(const std::string& filename, std::string_view s/*prefix*/)
         : _filename(filename), _fp(NULL) {
         // setting prefix.
         // remove trailing spaces.
@@ -588,7 +589,7 @@ public:
             _fp = NULL;
         }
     }
-    bool dump(const std::string& name, const butil::StringPiece& desc) override {
+    bool dump(const std::string& name, const std::string_view& desc) override {
         if (_fp == NULL) {
             butil::File::Error error;
             butil::FilePath dir = butil::FilePath(_filename).DirName();
@@ -622,7 +623,7 @@ private:
 class FileDumperGroup : public Dumper {
 public:
     FileDumperGroup(std::string tabs, std::string filename, 
-                     butil::StringPiece s/*prefix*/) {
+                     std::string_view s/*prefix*/) {
         butil::FilePath path(filename);
         if (path.FinalExtension() == ".data") {
             // .data will be appended later
@@ -630,8 +631,8 @@ public:
         }
 
         for (butil::KeyValuePairsSplitter sp(tabs, ';', '='); sp; ++sp) {
-            std::string key = sp.key().as_string();
-            std::string value = sp.value().as_string();
+            std::string key = flare::base::as_string(sp.key());
+            std::string value = flare::base::as_string(sp.value());
             FileDumper *f = new FileDumper(
                     path.AddExtension(key).AddExtension("data").value(), s);
             WildcardMatcher *m = new WildcardMatcher(value, '?', true);
@@ -649,7 +650,7 @@ public:
         dumpers.clear();
     }
 
-    bool dump(const std::string& name, const butil::StringPiece& desc) override {
+    bool dump(const std::string& name, const std::string_view& desc) override {
         for (size_t i = 0; i < dumpers.size() - 1; ++i) {
             if (dumpers[i].second->match(name)) {
                 return dumpers[i].first->dump(name, desc);
@@ -833,7 +834,7 @@ const bool ALLOW_UNUSED dummy_bvar_dump_prefix = ::GFLAGS_NS::RegisterFlagValida
 const bool ALLOW_UNUSED dummy_bvar_dump_tabs = ::GFLAGS_NS::RegisterFlagValidator(
     &FLAGS_bvar_dump_tabs, wakeup_dumping_thread);
 
-void to_underscored_name(std::string* name, const butil::StringPiece& src) {
+void to_underscored_name(std::string* name, const std::string_view& src) {
     name->reserve(name->size() + src.size() + 8/*just guess*/);
     for (const char* p = src.data(); p != src.data() + src.size(); ++p) {
         if (isalpha(*p)) {

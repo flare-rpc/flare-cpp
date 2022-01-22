@@ -36,7 +36,7 @@ void ThriftService::Describe(std::ostream &os, const DescribeOptions&) const {
     os << butil::class_name_str(*this);
 }
 
-void ThriftService::Expose(const butil::StringPiece& prefix) {
+void ThriftService::Expose(const std::string_view& prefix) {
     if (_status == NULL) {
         return;
     }

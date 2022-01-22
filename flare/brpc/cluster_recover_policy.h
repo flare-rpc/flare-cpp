@@ -80,7 +80,7 @@ private:
 };
 
 // Return a DefaultClusterRecoverPolicy object by params.
-bool GetRecoverPolicyByParams(const butil::StringPiece& params,
+bool GetRecoverPolicyByParams(const std::string_view& params,
                               std::shared_ptr<ClusterRecoverPolicy>* ptr_out);
 
 } // namespace brpc

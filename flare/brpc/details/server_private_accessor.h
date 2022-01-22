@@ -58,37 +58,37 @@ public:
 
     // Find by MethodDescriptor::full_name
     const Server::MethodProperty*
-    FindMethodPropertyByFullName(const butil::StringPiece &fullname) {
+    FindMethodPropertyByFullName(const std::string_view &fullname) {
         return _server->FindMethodPropertyByFullName(fullname);
     }
     const Server::MethodProperty*
-    FindMethodPropertyByFullName(const butil::StringPiece& fullname) const {
+    FindMethodPropertyByFullName(const std::string_view& fullname) const {
         return _server->FindMethodPropertyByFullName(fullname);
     }
     const Server::MethodProperty*
-    FindMethodPropertyByFullName(const butil::StringPiece& full_service_name,
-                                 const butil::StringPiece& method_name) const {
+    FindMethodPropertyByFullName(const std::string_view& full_service_name,
+                                 const std::string_view& method_name) const {
         return _server->FindMethodPropertyByFullName(
             full_service_name, method_name);
     }
     const Server::MethodProperty* FindMethodPropertyByNameAndIndex(
-        const butil::StringPiece& service_name, int method_index) const {
+        const std::string_view& service_name, int method_index) const {
         return _server->FindMethodPropertyByNameAndIndex(service_name, method_index);
     }
 
     const Server::ServiceProperty*
-    FindServicePropertyByFullName(const butil::StringPiece& fullname) const {
+    FindServicePropertyByFullName(const std::string_view& fullname) const {
         return _server->FindServicePropertyByFullName(fullname);
     }
 
     const Server::ServiceProperty*
-    FindServicePropertyByName(const butil::StringPiece& name) const {
+    FindServicePropertyByName(const std::string_view& name) const {
         return _server->FindServicePropertyByName(name);
     }
 
     const Server::ServiceProperty*
-    FindServicePropertyAdaptively(const butil::StringPiece& service_name) const {
-        if (service_name.find('.') == butil::StringPiece::npos) {
+    FindServicePropertyAdaptively(const std::string_view& service_name) const {
+        if (service_name.find('.') == std::string_view::npos) {
             return _server->FindServicePropertyByName(service_name);
         } else {
             return _server->FindServicePropertyByFullName(service_name);

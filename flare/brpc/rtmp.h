@@ -19,7 +19,7 @@
 #ifndef BRPC_RTMP_H
 #define BRPC_RTMP_H
 
-#include "flare/butil/strings/string_piece.h"   // butil::StringPiece
+#include "flare/butil/strings/string_piece.h"   // std::string_view
 #include "flare/butil/endpoint.h"               // butil::EndPoint
 #include "flare/brpc/shared_object.h"          // SharedObject, intrusive_ptr
 #include "flare/brpc/socket_id.h"              // SocketUniquePtr
@@ -325,7 +325,7 @@ struct AVCDecoderConfigurationRecord {
     std::vector<std::string> pps_list;
 
 private:
-    butil::Status ParseSPS(const butil::StringPiece& buf, size_t sps_length);
+    butil::Status ParseSPS(const std::string_view& buf, size_t sps_length);
 };
 std::ostream& operator<<(std::ostream&, const AVCDecoderConfigurationRecord&);
 
@@ -505,7 +505,7 @@ enum RtmpPublishType {
     RTMP_PUBLISH_LIVE,
 };
 const char* RtmpPublishType2Str(RtmpPublishType);
-bool Str2RtmpPublishType(const butil::StringPiece&, RtmpPublishType*);
+bool Str2RtmpPublishType(const std::string_view&, RtmpPublishType*);
 
 // For SetPeerBandwidth
 enum RtmpLimitType {
@@ -536,7 +536,7 @@ public:
     // NOTE: Inputs can be modified and consumed.
     virtual void OnUserData(void* msg);
     virtual void OnCuePoint(RtmpCuePoint*);
-    virtual void OnMetaData(RtmpMetaData*, const butil::StringPiece&);
+    virtual void OnMetaData(RtmpMetaData*, const std::string_view&);
     virtual void OnSharedObjectMessage(RtmpSharedObjectMessage* msg);
     virtual void OnAudioMessage(RtmpAudioMessage* msg);
     virtual void OnVideoMessage(RtmpVideoMessage* msg);
@@ -554,7 +554,7 @@ public:
     // Returns 0 on success, -1 otherwise.
     virtual int SendCuePoint(const RtmpCuePoint&);
     virtual int SendMetaData(const RtmpMetaData&,
-                             const butil::StringPiece& name = "onMetaData");
+                             const std::string_view& name = "onMetaData");
     virtual int SendSharedObjectMessage(const RtmpSharedObjectMessage& msg);
     virtual int SendAudioMessage(const RtmpAudioMessage& msg);
     virtual int SendAACMessage(const RtmpAACMessage& msg);
@@ -565,14 +565,14 @@ public:
 
     // Send a message to the peer to make it stop. The concrete message depends
     // on implementation of the stream.
-    virtual int SendStopMessage(const butil::StringPiece& error_description);
+    virtual int SendStopMessage(const std::string_view& error_description);
 
     // // Call user's procedure at server-side.
     // // request == NULL  : send AMF null as the parameter.
     // // response == NULL : response is not needed.
     // // done == NULL     : synchronous call, asynchronous otherwise.
     // void Call(Controller* cntl,
-    //           const butil::StringPiece& procedure_name,
+    //           const std::string_view& procedure_name,
     //           const google::protobuf::Message* request,
     //           google::protobuf::Message* response,
     //           google::protobuf::Closure* done);
@@ -631,7 +631,7 @@ friend class policy::OnServerStreamCreated;
     void EndProcessingMessage();
     void CallOnUserData(void* data);
     void CallOnCuePoint(RtmpCuePoint*);
-    void CallOnMetaData(RtmpMetaData*, const butil::StringPiece&);
+    void CallOnMetaData(RtmpMetaData*, const std::string_view&);
     void CallOnSharedObjectMessage(RtmpSharedObjectMessage* msg);
     void CallOnAudioMessage(RtmpAudioMessage* msg);
     void CallOnVideoMessage(RtmpVideoMessage* msg);
@@ -834,7 +834,7 @@ friend class OnClientStreamCreated;
 friend class RtmpRetryingClientStream;
 
     int Play(const RtmpPlayOptions& opt);
-    int Publish(const butil::StringPiece& name, RtmpPublishType type);
+    int Publish(const std::string_view& name, RtmpPublishType type);
 
     // @StreamCreator
     StreamUserData* OnCreatingStream(SocketUniquePtr* inout, Controller* cntl) override;
@@ -909,7 +909,7 @@ public:
     virtual void OnPlayable() = 0;
     virtual void OnUserData(void*) = 0;
     virtual void OnCuePoint(brpc::RtmpCuePoint* cuepoint) = 0;
-    virtual void OnMetaData(brpc::RtmpMetaData* metadata, const butil::StringPiece& name) = 0;
+    virtual void OnMetaData(brpc::RtmpMetaData* metadata, const std::string_view& name) = 0;
     virtual void OnAudioMessage(brpc::RtmpAudioMessage* msg) = 0;
     virtual void OnVideoMessage(brpc::RtmpVideoMessage* msg) = 0;
     virtual void OnSharedObjectMessage(RtmpSharedObjectMessage* msg) = 0;
@@ -927,7 +927,7 @@ public:
     void OnPlayable();
     void OnUserData(void*);
     void OnCuePoint(brpc::RtmpCuePoint* cuepoint);
-    void OnMetaData(brpc::RtmpMetaData* metadata, const butil::StringPiece& name);
+    void OnMetaData(brpc::RtmpMetaData* metadata, const std::string_view& name);
     void OnAudioMessage(brpc::RtmpAudioMessage* msg);
     void OnVideoMessage(brpc::RtmpVideoMessage* msg);
     void OnSharedObjectMessage(RtmpSharedObjectMessage* msg);
@@ -972,7 +972,7 @@ public:
     // resend metadata or header messages).
     int SendCuePoint(const RtmpCuePoint&);
     int SendMetaData(const RtmpMetaData&,
-                     const butil::StringPiece& name = "onMetaData");
+                     const std::string_view& name = "onMetaData");
     int SendSharedObjectMessage(const RtmpSharedObjectMessage& msg);
     int SendAudioMessage(const RtmpAudioMessage& msg);
     int SendAACMessage(const RtmpAACMessage& msg);
@@ -1030,26 +1030,26 @@ friend class RetryingClientMessageHandler;
 // "rtmp://" can be ignored.
 // NOTE: query strings after stream_name is not removed and returned as part
 // of stream_name.
-void ParseRtmpURL(const butil::StringPiece& rtmp_url,
-                  butil::StringPiece* host,
-                  butil::StringPiece* vhost_after_app,
-                  butil::StringPiece* port,
-                  butil::StringPiece* app,
-                  butil::StringPiece* stream_name);
-void ParseRtmpHostAndPort(const butil::StringPiece& host_and_port,
-                          butil::StringPiece* host,
-                          butil::StringPiece* port);
-butil::StringPiece RemoveQueryStrings(const butil::StringPiece& stream_name,
-                                     butil::StringPiece* query_strings);
+void ParseRtmpURL(const std::string_view& rtmp_url,
+                  std::string_view* host,
+                  std::string_view* vhost_after_app,
+                  std::string_view* port,
+                  std::string_view* app,
+                  std::string_view* stream_name);
+void ParseRtmpHostAndPort(const std::string_view& host_and_port,
+                          std::string_view* host,
+                          std::string_view* port);
+std::string_view RemoveQueryStrings(const std::string_view& stream_name,
+                                     std::string_view* query_strings);
 // Returns "rtmp://HOST/APP/STREAM_NAME"
-std::string MakeRtmpURL(const butil::StringPiece& host,
-                        const butil::StringPiece& port,
-                        const butil::StringPiece& app,
-                        const butil::StringPiece& stream_name);
+std::string MakeRtmpURL(const std::string_view& host,
+                        const std::string_view& port,
+                        const std::string_view& app,
+                        const std::string_view& stream_name);
 // Returns url removed with beginning "rtmp://".
-butil::StringPiece RemoveRtmpPrefix(const butil::StringPiece& url);
+std::string_view RemoveRtmpPrefix(const std::string_view& url);
 // Returns url removed with beginning "xxx://"
-butil::StringPiece RemoveProtocolPrefix(const butil::StringPiece& url);
+std::string_view RemoveProtocolPrefix(const std::string_view& url);
 
 // Implement this class and assign an instance to ServerOption.rtmp_service
 // to enable RTMP support.
@@ -1109,7 +1109,7 @@ public:
     virtual void OnSetBufferLength(uint32_t buffer_length_ms);
 
     // @RtmpStreamBase, sending StreamNotFound
-    int SendStopMessage(const butil::StringPiece& error_description);
+    int SendStopMessage(const std::string_view& error_description);
     void Destroy();
 
 private:

@@ -41,6 +41,7 @@
 #include "flare/brpc/policy/http2_rpc_protocol.h"
 #include "flare/brpc/details/usercode_backup_pool.h"
 #include "flare/brpc/grpc.h"
+#include "flare/base/strings.h"
 
 extern "C" {
 void bthread_assign_data(void* data);
@@ -158,19 +159,19 @@ int InitCommonStrings() {
 static const int ALLOW_UNUSED force_creation_of_common = InitCommonStrings();
 const CommonStrings* get_common_strings() { return common; }
 
-HttpContentType ParseContentType(butil::StringPiece ct, bool* is_grpc_ct) {
+HttpContentType ParseContentType(std::string_view ct, bool* is_grpc_ct) {
     // According to http://www.w3.org/Protocols/rfc2616/rfc2616-sec3.html#sec3.7
     //   media-type  = type "/" subtype *( ";" parameter )
     //   type        = token
     //   subtype     = token
 
-    const butil::StringPiece prefix = "application/";
-    if (!ct.starts_with(prefix)) {
+    const std::string_view prefix = "application/";
+    if (!flare::base::starts_with(ct, prefix)) {
         return HTTP_CONTENT_OTHERS;
     }
     ct.remove_prefix(prefix.size());
 
-    if (ct.starts_with("grpc")) {
+    if (flare::base::starts_with(ct,"grpc")) {
         if (ct.size() == (size_t)4 || ct[4] == ';') {
             if (is_grpc_ct) {
                 *is_grpc_ct = true;
@@ -188,13 +189,13 @@ HttpContentType ParseContentType(butil::StringPiece ct, bool* is_grpc_ct) {
     }
 
     HttpContentType type = HTTP_CONTENT_OTHERS;
-    if (ct.starts_with("json")) {
+    if (flare::base::starts_with(ct,"json")) {
         type = HTTP_CONTENT_JSON;
         ct.remove_prefix(4);
-    } else if (ct.starts_with("proto")) {
+    } else if (flare::base::starts_with(ct,"proto")) {
         type = HTTP_CONTENT_PROTO;
         ct.remove_prefix(5);
-    } else if (ct.starts_with("x-protobuf")) {
+    } else if (flare::base::starts_with(ct,"x-protobuf")) {
         type = HTTP_CONTENT_PROTO;
         ct.remove_prefix(10);
     } else {
@@ -955,9 +956,9 @@ FindMethodPropertyByURIImpl(const std::string& uri_path, const Server* server,
         return wrapper.FindMethodPropertyByFullName(
             IndexService::descriptor()->full_name(), common->DEFAULT_METHOD);
     }
-    butil::StringPiece service_name(splitter.field(), splitter.length());
+    std::string_view service_name(splitter.field(), splitter.length());
     const bool full_service_name =
-        (service_name.find('.') != butil::StringPiece::npos);
+        (service_name.find('.') != std::string_view::npos);
     const Server::ServiceProperty* const sp = 
         (full_service_name ?
          wrapper.FindServicePropertyByFullName(service_name) :
@@ -969,10 +970,10 @@ FindMethodPropertyByURIImpl(const std::string& uri_path, const Server* server,
     // Find restful methods by uri.
     if (sp->restful_map) {
         ++splitter;
-        butil::StringPiece left_path;
+        std::string_view left_path;
         if (splitter) {
             // The -1 is for including /, always safe because of ++splitter
-            left_path.set(splitter.field() - 1, uri_path.c_str() +
+            left_path = std::string_view(splitter.field() - 1, uri_path.c_str() +
                           uri_path.size() - splitter.field() + 1);
         }
         return sp->restful_map->FindMethodProperty(left_path, unresolved_path);
@@ -984,9 +985,9 @@ FindMethodPropertyByURIImpl(const std::string& uri_path, const Server* server,
 
     // Regard URI as [service_name]/[method_name]
     const Server::MethodProperty* mp = NULL;
-    butil::StringPiece method_name;
+    std::string_view method_name;
     if (++splitter != NULL) {
-        method_name.set(splitter.field(), splitter.length());
+        method_name = std::string_view(splitter.field(), splitter.length());
         // Copy splitter rather than modifying it directly since it's used
         // in later branches.
         mp = wrapper.FindMethodPropertyByFullName(service_name, method_name);

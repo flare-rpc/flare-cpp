@@ -189,7 +189,7 @@ int HttpMessage::UnlockAndFlushToBodyReader(std::unique_lock<butil::Mutex>& mu) 
     ProgressiveReader* r = _body_reader;
     mu.unlock();
     for (size_t i = 0; i < body_seen.backing_block_num(); ++i) {
-        butil::StringPiece blk = body_seen.backing_block(i);
+        std::string_view blk = body_seen.backing_block(i);
         butil::Status st = r->OnReadOnePart(blk.data(), blk.size());
         if (!st.ok()) {
             mu.lock();
@@ -365,7 +365,7 @@ void HttpMessage::SetBodyReader(ProgressiveReader* r) {
         butil::IOBuf body_seen = _body.movable();
         mu.unlock();
         for (size_t i = 0; i < body_seen.backing_block_num(); ++i) {
-            butil::StringPiece blk = body_seen.backing_block(i);
+            std::string_view blk = body_seen.backing_block(i);
             butil::Status st = r->OnReadOnePart(blk.data(), blk.size());
             if (!st.ok()) {
                 r->OnEndOfMessage(st);
@@ -431,7 +431,7 @@ ssize_t HttpMessage::ParseFromArray(const char *data, const size_t length) {
     if (_parser.http_errno != 0) {
         // May try HTTP on other formats, failure is norm.
         RPC_VLOG << "Fail to parse http message, parser=" << _parser
-                 << ", buf=`" << butil::StringPiece(data, length) << '\'';
+                 << ", buf=`" << std::string_view(data, length) << '\'';
         return -1;
     } 
     _parsed_length += nprocessed;
@@ -449,7 +449,7 @@ ssize_t HttpMessage::ParseFromIOBuf(const butil::IOBuf &buf) {
     }
     size_t nprocessed = 0;
     for (size_t i = 0; i < buf.backing_block_num(); ++i) {
-        butil::StringPiece blk = buf.backing_block(i);
+        std::string_view blk = buf.backing_block(i);
         if (blk.empty()) {
             // length=0 will be treated as EOF by http_parser, must skip.
             continue;

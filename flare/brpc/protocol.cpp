@@ -147,14 +147,14 @@ void SerializeRequestDefault(butil::IOBuf* buf,
 // ======================================================
 
 inline bool CompareStringPieceWithoutCase(
-        const butil::StringPiece& s1, const char* s2) {
+        const std::string_view& s1, const char* s2) {
     if (strlen(s2) != s1.size()) {
         return false;
     }
     return strncasecmp(s1.data(), s2, s1.size()) == 0;
 }
 
-ProtocolType StringToProtocolType(const butil::StringPiece& name,
+ProtocolType StringToProtocolType(const std::string_view& name,
                                   bool print_log_on_unknown) {
     // Force init of s_protocol_name.
     GlobalInitializeOrDie();

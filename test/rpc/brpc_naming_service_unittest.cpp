@@ -32,6 +32,7 @@
 #include "flare/brpc/policy/discovery_naming_service.h"
 #include "echo.pb.h"
 #include "flare/brpc/server.h"
+#include "flare/base/strings.h"
 
 
 namespace brpc {
@@ -582,7 +583,7 @@ public:
         auto body = cntl->request_attachment().to_string();
         for (brpc::QuerySplitter sp(body); sp; ++sp) {
             if (sp.key() == "addrs") {
-                _addrs.insert(sp.value().as_string());
+                _addrs.insert(flare::base::as_string(sp.value()));
             }
         }
         cntl->response_attachment().append(R"({

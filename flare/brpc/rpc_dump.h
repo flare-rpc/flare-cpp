@@ -80,7 +80,7 @@ inline SampledRequest* AskToBeSampled() {
 //   }
 class SampleIterator {
 public:
-    explicit SampleIterator(const butil::StringPiece& dir);
+    explicit SampleIterator(const std::string_view& dir);
     ~SampleIterator();
 
     // Read a sample. Order of samples are not guaranteed to be same with

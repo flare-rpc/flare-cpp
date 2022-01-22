@@ -64,7 +64,7 @@ static int ParseSSLProtocols(const std::string& str_protocol) {
     butil::StringSplitter sp(str_protocol.data(),
                              str_protocol.data() + str_protocol.size(), ',');
     for (; sp; ++sp) {
-        butil::StringPiece protocol(sp.field(), sp.length());
+        std::string_view protocol(sp.field(), sp.length());
         protocol.trim_spaces();
         if (strncasecmp(protocol.data(), "SSLv3", protocol.size()) == 0
             || strncasecmp(protocol.data(), "TLSv1", protocol.size()) == 0

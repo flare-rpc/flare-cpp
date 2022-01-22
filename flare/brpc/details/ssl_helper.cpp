@@ -30,6 +30,7 @@
 #include "flare/butil/string_splitter.h"
 #include "flare/brpc/socket.h"
 #include "flare/brpc/details/ssl_helper.h"
+#include "flare/base/strings.h"
 
 namespace brpc {
 
@@ -70,8 +71,8 @@ static int ParseSSLProtocols(const std::string& str_protocol) {
     butil::StringSplitter sp(str_protocol.data(),
                              str_protocol.data() + str_protocol.size(), ',');
     for (; sp; ++sp) {
-        butil::StringPiece protocol(sp.field(), sp.length());
-        protocol.trim_spaces();
+        std::string_view protocol(sp.field(), sp.length());
+        protocol = flare::base::strip_ascii_whitespace(protocol);
         if (strncasecmp(protocol.data(), "SSLv3", protocol.size()) == 0) {
             protocol_flag |= SSLv3;
         } else if (strncasecmp(protocol.data(), "TLSv1", protocol.size()) == 0) {
@@ -830,7 +831,7 @@ void Print(std::ostream& os, X509* cert, const char* sep) {
 
     char* bufp = NULL;
     int len = BIO_get_mem_data(buf, &bufp);
-    os << butil::StringPiece(bufp, len);
+    os << std::string_view(bufp, len);
 }
 
 } // namespace brpc

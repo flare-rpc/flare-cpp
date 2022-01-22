@@ -144,7 +144,7 @@ int RandomizedLoadBalancer::SelectServer(const SelectIn& in, SelectOut* out) {
 }
 
 RandomizedLoadBalancer* RandomizedLoadBalancer::New(
-    const butil::StringPiece& params) const {
+    const std::string_view& params) const {
     RandomizedLoadBalancer* lb = new (std::nothrow) RandomizedLoadBalancer;
     if (lb && !lb->SetParameters(params)) {
         delete lb;
@@ -176,7 +176,7 @@ void RandomizedLoadBalancer::Describe(
     os << '}';
 }
 
-bool RandomizedLoadBalancer::SetParameters(const butil::StringPiece& params) {
+bool RandomizedLoadBalancer::SetParameters(const std::string_view& params) {
     return GetRecoverPolicyByParams(params, &_cluster_recover_policy);
 }
 

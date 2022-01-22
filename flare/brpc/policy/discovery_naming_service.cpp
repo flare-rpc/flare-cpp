@@ -21,7 +21,7 @@
 #include "flare/butil/third_party/rapidjson/memorybuffer.h"
 #include "flare/butil/third_party/rapidjson/writer.h"
 #include "flare/butil/string_printf.h"
-#include "flare/butil/strings/string_split.h"
+#include "flare/base/str_split.h"
 #include "flare/butil/fast_rand.h"
 #include "flare/bthread/bthread.h"
 #include "flare/brpc/channel.h"
@@ -274,8 +274,7 @@ int DiscoveryClient::DoRegister() {
     os << "appid=" << _params.appid
         << "&hostname=" << _params.hostname;
 
-    std::vector<butil::StringPiece> addrs;
-    butil::SplitString(_params.addrs, ',', &addrs);
+    std::vector<std::string_view> addrs = flare::base::string_split(_params.addrs, ',');
     for (size_t i = 0; i < addrs.size(); ++i) {
         if (!addrs[i].empty()) {
             os << "&addrs=" << addrs[i];
@@ -424,9 +423,9 @@ int DiscoveryNamingService::GetServers(const char* service_name,
             }
             // The result returned by discovery include protocol prefix, such as
             // http://172.22.35.68:6686, which should be removed.
-            butil::StringPiece addr(addrs[j].GetString(), addrs[j].GetStringLength());
-            butil::StringPiece::size_type pos = addr.find("://");
-            if (pos != butil::StringPiece::npos) {
+            std::string_view addr(addrs[j].GetString(), addrs[j].GetStringLength());
+            std::string_view::size_type pos = addr.find("://");
+            if (pos != std::string_view::npos) {
                 if (pos != 4 /* sizeof("grpc") */ ||
                         strncmp("grpc", addr.data(), 4) != 0) {
                     // Skip server that has prefix but not start with "grpc"

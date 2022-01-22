@@ -47,7 +47,7 @@ MethodStatus::MethodStatus()
 MethodStatus::~MethodStatus() {
 }
 
-int MethodStatus::Expose(const butil::StringPiece& prefix) {
+int MethodStatus::Expose(const std::string_view& prefix) {
     if (_nconcurrency_bvar.expose_as(prefix, "concurrency") != 0) {
         return -1;
     }

@@ -291,7 +291,7 @@ void Series<Vector<T,N>, Op>::describe(std::ostream& os,
         int c = 0;
         os << "{\"label\":\"";
         if (sp) {
-            os << butil::StringPiece(sp.field(), sp.length());
+            os << std::string_view(sp.field(), sp.length());
             ++sp;
         } else {
             os << "Vector[" << j << ']';

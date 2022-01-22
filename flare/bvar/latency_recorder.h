@@ -77,19 +77,19 @@ class LatencyRecorder : public detail::LatencyRecorderBase {
 public:
     LatencyRecorder() : Base(-1) {}
     explicit LatencyRecorder(time_t window_size) : Base(window_size) {}
-    explicit LatencyRecorder(const butil::StringPiece& prefix) : Base(-1) {
+    explicit LatencyRecorder(const std::string_view& prefix) : Base(-1) {
         expose(prefix);
     }
-    LatencyRecorder(const butil::StringPiece& prefix,
+    LatencyRecorder(const std::string_view& prefix,
                     time_t window_size) : Base(window_size) {
         expose(prefix);
     }
-    LatencyRecorder(const butil::StringPiece& prefix1,
-                    const butil::StringPiece& prefix2) : Base(-1) {
+    LatencyRecorder(const std::string_view& prefix1,
+                    const std::string_view& prefix2) : Base(-1) {
         expose(prefix1, prefix2);
     }
-    LatencyRecorder(const butil::StringPiece& prefix1,
-                    const butil::StringPiece& prefix2,
+    LatencyRecorder(const std::string_view& prefix1,
+                    const std::string_view& prefix2,
                     time_t window_size) : Base(window_size) {
         expose(prefix1, prefix2);
     }
@@ -111,11 +111,11 @@ public:
     //                                    // foo_bar_read_max_latency
     //                                    // foo_bar_read_count
     //                                    // foo_bar_read_qps
-    int expose(const butil::StringPiece& prefix) {
-        return expose(butil::StringPiece(), prefix);
+    int expose(const std::string_view& prefix) {
+        return expose(std::string_view(), prefix);
     }
-    int expose(const butil::StringPiece& prefix1,
-               const butil::StringPiece& prefix2);
+    int expose(const std::string_view& prefix1,
+               const std::string_view& prefix2);
     
     // Hide all internal variables, called in dtor as well.
     void hide();

@@ -141,8 +141,8 @@ public:
     }
 
 protected:
-    int expose_impl(const butil::StringPiece& prefix,
-                    const butil::StringPiece& name,
+    int expose_impl(const std::string_view& prefix,
+                    const std::string_view& name,
                     DisplayFilter display_filter) override {
         const int rc = Variable::expose_impl(prefix, name, display_filter);
         if (rc == 0 &&
@@ -179,12 +179,12 @@ public:
     // Different from PerSecond, we require window_size here because get_value
     // of Window is largely affected by window_size while PerSecond is not.
     Window(R* var, time_t window_size) : Base(var, window_size) {}
-    Window(const butil::StringPiece& name, R* var, time_t window_size)
+    Window(const std::string_view& name, R* var, time_t window_size)
         : Base(var, window_size) {
         this->expose(name);
     }
-    Window(const butil::StringPiece& prefix,
-           const butil::StringPiece& name, R* var, time_t window_size)
+    Window(const std::string_view& prefix,
+           const std::string_view& name, R* var, time_t window_size)
         : Base(var, window_size) {
         this->expose_as(prefix, name);
     }
@@ -202,20 +202,20 @@ public:
     // If window_size is non-positive or absent, use FLAGS_bvar_dump_interval.
     PerSecond(R* var) : Base(var, -1) {}
     PerSecond(R* var, time_t window_size) : Base(var, window_size) {}
-    PerSecond(const butil::StringPiece& name, R* var) : Base(var, -1) {
+    PerSecond(const std::string_view& name, R* var) : Base(var, -1) {
         this->expose(name);
     }
-    PerSecond(const butil::StringPiece& name, R* var, time_t window_size)
+    PerSecond(const std::string_view& name, R* var, time_t window_size)
         : Base(var, window_size) {
         this->expose(name);
     }
-    PerSecond(const butil::StringPiece& prefix,
-              const butil::StringPiece& name, R* var)
+    PerSecond(const std::string_view& prefix,
+              const std::string_view& name, R* var)
         : Base(var, -1) {
         this->expose_as(prefix, name);
     }
-    PerSecond(const butil::StringPiece& prefix,
-              const butil::StringPiece& name, R* var, time_t window_size)
+    PerSecond(const std::string_view& prefix,
+              const std::string_view& name, R* var, time_t window_size)
         : Base(var, window_size) {
         this->expose_as(prefix, name);
     }

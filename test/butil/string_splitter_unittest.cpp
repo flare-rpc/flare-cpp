@@ -337,7 +337,7 @@ TEST_F(StringSplitterTest, split_limit_len) {
     ++ss2;
     ASSERT_FALSE(ss2);
 
-    butil::StringPiece sp(str, 5);
+    std::string_view sp(str, 5);
     // Allows using '\0' as separator
     butil::StringSplitter ss3(sp, '\0');
 

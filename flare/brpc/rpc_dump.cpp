@@ -257,7 +257,7 @@ bool RpcDumpContext::Serialize(butil::IOBuf& buf, SampledRequest* sample) {
     return true;
 }
 
-SampleIterator::SampleIterator(const butil::StringPiece& dir)
+SampleIterator::SampleIterator(const std::string_view& dir)
     : _cur_fd(-1)
     , _enum(NULL)
     , _dir(std::string(dir.data(), dir.size())) {

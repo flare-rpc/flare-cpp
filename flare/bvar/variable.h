@@ -25,7 +25,7 @@
 #include <vector>                      // std::vector
 #include <gflags/gflags_declare.h>
 #include "flare/butil/macros.h"               // DISALLOW_COPY_AND_ASSIGN
-#include "flare/butil/strings/string_piece.h" // butil::StringPiece
+#include "flare/butil/strings/string_piece.h" // std::string_view
 
 #ifdef BAIDU_INTERNAL
 #include <boost/any.hpp>
@@ -52,7 +52,7 @@ class Dumper {
 public:
     virtual ~Dumper() { }
     virtual bool dump(const std::string& name,
-                      const butil::StringPiece& description) = 0;
+                      const std::string_view& description) = 0;
 };
 
 // Options for Variable::dump_exposed().
@@ -127,9 +127,9 @@ public:
     //   describe_exposed
     //   find_exposed
     // Return 0 on success, -1 otherwise.
-    int expose(const butil::StringPiece& name,
+    int expose(const std::string_view& name,
                DisplayFilter display_filter = DISPLAY_ON_ALL) {
-        return expose_impl(butil::StringPiece(), name, display_filter);
+        return expose_impl(std::string_view(), name, display_filter);
     }
  
     // Expose this variable with a prefix.
@@ -147,8 +147,8 @@ public:
     //   }  // foo
     //   }  // bar
     // Returns 0 on success, -1 otherwise.
-    int expose_as(const butil::StringPiece& prefix,
-                  const butil::StringPiece& name,
+    int expose_as(const std::string_view& prefix,
+                  const std::string_view& name,
                   DisplayFilter display_filter = DISPLAY_ON_ALL) {
         return expose_impl(prefix, name, display_filter);
     }
@@ -206,8 +206,8 @@ public:
     static int dump_exposed(Dumper* dumper, const DumpOptions* options);
 
 protected:
-    virtual int expose_impl(const butil::StringPiece& prefix,
-                            const butil::StringPiece& name,
+    virtual int expose_impl(const std::string_view& prefix,
+                            const std::string_view& name,
                             DisplayFilter display_filter);
 
 private:
@@ -227,7 +227,7 @@ private:
 //   FooBar          -> foo_bar
 //   RPCTest         -> rpctest
 //   HELLO           -> hello
-void to_underscored_name(std::string* out, const butil::StringPiece& name);
+void to_underscored_name(std::string* out, const std::string_view& name);
 
 }  // namespace bvar
 

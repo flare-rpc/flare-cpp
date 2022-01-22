@@ -208,7 +208,7 @@ public:
         : KeyValuePairsSplitter(str_begin, '&', '=')
     {}
 
-    inline QuerySplitter(const butil::StringPiece &sp)
+    inline QuerySplitter(const std::string_view &sp)
         : KeyValuePairsSplitter(sp, '&', '=')
     {}
 };
@@ -220,9 +220,9 @@ class QueryRemover {
 public:
     QueryRemover(const std::string* str);
 
-    butil::StringPiece key() { return _qs.key();}
-    butil::StringPiece value() { return _qs.value(); }
-    butil::StringPiece key_and_value() { return _qs.key_and_value(); }
+    std::string_view key() { return _qs.key();}
+    std::string_view value() { return _qs.value(); }
+    std::string_view key_and_value() { return _qs.key_and_value(); }
 
     // Move splitter forward.
     QueryRemover& operator++();
@@ -254,8 +254,8 @@ private:
 // "/some/path?" -> "/some/path?key=value"
 // "/some/path?key1=value1" -> "/some/path?key1=value1&key=value"
 void append_query(std::string *query_string,
-                  const butil::StringPiece& key,
-                  const butil::StringPiece& value);
+                  const std::string_view& key,
+                  const std::string_view& value);
 
 } // namespace brpc
 

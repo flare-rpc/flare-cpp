@@ -140,7 +140,7 @@ const AMFField* AMFObject::Find(const char* name) const {
     return NULL;
 }
 
-void AMFField::SetString(const butil::StringPiece& str) {
+void AMFField::SetString(const std::string_view& str) {
     // TODO: Try to reuse the space.
     Clear();
     if (str.size() < SSO_LIMIT) {
@@ -218,7 +218,7 @@ AMFArray* AMFField::MutableArray() {
 
 // ============= AMFObject =============
 
-void AMFObject::SetString(const std::string& name, const butil::StringPiece& str) {
+void AMFObject::SetString(const std::string& name, const std::string_view& str) {
     _fields[name].SetString(str);
 }
 
@@ -941,7 +941,7 @@ void AMFArray::RemoveLastField() {
 
 // [ Write ]
 
-void WriteAMFString(const butil::StringPiece& str, AMFOutputStream* stream) {
+void WriteAMFString(const std::string_view& str, AMFOutputStream* stream) {
     if (str.size() < 65536u) {
         stream->put_u8(AMF_MARKER_STRING);
         stream->put_u16(str.size());
@@ -1070,13 +1070,13 @@ static void WriteAMFField(const AMFField& field, AMFOutputStream* stream) {
         break;
     case AMF_MARKER_STRING: {
         stream->put_u8(AMF_MARKER_STRING);
-        const butil::StringPiece str = field.AsString();
+        const std::string_view str = field.AsString();
         stream->put_u16(str.size());
         stream->putn(str.data(), str.size());
     } break;
     case AMF_MARKER_LONG_STRING: {
         stream->put_u8(AMF_MARKER_LONG_STRING);
-        const butil::StringPiece str = field.AsString();
+        const std::string_view str = field.AsString();
         stream->put_u32(str.size());
         stream->putn(str.data(), str.size());
     } break;

@@ -504,8 +504,8 @@ std::string QueryRemover::modified_query() {
 }
 
 void append_query(std::string *query_string,
-                  const butil::StringPiece& key,
-                  const butil::StringPiece& value) {
+                  const std::string_view& key,
+                  const std::string_view& value) {
     if (!query_string->empty() && butil::back_char(*query_string) != '?') {
         query_string->push_back('&');
     }

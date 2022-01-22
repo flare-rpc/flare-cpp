@@ -47,7 +47,7 @@ void NsheadService::Describe(std::ostream &os, const DescribeOptions&) const {
     os << butil::class_name_str(*this);
 }
 
-void NsheadService::Expose(const butil::StringPiece& prefix) {
+void NsheadService::Expose(const std::string_view& prefix) {
     _cached_name = butil::class_name_str(*this);
     if (_status == NULL) {
         return;

@@ -257,7 +257,7 @@ int SocketMap::Insert(const SocketMapKey& key, SocketId* id,
         char namebuf[32];
         int len = snprintf(namebuf, sizeof(namebuf), "rpc_socketmap_%p", this);
         _this_map_bvar = new bvar::PassiveStatus<std::string>(
-            butil::StringPiece(namebuf, len), PrintSocketMap, this);
+            std::string_view(namebuf, len), PrintSocketMap, this);
     }
     return 0;
 }
@@ -299,7 +299,7 @@ void SocketMap::RemoveInternal(const SocketMapKey& key,
                 char namebuf[32];
                 int len = snprintf(namebuf, sizeof(namebuf), "rpc_socketmap_%p", this);
                 _this_map_bvar = new bvar::PassiveStatus<std::string>(
-                    butil::StringPiece(namebuf, len), PrintSocketMap, this);
+                    std::string_view(namebuf, len), PrintSocketMap, this);
             }
             s->ReleaseAdditionalReference(); // release extra ref
             SocketUniquePtr ptr(s);  // Dereference

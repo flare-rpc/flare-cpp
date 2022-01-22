@@ -76,7 +76,7 @@ public:
 public:
     // NOTE: You must be very careful about lifetime of `arg' which should be
     // valid during lifetime of PassiveStatus.
-    PassiveStatus(const butil::StringPiece& name,
+    PassiveStatus(const std::string_view& name,
                   Tp (*getfn)(void*), void* arg)
         : _getfn(getfn)
         , _arg(arg)
@@ -85,8 +85,8 @@ public:
         expose(name);
     }
     
-    PassiveStatus(const butil::StringPiece& prefix,
-                  const butil::StringPiece& name,
+    PassiveStatus(const std::string_view& prefix,
+                  const std::string_view& name,
                   Tp (*getfn)(void*), void* arg)
         : _getfn(getfn)
         , _arg(arg)
@@ -167,8 +167,8 @@ public:
     }
 
 protected:
-    int expose_impl(const butil::StringPiece& prefix,
-                    const butil::StringPiece& name,
+    int expose_impl(const std::string_view& prefix,
+                    const std::string_view& name,
                     DisplayFilter display_filter) override {
         const int rc = Variable::expose_impl(prefix, name, display_filter);
         if (ADDITIVE &&
@@ -199,14 +199,14 @@ class PassiveStatus<std::string> : public Variable {
 public:
     // NOTE: You must be very careful about lifetime of `arg' which should be
     // valid during lifetime of PassiveStatus.
-    PassiveStatus(const butil::StringPiece& name,
+    PassiveStatus(const std::string_view& name,
                   void (*print)(std::ostream&, void*), void* arg)
         : _print(print), _arg(arg) {
         expose(name);
     }
 
-    PassiveStatus(const butil::StringPiece& prefix,
-                  const butil::StringPiece& name,
+    PassiveStatus(const std::string_view& prefix,
+                  const std::string_view& name,
                   void (*print)(std::ostream&, void*), void* arg)
         : _print(print), _arg(arg) {
         expose_as(prefix, name);
@@ -245,12 +245,12 @@ private:
 template <typename Tp>
 class BasicPassiveStatus : public PassiveStatus<Tp> {
 public:
-    BasicPassiveStatus(const butil::StringPiece& name,
+    BasicPassiveStatus(const std::string_view& name,
                        Tp (*getfn)(void*), void* arg)
         : PassiveStatus<Tp>(name, getfn, arg) {}
     
-    BasicPassiveStatus(const butil::StringPiece& prefix,
-                       const butil::StringPiece& name,
+    BasicPassiveStatus(const std::string_view& prefix,
+                       const std::string_view& name,
                        Tp (*getfn)(void*), void* arg)
         : PassiveStatus<Tp>(prefix, name, getfn, arg) {}
 
@@ -261,12 +261,12 @@ public:
 template <>
 class BasicPassiveStatus<std::string> : public PassiveStatus<std::string> {
 public:
-    BasicPassiveStatus(const butil::StringPiece& name,
+    BasicPassiveStatus(const std::string_view& name,
                        void (*print)(std::ostream&, void*), void* arg)
         : PassiveStatus<std::string>(name, print, arg) {}
     
-    BasicPassiveStatus(const butil::StringPiece& prefix,
-                       const butil::StringPiece& name,
+    BasicPassiveStatus(const std::string_view& prefix,
+                       const std::string_view& name,
                        void (*print)(std::ostream&, void*), void* arg)
         : PassiveStatus<std::string>(prefix, name, print, arg) {}
 

@@ -32,6 +32,7 @@
 #include "flare/brpc/redis.h"
 #include "flare/brpc/redis_command.h"
 #include "flare/brpc/policy/redis_protocol.h"
+#include "flare/base/strings.h"
 
 namespace brpc {
 
@@ -76,7 +77,7 @@ public:
 };
 
 int ConsumeCommand(RedisConnContext* ctx,
-                   const std::vector<butil::StringPiece>& args,
+                   const std::vector<std::string_view>& args,
                    bool flush_batched,
                    butil::IOBufAppender* appender) {
     RedisReply output(&ctx->arena);
@@ -93,7 +94,7 @@ int ConsumeCommand(RedisConnContext* ctx,
         RedisCommandHandler* ch = ctx->redis_service->FindCommandHandler(args[0]);
         if (!ch) {
             char buf[64];
-            snprintf(buf, sizeof(buf), "ERR unknown command `%s`", args[0].as_string().c_str());
+            snprintf(buf, sizeof(buf), "ERR unknown command `%s`", flare::base::as_string(args[0]).c_str());
             output.SetError(buf);
         } else {
             result = ch->Run(args, &output, flush_batched);
@@ -159,7 +160,7 @@ ParseResult ParseRedisMessage(butil::IOBuf* source, Socket* socket,
             ctx = new RedisConnContext(rs);
             socket->reset_parsing_context(ctx);
         }
-        std::vector<butil::StringPiece> current_args;
+        std::vector<std::string_view> current_args;
         butil::IOBufAppender appender;
         ParseError err = PARSE_OK;
 
@@ -168,7 +169,7 @@ ParseResult ParseRedisMessage(butil::IOBuf* source, Socket* socket,
             return MakeParseError(err);
         }
         while (true) {
-            std::vector<butil::StringPiece> next_args;
+            std::vector<std::string_view> next_args;
             err = ctx->parser.Consume(*source, &next_args, &ctx->arena);
             if (err != PARSE_OK) {
                 break;

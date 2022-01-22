@@ -408,8 +408,8 @@ void ProcessRpcRequest(InputMessageBase* msg_base) {
 
         // NOTE(gejun): jprotobuf sends service names without packages. So the
         // name should be changed to full when it's not.
-        butil::StringPiece svc_name(request_meta.service_name());
-        if (svc_name.find('.') == butil::StringPiece::npos) {
+        std::string_view svc_name(request_meta.service_name());
+        if (svc_name.find('.') == std::string_view::npos) {
             const Server::ServiceProperty* sp =
                 server_accessor.FindServicePropertyByName(svc_name);
             if (NULL == sp) {

@@ -354,7 +354,7 @@ public:
     explicit RtmpSubStream(brpc::RtmpMessageHandler* mh)
         : _message_handler(mh) {}
     // @RtmpStreamBase
-    void OnMetaData(brpc::RtmpMetaData*, const butil::StringPiece&);
+    void OnMetaData(brpc::RtmpMetaData*, const std::string_view&);
     void OnSharedObjectMessage(brpc::RtmpSharedObjectMessage* msg);
     void OnAudioMessage(brpc::RtmpAudioMessage* msg);
     void OnVideoMessage(brpc::RtmpVideoMessage* msg);
@@ -368,7 +368,7 @@ void RtmpSubStream::OnFirstMessage() {
     _message_handler->OnPlayable();
 }
 
-void RtmpSubStream::OnMetaData(brpc::RtmpMetaData* obj, const butil::StringPiece& name) {
+void RtmpSubStream::OnMetaData(brpc::RtmpMetaData* obj, const std::string_view& name) {
     _message_handler->OnMetaData(obj, name);
 }
 
@@ -426,11 +426,11 @@ void RtmpSubStreamCreator::LaunchSubStream(
 }
 
 TEST(RtmpTest, parse_rtmp_url) {
-    butil::StringPiece host;
-    butil::StringPiece vhost;
-    butil::StringPiece port;
-    butil::StringPiece app;
-    butil::StringPiece stream_name;
+    std::string_view host;
+    std::string_view vhost;
+    std::string_view port;
+    std::string_view app;
+    std::string_view stream_name;
 
     brpc::ParseRtmpURL("rtmp://HOST/APP/STREAM",
                              &host, &vhost, &port, &app, &stream_name);

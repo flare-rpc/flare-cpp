@@ -35,11 +35,11 @@ butil::Status RedisCommandFormatV(butil::IOBuf* buf, const char* fmt, va_list ar
 
 // Just convert the command to the text format of redis without processing the
 // specifiers(%) inside.
-butil::Status RedisCommandNoFormat(butil::IOBuf* buf, const butil::StringPiece& command);
+butil::Status RedisCommandNoFormat(butil::IOBuf* buf, const std::string_view& command);
 
 // Concatenate components to form a redis command.
 butil::Status RedisCommandByComponents(butil::IOBuf* buf,
-                                      const butil::StringPiece* components,
+                                      const std::string_view* components,
                                       size_t num_components);
 
 // A parser used to parse redis raw command.
@@ -50,7 +50,7 @@ public:
     // Parse raw message from `buf'. Return PARSE_OK and set the parsed command
     // to `args' and length to `len' if successful. Memory of args are allocated 
     // in `arena'.
-    ParseError Consume(butil::IOBuf& buf, std::vector<butil::StringPiece>* args,
+    ParseError Consume(butil::IOBuf& buf, std::vector<std::string_view>* args,
                        butil::Arena* arena);
 
 private:
@@ -60,7 +60,7 @@ private:
     bool _parsing_array;            // if the parser has met array indicator '*'
     int _length;                    // array length
     int _index;                     // current parsing array index
-    std::vector<butil::StringPiece> _args;  // parsed command string
+    std::vector<std::string_view> _args;  // parsed command string
 };
 
 } // namespace brpc

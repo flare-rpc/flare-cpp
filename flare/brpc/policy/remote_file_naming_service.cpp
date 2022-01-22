@@ -25,6 +25,7 @@
 #include "flare/brpc/log.h"
 #include "flare/brpc/channel.h"
 #include "flare/brpc/policy/remote_file_naming_service.h"
+#include "flare/base/strings.h"
 
 
 namespace brpc {
@@ -37,9 +38,9 @@ DEFINE_int32(remote_file_timeout_ms, 1000,
              "Timeout for fetching remote server lists");
 
 // Defined in file_naming_service.cpp
-bool SplitIntoServerAndTag(const butil::StringPiece& line,
-                           butil::StringPiece* server_addr,
-                           butil::StringPiece* tag);
+bool SplitIntoServerAndTag(const std::string_view& line,
+                           std::string_view* server_addr,
+                           std::string_view* tag);
 
 static bool CutLineFromIOBuf(butil::IOBuf* source, std::string* line_out) {
     if (source->empty()) {
@@ -62,10 +63,10 @@ int RemoteFileNamingService::GetServers(const char *service_name_cstr,
     servers->clear();
 
     if (_channel == NULL) {
-        butil::StringPiece tmpname(service_name_cstr);
+        std::string_view tmpname(service_name_cstr);
         size_t pos = tmpname.find("://");
-        butil::StringPiece proto;
-        if (pos != butil::StringPiece::npos) {
+        std::string_view proto;
+        if (pos != std::string_view::npos) {
             proto = tmpname.substr(0, pos);
             for (pos += 3; tmpname[pos] == '/'; ++pos) {}
             tmpname.remove_prefix(pos);
@@ -78,13 +79,13 @@ int RemoteFileNamingService::GetServers(const char *service_name_cstr,
             return -1;
         }
         size_t slash_pos = tmpname.find('/');
-        butil::StringPiece server_addr_piece;
-        if (slash_pos == butil::StringPiece::npos) {
+        std::string_view server_addr_piece;
+        if (slash_pos == std::string_view::npos) {
             server_addr_piece = tmpname;
             _path = "/";
         } else {
             server_addr_piece = tmpname.substr(0, slash_pos);
-            _path = tmpname.substr(slash_pos).as_string();
+            _path = std::move(flare::base::as_string(tmpname.substr(slash_pos)));
         }
         _server_addr.reserve(proto.size() + 3 + server_addr_piece.size());
         _server_addr.append(proto.data(), proto.size());
@@ -118,8 +119,8 @@ int RemoteFileNamingService::GetServers(const char *service_name_cstr,
     std::set<ServerNode> presence;
 
     while (CutLineFromIOBuf(&cntl.response_attachment(), &line)) {
-        butil::StringPiece addr;
-        butil::StringPiece tag;
+        std::string_view addr;
+        std::string_view tag;
         if (!SplitIntoServerAndTag(line, &addr, &tag)) {
             continue;
         }
@@ -132,7 +133,7 @@ int RemoteFileNamingService::GetServers(const char *service_name_cstr,
         }
         ServerNode node;
         node.addr = point;
-        tag.CopyToString(&node.tag);
+        flare::base::copy_to_string(tag, &node.tag);
         if (presence.insert(node).second) {
             servers->push_back(node);
         } else {

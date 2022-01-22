@@ -30,6 +30,7 @@
 #include "flare/brpc/builtin/pprof_perl.h"
 #include "flare/brpc/builtin/hotspots_service.h"
 #include "flare/brpc/details/tcmalloc_extension.h"
+#include "flare/base/strings.h"
 
 extern "C" {
 int __attribute__((weak)) ProfilerStart(const char* fname);
@@ -161,7 +162,7 @@ static ProfilingEnvironment g_env[4] = {
 // The `content' should be small so that it can be written into file in one
 // fwrite (at most time).
 static bool WriteSmallFile(const char* filepath_in,
-                           const butil::StringPiece& content) {
+                           const std::string_view& content) {
     butil::File::Error error;
     butil::FilePath path(filepath_in);
     butil::FilePath dir = path.DirName();
@@ -244,9 +245,9 @@ static const char* GetBaseName(const std::string* full_base_name) {
 }
 
 static const char* GetBaseName(const char* full_base_name) {
-    butil::StringPiece s(full_base_name);
+    std::string_view s(full_base_name);
     size_t offset = s.find_last_of('/');
-    if (offset == butil::StringPiece::npos) {
+    if (offset == std::string_view::npos) {
         offset = 0;
     } else {
         ++offset;
@@ -258,8 +259,8 @@ static const char* GetBaseName(const char* full_base_name) {
 // NOTE: this function MUST be applied to all parameters finally passed to
 // system related functions (popen/system/exec ...) to avoid potential
 // injections from URL and other user inputs.
-static bool ValidProfilePath(const butil::StringPiece& path) {
-    if (!path.starts_with(FLAGS_rpc_profiling_dir)) {
+static bool ValidProfilePath(const std::string_view& path) {
+    if (!flare::base::starts_with(path, FLAGS_rpc_profiling_dir)) {
         // Must be under the directory.
         return false;
     }

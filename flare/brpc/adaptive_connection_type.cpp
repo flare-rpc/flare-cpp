@@ -23,14 +23,14 @@
 namespace brpc {
 
 inline bool CompareStringPieceWithoutCase(
-        const butil::StringPiece& s1, const char* s2) {
+        const std::string_view& s1, const char* s2) {
     if (strlen(s2) != s1.size()) {
         return false;
     }
     return strncasecmp(s1.data(), s2, s1.size()) == 0;
 }
 
-ConnectionType StringToConnectionType(const butil::StringPiece& type,
+ConnectionType StringToConnectionType(const std::string_view& type,
                                       bool print_log_on_unknown) {
     if (CompareStringPieceWithoutCase(type, "single")) {
         return CONNECTION_TYPE_SINGLE;
@@ -59,7 +59,7 @@ const char* ConnectionTypeToString(ConnectionType type) {
     return "unknown";
 }
 
-void AdaptiveConnectionType::operator=(const butil::StringPiece& name) {
+void AdaptiveConnectionType::operator=(const std::string_view& name) {
     if (name.empty()) {
         _type = CONNECTION_TYPE_UNKNOWN;
         _error = false;

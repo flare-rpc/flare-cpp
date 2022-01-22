@@ -138,7 +138,7 @@ int WeightedRandomizedLoadBalancer::SelectServer(const SelectIn& in, SelectOut* 
 }
 
 LoadBalancer* WeightedRandomizedLoadBalancer::New(
-    const butil::StringPiece&) const {
+    const std::string_view&) const {
     return new (std::nothrow) WeightedRandomizedLoadBalancer;
 }
 

@@ -31,9 +31,9 @@ namespace brpc {
 // Convert a case-insensitive string to corresponding ProtocolType which is
 // defined in src/brpc/options.proto
 // Returns: PROTOCOL_UNKNOWN on error.
-ProtocolType StringToProtocolType(const butil::StringPiece& type,
+ProtocolType StringToProtocolType(const std::string_view& type,
                                   bool print_log_on_unknown);
-inline ProtocolType StringToProtocolType(const butil::StringPiece& type)
+inline ProtocolType StringToProtocolType(const std::string_view& type)
 { return StringToProtocolType(type, true); }
 
 // Convert a ProtocolType to a c-style string.
@@ -52,10 +52,10 @@ public:
         _param.clear();
     }
 
-    void operator=(butil::StringPiece name) {
-        butil::StringPiece param;
+    void operator=(std::string_view name) {
+        std::string_view param;
         const size_t pos = name.find(':');
-        if (pos != butil::StringPiece::npos) {
+        if (pos != std::string_view::npos) {
             param = name.substr(pos + 1);
             name.remove_suffix(name.size() - pos);
         }

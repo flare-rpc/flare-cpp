@@ -26,8 +26,8 @@
 #include <stdint.h>                              // uint32_t
 #include <string>                                // std::string
 #include <ostream>                               // std::ostream
+#include <string_view>
 #include <google/protobuf/io/zero_copy_stream.h> // ZeroCopyInputStream
-#include "flare/butil/strings/string_piece.h"           // butil::StringPiece
 #include "flare/butil/third_party/snappy/snappy-sinksource.h"
 #include "flare/butil/zero_copy_stream_as_streambuf.h"
 #include "flare/butil/macros.h"
@@ -344,14 +344,14 @@ public:
     static size_t block_count_hit_tls_threshold();
 
     // Equal with a string/IOBuf or not.
-    bool equals(const butil::StringPiece&) const;
+    bool equals(const std::string_view&) const;
     bool equals(const IOBuf& other) const;
 
     // Get the number of backing blocks
     size_t backing_block_num() const { return _ref_num(); }
 
-    // Get #i backing_block, an empty StringPiece is returned if no such block
-    StringPiece backing_block(size_t i) const;
+    // Get #i backing_block, an empty std::string_view is returned if no such block
+    std::string_view backing_block(size_t i) const;
 
     // Make a movable version of self
     Movable movable() { return Movable(*this); }
@@ -420,13 +420,13 @@ private:
 
 std::ostream& operator<<(std::ostream&, const IOBuf& buf);
 
-inline bool operator==(const butil::IOBuf& b, const butil::StringPiece& s)
+inline bool operator==(const butil::IOBuf& b, const std::string_view& s)
 { return b.equals(s); }
-inline bool operator==(const butil::StringPiece& s, const butil::IOBuf& b)
+inline bool operator==(const std::string_view& s, const butil::IOBuf& b)
 { return b.equals(s); }
-inline bool operator!=(const butil::IOBuf& b, const butil::StringPiece& s)
+inline bool operator!=(const butil::IOBuf& b, const std::string_view& s)
 { return !b.equals(s); }
-inline bool operator!=(const butil::StringPiece& s, const butil::IOBuf& b)
+inline bool operator!=(const std::string_view& s, const butil::IOBuf& b)
 { return !b.equals(s); }
 inline bool operator==(const butil::IOBuf& b1, const butil::IOBuf& b2)
 { return b1.equals(b2); }
@@ -667,7 +667,7 @@ public:
     // CPU E5-2620 @ 2.00GHz. Longer data/strings make differences smaller.
     // Returns 0 on success, -1 otherwise.
     int append(const void* data, size_t n);
-    int append(const butil::StringPiece& str);
+    int append(const std::string_view& str);
 
     // Format integer |d| to back side of the internal buffer, which is much faster
     // than snprintf(..., "%lu", d).

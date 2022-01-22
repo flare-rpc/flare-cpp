@@ -420,7 +420,7 @@ public:
                    ServiceOwnership ownership);
     int AddService(google::protobuf::Service* service,
                    ServiceOwnership ownership,
-                   const butil::StringPiece& restful_mappings,
+                   const std::string_view& restful_mappings,
                    bool allow_default_url = false);
     int AddService(google::protobuf::Service* service,
                    const ServiceOptions& options);
@@ -454,14 +454,14 @@ public:
     // Notice that for performance concerns, this function does not lock service
     // list internally thus races with AddService()/RemoveService().
     google::protobuf::Service*
-    FindServiceByFullName(const butil::StringPiece& full_name) const;
+    FindServiceByFullName(const std::string_view& full_name) const;
 
     // Find a service by its ServiceDescriptor::name().
     // Returns the registered service pointer, NULL on not found.
     // Notice that for performance concerns, this function does not lock service
     // list internally thus races with AddService()/RemoveService().
     google::protobuf::Service*
-    FindServiceByName(const butil::StringPiece& name) const;
+    FindServiceByName(const std::string_view& name) const;
 
     // Put all services registered by user into `services'
     void ListServices(std::vector<google::protobuf::Service*>* services);
@@ -519,18 +519,18 @@ public:
     // an auto concurrency limiter, eg `options.max_concurrency = "auto"`.If you
     // still called non-const version of the interface, your changes to the
     // maximum concurrency will not take effect.
-    AdaptiveMaxConcurrency& MaxConcurrencyOf(const butil::StringPiece& full_method_name);
-    int MaxConcurrencyOf(const butil::StringPiece& full_method_name) const;
+    AdaptiveMaxConcurrency& MaxConcurrencyOf(const std::string_view& full_method_name);
+    int MaxConcurrencyOf(const std::string_view& full_method_name) const;
     
-    AdaptiveMaxConcurrency& MaxConcurrencyOf(const butil::StringPiece& full_service_name,
-                          const butil::StringPiece& method_name);
-    int MaxConcurrencyOf(const butil::StringPiece& full_service_name,
-                         const butil::StringPiece& method_name) const;
+    AdaptiveMaxConcurrency& MaxConcurrencyOf(const std::string_view& full_service_name,
+                          const std::string_view& method_name);
+    int MaxConcurrencyOf(const std::string_view& full_service_name,
+                         const std::string_view& method_name) const;
 
     AdaptiveMaxConcurrency& MaxConcurrencyOf(google::protobuf::Service* service,
-                          const butil::StringPiece& method_name);
+                          const std::string_view& method_name);
     int MaxConcurrencyOf(google::protobuf::Service* service,
-                         const butil::StringPiece& method_name) const;
+                         const std::string_view& method_name) const;
 
 private:
 friend class StatusService;
@@ -579,21 +579,21 @@ friend class Controller;
     void PutPidFileIfNeeded();
 
     const MethodProperty*
-    FindMethodPropertyByFullName(const butil::StringPiece& fullname) const;
+    FindMethodPropertyByFullName(const std::string_view& fullname) const;
 
     const MethodProperty*
-    FindMethodPropertyByFullName(const butil::StringPiece& full_service_name,
-                                 const butil::StringPiece& method_name) const;
+    FindMethodPropertyByFullName(const std::string_view& full_service_name,
+                                 const std::string_view& method_name) const;
 
     const MethodProperty*
-    FindMethodPropertyByNameAndIndex(const butil::StringPiece& service_name,
+    FindMethodPropertyByNameAndIndex(const std::string_view& service_name,
                                      int method_index) const;
     
     const ServiceProperty*
-    FindServicePropertyByFullName(const butil::StringPiece& fullname) const;
+    FindServicePropertyByFullName(const std::string_view& fullname) const;
 
     const ServiceProperty*
-    FindServicePropertyByName(const butil::StringPiece& name) const;
+    FindServicePropertyByName(const std::string_view& name) const;
     
     std::string ServerPrefix() const;
 

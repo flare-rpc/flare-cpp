@@ -22,15 +22,16 @@
 #include "flare/butil/string_splitter.h"                     // StringSplitter
 #include "flare/brpc/log.h"
 #include "flare/brpc/policy/list_naming_service.h"
+#include "flare/base/strings.h"
 
 
 namespace brpc {
 namespace policy {
 
 // Defined in file_naming_service.cpp
-bool SplitIntoServerAndTag(const butil::StringPiece& line,
-                           butil::StringPiece* server_addr,
-                           butil::StringPiece* tag);
+bool SplitIntoServerAndTag(const std::string_view& line,
+                           std::string_view* server_addr,
+                           std::string_view* tag);
 
 int ParseServerList(const char* service_name,
                     std::vector<ServerNode>* servers) {
@@ -47,8 +48,8 @@ int ParseServerList(const char* service_name,
     }
     for (butil::StringSplitter sp(service_name, ','); sp != NULL; ++sp) {
         line.assign(sp.field(), sp.length());
-        butil::StringPiece addr;
-        butil::StringPiece tag;
+        std::string_view addr;
+        std::string_view tag;
         if (!SplitIntoServerAndTag(line, &addr, &tag)) {
             continue;
         }
@@ -61,7 +62,7 @@ int ParseServerList(const char* service_name,
         }
         ServerNode node;
         node.addr = point;
-        tag.CopyToString(&node.tag);
+        flare::base::copy_to_string(tag, &node.tag);
         if (presence.insert(node).second) {
             servers->push_back(node);
         } else {

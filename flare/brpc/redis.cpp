@@ -22,6 +22,7 @@
 #include "flare/butil/strings/string_util.h"          // StringToLowerASCII
 #include "flare/brpc/redis.h"
 #include "flare/brpc/redis_command.h"
+#include "flare/base/strings.h"
 
 namespace brpc {
 
@@ -129,7 +130,7 @@ void RedisRequest::Swap(RedisRequest* other) {
     }
 }
 
-bool RedisRequest::AddCommand(const butil::StringPiece& command) {
+bool RedisRequest::AddCommand(const std::string_view& command) {
     if (_has_error) {
         return false;
     }
@@ -144,7 +145,7 @@ bool RedisRequest::AddCommand(const butil::StringPiece& command) {
     }    
 }
 
-bool RedisRequest::AddCommandByComponents(const butil::StringPiece* components, 
+bool RedisRequest::AddCommandByComponents(const std::string_view* components,
                                          size_t n) {
     if (_has_error) {
         return false;
@@ -447,8 +448,8 @@ bool RedisService::AddCommandHandler(const std::string& name, RedisCommandHandle
     return true;
 }
  
-RedisCommandHandler* RedisService::FindCommandHandler(const butil::StringPiece& name) const {
-    auto it = _command_map.find(name.as_string());
+RedisCommandHandler* RedisService::FindCommandHandler(const std::string_view& name) const {
+    auto it = _command_map.find(flare::base::as_string(name));
     if (it != _command_map.end()) {
         return it->second;
     }

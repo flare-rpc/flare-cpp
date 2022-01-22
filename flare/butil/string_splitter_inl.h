@@ -39,7 +39,7 @@ StringSplitter::StringSplitter(const char* str, char sep,
                                EmptyFieldAction action)
     : StringSplitter(str, NULL, sep, action) {}
 
-StringSplitter::StringSplitter(const StringPiece& input, char sep,
+StringSplitter::StringSplitter(const std::string_view& input, char sep,
                                EmptyFieldAction action)
     : StringSplitter(input.data(), input.data() + input.length(), sep, action) {}
 
@@ -87,8 +87,8 @@ size_t StringSplitter::length() const {
     return static_cast<size_t>(_tail - _head);
 }
 
-StringPiece StringSplitter::field_sp() const {
-    return StringPiece(field(), length());
+std::string_view StringSplitter::field_sp() const {
+    return std::string_view(field(), length());
 }
 
 bool StringSplitter::not_end(const char* p) const {
@@ -238,8 +238,8 @@ size_t StringMultiSplitter::length() const {
     return static_cast<size_t>(_tail - _head);
 }
 
-StringPiece StringMultiSplitter::field_sp() const {
-    return StringPiece(field(), length());
+std::string_view StringMultiSplitter::field_sp() const {
+    return std::string_view(field(), length());
 }
 
 bool StringMultiSplitter::not_end(const char* p) const {
@@ -319,9 +319,9 @@ int StringMultiSplitter::to_double(double* pv) const {
 }
 
 void KeyValuePairsSplitter::UpdateDelimiterPosition() {
-    const StringPiece key_value_pair(key_and_value());
+    const std::string_view key_value_pair(key_and_value());
     _delim_pos = key_value_pair.find(_key_value_delim);
-    if (_delim_pos == StringPiece::npos) {
+    if (_delim_pos == std::string_view::npos) {
         _delim_pos = key_value_pair.length();
     }
 }

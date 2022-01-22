@@ -28,6 +28,7 @@
 #include "flare/brpc/span.h"
 #include "flare/brpc/policy/dh.h"
 #include "flare/brpc/policy/rtmp_protocol.h"
+#include "flare/base/strings.h"
 
 // For printing logs with useful prefixes.
 #define RTMP_LOG(level, socket, mh)                                     \
@@ -1927,7 +1928,7 @@ bool RtmpChunkStream::OnUserControlMessage(
     char buf[mh.message_length]; // safe to put on stack.
     msg_body->cutn(buf, mh.message_length);
     const uint16_t event_type = ReadBigEndian2Bytes(buf);
-    butil::StringPiece event_data(buf + 2, mh.message_length - 2);
+    std::string_view event_data(buf + 2, mh.message_length - 2);
     switch ((RtmpUserControlEventType)event_type) {
     case RTMP_USER_CONTROL_EVENT_STREAM_BEGIN:
         return OnStreamBegin(mh, event_data, socket);
@@ -1953,7 +1954,7 @@ bool RtmpChunkStream::OnUserControlMessage(
 }
 
 bool RtmpChunkStream::OnStreamBegin(const RtmpMessageHeader& mh,
-                                    const butil::StringPiece& event_data,
+                                    const std::string_view& event_data,
                                     Socket* socket) {
     RtmpService* service = connection_context()->service();
     if (service != NULL) {
@@ -1970,7 +1971,7 @@ bool RtmpChunkStream::OnStreamBegin(const RtmpMessageHeader& mh,
 }
 
 bool RtmpChunkStream::OnStreamEOF(const RtmpMessageHeader& mh,
-                                  const butil::StringPiece& event_data,
+                                  const std::string_view& event_data,
                                   Socket* socket) {
     RtmpService* service = connection_context()->service();
     if (service != NULL) {
@@ -1987,7 +1988,7 @@ bool RtmpChunkStream::OnStreamEOF(const RtmpMessageHeader& mh,
 }
 
 bool RtmpChunkStream::OnStreamDry(const RtmpMessageHeader& mh,
-                                  const butil::StringPiece& event_data,
+                                  const std::string_view& event_data,
                                   Socket* socket) {
     RtmpService* service = connection_context()->service();
     if (service != NULL) {
@@ -2004,7 +2005,7 @@ bool RtmpChunkStream::OnStreamDry(const RtmpMessageHeader& mh,
 }
 
 bool RtmpChunkStream::OnStreamIsRecorded(const RtmpMessageHeader& mh,
-                                         const butil::StringPiece& event_data,
+                                         const std::string_view& event_data,
                                          Socket* socket) {
     RtmpService* service = connection_context()->service();
     if (service != NULL) {
@@ -2021,7 +2022,7 @@ bool RtmpChunkStream::OnStreamIsRecorded(const RtmpMessageHeader& mh,
 }
 
 bool RtmpChunkStream::OnSetBufferLength(const RtmpMessageHeader& mh,
-                                        const butil::StringPiece& event_data,
+                                        const std::string_view& event_data,
                                         Socket* socket) {
     RtmpService* service = connection_context()->service();
     if (service == NULL) {
@@ -2052,7 +2053,7 @@ bool RtmpChunkStream::OnSetBufferLength(const RtmpMessageHeader& mh,
 }
 
 bool RtmpChunkStream::OnPingRequest(const RtmpMessageHeader& mh,
-                                    const butil::StringPiece& event_data,
+                                    const std::string_view& event_data,
                                     Socket* socket) {
     RtmpService* service = connection_context()->service();
     if (service != NULL) {
@@ -2079,7 +2080,7 @@ bool RtmpChunkStream::OnPingRequest(const RtmpMessageHeader& mh,
 }
 
 bool RtmpChunkStream::OnPingResponse(const RtmpMessageHeader& mh,
-                                     const butil::StringPiece& event_data,
+                                     const std::string_view& event_data,
                                      Socket* socket) {
     RtmpService* service = connection_context()->service();
     if (service == NULL) {
@@ -2097,7 +2098,7 @@ bool RtmpChunkStream::OnPingResponse(const RtmpMessageHeader& mh,
 }
 
 bool RtmpChunkStream::OnBufferEmpty(const RtmpMessageHeader& mh,
-                                    const butil::StringPiece& event_data,
+                                    const std::string_view& event_data,
                                     Socket* socket) {
     // Ignore right now.
     // NOTE: If we need to fetch the data from FMS as fast as possible,
@@ -2115,7 +2116,7 @@ bool RtmpChunkStream::OnBufferEmpty(const RtmpMessageHeader& mh,
 }
 
 bool RtmpChunkStream::OnBufferReady(const RtmpMessageHeader& mh,
-                                    const butil::StringPiece& event_data,
+                                    const std::string_view& event_data,
                                     Socket* socket) {
     if (event_data.size() != 4) {
         RTMP_ERROR(socket, mh) << "Invalid BufferReady.event_data.size="
@@ -2594,7 +2595,7 @@ bool RtmpChunkStream::OnCreateStream(const RtmpMessageHeader& mh,
     }
     const AMFField* stream_name_field = cmd_obj.Find("StreamName");
     if (stream_name_field != NULL && stream_name_field->IsString()) {
-        stream_name_field->AsString().CopyToString(&stream_name);
+        flare::base::copy_to_string(stream_name_field->AsString(), &stream_name);
     }
     if (is_publish) {
         const AMFField* publish_type_field = cmd_obj.Find("PublishType");

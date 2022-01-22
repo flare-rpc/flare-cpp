@@ -20,7 +20,7 @@
 #define  BRPC_HPACK_H
 
 #include "flare/butil/iobuf.h"                             // butil::IOBuf
-#include "flare/butil/strings/string_piece.h"              // butil::StringPiece
+#include "flare/butil/strings/string_piece.h"              // std::string_view
 #include "flare/brpc/http2.h"
 #include "flare/brpc/describable.h"
 

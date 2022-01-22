@@ -64,14 +64,14 @@ public:
     // Concatenate components into a redis command, similarly with
     // redisCommandArgv() in hiredis.
     // Example:
-    //   butil::StringPiece components[] = { "set", "key", "value" };
+    //   std::string_view components[] = { "set", "key", "value" };
     //   request.AddCommandByComponents(components, arraysize(components));
-    bool AddCommandByComponents(const butil::StringPiece* components, size_t n);
+    bool AddCommandByComponents(const std::string_view* components, size_t n);
     
     // Add a command with variadic args to this request.
     // The reason that adding so many overloads rather than using ... is that
     // it's the only way to dispatch the AddCommand w/o args differently.
-    bool AddCommand(const butil::StringPiece& command);
+    bool AddCommand(const std::string_view& command);
     
     template <typename A1>
     bool AddCommand(const char* format, A1 a1)
@@ -225,7 +225,7 @@ public:
     bool AddCommandHandler(const std::string& name, RedisCommandHandler* handler);
 
     // This function should not be touched by user and used by brpc deverloper only.
-    RedisCommandHandler* FindCommandHandler(const butil::StringPiece& name) const;
+    RedisCommandHandler* FindCommandHandler(const std::string_view& name) const;
 
 private:
     typedef std::unordered_map<std::string, RedisCommandHandler*> CommandMap;
@@ -261,7 +261,7 @@ public:
     // an start marker and brpc will call MultiTransactionHandler() to new a transaction
     // handler that all the following commands are sent to this tranction handler until
     // it returns REDIS_CMD_HANDLED. Read the comment below.
-    virtual RedisCommandHandlerResult Run(const std::vector<butil::StringPiece>& args,
+    virtual RedisCommandHandlerResult Run(const std::vector<std::string_view>& args,
                                           brpc::RedisReply* output,
                                           bool flush_batched) = 0;
 

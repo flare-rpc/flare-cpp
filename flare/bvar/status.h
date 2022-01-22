@@ -46,12 +46,12 @@ namespace bvar {
 
         Status(const T &value) : _value(value) {}
 
-        Status(const butil::StringPiece &name, const T &value) : _value(value) {
+        Status(const std::string_view &name, const T &value) : _value(value) {
             this->expose(name);
         }
 
-        Status(const butil::StringPiece &prefix,
-               const butil::StringPiece &name, const T &value) : _value(value) {
+        Status(const std::string_view &prefix,
+               const std::string_view &name, const T &value) : _value(value) {
             this->expose_as(prefix, name);
         }
 
@@ -116,13 +116,13 @@ namespace bvar {
 
         Status(const T &value) : _value(value), _series_sampler(NULL) {}
 
-        Status(const butil::StringPiece &name, const T &value)
+        Status(const std::string_view &name, const T &value)
                 : _value(value), _series_sampler(NULL) {
             this->expose(name);
         }
 
-        Status(const butil::StringPiece &prefix,
-               const butil::StringPiece &name, const T &value)
+        Status(const std::string_view &prefix,
+               const std::string_view &name, const T &value)
                 : _value(value), _series_sampler(NULL) {
             this->expose_as(prefix, name);
         }
@@ -164,8 +164,8 @@ namespace bvar {
         }
 
     protected:
-        int expose_impl(const butil::StringPiece &prefix,
-                        const butil::StringPiece &name,
+        int expose_impl(const std::string_view &prefix,
+                        const std::string_view &name,
                         DisplayFilter display_filter) override {
             const int rc = Variable::expose_impl(prefix, name, display_filter);
             if (rc == 0 &&
@@ -188,7 +188,7 @@ namespace bvar {
     public:
         Status() {}
 
-        Status(const butil::StringPiece &name, const char *fmt, ...) {
+        Status(const std::string_view &name, const char *fmt, ...) {
             if (fmt) {
                 va_list ap;
                 va_start(ap, fmt);
@@ -198,8 +198,8 @@ namespace bvar {
             expose(name);
         }
 
-        Status(const butil::StringPiece &prefix,
-               const butil::StringPiece &name, const char *fmt, ...) {
+        Status(const std::string_view &prefix,
+               const std::string_view &name, const char *fmt, ...) {
             if (fmt) {
                 va_list ap;
                 va_start(ap, fmt);

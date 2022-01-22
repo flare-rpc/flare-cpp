@@ -40,6 +40,8 @@
 #include "flare/brpc/details/ssl_helper.h"           // CreateServerSSLContext
 #include "flare/brpc/protocol.h"                     // ListProtocols
 #include "flare/brpc/nshead_service.h"               // NsheadService
+#include "flare/base/strings.h"
+
 #ifdef ENABLE_THRIFT_FRAMED_PROTOCOL
 #include "flare/brpc/thrift_service.h"               // ThriftService
 #endif
@@ -1247,8 +1249,8 @@ int Server::AddServiceInternal(google::protobuf::Service* service,
         }
     }
 
-    butil::StringPiece restful_mappings = svc_opt.restful_mappings;
-    restful_mappings.trim_spaces();
+    std::string_view restful_mappings = svc_opt.restful_mappings;
+    restful_mappings = flare::base::strip_ascii_whitespace(restful_mappings);
     if (!restful_mappings.empty()) {
         // Parse the mappings.
         std::vector<RestfulMapping> mappings;
@@ -1406,12 +1408,12 @@ int Server::AddService(google::protobuf::Service* service,
 
 int Server::AddService(google::protobuf::Service* service,
                        ServiceOwnership ownership,
-                       const butil::StringPiece& restful_mappings,
+                       const std::string_view& restful_mappings,
                        bool allow_default_url) {
     ServiceOptions options;
     options.ownership = ownership;
     // TODO: This is weird
-    options.restful_mappings = restful_mappings.as_string();
+    options.restful_mappings = flare::base::as_string(restful_mappings);
     options.allow_default_url = allow_default_url;
     return AddServiceInternal(service, false, options);
 }
@@ -1449,20 +1451,20 @@ void Server::RemoveMethodsOf(google::protobuf::Service* service) {
         if (mp->http_url) {
             butil::StringSplitter at_sp(mp->http_url->c_str(), '@');
             for (; at_sp; ++at_sp) {
-                butil::StringPiece path(at_sp.field(), at_sp.length());
-                path.trim_spaces();
+                std::string_view path(at_sp.field(), at_sp.length());
+                path = flare::base::strip_ascii_whitespace(path);
                 butil::StringSplitter slash_sp(
                     path.data(), path.data() + path.size(), '/');
                 if (slash_sp == NULL) {
                     LOG(ERROR) << "Invalid http_url=" << *mp->http_url;
                     break;
                 }
-                butil::StringPiece v_svc_name(slash_sp.field(), slash_sp.length());
+                std::string_view v_svc_name(slash_sp.field(), slash_sp.length());
                 const ServiceProperty* vsp = FindServicePropertyByName(v_svc_name);
                 if (vsp == NULL) {
                     if (_global_restful_map) {
                         std::string path_str;
-                        path.CopyToString(&path_str);
+                        flare::base::copy_to_string(path, &path_str);
                         if (_global_restful_map->RemoveByPathString(path_str)) {
                             continue;
                         }
@@ -1472,7 +1474,7 @@ void Server::RemoveMethodsOf(google::protobuf::Service* service) {
                     break;
                 }
                 std::string path_str;
-                path.CopyToString(&path_str);
+                flare::base::copy_to_string(path, &path_str);
                 if (!vsp->restful_map->RemoveByPathString(path_str)) {
                     LOG(ERROR) << "Fail to find path=" << path
                                << " in restful_map of service=" << v_svc_name;
@@ -1555,13 +1557,13 @@ void Server::ClearServices() {
 }
 
 google::protobuf::Service* Server::FindServiceByFullName(
-    const butil::StringPiece& full_name) const {
+    const std::string_view& full_name) const {
     ServiceProperty* ss = _fullname_service_map.seek(full_name);
     return (ss ? ss->service : NULL);
 }
 
 google::protobuf::Service* Server::FindServiceByName(
-    const butil::StringPiece& name) const {
+    const std::string_view& name) const {
     ServiceProperty* ss = _service_map.seek(name);
     return (ss ? ss->service : NULL);
 }
@@ -1777,13 +1779,13 @@ bool IsDummyServerRunning() {
 }
 
 const Server::MethodProperty*
-Server::FindMethodPropertyByFullName(const butil::StringPiece&fullname) const  {
+Server::FindMethodPropertyByFullName(const std::string_view&fullname) const  {
     return _method_map.seek(fullname);
 }
 
 const Server::MethodProperty*
-Server::FindMethodPropertyByFullName(const butil::StringPiece& service_name/*full*/,
-                                     const butil::StringPiece& method_name) const {
+Server::FindMethodPropertyByFullName(const std::string_view& service_name/*full*/,
+                                     const std::string_view& method_name) const {
     const size_t fullname_len = service_name.size() + 1 + method_name.size();
     if (fullname_len <= 256) {
         // Avoid allocation in most cases.
@@ -1791,7 +1793,7 @@ Server::FindMethodPropertyByFullName(const butil::StringPiece& service_name/*ful
         memcpy(buf, service_name.data(), service_name.size());
         buf[service_name.size()] = '.';
         memcpy(buf + service_name.size() + 1, method_name.data(), method_name.size());
-        return FindMethodPropertyByFullName(butil::StringPiece(buf, fullname_len));
+        return FindMethodPropertyByFullName(std::string_view(buf, fullname_len));
     } else {
         std::string full_method_name;
         full_method_name.reserve(fullname_len);
@@ -1803,7 +1805,7 @@ Server::FindMethodPropertyByFullName(const butil::StringPiece& service_name/*ful
 }
 
 const Server::MethodProperty*
-Server::FindMethodPropertyByNameAndIndex(const butil::StringPiece& service_name,
+Server::FindMethodPropertyByNameAndIndex(const std::string_view& service_name,
                                          int method_index) const {
     const Server::ServiceProperty* sp = FindServicePropertyByName(service_name);
     if (NULL == sp) {
@@ -1818,12 +1820,12 @@ Server::FindMethodPropertyByNameAndIndex(const butil::StringPiece& service_name,
 }
 
 const Server::ServiceProperty*
-Server::FindServicePropertyByFullName(const butil::StringPiece& fullname) const {
+Server::FindServicePropertyByFullName(const std::string_view& fullname) const {
     return _fullname_service_map.seek(fullname);
 }
 
 const Server::ServiceProperty*
-Server::FindServicePropertyByName(const butil::StringPiece& name) const {
+Server::FindServicePropertyByName(const std::string_view& name) const {
     return _service_map.seek(name);
 }
 
@@ -2071,7 +2073,7 @@ int Server::MaxConcurrencyOf(const MethodProperty* mp) const {
     return mp->max_concurrency;
 }
 
-AdaptiveMaxConcurrency& Server::MaxConcurrencyOf(const butil::StringPiece& full_method_name) {
+AdaptiveMaxConcurrency& Server::MaxConcurrencyOf(const std::string_view& full_method_name) {
     MethodProperty* mp = _method_map.seek(full_method_name);
     if (mp == NULL) {
         LOG(ERROR) << "Fail to find method=" << full_method_name;
@@ -2081,12 +2083,12 @@ AdaptiveMaxConcurrency& Server::MaxConcurrencyOf(const butil::StringPiece& full_
     return MaxConcurrencyOf(mp);
 }
 
-int Server::MaxConcurrencyOf(const butil::StringPiece& full_method_name) const {
+int Server::MaxConcurrencyOf(const std::string_view& full_method_name) const {
     return MaxConcurrencyOf(_method_map.seek(full_method_name));
 }
 
-AdaptiveMaxConcurrency& Server::MaxConcurrencyOf(const butil::StringPiece& full_service_name,
-                              const butil::StringPiece& method_name) {
+AdaptiveMaxConcurrency& Server::MaxConcurrencyOf(const std::string_view& full_service_name,
+                              const std::string_view& method_name) {
     MethodProperty* mp = const_cast<MethodProperty*>(
         FindMethodPropertyByFullName(full_service_name, method_name));
     if (mp == NULL) {
@@ -2098,19 +2100,19 @@ AdaptiveMaxConcurrency& Server::MaxConcurrencyOf(const butil::StringPiece& full_
     return MaxConcurrencyOf(mp);
 }
 
-int Server::MaxConcurrencyOf(const butil::StringPiece& full_service_name,
-                             const butil::StringPiece& method_name) const {
+int Server::MaxConcurrencyOf(const std::string_view& full_service_name,
+                             const std::string_view& method_name) const {
     return MaxConcurrencyOf(FindMethodPropertyByFullName(
                                 full_service_name, method_name));
 }
 
 AdaptiveMaxConcurrency& Server::MaxConcurrencyOf(google::protobuf::Service* service,
-                              const butil::StringPiece& method_name) {
+                              const std::string_view& method_name) {
     return MaxConcurrencyOf(service->GetDescriptor()->full_name(), method_name);
 }
 
 int Server::MaxConcurrencyOf(google::protobuf::Service* service,
-                             const butil::StringPiece& method_name) const {
+                             const std::string_view& method_name) const {
     return MaxConcurrencyOf(service->GetDescriptor()->full_name(), method_name);
 }
 

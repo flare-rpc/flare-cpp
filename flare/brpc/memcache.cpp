@@ -329,7 +329,7 @@ const char* MemcacheResponse::status_str(Status st) {
 // MUST NOT have extras.
 // MUST have key.
 // MUST NOT have value.
-bool MemcacheRequest::GetOrDelete(uint8_t command, const butil::StringPiece& key) {
+bool MemcacheRequest::GetOrDelete(uint8_t command, const std::string_view& key) {
     const policy::MemcacheRequestHeader header = {
         policy::MC_MAGIC_REQUEST,
         command,
@@ -351,11 +351,11 @@ bool MemcacheRequest::GetOrDelete(uint8_t command, const butil::StringPiece& key
     return true;
 }
 
-bool MemcacheRequest::Get(const butil::StringPiece& key) {
+bool MemcacheRequest::Get(const std::string_view& key) {
     return GetOrDelete(policy::MC_BINARY_GET, key);
 }
 
-bool MemcacheRequest::Delete(const butil::StringPiece& key) {
+bool MemcacheRequest::Delete(const std::string_view& key) {
     return GetOrDelete(policy::MC_BINARY_DELETE, key);
 }
 
@@ -521,7 +521,7 @@ const size_t STORE_EXTRAS = sizeof(StoreHeaderWithExtras) -
 //   +---------------+---------------+---------------+---------------+
 //   Total 8 bytes
 bool MemcacheRequest::Store(
-    uint8_t command, const butil::StringPiece& key, const butil::StringPiece& value,
+    uint8_t command, const std::string_view& key, const std::string_view& value,
     uint32_t flags, uint32_t exptime, uint64_t cas_value) {
     StoreHeaderWithExtras header_with_extras = {{
             policy::MC_MAGIC_REQUEST,
@@ -589,25 +589,25 @@ bool MemcacheResponse::PopStore(uint8_t command, uint64_t* cas_value) {
 }
 
 bool MemcacheRequest::Set(
-    const butil::StringPiece& key, const butil::StringPiece& value,
+    const std::string_view& key, const std::string_view& value,
     uint32_t flags, uint32_t exptime, uint64_t cas_value) {
     return Store(policy::MC_BINARY_SET, key, value, flags, exptime, cas_value);
 }
 
 bool MemcacheRequest::Add(
-    const butil::StringPiece& key, const butil::StringPiece& value,
+    const std::string_view& key, const std::string_view& value,
     uint32_t flags, uint32_t exptime, uint64_t cas_value) {
     return Store(policy::MC_BINARY_ADD, key, value, flags, exptime, cas_value);
 }
 
 bool MemcacheRequest::Replace(
-    const butil::StringPiece& key, const butil::StringPiece& value,
+    const std::string_view& key, const std::string_view& value,
     uint32_t flags, uint32_t exptime, uint64_t cas_value) {
     return Store(policy::MC_BINARY_REPLACE, key, value, flags, exptime, cas_value);
 }
     
 bool MemcacheRequest::Append(
-    const butil::StringPiece& key, const butil::StringPiece& value,
+    const std::string_view& key, const std::string_view& value,
     uint32_t flags, uint32_t exptime, uint64_t cas_value) {
     if (value.empty()) {
         LOG(ERROR) << "value to append must be non-empty";
@@ -617,7 +617,7 @@ bool MemcacheRequest::Append(
 }
 
 bool MemcacheRequest::Prepend(
-    const butil::StringPiece& key, const butil::StringPiece& value,
+    const std::string_view& key, const std::string_view& value,
     uint32_t flags, uint32_t exptime, uint64_t cas_value) {
     if (value.empty()) {
         LOG(ERROR) << "value to prepend must be non-empty";
@@ -671,7 +671,7 @@ const size_t INCR_EXTRAS = sizeof(IncrHeaderWithExtras) -
 //   +---------------+---------------+---------------+---------------+
 //   Total 20 bytes
 bool MemcacheRequest::Counter(
-    uint8_t command, const butil::StringPiece& key, uint64_t delta,
+    uint8_t command, const std::string_view& key, uint64_t delta,
     uint64_t initial_value, uint32_t exptime) {
     IncrHeaderWithExtras header_with_extras = {{
             policy::MC_MAGIC_REQUEST,
@@ -693,12 +693,12 @@ bool MemcacheRequest::Counter(
     return true;
 }
 
-bool MemcacheRequest::Increment(const butil::StringPiece& key, uint64_t delta,
+bool MemcacheRequest::Increment(const std::string_view& key, uint64_t delta,
                                 uint64_t initial_value, uint32_t exptime) {
     return Counter(policy::MC_BINARY_INCREMENT, key, delta, initial_value, exptime);
 }
 
-bool MemcacheRequest::Decrement(const butil::StringPiece& key, uint64_t delta,
+bool MemcacheRequest::Decrement(const std::string_view& key, uint64_t delta,
                                 uint64_t initial_value, uint32_t exptime) {
     return Counter(policy::MC_BINARY_DECREMENT, key, delta, initial_value, exptime);
 }
@@ -789,7 +789,7 @@ const size_t TOUCH_EXTRAS = sizeof(TouchHeaderWithExtras) - sizeof(policy::Memca
 //     0| Expiration                                                    |
 //      +---------------+---------------+---------------+---------------+
 //    Total 4 bytes
-bool MemcacheRequest::Touch(const butil::StringPiece& key, uint32_t exptime) {
+bool MemcacheRequest::Touch(const std::string_view& key, uint32_t exptime) {
     TouchHeaderWithExtras header_with_extras = {{
             policy::MC_MAGIC_REQUEST,
             policy::MC_BINARY_TOUCH,

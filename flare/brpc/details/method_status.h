@@ -50,7 +50,7 @@ public:
 
     // Expose internal vars.
     // Return 0 on success, -1 otherwise.
-    int Expose(const butil::StringPiece& prefix);
+    int Expose(const std::string_view& prefix);
 
     // Describe internal vars, used by /status
     void Describe(std::ostream &os, const DescribeOptions&) const override;

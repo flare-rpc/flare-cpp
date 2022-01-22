@@ -142,7 +142,7 @@ int RoundRobinLoadBalancer::SelectServer(const SelectIn& in, SelectOut* out) {
 }
 
 RoundRobinLoadBalancer* RoundRobinLoadBalancer::New(
-    const butil::StringPiece& params) const {
+    const std::string_view& params) const {
     RoundRobinLoadBalancer* lb = new (std::nothrow) RoundRobinLoadBalancer;
     if (lb && !lb->SetParameters(params)) {
         delete lb;
@@ -174,7 +174,7 @@ void RoundRobinLoadBalancer::Describe(
     os << '}';
 }
 
-bool RoundRobinLoadBalancer::SetParameters(const butil::StringPiece& params) {
+bool RoundRobinLoadBalancer::SetParameters(const std::string_view& params) {
     return GetRecoverPolicyByParams(params, &_cluster_recover_policy);
 }
 

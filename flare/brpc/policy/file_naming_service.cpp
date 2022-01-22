@@ -24,14 +24,15 @@
 #include "flare/bthread/bthread.h"                            // bthread_usleep
 #include "flare/brpc/log.h"
 #include "flare/brpc/policy/file_naming_service.h"
+#include "flare/base/strings.h"
 
 
 namespace brpc {
 namespace policy {
 
-bool SplitIntoServerAndTag(const butil::StringPiece& line,
-                           butil::StringPiece* server_addr,
-                           butil::StringPiece* tag) {
+bool SplitIntoServerAndTag(const std::string_view& line,
+                           std::string_view* server_addr,
+                           std::string_view* tag) {
     size_t i = 0;
     for (; i < line.size() && isspace(line[i]); ++i) {}
     if (i == line.size() || line[i] == '#') {  // blank line or comments
@@ -42,7 +43,7 @@ bool SplitIntoServerAndTag(const butil::StringPiece& line,
     ssize_t tag_size = 0;
     for (; i < line.size() && !isspace(line[i]); ++i) {}
     if (server_addr) {
-        server_addr->set(addr_start, line.data() + i - addr_start);
+        *server_addr = std::string_view(addr_start, line.data() + i - addr_start);
     }
     if (i != line.size()) {
         for (++i; i < line.size() && isspace(line[i]); ++i) {}
@@ -57,9 +58,9 @@ bool SplitIntoServerAndTag(const butil::StringPiece& line,
         }
         if (tag) {
             if (tag_size) {
-                tag->set(tag_start, tag_size);
+                *tag = std::string_view(tag_start, tag_size);
             } else {
-                tag->clear();
+                *tag = std::string_view();
             }
         }
     }
@@ -86,9 +87,9 @@ int FileNamingService::GetServers(const char *service_name,
         if (line[nr - 1] == '\n') { // remove ending newline
             --nr;
         }
-        butil::StringPiece addr;
-        butil::StringPiece tag;
-        if (!SplitIntoServerAndTag(butil::StringPiece(line, nr),
+        std::string_view addr;
+        std::string_view tag;
+        if (!SplitIntoServerAndTag(std::string_view(line, nr),
                                    &addr, &tag)) {
             continue;
         }
@@ -101,7 +102,7 @@ int FileNamingService::GetServers(const char *service_name,
         }
         ServerNode node;
         node.addr = point;
-        tag.CopyToString(&node.tag);
+        flare::base::copy_to_string(tag, &node.tag);
         if (presence.insert(node).second) {
             servers->push_back(node);
         } else {

@@ -63,7 +63,7 @@ friend class StatusService;
 friend class Server;
 
 private:
-    void Expose(const butil::StringPiece& prefix);
+    void Expose(const std::string_view& prefix);
     
     MethodStatus* _status;
 };

@@ -263,7 +263,7 @@ public:
     explicit VarsDumper(butil::IOBufBuilder& os, bool use_html)
         : _os(os), _use_html(use_html) {}
     
-    bool dump(const std::string& name, const butil::StringPiece& desc) {
+    bool dump(const std::string& name, const std::string_view& desc) {
         bool plot = false;
         if (_use_html) {
             bvar::SeriesOptions series_options;
