@@ -25,7 +25,7 @@
 #include "flare/butil/logging.h"                       // LOG
 #include "flare/butil/scoped_lock.h"
 #include "flare/butil/endpoint.h"
-#include "flare/butil/base64.h"
+#include "flare/base/base64.h"
 #include "flare/bthread/bthread.h"                    // bthread_usleep
 #include "flare/brpc/log.h"
 #include "flare/brpc/reloadable_flags.h"
@@ -595,7 +595,7 @@ void MakeRawHttpRequest(butil::IOBuf* request,
         // characters in this part and even if users did, most of them are
         // invalid and rejected by http_parser_parse_url().
         std::string encoded_user_info;
-        butil::Base64Encode(user_info, &encoded_user_info);
+        flare::base::base64_encode(user_info, &encoded_user_info);
         os << "Authorization: Basic " << encoded_user_info << BRPC_CRLF;
     }
     os << BRPC_CRLF;  // CRLF before content

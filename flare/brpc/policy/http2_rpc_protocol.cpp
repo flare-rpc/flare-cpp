@@ -19,7 +19,7 @@
 #include "flare/brpc/policy/http2_rpc_protocol.h"
 #include "flare/brpc/details/controller_private_accessor.h"
 #include "flare/brpc/server.h"
-#include "flare/butil/base64.h"
+#include "flare/base/base64.h"
 #include "flare/brpc/log.h"
 
 namespace brpc {
@@ -1448,7 +1448,7 @@ H2UnsentRequest* H2UnsentRequest::New(Controller* c) {
         // characters in this part and even if users did, most of them are
         // invalid and rejected by http_parser_parse_url().
         std::string encoded_user_info;
-        butil::Base64Encode(user_info, &encoded_user_info);
+        flare::base::base64_encode(user_info, &encoded_user_info);
         std::string* val = &msg->push(common->AUTHORIZATION);
         val->reserve(6 + encoded_user_info.size());
         val->append("Basic ");

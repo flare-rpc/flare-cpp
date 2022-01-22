@@ -17,7 +17,7 @@
 
 #include "flare/brpc/policy/couchbase_authenticator.h"
 
-#include "flare/butil/base64.h"
+#include "flare/base/base64.h"
 #include "flare/butil/iobuf.h"
 #include "flare/butil/string_printf.h"
 #include "flare/butil/sys_byteorder.h"

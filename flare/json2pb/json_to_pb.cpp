@@ -28,10 +28,10 @@
 #include "json_to_pb.h"
 #include "zero_copy_stream_reader.h"       // ZeroCopyStreamReader
 #include "encode_decode.h"
-#include "flare/butil/base64.h"
 #include "flare/butil/string_printf.h"
 #include "protobuf_map.h"
 #include "rapidjson.h"
+#include "flare/base/base64.h"
 
 #define J2PERROR(perr, fmt, ...)                                        \
     if (perr) {                                                         \
@@ -410,7 +410,7 @@ static bool JsonValueToProtoField(const BUTIL_RAPIDJSON_NAMESPACE::Value& value,
                     if (field->type() == google::protobuf::FieldDescriptor::TYPE_BYTES &&
                         options.base64_to_bytes) {
                         std::string str_decoded;
-                        if (!butil::Base64Decode(str, &str_decoded)) {
+                        if (!flare::base::base64_decode(str, &str_decoded)) {
                             J2PERROR(err, "Fail to decode base64 string=%s", str.c_str());
                             return false;
                         }
@@ -424,7 +424,7 @@ static bool JsonValueToProtoField(const BUTIL_RAPIDJSON_NAMESPACE::Value& value,
             if (field->type() == google::protobuf::FieldDescriptor::TYPE_BYTES &&
                 options.base64_to_bytes) {
                 std::string str_decoded;
-                if (!butil::Base64Decode(str, &str_decoded)) {
+                if (!flare::base::base64_decode(str, &str_decoded)) {
                     J2PERROR(err, "Fail to decode base64 string=%s", str.c_str());
                     return false;
                 }
