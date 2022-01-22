@@ -359,6 +359,8 @@ endif()
 set(FLARE_BASE_SRC
         ${PROJECT_SOURCE_DIR}/flare/base/ascii.cc
         ${PROJECT_SOURCE_DIR}/flare/base/strings.cc
+        ${PROJECT_SOURCE_DIR}/flare/base/str_split.cc
+
         )
 
 file(GLOB_RECURSE BVAR_SOURCES "${PROJECT_SOURCE_DIR}/flare/bvar/*.cpp")
