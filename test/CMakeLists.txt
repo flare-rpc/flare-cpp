@@ -215,33 +215,10 @@ add_test(NAME test_butil COMMAND test_butil)
 list(REMOVE_ITEM BVAR_SOURCES ${PROJECT_SOURCE_DIR}/flare/bvar/default_variables.cpp)
 
 add_library(BVAR_DEBUG_LIB OBJECT ${BVAR_SOURCES})
-file(GLOB TEST_BVAR_SRCS "bvar_*_unittest.cpp")
-add_executable(test_bvar ${TEST_BVAR_SRCS}
-                         $<TARGET_OBJECTS:BVAR_DEBUG_LIB>
-                         $<TARGET_OBJECTS:BUTIL_DEBUG_LIB>)
-target_link_libraries(test_bvar gtest
-                                ${GPERFTOOLS_LIBRARIES}
-                                ${DYNAMIC_LIB})
-add_test(NAME test_bvar COMMAND test_bvar)
+add_subdirectory(bvar)
 
 # bthread tests
-file(GLOB BTHREAD_UNITTESTS "bthread*unittest.cpp")
-foreach(BTHREAD_UT ${BTHREAD_UNITTESTS})
-    get_filename_component(BTHREAD_UT_WE ${BTHREAD_UT} NAME_WE)
-    add_executable(${BTHREAD_UT_WE} ${BTHREAD_UT})
-    target_link_libraries(${BTHREAD_UT_WE} gtest_main
-                                           brpc-shared-debug
-                                           ${GPERFTOOLS_LIBRARIES})
-    add_test(NAME ${BTHREAD_UT_WE} COMMAND ${BTHREAD_UT_WE})
-endforeach()
+add_subdirectory(bthread)
 
 # brpc tests
-file(GLOB BRPC_UNITTESTS "brpc_*_unittest.cpp")
-foreach(BRPC_UT ${BRPC_UNITTESTS})
-    get_filename_component(BRPC_UT_WE ${BRPC_UT} NAME_WE)
-    add_executable(${BRPC_UT_WE} ${BRPC_UT} $<TARGET_OBJECTS:TEST_PROTO_LIB>)
-    target_link_libraries(${BRPC_UT_WE} brpc-shared-debug
-                                        gtest_main
-                                        ${GPERFTOOLS_LIBRARIES})
-    add_test(NAME ${BRPC_UT_WE} COMMAND ${BRPC_UT_WE})
-endforeach()
+add_subdirectory(rpc)
