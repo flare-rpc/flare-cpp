@@ -54,7 +54,6 @@
 #include "flare/brpc/builtin/status_service.h"
 #include "flare/brpc/builtin/protobufs_service.h"
 #include "flare/brpc/builtin/threads_service.h"
-#include "flare/brpc/builtin/vlog_service.h"
 #include "flare/brpc/builtin/index_service.h"        // IndexService
 #include "flare/brpc/builtin/connections_service.h"  // ConnectionsService
 #include "flare/brpc/builtin/flags_service.h"        // FlagsService
@@ -503,12 +502,6 @@ int Server::AddBuiltinServices() {
         return -1;
     }
 
-#if !BRPC_WITH_GLOG
-    if (AddBuiltinService(new (std::nothrow) VLogService)) {
-        LOG(ERROR) << "Fail to add VLogService";
-        return -1;
-    }
-#endif
 
     if (AddBuiltinService(new (std::nothrow) PProfService)) {
         LOG(ERROR) << "Fail to add PProfService";

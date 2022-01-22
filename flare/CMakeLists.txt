@@ -43,9 +43,7 @@ add_library(brpc-static STATIC $<TARGET_OBJECTS:BUTIL_LIB>
 
 target_link_libraries(brpc-shared ${DYNAMIC_LIB})
 
-if (BRPC_WITH_GLOG)
-    target_link_libraries(brpc-shared ${GLOG_LIB})
-endif ()
+target_link_libraries(brpc-shared ${GLOG_LIB})
 
 if (BRPC_WITH_THRIFT)
     target_link_libraries(brpc-shared thrift)

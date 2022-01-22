@@ -18,7 +18,7 @@
 cmake_minimum_required(VERSION 3.1.3)
 project(flare C CXX)
 
-option(WITH_GLOG "With glog" OFF)
+option(WITH_GLOG "With glog" ON)
 option(WITH_MESALINK "With MesaLink" OFF)
 option(DEBUG "Print debug logs" OFF)
 option(WITH_DEBUG_SYMBOLS "With debug symbols" ON)
@@ -51,11 +51,6 @@ else()
     message(WARNING "You are using an unsupported compiler! Compilation has only been tested with Clang and GCC.")
 endif()
 
-set(WITH_GLOG_VAL "0")
-if(WITH_GLOG)
-    set(WITH_GLOG_VAL "1")
-    set(BRPC_WITH_GLOG 1)
-endif()
 
 if(WITH_DEBUG_SYMBOLS)
     set(DEBUG_SYMBOL "-g")
@@ -67,8 +62,6 @@ if(WITH_THRIFT)
 endif()
 
 include(GNUInstallDirs)
-
-configure_file(${PROJECT_SOURCE_DIR}/config.h.in ${PROJECT_SOURCE_DIR}/flare/butil/config.h @ONLY)
 
 set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 
@@ -104,7 +97,7 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
     set(CMAKE_CPP_FLAGS "${CMAKE_CPP_FLAGS} -Wno-deprecated-declarations -Wno-inconsistent-missing-override")
 endif()
 
-set(CMAKE_CPP_FLAGS "${CMAKE_CPP_FLAGS} ${DEFINE_CLOCK_GETTIME} -DBRPC_WITH_GLOG=${WITH_GLOG_VAL} -DGFLAGS_NS=${GFLAGS_NS}")
+set(CMAKE_CPP_FLAGS "${CMAKE_CPP_FLAGS} ${DEFINE_CLOCK_GETTIME}  -DGFLAGS_NS=${GFLAGS_NS}")
 if(WITH_MESALINK)
     set(CMAKE_CPP_FLAGS "${CMAKE_CPP_FLAGS} -DUSE_MESALINK")
 endif()
@@ -142,14 +135,12 @@ if ((NOT LEVELDB_INCLUDE_PATH) OR (NOT LEVELDB_LIB))
     message(FATAL_ERROR "Fail to find leveldb")
 endif()
 
-if(WITH_GLOG)
     find_path(GLOG_INCLUDE_PATH NAMES glog/logging.h)
     find_library(GLOG_LIB NAMES glog)
     if((NOT GLOG_INCLUDE_PATH) OR (NOT GLOG_LIB))
         message(FATAL_ERROR "Fail to find glog")
     endif()
     include_directories(${GLOG_INCLUDE_PATH})
-endif()
 
 if(WITH_MESALINK)
     find_path(MESALINK_INCLUDE_PATH NAMES mesalink/openssl/ssl.h)
@@ -202,10 +193,8 @@ endif()
 
 set(BRPC_PRIVATE_LIBS "-lgflags -lprotobuf -lleveldb -lprotoc -lssl -lcrypto -ldl -lz")
 
-if(WITH_GLOG)
     set(DYNAMIC_LIB ${DYNAMIC_LIB} ${GLOG_LIB})
     set(BRPC_PRIVATE_LIBS "${BRPC_PRIVATE_LIBS} -lglog")
-endif()
 
 if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
     set(DYNAMIC_LIB ${DYNAMIC_LIB} rt)

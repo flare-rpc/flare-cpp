@@ -51,7 +51,7 @@ else ()
     message(FATAL_ERROR "Googletest is not available")
 endif ()
 
-set(CMAKE_CPP_FLAGS "${DEFINE_CLOCK_GETTIME} -DBRPC_WITH_GLOG=${WITH_GLOG_VAL} -DGFLAGS_NS=${GFLAGS_NS}")
+set(CMAKE_CPP_FLAGS "${DEFINE_CLOCK_GETTIME}  -DGFLAGS_NS=${GFLAGS_NS}")
 set(CMAKE_CPP_FLAGS "${CMAKE_CPP_FLAGS} -DBTHREAD_USE_FAST_PTHREAD_MUTEX -D__const__= -D_GNU_SOURCE -DUSE_SYMBOLIZE -DNO_TCMALLOC -D__STDC_FORMAT_MACROS -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -DUNIT_TEST -Dprivate=public -Dprotected=public -DBVAR_NOT_LINK_DEFAULT_VARIABLES -D__STRICT_ANSI__ -include ${PROJECT_SOURCE_DIR}/test/sstream_workaround.h")
 set(CMAKE_CXX_FLAGS "${CMAKE_CPP_FLAGS} -g -O2 -pipe -Wall -W -fPIC -fstrict-aliasing -Wno-invalid-offsetof -Wno-unused-parameter -fno-omit-frame-pointer")
 use_cxx17()
@@ -138,7 +138,6 @@ SET(TEST_BUTIL_SOURCES
         ${PROJECT_SOURCE_DIR}/test/butil/watchdog_unittest.cc
         ${PROJECT_SOURCE_DIR}/test/butil/time_unittest.cc
         ${PROJECT_SOURCE_DIR}/test/butil/version_unittest.cc
-        ${PROJECT_SOURCE_DIR}/test/butil/logging_unittest.cc
         ${PROJECT_SOURCE_DIR}/test/butil/cacheline_unittest.cpp
         ${PROJECT_SOURCE_DIR}/test/butil/class_name_unittest.cpp
         ${PROJECT_SOURCE_DIR}/test/butil/endpoint_unittest.cpp
@@ -198,9 +197,7 @@ set_target_properties(brpc-shared-debug PROPERTIES
         LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/test)
 
 target_link_libraries(brpc-shared-debug ${DYNAMIC_LIB})
-if (BRPC_WITH_GLOG)
     target_link_libraries(brpc-shared-debug ${GLOG_LIB})
-endif ()
 
 # test_butil
 add_executable(test_butil ${TEST_BUTIL_SOURCES}

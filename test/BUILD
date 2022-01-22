@@ -40,10 +40,7 @@ COPTS = [
     "-DBAZEL_TEST=1",
     "-DBVAR_NOT_LINK_DEFAULT_VARIABLES",
     "-DUNIT_TEST",
-] + select({
-    "//:with_glog": ["-DBRPC_WITH_GLOG=1"],
-    "//conditions:default": ["-DBRPC_WITH_GLOG=0"],
-})
+]
 
 LINKOPTS = [
     "-lpthread",
