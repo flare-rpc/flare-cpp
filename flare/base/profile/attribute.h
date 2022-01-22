@@ -54,4 +54,12 @@
 #endif
 #endif  // FLARE_MUST_USE_RESULT
 
+#define FLARE_ARRAY_SIZE(array) \
+  (sizeof(::flare::base::base_internal::ArraySizeHelper(array)))
+
+namespace flare::base::base_internal {
+    template<typename T, size_t N>
+    auto ArraySizeHelper(const T (&array)[N]) -> char (&)[N];
+}  // namespace flare::base::base_internal
+
 #endif // FLARE_BASE_PROFILE_ATTRIBUTE_H_
