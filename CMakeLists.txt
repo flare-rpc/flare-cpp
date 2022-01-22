@@ -246,7 +246,6 @@ set(BUTIL_SOURCES
     ${PROJECT_SOURCE_DIR}/flare/butil/third_party/murmurhash3/murmurhash3.cpp
     ${PROJECT_SOURCE_DIR}/flare/butil/arena.cpp
     ${PROJECT_SOURCE_DIR}/flare/butil/at_exit.cc
-    ${PROJECT_SOURCE_DIR}/flare/butil/base64.cc
     ${PROJECT_SOURCE_DIR}/flare/butil/big_endian.cc
     ${PROJECT_SOURCE_DIR}/flare/butil/debug/alias.cc
     ${PROJECT_SOURCE_DIR}/flare/butil/debug/asan_invalid_access.cc

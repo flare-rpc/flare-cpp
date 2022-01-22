@@ -1,4 +1,4 @@
-file(GLOB BASE_UNITTESTS "*est.cc")
+file(GLOB BASE_UNITTESTS "*test.cc")
 foreach(BASE_UT ${BASE_UNITTESTS})
     get_filename_component(BASE_UT_WE ${BASE_UT} NAME_WE)
     add_executable(${BASE_UT_WE} ${BASE_UT} $<TARGET_OBJECTS:TEST_PROTO_LIB>)

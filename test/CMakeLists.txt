@@ -78,7 +78,6 @@ SET(TEST_BUTIL_SOURCES
         ${PROJECT_SOURCE_DIR}/test/butil/popen_unittest.cpp
         ${PROJECT_SOURCE_DIR}/test/butil/bounded_queue_unittest.cc
         ${PROJECT_SOURCE_DIR}/test/butil/at_exit_unittest.cc
-        ${PROJECT_SOURCE_DIR}/test/butil/base64_unittest.cc
         ${PROJECT_SOURCE_DIR}/test/butil/big_endian_unittest.cc
         ${PROJECT_SOURCE_DIR}/test/butil/hash_tables_unittest.cc
         ${PROJECT_SOURCE_DIR}/test/butil/linked_list_unittest.cc
