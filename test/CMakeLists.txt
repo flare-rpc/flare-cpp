@@ -224,3 +224,6 @@ add_subdirectory(bthread)
 
 # brpc tests
 add_subdirectory(rpc)
+
+#
+add_subdirectory(base)
