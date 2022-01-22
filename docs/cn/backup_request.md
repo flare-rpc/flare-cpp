@@ -25,8 +25,8 @@ Channel开启backup request。这个Channel会先向其中一个server发送请�
 自行添加的方法：
 
 ```c++
-#include <bvar/bvar.h>
-#include <butil/time.h>
+#include <flare/bvar/bvar.h>
+#include <flare/butil/time.h>
 ...
 bvar::LatencyRecorder my_func_latency("my_func");
 ...

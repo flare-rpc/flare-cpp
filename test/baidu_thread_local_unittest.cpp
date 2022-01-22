@@ -17,7 +17,7 @@
 
 #include <gtest/gtest.h>
 #include <errno.h>
-#include "butil/thread_local.h"
+#include "flare/butil/thread_local.h"
 
 namespace {
 

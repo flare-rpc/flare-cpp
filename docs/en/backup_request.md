@@ -25,8 +25,8 @@ You can look the default cdf(Cumulative Distribution Function) graph of latency 
 The way of adding it by yourself:
 
 ```c++
-#include <bvar/bvar.h>
-#include <butil/time.h>
+#include <flare/bvar/bvar.h>
+#include <flare/butil/time.h>
 ...
 bvar::LatencyRecorder my_func_latency("my_func");
 ...

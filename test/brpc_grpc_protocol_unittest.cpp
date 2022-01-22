@@ -18,11 +18,11 @@
 
 #include <gtest/gtest.h>
 #include <gflags/gflags.h>
-#include "brpc/controller.h"
-#include "brpc/server.h"
-#include "brpc/channel.h"
-#include "brpc/grpc.h"
-#include "butil/time.h"
+#include "flare/brpc/controller.h"
+#include "flare/brpc/server.h"
+#include "flare/brpc/channel.h"
+#include "flare/brpc/grpc.h"
+#include "flare/butil/time.h"
 #include "grpc.pb.h"
 
 int main(int argc, char* argv[]) {

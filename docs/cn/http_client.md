@@ -192,7 +192,7 @@ Notes on http header:
 出于通用性考虑brpc不会自动解压response body，解压代码并不复杂，用户可以自己做，方法如下：
 
 ```c++
-#include <brpc/policy/gzip_compress.h>
+#include <flare/brpc/policy/gzip_compress.h>
 ...
 const std::string* encoding = cntl->http_response().GetHeader("Content-Encoding");
 if (encoding != NULL && *encoding == "gzip") {
@@ -217,7 +217,7 @@ brpc client支持在读取完body前就结束RPC，让用户在RPC结束后再�
 1. 首先实现ProgressiveReader，接口如下：
 
    ```c++
-   #include <brpc/progressive_reader.h>
+   #include <flare/brpc/progressive_reader.h>
    ...
    class ProgressiveReader {
    public:

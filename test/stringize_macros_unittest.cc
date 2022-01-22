@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "butil/strings/stringize_macros.h"
+#include "flare/butil/strings/stringize_macros.h"
 
 #include <gtest/gtest.h>
 

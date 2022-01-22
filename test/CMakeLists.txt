@@ -34,7 +34,7 @@ set(TEST_PROTO_FILES addressbook1.proto
                      grpc.proto
                      health_check.proto)
 file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/test/hdrs)
-set(PROTOC_FLAGS ${PROTOC_FLAGS} -I${CMAKE_SOURCE_DIR}/src)
+set(PROTOC_FLAGS ${PROTOC_FLAGS} -I${CMAKE_SOURCE_DIR}/test -I${CMAKE_SOURCE_DIR})
 compile_proto(PROTO_HDRS PROTO_SRCS ${CMAKE_BINARY_DIR}/test
                                     ${CMAKE_BINARY_DIR}/test/hdrs
                                     ${CMAKE_SOURCE_DIR}/test
@@ -124,7 +124,6 @@ SET(TEST_BUTIL_SOURCES
     ${PROJECT_SOURCE_DIR}/test/sys_string_conversions_unittest.cc
     ${PROJECT_SOURCE_DIR}/test/utf_offset_string_conversions_unittest.cc
     ${PROJECT_SOURCE_DIR}/test/utf_string_conversions_unittest.cc
-    ${PROJECT_SOURCE_DIR}/test/cancellation_flag_unittest.cc
     ${PROJECT_SOURCE_DIR}/test/condition_variable_unittest.cc
     ${PROJECT_SOURCE_DIR}/test/lock_unittest.cc
     ${PROJECT_SOURCE_DIR}/test/waitable_event_unittest.cc
@@ -213,7 +212,7 @@ add_test(NAME test_butil COMMAND test_butil)
 
 # test_bvar
 # -DBVAR_NOT_LINK_DEFAULT_VARIABLES not work for gcc >= 5.0, just remove the file to prevent linking into unit tests
-list(REMOVE_ITEM BVAR_SOURCES ${PROJECT_SOURCE_DIR}/src/bvar/default_variables.cpp)
+list(REMOVE_ITEM BVAR_SOURCES ${PROJECT_SOURCE_DIR}/flare/bvar/default_variables.cpp)
 
 add_library(BVAR_DEBUG_LIB OBJECT ${BVAR_SOURCES})
 file(GLOB TEST_BVAR_SRCS "bvar_*_unittest.cpp")

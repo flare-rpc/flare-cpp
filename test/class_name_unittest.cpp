@@ -16,8 +16,8 @@
 // under the License.
 
 #include <gtest/gtest.h>
-#include "butil/class_name.h"
-#include "butil/logging.h"
+#include "flare/butil/class_name.h"
+#include "flare/butil/logging.h"
 
 namespace butil {
 namespace foobar {

@@ -20,16 +20,16 @@
 #include <sys/socket.h>                // socketpair
 #include <errno.h>                     // errno
 #include <fcntl.h>                     // O_RDONLY
-#include <butil/files/temp_file.h>      // TempFile
-#include <butil/containers/flat_map.h>
-#include <butil/macros.h>
-#include <butil/time.h>                 // Timer
-#include <butil/fd_utility.h>           // make_non_blocking
-#include <butil/iobuf.h>
-#include <butil/logging.h>
-#include <butil/fd_guard.h>
-#include <butil/errno.h>
-#include <butil/fast_rand.h>
+#include <flare/butil/files/temp_file.h>      // TempFile
+#include <flare/butil/containers/flat_map.h>
+#include <flare/butil/macros.h>
+#include <flare/butil/time.h>                 // Timer
+#include <flare/butil/fd_utility.h>           // make_non_blocking
+#include <flare/butil/iobuf.h>
+#include <flare/butil/logging.h>
+#include <flare/butil/fd_guard.h>
+#include <flare/butil/errno.h>
+#include <flare/butil/fast_rand.h>
 #if BAZEL_TEST
 #include "test/iobuf.pb.h"
 #else

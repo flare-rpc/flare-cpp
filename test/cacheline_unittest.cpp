@@ -19,8 +19,8 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <gtest/gtest.h>
-#include "butil/time.h"
-#include "butil/macros.h"
+#include "flare/butil/time.h"
+#include "flare/butil/macros.h"
 
 namespace {
 

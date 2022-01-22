@@ -18,8 +18,8 @@
 #include <sys/resource.h>
 #include <gtest/gtest.h>
 #include <gflags/gflags.h>
-#include "butil/at_exit.h"
-#include "butil/logging.h"
+#include "flare/butil/at_exit.h"
+#include "flare/butil/logging.h"
 #include "multiprocess_func_list.h"
 
 DEFINE_bool(disable_coredump, false, "Never core dump");

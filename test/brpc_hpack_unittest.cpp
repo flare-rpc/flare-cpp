@@ -20,8 +20,8 @@
 // Date: 2017/04/25 00:23:12
 
 #include <gtest/gtest.h>
-#include "brpc/details/hpack.h"
-#include "butil/logging.h"
+#include "flare/brpc/details/hpack.h"
+#include "flare/butil/logging.h"
 
 class HPackTest : public testing::Test {
 };

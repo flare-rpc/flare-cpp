@@ -16,7 +16,7 @@
 // under the License.
 
 #include <gtest/gtest.h>
-#include "butil/scoped_lock.h"
+#include "flare/butil/scoped_lock.h"
 #include <errno.h>
 
 namespace {

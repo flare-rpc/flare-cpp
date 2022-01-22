@@ -17,7 +17,7 @@
 
 #include <errno.h>
 #include <gtest/gtest.h>
-#include "butil/status.h"
+#include "flare/butil/status.h"
 
 namespace {
 class StatusTest : public ::testing::Test{

@@ -22,16 +22,16 @@
 #include <fstream>
 #include <gtest/gtest.h>
 #include <google/protobuf/descriptor.h>
-#include <butil/time.h>
-#include <butil/macros.h>
-#include <butil/fd_guard.h>
-#include <butil/files/scoped_file.h>
-#include "brpc/global.h"
-#include "brpc/socket.h"
-#include "brpc/server.h"
-#include "brpc/channel.h"
-#include "brpc/socket_map.h"
-#include "brpc/controller.h"
+#include <flare/butil/time.h>
+#include <flare/butil/macros.h>
+#include <flare/butil/fd_guard.h>
+#include <flare/butil/files/scoped_file.h>
+#include "flare/brpc/global.h"
+#include "flare/brpc/socket.h"
+#include "flare/brpc/server.h"
+#include "flare/brpc/channel.h"
+#include "flare/brpc/socket_map.h"
+#include "flare/brpc/controller.h"
 #include "echo.pb.h"
 
 namespace brpc {

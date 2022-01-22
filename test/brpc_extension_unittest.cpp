@@ -23,9 +23,9 @@
 #include <sys/socket.h>
 #include <map>
 #include <gtest/gtest.h>
-#include "butil/time.h"
-#include "butil/macros.h"
-#include "brpc/extension.h"
+#include "flare/butil/time.h"
+#include "flare/butil/macros.h"
+#include "flare/brpc/extension.h"
 
 class ExtensionTest : public ::testing::Test{
 protected:

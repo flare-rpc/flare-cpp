@@ -19,12 +19,12 @@
 
 #include <gflags/gflags.h>
 
-#include <butil/logging.h>
-#include <butil/time.h>
-#include <butil/strings/string_piece.h>
-#include <brpc/channel.h>
-#include <brpc/nshead_message.h>
-#include <bvar/bvar.h>
+#include <flare/butil/logging.h>
+#include <flare/butil/time.h>
+#include <flare/butil/strings/string_piece.h>
+#include <flare/brpc/channel.h>
+#include <flare/brpc/nshead_message.h>
+#include <flare/bvar/bvar.h>
 
 bvar::LatencyRecorder g_latency_recorder("client");
 

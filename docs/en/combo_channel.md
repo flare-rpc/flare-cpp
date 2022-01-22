@@ -179,7 +179,7 @@ Currently `SelectiveChannel` requires **the request remains valid before complet
 The initialization of `SelectiveChannel` is almost the same as regular `Channel`, except that it doesn't need a naming service in `Init`, because `SelectiveChannel` adds sub channels dynamically by `AddChannel`, while regular `Channel` adds servers in the naming service. 
 
 ```c++
-#include <brpc/selective_channel.h>
+#include <flare/brpc/selective_channel.h>
 ...
 brpc::SelectiveChannel schan;
 brpc::ChannelOptions schan_options;
@@ -263,7 +263,7 @@ If partitions are listed in different naming services, users have to implement t
 First of all, implement your own `PartitionParser`. In this example, the tag's format is `N/M`, where N is index of the partition and M is total number of partitions. `0/3` means that there're 3 partitions and this is the first one of them.
 
 ```c++
-#include <brpc/partition_channel.h>
+#include <flare/brpc/partition_channel.h>
 ...
 class MyPartitionParser : public brpc::PartitionParser {
 public:
@@ -293,7 +293,7 @@ public:
 Then initialize the `PartitionChannel`.
 
 ```c++
-#include <brpc/partition_channel.h>
+#include <flare/brpc/partition_channel.h>
 ...
 brpc::PartitionChannel channel;
  

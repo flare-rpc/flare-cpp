@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "butil/memory/aligned_memory.h"
-#include "butil/memory/scoped_ptr.h"
+#include "flare/butil/memory/aligned_memory.h"
+#include "flare/butil/memory/scoped_ptr.h"
 #include <gtest/gtest.h>
 
 #define EXPECT_ALIGNED(ptr, align) \

@@ -9,10 +9,10 @@
 #include <cmath>
 #include <limits>
 
-#include "butil/format_macros.h"
-#include "butil/strings/string_number_conversions.h"
-#include "butil/strings/stringprintf.h"
-#include "butil/strings/utf_string_conversions.h"
+#include "flare/butil/format_macros.h"
+#include "flare/butil/strings/string_number_conversions.h"
+#include "flare/butil/strings/stringprintf.h"
+#include "flare/butil/strings/utf_string_conversions.h"
 #include <gtest/gtest.h>
 
 namespace butil {

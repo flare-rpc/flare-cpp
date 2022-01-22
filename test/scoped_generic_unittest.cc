@@ -4,7 +4,7 @@
 
 #include <vector>
 
-#include "butil/scoped_generic.h"
+#include "flare/butil/scoped_generic.h"
 #include <gtest/gtest.h>
 
 namespace butil {

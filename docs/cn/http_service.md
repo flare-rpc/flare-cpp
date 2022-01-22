@@ -303,7 +303,7 @@ http服务常对http body进行压缩，可以有效减少网页的传输时间�
 出于通用性考虑且解压代码不复杂，brpc不会自动解压request body，用户可以自己做，方法如下：
 
 ```c++
-#include <brpc/policy/gzip_compress.h>
+#include <flare/brpc/policy/gzip_compress.h>
 ...
 const std::string* encoding = cntl->http_request().GetHeader("Content-Encoding");
 if (encoding != NULL && *encoding == "gzip") {
@@ -335,7 +335,7 @@ brpc server支持发送超大或无限长的body。方法如下:
 
 1. 调用Controller::CreateProgressiveAttachment()创建可持续发送的body。返回的ProgressiveAttachment对象需要用intrusive_ptr管理。
   ```c++
-  #include <brpc/progressive_attachment.h>
+  #include <flare/brpc/progressive_attachment.h>
   ...
   butil::intrusive_ptr<brpc::ProgressiveAttachment> pa = cntl->CreateProgressiveAttachment();
   ```

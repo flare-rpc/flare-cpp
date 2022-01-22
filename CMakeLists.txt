@@ -68,7 +68,7 @@ endif()
 
 include(GNUInstallDirs)
 
-configure_file(${PROJECT_SOURCE_DIR}/config.h.in ${PROJECT_SOURCE_DIR}/src/butil/config.h @ONLY)
+configure_file(${PROJECT_SOURCE_DIR}/config.h.in ${PROJECT_SOURCE_DIR}/flare/butil/config.h @ONLY)
 
 set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 
@@ -86,7 +86,7 @@ if(${GFLAGS_NS} STREQUAL "GFLAGS_NAMESPACE")
 endif()
 
 include_directories(
-    ${PROJECT_SOURCE_DIR}/src
+    ${PROJECT_SOURCE_DIR}
     ${CMAKE_CURRENT_BINARY_DIR}
 )
 
@@ -232,137 +232,135 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/output/lib)
 # the reason why not using file(GLOB_RECURSE...) is that we want to
 # include different files on different platforms.
 set(BUTIL_SOURCES
-    ${PROJECT_SOURCE_DIR}/src/butil/third_party/dmg_fp/g_fmt.cc
-    ${PROJECT_SOURCE_DIR}/src/butil/third_party/dmg_fp/dtoa_wrapper.cc
-    ${PROJECT_SOURCE_DIR}/src/butil/third_party/dynamic_annotations/dynamic_annotations.c
-    ${PROJECT_SOURCE_DIR}/src/butil/third_party/icu/icu_utf.cc
-    ${PROJECT_SOURCE_DIR}/src/butil/third_party/superfasthash/superfasthash.c
-    ${PROJECT_SOURCE_DIR}/src/butil/third_party/modp_b64/modp_b64.cc
-    ${PROJECT_SOURCE_DIR}/src/butil/third_party/symbolize/demangle.cc
-    ${PROJECT_SOURCE_DIR}/src/butil/third_party/symbolize/symbolize.cc
-    ${PROJECT_SOURCE_DIR}/src/butil/third_party/snappy/snappy-sinksource.cc
-    ${PROJECT_SOURCE_DIR}/src/butil/third_party/snappy/snappy-stubs-internal.cc
-    ${PROJECT_SOURCE_DIR}/src/butil/third_party/snappy/snappy.cc
-    ${PROJECT_SOURCE_DIR}/src/butil/third_party/murmurhash3/murmurhash3.cpp
-    ${PROJECT_SOURCE_DIR}/src/butil/arena.cpp
-    ${PROJECT_SOURCE_DIR}/src/butil/at_exit.cc
-    ${PROJECT_SOURCE_DIR}/src/butil/atomicops_internals_x86_gcc.cc
-    ${PROJECT_SOURCE_DIR}/src/butil/base64.cc
-    ${PROJECT_SOURCE_DIR}/src/butil/big_endian.cc
-    ${PROJECT_SOURCE_DIR}/src/butil/debug/alias.cc
-    ${PROJECT_SOURCE_DIR}/src/butil/debug/asan_invalid_access.cc
-    ${PROJECT_SOURCE_DIR}/src/butil/debug/crash_logging.cc
-    ${PROJECT_SOURCE_DIR}/src/butil/debug/debugger.cc
-    ${PROJECT_SOURCE_DIR}/src/butil/debug/debugger_posix.cc
-    ${PROJECT_SOURCE_DIR}/src/butil/debug/dump_without_crashing.cc
-    ${PROJECT_SOURCE_DIR}/src/butil/debug/proc_maps_linux.cc
-    ${PROJECT_SOURCE_DIR}/src/butil/debug/stack_trace.cc
-    ${PROJECT_SOURCE_DIR}/src/butil/debug/stack_trace_posix.cc
-    ${PROJECT_SOURCE_DIR}/src/butil/environment.cc
-    ${PROJECT_SOURCE_DIR}/src/butil/files/file.cc
-    ${PROJECT_SOURCE_DIR}/src/butil/files/file_posix.cc
-    ${PROJECT_SOURCE_DIR}/src/butil/files/file_enumerator.cc
-    ${PROJECT_SOURCE_DIR}/src/butil/files/file_enumerator_posix.cc
-    ${PROJECT_SOURCE_DIR}/src/butil/files/file_path.cc
-    ${PROJECT_SOURCE_DIR}/src/butil/files/file_path_constants.cc
-    ${PROJECT_SOURCE_DIR}/src/butil/files/memory_mapped_file.cc
-    ${PROJECT_SOURCE_DIR}/src/butil/files/memory_mapped_file_posix.cc
-    ${PROJECT_SOURCE_DIR}/src/butil/files/scoped_file.cc
-    ${PROJECT_SOURCE_DIR}/src/butil/files/scoped_temp_dir.cc
-    ${PROJECT_SOURCE_DIR}/src/butil/file_util.cc
-    ${PROJECT_SOURCE_DIR}/src/butil/file_util_posix.cc
-    ${PROJECT_SOURCE_DIR}/src/butil/guid.cc
-    ${PROJECT_SOURCE_DIR}/src/butil/guid_posix.cc
-    ${PROJECT_SOURCE_DIR}/src/butil/hash.cc
-    ${PROJECT_SOURCE_DIR}/src/butil/lazy_instance.cc
-    ${PROJECT_SOURCE_DIR}/src/butil/memory/aligned_memory.cc
-    ${PROJECT_SOURCE_DIR}/src/butil/memory/ref_counted.cc
-    ${PROJECT_SOURCE_DIR}/src/butil/memory/ref_counted_memory.cc
-    ${PROJECT_SOURCE_DIR}/src/butil/memory/singleton.cc
-    ${PROJECT_SOURCE_DIR}/src/butil/memory/weak_ptr.cc
-    ${PROJECT_SOURCE_DIR}/src/butil/process_util.cc
-    ${PROJECT_SOURCE_DIR}/src/butil/rand_util.cc
-    ${PROJECT_SOURCE_DIR}/src/butil/rand_util_posix.cc
-    ${PROJECT_SOURCE_DIR}/src/butil/fast_rand.cpp
-    ${PROJECT_SOURCE_DIR}/src/butil/safe_strerror_posix.cc
-    ${PROJECT_SOURCE_DIR}/src/butil/sha1_portable.cc
-    ${PROJECT_SOURCE_DIR}/src/butil/strings/latin1_string_conversions.cc
-    ${PROJECT_SOURCE_DIR}/src/butil/strings/nullable_string16.cc
-    ${PROJECT_SOURCE_DIR}/src/butil/strings/safe_sprintf.cc
-    ${PROJECT_SOURCE_DIR}/src/butil/strings/string16.cc
-    ${PROJECT_SOURCE_DIR}/src/butil/strings/string_number_conversions.cc
-    ${PROJECT_SOURCE_DIR}/src/butil/strings/string_split.cc
-    ${PROJECT_SOURCE_DIR}/src/butil/strings/string_piece.cc
-    ${PROJECT_SOURCE_DIR}/src/butil/strings/string_util.cc
-    ${PROJECT_SOURCE_DIR}/src/butil/strings/string_util_constants.cc
-    ${PROJECT_SOURCE_DIR}/src/butil/strings/stringprintf.cc
-    ${PROJECT_SOURCE_DIR}/src/butil/strings/utf_offset_string_conversions.cc
-    ${PROJECT_SOURCE_DIR}/src/butil/strings/utf_string_conversion_utils.cc
-    ${PROJECT_SOURCE_DIR}/src/butil/strings/utf_string_conversions.cc
-    ${PROJECT_SOURCE_DIR}/src/butil/synchronization/cancellation_flag.cc
-    ${PROJECT_SOURCE_DIR}/src/butil/synchronization/condition_variable_posix.cc
-    ${PROJECT_SOURCE_DIR}/src/butil/synchronization/waitable_event_posix.cc
-    ${PROJECT_SOURCE_DIR}/src/butil/threading/non_thread_safe_impl.cc
-    ${PROJECT_SOURCE_DIR}/src/butil/threading/platform_thread_posix.cc
-    ${PROJECT_SOURCE_DIR}/src/butil/threading/simple_thread.cc
-    ${PROJECT_SOURCE_DIR}/src/butil/threading/thread_checker_impl.cc
-    ${PROJECT_SOURCE_DIR}/src/butil/threading/thread_collision_warner.cc
-    ${PROJECT_SOURCE_DIR}/src/butil/threading/thread_id_name_manager.cc
-    ${PROJECT_SOURCE_DIR}/src/butil/threading/thread_local_posix.cc
-    ${PROJECT_SOURCE_DIR}/src/butil/threading/thread_local_storage.cc
-    ${PROJECT_SOURCE_DIR}/src/butil/threading/thread_local_storage_posix.cc
-    ${PROJECT_SOURCE_DIR}/src/butil/threading/thread_restrictions.cc
-    ${PROJECT_SOURCE_DIR}/src/butil/threading/watchdog.cc
-    ${PROJECT_SOURCE_DIR}/src/butil/time/clock.cc
-    ${PROJECT_SOURCE_DIR}/src/butil/time/default_clock.cc
-    ${PROJECT_SOURCE_DIR}/src/butil/time/default_tick_clock.cc
-    ${PROJECT_SOURCE_DIR}/src/butil/time/tick_clock.cc
-    ${PROJECT_SOURCE_DIR}/src/butil/time/time.cc
-    ${PROJECT_SOURCE_DIR}/src/butil/time/time_posix.cc
-    ${PROJECT_SOURCE_DIR}/src/butil/version.cc
-    ${PROJECT_SOURCE_DIR}/src/butil/logging.cc
-    ${PROJECT_SOURCE_DIR}/src/butil/class_name.cpp
-    ${PROJECT_SOURCE_DIR}/src/butil/errno.cpp
-    ${PROJECT_SOURCE_DIR}/src/butil/find_cstr.cpp
-    ${PROJECT_SOURCE_DIR}/src/butil/status.cpp
-    ${PROJECT_SOURCE_DIR}/src/butil/string_printf.cpp
-    ${PROJECT_SOURCE_DIR}/src/butil/thread_local.cpp
-    ${PROJECT_SOURCE_DIR}/src/butil/unix_socket.cpp
-    ${PROJECT_SOURCE_DIR}/src/butil/endpoint.cpp
-    ${PROJECT_SOURCE_DIR}/src/butil/fd_utility.cpp
-    ${PROJECT_SOURCE_DIR}/src/butil/files/temp_file.cpp
-    ${PROJECT_SOURCE_DIR}/src/butil/files/file_watcher.cpp
-    ${PROJECT_SOURCE_DIR}/src/butil/time.cpp
-    ${PROJECT_SOURCE_DIR}/src/butil/zero_copy_stream_as_streambuf.cpp
-    ${PROJECT_SOURCE_DIR}/src/butil/crc32c.cc
-    ${PROJECT_SOURCE_DIR}/src/butil/containers/case_ignored_flat_map.cpp
-    ${PROJECT_SOURCE_DIR}/src/butil/iobuf.cpp
-    ${PROJECT_SOURCE_DIR}/src/butil/binary_printer.cpp
-    ${PROJECT_SOURCE_DIR}/src/butil/recordio.cc
-    ${PROJECT_SOURCE_DIR}/src/butil/popen.cpp
+    ${PROJECT_SOURCE_DIR}/flare/butil/third_party/dmg_fp/g_fmt.cc
+    ${PROJECT_SOURCE_DIR}/flare/butil/third_party/dmg_fp/dtoa_wrapper.cc
+    ${PROJECT_SOURCE_DIR}/flare/butil/third_party/dynamic_annotations/dynamic_annotations.c
+    ${PROJECT_SOURCE_DIR}/flare/butil/third_party/icu/icu_utf.cc
+    ${PROJECT_SOURCE_DIR}/flare/butil/third_party/superfasthash/superfasthash.c
+    ${PROJECT_SOURCE_DIR}/flare/butil/third_party/modp_b64/modp_b64.cc
+    ${PROJECT_SOURCE_DIR}/flare/butil/third_party/symbolize/demangle.cc
+    ${PROJECT_SOURCE_DIR}/flare/butil/third_party/symbolize/symbolize.cc
+    ${PROJECT_SOURCE_DIR}/flare/butil/third_party/snappy/snappy-sinksource.cc
+    ${PROJECT_SOURCE_DIR}/flare/butil/third_party/snappy/snappy-stubs-internal.cc
+    ${PROJECT_SOURCE_DIR}/flare/butil/third_party/snappy/snappy.cc
+    ${PROJECT_SOURCE_DIR}/flare/butil/third_party/murmurhash3/murmurhash3.cpp
+    ${PROJECT_SOURCE_DIR}/flare/butil/arena.cpp
+    ${PROJECT_SOURCE_DIR}/flare/butil/at_exit.cc
+    ${PROJECT_SOURCE_DIR}/flare/butil/base64.cc
+    ${PROJECT_SOURCE_DIR}/flare/butil/big_endian.cc
+    ${PROJECT_SOURCE_DIR}/flare/butil/debug/alias.cc
+    ${PROJECT_SOURCE_DIR}/flare/butil/debug/asan_invalid_access.cc
+    ${PROJECT_SOURCE_DIR}/flare/butil/debug/crash_logging.cc
+    ${PROJECT_SOURCE_DIR}/flare/butil/debug/debugger.cc
+    ${PROJECT_SOURCE_DIR}/flare/butil/debug/debugger_posix.cc
+    ${PROJECT_SOURCE_DIR}/flare/butil/debug/dump_without_crashing.cc
+    ${PROJECT_SOURCE_DIR}/flare/butil/debug/proc_maps_linux.cc
+    ${PROJECT_SOURCE_DIR}/flare/butil/debug/stack_trace.cc
+    ${PROJECT_SOURCE_DIR}/flare/butil/debug/stack_trace_posix.cc
+    ${PROJECT_SOURCE_DIR}/flare/butil/environment.cc
+    ${PROJECT_SOURCE_DIR}/flare/butil/files/file.cc
+    ${PROJECT_SOURCE_DIR}/flare/butil/files/file_posix.cc
+    ${PROJECT_SOURCE_DIR}/flare/butil/files/file_enumerator.cc
+    ${PROJECT_SOURCE_DIR}/flare/butil/files/file_enumerator_posix.cc
+    ${PROJECT_SOURCE_DIR}/flare/butil/files/file_path.cc
+    ${PROJECT_SOURCE_DIR}/flare/butil/files/file_path_constants.cc
+    ${PROJECT_SOURCE_DIR}/flare/butil/files/memory_mapped_file.cc
+    ${PROJECT_SOURCE_DIR}/flare/butil/files/memory_mapped_file_posix.cc
+    ${PROJECT_SOURCE_DIR}/flare/butil/files/scoped_file.cc
+    ${PROJECT_SOURCE_DIR}/flare/butil/files/scoped_temp_dir.cc
+    ${PROJECT_SOURCE_DIR}/flare/butil/file_util.cc
+    ${PROJECT_SOURCE_DIR}/flare/butil/file_util_posix.cc
+    ${PROJECT_SOURCE_DIR}/flare/butil/guid.cc
+    ${PROJECT_SOURCE_DIR}/flare/butil/guid_posix.cc
+    ${PROJECT_SOURCE_DIR}/flare/butil/hash.cc
+    ${PROJECT_SOURCE_DIR}/flare/butil/lazy_instance.cc
+    ${PROJECT_SOURCE_DIR}/flare/butil/memory/aligned_memory.cc
+    ${PROJECT_SOURCE_DIR}/flare/butil/memory/ref_counted.cc
+    ${PROJECT_SOURCE_DIR}/flare/butil/memory/ref_counted_memory.cc
+    ${PROJECT_SOURCE_DIR}/flare/butil/memory/singleton.cc
+    ${PROJECT_SOURCE_DIR}/flare/butil/memory/weak_ptr.cc
+    ${PROJECT_SOURCE_DIR}/flare/butil/process_util.cc
+    ${PROJECT_SOURCE_DIR}/flare/butil/rand_util.cc
+    ${PROJECT_SOURCE_DIR}/flare/butil/rand_util_posix.cc
+    ${PROJECT_SOURCE_DIR}/flare/butil/fast_rand.cpp
+    ${PROJECT_SOURCE_DIR}/flare/butil/safe_strerror_posix.cc
+    ${PROJECT_SOURCE_DIR}/flare/butil/sha1_portable.cc
+    ${PROJECT_SOURCE_DIR}/flare/butil/strings/latin1_string_conversions.cc
+    ${PROJECT_SOURCE_DIR}/flare/butil/strings/nullable_string16.cc
+    ${PROJECT_SOURCE_DIR}/flare/butil/strings/safe_sprintf.cc
+    ${PROJECT_SOURCE_DIR}/flare/butil/strings/string16.cc
+    ${PROJECT_SOURCE_DIR}/flare/butil/strings/string_number_conversions.cc
+    ${PROJECT_SOURCE_DIR}/flare/butil/strings/string_split.cc
+    ${PROJECT_SOURCE_DIR}/flare/butil/strings/string_piece.cc
+    ${PROJECT_SOURCE_DIR}/flare/butil/strings/string_util.cc
+    ${PROJECT_SOURCE_DIR}/flare/butil/strings/string_util_constants.cc
+    ${PROJECT_SOURCE_DIR}/flare/butil/strings/stringprintf.cc
+    ${PROJECT_SOURCE_DIR}/flare/butil/strings/utf_offset_string_conversions.cc
+    ${PROJECT_SOURCE_DIR}/flare/butil/strings/utf_string_conversion_utils.cc
+    ${PROJECT_SOURCE_DIR}/flare/butil/strings/utf_string_conversions.cc
+    ${PROJECT_SOURCE_DIR}/flare/butil/synchronization/condition_variable_posix.cc
+    ${PROJECT_SOURCE_DIR}/flare/butil/synchronization/waitable_event_posix.cc
+    ${PROJECT_SOURCE_DIR}/flare/butil/threading/non_thread_safe_impl.cc
+    ${PROJECT_SOURCE_DIR}/flare/butil/threading/platform_thread_posix.cc
+    ${PROJECT_SOURCE_DIR}/flare/butil/threading/simple_thread.cc
+    ${PROJECT_SOURCE_DIR}/flare/butil/threading/thread_checker_impl.cc
+    ${PROJECT_SOURCE_DIR}/flare/butil/threading/thread_collision_warner.cc
+    ${PROJECT_SOURCE_DIR}/flare/butil/threading/thread_id_name_manager.cc
+    ${PROJECT_SOURCE_DIR}/flare/butil/threading/thread_local_posix.cc
+    ${PROJECT_SOURCE_DIR}/flare/butil/threading/thread_local_storage.cc
+    ${PROJECT_SOURCE_DIR}/flare/butil/threading/thread_local_storage_posix.cc
+    ${PROJECT_SOURCE_DIR}/flare/butil/threading/thread_restrictions.cc
+    ${PROJECT_SOURCE_DIR}/flare/butil/threading/watchdog.cc
+    ${PROJECT_SOURCE_DIR}/flare/butil/time/clock.cc
+    ${PROJECT_SOURCE_DIR}/flare/butil/time/default_clock.cc
+    ${PROJECT_SOURCE_DIR}/flare/butil/time/default_tick_clock.cc
+    ${PROJECT_SOURCE_DIR}/flare/butil/time/tick_clock.cc
+    ${PROJECT_SOURCE_DIR}/flare/butil/time/time.cc
+    ${PROJECT_SOURCE_DIR}/flare/butil/time/time_posix.cc
+    ${PROJECT_SOURCE_DIR}/flare/butil/version.cc
+    ${PROJECT_SOURCE_DIR}/flare/butil/logging.cc
+    ${PROJECT_SOURCE_DIR}/flare/butil/class_name.cpp
+    ${PROJECT_SOURCE_DIR}/flare/butil/errno.cpp
+    ${PROJECT_SOURCE_DIR}/flare/butil/find_cstr.cpp
+    ${PROJECT_SOURCE_DIR}/flare/butil/status.cpp
+    ${PROJECT_SOURCE_DIR}/flare/butil/string_printf.cpp
+    ${PROJECT_SOURCE_DIR}/flare/butil/thread_local.cpp
+    ${PROJECT_SOURCE_DIR}/flare/butil/unix_socket.cpp
+    ${PROJECT_SOURCE_DIR}/flare/butil/endpoint.cpp
+    ${PROJECT_SOURCE_DIR}/flare/butil/fd_utility.cpp
+    ${PROJECT_SOURCE_DIR}/flare/butil/files/temp_file.cpp
+    ${PROJECT_SOURCE_DIR}/flare/butil/files/file_watcher.cpp
+    ${PROJECT_SOURCE_DIR}/flare/butil/time.cpp
+    ${PROJECT_SOURCE_DIR}/flare/butil/zero_copy_stream_as_streambuf.cpp
+    ${PROJECT_SOURCE_DIR}/flare/butil/crc32c.cc
+    ${PROJECT_SOURCE_DIR}/flare/butil/containers/case_ignored_flat_map.cpp
+    ${PROJECT_SOURCE_DIR}/flare/butil/iobuf.cpp
+    ${PROJECT_SOURCE_DIR}/flare/butil/binary_printer.cpp
+    ${PROJECT_SOURCE_DIR}/flare/butil/recordio.cc
+    ${PROJECT_SOURCE_DIR}/flare/butil/popen.cpp
     )
 
 if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
     set(BUTIL_SOURCES ${BUTIL_SOURCES}
-        ${PROJECT_SOURCE_DIR}/src/butil/file_util_linux.cc
-        ${PROJECT_SOURCE_DIR}/src/butil/threading/platform_thread_linux.cc
-        ${PROJECT_SOURCE_DIR}/src/butil/strings/sys_string_conversions_posix.cc)
+        ${PROJECT_SOURCE_DIR}/flare/butil/file_util_linux.cc
+        ${PROJECT_SOURCE_DIR}/flare/butil/threading/platform_thread_linux.cc
+        ${PROJECT_SOURCE_DIR}/flare/butil/strings/sys_string_conversions_posix.cc)
 elseif(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
     set(BUTIL_SOURCES ${BUTIL_SOURCES}
-        ${PROJECT_SOURCE_DIR}/src/butil/mac/bundle_locations.mm
-        ${PROJECT_SOURCE_DIR}/src/butil/mac/foundation_util.mm
-        ${PROJECT_SOURCE_DIR}/src/butil/file_util_mac.mm
-        ${PROJECT_SOURCE_DIR}/src/butil/threading/platform_thread_mac.mm
-        ${PROJECT_SOURCE_DIR}/src/butil/strings/sys_string_conversions_mac.mm
-        ${PROJECT_SOURCE_DIR}/src/butil/time/time_mac.cc
-        ${PROJECT_SOURCE_DIR}/src/butil/mac/scoped_mach_port.cc)
+        ${PROJECT_SOURCE_DIR}/flare/butil/mac/bundle_locations.mm
+        ${PROJECT_SOURCE_DIR}/flare/butil/mac/foundation_util.mm
+        ${PROJECT_SOURCE_DIR}/flare/butil/file_util_mac.mm
+        ${PROJECT_SOURCE_DIR}/flare/butil/threading/platform_thread_mac.mm
+        ${PROJECT_SOURCE_DIR}/flare/butil/strings/sys_string_conversions_mac.mm
+        ${PROJECT_SOURCE_DIR}/flare/butil/time/time_mac.cc
+        ${PROJECT_SOURCE_DIR}/flare/butil/mac/scoped_mach_port.cc)
 endif()
 
-file(GLOB_RECURSE BVAR_SOURCES "${PROJECT_SOURCE_DIR}/src/bvar/*.cpp")
-file(GLOB_RECURSE BTHREAD_SOURCES "${PROJECT_SOURCE_DIR}/src/bthread/*.cpp")
-file(GLOB_RECURSE JSON2PB_SOURCES "${PROJECT_SOURCE_DIR}/src/json2pb/*.cpp")
-file(GLOB_RECURSE BRPC_SOURCES "${PROJECT_SOURCE_DIR}/src/brpc/*.cpp")
-file(GLOB_RECURSE THRIFT_SOURCES "${PROJECT_SOURCE_DIR}/src/brpc/thrift*.cpp")
+file(GLOB_RECURSE BVAR_SOURCES "${PROJECT_SOURCE_DIR}/flare/bvar/*.cpp")
+file(GLOB_RECURSE BTHREAD_SOURCES "${PROJECT_SOURCE_DIR}/flare/bthread/*.cpp")
+file(GLOB_RECURSE JSON2PB_SOURCES "${PROJECT_SOURCE_DIR}/flare/json2pb/*.cpp")
+file(GLOB_RECURSE BRPC_SOURCES "${PROJECT_SOURCE_DIR}/flare/brpc/*.cpp")
+file(GLOB_RECURSE THRIFT_SOURCES "${PROJECT_SOURCE_DIR}/flare/brpc/thrift*.cpp")
 
 if(WITH_THRIFT)
     message("brpc compile with thrift protocol")
@@ -375,35 +373,36 @@ else()
 endif()
 
 set(MCPACK2PB_SOURCES
-    ${PROJECT_SOURCE_DIR}/src/mcpack2pb/field_type.cpp
-    ${PROJECT_SOURCE_DIR}/src/mcpack2pb/mcpack2pb.cpp
-    ${PROJECT_SOURCE_DIR}/src/mcpack2pb/parser.cpp
-    ${PROJECT_SOURCE_DIR}/src/mcpack2pb/serializer.cpp)
+    ${PROJECT_SOURCE_DIR}/flare/mcpack2pb/field_type.cpp
+    ${PROJECT_SOURCE_DIR}/flare/mcpack2pb/mcpack2pb.cpp
+    ${PROJECT_SOURCE_DIR}/flare/mcpack2pb/parser.cpp
+    ${PROJECT_SOURCE_DIR}/flare/mcpack2pb/serializer.cpp)
 
 include(CompileProto)
-set(PROTO_FILES idl_options.proto
-                brpc/rtmp.proto
-                brpc/rpc_dump.proto
-                brpc/get_favicon.proto
-                brpc/span.proto
-                brpc/builtin_service.proto
-                brpc/get_js.proto
-                brpc/errno.proto
-                brpc/nshead_meta.proto
-                brpc/options.proto
-                brpc/policy/baidu_rpc_meta.proto
-                brpc/policy/hulu_pbrpc_meta.proto
-                brpc/policy/public_pbrpc_meta.proto
-                brpc/policy/sofa_pbrpc_meta.proto
-                brpc/policy/mongo.proto
-                brpc/trackme.proto
-                brpc/streaming_rpc_meta.proto
-                brpc/proto_base.proto)
-file(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/output/include/brpc)
+set(PROTO_FILES flare/idl_options.proto
+        flare/brpc/rtmp.proto
+        flare/brpc/rpc_dump.proto
+        flare/brpc/get_favicon.proto
+        flare/brpc/span.proto
+        flare/brpc/builtin_service.proto
+        flare/brpc/get_js.proto
+        flare/brpc/errno.proto
+        flare/brpc/nshead_meta.proto
+        flare/brpc/options.proto
+        flare/brpc/policy/baidu_rpc_meta.proto
+        flare/brpc/policy/hulu_pbrpc_meta.proto
+        flare/brpc/policy/public_pbrpc_meta.proto
+        flare/brpc/policy/sofa_pbrpc_meta.proto
+        flare/brpc/policy/mongo.proto
+        flare/brpc/trackme.proto
+        flare/brpc/streaming_rpc_meta.proto
+        flare/brpc/proto_base.proto)
+
+file(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/output/include/flare)
 set(PROTOC_FLAGS ${PROTOC_FLAGS} -I${PROTOBUF_INCLUDE_DIR})
 compile_proto(PROTO_HDRS PROTO_SRCS ${PROJECT_BINARY_DIR}
                                     ${PROJECT_BINARY_DIR}/output/include
-                                    ${PROJECT_SOURCE_DIR}/src
+                                    ${PROJECT_SOURCE_DIR}
                                     "${PROTO_FILES}")
 add_library(PROTO_LIB OBJECT ${PROTO_SRCS} ${PROTO_HDRS})
 
@@ -416,21 +415,24 @@ set(SOURCES
     ${THRIFT_SOURCES}
     )
 
-add_subdirectory(src)
+add_subdirectory(flare)
 if(BUILD_UNIT_TESTS)
     enable_testing()
     add_subdirectory(test)
 endif()
 add_subdirectory(tools)
 
-file(COPY ${CMAKE_CURRENT_BINARY_DIR}/brpc/
-        DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/output/include/brpc/
+#[[
+file(COPY ${CMAKE_CURRENT_BINARY_DIR}/flare/
+        DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/output/include/flare/
         FILES_MATCHING
         PATTERN "*.h"
         PATTERN "*.hpp"
         )
-file(COPY ${PROJECT_SOURCE_DIR}/src/
-        DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/output/include/
+]]
+
+file(COPY ${PROJECT_SOURCE_DIR}/flare/
+        DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/output/include/flare/
         FILES_MATCHING
         PATTERN "*.h"
         PATTERN "*.hpp"

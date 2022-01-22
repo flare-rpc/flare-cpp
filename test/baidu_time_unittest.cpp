@@ -16,16 +16,16 @@
 // under the License.
 
 #include <gtest/gtest.h>
-#include "butil/build_config.h"
+#include "flare/butil/build_config.h"
 
 #if defined(OS_LINUX)
 #include <syscall.h>                         // SYS_clock_gettime
 #include <unistd.h>                          // syscall
 #endif
 
-#include "butil/time.h"
-#include "butil/macros.h"
-#include "butil/logging.h"
+#include "flare/butil/time.h"
+#include "flare/butil/macros.h"
+#include "flare/butil/logging.h"
 
 namespace {
 

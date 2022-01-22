@@ -2,15 +2,15 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "butil/strings/safe_sprintf.h"
+#include "flare/butil/strings/safe_sprintf.h"
 
 #include <stdio.h>
 #include <string.h>
 
 #include <limits>
 
-#include "butil/logging.h"
-#include "butil/memory/scoped_ptr.h"
+#include "flare/butil/logging.h"
+#include "flare/butil/memory/scoped_ptr.h"
 #include <gtest/gtest.h>
 
 // Death tests on Android are currently very flaky. No need to add more flaky

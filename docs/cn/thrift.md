@@ -45,8 +45,8 @@ mkdir build && cd build && cmake ../ -DWITH_THRIFT=1
 
 示例代码如下：
 ```c++
-#include <brpc/channel.h>
-#include <brpc/thrift_message.h>         // 定义了ThriftStub
+#include <flare/brpc/channel.h>
+#include <flare/brpc/thrift_message.h>         // 定义了ThriftStub
 ...
 
 DEFINE_string(server, "0.0.0.0:8019", "IP Address of thrift server");

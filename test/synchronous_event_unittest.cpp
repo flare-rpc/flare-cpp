@@ -16,7 +16,7 @@
 // under the License.
 
 #include <gtest/gtest.h>
-#include "butil/synchronous_event.h"
+#include "flare/butil/synchronous_event.h"
 
 namespace {
 class SynchronousEventTest : public ::testing::Test{

@@ -18,9 +18,9 @@
 // A server to receive EchoRequest and send back EchoResponse.
 
 #include <gflags/gflags.h>
-#include <butil/logging.h>
-#include <butil/string_printf.h>
-#include <brpc/server.h>
+#include <flare/butil/logging.h>
+#include <flare/butil/string_printf.h>
+#include <flare/brpc/server.h>
 #include "echo.pb.h"
 
 DEFINE_bool(echo_attachment, true, "Echo attachment as well");

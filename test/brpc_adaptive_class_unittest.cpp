@@ -20,9 +20,9 @@
 // Date: 2019/04/16 23:41:04
 
 #include <gtest/gtest.h>
-#include "brpc/adaptive_max_concurrency.h"
-#include "brpc/adaptive_protocol_type.h"
-#include "brpc/adaptive_connection_type.h"
+#include "flare/brpc/adaptive_max_concurrency.h"
+#include "flare/brpc/adaptive_protocol_type.h"
+#include "flare/brpc/adaptive_connection_type.h"
 
 const std::string kAutoCL = "aUto";
 const std::string kHttp = "hTTp";

@@ -26,14 +26,14 @@
 #include <gflags/gflags.h>
 #include <google/protobuf/descriptor.h>
 #include <google/protobuf/io/zero_copy_stream_impl_lite.h>
-#include "butil/time.h"
-#include "butil/macros.h"
-#include "brpc/socket.h"
-#include "brpc/acceptor.h"
-#include "brpc/server.h"
-#include "brpc/controller.h"
-#include "brpc/rtmp.h"
-#include "brpc/amf.h"
+#include "flare/butil/time.h"
+#include "flare/butil/macros.h"
+#include "flare/brpc/socket.h"
+#include "flare/brpc/acceptor.h"
+#include "flare/brpc/server.h"
+#include "flare/brpc/controller.h"
+#include "flare/brpc/rtmp.h"
+#include "flare/brpc/amf.h"
 
 int main(int argc, char* argv[]) {
     testing::InitGoogleTest(&argc, argv);

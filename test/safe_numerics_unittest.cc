@@ -9,10 +9,10 @@
 
 #include <limits>
 
-#include "butil/compiler_specific.h"
-#include "butil/numerics/safe_conversions.h"
-#include "butil/numerics/safe_math.h"
-#include "butil/type_traits.h"
+#include "flare/butil/compiler_specific.h"
+#include "flare/butil/numerics/safe_conversions.h"
+#include "flare/butil/numerics/safe_math.h"
+#include "flare/butil/type_traits.h"
 #include <gtest/gtest.h>
 
 using std::numeric_limits;

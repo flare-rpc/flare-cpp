@@ -21,10 +21,10 @@
 #include <fstream>
 #include <string>
 #include <google/protobuf/text_format.h>
-#include "butil/iobuf.h"
-#include "butil/third_party/rapidjson/rapidjson.h"
-#include "butil/time.h"
-#include "butil/gperftools_profiler.h"
+#include "flare/butil/iobuf.h"
+#include "flare/butil/third_party/rapidjson/rapidjson.h"
+#include "flare/butil/time.h"
+#include "flare/butil/gperftools_profiler.h"
 #include "json2pb/pb_to_json.h"
 #include "json2pb/json_to_pb.h"
 #include "json2pb/encode_decode.h"

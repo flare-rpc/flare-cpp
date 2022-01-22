@@ -1,7 +1,7 @@
 # Quick introduction
 
 ```c++
-#include <bvar/bvar.h>
+#include <flare/bvar/bvar.h>
 
 namespace foo {
 namespace bar {
@@ -105,7 +105,7 @@ About thread-safety:
 计时可以使用butil::Timer，接口如下：
 
 ```c++
-#include <butil/time.h>
+#include <flare/butil/time.h>
 namespace butil {
 class Timer {
 public:

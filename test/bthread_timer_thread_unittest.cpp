@@ -17,10 +17,10 @@
 
 #include <gtest/gtest.h>
 #include <gflags/gflags.h>
-#include "bthread/sys_futex.h"
-#include "bthread/timer_thread.h"
-#include "bthread/bthread.h"
-#include "butil/logging.h"
+#include "flare/bthread/sys_futex.h"
+#include "flare/bthread/timer_thread.h"
+#include "flare/bthread/bthread.h"
+#include "flare/butil/logging.h"
 
 namespace {
 

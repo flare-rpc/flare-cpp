@@ -18,10 +18,10 @@
 #include <gtest/gtest.h>
 #include <iostream>
 
-#include "butil/time.h"
-#include "butil/logging.h"
-#include "brpc/details/http_parser.h"
-#include "brpc/builtin/common.h"  // AppendFileName
+#include "flare/butil/time.h"
+#include "flare/butil/logging.h"
+#include "flare/brpc/details/http_parser.h"
+#include "flare/brpc/builtin/common.h"  // AppendFileName
 
 using brpc::http_parser;
 using brpc::http_parser_init;

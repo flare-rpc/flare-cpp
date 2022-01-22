@@ -4,8 +4,8 @@
 
 #include <string>
 
-#include "butil/memory/linked_ptr.h"
-#include "butil/strings/stringprintf.h"
+#include "flare/butil/memory/linked_ptr.h"
+#include "flare/butil/strings/stringprintf.h"
 #include <gtest/gtest.h>
 
 namespace {

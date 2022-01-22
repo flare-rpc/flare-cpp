@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "butil/build_config.h"
+#include "flare/butil/build_config.h"
 
 #if defined(OS_WIN)
 #include <windows.h>
@@ -24,23 +24,23 @@
 #include <set>
 #include <vector>
 
-#include "butil/file_util.h"
-#include "butil/files/file_enumerator.h"
-#include "butil/files/file_path.h"
-#include "butil/files/scoped_file.h"
-#include "butil/files/scoped_temp_dir.h"
-#include "butil/strings/utf_string_conversions.h"
-#include "butil/threading/platform_thread.h"
+#include "flare/butil/file_util.h"
+#include "flare/butil/files/file_enumerator.h"
+#include "flare/butil/files/file_path.h"
+#include "flare/butil/files/scoped_file.h"
+#include "flare/butil/files/scoped_temp_dir.h"
+#include "flare/butil/strings/utf_string_conversions.h"
+#include "flare/butil/threading/platform_thread.h"
 #include <gtest/gtest.h>
 #include <gtest/gtest.h>
 
 #if defined(OS_WIN)
-#include "butil/win/scoped_handle.h"
-#include "butil/win/windows_version.h"
+#include "flare/butil/win/scoped_handle.h"
+#include "flare/butil/win/windows_version.h"
 #endif
 
 #if defined(OS_ANDROID)
-#include "butil/android/content_uri_utils.h"
+#include "flare/butil/android/content_uri_utils.h"
 #endif
 
 // This macro helps avoid wrapped lines in the test structs.

@@ -45,8 +45,8 @@ Steps：
 
 Example code:
 ```c++
-#include <brpc/channel.h>
-#include <brpc/thrift_message.h>         // Defines ThriftStub
+#include <flare/brpc/channel.h>
+#include <flare/brpc/thrift_message.h>         // Defines ThriftStub
 ...
 
 DEFINE_string(server, "0.0.0.0:8019", "IP Address of thrift server");

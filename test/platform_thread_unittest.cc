@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "butil/compiler_specific.h"
-#include "butil/threading/platform_thread.h"
+#include "flare/butil/compiler_specific.h"
+#include "flare/butil/threading/platform_thread.h"
 
 #include <gtest/gtest.h>
 

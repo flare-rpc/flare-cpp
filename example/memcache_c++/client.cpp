@@ -18,12 +18,12 @@
 // A multi-threaded client getting keys from a memcache server constantly.
 
 #include <gflags/gflags.h>
-#include <bthread/bthread.h>
-#include <butil/logging.h>
-#include <butil/string_printf.h>
-#include <brpc/channel.h>
-#include <brpc/memcache.h>
-#include <brpc/policy/couchbase_authenticator.h>
+#include <flare/bthread/bthread.h>
+#include <flare/butil/logging.h>
+#include <flare/butil/string_printf.h>
+#include <flare/brpc/channel.h>
+#include <flare/brpc/memcache.h>
+#include <flare/brpc/policy/couchbase_authenticator.h>
 
 DEFINE_int32(thread_num, 10, "Number of threads to send requests");
 DEFINE_bool(use_bthread, false, "Use bthread to send requests");
@@ -43,12 +43,12 @@ DEFINE_int32(batch, 1, "Pipelined Operations");
 
 bvar::LatencyRecorder g_latency_recorder("client");
 bvar::Adder<int> g_error_count("client_error_count");
-butil::static_atomic<int> g_sender_count = BUTIL_STATIC_ATOMIC_INIT(0);
+flare::static_atomic<int> g_sender_count = FLARE_STATIC_ATOMIC_INIT(0);
 
 static void* sender(void* arg) {
     google::protobuf::RpcChannel* channel = 
         static_cast<google::protobuf::RpcChannel*>(arg);
-    const int base_index = g_sender_count.fetch_add(1, butil::memory_order_relaxed);
+    const int base_index = g_sender_count.fetch_add(1, std::memory_order_relaxed);
 
     std::string value;
     std::vector<std::pair<std::string, std::string> > kvs;

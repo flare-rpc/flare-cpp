@@ -17,14 +17,14 @@
 
 #include <execinfo.h>
 #include <gtest/gtest.h>
-#include "butil/time.h"
-#include "butil/macros.h"
-#include "butil/logging.h"
-#include "butil/logging.h"
-#include "butil/gperftools_profiler.h"
-#include "bthread/bthread.h"
-#include "bthread/unstable.h"
-#include "bthread/task_meta.h"
+#include "flare/butil/time.h"
+#include "flare/butil/macros.h"
+#include "flare/butil/logging.h"
+#include "flare/butil/logging.h"
+#include "flare/butil/gperftools_profiler.h"
+#include "flare/bthread/bthread.h"
+#include "flare/bthread/unstable.h"
+#include "flare/bthread/task_meta.h"
 
 namespace {
 class BthreadTest : public ::testing::Test{

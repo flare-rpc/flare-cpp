@@ -16,19 +16,19 @@
 // under the License.
 
 #include <sys/uio.h>               // writev
-#include "butil/compat.h"
+#include "flare/butil/compat.h"
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <gtest/gtest.h>
-#include "butil/time.h"
-#include "butil/macros.h"
-#include "butil/scoped_lock.h"
-#include "butil/fd_utility.h"
-#include "butil/logging.h"
-#include "butil/gperftools_profiler.h"
-#include "bthread/bthread.h"
-#include "bthread/task_control.h"
-#include "bthread/task_group.h"
+#include "flare/butil/time.h"
+#include "flare/butil/macros.h"
+#include "flare/butil/scoped_lock.h"
+#include "flare/butil/fd_utility.h"
+#include "flare/butil/logging.h"
+#include "flare/butil/gperftools_profiler.h"
+#include "flare/bthread/bthread.h"
+#include "flare/bthread/task_control.h"
+#include "flare/bthread/task_group.h"
 #if defined(OS_MACOSX)
 #include <sys/types.h>                           // struct kevent
 #include <sys/event.h>                           // kevent(), kqueue()

@@ -25,15 +25,15 @@
 #include <gtest/gtest.h>
 #include <gflags/gflags.h>
 #include <google/protobuf/descriptor.h>
-#include "butil/time.h"
-#include "butil/macros.h"
-#include "brpc/socket.h"
-#include "brpc/policy/most_common_message.h"
-#include "brpc/controller.h"
+#include "flare/butil/time.h"
+#include "flare/butil/macros.h"
+#include "flare/brpc/socket.h"
+#include "flare/brpc/policy/most_common_message.h"
+#include "flare/brpc/controller.h"
 
-#include "brpc/esp_message.h"
-#include "brpc/policy/esp_protocol.h"
-#include "brpc/policy/esp_authenticator.h"
+#include "flare/brpc/esp_message.h"
+#include "flare/brpc/policy/esp_protocol.h"
+#include "flare/brpc/policy/esp_authenticator.h"
 
 int main(int argc, char* argv[]) {
     testing::InitGoogleTest(&argc, argv);

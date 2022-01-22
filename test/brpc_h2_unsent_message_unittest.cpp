@@ -21,11 +21,11 @@
 
 #include <gflags/gflags.h>
 #include <gtest/gtest.h>
-#include "bthread/bthread.h"
-#include "butil/static_atomic.h"
-#include "brpc/policy/http_rpc_protocol.h"
-#include "brpc/policy/http2_rpc_protocol.h"
-#include "butil/gperftools_profiler.h"
+#include "flare/bthread/bthread.h"
+#include "flare/butil/static_atomic.h"
+#include "flare/brpc/policy/http_rpc_protocol.h"
+#include "flare/brpc/policy/http2_rpc_protocol.h"
+#include "flare/butil/gperftools_profiler.h"
 
 int main(int argc, char* argv[]) {
     testing::InitGoogleTest(&argc, argv);

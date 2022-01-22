@@ -23,12 +23,12 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <gtest/gtest.h>
-#include "butil/gperftools_profiler.h"
-#include "butil/time.h"
-#include "butil/macros.h"
-#include "butil/fd_utility.h"
-#include "brpc/event_dispatcher.h"
-#include "brpc/details/has_epollrdhup.h"
+#include "flare/butil/gperftools_profiler.h"
+#include "flare/butil/time.h"
+#include "flare/butil/macros.h"
+#include "flare/butil/fd_utility.h"
+#include "flare/brpc/event_dispatcher.h"
+#include "flare/brpc/details/has_epollrdhup.h"
 
 class EventDispatcherTest : public ::testing::Test{
 protected:

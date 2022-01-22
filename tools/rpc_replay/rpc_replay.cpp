@@ -17,16 +17,16 @@
 
 
 #include <gflags/gflags.h>
-#include <butil/logging.h>
-#include <butil/time.h>
-#include <butil/macros.h>
-#include <butil/file_util.h>
-#include <bvar/bvar.h>
-#include <bthread/bthread.h>
-#include <brpc/channel.h>
-#include <brpc/server.h>
-#include <brpc/rpc_dump.h>
-#include <brpc/serialized_request.h>
+#include <flare/butil/logging.h>
+#include <flare/butil/time.h>
+#include <flare/butil/macros.h>
+#include <flare/butil/file_util.h>
+#include <flare/bvar/bvar.h>
+#include <flare/bthread/bthread.h>
+#include <flare/brpc/channel.h>
+#include <flare/brpc/server.h>
+#include <flare/brpc/rpc_dump.h>
+#include <flare/brpc/serialized_request.h>
 #include "info_thread.h"
 
 DEFINE_string(dir, "", "The directory of dumped requests");
@@ -124,11 +124,11 @@ static void handle_response(brpc::Controller* cntl, int64_t start_time,
     delete cntl;
 }
 
-butil::atomic<int> g_thread_offset(0);
+std::atomic<int> g_thread_offset(0);
 
 static void* replay_thread(void* arg) {
     ChannelGroup* chan_group = static_cast<ChannelGroup*>(arg);
-    const int thread_offset = g_thread_offset.fetch_add(1, butil::memory_order_relaxed);
+    const int thread_offset = g_thread_offset.fetch_add(1, std::memory_order_relaxed);
     double req_rate = FLAGS_qps / (double)FLAGS_thread_num;
     brpc::SerializedRequest req;
     std::deque<int64_t> timeq;

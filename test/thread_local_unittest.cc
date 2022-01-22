@@ -2,10 +2,10 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "butil/logging.h"
-#include "butil/threading/simple_thread.h"
-#include "butil/threading/thread_local.h"
-#include "butil/synchronization/waitable_event.h"
+#include "flare/butil/logging.h"
+#include "flare/butil/threading/simple_thread.h"
+#include "flare/butil/threading/thread_local.h"
+#include "flare/butil/synchronization/waitable_event.h"
 #include <gtest/gtest.h>
 
 namespace butil {

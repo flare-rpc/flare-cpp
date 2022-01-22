@@ -17,15 +17,15 @@
 
 #include <gtest/gtest.h>
 #include <gflags/gflags.h>
-#include "butil/static_atomic.h"
-#include "butil/time.h"
-#include "butil/macros.h"
-#include "butil/logging.h"
-#include "butil/thread_local.h"
-#include <bthread/butex.h>
-#include "butil/logging.h"
-#include "bthread/bthread.h"
-#include "bthread/task_control.h"
+#include "flare/butil/static_atomic.h"
+#include "flare/butil/time.h"
+#include "flare/butil/macros.h"
+#include "flare/butil/logging.h"
+#include "flare/butil/thread_local.h"
+#include <flare/bthread/butex.h>
+#include "flare/butil/logging.h"
+#include "flare/bthread/bthread.h"
+#include "flare/bthread/task_control.h"
 
 namespace bthread {
     extern TaskControl* g_task_control;

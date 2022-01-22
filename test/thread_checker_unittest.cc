@@ -2,11 +2,11 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "butil/basictypes.h"
-#include "butil/logging.h"
-#include "butil/memory/scoped_ptr.h"
-#include "butil/threading/thread_checker.h"
-#include "butil/threading/simple_thread.h"
+#include "flare/butil/basictypes.h"
+#include "flare/butil/logging.h"
+#include "flare/butil/memory/scoped_ptr.h"
+#include "flare/butil/threading/thread_checker.h"
+#include "flare/butil/threading/simple_thread.h"
 #include <gtest/gtest.h>
 
 // Duplicated from butil/threading/thread_checker.h so that we can be

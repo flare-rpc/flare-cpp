@@ -22,11 +22,11 @@
 #include <pthread.h>
 #include <gtest/gtest.h>
 #include <gflags/gflags.h>
-#include "butil/macros.h"
-#include "bthread/bthread.h"
-#include "brpc/circuit_breaker.h"
-#include "brpc/socket.h"
-#include "brpc/server.h"
+#include "flare/butil/macros.h"
+#include "flare/bthread/bthread.h"
+#include "flare/brpc/circuit_breaker.h"
+#include "flare/brpc/socket.h"
+#include "flare/brpc/server.h"
 #include "echo.pb.h"
 
 namespace {

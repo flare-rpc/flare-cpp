@@ -2,11 +2,11 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "butil/at_exit.h"
-#include "butil/atomic_sequence_num.h"
-#include "butil/lazy_instance.h"
-#include "butil/memory/aligned_memory.h"
-#include "butil/threading/simple_thread.h"
+#include "flare/butil/at_exit.h"
+#include "flare/butil/atomic_sequence_num.h"
+#include "flare/butil/lazy_instance.h"
+#include "flare/butil/memory/aligned_memory.h"
+#include "flare/butil/threading/simple_thread.h"
 #include <gtest/gtest.h>
 
 namespace {

@@ -12,10 +12,10 @@
 #include <algorithm>
 #include <limits>
 
-#include "butil/file_util.h"
-#include "butil/logging.h"
-#include "butil/memory/scoped_ptr.h"
-#include "butil/build_config.h"
+#include "flare/butil/file_util.h"
+#include "flare/butil/logging.h"
+#include "flare/butil/memory/scoped_ptr.h"
+#include "flare/butil/build_config.h"
 #include <gtest/gtest.h>
 
 #if defined(OS_POSIX)

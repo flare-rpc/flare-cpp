@@ -21,11 +21,11 @@
 
 #include "gen-cpp/echo_types.h"
 
-#include <butil/logging.h>
-#include <butil/time.h>
-#include <brpc/channel.h>
-#include <brpc/thrift_message.h>
-#include <bvar/bvar.h>
+#include <flare/butil/logging.h>
+#include <flare/butil/time.h>
+#include <flare/brpc/channel.h>
+#include <flare/brpc/thrift_message.h>
+#include <flare/bvar/bvar.h>
 
 bvar::LatencyRecorder g_latency_recorder("client");
 

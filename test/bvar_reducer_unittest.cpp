@@ -17,12 +17,12 @@
 
 #include <limits>                           //std::numeric_limits
 
-#include "bvar/reducer.h"
+#include "flare/bvar/reducer.h"
 
-#include "butil/time.h"
-#include "butil/macros.h"
-#include "butil/string_printf.h"
-#include "butil/string_splitter.h"
+#include "flare/butil/time.h"
+#include "flare/butil/macros.h"
+#include "flare/butil/string_printf.h"
+#include "flare/butil/string_splitter.h"
 
 #include <gtest/gtest.h>
 

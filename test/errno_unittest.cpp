@@ -16,7 +16,7 @@
 // under the License.
 
 #include <gtest/gtest.h>
-#include "butil/errno.h"
+#include "flare/butil/errno.h"
 
 class ErrnoTest : public ::testing::Test{
 protected:

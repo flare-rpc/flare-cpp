@@ -4,9 +4,9 @@
 
 #include <sstream>
 
-#include "butil/strings/string16.h"
+#include "flare/butil/strings/string16.h"
 
-#include "butil/strings/utf_string_conversions.h"
+#include "flare/butil/strings/utf_string_conversions.h"
 #include <gtest/gtest.h>
 
 namespace butil {

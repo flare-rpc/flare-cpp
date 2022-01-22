@@ -46,7 +46,7 @@ serialized request (body_size - meta_size bytes, including attachment)
 brpc提供了[SampleIterator](https://github.com/brpc/brpc/blob/master/src/brpc/rpc_dump.h)从一个采样目录下的所有文件中依次读取所有的被采样请求，用户可根据需求把serialized request反序列化为protobuf请求，做一些二次开发。
 
 ```c++
-#include <brpc/rpc_dump.h>
+#include <flare/brpc/rpc_dump.h>
 ...
 brpc::SampleIterator it("./rpc_data/rpc_dump/echo_server");         
 for (brpc::SampledRequest* req = it->Next(); req != NULL; req = it->Next()) {

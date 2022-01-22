@@ -19,7 +19,7 @@
 
 #include <gflags/gflags.h>
 
-#include <butil/logging.h>
+#include <flare/butil/logging.h>
 
 #include "gen-cpp/EchoService.h"
 

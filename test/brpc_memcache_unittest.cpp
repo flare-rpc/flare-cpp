@@ -16,10 +16,10 @@
 // under the License.
 
 #include <iostream>
-#include "butil/time.h"
-#include "butil/logging.h"
-#include <brpc/memcache.h>
-#include <brpc/channel.h>
+#include "flare/butil/time.h"
+#include "flare/butil/logging.h"
+#include <flare/brpc/memcache.h>
+#include <flare/brpc/channel.h>
 #include <gtest/gtest.h>
 
 namespace brpc {

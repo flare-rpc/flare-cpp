@@ -16,9 +16,9 @@
 // under the License.
 
 #include <gflags/gflags.h>
-#include <butil/logging.h>
-#include <brpc/channel.h>
-#include <brpc/server.h>
+#include <flare/butil/logging.h>
+#include <flare/brpc/channel.h>
+#include <flare/brpc/server.h>
 #include "echo.pb.h"
 
 DEFINE_int32(timeout_ms, 100, "RPC timeout in milliseconds");

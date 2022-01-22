@@ -8,14 +8,14 @@
 #include <algorithm>
 #include <vector>
 
-#include "butil/logging.h"
-#include "butil/memory/scoped_ptr.h"
-#include "butil/synchronization/condition_variable.h"
-#include "butil/synchronization/lock.h"
-#include "butil/synchronization/spin_wait.h"
-#include "butil/threading/platform_thread.h"
-#include "butil/threading/thread_collision_warner.h"
-#include "butil/time/time.h"
+#include "flare/butil/logging.h"
+#include "flare/butil/memory/scoped_ptr.h"
+#include "flare/butil/synchronization/condition_variable.h"
+#include "flare/butil/synchronization/lock.h"
+#include "flare/butil/synchronization/spin_wait.h"
+#include "flare/butil/threading/platform_thread.h"
+#include "flare/butil/threading/thread_collision_warner.h"
+#include "flare/butil/time/time.h"
 #include <gtest/gtest.h>
 #include <gtest/gtest.h>
 

@@ -2,13 +2,13 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "butil/memory/weak_ptr.h"
+#include "flare/butil/memory/weak_ptr.h"
 
 #include <string>
 
-#include "butil/debug/leak_annotations.h"
-#include "butil/memory/scoped_ptr.h"
-#include "butil/synchronization/waitable_event.h"
+#include "flare/butil/debug/leak_annotations.h"
+#include "flare/butil/memory/scoped_ptr.h"
+#include "flare/butil/synchronization/waitable_event.h"
 #include <gtest/gtest.h>
 
 namespace butil {

@@ -16,7 +16,7 @@
 // under the License.
 
 #include <gtest/gtest.h>
-#include "butil/unique_ptr.h"
+#include "flare/butil/unique_ptr.h"
 
 namespace {
 

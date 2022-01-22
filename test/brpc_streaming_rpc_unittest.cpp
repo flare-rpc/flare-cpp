@@ -21,10 +21,10 @@
 
 #include <gtest/gtest.h>
 
-#include "brpc/server.h"
-#include "brpc/controller.h"
-#include "brpc/channel.h"
-#include "brpc/stream_impl.h"
+#include "flare/brpc/server.h"
+#include "flare/brpc/controller.h"
+#include "flare/brpc/channel.h"
+#include "flare/brpc/stream_impl.h"
 #include "echo.pb.h"
 
 class AfterAcceptStream {

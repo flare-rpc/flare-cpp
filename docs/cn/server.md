@@ -308,7 +308,7 @@ server端会自动尝试其支持的协议，无需用户指定。`cntl->protoco
 - 百盟的协议，显示为”nova_pbrpc“, 默认不启用，开启方式：
 
   ```c++
-  #include <brpc/policy/nova_pbrpc_protocol.h>
+  #include <flare/brpc/policy/nova_pbrpc_protocol.h>
   ...
   ServerOptions options;
   ...
@@ -318,7 +318,7 @@ server端会自动尝试其支持的协议，无需用户指定。`cntl->protoco
 - public_pbrpc协议，显示为"public_pbrpc"，默认不启用，开启方式：
 
   ```c++
-  #include <brpc/policy/public_pbrpc_protocol.h>
+  #include <flare/brpc/policy/public_pbrpc_protocol.h>
   ...
   ServerOptions options;
   ...
@@ -328,7 +328,7 @@ server端会自动尝试其支持的协议，无需用户指定。`cntl->protoco
 - nshead+mcpack协议，显示为"nshead_mcpack"，默认不启用，开启方式：
 
   ```c++
-  #include <brpc/policy/nshead_mcpack_protocol.h>
+  #include <flare/brpc/policy/nshead_mcpack_protocol.h>
   ...
   ServerOptions options;
   ...

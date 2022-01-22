@@ -17,7 +17,7 @@
 
 #include <gtest/gtest.h>
 
-#include "brpc/uri.h"
+#include "flare/brpc/uri.h"
 
 TEST(URITest, everything) {
     brpc::URI uri;

@@ -2,9 +2,9 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "butil/big_endian.h"
+#include "flare/butil/big_endian.h"
 
-#include "butil/strings/string_piece.h"
+#include "flare/butil/strings/string_piece.h"
 #include <gtest/gtest.h>
 
 namespace butil {

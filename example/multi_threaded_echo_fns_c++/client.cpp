@@ -18,13 +18,13 @@
 // A client sending requests to servers(discovered by naming service) by multiple threads.
 
 #include <gflags/gflags.h>
-#include <bthread/bthread.h>
-#include <butil/logging.h>
-#include <butil/string_printf.h>
-#include <butil/time.h>
-#include <butil/macros.h>
-#include <brpc/channel.h>
-#include <brpc/server.h>
+#include <flare/bthread/bthread.h>
+#include <flare/butil/logging.h>
+#include <flare/butil/string_printf.h>
+#include <flare/butil/time.h>
+#include <flare/butil/macros.h>
+#include <flare/brpc/channel.h>
+#include <flare/brpc/server.h>
 #include <deque>
 #include "echo.pb.h"
 
@@ -45,7 +45,7 @@ std::string g_attachment;
 
 bvar::LatencyRecorder g_latency_recorder("client");
 bvar::Adder<int> g_error_count("client_error_count");
-butil::static_atomic<int> g_sender_count = BUTIL_STATIC_ATOMIC_INIT(0);
+flare::static_atomic<int> g_sender_count = FLARE_STATIC_ATOMIC_INIT(0);
 
 static void* sender(void* arg) {
     // Normally, you should not call a Channel directly, but instead construct
@@ -60,7 +60,7 @@ static void* sender(void* arg) {
         example::EchoResponse response;
         brpc::Controller cntl;
 
-        const int thread_index = g_sender_count.fetch_add(1, butil::memory_order_relaxed);
+        const int thread_index = g_sender_count.fetch_add(1, std::memory_order_relaxed);
         const int input = ((thread_index & 0xFFF) << 20) | (log_id & 0xFFFFF);
         request.set_value(input);
         cntl.set_log_id(log_id ++);  // set by user

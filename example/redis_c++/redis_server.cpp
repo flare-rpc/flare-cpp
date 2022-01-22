@@ -19,14 +19,14 @@
 // get, but it's sufficient that you can get the idea how to
 // implement brpc::RedisCommandHandler.
 
-#include <brpc/server.h>
-#include <brpc/redis.h>
-#include <butil/crc32c.h>
-#include <butil/strings/string_split.h>
+#include <flare/brpc/server.h>
+#include <flare/brpc/redis.h>
+#include <flare/butil/crc32c.h>
+#include <flare/butil/strings/string_split.h>
 #include <gflags/gflags.h>
 #include <unordered_map>
 
-#include <butil/time.h>
+#include <flare/butil/time.h>
 
 DEFINE_int32(port, 6379, "TCP Port of this server");
 

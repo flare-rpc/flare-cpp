@@ -2,15 +2,15 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "butil/rand_util.h"
-#include "butil/fast_rand.h"
-#include "butil/time.h"
+#include "flare/butil/rand_util.h"
+#include "flare/butil/fast_rand.h"
+#include "flare/butil/time.h"
 #include <algorithm>
 #include <limits>
 
-#include "butil/logging.h"
-#include "butil/memory/scoped_ptr.h"
-#include "butil/time/time.h"
+#include "flare/butil/logging.h"
+#include "flare/butil/memory/scoped_ptr.h"
+#include "flare/butil/time/time.h"
 #include <gtest/gtest.h>
 
 namespace {

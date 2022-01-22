@@ -560,7 +560,7 @@ If the RPC fails due to request(EREQUEST), no retry will be done because server 
 Users can inherit [brpc::RetryPolicy](https://github.com/brpc/brpc/blob/master/src/brpc/retry_policy.h) to customize conditions of retrying. For example brpc does not retry for http/h2 related errors by default. If you want to retry for HTTP_STATUS_FORBIDDEN(403) in your app, you can do as follows:
 
 ```c++
-#include <brpc/retry_policy.h>
+#include <flare/brpc/retry_policy.h>
 
 class MyRetryPolicy : public brpc::RetryPolicy {
 public:

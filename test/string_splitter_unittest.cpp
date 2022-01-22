@@ -16,7 +16,7 @@
 // under the License.
 
 #include <gtest/gtest.h>
-#include "butil/string_splitter.h"
+#include "flare/butil/string_splitter.h"
 #include <stdlib.h>
 
 namespace {

@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "butil/files/dir_reader_posix.h"
+#include "flare/butil/files/dir_reader_posix.h"
 
 #include <fcntl.h>
 #include <stdio.h>
@@ -10,11 +10,11 @@
 #include <string.h>
 #include <unistd.h>
 
-#include "butil/logging.h"
+#include "flare/butil/logging.h"
 #include <gtest/gtest.h>
 
 #if defined(OS_ANDROID)
-#include "butil/os_compat_android.h"
+#include "flare/butil/os_compat_android.h"
 #endif
 
 namespace butil {

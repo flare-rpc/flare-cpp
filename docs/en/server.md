@@ -311,7 +311,7 @@ Server detects supported protocols automatically, without assignment from users.
 - Protocol of Baidu ads union, shown as "nova_pbrpc", disabled by default. Enabling method:
 
   ```c++
-  #include <brpc/policy/nova_pbrpc_protocol.h>
+  #include <flare/brpc/policy/nova_pbrpc_protocol.h>
   ...
   ServerOptions options;
   ...
@@ -321,7 +321,7 @@ Server detects supported protocols automatically, without assignment from users.
 - Protocol of public_pbrpc, shown as "public_pbrpc", disabled by default. Enabling method:
 
   ```c++
-  #include <brpc/policy/public_pbrpc_protocol.h>
+  #include <flare/brpc/policy/public_pbrpc_protocol.h>
   ...
   ServerOptions options;
   ...
@@ -331,7 +331,7 @@ Server detects supported protocols automatically, without assignment from users.
 - Protocol of nshead+mcpack, shown as "nshead_mcpack", disabled by default. Enabling method:
 
   ```c++
-  #include <brpc/policy/nshead_mcpack_protocol.h>
+  #include <flare/brpc/policy/nshead_mcpack_protocol.h>
   ...
   ServerOptions options;
   ...

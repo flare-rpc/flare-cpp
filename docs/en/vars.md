@@ -80,7 +80,7 @@ brpc calculates latency distributions of services automatically, which do not ne
 `bvar::LatencyRecorder` is able to calculate latency distributions of any code, as depicted below. (checkout [bvar-c++](bvar_c++.md) for details):
 
 ```c++
-#include <bvar/bvar.h>
+#include <flare/bvar/bvar.h>
 
 ...
 bvar::LatencyRecorder g_latency_recorder("client");  // expose this recorder

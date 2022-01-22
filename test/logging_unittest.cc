@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "butil/basictypes.h"
-#include "butil/logging.h"
+#include "flare/butil/basictypes.h"
+#include "flare/butil/logging.h"
 
 #include <gtest/gtest.h>
 #include <gflags/gflags.h>

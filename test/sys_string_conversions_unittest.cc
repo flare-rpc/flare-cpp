@@ -4,10 +4,10 @@
 
 #include <string>
 
-#include "butil/basictypes.h"
-#include "butil/strings/string_piece.h"
-#include "butil/strings/sys_string_conversions.h"
-#include "butil/strings/utf_string_conversions.h"
+#include "flare/butil/basictypes.h"
+#include "flare/butil/strings/string_piece.h"
+#include "flare/butil/strings/sys_string_conversions.h"
+#include "flare/butil/strings/utf_string_conversions.h"
 #include "scoped_locale.h"
 #include <gtest/gtest.h>
 

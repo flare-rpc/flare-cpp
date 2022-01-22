@@ -17,14 +17,14 @@
 
 #include <map>
 #include <gtest/gtest.h>
-#include "butil/static_atomic.h"
-#include "butil/time.h"
-#include "butil/macros.h"
-#include "butil/scoped_lock.h"
-#include "butil/gperftools_profiler.h"
-#include "bthread/bthread.h"
-#include "bthread/condition_variable.h"
-#include "bthread/stack.h"
+#include "flare/butil/static_atomic.h"
+#include "flare/butil/time.h"
+#include "flare/butil/macros.h"
+#include "flare/butil/scoped_lock.h"
+#include "flare/butil/gperftools_profiler.h"
+#include "flare/bthread/bthread.h"
+#include "flare/bthread/condition_variable.h"
+#include "flare/bthread/stack.h"
 
 namespace {
 struct Arg {

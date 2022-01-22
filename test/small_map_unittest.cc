@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "butil/containers/small_map.h"
+#include "flare/butil/containers/small_map.h"
 
 #include <stddef.h>
 
@@ -10,8 +10,8 @@
 #include <functional>
 #include <map>
 
-#include "butil/containers/hash_tables.h"
-#include "butil/logging.h"
+#include "flare/butil/containers/hash_tables.h"
+#include "flare/butil/logging.h"
 #include <gtest/gtest.h>
 
 namespace butil {

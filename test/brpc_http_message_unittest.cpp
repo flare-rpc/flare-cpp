@@ -20,9 +20,9 @@
 #include <gtest/gtest.h>
 #include <google/protobuf/descriptor.h>
 
-#include "brpc/server.h"
-#include "brpc/details/http_message.h"
-#include "brpc/policy/http_rpc_protocol.h"
+#include "flare/brpc/server.h"
+#include "flare/brpc/details/http_message.h"
+#include "flare/brpc/policy/http_rpc_protocol.h"
 #include "echo.pb.h"
 
 namespace brpc {

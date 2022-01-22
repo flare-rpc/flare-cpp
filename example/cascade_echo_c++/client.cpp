@@ -19,14 +19,14 @@
 // again according to the field `depth'
 
 #include <gflags/gflags.h>
-#include <butil/logging.h>
-#include <butil/time.h>
-#include <bthread/bthread.h>
-#include <brpc/channel.h>
-#include <brpc/server.h>
+#include <flare/butil/logging.h>
+#include <flare/butil/time.h>
+#include <flare/bthread/bthread.h>
+#include <flare/brpc/channel.h>
+#include <flare/brpc/server.h>
 #include "echo.pb.h"
-#include <bvar/bvar.h>
-#include <butil/fast_rand.h>
+#include <flare/bvar/bvar.h>
+#include <flare/butil/fast_rand.h>
 
 DEFINE_int32(thread_num, 2, "Number of threads to send requests");
 DEFINE_bool(use_bthread, false, "Use bthread to send requests");

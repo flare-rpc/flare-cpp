@@ -4,9 +4,9 @@
 
 #include <algorithm>
 
-#include "butil/logging.h"
-#include "butil/strings/string_piece.h"
-#include "butil/strings/utf_offset_string_conversions.h"
+#include "flare/butil/logging.h"
+#include "flare/butil/strings/string_piece.h"
+#include "flare/butil/strings/utf_offset_string_conversions.h"
 #include <gtest/gtest.h>
 
 namespace butil {

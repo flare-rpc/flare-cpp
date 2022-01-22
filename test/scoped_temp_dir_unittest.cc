@@ -4,9 +4,9 @@
 
 #include <string>
 
-#include "butil/file_util.h"
-#include "butil/files/file.h"
-#include "butil/files/scoped_temp_dir.h"
+#include "flare/butil/file_util.h"
+#include "flare/butil/files/file.h"
+#include "flare/butil/files/scoped_temp_dir.h"
 #include <gtest/gtest.h>
 
 namespace butil {

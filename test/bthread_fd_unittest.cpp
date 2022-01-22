@@ -15,23 +15,23 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#include "butil/compat.h"
+#include "flare/butil/compat.h"
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/utsname.h>                           // uname
 #include <fcntl.h>
 #include <gtest/gtest.h>
 #include <pthread.h>
-#include "butil/gperftools_profiler.h"
-#include "butil/time.h"
-#include "butil/macros.h"
-#include "butil/fd_utility.h"
-#include "butil/logging.h"
-#include "bthread/task_control.h"
-#include "bthread/task_group.h"
-#include "bthread/interrupt_pthread.h"
-#include "bthread/bthread.h"
-#include "bthread/unstable.h"
+#include "flare/butil/gperftools_profiler.h"
+#include "flare/butil/time.h"
+#include "flare/butil/macros.h"
+#include "flare/butil/fd_utility.h"
+#include "flare/butil/logging.h"
+#include "flare/bthread/task_control.h"
+#include "flare/bthread/task_group.h"
+#include "flare/bthread/interrupt_pthread.h"
+#include "flare/bthread/bthread.h"
+#include "flare/bthread/unstable.h"
 #if defined(OS_MACOSX)
 #include <sys/types.h>                           // struct kevent
 #include <sys/event.h>                           // kevent(), kqueue()

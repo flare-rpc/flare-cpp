@@ -18,8 +18,8 @@ Turn on [-redis_verbose](#Debug) to print contents of all redis requests and res
 Create a `Channel` for accessing redis:
 
 ```c++
-#include <brpc/redis.h>
-#include <brpc/channel.h>
+#include <flare/brpc/redis.h>
+#include <flare/brpc/channel.h>
   
 brpc::ChannelOptions options;
 options.protocol = brpc::PROTOCOL_REDIS;
