@@ -49,12 +49,12 @@ void ConditionVariable::TimedWait(const butil::TimeDelta& max_time) {
   gettimeofday(&now, NULL);
   struct timespec absolute_time;
   absolute_time.tv_sec = now.tv_sec;
-  absolute_time.tv_nsec = now.tv_usec * Time::kNanosecondsPerMicrosecond;
+  absolute_time.tv_nsec = now.tv_usec * butil::Time::kNanosecondsPerMicrosecond;
 
   absolute_time.tv_sec += relative_time.tv_sec;
   absolute_time.tv_nsec += relative_time.tv_nsec;
-  absolute_time.tv_sec += absolute_time.tv_nsec / Time::kNanosecondsPerSecond;
-  absolute_time.tv_nsec %= Time::kNanosecondsPerSecond;
+  absolute_time.tv_sec += absolute_time.tv_nsec / butil::Time::kNanosecondsPerSecond;
+  absolute_time.tv_nsec %= butil::Time::kNanosecondsPerSecond;
   DCHECK_GE(absolute_time.tv_sec, now.tv_sec);  // Overflow paranoia
 
   int rv = pthread_cond_timedwait(&condition_, user_mutex_, &absolute_time);
