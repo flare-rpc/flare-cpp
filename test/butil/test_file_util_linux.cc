@@ -13,7 +13,7 @@
 namespace butil {
 
 bool EvictFileFromSystemCache(const FilePath& file) {
-  ScopedFD fd(open(file.value().c_str(), O_RDONLY));
+  flare::base::ScopedFD fd(open(file.value().c_str(), O_RDONLY));
   if (!fd.is_valid())
     return false;
   if (fdatasync(fd.get()) != 0)
