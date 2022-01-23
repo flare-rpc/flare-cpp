@@ -63,12 +63,12 @@ namespace {
         rc = flare::base::read_command_output_through_clone(oss, "kill -9 $$");
         ASSERT_EQ(-1, rc);
         ASSERT_EQ(errno, ECHILD);
-        ASSERT_TRUE(std::string_view(oss.str()).ends_with("was killed by signal 9"));
+        ASSERT_TRUE(flare::base::ends_with(oss.str(), "was killed by signal 9"));
         oss.str("");
         rc = flare::base::read_command_output_through_clone(oss, "kill -15 $$");
         ASSERT_EQ(-1, rc);
         ASSERT_EQ(errno, ECHILD);
-        ASSERT_TRUE(std::string_view(oss.str()).ends_with("was killed by signal 15"));
+        ASSERT_TRUE(flare::base::ends_with(oss.str(), "was killed by signal 15"));
 
         oss.str("");
         ASSERT_EQ(0, flare::base::read_command_output_through_clone(oss, "for i in `seq 1 100000`; do echo -n '=' ; done"));
