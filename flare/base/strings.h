@@ -8,6 +8,7 @@
 #include <string>
 #include <vector>
 #include <cstring>
+#include <algorithm>
 #include <stdarg.h>
 #include <string_view>
 #include "flare/base/profile.h"
