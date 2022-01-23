@@ -1,19 +1,3 @@
-// Licensed to the Apache Software Foundation (ASF) under one
-// or more contributor license agreements.  See the NOTICE file
-// distributed with this work for additional information
-// regarding copyright ownership.  The ASF licenses this file
-// to you under the Apache License, Version 2.0 (the
-// "License"); you may not use this file except in compliance
-// with the License.  You may obtain a copy of the License at
-//
-//   http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing,
-// software distributed under the License is distributed on an
-// "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-// KIND, either express or implied.  See the License for the
-// specific language governing permissions and limitations
-// under the License.
 
 #include <gtest/gtest.h>
 #include <stdio.h>
@@ -22,12 +6,11 @@
 #include <random>
 #include <vector>
 #include "flare/base/time.h"
-#include "flare/butil/macros.h"
 #include "flare/base/strings.h"
 #include "flare/base/logging.h"
 #include "flare/container/hash_tables.h"
 #include "flare/container/flat_map.h"
-#include "flare/butil/containers/pooled_map.h"
+#include "pooled_map.h"
 #include "flare/container/case_ignored_flat_map.h"
 
 namespace {
@@ -88,11 +71,11 @@ namespace {
     }
 
     TEST_F(FlatMapTest, swap_pooled_allocator) {
-        butil::details::PooledAllocator<int, 128> a1;
+        flare::container::details::PooledAllocator<int, 128> a1;
         a1.allocate(1);
         const void *p1 = a1._pool._blocks;
 
-        butil::details::PooledAllocator<int, 128> a2;
+        flare::container::details::PooledAllocator<int, 128> a2;
         a2.allocate(1);
         const void *p2 = a2._pool._blocks;
 
@@ -650,8 +633,8 @@ namespace {
         std::sort(keys_out.begin(), keys_out.end());
         keys_out.resize(std::unique(keys_out.begin(), keys_out.end()) - keys_out.begin());
         LOG_IF(INFO, keys_out.size() != old_keys_out_size)
-        << "Iterated " << old_keys_out_size - keys_out.size()
-        << " duplicated elements";
+                        << "Iterated " << old_keys_out_size - keys_out.size()
+                        << " duplicated elements";
         ASSERT_EQ(m1.size(), keys_out.size());
         for (size_t i = 0; i < keys_out.size(); ++i) {
             if (i) {
@@ -910,7 +893,7 @@ namespace {
 
         for (int i = 0; i < 10; ++i) {
             tm3.start();
-            butil::PooledMap<std::string, std::string> m3;
+            flare::container::PooledMap<std::string, std::string> m3;
             m3["Content-type"] = "application/json";
             m3["Request-Id"] = "true";
             m3["Status-Code"] = "200";
@@ -1104,7 +1087,7 @@ namespace {
         std::vector<uint64_t> keys;
         flare::container::FlatMap<uint64_t, T> id_map;
         std::map < uint64_t, T > std_map;
-        butil::PooledMap<uint64_t, T> pooled_map;
+        flare::container::PooledMap<uint64_t, T> pooled_map;
         flare::container::hash_map<uint64_t, T> hash_map;
         flare::base::stop_watcher id_tm, std_tm, pooled_tm, hash_tm;
 
@@ -1168,7 +1151,7 @@ namespace {
 
             LOG(INFO) << (random ? "Randomly" : "Sequentially")
                       << " inserting " << keys.size()
-                      << " into FlatMap/std::map/butil::PooledMap/flare::container::hash_map takes "
+                      << " into FlatMap/std::map/flare::container::PooledMap/flare::container::hash_map takes "
                       << id_tm.n_elapsed() / keys.size()
                       << "/" << std_tm.n_elapsed() / keys.size()
                       << "/" << pooled_tm.n_elapsed() / keys.size()
@@ -1204,7 +1187,7 @@ namespace {
 
             LOG(INFO) << (random ? "Randomly" : "Sequentially")
                       << " erasing " << keys.size()
-                      << " from FlatMap/std::map/butil::PooledMap/flare::container::hash_map takes "
+                      << " from FlatMap/std::map/flare::container::PooledMap/flare::container::hash_map takes "
                       << id_tm.n_elapsed() / keys.size()
                       << "/" << std_tm.n_elapsed() / keys.size()
                       << "/" << pooled_tm.n_elapsed() / keys.size()
@@ -1220,7 +1203,7 @@ namespace {
         std::vector<uint64_t> rkeys;
         flare::container::FlatMap<uint64_t, T> id_map;
         std::map < uint64_t, T > std_map;
-        butil::PooledMap<uint64_t, T> pooled_map;
+        flare::container::PooledMap<uint64_t, T> pooled_map;
         flare::container::hash_map<uint64_t, T> hash_map;
 
         flare::base::stop_watcher id_tm, std_tm, pooled_tm, hash_tm;
@@ -1282,7 +1265,7 @@ namespace {
             hash_tm.stop();
 
             LOG(INFO) << "Seeking " << keys.size()
-                      << " from FlatMap/std::map/butil::PooledMap/flare::container::hash_map takes "
+                      << " from FlatMap/std::map/flare::container::PooledMap/flare::container::hash_map takes "
                       << id_tm.n_elapsed() / keys.size()
                       << "/" << std_tm.n_elapsed() / keys.size()
                       << "/" << pooled_tm.n_elapsed() / keys.size()

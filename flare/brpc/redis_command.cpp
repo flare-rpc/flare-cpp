@@ -363,7 +363,7 @@ RedisCommandParser::RedisCommandParser()
 
 ParseError RedisCommandParser::Consume(butil::IOBuf& buf,
                                        std::vector<std::string_view>* args,
-                                       butil::Arena* arena) {
+                                       flare::memory::Arena* arena) {
     const char* pfc = (const char*)buf.fetch1();
     if (pfc == NULL) {
         return PARSE_ERROR_NOT_ENOUGH_DATA;

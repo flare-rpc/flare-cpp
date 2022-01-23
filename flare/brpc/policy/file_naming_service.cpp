@@ -19,7 +19,7 @@
 #include <stdio.h>                                      // getline
 #include <string>                                       // std::string
 #include <set>                                          // std::set
-#include "flare/butil/files/file_watcher.h"                    // FileWatcher
+#include "flare/base/file_watcher.h"                    // file_watcher
 #include "flare/base/scoped_file.h"                     // scoped_file
 #include "flare/bthread/bthread.h"                            // bthread_usleep
 #include "flare/brpc/log.h"
@@ -118,9 +118,9 @@ int FileNamingService::GetServers(const char *service_name,
 int FileNamingService::RunNamingService(const char* service_name,
                                         NamingServiceActions* actions) {
     std::vector<ServerNode> servers;
-    butil::FileWatcher fw;
+    flare::base::file_watcher fw;
     if (fw.init(service_name) < 0) {
-        LOG(ERROR) << "Fail to init FileWatcher on `" << service_name << "'";
+        LOG(ERROR) << "Fail to init file_watcher on `" << service_name << "'";
         return -1;
     }
     for (;;) {
@@ -131,7 +131,7 @@ int FileNamingService::RunNamingService(const char* service_name,
         actions->ResetServers(servers);
 
         for (;;) {
-            butil::FileWatcher::Change change = fw.check_and_consume();
+            flare::base::file_watcher::Change change = fw.check_and_consume();
             if (change > 0) {
                 break;
             }

@@ -1,36 +1,3 @@
-// Copyright (c) 2012 The Chromium Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style license that can be
-// found in the LICENSE file.
-
-// The LazyInstance<Type, Traits> class manages a single instance of Type,
-// which will be lazily created on the first time it's accessed.  This class is
-// useful for places you would normally use a function-level static, but you
-// need to have guaranteed thread-safety.  The Type constructor will only ever
-// be called once, even if two threads are racing to create the object.  Get()
-// and Pointer() will always return the same, completely initialized instance.
-// When the instance is constructed it is registered with AtExitManager.  The
-// destructor will be called on program exit.
-//
-// LazyInstance is completely thread safe, assuming that you create it safely.
-// The class was designed to be POD initialized, so it shouldn't require a
-// static constructor.  It really only makes sense to declare a LazyInstance as
-// a global variable using the LAZY_INSTANCE_INITIALIZER initializer.
-//
-// LazyInstance is similar to Singleton, except it does not have the singleton
-// property.  You can have multiple LazyInstance's of the same type, and each
-// will manage a unique instance.  It also preallocates the space for Type, as
-// to avoid allocating the Type instance on the heap.  This may help with the
-// performance of creating the instance, and reducing heap fragmentation.  This
-// requires that Type be a complete type so we can determine the size.
-//
-// Example usage:
-//   static LazyInstance<MyClass> my_instance = LAZY_INSTANCE_INITIALIZER;
-//   void SomeMethod() {
-//     my_instance.Get().SomeMethod();  // MyClass::SomeMethod()
-//
-//     MyClass* ptr = my_instance.Pointer();
-//     ptr->DoDoDo();  // MyClass::DoDoDo
-//   }
 
 #ifndef BUTIL_LAZY_INSTANCE_H_
 #define BUTIL_LAZY_INSTANCE_H_

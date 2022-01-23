@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "flare/butil/rand_util.h"
+#include "flare/base/rand_util.h"
 #include "flare/base/fast_rand.h"
 #include "flare/base/time.h"
 #include <algorithm>
@@ -21,9 +21,9 @@ const int kIntMax = std::numeric_limits<int>::max();
 }  // namespace
 
 TEST(RandUtilTest, Sanity) {
-    EXPECT_EQ(butil::RandInt(0, 0), 0);
-    EXPECT_EQ(butil::RandInt(kIntMin, kIntMin), kIntMin);
-    EXPECT_EQ(butil::RandInt(kIntMax, kIntMax), kIntMax);
+    EXPECT_EQ(flare::base::RandInt(0, 0), 0);
+    EXPECT_EQ(flare::base::RandInt(kIntMin, kIntMin), kIntMin);
+    EXPECT_EQ(flare::base::RandInt(kIntMax, kIntMax), kIntMax);
 
     for (int i = 0; i < 10; ++i) {
         uint64_t value = flare::base::fast_rand_in(
@@ -65,7 +65,7 @@ TEST(RandUtilTest, Sanity) {
 
 TEST(RandUtilTest, RandDouble) {
     // Force 64-bit precision, making sure we're not in a 80-bit FPU register.
-    volatile double number = butil::RandDouble();
+    volatile double number = flare::base::RandDouble();
     EXPECT_GT(1.0, number);
     EXPECT_LE(0.0, number);
 
@@ -78,7 +78,7 @@ TEST(RandUtilTest, RandBytes) {
     const size_t buffer_size = 50;
     char buffer[buffer_size];
     memset(buffer, 0, buffer_size);
-    butil::RandBytes(buffer, buffer_size);
+    flare::base::RandBytes(buffer, buffer_size);
     std::sort(buffer, buffer + buffer_size);
     // Probability of occurrence of less than 25 unique bytes in 50 random bytes
     // is below 10^-25.
@@ -86,9 +86,9 @@ TEST(RandUtilTest, RandBytes) {
 }
 
 TEST(RandUtilTest, RandBytesAsString) {
-    std::string random_string = butil::RandBytesAsString(1);
+    std::string random_string = flare::base::RandBytesAsString(1);
     EXPECT_EQ(1U, random_string.size());
-    random_string = butil::RandBytesAsString(145);
+    random_string = flare::base::RandBytesAsString(145);
     EXPECT_EQ(145U, random_string.size());
     char accumulator = 0;
     for (size_t i = 0; i < random_string.size(); ++i) {
@@ -102,7 +102,7 @@ TEST(RandUtilTest, RandBytesAsString) {
 // Make sure that it is still appropriate to use RandGenerator in conjunction
 // with std::random_shuffle().
 TEST(RandUtilTest, RandGeneratorForRandomShuffle) {
-    EXPECT_EQ(butil::RandGenerator(1), 0U);
+    EXPECT_EQ(flare::base::RandGenerator(1), 0U);
     EXPECT_LE(std::numeric_limits<ptrdiff_t>::max(),
               std::numeric_limits<int64_t>::max());
 }
@@ -112,7 +112,7 @@ TEST(RandUtilTest, RandGeneratorIsUniform) {
     // regression test that consistently failed when RandGenerator was
     // implemented this way:
     //
-    //   return butil::RandUint64() % max;
+    //   return flare::base::RandUint64() % max;
     //
     // A degenerate case for such an implementation is e.g. a top of
     // range that is 2/3rds of the way to MAX_UINT64, in which case the
@@ -131,7 +131,7 @@ TEST(RandUtilTest, RandGeneratorIsUniform) {
         double cumulative_average = 0.0;
         int count = 0;
         while (count < kMaxAttempts) {
-            uint64_t value = (round == 0 ? butil::RandGenerator(kTopOfRange)
+            uint64_t value = (round == 0 ? flare::base::RandGenerator(kTopOfRange)
                               : flare::base::fast_rand_less_than(kTopOfRange));
             cumulative_average = (count * cumulative_average + value) / (count + 1);
 
@@ -163,7 +163,7 @@ TEST(RandUtilTest, RandUint64ProducesBothValuesOfAllBits) {
         uint64_t found_zeros = kAllOnes;
         bool fail = true;
         for (size_t i = 0; i < 1000; ++i) {
-            uint64_t value = (round == 0 ? butil::RandUint64() : flare::base::fast_rand());
+            uint64_t value = (round == 0 ? flare::base::RandUint64() : flare::base::fast_rand());
             found_ones |= value;
             found_zeros &= value;
 
@@ -190,7 +190,7 @@ TEST(RandUtilTest, DISABLED_RandBytesPerf) {
     scoped_ptr<uint8_t[]> buffer(new uint8_t[kTestBufferSize]);
     const butil::TimeTicks now = butil::TimeTicks::HighResNow();
     for (int i = 0; i < kTestIterations; ++i) {
-        butil::RandBytes(buffer.get(), kTestBufferSize);
+        flare::base::RandBytes(buffer.get(), kTestBufferSize);
     }
     const butil::TimeTicks end = butil::TimeTicks::HighResNow();
 

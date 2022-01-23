@@ -75,13 +75,8 @@ file(COPY ${PROJECT_SOURCE_DIR}/test/run_tests.sh DESTINATION ${CMAKE_CURRENT_BI
 
 SET(TEST_BUTIL_SOURCES
         ${PROJECT_SOURCE_DIR}/test/butil/recordio_unittest.cpp
-        ${PROJECT_SOURCE_DIR}/test/butil/popen_unittest.cpp
-        ${PROJECT_SOURCE_DIR}/test/butil/bounded_queue_unittest.cc
         ${PROJECT_SOURCE_DIR}/test/butil/at_exit_unittest.cc
         ${PROJECT_SOURCE_DIR}/test/butil/big_endian_unittest.cc
-        ${PROJECT_SOURCE_DIR}/test/butil/hash_tables_unittest.cc
-        ${PROJECT_SOURCE_DIR}/test/butil/linked_list_unittest.cc
-        ${PROJECT_SOURCE_DIR}/test/butil/small_map_unittest.cc
         ${PROJECT_SOURCE_DIR}/test/butil/crash_logging_unittest.cc
         ${PROJECT_SOURCE_DIR}/test/butil/leak_tracker_unittest.cc
         ${PROJECT_SOURCE_DIR}/test/butil/stack_trace_unittest.cc
@@ -102,8 +97,6 @@ SET(TEST_BUTIL_SOURCES
         ${PROJECT_SOURCE_DIR}/test/butil/scoped_vector_unittest.cc
         ${PROJECT_SOURCE_DIR}/test/butil/singleton_unittest.cc
         ${PROJECT_SOURCE_DIR}/test/butil/weak_ptr_unittest.cc
-        ${PROJECT_SOURCE_DIR}/test/butil/observer_list_unittest.cc
-        ${PROJECT_SOURCE_DIR}/test/butil/rand_util_unittest.cc
         ${PROJECT_SOURCE_DIR}/test/butil/safe_numerics_unittest.cc
         ${PROJECT_SOURCE_DIR}/test/butil/scoped_clear_errno_unittest.cc
         ${PROJECT_SOURCE_DIR}/test/butil/scoped_generic_unittest.cc
@@ -134,29 +127,15 @@ SET(TEST_BUTIL_SOURCES
         ${PROJECT_SOURCE_DIR}/test/butil/thread_id_name_manager_unittest.cc
         ${PROJECT_SOURCE_DIR}/test/butil/thread_local_storage_unittest.cc
         ${PROJECT_SOURCE_DIR}/test/butil/thread_local_unittest.cc
-        ${PROJECT_SOURCE_DIR}/test/butil/watchdog_unittest.cc
         ${PROJECT_SOURCE_DIR}/test/butil/time_unittest.cc
         ${PROJECT_SOURCE_DIR}/test/butil/version_unittest.cc
-        ${PROJECT_SOURCE_DIR}/test/butil/cacheline_unittest.cpp
-        ${PROJECT_SOURCE_DIR}/test/butil/class_name_unittest.cpp
-        ${PROJECT_SOURCE_DIR}/test/butil/endpoint_unittest.cpp
         ${PROJECT_SOURCE_DIR}/test/butil/unique_ptr_unittest.cpp
-        ${PROJECT_SOURCE_DIR}/test/butil/errno_unittest.cpp
-        ${PROJECT_SOURCE_DIR}/test/butil/fd_guard_unittest.cpp
-        ${PROJECT_SOURCE_DIR}/test/butil/file_watcher_unittest.cpp
-        ${PROJECT_SOURCE_DIR}/test/butil/find_cstr_unittest.cpp
         ${PROJECT_SOURCE_DIR}/test/butil/scoped_lock_unittest.cpp
-        ${PROJECT_SOURCE_DIR}/test/butil/status_unittest.cpp
-        ${PROJECT_SOURCE_DIR}/test/butil/string_printf_unittest.cpp
         ${PROJECT_SOURCE_DIR}/test/butil/string_splitter_unittest.cpp
         ${PROJECT_SOURCE_DIR}/test/butil/synchronous_event_unittest.cpp
-        ${PROJECT_SOURCE_DIR}/test/butil/temp_file_unittest.cpp
         ${PROJECT_SOURCE_DIR}/test/butil/baidu_thread_local_unittest.cpp
-        ${PROJECT_SOURCE_DIR}/test/butil/baidu_time_unittest.cpp
-        ${PROJECT_SOURCE_DIR}/test/butil/flat_map_unittest.cpp
         ${PROJECT_SOURCE_DIR}/test/butil/crc32c_unittest.cc
         ${PROJECT_SOURCE_DIR}/test/butil/iobuf_unittest.cpp
-        ${PROJECT_SOURCE_DIR}/test/butil/object_pool_unittest.cpp
         ${PROJECT_SOURCE_DIR}/test/butil/scoped_locale.cc
         ${PROJECT_SOURCE_DIR}/test/butil/butil_unittest_main.cpp
         ${PROJECT_SOURCE_DIR}/test/butil/butil_unittest_main.cpp
@@ -222,3 +201,5 @@ add_subdirectory(rpc)
 
 #
 add_subdirectory(base)
+add_subdirectory(container)
+add_subdirectory(memory)

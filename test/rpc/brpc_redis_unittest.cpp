@@ -571,7 +571,7 @@ TEST_F(RedisTest, command_parser) {
     brpc::RedisCommandParser parser;
     butil::IOBuf buf;
     std::vector<std::string_view> command_out;
-    butil::Arena arena;
+    flare::memory::Arena arena;
     {
         // parse from whole command
         std::string command = "set abc edc";
@@ -637,7 +637,7 @@ TEST_F(RedisTest, command_parser) {
 }
 
 TEST_F(RedisTest, redis_reply_codec) {
-    butil::Arena arena;
+    flare::memory::Arena arena;
     // status
     {
         brpc::RedisReply r(&arena);

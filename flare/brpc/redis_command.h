@@ -23,7 +23,7 @@
 #include <vector>
 #include "flare/butil/iobuf.h"
 #include "flare/base/status.h"
-#include "flare/butil/arena.h"
+#include "flare/memory/arena.h"
 #include "flare/brpc/parse_result.h"
 
 namespace brpc {
@@ -51,7 +51,7 @@ public:
     // to `args' and length to `len' if successful. Memory of args are allocated 
     // in `arena'.
     ParseError Consume(butil::IOBuf& buf, std::vector<std::string_view>* args,
-                       butil::Arena* arena);
+                       flare::memory::Arena* arena);
 
 private:
     // Reset parser to the initial state.

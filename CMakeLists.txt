@@ -232,7 +232,6 @@ set(BUTIL_SOURCES
     ${PROJECT_SOURCE_DIR}/flare/butil/third_party/snappy/snappy-sinksource.cc
     ${PROJECT_SOURCE_DIR}/flare/butil/third_party/snappy/snappy-stubs-internal.cc
     ${PROJECT_SOURCE_DIR}/flare/butil/third_party/snappy/snappy.cc
-    ${PROJECT_SOURCE_DIR}/flare/butil/arena.cpp
     ${PROJECT_SOURCE_DIR}/flare/butil/at_exit.cc
     ${PROJECT_SOURCE_DIR}/flare/butil/big_endian.cc
     ${PROJECT_SOURCE_DIR}/flare/butil/debug/alias.cc
@@ -265,8 +264,6 @@ set(BUTIL_SOURCES
     ${PROJECT_SOURCE_DIR}/flare/butil/memory/ref_counted_memory.cc
     ${PROJECT_SOURCE_DIR}/flare/butil/memory/singleton.cc
     ${PROJECT_SOURCE_DIR}/flare/butil/memory/weak_ptr.cc
-    ${PROJECT_SOURCE_DIR}/flare/butil/rand_util.cc
-    ${PROJECT_SOURCE_DIR}/flare/butil/rand_util_posix.cc
     ${PROJECT_SOURCE_DIR}/flare/butil/safe_strerror_posix.cc
     ${PROJECT_SOURCE_DIR}/flare/butil/sha1_portable.cc
     ${PROJECT_SOURCE_DIR}/flare/butil/strings/latin1_string_conversions.cc
@@ -294,7 +291,6 @@ set(BUTIL_SOURCES
     ${PROJECT_SOURCE_DIR}/flare/butil/threading/thread_local_storage.cc
     ${PROJECT_SOURCE_DIR}/flare/butil/threading/thread_local_storage_posix.cc
     ${PROJECT_SOURCE_DIR}/flare/butil/threading/thread_restrictions.cc
-    ${PROJECT_SOURCE_DIR}/flare/butil/threading/watchdog.cc
     ${PROJECT_SOURCE_DIR}/flare/butil/time/clock.cc
     ${PROJECT_SOURCE_DIR}/flare/butil/time/default_clock.cc
     ${PROJECT_SOURCE_DIR}/flare/butil/time/default_tick_clock.cc
@@ -303,7 +299,6 @@ set(BUTIL_SOURCES
     ${PROJECT_SOURCE_DIR}/flare/butil/time/time_posix.cc
     ${PROJECT_SOURCE_DIR}/flare/butil/version.cc
     ${PROJECT_SOURCE_DIR}/flare/butil/unix_socket.cpp
-    ${PROJECT_SOURCE_DIR}/flare/butil/files/file_watcher.cpp
     ${PROJECT_SOURCE_DIR}/flare/butil/zero_copy_stream_as_streambuf.cpp
     ${PROJECT_SOURCE_DIR}/flare/butil/crc32c.cc
     ${PROJECT_SOURCE_DIR}/flare/butil/iobuf.cpp
@@ -331,11 +326,13 @@ endif()
 file(GLOB_RECURSE FLARE_BASE_SRC "${PROJECT_SOURCE_DIR}/flare/base/*.cc")
 file(GLOB_RECURSE FLARE_CONTAINER_SRC "${PROJECT_SOURCE_DIR}/flare/container/*.cc")
 file(GLOB_RECURSE FLARE_HASH_SRC "${PROJECT_SOURCE_DIR}/flare/hash/*.cc")
+file(GLOB_RECURSE FLARE_MEMORY_SRC "${PROJECT_SOURCE_DIR}/flare/memory/*.cc")
 
 set(FLARE_SRC
         ${FLARE_BASE_SRC}
         ${FLARE_CONTAINER_SRC}
         ${FLARE_HASH_SRC}
+        ${FLARE_MEMORY_SRC}
         )
 file(GLOB_RECURSE BVAR_SOURCES "${PROJECT_SOURCE_DIR}/flare/bvar/*.cpp")
 file(GLOB_RECURSE BTHREAD_SOURCES "${PROJECT_SOURCE_DIR}/flare/bthread/*.cpp")

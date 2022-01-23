@@ -21,7 +21,7 @@
 
 #include "flare/butil/iobuf.h"                  // butil::IOBuf
 #include "flare/butil/strings/string_piece.h"   // std::string_view
-#include "flare/butil/arena.h"                  // butil::Arena
+#include "flare/memory/arena.h"                  // flare::memory::Arena
 #include "flare/base/logging.h"                // CHECK
 #include "parse_result.h"                 // ParseError
 
@@ -45,7 +45,7 @@ class RedisReply {
 public:
     // The initial value for a reply is a nil.
     // All needed memory is allocated on `arena'.
-    RedisReply(butil::Arena* arena);
+    RedisReply(flare::memory::Arena* arena);
 
     // Type of the reply.
     RedisReplyType type() const { return _type; }
@@ -161,7 +161,7 @@ private:
         } array;
         uint64_t padding[2]; // For swapping, must cover all bytes.
     } _data;
-    butil::Arena* _arena;
+    flare::memory::Arena* _arena;
 };
 
 // =========== inline impl. ==============
@@ -179,7 +179,7 @@ inline void RedisReply::Reset() {
     // _arena should not be reset because further memory allocation needs it.
 }
 
-inline RedisReply::RedisReply(butil::Arena* arena)
+inline RedisReply::RedisReply(flare::memory::Arena* arena)
     : _arena(arena) {
     Reset();
 }
