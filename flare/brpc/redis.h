@@ -178,9 +178,9 @@ public:
     // implements Message ----------------------------------------------
   
     RedisResponse* New() const override;
-    void CopyFrom(const ::google::protobuf::Message& from);
+    void CopyFrom(const ::google::protobuf::Message& from) override;
     void MergeFrom(const ::google::protobuf::Message& from) override;
-    void CopyFrom(const RedisResponse& from);
+    void CopyFrom(const RedisResponse& from) ;
     void MergeFrom(const RedisResponse& from);
     void Clear() override;
     bool IsInitialized() const override;

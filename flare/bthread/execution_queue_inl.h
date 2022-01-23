@@ -284,11 +284,11 @@ public:
         return ret.Pass();
     }
 
-    int execute(typename butil::add_const_reference<T>::type task) {
+    int execute(typename flare::base::add_const_reference<T>::type task) {
         return execute(task, NULL, NULL);
     }
 
-    int execute(typename butil::add_const_reference<T>::type task,
+    int execute(typename flare::base::add_const_reference<T>::type task,
                 const TaskOptions* options, TaskHandle* handle) {
         if (stopped()) {
             return EINVAL;
@@ -340,20 +340,20 @@ execution_queue_address(ExecutionQueueId<T> id) {
 
 template <typename T>
 inline int execution_queue_execute(ExecutionQueueId<T> id, 
-                       typename butil::add_const_reference<T>::type task) {
+                       typename flare::base::add_const_reference<T>::type task) {
     return execution_queue_execute(id, task, NULL);
 }
 
 template <typename T>
 inline int execution_queue_execute(ExecutionQueueId<T> id, 
-                       typename butil::add_const_reference<T>::type task,
+                       typename flare::base::add_const_reference<T>::type task,
                        const TaskOptions* options) {
     return execution_queue_execute(id, task, options, NULL);
 }
 
 template <typename T>
 inline int execution_queue_execute(ExecutionQueueId<T> id, 
-                       typename butil::add_const_reference<T>::type task,
+                       typename flare::base::add_const_reference<T>::type task,
                        const TaskOptions* options,
                        TaskHandle* handle) {
     typename ExecutionQueue<T>::scoped_ptr_t 

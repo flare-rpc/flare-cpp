@@ -126,7 +126,6 @@ SET(TEST_BUTIL_SOURCES
         ${PROJECT_SOURCE_DIR}/test/butil/condition_variable_unittest.cc
         ${PROJECT_SOURCE_DIR}/test/butil/lock_unittest.cc
         ${PROJECT_SOURCE_DIR}/test/butil/waitable_event_unittest.cc
-        ${PROJECT_SOURCE_DIR}/test/butil/type_traits_unittest.cc
         ${PROJECT_SOURCE_DIR}/test/butil/non_thread_safe_unittest.cc
         ${PROJECT_SOURCE_DIR}/test/butil/platform_thread_unittest.cc
         ${PROJECT_SOURCE_DIR}/test/butil/simple_thread_unittest.cc

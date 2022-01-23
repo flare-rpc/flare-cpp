@@ -23,7 +23,7 @@
 #include <math.h>                       // round
 #include <ostream>
 #include "flare/butil/scoped_lock.h"           // BAIDU_SCOPED_LOCK
-#include "flare/butil/type_traits.h"
+#include "flare/base/type_traits.h"
 #include "flare/bvar/vector.h"
 #include "flare/bvar/detail/call_op_returning_void.h"
 #include "flare/base/string_splitter.h"
@@ -51,8 +51,8 @@ private:
 };
 
 template <typename T, typename Op>
-struct DivideOnAddition<T, Op, typename butil::enable_if<
-                                   butil::is_integral<T>::value>::type> {
+struct DivideOnAddition<T, Op, typename std::enable_if<
+                                   std::is_integral<T>::value>::type> {
     static void inplace_divide(T& obj, const Op& op, int number) {
         static ProbablyAddtition<T, Op> probably_add(op);
         if (probably_add) {
@@ -62,8 +62,8 @@ struct DivideOnAddition<T, Op, typename butil::enable_if<
 };
 
 template <typename T, typename Op>
-struct DivideOnAddition<T, Op, typename butil::enable_if<
-                                   butil::is_floating_point<T>::value>::type> {
+struct DivideOnAddition<T, Op, typename std::enable_if<
+                                   std::is_floating_point<T>::value>::type> {
     static void inplace_divide(T& obj, const Op& op, int number) {
         static ProbablyAddtition<T, Op> probably_add(op);
         if (probably_add) {
@@ -73,8 +73,8 @@ struct DivideOnAddition<T, Op, typename butil::enable_if<
 };
 
 template <typename T, size_t N, typename Op>
-struct DivideOnAddition<Vector<T,N>, Op, typename butil::enable_if<
-                                             butil::is_integral<T>::value>::type> {
+struct DivideOnAddition<Vector<T,N>, Op, typename std::enable_if<
+                                             std::is_integral<T>::value>::type> {
     static void inplace_divide(Vector<T, N>& obj, const Op& op, int number) {
         static ProbablyAddtition<Vector<T, N>, Op> probably_add(op);
         if (probably_add) {
@@ -86,8 +86,8 @@ struct DivideOnAddition<Vector<T,N>, Op, typename butil::enable_if<
 };
 
 template <typename T, size_t N, typename Op>
-struct DivideOnAddition<Vector<T,N>, Op, typename butil::enable_if<
-                                   butil::is_floating_point<T>::value>::type> {
+struct DivideOnAddition<Vector<T,N>, Op, typename std::enable_if<
+                                   std::is_floating_point<T>::value>::type> {
     static void inplace_divide(Vector<T,N>& obj, const Op& op, int number) {
         static ProbablyAddtition<Vector<T,N>, Op> probably_add(op);
         if (probably_add) {
@@ -126,8 +126,8 @@ private:
     public:
         Data() {
             // is_pod does not work for gcc 3.4
-            if (butil::is_integral<T>::value ||
-                butil::is_floating_point<T>::value) {
+            if (std::is_integral<T>::value ||
+                std::is_floating_point<T>::value) {
                 memset(static_cast<void*>(_array), 0, sizeof(_array));
             }
         }

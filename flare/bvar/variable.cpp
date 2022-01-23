@@ -849,7 +849,7 @@ void to_underscored_name(std::string* name, const std::string_view& src) {
             }
         } else if (isdigit(*p)) {
             name->push_back(*p);
-        } else if (name->empty() || butil::back_char(*name) != '_') {
+        } else if (name->empty() || flare::base::back_char(*name) != '_') {
             name->push_back('_');
         }
     }

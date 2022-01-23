@@ -6,7 +6,7 @@
 #define BUTIL_MEMORY_RAW_SCOPED_REFPTR_MISMATCH_CHECKER_H_
 
 #include "flare/butil/memory/ref_counted.h"
-#include "flare/butil/type_traits.h"
+#include "flare/base/type_traits.h"
 #include "flare/butil/build_config.h"
 
 // It is dangerous to post a task with a T* argument where T is a subtype of

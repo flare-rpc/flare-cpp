@@ -25,7 +25,7 @@
 #include "flare/butil/scoped_lock.h"           // BAIDU_SCOPED_LOCK
 #include "flare/base/logging.h"               // LOG()
 #include "flare/butil/containers/bounded_queue.h"// BoundedQueue
-#include "flare/butil/type_traits.h"           // is_same
+#include "flare/base/type_traits.h"           // is_same
 #include "flare/base/time.h"                  // gettimeofday_us
 #include "flare/base/class_name.h"
 
@@ -121,7 +121,7 @@ public:
         }
 
         Sample<T> latest;
-        if (butil::is_same<InvOp, VoidOp>::value) {
+        if (std::is_same<InvOp, VoidOp>::value) {
             // The operator can't be inversed.
             // We reset the reducer and save the result as a sample.
             // Suming up samples gives the result within a window.
@@ -156,7 +156,7 @@ public:
         }
         Sample<T>* latest = _q.bottom();
         DCHECK(latest != oldest);
-        if (butil::is_same<InvOp, VoidOp>::value) {
+        if (std::is_same<InvOp, VoidOp>::value) {
             // No inverse op. Sum up all samples within the window.
             result->data = latest->data;
             for (int i = 1; true; ++i) {

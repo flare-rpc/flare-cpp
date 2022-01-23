@@ -16,7 +16,7 @@
 namespace flare::base {
 
     // Converts the characters in `s` to lowercase, changing the contents of `s`.
-    void string_to_lower(std::string* s);
+    void string_to_lower(std::string *s);
 
     // Creates a lowercase string from a given std::string_view.
     FLARE_MUST_USE_RESULT inline std::string string_to_lower(std::string_view s) {
@@ -26,7 +26,7 @@ namespace flare::base {
     }
 
     // Converts the characters in `s` to uppercase, changing the contents of `s`.
-    void string_to_upper(std::string* s);
+    void string_to_upper(std::string *s);
 
     // Creates an uppercase string from a given std::string_view.
     FLARE_MUST_USE_RESULT inline std::string string_to_upper(std::string_view s) {
@@ -44,7 +44,7 @@ namespace flare::base {
     }
 
     // Strips in place whitespace from the beginning of the given string.
-    inline void strip_leading_ascii_whitespace(std::string* str) {
+    inline void strip_leading_ascii_whitespace(std::string *str) {
         auto it = std::find_if_not(str->begin(), str->end(), flare::base::ascii_isspace);
         str->erase(str->begin(), it);
     }
@@ -58,7 +58,7 @@ namespace flare::base {
     }
 
     // Strips in place whitespace from the end of the given string
-    inline void strip_trailing_ascii_whitespace(std::string* str) {
+    inline void strip_trailing_ascii_whitespace(std::string *str) {
         auto it = std::find_if_not(str->rbegin(), str->rend(), flare::base::ascii_isspace);
         str->erase(str->rend() - it);
     }
@@ -71,13 +71,13 @@ namespace flare::base {
     }
 
     // Strips in place whitespace from both ends of the given string
-    inline void strip_ascii_whitespace(std::string* str) {
+    inline void strip_ascii_whitespace(std::string *str) {
         strip_trailing_ascii_whitespace(str);
         strip_leading_ascii_whitespace(str);
     }
 
     // Strips leading, trailing, and consecutive internal whitespace.
-    void strip_extra_ascii_whitespace(std::string*);
+    void strip_extra_ascii_whitespace(std::string *);
 
     FLARE_MUST_USE_RESULT inline std::string as_string(const std::string_view &str) {
         return std::string(str.data(), str.size());
@@ -95,7 +95,7 @@ namespace flare::base {
     //
     // Returns whether a given string `haystack` contains the substring `needle`.
     inline bool str_contains(std::string_view haystack,
-                            std::string_view needle) noexcept {
+                             std::string_view needle) noexcept {
         return haystack.find(needle, 0) != haystack.npos;
     }
 
@@ -107,9 +107,9 @@ namespace flare::base {
     //
     // Returns whether a given string `text` begins with `prefix`.
     inline bool starts_with(std::string_view text,
-                           std::string_view prefix) noexcept {
-    return prefix.empty() || (text.size() >= prefix.size() &&
-        memcmp(text.data(), prefix.data(), prefix.size()) == 0);
+                            std::string_view prefix) noexcept {
+        return prefix.empty() || (text.size() >= prefix.size() &&
+                                  memcmp(text.data(), prefix.data(), prefix.size()) == 0);
     }
 
 
@@ -117,9 +117,10 @@ namespace flare::base {
     //
     // Returns whether a given string `text` ends with `suffix`.
     inline bool ends_with(std::string_view text,
-                         std::string_view suffix) noexcept {
-    return suffix.empty() || (text.size() >= suffix.size() &&
-        memcmp(text.data() + (text.size() - suffix.size()), suffix.data(),suffix.size()) == 0);
+                          std::string_view suffix) noexcept {
+        return suffix.empty() || (text.size() >= suffix.size() &&
+                                  memcmp(text.data() + (text.size() - suffix.size()), suffix.data(), suffix.size()) ==
+                                  0);
     }
 
     // equals_ignore_case()
@@ -127,21 +128,21 @@ namespace flare::base {
     // Returns whether given ASCII strings `piece1` and `piece2` are equal, ignoring
     // case in the comparison.
     bool equals_ignore_case(std::string_view piece1,
-                          std::string_view piece2) noexcept;
+                            std::string_view piece2) noexcept;
 
     // starts_with_ignore_case()
     //
     // Returns whether a given ASCII string `text` starts with `prefix`,
     // ignoring case in the comparison.
     bool starts_with_ignore_case(std::string_view text,
-                              std::string_view prefix) noexcept;
+                                 std::string_view prefix) noexcept;
 
     // ends_with_ignore_case()
     //
     // Returns whether a given ASCII string `text` ends with `suffix`, ignoring
     // case in the comparison.
     bool ends_with_ignore_case(std::string_view text,
-                            std::string_view suffix) noexcept;
+                               std::string_view suffix) noexcept;
 
 
     // consume_prefix()
@@ -154,7 +155,7 @@ namespace flare::base {
     //   std::string_view input("abc");
     //   EXPECT_TRUE(flare::base::consume_prefix(&input, "a"));
     //   EXPECT_EQ(input, "bc");
-    inline bool consume_prefix(std::string_view* str, std::string_view expected) {
+    inline bool consume_prefix(std::string_view *str, std::string_view expected) {
         if (!flare::base::starts_with(*str, expected)) {
             return false;
         }
@@ -172,7 +173,7 @@ namespace flare::base {
     //   std::string_view input("abcdef");
     //   EXPECT_TRUE(flare::base::consume_suffix(&input, "def"));
     //   EXPECT_EQ(input, "abc");
-    inline bool consume_suffix(std::string_view* str, std::string_view expected) {
+    inline bool consume_suffix(std::string_view *str, std::string_view expected) {
         if (!flare::base::ends_with(*str, expected)) {
             return false;
         }
@@ -324,27 +325,30 @@ namespace flare::base {
 
 
     // Convert |format| and associated arguments to std::string
-    std::string string_printf(const char* format, ...)
+    std::string string_printf(const char *format, ...)
     __attribute__ ((format (printf, 1, 2)));
 
     // Write |format| and associated arguments into |output|
     // Returns 0 on success, -1 otherwise.
-    int string_printf(std::string* output, const char* fmt, ...)
+    int string_printf(std::string *output, const char *fmt, ...)
     __attribute__ ((format (printf, 2, 3)));
 
     // Write |format| and associated arguments in form of va_list into |output|.
     // Returns 0 on success, -1 otherwise.
-    int string_vprintf(std::string* output, const char* format, va_list args);
+    int string_vprintf(std::string *output, const char *format, va_list args);
 
     // Append |format| and associated arguments to |output|
     // Returns 0 on success, -1 otherwise.
-    int string_appendf(std::string* output, const char* format, ...)
+    int string_appendf(std::string *output, const char *format, ...)
     __attribute__ ((format (printf, 2, 3)));
 
     // Append |format| and associated arguments in form of va_list to |output|.
     // Returns 0 on success, -1 otherwise.
-    int string_vappendf(std::string* output, const char* format, va_list args);
+    int string_vappendf(std::string *output, const char *format, va_list args);
 
+    inline char front_char(const std::string_view &s) { return s[0]; }
+
+    inline char back_char(const std::string_view &s) { return s[s.size() - 1]; }
 
 }  // namespace flare::base
 #endif  // FLARE_BASE_STRINGS_H_

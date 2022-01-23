@@ -96,7 +96,7 @@
 #include <stdint.h>
 #include <functional>
 #include <iostream>                               // std::ostream
-#include "flare/butil/type_traits.h"
+#include <type_traits>
 #include "flare/base/logging.h"
 #include "flare/butil/find_cstr.h"
 #include "flare/butil/single_threaded_pool.h"            // SingleThreadedPool
@@ -133,10 +133,10 @@ public:
     typedef _T mapped_type;
     typedef FlatMapElement<_K, _T> Element;
     typedef typename Element::value_type value_type;
-    typedef typename conditional<
+    typedef typename std::conditional<
         _Sparse, SparseFlatMapIterator<FlatMap, value_type>,
         FlatMapIterator<FlatMap, value_type> >::type iterator;
-    typedef typename conditional<
+    typedef typename std::conditional<
         _Sparse, SparseFlatMapIterator<FlatMap, const value_type>, 
         FlatMapIterator<FlatMap, const value_type> >::type const_iterator;
     typedef _Hash hasher;

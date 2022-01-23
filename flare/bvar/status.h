@@ -22,7 +22,7 @@
 
 #include <string>                       // std::string
 #include "flare/base/static_atomic.h"
-#include "flare/butil/type_traits.h"
+#include "flare/base/type_traits.h"
 #include "flare/base/strings.h"
 #include "flare/butil/synchronization/lock.h"
 #include "flare/bvar/detail/is_atomical.h"
@@ -86,7 +86,7 @@ namespace bvar {
     };
 
     template<typename T>
-    class Status<T, typename butil::enable_if<detail::is_atomical<T>::value>::type>
+    class Status<T, typename std::enable_if<detail::is_atomical<T>::value>::type>
             : public Variable {
     public:
         struct PlaceHolderOp {
@@ -95,7 +95,7 @@ namespace bvar {
 
         class SeriesSampler : public detail::Sampler {
         public:
-            typedef typename butil::conditional<
+            typedef typename std::conditional<
                     true, detail::AddTo < T>, PlaceHolderOp>
             ::type Op;
 

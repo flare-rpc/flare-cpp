@@ -79,12 +79,12 @@ public:
     typedef Value value_type;
     typedef Value& reference;
     typedef Value* pointer;
-    typedef typename add_const<Value>::type ConstValue;
+    typedef typename std::add_const<Value>::type ConstValue;
     typedef ConstValue& const_reference;
     typedef ConstValue* const_pointer;
     typedef std::forward_iterator_tag iterator_category;
     typedef ptrdiff_t difference_type;
-    typedef typename remove_const<Value>::type NonConstValue;
+    typedef typename std::remove_const<Value>::type NonConstValue;
     
     FlatMapIterator() : _node(NULL), _entry(NULL) {}    
     FlatMapIterator(const Map* map, size_t pos) {
@@ -151,12 +151,12 @@ public:
     typedef Value value_type;
     typedef Value& reference;
     typedef Value* pointer;
-    typedef typename add_const<Value>::type ConstValue;
+    typedef typename std::add_const<Value>::type ConstValue;
     typedef ConstValue& const_reference;
     typedef ConstValue* const_pointer;
     typedef std::forward_iterator_tag iterator_category;
     typedef ptrdiff_t difference_type;
-    typedef typename remove_const<Value>::type NonConstValue;
+    typedef typename std::remove_const<Value>::type NonConstValue;
     
     SparseFlatMapIterator() : _node(NULL), _pos(0), _map(NULL) {}
     SparseFlatMapIterator(const Map* map, size_t pos) {

@@ -26,7 +26,7 @@
 #include "flare/butil/thread_local.h"
 #include "flare/base/logging.h"
 #include "flare/butil/macros.h"
-#include "flare/butil/type_traits.h"
+#include "flare/base/type_traits.h"
 #include "flare/butil/errno.h"
 #include "flare/base/static_atomic.h"
 #include "flare/butil/unique_ptr.h"
@@ -288,8 +288,8 @@ DoublyBufferedData<T, TLS>::DoublyBufferedData()
     }
     // Initialize _data for some POD types. This is essential for pointer
     // types because they should be Read() as NULL before any Modify().
-    if (is_integral<T>::value || is_floating_point<T>::value ||
-        is_pointer<T>::value || is_member_function_pointer<T>::value) {
+    if (std::is_integral<T>::value || std::is_floating_point<T>::value ||
+            std::is_pointer<T>::value || std::is_member_function_pointer<T>::value) {
         _data[0] = T();
         _data[1] = T();
     }

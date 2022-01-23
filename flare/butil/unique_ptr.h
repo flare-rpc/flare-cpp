@@ -22,7 +22,7 @@
 #elif !defined(BAIDU_NO_EMULATED_UNIQUE_PTR)
 
 #include <algorithm>                // std::swap until C++11
-#include "flare/butil/type_traits.h"
+#include "flare/base/type_traits.h"
 #include "flare/butil/macros.h"            // BAIDU_CASSERT
 
 namespace std {
@@ -299,7 +299,7 @@ public:
                up_detail::is_convertible<E, deleter_type>::value &&
                (
                    !butil::is_reference<deleter_type>::value ||
-                   butil::is_same<deleter_type, E>::value)
+                   std::is_same<deleter_type, E>::value)
                >::type* = 0)
         : ptr_(u.release(), forward<D>(forward<E>(u.get_deleter()))) {}
 

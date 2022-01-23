@@ -22,7 +22,7 @@
 
 #include <limits>                                 // std::numeric_limits
 #include "flare/base/logging.h"                         // LOG()
-#include "flare/butil/type_traits.h"                     // butil::add_cr_non_integral
+#include "flare/base/type_traits.h"                     // flare::base::add_cr_non_integral
 #include "flare/base/class_name.h"                      // class_name_str
 #include "flare/bvar/variable.h"                        // Variable
 #include "flare/bvar/detail/combiner.h"                 // detail::AgentCombiner
@@ -85,7 +85,7 @@ public:
 
 public:
     // The `identify' must satisfy: identity Op a == a
-    Reducer(typename butil::add_cr_non_integral<T>::type identity = T(),
+    Reducer(typename flare::base::add_cr_non_integral<T>::type identity = T(),
             const Op& op = Op(),
             const InvOp& inv_op = InvOp())
         : _combiner(identity, identity, op)
@@ -109,13 +109,13 @@ public:
 
     // Add a value.
     // Returns self reference for chaining.
-    Reducer& operator<<(typename butil::add_cr_non_integral<T>::type value);
+    Reducer& operator<<(typename flare::base::add_cr_non_integral<T>::type value);
 
     // Get reduced value.
     // Notice that this function walks through threads that ever add values
     // into this reducer. You should avoid calling it frequently.
     T get_value() const {
-        CHECK(!(butil::is_same<InvOp, detail::VoidOp>::value) || _sampler == NULL)
+        CHECK(!(std::is_same<InvOp, detail::VoidOp>::value) || _sampler == NULL)
             << "You should not call Reducer<" << flare::base::class_name_str<T>()
             << ", " << flare::base::class_name_str<Op>() << ">::get_value() when a"
             << " Window<> is used because the operator does not have inverse.";
@@ -128,7 +128,7 @@ public:
     T reset() { return _combiner.reset_all_agents(); }
 
     void describe(std::ostream& os, bool quote_string) const override {
-        if (butil::is_same<T, std::string>::value && quote_string) {
+        if (std::is_same<T, std::string>::value && quote_string) {
             os << '"' << get_value() << '"';
         } else {
             os << get_value();
@@ -171,8 +171,8 @@ protected:
         const int rc = Variable::expose_impl(prefix, name, display_filter);
         if (rc == 0 &&
             _series_sampler == NULL &&
-            !butil::is_same<InvOp, detail::VoidOp>::value &&
-            !butil::is_same<T, std::string>::value &&
+            !std::is_same<InvOp, detail::VoidOp>::value &&
+            !std::is_same<T, std::string>::value &&
             FLAGS_save_series) {
             _series_sampler = new SeriesSampler(this, _combiner.op());
             _series_sampler->schedule();
@@ -189,7 +189,7 @@ private:
 
 template <typename T, typename Op, typename InvOp>
 inline Reducer<T, Op, InvOp>& Reducer<T, Op, InvOp>::operator<<(
-    typename butil::add_cr_non_integral<T>::type value) {
+    typename flare::base::add_cr_non_integral<T>::type value) {
     // It's wait-free for most time
     agent_type* agent = _combiner.get_or_create_tls_agent();
     if (__builtin_expect(!agent, 0)) {
@@ -210,13 +210,13 @@ namespace detail {
 template <typename Tp>
 struct AddTo {
     void operator()(Tp & lhs, 
-                    typename butil::add_cr_non_integral<Tp>::type rhs) const
+                    typename flare::base::add_cr_non_integral<Tp>::type rhs) const
     { lhs += rhs; }
 };
 template <typename Tp>
 struct MinusFrom {
     void operator()(Tp & lhs, 
-                    typename butil::add_cr_non_integral<Tp>::type rhs) const
+                    typename flare::base::add_cr_non_integral<Tp>::type rhs) const
     { lhs -= rhs; }
 };
 }
@@ -245,7 +245,7 @@ namespace detail {
 template <typename Tp> 
 struct MaxTo {
     void operator()(Tp & lhs, 
-                    typename butil::add_cr_non_integral<Tp>::type rhs) const {
+                    typename flare::base::add_cr_non_integral<Tp>::type rhs) const {
         // Use operator< as well.
         if (lhs < rhs) {
             lhs = rhs;
@@ -295,7 +295,7 @@ namespace detail {
 template <typename Tp> 
 struct MinTo {
     void operator()(Tp & lhs, 
-                    typename butil::add_cr_non_integral<Tp>::type rhs) const {
+                    typename flare::base::add_cr_non_integral<Tp>::type rhs) const {
         if (rhs < lhs) {
             lhs = rhs;
         }

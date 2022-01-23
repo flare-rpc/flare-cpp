@@ -18,13 +18,13 @@
 #ifndef BVAR_DETAIL_IS_ATOMICAL_H
 #define BVAR_DETAIL_IS_ATOMICAL_H
 
-#include "flare/butil/type_traits.h"
+#include "flare/base/type_traits.h"
 
 namespace bvar {
 namespace detail {
 template <class T> struct is_atomical
-: butil::integral_constant<bool, (butil::is_integral<T>::value ||
-                                 butil::is_floating_point<T>::value)
+: std::integral_constant<bool, (std::is_integral<T>::value ||
+                                 std::is_floating_point<T>::value)
                                  // FIXME(gejun): Not work in gcc3.4
                                  // butil::is_enum<T>::value ||
                                  // NOTE(gejun): Ops on pointers are not

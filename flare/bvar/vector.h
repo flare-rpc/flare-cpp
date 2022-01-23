@@ -22,6 +22,7 @@
 
 #include <ostream>
 #include <gflags/gflags_declare.h>
+#include "flare/base/type_traits.h"
 
 namespace bvar {
 
@@ -111,10 +112,10 @@ std::ostream& operator<<(std::ostream& os, const Vector<T, N>& vec) {
 }
 
 template <typename T>
-struct is_vector : public butil::false_type {};
+struct is_vector : public std::false_type {};
 
 template <typename T, size_t N>
-struct is_vector<Vector<T,N> > : public butil::true_type {};
+struct is_vector<Vector<T,N> > : public std::true_type {};
 
 }  // namespace bvar
 

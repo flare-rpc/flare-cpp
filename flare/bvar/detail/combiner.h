@@ -24,7 +24,7 @@
 #include <vector>                       // std::vector
 #include "flare/base/static_atomic.h"
 #include "flare/butil/scoped_lock.h"           // BAIDU_SCOPED_LOCK
-#include "flare/butil/type_traits.h"           // butil::add_cr_non_integral
+#include "flare/base/type_traits.h"           // flare::base::add_cr_non_integral
 #include "flare/butil/synchronization/lock.h"  // butil::Lock
 #include "flare/butil/containers/linked_list.h"// LinkNode
 #include "flare/bvar/detail/agent_group.h"    // detail::AgentGroup
@@ -113,7 +113,7 @@ namespace bvar {
 
         template<typename T>
         class ElementContainer<
-                T, typename butil::enable_if<is_atomical<T>::value>::type> {
+                T, typename std::enable_if<is_atomical<T>::value>::type> {
         public:
             // We don't need any memory fencing here, every op is relaxed.
 
@@ -246,9 +246,9 @@ namespace bvar {
                 return ret;
             }
 
-            typename butil::add_cr_non_integral<ElementTp>::type element_identity() const { return _element_identity; }
+            typename flare::base::add_cr_non_integral<ElementTp>::type element_identity() const { return _element_identity; }
 
-            typename butil::add_cr_non_integral<ResultTp>::type result_identity() const { return _result_identity; }
+            typename flare::base::add_cr_non_integral<ResultTp>::type result_identity() const { return _result_identity; }
 
             // [Threadsafe] May be called from anywhere.
             ResultTp reset_all_agents() {
