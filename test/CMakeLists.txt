@@ -144,8 +144,8 @@ set(IO_TEST_SRC
         )
 if (CMAKE_SYSTEM_NAME STREQUAL "Linux")
     SET(TEST_BUTIL_SOURCES ${TEST_BUTIL_SOURCES}
-            ${PROJECT_SOURCE_DIR}/test/proc_maps_linux_unittest.cc
-            ${PROJECT_SOURCE_DIR}/test/test_file_util_linux.cc)
+            ${PROJECT_SOURCE_DIR}/test/butil/proc_maps_linux_unittest.cc
+            ${PROJECT_SOURCE_DIR}/test/butil/test_file_util_linux.cc)
 endif ()
 
 # bthread_* functions are used in logging.cc, and they need to be marked as
