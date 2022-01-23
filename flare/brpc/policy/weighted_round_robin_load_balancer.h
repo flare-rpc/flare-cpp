@@ -22,7 +22,7 @@
 #include <map>                              
 #include <vector>
 #include <unordered_set>
-#include "flare/butil/containers/doubly_buffered_data.h"
+#include "flare/container/doubly_buffered_data.h"
 #include "flare/brpc/load_balancer.h"
 
 namespace brpc {
@@ -81,7 +81,7 @@ private:
                                           const std::unordered_set<SocketId>& filter,
                                           TLS& tls);
 
-    butil::DoublyBufferedData<Servers, TLS> _db_servers;
+    flare::container::DoublyBufferedData<Servers, TLS> _db_servers;
 };
 
 }  // namespace policy

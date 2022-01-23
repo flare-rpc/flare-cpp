@@ -27,8 +27,8 @@
 #include <algorithm>                     // std::max, std::min
 #include "flare/base/static_atomic.h"              // std::atomic
 #include "flare/butil/macros.h"                 // BAIDU_CACHELINE_ALIGNMENT
-#include "flare/butil/scoped_lock.h"            // BAIDU_SCOPED_LOCK
-#include "flare/butil/thread_local.h"           // thread_atexit
+#include "flare/base/scoped_lock.h"            // FLARE_SCOPED_LOCK
+#include "flare/base/thread.h"           // thread_atexit
 #include <vector>
 
 #ifdef BUTIL_RESOURCE_POOL_NEED_FREE_ITEM_NUM
@@ -315,7 +315,7 @@ public:
         LocalPool* lp = _local_pool;
         if (lp) {
             _local_pool = NULL;
-            butil::thread_atexit_cancel(LocalPool::delete_local_pool, lp);
+            flare::base::thread_atexit_cancel(LocalPool::delete_local_pool, lp);
             delete lp;
         }
     }
@@ -416,7 +416,7 @@ private:
     // Shall be called infrequently because a BlockGroup is pretty big.
     static bool add_block_group(size_t old_ngroup) {
         BlockGroup* bg = NULL;
-        BAIDU_SCOPED_LOCK(_block_group_mutex);
+        FLARE_SCOPED_LOCK(_block_group_mutex);
         const size_t ngroup = _ngroup.load(std::memory_order_acquire);
         if (ngroup != old_ngroup) {
             // Other thread got lock and added group before this thread.
@@ -444,9 +444,9 @@ private:
         if (NULL == lp) {
             return NULL;
         }
-        BAIDU_SCOPED_LOCK(_change_thread_mutex); //avoid race with clear()
+        FLARE_SCOPED_LOCK(_change_thread_mutex); //avoid race with clear()
         _local_pool = lp;
-        butil::thread_atexit(LocalPool::delete_local_pool, lp);
+        flare::base::thread_atexit(LocalPool::delete_local_pool, lp);
         _nlocal.fetch_add(1, std::memory_order_relaxed);
         return lp;
     }
@@ -465,7 +465,7 @@ private:
         // be deallocated correctly in tests, so wrap the function with 
         // a macro which is only defined in unittests.
 #ifdef BAIDU_CLEAR_RESOURCE_POOL_AFTER_ALL_THREADS_QUIT
-        BAIDU_SCOPED_LOCK(_change_thread_mutex);  // including acquire fence.
+        FLARE_SCOPED_LOCK(_change_thread_mutex);  // including acquire fence.
         // Do nothing if there're active threads.
         if (_nlocal.load(std::memory_order_relaxed) != 0) {
             return;
@@ -541,7 +541,7 @@ private:
     
     static flare::static_atomic<ResourcePool*> _singleton;
     static pthread_mutex_t _singleton_mutex;
-    static BAIDU_THREAD_LOCAL LocalPool* _local_pool;
+    static FLARE_THREAD_LOCAL LocalPool* _local_pool;
     static flare::static_atomic<long> _nlocal;
     static flare::static_atomic<size_t> _ngroup;
     static pthread_mutex_t _block_group_mutex;
@@ -562,7 +562,7 @@ template <typename T>
 const size_t ResourcePool<T>::FREE_CHUNK_NITEM;
 
 template <typename T>
-BAIDU_THREAD_LOCAL typename ResourcePool<T>::LocalPool*
+FLARE_THREAD_LOCAL typename ResourcePool<T>::LocalPool*
 ResourcePool<T>::_local_pool = NULL;
 
 template <typename T>

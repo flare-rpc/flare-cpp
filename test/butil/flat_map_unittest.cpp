@@ -25,10 +25,10 @@
 #include "flare/butil/macros.h"
 #include "flare/base/strings.h"
 #include "flare/base/logging.h"
-#include "flare/butil/containers/hash_tables.h"
-#include "flare/butil/containers/flat_map.h"
+#include "flare/container/hash_tables.h"
+#include "flare/container/flat_map.h"
 #include "flare/butil/containers/pooled_map.h"
-#include "flare/butil/containers/case_ignored_flat_map.h"
+#include "flare/container/case_ignored_flat_map.h"
 
 namespace {
     class FlatMapTest : public ::testing::Test {
@@ -64,7 +64,7 @@ namespace {
 
     TEST_F(FlatMapTest, initialization_of_values) {
         // Construct non-POD values w/o copy-construction.
-        butil::FlatMap<int, Foo> map;
+        flare::container::FlatMap<int, Foo> map;
         ASSERT_EQ(0, map.init(32));
         ASSERT_EQ(0, g_foo_ctor);
         ASSERT_EQ(0, g_foo_copy_ctor);
@@ -75,7 +75,7 @@ namespace {
         ASSERT_EQ(0, g_foo_assign);
 
         // Zeroize POD values.
-        butil::FlatMap<int, Bar> map2;
+        flare::container::FlatMap<int, Bar> map2;
         ASSERT_EQ(0, map2.init(32));
         Bar &g = map2[1];
         ASSERT_EQ(0, g.x);
@@ -103,7 +103,7 @@ namespace {
     }
 
     TEST_F(FlatMapTest, copy_flat_map) {
-        typedef butil::FlatMap<std::string, std::string> Map;
+        typedef flare::container::FlatMap<std::string, std::string> Map;
         Map uninit_m1;
         ASSERT_FALSE(uninit_m1.initialized());
         ASSERT_TRUE(uninit_m1.empty());
@@ -186,23 +186,23 @@ namespace {
     }
 
     TEST_F(FlatMapTest, seek_by_string_piece) {
-        butil::FlatMap<std::string, int> m;
+        flare::container::FlatMap<std::string, int> m;
         ASSERT_EQ(0, m.init(16));
         m["hello"] = 1;
         m["world"] = 2;
-        butil::StringPiece k1("hello");
+        std::string_view k1("hello");
         ASSERT_TRUE(m.seek(k1));
         ASSERT_EQ(1, *m.seek(k1));
-        butil::StringPiece k2("world");
+        std::string_view k2("world");
         ASSERT_TRUE(m.seek(k2));
         ASSERT_EQ(2, *m.seek(k2));
-        butil::StringPiece k3("heheda");
+        std::string_view k3("heheda");
         ASSERT_TRUE(m.seek(k3) == NULL);
     }
 
     TEST_F(FlatMapTest, to_lower) {
         for (int c = -128; c < 128; ++c) {
-            ASSERT_EQ((char) ::tolower(c), butil::ascii_tolower(c)) << "c=" << c;
+            ASSERT_EQ((char) ::tolower(c), flare::base::ascii_tolower(c)) << "c=" << c;
         }
 
         const size_t input_len = 102;
@@ -251,7 +251,7 @@ namespace {
     }
 
     TEST_F(FlatMapTest, case_ignored_map) {
-        butil::CaseIgnoredFlatMap<int> m1;
+        flare::container::CaseIgnoredFlatMap<int> m1;
         ASSERT_EQ(0, m1.init(32));
         m1["Content-Type"] = 1;
         m1["content-Type"] = 10;
@@ -265,7 +265,7 @@ namespace {
     }
 
     TEST_F(FlatMapTest, case_ignored_set) {
-        butil::CaseIgnoredFlatSet s1;
+        flare::container::CaseIgnoredFlatSet s1;
         ASSERT_EQ(0, s1.init(32));
         s1.insert("Content-Type");
         ASSERT_EQ(1ul, s1.size());
@@ -286,7 +286,7 @@ namespace {
 
 
     TEST_F(FlatMapTest, make_sure_all_methods_compile) {
-        typedef butil::FlatMap<int, long> M1;
+        typedef flare::container::FlatMap<int, long> M1;
         M1 m1;
         ASSERT_EQ(0, m1.init(32));
         ASSERT_EQ(0u, m1.size());
@@ -313,7 +313,7 @@ namespace {
         }
         std::cout << std::endl;
 
-        typedef butil::FlatSet<int> S1;
+        typedef flare::container::FlatSet<int> S1;
         S1 s1;
         ASSERT_EQ(0, s1.init(32));
         ASSERT_EQ(0u, s1.size());
@@ -343,9 +343,9 @@ namespace {
 
     TEST_F(FlatMapTest, flat_map_of_string) {
         std::vector<std::string> keys;
-        butil::FlatMap<std::string, size_t> m1;
+        flare::container::FlatMap<std::string, size_t> m1;
         std::map < std::string, size_t > m2;
-        butil::hash_map<std::string, size_t> m3;
+        flare::container::hash_map<std::string, size_t> m3;
         const size_t N = 10000;
         ASSERT_EQ(0, m1.init(N));
         flare::base::stop_watcher tm1, tm1_2, tm2, tm3;
@@ -425,8 +425,8 @@ namespace {
     }
 
     TEST_F(FlatMapTest, fast_iterator) {
-        typedef butil::FlatMap<uint64_t, uint64_t> M1;
-        typedef butil::SparseFlatMap<uint64_t, uint64_t> M2;
+        typedef flare::container::FlatMap<uint64_t, uint64_t> M1;
+        typedef flare::container::SparseFlatMap<uint64_t, uint64_t> M2;
 
         M1 m1;
         M2 m2;
@@ -483,11 +483,11 @@ namespace {
 
     template<typename Key, typename Value, typename OnPause>
     static void list_flat_map(std::vector<Key> *keys,
-                              const butil::FlatMap<Key, Value> &map,
+                              const flare::container::FlatMap<Key, Value> &map,
                               size_t max_one_pass,
                               OnPause &on_pause) {
         keys->clear();
-        typedef butil::FlatMap<Key, Value> Map;
+        typedef flare::container::FlatMap<Key, Value> Map;
         size_t n = 0;
         for (typename Map::const_iterator it = map.begin(); it != map.end(); ++it) {
             if (++n >= max_one_pass) {
@@ -507,7 +507,7 @@ namespace {
         }
     }
 
-    typedef butil::FlatMap<uint64_t, uint64_t> PositionHintMap;
+    typedef flare::container::FlatMap<uint64_t, uint64_t> PositionHintMap;
 
     static void fill_position_hint_map(PositionHintMap *map,
                                        std::vector<uint64_t> *keys) {
@@ -587,8 +587,8 @@ namespace {
             ++(*map)[inserted_key];
         }
 
-        butil::FlatSet<uint64_t> removed_keys;
-        butil::FlatSet<uint64_t> inserted_keys;
+        flare::container::FlatSet<uint64_t> removed_keys;
+        flare::container::FlatSet<uint64_t> inserted_keys;
         const std::vector<uint64_t> *keys;
         PositionHintMap *map;
     };
@@ -630,7 +630,7 @@ namespace {
             removed_keys.insert(removed_key);
         }
 
-        butil::FlatSet<uint64_t> removed_keys;
+        flare::container::FlatSet<uint64_t> removed_keys;
         PositionHintMap *map;
     };
 
@@ -706,8 +706,8 @@ namespace {
             }
         }
 
-        butil::FlatSet<uint64_t> removed_keys;
-        butil::FlatSet<uint64_t> inserted_keys;
+        flare::container::FlatSet<uint64_t> removed_keys;
+        flare::container::FlatSet<uint64_t> inserted_keys;
         const std::vector<uint64_t> *keys_out;
         std::vector<uint64_t> *all_keys;
         PositionHintMap *map;
@@ -764,8 +764,8 @@ namespace {
         }
 
         std::set<int *> m1;
-        butil::FlatSet<int *, PointerHasher<int> > m2;
-        butil::hash_set<int *, PointerHasher<int> > m3;
+        flare::container::FlatSet<int *, PointerHasher<int> > m2;
+        flare::container::hash_set<int *, PointerHasher<int> > m3;
 
         std::vector<int *> r;
         int sum;
@@ -871,7 +871,7 @@ namespace {
     };
 
     TEST_F(FlatMapTest, key_value_are_not_constructed_before_first_insertion) {
-        butil::FlatMap<Key, Value, KeyHasher, KeyEqualTo> m;
+        flare::container::FlatMap<Key, Value, KeyHasher, KeyEqualTo> m;
         ASSERT_EQ(0, m.init(32));
         ASSERT_EQ(0, n_con_key);
         ASSERT_EQ(0, n_cp_con_key);
@@ -889,9 +889,9 @@ namespace {
     }
 
     TEST_F(FlatMapTest, manipulate_uninitialized_map) {
-        butil::FlatMap<int, int> m;
+        flare::container::FlatMap<int, int> m;
         ASSERT_FALSE(m.initialized());
-        for (butil::FlatMap<int, int>::iterator it = m.begin(); it != m.end(); ++it) {
+        for (flare::container::FlatMap<int, int>::iterator it = m.begin(); it != m.end(); ++it) {
             LOG(INFO) << "nothing";
         }
         ASSERT_EQ(NULL, m.seek(1));
@@ -917,7 +917,7 @@ namespace {
             tm3.stop();
 
             tm4.start();
-            butil::CaseIgnoredFlatMap<std::string> m4;
+            flare::container::CaseIgnoredFlatMap<std::string> m4;
             m4.init(16);
             m4["Content-type"] = "application/json";
             m4["Request-Id"] = "true";
@@ -925,7 +925,7 @@ namespace {
             tm4.stop();
 
             tm1.start();
-            butil::FlatMap<std::string, std::string> m1;
+            flare::container::FlatMap<std::string, std::string> m1;
             m1.init(16);
             m1["Content-type"] = "application/json";
             m1["Request-Id"] = "true";
@@ -948,7 +948,7 @@ namespace {
 
 
     TEST_F(FlatMapTest, sanity) {
-        typedef butil::FlatMap<uint64_t, long> Map;
+        typedef flare::container::FlatMap<uint64_t, long> Map;
         Map m;
 
         ASSERT_FALSE(m.initialized());
@@ -1037,8 +1037,8 @@ namespace {
         srand(0);
 
         {
-            butil::hash_map<uint64_t, Value> ref[2];
-            typedef butil::FlatMap<uint64_t, Value> Map;
+            flare::container::hash_map<uint64_t, Value> ref[2];
+            typedef flare::container::FlatMap<uint64_t, Value> Map;
             Map ht[2];
             ht[0].init(40);
             ht[1] = ht[0];
@@ -1067,12 +1067,12 @@ namespace {
                 // bi-check
                 for (int i = 0; i < 2; ++i) {
                     for (Map::iterator it = ht[i].begin(); it != ht[i].end(); ++it) {
-                        butil::hash_map<uint64_t, Value>::iterator it2 = ref[i].find(it->first);
+                        flare::container::hash_map<uint64_t, Value>::iterator it2 = ref[i].find(it->first);
                         ASSERT_TRUE (it2 != ref[i].end());
                         ASSERT_EQ (it2->second, it->second);
                     }
 
-                    for (butil::hash_map<uint64_t, Value>::iterator it = ref[i].begin();
+                    for (flare::container::hash_map<uint64_t, Value>::iterator it = ref[i].begin();
                          it != ref[i].end(); ++it) {
                         Value *p_value = ht[i].seek(it->first);
                         ASSERT_TRUE (p_value != NULL);
@@ -1102,10 +1102,10 @@ namespace {
         const size_t NPASS = ARRAY_SIZE(nkeys);
 
         std::vector<uint64_t> keys;
-        butil::FlatMap<uint64_t, T> id_map;
+        flare::container::FlatMap<uint64_t, T> id_map;
         std::map < uint64_t, T > std_map;
         butil::PooledMap<uint64_t, T> pooled_map;
-        butil::hash_map<uint64_t, T> hash_map;
+        flare::container::hash_map<uint64_t, T> hash_map;
         flare::base::stop_watcher id_tm, std_tm, pooled_tm, hash_tm;
 
         size_t max_nkeys = 0;
@@ -1168,7 +1168,7 @@ namespace {
 
             LOG(INFO) << (random ? "Randomly" : "Sequentially")
                       << " inserting " << keys.size()
-                      << " into FlatMap/std::map/butil::PooledMap/butil::hash_map takes "
+                      << " into FlatMap/std::map/butil::PooledMap/flare::container::hash_map takes "
                       << id_tm.n_elapsed() / keys.size()
                       << "/" << std_tm.n_elapsed() / keys.size()
                       << "/" << pooled_tm.n_elapsed() / keys.size()
@@ -1204,7 +1204,7 @@ namespace {
 
             LOG(INFO) << (random ? "Randomly" : "Sequentially")
                       << " erasing " << keys.size()
-                      << " from FlatMap/std::map/butil::PooledMap/butil::hash_map takes "
+                      << " from FlatMap/std::map/butil::PooledMap/flare::container::hash_map takes "
                       << id_tm.n_elapsed() / keys.size()
                       << "/" << std_tm.n_elapsed() / keys.size()
                       << "/" << pooled_tm.n_elapsed() / keys.size()
@@ -1218,10 +1218,10 @@ namespace {
         const size_t NPASS = ARRAY_SIZE(nkeys);
         std::vector<uint64_t> keys;
         std::vector<uint64_t> rkeys;
-        butil::FlatMap<uint64_t, T> id_map;
+        flare::container::FlatMap<uint64_t, T> id_map;
         std::map < uint64_t, T > std_map;
         butil::PooledMap<uint64_t, T> pooled_map;
-        butil::hash_map<uint64_t, T> hash_map;
+        flare::container::hash_map<uint64_t, T> hash_map;
 
         flare::base::stop_watcher id_tm, std_tm, pooled_tm, hash_tm;
 
@@ -1282,7 +1282,7 @@ namespace {
             hash_tm.stop();
 
             LOG(INFO) << "Seeking " << keys.size()
-                      << " from FlatMap/std::map/butil::PooledMap/butil::hash_map takes "
+                      << " from FlatMap/std::map/butil::PooledMap/flare::container::hash_map takes "
                       << id_tm.n_elapsed() / keys.size()
                       << "/" << std_tm.n_elapsed() / keys.size()
                       << "/" << pooled_tm.n_elapsed() / keys.size()
@@ -1313,8 +1313,8 @@ namespace {
     }
 
     TEST_F(FlatMapTest, copy) {
-        butil::FlatMap<int, int> m1;
-        butil::FlatMap<int, int> m2;
+        flare::container::FlatMap<int, int> m1;
+        flare::container::FlatMap<int, int> m2;
         ASSERT_EQ(0, m1.init(32));
         m1[1] = 1;
         m1[2] = 2;

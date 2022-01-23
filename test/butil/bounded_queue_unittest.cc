@@ -18,7 +18,7 @@
 // Date: Sun Nov  3 19:16:50 PST 2019
 
 #include <iostream>
-#include "flare/butil/containers/bounded_queue.h"
+#include "flare/container/bounded_queue.h"
 #include <gtest/gtest.h>
 
 namespace {
@@ -26,7 +26,7 @@ namespace {
 TEST(BoundedQueueTest, sanity) {
     const int N = 36;
     char storage[N * sizeof(int)];
-    butil::BoundedQueue<int> q(storage, sizeof(storage), butil::NOT_OWN_STORAGE);
+    flare::container::bounded_queue<int> q(storage, sizeof(storage), flare::container::NOT_OWN_STORAGE);
     ASSERT_EQ(0ul, q.size());
     ASSERT_TRUE(q.empty());
     ASSERT_TRUE(NULL == q.top());

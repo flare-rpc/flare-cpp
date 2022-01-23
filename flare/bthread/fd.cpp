@@ -30,7 +30,7 @@
 #include "flare/base/time.h"
 #include "flare/base/fd_utility.h"                     // make_non_blocking
 #include "flare/base/logging.h"
-#include "flare/butil/third_party/murmurhash3/murmurhash3.h"   // fmix32
+#include "flare/hash/murmurhash3.h"   // fmix32
 #include "flare/bthread/butex.h"                       // butex_*
 #include "flare/bthread/task_group.h"                  // TaskGroup
 #include "flare/bthread/bthread.h"                             // bthread_start_urgent
@@ -39,7 +39,7 @@
 
 namespace bthread {
 
-extern BAIDU_THREAD_LOCAL TaskGroup* tls_task_group;
+extern FLARE_THREAD_LOCAL TaskGroup* tls_task_group;
 
 template <typename T, size_t NBLOCK, size_t BLOCK_SIZE>
 class LazyArray {
@@ -187,7 +187,7 @@ public:
 
         const int rc = bthread_join(_tid, NULL);
         if (rc) {
-            LOG(FATAL) << "Fail to join EpollThread, " << berror(rc);
+            LOG(FATAL) << "Fail to join EpollThread, " << flare_error(rc);
             return -1;
         }
         close(closing_epoll_pipe[0]);
@@ -346,8 +346,8 @@ private:
 #ifndef NDEBUG
                     break_nums.fetch_add(1, std::memory_order_relaxed);
                     int* p = &errno;
-                    const char* b = berror();
-                    const char* b2 = berror(errno);
+                    const char* b = flare_error();
+                    const char* b2 = flare_error(errno);
                     DLOG(FATAL) << "Fail to epoll epfd=" << epfd << ", "
                                 << errno << " " << p << " " <<  b << " " <<  b2;
 #endif
@@ -405,7 +405,7 @@ static inline EpollThread& get_epoll_thread(int fd) {
         return et;
     }
 
-    EpollThread& et = epoll_thread[butil::fmix32(fd) % BTHREAD_EPOLL_THREAD_NUM];
+    EpollThread& et = epoll_thread[flare::hash::fmix32(fd) % BTHREAD_EPOLL_THREAD_NUM];
     et.start(BTHREAD_DEFAULT_EPOLL_SIZE);
     return et;
 }

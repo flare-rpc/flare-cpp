@@ -83,7 +83,7 @@ public:
         }
 
         ParallelChannelDone* shared_data;
-        butil::intrusive_ptr<ResponseMerger> merger;
+        flare::container::intrusive_ptr<ResponseMerger> merger;
         SubCall ap;
         Controller cntl;
     };

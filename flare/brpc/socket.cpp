@@ -618,8 +618,8 @@ int Socket::Create(const SocketOptions& options, SocketId* id) {
     m->_auth_flag_error.store(0, std::memory_order_relaxed);
     const int rc2 = bthread_id_create(&m->_auth_id, NULL, NULL);
     if (rc2) {
-        LOG(ERROR) << "Fail to create auth_id: " << berror(rc2);
-        m->SetFailed(rc2, "Fail to create auth_id: %s", berror(rc2));
+        LOG(ERROR) << "Fail to create auth_id: " << flare_error(rc2);
+        m->SetFailed(rc2, "Fail to create auth_id: %s", flare_error(rc2));
         return -1;
     }
     // Disable SSL check if there is no SSL context
@@ -640,8 +640,8 @@ int Socket::Create(const SocketOptions& options, SocketId* id) {
     // NOTE: last two params are useless in bthread > r32787
     const int rc = bthread_id_list_init(&m->_id_wait_list, 512, 512);
     if (rc) {
-        LOG(ERROR) << "Fail to init _id_wait_list: " << berror(rc);
-        m->SetFailed(rc, "Fail to init _id_wait_list: %s", berror(rc));
+        LOG(ERROR) << "Fail to init _id_wait_list: " << flare_error(rc);
+        m->SetFailed(rc, "Fail to init _id_wait_list: %s", flare_error(rc));
         return -1;
     }
     m->_last_writetime_us.store(cpuwide_now, std::memory_order_relaxed);
@@ -653,7 +653,7 @@ int Socket::Create(const SocketOptions& options, SocketId* id) {
         const int saved_errno = errno;
         PLOG(ERROR) << "Fail to ResetFileDescriptor";
         m->SetFailed(saved_errno, "Fail to ResetFileDescriptor: %s", 
-                     berror(saved_errno));
+                     flare_error(saved_errno));
         return -1;
     }
     *id = m->_this_id;
@@ -715,7 +715,7 @@ int Socket::WaitAndReset(int32_t expected_nref) {
     bthread_id_error(_auth_id, 0);
     const int rc = bthread_id_create(&_auth_id, NULL, NULL);
     if (rc != 0) {
-        LOG(FATAL) << "Fail to create _auth_id, " << berror(rc);
+        LOG(FATAL) << "Fail to create _auth_id, " << flare_error(rc);
         return -1;
     }
 
@@ -724,7 +724,7 @@ int Socket::WaitAndReset(int32_t expected_nref) {
     _last_writetime_us.store(cpuwide_now, std::memory_order_relaxed);
     _logoff_flag.store(false, std::memory_order_relaxed);
     {
-        BAIDU_SCOPED_LOCK(_pipeline_mutex);
+        FLARE_SCOPED_LOCK(_pipeline_mutex);
         if (_pipeline_q) {
             _pipeline_q->clear();
         }
@@ -1168,7 +1168,7 @@ int Socket::Connect(const timespec* abstime,
             const int saved_errno = errno;
             PLOG(WARNING) << "Fail to add fd=" << sockfd << " into epoll";
             s->SetFailed(saved_errno, "Fail to add fd=%d into epoll: %s",
-                         (int)sockfd, berror(saved_errno));
+                         (int)sockfd, flare_error(saved_errno));
             return -1;
         }
         
@@ -1183,8 +1183,8 @@ int Socket::Connect(const timespec* abstime,
                                        HandleEpollOutTimeout,
                                        (void*)connect_id);
             if (rc) {
-                LOG(ERROR) << "Fail to add timer: " << berror(rc);
-                s->SetFailed(rc, "Fail to add timer: %s", berror(rc));
+                LOG(ERROR) << "Fail to add timer: " << flare_error(rc);
+                s->SetFailed(rc, "Fail to add timer: %s", flare_error(rc));
                 return -1;
             }
         }
@@ -1335,7 +1335,7 @@ void Socket::AfterAppConnected(int err, void* data) {
         }
 
         s->SetFailed(err, "Fail to connect %s: %s",
-                     s->description().c_str(), berror(err));
+                     s->description().c_str(), flare_error(err));
         s->ReleaseAllFailedWriteRequests(req);
     }
 }
@@ -1561,7 +1561,7 @@ int Socket::StartWrite(WriteRequest* req, const WriteOptions& opt) {
             // EPIPE is common in pooled connections + backup requests.
             PLOG_IF(WARNING, errno != EPIPE) << "Fail to write into " << *this;
             SetFailed(saved_errno, "Fail to write into %s: %s", 
-                      description().c_str(), berror(saved_errno));
+                      description().c_str(), flare_error(saved_errno));
             goto FAIL_TO_WRITE;
         }
     } else {
@@ -1615,7 +1615,7 @@ void* Socket::KeepWrite(void* void_arg) {
                 const int saved_errno = errno;
                 PLOG(WARNING) << "Fail to keep-write into " << *s;
                 s->SetFailed(saved_errno, "Fail to keep-write into %s: %s",
-                             s->description().c_str(), berror(saved_errno));
+                             s->description().c_str(), flare_error(saved_errno));
                 break;
             }
         } else {
@@ -1647,7 +1647,7 @@ void* Socket::KeepWrite(void* void_arg) {
                 const int saved_errno = errno;
                 PLOG(WARNING) << "Fail to wait epollout of " << *s;
                 s->SetFailed(saved_errno, "Fail to wait epollout of %s: %s",
-                             s->description().c_str(), berror(saved_errno));
+                             s->description().c_str(), flare_error(saved_errno));
                 break;
             }
         }
@@ -2016,13 +2016,13 @@ void Socket::DebugSocket(std::ostream& os, SocketId id) {
     size_t idsizes[4];
     size_t nidsize = 0;
     {
-        BAIDU_SCOPED_LOCK(ptr->_pipeline_mutex);
+        FLARE_SCOPED_LOCK(ptr->_pipeline_mutex);
         if (ptr->_pipeline_q) {
             npipelined = ptr->_pipeline_q->size();
         }
     }
     {
-        BAIDU_SCOPED_LOCK(ptr->_id_wait_list_mutex);
+        FLARE_SCOPED_LOCK(ptr->_id_wait_list_mutex);
         if (bthread::get_sizes) {
             nidsize = bthread::get_sizes(
                 &ptr->_id_wait_list, idsizes, arraysize(idsizes));
@@ -2302,7 +2302,7 @@ inline int SocketPool::GetSocket(SocketUniquePtr* ptr) {
     if (connection_pool_size > 0) {
         for (;;) {
             {
-                BAIDU_SCOPED_LOCK(_mutex);
+                FLARE_SCOPED_LOCK(_mutex);
                 if (_pool.empty()) {
                     break;
                 }
@@ -2337,7 +2337,7 @@ inline void SocketPool::ReturnSocket(Socket* sock) {
     if (_numfree.fetch_add(1, std::memory_order_relaxed) <
         connection_pool_size) {
         const SocketId sid = sock->id();
-        BAIDU_SCOPED_LOCK(_mutex);
+        FLARE_SCOPED_LOCK(_mutex);
         _pool.push_back(sid);
     } else {
         // Cancel the addition and close the pooled socket.

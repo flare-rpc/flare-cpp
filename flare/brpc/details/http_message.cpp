@@ -23,7 +23,7 @@
 #include <gflags/gflags.h>
 #include "flare/butil/macros.h"
 #include "flare/base/logging.h"                       // LOG
-#include "flare/butil/scoped_lock.h"
+#include "flare/base/scoped_lock.h"
 #include "flare/base/endpoint.h"
 #include "flare/base/base64.h"
 #include "flare/bthread/bthread.h"                    // bthread_usleep

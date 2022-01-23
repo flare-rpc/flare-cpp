@@ -19,8 +19,8 @@
 #include <algorithm>                                           // std::set_union
 #include <array>
 #include <gflags/gflags.h>
-#include "flare/butil/containers/flat_map.h"
-#include "flare/butil/errno.h"
+#include "flare/container/flat_map.h"
+#include "flare/base/errno.h"
 #include "flare/butil/strings/string_number_conversions.h"
 #include "flare/brpc/socket.h"
 #include "flare/brpc/policy/consistent_hashing_load_balancer.h"
@@ -174,7 +174,7 @@ size_t ConsistentHashingLoadBalancer::RemoveBatch(
         bg = fg;
         return 0;
     }
-    butil::FlatSet<ServerId> id_set;
+    flare::container::FlatSet<ServerId> id_set;
     bool use_set = true;
     if (id_set.init(servers.size() * 2) == 0) {
         for (size_t i = 0; i < servers.size(); ++i) {
@@ -186,7 +186,7 @@ size_t ConsistentHashingLoadBalancer::RemoveBatch(
     } else {
         use_set = false;
     }
-    CHECK(use_set) << "Fail to construct id_set, " << berror();
+    CHECK(use_set) << "Fail to construct id_set, " << flare_error();
     bg.clear();
     for (size_t i = 0; i < fg.size(); ++i) {
         const bool removed = 
@@ -296,7 +296,7 @@ int ConsistentHashingLoadBalancer::SelectServer(
         LOG(ERROR) << "request_code must be 32-bit currently";
         return EINVAL;
     }
-    butil::DoublyBufferedData<std::vector<Node> >::ScopedPtr s;
+    flare::container::DoublyBufferedData<std::vector<Node> >::ScopedPtr s;
     if (_db_hash_ring.Read(&s) != 0) {
         return ENOMEM;
     }
@@ -358,7 +358,7 @@ void ConsistentHashingLoadBalancer::GetLoads(
     load_map->clear();
     std::map<flare::base::end_point, uint32_t> count_map;
     do {
-        butil::DoublyBufferedData<std::vector<Node> >::ScopedPtr s;
+        flare::container::DoublyBufferedData<std::vector<Node> >::ScopedPtr s;
         if (_db_hash_ring.Read(&s) != 0) {
             break;
         }

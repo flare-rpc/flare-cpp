@@ -104,7 +104,7 @@ size_t RoundRobinLoadBalancer::RemoveServersInBatch(
 }
 
 int RoundRobinLoadBalancer::SelectServer(const SelectIn& in, SelectOut* out) {
-    butil::DoublyBufferedData<Servers, TLS>::ScopedPtr s;
+    flare::container::DoublyBufferedData<Servers, TLS>::ScopedPtr s;
     if (_db_servers.Read(&s) != 0) {
         return ENOMEM;
     }
@@ -162,7 +162,7 @@ void RoundRobinLoadBalancer::Describe(
         return;
     }
     os << "RoundRobin{";
-    butil::DoublyBufferedData<Servers, TLS>::ScopedPtr s;
+    flare::container::DoublyBufferedData<Servers, TLS>::ScopedPtr s;
     if (_db_servers.Read(&s) != 0) {
         os << "fail to read _db_servers";
     } else {

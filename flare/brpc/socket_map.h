@@ -21,7 +21,7 @@
 
 #include <vector>                             // std::vector
 #include "flare/bvar/bvar.h"                        // bvar::PassiveStatus
-#include "flare/butil/containers/flat_map.h"        // FlatMap
+#include "flare/container/flat_map.h"        // FlatMap
 #include "flare/brpc/socket_id.h"                   // SockdetId
 #include "flare/brpc/options.pb.h"                  // ProtocolType
 #include "flare/brpc/input_messenger.h"             // InputMessageHandler
@@ -67,8 +67,8 @@ inline bool operator==(const SocketMapKey& k1, const SocketMapKey& k2) {
 
 struct SocketMapKeyHasher {
     size_t operator()(const SocketMapKey& key) const {
-        size_t h = butil::DefaultHasher<flare::base::end_point>()(key.peer.addr);
-        h = h * 101 + butil::DefaultHasher<std::string>()(key.peer.tag);
+        size_t h = flare::container::DefaultHasher<flare::base::end_point>()(key.peer.addr);
+        h = h * 101 + flare::container::DefaultHasher<std::string>()(key.peer.tag);
         h = h * 101 + key.channel_signature.data[1];
         return h;
     }
@@ -174,7 +174,7 @@ private:
 
     // TODO: When RpcChannels connecting to one end_point are frequently created
     //       and destroyed, a single map+mutex may become hot-spots.
-    typedef butil::FlatMap<SocketMapKey, SingleConnection,
+    typedef flare::container::FlatMap<SocketMapKey, SingleConnection,
                            SocketMapKeyHasher> Map;
     SocketMapOptions _options;
     butil::Mutex _mutex;

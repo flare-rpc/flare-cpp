@@ -70,7 +70,7 @@ public:
     virtual ~FileServiceImpl() {};
 
     struct Args {
-        butil::intrusive_ptr<brpc::ProgressiveAttachment> pa;
+        flare::container::intrusive_ptr<brpc::ProgressiveAttachment> pa;
     };
 
     static void* SendLargeFile(void* raw_args) {

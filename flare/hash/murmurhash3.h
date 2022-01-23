@@ -43,7 +43,7 @@ typedef unsigned __int64 uint64_t;
 #define BIG_CONSTANT(x) (x##LLU)
 #endif
 
-namespace butil {
+namespace flare::hash {
 
 // Finalization mix - force all bits of a hash block to avalanche
 MURMURHASH_FORCE_INLINE uint32_t fmix32 (uint32_t h) {
@@ -111,6 +111,6 @@ void MurmurHash3_x64_128_Init(MurmurHash3_x64_128_Context* ctx, uint32_t seed);
 void MurmurHash3_x64_128_Update(MurmurHash3_x64_128_Context* ctx, const void* key, int len);
 void MurmurHash3_x64_128_Final(void* out, const MurmurHash3_x64_128_Context* ctx);
 
-} // namespace butil
+} // namespace flare::hash
 
 #endif // BUTIL_THIRD_PARTY_MURMURHASH3_MURMURHASH3_H

@@ -23,7 +23,7 @@
 #include "flare/brpc/log.h"
 #include "flare/brpc/details/http_parser.h"      // http_parser_parse_url
 #include "flare/brpc/uri.h"                      // URI
-
+#include "flare/base/strings.h"
 
 namespace brpc {
 
@@ -506,7 +506,7 @@ std::string QueryRemover::modified_query() {
 void append_query(std::string *query_string,
                   const std::string_view& key,
                   const std::string_view& value) {
-    if (!query_string->empty() && butil::back_char(*query_string) != '?') {
+    if (!query_string->empty() && flare::base::back_char(*query_string) != '?') {
         query_string->push_back('&');
     }
     query_string->append(key.data(), key.size());

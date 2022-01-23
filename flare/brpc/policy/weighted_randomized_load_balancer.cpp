@@ -110,7 +110,7 @@ size_t WeightedRandomizedLoadBalancer::RemoveServersInBatch(
 }
 
 int WeightedRandomizedLoadBalancer::SelectServer(const SelectIn& in, SelectOut* out) {
-    butil::DoublyBufferedData<Servers>::ScopedPtr s;
+    flare::container::DoublyBufferedData<Servers>::ScopedPtr s;
     if (_db_servers.Read(&s) != 0) {
         return ENOMEM;
     }
@@ -153,7 +153,7 @@ void WeightedRandomizedLoadBalancer::Describe(
         return;
     }
     os << "WeightedRandomized{";
-    butil::DoublyBufferedData<Servers>::ScopedPtr s;
+    flare::container::DoublyBufferedData<Servers>::ScopedPtr s;
     if (_db_servers.Read(&s) != 0) {
         os << "fail to read _db_servers";
     } else {

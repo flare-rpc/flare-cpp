@@ -20,7 +20,7 @@
 #include <pthread.h>
 #include <gflags/gflags.h>
 #include "flare/bthread/butex.h"
-#include "flare/butil/scoped_lock.h"
+#include "flare/base/scoped_lock.h"
 #include "flare/base/logging.h"
 #include "flare/brpc/log.h"
 #include "flare/brpc/socket_map.h"
@@ -42,8 +42,8 @@ struct NSKey {
 };
 struct NSKeyHasher {
     size_t operator()(const NSKey& nskey) const {
-        size_t h = butil::DefaultHasher<std::string>()(nskey.protocol);
-        h = h * 101 + butil::DefaultHasher<std::string>()(nskey.service_name);
+        size_t h = flare::container::DefaultHasher<std::string>()(nskey.protocol);
+        h = h * 101 + flare::container::DefaultHasher<std::string>()(nskey.service_name);
         h = h * 101 + nskey.channel_signature.data[1];
         return h;
     }
@@ -54,7 +54,7 @@ inline bool operator==(const NSKey& k1, const NSKey& k2) {
         k1.channel_signature == k2.channel_signature;
 }
 
-typedef butil::FlatMap<NSKey, NamingServiceThread*, NSKeyHasher> NamingServiceMap;
+typedef flare::container::FlatMap<NSKey, NamingServiceThread*, NSKeyHasher> NamingServiceMap;
 // Construct on demand to make the code work before main()
 static NamingServiceMap* g_nsthread_map = NULL;
 static pthread_mutex_t g_nsthread_map_mutex = PTHREAD_MUTEX_INITIALIZER;
@@ -163,7 +163,7 @@ void NamingServiceThread::Actions::ResetServers(
     ServerNodeWithId2ServerId(_removed_sockets, &removed_ids, NULL);
 
     {
-        BAIDU_SCOPED_LOCK(_owner->_mutex);
+        FLARE_SCOPED_LOCK(_owner->_mutex);
         _last_servers.swap(_servers);
         _owner->_last_sockets.swap(_sockets);
         for (std::map<NamingServiceWatcher*,
@@ -247,7 +247,7 @@ NamingServiceThread::~NamingServiceThread() {
         _tid = 0;
     }
     {
-        BAIDU_SCOPED_LOCK(_mutex);
+        FLARE_SCOPED_LOCK(_mutex);
         std::vector<ServerId> to_be_removed;
         ServerNodeWithId2ServerId(_last_sockets, &to_be_removed, NULL);
         if (!_last_sockets.empty()) {
@@ -291,7 +291,7 @@ int NamingServiceThread::Start(NamingService* naming_service,
     } else {
         int rc = bthread_start_urgent(&_tid, NULL, RunThis, this);
         if (rc) {
-            LOG(ERROR) << "Fail to create bthread: " << berror(rc);
+            LOG(ERROR) << "Fail to create bthread: " << flare_error(rc);
             return -1;
         }
     }
@@ -308,7 +308,7 @@ int NamingServiceThread::WaitForFirstBatchOfServers() {
         rc = 0;
     }
     if (rc) {
-        LOG(ERROR) << "Fail to WaitForFirstBatchOfServers: " << berror(rc);
+        LOG(ERROR) << "Fail to WaitForFirstBatchOfServers: " << flare_error(rc);
         return -1;
     }
     return 0;
@@ -336,7 +336,7 @@ int NamingServiceThread::AddWatcher(NamingServiceWatcher* watcher,
         LOG(ERROR) << "Param[watcher] is NULL";
         return -1;
     }
-    BAIDU_SCOPED_LOCK(_mutex);
+    FLARE_SCOPED_LOCK(_mutex);
     if (_watchers.emplace(watcher, filter).second) {
         if (!_last_sockets.empty()) {
             std::vector<ServerId> added_ids;
@@ -353,7 +353,7 @@ int NamingServiceThread::RemoveWatcher(NamingServiceWatcher* watcher) {
         LOG(ERROR) << "Param[watcher] is NULL";
         return -1;
     }
-    BAIDU_SCOPED_LOCK(_mutex);
+    FLARE_SCOPED_LOCK(_mutex);
     if (_watchers.erase(watcher)) {
         // Not call OnRemovedServers of the watcher because watcher can
         // remove the sockets by itself and in most cases, removing
@@ -366,7 +366,7 @@ int NamingServiceThread::RemoveWatcher(NamingServiceWatcher* watcher) {
 void NamingServiceThread::Run() {
     int rc = _ns->RunNamingService(_service_name.c_str(), &_actions);
     if (rc != 0) {
-        LOG(WARNING) << "Fail to run naming service: " << berror(rc);
+        LOG(WARNING) << "Fail to run naming service: " << flare_error(rc);
         if (rc == ENODATA) {
             LOG(ERROR) << "RunNamingService should not return ENODATA, "
                 "change it to ESTOP";
@@ -408,7 +408,7 @@ static const char* ParseNamingServiceUrl(const char* url, char* protocol) {
 }
 
 int GetNamingServiceThread(
-    butil::intrusive_ptr<NamingServiceThread>* nsthread_out,
+    flare::container::intrusive_ptr<NamingServiceThread>* nsthread_out,
     const char* url,
     const GetNamingServiceThreadOptions* options) {
     char protocol[MAX_PROTOCOL_LEN + 1];
@@ -425,7 +425,7 @@ int GetNamingServiceThread(
     const NSKey key(protocol, service_name,
                     (options ? options->channel_signature : ChannelSignature()));
     bool new_thread = false;
-    butil::intrusive_ptr<NamingServiceThread> nsthread;
+    flare::container::intrusive_ptr<NamingServiceThread> nsthread;
     {
         std::unique_lock<pthread_mutex_t> mu(g_nsthread_map_mutex);
         if (g_nsthread_map == NULL) {

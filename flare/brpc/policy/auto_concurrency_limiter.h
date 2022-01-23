@@ -19,7 +19,7 @@
 #define BRPC_POLICY_AUTO_CONCURRENCY_LIMITER_H
 
 #include "flare/bvar/bvar.h"
-#include "flare/butil/containers/bounded_queue.h"
+#include "flare/container/bounded_queue.h"
 #include "flare/brpc/concurrency_limiter.h"
 
 namespace brpc {

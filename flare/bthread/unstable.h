@@ -80,7 +80,7 @@ extern int bthread_connect(int sockfd, const sockaddr* serv_addr,
                            socklen_t addrlen);
 
 // Add a startup function that each pthread worker will run at the beginning
-// To run code at the end, use butil::thread_atexit()
+// To run code at the end, use flare::base::thread_atexit()
 // Returns 0 on success, error code otherwise.
 extern int bthread_set_worker_startfn(void (*start_fn)());
 

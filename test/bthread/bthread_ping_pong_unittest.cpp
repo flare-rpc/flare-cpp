@@ -24,7 +24,7 @@
 #include "flare/butil/compat.h"
 #include "flare/base/time.h"
 #include "flare/butil/macros.h"
-#include "flare/butil/errno.h"
+#include "flare/base/errno.h"
 #include <flare/bthread/sys_futex.h>
 #include <flare/bthread/butex.h>
 #include "flare/bthread/bthread.h"

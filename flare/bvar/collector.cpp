@@ -49,7 +49,7 @@ struct CombineCollected {
             s1 = s2;
             return;
         }
-        s1->InsertBeforeAsList(s2);
+        s1->insert_before_as_list(s2);
     }
 };
 
@@ -104,7 +104,7 @@ private:
     int64_t _ndump;
     pthread_mutex_t _dump_thread_mutex;
     pthread_cond_t _dump_thread_cond;
-    butil::LinkNode<Collected> _dump_root;
+    flare::container::link_node<Collected> _dump_root;
     pthread_mutex_t _sleep_mutex;
     pthread_cond_t _sleep_cond;
 };
@@ -124,7 +124,7 @@ Collector::Collector()
     pthread_cond_init(&_sleep_cond, NULL);
     int rc = pthread_create(&_grab_thread, NULL, run_grab_thread, this);
     if (rc != 0) {
-        LOG(ERROR) << "Fail to create Collector, " << berror(rc);
+        LOG(ERROR) << "Fail to create Collector, " << flare_error(rc);
     } else {
         _created = true;
     }
@@ -192,22 +192,22 @@ void Collector::grab_thread() {
         }
 
         // Collect TLS submissions and give them to dump_thread.
-        butil::LinkNode<Collected>* head = this->reset();
+        flare::container::link_node<Collected>* head = this->reset();
         if (head) {
-            butil::LinkNode<Collected> tmp_root;
-            head->InsertBeforeAsList(&tmp_root);
+            flare::container::link_node<Collected> tmp_root;
+            head->insert_before_as_list(&tmp_root);
             head = NULL;
             
             // Group samples by preprocessors.
-            for (butil::LinkNode<Collected>* p = tmp_root.next(); p != &tmp_root;) {
-                butil::LinkNode<Collected>* saved_next = p->next();
-                p->RemoveFromList();
+            for (flare::container::link_node<Collected>* p = tmp_root.next(); p != &tmp_root;) {
+                flare::container::link_node<Collected>* saved_next = p->next();
+                p->remove_from_list();
                 CollectorPreprocessor* prep = p->value()->preprocessor();
                 prep_map[prep].push_back(p->value());
                 p = saved_next;
             }
             // Iterate prep_map
-            butil::LinkNode<Collected> root;
+            flare::container::link_node<Collected> root;
             for (PreprocessorMap::iterator it = prep_map.begin();
                  it != prep_map.end(); ++it) {
                 std::vector<Collected*> & list = it->second;
@@ -235,16 +235,16 @@ void Collector::grab_thread() {
                         ++_ndrop;
                         p->destroy();
                     } else {
-                        p->InsertBefore(&root);
+                        p->insert_before(&root);
                     }
                 }
             }
             // Give the samples to dump_thread
             if (root.next() != &root) {  // non empty
-                butil::LinkNode<Collected>* head2 = root.next();
-                root.RemoveFromList();
-                BAIDU_SCOPED_LOCK(_dump_thread_mutex);
-                head2->InsertBeforeAsList(&_dump_root);
+                flare::container::link_node<Collected>* head2 = root.next();
+                root.remove_from_list();
+                FLARE_SCOPED_LOCK(_dump_thread_mutex);
+                head2->insert_before_as_list(&_dump_root);
                 pthread_cond_signal(&_dump_thread_cond);
             }
         }
@@ -273,7 +273,7 @@ void Collector::grab_thread() {
     }
     // make sure _stop is true, we may have other reasons to quit above loop
     {
-        BAIDU_SCOPED_LOCK(_dump_thread_mutex);
+        FLARE_SCOPED_LOCK(_dump_thread_mutex);
         _stop = true; 
         pthread_cond_signal(&_dump_thread_cond);
     }
@@ -369,16 +369,16 @@ void Collector::dump_thread() {
     bvar::PerSecond<bvar::PassiveStatus<int64_t> > ndumped_second(
         "bvar::collector_dump_second", &ndumped_var);
 
-    butil::LinkNode<Collected> root;
+    flare::container::link_node<Collected> root;
     size_t round = 0;
 
     // The main loop
     while (!_stop) {
         ++round;
         // Get new samples set by grab_thread.
-        butil::LinkNode<Collected>* newhead = NULL;
+        flare::container::link_node<Collected>* newhead = NULL;
         {
-            BAIDU_SCOPED_LOCK(_dump_thread_mutex);
+            FLARE_SCOPED_LOCK(_dump_thread_mutex);
             while (!_stop && _dump_root.next() == &_dump_root) {
                 const int64_t now_ns = flare::base::cpuwide_time_ns();
                 busy_seconds += (now_ns - last_ns) / 1000000000.0;
@@ -389,16 +389,16 @@ void Collector::dump_thread() {
                 break;
             }
             newhead = _dump_root.next();
-            _dump_root.RemoveFromList();
+            _dump_root.remove_from_list();
         }
         CHECK(newhead != &_dump_root);
-        newhead->InsertBeforeAsList(&root);
+        newhead->insert_before_as_list(&root);
 
         // Call callbacks.
-        for (butil::LinkNode<Collected>* p = root.next(); !_stop && p != &root;) {
+        for (flare::container::link_node<Collected>* p = root.next(); !_stop && p != &root;) {
             // We remove p from the list, save next first.
-            butil::LinkNode<Collected>* saved_next = p->next();
-            p->RemoveFromList();
+            flare::container::link_node<Collected>* saved_next = p->next();
+            p->remove_from_list();
             Collected* s = p->value();
             s->dump_and_destroy(round);
             ++_ndump;

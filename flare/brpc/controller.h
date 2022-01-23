@@ -24,7 +24,7 @@
 
 #include <gflags/gflags.h>                     // Users often need gflags
 #include <string>
-#include "flare/butil/intrusive_ptr.hpp"             // butil::intrusive_ptr
+#include "flare/container/intrusive_ptr.h"             // flare::container::intrusive_ptr
 #include "flare/bthread/errno.h"                     // Redefine errno
 #include "flare/base/endpoint.h"                    // flare::base::end_point
 #include "flare/butil/iobuf.h"                       // butil::IOBuf
@@ -397,7 +397,7 @@ public:
     // If `stop_style' is FORCE_STOP, the underlying socket will be failed
     // immediately when the socket becomes idle or server is stopped.
     // Default value of `stop_style' is WAIT_FOR_STOP.
-    butil::intrusive_ptr<ProgressiveAttachment>
+    flare::container::intrusive_ptr<ProgressiveAttachment>
     CreateProgressiveAttachment(StopStyle stop_style = WAIT_FOR_STOP);
 
     bool has_progressive_writer() const { return _wpa != NULL; }
@@ -478,7 +478,7 @@ public:
     bool Failed() const override;
 
     // If Failed() is true, return description of the errors.
-    // NOTE: ErrorText() != berror(ErrorCode()). 
+    // NOTE: ErrorText() != flare_error(ErrorCode()).
     std::string ErrorText() const override;
 
     // Last error code. Equals 0 iff Failed() is false.
@@ -713,7 +713,7 @@ private:
     const Server* _server;
     bthread_id_t _oncancel_id;
     const AuthContext* _auth_context;        // Authentication result
-    butil::intrusive_ptr<MongoContext> _mongo_session_data;
+    flare::container::intrusive_ptr<MongoContext> _mongo_session_data;
     SampledRequest* _sampled_request;
 
     ProtocolType _request_protocol;
@@ -756,7 +756,7 @@ private:
     RPCSender* _sender;
     uint64_t _request_code;
     SocketId _single_server_id;
-    butil::intrusive_ptr<SharedLoadBalancer> _lb;
+    flare::container::intrusive_ptr<SharedLoadBalancer> _lb;
 
     // for passing parameters to created bthread, don't modify it otherwhere.
     CompletionInfo _tmp_completion_info;
@@ -785,9 +785,9 @@ private:
     butil::IOBuf _response_attachment;
 
     // Writable progressive attachment
-    butil::intrusive_ptr<ProgressiveAttachment> _wpa;
+    flare::container::intrusive_ptr<ProgressiveAttachment> _wpa;
     // Readable progressive attachment
-    butil::intrusive_ptr<ReadableProgressiveAttachment> _rpa;
+    flare::container::intrusive_ptr<ReadableProgressiveAttachment> _rpa;
 
     // TODO: Replace following fields with StreamCreator
     // Defined at client side

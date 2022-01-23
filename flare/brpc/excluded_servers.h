@@ -19,8 +19,8 @@
 #ifndef BRPC_EXCLUDED_SERVERS_H
 #define BRPC_EXCLUDED_SERVERS_H
 
-#include "flare/butil/scoped_lock.h"
-#include "flare/butil/containers/bounded_queue.h"
+#include "flare/base/scoped_lock.h"
+#include "flare/container/bounded_queue.h"
 #include "flare/brpc/socket_id.h"                       // SocketId
 
 
@@ -50,13 +50,13 @@ public:
 
 private:
     ExcludedServers(int cap)
-        : _l(_space, sizeof(SocketId)* cap, butil::NOT_OWN_STORAGE) {}
+        : _l(_space, sizeof(SocketId)* cap, flare::container::NOT_OWN_STORAGE) {}
     ~ExcludedServers() {}
     // Controller::_accessed may be shared by sub channels in schan, protect
     // all mutable methods with this mutex. In ordinary channels, this mutex
     // is never contended.
     mutable butil::Mutex _mutex;
-    butil::BoundedQueue<SocketId> _l;
+    flare::container::bounded_queue<SocketId> _l;
     SocketId _space[0];
 };
 
@@ -79,7 +79,7 @@ inline void ExcludedServers::Destroy(ExcludedServers* ptr) {
 }
 
 inline void ExcludedServers::Add(SocketId id) {
-    BAIDU_SCOPED_LOCK(_mutex);
+    FLARE_SCOPED_LOCK(_mutex);
     const SocketId* last_id = _l.bottom();
     if (last_id == NULL || *last_id != id) {
         _l.elim_push(id);
@@ -87,7 +87,7 @@ inline void ExcludedServers::Add(SocketId id) {
 }
 
 inline bool ExcludedServers::IsExcluded(SocketId id) const {
-    BAIDU_SCOPED_LOCK(_mutex);
+    FLARE_SCOPED_LOCK(_mutex);
     for (size_t i = 0; i < _l.size(); ++i) {
         if (*_l.bottom(i) == id) {
             return true;

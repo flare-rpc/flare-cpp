@@ -22,7 +22,7 @@
 #include <string>                      // std::string
 #include "flare/butil/macros.h"
 #include "flare/butil/iobuf.h"               // butil::IOBuf
-#include "flare/butil/scoped_lock.h"         // butil::unique_lock
+#include "flare/base/scoped_lock.h"         // butil::unique_lock
 #include "flare/base/endpoint.h"
 #include "flare/brpc/details/http_parser.h"  // http_parser
 #include "flare/brpc/http_header.h"          // HttpHeader

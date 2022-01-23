@@ -21,7 +21,7 @@
 #define  BVAR_LOCK_TIMER_H
 
 #include "flare/base/time.h"             // flare::base::stop_watcher
-#include "flare/butil/scoped_lock.h"      // std::lock_guard std::unique_lock
+#include "flare/base/scoped_lock.h"      // std::lock_guard std::unique_lock
 #include "flare/butil/macros.h"           // DISALLOW_COPY_AND_ASSIGN
 
 #include "flare/bvar/recorder.h"         // IntRecorder
@@ -69,7 +69,7 @@
 // void critical_routine_with_lock_guard() {
 //     std::lock_guard<my_mutex_t> guard(mutex);
 //     // ^^^
-//     // Or you can use BAIDU_SCOPED_LOCK(mutex) to make it simple
+//     // Or you can use FLARE_SCOPED_LOCK(mutex) to make it simple
 //     ... 
 //     doing something inside the critical section
 //     ...
@@ -120,7 +120,7 @@ struct MutexConstructor<pthread_mutex_t> {
     bool operator()(pthread_mutex_t* mutex) const { 
 #ifndef NDEBUG
         const int rc = pthread_mutex_init(mutex, NULL);
-        CHECK_EQ(0, rc) << "Fail to init pthread_mutex, " << berror(rc);
+        CHECK_EQ(0, rc) << "Fail to init pthread_mutex, " << flare_error(rc);
         return rc == 0;
 #else
         return pthread_mutex_init(mutex, NULL) == 0;
@@ -133,7 +133,7 @@ struct MutexDestructor<pthread_mutex_t> {
     bool operator()(pthread_mutex_t* mutex) const { 
 #ifndef NDEBUG
         const int rc = pthread_mutex_destroy(mutex);
-        CHECK_EQ(0, rc) << "Fail to destroy pthread_mutex, " << berror(rc);
+        CHECK_EQ(0, rc) << "Fail to destroy pthread_mutex, " << flare_error(rc);
         return rc == 0;
 #else
         return pthread_mutex_destroy(mutex) == 0;

@@ -23,7 +23,7 @@
 #include <functional>
 #include <vector>                                       // std::vector
 #include "flare/base/endpoint.h"                              // flare::base::end_point
-#include "flare/butil/containers/doubly_buffered_data.h"
+#include "flare/container/doubly_buffered_data.h"
 #include "flare/brpc/load_balancer.h"
 
 
@@ -77,7 +77,7 @@ private:
                          const ServerId& server, bool *executed);
     size_t _num_replicas;
     ConsistentHashingLoadBalancerType _type;
-    butil::DoublyBufferedData<std::vector<Node> > _db_hash_ring;
+    flare::container::DoublyBufferedData<std::vector<Node> > _db_hash_ring;
 };
 
 }  // namespace policy

@@ -207,7 +207,7 @@ void ExecutionQueueBase::_on_recycle() {
             start_execute(node);
             break;
         }
-        CHECK(false) << "Fail to create task_node_t, " << berror();
+        CHECK(false) << "Fail to create task_node_t, " << flare_error();
         ::bthread_usleep(1000);
     }
 }

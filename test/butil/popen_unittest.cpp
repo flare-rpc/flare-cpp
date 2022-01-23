@@ -18,7 +18,7 @@
 // Date: 2017/11/06 10:57:08
 
 #include "flare/butil/popen.h"
-#include "flare/butil/errno.h"
+#include "flare/base/errno.h"
 #include "flare/butil/strings/string_piece.h"
 #include "flare/butil/build_config.h"
 #include <gtest/gtest.h>
@@ -36,12 +36,12 @@ class PopenTest : public testing::Test {
 TEST(PopenTest, posix_popen) {
     std::ostringstream oss;
     int rc = butil::read_command_output_through_popen(oss, "echo \"Hello World\"");
-    ASSERT_EQ(0, rc) << berror(errno);
+    ASSERT_EQ(0, rc) << flare_error(errno);
     ASSERT_EQ("Hello World\n", oss.str());
 
     oss.str("");
     rc = butil::read_command_output_through_popen(oss, "exit 1");
-    EXPECT_EQ(1, rc) << berror(errno);
+    EXPECT_EQ(1, rc) << flare_error(errno);
     ASSERT_TRUE(oss.str().empty()) << oss.str();
     oss.str("");
     rc = butil::read_command_output_through_popen(oss, "kill -9 $$");
@@ -70,12 +70,12 @@ TEST(PopenTest, posix_popen) {
 TEST(PopenTest, clone) {
     std::ostringstream oss;
     int rc = butil::read_command_output_through_clone(oss, "echo \"Hello World\"");
-    ASSERT_EQ(0, rc) << berror(errno);
+    ASSERT_EQ(0, rc) << flare_error(errno);
     ASSERT_EQ("Hello World\n", oss.str());
 
     oss.str("");
     rc = butil::read_command_output_through_clone(oss, "exit 1");
-    ASSERT_EQ(1, rc) << berror(errno);
+    ASSERT_EQ(1, rc) << flare_error(errno);
     ASSERT_TRUE(oss.str().empty()) << oss.str();
     oss.str("");
     rc = butil::read_command_output_through_clone(oss, "kill -9 $$");

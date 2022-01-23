@@ -21,7 +21,7 @@
 
 #include <vector>                                      // std::vector
 #include <map>                                         // std::map
-#include "flare/butil/containers/doubly_buffered_data.h"
+#include "flare/container/doubly_buffered_data.h"
 #include "flare/brpc/load_balancer.h"
 #include "flare/brpc/cluster_recover_policy.h"
 
@@ -57,7 +57,7 @@ private:
     static size_t BatchAdd(Servers& bg, const std::vector<ServerId>& servers);
     static size_t BatchRemove(Servers& bg, const std::vector<ServerId>& servers);
 
-    butil::DoublyBufferedData<Servers, TLS> _db_servers;
+    flare::container::DoublyBufferedData<Servers, TLS> _db_servers;
     std::shared_ptr<ClusterRecoverPolicy> _cluster_recover_policy;
 };
 

@@ -195,7 +195,7 @@ static void PrintAnnotations(
             PrintRealTime(os, anno_time);
             PrintElapse(os, anno_time, last_time);
             os << ' ' << a;
-            if (a.empty() || butil::back_char(a) != '\n') {
+            if (a.empty() || flare::base::back_char(a) != '\n') {
                 os << '\n';
             }
         }
@@ -671,7 +671,7 @@ void RpczService::default_method(::google::protobuf::RpcController* cntl_base,
             if (span.error_code() == 0) {
                 os << " [OK]";
             } else {
-                os << " [" << berror(span.error_code()) << "] ";
+                os << " [" << flare_error(span.error_code()) << "] ";
             }
             os << std::endl;
         }

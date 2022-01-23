@@ -19,7 +19,7 @@
 #ifndef BRPC_POLICY_RTMP_PROTOCOL_H
 #define BRPC_POLICY_RTMP_PROTOCOL_H
 
-#include "flare/butil/containers/flat_map.h"
+#include "flare/container/flat_map.h"
 #include "flare/brpc/protocol.h"
 #include "flare/brpc/rtmp.h"
 #include "flare/brpc/amf.h"
@@ -281,7 +281,7 @@ public:
     // Find the stream by its id and reference the stream with intrusive_ptr.
     // Returns true on success.
     bool FindMessageStream(uint32_t stream_id,
-                           butil::intrusive_ptr<RtmpStreamBase>* stream);
+                           flare::container::intrusive_ptr<RtmpStreamBase>* stream);
 
     // Called in client-side to map the id to stream.
     bool AddClientStream(RtmpStreamBase* stream);
@@ -381,14 +381,14 @@ private:
     // Mapping message_stream_id to message streams.
     butil::Mutex _stream_mutex;
     struct MessageStreamInfo {
-        butil::intrusive_ptr<RtmpStreamBase> stream;
+        flare::container::intrusive_ptr<RtmpStreamBase> stream;
     };
-    butil::FlatMap<uint32_t, MessageStreamInfo> _mstream_map;
+    flare::container::FlatMap<uint32_t, MessageStreamInfo> _mstream_map;
 
     // Mapping transaction id to handlers.
     butil::Mutex _trans_mutex;
     uint32_t _trans_id_allocator;
-    butil::FlatMap<uint32_t, RtmpTransactionHandler*> _trans_map;
+    flare::container::FlatMap<uint32_t, RtmpTransactionHandler*> _trans_map;
 
     RtmpConnectRequest _connect_req;
 

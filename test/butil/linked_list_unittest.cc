@@ -3,13 +3,13 @@
 // found in the LICENSE file.
 
 #include "flare/butil/basictypes.h"
-#include "flare/butil/containers/linked_list.h"
+#include "flare/container/linked_list.h"
 #include <gtest/gtest.h>
 
-namespace butil {
+namespace flare::container {
 namespace {
 
-class Node : public LinkNode<Node> {
+class Node : public link_node<Node> {
  public:
   explicit Node(int id) : id_(id) {}
 
@@ -26,7 +26,7 @@ class MultipleInheritanceNodeBase {
 };
 
 class MultipleInheritanceNode : public MultipleInheritanceNodeBase,
-                                public LinkNode<MultipleInheritanceNode> {
+                                public link_node<MultipleInheritanceNode> {
  public:
   MultipleInheritanceNode() {}
 };
@@ -34,10 +34,10 @@ class MultipleInheritanceNode : public MultipleInheritanceNodeBase,
 // Checks that when iterating |list| (either from head to tail, or from
 // tail to head, as determined by |forward|), we get back |node_ids|,
 // which is an array of size |num_nodes|.
-void ExpectListContentsForDirection(const LinkedList<Node>& list,
+void ExpectListContentsForDirection(const linked_list<Node>& list,
   int num_nodes, const int* node_ids, bool forward) {
   int i = 0;
-  for (const LinkNode<Node>* node = (forward ? list.head() : list.tail());
+  for (const link_node<Node>* node = (forward ? list.head() : list.tail());
        node != list.end();
        node = (forward ? node->next() : node->previous())) {
     ASSERT_LT(i, num_nodes);
@@ -48,7 +48,7 @@ void ExpectListContentsForDirection(const LinkedList<Node>& list,
   EXPECT_EQ(num_nodes, i);
 }
 
-void ExpectListContents(const LinkedList<Node>& list,
+void ExpectListContents(const linked_list<Node>& list,
                         int num_nodes,
                         const int* node_ids) {
   {
@@ -61,19 +61,19 @@ void ExpectListContents(const LinkedList<Node>& list,
   }
 }
 
-TEST(LinkedList, Empty) {
-  LinkedList<Node> list;
+TEST(linked_list, Empty) {
+  linked_list<Node> list;
   EXPECT_EQ(list.end(), list.head());
   EXPECT_EQ(list.end(), list.tail());
   ExpectListContents(list, 0, NULL);
 }
 
-TEST(LinkedList, Append) {
-  LinkedList<Node> list;
+TEST(linked_list, append) {
+  linked_list<Node> list;
   ExpectListContents(list, 0, NULL);
 
   Node n1(1);
-  list.Append(&n1);
+  list.append(&n1);
 
   EXPECT_EQ(&n1, list.head());
   EXPECT_EQ(&n1, list.tail());
@@ -83,7 +83,7 @@ TEST(LinkedList, Append) {
   }
 
   Node n2(2);
-  list.Append(&n2);
+  list.append(&n2);
 
   EXPECT_EQ(&n1, list.head());
   EXPECT_EQ(&n2, list.tail());
@@ -93,7 +93,7 @@ TEST(LinkedList, Append) {
   }
 
   Node n3(3);
-  list.Append(&n3);
+  list.append(&n3);
 
   EXPECT_EQ(&n1, list.head());
   EXPECT_EQ(&n3, list.tail());
@@ -103,8 +103,8 @@ TEST(LinkedList, Append) {
   }
 }
 
-TEST(LinkedList, RemoveFromList) {
-  LinkedList<Node> list;
+TEST(linked_list, remove_from_list) {
+  linked_list<Node> list;
 
   Node n1(1);
   Node n2(2);
@@ -112,11 +112,11 @@ TEST(LinkedList, RemoveFromList) {
   Node n4(4);
   Node n5(5);
 
-  list.Append(&n1);
-  list.Append(&n2);
-  list.Append(&n3);
-  list.Append(&n4);
-  list.Append(&n5);
+  list.append(&n1);
+  list.append(&n2);
+  list.append(&n3);
+  list.append(&n4);
+  list.append(&n5);
 
   EXPECT_EQ(&n1, list.head());
   EXPECT_EQ(&n5, list.tail());
@@ -126,7 +126,7 @@ TEST(LinkedList, RemoveFromList) {
   }
 
   // Remove from the middle.
-  n3.RemoveFromList();
+  n3.remove_from_list();
 
   EXPECT_EQ(&n1, list.head());
   EXPECT_EQ(&n5, list.tail());
@@ -136,7 +136,7 @@ TEST(LinkedList, RemoveFromList) {
   }
 
   // Remove from the tail.
-  n5.RemoveFromList();
+  n5.remove_from_list();
 
   EXPECT_EQ(&n1, list.head());
   EXPECT_EQ(&n4, list.tail());
@@ -146,7 +146,7 @@ TEST(LinkedList, RemoveFromList) {
   }
 
   // Remove from the head.
-  n1.RemoveFromList();
+  n1.remove_from_list();
 
   EXPECT_EQ(&n2, list.head());
   EXPECT_EQ(&n4, list.tail());
@@ -156,19 +156,19 @@ TEST(LinkedList, RemoveFromList) {
   }
 
   // Empty the list.
-  n2.RemoveFromList();
-  n4.RemoveFromList();
+  n2.remove_from_list();
+  n4.remove_from_list();
 
   ExpectListContents(list, 0, NULL);
   EXPECT_EQ(list.end(), list.head());
   EXPECT_EQ(list.end(), list.tail());
 
   // Fill the list once again.
-  list.Append(&n1);
-  list.Append(&n2);
-  list.Append(&n3);
-  list.Append(&n4);
-  list.Append(&n5);
+  list.append(&n1);
+  list.append(&n2);
+  list.append(&n3);
+  list.append(&n4);
+  list.append(&n5);
 
   EXPECT_EQ(&n1, list.head());
   EXPECT_EQ(&n5, list.tail());
@@ -178,16 +178,16 @@ TEST(LinkedList, RemoveFromList) {
   }
 }
 
-TEST(LinkedList, InsertBefore) {
-  LinkedList<Node> list;
+TEST(linked_list, insert_before) {
+  linked_list<Node> list;
 
   Node n1(1);
   Node n2(2);
   Node n3(3);
   Node n4(4);
 
-  list.Append(&n1);
-  list.Append(&n2);
+  list.append(&n1);
+  list.append(&n2);
 
   EXPECT_EQ(&n1, list.head());
   EXPECT_EQ(&n2, list.tail());
@@ -196,7 +196,7 @@ TEST(LinkedList, InsertBefore) {
     ExpectListContents(list, arraysize(expected), expected);
   }
 
-  n3.InsertBefore(&n2);
+  n3.insert_before(&n2);
 
   EXPECT_EQ(&n1, list.head());
   EXPECT_EQ(&n2, list.tail());
@@ -205,7 +205,7 @@ TEST(LinkedList, InsertBefore) {
     ExpectListContents(list, arraysize(expected), expected);
   }
 
-  n4.InsertBefore(&n1);
+  n4.insert_before(&n1);
 
   EXPECT_EQ(&n4, list.head());
   EXPECT_EQ(&n2, list.tail());
@@ -215,16 +215,16 @@ TEST(LinkedList, InsertBefore) {
   }
 }
 
-TEST(LinkedList, InsertAfter) {
-  LinkedList<Node> list;
+TEST(linked_list, insert_after) {
+  linked_list<Node> list;
 
   Node n1(1);
   Node n2(2);
   Node n3(3);
   Node n4(4);
 
-  list.Append(&n1);
-  list.Append(&n2);
+  list.append(&n1);
+  list.append(&n2);
 
   EXPECT_EQ(&n1, list.head());
   EXPECT_EQ(&n2, list.tail());
@@ -233,7 +233,7 @@ TEST(LinkedList, InsertAfter) {
     ExpectListContents(list, arraysize(expected), expected);
   }
 
-  n3.InsertAfter(&n2);
+  n3.insert_after(&n2);
 
   EXPECT_EQ(&n1, list.head());
   EXPECT_EQ(&n3, list.tail());
@@ -242,7 +242,7 @@ TEST(LinkedList, InsertAfter) {
     ExpectListContents(list, arraysize(expected), expected);
   }
 
-  n4.InsertAfter(&n1);
+  n4.insert_after(&n1);
 
   EXPECT_EQ(&n1, list.head());
   EXPECT_EQ(&n3, list.tail());
@@ -252,57 +252,57 @@ TEST(LinkedList, InsertAfter) {
   }
 }
 
-TEST(LinkedList, MultipleInheritanceNode) {
+TEST(linked_list, MultipleInheritanceNode) {
   MultipleInheritanceNode node;
   EXPECT_EQ(&node, node.value());
 }
 
-TEST(LinkedList, EmptyListIsEmpty) {
-  LinkedList<Node> list;
+TEST(linked_list, EmptyListIsEmpty) {
+  linked_list<Node> list;
   EXPECT_TRUE(list.empty());
 }
 
-TEST(LinkedList, NonEmptyListIsNotEmpty) {
-  LinkedList<Node> list;
+TEST(linked_list, NonEmptyListIsNotEmpty) {
+  linked_list<Node> list;
 
   Node n(1);
-  list.Append(&n);
+  list.append(&n);
 
   EXPECT_FALSE(list.empty());
 }
 
-TEST(LinkedList, EmptiedListIsEmptyAgain) {
-  LinkedList<Node> list;
+TEST(linked_list, EmptiedListIsEmptyAgain) {
+  linked_list<Node> list;
 
   Node n(1);
-  list.Append(&n);
-  n.RemoveFromList();
+  list.append(&n);
+  n.remove_from_list();
 
   EXPECT_TRUE(list.empty());
 }
 
-TEST(LinkedList, NodesCanBeReused) {
-  LinkedList<Node> list1;
-  LinkedList<Node> list2;
+TEST(linked_list, NodesCanBeReused) {
+  linked_list<Node> list1;
+  linked_list<Node> list2;
 
   Node n(1);
-  list1.Append(&n);
-  n.RemoveFromList();
-  list2.Append(&n);
+  list1.append(&n);
+  n.remove_from_list();
+  list2.append(&n);
 
   EXPECT_EQ(list2.head()->value(), &n);
 }
 
-TEST(LinkedList, RemovedNodeHasNullNextPrevious) {
-  LinkedList<Node> list;
+TEST(linked_list, RemovedNodeHasNullNextPrevious) {
+  linked_list<Node> list;
 
   Node n(1);
-  list.Append(&n);
-  n.RemoveFromList();
+  list.append(&n);
+  n.remove_from_list();
 
   EXPECT_EQ(&n, n.next());
   EXPECT_EQ(&n, n.previous());
 }
 
 }  // namespace
-}  // namespace butil
+}  // namespace flare::container

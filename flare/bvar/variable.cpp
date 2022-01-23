@@ -23,10 +23,10 @@
 #include <sstream>                              // std::ostringstream
 #include <gflags/gflags.h>
 #include "flare/butil/macros.h"                        // BAIDU_CASSERT
-#include "flare/butil/containers/flat_map.h"           // butil::FlatMap
-#include "flare/butil/scoped_lock.h"                   // BAIDU_SCOPE_LOCK
+#include "flare/container/flat_map.h"           // flare::container::FlatMap
+#include "flare/base/scoped_lock.h"                   // BAIDU_SCOPE_LOCK
 #include "flare/base/string_splitter.h"               // flare::base::StringSplitter
-#include "flare/butil/errno.h"                         // berror
+#include "flare/base/errno.h"                          // flare_error
 #include "flare/base/time.h"                          // milliseconds_from_now
 #include "flare/butil/file_util.h"                     // butil::FilePath
 #include "flare/bvar/gflag.h"
@@ -74,7 +74,7 @@ public:
     DisplayFilter display_filter;
 };
 
-typedef butil::FlatMap<std::string, VarEntry> VarMap;
+typedef flare::container::FlatMap<std::string, VarEntry> VarMap;
 
 struct VarMapWithLock : public VarMap {
     pthread_mutex_t mutex;
@@ -149,7 +149,7 @@ int Variable::expose_impl(const std::string_view& prefix,
     _name.reserve((prefix.size() + name.size()) * 5 / 4);
     if (!prefix.empty()) {
         to_underscored_name(&_name, prefix);
-        if (!_name.empty() && butil::back_char(_name) != '_') {
+        if (!_name.empty() && flare::base::back_char(_name) != '_') {
             _name.push_back('_');
         }
     }
@@ -157,7 +157,7 @@ int Variable::expose_impl(const std::string_view& prefix,
     
     VarMapWithLock& m = get_var_map(_name);
     {
-        BAIDU_SCOPED_LOCK(m.mutex);
+        FLARE_SCOPED_LOCK(m.mutex);
         VarEntry* entry = m.seek(_name);
         if (entry == NULL) {
             entry = &m[_name];
@@ -187,7 +187,7 @@ bool Variable::hide() {
         return false;
     }
     VarMapWithLock& m = get_var_map(_name);
-    BAIDU_SCOPED_LOCK(m.mutex);
+    FLARE_SCOPED_LOCK(m.mutex);
     VarEntry* entry = m.seek(_name);
     if (entry) {
         CHECK_EQ(1UL, m.erase(_name));
@@ -247,7 +247,7 @@ int Variable::describe_exposed(const std::string& name, std::ostream& os,
                                bool quote_string,
                                DisplayFilter display_filter) {
     VarMapWithLock& m = get_var_map(name);
-    BAIDU_SCOPED_LOCK(m.mutex);
+    FLARE_SCOPED_LOCK(m.mutex);
     VarEntry* p = m.seek(name);
     if (p == NULL) {
         return -1;
@@ -287,7 +287,7 @@ int Variable::describe_series_exposed(const std::string& name,
                                       std::ostream& os,
                                       const SeriesOptions& options) {
     VarMapWithLock& m = get_var_map(name);
-    BAIDU_SCOPED_LOCK(m.mutex);
+    FLARE_SCOPED_LOCK(m.mutex);
     VarEntry* p = m.seek(name);
     if (p == NULL) {
         return -1;
@@ -298,7 +298,7 @@ int Variable::describe_series_exposed(const std::string& name,
 #ifdef BAIDU_INTERNAL
 int Variable::get_exposed(const std::string& name, boost::any* value) {
     VarMapWithLock& m = get_var_map(name);
-    BAIDU_SCOPED_LOCK(m.mutex);
+    FLARE_SCOPED_LOCK(m.mutex);
     VarEntry* p = m.seek(name);
     if (p == NULL) {
         return -1;
@@ -551,7 +551,7 @@ std::string read_command_name() {
     // safety we normalize the name.
     std::string s;
     if (command_name.size() >= 2UL && command_name[0] == '(' &&
-        butil::back_char(command_name) == ')') {
+        flare::base::back_char(command_name) == ')') {
         // remove parenthesis.
         to_underscored_name(&s,
                             std::string_view(command_name.data() + 1,
@@ -574,7 +574,7 @@ public:
         // normalize it.
         if (!s.empty()) {
             to_underscored_name(&_prefix, s);
-            if (butil::back_char(_prefix) != '_') {
+            if (flare::base::back_char(_prefix) != '_') {
                 _prefix.push_back('_');
             }
         }
@@ -774,7 +774,7 @@ static void launch_dumping_thread() {
     pthread_t thread_id;
     int rc = pthread_create(&thread_id, NULL, dumping_thread, NULL);
     if (rc != 0) {
-        LOG(FATAL) << "Fail to launch dumping thread: " << berror(rc);
+        LOG(FATAL) << "Fail to launch dumping thread: " << flare_error(rc);
         return;
     }
     // Detach the thread because no one would join it.
@@ -840,7 +840,7 @@ void to_underscored_name(std::string* name, const std::string_view& src) {
         if (isalpha(*p)) {
             if (*p < 'a') { // upper cases
                 if (p != src.data() && !isupper(p[-1]) &&
-                    butil::back_char(*name) != '_') {
+                    flare::base::back_char(*name) != '_') {
                     name->push_back('_');
                 }
                 name->push_back(*p - 'A' + 'a');

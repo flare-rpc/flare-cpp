@@ -327,9 +327,9 @@ public:
         pthread_mutex_destroy(&_mutex);
     }
     void move_created_streams(
-        std::vector<butil::intrusive_ptr<PublishStream> >* out) {
+        std::vector<flare::container::intrusive_ptr<PublishStream> >* out) {
         out->clear();
-        BAIDU_SCOPED_LOCK(_mutex);
+        FLARE_SCOPED_LOCK(_mutex);
         out->swap(_created_streams);
     }
 
@@ -339,14 +339,14 @@ private:
         const brpc::RtmpConnectRequest&) {
         PublishStream* stream = new PublishStream(_sleep_ms);
         {
-            BAIDU_SCOPED_LOCK(_mutex);
+            FLARE_SCOPED_LOCK(_mutex);
             _created_streams.push_back(stream);
         }
         return stream;
     }
     int64_t _sleep_ms;
     pthread_mutex_t _mutex;
-    std::vector<butil::intrusive_ptr<PublishStream> > _created_streams;
+    std::vector<flare::container::intrusive_ptr<PublishStream> > _created_streams;
 };
 
 class RtmpSubStream : public brpc::RtmpClientStream {
@@ -397,7 +397,7 @@ public:
 
     // @SubStreamCreator
     void NewSubStream(brpc::RtmpMessageHandler* message_handler,
-                      butil::intrusive_ptr<brpc::RtmpStreamBase>* sub_stream);
+                      flare::container::intrusive_ptr<brpc::RtmpStreamBase>* sub_stream);
     void LaunchSubStream(brpc::RtmpStreamBase* sub_stream,
                          brpc::RtmpRetryingClientStreamOptions* options);
 
@@ -411,7 +411,7 @@ RtmpSubStreamCreator::RtmpSubStreamCreator(const brpc::RtmpClient* client)
 RtmpSubStreamCreator::~RtmpSubStreamCreator() {}
  
 void RtmpSubStreamCreator::NewSubStream(brpc::RtmpMessageHandler* message_handler,
-                                        butil::intrusive_ptr<brpc::RtmpStreamBase>* sub_stream) {
+                                        flare::container::intrusive_ptr<brpc::RtmpStreamBase>* sub_stream) {
     if (sub_stream) { 
         (*sub_stream).reset(new RtmpSubStream(message_handler));
     }
@@ -634,7 +634,7 @@ TEST(RtmpTest, successfully_publish_streams) {
         
         bthread_usleep(500000);
     }
-    std::vector<butil::intrusive_ptr<PublishStream> > created_streams;
+    std::vector<flare::container::intrusive_ptr<PublishStream> > created_streams;
     rtmp_service.move_created_streams(&created_streams);
     ASSERT_EQ(NSTREAM, (int)created_streams.size());
     for (int i = 0; i < NSTREAM; ++i) {
@@ -677,7 +677,7 @@ TEST(RtmpTest, failed_to_publish_streams) {
     for (int i = 0; i < NSTREAM; ++i) {
         cstreams[i]->assertions_on_failure();
     }
-    std::vector<butil::intrusive_ptr<PublishStream> > created_streams;
+    std::vector<flare::container::intrusive_ptr<PublishStream> > created_streams;
     rtmp_service.move_created_streams(&created_streams);
     ASSERT_EQ(NSTREAM, (int)created_streams.size());
     for (int i = 0; i < NSTREAM; ++i) {
@@ -720,7 +720,7 @@ TEST(RtmpTest, destroy_client_streams_before_init) {
 
     // Create multiple streams.
     const int NSTREAM = 2;
-    butil::intrusive_ptr<TestRtmpClientStream> cstreams[NSTREAM];
+    flare::container::intrusive_ptr<TestRtmpClientStream> cstreams[NSTREAM];
     for (int i = 0; i < NSTREAM; ++i) {
         cstreams[i].reset(new TestRtmpClientStream);
         cstreams[i]->Destroy();
@@ -745,7 +745,7 @@ TEST(RtmpTest, destroy_retrying_client_streams_before_init) {
 
     // Create multiple streams.
     const int NSTREAM = 2;
-    butil::intrusive_ptr<TestRtmpRetryingClientStream> cstreams[NSTREAM];
+    flare::container::intrusive_ptr<TestRtmpRetryingClientStream> cstreams[NSTREAM];
     for (int i = 0; i < NSTREAM; ++i) {
         cstreams[i].reset(new TestRtmpRetryingClientStream);
         cstreams[i]->Destroy();
@@ -775,7 +775,7 @@ TEST(RtmpTest, destroy_client_streams_during_creation) {
 
     // Create multiple streams.
     const int NSTREAM = 2;
-    butil::intrusive_ptr<TestRtmpClientStream> cstreams[NSTREAM];
+    flare::container::intrusive_ptr<TestRtmpClientStream> cstreams[NSTREAM];
     for (int i = 0; i < NSTREAM; ++i) {
         cstreams[i].reset(new TestRtmpClientStream);
         brpc::RtmpClientStreamOptions opt;
@@ -807,7 +807,7 @@ TEST(RtmpTest, destroy_retrying_client_streams_during_creation) {
 
     // Create multiple streams.
     const int NSTREAM = 2;
-    butil::intrusive_ptr<TestRtmpRetryingClientStream> cstreams[NSTREAM];
+    flare::container::intrusive_ptr<TestRtmpRetryingClientStream> cstreams[NSTREAM];
     for (int i = 0; i < NSTREAM; ++i) {
         cstreams[i].reset(new TestRtmpRetryingClientStream);
         brpc::RtmpRetryingClientStreamOptions opt;

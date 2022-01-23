@@ -20,7 +20,7 @@
 #define  BRPC_HTTP_HEADER_H
 
 #include "flare/butil/strings/string_piece.h"  // StringPiece
-#include "flare/butil/containers/case_ignored_flat_map.h"
+#include "flare/container/case_ignored_flat_map.h"
 #include "flare/brpc/uri.h"              // URI
 #include "flare/brpc/http_method.h"      // HttpMethod
 #include "flare/brpc/http_status_code.h"
@@ -39,7 +39,7 @@ class H2StreamContext;
 // Non-body part of a HTTP message.
 class HttpHeader {
 public:
-    typedef butil::CaseIgnoredFlatMap<std::string> HeaderMap;
+    typedef flare::container::CaseIgnoredFlatMap<std::string> HeaderMap;
     typedef HeaderMap::const_iterator HeaderIterator;
 
     HttpHeader();

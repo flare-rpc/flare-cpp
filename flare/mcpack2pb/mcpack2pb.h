@@ -24,7 +24,7 @@
 
 #include <google/protobuf/message.h>
 #include <google/protobuf/io/zero_copy_stream_impl_lite.h>
-#include "flare/butil/containers/flat_map.h"
+#include "flare/container/flat_map.h"
 #include "flare/butil/iobuf.h"
 #include "flare/mcpack2pb/parser.h"
 #include "flare/mcpack2pb/serializer.h"
@@ -35,7 +35,7 @@ typedef bool (*SetFieldFn)(::google::protobuf::Message* msg,
                            UnparsedValue& value);
 
 // Mapping from filed name to its parsing&setting function.
-typedef butil::FlatMap<butil::StringPiece, SetFieldFn> FieldMap;
+typedef flare::container::FlatMap<butil::StringPiece, SetFieldFn> FieldMap;
 
 enum SerializationFormat {
     FORMAT_COMPACK,

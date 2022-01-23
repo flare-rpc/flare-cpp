@@ -63,7 +63,7 @@ pthread_mutex_t g_task_control_mutex = PTHREAD_MUTEX_INITIALIZER;
 // are not constructed before main().
 TaskControl* g_task_control = NULL;
 
-extern BAIDU_THREAD_LOCAL TaskGroup* tls_task_group;
+extern FLARE_THREAD_LOCAL TaskGroup* tls_task_group;
 extern void (*g_worker_startfn)();
 
 inline TaskControl* get_task_control() {
@@ -76,7 +76,7 @@ inline TaskControl* get_or_new_task_control() {
     if (c != NULL) {
         return c;
     }
-    BAIDU_SCOPED_LOCK(g_task_control_mutex);
+    FLARE_SCOPED_LOCK(g_task_control_mutex);
     c = p->load(std::memory_order_consume);
     if (c != NULL) {
         return c;
@@ -108,7 +108,7 @@ static bool validate_bthread_min_concurrency(const char*, int32_t val) {
     if (!c) {
         return true;
     }
-    BAIDU_SCOPED_LOCK(g_task_control_mutex);
+    FLARE_SCOPED_LOCK(g_task_control_mutex);
     int concurrency = c->concurrency();
     if (val > concurrency) {
         int added = c->add_workers(val - concurrency);
@@ -287,7 +287,7 @@ int bthread_setconcurrency(int num) {
             return 0;
         }
     }
-    BAIDU_SCOPED_LOCK(bthread::g_task_control_mutex);
+    FLARE_SCOPED_LOCK(bthread::g_task_control_mutex);
     c = bthread::get_task_control();
     if (c == NULL) {
         if (bthread::never_set_bthread_concurrency) {

@@ -20,7 +20,7 @@
 // Date: Wed Mar 14 17:44:58 CST 2018
 
 #include "flare/bthread/sys_futex.h"
-#include "flare/butil/scoped_lock.h"
+#include "flare/base/scoped_lock.h"
 #include "flare/base/static_atomic.h"
 #include <pthread.h>
 #include <unordered_map>

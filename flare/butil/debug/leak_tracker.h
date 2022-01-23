@@ -13,7 +13,7 @@
 #endif
 
 #ifdef ENABLE_LEAK_TRACKER
-#include "flare/butil/containers/linked_list.h"
+#include "flare/container/linked_list.h"
 #include "flare/butil/debug/stack_trace.h"
 #include "flare/base/logging.h"
 #endif  // ENABLE_LEAK_TRACKER
@@ -64,14 +64,14 @@ class LeakTracker {
 // If leak tracking is enabled we track where the object was allocated from.
 
 template<typename T>
-class LeakTracker : public LinkNode<LeakTracker<T> > {
+class LeakTracker : public flare::container::link_node<LeakTracker<T> > {
  public:
   LeakTracker() {
-    instances()->Append(this);
+    instances()->append(this);
   }
 
   ~LeakTracker() {
-    this->RemoveFromList();
+    this->remove_from_list();
   }
 
   static void CheckForLeaks() {
@@ -84,7 +84,7 @@ class LeakTracker : public LinkNode<LeakTracker<T> > {
     const size_t kMaxStackTracesToCopyOntoStack = 3;
     StackTrace stacktraces[kMaxStackTracesToCopyOntoStack];
 
-    for (LinkNode<LeakTracker<T> >* node = instances()->head();
+    for (flare::container::link_node<LeakTracker<T> >* node = instances()->head();
          node != instances()->end();
          node = node->next()) {
       StackTrace& allocation_stack = node->value()->allocation_stack_;
@@ -112,7 +112,7 @@ class LeakTracker : public LinkNode<LeakTracker<T> > {
   static int NumLiveInstances() {
     // Walk the allocation list and count how many entries it has.
     int count = 0;
-    for (LinkNode<LeakTracker<T> >* node = instances()->head();
+    for (flare::container::link_node<LeakTracker<T> >* node = instances()->head();
          node != instances()->end();
          node = node->next()) {
       ++count;
@@ -122,8 +122,8 @@ class LeakTracker : public LinkNode<LeakTracker<T> > {
 
  private:
   // Each specialization of LeakTracker gets its own static storage.
-  static LinkedList<LeakTracker<T> >* instances() {
-    static LinkedList<LeakTracker<T> > list;
+  static flare::container::linked_list<LeakTracker<T> >* instances() {
+    static flare::container::linked_list<LeakTracker<T> > list;
     return &list;
   }
 

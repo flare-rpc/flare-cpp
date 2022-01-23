@@ -24,10 +24,10 @@
 #include <gflags/gflags.h>
 #include "flare/butil/compat.h"                   // OS_MACOSX
 #include "flare/butil/macros.h"                   // ARRAY_SIZE
-#include "flare/butil/scoped_lock.h"              // BAIDU_SCOPED_LOCK
+#include "flare/base/scoped_lock.h"              // FLARE_SCOPED_LOCK
 #include "flare/butil/fast_rand.h"
 #include "flare/butil/unique_ptr.h"
-#include "flare/butil/third_party/murmurhash3/murmurhash3.h" // fmix64
+#include "flare/hash/murmurhash3.h" // fmix64
 #include "flare/bthread/errno.h"                  // ESTOP
 #include "flare/bthread/butex.h"                  // butex_*
 #include "flare/bthread/sys_futex.h"              // futex_wake_private
@@ -68,7 +68,7 @@ extern void return_keytable(bthread_keytable_pool_t*, KeyTable*);
 
 // [Hacky] This is a special TLS set by bthread-rpc privately... to save
 // overhead of creation keytable, may be removed later.
-BAIDU_THREAD_LOCAL void* tls_unique_user_ptr = NULL;
+FLARE_THREAD_LOCAL void* tls_unique_user_ptr = NULL;
 
 const TaskStatistics EMPTY_STAT = { 0, 0 };
 
@@ -80,7 +80,7 @@ int TaskGroup::get_attr(bthread_t tid, bthread_attr_t* out) {
     TaskMeta* const m = address_meta(tid);
     if (m != NULL) {
         const uint32_t given_ver = get_version(tid);
-        BAIDU_SCOPED_LOCK(m->version_lock);
+        FLARE_SCOPED_LOCK(m->version_lock);
         if (given_ver == *m->version_butex) {
             *out = m->attr;
             return 0;
@@ -94,7 +94,7 @@ void TaskGroup::set_stopped(bthread_t tid) {
     TaskMeta* const m = address_meta(tid);
     if (m != NULL) {
         const uint32_t given_ver = get_version(tid);
-        BAIDU_SCOPED_LOCK(m->version_lock);
+        FLARE_SCOPED_LOCK(m->version_lock);
         if (given_ver == *m->version_butex) {
             m->stop = true;
         }
@@ -105,7 +105,7 @@ bool TaskGroup::is_stopped(bthread_t tid) {
     TaskMeta* const m = address_meta(tid);
     if (m != NULL) {
         const uint32_t given_ver = get_version(tid);
-        BAIDU_SCOPED_LOCK(m->version_lock);
+        FLARE_SCOPED_LOCK(m->version_lock);
         if (given_ver == *m->version_butex) {
             return m->stop;
         }
@@ -195,7 +195,7 @@ TaskGroup::TaskGroup(TaskControl* c)
 {
     _steal_seed = butil::fast_rand();
     _steal_offset = OFFSET_TABLE[_steal_seed % ARRAY_SIZE(OFFSET_TABLE)];
-    _pl = &c->_pl[butil::fmix64(pthread_numeric_id()) % TaskControl::PARKING_LOT_NUM];
+    _pl = &c->_pl[flare::hash::fmix64(pthread_numeric_id()) % TaskControl::PARKING_LOT_NUM];
     CHECK(c);
 }
 
@@ -327,7 +327,7 @@ void TaskGroup::task_runner(intptr_t skip_remained) {
         // or join to the bthread after changing version will be rejected.
         // The spinlock is for visibility of TaskGroup::get_attr.
         {
-            BAIDU_SCOPED_LOCK(m->version_lock);
+            FLARE_SCOPED_LOCK(m->version_lock);
             if (0 == ++*m->version_butex) {
                 ++*m->version_butex;
             }
@@ -755,7 +755,7 @@ void TaskGroup::_add_sleep_event(void* void_args) {
     // Set TaskMeta::current_sleep which is for interruption.
     const uint32_t given_ver = get_version(e.tid);
     {
-        BAIDU_SCOPED_LOCK(e.meta->version_lock);
+        FLARE_SCOPED_LOCK(e.meta->version_lock);
         if (given_ver == *e.meta->version_butex && !e.meta->interrupted) {
             e.meta->current_sleep = sleep_id;
             return;
@@ -814,7 +814,7 @@ static int interrupt_and_consume_waiters(
         return EINVAL;
     }
     const uint32_t given_ver = get_version(tid);
-    BAIDU_SCOPED_LOCK(m->version_lock);
+    FLARE_SCOPED_LOCK(m->version_lock);
     if (given_ver == *m->version_butex) {
         *pw = m->current_waiter.exchange(NULL, std::memory_order_acquire);
         *sleep_id = m->current_sleep;
@@ -829,7 +829,7 @@ static int set_butex_waiter(bthread_t tid, ButexWaiter* w) {
     TaskMeta* const m = TaskGroup::address_meta(tid);
     if (m != NULL) {
         const uint32_t given_ver = get_version(tid);
-        BAIDU_SCOPED_LOCK(m->version_lock);
+        FLARE_SCOPED_LOCK(m->version_lock);
         if (given_ver == *m->version_butex) {
             // Release fence makes m->interrupted visible to butex_wait
             m->current_waiter.store(w, std::memory_order_release);
@@ -906,7 +906,7 @@ void print_task(std::ostream& os, bthread_t tid) {
     int64_t cpuwide_start_ns = 0;
     TaskStatistics stat = {0, 0};
     {
-        BAIDU_SCOPED_LOCK(m->version_lock);
+        FLARE_SCOPED_LOCK(m->version_lock);
         if (given_ver == *m->version_butex) {
             matched = true;
             stop = m->stop;

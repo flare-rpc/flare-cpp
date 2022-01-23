@@ -391,7 +391,7 @@ friend void InitFrameHandlers();
     HPacker _hpacker;
     mutable butil::Mutex _abandoned_streams_mutex;
     std::vector<uint32_t> _abandoned_streams;
-    typedef butil::FlatMap<int, H2StreamContext*> StreamMap;
+    typedef flare::container::FlatMap<int, H2StreamContext*> StreamMap;
     mutable butil::Mutex _stream_mutex;
     StreamMap _pending_streams;
     std::atomic<int64_t> _deferred_window_update;

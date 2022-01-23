@@ -20,22 +20,23 @@
 // Date: Wed Jul 30 11:47:19 CST 2014
 
 #include "flare/bthread/errno.h"
+#include "flare/base/profile.h"
 
 // Define errno in bthread/errno.h
 extern const int ESTOP = -20;
 
-BAIDU_REGISTER_ERRNO(ESTOP, "The structure is stopping")
+FLARE_REGISTER_ERRNO(ESTOP, "The structure is stopping")
 
 extern "C" {
 
-#if defined(OS_LINUX)
+#if defined(FLARE_PLATFORM_LINUX)
 
 extern int *__errno_location() __attribute__((__const__));
 
 int *bthread_errno_location() {
     return __errno_location();
 }
-#elif defined(OS_MACOSX)
+#elif defined(FLARE_PLATFORM_OSX)
 
 extern int * __error(void);
 

@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "flare/butil/containers/hash_tables.h"
+#include "flare/container/hash_tables.h"
 
 #include "flare/butil/basictypes.h"
 #include <gtest/gtest.h>
@@ -15,7 +15,7 @@ class HashPairTest : public testing::Test {
 #define INSERT_PAIR_TEST(Type, value1, value2) \
   { \
     Type pair(value1, value2); \
-    butil::hash_map<Type, int> map; \
+    flare::container::hash_map<Type, int> map; \
     map[pair] = 1; \
   }
 

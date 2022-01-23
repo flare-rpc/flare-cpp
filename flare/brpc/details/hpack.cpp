@@ -20,9 +20,9 @@
 
 #include <limits>                                       // std::numeric_limits
 #include <vector>
-#include "flare/butil/containers/bounded_queue.h"              // butil::BoundedQueue
-#include "flare/butil/containers/flat_map.h"                   // butil::FlatMap
-#include "flare/butil/containers/case_ignored_flat_map.h"      // butil::FlatMap
+#include "flare/container/bounded_queue.h"              // flare::container::bounded_queue
+#include "flare/container/flat_map.h"                   // flare::container::FlatMap
+#include "flare/container/case_ignored_flat_map.h"      // flare::container::FlatMap
 #include "flare/brpc/details/hpack-static-table.h"       // s_static_headers
 
 
@@ -51,8 +51,8 @@ struct HeaderAndHashCode {
 
 struct HeaderHasher {
     size_t operator()(const HPacker::Header& h) const {
-        return butil::CaseIgnoredHasher()(h.name)
-            * 101 + butil::DefaultHasher<std::string>()(h.value);
+        return flare::container::CaseIgnoredHasher()(h.name)
+            * 101 + flare::container::DefaultHasher<std::string>()(h.value);
     }
     size_t operator()(const HeaderAndHashCode& h) const {
         return h.hash_code;
@@ -61,8 +61,8 @@ struct HeaderHasher {
 
 struct HeaderEqualTo {
     bool operator()(const HPacker::Header& h1, const HPacker::Header& h2) const {
-        return butil::CaseIgnoredEqual()(h1.name, h2.name)
-            && butil::DefaultEqualTo<std::string>()(h1.value, h2.value);
+        return flare::container::CaseIgnoredEqual()(h1.name, h2.name)
+            && flare::container::DefaultEqualTo<std::string>()(h1.value, h2.value);
     }
     bool operator()(const HPacker::Header& h1, const HeaderAndHashCode& h2) const {
         return operator()(h1, *h2.header);
@@ -203,7 +203,7 @@ private:
     uint64_t _add_times;  // Increase when adding a new entry.
     size_t _max_size;
     size_t _size;
-    butil::BoundedQueue<Header> _header_queue;
+    flare::container::bounded_queue<Header> _header_queue;
 
     // -----------------------  Encoder only ----------------------------
     // Indexes that map entry to the latest time it was added.
@@ -213,8 +213,8 @@ private:
     // Since the encoder just cares whether this header is in the index table
     // rather than which the index number is, only the latest entry of the same
     // header is indexed here, which is definitely the last one to be removed.
-    butil::FlatMap<Header, uint64_t, HeaderHasher, HeaderEqualTo> _header_index;
-    butil::CaseIgnoredFlatMap<uint64_t> _name_index;
+    flare::container::FlatMap<Header, uint64_t, HeaderHasher, HeaderEqualTo> _header_index;
+    flare::container::CaseIgnoredFlatMap<uint64_t> _name_index;
 };
 
 int IndexTable::Init(const IndexTableOptions& options) {
@@ -233,9 +233,9 @@ int IndexTable::Init(const IndexTableOptions& options) {
         LOG(ERROR) << "Fail to malloc space for " << num_headers << " headers";
         return -1;
     }
-    butil::BoundedQueue<Header> tmp(
+    flare::container::bounded_queue<Header> tmp(
         header_queue_storage, num_headers * sizeof(Header),
-        butil::OWNS_STORAGE);
+        flare::container::OWNS_STORAGE);
     _header_queue.swap(tmp);
     _start_index = options.start_index;
     _need_indexes = options.need_indexes;
@@ -574,7 +574,7 @@ inline void EncodeString(butil::IOBufAppender* out, const std::string& s,
         EncodeInteger(out, 0x00, 7, s.size());
         if (LOWERCASE) {
             for (size_t i = 0; i < s.size(); ++i) {
-                out->push_back(butil::ascii_tolower(s[i]));
+                out->push_back(flare::base::ascii_tolower(s[i]));
             }
         } else {
             out->append(s);
@@ -585,7 +585,7 @@ inline void EncodeString(butil::IOBufAppender* out, const std::string& s,
     uint32_t bit_len = 0;
     if (LOWERCASE) {
         for (size_t i = 0; i < s.size(); ++i) {
-            bit_len += s_huffman_table[(uint8_t)butil::ascii_tolower(s[i])].bit_len;
+            bit_len += s_huffman_table[(uint8_t)flare::base::ascii_tolower(s[i])].bit_len;
         }
     } else {
         for (size_t i = 0; i < s.size(); ++i) {
@@ -596,7 +596,7 @@ inline void EncodeString(butil::IOBufAppender* out, const std::string& s,
     HuffmanEncoder e(out, s_huffman_table);
     if (LOWERCASE) {
         for (size_t i = 0; i < s.size(); ++i) {
-            e.Encode(butil::ascii_tolower(s[i]));
+            e.Encode(flare::base::ascii_tolower(s[i]));
         }
     } else {
         for (size_t i = 0; i < s.size(); ++i) {
@@ -871,7 +871,7 @@ void tolower(std::string* s) {
     const char* d = s->c_str();
     for (size_t i = 0; i < s->size(); ++i) {
         const char c = d[i];
-        const char c2 = butil::ascii_tolower(c);
+        const char c2 = flare::base::ascii_tolower(c);
         if (c2 != c) {
             (*s)[i] = c2;
         }

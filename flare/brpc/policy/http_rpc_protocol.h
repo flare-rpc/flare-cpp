@@ -88,16 +88,16 @@ public:
         , HttpMessage(read_body_progressively)
         , _is_stage2(false) {
         // add one ref for Destroy
-        butil::intrusive_ptr<HttpContext>(this).detach();
+        flare::container::intrusive_ptr<HttpContext>(this).detach();
     }
 
     void AddOneRefForStage2() {
-        butil::intrusive_ptr<HttpContext>(this).detach();
+        flare::container::intrusive_ptr<HttpContext>(this).detach();
         _is_stage2 = true;
     }
 
     void RemoveOneRefForStage2() {
-        butil::intrusive_ptr<HttpContext>(this, false);
+        flare::container::intrusive_ptr<HttpContext>(this, false);
     }
 
     // True if AddOneRefForStage2() was ever called.

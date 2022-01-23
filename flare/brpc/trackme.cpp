@@ -116,7 +116,7 @@ int ReadJPaasHostPort(int container_port) {
 
 // Called in server.cpp
 void SetTrackMeAddress(flare::base::end_point pt) {
-    BAIDU_SCOPED_LOCK(s_trackme_mutex);
+    FLARE_SCOPED_LOCK(s_trackme_mutex);
     if (s_trackme_addr == NULL) {
         // JPAAS has NAT capabilities, read its log to figure out the open port
         // accessible from outside.
@@ -139,7 +139,7 @@ static void HandleTrackMeResponse(Controller* cntl, TrackMeResponse* res) {
         cur_info.error_text = res->error_text();
         bool already_reported = false;
         {
-            BAIDU_SCOPED_LOCK(s_trackme_mutex);
+            FLARE_SCOPED_LOCK(s_trackme_mutex);
             if (g_bug_info != NULL && *g_bug_info == cur_info) {
                 // we've shown the bug.
                 already_reported = true;

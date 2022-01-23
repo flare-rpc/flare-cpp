@@ -213,7 +213,7 @@ void InputMessenger::OnNewMessages(Socket* m) {
                 const int saved_errno = errno;
                 PLOG(WARNING) << "Fail to read from " << *m;
                 m->SetFailed(saved_errno, "Fail to read from %s: %s",
-                             m->description().c_str(), berror(saved_errno));
+                             m->description().c_str(), flare_error(saved_errno));
                 return;
             } else if (!m->MoreReadEvents(&progress)) {
                 return;
@@ -354,7 +354,7 @@ int InputMessenger::AddHandler(const InputMessageHandler& handler) {
         CHECK(false) << "Invalid argument";
         return -1;
     }
-    BAIDU_SCOPED_LOCK(_add_handler_mutex);
+    FLARE_SCOPED_LOCK(_add_handler_mutex);
     if (NULL == _handlers) {
         _handlers = new (std::nothrow) InputMessageHandler[_capacity];
         if (NULL == _handlers) {
@@ -399,7 +399,7 @@ int InputMessenger::AddNonProtocolHandler(const InputMessageHandler& handler) {
         CHECK(false) << "Invalid argument";
         return -1;
     }
-    BAIDU_SCOPED_LOCK(_add_handler_mutex);
+    FLARE_SCOPED_LOCK(_add_handler_mutex);
     if (NULL == _handlers) {
         _handlers = new (std::nothrow) InputMessageHandler[_capacity];
         if (NULL == _handlers) {

@@ -20,7 +20,7 @@
 #include <map>
 #include "flare/bthread/bthread.h"
 #include "flare/base/time.h"
-#include "flare/butil/scoped_lock.h"
+#include "flare/base/scoped_lock.h"
 #include "flare/base/logging.h"
 #include "flare/brpc/log.h"
 #include "flare/brpc/protocol.h"
@@ -308,7 +308,7 @@ void SocketMap::RemoveInternal(const SocketMapKey& key,
 }
 
 int SocketMap::Find(const SocketMapKey& key, SocketId* id) {
-    BAIDU_SCOPED_LOCK(_mutex);
+    FLARE_SCOPED_LOCK(_mutex);
     SingleConnection* sc = _map.seek(key);
     if (sc) {
         *id = sc->socket->id();
@@ -319,7 +319,7 @@ int SocketMap::Find(const SocketMapKey& key, SocketId* id) {
 
 void SocketMap::List(std::vector<SocketId>* ids) {
     ids->clear();
-    BAIDU_SCOPED_LOCK(_mutex);
+    FLARE_SCOPED_LOCK(_mutex);
     for (Map::iterator it = _map.begin(); it != _map.end(); ++it) {
         ids->push_back(it->second.socket->id());
     }
@@ -327,7 +327,7 @@ void SocketMap::List(std::vector<SocketId>* ids) {
 
 void SocketMap::List(std::vector<flare::base::end_point>* pts) {
     pts->clear();
-    BAIDU_SCOPED_LOCK(_mutex);
+    FLARE_SCOPED_LOCK(_mutex);
     for (Map::iterator it = _map.begin(); it != _map.end(); ++it) {
         pts->push_back(it->second.socket->remote_side());
     }
@@ -336,7 +336,7 @@ void SocketMap::List(std::vector<flare::base::end_point>* pts) {
 void SocketMap::ListOrphans(int64_t defer_us, std::vector<SocketMapKey>* out) {
     out->clear();
     const int64_t now = flare::base::cpuwide_time_us();
-    BAIDU_SCOPED_LOCK(_mutex);
+    FLARE_SCOPED_LOCK(_mutex);
     for (Map::iterator it = _map.begin(); it != _map.end(); ++it) {
         SingleConnection& sc = it->second;
         if (sc.ref_count == 0 && now - sc.no_ref_us >= defer_us) {

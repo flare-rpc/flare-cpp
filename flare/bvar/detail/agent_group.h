@@ -27,10 +27,10 @@
 #include <deque>                            // std::deque
 #include <vector>                           // std::vector
 
-#include "flare/butil/errno.h"                     // errno
-#include "flare/butil/thread_local.h"              // thread_atexit
+#include "flare/base/errno.h"                      // errno
+#include "flare/base/thread.h"              // thread_atexit
 #include "flare/butil/macros.h"                    // BAIDU_CACHELINE_ALIGNMENT
-#include "flare/butil/scoped_lock.h"
+#include "flare/base/scoped_lock.h"
 #include "flare/base/logging.h"
 
 namespace bvar {
@@ -87,7 +87,7 @@ public:
     };
 
     inline static AgentId create_new_agent() {
-        BAIDU_SCOPED_LOCK(_s_mutex);
+        FLARE_SCOPED_LOCK(_s_mutex);
         AgentId agent_id = 0;
         if (!_get_free_ids().empty()) {
             agent_id = _get_free_ids().back();
@@ -100,7 +100,7 @@ public:
 
     inline static int destroy_agent(AgentId id) {
         // TODO: How to avoid double free?
-        BAIDU_SCOPED_LOCK(_s_mutex);
+        FLARE_SCOPED_LOCK(_s_mutex);
         if (id < 0 || id >= _s_agent_kinds) {
             errno = EINVAL;
             return -1;
@@ -135,10 +135,10 @@ public:
         if (_s_tls_blocks == NULL) {
             _s_tls_blocks = new (std::nothrow) std::vector<ThreadBlock *>;
             if (__builtin_expect(_s_tls_blocks == NULL, 0)) {
-                LOG(FATAL) << "Fail to create vector, " << berror();
+                LOG(FATAL) << "Fail to create vector, " << flare_error();
                 return NULL;
             }
-            butil::thread_atexit(_destroy_tls_blocks);
+            flare::base::thread_atexit(_destroy_tls_blocks);
         }
         const size_t block_id = (size_t)id / ELEMENTS_PER_BLOCK; 
         if (block_id >= _s_tls_blocks->size()) {

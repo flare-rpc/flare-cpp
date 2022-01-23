@@ -16,7 +16,7 @@
 // under the License.
 
 #include <gtest/gtest.h>
-#include "flare/butil/errno.h"
+#include "flare/base/errno.h"
 
 class ErrnoTest : public ::testing::Test{
 protected:
@@ -35,26 +35,26 @@ protected:
 #define EOK -117
 #define EMYERROR -30
 
-BAIDU_REGISTER_ERRNO(ESTOP, "the thread is stopping")
-BAIDU_REGISTER_ERRNO(EBREAK, "the thread is interrupted")
-BAIDU_REGISTER_ERRNO(ESTH, "something happened")
-BAIDU_REGISTER_ERRNO(EOK, "OK!")
-BAIDU_REGISTER_ERRNO(EMYERROR, "my error");
+FLARE_REGISTER_ERRNO(ESTOP, "the thread is stopping")
+FLARE_REGISTER_ERRNO(EBREAK, "the thread is interrupted")
+FLARE_REGISTER_ERRNO(ESTH, "something happened")
+FLARE_REGISTER_ERRNO(EOK, "OK!")
+FLARE_REGISTER_ERRNO(EMYERROR, "my error");
 
 TEST_F(ErrnoTest, system_errno) {
     errno = EPIPE;
-    ASSERT_STREQ("Broken pipe", berror());
-    ASSERT_STREQ("Interrupted system call", berror(EINTR));
+    ASSERT_STREQ("Broken pipe", flare_error());
+    ASSERT_STREQ("Interrupted system call", flare_error(EINTR));
 }
 
 TEST_F(ErrnoTest, customized_errno) {
-    ASSERT_STREQ("the thread is stopping", berror(ESTOP));
-    ASSERT_STREQ("the thread is interrupted", berror(EBREAK));
-    ASSERT_STREQ("something happened", berror(ESTH));
-    ASSERT_STREQ("OK!", berror(EOK));
-    ASSERT_STREQ("Unknown error 1000", berror(1000));
+    ASSERT_STREQ("the thread is stopping", flare_error(ESTOP));
+    ASSERT_STREQ("the thread is interrupted", flare_error(EBREAK));
+    ASSERT_STREQ("something happened", flare_error(ESTH));
+    ASSERT_STREQ("OK!", flare_error(EOK));
+    ASSERT_STREQ("Unknown error 1000", flare_error(1000));
     
     errno = ESTOP;
     printf("Something got wrong, %m\n");
-    printf("Something got wrong, %s\n", berror());
+    printf("Something got wrong, %s\n", flare_error());
 }

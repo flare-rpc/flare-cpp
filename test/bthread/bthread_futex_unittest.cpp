@@ -22,7 +22,7 @@
 #include <gtest/gtest.h>
 #include "flare/base/time.h"
 #include "flare/butil/macros.h"
-#include "flare/butil/errno.h"
+#include "flare/base/errno.h"
 #include <limits.h>                            // INT_MAX
 #include "flare/base/static_atomic.h"
 #include "flare/bthread/bthread.h"

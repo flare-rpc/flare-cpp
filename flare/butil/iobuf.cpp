@@ -31,7 +31,7 @@
 #include <stdexcept>                       // std::invalid_argument
 #include "flare/butil/build_config.h"             // ARCH_CPU_X86_64
 #include "flare/base/static_atomic.h"                // std::atomic
-#include "flare/butil/thread_local.h"             // thread_atexit
+#include "flare/base/thread.h"             // thread_atexit
 #include "flare/butil/macros.h"                   // BAIDU_CASSERT
 #include "flare/base/logging.h"                  // CHECK, LOG
 #include "flare/base/fd_guard.h"                 // flare::base::fd_guard
@@ -376,7 +376,7 @@ IOBuf::Block* share_tls_block() {
     } else if (!tls_data.registered) {
         tls_data.registered = true;
         // Only register atexit at the first time
-        butil::thread_atexit(remove_tls_block_chain);
+        flare::base::thread_atexit(remove_tls_block_chain);
     }
     if (!new_block) {
         new_block = create_block(); // may be NULL
@@ -405,7 +405,7 @@ inline void release_tls_block(IOBuf::Block *b) {
         ++tls_data.num_blocks;
         if (!tls_data.registered) {
             tls_data.registered = true;
-            butil::thread_atexit(remove_tls_block_chain);
+            flare::base::thread_atexit(remove_tls_block_chain);
         }
     }
 }
@@ -441,7 +441,7 @@ void release_tls_block_chain(IOBuf::Block* b) {
     tls_data.num_blocks += n;
     if (!tls_data.registered) {
         tls_data.registered = true;
-        butil::thread_atexit(remove_tls_block_chain);
+        flare::base::thread_atexit(remove_tls_block_chain);
     }
 }
 

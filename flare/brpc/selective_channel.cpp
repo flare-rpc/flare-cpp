@@ -174,7 +174,7 @@ int ChannelBalancer::AddChannel(ChannelBase* sub_channel,
         LOG(ERROR) << "Parameter[sub_channel] is NULL";
         return -1;
     }
-    BAIDU_SCOPED_LOCK(_mutex);
+    FLARE_SCOPED_LOCK(_mutex);
     if (_chan_map.find(sub_channel) != _chan_map.end()) {
         LOG(ERROR) << "Duplicated sub_channel=" << sub_channel;
         return -1;
@@ -219,7 +219,7 @@ void ChannelBalancer::RemoveAndDestroyChannel(SelectiveChannel::ChannelHandle ha
     if (rc >= 0) {
         SubChannel* sub = static_cast<SubChannel*>(ptr->user());
         {
-            BAIDU_SCOPED_LOCK(_mutex);
+            FLARE_SCOPED_LOCK(_mutex);
             CHECK_EQ(1UL, _chan_map.erase(sub->chan));
         }
         {
@@ -243,7 +243,7 @@ inline int ChannelBalancer::SelectChannel(const LoadBalancer::SelectIn& in,
 }
 
 int ChannelBalancer::CheckHealth() {
-    BAIDU_SCOPED_LOCK(_mutex);
+    FLARE_SCOPED_LOCK(_mutex);
     for (ChannelToIdMap::const_iterator it = _chan_map.begin();
          it != _chan_map.end(); ++it) {
         if (!it->second->Failed() &&
@@ -256,7 +256,7 @@ int ChannelBalancer::CheckHealth() {
 
 void ChannelBalancer::Describe(std::ostream& os,
                                const DescribeOptions& options) {
-    BAIDU_SCOPED_LOCK(_mutex);
+    FLARE_SCOPED_LOCK(_mutex);
     if (!options.verbose) {
         os << _chan_map.size();
         return;
@@ -297,7 +297,7 @@ int Sender::IssueRPC(int64_t start_realtime_us) {
     const int rc = static_cast<ChannelBalancer*>(_main_cntl->_lb.get())
         ->SelectChannel(sel_in, &sel_out);
     if (rc != 0) {
-        _main_cntl->SetFailed(rc, "Fail to select channel, %s", berror(rc));
+        _main_cntl->SetFailed(rc, "Fail to select channel, %s", flare_error(rc));
         return -1;
     }
     DLOG(INFO) << "Selected channel=" << sel_out.channel() << ", size="
@@ -343,7 +343,7 @@ void SubDone::Run() {
         // _cid must be valid because schan does not dtor before cancelling
         // all sub calls.
         LOG(ERROR) << "Fail to lock correlation_id="
-                   << _cid.value << ": " << berror(rc);
+                   << _cid.value << ": " << flare_error(rc);
         return;
     }
     // NOTE: Copying gettable-but-settable fields which are generally set

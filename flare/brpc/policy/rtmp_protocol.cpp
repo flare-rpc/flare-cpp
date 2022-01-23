@@ -18,7 +18,7 @@
 
 #include <openssl/hmac.h> // HMAC_CTX_init
 #include <google/protobuf/io/zero_copy_stream_impl_lite.h>
-#include "flare/butil/scoped_lock.h"
+#include "flare/base/scoped_lock.h"
 #include "flare/butil/fast_rand.h"
 #include "flare/butil/sys_byteorder.h"
 #include "flare/brpc/log.h"
@@ -741,7 +741,7 @@ RtmpContext::~RtmpContext() {
     if (!_mstream_map.empty()) {
         size_t ncstream = 0;
         size_t nsstream = 0;
-        for (butil::FlatMap<uint32_t, MessageStreamInfo>::iterator
+        for (flare::container::FlatMap<uint32_t, MessageStreamInfo>::iterator
                  it = _mstream_map.begin(); it != _mstream_map.end(); ++it) {
             if (it->second.stream->is_server_stream()) {
                 ++nsstream;
@@ -756,7 +756,7 @@ RtmpContext::~RtmpContext() {
     }
     
     // cancel incomplete transactions
-    for (butil::FlatMap<uint32_t, RtmpTransactionHandler*>::iterator
+    for (flare::container::FlatMap<uint32_t, RtmpTransactionHandler*>::iterator
              it = _trans_map.begin(); it != _trans_map.end(); ++it) {
         if (it->second) {
             it->second->Cancel();
@@ -915,8 +915,8 @@ void RtmpContext::DeallocateMessageStreamId(uint32_t stream_id) {
 }
 
 bool RtmpContext::FindMessageStream(
-    uint32_t stream_id, butil::intrusive_ptr<RtmpStreamBase>* stream) {
-    BAIDU_SCOPED_LOCK(_stream_mutex);
+    uint32_t stream_id, flare::container::intrusive_ptr<RtmpStreamBase>* stream) {
+    FLARE_SCOPED_LOCK(_stream_mutex);
     MessageStreamInfo* info = _mstream_map.seek(stream_id);
     if (info == NULL || info->stream == NULL) {
         return false;
@@ -980,7 +980,7 @@ bool RtmpContext::RemoveMessageStream(RtmpStreamBase* stream) {
         return false;
     }
     // for deref the stream outside _stream_mutex.
-    butil::intrusive_ptr<RtmpStreamBase> deref_ptr; 
+    flare::container::intrusive_ptr<RtmpStreamBase> deref_ptr;
     {
         std::unique_lock<butil::Mutex> mu(_stream_mutex);
         MessageStreamInfo* info = _mstream_map.seek(stream_id);
@@ -1015,7 +1015,7 @@ bool RtmpContext::AddTransaction(uint32_t* out_transaction_id,
                                  RtmpTransactionHandler* handler) {
     uint32_t transaction_id = 0;
     uint32_t step = 1;
-    BAIDU_SCOPED_LOCK(_trans_mutex);
+    FLARE_SCOPED_LOCK(_trans_mutex);
     for (int i = 0; i < 10; ++i) {
         transaction_id = _trans_id_allocator;
         _trans_id_allocator += step;
@@ -1036,7 +1036,7 @@ RtmpTransactionHandler*
 RtmpContext::RemoveTransaction(uint32_t transaction_id) {
     RtmpTransactionHandler* handler = NULL;
     {
-        BAIDU_SCOPED_LOCK(_trans_mutex);
+        FLARE_SCOPED_LOCK(_trans_mutex);
         RtmpTransactionHandler** phandler = _trans_map.seek(transaction_id);
         if (phandler != NULL) {
             handler = *phandler;
@@ -1761,7 +1761,7 @@ static const RtmpChunkStream::MessageHandler s_msg_handlers[] = {
     &RtmpChunkStream::OnAggregateMessage, // 22
 };
 
-typedef butil::FlatMap<std::string, RtmpChunkStream::CommandHandler> CommandHandlerMap;
+typedef flare::container::FlatMap<std::string, RtmpChunkStream::CommandHandler> CommandHandlerMap;
 static CommandHandlerMap* s_cmd_handlers = NULL;
 static pthread_once_t s_cmd_handlers_init_once = PTHREAD_ONCE_INIT;
 static void InitCommandHandlers() {
@@ -2043,7 +2043,7 @@ bool RtmpChunkStream::OnSetBufferLength(const RtmpMessageHeader& mh,
         // Ignore SetBufferSize for control stream.
         return true;
     }
-    butil::intrusive_ptr<RtmpStreamBase> stream;
+    flare::container::intrusive_ptr<RtmpStreamBase> stream;
     if (!connection_context()->FindMessageStream(stream_id, &stream)) {
         RTMP_WARNING(socket, mh) << "Fail to find stream_id=" << stream_id;
         return false;
@@ -2148,7 +2148,7 @@ bool RtmpChunkStream::OnAudioMessage(
 
     const int vlvl = RPC_VLOG_LEVEL + 1;
     VLOG(vlvl) << socket->remote_side() << "[" << mh.stream_id << "] " << msg;
-    butil::intrusive_ptr<RtmpStreamBase> stream;
+    flare::container::intrusive_ptr<RtmpStreamBase> stream;
     if (!connection_context()->FindMessageStream(mh.stream_id, &stream)) {
         LOG_EVERY_SECOND(WARNING) << socket->remote_side()
                                   << ": Fail to find stream_id=" << mh.stream_id;
@@ -2180,7 +2180,7 @@ bool RtmpChunkStream::OnVideoMessage(
 
     const int vlvl = RPC_VLOG_LEVEL + 1;
     VLOG(vlvl) << socket->remote_side() << "[" << mh.stream_id << "] " << msg;
-    butil::intrusive_ptr<RtmpStreamBase> stream;
+    flare::container::intrusive_ptr<RtmpStreamBase> stream;
     if (!connection_context()->FindMessageStream(mh.stream_id, &stream)) {
         LOG_EVERY_SECOND(WARNING) << socket->remote_side()
                                   << ": Fail to find stream_id=" << mh.stream_id;
@@ -2221,7 +2221,7 @@ bool RtmpChunkStream::OnDataMessageAMF0(
             return false;
         }
         // TODO: execq?
-        butil::intrusive_ptr<RtmpStreamBase> stream;
+        flare::container::intrusive_ptr<RtmpStreamBase> stream;
         if (!connection_context()->FindMessageStream(mh.stream_id, &stream)) {
             LOG_EVERY_SECOND(WARNING) << socket->remote_side()
                                       << ": Fail to find stream_id=" << mh.stream_id;
@@ -2240,7 +2240,7 @@ bool RtmpChunkStream::OnDataMessageAMF0(
             return false;
         }
         // TODO: execq?
-        butil::intrusive_ptr<RtmpStreamBase> stream;
+        flare::container::intrusive_ptr<RtmpStreamBase> stream;
         if (!connection_context()->FindMessageStream(mh.stream_id, &stream)) {
             LOG_EVERY_SECOND(WARNING) << socket->remote_side()
                                       << ": Fail to find stream_id=" << mh.stream_id;
@@ -2557,7 +2557,7 @@ bool RtmpChunkStream::OnStatus(const RtmpMessageHeader& mh,
         RTMP_ERROR(socket, mh) << "Fail to read onStatus.InfoObject";
         return false;
     }
-    butil::intrusive_ptr<RtmpStreamBase> stream;
+    flare::container::intrusive_ptr<RtmpStreamBase> stream;
     if (!connection_context()->FindMessageStream(mh.stream_id, &stream)) {
         RTMP_WARNING(socket, mh) << "Fail to find stream_id=" << mh.stream_id;
         return false;
@@ -2606,7 +2606,7 @@ bool RtmpChunkStream::OnCreateStream(const RtmpMessageHeader& mh,
     RPC_VLOG << socket->remote_side() << "[" << mh.stream_id
              << "] createStream{transaction_id=" << transaction_id << '}';
     std::string error_text;
-    butil::intrusive_ptr<RtmpServerStream> stream(
+    flare::container::intrusive_ptr<RtmpServerStream> stream(
         service->NewStream(connection_context()->_connect_req));
     if (connection_context()->_connect_req.stream_multiplexing() &&
         stream != NULL) {
@@ -2625,12 +2625,12 @@ bool RtmpChunkStream::OnCreateStream(const RtmpMessageHeader& mh,
                                              RtmpServerStream::RunOnFailed);
             if (rc) {
                 LOG(ERROR) << "Fail to create RtmpServerStream._onfail_id: "
-                           << berror(rc);
+                           << flare_error(rc);
                 stream->OnStopInternal();
                 return false;
             }
             // Add a ref for RunOnFailed.
-            butil::intrusive_ptr<RtmpServerStream>(stream).detach();
+            flare::container::intrusive_ptr<RtmpServerStream>(stream).detach();
             socket->fail_me_at_server_stop();
             socket->NotifyOnFailed(stream->_onfail_id);
         }
@@ -2712,7 +2712,7 @@ public:
     void Run();
 public:
     flare::base::flare_status status;
-    butil::intrusive_ptr<RtmpServerStream> player_stream;
+    flare::container::intrusive_ptr<RtmpServerStream> player_stream;
 };
 
 void OnPlayContinuation::Run() {
@@ -2884,7 +2884,7 @@ bool RtmpChunkStream::OnPlay(const RtmpMessageHeader& mh,
     msg4->body = req_buf;
     msgs.push().reset(msg4);
 
-    butil::intrusive_ptr<RtmpStreamBase> stream_guard;
+    flare::container::intrusive_ptr<RtmpStreamBase> stream_guard;
     if (!connection_context()->FindMessageStream(mh.stream_id, &stream_guard)) {
         RTMP_WARNING(socket, mh) << "Fail to find stream_id=" << mh.stream_id;
         return false;
@@ -2938,7 +2938,7 @@ bool RtmpChunkStream::OnPlay2(const RtmpMessageHeader& mh,
         RTMP_ERROR(socket, mh) << "Fail to read play2.Parameters";
         return false;
     }
-    butil::intrusive_ptr<RtmpStreamBase> stream;
+    flare::container::intrusive_ptr<RtmpStreamBase> stream;
     if (!connection_context()->FindMessageStream(mh.stream_id, &stream)) {
         RTMP_WARNING(socket, mh) << "Fail to find stream_id=" << mh.stream_id;
         return false;
@@ -2968,7 +2968,7 @@ bool RtmpChunkStream::OnDeleteStream(const RtmpMessageHeader& mh,
         RTMP_ERROR(socket, mh) << "Fail to read deleteStream.StreamId";
         return false;
     }
-    butil::intrusive_ptr<RtmpStreamBase> stream;
+    flare::container::intrusive_ptr<RtmpStreamBase> stream;
     if (!connection_context()->FindMessageStream(stream_id, &stream)) {
         // TODO: frequent, commented now
         //RTMP_WARNING(socket, mh) << "Fail to find stream_id=" << stream_id;
@@ -2997,7 +2997,7 @@ bool RtmpChunkStream::OnCloseStream(const RtmpMessageHeader& mh,
         RTMP_ERROR(socket, mh) << "Fail to read closeStream.CommandObject";
         return false;
     }
-    butil::intrusive_ptr<RtmpStreamBase> stream;
+    flare::container::intrusive_ptr<RtmpStreamBase> stream;
     if (!connection_context()->FindMessageStream(mh.stream_id, &stream)) {
         // TODO: frequent, commented now
         //RTMP_WARNING(socket, mh) << "Fail to find stream_id=" << mh.stream_id;
@@ -3017,7 +3017,7 @@ public:
 public:
     flare::base::flare_status status;
     std::string publish_name;
-    butil::intrusive_ptr<RtmpServerStream> publish_stream;
+    flare::container::intrusive_ptr<RtmpServerStream> publish_stream;
 };
 
 void OnPublishContinuation::Run() {
@@ -3098,7 +3098,7 @@ bool RtmpChunkStream::OnPublish(const RtmpMessageHeader& mh,
              << " stream_name=" << publish_name
              << " type=" << RtmpPublishType2Str(publish_type) << '}';
 
-    butil::intrusive_ptr<RtmpStreamBase> stream_guard;
+    flare::container::intrusive_ptr<RtmpStreamBase> stream_guard;
     if (!connection_context()->FindMessageStream(mh.stream_id, &stream_guard)) {
         RTMP_WARNING(socket, mh) << "Fail to find stream_id=" << mh.stream_id;
         return false;
@@ -3247,7 +3247,7 @@ bool RtmpChunkStream::OnSeek(const RtmpMessageHeader& mh,
         return false;
     }
 
-    butil::intrusive_ptr<RtmpStreamBase> stream;
+    flare::container::intrusive_ptr<RtmpStreamBase> stream;
     if (!connection_context()->FindMessageStream(mh.stream_id, &stream)) {
         RTMP_WARNING(socket, mh) << "Fail to find stream_id=" << mh.stream_id;
         return false;
@@ -3321,7 +3321,7 @@ bool RtmpChunkStream::OnPause(const RtmpMessageHeader& mh,
         return false;
     }
 
-    butil::intrusive_ptr<RtmpStreamBase> stream;
+    flare::container::intrusive_ptr<RtmpStreamBase> stream;
     if (!connection_context()->FindMessageStream(mh.stream_id, &stream)) {
         RTMP_WARNING(socket, mh) << "Fail to find stream_id=" << mh.stream_id;
         return false;
@@ -3466,7 +3466,7 @@ public:
              AMFInputStream* istream, Socket* socket);
     void Cancel();
 private:
-    butil::intrusive_ptr<RtmpClientStream> _stream;
+    flare::container::intrusive_ptr<RtmpClientStream> _stream;
     CallId _call_id;
 };
 
@@ -3494,7 +3494,7 @@ void OnServerStreamCreated::Run(bool error,
     const int rc = bthread_id_lock(cid, (void**)&cntl);
     if (rc != 0) {
         LOG_IF(ERROR, rc != EINVAL && rc != EPERM)
-            << "Fail to lock correlation_id=" << cid << ": " << berror(rc);
+            << "Fail to lock correlation_id=" << cid << ": " << flare_error(rc);
         return;
     }
     

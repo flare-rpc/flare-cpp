@@ -31,7 +31,7 @@
 
 #include "flare/base/time.h"
 #include "flare/base/singleton_on_pthread_once.h"
-#include "flare/butil/scoped_lock.h"
+#include "flare/base/scoped_lock.h"
 #include "flare/butil/files/scoped_file.h"
 #include "flare/butil/files/dir_reader_posix.h"
 #include "flare/butil/file_util.h"
@@ -685,7 +685,7 @@ namespace bvar {
             buf[sizeof(buf) - 1] = '\0';
             os << buf;
         } else {
-            os << "unknown (" << berror() << ')';
+            os << "unknown (" << flare_error() << ')';
         }
     }
 

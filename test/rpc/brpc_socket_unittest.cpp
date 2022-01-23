@@ -799,7 +799,7 @@ void* Writer(void* void_arg) {
                 continue;
             }
             printf("Fail to write into SocketId=%" PRIu64 ", %s\n",
-                   arg->socket_id, berror());
+                   arg->socket_id, flare_error());
             break;
         }
     }
@@ -856,7 +856,7 @@ TEST_F(SocketTest, multi_threaded_write) {
                     continue;
                 }
                 if (EAGAIN != errno) {
-                    ASSERT_EQ(EAGAIN, errno) << berror();
+                    ASSERT_EQ(EAGAIN, errno) << flare_error();
                 }
                 bthread_usleep(1000);
                 if (flare::base::gettimeofday_us() >= start_time + 2000000L) {
@@ -922,7 +922,7 @@ void* FastWriter(void* void_arg) {
                 continue;
             }
             printf("Fail to write into SocketId=%" PRIu64 ", %s\n",
-                   arg->socket_id, berror());
+                   arg->socket_id, flare_error());
             break;
         }
     }

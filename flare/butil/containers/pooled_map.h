@@ -20,7 +20,7 @@
 #ifndef BUTIL_POOLED_MAP_H
 #define BUTIL_POOLED_MAP_H
 
-#include "flare/butil/single_threaded_pool.h"
+#include "flare/container/single_threaded_pool.h"
 #include <new>
 #include <map>
 
@@ -37,52 +37,52 @@ template <class T1, size_t BLOCK_SIZE> class PooledAllocator;
 // When do NOT use PooledMap?
 //   When the std::map has less that 10 elements, PooledMap is probably slower
 //   because it allocates BLOCK_SIZE memory at least. When the std::map has more than
-//   100 elements, you should use butil::FlatMap instead.
+//   100 elements, you should use flare::container::FlatMap instead.
 
 // insert/erase comparisons between several maps:
 // [ value = 8 bytes ]
-// Sequentially inserting 100 into FlatMap/std::map/butil::PooledMap/butil::hash_map takes 15/114/54/60
-// Sequentially erasing 100 from FlatMap/std::map/butil::PooledMap/butil::hash_map takes 6/123/56/37
-// Sequentially inserting 1000 into FlatMap/std::map/butil::PooledMap/butil::hash_map takes 9/92/56/54
-// Sequentially erasing 1000 from FlatMap/std::map/butil::PooledMap/butil::hash_map takes 3/68/51/35
-// Sequentially inserting 10000 into FlatMap/std::map/butil::PooledMap/butil::hash_map takes 10/99/63/54
-// Sequentially erasing 10000 from FlatMap/std::map/butil::PooledMap/butil::hash_map takes 4/73/54/35
+// Sequentially inserting 100 into FlatMap/std::map/butil::PooledMap/flare::container::hash_map takes 15/114/54/60
+// Sequentially erasing 100 from FlatMap/std::map/butil::PooledMap/flare::container::hash_map takes 6/123/56/37
+// Sequentially inserting 1000 into FlatMap/std::map/butil::PooledMap/flare::container::hash_map takes 9/92/56/54
+// Sequentially erasing 1000 from FlatMap/std::map/butil::PooledMap/flare::container::hash_map takes 3/68/51/35
+// Sequentially inserting 10000 into FlatMap/std::map/butil::PooledMap/flare::container::hash_map takes 10/99/63/54
+// Sequentially erasing 10000 from FlatMap/std::map/butil::PooledMap/flare::container::hash_map takes 4/73/54/35
 // [ value = 32 bytes ]
-// Sequentially inserting 100 into FlatMap/std::map/butil::PooledMap/butil::hash_map takes 14/107/57/57
-// Sequentially erasing 100 from FlatMap/std::map/butil::PooledMap/butil::hash_map takes 5/75/53/37
-// Sequentially inserting 1000 into FlatMap/std::map/butil::PooledMap/butil::hash_map takes 13/94/55/53
-// Sequentially erasing 1000 from FlatMap/std::map/butil::PooledMap/butil::hash_map takes 4/67/50/37
-// Sequentially inserting 10000 into FlatMap/std::map/butil::PooledMap/butil::hash_map takes 13/102/63/54
-// Sequentially erasing 10000 from FlatMap/std::map/butil::PooledMap/butil::hash_map takes 4/69/53/36
+// Sequentially inserting 100 into FlatMap/std::map/butil::PooledMap/flare::container::hash_map takes 14/107/57/57
+// Sequentially erasing 100 from FlatMap/std::map/butil::PooledMap/flare::container::hash_map takes 5/75/53/37
+// Sequentially inserting 1000 into FlatMap/std::map/butil::PooledMap/flare::container::hash_map takes 13/94/55/53
+// Sequentially erasing 1000 from FlatMap/std::map/butil::PooledMap/flare::container::hash_map takes 4/67/50/37
+// Sequentially inserting 10000 into FlatMap/std::map/butil::PooledMap/flare::container::hash_map takes 13/102/63/54
+// Sequentially erasing 10000 from FlatMap/std::map/butil::PooledMap/flare::container::hash_map takes 4/69/53/36
 // [ value = 128 bytes ]
-// Sequentially inserting 100 into FlatMap/std::map/butil::PooledMap/butil::hash_map takes 35/160/96/98
-// Sequentially erasing 100 from FlatMap/std::map/butil::PooledMap/butil::hash_map takes 7/96/53/42
-// Sequentially inserting 1000 into FlatMap/std::map/butil::PooledMap/butil::hash_map takes 30/159/98/98
-// Sequentially erasing 1000 from FlatMap/std::map/butil::PooledMap/butil::hash_map takes 6/82/49/43
-// Sequentially inserting 10000 into FlatMap/std::map/butil::PooledMap/butil::hash_map takes 29/155/114/116
-// Sequentially erasing 10000 from FlatMap/std::map/butil::PooledMap/butil::hash_map takes 6/81/53/43
+// Sequentially inserting 100 into FlatMap/std::map/butil::PooledMap/flare::container::hash_map takes 35/160/96/98
+// Sequentially erasing 100 from FlatMap/std::map/butil::PooledMap/flare::container::hash_map takes 7/96/53/42
+// Sequentially inserting 1000 into FlatMap/std::map/butil::PooledMap/flare::container::hash_map takes 30/159/98/98
+// Sequentially erasing 1000 from FlatMap/std::map/butil::PooledMap/flare::container::hash_map takes 6/82/49/43
+// Sequentially inserting 10000 into FlatMap/std::map/butil::PooledMap/flare::container::hash_map takes 29/155/114/116
+// Sequentially erasing 10000 from FlatMap/std::map/butil::PooledMap/flare::container::hash_map takes 6/81/53/43
 
 // [ value = 8 bytes ]
-// Randomly inserting 100 into FlatMap/std::map/butil::PooledMap/butil::hash_map takes 13/168/103/59
-// Randomly erasing 100 from FlatMap/std::map/butil::PooledMap/butil::hash_map takes 6/159/125/37
-// Randomly inserting 1000 into FlatMap/std::map/butil::PooledMap/butil::hash_map takes 10/157/115/54
-// Randomly erasing 1000 from FlatMap/std::map/butil::PooledMap/butil::hash_map takes 4/175/138/36
-// Randomly inserting 10000 into FlatMap/std::map/butil::PooledMap/butil::hash_map takes 11/219/177/56
-// Randomly erasing 10000 from FlatMap/std::map/butil::PooledMap/butil::hash_map takes 4/229/207/47
+// Randomly inserting 100 into FlatMap/std::map/butil::PooledMap/flare::container::hash_map takes 13/168/103/59
+// Randomly erasing 100 from FlatMap/std::map/butil::PooledMap/flare::container::hash_map takes 6/159/125/37
+// Randomly inserting 1000 into FlatMap/std::map/butil::PooledMap/flare::container::hash_map takes 10/157/115/54
+// Randomly erasing 1000 from FlatMap/std::map/butil::PooledMap/flare::container::hash_map takes 4/175/138/36
+// Randomly inserting 10000 into FlatMap/std::map/butil::PooledMap/flare::container::hash_map takes 11/219/177/56
+// Randomly erasing 10000 from FlatMap/std::map/butil::PooledMap/flare::container::hash_map takes 4/229/207/47
 // [ value = 32 bytes ]
-// Randomly inserting 100 into FlatMap/std::map/butil::PooledMap/butil::hash_map takes 17/178/112/57
-// Randomly erasing 100 from FlatMap/std::map/butil::PooledMap/butil::hash_map takes 6/149/117/38
-// Randomly inserting 1000 into FlatMap/std::map/butil::PooledMap/butil::hash_map takes 15/169/135/54
-// Randomly erasing 1000 from FlatMap/std::map/butil::PooledMap/butil::hash_map takes 5/157/129/39
-// Randomly inserting 10000 into FlatMap/std::map/butil::PooledMap/butil::hash_map takes 19/242/203/55
-// Randomly erasing 10000 from FlatMap/std::map/butil::PooledMap/butil::hash_map takes 5/233/218/54
+// Randomly inserting 100 into FlatMap/std::map/butil::PooledMap/flare::container::hash_map takes 17/178/112/57
+// Randomly erasing 100 from FlatMap/std::map/butil::PooledMap/flare::container::hash_map takes 6/149/117/38
+// Randomly inserting 1000 into FlatMap/std::map/butil::PooledMap/flare::container::hash_map takes 15/169/135/54
+// Randomly erasing 1000 from FlatMap/std::map/butil::PooledMap/flare::container::hash_map takes 5/157/129/39
+// Randomly inserting 10000 into FlatMap/std::map/butil::PooledMap/flare::container::hash_map takes 19/242/203/55
+// Randomly erasing 10000 from FlatMap/std::map/butil::PooledMap/flare::container::hash_map takes 5/233/218/54
 // [ value = 128 bytes ]
-// Randomly inserting 100 into FlatMap/std::map/butil::PooledMap/butil::hash_map takes 36/214/145/96
-// Randomly erasing 100 from FlatMap/std::map/butil::PooledMap/butil::hash_map takes 7/166/122/53
-// Randomly inserting 1000 into FlatMap/std::map/butil::PooledMap/butil::hash_map takes 36/230/174/100
-// Randomly erasing 1000 from FlatMap/std::map/butil::PooledMap/butil::hash_map takes 6/193/153/65
-// Randomly inserting 10000 into FlatMap/std::map/butil::PooledMap/butil::hash_map takes 45/304/270/115
-// Randomly erasing 10000 from FlatMap/std::map/butil::PooledMap/butil::hash_map takes 7/299/246/88
+// Randomly inserting 100 into FlatMap/std::map/butil::PooledMap/flare::container::hash_map takes 36/214/145/96
+// Randomly erasing 100 from FlatMap/std::map/butil::PooledMap/flare::container::hash_map takes 7/166/122/53
+// Randomly inserting 1000 into FlatMap/std::map/butil::PooledMap/flare::container::hash_map takes 36/230/174/100
+// Randomly erasing 1000 from FlatMap/std::map/butil::PooledMap/flare::container::hash_map takes 6/193/153/65
+// Randomly inserting 10000 into FlatMap/std::map/butil::PooledMap/flare::container::hash_map takes 45/304/270/115
+// Randomly erasing 10000 from FlatMap/std::map/butil::PooledMap/flare::container::hash_map takes 7/299/246/88
 
 template <typename K, typename V, size_t BLOCK_SIZE = 512,
           typename C = std::less<K> >
@@ -162,7 +162,7 @@ public:
     void destroy(pointer p) { p->T1::~T1(); }
 
 private:
-    butil::SingleThreadedPool<sizeof(T1), BLOCK_SIZE, 1> _pool;
+    flare::container::SingleThreadedPool<sizeof(T1), BLOCK_SIZE, 1> _pool;
 };
 
 // Return true if b could be used to deallocate storage obtained through a

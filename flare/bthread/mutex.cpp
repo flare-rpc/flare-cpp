@@ -27,14 +27,14 @@
 #include "flare/bvar/bvar.h"
 #include "flare/bvar/collector.h"
 #include "flare/butil/macros.h"                         // BAIDU_CASSERT
-#include "flare/butil/containers/flat_map.h"
+#include "flare/container/flat_map.h"
 #include "flare/butil/iobuf.h"
 #include "flare/base/fd_guard.h"
 #include "flare/butil/files/file.h"
 #include "flare/butil/files/file_path.h"
 #include "flare/butil/file_util.h"
 #include "flare/butil/unique_ptr.h"
-#include "flare/butil/third_party/murmurhash3/murmurhash3.h"
+#include "flare/hash/murmurhash3.h"
 #include "flare/base/logging.h"
 #include "flare/butil/object_pool.h"
 #include "flare/bthread/butex.h"                       // butex_*
@@ -79,7 +79,7 @@ struct SampledContention : public bvar::Collected {
         }
         uint32_t code = 1;
         uint32_t seed = nframes;
-        butil::MurmurHash3_x86_32(stack, sizeof(void*) * nframes, seed, &code);
+        flare::hash::MurmurHash3_x86_32(stack, sizeof(void*) * nframes, seed, &code);
         return code;
     }
 };
@@ -106,7 +106,7 @@ struct ContentionHash {
 // The global context for contention profiler.
 class ContentionProfiler {
 public:
-    typedef butil::FlatMap<SampledContention*, SampledContention*,
+    typedef flare::container::FlatMap<SampledContention*, SampledContention*,
                           ContentionHash, ContentionEqual> ContentionMap;
 
     explicit ContentionProfiler(const char* name);
@@ -284,7 +284,7 @@ void SampledContention::dump_and_destroy(size_t /*round*/) {
         // Must be protected with mutex to avoid race with deletion of ctx.
         // dump_and_destroy is called from dumping thread only so this mutex
         // is not contended at most of time.
-        BAIDU_SCOPED_LOCK(g_cp_mutex);
+        FLARE_SCOPED_LOCK(g_cp_mutex);
         if (g_cp) {
             g_cp->dump_and_destroy(this);
             return;
@@ -323,7 +323,7 @@ bool ContentionProfilerStart(const char* filename) {
     // Optimistic locking. A not-used ContentionProfiler does not write file.
     std::unique_ptr<ContentionProfiler> ctx(new ContentionProfiler(filename));
     {
-        BAIDU_SCOPED_LOCK(g_cp_mutex);
+        FLARE_SCOPED_LOCK(g_cp_mutex);
         if (g_cp) {
             return false;
         }
@@ -430,7 +430,7 @@ int first_sys_pthread_mutex_unlock(pthread_mutex_t* mutex) {
 }
 
 inline uint64_t hash_mutex_ptr(const pthread_mutex_t* m) {
-    return butil::fmix64((uint64_t)m);
+    return flare::hash::fmix64((uint64_t)m);
 }
 
 // Mark being inside locking so that pthread_mutex calls inside collecting

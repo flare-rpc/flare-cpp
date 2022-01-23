@@ -62,4 +62,15 @@ namespace flare::base::base_internal {
     auto ArraySizeHelper(const T (&array)[N]) -> char (&)[N];
 }  // namespace flare::base::base_internal
 
+// FLARE_DEPRECATED void dont_call_me_anymore(int arg);
+// ...
+// warning: 'void dont_call_me_anymore(int)' is deprecated
+#if defined(FLARE_COMPILER_GNUC) ||  defined(FLARE_COMPILER_CLANG)
+# define FLARE_DEPRECATED __attribute__((deprecated))
+#elif defined(FLARE_COMPILER_MSVC)
+# define FLARE_DEPRECATED __declspec(deprecated)
+#else
+# define FLARE_DEPRECATED
+#endif
+
 #endif // FLARE_BASE_PROFILE_ATTRIBUTE_H_

@@ -202,7 +202,7 @@ void* client_thread(void* arg) {
 # elif defined(OS_MACOSX)
             const int wait_rc = bthread_fd_wait(m->fd, EVFILT_READ);
 # endif
-            EXPECT_EQ(0, wait_rc) << berror();
+            EXPECT_EQ(0, wait_rc) << flare_error();
             rc = read(m->fd, &m->count, sizeof(m->count));
         } while (rc < 0 && errno == EAGAIN);
 #else
@@ -375,7 +375,7 @@ TEST(FDTest, mod_closed_fd) {
 
     errno = 0;
     ASSERT_EQ(-1, epoll_ctl(epfd, EPOLL_CTL_MOD, fd[0], &e));
-    ASSERT_EQ(EBADF, errno) << berror();
+    ASSERT_EQ(EBADF, errno) << flare_error();
 
     ASSERT_EQ(0, pipe(new_fd));
     ASSERT_EQ(fd[0], new_fd[0]);
@@ -383,7 +383,7 @@ TEST(FDTest, mod_closed_fd) {
     
     errno = 0;
     ASSERT_EQ(-1, epoll_ctl(epfd, EPOLL_CTL_MOD, fd[0], &e));
-    ASSERT_EQ(ENOENT, errno) << berror();
+    ASSERT_EQ(ENOENT, errno) << flare_error();
     
     ASSERT_EQ(0, close(epfd));
 #endif

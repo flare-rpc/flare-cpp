@@ -23,8 +23,8 @@
 // on internal structures, use opaque pointers instead.
 
 #include <vector>
-#include "flare/butil/containers/hash_tables.h"   // hash
-#include "flare/butil/containers/flat_map.h"
+#include "flare/container/hash_tables.h"   // hash
+#include "flare/container/flat_map.h"
 #include "flare/brpc/socket_id.h"
 
 namespace brpc {
@@ -71,14 +71,14 @@ public:
     // Returns list of SocketId that do not exist after.
     std::vector<SocketId>& RemoveServers(const std::vector<ServerId>& servers);
 private:
-    butil::FlatMap<SocketId, int> _nref_map;
+    flare::container::FlatMap<SocketId, int> _nref_map;
     std::vector<SocketId> _tmp;
 };
 
 } // namespace brpc
 
 
-namespace BUTIL_HASH_NAMESPACE {
+namespace FLARE_HASH_NAMESPACE {
 #if defined(COMPILER_GCC)
 template<>
 struct hash<brpc::ServerId> {

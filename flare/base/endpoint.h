@@ -4,7 +4,7 @@
 
 #include <netinet/in.h>                          // in_addr
 #include <iostream>                              // std::ostream
-#include "flare/butil/containers/hash_tables.h"         // hashing functions
+#include "flare/container/hash_tables.h"         // hashing functions
 
 namespace flare::base {
 
@@ -195,23 +195,23 @@ namespace flare::base {
 }  // namespace flare::base
 
 
-namespace BUTIL_HASH_NAMESPACE {
+namespace FLARE_HASH_NAMESPACE {
 
 // Implement methods for hashing a pair of integers, so they can be used as
 // keys in STL containers.
 
-#if defined(COMPILER_MSVC)
+#if defined(FLARE_COMPILER_MSVC)
 
     inline std::size_t hash_value(const flare::base::end_point& ep) {
-        return butil::HashPair(flare::base::ip2int(ep.ip), ep.port);
+        return flare::container::hash_pair(flare::base::ip2int(ep.ip), ep.port);
     }
 
-#elif defined(COMPILER_GCC)
+#elif defined(FLARE_COMPILER_GNUC) || defined(FLARE_COMPILER_CLANG)
 
     template<>
     struct hash<flare::base::end_point> {
         std::size_t operator()(const flare::base::end_point &ep) const {
-            return butil::HashPair(flare::base::ip2int(ep.ip), ep.port);
+            return flare::container::hash_pair(flare::base::ip2int(ep.ip), ep.port);
         }
     };
 

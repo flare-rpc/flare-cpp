@@ -232,7 +232,6 @@ set(BUTIL_SOURCES
     ${PROJECT_SOURCE_DIR}/flare/butil/third_party/snappy/snappy-sinksource.cc
     ${PROJECT_SOURCE_DIR}/flare/butil/third_party/snappy/snappy-stubs-internal.cc
     ${PROJECT_SOURCE_DIR}/flare/butil/third_party/snappy/snappy.cc
-    ${PROJECT_SOURCE_DIR}/flare/butil/third_party/murmurhash3/murmurhash3.cpp
     ${PROJECT_SOURCE_DIR}/flare/butil/arena.cpp
     ${PROJECT_SOURCE_DIR}/flare/butil/at_exit.cc
     ${PROJECT_SOURCE_DIR}/flare/butil/big_endian.cc
@@ -306,15 +305,11 @@ set(BUTIL_SOURCES
     ${PROJECT_SOURCE_DIR}/flare/butil/time/time.cc
     ${PROJECT_SOURCE_DIR}/flare/butil/time/time_posix.cc
     ${PROJECT_SOURCE_DIR}/flare/butil/version.cc
-    ${PROJECT_SOURCE_DIR}/flare/butil/errno.cpp
-    ${PROJECT_SOURCE_DIR}/flare/butil/find_cstr.cpp
-    ${PROJECT_SOURCE_DIR}/flare/butil/thread_local.cpp
     ${PROJECT_SOURCE_DIR}/flare/butil/unix_socket.cpp
     ${PROJECT_SOURCE_DIR}/flare/butil/files/temp_file.cpp
     ${PROJECT_SOURCE_DIR}/flare/butil/files/file_watcher.cpp
     ${PROJECT_SOURCE_DIR}/flare/butil/zero_copy_stream_as_streambuf.cpp
     ${PROJECT_SOURCE_DIR}/flare/butil/crc32c.cc
-    ${PROJECT_SOURCE_DIR}/flare/butil/containers/case_ignored_flat_map.cpp
     ${PROJECT_SOURCE_DIR}/flare/butil/iobuf.cpp
     ${PROJECT_SOURCE_DIR}/flare/butil/binary_printer.cpp
     ${PROJECT_SOURCE_DIR}/flare/butil/recordio.cc
@@ -339,7 +334,14 @@ endif()
 
 
 file(GLOB_RECURSE FLARE_BASE_SRC "${PROJECT_SOURCE_DIR}/flare/base/*.cc")
+file(GLOB_RECURSE FLARE_CONTAINER_SRC "${PROJECT_SOURCE_DIR}/flare/container/*.cc")
+file(GLOB_RECURSE FLARE_HASH_SRC "${PROJECT_SOURCE_DIR}/flare/hash/*.cc")
 
+set(FLARE_SRC
+        ${FLARE_BASE_SRC}
+        ${FLARE_CONTAINER_SRC}
+        ${FLARE_HASH_SRC}
+        )
 file(GLOB_RECURSE BVAR_SOURCES "${PROJECT_SOURCE_DIR}/flare/bvar/*.cpp")
 file(GLOB_RECURSE BTHREAD_SOURCES "${PROJECT_SOURCE_DIR}/flare/bthread/*.cpp")
 file(GLOB_RECURSE JSON2PB_SOURCES "${PROJECT_SOURCE_DIR}/flare/json2pb/*.cpp")

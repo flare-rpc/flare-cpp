@@ -747,7 +747,7 @@ public:
 
 private:
 friend class RtmpClientStream;
-    butil::intrusive_ptr<RtmpClientImpl> _impl;
+    flare::container::intrusive_ptr<RtmpClientImpl> _impl;
 };
 
 struct RtmpHashCode {
@@ -859,8 +859,8 @@ friend class RtmpRetryingClientStream;
     // client stream self.
     void SignalError() override;
 
-    butil::intrusive_ptr<RtmpClientImpl> _client_impl;
-    butil::intrusive_ptr<RtmpClientStream> _self_ref;
+    flare::container::intrusive_ptr<RtmpClientImpl> _client_impl;
+    flare::container::intrusive_ptr<RtmpClientStream> _self_ref;
     bthread_id_t _onfail_id;
     CallId _create_stream_rpc_id;
     bool _from_socketmap;
@@ -934,7 +934,7 @@ public:
     void OnSubStreamStop(RtmpStreamBase* sub_stream);
 
 private:
-    butil::intrusive_ptr<RtmpRetryingClientStream> _parent;
+    flare::container::intrusive_ptr<RtmpRetryingClientStream> _parent;
 };
 
 class SubStreamCreator {
@@ -943,7 +943,7 @@ public:
     // the current SubStream. *sub_stream is set iff the creation is successful.
     // Note: message_handler is OWNED by this creator and deleted by the creator.
     virtual void NewSubStream(RtmpMessageHandler* message_handler,
-                              butil::intrusive_ptr<RtmpStreamBase>* sub_stream) = 0;
+                              flare::container::intrusive_ptr<RtmpStreamBase>* sub_stream) = 0;
     
     // Do the Initialization of sub_stream. If an error happens, sub_stream->Destroy()
     // would be called.
@@ -999,13 +999,13 @@ private:
 friend class RetryingClientMessageHandler;
 
     void OnSubStreamStop(RtmpStreamBase* sub_stream);
-    int AcquireStreamToSend(butil::intrusive_ptr<RtmpStreamBase>*);
+    int AcquireStreamToSend(flare::container::intrusive_ptr<RtmpStreamBase>*);
     static void OnRecreateTimer(void* arg);
     void Recreate();
     void CallOnStopIfNeeded();
     
-    butil::intrusive_ptr<RtmpStreamBase> _using_sub_stream;
-    butil::intrusive_ptr<RtmpRetryingClientStream> _self_ref;
+    flare::container::intrusive_ptr<RtmpStreamBase> _using_sub_stream;
+    flare::container::intrusive_ptr<RtmpRetryingClientStream> _self_ref;
     mutable butil::Mutex _stream_mutex;
     RtmpRetryingClientStreamOptions _options;
     std::atomic<bool> _destroying;

@@ -24,21 +24,21 @@
 namespace {
 
 TEST(SamplerTest, linked_list) {
-    butil::LinkNode<bvar::detail::Sampler> n1, n2;
-    n1.InsertBeforeAsList(&n2);
+    flare::container::link_node<bvar::detail::Sampler> n1, n2;
+    n1.insert_before_as_list(&n2);
     ASSERT_EQ(n1.next(), &n2);
     ASSERT_EQ(n1.previous(), &n2);
     ASSERT_EQ(n2.next(), &n1);
     ASSERT_EQ(n2.previous(), &n1);
 
-    butil::LinkNode<bvar::detail::Sampler> n3, n4;
-    n3.InsertBeforeAsList(&n4);
+    flare::container::link_node<bvar::detail::Sampler> n3, n4;
+    n3.insert_before_as_list(&n4);
     ASSERT_EQ(n3.next(), &n4);
     ASSERT_EQ(n3.previous(), &n4);
     ASSERT_EQ(n4.next(), &n3);
     ASSERT_EQ(n4.previous(), &n3);
 
-    n1.InsertBeforeAsList(&n3);
+    n1.insert_before_as_list(&n3);
     ASSERT_EQ(n1.next(), &n2);
     ASSERT_EQ(n2.next(), &n3);
     ASSERT_EQ(n3.next(), &n4);

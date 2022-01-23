@@ -19,7 +19,7 @@
 #ifndef BRPC_SHARED_OBJECT_H
 #define BRPC_SHARED_OBJECT_H
 
-#include "flare/butil/intrusive_ptr.hpp"                   // butil::intrusive_ptr
+#include "flare/container/intrusive_ptr.h"                   // flare::container::intrusive_ptr
 #include "flare/base/static_atomic.h"
 
 
@@ -38,14 +38,14 @@ public:
     int ref_count() const { return _nref.load(std::memory_order_relaxed); }
     
     // Add ref and returns the ref_count seen before added.
-    // The effect is basically same as butil::intrusive_ptr<T>(obj).detach()
+    // The effect is basically same as flare::container::intrusive_ptr<T>(obj).detach()
     // except that the latter one does not return the seen ref_count which is
     // useful in some scenarios.
     int AddRefManually()
     { return _nref.fetch_add(1, std::memory_order_relaxed); }
 
     // Remove one ref, if the ref_count hit zero, delete this object.
-    // Same as butil::intrusive_ptr<T>(obj, false).reset(NULL)
+    // Same as flare::container::intrusive_ptr<T>(obj, false).reset(NULL)
     void RemoveRefManually() {
         if (_nref.fetch_sub(1, std::memory_order_release) == 1) {
             std::atomic_thread_fence(std::memory_order_acquire);

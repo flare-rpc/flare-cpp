@@ -1184,7 +1184,7 @@ const RtmpClientOptions& RtmpClient::options() const {
 
 int RtmpClient::Init(flare::base::end_point server_addr_and_port,
                      const RtmpClientOptions& options) {
-    butil::intrusive_ptr<RtmpClientImpl> tmp(new (std::nothrow) RtmpClientImpl);
+    flare::container::intrusive_ptr<RtmpClientImpl> tmp(new (std::nothrow) RtmpClientImpl);
     if (tmp == NULL) {
         LOG(FATAL) << "Fail to new RtmpClientImpl";
         return -1;
@@ -1198,7 +1198,7 @@ int RtmpClient::Init(flare::base::end_point server_addr_and_port,
 
 int RtmpClient::Init(const char* server_addr_and_port,
                      const RtmpClientOptions& options) {
-    butil::intrusive_ptr<RtmpClientImpl> tmp(new (std::nothrow) RtmpClientImpl);
+    flare::container::intrusive_ptr<RtmpClientImpl> tmp(new (std::nothrow) RtmpClientImpl);
     if (tmp == NULL) {
         LOG(FATAL) << "Fail to new RtmpClientImpl";
         return -1;
@@ -1212,7 +1212,7 @@ int RtmpClient::Init(const char* server_addr_and_port,
 
 int RtmpClient::Init(const char* server_addr, int port,
                      const RtmpClientOptions& options) {
-    butil::intrusive_ptr<RtmpClientImpl> tmp(new (std::nothrow) RtmpClientImpl);
+    flare::container::intrusive_ptr<RtmpClientImpl> tmp(new (std::nothrow) RtmpClientImpl);
     if (tmp == NULL) {
         LOG(FATAL) << "Fail to new RtmpClientImpl";
         return -1;
@@ -1227,7 +1227,7 @@ int RtmpClient::Init(const char* server_addr, int port,
 int RtmpClient::Init(const char* naming_service_url, 
                      const char* load_balancer_name,
                      const RtmpClientOptions& options) {
-    butil::intrusive_ptr<RtmpClientImpl> tmp(new (std::nothrow) RtmpClientImpl);
+    flare::container::intrusive_ptr<RtmpClientImpl> tmp(new (std::nothrow) RtmpClientImpl);
     if (tmp == NULL) {
         LOG(FATAL) << "Fail to new RtmpClientImpl";
         return -1;
@@ -1630,7 +1630,7 @@ RtmpClientStream::~RtmpClientStream() {
 void RtmpClientStream::Destroy() {
     bthread_id_t onfail_id = INVALID_BTHREAD_ID;
     CallId create_stream_rpc_id = INVALID_BTHREAD_ID;
-    butil::intrusive_ptr<RtmpClientStream> self_ref;
+    flare::container::intrusive_ptr<RtmpClientStream> self_ref;
     
     std::unique_lock<butil::Mutex> mu(_state_mutex);
     switch (_state) {
@@ -1728,7 +1728,7 @@ StreamUserData* RtmpClientStream::OnCreatingStream(
 }
 
 int RtmpClientStream::RunOnFailed(bthread_id_t id, void* data, int) {
-    butil::intrusive_ptr<RtmpClientStream> stream(
+    flare::container::intrusive_ptr<RtmpClientStream> stream(
         static_cast<RtmpClientStream*>(data), false);
     CHECK(stream->_rtmpsock);
     // Must happen after NotifyOnFailed which is after all other callsites
@@ -1818,12 +1818,12 @@ void RtmpClientStream::DestroyStreamCreator(Controller* cntl) {
             CHECK(_rtmpsock);
             rc = bthread_id_create(&onfail_id, this, RunOnFailed);
             if (rc) {
-                cntl->SetFailed(ENOMEM, "Fail to create _onfail_id: %s", berror(rc));
+                cntl->SetFailed(ENOMEM, "Fail to create _onfail_id: %s", flare_error(rc));
                 mu.unlock();
                 return OnFailedToCreateStream();
             }
             // Add a ref for RunOnFailed.
-            butil::intrusive_ptr<RtmpClientStream>(this).detach();
+            flare::container::intrusive_ptr<RtmpClientStream>(this).detach();
             _state = STATE_CREATED;
             _onfail_id = onfail_id;
             break;
@@ -2094,7 +2094,7 @@ public:
     Controller cntl;
     // Hold a reference of stream to prevent it from destructing during an
     // async Create().
-    butil::intrusive_ptr<RtmpClientStream> stream;
+    flare::container::intrusive_ptr<RtmpClientStream> stream;
 };
 
 void OnClientStreamCreated::Run() {
@@ -2253,12 +2253,12 @@ void RtmpRetryingClientStream::Destroy() {
     // Make sure _self_ref is released before quiting this function.
     // Notice that _self_ref.reset(NULL) is wrong because it may destructs
     // this object immediately.
-    butil::intrusive_ptr<RtmpRetryingClientStream> self_ref;
+    flare::container::intrusive_ptr<RtmpRetryingClientStream> self_ref;
     _self_ref.swap(self_ref);
 
-    butil::intrusive_ptr<RtmpStreamBase> old_sub_stream;
+    flare::container::intrusive_ptr<RtmpStreamBase> old_sub_stream;
     {
-        BAIDU_SCOPED_LOCK(_stream_mutex);
+        FLARE_SCOPED_LOCK(_stream_mutex);
         // swap instead of reset(NULL) to make the stream destructed
         // outside _stream_mutex.
         _using_sub_stream.swap(old_sub_stream);
@@ -2271,7 +2271,7 @@ void RtmpRetryingClientStream::Destroy() {
         if (bthread_timer_del(_create_timer_id) == 0) {
             // The callback is not run yet. Remove the additional ref added
             // before creating the timer.
-            butil::intrusive_ptr<RtmpRetryingClientStream> deref(this, false);
+            flare::container::intrusive_ptr<RtmpRetryingClientStream> deref(this, false);
         }
     }
     return CallOnStopIfNeeded();
@@ -2333,12 +2333,12 @@ RetryingClientMessageHandler::RetryingClientMessageHandler(RtmpRetryingClientStr
     : _parent(parent) {}
 
 void RtmpRetryingClientStream::Recreate() {
-    butil::intrusive_ptr<RtmpStreamBase> sub_stream;
+    flare::container::intrusive_ptr<RtmpStreamBase> sub_stream;
     _sub_stream_creator->NewSubStream(new RetryingClientMessageHandler(this), &sub_stream);
-    butil::intrusive_ptr<RtmpStreamBase> old_sub_stream;
+    flare::container::intrusive_ptr<RtmpStreamBase> old_sub_stream;
     bool destroying = false;
     {
-        BAIDU_SCOPED_LOCK(_stream_mutex);
+        FLARE_SCOPED_LOCK(_stream_mutex);
         // Need to check _destroying to avoid setting the new sub_stream to a 
         // destroying retrying stream. 
         // Note: the load of _destroying and the setting of _using_sub_stream 
@@ -2368,7 +2368,7 @@ void RtmpRetryingClientStream::Recreate() {
 
 void RtmpRetryingClientStream::OnRecreateTimer(void* arg) {
     // Hold the referenced stream.
-    butil::intrusive_ptr<RtmpRetryingClientStream> ptr(
+    flare::container::intrusive_ptr<RtmpRetryingClientStream> ptr(
         static_cast<RtmpRetryingClientStream*>(arg), false/*not add ref*/);
     ptr->Recreate();
 }
@@ -2377,9 +2377,9 @@ void RtmpRetryingClientStream::OnSubStreamStop(RtmpStreamBase* sub_stream) {
     // Make sure the sub_stream is destroyed after this function.
     DestroyingPtr<RtmpStreamBase> sub_stream_guard(sub_stream);
     
-    butil::intrusive_ptr<RtmpStreamBase> removed_sub_stream;
+    flare::container::intrusive_ptr<RtmpStreamBase> removed_sub_stream;
     {
-        BAIDU_SCOPED_LOCK(_stream_mutex);
+        FLARE_SCOPED_LOCK(_stream_mutex);
         if (sub_stream == _using_sub_stream) {
             _using_sub_stream.swap(removed_sub_stream);
         }
@@ -2437,7 +2437,7 @@ void RtmpRetryingClientStream::OnSubStreamStop(RtmpStreamBase* sub_stream) {
     if (wait_us > 0) {
         // retry is too frequent, schedule the retry.
         // Add a ref for OnRecreateTimer which does deref.
-        butil::intrusive_ptr<RtmpRetryingClientStream>(this).detach();
+        flare::container::intrusive_ptr<RtmpRetryingClientStream>(this).detach();
         if (bthread_timer_add(&_create_timer_id,
                               flare::base::microseconds_from_now(wait_us),
                               OnRecreateTimer, this) != 0) {
@@ -2451,8 +2451,8 @@ void RtmpRetryingClientStream::OnSubStreamStop(RtmpStreamBase* sub_stream) {
 }
 
 int RtmpRetryingClientStream::AcquireStreamToSend(
-    butil::intrusive_ptr<RtmpStreamBase>* ptr) {
-    BAIDU_SCOPED_LOCK(_stream_mutex);
+    flare::container::intrusive_ptr<RtmpStreamBase>* ptr) {
+    FLARE_SCOPED_LOCK(_stream_mutex);
     if (!_using_sub_stream) {
         errno = EPERM;
         return -1;
@@ -2472,7 +2472,7 @@ int RtmpRetryingClientStream::AcquireStreamToSend(
 }
 
 int RtmpRetryingClientStream::SendCuePoint(const RtmpCuePoint& obj) {
-    butil::intrusive_ptr<RtmpStreamBase> ptr;
+    flare::container::intrusive_ptr<RtmpStreamBase> ptr;
     if (AcquireStreamToSend(&ptr) != 0) {
         return -1;
     }
@@ -2480,7 +2480,7 @@ int RtmpRetryingClientStream::SendCuePoint(const RtmpCuePoint& obj) {
 }
 
 int RtmpRetryingClientStream::SendMetaData(const RtmpMetaData& obj, const std::string_view& name) {
-    butil::intrusive_ptr<RtmpStreamBase> ptr;
+    flare::container::intrusive_ptr<RtmpStreamBase> ptr;
     if (AcquireStreamToSend(&ptr) != 0) {
         return -1;
     }
@@ -2489,7 +2489,7 @@ int RtmpRetryingClientStream::SendMetaData(const RtmpMetaData& obj, const std::s
 
 int RtmpRetryingClientStream::SendSharedObjectMessage(
     const RtmpSharedObjectMessage& msg) {
-    butil::intrusive_ptr<RtmpStreamBase> ptr;
+    flare::container::intrusive_ptr<RtmpStreamBase> ptr;
     if (AcquireStreamToSend(&ptr) != 0) {
         return -1;
     }
@@ -2497,7 +2497,7 @@ int RtmpRetryingClientStream::SendSharedObjectMessage(
 }
 
 int RtmpRetryingClientStream::SendAudioMessage(const RtmpAudioMessage& msg) {
-    butil::intrusive_ptr<RtmpStreamBase> ptr;
+    flare::container::intrusive_ptr<RtmpStreamBase> ptr;
     if (AcquireStreamToSend(&ptr) != 0) {
         return -1;
     }
@@ -2505,7 +2505,7 @@ int RtmpRetryingClientStream::SendAudioMessage(const RtmpAudioMessage& msg) {
 }
 
 int RtmpRetryingClientStream::SendAACMessage(const RtmpAACMessage& msg) {
-    butil::intrusive_ptr<RtmpStreamBase> ptr;
+    flare::container::intrusive_ptr<RtmpStreamBase> ptr;
     if (AcquireStreamToSend(&ptr) != 0) {
         return -1;
     }
@@ -2513,7 +2513,7 @@ int RtmpRetryingClientStream::SendAACMessage(const RtmpAACMessage& msg) {
 }
 
 int RtmpRetryingClientStream::SendVideoMessage(const RtmpVideoMessage& msg) {
-    butil::intrusive_ptr<RtmpStreamBase> ptr;
+    flare::container::intrusive_ptr<RtmpStreamBase> ptr;
     if (AcquireStreamToSend(&ptr) != 0) {
         return -1;
     }
@@ -2521,7 +2521,7 @@ int RtmpRetryingClientStream::SendVideoMessage(const RtmpVideoMessage& msg) {
 }
 
 int RtmpRetryingClientStream::SendAVCMessage(const RtmpAVCMessage& msg) {
-    butil::intrusive_ptr<RtmpStreamBase> ptr;
+    flare::container::intrusive_ptr<RtmpStreamBase> ptr;
     if (AcquireStreamToSend(&ptr) != 0) {
         return -1;
     }
@@ -2529,9 +2529,9 @@ int RtmpRetryingClientStream::SendAVCMessage(const RtmpAVCMessage& msg) {
 }
 
 void RtmpRetryingClientStream::StopCurrentStream() {
-    butil::intrusive_ptr<RtmpStreamBase> sub_stream;
+    flare::container::intrusive_ptr<RtmpStreamBase> sub_stream;
     {
-        BAIDU_SCOPED_LOCK(_stream_mutex);
+        FLARE_SCOPED_LOCK(_stream_mutex);
         sub_stream = _using_sub_stream;
     }
     if (sub_stream) {
@@ -2543,7 +2543,7 @@ void RtmpRetryingClientStream::OnPlayable() {}
 
 flare::base::end_point RtmpRetryingClientStream::remote_side() const {
     {
-        BAIDU_SCOPED_LOCK(_stream_mutex);
+        FLARE_SCOPED_LOCK(_stream_mutex);
         if (_using_sub_stream) {
             return _using_sub_stream->remote_side();
         }
@@ -2553,7 +2553,7 @@ flare::base::end_point RtmpRetryingClientStream::remote_side() const {
 
 flare::base::end_point RtmpRetryingClientStream::local_side() const {
     {
-        BAIDU_SCOPED_LOCK(_stream_mutex);
+        FLARE_SCOPED_LOCK(_stream_mutex);
         if (_using_sub_stream) {
             return _using_sub_stream->local_side();
         }
@@ -2695,7 +2695,7 @@ int RtmpServerStream::SendStreamDry() {
 }
 
 int RtmpServerStream::RunOnFailed(bthread_id_t id, void* data, int) {
-    butil::intrusive_ptr<RtmpServerStream> stream(
+    flare::container::intrusive_ptr<RtmpServerStream> stream(
         static_cast<RtmpServerStream*>(data), false);
     CHECK(stream->_rtmpsock);
     stream->OnStopInternal();

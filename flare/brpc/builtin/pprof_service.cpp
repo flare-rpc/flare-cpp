@@ -103,7 +103,7 @@ void PProfService::profile(
     if ((void*)ProfilerStart == NULL || (void*)ProfilerStop == NULL) {
         cntl->SetFailed(ENOMETHOD, "%s, to enable cpu profiler, check out "
                         "docs/cn/cpu_profiler.md",
-                        berror(ENOMETHOD));
+                        flare_error(ENOMETHOD));
         return;
     }    
     int sleep_sec = ReadSeconds(cntl);
@@ -127,7 +127,7 @@ void PProfService::profile(
 
     char prof_name[256];
     if (MakeProfName(PROFILING_CPU, prof_name, sizeof(prof_name)) != 0) {
-        cntl->SetFailed(errno, "Fail to create .prof file, %s", berror());
+        cntl->SetFailed(errno, "Fail to create .prof file, %s", flare_error());
         return;
     }
     butil::File::Error error;
@@ -184,7 +184,7 @@ void PProfService::contention(
 
     char prof_name[256];
     if (MakeProfName(PROFILING_CONTENTION, prof_name, sizeof(prof_name)) != 0) {
-        cntl->SetFailed(errno, "Fail to create .prof file, %s", berror());
+        cntl->SetFailed(errno, "Fail to create .prof file, %s", flare_error());
         return;
     }
     if (!bthread::ContentionProfilerStart(prof_name)) {
@@ -251,7 +251,7 @@ void PProfService::growth(
     if (malloc_ext == NULL) {
         cntl->SetFailed(ENOMETHOD, "%s, to enable growth profiler, check out "
                         "docs/cn/heap_profiler.md",
-                        berror(ENOMETHOD));
+                        flare_error(ENOMETHOD));
         return;
     }
     // Log requester

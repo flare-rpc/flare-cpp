@@ -163,7 +163,7 @@ static long ReadPortOfDummyServer(const char* filename) {
     const ssize_t nr = read(fd, port_str, sizeof(port_str));
     if (nr <= 0) {
         LOG(ERROR) << "Fail to read `" << DUMMY_SERVER_PORT_FILE << "': "
-                   << (nr == 0 ? "nothing to read" : berror());
+                   << (nr == 0 ? "nothing to read" : flare_error());
         return -1;
     }
     port_str[std::min((size_t)nr, sizeof(port_str)-1)] = '\0';

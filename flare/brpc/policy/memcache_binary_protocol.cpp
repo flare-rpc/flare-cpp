@@ -34,7 +34,7 @@
 #include "flare/brpc/policy/memcache_binary_header.h"
 #include "flare/brpc/memcache.h"
 #include "flare/brpc/policy/most_common_message.h"
-#include "flare/butil/containers/flat_map.h"
+#include "flare/container/flat_map.h"
 
 
 namespace brpc {
@@ -50,27 +50,27 @@ static uint64_t supported_cmd_map[8];
 static pthread_once_t supported_cmd_map_once = PTHREAD_ONCE_INIT;
 
 static void InitSupportedCommandMap() {
-    butil::bit_array_clear(supported_cmd_map, 256);
-    butil::bit_array_set(supported_cmd_map, MC_BINARY_GET);
-    butil::bit_array_set(supported_cmd_map, MC_BINARY_SET);
-    butil::bit_array_set(supported_cmd_map, MC_BINARY_ADD);
-    butil::bit_array_set(supported_cmd_map, MC_BINARY_REPLACE);
-    butil::bit_array_set(supported_cmd_map, MC_BINARY_DELETE);
-    butil::bit_array_set(supported_cmd_map, MC_BINARY_INCREMENT);
-    butil::bit_array_set(supported_cmd_map, MC_BINARY_DECREMENT);
-    butil::bit_array_set(supported_cmd_map, MC_BINARY_FLUSH);
-    butil::bit_array_set(supported_cmd_map, MC_BINARY_VERSION);
-    butil::bit_array_set(supported_cmd_map, MC_BINARY_NOOP);
-    butil::bit_array_set(supported_cmd_map, MC_BINARY_APPEND);
-    butil::bit_array_set(supported_cmd_map, MC_BINARY_PREPEND);
-    butil::bit_array_set(supported_cmd_map, MC_BINARY_STAT);
-    butil::bit_array_set(supported_cmd_map, MC_BINARY_TOUCH);
-    butil::bit_array_set(supported_cmd_map, MC_BINARY_SASL_AUTH);
+    flare::container::bit_array_clear(supported_cmd_map, 256);
+    flare::container::bit_array_set(supported_cmd_map, MC_BINARY_GET);
+    flare::container::bit_array_set(supported_cmd_map, MC_BINARY_SET);
+    flare::container::bit_array_set(supported_cmd_map, MC_BINARY_ADD);
+    flare::container::bit_array_set(supported_cmd_map, MC_BINARY_REPLACE);
+    flare::container::bit_array_set(supported_cmd_map, MC_BINARY_DELETE);
+    flare::container::bit_array_set(supported_cmd_map, MC_BINARY_INCREMENT);
+    flare::container::bit_array_set(supported_cmd_map, MC_BINARY_DECREMENT);
+    flare::container::bit_array_set(supported_cmd_map, MC_BINARY_FLUSH);
+    flare::container::bit_array_set(supported_cmd_map, MC_BINARY_VERSION);
+    flare::container::bit_array_set(supported_cmd_map, MC_BINARY_NOOP);
+    flare::container::bit_array_set(supported_cmd_map, MC_BINARY_APPEND);
+    flare::container::bit_array_set(supported_cmd_map, MC_BINARY_PREPEND);
+    flare::container::bit_array_set(supported_cmd_map, MC_BINARY_STAT);
+    flare::container::bit_array_set(supported_cmd_map, MC_BINARY_TOUCH);
+    flare::container::bit_array_set(supported_cmd_map, MC_BINARY_SASL_AUTH);
 }
 
 inline bool IsSupportedCommand(uint8_t command) {
     pthread_once(&supported_cmd_map_once, InitSupportedCommandMap);
-    return butil::bit_array_get(supported_cmd_map, command);
+    return flare::container::bit_array_get(supported_cmd_map, command);
 }
 
 ParseResult ParseMemcacheMessage(butil::IOBuf* source,
@@ -159,7 +159,7 @@ void ProcessMemcacheResponse(InputMessageBase* msg_base) {
     const int rc = bthread_id_lock(cid, (void**)&cntl);
     if (rc != 0) {
         LOG_IF(ERROR, rc != EINVAL && rc != EPERM)
-            << "Fail to lock correlation_id=" << cid << ": " << berror(rc);
+            << "Fail to lock correlation_id=" << cid << ": " << flare_error(rc);
         return;
     }
     

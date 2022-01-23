@@ -18,14 +18,14 @@
 #ifndef BRPC_KVMAP_H
 #define BRPC_KVMAP_H
 
-#include "flare/butil/containers/flat_map.h"
+#include "flare/container/flat_map.h"
 
 namespace brpc {
     
 // Remember Key/Values in string
 class KVMap {
 public:
-    typedef butil::FlatMap<std::string, std::string> Map;
+    typedef flare::container::FlatMap<std::string, std::string> Map;
     typedef Map::const_iterator Iterator;
 
     KVMap() {}

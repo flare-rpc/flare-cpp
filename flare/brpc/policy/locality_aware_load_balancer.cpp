@@ -263,7 +263,7 @@ size_t LocalityAwareLoadBalancer::RemoveServersInBatch(
 }
 
 int LocalityAwareLoadBalancer::SelectServer(const SelectIn& in, SelectOut* out) {
-    butil::DoublyBufferedData<Servers>::ScopedPtr s;
+    flare::container::DoublyBufferedData<Servers>::ScopedPtr s;
     if (_db_servers.Read(&s) != 0) {
         return ENOMEM;
     }
@@ -350,7 +350,7 @@ int LocalityAwareLoadBalancer::SelectServer(const SelectIn& in, SelectOut* out) 
 }
 
 void LocalityAwareLoadBalancer::Feedback(const CallInfo& info) {        
-    butil::DoublyBufferedData<Servers>::ScopedPtr s;
+    flare::container::DoublyBufferedData<Servers>::ScopedPtr s;
     if (_db_servers.Read(&s) != 0) {
         return;
     }
@@ -371,7 +371,7 @@ int64_t LocalityAwareLoadBalancer::Weight::Update(
     const CallInfo& ci, size_t index) {
     const int64_t end_time_us = flare::base::gettimeofday_us();
     const int64_t latency = end_time_us - ci.begin_time_us;
-    BAIDU_SCOPED_LOCK(_mutex);
+    FLARE_SCOPED_LOCK(_mutex);
     if (Disabled()) {
         // The weight was disabled and will be removed soon, do nothing
         // and the diff is 0.
@@ -513,7 +513,7 @@ void LocalityAwareLoadBalancer::Describe(
     }
     os << "LocalityAware{total="
        << _total.load(std::memory_order_relaxed) << ' ';
-    butil::DoublyBufferedData<Servers>::ScopedPtr s;
+    flare::container::DoublyBufferedData<Servers>::ScopedPtr s;
     if (_db_servers.Read(&s) != 0) {
         os << "fail to read _db_servers";
     } else {
@@ -548,14 +548,14 @@ LocalityAwareLoadBalancer::Weight::Weight(int64_t initial_weight)
     , _old_index((size_t)-1L)
     , _old_weight(0)
     , _avg_latency(0)
-    , _time_q(_time_q_items, sizeof(_time_q_items), butil::NOT_OWN_STORAGE) {
+    , _time_q(_time_q_items, sizeof(_time_q_items), flare::container::NOT_OWN_STORAGE) {
 }
 
 LocalityAwareLoadBalancer::Weight::~Weight() {
 }
 
 int64_t LocalityAwareLoadBalancer::Weight::Disable() {
-    BAIDU_SCOPED_LOCK(_mutex);
+    FLARE_SCOPED_LOCK(_mutex);
     const int64_t saved = _weight;
     _base_weight = -1;
     _weight = 0;
@@ -563,7 +563,7 @@ int64_t LocalityAwareLoadBalancer::Weight::Disable() {
 }
 
 int64_t LocalityAwareLoadBalancer::Weight::MarkOld(size_t index) {
-    BAIDU_SCOPED_LOCK(_mutex);
+    FLARE_SCOPED_LOCK(_mutex);
     const int64_t saved = _weight;
     _old_weight = saved;
     _old_diff_sum = 0;
@@ -572,7 +572,7 @@ int64_t LocalityAwareLoadBalancer::Weight::MarkOld(size_t index) {
 }
         
 std::pair<int64_t, int64_t> LocalityAwareLoadBalancer::Weight::ClearOld() {
-    BAIDU_SCOPED_LOCK(_mutex);
+    FLARE_SCOPED_LOCK(_mutex);
     const int64_t old_weight = _old_weight;
     const int64_t diff = _old_diff_sum;
     _old_diff_sum = 0;

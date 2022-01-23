@@ -15,39 +15,12 @@
 // specific language governing permissions and limitations
 // under the License.
 
-// Date: Tue Sep 16 12:39:12 CST 2014
+// Date: Tue Jun 23 15:03:24 CST 2015
 
-#ifndef BUTIL_THREAD_LOCAL_INL_H
-#define BUTIL_THREAD_LOCAL_INL_H
+#include "flare/container/find_cstr.h"
 
-namespace butil {
+namespace flare::container {
 
-namespace detail {
+    thread_local StringMapThreadLocalTemp tls_stringmap_temp = {false, {}};
 
-template <typename T>
-class ThreadLocalHelper {
-public:
-    inline static T* get() {
-        if (__builtin_expect(value != NULL, 1)) {
-            return value;
-        }
-        value = new (std::nothrow) T;
-        if (value != NULL) {
-            butil::thread_atexit(delete_object<T>, value);
-        }
-        return value;
-    }
-    static BAIDU_THREAD_LOCAL T* value;
-};
-
-template <typename T> BAIDU_THREAD_LOCAL T* ThreadLocalHelper<T>::value = NULL;
-
-}  // namespace detail
-
-template <typename T> inline T* get_thread_local() {
-    return detail::ThreadLocalHelper<T>::get();
-}
-
-}  // namespace butil
-
-#endif  // BUTIL_THREAD_LOCAL_INL_H
+}  // namespace flare::container

@@ -41,7 +41,7 @@ public:
     MongoContext* context() { return _context.get(); }
 
 private:
-    butil::intrusive_ptr<MongoContext> _context;
+    flare::container::intrusive_ptr<MongoContext> _context;
 };
 
 class MongoServiceAdaptor {

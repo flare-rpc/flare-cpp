@@ -252,7 +252,7 @@ void ProgressiveAttachment::NotifyOnStopped(google::protobuf::Closure* done) {
     }
     const int rc = bthread_id_create(&_notify_id, done, RunOnFailed);
     if (rc) {
-        LOG(ERROR) << "Fail to create _notify_id: " << berror(rc);
+        LOG(ERROR) << "Fail to create _notify_id: " << flare_error(rc);
         return done->Run();
     }
     _httpsock->NotifyOnFailed(_notify_id);

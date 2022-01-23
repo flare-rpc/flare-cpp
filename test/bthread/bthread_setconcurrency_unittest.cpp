@@ -21,7 +21,7 @@
 #include "flare/base/time.h"
 #include "flare/butil/macros.h"
 #include "flare/base/logging.h"
-#include "flare/butil/thread_local.h"
+#include "flare/base/thread.h"
 #include <flare/bthread/butex.h>
 #include "flare/base/logging.h"
 #include "flare/bthread/bthread.h"
@@ -61,7 +61,7 @@ static std::atomic<int> *even;
 
 static std::atomic<int> nbthreads(0);
 static std::atomic<int> npthreads(0);
-static BAIDU_THREAD_LOCAL bool counted = false;
+static FLARE_THREAD_LOCAL bool counted = false;
 static std::atomic<bool> stop (false);
 
 static void *odd_thread(void *) {

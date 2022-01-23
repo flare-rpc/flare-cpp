@@ -1841,10 +1841,10 @@ TEST_F(ChannelTest, intrusive_ptr_sanity) {
     {
         MyShared* s1 = new MyShared;
         ASSERT_EQ(0, s1->ref_count());
-        butil::intrusive_ptr<MyShared> p1 = s1;
+        flare::container::intrusive_ptr<MyShared> p1 = s1;
         ASSERT_EQ(1, p1->ref_count());
         {
-            butil::intrusive_ptr<MyShared> p2 = s1;
+            flare::container::intrusive_ptr<MyShared> p2 = s1;
             ASSERT_EQ(2, p2->ref_count());
             ASSERT_EQ(2, p1->ref_count());
         }
@@ -1951,7 +1951,7 @@ TEST_F(ChannelTest, init_using_naming_service) {
 
     // `lb' should be valid even if `channel' has destroyed
     // since we hold another reference to it
-    butil::intrusive_ptr<brpc::SharedLoadBalancer>
+    flare::container::intrusive_ptr<brpc::SharedLoadBalancer>
         another_ctx = channel->_lb;
     delete channel;
     ASSERT_EQ(lb, another_ctx.get());

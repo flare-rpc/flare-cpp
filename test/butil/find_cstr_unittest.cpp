@@ -18,7 +18,7 @@
 #include <algorithm>
 #include <random>
 #include <gtest/gtest.h>
-#include "flare/butil/find_cstr.h"
+#include "flare/container/find_cstr.h"
 #include "flare/base/time.h"
 #include "flare/base/logging.h"
 
@@ -47,7 +47,7 @@ namespace {
             // nothing.
         }
         t1["hello"] = 0xdeadbeef;
-        std::map<std::string, int>::iterator it = butil::find_cstr(t1, "hello");
+        std::map<std::string, int>::iterator it = flare::container::find_cstr(t1, "hello");
         ASSERT_TRUE(it != t1.end());
         ASSERT_EQ("hello", it->first);
         ASSERT_EQ(0xdeadbeef, (unsigned int) it->second);
@@ -86,7 +86,7 @@ namespace {
         flare::base::stop_watcher tm;
         tm.start();
         for (size_t i = 0; i < all_keys.size(); ++i) {
-            sum += butil::find_cstr(t1, all_keys[i])->second;
+            sum += flare::container::find_cstr(t1, all_keys[i])->second;
         }
         tm.stop();
         int64_t elp1 = tm.n_elapsed();

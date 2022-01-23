@@ -107,12 +107,12 @@ public:
     bool SerializeTo(butil::IOBuf* buf) const;
 
     // Protobuf methods.
-    RedisRequest* New() const;
-    void CopyFrom(const ::google::protobuf::Message& from);
-    void MergeFrom(const ::google::protobuf::Message& from);
+    RedisRequest* New() const override;
+    void CopyFrom(const ::google::protobuf::Message& from) override;
+    void MergeFrom(const ::google::protobuf::Message& from) override;
     void CopyFrom(const RedisRequest& from);
     void MergeFrom(const RedisRequest& from);
-    void Clear();
+    void Clear() override;
     bool IsInitialized() const override;
   
     int ByteSize() const;

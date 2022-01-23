@@ -77,7 +77,7 @@ int RegisterProtocol(ProtocolType type, const Protocol& protocol) {
         return -1;
     }
     ProtocolEntry* const protocol_map = get_protocol_map();
-    BAIDU_SCOPED_LOCK(s_protocol_map_mutex);
+    FLARE_SCOPED_LOCK(s_protocol_map_mutex);
     if (protocol_map[index].valid.load(std::memory_order_relaxed)) {
         LOG(ERROR) << "ProtocolType=" << type << " was registered";
         return -1;

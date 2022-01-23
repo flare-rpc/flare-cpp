@@ -338,7 +338,7 @@ brpc server is capable of sending large or infinite sized body, in following ste
   ```c++
   #include <flare/brpc/progressive_attachment.h>
   ...
-  butil::intrusive_ptr<brpc::ProgressiveAttachment> pa = cntl->CreateProgressiveAttachment();
+  flare::container::intrusive_ptr<brpc::ProgressiveAttachment> pa = cntl->CreateProgressiveAttachment();
   ```
 
 2. Call `ProgressiveAttachment::Write()` to send the data.
@@ -346,7 +346,7 @@ brpc server is capable of sending large or infinite sized body, in following ste
    * If the write occurs before running of the server-side done, the sent data is cached until the done is called.
    * If the write occurs after running of the server-side done, the sent data is written out in chunked mode immediately.
 
-3. After usage, destruct all `butil::intrusive_ptr<brpc::ProgressiveAttachment>` to release related resources.
+3. After usage, destruct all `flare::container::intrusive_ptr<brpc::ProgressiveAttachment>` to release related resources.
 
 # Progressive receiving
 

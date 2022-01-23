@@ -290,14 +290,14 @@ TEST_F(ReducerTest, non_primitive_mt) {
     }
     usleep(50000);
     g_stop = true;
-    butil::hash_map<pthread_t, int> appended_count;
+    flare::container::hash_map<pthread_t, int> appended_count;
     for (size_t i = 0; i < arraysize(th); ++i) {
         StringAppenderResult* res = NULL;
         pthread_join(th[i], (void**)&res);
         appended_count[th[i]] = res->count;
         delete res;
     }
-    butil::hash_map<pthread_t, int> got_count;
+    flare::container::hash_map<pthread_t, int> got_count;
     std::string res = cater.get_value();
     for (flare::base::StringSplitter sp(res.c_str(), '.'); sp; ++sp) {
         char* endptr = NULL;

@@ -52,7 +52,7 @@ static bool CutLineFromIOBuf(butil::IOBuf* source, std::string* line_out) {
         return true;
     }
     line_data.copy_to(line_out);
-    if (!line_out->empty() && butil::back_char(*line_out) == '\r') {
+    if (!line_out->empty() && flare::base::back_char(*line_out) == '\r') {
         line_out->resize(line_out->size() - 1);
     }
     return true;

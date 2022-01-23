@@ -21,8 +21,8 @@
 #include <leveldb/db.h>
 #include <leveldb/comparator.h>
 #include "flare/bthread/bthread.h"
-#include "flare/butil/scoped_lock.h"
-#include "flare/butil/thread_local.h"
+#include "flare/base/scoped_lock.h"
+#include "flare/base/thread.h"
 #include "flare/base/strings.h"
 #include "flare/base/time.h"
 #include "flare/base/logging.h"
@@ -379,7 +379,7 @@ bvar::CollectorPreprocessor* Span::preprocessor() {
 static void ResetSpanDB(SpanDB* db) {
     SpanDB* old_db = NULL;
     {
-        BAIDU_SCOPED_LOCK(g_span_db_mutex);
+        FLARE_SCOPED_LOCK(g_span_db_mutex);
         old_db = g_span_db;
         g_span_db = db;
         if (g_span_db) {
@@ -409,8 +409,8 @@ static int StartIndexingIfNeeded() {
     return started_span_indexing ? 0 : -1;
 }
 
-inline int GetSpanDB(butil::intrusive_ptr<SpanDB>* db) {
-    BAIDU_SCOPED_LOCK(g_span_db_mutex);
+inline int GetSpanDB(flare::container::intrusive_ptr<SpanDB>* db) {
+    FLARE_SCOPED_LOCK(g_span_db_mutex);
     if (g_span_db != NULL) {
         *db = g_span_db;
         return 0;
@@ -638,7 +638,7 @@ void Span::dump_and_destroy(size_t /*round*/) {
 
     std::string value_buf;
 
-    butil::intrusive_ptr<SpanDB> db;
+    flare::container::intrusive_ptr<SpanDB> db;
     if (GetSpanDB(&db) != 0) {
         if (g_span_ending) {
             destroy();
@@ -681,7 +681,7 @@ void Span::dump_and_destroy(size_t /*round*/) {
 }
 
 int FindSpan(uint64_t trace_id, uint64_t span_id, RpczSpan* response) {
-    butil::intrusive_ptr<SpanDB> db;
+    flare::container::intrusive_ptr<SpanDB> db;
     if (GetSpanDB(&db) != 0) {
         return -1;
     }
@@ -703,7 +703,7 @@ int FindSpan(uint64_t trace_id, uint64_t span_id, RpczSpan* response) {
 
 void FindSpans(uint64_t trace_id, std::deque<RpczSpan>* out) {
     out->clear();
-    butil::intrusive_ptr<SpanDB> db;
+    flare::container::intrusive_ptr<SpanDB> db;
     if (GetSpanDB(&db) != 0) {
         return;
     }
@@ -735,7 +735,7 @@ void FindSpans(uint64_t trace_id, std::deque<RpczSpan>* out) {
 void ListSpans(int64_t starting_realtime, size_t max_scan,
                std::deque<BriefSpan>* out, SpanFilter* filter) {
     out->clear();
-    butil::intrusive_ptr<SpanDB> db;
+    flare::container::intrusive_ptr<SpanDB> db;
     if (GetSpanDB(&db) != 0) {
         return;
     }
@@ -772,7 +772,7 @@ void ListSpans(int64_t starting_realtime, size_t max_scan,
 }
 
 void DescribeSpanDB(std::ostream& os) {
-    butil::intrusive_ptr<SpanDB> db;
+    flare::container::intrusive_ptr<SpanDB> db;
     if (GetSpanDB(&db) != 0) {
         return;
     }

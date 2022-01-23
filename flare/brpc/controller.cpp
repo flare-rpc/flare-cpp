@@ -51,30 +51,30 @@
 
 // This is the only place that both client/server must link, so we put
 // registrations of errno here.
-BAIDU_REGISTER_ERRNO(brpc::ENOSERVICE, "No such service");
-BAIDU_REGISTER_ERRNO(brpc::ENOMETHOD, "No such method");
-BAIDU_REGISTER_ERRNO(brpc::EREQUEST, "Bad request");
-BAIDU_REGISTER_ERRNO(brpc::ERPCAUTH, "Authentication failed");
-BAIDU_REGISTER_ERRNO(brpc::ETOOMANYFAILS, "Too many sub channels failed");
-BAIDU_REGISTER_ERRNO(brpc::EPCHANFINISH, "ParallelChannel finished");
-BAIDU_REGISTER_ERRNO(brpc::EBACKUPREQUEST, "Sending backup request");
-BAIDU_REGISTER_ERRNO(brpc::ERPCTIMEDOUT, "RPC call is timed out");
-BAIDU_REGISTER_ERRNO(brpc::EFAILEDSOCKET, "Broken socket");
-BAIDU_REGISTER_ERRNO(brpc::EHTTP, "Bad http call");
-BAIDU_REGISTER_ERRNO(brpc::EOVERCROWDED, "The server is overcrowded");
-BAIDU_REGISTER_ERRNO(brpc::ERTMPPUBLISHABLE, "RtmpRetryingClientStream is publishable");
-BAIDU_REGISTER_ERRNO(brpc::ERTMPCREATESTREAM, "createStream was rejected by the RTMP server");
-BAIDU_REGISTER_ERRNO(brpc::EEOF, "Got EOF");
-BAIDU_REGISTER_ERRNO(brpc::EUNUSED, "The socket was not needed");
-BAIDU_REGISTER_ERRNO(brpc::ESSL, "SSL related operation failed");
-BAIDU_REGISTER_ERRNO(brpc::EH2RUNOUTSTREAMS, "The H2 socket was run out of streams");
+FLARE_REGISTER_ERRNO(brpc::ENOSERVICE, "No such service");
+FLARE_REGISTER_ERRNO(brpc::ENOMETHOD, "No such method");
+FLARE_REGISTER_ERRNO(brpc::EREQUEST, "Bad request");
+FLARE_REGISTER_ERRNO(brpc::ERPCAUTH, "Authentication failed");
+FLARE_REGISTER_ERRNO(brpc::ETOOMANYFAILS, "Too many sub channels failed");
+FLARE_REGISTER_ERRNO(brpc::EPCHANFINISH, "ParallelChannel finished");
+FLARE_REGISTER_ERRNO(brpc::EBACKUPREQUEST, "Sending backup request");
+FLARE_REGISTER_ERRNO(brpc::ERPCTIMEDOUT, "RPC call is timed out");
+FLARE_REGISTER_ERRNO(brpc::EFAILEDSOCKET, "Broken socket");
+FLARE_REGISTER_ERRNO(brpc::EHTTP, "Bad http call");
+FLARE_REGISTER_ERRNO(brpc::EOVERCROWDED, "The server is overcrowded");
+FLARE_REGISTER_ERRNO(brpc::ERTMPPUBLISHABLE, "RtmpRetryingClientStream is publishable");
+FLARE_REGISTER_ERRNO(brpc::ERTMPCREATESTREAM, "createStream was rejected by the RTMP server");
+FLARE_REGISTER_ERRNO(brpc::EEOF, "Got EOF");
+FLARE_REGISTER_ERRNO(brpc::EUNUSED, "The socket was not needed");
+FLARE_REGISTER_ERRNO(brpc::ESSL, "SSL related operation failed");
+FLARE_REGISTER_ERRNO(brpc::EH2RUNOUTSTREAMS, "The H2 socket was run out of streams");
 
-BAIDU_REGISTER_ERRNO(brpc::EINTERNAL, "General internal error");
-BAIDU_REGISTER_ERRNO(brpc::ERESPONSE, "Bad response");
-BAIDU_REGISTER_ERRNO(brpc::ELOGOFF, "Server is stopping");
-BAIDU_REGISTER_ERRNO(brpc::ELIMIT, "Reached server's max_concurrency");
-BAIDU_REGISTER_ERRNO(brpc::ECLOSE, "Close socket initiatively");
-BAIDU_REGISTER_ERRNO(brpc::EITP, "Bad Itp response");
+FLARE_REGISTER_ERRNO(brpc::EINTERNAL, "General internal error");
+FLARE_REGISTER_ERRNO(brpc::ERESPONSE, "Bad response");
+FLARE_REGISTER_ERRNO(brpc::ELOGOFF, "Server is stopping");
+FLARE_REGISTER_ERRNO(brpc::ELIMIT, "Reached server's max_concurrency");
+FLARE_REGISTER_ERRNO(brpc::ECLOSE, "Close socket initiatively");
+FLARE_REGISTER_ERRNO(brpc::EITP, "Bad Itp response");
 
 
 DECLARE_bool(log_as_json);
@@ -1117,7 +1117,7 @@ void Controller::IssueRPC(int64_t start_realtime_us) {
             using_auth = _auth;
         } else if (auth_error != 0) {
             SetFailed(auth_error, "Fail to authenticate, %s",
-                      berror(auth_error));
+                      flare_error(auth_error));
             return HandleSendFailed();
         }
     }
@@ -1220,7 +1220,7 @@ int Controller::HandleSocketFailed(bthread_id_t id, void* data, int error_code,
     } else if (!error_text.empty()) {
         cntl->SetFailed(error_code, "%s", error_text.c_str());
     } else {
-        cntl->SetFailed(error_code, "%s @%s", berror(error_code),
+        cntl->SetFailed(error_code, "%s @%s", flare_error(error_code),
                         flare::base::endpoint2str(cntl->remote_side()).c_str());
     }
     CompletionInfo info = { id, false };
@@ -1366,7 +1366,7 @@ void Controller::set_stream_creator(StreamCreator* sc) {
     _stream_creator = sc;
 }
 
-butil::intrusive_ptr<ProgressiveAttachment>
+flare::container::intrusive_ptr<ProgressiveAttachment>
 Controller::CreateProgressiveAttachment(StopStyle stop_style) {
     if (has_progressive_writer()) {
         LOG(ERROR) << "One controller can only have one ProgressiveAttachment";

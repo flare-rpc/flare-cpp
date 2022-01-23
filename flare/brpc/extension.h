@@ -20,9 +20,9 @@
 #define BRPC_EXTENSION_H
 
 #include <string>
-#include "flare/butil/scoped_lock.h"
+#include "flare/base/scoped_lock.h"
 #include "flare/base/logging.h"
-#include "flare/butil/containers/case_ignored_flat_map.h"
+#include "flare/container/case_ignored_flat_map.h"
 #include "flare/base/singleton_on_pthread_once.h"
 
 namespace flare::base {
@@ -51,7 +51,7 @@ private:
 friend class flare::base::GetLeakySingleton<Extension<T> >;
     Extension();
     ~Extension();
-    butil::CaseIgnoredFlatMap<T*> _instance_map;
+    flare::container::CaseIgnoredFlatMap<T*> _instance_map;
     butil::Mutex _map_mutex;
 };
 

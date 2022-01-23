@@ -20,7 +20,7 @@
 
 #include "flare/bthread/bthread.h"                       // bthread_t
 #include "flare/butil/synchronization/condition_variable.h"
-#include "flare/butil/containers/flat_map.h"
+#include "flare/container/flat_map.h"
 #include "flare/brpc/input_messenger.h"
 
 
@@ -33,7 +33,7 @@ struct ConnectStatistics {
 // process messages from which it reads
 class Acceptor : public InputMessenger {
 public:
-    typedef butil::FlatMap<SocketId, ConnectStatistics> SocketMap;
+    typedef flare::container::FlatMap<SocketId, ConnectStatistics> SocketMap;
 
     enum Status {
         UNINITIALIZED = 0,

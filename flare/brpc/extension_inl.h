@@ -44,7 +44,7 @@ int Extension<T>::Register(const std::string& name, T* instance) {
         LOG(ERROR) << "instance to \"" << name << "\" is NULL";
         return -1;
     }
-    BAIDU_SCOPED_LOCK(_map_mutex);
+    FLARE_SCOPED_LOCK(_map_mutex);
     if (_instance_map.seek(name) != NULL) {
         LOG(ERROR) << "\"" << name << "\" was registered";
         return -1;
@@ -66,7 +66,7 @@ T* Extension<T>::Find(const char* name) {
     if (NULL == name) {
         return NULL;
     }
-    BAIDU_SCOPED_LOCK(_map_mutex);
+    FLARE_SCOPED_LOCK(_map_mutex);
     T** p = _instance_map.seek(name);
     if (p) {
         return *p;
@@ -76,8 +76,8 @@ T* Extension<T>::Find(const char* name) {
 
 template <typename T>
 void Extension<T>::List(std::ostream& os, char separator) {
-    BAIDU_SCOPED_LOCK(_map_mutex);
-    for (typename butil::CaseIgnoredFlatMap<T*>::iterator
+    FLARE_SCOPED_LOCK(_map_mutex);
+    for (typename flare::container::CaseIgnoredFlatMap<T*>::iterator
              it = _instance_map.begin(); it != _instance_map.end(); ++it) {
         // private extensions which is not intended to be seen by users starts
         // with underscore.

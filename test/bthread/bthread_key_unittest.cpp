@@ -20,7 +20,7 @@
 #include <gtest/gtest.h>
 #include "flare/base/time.h"
 #include "flare/butil/macros.h"
-#include "flare/butil/scoped_lock.h"
+#include "flare/base/scoped_lock.h"
 #include "flare/base/logging.h"
 #include "flare/bthread/bthread.h"
 #include "flare/bthread/unstable.h"
@@ -133,7 +133,7 @@ std::vector<size_t> seqs;
 pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 
 void dtor2(void* arg) {
-    BAIDU_SCOPED_LOCK(mutex);
+    FLARE_SCOPED_LOCK(mutex);
     seqs.push_back((size_t)arg);
 }
 
@@ -150,7 +150,7 @@ static void* worker2(void* arg) {
 
 TEST(KeyTest, use_one_key_in_different_threads) {
     bthread_key_t k;
-    ASSERT_EQ(0, bthread_key_create(&k, dtor2)) << berror();
+    ASSERT_EQ(0, bthread_key_create(&k, dtor2)) << flare_error();
     seqs.clear();
 
     pthread_t th[16];

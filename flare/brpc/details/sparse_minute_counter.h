@@ -20,7 +20,7 @@
 #define BRPC_SPARSE_MINUTE_COUNTER_H
 
 
-#include "flare/butil/containers/bounded_queue.h"
+#include "flare/container/bounded_queue.h"
 
 namespace brpc {
 
@@ -54,7 +54,7 @@ public:
 
 private:
     DISALLOW_COPY_AND_ASSIGN(SparseMinuteCounter);
-    typedef butil::BoundedQueue<Item> Q;
+    typedef flare::container::bounded_queue<Item> Q;
     static Q* CreateQueue(uint32_t cap);
     static void DestroyQueue(Q* q);
     void Resize();
@@ -118,7 +118,7 @@ SparseMinuteCounter<T>::CreateQueue(uint32_t cap) {
     const size_t memsize =
         sizeof(Q) + sizeof(Item) * cap;
     char* mem = (char*)malloc(memsize); // intended crash on ENOMEM
-    return new (mem) Q(mem + sizeof(Q), sizeof(Item) * cap, butil::NOT_OWN_STORAGE);
+    return new (mem) Q(mem + sizeof(Q), sizeof(Item) * cap, flare::container::NOT_OWN_STORAGE);
 }
 
 template <typename T>

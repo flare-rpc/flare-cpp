@@ -16,10 +16,10 @@
 // under the License.
 
 #include <gtest/gtest.h>
-#include "flare/butil/errno.h"
+#include "flare/base/errno.h"
 #include "flare/base/endpoint.h"
 #include "flare/base/logging.h"
-#include "flare/butil/containers/flat_map.h"
+#include "flare/container/flat_map.h"
 
 namespace {
 
@@ -91,7 +91,7 @@ TEST(EndPointTest, endpoint) {
     flare::base::end_point p5;
     ASSERT_EQ(-1, hostname2endpoint("localhost:-1", &p5));
     ASSERT_EQ(-1, hostname2endpoint("localhost:65536", &p5));
-    ASSERT_EQ(0, hostname2endpoint("localhost:65535", &p5)) << berror();
+    ASSERT_EQ(0, hostname2endpoint("localhost:65535", &p5)) << flare_error();
     ASSERT_EQ(0, hostname2endpoint("localhost:0", &p5));
 
 #ifdef BAIDU_INTERNAL
@@ -103,7 +103,7 @@ TEST(EndPointTest, endpoint) {
 }
 
 TEST(EndPointTest, hash_table) {
-    butil::hash_map<flare::base::end_point, int> m;
+    flare::container::hash_map<flare::base::end_point, int> m;
     flare::base::end_point ep1(flare::base::IP_ANY, 123);
     flare::base::end_point ep2(flare::base::IP_ANY, 456);
     ++m[ep1];
@@ -123,7 +123,7 @@ TEST(EndPointTest, hash_table) {
 }
 
 TEST(EndPointTest, flat_map) {
-    butil::FlatMap<flare::base::end_point, int> m;
+    flare::container::FlatMap<flare::base::end_point, int> m;
     ASSERT_EQ(0, m.init(1024));
     uint32_t port = 8088;
 
@@ -142,7 +142,7 @@ TEST(EndPointTest, flat_map) {
         ++m[ep];
     }
 
-    butil::BucketInfo info = m.bucket_info();
+    flare::container::BucketInfo info = m.bucket_info();
     LOG(INFO) << "bucket info max long=" << info.longest_length
         << " avg=" << info.average_length << std::endl;
     ASSERT_LT(info.longest_length, 32ul) << "detect hash collision and it's too large.";

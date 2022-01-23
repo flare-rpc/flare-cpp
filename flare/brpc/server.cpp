@@ -1744,7 +1744,7 @@ int StartDummyServerAt(int port, ProfilerLinker) {
         return -1;
     }
     if (g_dummy_server == NULL) {  // (1)
-        BAIDU_SCOPED_LOCK(g_dummy_server_mutex);
+        FLARE_SCOPED_LOCK(g_dummy_server_mutex);
         if (g_dummy_server == NULL) {
             Server* dummy_server = new Server;
             dummy_server->set_version(flare::base::string_printf(
@@ -2119,7 +2119,7 @@ int Server::SSLSwitchCTXByHostname(struct ssl_st* ssl,
         return strict_sni ? SSL_TLSEXT_ERR_ALERT_FATAL : SSL_TLSEXT_ERR_NOACK;
     }
 
-    butil::DoublyBufferedData<CertMaps>::ScopedPtr s;
+    flare::container::DoublyBufferedData<CertMaps>::ScopedPtr s;
     if (server->_reload_cert_maps.Read(&s) != 0) {
         return SSL_TLSEXT_ERR_ALERT_FATAL;
     }

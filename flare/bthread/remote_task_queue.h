@@ -22,7 +22,7 @@
 #ifndef BTHREAD_REMOTE_TASK_QUEUE_H
 #define BTHREAD_REMOTE_TASK_QUEUE_H
 
-#include "flare/butil/containers/bounded_queue.h"
+#include "flare/container/bounded_queue.h"
 #include "flare/butil/macros.h"
 
 namespace bthread {
@@ -43,7 +43,7 @@ public:
         if (q_mem == NULL) {
             return -1;
         }
-        butil::BoundedQueue<bthread_t> q(q_mem, memsize, butil::OWNS_STORAGE);
+        flare::container::bounded_queue<bthread_t> q(q_mem, memsize, flare::container::OWNS_STORAGE);
         _tasks.swap(q);
         return 0;
     }
@@ -74,7 +74,7 @@ public:
 private:
 friend class TaskGroup;
     DISALLOW_COPY_AND_ASSIGN(RemoteTaskQueue);
-    butil::BoundedQueue<bthread_t> _tasks;
+    flare::container::bounded_queue<bthread_t> _tasks;
     butil::Mutex _mutex;
 };
 

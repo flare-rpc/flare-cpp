@@ -27,9 +27,9 @@
                                   // e.g. bthread_usleep
 #include <google/protobuf/service.h>                 // google::protobuf::Service
 #include "flare/butil/macros.h"                            // DISALLOW_COPY_AND_ASSIGN
-#include "flare/butil/containers/doubly_buffered_data.h"   // DoublyBufferedData
+#include "flare/container/doubly_buffered_data.h"   // DoublyBufferedData
 #include "flare/bvar/bvar.h"
-#include "flare/butil/containers/case_ignored_flat_map.h"  // [CaseIgnored]FlatMap
+#include "flare/container/case_ignored_flat_map.h"  // [CaseIgnored]FlatMap
 #include "flare/butil/ptr_container.h"
 #include "flare/brpc/controller.h"                   // brpc::Controller
 #include "flare/brpc/ssl_options.h"                  // ServerSSLOptions
@@ -334,7 +334,7 @@ public:
 
         const std::string& service_name() const;
     };
-    typedef butil::FlatMap<std::string, ServiceProperty> ServiceMap;
+    typedef flare::container::FlatMap<std::string, ServiceProperty> ServiceMap;
 
     struct MethodProperty {
         bool is_builtin_service;
@@ -359,7 +359,7 @@ public:
 
         MethodProperty();
     };
-    typedef butil::FlatMap<std::string, MethodProperty> MethodMap;
+    typedef flare::container::FlatMap<std::string, MethodProperty> MethodMap;
 
     struct ThreadLocalOptions {
         bthread_key_t tls_key;
@@ -598,7 +598,7 @@ friend class Controller;
     std::string ServerPrefix() const;
 
     // Mapping from hostname to corresponding SSL_CTX
-    typedef butil::CaseIgnoredFlatMap<std::shared_ptr<SocketSSLContext> > CertMap;
+    typedef flare::container::CaseIgnoredFlatMap<std::shared_ptr<SocketSSLContext> > CertMap;
     struct CertMaps {
         CertMap cert_map;
         CertMap wildcard_cert_map;
@@ -609,7 +609,7 @@ friend class Controller;
         std::vector<std::string> filters;
     };
     // Mapping from [certficate + private-key] to SSLContext
-    typedef butil::FlatMap<std::string, SSLContext> SSLContextMap;
+    typedef flare::container::FlatMap<std::string, SSLContext> SSLContextMap;
 
     void FreeSSLContexts();
 
@@ -663,7 +663,7 @@ friend class Controller;
     std::shared_ptr<SocketSSLContext> _default_ssl_ctx;
 
     // Reloadable SSL mappings
-    butil::DoublyBufferedData<CertMaps> _reload_cert_maps;
+    flare::container::DoublyBufferedData<CertMaps> _reload_cert_maps;
 
     // Holds the memory of all SSL_CTXs
     SSLContextMap _ssl_ctx_map;

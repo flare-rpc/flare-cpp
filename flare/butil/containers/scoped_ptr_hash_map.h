@@ -9,7 +9,7 @@
 #include <utility>
 
 #include "flare/butil/basictypes.h"
-#include "flare/butil/containers/hash_tables.h"
+#include "flare/container/hash_tables.h"
 #include "flare/base/logging.h"
 #include "flare/butil/memory/scoped_ptr.h"
 #include "flare/butil/stl_util.h"
@@ -17,11 +17,11 @@
 namespace butil {
 
 // This type acts like a hash_map<K, scoped_ptr<V> >, based on top of
-// butil::hash_map. The ScopedPtrHashMap has ownership of all values in the data
+// flare::container::hash_map. The ScopedPtrHashMap has ownership of all values in the data
 // structure.
 template <typename Key, typename Value>
 class ScopedPtrHashMap {
-  typedef butil::hash_map<Key, Value*> Container;
+  typedef flare::container::hash_map<Key, Value*> Container;
 
  public:
   typedef typename Container::key_type key_type;

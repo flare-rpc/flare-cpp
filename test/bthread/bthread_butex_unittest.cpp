@@ -104,7 +104,7 @@ TEST(ButexTest, join) {
     
     for (size_t i = 0; i < M; ++i) {
         ASSERT_EQ(0, bthread_join(jth[i], NULL))
-            << "i=" << i << " error=" << berror();
+            << "i=" << i << " error=" << flare_error();
     }
     for (size_t i = 0; i < M; ++i) {
         ASSERT_EQ(0, pthread_join(pth[i], NULL));

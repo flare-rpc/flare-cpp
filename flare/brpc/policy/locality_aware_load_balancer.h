@@ -22,9 +22,9 @@
 #include <vector>                                      // std::vector
 #include <deque>                                       // std::deque
 #include <map>                                         // std::map
-#include "flare/butil/containers/flat_map.h"                  // FlatMap
-#include "flare/butil/containers/doubly_buffered_data.h"      // DoublyBufferedData
-#include "flare/butil/containers/bounded_queue.h"             // BoundedQueue
+#include "flare/container/flat_map.h"                  // FlatMap
+#include "flare/container/doubly_buffered_data.h"      // DoublyBufferedData
+#include "flare/container/bounded_queue.h"             // bounded_queue
 #include "flare/brpc/load_balancer.h"
 #include "flare/brpc/controller.h"
 
@@ -101,7 +101,7 @@ private:
         size_t _old_index;
         int64_t _old_weight;
         int64_t _avg_latency;
-        butil::BoundedQueue<TimeInfo> _time_q;
+        flare::container::bounded_queue<TimeInfo> _time_q;
         // content of _time_q
         TimeInfo _time_q_items[RECV_QUEUE_SIZE];
     };
@@ -115,7 +115,7 @@ private:
     class Servers {
     public:
         std::vector<ServerInfo> weight_tree;
-        butil::FlatMap<SocketId, size_t> server_map;
+        flare::container::FlatMap<SocketId, size_t> server_map;
 
         Servers() {
             CHECK_EQ(0, server_map.init(1024, 70));
@@ -145,7 +145,7 @@ private:
     void PopLeft() { _left_weights.pop_back(); }
 
     std::atomic<int64_t> _total;
-    butil::DoublyBufferedData<Servers> _db_servers;
+    flare::container::DoublyBufferedData<Servers> _db_servers;
     std::deque<int64_t> _left_weights;
     ServerId2SocketIdMapper _id_mapper;
 };
@@ -189,7 +189,7 @@ inline int64_t LocalityAwareLoadBalancer::Weight::ResetWeight(
 inline LocalityAwareLoadBalancer::Weight::AddInflightResult
 LocalityAwareLoadBalancer::Weight::AddInflight(
     const SelectIn& in, size_t index, int64_t dice) {
-    BAIDU_SCOPED_LOCK(_mutex);
+    FLARE_SCOPED_LOCK(_mutex);
     if (Disabled()) {
         AddInflightResult r = { false, 0 };
         return r;
@@ -208,7 +208,7 @@ LocalityAwareLoadBalancer::Weight::AddInflight(
 
 inline int64_t LocalityAwareLoadBalancer::Weight::MarkFailed(
     size_t index, int64_t avg_weight) {
-    BAIDU_SCOPED_LOCK(_mutex);
+    FLARE_SCOPED_LOCK(_mutex);
     if (_base_weight <= avg_weight) {
         return 0;
     }

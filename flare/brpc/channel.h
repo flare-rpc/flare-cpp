@@ -24,7 +24,7 @@
 
 #include <ostream>                          // std::ostream
 #include "flare/bthread/errno.h"                  // Redefine errno
-#include "flare/butil/intrusive_ptr.hpp"          // butil::intrusive_ptr
+#include "flare/container/intrusive_ptr.h"          // flare::container::intrusive_ptr
 #include "flare/butil/ptr_container.h"
 #include "flare/brpc/ssl_options.h"               // ChannelSSLOptions
 #include "flare/brpc/channel_base.h"              // ChannelBase
@@ -226,7 +226,7 @@ protected:
     // are in the middle of RPC procedure using this channel.
     // It will be destroyed after channel's destruction and all
     // the RPC above has finished
-    butil::intrusive_ptr<SharedLoadBalancer> _lb;
+    flare::container::intrusive_ptr<SharedLoadBalancer> _lb;
     ChannelOptions _options;
     int _preferred_index;
 };

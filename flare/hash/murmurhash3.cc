@@ -27,7 +27,7 @@
 #include <stddef.h>  // size_t
 #include <string.h>  // memcpy
 #include <algorithm> // std::min
-#include "flare/butil/third_party/murmurhash3/murmurhash3.h"
+#include "flare/hash/murmurhash3.h"
 
 // Too many fallthroughs in this file to mark, just ignore the warning.
 #if defined(__GNUC__) && __GNUC__ >= 7
@@ -65,7 +65,7 @@ inline uint64_t rotl64 ( uint64_t x, int8_t r )
 
 #endif // !defined(_MSC_VER)
 
-namespace butil {
+namespace flare::hash {
 //-----------------------------------------------------------------------------
 // Block read - if your platform needs to do endian-swapping or can only
 // handle aligned reads, do the conversion here
@@ -711,4 +711,4 @@ void MurmurHash3_x86_32_Final(void * out, const MurmurHash3_x86_32_Context* ctx)
     *(uint32_t*)out = h1;
 }
 
-} // namespace butil
+} // namespace flare::hash

@@ -19,7 +19,7 @@
 #include <google/protobuf/descriptor.h>
 #include "flare/butil/sys_byteorder.h"
 #include "flare/base/logging.h"
-#include "flare/butil/find_cstr.h"
+#include "flare/container/find_cstr.h"
 #include "flare/brpc/log.h"
 #include "flare/brpc/amf.h"
 
@@ -133,7 +133,7 @@ void AMFField::SlowerClear() {
 
 const AMFField* AMFObject::Find(const char* name) const {
     std::map<std::string, AMFField>::const_iterator it =
-        butil::find_cstr(_fields, name);
+        flare::container::find_cstr(_fields, name);
     if (it != _fields.end()) {
         return &it->second;
     }

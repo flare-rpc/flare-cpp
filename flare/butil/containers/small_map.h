@@ -10,7 +10,7 @@
 #include <utility>
 
 #include "flare/butil/basictypes.h"
-#include "flare/butil/containers/hash_tables.h"
+#include "flare/container/hash_tables.h"
 #include "flare/base/logging.h"
 #include "flare/butil/memory/manual_constructor.h"
 
@@ -36,7 +36,7 @@ namespace butil {
 //    something else) and will probably be faster and do fewer heap allocations
 //    than std::map if you have just a couple of items.
 //
-//  - butil::hash_map should be used if you need O(1) lookups. It may waste
+//  - flare::container::hash_map should be used if you need O(1) lookups. It may waste
 //    space in the hash table, and it can be easy to write correct-looking
 //    code with the default hash function being wrong or poorly-behaving.
 //
@@ -147,7 +147,7 @@ struct select_equal_key {
 // hash map types. If you override the default comparator or allocator for a
 // map or hash_map, or use another type of map, this won't get used.
 //
-// If we switch to using std::unordered_map for butil::hash_map, then the
+// If we switch to using std::unordered_map for flare::container::hash_map, then the
 // hash_map specialization can be removed.
 template <typename KeyType, typename ValueType>
 struct select_equal_key< std::map<KeyType, ValueType>, false> {
@@ -158,7 +158,7 @@ struct select_equal_key< std::map<KeyType, ValueType>, false> {
   };
 };
 template <typename KeyType, typename ValueType>
-struct select_equal_key< butil::hash_map<KeyType, ValueType>, false> {
+struct select_equal_key< flare::container::hash_map<KeyType, ValueType>, false> {
   struct equal_key {
     bool operator()(const KeyType& left, const KeyType& right) {
       return left == right;

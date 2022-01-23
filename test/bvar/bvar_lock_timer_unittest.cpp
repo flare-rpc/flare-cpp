@@ -63,7 +63,7 @@ TEST_F(LockTimerTest, MutexWithRecorder) {
     IntRecorder recorder;
     MutexWithRecorder<std::mutex> mutex(recorder);
     {
-        BAIDU_SCOPED_LOCK(mutex);
+        FLARE_SCOPED_LOCK(mutex);
     }
     ASSERT_EQ(1u, recorder.get_value().num);
     LOG(INFO) << recorder;
@@ -83,7 +83,7 @@ TEST_F(LockTimerTest, MutexWithLatencyRecorder) {
     LatencyRecorder recorder(10);
     MutexWithLatencyRecorder<std::mutex> mutex(recorder);
     {
-        BAIDU_SCOPED_LOCK(mutex);
+        FLARE_SCOPED_LOCK(mutex);
     }
     ASSERT_EQ(1u, recorder.count());
     {
@@ -103,7 +103,7 @@ TEST_F(LockTimerTest, pthread_mutex_and_cond) {
     LatencyRecorder recorder(10);
     MutexWithLatencyRecorder<pthread_mutex_t> mutex(recorder);
     {
-        BAIDU_SCOPED_LOCK(mutex);
+        FLARE_SCOPED_LOCK(mutex);
     }
     ASSERT_EQ(1u, recorder.count());
     {
@@ -171,7 +171,7 @@ void *double_lock_thread(void *arg) {
     for (size_t i = 0; i < OPS_PER_THREAD; ++i) {
         std::unique_lock<M0> lck0(dla->m0, std::defer_lock);
         std::unique_lock<M1> lck1(dla->m1, std::defer_lock);
-        butil::double_lock(lck0, lck1);
+        flare::base::double_lock(lck0, lck1);
         usleep(10);
     }
     return NULL;
@@ -224,7 +224,7 @@ TEST_F(LockTimerTest, overhead) {
     ProfilerStart("mutex_with_latency_recorder.prof");
     timer.start();
     for (size_t i = 0; i < N; ++i) {
-        BAIDU_SCOPED_LOCK(m0);
+        FLARE_SCOPED_LOCK(m0);
     }
     timer.stop();
     ProfilerStop();
@@ -236,7 +236,7 @@ TEST_F(LockTimerTest, overhead) {
     ProfilerStart("mutex_with_recorder.prof");
     timer.start();
     for (size_t i = 0; i < N; ++i) {
-        BAIDU_SCOPED_LOCK(m1);
+        FLARE_SCOPED_LOCK(m1);
     }
     timer.stop();
     ProfilerStop();
@@ -246,7 +246,7 @@ TEST_F(LockTimerTest, overhead) {
     ProfilerStart("mutex_with_timer.prof");
     timer.start();
     for (size_t i = 0; i < N; ++i) {
-        BAIDU_SCOPED_LOCK(m2);
+        FLARE_SCOPED_LOCK(m2);
     }
     timer.stop();
     ProfilerStop();

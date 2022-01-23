@@ -335,7 +335,7 @@ void ProcessNsheadResponse(InputMessageBase* msg_base) {
     const int rc = bthread_id_lock(cid, (void**)&cntl);
     if (rc != 0) {
         LOG_IF(ERROR, rc != EINVAL && rc != EPERM)
-            << "Fail to lock correlation_id=" << cid << ": " << berror(rc);
+            << "Fail to lock correlation_id=" << cid << ": " << flare_error(rc);
         return;
     }
 

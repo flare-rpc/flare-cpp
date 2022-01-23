@@ -19,7 +19,7 @@
 #include <deque>
 #include <vector>
 #include <gflags/gflags.h>
-#include "flare/butil/scoped_lock.h"
+#include "flare/base/scoped_lock.h"
 #ifdef BAIDU_INTERNAL
 #include "flare/butil/comlog_sink.h"
 #endif
@@ -73,7 +73,7 @@ static int GetUserCodeInPlace(void*) {
 }
 
 static size_t GetUserCodeQueueSize(void*) {
-    BAIDU_SCOPED_LOCK(s_usercode_mutex);
+    FLARE_SCOPED_LOCK(s_usercode_mutex);
     return (s_usercode_pool != NULL ? s_usercode_pool->queue.size() : 0);
 }
 
@@ -120,7 +120,7 @@ void UserCodeBackupPool::UserCodeRunningLoop() {
         bool blocked = false;
         UserCode usercode = { NULL, NULL };
         {
-            BAIDU_SCOPED_LOCK(s_usercode_mutex);
+            FLARE_SCOPED_LOCK(s_usercode_mutex);
             while (queue.empty()) {
                 pthread_cond_wait(&s_usercode_cond, &s_usercode_mutex);
                 blocked = true;

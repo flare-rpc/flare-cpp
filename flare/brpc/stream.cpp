@@ -197,7 +197,7 @@ int Stream::Connect(Socket* ptr, const timespec*,
         bthread_mutex_unlock(&_connect_mutex);
         bthread_t tid;
         if (bthread_start_urgent(&tid, &BTHREAD_ATTR_NORMAL, RunOnConnect, meta) != 0) {
-            LOG(FATAL) << "Fail to start bthread, " << berror();
+            LOG(FATAL) << "Fail to start bthread, " << flare_error();
             RunOnConnect(meta);
         }
         return 0;
@@ -251,7 +251,7 @@ void Stream::TriggerOnConnectIfNeed() {
         bthread_mutex_unlock(&_connect_mutex);
         bthread_t tid;
         if (bthread_start_urgent(&tid, &BTHREAD_ATTR_NORMAL, RunOnConnect, meta) != 0) {
-            LOG(FATAL) << "Fail to start bthread, " << berror();
+            LOG(FATAL) << "Fail to start bthread, " << flare_error();
             RunOnConnect(meta);
         }
         return;
@@ -279,8 +279,8 @@ int Stream::AppendIfNotFull(const butil::IOBuf &data) {
     const int rc = _fake_socket_weak_ref->Write(&copied_data);
     if (rc != 0) {
         // Stream may be closed by peer before
-        LOG(WARNING) << "Fail to write to _fake_socket, " << berror();
-        BAIDU_SCOPED_LOCK(_congestion_control_mutex);
+        LOG(WARNING) << "Fail to write to _fake_socket, " << flare_error();
+        FLARE_SCOPED_LOCK(_congestion_control_mutex);
         _produced -= data.length();
         return -1;
     }
@@ -329,7 +329,7 @@ int Stream::TriggerOnWritable(bthread_id_t id, void *data, int error_code) {
             : &BTHREAD_ATTR_NORMAL;
         bthread_t tid;
         if (bthread_start_background(&tid, attr, RunOnWritable, wm) != 0) {
-            LOG(FATAL) << "Fail to start bthread" << berror();
+            LOG(FATAL) << "Fail to start bthread" << flare_error();
             RunOnWritable(wm);
         }
     } else {
@@ -354,7 +354,7 @@ void Stream::Wait(void (*on_writable)(StreamId, void*, int), void* arg,
     bthread_id_t wait_id;
     const int rc = bthread_id_create(&wait_id, wm, TriggerOnWritable);
     if (rc != 0) {
-        CHECK(false) << "Fail to create bthread_id, " << berror(rc);
+        CHECK(false) << "Fail to create bthread_id, " << flare_error(rc);
         wm->error_code = rc;
         RunOnWritable(wm);
         return;
@@ -369,7 +369,7 @@ void Stream::Wait(void (*on_writable)(StreamId, void*, int), void* arg,
                                          OnTimedOut, 
                                          reinterpret_cast<void*>(wait_id.value));
         if (rc != 0) {
-            LOG(ERROR) << "Fail to add timer, " << berror(rc);
+            LOG(ERROR) << "Fail to add timer, " << flare_error(rc);
             CHECK_EQ(0, TriggerOnWritable(wait_id, wm, rc));
         }
     }

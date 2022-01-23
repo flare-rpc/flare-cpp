@@ -19,7 +19,7 @@
 #include <vector>
 #include <gflags/gflags.h>
 #include "flare/brpc/cluster_recover_policy.h"
-#include "flare/butil/scoped_lock.h"
+#include "flare/base/scoped_lock.h"
 #include "flare/butil/synchronization/lock.h"
 #include "flare/brpc/server_id.h"
 #include "flare/brpc/socket.h"

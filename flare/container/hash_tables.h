@@ -1,44 +1,22 @@
-// Copyright (c) 2011 The Chromium Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style license that can be
-// found in the LICENSE file.
-//
 
-//
-// Deal with the differences between Microsoft and GNU implemenations
-// of hash_map. Allows all platforms to use |butil::hash_map| and
-// |butil::hash_set|.
-//  eg:
-//   butil::hash_map<int, std::string> my_map;
-//   butil::hash_set<int> my_set;
-//
-// NOTE: It is an explicit non-goal of this class to provide a generic hash
-// function for pointers.  If you want to hash a pointers to a particular class,
-// please define the template specialization elsewhere (for example, in its
-// header file) and keep it specific to just pointers to that class.  This is
-// because identity hashes are not desirable for all types that might show up
-// in containers as pointers.
-
-#ifndef BUTIL_CONTAINERS_HASH_TABLES_H_
-#define BUTIL_CONTAINERS_HASH_TABLES_H_
+#ifndef FLARE_CONTAINER_HASH_TABLES_H_
+#define FLARE_CONTAINER_HASH_TABLES_H_
 
 #include <utility>
+#include "flare/hash/murmurhash3.h"   // fmix64
+#include "flare/base/profile.h"
 
-#include "flare/butil/basictypes.h"
-#include "flare/butil/strings/string16.h"
-#include "flare/butil/build_config.h"
-#include "flare/butil/third_party/murmurhash3/murmurhash3.h"   // fmix64
-
-#if defined(COMPILER_MSVC)
+#if defined(FLARE_COMPILER_MSVC)
 #include <hash_map>
 #include <hash_set>
 
-#define BUTIL_HASH_NAMESPACE stdext
+#define FLARE_HASH_NAMESPACE stdext
 
-#elif defined(COMPILER_GCC)
-#if defined(OS_ANDROID)
-#define BUTIL_HASH_NAMESPACE std
+#elif defined(FLARE_COMPILER_GNUC) || defined(FLARE_COMPILER_CLANG)
+#if defined(FLARE_PLATFORM_ANDROID)
+#define FLARE_HASH_NAMESPACE std
 #else
-#define BUTIL_HASH_NAMESPACE __gnu_cxx
+#define FLARE_HASH_NAMESPACE __gnu_cxx
 #endif
 
 // This is a hack to disable the gcc 4.4 warning about hash_map and hash_set
@@ -49,7 +27,7 @@
 #undef __DEPRECATED
 #endif
 
-#if defined(OS_ANDROID)
+#if defined(FLARE_PLATFORM_ANDROID)
 #include <hash_map>
 #include <hash_set>
 #else
@@ -64,9 +42,9 @@
 #undef CHROME_OLD__DEPRECATED
 #endif
 
-namespace BUTIL_HASH_NAMESPACE {
+namespace FLARE_HASH_NAMESPACE {
 
-#if !defined(OS_ANDROID)
+#if !defined(FLARE_PLATFORM_ANDROID)
 // The GNU C++ library provides identity hash functions for many integral types,
 // but not for |long long|.  This hash function will truncate if |size_t| is
 // narrower than |long long|.  This is probably good enough for what we will
@@ -84,7 +62,7 @@ DEFINE_TRIVIAL_HASH(long long);
 DEFINE_TRIVIAL_HASH(unsigned long long);
 
 #undef DEFINE_TRIVIAL_HASH
-#endif  // !defined(OS_ANDROID)
+#endif  // !defined(FLARE_PLATFORM_ANDROID)
 
 // Implement string hash functions so that strings of various flavors can
 // be used as keys in STL maps and sets.  The hash algorithm comes from the
@@ -104,27 +82,27 @@ DEFINE_TRIVIAL_HASH(unsigned long long);
     }
 
 DEFINE_STRING_HASH(std::string);
-DEFINE_STRING_HASH(butil::string16);
+DEFINE_STRING_HASH(std::wstring);
 
 #undef DEFINE_STRING_HASH
 
-}  // namespace BUTIL_HASH_NAMESPACE
+}  // namespace FLARE_HASH_NAMESPACE
 
 #else  // COMPILER
-#error define BUTIL_HASH_NAMESPACE for your compiler
+#error define FLARE_HASH_NAMESPACE for your compiler
 #endif  // COMPILER
 
-namespace butil {
-using BUTIL_HASH_NAMESPACE::hash_map;
-using BUTIL_HASH_NAMESPACE::hash_multimap;
-using BUTIL_HASH_NAMESPACE::hash_multiset;
-using BUTIL_HASH_NAMESPACE::hash_set;
+namespace flare::container {
+using FLARE_HASH_NAMESPACE::hash_map;
+using FLARE_HASH_NAMESPACE::hash_multimap;
+using FLARE_HASH_NAMESPACE::hash_multiset;
+using FLARE_HASH_NAMESPACE::hash_set;
 
 // Implement hashing for pairs of at-most 32 bit integer values.
 inline std::size_t HashInts32(uint32_t value1, uint32_t value2) {
   uint64_t value1_64 = value1;
   uint64_t hash64 = (value1_64 << 32) | value2;
-  return static_cast<size_t>(fmix64(hash64));
+  return static_cast<size_t>(flare::hash::fmix64(hash64));
 }
 
 // Implement hashing for pairs of up-to 64-bit integer values.
@@ -163,7 +141,7 @@ inline std::size_t HashInts64(uint64_t value1, uint64_t value2) {
 }
 
 #define DEFINE_32BIT_PAIR_HASH(Type1, Type2) \
-inline std::size_t HashPair(Type1 value1, Type2 value2) { \
+inline std::size_t hash_pair(Type1 value1, Type2 value2) { \
   return HashInts32(value1, value2); \
 }
 
@@ -187,7 +165,7 @@ DEFINE_32BIT_PAIR_HASH(uint32_t, uint32_t);
 #undef DEFINE_32BIT_PAIR_HASH
 
 #define DEFINE_64BIT_PAIR_HASH(Type1, Type2) \
-inline std::size_t HashPair(Type1 value1, Type2 value2) { \
+inline std::size_t hash_pair(Type1 value1, Type2 value2) { \
   return HashInts64(value1, value2); \
 }
 
@@ -213,9 +191,9 @@ DEFINE_64BIT_PAIR_HASH(uint64_t, int64_t);
 DEFINE_64BIT_PAIR_HASH(uint64_t, uint64_t);
 
 #undef DEFINE_64BIT_PAIR_HASH
-}  // namespace butil
+}  // namespace flare::container
 
-namespace BUTIL_HASH_NAMESPACE {
+namespace FLARE_HASH_NAMESPACE {
 
 // Implement methods for hashing a pair of integers, so they can be used as
 // keys in STL containers.
@@ -223,22 +201,22 @@ namespace BUTIL_HASH_NAMESPACE {
 // NOTE(gejun): Specialize ptr as well which is supposed to work with 
 // containers by default
 
-#if defined(COMPILER_MSVC)
+#if defined(FLARE_COMPILER_MSVC)
 
 template<typename Type1, typename Type2>
 inline std::size_t hash_value(const std::pair<Type1, Type2>& value) {
-  return butil::HashPair(value.first, value.second);
+  return flare::container::hash_pair(value.first, value.second);
 }
 template<typename Type>
 inline std::size_t hash_value(Type* ptr) {
   return (uintptr_t)ptr;
 }
 
-#elif defined(COMPILER_GCC)
+#elif defined(FLARE_COMPILER_GNUC) || defined(FLARE_COMPILER_CLANG)
 template<typename Type1, typename Type2>
 struct hash<std::pair<Type1, Type2> > {
   std::size_t operator()(std::pair<Type1, Type2> value) const {
-    return butil::HashPair(value.first, value.second);
+    return flare::container::hash_pair(value.first, value.second);
   }
 };
 template<typename Type>
@@ -257,4 +235,4 @@ struct hash<Type*> {
 #undef DEFINE_PAIR_HASH_FUNCTION_START
 #undef DEFINE_PAIR_HASH_FUNCTION_END
 
-#endif  // BUTIL_CONTAINERS_HASH_TABLES_H_
+#endif  // FLARE_CONTAINER_HASH_TABLES_H_

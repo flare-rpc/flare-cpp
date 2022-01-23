@@ -22,7 +22,7 @@
 
 #include <math.h>                       // round
 #include <ostream>
-#include "flare/butil/scoped_lock.h"           // BAIDU_SCOPED_LOCK
+#include "flare/base/scoped_lock.h"           // FLARE_SCOPED_LOCK
 #include "flare/base/type_traits.h"
 #include "flare/bvar/vector.h"
 #include "flare/bvar/detail/call_op_returning_void.h"
@@ -112,7 +112,7 @@ public:
     }
 
     void append(const T& value) {
-        BAIDU_SCOPED_LOCK(_mutex);
+        FLARE_SCOPED_LOCK(_mutex);
         return append_second(value, _op);
     }
 

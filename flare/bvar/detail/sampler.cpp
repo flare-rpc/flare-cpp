@@ -39,7 +39,7 @@ struct CombineSampler {
             s1 = s2;
             return;
         }
-        s1->InsertBeforeAsList(s2);
+        s1->insert_before_as_list(s2);
     }
 };
 
@@ -89,7 +89,7 @@ private:
     void create_sampling_thread() {
         const int rc = pthread_create(&_tid, NULL, sampling_thread, this);
         if (rc != 0) {
-            LOG(FATAL) << "Fail to create sampling_thread, " << berror(rc);
+            LOG(FATAL) << "Fail to create sampling_thread, " << flare_error(rc);
         } else {
             _created = true;
             if (!registered_atfork) {
@@ -145,24 +145,24 @@ void SamplerCollector::run() {
     }
 #endif
 
-    butil::LinkNode<Sampler> root;
+    flare::container::link_node<Sampler> root;
     int consecutive_nosleep = 0;
     while (!_stop) {
         int64_t abstime = flare::base::gettimeofday_us();
         Sampler* s = this->reset();
         if (s) {
-            s->InsertBeforeAsList(&root);
+            s->insert_before_as_list(&root);
         }
         int nremoved = 0;
         int nsampled = 0;
-        for (butil::LinkNode<Sampler>* p = root.next(); p != &root;) {
+        for (flare::container::link_node<Sampler>* p = root.next(); p != &root;) {
             // We may remove p from the list, save next first.
-            butil::LinkNode<Sampler>* saved_next = p->next();
+            flare::container::link_node<Sampler>* saved_next = p->next();
             Sampler* s = p->value();
             s->_mutex.lock();
             if (!s->_used) {
                 s->_mutex.unlock();
-                p->RemoveFromList();
+                p->remove_from_list();
                 delete s;
                 ++nremoved;
             } else {

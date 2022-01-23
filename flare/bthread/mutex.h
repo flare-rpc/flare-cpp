@@ -23,7 +23,7 @@
 #define  BTHREAD_MUTEX_H
 
 #include "flare/bthread/types.h"
-#include "flare/butil/scoped_lock.h"
+#include "flare/base/scoped_lock.h"
 #include "flare/bvar/utils/lock_timer.h"
 
 __BEGIN_DECLS
@@ -98,7 +98,7 @@ public:
 #if !defined(NDEBUG)
         const int rc = bthread_mutex_lock(_pmutex);
         if (rc) {
-            LOG(FATAL) << "Fail to lock bthread_mutex_t=" << _pmutex << ", " << berror(rc);
+            LOG(FATAL) << "Fail to lock bthread_mutex_t=" << _pmutex << ", " << flare_error(rc);
             _pmutex = NULL;
         }
 #else

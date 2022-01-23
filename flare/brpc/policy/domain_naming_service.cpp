@@ -112,7 +112,7 @@ int DomainNamingService::GetServers(const char* dns_name,
     } while (1);
     if (ret != 0) {
         // `hstrerror' is thread safe under linux
-        LOG(WARNING) << "Can't resolve `" << buf << "', return=`" << berror(ret)
+        LOG(WARNING) << "Can't resolve `" << buf << "', return=`" << flare_error(ret)
                      << "' herror=`" << hstrerror(error) << '\'';
         return -1;
     }

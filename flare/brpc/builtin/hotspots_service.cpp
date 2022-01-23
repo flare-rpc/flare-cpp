@@ -64,10 +64,10 @@ static const char* DisplayTypeToString(DisplayType type) {
 }
 
 static DisplayType StringToDisplayType(const std::string& val) {
-    static butil::CaseIgnoredFlatMap<DisplayType>* display_type_map;
+    static flare::container::CaseIgnoredFlatMap<DisplayType>* display_type_map;
     static std::once_flag flag;
     std::call_once(flag, []() {
-        display_type_map = new butil::CaseIgnoredFlatMap<DisplayType>;
+        display_type_map = new flare::container::CaseIgnoredFlatMap<DisplayType>;
         display_type_map->init(10);
         (*display_type_map)["dot"] = DisplayType::kDot;
 #if defined(OS_LINUX)
@@ -334,7 +334,7 @@ static void ConsumeWaiters(ProfilingType type, const Controller* cur_cntl,
     }
     ProfilingEnvironment& env = g_env[type];
     if (env.client) {
-        BAIDU_SCOPED_LOCK(env.mutex);
+        FLARE_SCOPED_LOCK(env.mutex);
         if (env.client == NULL) {
             return;
         }
@@ -535,7 +535,7 @@ static void DisplayResult(Controller* cntl,
                 continue;
             }
             if (rc < 0) {
-                os << "Fail to execute `" << cmd << "', " << berror()
+                os << "Fail to execute `" << cmd << "', " << flare_error()
                    << (use_html ? "</body></html>" : "\n");
                 os.move_to(resp);
                 cntl->http_response().set_status_code(
@@ -671,7 +671,7 @@ static void DoProfiling(ProfilingType type,
     }
 
     {
-        BAIDU_SCOPED_LOCK(g_env[type].mutex);
+        FLARE_SCOPED_LOCK(g_env[type].mutex);
         if (g_env[type].client) {
             if (NULL == g_env[type].waiters) {
                 g_env[type].waiters = new std::vector<ProfilingWaiter>;
@@ -713,7 +713,7 @@ static void DoProfiling(ProfilingType type,
 
     char prof_name[128];
     if (MakeProfName(type, prof_name, sizeof(prof_name)) != 0) {
-        os << "Fail to create prof name: " << berror()
+        os << "Fail to create prof name: " << flare_error()
            << (use_html ? "</body></html>" : "\n");
         os.move_to(resp);
         cntl->http_response().set_status_code(HTTP_STATUS_INTERNAL_SERVER_ERROR);
@@ -901,7 +901,7 @@ static void StartProfiling(ProfilingType type,
     size_t nwaiters = 0;
     ProfilingEnvironment & env = g_env[type];
     if (view == NULL) {
-        BAIDU_SCOPED_LOCK(env.mutex);
+        FLARE_SCOPED_LOCK(env.mutex);
         if (env.client) {
             profiling_client = *env.client;
             nwaiters = (env.waiters ? env.waiters->size() : 0);

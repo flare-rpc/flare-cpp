@@ -22,7 +22,7 @@ endif ()
 
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
-add_library(FLARE_BASE_LIB ${FLARE_BASE_SRC})
+add_library(FLARE_BASE_LIB ${FLARE_SRC})
 add_library(BUTIL_LIB OBJECT ${BUTIL_SOURCES})
 add_library(SOURCES_LIB OBJECT ${SOURCES})
 add_dependencies(SOURCES_LIB PROTO_LIB)

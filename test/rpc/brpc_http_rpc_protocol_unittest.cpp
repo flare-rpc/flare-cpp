@@ -500,7 +500,7 @@ public:
         cntl->http_response().set_content_type("text/plain");
         brpc::StopStyle stop_style = (_nrep == std::numeric_limits<size_t>::max() 
                 ? brpc::FORCE_STOP : brpc::WAIT_FOR_STOP);
-        butil::intrusive_ptr<brpc::ProgressiveAttachment> pa
+        flare::container::intrusive_ptr<brpc::ProgressiveAttachment> pa
             = cntl->CreateProgressiveAttachment(stop_style);
         if (pa == NULL) {
             cntl->SetFailed("The socket was just failed");
@@ -548,7 +548,7 @@ public:
         cntl->http_response().set_content_type("text/plain");
         brpc::StopStyle stop_style = (_nrep == std::numeric_limits<size_t>::max() 
                 ? brpc::FORCE_STOP : brpc::WAIT_FOR_STOP);
-        butil::intrusive_ptr<brpc::ProgressiveAttachment> pa
+        flare::container::intrusive_ptr<brpc::ProgressiveAttachment> pa
             = cntl->CreateProgressiveAttachment(stop_style);
         if (pa == NULL) {
             cntl->SetFailed("The socket was just failed");
@@ -648,7 +648,7 @@ public:
         : _nread(0)
         , _ncount(0)
         , _destroyed(false) {
-        butil::intrusive_ptr<ReadBody>(this).detach(); // ref
+        flare::container::intrusive_ptr<ReadBody>(this).detach(); // ref
     }
                 
     flare::base::flare_status OnReadOnePart(const void* data, size_t length) {
@@ -670,7 +670,7 @@ public:
         return flare::base::flare_status::OK();
     }
     void OnEndOfMessage(const flare::base::flare_status& st) {
-        butil::intrusive_ptr<ReadBody>(this, false); // deref
+        flare::container::intrusive_ptr<ReadBody>(this, false); // deref
         ASSERT_LT(_buf.size(), PA_DATA_LEN);
         ASSERT_EQ(0, memcmp(_buf.data(), PA_DATA, _buf.size()));
         _destroyed = true;
@@ -691,7 +691,7 @@ private:
 static const int GENERAL_DELAY_US = 300000; // 0.3s
 
 TEST_F(HttpTest, read_long_body_progressively) {
-    butil::intrusive_ptr<ReadBody> reader;
+    flare::container::intrusive_ptr<ReadBody> reader;
     {
         const int port = 8923;
         brpc::Server server;
@@ -740,7 +740,7 @@ TEST_F(HttpTest, read_long_body_progressively) {
 }
 
 TEST_F(HttpTest, read_short_body_progressively) {
-    butil::intrusive_ptr<ReadBody> reader;
+    flare::container::intrusive_ptr<ReadBody> reader;
     const int port = 8923;
     brpc::Server server;
     const int NREP = 10000;
@@ -778,7 +778,7 @@ TEST_F(HttpTest, read_short_body_progressively) {
 }
 
 TEST_F(HttpTest, read_progressively_after_cntl_destroys) {
-    butil::intrusive_ptr<ReadBody> reader;
+    flare::container::intrusive_ptr<ReadBody> reader;
     {
         const int port = 8923;
         brpc::Server server;
@@ -824,7 +824,7 @@ TEST_F(HttpTest, read_progressively_after_cntl_destroys) {
 }
 
 TEST_F(HttpTest, read_progressively_after_long_delay) {
-    butil::intrusive_ptr<ReadBody> reader;
+    flare::container::intrusive_ptr<ReadBody> reader;
     {
         const int port = 8923;
         brpc::Server server;
@@ -940,7 +940,7 @@ TEST_F(HttpTest, failed_on_read_one_part) {
 }
 
 TEST_F(HttpTest, broken_socket_stops_progressive_reading) {
-    butil::intrusive_ptr<ReadBody> reader;
+    flare::container::intrusive_ptr<ReadBody> reader;
     const int port = 8923;
     brpc::Server server;
     DownloadServiceImpl svc(DONE_BEFORE_CREATE_PA,

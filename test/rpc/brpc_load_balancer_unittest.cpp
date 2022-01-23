@@ -29,7 +29,7 @@
 #include "flare/butil/gperftools_profiler.h"
 #include "flare/base/time.h"
 #include "flare/butil/fast_rand.h"
-#include "flare/butil/containers/doubly_buffered_data.h"
+#include "flare/container/doubly_buffered_data.h"
 #include "flare/brpc/describable.h"
 #include "flare/brpc/socket.h"
 #include "flare/butil/strings/string_number_conversions.h"
@@ -108,29 +108,29 @@ namespace {
         const size_t old_TLS_ctor = TLS_ctor;
         const size_t old_TLS_dtor = TLS_dtor;
         {
-            butil::DoublyBufferedData<Foo, TLS> d2;
-            butil::DoublyBufferedData<Foo, TLS>::ScopedPtr ptr;
+            flare::container::DoublyBufferedData<Foo, TLS> d2;
+            flare::container::DoublyBufferedData<Foo, TLS>::ScopedPtr ptr;
             d2.Read(&ptr);
             ASSERT_EQ(old_TLS_ctor + 1, TLS_ctor);
         }
         ASSERT_EQ(old_TLS_ctor + 1, TLS_ctor);
         ASSERT_EQ(old_TLS_dtor + 1, TLS_dtor);
 
-        butil::DoublyBufferedData<Foo> d;
+        flare::container::DoublyBufferedData<Foo> d;
         {
-            butil::DoublyBufferedData<Foo>::ScopedPtr ptr;
+            flare::container::DoublyBufferedData<Foo>::ScopedPtr ptr;
             ASSERT_EQ(0, d.Read(&ptr));
             ASSERT_EQ(0, ptr->x);
         }
         {
-            butil::DoublyBufferedData<Foo>::ScopedPtr ptr;
+            flare::container::DoublyBufferedData<Foo>::ScopedPtr ptr;
             ASSERT_EQ(0, d.Read(&ptr));
             ASSERT_EQ(0, ptr->x);
         }
 
         d.Modify(AddN, 10);
         {
-            butil::DoublyBufferedData<Foo>::ScopedPtr ptr;
+            flare::container::DoublyBufferedData<Foo>::ScopedPtr ptr;
             ASSERT_EQ(0, d.Read(&ptr));
             ASSERT_EQ(10, ptr->x);
         }
@@ -263,7 +263,7 @@ namespace {
             ++(*selected_count)[ptr->id()];
         }
         LOG_IF(INFO, ret != 0) << "select_server[" << pthread_self()
-                               << "] quits before of " << berror(ret);
+                               << "] quits before of " << flare_error(ret);
         return selected_count;
     }
 
