@@ -23,7 +23,7 @@
 #define BTHREAD_REMOTE_TASK_QUEUE_H
 
 #include "flare/container/bounded_queue.h"
-#include "flare/butil/macros.h"
+#include "flare/base/profile.h"
 
 namespace bthread {
 

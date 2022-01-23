@@ -21,7 +21,7 @@
 #include <google/protobuf/descriptor.h>
 #include <gflags/gflags.h>
 #include "flare/bthread/bthread.h"
-#include "flare/butil/build_config.h"    // OS_MACOSX
+#include "flare/butil/build_config.h"    // FLARE_PLATFORM_OSX
 #include "flare/base/strings.h"
 #include "flare/base/logging.h"
 #include "flare/base/time.h"
@@ -1439,7 +1439,7 @@ int Controller::GetSockOption(int level, int optname, void* optval, socklen_t* o
     }
 }
 
-#if defined(OS_MACOSX)
+#if defined(FLARE_PLATFORM_OSX)
 typedef sig_t SignalHandler;
 #else
 typedef sighandler_t SignalHandler;

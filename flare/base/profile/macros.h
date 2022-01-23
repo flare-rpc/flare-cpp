@@ -84,4 +84,19 @@ namespace flare::base {
 #endif // defined(__cplusplus)
 
 
+// Convert symbol to string
+#ifndef FLARE_SYMBOLSTR
+# define FLARE_SYMBOLSTR(a) FLARE_SYMBOLSTR_HELPER(a)
+# define FLARE_SYMBOLSTR_HELPER(a) #a
+#endif
+
+// ptr:     the pointer to the member.
+// type:    the type of the container struct this is embedded in.
+// member:  the name of the member within the struct.
+#ifndef FLARE_CONTAINER_OF
+# define FLARE_CONTAINER_OF(ptr, type, member) ({                             \
+            const decltype( ((type *)0)->member ) *__mptr = (ptr);  \
+            (type *)( (char *)__mptr - offsetof(type,member) );})
+#endif
+
 #endif  // FLARE_BASE_PROFILE_MACROS_H_

@@ -431,7 +431,7 @@ void* FailedWriter(void* void_arg) {
     for (size_t i = 0; i < arg->times; ++i) {
         bthread_id_t id;
         EXPECT_EQ(0, bthread_id_create(&id, NULL, NULL));
-        snprintf(buf, sizeof(buf), "%0" BAIDU_SYMBOLSTR(NUMBER_WIDTH) "lu",
+        snprintf(buf, sizeof(buf), "%0" FLARE_SYMBOLSTR(NUMBER_WIDTH) "lu",
                  i + arg->offset);
         butil::IOBuf src;
         src.append(buf);
@@ -787,7 +787,7 @@ void* Writer(void* void_arg) {
     }
     char buf[32];
     for (size_t i = 0; i < arg->times; ++i) {
-        snprintf(buf, sizeof(buf), "%0" BAIDU_SYMBOLSTR(NUMBER_WIDTH) "lu",
+        snprintf(buf, sizeof(buf), "%0" FLARE_SYMBOLSTR(NUMBER_WIDTH) "lu",
                  i + arg->offset);
         butil::IOBuf src;
         src.append(buf);

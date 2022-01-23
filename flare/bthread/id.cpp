@@ -304,7 +304,7 @@ struct IdResetter {
         : _error_code(ec), _error_text(et) {}
     void operator()(bthread_id_t & id) const {
         bthread_id_error2_verbose(
-            id, _error_code, _error_text, __FILE__ ":" BAIDU_SYMBOLSTR(__LINE__));
+            id, _error_code, _error_text, __FILE__ ":" FLARE_SYMBOLSTR(__LINE__));
         id = INVALID_BTHREAD_ID;
     }
 private:

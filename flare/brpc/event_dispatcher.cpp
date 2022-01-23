@@ -30,7 +30,7 @@
 
 #include "flare/brpc/reloadable_flags.h"
 
-#if defined(OS_MACOSX)
+#if defined(FLARE_PLATFORM_OSX)
 
 #include <sys/types.h>
 #include <sys/event.h>
@@ -47,13 +47,13 @@ namespace brpc {
 
     EventDispatcher::EventDispatcher()
             : _epfd(-1), _stop(false), _tid(0), _consumer_thread_attr(BTHREAD_ATTR_NORMAL) {
-#if defined(OS_LINUX)
+#if defined(FLARE_PLATFORM_LINUX)
         _epfd = epoll_create(1024 * 1024);
         if (_epfd < 0) {
             PLOG(FATAL) << "Fail to create epoll";
             return;
         }
-#elif defined(OS_MACOSX)
+#elif defined(FLARE_PLATFORM_OSX)
         _epfd = kqueue();
         if (_epfd < 0) {
             PLOG(FATAL) << "Fail to create kqueue";
@@ -87,9 +87,9 @@ namespace brpc {
 
     int EventDispatcher::Start(const bthread_attr_t *consumer_thread_attr) {
         if (_epfd < 0) {
-#if defined(OS_LINUX)
+#if defined(FLARE_PLATFORM_LINUX)
             LOG(FATAL) << "epoll was not created";
-#elif defined(OS_MACOSX)
+#elif defined(FLARE_PLATFORM_OSX)
             LOG(FATAL) << "kqueue was not created";
 #endif
             return -1;
@@ -132,10 +132,10 @@ namespace brpc {
         _stop = true;
 
         if (_epfd >= 0) {
-#if defined(OS_LINUX)
+#if defined(FLARE_PLATFORM_LINUX)
             epoll_event evt = { EPOLLOUT,  { NULL } };
             epoll_ctl(_epfd, EPOLL_CTL_ADD, _wakeup_fds[1], &evt);
-#elif defined(OS_MACOSX)
+#elif defined(FLARE_PLATFORM_OSX)
             struct kevent kqueue_event;
             EV_SET(&kqueue_event, _wakeup_fds[1], EVFILT_WRITE, EV_ADD | EV_ENABLE,
                    0, 0, NULL);
@@ -157,7 +157,7 @@ namespace brpc {
             return -1;
         }
 
-#if defined(OS_LINUX)
+#if defined(FLARE_PLATFORM_LINUX)
         epoll_event evt;
         evt.data.u64 = socket_id;
         evt.events = EPOLLOUT | EPOLLET;
@@ -176,7 +176,7 @@ namespace brpc {
                 return -1;
             }
         }
-#elif defined(OS_MACOSX)
+#elif defined(FLARE_PLATFORM_OSX)
         struct kevent evt;
         //TODO(zhujiashun): add EV_EOF
         EV_SET(&evt, fd, EVFILT_WRITE, EV_ADD | EV_ENABLE | EV_CLEAR,
@@ -197,7 +197,7 @@ namespace brpc {
 
     int EventDispatcher::RemoveEpollOut(SocketId socket_id,
                                         int fd, bool pollin) {
-#if defined(OS_LINUX)
+#if defined(FLARE_PLATFORM_LINUX)
         if (pollin) {
             epoll_event evt;
             evt.data.u64 = socket_id;
@@ -209,7 +209,7 @@ namespace brpc {
         } else {
             return epoll_ctl(_epfd, EPOLL_CTL_DEL, fd, NULL);
         }
-#elif defined(OS_MACOSX)
+#elif defined(FLARE_PLATFORM_OSX)
         struct kevent evt;
         EV_SET(&evt, fd, EVFILT_WRITE, EV_DELETE, 0, 0, NULL);
         if (kevent(_epfd, &evt, 1, NULL, 0, NULL) < 0) {
@@ -230,7 +230,7 @@ namespace brpc {
             errno = EINVAL;
             return -1;
         }
-#if defined(OS_LINUX)
+#if defined(FLARE_PLATFORM_LINUX)
         epoll_event evt;
         evt.events = EPOLLIN | EPOLLET;
         evt.data.u64 = socket_id;
@@ -238,7 +238,7 @@ namespace brpc {
         evt.events |= has_epollrdhup;
 #endif
         return epoll_ctl(_epfd, EPOLL_CTL_ADD, fd, &evt);
-#elif defined(OS_MACOSX)
+#elif defined(FLARE_PLATFORM_OSX)
         struct kevent evt;
         EV_SET(&evt, fd, EVFILT_READ, EV_ADD | EV_ENABLE | EV_CLEAR,
                0, 0, (void *) socket_id);
@@ -258,12 +258,12 @@ namespace brpc {
         // from epoll again! If the fd was level-triggered and there's data left,
         // epoll_wait will keep returning events of the fd continuously, making
         // program abnormal.
-#if defined(OS_LINUX)
+#if defined(FLARE_PLATFORM_LINUX)
         if (epoll_ctl(_epfd, EPOLL_CTL_DEL, fd, NULL) < 0) {
             PLOG(WARNING) << "Fail to remove fd=" << fd << " from epfd=" << _epfd;
             return -1;
         }
-#elif defined(OS_MACOSX)
+#elif defined(FLARE_PLATFORM_OSX)
         struct kevent evt;
         EV_SET(&evt, fd, EVFILT_READ, EV_DELETE, 0, 0, NULL);
         kevent(_epfd, &evt, 1, NULL, 0, NULL);
@@ -280,7 +280,7 @@ namespace brpc {
 
     void EventDispatcher::Run() {
         while (!_stop) {
-#if defined(OS_LINUX)
+#if defined(FLARE_PLATFORM_LINUX)
             epoll_event e[32];
 #ifdef BRPC_ADDITIONAL_EPOLL
             // Performance downgrades in examples.
@@ -291,7 +291,7 @@ namespace brpc {
 #else
             const int n = epoll_wait(_epfd, e, ARRAY_SIZE(e), -1);
 #endif
-#elif defined(OS_MACOSX)
+#elif defined(FLARE_PLATFORM_OSX)
             struct kevent e[32];
             int n = kevent(_epfd, NULL, 0, e, ARRAY_SIZE(e), NULL);
 #endif
@@ -306,15 +306,15 @@ namespace brpc {
                     // We've checked _stop, no wake-up will be missed.
                     continue;
                 }
-#if defined(OS_LINUX)
+#if defined(FLARE_PLATFORM_LINUX)
                     PLOG(FATAL) << "Fail to epoll_wait epfd=" << _epfd;
-#elif defined(OS_MACOSX)
+#elif defined(FLARE_PLATFORM_OSX)
                 PLOG(FATAL) << "Fail to kqueue epfd=" << _epfd;
 #endif
                 break;
             }
             for (int i = 0; i < n; ++i) {
-#if defined(OS_LINUX)
+#if defined(FLARE_PLATFORM_LINUX)
                 if (e[i].events & (EPOLLIN | EPOLLERR | EPOLLHUP)
 #ifdef BRPC_SOCKET_HAS_EOF
                     || (e[i].events & has_epollrdhup)
@@ -324,7 +324,7 @@ namespace brpc {
                     Socket::StartInputEvent(e[i].data.u64, e[i].events,
                                             _consumer_thread_attr);
                 }
-#elif defined(OS_MACOSX)
+#elif defined(FLARE_PLATFORM_OSX)
                 if ((e[i].flags & EV_ERROR) || e[i].filter == EVFILT_READ) {
                     // We don't care about the return value.
                     Socket::StartInputEvent((SocketId) e[i].udata, e[i].filter,
@@ -333,12 +333,12 @@ namespace brpc {
 #endif
             }
             for (int i = 0; i < n; ++i) {
-#if defined(OS_LINUX)
+#if defined(FLARE_PLATFORM_LINUX)
                 if (e[i].events & (EPOLLOUT | EPOLLERR | EPOLLHUP)) {
                     // We don't care about the return value.
                     Socket::HandleEpollOut(e[i].data.u64);
                 }
-#elif defined(OS_MACOSX)
+#elif defined(FLARE_PLATFORM_OSX)
                 if ((e[i].flags & EV_ERROR) || e[i].filter == EVFILT_WRITE) {
                     // We don't care about the return value.
                     Socket::HandleEpollOut((SocketId) e[i].udata);

@@ -16,7 +16,7 @@
 // under the License.
 
 
-#include "flare/base/compat.h"                        // OS_MACOSX
+#include "flare/base/compat.h"                        // FLARE_PLATFORM_OSX
 #include <openssl/ssl.h>
 #include <openssl/err.h>
 #ifdef USE_MESALINK
@@ -48,7 +48,7 @@
 #include "flare/brpc/policy/rtmp_protocol.h"  // FIXME
 #include "flare/brpc/periodic_task.h"
 #include "flare/brpc/details/health_check.h"
-#if defined(OS_MACOSX)
+#if defined(FLARE_PLATFORM_OSX)
 #include <sys/event.h>
 #endif
 
@@ -1767,9 +1767,9 @@ int Socket::SSLHandshake(int fd, bool server_mode) {
         int ssl_error = SSL_get_error(_ssl_session, rc);
         switch (ssl_error) {
         case SSL_ERROR_WANT_READ:
-#if defined(OS_LINUX)
+#if defined(FLARE_PLATFORM_LINUX)
             if (bthread_fd_wait(fd, EPOLLIN) != 0) {
-#elif defined(OS_MACOSX)
+#elif defined(FLARE_PLATFORM_OSX)
             if (bthread_fd_wait(fd, EVFILT_READ) != 0) {
 #endif
                 return -1;
@@ -1777,9 +1777,9 @@ int Socket::SSLHandshake(int fd, bool server_mode) {
             break;
 
         case SSL_ERROR_WANT_WRITE:
-#if defined(OS_LINUX)
+#if defined(FLARE_PLATFORM_LINUX)
             if (bthread_fd_wait(fd, EPOLLOUT) != 0) {
-#elif defined(OS_MACOSX)
+#elif defined(FLARE_PLATFORM_OSX)
             if (bthread_fd_wait(fd, EVFILT_WRITE) != 0) {
 #endif
                 return -1;
@@ -1931,9 +1931,9 @@ int Socket::StartInputEvent(SocketId id, uint32_t events,
         return 0;
     }
     if (s->fd() < 0) {
-#if defined(OS_LINUX)
+#if defined(FLARE_PLATFORM_LINUX)
         CHECK(!(events & EPOLLIN)) << "epoll_events=" << events;
-#elif defined(OS_MACOSX)
+#elif defined(FLARE_PLATFORM_OSX)
         CHECK((short)events != EVFILT_READ) << "kqueue filter=" << events;
 #endif
         return -1;
@@ -2139,7 +2139,7 @@ void Socket::DebugSocket(std::ostream& os, SocketId id) {
         Print(os, ptr->_ssl_session, "\n  ");
         os << "\n}";
     }
-#if defined(OS_MACOSX)
+#if defined(FLARE_PLATFORM_OSX)
     struct tcp_connection_info ti;
     socklen_t len = sizeof(ti);
     if (fd >= 0 && getsockopt(fd, IPPROTO_TCP, TCP_CONNECTION_INFO, &ti, &len) == 0) {
@@ -2159,7 +2159,7 @@ void Socket::DebugSocket(std::ostream& os, SocketId id) {
            << "\n  rttvar=" << ti.tcpi_rttvar
            << "\n}";
     }
-#elif defined(OS_LINUX)
+#elif defined(FLARE_PLATFORM_LINUX)
     struct tcp_info ti;
     socklen_t len = sizeof(ti);
     if (fd >= 0 && getsockopt(fd, SOL_TCP, TCP_INFO, &ti, &len) == 0) {

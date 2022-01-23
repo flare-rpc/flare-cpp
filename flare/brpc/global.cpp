@@ -27,7 +27,7 @@
 #include <fcntl.h>                               // O_RDONLY
 #include <signal.h>
 
-#include "flare/butil/build_config.h"                  // OS_LINUX
+#include "flare/butil/build_config.h"                  // FLARE_PLATFORM_LINUX
 // Naming services
 #ifdef BAIDU_INTERNAL
 #include "flare/brpc/policy/baidu_naming_service.h"
@@ -85,7 +85,7 @@
 #include "flare/brpc/server.h"
 #include "flare/brpc/trackme.h"             // TrackMe
 #include "flare/brpc/details/usercode_backup_pool.h"
-#if defined(OS_LINUX)
+#if defined(FLARE_PLATFORM_LINUX)
 #include <malloc.h>                   // malloc_trim
 #endif
 #include "flare/base/fd_guard.h"
@@ -278,7 +278,7 @@ static void* GlobalUpdate(void*) {
             if (MallocExtension_ReleaseFreeMemory != NULL) {
                 MallocExtension_ReleaseFreeMemory();
             } else {
-#if defined(OS_LINUX)
+#if defined(FLARE_PLATFORM_LINUX)
                 // GNU specific.
                 malloc_trim(10 * 1024 * 1024/*leave 10M pad*/);
 #endif

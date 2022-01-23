@@ -21,7 +21,7 @@
 
 #include "flare/base/static_atomic.h"                // std::atomic
 #include "flare/base/scoped_lock.h"              // FLARE_SCOPED_LOCK
-#include "flare/butil/macros.h"
+#include "flare/base/profile.h"
 #include "flare/container/linked_list.h"   // link_node
 
 #ifdef SHOW_BTHREAD_BUTEX_WAITER_COUNT_IN_VARS
@@ -257,7 +257,7 @@ namespace bthread {
             return;
         }
         Butex *b = static_cast<Butex *>(
-                container_of(static_cast<std::atomic<int> *>(butex), Butex, value));
+                FLARE_CONTAINER_OF(static_cast<std::atomic<int> *>(butex), Butex, value));
         flare::memory::return_object(b);
     }
 
@@ -267,7 +267,7 @@ namespace bthread {
     }
 
     int butex_wake(void *arg) {
-        Butex *b = container_of(static_cast<std::atomic<int> *>(arg), Butex, value);
+        Butex *b = FLARE_CONTAINER_OF(static_cast<std::atomic<int> *>(arg), Butex, value);
         ButexWaiter *front = NULL;
         {
             FLARE_SCOPED_LOCK(b->waiter_lock);
@@ -294,7 +294,7 @@ namespace bthread {
     }
 
     int butex_wake_all(void *arg) {
-        Butex *b = container_of(static_cast<std::atomic<int> *>(arg), Butex, value);
+        Butex *b = FLARE_CONTAINER_OF(static_cast<std::atomic<int> *>(arg), Butex, value);
 
         ButexWaiterList bthread_waiters;
         ButexWaiterList pthread_waiters;
@@ -352,7 +352,7 @@ namespace bthread {
     }
 
     int butex_wake_except(void *arg, bthread_t excluded_bthread) {
-        Butex *b = container_of(static_cast<std::atomic<int> *>(arg), Butex, value);
+        Butex *b = FLARE_CONTAINER_OF(static_cast<std::atomic<int> *>(arg), Butex, value);
 
         ButexWaiterList bthread_waiters;
         ButexWaiterList pthread_waiters;
@@ -414,8 +414,8 @@ namespace bthread {
     }
 
     int butex_requeue(void *arg, void *arg2) {
-        Butex *b = container_of(static_cast<std::atomic<int> *>(arg), Butex, value);
-        Butex *m = container_of(static_cast<std::atomic<int> *>(arg2), Butex, value);
+        Butex *b = FLARE_CONTAINER_OF(static_cast<std::atomic<int> *>(arg), Butex, value);
+        Butex *m = FLARE_CONTAINER_OF(static_cast<std::atomic<int> *>(arg2), Butex, value);
 
         ButexWaiter *front = NULL;
         {
@@ -613,7 +613,7 @@ namespace bthread {
     }
 
     int butex_wait(void *arg, int expected_value, const timespec *abstime) {
-        Butex *b = container_of(static_cast<std::atomic<int> *>(arg), Butex, value);
+        Butex *b = FLARE_CONTAINER_OF(static_cast<std::atomic<int> *>(arg), Butex, value);
         if (b->value.load(std::memory_order_relaxed) != expected_value) {
             errno = EWOULDBLOCK;
             // Sometimes we may take actions immediately after unmatched butex,

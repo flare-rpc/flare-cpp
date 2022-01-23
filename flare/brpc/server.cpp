@@ -1662,7 +1662,7 @@ void Server::PutPidFileIfNeeded() {
         int rc = mkdir(dir_name.c_str(),
                        S_IFDIR | S_IRUSR | S_IWUSR | S_IXUSR | S_IRGRP);
         if (rc != 0 && errno != EEXIST
-#if defined(OS_MACOSX)
+#if defined(FLARE_PLATFORM_OSX)
         && errno != EISDIR
 #endif
         ) {

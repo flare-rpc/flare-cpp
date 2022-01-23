@@ -29,12 +29,11 @@
 #else
 #endif
 
+#include <filesystem>
 #include "flare/base/time.h"
 #include "flare/base/singleton_on_pthread_once.h"
 #include "flare/base/scoped_lock.h"
 #include "flare/base/scoped_file.h"
-#include "flare/butil/files/dir_reader_posix.h"
-#include "flare/butil/file_util.h"
 #include "flare/base/process_util.h"            // read_command_line
 #include "flare/base/popen.h"                   // read_command_output
 #include "flare/bvar/passive_status.h"
@@ -77,7 +76,7 @@ namespace bvar {
     static bool read_proc_status(ProcStat &stat) {
         stat = ProcStat();
         errno = 0;
-#if defined(OS_LINUX)
+#if defined(FLARE_PLATFORM_LINUX)
         // Read status from /proc/self/stat. Information from `man proc' is out of date,
         // see http://man7.org/linux/man-pages/man5/proc.5.html
         flare::base::scoped_file fp("/proc/self/stat", "r");
@@ -99,7 +98,7 @@ namespace bvar {
             return false;
         }
         return true;
-#elif defined(OS_MACOSX)
+#elif defined(FLARE_PLATFORM_OSX)
         // TODO(zhujiashun): get remaining state in MacOS.
         memset(&stat, 0, sizeof(stat));
         static pid_t pid = getpid();
@@ -212,7 +211,7 @@ namespace bvar {
     static bool read_proc_memory(ProcMemory &m) {
         m = ProcMemory();
         errno = 0;
-#if defined(OS_LINUX)
+#if defined(FLARE_PLATFORM_LINUX)
         flare::base::scoped_file fp("/proc/self/statm", "r");
         if (NULL == fp) {
             PLOG_ONCE(WARNING) << "Fail to open /proc/self/statm";
@@ -225,7 +224,7 @@ namespace bvar {
             return false;
         }
         return true;
-#elif defined(OS_MACOSX)
+#elif defined(FLARE_PLATFORM_OSX)
         // TODO(zhujiashun): get remaining memory info in MacOS.
         memset(&m, 0, sizeof(m));
         static pid_t pid = getpid();
@@ -280,7 +279,7 @@ namespace bvar {
     };
 
     static bool read_load_average(LoadAverage &m) {
-#if defined(OS_LINUX)
+#if defined(FLARE_PLATFORM_LINUX)
         flare::base::scoped_file fp("/proc/loadavg", "r");
         if (NULL == fp) {
             PLOG_ONCE(WARNING) << "Fail to open /proc/loadavg";
@@ -294,7 +293,7 @@ namespace bvar {
             return false;
         }
         return true;
-#elif defined(OS_MACOSX)
+#elif defined(FLARE_PLATFORM_OSX)
         std::ostringstream oss;
         if (flare::base::read_command_output(oss, "sysctl -n vm.loadavg") != 0) {
             LOG(ERROR) << "Fail to read loadavg";
@@ -335,18 +334,22 @@ namespace bvar {
 // ==================================================
 
     static int get_fd_count(int limit) {
-#if defined(OS_LINUX)
-        butil::DirReaderPosix dr("/proc/self/fd");
-        int count = 0;
-        if (!dr.IsValid()) {
+#if defined(FLARE_PLATFORM_LINUX)
+        try {
+            std::filesystem::directory_iterator di("/proc/self/fd");
+            // Have to limit the scaning which consumes a lot of CPU when #fd
+            // are huge (100k+)
+            std::filesystem::directory_iterator endDi;
+            for (; di != endDi && count <= limit + 3; ++count, ++di) {}
+            return count - 3; /* skipped ., .. and the fd in di*/
+        } catch(...) {
             PLOG(WARNING) << "Fail to open /proc/self/fd";
             return -1;
         }
-        // Have to limit the scaning which consumes a lot of CPU when #fd
-        // are huge (100k+)
-        for (; dr.Next() && count <= limit + 3; ++count) {}
-        return count - 3 /* skipped ., .. and the fd in dr*/;
-#elif defined(OS_MACOSX)
+        int count = 0;
+
+
+#elif defined(FLARE_PLATFORM_OSX)
         // TODO(zhujiashun): following code will cause core dump with some
         // probability under mac when program exits. Fix it.
         /*
@@ -435,7 +438,7 @@ namespace bvar {
     };
 
     static bool read_proc_io(ProcIO *s) {
-#if defined(OS_LINUX)
+#if defined(FLARE_PLATFORM_LINUX)
         flare::base::scoped_file fp("/proc/self/io", "r");
         if (NULL == fp) {
             PLOG_ONCE(WARNING) << "Fail to open /proc/self/io";
@@ -450,7 +453,7 @@ namespace bvar {
             return false;
         }
         return true;
-#elif defined(OS_MACOSX)
+#elif defined(FLARE_PLATFORM_OSX)
         // TODO(zhujiashun): get rchar, wchar, syscr, syscw, cancelled_write_bytes
         // in MacOS.
         memset(s, 0, sizeof(ProcIO));
@@ -544,7 +547,7 @@ namespace bvar {
     };
 
     static bool read_disk_stat(DiskStat *s) {
-#if defined(OS_LINUX)
+#if defined(FLARE_PLATFORM_LINUX)
         flare::base::scoped_file fp("/proc/diskstats", "r");
         if (NULL == fp) {
             PLOG_ONCE(WARNING) << "Fail to open /proc/diskstats";
@@ -571,7 +574,7 @@ namespace bvar {
             return false;
         }
         return true;
-#elif defined(OS_MACOSX)
+#elif defined(FLARE_PLATFORM_OSX)
         // TODO(zhujiashun)
         return false;
 #else
@@ -877,10 +880,10 @@ namespace bvar {
     PassiveStatus <std::string> g_gcc_version("gcc_version", get_gcc_version, NULL);
 
     void get_work_dir(std::ostream &os, void *) {
-        butil::FilePath path;
-        const bool rc = butil::GetCurrentDirectory(&path);
-        LOG_IF(WARNING, !rc) << "Fail to GetCurrentDirectory";
-        os << path.value();
+        std::error_code ec;
+        std::filesystem::path curr = std::filesystem::current_path(ec);
+        LOG_IF(WARNING, ec) << "Fail to GetCurrentDirectory";
+        os << curr.c_str();
     }
 
     PassiveStatus <std::string> g_work_dir("process_work_dir", get_work_dir, NULL);

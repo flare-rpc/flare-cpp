@@ -18,7 +18,7 @@
 
 #include "flare/butil/build_config.h"
 
-#if defined(OS_LINUX)
+#if defined(FLARE_PLATFORM_LINUX)
 
 #include <sys/epoll.h>                             // epoll_create
 #include <sys/types.h>                             // socketpair
@@ -68,4 +68,4 @@ namespace brpc {
 extern const unsigned int has_epollrdhup = false;
 }
 
-#endif // defined(OS_LINUX)
+#endif // defined(FLARE_PLATFORM_LINUX)

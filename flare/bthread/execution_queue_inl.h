@@ -23,7 +23,7 @@
 #define  BTHREAD_EXECUTION_QUEUE_INL_H
 
 #include "flare/base/static_atomic.h"             // std::atomic
-#include "flare/butil/macros.h"                // FLARE_CACHELINE_ALIGNMENT
+#include "flare/base/profile.h"                // FLARE_CACHELINE_ALIGNMENT
 #include "flare/butil/memory/scoped_ptr.h"     // butil::scoped_ptr
 #include "flare/base/logging.h"               // LOG
 #include "flare/base/time.h"                  // flare::base::cpuwide_time_ns

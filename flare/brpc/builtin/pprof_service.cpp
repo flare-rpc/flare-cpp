@@ -38,7 +38,7 @@
 #include "flare/base/fd_guard.h"
 
 extern "C" {
-#if defined(OS_LINUX)
+#if defined(FLARE_PLATFORM_LINUX)
 extern char *program_invocation_name;
 #endif
 int __attribute__((weak)) ProfilerStart(const char* fname);
@@ -459,9 +459,9 @@ static void LoadSymbols() {
     info.start_addr = 0;
     info.end_addr = std::numeric_limits<uintptr_t>::max();
     info.offset = 0;
-#if defined(OS_LINUX)
+#if defined(FLARE_PLATFORM_LINUX)
     info.path = program_invocation_name;
-#elif defined(OS_MACOSX)
+#elif defined(FLARE_PLATFORM_OSX)
     info.path = getprogname();
 #endif
     ExtractSymbolsFromBinary(symbol_map, info);

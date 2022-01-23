@@ -46,7 +46,7 @@ namespace brpc {
 enum class DisplayType{
     kUnknown,
     kDot,
-#if defined(OS_LINUX)
+#if defined(FLARE_PLATFORM_LINUX)
     kFlameGraph,
 #endif
     kText
@@ -55,7 +55,7 @@ enum class DisplayType{
 static const char* DisplayTypeToString(DisplayType type) {
     switch (type) {
         case DisplayType::kDot: return "dot";
-#if defined(OS_LINUX)
+#if defined(FLARE_PLATFORM_LINUX)
         case DisplayType::kFlameGraph: return "flame";
 #endif
         case DisplayType::kText: return "text";
@@ -70,7 +70,7 @@ static DisplayType StringToDisplayType(const std::string& val) {
         display_type_map = new flare::container::CaseIgnoredFlatMap<DisplayType>;
         display_type_map->init(10);
         (*display_type_map)["dot"] = DisplayType::kDot;
-#if defined(OS_LINUX)
+#if defined(FLARE_PLATFORM_LINUX)
         (*display_type_map)["flame"] = DisplayType::kFlameGraph;
 #endif
         (*display_type_map)["text"] = DisplayType::kText;
@@ -84,11 +84,11 @@ static DisplayType StringToDisplayType(const std::string& val) {
 
 static std::string DisplayTypeToPProfArgument(DisplayType type) {
     switch (type) {
-#if defined(OS_LINUX)
+#if defined(FLARE_PLATFORM_LINUX)
         case DisplayType::kDot: return " --dot ";
         case DisplayType::kFlameGraph: return " --collapsed ";
         case DisplayType::kText: return " --text ";
-#elif defined(OS_MACOSX)
+#elif defined(FLARE_PLATFORM_OSX)
         case DisplayType::kDot: return " -dot ";
         case DisplayType::kText: return " -text ";
 #endif
@@ -373,7 +373,7 @@ static void NotifyWaiters(ProfilingType type, const Controller* cur_cntl,
     }
 }
 
-#if defined(OS_MACOSX)
+#if defined(FLARE_PLATFORM_OSX)
 static const char* s_pprof_binary_path = nullptr;
 static bool check_GOOGLE_PPROF_BINARY_PATH() {
     char* str = getenv("GOOGLE_PPROF_BINARY_PATH");
@@ -417,7 +417,7 @@ static void DisplayResult(Controller* cntl,
         if (display_type == DisplayType::kUnknown) {
             return cntl->SetFailed(EINVAL, "Invalid display_type=%s", display_type_query->c_str());
         }
-#if defined(OS_LINUX)
+#if defined(FLARE_PLATFORM_LINUX)
         if (display_type == DisplayType::kFlameGraph && !flamegraph_tool) {
             return cntl->SetFailed(EINVAL, "Failed to find environment variable "
                 "FLAMEGRAPH_PL_PATH, please read cpu_profiler doc"
@@ -481,7 +481,7 @@ static void DisplayResult(Controller* cntl,
 
     std::string pprof_tool{GeneratePerlScriptPath(PPROF_FILENAME)};
 
-#if defined(OS_LINUX)
+#if defined(FLARE_PLATFORM_LINUX)
     cmd_builder << "perl " << pprof_tool
                 << DisplayTypeToPProfArgument(display_type)
                 << (show_ccount ? " --contention " : "");
@@ -497,7 +497,7 @@ static void DisplayResult(Controller* cntl,
         cmd_builder << " 2>/dev/null " << " | " << "perl " << flamegraph_tool;
     }
     cmd_builder << " 2>&1 ";
-#elif defined(OS_MACOSX)
+#elif defined(FLARE_PLATFORM_OSX)
     cmd_builder << s_pprof_binary_path << " "
                 << DisplayTypeToPProfArgument(display_type)
                 << (show_ccount ? " -contentions " : "");
@@ -720,7 +720,7 @@ static void DoProfiling(ProfilingType type,
         return NotifyWaiters(type, cntl, view);
     }
 
-#if defined(OS_MACOSX)
+#if defined(FLARE_PLATFORM_OSX)
     if (!has_GOOGLE_PPROF_BINARY_PATH()) {
         os << "no GOOGLE_PPROF_BINARY_PATH in env"
            << (use_html ? "</body></html>" : "\n");
@@ -856,7 +856,7 @@ static void StartProfiling(ProfilingType type,
     }
     const char* const type_str = ProfilingType2String(type);
 
-#if defined(OS_MACOSX)
+#if defined(FLARE_PLATFORM_OSX)
     if (!has_GOOGLE_PPROF_BINARY_PATH()) {
         enabled = false;
         extra_desc = "(no GOOGLE_PPROF_BINARY_PATH in env)";
@@ -888,7 +888,7 @@ static void StartProfiling(ProfilingType type,
         if (display_type == DisplayType::kUnknown) {
             return cntl->SetFailed(EINVAL, "Invalid display_type=%s", display_type_query->c_str());
         }
-#if defined(OS_LINUX)
+#if defined(FLARE_PLATFORM_LINUX)
         if (display_type == DisplayType::kFlameGraph && !getenv("FLAMEGRAPH_PL_PATH")) {
             return cntl->SetFailed(EINVAL, "Failed to find environment variable "
                 "FLAMEGRAPH_PL_PATH, please read cpu_profiler doc"
@@ -1077,7 +1077,7 @@ static void StartProfiling(ProfilingType type,
     os << "<div><pre style='display:inline'>Display: </pre>"
         "<select id='display_type' onchange='onSelectProf()'>"
         "<option value=dot" << (display_type == DisplayType::kDot ? " selected" : "") << ">dot</option>"
-#if defined(OS_LINUX)
+#if defined(FLARE_PLATFORM_LINUX)
         "<option value=flame" << (display_type == DisplayType::kFlameGraph ? " selected" : "") << ">flame</option>"
 #endif
         "<option value=text" << (display_type == DisplayType::kText ? " selected" : "") << ">text</option></select>";

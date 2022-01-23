@@ -22,7 +22,7 @@
 #ifndef BTHREAD_ID_H
 #define BTHREAD_ID_H
 
-#include "flare/butil/macros.h"              // BAIDU_SYMBOLSTR
+#include "flare/base/profile.h"              // FLARE_SYMBOLSTR
 #include "flare/bthread/types.h"
 
 __BEGIN_DECLS
@@ -73,7 +73,7 @@ int bthread_id_cancel(bthread_id_t id);
 // If `id' is destroyed, un-called on_error are dropped.
 // Returns 0 on success, error code otherwise.
 #define bthread_id_error(id, err)                                        \
-    bthread_id_error_verbose(id, err, __FILE__ ":" BAIDU_SYMBOLSTR(__LINE__))
+    bthread_id_error_verbose(id, err, __FILE__ ":" FLARE_SYMBOLSTR(__LINE__))
 
 int bthread_id_error_verbose(bthread_id_t id, int error_code, 
                              const char *location);
@@ -96,7 +96,7 @@ int bthread_id_trylock(bthread_id_t id, void** pdata);
 // On success return 0 and set `pdata' with the `data' parameter to
 // bthread_id_create[_ranged], error code otherwise.
 #define bthread_id_lock(id, pdata)                                      \
-    bthread_id_lock_verbose(id, pdata, __FILE__ ":" BAIDU_SYMBOLSTR(__LINE__))
+    bthread_id_lock_verbose(id, pdata, __FILE__ ":" FLARE_SYMBOLSTR(__LINE__))
 int bthread_id_lock_verbose(bthread_id_t id, void** pdata, 
                             const char *location);
 
@@ -105,7 +105,7 @@ int bthread_id_lock_verbose(bthread_id_t id, void** pdata,
 // smaller than the original range of this id, nothing happens about the range
 #define bthread_id_lock_and_reset_range(id, pdata, range)               \
     bthread_id_lock_and_reset_range_verbose(id, pdata, range,           \
-                               __FILE__ ":" BAIDU_SYMBOLSTR(__LINE__))
+                               __FILE__ ":" FLARE_SYMBOLSTR(__LINE__))
 int bthread_id_lock_and_reset_range_verbose(
     bthread_id_t id, void **pdata, 
     int range, const char *location);
@@ -176,7 +176,7 @@ int bthread_id_create2_ranged(
                     const std::string& error_text),
     int range);
 #define bthread_id_error2(id, ec, et)                                   \
-    bthread_id_error2_verbose(id, ec, et, __FILE__ ":" BAIDU_SYMBOLSTR(__LINE__))
+    bthread_id_error2_verbose(id, ec, et, __FILE__ ":" FLARE_SYMBOLSTR(__LINE__))
 int bthread_id_error2_verbose(bthread_id_t id, int error_code,
                               const std::string& error_text,
                               const char *location);

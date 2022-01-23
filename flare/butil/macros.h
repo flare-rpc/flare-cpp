@@ -320,31 +320,13 @@ enum LinkerInitialized { LINKER_INITIALIZED };
 
 }  // namespace butil
 
-// Convert symbol to string
-#ifndef BAIDU_SYMBOLSTR
-# define BAIDU_SYMBOLSTR(a) BAIDU_SYMBOLSTR_HELPER(a)
-# define BAIDU_SYMBOLSTR_HELPER(a) #a
-#endif
-
-#ifndef BAIDU_TYPEOF
-# if defined(BUTIL_CXX11_ENABLED)
-#  define BAIDU_TYPEOF decltype
-# else
-#  ifdef _MSC_VER
-#   include <boost/typeof/typeof.hpp>
-#   define BAIDU_TYPEOF BOOST_TYPEOF
-#  else
-#   define BAIDU_TYPEOF typeof
-#  endif
-# endif // BUTIL_CXX11_ENABLED
-#endif  // BAIDU_TYPEOF
 
 // ptr:     the pointer to the member.
 // type:    the type of the container struct this is embedded in.
 // member:  the name of the member within the struct.
-#ifndef container_of
-# define container_of(ptr, type, member) ({                             \
-            const BAIDU_TYPEOF( ((type *)0)->member ) *__mptr = (ptr);  \
+#ifndef FLARE_CONTAINER_OF
+# define FLARE_CONTAINER_OF(ptr, type, member) ({                             \
+            const decltype( ((type *)0)->member ) *__mptr = (ptr);  \
             (type *)( (char *)__mptr - offsetof(type,member) );})
 #endif
 
