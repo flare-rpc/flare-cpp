@@ -164,7 +164,7 @@ bool DetermineDevShmExecutable() {
   bool result = false;
   FilePath path;
 
-  ScopedFD fd(CreateAndOpenFdForTemporaryFile(FilePath("/dev/shm"), &path));
+  flare::base::ScopedFD fd(CreateAndOpenFdForTemporaryFile(FilePath("/dev/shm"), &path));
   if (fd.is_valid()) {
     DeleteFile(path, false);
     long sysconf_result = sysconf(_SC_PAGESIZE);
