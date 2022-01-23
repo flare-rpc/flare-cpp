@@ -17,7 +17,7 @@
 #ifndef BUTIL_RECORDIO_H
 #define BUTIL_RECORDIO_H
 
-#include "flare/butil/iobuf.h"
+#include "flare/io/iobuf.h"
 #include <memory>
 
 namespace butil {
@@ -31,7 +31,7 @@ class Record {
 public:
     struct NamedMeta {
         std::string name;
-        std::shared_ptr<butil::IOBuf> data;
+        std::shared_ptr<flare::io::IOBuf> data;
     };
 
     // Number of metas. Could be 0.
@@ -42,7 +42,7 @@ public:
     const NamedMeta& MetaAt(size_t i) const { return _metas[i]; }
 
     // Get meta by |name|. NULL on not found.
-    const butil::IOBuf* Meta(const char* name) const;
+    const flare::io::IOBuf* Meta(const char* name) const;
 
     // Returns a mutable pointer to the meta with |name|. If the meta does
     // not exist, add it first.
@@ -52,18 +52,18 @@ public:
     // NOTE: With the assumption that there won't be many metas, the impl.
     // tests presence by scaning all fields, which may perform badly when metas
     // are a lot.
-    butil::IOBuf* MutableMeta(const char* name, bool null_on_found = false);
-    butil::IOBuf* MutableMeta(const std::string& name, bool null_on_found = false);
+    flare::io::IOBuf* MutableMeta(const char* name, bool null_on_found = false);
+    flare::io::IOBuf* MutableMeta(const std::string& name, bool null_on_found = false);
 
     // Remove meta with the name. The impl. may scan all fields.
     // Returns true on erased, false on absent.
     bool RemoveMeta(const butil::StringPiece& name);
 
     // Get the payload. Empty by default.
-    const butil::IOBuf& Payload() const { return _payload; }
+    const flare::io::IOBuf& Payload() const { return _payload; }
 
     // Get a mutable pointer to the payload.
-    butil::IOBuf* MutablePayload() { return &_payload; }
+    flare::io::IOBuf* MutablePayload() { return &_payload; }
 
     // Clear payload and remove all meta.
     void Clear();
@@ -72,7 +72,7 @@ public:
     size_t ByteSize() const;
 
 private:
-    butil::IOBuf _payload;
+    flare::io::IOBuf _payload;
     std::vector<NamedMeta> _metas;
 };
 
@@ -91,7 +91,7 @@ public:
     // A special error code to mark end of input data.
     static const int END_OF_READER = -1;
 
-    explicit RecordReader(IReader* reader);
+    explicit RecordReader(flare::io::IReader* reader);
 
     // Returns true on success and |out| is overwritten by the record.
     // False otherwise and last_error() is the error which is treated as permanent.
@@ -111,9 +111,9 @@ private:
     int CutRecord(Record* rec);
 
 private:
-    IReader* _reader;
-    IOPortal _portal;
-    IOBufCutter _cutter;
+    flare::io::IReader* _reader;
+    flare::io::IOPortal _portal;
+    flare::io::IOBufCutter _cutter;
     size_t _ncut;
     int _last_error;
 };
@@ -121,7 +121,7 @@ private:
 // Write records into the IWriter.
 class RecordWriter {
 public:
-    explicit RecordWriter(IWriter* writer);
+    explicit RecordWriter(flare::io::IWriter* writer);
 
     // Serialize |record| into internal buffer and NOT flush into the IWriter.
     int WriteWithoutFlush(const Record& record);
@@ -134,8 +134,8 @@ public:
     int Flush();
 
 private:
-    IOBuf _buf;
-    IWriter* _writer;
+    flare::io::IOBuf _buf;
+    flare::io::IWriter* _writer;
 };
 
 } // namespace butil

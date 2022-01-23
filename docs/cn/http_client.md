@@ -41,7 +41,7 @@ HTTP/h2和protobuf关系不大，所以除了Controller和done，CallMethod的�
 
 # POST
 
-默认的HTTP Method为GET，可设置为POST或[更多http method](https://github.com/brpc/brpc/blob/master/src/brpc/http_method.h)。待POST的数据应置入request_attachment()，它([butil::IOBuf](https://github.com/brpc/brpc/blob/master/src/butil/iobuf.h))可以直接append std::string或char*。
+默认的HTTP Method为GET，可设置为POST或[更多http method](https://github.com/brpc/brpc/blob/master/src/brpc/http_method.h)。待POST的数据应置入request_attachment()，它([flare::io::IOBuf](https://github.com/brpc/brpc/blob/master/src/butil/iobuf.h))可以直接append std::string或char*。
 
 ```c++
 brpc::Controller cntl;
@@ -57,7 +57,7 @@ channel.CallMethod(NULL, &cntl, NULL, NULL, NULL/*done*/);
 brpc::Controller cntl;
 cntl.http_request().uri() = "...";  // 设置为待访问的URL
 cntl.http_request().set_method(brpc::HTTP_METHOD_POST);
-butil::IOBufBuilder os;
+flare::io::IOBufBuilder os;
 os << "A lot of printing" << printable_objects << ...;
 os.move_to(cntl.request_attachment());
 channel.CallMethod(NULL, &cntl, NULL, NULL, NULL/*done*/);
@@ -154,13 +154,13 @@ cntl->http_request().set_content_type("text/plain");
 ```
 访问body
 ```c++
-butil::IOBuf& buf = cntl->request_attachment();
+flare::io::IOBuf& buf = cntl->request_attachment();
 std::string str = cntl->request_attachment().to_string(); // 有拷贝
 ```
 设置body
 ```c++
 cntl->request_attachment().append("....");
-butil::IOBufBuilder os;
+flare::io::IOBufBuilder os;
 os << "....";
 os.move_to(cntl->request_attachment());
 ```
@@ -196,7 +196,7 @@ Notes on http header:
 ...
 const std::string* encoding = cntl->http_response().GetHeader("Content-Encoding");
 if (encoding != NULL && *encoding == "gzip") {
-    butil::IOBuf uncompressed;
+    flare::io::IOBuf uncompressed;
     if (!brpc::policy::GzipDecompress(cntl->response_attachment(), &uncompressed)) {
         LOG(ERROR) << "Fail to un-gzip response body";
         return;

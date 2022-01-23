@@ -24,7 +24,7 @@
 #include <set>                                 // std::set
 #include "flare/base/static_atomic.h"                    // std::atomic
 #include "flare/bthread/types.h"                      // bthread_id_t
-#include "flare/butil/iobuf.h"                        // butil::IOBuf, IOPortal
+#include "flare/io/iobuf.h"                        // flare::io::IOBuf, IOPortal
 #include "flare/butil/macros.h"                       // FLARE_DISALLOW_COPY_AND_ASSIGN
 #include "flare/base/endpoint.h"                     // flare::base::end_point
 #include "flare/memory/resource_pool.h"                // flare::memory::ResourceId
@@ -87,8 +87,8 @@ public:
                         int (*on_connect)(int, int, void*), void*) = 0;
 
     // Cut IOBufs into fd or SSL Channel
-    virtual ssize_t CutMessageIntoFileDescriptor(int, butil::IOBuf**, size_t) = 0;
-    virtual ssize_t CutMessageIntoSSLChannel(SSL*, butil::IOBuf**, size_t) = 0;
+    virtual ssize_t CutMessageIntoFileDescriptor(int, flare::io::IOBuf**, size_t) = 0;
+    virtual ssize_t CutMessageIntoSSLChannel(SSL*, flare::io::IOBuf**, size_t) = 0;
 };
 
 // Application-level connect. After TCP connected, the client sends some
@@ -267,7 +267,7 @@ public:
             , pipelined_count(0), with_auth(false)
             , ignore_eovercrowded(false) {}
     };
-    int Write(butil::IOBuf *msg, const WriteOptions* options = NULL);
+    int Write(flare::io::IOBuf *msg, const WriteOptions* options = NULL);
 
     // Write an user-defined message. `msg' is released when Write() is
     // successful and *may* remain unchanged otherwise.
@@ -731,7 +731,7 @@ private:
     uint32_t _avg_msg_size;
 
     // Storing data read from `_fd' but cut-off yet.
-    butil::IOPortal _read_buf;
+    flare::io::IOPortal _read_buf;
 
     // Set with cpuwide_time_us() at last read operation
     std::atomic<int64_t> _last_readtime_us;

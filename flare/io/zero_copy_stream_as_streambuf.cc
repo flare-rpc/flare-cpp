@@ -18,9 +18,9 @@
 // Date: Thu Nov 22 13:57:56 CST 2012
 
 #include "flare/butil/macros.h"
-#include "flare/butil/zero_copy_stream_as_streambuf.h"
+#include "flare/io/zero_copy_stream_as_streambuf.h"
 
-namespace butil {
+namespace flare::io {
 
 BAIDU_CASSERT(sizeof(std::streambuf::char_type) == sizeof(char),
               only_support_char);
@@ -68,4 +68,4 @@ std::streampos ZeroCopyStreamAsStreamBuf::seekoff(
 }
 
 
-}  // namespace butil
+}  // namespace flare::io

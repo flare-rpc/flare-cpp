@@ -132,7 +132,7 @@ protected:
 
         test::EchoRequest req;
         req.set_message(EXP_REQUEST);
-        butil::IOBufAsZeroCopyOutputStream req_stream(&msg->payload);
+        flare::io::IOBufAsZeroCopyOutputStream req_stream(&msg->payload);
         EXPECT_TRUE(req.SerializeToZeroCopyStream(&req_stream));
         return msg;
     }
@@ -146,7 +146,7 @@ protected:
         
         test::EchoResponse res;
         res.set_message(EXP_RESPONSE);
-        butil::IOBufAsZeroCopyOutputStream res_stream(&msg->payload);
+        flare::io::IOBufAsZeroCopyOutputStream res_stream(&msg->payload);
         EXPECT_TRUE(res.SerializeToZeroCopyStream(&res_stream));
         return msg;
     }
@@ -208,8 +208,8 @@ TEST_F(NovaTest, process_response_after_eof) {
 }
 
 TEST_F(NovaTest, complete_flow) {
-    butil::IOBuf request_buf;
-    butil::IOBuf total_buf;
+    flare::io::IOBuf request_buf;
+    flare::io::IOBuf total_buf;
     brpc::Controller cntl;
     test::EchoRequest req;
     test::EchoResponse res;
@@ -235,7 +235,7 @@ TEST_F(NovaTest, complete_flow) {
     ProcessMessage(brpc::policy::ProcessNsheadRequest, req_msg, false);
 
     // Read response from pipe
-    butil::IOPortal response_buf;
+    flare::io::IOPortal response_buf;
     response_buf.append_from_file_descriptor(_pipe_fds[0], 1024);
     brpc::ParseResult res_pr =
             brpc::policy::ParseNsheadMessage(&response_buf, NULL, false, NULL);
@@ -248,8 +248,8 @@ TEST_F(NovaTest, complete_flow) {
 }
 
 TEST_F(NovaTest, close_in_callback) {
-    butil::IOBuf request_buf;
-    butil::IOBuf total_buf;
+    flare::io::IOBuf request_buf;
+    flare::io::IOBuf total_buf;
     brpc::Controller cntl;
     test::EchoRequest req;
     cntl._connection_type = brpc::CONNECTION_TYPE_SHORT;

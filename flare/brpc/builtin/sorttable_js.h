@@ -19,7 +19,7 @@
 #ifndef BRPC_BUILTIN_SORTTABLE_JS_H
 #define BRPC_BUILTIN_SORTTABLE_JS_H
 
-#include "flare/butil/iobuf.h"
+#include "flare/io/iobuf.h"
 
 
 namespace brpc {
@@ -28,7 +28,7 @@ namespace brpc {
 // We need to pack all js inside C++ code so that builtin services can be
 // accessed without external resources and network connection.
 const char* sorttable_js();
-const butil::IOBuf& sorttable_js_iobuf();
+const flare::io::IOBuf& sorttable_js_iobuf();
 
 } // namespace brpc
 

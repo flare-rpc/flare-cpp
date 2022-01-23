@@ -73,14 +73,14 @@ bool MemcacheRequest::MergePartialFromCodedStream(
     LOG(WARNING) << "You're not supposed to parse a MemcacheRequest";
     
     // simple approach just making it work.
-    butil::IOBuf tmp;
+    flare::io::IOBuf tmp;
     const void* data = NULL;
     int size = 0;
     while (input->GetDirectBufferPointer(&data, &size)) {
         tmp.append(data, size);
         input->Skip(size);
     }
-    const butil::IOBuf saved = tmp;
+    const flare::io::IOBuf saved = tmp;
     int count = 0;
     for (; !tmp.empty(); ++count) {
         char aux_buf[sizeof(policy::MemcacheRequestHeader)];
@@ -108,7 +108,7 @@ void MemcacheRequest::SerializeWithCachedSizes(
     LOG(WARNING) << "You're not supposed to serialize a MemcacheRequest";
 
     // simple approach just making it work.
-    butil::IOBufAsZeroCopyInputStream wrapper(_buf);
+    flare::io::IOBufAsZeroCopyInputStream wrapper(_buf);
     const void* data = NULL;
     int size = 0;
     while (wrapper.Next(&data, &size)) {
@@ -229,7 +229,7 @@ void MemcacheResponse::SerializeWithCachedSizes(
     LOG(WARNING) << "You're not supposed to serialize a MemcacheResponse";
     
     // simple approach just making it work.
-    butil::IOBufAsZeroCopyInputStream wrapper(_buf);
+    flare::io::IOBufAsZeroCopyInputStream wrapper(_buf);
     const void* data = NULL;
     int size = 0;
     while (wrapper.Next(&data, &size)) {
@@ -415,7 +415,7 @@ bool MemcacheRequest::Flush(uint32_t timeout) {
 //   +---------------+---------------+---------------+---------------+
 //   Total 4 bytes
 bool MemcacheResponse::PopGet(
-    butil::IOBuf* value, uint32_t* flags, uint64_t* cas_value) {
+    flare::io::IOBuf* value, uint32_t* flags, uint64_t* cas_value) {
     const size_t n = _buf.size();
     policy::MemcacheResponseHeader header;
     if (n < sizeof(header)) {
@@ -481,7 +481,7 @@ bool MemcacheResponse::PopGet(
 
 bool MemcacheResponse::PopGet(
     std::string* value, uint32_t* flags, uint64_t* cas_value) {
-    butil::IOBuf tmp;
+    flare::io::IOBuf tmp;
     if (PopGet(&tmp, flags, cas_value)) {
         tmp.copy_to(value);
         return true;

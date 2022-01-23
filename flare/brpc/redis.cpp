@@ -194,7 +194,7 @@ bool RedisRequest::AddCommandV(const char* fmt, va_list ap) {
     }
 }
 
-bool RedisRequest::SerializeTo(butil::IOBuf* buf) const {
+bool RedisRequest::SerializeTo(flare::io::IOBuf* buf) const {
     if (_has_error) {
         LOG(ERROR) << "Reject serialization due to error in AddCommand[V]";
         return false;
@@ -215,8 +215,8 @@ const ::google::protobuf::Descriptor* RedisRequest::descriptor() {
 }
 
 void RedisRequest::Print(std::ostream& os) const {
-    butil::IOBuf cp = _buf;
-    butil::IOBuf seg;
+    flare::io::IOBuf cp = _buf;
+    flare::io::IOBuf seg;
     while (cp.cut_until(&seg, "\r\n") == 0) {
         os << seg;
         if (FLAGS_redis_verbose_crlf2space) {
@@ -381,7 +381,7 @@ const ::google::protobuf::Descriptor* RedisResponse::descriptor() {
 
 // ===================================================================
 
-ParseError RedisResponse::ConsumePartialIOBuf(butil::IOBuf& buf, int reply_count) {
+ParseError RedisResponse::ConsumePartialIOBuf(flare::io::IOBuf& buf, int reply_count) {
     size_t oldsize = buf.size();
     if (reply_size() == 0) {
         ParseError err = _first_reply.ConsumePartialIOBuf(buf);

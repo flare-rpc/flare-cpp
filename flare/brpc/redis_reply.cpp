@@ -38,7 +38,7 @@ const char* RedisReplyTypeToString(RedisReplyType type) {
     }
 }
 
-bool RedisReply::SerializeTo(butil::IOBufAppender* appender) {
+bool RedisReply::SerializeTo(flare::io::IOBufAppender* appender) {
     switch (_type) {
         case REDIS_REPLY_ERROR:
             // fall through
@@ -89,7 +89,7 @@ bool RedisReply::SerializeTo(butil::IOBufAppender* appender) {
     return false;
 }
 
-ParseError RedisReply::ConsumePartialIOBuf(butil::IOBuf& buf) {
+ParseError RedisReply::ConsumePartialIOBuf(flare::io::IOBuf& buf) {
     if (_type == REDIS_REPLY_ARRAY && _data.array.last_index >= 0) {
         // The parsing was suspended while parsing sub replies,
         // continue the parsing.
@@ -115,7 +115,7 @@ ParseError RedisReply::ConsumePartialIOBuf(butil::IOBuf& buf) {
     switch (fc) {
     case '-':   // Error          "-<message>\r\n"
     case '+': { // Simple String  "+<string>\r\n"
-        butil::IOBuf str;
+        flare::io::IOBuf str;
         if (buf.cut_until(&str, "\r\n") != 0) {
             const size_t len = buf.size();
             if (len > std::numeric_limits<uint32_t>::max()) {

@@ -179,18 +179,18 @@ static long ReadPortOfDummyServer(const char* filename) {
     return port;
 }
 
-// Expose counters of butil::IOBuf
+// Expose counters of flare::io::IOBuf
 static int64_t GetIOBufBlockCount(void*) {
-    return butil::IOBuf::block_count();
+    return flare::io::IOBuf::block_count();
 }
 static int64_t GetIOBufBlockCountHitTLSThreshold(void*) {
-    return butil::IOBuf::block_count_hit_tls_threshold();
+    return flare::io::IOBuf::block_count_hit_tls_threshold();
 }
 static int64_t GetIOBufNewBigViewCount(void*) {
-    return butil::IOBuf::new_bigview_count();
+    return flare::io::IOBuf::new_bigview_count();
 }
 static int64_t GetIOBufBlockMemory(void*) {
-    return butil::IOBuf::block_memory();
+    return flare::io::IOBuf::block_memory();
 }
 
 // Defined in server.cpp

@@ -19,7 +19,7 @@
 #ifndef  BRPC_STREAM_H
 #define  BRPC_STREAM_H
 
-#include "flare/butil/iobuf.h"
+#include "flare/io/iobuf.h"
 #include "flare/base/scoped_generic.h"
 #include "flare/brpc/socket_id.h"
 
@@ -42,7 +42,7 @@ namespace brpc {
         virtual ~StreamInputHandler() = default;
 
         virtual int on_received_messages(StreamId id,
-                                         butil::IOBuf *const messages[],
+                                         flare::io::IOBuf *const messages[],
                                          size_t size) = 0;
 
         virtual void on_idle_timeout(StreamId id) = 0;
@@ -97,7 +97,7 @@ namespace brpc {
     //  - EAGAIN: |stream_id| is created with positive |max_buf_size| and buf size
     //            which the remote side hasn't consumed yet excceeds the number.
     //  - EINVAL: |stream_id| is invalied or has been closed
-    int StreamWrite(StreamId stream_id, const butil::IOBuf &message);
+    int StreamWrite(StreamId stream_id, const flare::io::IOBuf &message);
 
     // Write util the pending buffer size is less than |max_buf_size| or orrur
     // occurs

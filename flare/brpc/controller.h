@@ -27,7 +27,7 @@
 #include "flare/container/intrusive_ptr.h"             // flare::container::intrusive_ptr
 #include "flare/bthread/errno.h"                     // Redefine errno
 #include "flare/base/endpoint.h"                    // flare::base::end_point
-#include "flare/butil/iobuf.h"                       // butil::IOBuf
+#include "flare/io/iobuf.h"                       // flare::io::IOBuf
 #include "flare/bthread/types.h"                     // bthread_id_t
 #include "flare/brpc/options.pb.h"                   // CompressType
 #include "flare/brpc/errno.pb.h"                     // error code
@@ -254,7 +254,7 @@ public:
 
     // User attached data or body of http request, which is wired to network
     // directly instead of being serialized into protobuf messages.
-    butil::IOBuf& request_attachment() { return _request_attachment; }
+    flare::io::IOBuf& request_attachment() { return _request_attachment; }
 
     ConnectionType connection_type() const { return _connection_type; }
     // Get the called method. May-be NULL for non-pb services.
@@ -391,7 +391,7 @@ public:
     
     // User attached data or body of http response, which is wired to network
     // directly instead of being serialized into protobuf messages.
-    butil::IOBuf& response_attachment() { return _response_attachment; }
+    flare::io::IOBuf& response_attachment() { return _response_attachment; }
 
     // Create a ProgressiveAttachment to write (often after RPC).
     // If `stop_style' is FORCE_STOP, the underlying socket will be failed
@@ -498,8 +498,8 @@ public:
     const HttpHeader& http_response() const
     { return _http_response != NULL ? *_http_response : DefaultHttpHeader(); }
 
-    const butil::IOBuf& request_attachment() const { return _request_attachment; }
-    const butil::IOBuf& response_attachment() const { return _response_attachment; }
+    const flare::io::IOBuf& request_attachment() const { return _request_attachment; }
+    const flare::io::IOBuf& response_attachment() const { return _response_attachment; }
 
     // Get the object to write key/value which will be flushed into
     // LOG(INFO) when this controller is deleted.
@@ -771,7 +771,7 @@ private:
     Protocol::PackRequest _pack_request;
     const google::protobuf::MethodDescriptor* _method;
     const Authenticator* _auth;
-    butil::IOBuf _request_buf;
+    flare::io::IOBuf _request_buf;
     IdlNames _idl_names;
     int64_t _idl_result;
 
@@ -781,8 +781,8 @@ private:
     std::unique_ptr<KVMap> _session_kv;
 
     // Fields with large size but low access frequency 
-    butil::IOBuf _request_attachment;
-    butil::IOBuf _response_attachment;
+    flare::io::IOBuf _request_attachment;
+    flare::io::IOBuf _response_attachment;
 
     // Writable progressive attachment
     flare::container::intrusive_ptr<ProgressiveAttachment> _wpa;

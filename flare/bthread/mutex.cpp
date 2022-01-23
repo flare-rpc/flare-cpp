@@ -27,7 +27,7 @@
 #include "flare/bvar/bvar.h"
 #include "flare/bvar/collector.h"
 #include "flare/container/flat_map.h"
-#include "flare/butil/iobuf.h"
+#include "flare/io/iobuf.h"
 #include "flare/base/fd_guard.h"
 #include "flare/butil/files/file.h"
 #include "flare/butil/files/file_path.h"
@@ -126,7 +126,7 @@ namespace bthread {
         bool _init;  // false before first dump_and_destroy is called
         bool _first_write;      // true if buffer was not written to file yet.
         std::string _filename;  // the file storing profiling result.
-        butil::IOBuf _disk_buf;  // temp buf before saving the file.
+        flare::io::IOBuf _disk_buf;  // temp buf before saving the file.
         ContentionMap _dedup_map; // combining same samples to make result smaller.
     };
 
@@ -177,7 +177,7 @@ namespace bthread {
         // Serialize contentions in _dedup_map into _disk_buf.
         if (!_dedup_map.empty()) {
             BT_VLOG << "dedup_map=" << _dedup_map.size();
-            butil::IOBufBuilder os;
+            flare::io::IOBufBuilder os;
             for (ContentionMap::const_iterator
                          it = _dedup_map.begin(); it != _dedup_map.end(); ++it) {
                 SampledContention *c = it->second;
@@ -197,7 +197,7 @@ namespace bthread {
         if (ending) {
             BT_VLOG << "Append /proc/self/maps";
             // Failures are not critical, don't return directly.
-            butil::IOPortal mem_maps;
+            flare::io::IOPortal mem_maps;
             const flare::base::fd_guard fd(open("/proc/self/maps", O_RDONLY));
             if (fd >= 0) {
                 while (true) {

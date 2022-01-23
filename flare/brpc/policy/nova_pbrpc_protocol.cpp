@@ -21,7 +21,7 @@
 #include <gflags/gflags.h>
 
 #include "flare/base/time.h"
-#include "flare/butil/iobuf.h"                        // butil::IOBuf
+#include "flare/io/iobuf.h"                        // flare::io::IOBuf
 
 #include "flare/brpc/controller.h"               // Controller
 #include "flare/brpc/socket.h"                   // Socket
@@ -151,7 +151,7 @@ void ProcessNovaResponse(InputMessageBase* msg_base) {
     accessor.OnResponse(cid, saved_error);
 } 
 
-void SerializeNovaRequest(butil::IOBuf* buf, Controller* cntl,
+void SerializeNovaRequest(flare::io::IOBuf* buf, Controller* cntl,
                           const google::protobuf::Message* request) {
     CompressType type = cntl->request_compress_type();
     if (type != COMPRESS_TYPE_NONE && type != COMPRESS_TYPE_SNAPPY) {
@@ -162,12 +162,12 @@ void SerializeNovaRequest(butil::IOBuf* buf, Controller* cntl,
     return SerializeRequestDefault(buf, cntl, request);
 }
 
-void PackNovaRequest(butil::IOBuf* buf,
+void PackNovaRequest(flare::io::IOBuf* buf,
                      SocketMessage**,
                      uint64_t correlation_id,
                      const google::protobuf::MethodDescriptor* method,
                      Controller* controller,
-                     const butil::IOBuf& request,
+                     const flare::io::IOBuf& request,
                      const Authenticator* /*not supported*/) {
     ControllerPrivateAccessor accessor(controller);
     if (controller->connection_type() == CONNECTION_TYPE_SINGLE) {

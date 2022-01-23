@@ -138,7 +138,7 @@ inline void PackSofaHeader(char* sofa_header, int meta_size, int body_size) {
 }
 
 static void SerializeSofaHeaderAndMeta(
-    butil::IOBuf* out, const SofaRpcMeta& meta, int payload_size) {
+    flare::io::IOBuf* out, const SofaRpcMeta& meta, int payload_size) {
     const int meta_size = meta.ByteSize();
     if (meta_size <= 232) { // most common cases
         char header_and_meta[24 + meta_size];
@@ -152,14 +152,14 @@ static void SerializeSofaHeaderAndMeta(
         char header[24];
         PackSofaHeader(header, meta_size, payload_size);
         out->append(header, sizeof(header));
-        butil::IOBufAsZeroCopyOutputStream buf_stream(out);
+        flare::io::IOBufAsZeroCopyOutputStream buf_stream(out);
         ::google::protobuf::io::CodedOutputStream coded_out(&buf_stream);
         meta.SerializeWithCachedSizes(&coded_out);
         CHECK(!coded_out.HadError());
     }
 }
 
-ParseResult ParseSofaMessage(butil::IOBuf* source, Socket* socket,
+ParseResult ParseSofaMessage(flare::io::IOBuf* source, Socket* socket,
                              bool /*read_eof*/, const void* /*arg*/) {
     char header_buf[24];
     const size_t n = source->copy_to(header_buf, sizeof(header_buf));
@@ -232,7 +232,7 @@ static void SendSofaResponse(int64_t correlation_id,
         "your response_attachment will not be sent";
 
     bool append_body = false;
-    butil::IOBuf res_body;
+    flare::io::IOBuf res_body;
     // `res' can be NULL here, in which case we don't serialize it
     // If user calls `SetFailed' on Controller, we don't serialize
     // response either
@@ -271,7 +271,7 @@ static void SendSofaResponse(int64_t correlation_id,
     meta.set_compress_type(
         CompressType2Sofa(cntl->response_compress_type()));
 
-    butil::IOBuf res_buf;
+    flare::io::IOBuf res_buf;
     SerializeSofaHeaderAndMeta(&res_buf, meta, res_size);
     if (append_body) {
         res_buf.append(res_body.movable());
@@ -530,12 +530,12 @@ void ProcessSofaResponse(InputMessageBase* msg_base) {
     accessor.OnResponse(cid, saved_error);
 }
 
-void PackSofaRequest(butil::IOBuf* req_buf,
+void PackSofaRequest(flare::io::IOBuf* req_buf,
                      SocketMessage**,
                      uint64_t correlation_id,
                      const google::protobuf::MethodDescriptor* method,
                      Controller* cntl,
-                     const butil::IOBuf& req_body,
+                     const flare::io::IOBuf& req_body,
                      const Authenticator* /*not supported*/) {
     if (!cntl->request_attachment().empty()) {
         LOG(WARNING) << "sofa-pbrpc does not support attachment, "

@@ -1,7 +1,7 @@
 
 
-#ifndef BUTIL_DOUBLY_BUFFERED_DATA_H
-#define BUTIL_DOUBLY_BUFFERED_DATA_H
+#ifndef FLARE_CONTAINER_DOUBLY_BUFFERED_DATA_H_
+#define FLARE_CONTAINER_DOUBLY_BUFFERED_DATA_H_
 
 #include <vector>                                       // std::vector
 #include <pthread.h>
@@ -60,7 +60,7 @@ namespace flare::container {
             TLS &tls() { return _w->user_tls(); }
 
         private:
-            DISALLOW_COPY_AND_ASSIGN(ScopedPtr);
+            FLARE_DISALLOW_COPY_AND_ASSIGN(ScopedPtr);
 
             const T *_data;
             Wrapper *_w;
@@ -328,18 +328,18 @@ namespace flare::container {
     template<typename T, typename TLS>
     int DoublyBufferedData<T, TLS>::Read(
             typename DoublyBufferedData<T, TLS>::ScopedPtr *ptr) {
-        if (BAIDU_UNLIKELY(!_created_key)) {
+        if (FLARE_UNLIKELY(!_created_key)) {
             return -1;
         }
         Wrapper *w = static_cast<Wrapper *>(pthread_getspecific(_wrapper_key));
-        if (BAIDU_LIKELY(w != NULL)) {
+        if (FLARE_LIKELY(w != NULL)) {
             w->BeginRead();
             ptr->_data = UnsafeRead();
             ptr->_w = w;
             return 0;
         }
         w = AddWrapper();
-        if (BAIDU_LIKELY(w != NULL)) {
+        if (FLARE_LIKELY(w != NULL)) {
             const int rc = pthread_setspecific(_wrapper_key, w);
             if (rc == 0) {
                 w->BeginRead();
@@ -427,4 +427,4 @@ namespace flare::container {
 
 }  // namespace flare::container
 
-#endif  // BUTIL_DOUBLY_BUFFERED_DATA_H
+#endif  // FLARE_CONTAINER_DOUBLY_BUFFERED_DATA_H_

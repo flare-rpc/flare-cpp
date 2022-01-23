@@ -204,11 +204,11 @@ HttpContentType ParseContentType(std::string_view ct, bool* is_grpc_ct) {
     return (ct.empty() || ct.front() == ';') ? type : HTTP_CONTENT_OTHERS;
 }
 
-static void PrintMessage(const butil::IOBuf& inbuf,
+static void PrintMessage(const flare::io::IOBuf& inbuf,
                          bool request_or_response,
                          bool has_content) {
-    butil::IOBuf buf1 = inbuf;
-    butil::IOBuf buf2;
+    flare::io::IOBuf buf1 = inbuf;
+    flare::io::IOBuf buf2;
     char str[48];
     if (request_or_response) {
         snprintf(str, sizeof(str), "[ HTTP REQUEST @%s ]", flare::base::my_ip_cstr());
@@ -227,21 +227,21 @@ static void PrintMessage(const butil::IOBuf& inbuf,
     if (!has_content) {
         LOG(INFO) << '\n' << buf2 << buf1;
     } else {
-        LOG(INFO) << '\n' << buf2 << butil::ToPrintableString(buf1, FLAGS_http_verbose_max_body_length);
+        LOG(INFO) << '\n' << buf2 << flare::io::ToPrintableString(buf1, FLAGS_http_verbose_max_body_length);
     }
 }
 
-static void AddGrpcPrefix(butil::IOBuf* body, bool compressed) {
+static void AddGrpcPrefix(flare::io::IOBuf* body, bool compressed) {
     char buf[5];
     buf[0] = (compressed ? 1 : 0);
     *(uint32_t*)(buf + 1) = butil::HostToNet32(body->size());
-    butil::IOBuf tmp_buf;
+    flare::io::IOBuf tmp_buf;
     tmp_buf.append(buf, sizeof(buf));
-    tmp_buf.append(butil::IOBuf::Movable(*body));
+    tmp_buf.append(flare::io::IOBuf::Movable(*body));
     body->swap(tmp_buf);
 }
 
-static bool RemoveGrpcPrefix(butil::IOBuf* body, bool* compressed) {
+static bool RemoveGrpcPrefix(flare::io::IOBuf* body, bool* compressed) {
     if (body->empty()) {
         *compressed = false;
         return true;
@@ -295,7 +295,7 @@ void ProcessHttpResponse(InputMessageBase* msg) {
 
     HttpHeader* res_header = &cntl->http_response();
     res_header->Swap(imsg_guard->header());
-    butil::IOBuf& res_body = imsg_guard->body();
+    flare::io::IOBuf& res_body = imsg_guard->body();
     CHECK(cntl->response_attachment().empty());
     const int saved_error = cntl->ErrorCode();
 
@@ -423,7 +423,7 @@ void ProcessHttpResponse(InputMessageBase* msg) {
         if (encoding != NULL && *encoding == common->GZIP) {
             TRACEPRINTF("Decompressing response=%lu",
                         (unsigned long)res_body.size());
-            butil::IOBuf uncompressed;
+            flare::io::IOBuf uncompressed;
             if (!policy::GzipDecompress(res_body, &uncompressed)) {
                 cntl->SetFailed(ERESPONSE, "Fail to un-gzip response body");
                 break;
@@ -437,7 +437,7 @@ void ProcessHttpResponse(InputMessageBase* msg) {
             }
         } else if (content_type == HTTP_CONTENT_JSON) {
             // message body is json
-            butil::IOBufAsZeroCopyInputStream wrapper(res_body);
+            flare::io::IOBufAsZeroCopyInputStream wrapper(res_body);
             std::string err;
             json2pb::Json2PbOptions options;
             options.base64_to_bytes = cntl->has_pb_bytes_to_base64();
@@ -459,7 +459,7 @@ void ProcessHttpResponse(InputMessageBase* msg) {
     accessor.OnResponse(cid, saved_error);
 }
 
-void SerializeHttpRequest(butil::IOBuf* /*not used*/,
+void SerializeHttpRequest(flare::io::IOBuf* /*not used*/,
                           Controller* cntl,
                           const google::protobuf::Message* pbreq) {
     HttpHeader& hreq = cntl->http_request();
@@ -506,7 +506,7 @@ void SerializeHttpRequest(butil::IOBuf* /*not used*/,
             is_grpc = (is_http2 && is_grpc_ct);
         }
 
-        butil::IOBufAsZeroCopyOutputStream wrapper(&cntl->request_attachment());
+        flare::io::IOBufAsZeroCopyOutputStream wrapper(&cntl->request_attachment());
         if (content_type == HTTP_CONTENT_PROTO) {
             // Serialize content as protobuf
             if (!pbreq->SerializeToZeroCopyStream(&wrapper)) {
@@ -552,7 +552,7 @@ void SerializeHttpRequest(butil::IOBuf* /*not used*/,
         const size_t request_size = cntl->request_attachment().size();
         if (request_size >= (size_t)FLAGS_http_body_compress_threshold) {
             TRACEPRINTF("Compressing request=%lu", (unsigned long)request_size);
-            butil::IOBuf compressed;
+            flare::io::IOBuf compressed;
             if (GzipCompress(cntl->request_attachment(), &compressed, NULL)) {
                 cntl->request_attachment().swap(compressed);
                 if (is_grpc) {
@@ -627,12 +627,12 @@ void SerializeHttpRequest(butil::IOBuf* /*not used*/,
     }
 }
 
-void PackHttpRequest(butil::IOBuf* buf,
+void PackHttpRequest(flare::io::IOBuf* buf,
                      SocketMessage**,
                      uint64_t correlation_id,
                      const google::protobuf::MethodDescriptor*,
                      Controller* cntl,
-                     const butil::IOBuf& /*unused*/,
+                     const flare::io::IOBuf& /*unused*/,
                      const Authenticator* auth) {
     if (cntl->connection_type() == CONNECTION_TYPE_SINGLE) {
         return cntl->SetFailed(EREQUEST, "http can't work with CONNECTION_TYPE_SINGLE");
@@ -753,7 +753,7 @@ HttpResponseSender::~HttpResponseSender() {
         !cntl->Failed()) {
         // ^ pb response in failed RPC is undefined, no need to convert.
         
-        butil::IOBufAsZeroCopyOutputStream wrapper(&cntl->response_attachment());
+        flare::io::IOBufAsZeroCopyOutputStream wrapper(&cntl->response_attachment());
         if (content_type == HTTP_CONTENT_PROTO) {
             if (!res->SerializeToZeroCopyStream(&wrapper)) {
                 cntl->SetFailed(ERESPONSE, "Fail to serialize %s", res->GetTypeName().c_str());
@@ -845,7 +845,7 @@ HttpResponseSender::~HttpResponseSender() {
         if (response_size >= (size_t)FLAGS_http_body_compress_threshold
             && (is_http2 || SupportGzip(cntl))) {
             TRACEPRINTF("Compressing response=%lu", (unsigned long)response_size);
-            butil::IOBuf tmpbuf;
+            flare::io::IOBuf tmpbuf;
             if (GzipCompress(cntl->response_attachment(), &tmpbuf, NULL)) {
                 cntl->response_attachment().swap(tmpbuf);
                 if (is_grpc) {
@@ -891,11 +891,11 @@ HttpResponseSender::~HttpResponseSender() {
             rc = socket->Write(h2_response, &wopt);
         }
     } else {
-        butil::IOBuf* content = NULL;
+        flare::io::IOBuf* content = NULL;
         if (cntl->Failed() || !cntl->has_progressive_writer()) {
             content = &cntl->response_attachment();
         }
-        butil::IOBuf res_buf;
+        flare::io::IOBuf res_buf;
         MakeRawHttpResponse(&res_buf, res_header, content);
         if (FLAGS_http_verbose) {
             PrintMessage(res_buf, false, !!content);
@@ -1040,7 +1040,7 @@ FindMethodPropertyByURI(const std::string& uri_path, const Server* server,
     return NULL;
 }
 
-ParseResult ParseHttpMessage(butil::IOBuf *source, Socket *socket,
+ParseResult ParseHttpMessage(flare::io::IOBuf *source, Socket *socket,
                              bool read_eof, const void* /*arg*/) {
     HttpContext* http_imsg = 
         static_cast<HttpContext*>(socket->parsing_context());
@@ -1147,7 +1147,7 @@ ParseResult ParseHttpMessage(butil::IOBuf *source, Socket *socket,
                 return MakeParseError(PARSE_ERROR_NOT_ENOUGH_DATA);
             }
             // Send 400 back.
-            butil::IOBuf bad_req;
+            flare::io::IOBuf bad_req;
             HttpHeader header;
             header.set_status_code(HTTP_STATUS_BAD_REQUEST);
             MakeRawHttpRequest(&bad_req, &header, socket->remote_side(), NULL);
@@ -1236,7 +1236,7 @@ void ProcessHttpRequest(InputMessageBase *msg) {
     ControllerPrivateAccessor accessor(cntl);
     HttpHeader& req_header = cntl->http_request();
     imsg_guard->header().Swap(req_header);
-    butil::IOBuf& req_body = imsg_guard->body();
+    flare::io::IOBuf& req_body = imsg_guard->body();
 
     flare::base::end_point user_addr;
     if (!GetUserAddressFromHeader(req_header, &user_addr)) {
@@ -1458,7 +1458,7 @@ void ProcessHttpRequest(InputMessageBase *msg) {
             if (encoding != NULL && *encoding == common->GZIP) {
                 TRACEPRINTF("Decompressing request=%lu",
                             (unsigned long)req_body.size());
-                butil::IOBuf uncompressed;
+                flare::io::IOBuf uncompressed;
                 if (!policy::GzipDecompress(req_body, &uncompressed)) {
                     cntl->SetFailed(EREQUEST, "Fail to un-gzip request body");
                     return;
@@ -1472,7 +1472,7 @@ void ProcessHttpRequest(InputMessageBase *msg) {
                     return;
                 }
             } else {
-                butil::IOBufAsZeroCopyInputStream wrapper(req_body);
+                flare::io::IOBufAsZeroCopyInputStream wrapper(req_body);
                 std::string err;
                 json2pb::Json2PbOptions options;
                 options.base64_to_bytes = sp->params.pb_bytes_to_base64;

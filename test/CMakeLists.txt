@@ -135,12 +135,13 @@ SET(TEST_BUTIL_SOURCES
         ${PROJECT_SOURCE_DIR}/test/butil/synchronous_event_unittest.cpp
         ${PROJECT_SOURCE_DIR}/test/butil/baidu_thread_local_unittest.cpp
         ${PROJECT_SOURCE_DIR}/test/butil/crc32c_unittest.cc
-        ${PROJECT_SOURCE_DIR}/test/butil/iobuf_unittest.cpp
         ${PROJECT_SOURCE_DIR}/test/butil/scoped_locale.cc
         ${PROJECT_SOURCE_DIR}/test/butil/butil_unittest_main.cpp
         ${PROJECT_SOURCE_DIR}/test/butil/butil_unittest_main.cpp
         )
-
+set(IO_TEST_SRC
+        ${PROJECT_SOURCE_DIR}/test/io/iobuf_unittest.cc
+        )
 if (CMAKE_SYSTEM_NAME STREQUAL "Linux")
     SET(TEST_BUTIL_SOURCES ${TEST_BUTIL_SOURCES}
             ${PROJECT_SOURCE_DIR}/test/proc_maps_linux_unittest.cc
@@ -178,13 +179,22 @@ target_link_libraries(brpc-shared-debug ${DYNAMIC_LIB})
     target_link_libraries(brpc-shared-debug ${GLOG_LIB})
 
 # test_butil
-add_executable(test_butil ${TEST_BUTIL_SOURCES}
-        ${CMAKE_CURRENT_BINARY_DIR}/iobuf.pb.cc)
+add_executable(test_butil ${TEST_BUTIL_SOURCES})
 target_link_libraries(test_butil brpc-shared-debug
         gtest
         ${GPERFTOOLS_LIBRARIES})
 
 add_test(NAME test_butil COMMAND test_butil)
+
+# test_io
+add_executable(test_io ${TEST_IO_SRC}
+        ${CMAKE_CURRENT_BINARY_DIR}/iobuf.pb.cc)
+target_link_libraries(test_io brpc-shared-debug
+        gtest
+        gtest_main
+        ${GPERFTOOLS_LIBRARIES})
+
+add_test(NAME test_io COMMAND test_io)
 
 # test_bvar
 # -DBVAR_NOT_LINK_DEFAULT_VARIABLES not work for gcc >= 5.0, just remove the file to prevent linking into unit tests

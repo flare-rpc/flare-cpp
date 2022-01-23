@@ -159,7 +159,7 @@ protected:
 
         test::EchoRequest req;
         req.set_message(EXP_REQUEST);
-        butil::IOBufAsZeroCopyOutputStream req_stream(&msg->body());
+        flare::io::IOBufAsZeroCopyOutputStream req_stream(&msg->body());
         EXPECT_TRUE(json2pb::ProtoMessageToJson(req, &req_stream, NULL));
         return msg;
     }
@@ -179,7 +179,7 @@ protected:
         
         test::EchoResponse res;
         res.set_message(EXP_RESPONSE);
-        butil::IOBufAsZeroCopyOutputStream res_stream(&msg->body());
+        flare::io::IOBufAsZeroCopyOutputStream res_stream(&msg->body());
         EXPECT_TRUE(json2pb::ProtoMessageToJson(res, &res_stream, NULL));
         return msg;
     }
@@ -193,7 +193,7 @@ protected:
         }
 
         EXPECT_GT(bytes_in_pipe, 0);
-        butil::IOPortal buf;
+        flare::io::IOPortal buf;
         EXPECT_EQ((ssize_t)bytes_in_pipe,
                   buf.append_from_file_descriptor(_pipe_fds[0], 1024));
         brpc::ParseResult pr =
@@ -206,8 +206,8 @@ protected:
         msg->Destroy();
     }
 
-    void MakeH2EchoRequestBuf(butil::IOBuf* out, brpc::Controller* cntl, int* h2_stream_id) {
-        butil::IOBuf request_buf;
+    void MakeH2EchoRequestBuf(flare::io::IOBuf* out, brpc::Controller* cntl, int* h2_stream_id) {
+        flare::io::IOBuf request_buf;
         test::EchoRequest req;
         req.set_message(EXP_REQUEST);
         cntl->http_request().set_method(brpc::HTTP_METHOD_POST);
@@ -223,13 +223,13 @@ protected:
         *h2_stream_id = h2_req->_stream_id;
     }
 
-    void MakeH2EchoResponseBuf(butil::IOBuf* out, int h2_stream_id) {
+    void MakeH2EchoResponseBuf(flare::io::IOBuf* out, int h2_stream_id) {
         brpc::Controller cntl;
         test::EchoResponse res;
         res.set_message(EXP_RESPONSE);
         cntl.http_request().set_content_type("application/proto");
         {
-            butil::IOBufAsZeroCopyOutputStream wrapper(&cntl.response_attachment());
+            flare::io::IOBufAsZeroCopyOutputStream wrapper(&cntl.response_attachment());
             EXPECT_TRUE(res.SerializeToZeroCopyStream(&wrapper));
         }
         brpc::policy::H2UnsentResponse* h2_res = brpc::policy::H2UnsentResponse::New(&cntl, h2_stream_id, false /*is grpc*/);
@@ -402,8 +402,8 @@ TEST_F(HttpTest, process_response_error_code) {
 }
 
 TEST_F(HttpTest, complete_flow) {
-    butil::IOBuf request_buf;
-    butil::IOBuf total_buf;
+    flare::io::IOBuf request_buf;
+    flare::io::IOBuf total_buf;
     brpc::Controller cntl;
     test::EchoRequest req;
     test::EchoResponse res;
@@ -430,7 +430,7 @@ TEST_F(HttpTest, complete_flow) {
     ProcessMessage(brpc::policy::ProcessHttpRequest, req_msg, false);
 
     // Read response from pipe
-    butil::IOPortal response_buf;
+    flare::io::IOPortal response_buf;
     response_buf.append_from_file_descriptor(_pipe_fds[0], 1024);
     brpc::ParseResult res_pr =
             brpc::policy::ParseHttpMessage(&response_buf, _socket.get(), false, NULL);
@@ -1038,11 +1038,11 @@ TEST_F(HttpTest, http2_ping) {
     brpc::Controller cntl;
 
     // Prepare request
-    butil::IOBuf req_out;
+    flare::io::IOBuf req_out;
     int h2_stream_id = 0;
     MakeH2EchoRequestBuf(&req_out, &cntl, &h2_stream_id);
     // Prepare response
-    butil::IOBuf res_out;
+    flare::io::IOBuf res_out;
     char pingbuf[9 /*FRAME_HEAD_SIZE*/ + 8 /*Opaque Data*/];
     brpc::policy::SerializeFrameHead(pingbuf, 8, brpc::policy::H2_FRAME_PING, 0, 0);
     // insert ping before header and data
@@ -1070,11 +1070,11 @@ inline void SaveUint32(void* out, uint32_t v) {
 TEST_F(HttpTest, http2_rst_before_header) {
     brpc::Controller cntl;
     // Prepare request
-    butil::IOBuf req_out;
+    flare::io::IOBuf req_out;
     int h2_stream_id = 0;
     MakeH2EchoRequestBuf(&req_out, &cntl, &h2_stream_id);
     // Prepare response
-    butil::IOBuf res_out;
+    flare::io::IOBuf res_out;
     char rstbuf[9 /*FRAME_HEAD_SIZE*/ + 4];
     brpc::policy::SerializeFrameHead(rstbuf, 4, brpc::policy::H2_FRAME_RST_STREAM, 0, h2_stream_id);
     SaveUint32(rstbuf + 9, brpc::H2_INTERNAL_ERROR);
@@ -1094,11 +1094,11 @@ TEST_F(HttpTest, http2_rst_before_header) {
 TEST_F(HttpTest, http2_rst_after_header_and_data) {
     brpc::Controller cntl;
     // Prepare request
-    butil::IOBuf req_out;
+    flare::io::IOBuf req_out;
     int h2_stream_id = 0;
     MakeH2EchoRequestBuf(&req_out, &cntl, &h2_stream_id);
     // Prepare response
-    butil::IOBuf res_out;
+    flare::io::IOBuf res_out;
     MakeH2EchoResponseBuf(&res_out, h2_stream_id);
     char rstbuf[9 /*FRAME_HEAD_SIZE*/ + 4];
     brpc::policy::SerializeFrameHead(rstbuf, 4, brpc::policy::H2_FRAME_RST_STREAM, 0, h2_stream_id);
@@ -1116,7 +1116,7 @@ TEST_F(HttpTest, http2_rst_after_header_and_data) {
 
 TEST_F(HttpTest, http2_window_used_up) {
     brpc::Controller cntl;
-    butil::IOBuf request_buf;
+    flare::io::IOBuf request_buf;
     test::EchoRequest req;
     // longer message to trigger using up window size sooner
     req.set_message("FLOW_CONTROL_FLOW_CONTROL");
@@ -1128,7 +1128,7 @@ TEST_F(HttpTest, http2_window_used_up) {
     brpc::H2Settings h2_settings;
     const size_t nb = brpc::policy::SerializeH2Settings(h2_settings, settingsbuf + brpc::policy::FRAME_HEAD_SIZE);
     brpc::policy::SerializeFrameHead(settingsbuf, nb, brpc::policy::H2_FRAME_SETTINGS, 0, 0);
-    butil::IOBuf buf;
+    flare::io::IOBuf buf;
     buf.append(settingsbuf, brpc::policy::FRAME_HEAD_SIZE + nb);
     brpc::policy::ParseH2Message(&buf, _h2_client_sock.get(), false, NULL);
 
@@ -1139,7 +1139,7 @@ TEST_F(HttpTest, http2_window_used_up) {
         brpc::SocketMessage* socket_message = NULL;
         brpc::policy::PackH2Request(NULL, &socket_message, cntl.call_id().value,
                                     NULL, &cntl, request_buf, NULL);
-        butil::IOBuf dummy;
+        flare::io::IOBuf dummy;
         flare::base::flare_status st = socket_message->AppendAndDestroySelf(&dummy, _h2_client_sock.get());
         if (i == nsuc) {
             // the last message should fail according to flow control policy.
@@ -1161,7 +1161,7 @@ TEST_F(HttpTest, http2_settings) {
     h2_settings.stream_window_size= (1u << 29) - 1;
     const size_t nb = brpc::policy::SerializeH2Settings(h2_settings, settingsbuf + brpc::policy::FRAME_HEAD_SIZE);
     brpc::policy::SerializeFrameHead(settingsbuf, nb, brpc::policy::H2_FRAME_SETTINGS, 0, 0);
-    butil::IOBuf buf;
+    flare::io::IOBuf buf;
     buf.append(settingsbuf, brpc::policy::FRAME_HEAD_SIZE + nb);
 
     brpc::policy::H2Context* ctx = new brpc::policy::H2Context(_socket.get(), NULL);
@@ -1171,11 +1171,11 @@ TEST_F(HttpTest, http2_settings) {
     // parse settings
     brpc::policy::ParseH2Message(&buf, _socket.get(), false, NULL);
 
-    butil::IOPortal response_buf;
+    flare::io::IOPortal response_buf;
     CHECK_EQ(response_buf.append_from_file_descriptor(_pipe_fds[0], 1024),
              (ssize_t)brpc::policy::FRAME_HEAD_SIZE);
     brpc::policy::H2FrameHead frame_head;
-    butil::IOBufBytesIterator it(response_buf);
+    flare::io::IOBufBytesIterator it(response_buf);
     ctx->ConsumeFrameHead(it, &frame_head);
     CHECK_EQ(frame_head.type, brpc::policy::H2_FRAME_SETTINGS);
     CHECK_EQ(frame_head.flags, 0x01 /* H2_FLAGS_ACK */);
@@ -1266,24 +1266,24 @@ TEST_F(HttpTest, http2_header_after_data) {
     brpc::Controller cntl;
 
     // Prepare request
-    butil::IOBuf req_out;
+    flare::io::IOBuf req_out;
     int h2_stream_id = 0;
     MakeH2EchoRequestBuf(&req_out, &cntl, &h2_stream_id);
 
     // Prepare response to res_out
-    butil::IOBuf res_out;
+    flare::io::IOBuf res_out;
     {
-        butil::IOBuf data_buf;
+        flare::io::IOBuf data_buf;
         test::EchoResponse res;
         res.set_message(EXP_RESPONSE);
         {
-            butil::IOBufAsZeroCopyOutputStream wrapper(&data_buf);
+            flare::io::IOBufAsZeroCopyOutputStream wrapper(&data_buf);
             EXPECT_TRUE(res.SerializeToZeroCopyStream(&wrapper));
         }
         brpc::policy::H2Context* ctx =
             static_cast<brpc::policy::H2Context*>(_h2_client_sock->parsing_context());
         brpc::HPacker& hpacker = ctx->hpacker();
-        butil::IOBufAppender header1_appender;
+        flare::io::IOBufAppender header1_appender;
         brpc::HPackOptions options;
         options.encode_name = false;    /* disable huffman encoding */
         options.encode_value = false;
@@ -1308,7 +1308,7 @@ TEST_F(HttpTest, http2_header_after_data) {
             brpc::HPacker::Header header("user-defined1", "a");
             hpacker.Encode(&header1_appender, header, options);
         }
-        butil::IOBuf header1;
+        flare::io::IOBuf header1;
         header1_appender.move_to(header1);
 
         char headbuf[brpc::policy::FRAME_HEAD_SIZE];
@@ -1316,15 +1316,15 @@ TEST_F(HttpTest, http2_header_after_data) {
                 brpc::policy::H2_FRAME_HEADERS, 0, h2_stream_id);
         // append header1
         res_out.append(headbuf, sizeof(headbuf));
-        res_out.append(butil::IOBuf::Movable(header1));
+        res_out.append(flare::io::IOBuf::Movable(header1));
 
         brpc::policy::SerializeFrameHead(headbuf, data_buf.size(),
             brpc::policy::H2_FRAME_DATA, 0, h2_stream_id);
         // append data
         res_out.append(headbuf, sizeof(headbuf));
-        res_out.append(butil::IOBuf::Movable(data_buf));
+        res_out.append(flare::io::IOBuf::Movable(data_buf));
 
-        butil::IOBufAppender header2_appender;
+        flare::io::IOBufAppender header2_appender;
         {
             brpc::HPacker::Header header("user-defined1", "overwrite-a");
             hpacker.Encode(&header2_appender, header, options);
@@ -1333,7 +1333,7 @@ TEST_F(HttpTest, http2_header_after_data) {
             brpc::HPacker::Header header("user-defined2", "b");
             hpacker.Encode(&header2_appender, header, options);
         }
-        butil::IOBuf header2;
+        flare::io::IOBuf header2;
         header2_appender.move_to(header2);
 
         brpc::policy::SerializeFrameHead(headbuf, header2.size(),
@@ -1341,7 +1341,7 @@ TEST_F(HttpTest, http2_header_after_data) {
                 h2_stream_id);
         // append header2
         res_out.append(headbuf, sizeof(headbuf));
-        res_out.append(butil::IOBuf::Movable(header2));
+        res_out.append(flare::io::IOBuf::Movable(header2));
     }
     // parse response
     brpc::ParseResult res_pr =
@@ -1363,11 +1363,11 @@ TEST_F(HttpTest, http2_header_after_data) {
 TEST_F(HttpTest, http2_goaway_sanity) {
     brpc::Controller cntl;
     // Prepare request
-    butil::IOBuf req_out;
+    flare::io::IOBuf req_out;
     int h2_stream_id = 0;
     MakeH2EchoRequestBuf(&req_out, &cntl, &h2_stream_id);
     // Prepare response
-    butil::IOBuf res_out;
+    flare::io::IOBuf res_out;
     MakeH2EchoResponseBuf(&res_out, h2_stream_id);
     // append goaway
     char goawaybuf[9 /*FRAME_HEAD_SIZE*/ + 8];
@@ -1392,8 +1392,8 @@ TEST_F(HttpTest, http2_goaway_sanity) {
     cntl._current_call.stream_user_data = h2_req;
     brpc::SocketMessage* socket_message = NULL;
     brpc::policy::PackH2Request(NULL, &socket_message, cntl.call_id().value,
-                                NULL, &cntl, butil::IOBuf(), NULL);
-    butil::IOBuf dummy;
+                                NULL, &cntl, flare::io::IOBuf(), NULL);
+    flare::io::IOBuf dummy;
     flare::base::flare_status st = socket_message->AppendAndDestroySelf(&dummy, _h2_client_sock.get());
     ASSERT_EQ(st.error_code(), brpc::ELOGOFF);
     ASSERT_TRUE(flare::base::ends_with(st.error_data(), "the connection just issued GOAWAY"));

@@ -56,7 +56,7 @@ public:
         cntl->http_response().set_content_type("text/plain");
        
         // 把请求的query-string和body打印结果作为回复内容。
-        butil::IOBufBuilder os;
+        flare::io::IOBufBuilder os;
         os << "queries:";
         for (brpc::URI::QueryIterator it = cntl->http_request().uri().QueryBegin();
                 it != cntl->http_request().uri().QueryEnd(); ++it) {
@@ -307,7 +307,7 @@ http服务常对http body进行压缩，可以有效减少网页的传输时间�
 ...
 const std::string* encoding = cntl->http_request().GetHeader("Content-Encoding");
 if (encoding != NULL && *encoding == "gzip") {
-    butil::IOBuf uncompressed;
+    flare::io::IOBuf uncompressed;
     if (!brpc::policy::GzipDecompress(cntl->request_attachment(), &uncompressed)) {
         LOG(ERROR) << "Fail to un-gzip request body";
         return;

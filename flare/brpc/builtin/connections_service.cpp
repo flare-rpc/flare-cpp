@@ -337,7 +337,7 @@ void ConnectionsService::default_method(
     const Server* server = cntl->server();
     Acceptor* am = server->_am;
     Acceptor* internal_am = server->_internal_am;
-    butil::IOBufBuilder os;
+    flare::io::IOBufBuilder os;
     const bool use_html = UseHTML(cntl->http_request());
     cntl->http_response().set_content_type(
         use_html ? "text/html" : "text/plain");

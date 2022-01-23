@@ -113,7 +113,7 @@ void FlagsService::set_value_page(Controller* cntl,
         cntl->SetFailed(ENOMETHOD, "No such gflag");
         return;
     }
-    butil::IOBufBuilder os;
+    flare::io::IOBufBuilder os;
     const bool is_string = (info.type == "string");
     os << "<!DOCTYPE html><html><body>"
         "<form action='' method='get'>"
@@ -176,7 +176,7 @@ void FlagsService::default_method(::google::protobuf::RpcController* cntl_base,
                             (value_str->empty() ? "empty string" : value_str->c_str()));
             return;
         }
-        butil::IOBufBuilder os;
+        flare::io::IOBufBuilder os;
         os << "Set `" << constraint << "' to " << *value_str;
         if (use_html) {
             os << "<br><a href='/flags'>[back to flags]</a>";
@@ -200,7 +200,7 @@ void FlagsService::default_method(::google::protobuf::RpcController* cntl_base,
     }
 
     // Print header of the table
-    butil::IOBufBuilder os;
+    flare::io::IOBufBuilder os;
     if (use_html) {
         os << "<!DOCTYPE html><html><head>\n" << gridtable_style()
            << "<script language=\"javascript\" type=\"text/javascript\" src=\"/js/jquery_min\"></script>\n"

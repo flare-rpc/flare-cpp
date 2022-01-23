@@ -131,7 +131,7 @@ NsheadService的接口如下，基本上用户只需要实现`ProcessNsheadReque
 // 代表一个nshead请求或回复。
 struct NsheadMessage {
     nshead_t head;
-    butil::IOBuf body;
+    flare::io::IOBuf body;
 };
  
 // 实现这个类并赋值给ServerOptions.nshead_service来让brpc处理nshead请求。

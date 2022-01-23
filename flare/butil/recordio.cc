@@ -75,7 +75,7 @@ static uint8_t SizeChecksum(uint32_t input) {
     return crc;
 }
 
-const butil::IOBuf* Record::Meta(const char* name) const {
+const flare::io::IOBuf* Record::Meta(const char* name) const {
     for (size_t i = 0; i < _metas.size(); ++i) {
         if (_metas[i].name == name) {
             return _metas[i].data.get();
@@ -84,7 +84,7 @@ const butil::IOBuf* Record::Meta(const char* name) const {
     return NULL;
 }
 
-butil::IOBuf* Record::MutableMeta(const char* name_cstr, bool null_on_found) {
+flare::io::IOBuf* Record::MutableMeta(const char* name_cstr, bool null_on_found) {
     const butil::StringPiece name = name_cstr;
     for (size_t i = 0; i < _metas.size(); ++i) {
         if (_metas[i].name == name) {
@@ -100,12 +100,12 @@ butil::IOBuf* Record::MutableMeta(const char* name_cstr, bool null_on_found) {
     }
     NamedMeta p;
     name.CopyToString(&p.name);
-    p.data = std::make_shared<butil::IOBuf>();
+    p.data = std::make_shared<flare::io::IOBuf>();
     _metas.push_back(p);
     return p.data.get();
 }
 
-butil::IOBuf* Record::MutableMeta(const std::string& name, bool null_on_found) {
+flare::io::IOBuf* Record::MutableMeta(const std::string& name, bool null_on_found) {
     for (size_t i = 0; i < _metas.size(); ++i) {
         if (_metas[i].name == name) {
             return null_on_found ? NULL : _metas[i].data.get();
@@ -120,7 +120,7 @@ butil::IOBuf* Record::MutableMeta(const std::string& name, bool null_on_found) {
     }
     NamedMeta p;
     p.name = name;
-    p.data = std::make_shared<butil::IOBuf>();
+    p.data = std::make_shared<flare::io::IOBuf>();
     _metas.push_back(p);
     return p.data.get();
 }
@@ -150,7 +150,7 @@ size_t Record::ByteSize() const {
     return n;
 }
 
-RecordReader::RecordReader(IReader* reader)
+RecordReader::RecordReader(flare::io::IReader* reader)
     : _reader(reader)
     , _cutter(&_portal)
     , _ncut(0)
@@ -226,7 +226,7 @@ int RecordReader::CutRecord(Record* rec) {
     void* dummy = headbuf;  // suppressing strict-aliasing warning
     if (*(const uint32_t*)dummy != *(const uint32_t*)BRPC_RECORDIO_MAGIC) {
         LOG(ERROR) << "Invalid magic_num="
-                   << butil::PrintedAsBinary(std::string((char*)headbuf, 4))
+                   << flare::io::PrintedAsBinary(std::string((char*)headbuf, 4))
                    << ", offset=" << offset();
         return -1;
     }
@@ -277,7 +277,7 @@ int RecordReader::CutRecord(Record* rec) {
                        << ", offset=" << offset();
             return -1;
         }
-        butil::IOBuf* meta = rec->MutableMeta(name, true/*null_on_found*/);
+        flare::io::IOBuf* meta = rec->MutableMeta(name, true/*null_on_found*/);
         if (meta == NULL) {
             LOG(ERROR) << "Fail to add meta=" << name
                        << ", offset=" << offset();
@@ -300,14 +300,14 @@ int RecordReader::CutRecord(Record* rec) {
     return 1;
 }
 
-RecordWriter::RecordWriter(IWriter* writer)
+RecordWriter::RecordWriter(flare::io::IWriter* writer)
     :_writer(writer) {
 }
 
 int RecordWriter::WriteWithoutFlush(const Record& rec) {
     const size_t old_size = _buf.size();
     uint8_t headbuf[9];
-    const IOBuf::Area headarea = _buf.reserve(sizeof(headbuf));
+    const flare::io::IOBuf::Area headarea = _buf.reserve(sizeof(headbuf));
     for (size_t i = 0; i < rec.MetaCount(); ++i) {
         auto& s = rec.MetaAt(i);
         if (s.name.size() > MAX_NAME_SIZE) {

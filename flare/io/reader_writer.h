@@ -22,32 +22,32 @@
 
 #include <sys/uio.h>                             // iovec
 
-namespace butil {
+namespace flare::io {
 
 // Abstraction for reading data.
 // The simplest implementation is to embed a file descriptor and read from it.
-class IReader {
-public:
-    virtual ~IReader() {}
+    class IReader {
+    public:
+        virtual ~IReader() {}
 
-    // Semantics of parameters and return value are same as readv(2) except that
-    // there's no `fd'.
-    virtual ssize_t ReadV(const iovec* iov, int iovcnt) = 0;
-};
+        // Semantics of parameters and return value are same as readv(2) except that
+        // there's no `fd'.
+        virtual ssize_t ReadV(const iovec *iov, int iovcnt) = 0;
+    };
 
 // Abstraction for writing data.
 // The simplest implementation is to embed a file descriptor and writev into it.
-class IWriter {
-public:
-    virtual ~IWriter() {}
+    class IWriter {
+    public:
+        virtual ~IWriter() {}
 
-    // Semantics of parameters and return value are same as writev(2) except that
-    // there's no `fd'.
-    // WriteV is required to submit data gathered by multiple appends in one 
-    // run and enable the possibility of atomic writes.
-    virtual ssize_t WriteV(const iovec* iov, int iovcnt) = 0;
-};
+        // Semantics of parameters and return value are same as writev(2) except that
+        // there's no `fd'.
+        // WriteV is required to submit data gathered by multiple appends in one
+        // run and enable the possibility of atomic writes.
+        virtual ssize_t WriteV(const iovec *iov, int iovcnt) = 0;
+    };
 
-}  // namespace butil
+}  // namespace flare::io
 
 #endif  // BUTIL_READER_WRITER_H

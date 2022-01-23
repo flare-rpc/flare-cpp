@@ -26,11 +26,11 @@
 namespace brpc {
 namespace policy {
 
-void PackStreamMessage(butil::IOBuf* out,
+void PackStreamMessage(flare::io::IOBuf* out,
                        const StreamFrameMeta &fm,
-                       const butil::IOBuf *data);
+                       const flare::io::IOBuf *data);
 
-ParseResult ParseStreamingMessage(butil::IOBuf* source, Socket* socket,
+ParseResult ParseStreamingMessage(flare::io::IOBuf* source, Socket* socket,
                                   bool read_eof, const void* arg);
 
 void ProcessStreamingMessage(InputMessageBase* msg);
@@ -40,7 +40,7 @@ void SendStreamRst(Socket* sock, int64_t remote_stream_id);
 void SendStreamClose(Socket *sock, int64_t remote_stream_id,
                      int64_t source_stream_id);
 
-int SendStreamData(Socket* sock, const butil::IOBuf* data,
+int SendStreamData(Socket* sock, const flare::io::IOBuf* data,
                    int64_t remote_stream_id, int64_t source_stream_id);
 
 }  // namespace policy

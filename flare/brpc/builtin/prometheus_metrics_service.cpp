@@ -47,7 +47,7 @@ extern const char* const g_server_info_prefix;
 // calculates quantiles in the server side.
 class PrometheusMetricsDumper : public bvar::Dumper {
 public:
-    explicit PrometheusMetricsDumper(butil::IOBufBuilder* os,
+    explicit PrometheusMetricsDumper(flare::io::IOBufBuilder* os,
                                      const std::string& server_prefix)
         : _os(os)
         , _server_prefix(server_prefix) {
@@ -77,7 +77,7 @@ private:
                                                      const std::string_view& desc);
 
 private:
-    butil::IOBufBuilder* _os;
+    flare::io::IOBufBuilder* _os;
     const std::string _server_prefix;
     std::map<std::string, SummaryItems> _m;
 };
@@ -109,7 +109,7 @@ PrometheusMetricsDumper::ProcessLatencyRecorderSuffix(const std::string_view& na
         "_latency_999", "_latency_9999", "_max_latency"
     };
     CHECK(NPERCENTILES == FLARE_ARRAY_SIZE(latency_names));
-    const std::string desc_str = std::move(flare::base::as_string(desc));;
+    const std::string desc_str(desc.data(), desc.size());
     std::string_view metric_name(name);
     for (int i = 0; i < NPERCENTILES; ++i) {
         if (!flare::base::ends_with(metric_name, latency_names[i])) {
@@ -122,7 +122,7 @@ PrometheusMetricsDumper::ProcessLatencyRecorderSuffix(const std::string_view& na
             // '_max_latency' is the last suffix name that appear in the sorted bvar
             // list, which means all related percentiles have been gathered and we are
             // ready to output a Summary.
-            si->metric_name = std::move(flare::base::as_string(metric_name));
+            si->metric_name = flare::base::as_string(metric_name);
         }
         return si;
     }
@@ -193,8 +193,8 @@ void PrometheusMetricsService::default_method(::google::protobuf::RpcController*
     }
 }
 
-int DumpPrometheusMetricsToIOBuf(butil::IOBuf* output) {
-    butil::IOBufBuilder os;
+int DumpPrometheusMetricsToIOBuf(flare::io::IOBuf* output) {
+    flare::io::IOBufBuilder os;
     PrometheusMetricsDumper dumper(&os, g_server_info_prefix);
     const int ndump = bvar::Variable::dump_exposed(&dumper, NULL);
     if (ndump < 0) {

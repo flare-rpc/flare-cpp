@@ -1122,7 +1122,7 @@ void Controller::IssueRPC(int64_t start_realtime_us) {
         }
     }
     // Make request
-    butil::IOBuf packet;
+    flare::io::IOBuf packet;
     SocketMessage* user_packet = NULL;
     _pack_request(&packet, &user_packet, cid.value, _method, this,
                   _request_buf, using_auth);

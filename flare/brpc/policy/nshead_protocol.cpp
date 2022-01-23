@@ -20,7 +20,7 @@
 #include <google/protobuf/message.h>            // Message
 #include <gflags/gflags.h>
 #include "flare/base/time.h"
-#include "flare/butil/iobuf.h"                         // butil::IOBuf
+#include "flare/io/iobuf.h"                         // flare::io::IOBuf
 #include "flare/brpc/log.h"
 #include "flare/brpc/controller.h"               // Controller
 #include "flare/brpc/socket.h"                   // Socket
@@ -106,7 +106,7 @@ void NsheadClosure::Run() {
             int response_size = sizeof(nshead_t) + _response.head.body_len;
             span->set_response_size(response_size);
         }
-        butil::IOBuf write_buf;
+        flare::io::IOBuf write_buf;
         write_buf.append(&_response.head, sizeof(nshead_t));
         write_buf.append(_response.body.movable());
         // Have the risk of unlimited pending responses, in which case, tell
@@ -137,7 +137,7 @@ void NsheadClosure::SetMethodName(const std::string& full_method_name) {
 
 namespace policy {
 
-ParseResult ParseNsheadMessage(butil::IOBuf* source,
+ParseResult ParseNsheadMessage(flare::io::IOBuf* source,
                                Socket*, bool /*read_eof*/, const void* /*arg*/) {
     char header_buf[sizeof(nshead_t)];
     const size_t n = source->copy_to(header_buf, sizeof(header_buf));
@@ -370,7 +370,7 @@ bool VerifyNsheadRequest(const InputMessageBase* msg_base) {
     return true;
 }
 
-void SerializeNsheadRequest(butil::IOBuf* request_buf, Controller* cntl,
+void SerializeNsheadRequest(flare::io::IOBuf* request_buf, Controller* cntl,
                             const google::protobuf::Message* req_base) {
     if (req_base == NULL) {
         return cntl->SetFailed(EREQUEST, "request is NULL");
@@ -394,12 +394,12 @@ void SerializeNsheadRequest(butil::IOBuf* request_buf, Controller* cntl,
 }
 
 void PackNsheadRequest(
-    butil::IOBuf* packet_buf,
+    flare::io::IOBuf* packet_buf,
     SocketMessage**,
     uint64_t correlation_id,
     const google::protobuf::MethodDescriptor*,
     Controller* cntl,
-    const butil::IOBuf& request,
+    const flare::io::IOBuf& request,
     const Authenticator*) {
     ControllerPrivateAccessor accessor(cntl);
     if (cntl->connection_type() == CONNECTION_TYPE_SINGLE) {

@@ -52,7 +52,7 @@ public:
             static_cast<brpc::Controller*>(cntl_base);
         // Fill response.
         cntl->http_response().set_content_type("text/plain");
-        butil::IOBufBuilder os;
+        flare::io::IOBufBuilder os;
         os << "queries:";
         for (brpc::URI::QueryIterator it = cntl->http_request().uri().QueryBegin();
                 it != cntl->http_request().uri().QueryEnd(); ++it) {

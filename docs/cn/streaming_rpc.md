@@ -80,7 +80,7 @@ int StreamAccept(StreamId* response_stream, Controller &cntl, const StreamOption
 class StreamInputHandler {
 public:
     // 当接收到消息后被调用
-    virtual int on_received_messages(StreamId id, butil::IOBuf *const messages[], size_t size) = 0;
+    virtual int on_received_messages(StreamId id, flare::io::IOBuf *const messages[], size_t size) = 0;
  
     // 当Stream上长时间没有数据交互后被调用
     virtual void on_idle_timeout(StreamId id) = 0;
@@ -106,7 +106,7 @@ public:
 //  - EAGAIN: |stream_id| is created with positive |max_buf_size| and buf size
 //            which the remote side hasn't consumed yet excceeds the number.
 //  - EINVAL: |stream_id| is invalied or has been closed
-int StreamWrite(StreamId stream_id, const butil::IOBuf &message);
+int StreamWrite(StreamId stream_id, const flare::io::IOBuf &message);
 ```
 
 # 流控

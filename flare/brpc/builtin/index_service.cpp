@@ -68,7 +68,7 @@ void IndexService::default_method(::google::protobuf::RpcController* controller,
     const char* const NL = (use_html ? "<br>\n" : "\n");
     const char* const SP = (use_html ? "&nbsp;" : "  ");
 
-    butil::IOBufBuilder os;
+    flare::io::IOBufBuilder os;
     if (use_html) {
         os << "<!DOCTYPE html><html>";
         if (as_more) {

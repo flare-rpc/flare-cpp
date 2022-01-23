@@ -300,7 +300,7 @@ const uint32_t MAX_PIPELINED_COUNT = 32768;
 struct FLARE_CACHELINE_ALIGNMENT Socket::WriteRequest {
     static WriteRequest* const UNCONNECTED;
     
-    butil::IOBuf data;
+    flare::io::IOBuf data;
     WriteRequest* next;
     bthread_id_t id_wait;
     Socket* socket;
@@ -332,7 +332,7 @@ struct FLARE_CACHELINE_ALIGNMENT Socket::WriteRequest {
         SocketMessage* msg = user_message();
         if (msg) {
             if (msg != DUMMY_USER_MESSAGE) {
-                butil::IOBuf dummy_buf;
+                flare::io::IOBuf dummy_buf;
                 // We don't care about the return value since the request
                 // is already failed.
                 (void)msg->AppendAndDestroySelf(&dummy_buf, NULL);
@@ -1427,7 +1427,7 @@ X509* Socket::GetPeerCertificate() const {
     return SSL_get_peer_certificate(_ssl_session);
 }
 
-int Socket::Write(butil::IOBuf* data, const WriteOptions* options_in) {
+int Socket::Write(flare::io::IOBuf* data, const WriteOptions* options_in) {
     WriteOptions opt;
     if (options_in) {
         opt = *options_in;
@@ -1549,7 +1549,7 @@ int Socket::StartWrite(WriteRequest* req, const WriteOptions& opt) {
     // Write once in the calling thread. If the write is not complete,
     // continue it in KeepWrite thread.
     if (_conn) {
-        butil::IOBuf* data_arr[1] = { &req->data };
+        flare::io::IOBuf* data_arr[1] = { &req->data };
         nw = _conn->CutMessageIntoFileDescriptor(fd(), data_arr, 1);
     } else {
         nw = req->data.cut_into_file_descriptor(fd());
@@ -1670,8 +1670,8 @@ void* Socket::KeepWrite(void* void_arg) {
 }
 
 ssize_t Socket::DoWrite(WriteRequest* req) {
-    // Group butil::IOBuf in the list into a batch array.
-    butil::IOBuf* data_list[DATA_LIST_MAX];
+    // Group flare::io::IOBuf in the list into a batch array.
+    flare::io::IOBuf* data_list[DATA_LIST_MAX];
     size_t ndata = 0;
     for (WriteRequest* p = req; p != NULL && ndata < DATA_LIST_MAX;
          p = p->next) {
@@ -1683,7 +1683,7 @@ ssize_t Socket::DoWrite(WriteRequest* req) {
         if (_conn) {
             return _conn->CutMessageIntoFileDescriptor(fd(), data_list, ndata);
         } else {
-            ssize_t nw = butil::IOBuf::cut_multiple_into_file_descriptor(
+            ssize_t nw = flare::io::IOBuf::cut_multiple_into_file_descriptor(
                 fd(), data_list, ndata);
             return nw;
         }
@@ -1695,7 +1695,7 @@ ssize_t Socket::DoWrite(WriteRequest* req) {
         return _conn->CutMessageIntoSSLChannel(_ssl_session, data_list, ndata);
     }
     int ssl_error = 0;
-    ssize_t nw = butil::IOBuf::cut_multiple_into_SSL_channel(
+    ssize_t nw = flare::io::IOBuf::cut_multiple_into_SSL_channel(
         _ssl_session, data_list, ndata, &ssl_error);
     switch (ssl_error) {
     case SSL_ERROR_NONE:
@@ -2080,7 +2080,7 @@ void Socket::DebugSocket(std::ostream& os, SocketId id) {
     const int64_t cpuwide_now = flare::base::cpuwide_time_us();
     os << "\nhc_count=" << ptr->_hc_count
        << "\navg_input_msg_size=" << ptr->_avg_msg_size
-        // NOTE: We're assuming that butil::IOBuf.size() is thread-safe, it is now
+        // NOTE: We're assuming that flare::io::IOBuf.size() is thread-safe, it is now
         // however it's not guaranteed.
        << "\nread_buf=" << ptr->_read_buf.size()
        << "\nlast_read_to_now=" << cpuwide_now - ptr->_last_readtime_us << "us"

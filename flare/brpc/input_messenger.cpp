@@ -170,7 +170,7 @@ void InputMessenger::OnNewMessages(Socket* m) {
     // - If the socket has only one message, the message will be parsed and
     //   processed in this bthread. nova-pbrpc and http works in this way.
     // - If the socket has several messages, all messages will be parsed (
-    //   meaning cutting from butil::IOBuf. serializing from protobuf is part of
+    //   meaning cutting from flare::io::IOBuf. serializing from protobuf is part of
     //   "process") in this bthread. All messages except the last one will be
     //   processed in separate bthreads. To minimize the overhead, scheduling
     //   is batched(notice the BTHREAD_NOSIGNAL and bthread_flush).
@@ -242,7 +242,7 @@ void InputMessenger::OnNewMessages(Socket* m) {
                 } else if (pr.error() == PARSE_ERROR_TRY_OTHERS) {
                     LOG(WARNING)
                         << "Close " << *m << " due to unknown message: "
-                        << butil::ToPrintable(m->_read_buf);
+                        << flare::io::ToPrintable(m->_read_buf);
                     m->SetFailed(EINVAL, "Close %s due to unknown message",
                                  m->description().c_str());
                     return;

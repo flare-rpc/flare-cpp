@@ -23,7 +23,7 @@
 #include <streambuf>
 #include <google/protobuf/io/zero_copy_stream.h>
 
-namespace butil {
+namespace flare::io {
 
 // Wrap a ZeroCopyOutputStream into std::streambuf. Notice that before 
 // destruction or shrink(), BackUp() of the stream are not called. In another
@@ -49,6 +49,6 @@ private:
     google::protobuf::io::ZeroCopyOutputStream* _zero_copy_stream;
 };
 
-}  // namespace butil
+}  // namespace flare::io
 
 #endif  // BUTIL_ZERO_COPY_STREAM_AS_STREAMBUF_H

@@ -19,7 +19,7 @@
 #ifndef BRPC_REDIS_REPLY_H
 #define BRPC_REDIS_REPLY_H
 
-#include "flare/butil/iobuf.h"                  // butil::IOBuf
+#include "flare/io/iobuf.h"                  // flare::io::IOBuf
 #include "flare/butil/strings/string_piece.h"   // std::string_view
 #include "flare/memory/arena.h"                  // flare::memory::Arena
 #include "flare/base/logging.h"                // CHECK
@@ -119,10 +119,10 @@ public:
     // reply. As a contrast, if the parsing needs `buf' to be intact,
     // the complexity in worst case may be O(N^2).
     // Returns PARSE_ERROR_ABSOLUTELY_WRONG if the parsing failed.
-    ParseError ConsumePartialIOBuf(butil::IOBuf& buf);
+    ParseError ConsumePartialIOBuf(flare::io::IOBuf& buf);
 
     // Serialize to iobuf appender using redis protocol
-    bool SerializeTo(butil::IOBufAppender* appender);
+    bool SerializeTo(flare::io::IOBufAppender* appender);
 
     // Swap internal fields with another reply.
     void Swap(RedisReply& other);

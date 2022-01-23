@@ -121,7 +121,7 @@ namespace bthread {
 
     __thread TaskGroup *tls_task_group_nosignal = NULL;
 
-    BUTIL_FORCE_INLINE int
+    FLARE_FORCE_INLINE int
     start_from_non_worker(bthread_t *__restrict tid,
                           const bthread_attr_t *__restrict attr,
                           void *(*fn)(void *),

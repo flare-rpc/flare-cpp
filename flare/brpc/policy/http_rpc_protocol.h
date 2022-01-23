@@ -118,20 +118,20 @@ private:
 };
 
 // Implement functions required in protocol.h
-ParseResult ParseHttpMessage(butil::IOBuf *source, Socket *socket,
+ParseResult ParseHttpMessage(flare::io::IOBuf *source, Socket *socket,
                              bool read_eof, const void *arg);
 void ProcessHttpRequest(InputMessageBase *msg);
 void ProcessHttpResponse(InputMessageBase* msg);
 bool VerifyHttpRequest(const InputMessageBase* msg);
-void SerializeHttpRequest(butil::IOBuf* request_buf,
+void SerializeHttpRequest(flare::io::IOBuf* request_buf,
                           Controller* cntl,
                           const google::protobuf::Message* msg);
-void PackHttpRequest(butil::IOBuf* buf,
+void PackHttpRequest(flare::io::IOBuf* buf,
                      SocketMessage** user_message_out,
                      uint64_t correlation_id,
                      const google::protobuf::MethodDescriptor* method,
                      Controller* controller,
-                     const butil::IOBuf& request,
+                     const flare::io::IOBuf& request,
                      const Authenticator* auth);
 bool ParseHttpServerAddress(flare::base::end_point* out, const char* server_addr_and_port);
 const std::string& GetHttpMethodName(const google::protobuf::MethodDescriptor*,

@@ -19,7 +19,7 @@
 #ifndef BRPC_INPUT_MESSENGER_H
 #define BRPC_INPUT_MESSENGER_H
 
-#include "flare/butil/iobuf.h"                    // butil::IOBuf
+#include "flare/io/iobuf.h"                    // flare::io::IOBuf
 #include "flare/brpc/socket.h"              // SocketId, SocketUser
 #include "flare/brpc/parse_result.h"        // ParseResult
 #include "flare/brpc/input_message_base.h"  // InputMessageBase
@@ -41,7 +41,7 @@ struct InputMessageHandler {
     //     from `source' before returning.
     //  MakeMessage(InputMessageBase*):
     //     The message is parsed successfully and cut from `source'.
-    typedef ParseResult (*Parse)(butil::IOBuf* source, Socket *socket,
+    typedef ParseResult (*Parse)(flare::io::IOBuf* source, Socket *socket,
                                  bool read_eof, const void *arg);
     Parse parse;
     

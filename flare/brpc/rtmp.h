@@ -110,7 +110,7 @@ struct RtmpAudioMessage {
     FlvSoundRate rate;
     FlvSoundBits bits;
     FlvSoundType type;
-    butil::IOBuf data;
+    flare::io::IOBuf data;
 
     bool IsAACSequenceHeader() const;
     size_t size() const { return data.size() + 1; }
@@ -132,7 +132,7 @@ struct RtmpAACMessage {
 
     // For sequence header:  AudioSpecificConfig
     // For raw:              Raw AAC frame data
-    butil::IOBuf data;
+    flare::io::IOBuf data;
 
     // Create AAC message from audio message.
     flare::base::flare_status Create(const RtmpAudioMessage& msg);
@@ -154,7 +154,7 @@ static const AACObjectType AAC_OBJECT_UNKNOWN = (AACObjectType)0;
 
 struct AudioSpecificConfig {
     AudioSpecificConfig();
-    flare::base::flare_status Create(const butil::IOBuf& buf);
+    flare::base::flare_status Create(const flare::io::IOBuf& buf);
     flare::base::flare_status Create(const void* data, size_t len);
 
     AACObjectType  aac_object;
@@ -210,7 +210,7 @@ struct RtmpVideoMessage {
     uint32_t timestamp;
     FlvVideoFrameType frame_type;
     FlvVideoCodec codec;
-    butil::IOBuf data;
+    flare::io::IOBuf data;
 
     // True iff this message is a sequence header of AVC codec.
     bool IsAVCSequenceHeader() const;
@@ -240,7 +240,7 @@ struct RtmpAVCMessage {
     // For sequence header:  AVCDecoderConfigurationRecord
     // For NALU:             One or more NALUs
     // For end of sequence:  empty
-    butil::IOBuf data;
+    flare::io::IOBuf data;
 
     // Create a AVC message from a video message.
     flare::base::flare_status Create(const RtmpVideoMessage&);
@@ -313,7 +313,7 @@ enum AVCNaluType {
 struct AVCDecoderConfigurationRecord {
     AVCDecoderConfigurationRecord();
     
-    flare::base::flare_status Create(const butil::IOBuf& buf);
+    flare::base::flare_status Create(const flare::io::IOBuf& buf);
     flare::base::flare_status Create(const void* data, size_t len);
 
     int             width;
@@ -338,13 +338,13 @@ enum AVCNaluFormat {
 // Iterate NALUs inside RtmpAVCMessage.data
 class AVCNaluIterator {
 public:
-    AVCNaluIterator(butil::IOBuf* data, uint32_t length_size_minus1,
+    AVCNaluIterator(flare::io::IOBuf* data, uint32_t length_size_minus1,
                     AVCNaluFormat* format_inout);
     ~AVCNaluIterator();
     void operator++();
     operator void*() const { return _data; }
-    butil::IOBuf& operator*() { return _cur_nalu; }
-    butil::IOBuf* operator->() { return &_cur_nalu; }
+    flare::io::IOBuf& operator*() { return _cur_nalu; }
+    flare::io::IOBuf* operator->() { return &_cur_nalu; }
     AVCNaluType nalu_type() const { return _nalu_type; }
 private:
     // `data' is mutable, improper to be copied.
@@ -352,8 +352,8 @@ private:
     bool next_as_annexb();
     bool next_as_ibmf();
     void set_end() { _data = NULL; }
-    butil::IOBuf* _data;
-    butil::IOBuf _cur_nalu;
+    flare::io::IOBuf* _data;
+    flare::io::IOBuf _cur_nalu;
     AVCNaluFormat* _format;
     uint32_t _length_size_minus1;
     AVCNaluType _nalu_type;
@@ -401,8 +401,8 @@ enum FlvTagType {
 class FlvWriter {
 public:
     // Start appending FLV tags into the buffer
-    explicit FlvWriter(butil::IOBuf* buf);
-    explicit FlvWriter(butil::IOBuf* buf, const FlvWriterOptions& options);
+    explicit FlvWriter(flare::io::IOBuf* buf);
+    explicit FlvWriter(flare::io::IOBuf* buf, const FlvWriterOptions& options);
     
     // Append a video/audio/metadata/cuepoint message into the output buffer.
     flare::base::flare_status Write(const RtmpVideoMessage&);
@@ -411,11 +411,11 @@ public:
     flare::base::flare_status Write(const RtmpCuePoint&);
 
 private:
-    flare::base::flare_status WriteScriptData(const butil::IOBuf& req_buf, uint32_t timestamp);
+    flare::base::flare_status WriteScriptData(const flare::io::IOBuf& req_buf, uint32_t timestamp);
 
 private:
     bool _write_header;
-    butil::IOBuf* _buf;
+    flare::io::IOBuf* _buf;
     FlvWriterOptions _options;
 };
 
@@ -423,7 +423,7 @@ class FlvReader {
 public:
     // Start reading FLV tags from the buffer. The data read by the following 
     // Read functions would be removed from *buf.
-    explicit FlvReader(butil::IOBuf* buf);
+    explicit FlvReader(flare::io::IOBuf* buf);
 
     // Get the next message type.
     // If it is a valid flv tag, flare::base::flare_status::OK() is returned and the
@@ -446,7 +446,7 @@ private:
 
 private:
     bool _read_header;
-    butil::IOBuf* _buf;
+    flare::io::IOBuf* _buf;
 };
 
 struct RtmpPlayOptions {
@@ -622,7 +622,7 @@ friend class policy::OnServerStreamCreated;
     virtual ~RtmpStreamBase();
 
     int SendMessage(uint32_t timestamp, uint8_t message_type,
-                    const butil::IOBuf& body); 
+                    const flare::io::IOBuf& body);
     int SendControlMessage(uint8_t message_type, const void* body, size_t);
 
     // OnStop is mutually exclusive with OnXXXMessage, following methods

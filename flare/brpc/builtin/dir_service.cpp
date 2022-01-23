@@ -57,7 +57,7 @@ void DirService::default_method(::google::protobuf::RpcController* cntl_base,
         flare::base::make_non_blocking(fd);
         flare::base::make_close_on_exec(fd);
 
-        butil::IOPortal read_portal;
+        flare::io::IOPortal read_portal;
         size_t total_read = 0;
         do {
             const ssize_t nr = read_portal.append_from_file_descriptor(
@@ -71,7 +71,7 @@ void DirService::default_method(::google::protobuf::RpcController* cntl_base,
             }
             total_read += nr;
         } while (total_read < MAX_READ);
-        butil::IOBuf& resp = cntl->response_attachment();
+        flare::io::IOBuf& resp = cntl->response_attachment();
         resp.swap(read_portal);
         if (total_read >= MAX_READ) {
             std::ostringstream oss;
@@ -100,7 +100,7 @@ void DirService::default_method(::google::protobuf::RpcController* cntl_base,
         CHECK_EQ(0, closedir(dir));
         
         std::sort(files.begin(), files.end());
-        butil::IOBufBuilder os;
+        flare::io::IOBufBuilder os;
         if (use_html) {
             os << "<!DOCTYPE html><html><body><pre>";
         }

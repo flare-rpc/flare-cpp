@@ -16,7 +16,7 @@
 // under the License.
 
 #include "flare/butil/macros.h"                           // ARRAY_SIZE
-#include "flare/butil/iobuf.h"                            // butil::IOBuf
+#include "flare/io/iobuf.h"                            // flare::io::IOBuf
 #include "flare/brpc/controller.h"                  // Controller
 #include "flare/brpc/builtin/sorttable_js.h"
 #include "flare/brpc/builtin/jquery_min_js.h"

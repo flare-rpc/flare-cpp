@@ -76,7 +76,7 @@ void ListCompressHandler(std::vector<CompressHandler>* vec) {
     }
 }
 
-bool ParseFromCompressedData(const butil::IOBuf& data, 
+bool ParseFromCompressedData(const flare::io::IOBuf& data,
                              google::protobuf::Message* msg,
                              CompressType compress_type) {
     if (compress_type == COMPRESS_TYPE_NONE) {
@@ -90,9 +90,9 @@ bool ParseFromCompressedData(const butil::IOBuf& data,
 }
 
 bool SerializeAsCompressedData(const google::protobuf::Message& msg,
-                               butil::IOBuf* buf, CompressType compress_type) {
+                               flare::io::IOBuf* buf, CompressType compress_type) {
     if (compress_type == COMPRESS_TYPE_NONE) {
-        butil::IOBufAsZeroCopyOutputStream wrapper(buf);
+        flare::io::IOBufAsZeroCopyOutputStream wrapper(buf);
         return msg.SerializeToZeroCopyStream(&wrapper);
     }
     const CompressHandler* handler = FindCompressHandler(compress_type);

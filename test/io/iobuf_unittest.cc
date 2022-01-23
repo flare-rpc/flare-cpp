@@ -25,7 +25,7 @@
 #include <flare/butil/macros.h>
 #include "flare/base/time.h"                 // Timer
 #include "flare/base/fd_utility.h"           // make_non_blocking
-#include <flare/butil/iobuf.h>
+#include <flare/io/iobuf.h>
 #include "flare/base/logging.h"
 #include "flare/base/fd_guard.h"
 #include "flare/base/errno.h"
@@ -39,7 +39,7 @@
 
 #endif   // BAZEL_TEST
 
-namespace butil {
+namespace flare::io {
     namespace iobuf {
         extern void *(*blockmem_allocate)(size_t);
 
@@ -47,9 +47,9 @@ namespace butil {
 
         extern void reset_blockmem_allocate_and_deallocate();
 
-        extern int32_t block_shared_count(butil::IOBuf::Block const *b);
+        extern int32_t block_shared_count(flare::io::IOBuf::Block const *b);
 
-        extern uint32_t block_cap(butil::IOBuf::Block const *b);
+        extern uint32_t block_cap(flare::io::IOBuf::Block const *b);
 
         extern IOBuf::Block *get_tls_block_head();
 
@@ -74,11 +74,11 @@ namespace butil {
 namespace {
 
     const size_t BLOCK_OVERHEAD = 32; //impl dependent
-    const size_t DEFAULT_PAYLOAD = butil::IOBuf::DEFAULT_BLOCK_SIZE - BLOCK_OVERHEAD;
+    const size_t DEFAULT_PAYLOAD = flare::io::IOBuf::DEFAULT_BLOCK_SIZE - BLOCK_OVERHEAD;
 
     void check_tls_block() {
-        ASSERT_EQ((butil::IOBuf::Block *) NULL, butil::iobuf::get_tls_block_head());
-        printf("tls_block of butil::IOBuf was deleted\n");
+        ASSERT_EQ((flare::io::IOBuf::Block *) NULL, butil::iobuf::get_tls_block_head());
+        printf("tls_block of flare::io::IOBuf was deleted\n");
     }
 
     const int ALLOW_UNUSED check_dummy = flare::base::thread_atexit(check_tls_block);
@@ -129,7 +129,7 @@ namespace {
 
     static void check_memory_leak() {
         if (is_debug_allocator_enabled()) {
-            butil::IOBuf::Block *p = butil::iobuf::get_tls_block_head();
+            flare::io::IOBuf::Block *p = butil::iobuf::get_tls_block_head();
             size_t n = 0;
             while (p) {
                 ASSERT_TRUE(s_set.seek(p)) << "Memory leak: " << p;
@@ -155,14 +155,14 @@ namespace {
         };
     };
 
-    std::string to_str(const butil::IOBuf &p) {
+    std::string to_str(const flare::io::IOBuf &p) {
         return p.to_string();
     }
 
     TEST_F(IOBufTest, append_zero) {
         int fds[2];
         ASSERT_EQ(0, pipe(fds));
-        butil::IOPortal p;
+        flare::io::IOPortal p;
         ASSERT_EQ(0, p.append_from_file_descriptor(fds[0], 0));
         ASSERT_EQ(0, close(fds[0]));
         ASSERT_EQ(0, close(fds[1]));
@@ -171,7 +171,7 @@ namespace {
     TEST_F(IOBufTest, pop_front) {
         install_debug_allocator();
 
-        butil::IOBuf buf;
+        flare::io::IOBuf buf;
         ASSERT_EQ(0UL, buf.pop_front(1));   // nothing happened
 
         std::string s = "hello";
@@ -212,7 +212,7 @@ namespace {
     TEST_F(IOBufTest, pop_back) {
         install_debug_allocator();
 
-        butil::IOBuf buf;
+        flare::io::IOBuf buf;
         ASSERT_EQ(0UL, buf.pop_back(1));   // nothing happened
 
         std::string s = "hello";
@@ -253,7 +253,7 @@ namespace {
     TEST_F(IOBufTest, append) {
         install_debug_allocator();
 
-        butil::IOBuf b;
+        flare::io::IOBuf b;
         ASSERT_EQ(0UL, b.length());
         ASSERT_TRUE(b.empty());
         ASSERT_EQ(-1, b.append(NULL));
@@ -277,7 +277,7 @@ namespace {
     TEST_F(IOBufTest, appendv) {
         install_debug_allocator();
 
-        butil::IOBuf b;
+        flare::io::IOBuf b;
         const_iovec vec[] = {{"hello1",  6},
                              {" world1", 7},
                              {"hello2",  6},
@@ -325,11 +325,11 @@ namespace {
     }
 
     TEST_F(IOBufTest, reserve) {
-        butil::IOBuf b;
-        ASSERT_EQ(butil::IOBuf::INVALID_AREA, b.reserve(0));
+        flare::io::IOBuf b;
+        ASSERT_EQ(flare::io::IOBuf::INVALID_AREA, b.reserve(0));
         const size_t NRESERVED1 = 5;
-        const butil::IOBuf::Area a1 = b.reserve(NRESERVED1);
-        ASSERT_TRUE(a1 != butil::IOBuf::INVALID_AREA);
+        const flare::io::IOBuf::Area a1 = b.reserve(NRESERVED1);
+        ASSERT_TRUE(a1 != flare::io::IOBuf::INVALID_AREA);
         ASSERT_EQ(NRESERVED1, b.size());
         b.append("hello world");
         ASSERT_EQ(0, b.unsafe_assign(a1, "prefix")); // `x' will not be copied
@@ -361,7 +361,7 @@ namespace {
         b.pop_back(b.size() - NRESERVED1);
         ASSERT_EQ(NRESERVED1, b.size());
         const size_t NRESERVED2 = DEFAULT_PAYLOAD * 3;
-        const butil::IOBuf::Area a2 = b.reserve(NRESERVED2);
+        const flare::io::IOBuf::Area a2 = b.reserve(NRESERVED2);
         ASSERT_EQ(NRESERVED1 + NRESERVED2, b.size());
         b.append(s1);
         ASSERT_EQ(NRESERVED1 + NRESERVED2 + s1.size(), b.size());
@@ -385,22 +385,22 @@ namespace {
     TEST_F(IOBufTest, iobuf_as_queue) {
         install_debug_allocator();
 
-        // If INITIAL_CAP gets bigger, creating butil::IOBuf::Block are very
-        // small. Since We don't access butil::IOBuf::Block::data in this case.
-        // We replace butil::IOBuf::Block with FakeBlock with only nshared (in
+        // If INITIAL_CAP gets bigger, creating flare::io::IOBuf::Block are very
+        // small. Since We don't access flare::io::IOBuf::Block::data in this case.
+        // We replace flare::io::IOBuf::Block with FakeBlock with only nshared (in
         // the same offset)
-        FakeBlock *blocks[butil::IOBuf::INITIAL_CAP + 16];
+        FakeBlock *blocks[flare::io::IOBuf::INITIAL_CAP + 16];
         const size_t NBLOCKS = FLARE_ARRAY_SIZE(blocks);
-        butil::IOBuf::BlockRef r[NBLOCKS];
+        flare::io::IOBuf::BlockRef r[NBLOCKS];
         const size_t LENGTH = 7UL;
         for (size_t i = 0; i < NBLOCKS; ++i) {
             ASSERT_TRUE((blocks[i] = new FakeBlock));
             r[i].offset = 1;
             r[i].length = LENGTH;
-            r[i].block = (butil::IOBuf::Block *) blocks[i];
+            r[i].block = (flare::io::IOBuf::Block *) blocks[i];
         }
 
-        butil::IOBuf p;
+        flare::io::IOBuf p;
 
         // Empty
         ASSERT_EQ(0UL, p._ref_num());
@@ -443,7 +443,7 @@ namespace {
         //ASSERT_EQ(1, r[1].block->nshared);
 
         // Add INITIAL_CAP+2 refs, r[0] and r[1] are used, don't use again
-        for (size_t i = 0; i < butil::IOBuf::INITIAL_CAP + 2; ++i) {
+        for (size_t i = 0; i < flare::io::IOBuf::INITIAL_CAP + 2; ++i) {
             p._push_back_ref(r[i + 2]);
             ASSERT_EQ(i + 1, p._ref_num());
             ASSERT_EQ(p._ref_num() * LENGTH, p.length());
@@ -487,10 +487,10 @@ namespace {
     TEST_F(IOBufTest, iobuf_sanity) {
         install_debug_allocator();
 
-        LOG(INFO) << "sizeof(butil::IOBuf)=" << sizeof(butil::IOBuf)
-                  << " sizeof(IOPortal)=" << sizeof(butil::IOPortal);
+        LOG(INFO) << "sizeof(flare::io::IOBuf)=" << sizeof(flare::io::IOBuf)
+                  << " sizeof(IOPortal)=" << sizeof(flare::io::IOPortal);
 
-        butil::IOBuf b1;
+        flare::io::IOBuf b1;
         std::string s1 = "hello world";
         const char c1 = 'A';
         const std::string s2 = "too simple";
@@ -535,7 +535,7 @@ namespace {
         ASSERT_EQ(0, b1.append(s2));
 
         // Cut first char
-        butil::IOBuf p;
+        flare::io::IOBuf p;
         b1.cutn(&p, 0);
         b1.cutn(&p, 1);
         ASSERT_EQ(s1.substr(0, 1), to_str(p));
@@ -560,13 +560,13 @@ namespace {
     TEST_F(IOBufTest, copy_and_assign) {
         install_debug_allocator();
 
-        const size_t TARGET_SIZE = butil::IOBuf::DEFAULT_BLOCK_SIZE * 2;
-        butil::IOBuf buf0;
+        const size_t TARGET_SIZE = flare::io::IOBuf::DEFAULT_BLOCK_SIZE * 2;
+        flare::io::IOBuf buf0;
         buf0.append("hello");
         ASSERT_EQ(1u, buf0._ref_num());
 
         // Copy-construct from SmallView
-        butil::IOBuf buf1 = buf0;
+        flare::io::IOBuf buf1 = buf0;
         ASSERT_EQ(1u, buf1._ref_num());
         ASSERT_EQ(buf0, buf1);
 
@@ -575,16 +575,16 @@ namespace {
         ASSERT_EQ(TARGET_SIZE, buf1.size());
 
         // Copy-construct from BigView
-        butil::IOBuf buf2 = buf1;
+        flare::io::IOBuf buf2 = buf1;
         ASSERT_EQ(buf1, buf2);
 
         // assign BigView to SmallView
-        butil::IOBuf buf3;
+        flare::io::IOBuf buf3;
         buf3 = buf1;
         ASSERT_EQ(buf1, buf3);
 
         // assign BigView to BigView
-        butil::IOBuf buf4;
+        flare::io::IOBuf buf4;
         buf4.resize(TARGET_SIZE, 'w');
         ASSERT_NE(buf1, buf4);
         buf4 = buf1;
@@ -595,21 +595,21 @@ namespace {
         install_debug_allocator();
 
         const char *SEED = "abcdefghijklmnqopqrstuvwxyz";
-        butil::IOBuf seedbuf;
+        flare::io::IOBuf seedbuf;
         seedbuf.append(SEED);
         const int REP = 100;
-        butil::IOBuf b1;
+        flare::io::IOBuf b1;
         for (int i = 0; i < REP; ++i) {
             b1.append(seedbuf);
             b1.append(SEED);
         }
-        butil::IOBuf b2;
+        flare::io::IOBuf b2;
         for (int i = 0; i < REP * 2; ++i) {
             b2.append(SEED);
         }
         ASSERT_EQ(b1, b2);
 
-        butil::IOBuf b3 = b2;
+        flare::io::IOBuf b3 = b2;
 
         b2.push_back('0');
         ASSERT_NE(b1, b2);
@@ -621,20 +621,20 @@ namespace {
     }
 
     TEST_F(IOBufTest, append_and_cut_it_all) {
-        butil::IOBuf b;
+        flare::io::IOBuf b;
         const size_t N = 32768UL;
         for (size_t i = 0; i < N; ++i) {
             ASSERT_EQ(0, b.push_back(i));
         }
         ASSERT_EQ(N, b.length());
-        butil::IOBuf p;
+        flare::io::IOBuf p;
         b.cutn(&p, N);
         ASSERT_TRUE(b.empty());
         ASSERT_EQ(N, p.length());
     }
 
     TEST_F(IOBufTest, copy_to) {
-        butil::IOBuf b;
+        flare::io::IOBuf b;
         const std::string seed = "abcdefghijklmnopqrstuvwxyz";
         std::string src;
         for (size_t i = 0; i < 1000; ++i) {
@@ -658,15 +658,15 @@ namespace {
         ASSERT_EQ(33u, b.append_to(&s3, 33, DEFAULT_PAYLOAD - 1));
         ASSERT_EQ(expected + expected, s3);
 
-        butil::IOBuf b1;
+        flare::io::IOBuf b1;
         ASSERT_EQ(src.size(), b.append_to(&b1));
         ASSERT_EQ(src, b1.to_string());
 
-        butil::IOBuf b2;
+        flare::io::IOBuf b2;
         ASSERT_EQ(32u, b.append_to(&b2, 32));
         ASSERT_EQ(src.substr(0, 32), b2.to_string());
 
-        butil::IOBuf b3;
+        flare::io::IOBuf b3;
         ASSERT_EQ(33u, b.append_to(&b3, 33, DEFAULT_PAYLOAD - 1));
         ASSERT_EQ(expected, b3.to_string());
 
@@ -677,9 +677,9 @@ namespace {
     TEST_F(IOBufTest, cut_by_single_text_delim) {
         install_debug_allocator();
 
-        butil::IOBuf b;
-        butil::IOBuf p;
-        std::vector<butil::IOBuf> ps;
+        flare::io::IOBuf b;
+        flare::io::IOBuf p;
+        std::vector<flare::io::IOBuf> ps;
         std::string s1 = "1234567\n12\n\n2567";
         ASSERT_EQ(0, b.append(s1));
         ASSERT_EQ(s1.length(), b.length());
@@ -704,9 +704,9 @@ namespace {
     TEST_F(IOBufTest, cut_by_multiple_text_delim) {
         install_debug_allocator();
 
-        butil::IOBuf b;
-        butil::IOBuf p;
-        std::vector<butil::IOBuf> ps;
+        flare::io::IOBuf b;
+        flare::io::IOBuf p;
+        std::vector<flare::io::IOBuf> ps;
         std::string s1 = "\r\n1234567\r\n12\r\n\n\r2567";
         ASSERT_EQ(0, b.append(s1));
         ASSERT_EQ(s1.length(), b.length());
@@ -731,8 +731,8 @@ namespace {
     TEST_F(IOBufTest, append_a_lot_and_cut_them_all) {
         install_debug_allocator();
 
-        butil::IOBuf b;
-        butil::IOBuf p;
+        flare::io::IOBuf b;
+        flare::io::IOBuf p;
         std::string s1 = "12345678901234567";
         const size_t N = 10000;
         for (size_t i = 0; i < N; ++i) {
@@ -752,7 +752,7 @@ namespace {
     TEST_F(IOBufTest, cut_into_fd_tiny) {
         install_debug_allocator();
 
-        butil::IOPortal b1, b2;
+        flare::io::IOPortal b1, b2;
         std::string ref;
         int fds[2];
 
@@ -790,8 +790,8 @@ namespace {
     TEST_F(IOBufTest, cut_multiple_into_fd_tiny) {
         install_debug_allocator();
 
-        butil::IOBuf *b1[10];
-        butil::IOPortal b2;
+        flare::io::IOBuf *b1[10];
+        flare::io::IOPortal b2;
         std::string ref;
         int fds[2];
 
@@ -801,7 +801,7 @@ namespace {
                 s.push_back(j * 10 + i);
             }
             ref.append(s);
-            butil::IOPortal *b = new butil::IOPortal();
+            flare::io::IOPortal *b = new flare::io::IOPortal();
             b->append(s);
             b1[j] = b;
         }
@@ -811,11 +811,11 @@ namespace {
         flare::base::make_non_blocking(fds[1]);
 
         ASSERT_EQ((ssize_t) ref.length(),
-                  butil::IOBuf::cut_multiple_into_file_descriptor(
+                  flare::io::IOBuf::cut_multiple_into_file_descriptor(
                           fds[1], b1, FLARE_ARRAY_SIZE(b1)));
         for (size_t j = 0; j < FLARE_ARRAY_SIZE(b1); ++j) {
             ASSERT_TRUE(b1[j]->empty());
-            delete (butil::IOPortal *) b1[j];
+            delete (flare::io::IOPortal *) b1[j];
             b1[j] = NULL;
         }
         ASSERT_EQ((ssize_t) ref.length(),
@@ -829,7 +829,7 @@ namespace {
     TEST_F(IOBufTest, cut_into_fd_a_lot_of_data) {
         install_debug_allocator();
 
-        butil::IOPortal b0, b1, b2;
+        flare::io::IOPortal b0, b1, b2;
         std::string s, ref;
         int fds[2];
 
@@ -878,9 +878,9 @@ namespace {
     TEST_F(IOBufTest, cut_by_delim_perf) {
         butil::iobuf::reset_blockmem_allocate_and_deallocate();
 
-        butil::IOBuf b;
-        butil::IOBuf p;
-        std::vector<butil::IOBuf> ps;
+        flare::io::IOBuf b;
+        flare::io::IOBuf p;
+        std::vector<flare::io::IOBuf> ps;
         std::string s1 = "123456789012345678901234567890\n";
         const size_t N = 100000;
         for (size_t i = 0; i < N; ++i) {
@@ -905,8 +905,8 @@ namespace {
     TEST_F(IOBufTest, cut_perf) {
         butil::iobuf::reset_blockmem_allocate_and_deallocate();
 
-        butil::IOBuf b;
-        butil::IOBuf p;
+        flare::io::IOBuf b;
+        flare::io::IOBuf p;
         const size_t length = 60000000UL;
         const size_t REP = 10;
         flare::base::stop_watcher t;
@@ -967,7 +967,7 @@ namespace {
             t.start();
             b.append(p);
             t.stop();
-            LOG(INFO) << "IOPortal::append(butil::IOBuf) takes "
+            LOG(INFO) << "IOPortal::append(flare::io::IOBuf) takes "
                       << t.n_elapsed() / p._ref_num() << "ns, tp="
                       << length * 1000.0 / t.n_elapsed() << "MB/s";
 
@@ -988,8 +988,8 @@ namespace {
             ref[j] = j;
         }
 
-        butil::IOPortal b1, b2;
-        std::vector<butil::IOBuf> ps;
+        flare::io::IOPortal b1, b2;
+        std::vector<flare::io::IOBuf> ps;
         ssize_t nr;
         size_t HINT = 16 * 1024UL;
         flare::base::stop_watcher t;
@@ -1026,7 +1026,7 @@ namespace {
             while ((nr = b1.append_from_file_descriptor(ifd, HINT)) > 0) {
                 ++nappend;
                 while (b1.length() >= w[i] + 12) {
-                    butil::IOBuf p;
+                    flare::io::IOBuf p;
                     b1.cutn(&p, 12);
                     b1.cutn(&p, w[i]);
                     ps.push_back(p);
@@ -1082,17 +1082,17 @@ namespace {
         m1.set_required_bool(true);
         m1.set_required_int32(0xbeefdead);
 
-        butil::IOBuf buf;
+        flare::io::IOBuf buf;
         const std::string header("just-make-sure-wrapper-does-not-clear-IOBuf");
         ASSERT_EQ(0, buf.append(header));
-        butil::IOBufAsZeroCopyOutputStream out_wrapper(&buf);
+        flare::io::IOBufAsZeroCopyOutputStream out_wrapper(&buf);
         ASSERT_EQ(0, out_wrapper.ByteCount());
         ASSERT_TRUE(m1.SerializeToZeroCopyStream(&out_wrapper));
         ASSERT_EQ((size_t) m1.ByteSize() + header.size(), buf.length());
         ASSERT_EQ(m1.ByteSize(), out_wrapper.ByteCount());
 
         ASSERT_EQ(header.size(), buf.pop_front(header.size()));
-        butil::IOBufAsZeroCopyInputStream in_wrapper(buf);
+        flare::io::IOBufAsZeroCopyInputStream in_wrapper(buf);
         ASSERT_EQ(0, in_wrapper.ByteCount());
         {
             const void *dummy_blk = NULL;
@@ -1138,12 +1138,12 @@ namespace {
             std::cout << "i=" << i << std::endl;
             // Consume the left TLS block so that cases are easier to check.
             butil::iobuf::remove_tls_block_chain();
-            butil::IOBuf src;
-            const int BLKSIZE = (i == 0 ? 1024 : butil::IOBuf::DEFAULT_BLOCK_SIZE);
+            flare::io::IOBuf src;
+            const int BLKSIZE = (i == 0 ? 1024 : flare::io::IOBuf::DEFAULT_BLOCK_SIZE);
             const int PLDSIZE = BLKSIZE - BLOCK_OVERHEAD;
-            butil::IOBufAsZeroCopyOutputStream out_stream1(&src, BLKSIZE);
-            butil::IOBufAsZeroCopyOutputStream out_stream2(&src);
-            butil::IOBufAsZeroCopyOutputStream &out_stream =
+            flare::io::IOBufAsZeroCopyOutputStream out_stream1(&src, BLKSIZE);
+            flare::io::IOBufAsZeroCopyOutputStream out_stream2(&src);
+            flare::io::IOBufAsZeroCopyOutputStream &out_stream =
                     (i == 0 ? out_stream1 : out_stream2);
             void *blk1 = NULL;
             int size1 = 0;
@@ -1191,18 +1191,18 @@ namespace {
         {
             // Consume the left TLS block so that later cases are easier
             // to check.
-            butil::IOBuf dummy;
-            butil::IOBufAsZeroCopyOutputStream dummy_stream(&dummy);
+            flare::io::IOBuf dummy;
+            flare::io::IOBufAsZeroCopyOutputStream dummy_stream(&dummy);
             void *dummy_data = NULL;
             int dummy_size = 0;
             ASSERT_TRUE(dummy_stream.Next(&dummy_data, &dummy_size));
         }
-        butil::IOBuf src;
+        flare::io::IOBuf src;
         const size_t N = DEFAULT_PAYLOAD * 2;
         src.resize(N);
         ASSERT_EQ(2u, src.backing_block_num());
         ASSERT_EQ(N, src.size());
-        butil::IOBufAsZeroCopyOutputStream out_stream(&src);
+        flare::io::IOBufAsZeroCopyOutputStream out_stream(&src);
         out_stream.BackUp(1); // also succeed.
         ASSERT_EQ(-1, out_stream.ByteCount());
         ASSERT_EQ(DEFAULT_PAYLOAD * 2 - 1, src.size());
@@ -1237,15 +1237,15 @@ namespace {
     }
 
     void *backup_thread(void *arg) {
-        butil::IOBufAsZeroCopyOutputStream *wrapper =
-                (butil::IOBufAsZeroCopyOutputStream *) arg;
+        flare::io::IOBufAsZeroCopyOutputStream *wrapper =
+                (flare::io::IOBufAsZeroCopyOutputStream *) arg;
         wrapper->BackUp(1024);
         return NULL;
     }
 
     TEST_F(IOBufTest, backup_in_another_thread) {
-        butil::IOBuf buf;
-        butil::IOBufAsZeroCopyOutputStream wrapper(&buf);
+        flare::io::IOBuf buf;
+        flare::io::IOBufAsZeroCopyOutputStream wrapper(&buf);
         size_t alloc_size = 0;
         for (int i = 0; i < 10; ++i) {
             void *data;
@@ -1267,10 +1267,10 @@ namespace {
     }
 
     TEST_F(IOBufTest, own_block) {
-        butil::IOBuf buf;
+        flare::io::IOBuf buf;
         const ssize_t BLOCK_SIZE = 1024;
-        butil::IOBuf::Block *saved_tls_block = butil::iobuf::get_tls_block_head();
-        butil::IOBufAsZeroCopyOutputStream wrapper(&buf, BLOCK_SIZE);
+        flare::io::IOBuf::Block *saved_tls_block = butil::iobuf::get_tls_block_head();
+        flare::io::IOBufAsZeroCopyOutputStream wrapper(&buf, BLOCK_SIZE);
         int alloc_size = 0;
         for (int i = 0; i < 100; ++i) {
             void *data;
@@ -1311,11 +1311,11 @@ namespace {
     TEST_F(IOBufTest, as_ostream) {
         butil::iobuf::reset_blockmem_allocate_and_deallocate();
 
-        butil::IOBufBuilder builder;
+        flare::io::IOBufBuilder builder;
         LOG(INFO) << "sizeof(IOBufBuilder)=" << sizeof(builder) << std::endl
-                  << "sizeof(IOBuf)=" << sizeof(butil::IOBuf) << std::endl
+                  << "sizeof(IOBuf)=" << sizeof(flare::io::IOBuf) << std::endl
                   << "sizeof(IOBufAsZeroCopyOutputStream)="
-                  << sizeof(butil::IOBufAsZeroCopyOutputStream) << std::endl
+                  << sizeof(flare::io::IOBufAsZeroCopyOutputStream) << std::endl
                   << "sizeof(ZeroCopyStreamAsStreamBuf)="
                   << sizeof(butil::ZeroCopyStreamAsStreamBuf) << std::endl
                   << "sizeof(ostream)=" << sizeof(std::ostream);
@@ -1340,7 +1340,7 @@ namespace {
         oss << "<before>" << foo2 << "<after>";
         ASSERT_EQ(oss.str(), builder.buf().to_string());
 
-        butil::IOBuf target;
+        flare::io::IOBuf target;
         builder.move_to(target);
         ASSERT_TRUE(builder.buf().empty());
         ASSERT_EQ(oss.str(), target.to_string());
@@ -1355,12 +1355,12 @@ namespace {
         file.save("dummy");
         flare::base::fd_guard fd(open(file.fname(), O_RDWR | O_TRUNC));
         ASSERT_TRUE(fd >= 0) << file.fname() << ' ' << flare_error();
-        butil::IOPortal buf;
+        flare::io::IOPortal buf;
         char dummy[10 * 1024];
         buf.append(dummy, sizeof(dummy));
         ASSERT_EQ((ssize_t) sizeof(dummy), buf.cut_into_file_descriptor(fd));
         for (size_t i = 0; i < sizeof(dummy); ++i) {
-            butil::IOPortal b0;
+            flare::io::IOPortal b0;
             ASSERT_EQ(sizeof(dummy) - i, (size_t) b0.pappend_from_file_descriptor(fd, i, sizeof(dummy)))
                                         << flare_error();
             char tmp[sizeof(dummy)];
@@ -1379,7 +1379,7 @@ namespace {
         off_t offset = start_num * sizeof(int);
         for (int i = 0; i < number_per_thread; ++i) {
             int to_write = start_num + i;
-            butil::IOBuf out;
+            flare::io::IOBuf out;
             out.append(&to_write, sizeof(int));
             CHECK_EQ(out.pcut_into_file_descriptor(fd, offset + sizeof(int) * i),
                      (ssize_t) sizeof(int));
@@ -1401,7 +1401,7 @@ namespace {
         }
         for (int i = 0; i < number_per_thread * (int) FLARE_ARRAY_SIZE(threads); ++i) {
             off_t offset = i * sizeof(int);
-            butil::IOPortal in;
+            flare::io::IOPortal in;
             ASSERT_EQ((ssize_t) sizeof(int), in.pappend_from_file_descriptor(fd, offset, sizeof(int)));
             int j;
             ASSERT_EQ(sizeof(j), in.cutn(&j, sizeof(j)));
@@ -1413,7 +1413,7 @@ namespace {
         size_t N = 100000;
         std::string expected;
         expected.reserve(N);
-        butil::IOBuf buf;
+        flare::io::IOBuf buf;
         for (size_t i = 0; i < N; ++i) {
             expected.push_back(i % 26 + 'a');
             buf.push_back(i % 26 + 'a');
@@ -1430,9 +1430,9 @@ namespace {
     }
 
     TEST_F(IOBufTest, swap) {
-        butil::IOBuf a;
+        flare::io::IOBuf a;
         a.append("I'am a");
-        butil::IOBuf b;
+        flare::io::IOBuf b;
         b.append("I'am b");
         std::swap(a, b);
         ASSERT_TRUE(a.equals("I'am b"));
@@ -1440,11 +1440,11 @@ namespace {
     }
 
     TEST_F(IOBufTest, resize) {
-        butil::IOBuf a;
+        flare::io::IOBuf a;
         a.resize(100);
         std::string as;
         as.resize(100);
-        butil::IOBuf b;
+        flare::io::IOBuf b;
         b.resize(100, 'b');
         std::string bs;
         bs.resize(100, 'b');
@@ -1455,11 +1455,11 @@ namespace {
     }
 
     TEST_F(IOBufTest, iterate_bytes) {
-        butil::IOBuf a;
+        flare::io::IOBuf a;
         a.append("hello world");
         std::string saved_a = a.to_string();
         size_t n = 0;
-        butil::IOBufBytesIterator it(a);
+        flare::io::IOBufBytesIterator it(a);
         for (; it != NULL; ++it, ++n) {
             ASSERT_EQ(saved_a[n], *it);
         }
@@ -1476,7 +1476,7 @@ namespace {
         }
         saved_a = a.to_string();
         n = 0;
-        for (butil::IOBufBytesIterator it2(a); it2 != NULL; it2++/*intended post++*/, ++n) {
+        for (flare::io::IOBufBytesIterator it2(a); it2 != NULL; it2++/*intended post++*/, ++n) {
             ASSERT_EQ(saved_a[n], *it2);
         }
         ASSERT_EQ(saved_a.size(), n);
@@ -1484,13 +1484,13 @@ namespace {
     }
 
     TEST_F(IOBufTest, appender) {
-        butil::IOBufAppender appender;
+        flare::io::IOBufAppender appender;
         ASSERT_EQ(0, appender.append("hello", 5));
         ASSERT_EQ("hello", appender.buf());
         ASSERT_EQ(0, appender.push_back(' '));
         ASSERT_EQ(0, appender.append("world", 5));
         ASSERT_EQ("hello world", appender.buf());
-        butil::IOBuf buf2;
+        flare::io::IOBuf buf2;
         appender.move_to(buf2);
         ASSERT_EQ("", appender.buf());
         ASSERT_EQ("hello world", buf2);
@@ -1502,7 +1502,7 @@ namespace {
             str.append(buf, len);
         }
         ASSERT_EQ(str, appender.buf());
-        butil::IOBuf buf3;
+        flare::io::IOBuf buf3;
         appender.move_to(buf3);
         ASSERT_EQ("", appender.buf());
         ASSERT_EQ(str, buf3);
@@ -1512,7 +1512,7 @@ namespace {
         const size_t N1 = 100000;
         flare::base::stop_watcher tm1;
         tm1.start();
-        butil::IOBuf buf1;
+        flare::io::IOBuf buf1;
         for (size_t i = 0; i < N1; ++i) {
             buf1.push_back(i);
         }
@@ -1520,7 +1520,7 @@ namespace {
 
         flare::base::stop_watcher tm2;
         tm2.start();
-        butil::IOBufAppender appender1;
+        flare::io::IOBufAppender appender1;
         for (size_t i = 0; i < N1; ++i) {
             appender1.push_back(i);
         }
@@ -1533,7 +1533,7 @@ namespace {
         const size_t N2 = 50000;
         const std::string s = "a repeatly appended string";
         std::string str2;
-        butil::IOBuf buf2;
+        flare::io::IOBuf buf2;
         tm1.start();
         for (size_t i = 0; i < N2; ++i) {
             buf2.append(s);
@@ -1541,7 +1541,7 @@ namespace {
         tm1.stop();
 
         tm2.start();
-        butil::IOBufAppender appender2;
+        flare::io::IOBufAppender appender2;
         for (size_t i = 0; i < N2; ++i) {
             appender2.append(s);
         }
@@ -1561,7 +1561,7 @@ namespace {
     }
 
     TEST_F(IOBufTest, printed_as_binary) {
-        butil::IOBuf buf;
+        flare::io::IOBuf buf;
         std::string str;
         for (int i = 0; i < 256; ++i) {
             buf.push_back((char) i);
@@ -1582,24 +1582,24 @@ namespace {
                 "\\EC\\ED\\EE\\EF\\F0\\F1\\F2\\F3\\F4\\F5\\F6\\F7\\F8\\F9\\FA"
                 "\\FB\\FC\\FD\\FE\\FF";
         std::ostringstream os;
-        os << butil::ToPrintable(buf, 256);
+        os << flare::io::ToPrintable(buf, 256);
         ASSERT_STREQ(OUTPUT, os.str().c_str());
         os.str("");
-        os << butil::ToPrintable(str, 256);
+        os << flare::io::ToPrintable(str, 256);
         ASSERT_STREQ(OUTPUT, os.str().c_str());
     }
 
     TEST_F(IOBufTest, copy_to_string_from_iterator) {
-        butil::IOBuf b0;
+        flare::io::IOBuf b0;
         for (size_t i = 0; i < 1 * 1024 * 1024lu; ++i) {
             b0.push_back(flare::base::fast_rand_in('a', 'z'));
         }
-        butil::IOBuf b1(b0);
-        butil::IOBufBytesIterator iter(b0);
+        flare::io::IOBuf b1(b0);
+        flare::io::IOBufBytesIterator iter(b0);
         size_t nc = 0;
         while (nc < b0.length()) {
             size_t to_copy = flare::base::fast_rand_in(1024lu, 64 * 1024lu);
-            butil::IOBuf b;
+            flare::io::IOBuf b;
             b1.cutn(&b, to_copy);
             std::string s;
             const size_t copied = iter.copy_and_forward(&s, to_copy);
@@ -1618,7 +1618,7 @@ namespace {
     }
 
     TEST_F(IOBufTest, append_user_data_and_consume) {
-        butil::IOBuf b0;
+        flare::io::IOBuf b0;
         const int REP = 16;
         const size_t len = REP * 256;
         char *data = (char *) malloc(len);
@@ -1630,7 +1630,7 @@ namespace {
         my_free_params = NULL;
         ASSERT_EQ(0, b0.append_user_data(data, len, my_free));
         ASSERT_EQ(1UL, b0._ref_num());
-        butil::IOBuf::BlockRef r = b0._front_ref();
+        flare::io::IOBuf::BlockRef r = b0._front_ref();
         ASSERT_EQ(1, butil::iobuf::block_shared_count(r.block));
         ASSERT_EQ(len, b0.size());
         std::string out;
@@ -1648,7 +1648,7 @@ namespace {
     }
 
     TEST_F(IOBufTest, append_user_data_and_share) {
-        butil::IOBuf b0;
+        flare::io::IOBuf b0;
         const int REP = 16;
         const size_t len = REP * 256;
         char *data = (char *) malloc(len);
@@ -1660,18 +1660,18 @@ namespace {
         my_free_params = NULL;
         ASSERT_EQ(0, b0.append_user_data(data, len, my_free));
         ASSERT_EQ(1UL, b0._ref_num());
-        butil::IOBuf::BlockRef r = b0._front_ref();
+        flare::io::IOBuf::BlockRef r = b0._front_ref();
         ASSERT_EQ(1, butil::iobuf::block_shared_count(r.block));
         ASSERT_EQ(len, b0.size());
 
         {
-            butil::IOBuf bufs[256];
+            flare::io::IOBuf bufs[256];
             for (int i = 0; i < 256; ++i) {
                 ASSERT_EQ((size_t) REP, b0.cutn(&bufs[i], REP));
                 ASSERT_EQ(len - (i + 1) * REP, b0.size());
                 if (i != 255) {
                     ASSERT_EQ(1UL, b0._ref_num());
-                    butil::IOBuf::BlockRef r = b0._front_ref();
+                    flare::io::IOBuf::BlockRef r = b0._front_ref();
                     ASSERT_EQ(i + 2, butil::iobuf::block_shared_count(r.block));
                 } else {
                     ASSERT_EQ(0UL, b0._ref_num());
@@ -1692,11 +1692,11 @@ namespace {
 
     TEST_F(IOBufTest, share_tls_block) {
         butil::iobuf::remove_tls_block_chain();
-        butil::IOBuf::Block *b = butil::iobuf::acquire_tls_block();
+        flare::io::IOBuf::Block *b = butil::iobuf::acquire_tls_block();
         ASSERT_EQ(0u, butil::iobuf::block_size(b));
 
-        butil::IOBuf::Block *b2 = butil::iobuf::share_tls_block();
-        butil::IOBuf buf;
+        flare::io::IOBuf::Block *b2 = butil::iobuf::share_tls_block();
+        flare::io::IOBuf buf;
         for (size_t i = 0; i < butil::iobuf::block_cap(b2); i++) {
             buf.push_back('x');
         }
@@ -1709,7 +1709,7 @@ namespace {
             buf.push_back('x');
         }
         // now tls block is b(full) -> b2(full) -> NULL
-        butil::IOBuf::Block *head_block = butil::iobuf::share_tls_block();
+        flare::io::IOBuf::Block *head_block = butil::iobuf::share_tls_block();
         ASSERT_EQ(0u, butil::iobuf::block_size(head_block));
         ASSERT_NE(b, head_block);
         ASSERT_NE(b2, head_block);
@@ -1717,14 +1717,14 @@ namespace {
 
     TEST_F(IOBufTest, acquire_tls_block) {
         butil::iobuf::remove_tls_block_chain();
-        butil::IOBuf::Block *b = butil::iobuf::acquire_tls_block();
+        flare::io::IOBuf::Block *b = butil::iobuf::acquire_tls_block();
         const size_t block_cap = butil::iobuf::block_cap(b);
-        butil::IOBuf buf;
+        flare::io::IOBuf buf;
         for (size_t i = 0; i < block_cap; i++) {
             buf.append("x");
         }
         ASSERT_EQ(1, butil::iobuf::get_tls_block_count());
-        butil::IOBuf::Block *head = butil::iobuf::get_tls_block_head();
+        flare::io::IOBuf::Block *head = butil::iobuf::get_tls_block_head();
         ASSERT_EQ(butil::iobuf::block_cap(head), butil::iobuf::block_size(head));
         butil::iobuf::release_tls_block_chain(b);
         ASSERT_EQ(2, butil::iobuf::get_tls_block_count());

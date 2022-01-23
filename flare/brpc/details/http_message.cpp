@@ -107,9 +107,9 @@ int HttpMessage::on_header_value(http_parser *parser,
         http_message->_cur_value->append(at, length);
     }
     if (FLAGS_http_verbose) {
-        butil::IOBufBuilder* vs = http_message->_vmsgbuilder;
+        flare::io::IOBufBuilder* vs = http_message->_vmsgbuilder;
         if (vs == NULL) {
-            vs = new butil::IOBufBuilder;
+            vs = new flare::io::IOBufBuilder;
             http_message->_vmsgbuilder = vs;
             if (parser->type == HTTP_REQUEST) {
                 *vs << "[ HTTP REQUEST @" << flare::base::my_ip() << " ]\n< "
@@ -185,7 +185,7 @@ int HttpMessage::UnlockAndFlushToBodyReader(std::unique_lock<flare::base::Mutex>
         mu.unlock();
         return 0;
     }
-    butil::IOBuf body_seen = _body.movable();
+    flare::io::IOBuf body_seen = _body.movable();
     ProgressiveReader* r = _body_reader;
     mu.unlock();
     for (size_t i = 0; i < body_seen.backing_block_num(); ++i) {
@@ -229,7 +229,7 @@ int HttpMessage::OnBody(const char *at, const size_t length) {
             if (_vbodylen < (size_t)FLAGS_http_verbose_max_body_length) {
                 int plen = std::min(length, (size_t)FLAGS_http_verbose_max_body_length
                                     - _vbodylen);
-                std::string str = butil::ToPrintableString(
+                std::string str = flare::io::ToPrintableString(
                     at, plen, std::numeric_limits<size_t>::max());
                 _vmsgbuilder->write(str.data(), str.size());
             }
@@ -362,7 +362,7 @@ void HttpMessage::SetBodyReader(ProgressiveReader* r) {
             _body_reader = r;
             return;
         }
-        butil::IOBuf body_seen = _body.movable();
+        flare::io::IOBuf body_seen = _body.movable();
         mu.unlock();
         for (size_t i = 0; i < body_seen.backing_block_num(); ++i) {
             std::string_view blk = body_seen.backing_block(i);
@@ -438,7 +438,7 @@ ssize_t HttpMessage::ParseFromArray(const char *data, const size_t length) {
     return nprocessed;
 }
 
-ssize_t HttpMessage::ParseFromIOBuf(const butil::IOBuf &buf) {
+ssize_t HttpMessage::ParseFromIOBuf(const flare::io::IOBuf &buf) {
     if (Completed()) {
         if (buf.empty()) {
             return 0;
@@ -459,7 +459,7 @@ ssize_t HttpMessage::ParseFromIOBuf(const butil::IOBuf &buf) {
         if (_parser.http_errno != 0) {
             // May try HTTP on other formats, failure is norm.
             RPC_VLOG << "Fail to parse http message, parser=" << _parser
-                     << ", buf=" << butil::ToPrintable(buf);
+                     << ", buf=" << flare::io::ToPrintable(buf);
             return -1;
         }
         if (Completed()) {
@@ -536,11 +536,11 @@ std::ostream& operator<<(std::ostream& os, const http_parser& parser) {
 //                | "CONNECT"                ; Section 9.9
 //                | extension-method
 // extension-method = token
-void MakeRawHttpRequest(butil::IOBuf* request,
+void MakeRawHttpRequest(flare::io::IOBuf* request,
                         HttpHeader* h,
                         const flare::base::end_point& remote_side,
-                        const butil::IOBuf* content) {
-    butil::IOBufBuilder os;
+                        const flare::io::IOBuf* content) {
+    flare::io::IOBufBuilder os;
     os << HttpMethod2Str(h->method()) << ' ';
     const URI& uri = h->uri();
     uri.PrintWithoutHost(os); // host is sent by "Host" header.
@@ -613,10 +613,10 @@ void MakeRawHttpRequest(butil::IOBuf* request,
 //                CRLF
 //                [ message-body ]          ; Section 7.2
 // Status-Line = HTTP-Version SP Status-Code SP Reason-Phrase CRLF
-void MakeRawHttpResponse(butil::IOBuf* response,
+void MakeRawHttpResponse(flare::io::IOBuf* response,
                          HttpHeader* h,
-                         butil::IOBuf* content) {
-    butil::IOBufBuilder os;
+                         flare::io::IOBuf* content) {
+    flare::io::IOBufBuilder os;
     os << "HTTP/" << h->major_version() << '.'
        << h->minor_version() << ' ' << h->status_code()
        << ' ' << h->reason_phrase() << BRPC_CRLF;
@@ -638,7 +638,7 @@ void MakeRawHttpResponse(butil::IOBuf* response,
     os << BRPC_CRLF;  // CRLF before content
     os.move_to(*response);
     if (content) {
-        response->append(butil::IOBuf::Movable(*content));
+        response->append(flare::io::IOBuf::Movable(*content));
     }
 }
 #undef BRPC_CRLF

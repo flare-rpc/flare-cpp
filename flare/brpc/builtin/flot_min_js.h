@@ -19,7 +19,7 @@
 #ifndef BRPC_BUILTIN_FLOT_MIN_JS_H
 #define BRPC_BUILTIN_FLOT_MIN_JS_H
 
-#include "flare/butil/iobuf.h"
+#include "flare/io/iobuf.h"
 
 
 namespace brpc {
@@ -28,8 +28,8 @@ namespace brpc {
 // We need to pack all js inside C++ code so that builtin services can be
 // accessed without external resources and network connection.
 const char* flot_min_js();
-const butil::IOBuf& flot_min_js_iobuf();
-const butil::IOBuf& flot_min_js_iobuf_gzip();
+const flare::io::IOBuf& flot_min_js_iobuf();
+const flare::io::IOBuf& flot_min_js_iobuf_gzip();
 
 } // namespace brpc
 

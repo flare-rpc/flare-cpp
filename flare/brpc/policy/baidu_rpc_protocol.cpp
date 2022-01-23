@@ -22,8 +22,8 @@
 #include <google/protobuf/io/coded_stream.h>
 #include "flare/base/logging.h"                       // LOG()
 #include "flare/base/time.h"
-#include "flare/butil/iobuf.h"                         // butil::IOBuf
-#include "flare/butil/raw_pack.h"                      // RawPacker RawUnpacker
+#include "flare/io/iobuf.h"                         // flare::io::IOBuf
+#include "flare/io/raw_pack.h"                      // RawPacker RawUnpacker
 #include "flare/brpc/controller.h"                    // Controller
 #include "flare/brpc/socket.h"                        // Socket
 #include "flare/brpc/server.h"                        // Server
@@ -62,13 +62,13 @@ DEFINE_bool(baidu_protocol_use_fullname, true,
 inline void PackRpcHeader(char* rpc_header, int meta_size, int payload_size) {
     uint32_t* dummy = (uint32_t*)rpc_header;  // suppress strict-alias warning
     *dummy = *(uint32_t*)"PRPC";
-    butil::RawPacker(rpc_header + 4)
+    flare::io::RawPacker(rpc_header + 4)
         .pack32(meta_size + payload_size)
         .pack32(meta_size);
 }
 
 static void SerializeRpcHeaderAndMeta(
-    butil::IOBuf* out, const RpcMeta& meta, int payload_size) {
+    flare::io::IOBuf* out, const RpcMeta& meta, int payload_size) {
     const int meta_size = meta.ByteSize();
     if (meta_size <= 244) { // most common cases
         char header_and_meta[12 + meta_size];
@@ -82,14 +82,14 @@ static void SerializeRpcHeaderAndMeta(
         char header[12];
         PackRpcHeader(header, meta_size, payload_size);
         out->append(header, sizeof(header));
-        butil::IOBufAsZeroCopyOutputStream buf_stream(out);
+        flare::io::IOBufAsZeroCopyOutputStream buf_stream(out);
         ::google::protobuf::io::CodedOutputStream coded_out(&buf_stream);
         meta.SerializeWithCachedSizes(&coded_out);
         CHECK(!coded_out.HadError());
     }
 }
 
-ParseResult ParseRpcMessage(butil::IOBuf* source, Socket* socket,
+ParseResult ParseRpcMessage(flare::io::IOBuf* source, Socket* socket,
                             bool /*read_eof*/, const void*) {
     char header_buf[12];
     const size_t n = source->copy_to(header_buf, sizeof(header_buf));
@@ -108,7 +108,7 @@ ParseResult ParseRpcMessage(butil::IOBuf* source, Socket* socket,
     }
     uint32_t body_size;
     uint32_t meta_size;
-    butil::RawUnpacker(header_buf + 4).unpack32(body_size).unpack32(meta_size);
+    flare::io::RawUnpacker(header_buf + 4).unpack32(body_size).unpack32(meta_size);
     if (body_size > FLAGS_max_body_size) {
         // We need this log to report the body_size to give users some clues
         // which is not printed in InputMessenger.
@@ -159,7 +159,7 @@ void SendRpcResponse(int64_t correlation_id,
         return;
     }
     bool append_body = false;
-    butil::IOBuf res_body;
+    flare::io::IOBuf res_body;
     // `res' can be NULL here, in which case we don't serialize it
     // If user calls `SetFailed' on Controller, we don't serialize
     // response either
@@ -216,7 +216,7 @@ void SendRpcResponse(int64_t correlation_id,
         }
     }
 
-    butil::IOBuf res_buf;
+    flare::io::IOBuf res_buf;
     SerializeRpcHeaderAndMeta(&res_buf, meta, res_size + attached_size);
     if (append_body) {
         res_buf.append(res_body.movable());
@@ -453,8 +453,8 @@ void ProcessRpcRequest(InputMessageBase* msg_base) {
             span->ResetServerSpanName(method->full_name());
         }
         const int req_size = static_cast<int>(msg->payload.size());
-        butil::IOBuf req_buf;
-        butil::IOBuf* req_buf_ptr = &msg->payload;
+        flare::io::IOBuf req_buf;
+        flare::io::IOBuf* req_buf_ptr = &msg->payload;
         if (meta.has_attachment_size()) {
             if (req_size < meta.attachment_size()) {
                 cntl->SetFailed(EREQUEST,
@@ -584,9 +584,9 @@ void ProcessRpcResponse(InputMessageBase* msg_base) {
             break;
         } 
         // Parse response message iff error code from meta is 0
-        butil::IOBuf res_buf;
+        flare::io::IOBuf res_buf;
         const int res_size = msg->payload.length();
-        butil::IOBuf* res_buf_ptr = &msg->payload;
+        flare::io::IOBuf* res_buf_ptr = &msg->payload;
         if (meta.has_attachment_size()) {
             if (meta.attachment_size() > res_size) {
                 cntl->SetFailed(
@@ -619,12 +619,12 @@ void ProcessRpcResponse(InputMessageBase* msg_base) {
     accessor.OnResponse(cid, saved_error);
 }
 
-void PackRpcRequest(butil::IOBuf* req_buf,
+void PackRpcRequest(flare::io::IOBuf* req_buf,
                     SocketMessage**,
                     uint64_t correlation_id,
                     const google::protobuf::MethodDescriptor* method,
                     Controller* cntl,
-                    const butil::IOBuf& request_body,
+                    const flare::io::IOBuf& request_body,
                     const Authenticator* auth) {
     RpcMeta meta;
     if (auth && auth->GenerateCredential(

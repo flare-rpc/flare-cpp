@@ -20,7 +20,7 @@
 #define BRPC_COMPRESS_H
 
 #include <google/protobuf/message.h>              // Message
-#include "flare/butil/iobuf.h"                           // butil::IOBuf
+#include "flare/io/iobuf.h"                           // flare::io::IOBuf
 #include "flare/brpc/options.pb.h"                     // CompressType
 
 namespace brpc {
@@ -28,11 +28,11 @@ namespace brpc {
 struct CompressHandler {
     // Compress serialized `msg' into `buf'.
     // Returns true on success, false otherwise
-    bool (*Compress)(const google::protobuf::Message& msg, butil::IOBuf* buf);
+    bool (*Compress)(const google::protobuf::Message& msg, flare::io::IOBuf* buf);
 
     // Parse decompressed `data' as `msg'.
     // Returns true on success, false otherwise
-    bool (*Decompress)(const butil::IOBuf& data, google::protobuf::Message* msg);
+    bool (*Decompress)(const flare::io::IOBuf& data, google::protobuf::Message* msg);
 
     // Name of the compression algorithm, must be string constant.
     const char* name;
@@ -50,14 +50,14 @@ void ListCompressHandler(std::vector<CompressHandler>* vec);
 
 // Parse decompressed `data' as `msg' using registered `compress_type'.
 // Returns true on success, false otherwise
-bool ParseFromCompressedData(const butil::IOBuf& data,
+bool ParseFromCompressedData(const flare::io::IOBuf& data,
                              google::protobuf::Message* msg,
                              CompressType compress_type);
 
 // Compress serialized `msg' into `buf' using registered `compress_type'.
 // Returns true on success, false otherwise
 bool SerializeAsCompressedData(const google::protobuf::Message& msg,
-                               butil::IOBuf* buf,
+                               flare::io::IOBuf* buf,
                                CompressType compress_type);
 
 } // namespace brpc

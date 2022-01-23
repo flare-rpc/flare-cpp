@@ -141,7 +141,7 @@ void PublicPbrpcServiceAdaptor::SerializeResponseToIOBuf(
             head->set_compress_type(COMPRESS_TYPE);
         }
     }
-    butil::IOBufAsZeroCopyOutputStream wrapper(&raw_res->body);
+    flare::io::IOBufAsZeroCopyOutputStream wrapper(&raw_res->body);
     if (!whole_res.SerializeToZeroCopyStream(&wrapper)) {
         cntl->CloseConnection("Close connection due to failure of "
                                  "serializing the whole response");
@@ -192,7 +192,7 @@ void ProcessPublicPbrpcResponse(InputMessageBase* msg_base) {
                              COMPRESS_TYPE_SNAPPY : COMPRESS_TYPE_NONE);
         bool parse_result = false;
         if (type == COMPRESS_TYPE_SNAPPY) {
-            butil::IOBuf tmp;
+            flare::io::IOBuf tmp;
             tmp.append(res_data);
             parse_result = ParseFromCompressedData(tmp, cntl->response(), type);
         } else {
@@ -213,7 +213,7 @@ void ProcessPublicPbrpcResponse(InputMessageBase* msg_base) {
     accessor.OnResponse(cid, saved_error);
 }
 
-void SerializePublicPbrpcRequest(butil::IOBuf* buf, Controller* cntl,
+void SerializePublicPbrpcRequest(flare::io::IOBuf* buf, Controller* cntl,
                                  const google::protobuf::Message* request) {
     CompressType type = cntl->request_compress_type();
     if (type != COMPRESS_TYPE_NONE && type != COMPRESS_TYPE_SNAPPY) {
@@ -224,17 +224,17 @@ void SerializePublicPbrpcRequest(butil::IOBuf* buf, Controller* cntl,
     return SerializeRequestDefault(buf, cntl, request);
 }
        
-void PackPublicPbrpcRequest(butil::IOBuf* buf,
+void PackPublicPbrpcRequest(flare::io::IOBuf* buf,
                             SocketMessage**,
                             uint64_t correlation_id,
                             const google::protobuf::MethodDescriptor* method,
                             Controller* controller,
-                            const butil::IOBuf& request,
+                            const flare::io::IOBuf& request,
                             const Authenticator* /*not supported*/) {
     PublicPbrpcRequest pbreq;
     RequestHead* head = pbreq.mutable_requesthead();
     RequestBody* body = pbreq.add_requestbody();
-    butil::IOBufAsZeroCopyOutputStream request_stream(buf);
+    flare::io::IOBufAsZeroCopyOutputStream request_stream(buf);
 
     head->set_from_host(flare::base::ip2str(flare::base::my_ip()).c_str());
     head->set_content_type(CONTENT_TYPE);

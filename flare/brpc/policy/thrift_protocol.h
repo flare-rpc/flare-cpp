@@ -25,7 +25,7 @@ namespace brpc {
 namespace policy {
 
 // Parse binary protocol format of thrift framed
-ParseResult ParseThriftMessage(butil::IOBuf* source, Socket* socket, bool read_eof, const void *arg);
+ParseResult ParseThriftMessage(flare::io::IOBuf* source, Socket* socket, bool read_eof, const void *arg);
 
 // Actions to a (client) request in thrift binary framed format
 void ProcessThriftRequest(InputMessageBase* msg);
@@ -33,16 +33,16 @@ void ProcessThriftRequest(InputMessageBase* msg);
 // Actions to a (server) response in thrift binary framed format
 void ProcessThriftResponse(InputMessageBase* msg);
 
-void SerializeThriftRequest(butil::IOBuf* request_buf, Controller* controller,
+void SerializeThriftRequest(flare::io::IOBuf* request_buf, Controller* controller,
                             const google::protobuf::Message* request);
 
 void PackThriftRequest(
-    butil::IOBuf* packet_buf,
+    flare::io::IOBuf* packet_buf,
     SocketMessage**,
     uint64_t correlation_id,
     const google::protobuf::MethodDescriptor*,
     Controller* controller,
-    const butil::IOBuf&,
+    const flare::io::IOBuf&,
     const Authenticator*);
 
 // Verify authentication information in thrift binary format

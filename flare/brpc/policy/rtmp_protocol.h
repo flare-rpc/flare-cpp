@@ -168,7 +168,7 @@ public:
     // Set RtmpContext::_chunk_size_out to this in AppendAndDestroySelf()
     // if this field is non-zero.
     uint32_t new_chunk_size;
-    butil::IOBuf body;
+    flare::io::IOBuf body;
     // If next is not NULL, next->AppendAndDestroySelf() will be called
     // recursively. For implementing batched messages.
     SocketMessagePtr<RtmpUnsentMessage> next;
@@ -176,7 +176,7 @@ public:
     RtmpUnsentMessage()
         : chunk_stream_id(0) , new_chunk_size(0), next(NULL) {}
     // @SocketMessage
-    flare::base::flare_status AppendAndDestroySelf(butil::IOBuf* out, Socket*);
+    flare::base::flare_status AppendAndDestroySelf(flare::io::IOBuf* out, Socket*);
 };
 
 // Notice that we can't directly pack CreateStream command in PackRtmpRequest, because 
@@ -190,7 +190,7 @@ public:
 public:
     explicit RtmpCreateStreamMessage() {}
     // @SocketMessage
-    flare::base::flare_status AppendAndDestroySelf(butil::IOBuf* out, Socket*);
+    flare::base::flare_status AppendAndDestroySelf(flare::io::IOBuf* out, Socket*);
 };
 
 enum RtmpChunkType {
@@ -223,7 +223,7 @@ void WriteLittleEndian4Bytes(char** buf, uint32_t val);
 RtmpUnsentMessage* MakeUnsentControlMessage(
     uint8_t message_type, const void* body, size_t size);
 RtmpUnsentMessage* MakeUnsentControlMessage(
-    uint8_t message_type, const butil::IOBuf& body);
+    uint8_t message_type, const flare::io::IOBuf& body);
 
 // The callback associated with a transaction_id.
 // If the transaction is successfully done, Run() will be called, otherwise
@@ -266,7 +266,7 @@ public:
     // Parse `source' from `socket'.
     // This method is only called from Protocol.Parse thus does not need
     // to be thread-safe.
-    ParseResult Feed(butil::IOBuf* source, Socket* socket);
+    ParseResult Feed(flare::io::IOBuf* source, Socket* socket);
 
     const RtmpClientOptions* client_options() const { return _client_options; }
     const Server* server() const { return _server; }
@@ -343,11 +343,11 @@ public:
     int SendConnectRequest(const flare::base::end_point& remote_side, int fd, bool simplified_rtmp);
 
 private:
-    ParseResult WaitForC0C1orSimpleRtmp(butil::IOBuf* source, Socket* socket);
-    ParseResult WaitForC2(butil::IOBuf* source, Socket* socket);
-    ParseResult WaitForS0S1(butil::IOBuf* source, Socket* socket);
-    ParseResult WaitForS2(butil::IOBuf* source, Socket* socket);
-    ParseResult OnChunks(butil::IOBuf* source, Socket* socket);
+    ParseResult WaitForC0C1orSimpleRtmp(flare::io::IOBuf* source, Socket* socket);
+    ParseResult WaitForC2(flare::io::IOBuf* source, Socket* socket);
+    ParseResult WaitForS0S1(flare::io::IOBuf* source, Socket* socket);
+    ParseResult WaitForS2(flare::io::IOBuf* source, Socket* socket);
+    ParseResult OnChunks(flare::io::IOBuf* source, Socket* socket);
 
     // Count received bytes and send ack back if needed.
     void AddReceivedBytes(Socket* socket, uint32_t size);
@@ -407,7 +407,7 @@ private:
 class RtmpChunkStream {
 public:
     typedef bool (RtmpChunkStream::*MessageHandler)(
-        const RtmpMessageHeader& mh, butil::IOBuf* msg_body, Socket* socket);
+        const RtmpMessageHeader& mh, flare::io::IOBuf* msg_body, Socket* socket);
 
     typedef bool (RtmpChunkStream::*CommandHandler)(
         const RtmpMessageHeader& mh, AMFInputStream*, Socket* socket);
@@ -416,27 +416,27 @@ public:
     RtmpChunkStream(RtmpContext* conn_ctx, uint32_t cs_id);
     
     ParseResult Feed(const RtmpBasicHeader& bh,
-                     butil::IOBuf* source, Socket* socket);
+                     flare::io::IOBuf* source, Socket* socket);
 
     RtmpContext* connection_context() const { return _conn_ctx; }
 
     uint32_t chunk_stream_id() const { return _cs_id; }
 
-    int SerializeMessage(butil::IOBuf* buf, const RtmpMessageHeader& mh,
-                         butil::IOBuf* body);
+    int SerializeMessage(flare::io::IOBuf* buf, const RtmpMessageHeader& mh,
+                         flare::io::IOBuf* body);
     
     bool OnMessage(
         const RtmpBasicHeader& bh, const RtmpMessageHeader& mh,
-        butil::IOBuf* msg_body, Socket* socket);
+        flare::io::IOBuf* msg_body, Socket* socket);
 
     bool OnSetChunkSize(const RtmpMessageHeader& mh,
-                        butil::IOBuf* msg_body, Socket* socket);
+                        flare::io::IOBuf* msg_body, Socket* socket);
     bool OnAbortMessage(const RtmpMessageHeader& mh,
-                        butil::IOBuf* msg_body, Socket* socket);
+                        flare::io::IOBuf* msg_body, Socket* socket);
     bool OnAck(const RtmpMessageHeader& mh,
-               butil::IOBuf* msg_body, Socket* socket);
+               flare::io::IOBuf* msg_body, Socket* socket);
     bool OnUserControlMessage(const RtmpMessageHeader& mh,
-                              butil::IOBuf* msg_body, Socket* socket);
+                              flare::io::IOBuf* msg_body, Socket* socket);
     bool OnStreamBegin(const RtmpMessageHeader&,
                        const std::string_view& event_data, Socket* socket);
     bool OnStreamEOF(const RtmpMessageHeader&,
@@ -457,28 +457,28 @@ public:
                        const std::string_view& event_data, Socket* socket);
     
     bool OnWindowAckSize(const RtmpMessageHeader& mh,
-                         butil::IOBuf* msg_body, Socket* socket);
+                         flare::io::IOBuf* msg_body, Socket* socket);
     bool OnSetPeerBandwidth(const RtmpMessageHeader& mh,
-                            butil::IOBuf* msg_body, Socket* socket);
+                            flare::io::IOBuf* msg_body, Socket* socket);
     
     bool OnAudioMessage(const RtmpMessageHeader& mh,
-                        butil::IOBuf* msg_body, Socket* socket);
+                        flare::io::IOBuf* msg_body, Socket* socket);
     bool OnVideoMessage(const RtmpMessageHeader& mh,
-                        butil::IOBuf* msg_body, Socket* socket);
+                        flare::io::IOBuf* msg_body, Socket* socket);
     bool OnDataMessageAMF0(const RtmpMessageHeader& mh,
-                           butil::IOBuf* msg_body, Socket* socket);
+                           flare::io::IOBuf* msg_body, Socket* socket);
     bool OnDataMessageAMF3(const RtmpMessageHeader& mh,
-                           butil::IOBuf* msg_body, Socket* socket);
+                           flare::io::IOBuf* msg_body, Socket* socket);
     bool OnSharedObjectMessageAMF0(const RtmpMessageHeader& mh,
-                                   butil::IOBuf* msg_body, Socket* socket);
+                                   flare::io::IOBuf* msg_body, Socket* socket);
     bool OnSharedObjectMessageAMF3(const RtmpMessageHeader& mh,
-                                   butil::IOBuf* msg_body, Socket* socket);
+                                   flare::io::IOBuf* msg_body, Socket* socket);
     bool OnCommandMessageAMF0(const RtmpMessageHeader& mh,
-                              butil::IOBuf* msg_body, Socket* socket);
+                              flare::io::IOBuf* msg_body, Socket* socket);
     bool OnCommandMessageAMF3(const RtmpMessageHeader& mh,
-                              butil::IOBuf* msg_body, Socket* socket);
+                              flare::io::IOBuf* msg_body, Socket* socket);
     bool OnAggregateMessage(const RtmpMessageHeader& mh,
-                            butil::IOBuf* msg_body, Socket* socket);
+                            flare::io::IOBuf* msg_body, Socket* socket);
 
     bool OnStatus(const RtmpMessageHeader& mh, AMFInputStream* istream,
                   Socket* socket);
@@ -525,7 +525,7 @@ private:
         uint32_t last_timestamp_delta;
         uint32_t left_message_length;
         RtmpMessageHeader last_msg_header;
-        butil::IOBuf msg_body;
+        flare::io::IOBuf msg_body;
     };
     struct WriteParams {
         WriteParams();
@@ -541,23 +541,23 @@ private:
 };
 
 // Parse binary format of rmtp.
-ParseResult ParseRtmpMessage(butil::IOBuf* source, Socket *socket, bool read_eof,
+ParseResult ParseRtmpMessage(flare::io::IOBuf* source, Socket *socket, bool read_eof,
                             const void *arg);
 
 // no-op placeholder, never be called.
 void ProcessRtmpMessage(InputMessageBase* msg);
 
 // Pack createStream message
-void PackRtmpRequest(butil::IOBuf* buf,
+void PackRtmpRequest(flare::io::IOBuf* buf,
                      SocketMessage**,
                      uint64_t correlation_id,
                      const google::protobuf::MethodDescriptor* method,
                      Controller* controller,
-                     const butil::IOBuf& request,
+                     const flare::io::IOBuf& request,
                      const Authenticator* auth);
 
 // Serialize createStream message
-void SerializeRtmpRequest(butil::IOBuf* buf,
+void SerializeRtmpRequest(flare::io::IOBuf* buf,
                           Controller* cntl,
                           const google::protobuf::Message* request);
 

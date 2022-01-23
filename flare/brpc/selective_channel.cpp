@@ -476,7 +476,7 @@ const Controller* GetSubControllerOfSelectiveChannel(
     return static_cast<const schan::Sender*>(sender)->SubController(index);
 }
 
-static void PassSerializeRequest(butil::IOBuf*, Controller*,
+static void PassSerializeRequest(flare::io::IOBuf*, Controller*,
                                  const google::protobuf::Message*) {
 }
 

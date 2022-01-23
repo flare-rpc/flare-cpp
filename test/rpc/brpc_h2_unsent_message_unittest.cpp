@@ -34,7 +34,7 @@ int main(int argc, char* argv[]) {
 
 TEST(H2UnsentMessage, request_throughput) {
     brpc::Controller cntl;
-    butil::IOBuf request_buf;
+    flare::io::IOBuf request_buf;
     cntl.http_request().uri() = "0.0.0.0:8010/HttpService/Echo";
     brpc::policy::SerializeHttpRequest(&request_buf, &cntl, NULL);
 
@@ -55,7 +55,7 @@ TEST(H2UnsentMessage, request_throughput) {
     int64_t ntotal = 500000;
 
     // calc H2UnsentRequest throughput
-    butil::IOBuf dummy_buf;
+    flare::io::IOBuf dummy_buf;
     ProfilerStart("h2_unsent_req.prof");
     int64_t start_us = flare::base::gettimeofday_us();
     for (int i = 0; i < ntotal; ++i) {

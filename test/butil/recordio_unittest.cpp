@@ -24,7 +24,7 @@
 
 namespace {
 
-class StringReader : public butil::IReader {
+class StringReader : public flare::io::IReader {
 public:
     StringReader(const std::string& str,
                  bool report_eagain_on_end = false)
@@ -58,7 +58,7 @@ private:
     bool _report_eagain_on_end;
 };
 
-class StringWriter : public butil::IWriter {
+class StringWriter : public flare::io::IWriter {
 public:
     ssize_t WriteV(const iovec* iov, int iovcnt) override {
         const size_t old_size = _str.size();
@@ -84,7 +84,7 @@ TEST(RecordIOTest, empty_record) {
 TEST(RecordIOTest, manipulate_record) {
     butil::Record r1;
     ASSERT_EQ((size_t)0, r1.MetaCount());
-    butil::IOBuf* foo_val = r1.MutableMeta("foo");
+    flare::io::IOBuf* foo_val = r1.MutableMeta("foo");
     ASSERT_EQ((size_t)1, r1.MetaCount());
     ASSERT_TRUE(foo_val->empty());
     foo_val->append("foo_data");
@@ -93,7 +93,7 @@ TEST(RecordIOTest, manipulate_record) {
     ASSERT_EQ("foo_data", *foo_val);
     ASSERT_EQ(foo_val, r1.Meta("foo"));
 
-    butil::IOBuf* bar_val = r1.MutableMeta("bar");
+    flare::io::IOBuf* bar_val = r1.MutableMeta("bar");
     ASSERT_EQ((size_t)2, r1.MetaCount());
     ASSERT_TRUE(bar_val->empty());
     bar_val->append("bar_data");
@@ -129,11 +129,11 @@ TEST(RecordIOTest, write_read_basic) {
     butil::Record src;
     ASSERT_EQ(0, rw.Write(src));
 
-    butil::IOBuf* foo_val = src.MutableMeta("foo");
+    flare::io::IOBuf* foo_val = src.MutableMeta("foo");
     foo_val->append("foo_data");
     ASSERT_EQ(0, rw.Write(src));
 
-    butil::IOBuf* bar_val = src.MutableMeta("bar");
+    flare::io::IOBuf* bar_val = src.MutableMeta("bar");
     bar_val->append("bar_data");
     ASSERT_EQ(0, rw.Write(src));
 
@@ -142,7 +142,7 @@ TEST(RecordIOTest, write_read_basic) {
 
     ASSERT_EQ(0, rw.Flush());
     std::cout << "len=" << sw.str().size()
-              << " content=" << butil::PrintedAsBinary(sw.str(), 256) << std::endl;
+              << " content=" <<flare::io::PrintedAsBinary(sw.str(), 256) << std::endl;
 
     StringReader sr(sw.str());
     butil::RecordReader rr(&sr);
@@ -190,18 +190,18 @@ TEST(RecordIOTest, incomplete_reader) {
     butil::RecordWriter rw(&sw);
 
     butil::Record src;
-    butil::IOBuf* foo_val = src.MutableMeta("foo");
+    flare::io::IOBuf* foo_val = src.MutableMeta("foo");
     foo_val->append("foo_data");
     ASSERT_EQ(0, rw.Write(src));
 
-    butil::IOBuf* bar_val = src.MutableMeta("bar");
+    flare::io::IOBuf* bar_val = src.MutableMeta("bar");
     bar_val->append("bar_data");
     ASSERT_EQ(0, rw.Write(src));
 
     ASSERT_EQ(0, rw.Flush());
     std::string data = sw.str();
     std::cout << "len=" << data.size()
-              << " content=" << butil::PrintedAsBinary(data, 256) << std::endl;
+              << " content=" <<flare::io::PrintedAsBinary(data, 256) << std::endl;
 
     StringReader sr(data, true);
     butil::RecordReader rr(&sr);

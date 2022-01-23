@@ -22,7 +22,7 @@
 
 #include "flare/butil/strings/string_piece.h"
 
-namespace butil {
+namespace flare::io {
 class IOBuf;
 
 // Print binary content within max length.
@@ -35,7 +35,7 @@ public:
     ToPrintable(const IOBuf& b, size_t max_length = DEFAULT_MAX_LENGTH)
         : _iobuf(&b), _max_length(max_length) {}
 
-    ToPrintable(const StringPiece& str, size_t max_length = DEFAULT_MAX_LENGTH)
+    ToPrintable(const std::string_view& str, size_t max_length = DEFAULT_MAX_LENGTH)
         : _iobuf(NULL), _str(str), _max_length(max_length) {}
 
     ToPrintable(const void* data, size_t n, size_t max_length = DEFAULT_MAX_LENGTH)
@@ -45,7 +45,7 @@ public:
 
 private:
     const IOBuf* _iobuf;
-    StringPiece _str;
+    std::string_view _str;
     size_t _max_length;
 };
 
@@ -60,11 +60,11 @@ inline std::ostream& operator<<(std::ostream& os, const ToPrintable& p) {
 // Convert binary data to a printable string.
 std::string ToPrintableString(const IOBuf& data,
                               size_t max_length = ToPrintable::DEFAULT_MAX_LENGTH);
-std::string ToPrintableString(const StringPiece& data,
+std::string ToPrintableString(const std::string_view& data,
                               size_t max_length = ToPrintable::DEFAULT_MAX_LENGTH);
 std::string ToPrintableString(const void* data, size_t n,
                               size_t max_length = ToPrintable::DEFAULT_MAX_LENGTH);
 
-} // namespace butil
+} // namespace flare::io
 
 #endif  // BUTIL_BINARY_PRINTER_H

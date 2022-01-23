@@ -21,7 +21,7 @@
 #include <gflags/gflags.h>
 #include "flare/base/logging.h"                       // LOG()
 #include "flare/base/time.h"
-#include "flare/butil/iobuf.h"                         // butil::IOBuf
+#include "flare/io/iobuf.h"                         // flare::io::IOBuf
 #include "flare/butil/sys_byteorder.h"
 #include "flare/brpc/controller.h"               // Controller
 #include "flare/brpc/details/controller_private_accessor.h"
@@ -73,7 +73,7 @@ inline bool IsSupportedCommand(uint8_t command) {
     return flare::container::bit_array_get(supported_cmd_map, command);
 }
 
-ParseResult ParseMemcacheMessage(butil::IOBuf* source,
+ParseResult ParseMemcacheMessage(flare::io::IOBuf* source,
                                  Socket* socket, bool /*read_eof*/, const void */*arg*/) {
     while (1) {
         const uint8_t* p_mcmagic = (const uint8_t*)source->fetch1();
@@ -191,7 +191,7 @@ void ProcessMemcacheResponse(InputMessageBase* msg_base) {
     accessor.OnResponse(cid, saved_error);
 }
 
-void SerializeMemcacheRequest(butil::IOBuf* buf,
+void SerializeMemcacheRequest(flare::io::IOBuf* buf,
                               Controller* cntl,
                               const google::protobuf::Message* request) {
     if (request == NULL) {
@@ -206,12 +206,12 @@ void SerializeMemcacheRequest(butil::IOBuf* buf,
     ControllerPrivateAccessor(cntl).set_pipelined_count(mr->pipelined_count());
 }
 
-void PackMemcacheRequest(butil::IOBuf* buf,
+void PackMemcacheRequest(flare::io::IOBuf* buf,
                          SocketMessage**,
                          uint64_t /*correlation_id*/,
                          const google::protobuf::MethodDescriptor*,
                          Controller* cntl,
-                         const butil::IOBuf& request,
+                         const flare::io::IOBuf& request,
                          const Authenticator* auth) {
     if (auth) {
         std::string auth_str;

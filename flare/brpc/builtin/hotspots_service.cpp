@@ -138,7 +138,7 @@ struct ProfilingResult {
     
     int64_t id;
     int status_code;
-    butil::IOBuf result;
+    flare::io::IOBuf result;
 };
 
 static bool g_written_pprof_perl = false;
@@ -186,7 +186,7 @@ static bool WriteSmallFile(const char* filepath_in,
 }
 
 static bool WriteSmallFile(const char* filepath_in,
-                           const butil::IOBuf& content) {
+                           const flare::io::IOBuf& content) {
     butil::File::Error error;
     butil::FilePath path(filepath_in);
     butil::FilePath dir = path.DirName();
@@ -200,7 +200,7 @@ static bool WriteSmallFile(const char* filepath_in,
         LOG(ERROR) << "Fail to open `" << path.value() << '\'';
         return false;
     }
-    butil::IOBufAsZeroCopyInputStream iter(content);
+    flare::io::IOBufAsZeroCopyInputStream iter(content);
     const void* data = NULL;
     int size = 0;
     while (iter.Next(&data, &size)) {
@@ -397,15 +397,15 @@ static bool has_GOOGLE_PPROF_BINARY_PATH() {
 static void DisplayResult(Controller* cntl,
                           google::protobuf::Closure* done,
                           const char* prof_name,
-                          const butil::IOBuf& result_prefix) {
+                          const flare::io::IOBuf& result_prefix) {
     ClosureGuard done_guard(done);
-    butil::IOBuf prof_result;
+    flare::io::IOBuf prof_result;
     if (cntl->IsCanceled()) {
         // If the page is refreshed, older connections are likely to be
         // already closed by browser.
         return;
     }
-    butil::IOBuf& resp = cntl->response_attachment();
+    flare::io::IOBuf& resp = cntl->response_attachment();
     const bool use_html = UseHTML(cntl->http_request());
     const bool show_ccount = cntl->http_request().uri().GetQuery("ccount");
     const std::string* base_name = cntl->http_request().uri().GetQuery("base");
@@ -434,7 +434,7 @@ static void DisplayResult(Controller* cntl,
                 EINVAL, "The profile denoted by `base' does not exist");
         }
     }
-    butil::IOBufBuilder os;
+    flare::io::IOBufBuilder os;
     os << result_prefix;
     char expected_result_name[256];
     MakeCacheName(expected_result_name, sizeof(expected_result_name),
@@ -522,7 +522,7 @@ static void DisplayResult(Controller* cntl,
         }
         errno = 0; // read_command_output may not set errno, clear it to make sure if
                    // we see non-zero errno, it's real error.
-        butil::IOBufBuilder pprof_output;
+        flare::io::IOBufBuilder pprof_output;
         RPC_VLOG << "Running cmd=" << cmd;
         const int rc = flare::base::read_command_output(pprof_output, cmd.c_str());
         if (rc != 0) {
@@ -552,8 +552,8 @@ static void DisplayResult(Controller* cntl,
 
         // Append the profile name as the visual reminder for what
         // current profile is.
-        butil::IOBuf before_label;
-        butil::IOBuf tmp;
+        flare::io::IOBuf before_label;
+        flare::io::IOBuf tmp;
         if (cntl->http_request().uri().GetQuery("view") == NULL) {
             tmp.append(prof_name);
             tmp.append("[addToProfEnd]");
@@ -605,11 +605,11 @@ static void DoProfiling(ProfilingType type,
                         ::google::protobuf::Closure* done) {
     ClosureGuard done_guard(done);
     Controller *cntl = static_cast<Controller*>(cntl_base);
-    butil::IOBuf& resp = cntl->response_attachment();
+    flare::io::IOBuf& resp = cntl->response_attachment();
     const bool use_html = UseHTML(cntl->http_request());
     cntl->http_response().set_content_type(use_html ? "text/html" : "text/plain");
 
-    butil::IOBufBuilder os;
+    flare::io::IOBufBuilder os;
     if (use_html) {
         os << "<!DOCTYPE html><html><head>\n"
             "<meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\" />\n"
@@ -836,9 +836,9 @@ static void StartProfiling(ProfilingType type,
                            ::google::protobuf::Closure* done) {
     ClosureGuard done_guard(done);
     Controller *cntl = static_cast<Controller*>(cntl_base);
-    butil::IOBuf& resp = cntl->response_attachment();
+    flare::io::IOBuf& resp = cntl->response_attachment();
     const bool use_html = UseHTML(cntl->http_request());
-    butil::IOBufBuilder os;
+    flare::io::IOBufBuilder os;
     bool enabled = false;
     const char* extra_desc = "";
     if (type == PROFILING_CPU) {

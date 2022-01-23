@@ -29,10 +29,10 @@
 #include <string_view>
 #include <google/protobuf/io/zero_copy_stream.h> // ZeroCopyInputStream
 #include "flare/butil/third_party/snappy/snappy-sinksource.h"
-#include "flare/butil/zero_copy_stream_as_streambuf.h"
+#include "flare/io/zero_copy_stream_as_streambuf.h"
 #include "flare/butil/macros.h"
-#include "flare/butil/reader_writer.h"
-#include "flare/butil/binary_printer.h"
+#include "flare/io/reader_writer.h"
+#include "flare/io/binary_printer.h"
 
 // For IOBuf::appendv(const const_iovec*, size_t). The only difference of this
 // struct from iovec (defined in sys/uio.h) is that iov_base is `const void*'
@@ -49,7 +49,7 @@ struct ssl_st;
 #endif
 }
 
-namespace butil {
+namespace flare::io {
 
 // IOBuf is a non-continuous buffer that can be cut and combined w/o copying
 // payload. It can be read from or flushed into file descriptors as well.
@@ -282,7 +282,7 @@ public:
     // Returns bytes copied.
     size_t append_to(IOBuf* buf, size_t n = (size_t)-1L, size_t pos = 0) const;
 
-    // Explicitly declare this overload as error to avoid copy_to(butil::IOBuf*)
+    // Explicitly declare this overload as error to avoid copy_to(flare::io::IOBuf*)
     // from being interpreted as copy_to(void*) by the compiler (which causes
     // undefined behavior).
     size_t copy_to(IOBuf* buf, size_t n = (size_t)-1L, size_t pos = 0) const
@@ -420,17 +420,17 @@ private:
 
 std::ostream& operator<<(std::ostream&, const IOBuf& buf);
 
-inline bool operator==(const butil::IOBuf& b, const std::string_view& s)
+inline bool operator==(const flare::io::IOBuf& b, const std::string_view& s)
 { return b.equals(s); }
-inline bool operator==(const std::string_view& s, const butil::IOBuf& b)
+inline bool operator==(const std::string_view& s, const flare::io::IOBuf& b)
 { return b.equals(s); }
-inline bool operator!=(const butil::IOBuf& b, const std::string_view& s)
+inline bool operator!=(const flare::io::IOBuf& b, const std::string_view& s)
 { return !b.equals(s); }
-inline bool operator!=(const std::string_view& s, const butil::IOBuf& b)
+inline bool operator!=(const std::string_view& s, const flare::io::IOBuf& b)
 { return !b.equals(s); }
-inline bool operator==(const butil::IOBuf& b1, const butil::IOBuf& b2)
+inline bool operator==(const flare::io::IOBuf& b1, const flare::io::IOBuf& b2)
 { return b1.equals(b2); }
-inline bool operator!=(const butil::IOBuf& b1, const butil::IOBuf& b2)
+inline bool operator!=(const flare::io::IOBuf& b1, const flare::io::IOBuf& b2)
 { return !b1.equals(b2); }
 
 // IOPortal is a subclass of IOBuf that can read from file descriptors.
@@ -485,12 +485,12 @@ private:
 // The cut IOBuf can be appended during cutting.
 class IOBufCutter {
 public:
-    explicit IOBufCutter(butil::IOBuf* buf);
+    explicit IOBufCutter(flare::io::IOBuf* buf);
     ~IOBufCutter();
 
     // Cut off n bytes and APPEND to `out'
     // Returns bytes cut.
-    size_t cutn(butil::IOBuf* out, size_t n);
+    size_t cutn(flare::io::IOBuf* out, size_t n);
     size_t cutn(std::string* out, size_t n);
     size_t cutn(void* out, size_t n);
 
@@ -586,7 +586,7 @@ private:
 // Wrap IOBuf into input of snappy compresson.
 class IOBufAsSnappySource : public butil::snappy::Source {
 public:
-    explicit IOBufAsSnappySource(const butil::IOBuf& buf)
+    explicit IOBufAsSnappySource(const flare::io::IOBuf& buf)
         : _buf(&buf), _stream(buf) {}
     virtual ~IOBufAsSnappySource() {}
 
@@ -601,14 +601,14 @@ public:
     void Skip(size_t n) override;
     
 private:
-    const butil::IOBuf* _buf;
-    butil::IOBufAsZeroCopyInputStream _stream;
+    const flare::io::IOBuf* _buf;
+    flare::io::IOBufAsZeroCopyInputStream _stream;
 };
 
 // Wrap IOBuf into output of snappy compression.
 class IOBufAsSnappySink : public butil::snappy::Sink {
 public:
-    explicit IOBufAsSnappySink(butil::IOBuf& buf);
+    explicit IOBufAsSnappySink(flare::io::IOBuf& buf);
     virtual ~IOBufAsSnappySink() {}
 
     // Append "bytes[0,n-1]" to this.
@@ -620,8 +620,8 @@ public:
 private:
     char* _cur_buf;
     int _cur_len;
-    butil::IOBuf* _buf;
-    butil::IOBufAsZeroCopyOutputStream _buf_stream;
+    flare::io::IOBuf* _buf;
+    flare::io::IOBufAsZeroCopyOutputStream _buf_stream;
 };
 
 // A std::ostream to build IOBuf.
@@ -704,7 +704,7 @@ private:
 // During iteration, the iobuf should NOT be changed.
 class IOBufBytesIterator {
 public:
-    explicit IOBufBytesIterator(const butil::IOBuf& buf);
+    explicit IOBufBytesIterator(const flare::io::IOBuf& buf);
     // Construct from another iterator.
     IOBufBytesIterator(const IOBufBytesIterator& it);
     IOBufBytesIterator(const IOBufBytesIterator& it, size_t bytes_left);
@@ -723,7 +723,7 @@ public:
     size_t forward(size_t n);
     // Append at most n bytes into buf, forwarding this iterator. Data are
     // referenced rather than copied.
-    size_t append_and_forward(butil::IOBuf* buf, size_t n);
+    size_t append_and_forward(flare::io::IOBuf* buf, size_t n);
     bool forward_one_block(const void** data, size_t* size);
     size_t bytes_left() const { return _bytes_left; }
 private:
@@ -732,24 +732,19 @@ private:
     const char* _block_end;
     uint32_t _block_count;
     uint32_t _bytes_left;
-    const butil::IOBuf* _buf;
+    const flare::io::IOBuf* _buf;
 };
 
-}  // namespace butil
+}  // namespace flare::io
 
-// Specialize std::swap for IOBuf
-#if __cplusplus < 201103L  // < C++11
-#include <algorithm>  // std::swap until C++11
-#else
 #include <utility>  // std::swap since C++11
-#endif  // __cplusplus < 201103L
 namespace std {
 template <>
-inline void swap(butil::IOBuf& a, butil::IOBuf& b) {
+inline void swap(flare::io::IOBuf& a, flare::io::IOBuf& b) {
     return a.swap(b);
 }
 } // namespace std
 
-#include "flare/butil/iobuf_inl.h"
+#include "flare/io/iobuf_inl.h"
 
 #endif  // BUTIL_IOBUF_H

@@ -21,7 +21,7 @@
 #include <gflags/gflags.h>
 
 #include "flare/base/time.h"
-#include "flare/butil/iobuf.h"                        // butil::IOBuf
+#include "flare/io/iobuf.h"                        // flare::io::IOBuf
 
 #include "flare/brpc/controller.h"               // Controller
 #include "flare/brpc/socket.h"                   // Socket
@@ -135,7 +135,7 @@ void ProcessNsheadMcpackResponse(InputMessageBase* msg_base) {
     accessor.OnResponse(cid, saved_error);
 } 
 
-void SerializeNsheadMcpackRequest(butil::IOBuf* buf, Controller* cntl,
+void SerializeNsheadMcpackRequest(flare::io::IOBuf* buf, Controller* cntl,
                           const google::protobuf::Message* pb_req) {
     CompressType type = cntl->request_compress_type();
     if (type != COMPRESS_TYPE_NONE) {
@@ -151,12 +151,12 @@ void SerializeNsheadMcpackRequest(butil::IOBuf* buf, Controller* cntl,
     }
 }
 
-void PackNsheadMcpackRequest(butil::IOBuf* buf,
+void PackNsheadMcpackRequest(flare::io::IOBuf* buf,
                              SocketMessage**,
                              uint64_t correlation_id,
                              const google::protobuf::MethodDescriptor*,
                              Controller* controller,
-                             const butil::IOBuf& request,
+                             const flare::io::IOBuf& request,
                              const Authenticator* /*not supported*/) {
     ControllerPrivateAccessor accessor(controller);
     if (controller->connection_type() == CONNECTION_TYPE_SINGLE) {

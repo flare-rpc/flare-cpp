@@ -20,7 +20,7 @@
 #define BRPC_SERIALIZED_REQUEST_H
 
 #include <google/protobuf/message.h>
-#include "flare/butil/iobuf.h"
+#include "flare/io/iobuf.h"
 #include "flare/brpc/proto_base.pb.h"
 
 namespace brpc {
@@ -50,8 +50,8 @@ public:
     bool IsInitialized() const;
     int ByteSize() const;
     int GetCachedSize() const { return (int)_serialized.size(); }
-    butil::IOBuf& serialized_data() { return _serialized; }
-    const butil::IOBuf& serialized_data() const { return _serialized; }
+    flare::io::IOBuf& serialized_data() { return _serialized; }
+    const flare::io::IOBuf& serialized_data() const { return _serialized; }
 
 protected:
     ::google::protobuf::Metadata GetMetadata() const;
@@ -70,7 +70,7 @@ private:
     void SetCachedSize(int size) const;
   
 private:
-    butil::IOBuf _serialized;
+    flare::io::IOBuf _serialized;
 };
 
 } // namespace brpc

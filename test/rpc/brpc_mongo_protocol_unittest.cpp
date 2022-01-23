@@ -69,7 +69,7 @@ class MyContext : public ::brpc::MongoContext {
 
 class MyMongoAdaptor : public brpc::MongoServiceAdaptor {
 public:
-    virtual void SerializeError(int /*response_to*/, butil::IOBuf* out_buf) const {
+    virtual void SerializeError(int /*response_to*/, flare::io::IOBuf* out_buf) const {
         brpc::mongo_head_t header = {
             (int32_t)(sizeof(brpc::mongo_head_t) + sizeof(int32_t) * 3 +
                 sizeof(int64_t) + EXP_REQUEST.length()),
@@ -155,7 +155,7 @@ TEST_F(MongoTest, process_request_logoff) {
     brpc::mongo_head_t header = { 0, 0, 0, 0 };
     header.op_code = brpc::MONGO_OPCODE_REPLY;
     header.message_length = sizeof(header) + EXP_REQUEST.length();
-    butil::IOBuf total_buf;
+    flare::io::IOBuf total_buf;
     total_buf.append(static_cast<const void*>(&header), sizeof(header));
     total_buf.append(EXP_REQUEST);
     brpc::ParseResult req_pr = brpc::policy::ParseMongoMessage(
@@ -170,7 +170,7 @@ TEST_F(MongoTest, process_request_failed_socket) {
     brpc::mongo_head_t header = { 0, 0, 0, 0 };
     header.op_code = brpc::MONGO_OPCODE_REPLY;
     header.message_length = sizeof(header) + EXP_REQUEST.length();
-    butil::IOBuf total_buf;
+    flare::io::IOBuf total_buf;
     total_buf.append(static_cast<const void*>(&header), sizeof(header));
     total_buf.append(EXP_REQUEST);
     brpc::ParseResult req_pr = brpc::policy::ParseMongoMessage(
@@ -182,8 +182,8 @@ TEST_F(MongoTest, process_request_failed_socket) {
 }
 
 TEST_F(MongoTest, complete_flow) {
-    butil::IOBuf request_buf;
-    butil::IOBuf total_buf;
+    flare::io::IOBuf request_buf;
+    flare::io::IOBuf total_buf;
     brpc::Controller cntl;
     brpc::policy::MongoRequest req;
     brpc::policy::MongoResponse res;
@@ -213,7 +213,7 @@ TEST_F(MongoTest, complete_flow) {
     ProcessMessage(brpc::policy::ProcessMongoRequest, req_msg, false);
 
     // Read response from pipe
-    butil::IOPortal response_buf;
+    flare::io::IOPortal response_buf;
     response_buf.append_from_file_descriptor(_pipe_fds[0], 1024);
     char buf[sizeof(brpc::mongo_head_t)];
     const brpc::mongo_head_t *phead = static_cast<const brpc::mongo_head_t*>(

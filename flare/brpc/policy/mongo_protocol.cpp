@@ -19,7 +19,7 @@
 #include <google/protobuf/message.h>            // Message
 #include <gflags/gflags.h>
 #include "flare/base/time.h"
-#include "flare/butil/iobuf.h"                         // butil::IOBuf
+#include "flare/io/iobuf.h"                         // flare::io::IOBuf
 #include "flare/brpc/controller.h"               // Controller
 #include "flare/brpc/socket.h"                   // Socket
 #include "flare/brpc/server.h"                   // Server
@@ -73,7 +73,7 @@ void SendMongoResponse::Run() {
     
     const MongoServiceAdaptor* adaptor =
             server->options().mongo_service_adaptor;
-    butil::IOBuf res_buf;
+    flare::io::IOBuf res_buf;
     if (cntl.Failed()) {
         adaptor->SerializeError(res.header().response_to(), &res_buf);
     } else if (res.has_message()) {
@@ -107,7 +107,7 @@ void SendMongoResponse::Run() {
     }
 }
 
-ParseResult ParseMongoMessage(butil::IOBuf* source,
+ParseResult ParseMongoMessage(flare::io::IOBuf* source,
                               Socket* socket, bool /*read_eof*/, const void *arg) {
     const Server* server = static_cast<const Server*>(arg);
     const MongoServiceAdaptor* adaptor = server->options().mongo_service_adaptor;

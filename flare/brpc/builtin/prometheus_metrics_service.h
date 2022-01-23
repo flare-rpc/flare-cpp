@@ -31,7 +31,7 @@ public:
                         ::google::protobuf::Closure* done) override;
 };
 
-int DumpPrometheusMetricsToIOBuf(butil::IOBuf* output);
+int DumpPrometheusMetricsToIOBuf(flare::io::IOBuf* output);
 
 } // namepace brpc
 

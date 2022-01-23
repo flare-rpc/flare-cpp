@@ -20,7 +20,7 @@
 #define BRPC_RPC_DUMP_H
 
 #include <gflags/gflags_declare.h>
-#include "flare/butil/iobuf.h"                            // IOBuf
+#include "flare/io/iobuf.h"                            // IOBuf
 #include "flare/butil/files/file_path.h"                  // FilePath
 #include "flare/bvar/collector.h"
 #include "flare/brpc/rpc_dump.pb.h"                       // RpcDumpMeta
@@ -49,7 +49,7 @@ DECLARE_bool(rpc_dump);
 
 class SampledRequest : public bvar::Collected {
 public:
-    butil::IOBuf request;
+    flare::io::IOBuf request;
     RpcDumpMeta meta;
 
     // Implement methods of Sampled.
@@ -92,9 +92,9 @@ public:
 private:
     // Parse on request from the buf. Set `format_error' to true when
     // the buf does not match the format.
-    static SampledRequest* Pop(butil::IOBuf& buf, bool* format_error);
+    static SampledRequest* Pop(flare::io::IOBuf& buf, bool* format_error);
     
-    butil::IOPortal _cur_buf;
+    flare::io::IOPortal _cur_buf;
     int _cur_fd;
     butil::FileEnumerator* _enum;
     butil::FilePath _dir;

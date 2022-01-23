@@ -35,9 +35,9 @@
 #include "flare/butil/macros.h"                   // BAIDU_CASSERT
 #include "flare/base/logging.h"                  // CHECK, LOG
 #include "flare/base/fd_guard.h"                 // flare::base::fd_guard
-#include "flare/butil/iobuf.h"
+#include "flare/io/iobuf.h"
 
-namespace butil {
+namespace flare::io {
 namespace iobuf {
 
 typedef ssize_t (*iov_function)(int fd, const struct iovec *vector,
@@ -1126,7 +1126,7 @@ void IOBuf::append(const Movable& movable_other) {
     if (empty()) {
         swap(movable_other.value());
     } else {
-        butil::IOBuf& other = movable_other.value();
+        flare::io::IOBuf& other = movable_other.value();
         const size_t nref = other._ref_num();
         for (size_t i = 0; i < nref; ++i) {
             _move_back_ref(other._ref_at(i));
@@ -1484,7 +1484,7 @@ std::string_view IOBuf::backing_block(size_t i) const {
     return std::string_view();
 }
 
-bool IOBuf::equals(const butil::IOBuf& other) const {
+bool IOBuf::equals(const flare::io::IOBuf& other) const {
     const size_t sz1 = size();
     if (sz1 != other.size()) {
         return false;
@@ -1716,7 +1716,7 @@ void IOPortal::return_cached_blocks_impl(Block* b) {
 
 //////////////// IOBufCutter ////////////////
 
-IOBufCutter::IOBufCutter(butil::IOBuf* buf)
+IOBufCutter::IOBufCutter(flare::io::IOBuf* buf)
     : _data(NULL)
     , _data_end(NULL)
     , _block(NULL)
@@ -1783,7 +1783,7 @@ size_t IOBufCutter::slower_copy_to(void* dst, size_t n) {
     return (char*)dst - (char*)saved_dst;
 }
 
-size_t IOBufCutter::cutn(butil::IOBuf* out, size_t n) {
+size_t IOBufCutter::cutn(flare::io::IOBuf* out, size_t n) {
     if (n == 0) {
         return 0;
     }
@@ -2033,7 +2033,7 @@ void IOBufAsZeroCopyOutputStream::_release_block() {
     _cur_block = NULL;
 }
 
-IOBufAsSnappySink::IOBufAsSnappySink(butil::IOBuf& buf)
+IOBufAsSnappySink::IOBufAsSnappySink(flare::io::IOBuf& buf)
     : _cur_buf(NULL), _cur_len(0), _buf(&buf), _buf_stream(&buf) {
 }
 
@@ -2049,7 +2049,7 @@ void IOBufAsSnappySink::Append(const char* bytes, size_t n) {
 }
 
 char* IOBufAsSnappySink::GetAppendBuffer(size_t length, char* scratch) {
-    // TODO: butil::IOBuf supports dynamic sized blocks.
+    // TODO: flare::io::IOBuf supports dynamic sized blocks.
     if (length <= 8000/*just a hint*/) {
         if (_buf_stream.Next(reinterpret_cast<void**>(&_cur_buf), &_cur_len)) { 
             if (_cur_len >= static_cast<int>(length)) {
@@ -2094,7 +2094,7 @@ IOBufAppender::IOBufAppender()
     , _zc_stream(&_buf) {
 }
 
-size_t IOBufBytesIterator::append_and_forward(butil::IOBuf* buf, size_t n) {
+size_t IOBufBytesIterator::append_and_forward(flare::io::IOBuf* buf, size_t n) {
     size_t nc = 0;
     while (nc < n && _bytes_left != 0) {
         const IOBuf::BlockRef& r = _buf->_ref_at(_block_count - 1);
@@ -2125,8 +2125,8 @@ bool IOBufBytesIterator::forward_one_block(const void** data, size_t* size) {
     return true;
 }
 
-}  // namespace butil
+}  // namespace flare::io
 
 void* fast_memcpy(void *__restrict dest, const void *__restrict src, size_t n) {
-    return butil::iobuf::cp(dest, src, n);
+    return flare::io::iobuf::cp(dest, src, n);
 }

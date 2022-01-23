@@ -21,7 +21,7 @@
 #include <string>                                       // std::string
 #include <set>                                          // std::set
 #include "flare/bthread/bthread.h"                            // bthread_usleep
-#include "flare/butil/iobuf.h"
+#include "flare/io/iobuf.h"
 #include "flare/brpc/log.h"
 #include "flare/brpc/channel.h"
 #include "flare/brpc/policy/remote_file_naming_service.h"
@@ -42,11 +42,11 @@ bool SplitIntoServerAndTag(const std::string_view& line,
                            std::string_view* server_addr,
                            std::string_view* tag);
 
-static bool CutLineFromIOBuf(butil::IOBuf* source, std::string* line_out) {
+static bool CutLineFromIOBuf(flare::io::IOBuf* source, std::string* line_out) {
     if (source->empty()) {
         return false;
     }
-    butil::IOBuf line_data;
+    flare::io::IOBuf line_data;
     if (source->cut_until(&line_data, "\n") != 0) {
         source->cutn(line_out, source->size());
         return true;
@@ -85,7 +85,7 @@ int RemoteFileNamingService::GetServers(const char *service_name_cstr,
             _path = "/";
         } else {
             server_addr_piece = tmpname.substr(0, slash_pos);
-            _path = std::move(flare::base::as_string(tmpname.substr(slash_pos)));
+            _path = flare::base::as_string(tmpname.substr(slash_pos));
         }
         _server_addr.reserve(proto.size() + 3 + server_addr_piece.size());
         _server_addr.append(proto.data(), proto.size());

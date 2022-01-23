@@ -37,11 +37,11 @@ channel.CallMethod(NULL, &cntl, NULL, NULL, NULL/*done*/);
 
 http/h2 does not relate to protobuf much, thus all parameters of `CallMethod` are NULL except `Controller` and `done`. Issue asynchronous RPC with non-NULL `done`.
 
-`cntl.response_attachment()` is body of the http/h2 response and typed `butil::IOBuf`. `IOBuf` can be converted to `std::string` by `to_string()`, which needs to allocate memory and copy all data. If performance is important, the code should consider supporting `IOBuf` directly rather than requiring continuous memory.
+`cntl.response_attachment()` is body of the http/h2 response and typed `flare::io::IOBuf`. `IOBuf` can be converted to `std::string` by `to_string()`, which needs to allocate memory and copy all data. If performance is important, the code should consider supporting `IOBuf` directly rather than requiring continuous memory.
 
 # POST
 
-The default HTTP Method is GET, which can be changed to POST or [other http methods](https://github.com/brpc/brpc/blob/master/src/brpc/http_method.h). The data to POST should be put into `request_attachment()`, which is typed [butil::IOBuf](https://github.com/brpc/brpc/blob/master/src/butil/iobuf.h) and able to append `std :: string` or `char *` directly.
+The default HTTP Method is GET, which can be changed to POST or [other http methods](https://github.com/brpc/brpc/blob/master/src/brpc/http_method.h). The data to POST should be put into `request_attachment()`, which is typed [flare::io::IOBuf](https://github.com/brpc/brpc/blob/master/src/butil/iobuf.h) and able to append `std :: string` or `char *` directly.
 
 ```c++
 brpc::Controller cntl;
@@ -51,13 +51,13 @@ cntl.request_attachment().append("{\"message\":\"hello world!\"}");
 channel.CallMethod(NULL, &cntl, NULL, NULL, NULL/*done*/);
 ```
 
-If the body needs a lot of printing to build, consider using `butil::IOBufBuilder`, which has same interfaces as `std::ostringstream`, probably simpler and more efficient than c-style printf when lots of objects need to be printed.
+If the body needs a lot of printing to build, consider using `flare::io::IOBufBuilder`, which has same interfaces as `std::ostringstream`, probably simpler and more efficient than c-style printf when lots of objects need to be printed.
 
 ```c++
 brpc::Controller cntl;
 cntl.http_request().uri() = "...";  // Request URL
 cntl.http_request().set_method(brpc::HTTP_METHOD_POST);
-butil::IOBufBuilder os;
+flare::io::IOBufBuilder os;
 os << "A lot of printing" << printable_objects << ...;
 os.move_to(cntl.request_attachment());
 channel.CallMethod(NULL, &cntl, NULL, NULL, NULL/*done*/);
@@ -162,14 +162,14 @@ cntl->http_request().set_content_type("text/plain");
 
 Get HTTP body
 ```c++
-butil::IOBuf& buf = cntl->request_attachment();
+flare::io::IOBuf& buf = cntl->request_attachment();
 std::string str = cntl->request_attachment().to_string(); // trigger copy underlying
 ```
 
 Set HTTP body
 ```c++
 cntl->request_attachment().append("....");
-butil::IOBufBuilder os; os << "....";
+flare::io::IOBufBuilder os; os << "....";
 os.move_to(cntl->request_attachment());
 ```
 
@@ -201,7 +201,7 @@ brpc does not decompress bodies of responses automatically due to universality. 
 ...
 const std::string* encoding = cntl->http_response().GetHeader("Content-Encoding");
 if (encoding != NULL && *encoding == "gzip") {
-    butil::IOBuf uncompressed;
+    flare::io::IOBuf uncompressed;
     if (!brpc::policy::GzipDecompress(cntl->response_attachment(), &uncompressed)) {
         LOG(ERROR) << "Fail to un-gzip response body";
         return;

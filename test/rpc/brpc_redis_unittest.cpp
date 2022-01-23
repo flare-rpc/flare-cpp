@@ -569,7 +569,7 @@ std::string GetCompleteCommand(const std::vector<std::string_view>& commands) {
 
 TEST_F(RedisTest, command_parser) {
     brpc::RedisCommandParser parser;
-    butil::IOBuf buf;
+    flare::io::IOBuf buf;
     std::vector<std::string_view> command_out;
     flare::memory::Arena arena;
     {
@@ -641,8 +641,8 @@ TEST_F(RedisTest, redis_reply_codec) {
     // status
     {
         brpc::RedisReply r(&arena);
-        butil::IOBuf buf;
-        butil::IOBufAppender appender;
+        flare::io::IOBuf buf;
+        flare::io::IOBufAppender appender;
         r.SetStatus("OK");
         ASSERT_TRUE(r.SerializeTo(&appender));
         appender.move_to(buf);
@@ -658,8 +658,8 @@ TEST_F(RedisTest, redis_reply_codec) {
     // error
     {
         brpc::RedisReply r(&arena);
-        butil::IOBuf buf;
-        butil::IOBufAppender appender;
+        flare::io::IOBuf buf;
+        flare::io::IOBufAppender appender;
         r.SetError("not exist \'key\'");
         ASSERT_TRUE(r.SerializeTo(&appender));
         appender.move_to(buf);
@@ -674,8 +674,8 @@ TEST_F(RedisTest, redis_reply_codec) {
     // string
     {
         brpc::RedisReply r(&arena);
-        butil::IOBuf buf;
-        butil::IOBufAppender appender;
+        flare::io::IOBuf buf;
+        flare::io::IOBufAppender appender;
         r.SetNullString();
         ASSERT_TRUE(r.SerializeTo(&appender));
         appender.move_to(buf);
@@ -713,8 +713,8 @@ TEST_F(RedisTest, redis_reply_codec) {
     // integer
     {
         brpc::RedisReply r(&arena);
-        butil::IOBuf buf;
-        butil::IOBufAppender appender;
+        flare::io::IOBuf buf;
+        flare::io::IOBufAppender appender;
         int t = 2;
         int input[] = { -1, 1234567 };
         const char* output[] = { ":-1\r\n", ":1234567\r\n" };
@@ -734,8 +734,8 @@ TEST_F(RedisTest, redis_reply_codec) {
     // array
     {
         brpc::RedisReply r(&arena);
-        butil::IOBuf buf;
-        butil::IOBufAppender appender;
+        flare::io::IOBuf buf;
+        flare::io::IOBufAppender appender;
         r.SetArray(3);
         brpc::RedisReply& sub_reply = r[0];
         sub_reply.SetArray(2);

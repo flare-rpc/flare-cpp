@@ -20,7 +20,7 @@
 #include <google/protobuf/message.h>            // Message
 
 #include "flare/base/time.h"
-#include "flare/butil/iobuf.h"                         // butil::IOBuf
+#include "flare/io/iobuf.h"                         // flare::io::IOBuf
 
 #include "flare/brpc/controller.h"               // Controller
 #include "flare/brpc/socket.h"                   // Socket

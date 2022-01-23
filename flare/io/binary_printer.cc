@@ -18,10 +18,10 @@
 // Date: Thu Nov 22 13:57:56 CST 2012
 
 #include <inttypes.h>
-#include "flare/butil/iobuf.h"
-#include "flare/butil/binary_printer.h"
+#include "flare/io/iobuf.h"
+#include "flare/io/binary_printer.h"
 
-namespace butil {
+namespace flare::io {
 
 static char s_binary_char_map[] = {
     '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
@@ -100,7 +100,7 @@ static void PrintIOBuf(Appender* appender, const IOBuf& b, size_t max_length) {
     const size_t n = b.backing_block_num();
     size_t nw = 0;
     for (size_t i = 0; i < n; ++i) {
-        StringPiece blk = b.backing_block(i);
+        std::string_view blk = b.backing_block(i);
         for (size_t j = 0; j < blk.size(); ++j) {
             if (nw >= max_length) {
                 printer.Flush();
@@ -117,7 +117,7 @@ static void PrintIOBuf(Appender* appender, const IOBuf& b, size_t max_length) {
 }
 
 template <typename Appender>
-static void PrintString(Appender* appender, const StringPiece& s, size_t max_length) {
+static void PrintString(Appender* appender, const std::string_view& s, size_t max_length) {
     BinaryCharPrinter<Appender> printer(appender);
     for (size_t i = 0; i < s.size(); ++i) {
         if (i >= max_length) {
@@ -148,7 +148,7 @@ std::string ToPrintableString(const IOBuf& data, size_t max_length) {
     return result;
 }
 
-std::string ToPrintableString(const StringPiece& data, size_t max_length) {
+std::string ToPrintableString(const std::string_view& data, size_t max_length) {
     std::string result;
     StringAppender appender(&result);
     PrintString(&appender, data, max_length);
@@ -158,8 +158,8 @@ std::string ToPrintableString(const StringPiece& data, size_t max_length) {
 std::string ToPrintableString(const void* data, size_t n, size_t max_length) {
     std::string result;
     StringAppender appender(&result);
-    PrintString(&appender, StringPiece((const char*)data, n), max_length);
+    PrintString(&appender, std::string_view((const char*)data, n), max_length);
     return result;
 }
 
-} // namespace butil
+} // namespace flare::io

@@ -68,10 +68,10 @@ int main(int argc, char* argv[]) {
     }
     
     while (!brpc::IsAskedToQuit()) {
-        butil::IOBuf msg1;
+        flare::io::IOBuf msg1;
         msg1.append("abcdefghijklmnopqrstuvwxyz");
         CHECK_EQ(0, brpc::StreamWrite(stream, msg1));
-        butil::IOBuf msg2;
+        flare::io::IOBuf msg2;
         msg2.append("0123456789");
         CHECK_EQ(0, brpc::StreamWrite(stream, msg2));
         sleep(1);

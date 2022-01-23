@@ -80,7 +80,7 @@ Upon creating/accepting a Stream, your can fill the `hander` in `StreamOptions` 
 class StreamInputHandler {
 public:
     // Callback when stream receives data
-    virtual int on_received_messages(StreamId id, butil::IOBuf *const messages[], size_t size) = 0;
+    virtual int on_received_messages(StreamId id, flare::io::IOBuf *const messages[], size_t size) = 0;
  
     // Callback when there is no data for a long time on the stream
     virtual void on_idle_timeout(StreamId id) = 0;
@@ -106,7 +106,7 @@ public:
 //  - EAGAIN: |stream_id| is created with positive |max_buf_size| and buf size
 //            which the remote side hasn't consumed yet excceeds the number.
 //  - EINVAL: |stream_id| is invalied or has been closed
-int StreamWrite(StreamId stream_id, const butil::IOBuf &message);
+int StreamWrite(StreamId stream_id, const flare::io::IOBuf &message);
 ```
 
 # Flow Control

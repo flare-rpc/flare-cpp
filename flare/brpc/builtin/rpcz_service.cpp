@@ -151,7 +151,7 @@ void RpczService::stats(::google::protobuf::RpcController* cntl_base,
         return;
     }
 
-    butil::IOBufBuilder os;
+    flare::io::IOBufBuilder os;
     DescribeSpanDB(os);
     os.move_to(cntl->response_attachment());
 }
@@ -483,7 +483,7 @@ void RpczService::default_method(::google::protobuf::RpcController* cntl_base,
     cntl->http_response().set_content_type(
         use_html ? "text/html" : "text/plain");
 
-    butil::IOBufBuilder os;
+    flare::io::IOBufBuilder os;
     if (use_html) {
         os << "<!DOCTYPE html><html><head>\n"
            << "<script language=\"javascript\" type=\"text/javascript\" src=\"/js/jquery_min\"></script>\n"

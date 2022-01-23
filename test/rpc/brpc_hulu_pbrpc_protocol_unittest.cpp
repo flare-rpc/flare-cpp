@@ -141,12 +141,12 @@ protected:
         const brpc::policy::HuluRpcRequestMeta& meta) {
         brpc::policy::MostCommonMessage* msg =
                 brpc::policy::MostCommonMessage::Get();
-        butil::IOBufAsZeroCopyOutputStream meta_stream(&msg->meta);
+        flare::io::IOBufAsZeroCopyOutputStream meta_stream(&msg->meta);
         EXPECT_TRUE(meta.SerializeToZeroCopyStream(&meta_stream));
 
         test::EchoRequest req;
         req.set_message(EXP_REQUEST);
-        butil::IOBufAsZeroCopyOutputStream req_stream(&msg->payload);
+        flare::io::IOBufAsZeroCopyOutputStream req_stream(&msg->payload);
         EXPECT_TRUE(req.SerializeToZeroCopyStream(&req_stream));
         return msg;
     }
@@ -155,12 +155,12 @@ protected:
         const brpc::policy::HuluRpcResponseMeta& meta) {
         brpc::policy::MostCommonMessage* msg =
                 brpc::policy::MostCommonMessage::Get();
-        butil::IOBufAsZeroCopyOutputStream meta_stream(&msg->meta);
+        flare::io::IOBufAsZeroCopyOutputStream meta_stream(&msg->meta);
         EXPECT_TRUE(meta.SerializeToZeroCopyStream(&meta_stream));
 
         test::EchoResponse res;
         res.set_message(EXP_RESPONSE);
-        butil::IOBufAsZeroCopyOutputStream res_stream(&msg->payload);
+        flare::io::IOBufAsZeroCopyOutputStream res_stream(&msg->payload);
         EXPECT_TRUE(res.SerializeToZeroCopyStream(&res_stream));
         return msg;
     }
@@ -174,7 +174,7 @@ protected:
         }
 
         EXPECT_GT(bytes_in_pipe, 0);
-        butil::IOPortal buf;
+        flare::io::IOPortal buf;
         EXPECT_EQ((ssize_t)bytes_in_pipe,
                   buf.append_from_file_descriptor(_pipe_fds[0], 1024));
         brpc::ParseResult pr = brpc::policy::ParseHuluMessage(&buf, NULL, false, NULL);
@@ -183,14 +183,14 @@ protected:
             static_cast<brpc::policy::MostCommonMessage*>(pr.message());
 
         brpc::policy::HuluRpcResponseMeta meta;
-        butil::IOBufAsZeroCopyInputStream meta_stream(msg->meta);
+        flare::io::IOBufAsZeroCopyInputStream meta_stream(msg->meta);
         EXPECT_TRUE(meta.ParseFromZeroCopyStream(&meta_stream));
         EXPECT_EQ(expect_code, meta.error_code());
     }
 
     void TestHuluCompress(brpc::CompressType type) {
-        butil::IOBuf request_buf;
-        butil::IOBuf total_buf;
+        flare::io::IOBuf request_buf;
+        flare::io::IOBuf total_buf;
         brpc::Controller cntl;
         test::EchoRequest req;
         test::EchoResponse res;
@@ -278,8 +278,8 @@ TEST_F(HuluTest, process_response_error_code) {
 }
 
 TEST_F(HuluTest, complete_flow) {
-    butil::IOBuf request_buf;
-    butil::IOBuf total_buf;
+    flare::io::IOBuf request_buf;
+    flare::io::IOBuf total_buf;
     brpc::Controller cntl;
     test::EchoRequest req;
     test::EchoResponse res;
@@ -304,7 +304,7 @@ TEST_F(HuluTest, complete_flow) {
     ProcessMessage(brpc::policy::ProcessHuluRequest, req_msg, false);
 
     // Read response from pipe
-    butil::IOPortal response_buf;
+    flare::io::IOPortal response_buf;
     response_buf.append_from_file_descriptor(_pipe_fds[0], 1024);
     brpc::ParseResult res_pr =
             brpc::policy::ParseHuluMessage(&response_buf, NULL, false, NULL);
@@ -317,8 +317,8 @@ TEST_F(HuluTest, complete_flow) {
 }
 
 TEST_F(HuluTest, close_in_callback) {
-    butil::IOBuf request_buf;
-    butil::IOBuf total_buf;
+    flare::io::IOBuf request_buf;
+    flare::io::IOBuf total_buf;
     brpc::Controller cntl;
     test::EchoRequest req;
 

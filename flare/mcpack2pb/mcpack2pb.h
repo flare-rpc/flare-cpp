@@ -25,7 +25,7 @@
 #include <google/protobuf/message.h>
 #include <google/protobuf/io/zero_copy_stream_impl_lite.h>
 #include "flare/container/flat_map.h"
-#include "flare/butil/iobuf.h"
+#include "flare/io/iobuf.h"
 #include "flare/mcpack2pb/parser.h"
 #include "flare/mcpack2pb/serializer.h"
 
@@ -76,19 +76,19 @@ struct MessageHandler {
     // the message.
     // Returns bytes parsed, 0 on error.
     size_t parse_from_iobuf_prefix(::google::protobuf::Message* msg,
-                                   const ::butil::IOBuf& buf);
+                                   const ::flare::io::IOBuf& buf);
     size_t parse_from_array_prefix(::google::protobuf::Message* msg,
                                    const void* data, int size);
     // Parse `msg' from IOBuf or array which may just contain the message.
     // Returns true on success.
     bool parse_from_iobuf(::google::protobuf::Message* msg,
-                          const ::butil::IOBuf& buf);
+                          const ::flare::io::IOBuf& buf);
     bool parse_from_array(::google::protobuf::Message* msg,
                           const void* data, int size);
     // Serialize `msg' to IOBuf or string.
     // Returns true on success.
     bool serialize_to_iobuf(const ::google::protobuf::Message& msg,
-                            ::butil::IOBuf* buf, SerializationFormat format);
+                            ::flare::io::IOBuf* buf, SerializationFormat format);
 
     // TODO(gejun): serialize_to_string is not supported because OutputStream
     // requires the embedded zero-copy stream to return permanent memory blocks
@@ -110,22 +110,22 @@ MessageHandler find_message_handler(const std::string& full_name);
 
 // inline impl.
 inline size_t MessageHandler::parse_from_iobuf_prefix(
-    ::google::protobuf::Message* msg, const ::butil::IOBuf& buf) {
+    ::google::protobuf::Message* msg, const ::flare::io::IOBuf& buf) {
     if (parse == NULL) {
         LOG(ERROR) << "`parse' is NULL";
         return 0;
     }
-    ::butil::IOBufAsZeroCopyInputStream zc_stream(buf);
+    ::flare::io::IOBufAsZeroCopyInputStream zc_stream(buf);
     return parse(msg, &zc_stream);
 }
 
 inline bool MessageHandler::parse_from_iobuf(
-    ::google::protobuf::Message* msg, const ::butil::IOBuf& buf) {
+    ::google::protobuf::Message* msg, const ::flare::io::IOBuf& buf) {
     if (parse == NULL) {
         LOG(ERROR) << "`parse' is NULL";
         return 0;
     }
-    ::butil::IOBufAsZeroCopyInputStream zc_stream(buf);
+    ::flare::io::IOBufAsZeroCopyInputStream zc_stream(buf);
     return parse(msg, &zc_stream) == buf.size();
 }
 
@@ -151,12 +151,12 @@ inline bool MessageHandler::parse_from_array(
 
 inline bool MessageHandler::serialize_to_iobuf(
     const ::google::protobuf::Message& msg,
-    ::butil::IOBuf* buf, SerializationFormat format) {
+    ::flare::io::IOBuf* buf, SerializationFormat format) {
     if (serialize == NULL) {
         LOG(ERROR) << "`serialize' is NULL";
         return false;
     }
-    ::butil::IOBufAsZeroCopyOutputStream zc_stream(buf);
+    ::flare::io::IOBufAsZeroCopyOutputStream zc_stream(buf);
     return serialize(msg, &zc_stream, format);
 }
 

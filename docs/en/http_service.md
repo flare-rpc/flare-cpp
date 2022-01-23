@@ -56,7 +56,7 @@ public:
         cntl->http_response().set_content_type("text/plain");
        
         // Use printed query string and body as the response.
-        butil::IOBufBuilder os;
+        flare::io::IOBufBuilder os;
         os << "queries:";
         for (brpc::URI::QueryIterator it = cntl->http_request().uri().QueryBegin();
                 it != cntl->http_request().uri().QueryEnd(); ++it) {
@@ -308,7 +308,7 @@ Due to generality, brpc does not decompress request bodies automatically, but us
 ...
 const std::string* encoding = cntl->http_request().GetHeader("Content-Encoding");
 if (encoding != NULL && *encoding == "gzip") {
-    butil::IOBuf uncompressed;
+    flare::io::IOBuf uncompressed;
     if (!brpc::policy::GzipDecompress(cntl->request_attachment(), &uncompressed)) {
         LOG(ERROR) << "Fail to un-gzip request body";
         return;
