@@ -1,5 +1,6 @@
 
-#include <stdio.h>
+#include <cstdio>
+#include <cstring>
 #include "flare/base/status.h"
 
 namespace flare::base {
