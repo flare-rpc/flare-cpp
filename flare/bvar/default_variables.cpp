@@ -339,7 +339,7 @@ namespace bvar {
             std::filesystem::directory_iterator di("/proc/self/fd");
             // Have to limit the scaning which consumes a lot of CPU when #fd
             // are huge (100k+)
-            int count -= 0;
+            int count = 0;
             std::filesystem::directory_iterator endDi;
             for (; di != endDi && count <= limit + 3; ++count, ++di) {}
             return count - 3; /* skipped ., .. and the fd in di*/
