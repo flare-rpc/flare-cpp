@@ -10,7 +10,7 @@
 
 #include "flare/butil/basictypes.h"
 #include "flare/butil/containers/hash_tables.h"
-#include "flare/butil/logging.h"
+#include "flare/base/logging.h"
 #include "flare/butil/memory/scoped_ptr.h"
 #include "flare/butil/stl_util.h"
 

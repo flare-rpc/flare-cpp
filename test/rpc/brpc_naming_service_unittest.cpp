@@ -18,7 +18,7 @@
 #include <stdio.h>
 #include <gtest/gtest.h>
 #include <vector>
-#include "flare/butil/string_printf.h"
+#include "flare/base/strings.h"
 #include "flare/butil/files/temp_file.h"
 #include "flare/bthread/bthread.h"
 #ifdef BAIDU_INTERNAL
@@ -52,7 +52,7 @@ DECLARE_int32(discovery_renew_interval_s);
 
 namespace {
 
-bool IsIPListEqual(const std::set<butil::ip_t>& s1, const std::set<butil::ip_t>& s2) {
+bool IsIPListEqual(const std::set<flare::base::ip_t>& s1, const std::set<flare::base::ip_t>& s2) {
     if (s1.size() != s2.size()) {
         return false;
     }
@@ -77,25 +77,25 @@ TEST(NamingServiceTest, sanity) {
     ASSERT_EQ(2u, servers.size());
     ASSERT_EQ(1234, servers[0].addr.port);
     ASSERT_EQ(1234, servers[1].addr.port);
-    const std::set<butil::ip_t> expected_ips{servers[0].addr.ip, servers[1].addr.ip};
+    const std::set<flare::base::ip_t> expected_ips{servers[0].addr.ip, servers[1].addr.ip};
 
     ASSERT_EQ(0, dns.GetServers("baidu.com", &servers));
     ASSERT_EQ(2u, servers.size());
-    const std::set<butil::ip_t> ip_list1{servers[0].addr.ip, servers[1].addr.ip};
+    const std::set<flare::base::ip_t> ip_list1{servers[0].addr.ip, servers[1].addr.ip};
     ASSERT_TRUE(IsIPListEqual(expected_ips, ip_list1));
     ASSERT_EQ(80, servers[0].addr.port);
     ASSERT_EQ(80, servers[1].addr.port);
 
     ASSERT_EQ(0, dns.GetServers("baidu.com:1234/useless1/useless2", &servers));
     ASSERT_EQ(2u, servers.size());
-    const std::set<butil::ip_t> ip_list2{servers[0].addr.ip, servers[1].addr.ip};
+    const std::set<flare::base::ip_t> ip_list2{servers[0].addr.ip, servers[1].addr.ip};
     ASSERT_TRUE(IsIPListEqual(expected_ips, ip_list2));
     ASSERT_EQ(1234, servers[0].addr.port);
     ASSERT_EQ(1234, servers[1].addr.port);
 
     ASSERT_EQ(0, dns.GetServers("baidu.com/useless1/useless2", &servers));
     ASSERT_EQ(2u, servers.size());
-    const std::set<butil::ip_t> ip_list3{servers[0].addr.ip, servers[1].addr.ip};
+    const std::set<flare::base::ip_t> ip_list3{servers[0].addr.ip, servers[1].addr.ip};
     ASSERT_TRUE(IsIPListEqual(expected_ips, ip_list3));
     ASSERT_EQ(80, servers[0].addr.port);
     ASSERT_EQ(80, servers[1].addr.port);
@@ -126,7 +126,7 @@ TEST(NamingServiceTest, sanity) {
 
     std::string s;
     for (size_t i = 0; i < ARRAY_SIZE(address_list); ++i) {
-        ASSERT_EQ(0, butil::string_appendf(&s, "%s,", address_list[i]));
+        ASSERT_EQ(0, flare::base::string_appendf(&s, "%s,", address_list[i]));
     }
     brpc::policy::ListNamingService lns;
     ASSERT_EQ(0, lns.GetServers(s.c_str(), &servers));
@@ -184,7 +184,7 @@ TEST(NamingServiceTest, wrong_name) {
 
     std::string s;
     for (size_t i = 0; i < ARRAY_SIZE(address_list); ++i) {
-        ASSERT_EQ(0, butil::string_appendf(&s, ", %s", address_list[i]));
+        ASSERT_EQ(0, flare::base::string_appendf(&s, ", %s", address_list[i]));
     }
     brpc::policy::ListNamingService lns;
     ASSERT_EQ(0, lns.GetServers(s.c_str(), &servers));
@@ -229,10 +229,10 @@ TEST(NamingServiceTest, remotefile) {
     ASSERT_EQ(0, server2.AddService(&svc2, brpc::SERVER_DOESNT_OWN_SERVICE));
     ASSERT_EQ(0, server2.Start("localhost:8636", NULL));
 
-    butil::EndPoint n1;
-    ASSERT_EQ(0, butil::str2endpoint("0.0.0.0:8635", &n1));
-    butil::EndPoint n2;
-    ASSERT_EQ(0, butil::str2endpoint("0.0.0.0:8636", &n2));
+    flare::base::end_point n1;
+    ASSERT_EQ(0, flare::base::str2endpoint("0.0.0.0:8635", &n1));
+    flare::base::end_point n2;
+    ASSERT_EQ(0, flare::base::str2endpoint("0.0.0.0:8636", &n2));
     std::vector<brpc::ServerNode> expected_servers;
     expected_servers.push_back(brpc::ServerNode(n1, "tag1"));
     expected_servers.push_back(brpc::ServerNode(n2, "tag2"));
@@ -439,10 +439,10 @@ TEST(NamingServiceTest, consul_with_backup_file) {
 
     bthread_usleep(5000000);
 
-    butil::EndPoint n1;
-    ASSERT_EQ(0, butil::str2endpoint("10.121.36.189:8003", &n1));
-    butil::EndPoint n2;
-    ASSERT_EQ(0, butil::str2endpoint("10.121.36.190:8003", &n2));
+    flare::base::end_point n1;
+    ASSERT_EQ(0, flare::base::str2endpoint("10.121.36.189:8003", &n1));
+    flare::base::end_point n2;
+    ASSERT_EQ(0, flare::base::str2endpoint("10.121.36.190:8003", &n2));
     std::vector<brpc::ServerNode> expected_servers;
     expected_servers.push_back(brpc::ServerNode(n1, "1"));
     expected_servers.push_back(brpc::ServerNode(n2, "2"));

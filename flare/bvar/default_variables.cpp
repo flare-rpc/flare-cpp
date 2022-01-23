@@ -29,8 +29,8 @@
 #else
 #endif
 
-#include "flare/butil/time.h"
-#include "flare/butil/memory/singleton_on_pthread_once.h"
+#include "flare/base/time.h"
+#include "flare/base/singleton_on_pthread_once.h"
 #include "flare/butil/scoped_lock.h"
 #include "flare/butil/files/scoped_file.h"
 #include "flare/butil/files/dir_reader_posix.h"
@@ -38,7 +38,7 @@
 #include "flare/butil/process_util.h"            // ReadCommandLine
 #include "flare/butil/popen.h"                   // read_command_output
 #include "flare/bvar/passive_status.h"
-#include "flare/butil/static_atomic.h"
+#include "flare/base/static_atomic.h"
 
 namespace bvar {
 
@@ -145,8 +145,8 @@ namespace bvar {
         // and 64-bit numbers.
         template<typename ReadFn>
         static const T &get_value(const ReadFn &fn) {
-            CachedReader *p = butil::get_leaky_singleton<CachedReader>();
-            const int64_t now = butil::gettimeofday_us();
+            CachedReader *p = flare::base::get_leaky_singleton<CachedReader>();
+            const int64_t now = flare::base::gettimeofday_us();
             if (now > p->_mtime_us + CACHED_INTERVAL_US) {
                 pthread_mutex_lock(&p->_mutex);
                 if (now > p->_mtime_us + CACHED_INTERVAL_US) {
@@ -610,7 +610,7 @@ namespace bvar {
     };
 
     static void get_cmdline(std::ostream &os, void *) {
-        os << butil::get_leaky_singleton<ReadSelfCmdline>()->content;
+        os << flare::base::get_leaky_singleton<ReadSelfCmdline>()->content;
     }
 
     struct ReadVersion {
@@ -627,15 +627,15 @@ namespace bvar {
     };
 
     static void get_kernel_version(std::ostream &os, void *) {
-        os << butil::get_leaky_singleton<ReadVersion>()->content;
+        os << flare::base::get_leaky_singleton<ReadVersion>()->content;
     }
 
 // ======================================
 
-    static int64_t g_starting_time = butil::gettimeofday_us();
+    static int64_t g_starting_time = flare::base::gettimeofday_us();
 
     static timeval get_uptime(void *) {
-        int64_t uptime_us = butil::gettimeofday_us() - g_starting_time;
+        int64_t uptime_us = flare::base::gettimeofday_us() - g_starting_time;
         timeval tm;
         tm.tv_sec = uptime_us / 1000000L;
         tm.tv_usec = uptime_us - tm.tv_sec * 1000000L;
@@ -769,9 +769,9 @@ namespace bvar {
     }
 
     static TimePercent get_cputime_percent(void *) {
-        TimePercent tp = {butil::timeval_to_microseconds(g_ru_stime.get_value()) +
-                          butil::timeval_to_microseconds(g_ru_utime.get_value()),
-                          butil::timeval_to_microseconds(g_uptime.get_value())};
+        TimePercent tp = {flare::base::timeval_to_microseconds(g_ru_stime.get_value()) +
+                          flare::base::timeval_to_microseconds(g_ru_utime.get_value()),
+                          flare::base::timeval_to_microseconds(g_uptime.get_value())};
         return tp;
     }
 
@@ -780,8 +780,8 @@ namespace bvar {
             "process_cpu_usage", &g_cputime_percent, FLAGS_bvar_dump_interval);
 
     static TimePercent get_stime_percent(void *) {
-        TimePercent tp = {butil::timeval_to_microseconds(g_ru_stime.get_value()),
-                          butil::timeval_to_microseconds(g_uptime.get_value())};
+        TimePercent tp = {flare::base::timeval_to_microseconds(g_ru_stime.get_value()),
+                          flare::base::timeval_to_microseconds(g_uptime.get_value())};
         return tp;
     }
 
@@ -790,8 +790,8 @@ namespace bvar {
             "process_cpu_usage_system", &g_stime_percent, FLAGS_bvar_dump_interval);
 
     static TimePercent get_utime_percent(void *) {
-        TimePercent tp = {butil::timeval_to_microseconds(g_ru_utime.get_value()),
-                          butil::timeval_to_microseconds(g_uptime.get_value())};
+        TimePercent tp = {flare::base::timeval_to_microseconds(g_ru_utime.get_value()),
+                          flare::base::timeval_to_microseconds(g_uptime.get_value())};
         return tp;
     }
 

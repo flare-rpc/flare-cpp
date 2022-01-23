@@ -23,10 +23,10 @@
 #include <gtest/gtest.h>
 #include <pthread.h>
 #include "flare/butil/gperftools_profiler.h"
-#include "flare/butil/time.h"
+#include "flare/base/time.h"
 #include "flare/butil/macros.h"
-#include "flare/butil/fd_utility.h"
-#include "flare/butil/logging.h"
+#include "flare/base/fd_utility.h"
+#include "flare/base/logging.h"
 #include "flare/bthread/task_control.h"
 #include "flare/bthread/task_group.h"
 #include "flare/bthread/interrupt_pthread.h"
@@ -293,7 +293,7 @@ TEST(FDTest, ping_pong) {
         cm[i]->count = i;
         cm[i]->times = REP;
 #ifdef RUN_CLIENT_IN_BTHREAD
-        butil::make_non_blocking(cm[i]->fd);
+        flare::base::make_non_blocking(cm[i]->fd);
         ASSERT_EQ(0, bthread_start_urgent(&cth[i], NULL, client_thread, cm[i]));
 #else
         ASSERT_EQ(0, pthread_create(&cth[i], NULL, client_thread, cm[i]));
@@ -301,7 +301,7 @@ TEST(FDTest, ping_pong) {
     }
 
     ProfilerStart("ping_pong.prof");
-    butil::Timer tm;
+    flare::base::stop_watcher tm;
     tm.start();
 
     for (size_t i = 0; i < NEPOLL; ++i) {
@@ -466,7 +466,7 @@ TEST(FDTest, invalid_epoll_events) {
 #endif
     bthread_t th;
     ASSERT_EQ(0, bthread_start_urgent(&th, NULL, close_the_fd, &fds[1]));
-    butil::Timer tm;
+    flare::base::stop_watcher tm;
     tm.start();
 #if defined(OS_LINUX)
     ASSERT_EQ(0, bthread_fd_wait(fds[0], EPOLLIN | EPOLLET));
@@ -480,7 +480,7 @@ TEST(FDTest, invalid_epoll_events) {
 }
 
 void* wait_for_the_fd(void* arg) {
-    timespec ts = butil::milliseconds_from_now(50);
+    timespec ts = flare::base::milliseconds_from_now(50);
 #if defined(OS_LINUX)
     bthread_fd_timedwait(*(int*)arg, EPOLLIN, &ts);
 #elif defined(OS_MACOSX)
@@ -496,7 +496,7 @@ TEST(FDTest, timeout) {
     ASSERT_EQ(0, pthread_create(&th, NULL, wait_for_the_fd, &fds[0]));
     bthread_t bth;
     ASSERT_EQ(0, bthread_start_urgent(&bth, NULL, wait_for_the_fd, &fds[0]));
-    butil::Timer tm;
+    flare::base::stop_watcher tm;
     tm.start();
     ASSERT_EQ(0, pthread_join(th, NULL));
     ASSERT_EQ(0, bthread_join(bth, NULL));
@@ -511,7 +511,7 @@ TEST(FDTest, close_should_wakeup_waiter) {
     ASSERT_EQ(0, pipe(fds));
     bthread_t bth;
     ASSERT_EQ(0, bthread_start_urgent(&bth, NULL, wait_for_the_fd, &fds[0]));
-    butil::Timer tm;
+    flare::base::stop_watcher tm;
     tm.start();
     ASSERT_EQ(0, bthread_close(fds[0]));
     ASSERT_EQ(0, bthread_join(bth, NULL));

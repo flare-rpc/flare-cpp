@@ -17,22 +17,22 @@
 
 #include <gtest/gtest.h>
 #include "flare/butil/errno.h"
-#include "flare/butil/endpoint.h"
-#include "flare/butil/logging.h"
+#include "flare/base/endpoint.h"
+#include "flare/base/logging.h"
 #include "flare/butil/containers/flat_map.h"
 
 namespace {
 
 TEST(EndPointTest, comparisons) {
-    butil::EndPoint p1(butil::int2ip(1234), 5678);
-    butil::EndPoint p2 = p1;
+    flare::base::end_point p1(flare::base::int2ip(1234), 5678);
+    flare::base::end_point p2 = p1;
     ASSERT_TRUE(p1 == p2 && !(p1 != p2));
     ASSERT_TRUE(p1 <= p2 && p1 >= p2 && !(p1 < p2 || p1 > p2));
     ++p2.port;
     ASSERT_TRUE(p1 != p2 && !(p1 == p2));
     ASSERT_TRUE(p1 < p2 && p2 > p1 && !(p2 <= p1 || p1 >= p2));
     --p2.port;
-    p2.ip = butil::int2ip(butil::ip2int(p2.ip)-1);
+    p2.ip = flare::base::int2ip(flare::base::ip2int(p2.ip)-1);
     ASSERT_TRUE(p1 != p2 && !(p1 == p2));
     ASSERT_TRUE(p1 > p2 && p2 < p1 && !(p1 <= p2 || p2 >= p1));
 }
@@ -40,17 +40,17 @@ TEST(EndPointTest, comparisons) {
 TEST(EndPointTest, ip_t) {
     LOG(INFO) << "INET_ADDRSTRLEN = " << INET_ADDRSTRLEN;
     
-    butil::ip_t ip0;
-    ASSERT_EQ(0, butil::str2ip("1.1.1.1", &ip0));
-    ASSERT_STREQ("1.1.1.1", butil::ip2str(ip0).c_str());
-    ASSERT_EQ(-1, butil::str2ip("301.1.1.1", &ip0));
-    ASSERT_EQ(-1, butil::str2ip("1.-1.1.1", &ip0));
-    ASSERT_EQ(-1, butil::str2ip("1.1.-101.1", &ip0));
-    ASSERT_STREQ("1.0.0.0", butil::ip2str(butil::int2ip(1)).c_str());
+    flare::base::ip_t ip0;
+    ASSERT_EQ(0, flare::base::str2ip("1.1.1.1", &ip0));
+    ASSERT_STREQ("1.1.1.1", flare::base::ip2str(ip0).c_str());
+    ASSERT_EQ(-1, flare::base::str2ip("301.1.1.1", &ip0));
+    ASSERT_EQ(-1, flare::base::str2ip("1.-1.1.1", &ip0));
+    ASSERT_EQ(-1, flare::base::str2ip("1.1.-101.1", &ip0));
+    ASSERT_STREQ("1.0.0.0", flare::base::ip2str(flare::base::int2ip(1)).c_str());
 
-    butil::ip_t ip1, ip2, ip3;
-    ASSERT_EQ(0, butil::str2ip("192.168.0.1", &ip1));
-    ASSERT_EQ(0, butil::str2ip("192.168.0.2", &ip2));
+    flare::base::ip_t ip1, ip2, ip3;
+    ASSERT_EQ(0, flare::base::str2ip("192.168.0.1", &ip1));
+    ASSERT_EQ(0, flare::base::str2ip("192.168.0.2", &ip2));
     ip3 = ip1;
     ASSERT_LT(ip1, ip2);
     ASSERT_LE(ip1, ip2);
@@ -63,49 +63,49 @@ TEST(EndPointTest, ip_t) {
 }
 
 TEST(EndPointTest, show_local_info) {
-    LOG(INFO) << "my_ip is " << butil::my_ip() << std::endl
-              << "my_ip_cstr is " << butil::my_ip_cstr() << std::endl
-              << "my_hostname is " << butil::my_hostname();
+    LOG(INFO) << "my_ip is " << flare::base::my_ip() << std::endl
+              << "my_ip_cstr is " << flare::base::my_ip_cstr() << std::endl
+              << "my_hostname is " << flare::base::my_hostname();
 }
 
 TEST(EndPointTest, endpoint) {
-    butil::EndPoint p1;
-    ASSERT_EQ(butil::IP_ANY, p1.ip);
+    flare::base::end_point p1;
+    ASSERT_EQ(flare::base::IP_ANY, p1.ip);
     ASSERT_EQ(0, p1.port);
     
-    butil::EndPoint p2(butil::IP_NONE, -1);
-    ASSERT_EQ(butil::IP_NONE, p2.ip);
+    flare::base::end_point p2(flare::base::IP_NONE, -1);
+    ASSERT_EQ(flare::base::IP_NONE, p2.ip);
     ASSERT_EQ(-1, p2.port);
 
-    butil::EndPoint p3;
-    ASSERT_EQ(-1, butil::str2endpoint(" 127.0.0.1:-1", &p3));
-    ASSERT_EQ(-1, butil::str2endpoint(" 127.0.0.1:65536", &p3));
-    ASSERT_EQ(0, butil::str2endpoint(" 127.0.0.1:65535", &p3));
-    ASSERT_EQ(0, butil::str2endpoint(" 127.0.0.1:0", &p3));
+    flare::base::end_point p3;
+    ASSERT_EQ(-1, flare::base::str2endpoint(" 127.0.0.1:-1", &p3));
+    ASSERT_EQ(-1, flare::base::str2endpoint(" 127.0.0.1:65536", &p3));
+    ASSERT_EQ(0, flare::base::str2endpoint(" 127.0.0.1:65535", &p3));
+    ASSERT_EQ(0, flare::base::str2endpoint(" 127.0.0.1:0", &p3));
 
-    butil::EndPoint p4;
-    ASSERT_EQ(0, butil::str2endpoint(" 127.0.0.1: 289 ", &p4));
-    ASSERT_STREQ("127.0.0.1", butil::ip2str(p4.ip).c_str());
+    flare::base::end_point p4;
+    ASSERT_EQ(0, flare::base::str2endpoint(" 127.0.0.1: 289 ", &p4));
+    ASSERT_STREQ("127.0.0.1", flare::base::ip2str(p4.ip).c_str());
     ASSERT_EQ(289, p4.port);
     
-    butil::EndPoint p5;
+    flare::base::end_point p5;
     ASSERT_EQ(-1, hostname2endpoint("localhost:-1", &p5));
     ASSERT_EQ(-1, hostname2endpoint("localhost:65536", &p5));
     ASSERT_EQ(0, hostname2endpoint("localhost:65535", &p5)) << berror();
     ASSERT_EQ(0, hostname2endpoint("localhost:0", &p5));
 
 #ifdef BAIDU_INTERNAL
-    butil::EndPoint p6;
+    flare::base::end_point p6;
     ASSERT_EQ(0, hostname2endpoint("tc-cm-et21.tc: 289 ", &p6));
-    ASSERT_STREQ("10.23.249.73", butil::ip2str(p6.ip).c_str());
+    ASSERT_STREQ("10.23.249.73", flare::base::ip2str(p6.ip).c_str());
     ASSERT_EQ(289, p6.port);
 #endif
 }
 
 TEST(EndPointTest, hash_table) {
-    butil::hash_map<butil::EndPoint, int> m;
-    butil::EndPoint ep1(butil::IP_ANY, 123);
-    butil::EndPoint ep2(butil::IP_ANY, 456);
+    butil::hash_map<flare::base::end_point, int> m;
+    flare::base::end_point ep1(flare::base::IP_ANY, 123);
+    flare::base::end_point ep2(flare::base::IP_ANY, 456);
     ++m[ep1];
     ASSERT_TRUE(m.find(ep1) != m.end());
     ASSERT_EQ(1, m.find(ep1)->second);
@@ -123,22 +123,22 @@ TEST(EndPointTest, hash_table) {
 }
 
 TEST(EndPointTest, flat_map) {
-    butil::FlatMap<butil::EndPoint, int> m;
+    butil::FlatMap<flare::base::end_point, int> m;
     ASSERT_EQ(0, m.init(1024));
     uint32_t port = 8088;
 
-    butil::EndPoint ep1(butil::IP_ANY, port);
-    butil::EndPoint ep2(butil::IP_ANY, port);
+    flare::base::end_point ep1(flare::base::IP_ANY, port);
+    flare::base::end_point ep2(flare::base::IP_ANY, port);
     ++m[ep1];
     ++m[ep2];
     ASSERT_EQ(1u, m.size());
 
-    butil::ip_t ip_addr;
-    butil::str2ip("10.10.10.10", &ip_addr);
-    int ip = butil::ip2int(ip_addr);
+    flare::base::ip_t ip_addr;
+    flare::base::str2ip("10.10.10.10", &ip_addr);
+    int ip = flare::base::ip2int(ip_addr);
 
     for (int i = 0; i < 1023; ++i) {
-        butil::EndPoint ep(butil::int2ip(++ip), port);
+        flare::base::end_point ep(flare::base::int2ip(++ip), port);
         ++m[ep];
     }
 

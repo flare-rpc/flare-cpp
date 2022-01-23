@@ -24,11 +24,11 @@
 #include <pthread.h>
 #include "flare/butil/scoped_lock.h"
 #include "flare/butil/thread_local.h"
-#include "flare/butil/logging.h"
+#include "flare/base/logging.h"
 #include "flare/butil/macros.h"
 #include "flare/butil/type_traits.h"
 #include "flare/butil/errno.h"
-#include "flare/butil/static_atomic.h"
+#include "flare/base/static_atomic.h"
 #include "flare/butil/unique_ptr.h"
 
 namespace butil {

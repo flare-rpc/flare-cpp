@@ -35,7 +35,7 @@
 #include <ostream>
 
 #include "flare/butil/basictypes.h"
-#include "flare/butil/logging.h"
+#include "flare/base/logging.h"
 #include "flare/butil/memory/scoped_ptr.h"
 #include "flare/butil/posix/eintr_wrapper.h"
 #include "flare/butil/safe_strerror_posix.h"

@@ -5,7 +5,7 @@
 #include <algorithm>
 #include <vector>
 
-#include "flare/butil/logging.h"
+#include "flare/base/logging.h"
 #include "flare/butil/synchronization/waitable_event.h"
 #include "flare/butil/synchronization/condition_variable.h"
 #include "flare/butil/synchronization/lock.h"

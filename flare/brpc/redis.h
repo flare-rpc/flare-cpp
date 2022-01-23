@@ -179,11 +179,11 @@ public:
   
     RedisResponse* New() const override;
     void CopyFrom(const ::google::protobuf::Message& from);
-    void MergeFrom(const ::google::protobuf::Message& from);
+    void MergeFrom(const ::google::protobuf::Message& from) override;
     void CopyFrom(const RedisResponse& from);
     void MergeFrom(const RedisResponse& from);
-    void Clear();
-    bool IsInitialized() const;
+    void Clear() override;
+    bool IsInitialized() const override;
   
     int ByteSize() const;
     bool MergePartialFromCodedStream(
@@ -191,7 +191,7 @@ public:
     void SerializeWithCachedSizes(
         ::google::protobuf::io::CodedOutputStream* output) const;
     ::google::protobuf::uint8* SerializeWithCachedSizesToArray(::google::protobuf::uint8* output) const;
-    int GetCachedSize() const { return _cached_size_; }
+    int GetCachedSize() const override { return _cached_size_; }
 
     static const ::google::protobuf::Descriptor* descriptor();
 
@@ -201,7 +201,7 @@ protected:
 private:
     void SharedCtor();
     void SharedDtor();
-    void SetCachedSize(int size) const;
+    void SetCachedSize(int size) const override;
 
     RedisReply _first_reply;
     RedisReply* _other_replies;

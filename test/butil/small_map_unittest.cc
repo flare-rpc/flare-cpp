@@ -11,7 +11,7 @@
 #include <map>
 
 #include "flare/butil/containers/hash_tables.h"
-#include "flare/butil/logging.h"
+#include "flare/base/logging.h"
 #include <gtest/gtest.h>
 
 namespace butil {

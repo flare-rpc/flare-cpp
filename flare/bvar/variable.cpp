@@ -25,9 +25,9 @@
 #include "flare/butil/macros.h"                        // BAIDU_CASSERT
 #include "flare/butil/containers/flat_map.h"           // butil::FlatMap
 #include "flare/butil/scoped_lock.h"                   // BAIDU_SCOPE_LOCK
-#include "flare/butil/string_splitter.h"               // butil::StringSplitter
+#include "flare/base/string_splitter.h"               // flare::base::StringSplitter
 #include "flare/butil/errno.h"                         // berror
-#include "flare/butil/time.h"                          // milliseconds_from_now
+#include "flare/base/time.h"                          // milliseconds_from_now
 #include "flare/butil/file_util.h"                     // butil::FilePath
 #include "flare/bvar/gflag.h"
 #include "flare/bvar/variable.h"
@@ -413,7 +413,7 @@ public:
         }
         std::string name;
         const char wc_pattern[3] = { '*', question_mark, '\0' };
-        for (butil::StringMultiSplitter sp(wildcards.c_str(), ",;");
+        for (flare::base::StringMultiSplitter sp(wildcards.c_str(), ",;");
              sp != NULL; ++sp) {
             name.assign(sp.field(), sp.length());
             if (name.find_first_of(wc_pattern) != std::string::npos) {
@@ -630,7 +630,7 @@ public:
             path = path.RemoveFinalExtension();
         }
 
-        for (butil::KeyValuePairsSplitter sp(tabs, ';', '='); sp; ++sp) {
+        for (flare::base::KeyValuePairsSplitter sp(tabs, ';', '='); sp; ++sp) {
             std::string key = flare::base::as_string(sp.key());
             std::string value = flare::base::as_string(sp.value());
             FileDumper *f = new FileDumper(
@@ -762,7 +762,7 @@ static void* dumping_thread(void*) {
             LOG(ERROR) << "Bad cond_sleep_ms=" << cond_sleep_ms;
             cond_sleep_ms = 10000;
         }
-        timespec deadline = butil::milliseconds_from_now(cond_sleep_ms);
+        timespec deadline = flare::base::milliseconds_from_now(cond_sleep_ms);
         pthread_mutex_lock(&dump_mutex);
         pthread_cond_timedwait(&dump_cond, &dump_mutex, &deadline);
         pthread_mutex_unlock(&dump_mutex);

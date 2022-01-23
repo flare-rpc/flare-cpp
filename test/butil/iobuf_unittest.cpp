@@ -23,11 +23,11 @@
 #include <flare/butil/files/temp_file.h>      // TempFile
 #include <flare/butil/containers/flat_map.h>
 #include <flare/butil/macros.h>
-#include <flare/butil/time.h>                 // Timer
-#include <flare/butil/fd_utility.h>           // make_non_blocking
+#include "flare/base/time.h"                 // Timer
+#include "flare/base/fd_utility.h"           // make_non_blocking
 #include <flare/butil/iobuf.h>
-#include <flare/butil/logging.h>
-#include <flare/butil/fd_guard.h>
+#include "flare/base/logging.h"
+#include "flare/base/fd_guard.h"
 #include <flare/butil/errno.h>
 #include <flare/butil/fast_rand.h>
 #if BAZEL_TEST
@@ -738,8 +738,8 @@ TEST_F(IOBufTest, cut_into_fd_tiny) {
     //ASSERT_EQ(0, pipe(fds));
     ASSERT_EQ(0, socketpair(AF_UNIX, SOCK_STREAM, 0, fds));
 
-    butil::make_non_blocking(fds[0]);
-    butil::make_non_blocking(fds[1]);
+    flare::base::make_non_blocking(fds[0]);
+    flare::base::make_non_blocking(fds[1]);
     
     while (!b1.empty() || b2.length() != ref.length()) {
         size_t b1len = b1.length(), b2len = b2.length();
@@ -777,8 +777,8 @@ TEST_F(IOBufTest, cut_multiple_into_fd_tiny) {
     }
     
     ASSERT_EQ(0, socketpair(AF_UNIX, SOCK_STREAM, 0, fds));
-    butil::make_non_blocking(fds[0]);
-    butil::make_non_blocking(fds[1]);
+    flare::base::make_non_blocking(fds[0]);
+    flare::base::make_non_blocking(fds[1]);
     
     ASSERT_EQ((ssize_t)ref.length(),
               butil::IOBuf::cut_multiple_into_file_descriptor(
@@ -823,8 +823,8 @@ TEST_F(IOBufTest, cut_into_fd_a_lot_of_data) {
 
     //ASSERT_EQ(0, pipe(fds));
     ASSERT_EQ(0, socketpair(AF_UNIX, SOCK_STREAM, 0, fds));
-    butil::make_non_blocking(fds[0]);
-    butil::make_non_blocking(fds[1]);
+    flare::base::make_non_blocking(fds[0]);
+    flare::base::make_non_blocking(fds[1]);
     const int sockbufsize = 16 * 1024 - 17;
     ASSERT_EQ(0, setsockopt(fds[1], SOL_SOCKET, SO_SNDBUF,
                             (const char*)&sockbufsize, sizeof(int)));
@@ -858,7 +858,7 @@ TEST_F(IOBufTest, cut_by_delim_perf) {
     }
     ASSERT_EQ(N * s1.length(), b.length());
 
-    butil::Timer t;
+    flare::base::stop_watcher t;
     //ProfilerStart("cutd.prof");
     t.start();
     for (; b.cut_until(&p, "\n") == 0; ) { }
@@ -879,7 +879,7 @@ TEST_F(IOBufTest, cut_perf) {
     butil::IOBuf p;
     const size_t length = 60000000UL;
     const size_t REP = 10;
-    butil::Timer t;
+    flare::base::stop_watcher t;
     std::string s = "1234567890";
     const bool push_char = false;
 
@@ -962,7 +962,7 @@ TEST_F(IOBufTest, append_store_append_cut) {
     std::vector<butil::IOBuf> ps;
     ssize_t nr;
     size_t HINT = 16*1024UL;
-    butil::Timer t;
+    flare::base::stop_watcher t;
     size_t w[3] = { 16, 128, 1024 };
     char name[64];
     char profname[64];
@@ -1322,7 +1322,7 @@ TEST_F(IOBufTest, as_ostream) {
 TEST_F(IOBufTest, append_from_fd_with_offset) {
     butil::TempFile file;
     file.save("dummy");
-    butil::fd_guard fd(open(file.fname(), O_RDWR | O_TRUNC));
+    flare::base::fd_guard fd(open(file.fname(), O_RDWR | O_TRUNC));
     ASSERT_TRUE(fd >= 0) << file.fname() << ' ' << berror();
     butil::IOPortal buf;
     char dummy[10 * 1024];
@@ -1478,7 +1478,7 @@ TEST_F(IOBufTest, appender) {
 
 TEST_F(IOBufTest, appender_perf) {
     const size_t N1 = 100000;
-    butil::Timer tm1;
+    flare::base::stop_watcher tm1;
     tm1.start();
     butil::IOBuf buf1;
     for (size_t i = 0; i < N1; ++i) {
@@ -1486,7 +1486,7 @@ TEST_F(IOBufTest, appender_perf) {
     }
     tm1.stop();
 
-    butil::Timer tm2;
+    flare::base::stop_watcher tm2;
     tm2.start();
     butil::IOBufAppender appender1;
     for (size_t i = 0; i < N1; ++i) {
@@ -1515,7 +1515,7 @@ TEST_F(IOBufTest, appender_perf) {
     }
     tm2.stop();
 
-    butil::Timer tm3;
+    flare::base::stop_watcher tm3;
     tm3.start();
     for (size_t i = 0; i < N2; ++i) {
         str2.append(s);

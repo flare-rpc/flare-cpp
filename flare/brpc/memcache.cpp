@@ -19,10 +19,10 @@
 #include <algorithm>
 #include <google/protobuf/reflection_ops.h>
 #include <google/protobuf/wire_format.h>
-#include "flare/butil/string_printf.h"
+#include "flare/base/strings.h"
 #include "flare/butil/macros.h"
 #include "flare/butil/sys_byteorder.h"
-#include "flare/butil/logging.h"
+#include "flare/base/logging.h"
 #include "flare/brpc/memcache.h"
 #include "flare/brpc/policy/memcache_binary_header.h"
 
@@ -419,16 +419,16 @@ bool MemcacheResponse::PopGet(
     const size_t n = _buf.size();
     policy::MemcacheResponseHeader header;
     if (n < sizeof(header)) {
-        butil::string_printf(&_err, "buffer is too small to contain a header");
+        flare::base::string_printf(&_err, "buffer is too small to contain a header");
         return false;
     }
     _buf.copy_to(&header, sizeof(header));
     if (header.command != (uint8_t)policy::MC_BINARY_GET) {
-        butil::string_printf(&_err, "not a GET response");
+        flare::base::string_printf(&_err, "not a GET response");
         return false;
     }
     if (n < sizeof(header) + header.total_body_length) {
-        butil::string_printf(&_err, "response=%u < header=%u + body=%u",
+        flare::base::string_printf(&_err, "response=%u < header=%u + body=%u",
                   (unsigned)n, (unsigned)sizeof(header), header.total_body_length);
         return false;
     }
@@ -438,7 +438,7 @@ bool MemcacheResponse::PopGet(
         const int value_size = (int)header.total_body_length - (int)header.extras_length
             - (int)header.key_length;
         if (value_size < 0) {
-            butil::string_printf(&_err, "value_size=%d is non-negative", value_size);
+            flare::base::string_printf(&_err, "value_size=%d is non-negative", value_size);
             return false;
         }
         _buf.pop_front(sizeof(header) + header.extras_length +
@@ -448,18 +448,18 @@ bool MemcacheResponse::PopGet(
         return false;
     }
     if (header.extras_length != 4u) {
-        butil::string_printf(&_err, "GET response must have flags as extras, actual length=%u",
+        flare::base::string_printf(&_err, "GET response must have flags as extras, actual length=%u",
                   header.extras_length);
         return false;
     }
     if (header.key_length != 0) {
-        butil::string_printf(&_err, "GET response must not have key");
+        flare::base::string_printf(&_err, "GET response must not have key");
         return false;
     }
     const int value_size = (int)header.total_body_length - (int)header.extras_length
         - (int)header.key_length;
     if (value_size < 0) {
-        butil::string_printf(&_err, "value_size=%d is non-negative", value_size);
+        flare::base::string_printf(&_err, "value_size=%d is non-negative", value_size);
         return false;
     }
     _buf.pop_front(sizeof(header));
@@ -555,16 +555,16 @@ bool MemcacheResponse::PopStore(uint8_t command, uint64_t* cas_value) {
     const size_t n = _buf.size();
     policy::MemcacheResponseHeader header;
     if (n < sizeof(header)) {
-        butil::string_printf(&_err, "buffer is too small to contain a header");
+        flare::base::string_printf(&_err, "buffer is too small to contain a header");
         return false;
     }
     _buf.copy_to(&header, sizeof(header));
     if (header.command != command) {
-        butil::string_printf(&_err, "Not a STORE response");
+        flare::base::string_printf(&_err, "Not a STORE response");
         return false;
     }
     if (n < sizeof(header) + header.total_body_length) {
-        butil::string_printf(&_err, "Not enough data");
+        flare::base::string_printf(&_err, "Not enough data");
         return false;
     }
     LOG_IF(ERROR, header.extras_length != 0) << "STORE response must not have flags";
@@ -719,16 +719,16 @@ bool MemcacheResponse::PopCounter(
     const size_t n = _buf.size();
     policy::MemcacheResponseHeader header;
     if (n < sizeof(header)) {
-        butil::string_printf(&_err, "buffer is too small to contain a header");
+        flare::base::string_printf(&_err, "buffer is too small to contain a header");
         return false;
     }
     _buf.copy_to(&header, sizeof(header));
     if (header.command != command) {
-        butil::string_printf(&_err, "not a INCR/DECR response");
+        flare::base::string_printf(&_err, "not a INCR/DECR response");
         return false;
     }
     if (n < sizeof(header) + header.total_body_length) {
-        butil::string_printf(&_err, "response=%u < header=%u + body=%u",
+        flare::base::string_printf(&_err, "response=%u < header=%u + body=%u",
                   (unsigned)n, (unsigned)sizeof(header), header.total_body_length);
         return false;
     }
@@ -740,7 +740,7 @@ bool MemcacheResponse::PopCounter(
 
     if (header.status != (uint16_t)STATUS_SUCCESS) {
         if (value_size < 0) {
-            butil::string_printf(&_err, "value_size=%d is negative", value_size);
+            flare::base::string_printf(&_err, "value_size=%d is negative", value_size);
         } else {
             _err.clear();
             _buf.cutn(&_err, value_size);
@@ -748,7 +748,7 @@ bool MemcacheResponse::PopCounter(
         return false;
     }
     if (value_size != 8) {
-        butil::string_printf(&_err, "value_size=%d is not 8", value_size);
+        flare::base::string_printf(&_err, "value_size=%d is not 8", value_size);
         return false;
     }
     uint64_t raw_value = 0;
@@ -839,16 +839,16 @@ bool MemcacheResponse::PopVersion(std::string* version) {
     const size_t n = _buf.size();
     policy::MemcacheResponseHeader header;
     if (n < sizeof(header)) {
-        butil::string_printf(&_err, "buffer is too small to contain a header");
+        flare::base::string_printf(&_err, "buffer is too small to contain a header");
         return false;
     }
     _buf.copy_to(&header, sizeof(header));
     if (header.command != policy::MC_BINARY_VERSION) {
-        butil::string_printf(&_err, "not a VERSION response");
+        flare::base::string_printf(&_err, "not a VERSION response");
         return false;
     }
     if (n < sizeof(header) + header.total_body_length) {
-        butil::string_printf(&_err, "response=%u < header=%u + body=%u",
+        flare::base::string_printf(&_err, "response=%u < header=%u + body=%u",
                   (unsigned)n, (unsigned)sizeof(header), header.total_body_length);
         return false;
     }
@@ -858,7 +858,7 @@ bool MemcacheResponse::PopVersion(std::string* version) {
         - (int)header.key_length;
     _buf.pop_front(sizeof(header) + header.extras_length + header.key_length);
     if (value_size < 0) {
-        butil::string_printf(&_err, "value_size=%d is negative", value_size);
+        flare::base::string_printf(&_err, "value_size=%d is negative", value_size);
         return false;
     }
     if (header.status != (uint16_t)STATUS_SUCCESS) {

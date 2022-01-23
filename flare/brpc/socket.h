@@ -22,11 +22,11 @@
 #include <iostream>                            // std::ostream
 #include <deque>                               // std::deque
 #include <set>                                 // std::set
-#include "flare/butil/static_atomic.h"                    // std::atomic
+#include "flare/base/static_atomic.h"                    // std::atomic
 #include "flare/bthread/types.h"                      // bthread_id_t
 #include "flare/butil/iobuf.h"                        // butil::IOBuf, IOPortal
 #include "flare/butil/macros.h"                       // DISALLOW_COPY_AND_ASSIGN
-#include "flare/butil/endpoint.h"                     // butil::EndPoint
+#include "flare/base/endpoint.h"                     // flare::base::end_point
 #include "flare/butil/resource_pool.h"                // butil::ResourceId
 #include "flare/bthread/butex.h"                      // butex_create_checked
 #include "flare/brpc/authenticator.h"           // Authenticator
@@ -177,7 +177,7 @@ struct SocketOptions {
     // ownership. Socket will close the fd(if needed) and call
     // user->BeforeRecycle() before recycling.
     int fd;
-    butil::EndPoint remote_side;
+    flare::base::end_point remote_side;
     SocketUser* user;
     // When *edge-triggered* events happen on the file descriptor, callback
     // `on_edge_triggered_events' will be called. Inside the callback, user
@@ -277,10 +277,10 @@ public:
     int fd() const { return _fd.load(std::memory_order_relaxed); }
 
     // ip/port of the local end of the connection
-    butil::EndPoint local_side() const { return _local_side; }
+    flare::base::end_point local_side() const { return _local_side; }
 
     // ip/port of the other end of the connection.
-    butil::EndPoint remote_side() const { return _remote_side; }
+    flare::base::end_point remote_side() const { return _remote_side; }
 
     // Positive value enables health checking.
     // Initialized by SocketOptions.health_check_interval_s.
@@ -693,10 +693,10 @@ private:
     int64_t _reset_fd_real_us; // When _fd was reset, in microseconds.
 
     // Address of peer. Initialized by SocketOptions.remote_side.
-    butil::EndPoint _remote_side;
+    flare::base::end_point _remote_side;
 
     // Address of self. Initialized in ResetFileDescriptor().
-    butil::EndPoint _local_side;
+    flare::base::end_point _local_side;
 
     // Called when edge-triggered events happened on `_fd'. Read comments
     // of EventDispatcher::AddConsumer (event_dispatcher.h)

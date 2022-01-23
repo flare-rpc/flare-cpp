@@ -30,7 +30,7 @@ namespace policy {
 Server::MethodProperty*
 FindMethodPropertyByURI(const std::string& uri_path, const Server* server,
                         std::string* unknown_method_str);
-bool ParseHttpServerAddress(butil::EndPoint *point, const char *server_addr_and_port);
+bool ParseHttpServerAddress(flare::base::end_point *point, const char *server_addr_and_port);
 }}
 
 namespace {
@@ -332,7 +332,7 @@ TEST(HttpMessageTest, http_header) {
 }
 
 TEST(HttpMessageTest, empty_url) {
-    butil::EndPoint host;
+    flare::base::end_point host;
     ASSERT_FALSE(ParseHttpServerAddress(&host, ""));
 }
 
@@ -342,8 +342,8 @@ TEST(HttpMessageTest, serialize_http_request) {
     header.SetHeader("Foo", "Bar");
     ASSERT_EQ(1u, header.HeaderCount());
     header.set_method(brpc::HTTP_METHOD_POST);
-    butil::EndPoint ep;
-    ASSERT_EQ(0, butil::str2endpoint("127.0.0.1:1234", &ep));
+    flare::base::end_point ep;
+    ASSERT_EQ(0, flare::base::str2endpoint("127.0.0.1:1234", &ep));
     butil::IOBuf request;
     butil::IOBuf content;
     content.append("data");

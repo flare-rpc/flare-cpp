@@ -22,7 +22,7 @@
 #include "flare/butil/files/file_enumerator.h"
 #include "flare/butil/file_util.h"                     // butil::FilePath
 #include "flare/butil/popen.h"                         // butil::read_command_output
-#include "flare/butil/fd_guard.h"                      // butil::fd_guard
+#include "flare/base/fd_guard.h"                      // flare::base::fd_guard
 #include "flare/brpc/log.h"
 #include "flare/brpc/controller.h"
 #include "flare/brpc/server.h"
@@ -130,7 +130,7 @@ struct ProfilingClient {
     int64_t end_us;
     int seconds;
     int64_t id;
-    butil::EndPoint point;
+    flare::base::end_point point;
 };
 
 struct ProfilingResult {
@@ -380,7 +380,7 @@ static bool check_GOOGLE_PPROF_BINARY_PATH() {
     if (str == NULL) {
         return false;
     }
-    butil::fd_guard fd(open(str, O_RDONLY));
+    flare::base::fd_guard fd(open(str, O_RDONLY));
     if (fd < 0) {
         return false;
     }
@@ -692,7 +692,7 @@ static void DoProfiling(ProfilingType type,
         }
         CHECK(NULL == g_env[type].client);
         g_env[type].client = new ProfilingClient;
-        g_env[type].client->end_us = butil::cpuwide_time_us() + seconds * 1000000L;
+        g_env[type].client->end_us = flare::base::cpuwide_time_us() + seconds * 1000000L;
         g_env[type].client->seconds = seconds;
         // This id work arounds an issue of chrome (or jquery under chrome) that
         // the ajax call in another tab may be delayed until ajax call in
@@ -1131,7 +1131,7 @@ static void StartProfiling(ProfilingType type,
     os << "<div id=\"profiling-result\">";
     if (profiling_client.seconds != 0) {
         const int wait_seconds =
-            (int)ceil((profiling_client.end_us - butil::cpuwide_time_us())
+            (int)ceil((profiling_client.end_us - flare::base::cpuwide_time_us())
                       / 1000000.0);
         os << "Your request is merged with the request from "
            << profiling_client.point;

@@ -139,24 +139,24 @@ public:
 
 ## 获取Client的地址
 
-`controller->remote_side()`可获得发送该请求的client地址和端口，类型是butil::EndPoint。如果client是nginx，remote_side()是nginx的地址。要获取真实client的地址，可以在nginx里设置`proxy_header ClientIp $remote_addr;`, 在rpc中通过`controller->http_request().GetHeader("ClientIp")`获得对应的值。
+`controller->remote_side()`可获得发送该请求的client地址和端口，类型是butil::end_point。如果client是nginx，remote_side()是nginx的地址。要获取真实client的地址，可以在nginx里设置`proxy_header ClientIp $remote_addr;`, 在rpc中通过`controller->http_request().GetHeader("ClientIp")`获得对应的值。
 
 打印方式：
 
 ```c++
 LOG(INFO) << "remote_side=" << cntl->remote_side(); 
-printf("remote_side=%s\n", butil::endpoint2str(cntl->remote_side()).c_str());
+printf("remote_side=%s\n", flare::base::endpoint2str(cntl->remote_side()).c_str());
 ```
 
 ## 获取Server的地址
 
-controller->local_side()获得server端的地址，类型是butil::EndPoint。
+controller->local_side()获得server端的地址，类型是butil::end_point。
 
 打印方式：
 
 ```c++
 LOG(INFO) << "local_side=" << cntl->local_side(); 
-printf("local_side=%s\n", butil::endpoint2str(cntl->local_side()).c_str());
+printf("local_side=%s\n", flare::base::endpoint2str(cntl->local_side()).c_str());
 ```
 
 ## 异步Service
@@ -205,7 +205,7 @@ Server启动后你无法再修改其中的Service。
 
 ```c++
 int Start(const char* ip_and_port_str, const ServerOptions* opt);
-int Start(EndPoint ip_and_port, const ServerOptions* opt);
+int Start(end_point ip_and_port, const ServerOptions* opt);
 int Start(int port, const ServerOptions* opt);
 int Start(const char *ip_str, PortRange port_range, const ServerOptions *opt);  // r32009后增加
 ```
@@ -540,7 +540,7 @@ public:
     // and later fetch this pointer from `Controller'.
     // Returns 0 on success, error code otherwise
     virtual int VerifyCredential(const std::string& auth_str,
-                                 const base::EndPoint& client_addr,
+                                 const base::end_point& client_addr,
                                  AuthContext* out_ctx) const = 0;
     }; 
 

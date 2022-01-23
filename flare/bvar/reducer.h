@@ -21,9 +21,9 @@
 #define  BVAR_REDUCER_H
 
 #include <limits>                                 // std::numeric_limits
-#include "flare/butil/logging.h"                         // LOG()
+#include "flare/base/logging.h"                         // LOG()
 #include "flare/butil/type_traits.h"                     // butil::add_cr_non_integral
-#include "flare/butil/class_name.h"                      // class_name_str
+#include "flare/base/class_name.h"                      // class_name_str
 #include "flare/bvar/variable.h"                        // Variable
 #include "flare/bvar/detail/combiner.h"                 // detail::AgentCombiner
 #include "flare/bvar/detail/sampler.h"                  // ReducerSampler
@@ -116,8 +116,8 @@ public:
     // into this reducer. You should avoid calling it frequently.
     T get_value() const {
         CHECK(!(butil::is_same<InvOp, detail::VoidOp>::value) || _sampler == NULL)
-            << "You should not call Reducer<" << butil::class_name_str<T>()
-            << ", " << butil::class_name_str<Op>() << ">::get_value() when a"
+            << "You should not call Reducer<" << flare::base::class_name_str<T>()
+            << ", " << flare::base::class_name_str<Op>() << ">::get_value() when a"
             << " Window<> is used because the operator does not have inverse.";
         return _combiner.combine_agents();
     }

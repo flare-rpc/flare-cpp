@@ -116,9 +116,9 @@ This function is used to authenticate connections, it is called when the first m
 
 ### parse_server_address
 ```c++
-typedef bool (*ParseServerAddress)(butil::EndPoint* out, const char* server_addr_and_port);
+typedef bool (*ParseServerAddress)(flare::base::end_point* out, const char* server_addr_and_port);
 ```
-This function converts server_addr_and_port(an argument of Channel.Init) to butil::EndPoint, which is optional. Some protocols may differ in the expression and understanding of server addresses.
+This function converts server_addr_and_port(an argument of Channel.Init) to flare::base::end_point, which is optional. Some protocols may differ in the expression and understanding of server addresses.
 
 ### get_method_name
 ```c++

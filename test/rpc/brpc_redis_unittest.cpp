@@ -18,8 +18,8 @@
 
 #include <iostream>
 #include <unordered_map>
-#include <flare/butil/time.h>
-#include <flare/butil/logging.h>
+#include "flare/base/time.h"
+#include "flare/base/logging.h"
 #include <flare/brpc/redis.h>
 #include <flare/brpc/channel.h>
 #include <flare/brpc/policy/redis_authenticator.h>

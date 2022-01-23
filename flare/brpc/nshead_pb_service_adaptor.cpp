@@ -19,7 +19,7 @@
 #include <google/protobuf/descriptor.h>         // MethodDescriptor
 #include <google/protobuf/message.h>            // Message
 
-#include "flare/butil/time.h"
+#include "flare/base/time.h"
 #include "flare/butil/iobuf.h"                         // butil::IOBuf
 
 #include "flare/brpc/controller.h"               // Controller
@@ -87,7 +87,7 @@ void SendNsheadPbResponse::Run() {
     // back response.
     if (saved_status) {
         saved_status->OnResponded(
-            !saved_failed, butil::cpuwide_time_us() - received_us);
+            !saved_failed, flare::base::cpuwide_time_us() - received_us);
     }
     saved_done->Run();
 }

@@ -19,7 +19,7 @@
 
 #include <gflags/gflags.h>
 #include "flare/butil/build_config.h"
-#include "flare/butil/logging.h"
+#include "flare/base/logging.h"
 
 #if defined(OS_LINUX)
 // clone is a linux specific syscall

@@ -17,7 +17,7 @@
 
 
 #include <pthread.h>
-#include "flare/butil/logging.h"
+#include "flare/base/logging.h"
 #include "flare/brpc/policy/gzip_compress.h"
 #include "flare/brpc/builtin/viz_min_js.h"
 

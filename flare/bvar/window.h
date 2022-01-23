@@ -23,7 +23,7 @@
 #include <limits>                                 // std::numeric_limits
 #include <math.h>                                 // round
 #include <gflags/gflags_declare.h>
-#include "flare/butil/logging.h"                         // LOG
+#include "flare/base/logging.h"                         // LOG
 #include "flare/bvar/detail/sampler.h"
 #include "flare/bvar/detail/series.h"
 #include "flare/bvar/variable.h"

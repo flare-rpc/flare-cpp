@@ -23,7 +23,7 @@
 #include <memory>
 #include <iostream>
 #include <sstream>
-#include "flare/butil/time.h"
+#include "flare/base/time.h"
 #include "flare/butil/macros.h"
 #include "flare/base/strings.h"
 #include "flare/bvar/bvar.h"
@@ -377,7 +377,7 @@ TEST_F(VariableTest, recursive_mutex) {
     pthread_mutex_t mutex;
     pthread_mutex_init(&mutex, &attr);
     pthread_mutexattr_destroy(&attr);
-    butil::Timer timer;
+    flare::base::stop_watcher timer;
     const size_t N = 1000000;
     timer.start();
     for (size_t i = 0; i < N; ++i) {

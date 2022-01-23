@@ -26,8 +26,8 @@
 #include <mesalink/openssl/evp.h>
 #include <mesalink/openssl/pem.h>
 #include "flare/butil/unique_ptr.h"
-#include "flare/butil/logging.h"
-#include "flare/butil/string_splitter.h"
+#include "flare/base/logging.h"
+#include "flare/base/string_splitter.h"
 #include "flare/brpc/socket.h"
 #include "flare/brpc/ssl_options.h"
 #include "flare/brpc/details/ssl_helper.h"
@@ -61,7 +61,7 @@ const char* SSLStateToString(SSLState s) {
 
 static int ParseSSLProtocols(const std::string& str_protocol) {
     int protocol_flag = 0;
-    butil::StringSplitter sp(str_protocol.data(),
+    flare::base::StringSplitter sp(str_protocol.data(),
                              str_protocol.data() + str_protocol.size(), ',');
     for (; sp; ++sp) {
         std::string_view protocol(sp.field(), sp.length());

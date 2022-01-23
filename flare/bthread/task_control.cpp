@@ -21,7 +21,7 @@
 
 #include "flare/butil/scoped_lock.h"             // BAIDU_SCOPED_LOCK
 #include "flare/butil/errno.h"                   // berror
-#include "flare/butil/logging.h"
+#include "flare/base/logging.h"
 #include "flare/butil/third_party/murmurhash3/murmurhash3.h"
 #include "flare/bthread/sys_futex.h"            // futex_wake_private
 #include "flare/bthread/interrupt_pthread.h"
@@ -327,7 +327,7 @@ int TaskControl::_destroy_group(TaskGroup* g) {
     if (erased) {
         get_global_timer_thread()->schedule(
             delete_task_group, g,
-            butil::microseconds_from_now(FLAGS_task_group_delete_delay * 1000000L));
+            flare::base::microseconds_from_now(FLAGS_task_group_delete_delay * 1000000L));
     }
     return 0;
 }

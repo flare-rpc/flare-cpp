@@ -26,7 +26,7 @@
 #include "flare/butil/type_traits.h"
 #include "flare/bvar/vector.h"
 #include "flare/bvar/detail/call_op_returning_void.h"
-#include "flare/butil/string_splitter.h"
+#include "flare/base/string_splitter.h"
 
 namespace bvar {
 namespace detail {
@@ -282,7 +282,7 @@ void Series<Vector<T,N>, Op>::describe(std::ostream& os,
     // to exactly accurate.
     pthread_mutex_unlock(&this->_mutex);
 
-    butil::StringSplitter sp(vector_names ? vector_names->c_str() : "", ',');
+    flare::base::StringSplitter sp(vector_names ? vector_names->c_str() : "", ',');
     os << '[';
     for (size_t j = 0; j < N; ++j) {
         if (j) {

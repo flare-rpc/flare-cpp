@@ -26,7 +26,7 @@ template <typename T>
 Extension<T>* Extension<T>::instance() {
     // NOTE: We don't delete extensions because in principle they can be
     // accessed during exiting, e.g. create a channel to send rpc at exit.
-    return butil::get_leaky_singleton<Extension<T> >();
+    return flare::base::get_leaky_singleton<Extension<T> >();
 }
 
 template <typename T>

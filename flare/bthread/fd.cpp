@@ -26,10 +26,10 @@
 #include <sys/types.h>                           // struct kevent
 #include <sys/event.h>                           // kevent(), kqueue()
 #endif
-#include "flare/butil/static_atomic.h"
-#include "flare/butil/time.h"
-#include "flare/butil/fd_utility.h"                     // make_non_blocking
-#include "flare/butil/logging.h"
+#include "flare/base/static_atomic.h"
+#include "flare/base/time.h"
+#include "flare/base/fd_utility.h"                     // make_non_blocking
+#include "flare/base/logging.h"
 #include "flare/butil/third_party/murmurhash3/murmurhash3.h"   // fmix32
 #include "flare/bthread/butex.h"                       // butex_*
 #include "flare/bthread/task_group.h"                  // TaskGroup
@@ -454,8 +454,8 @@ int pthread_fd_wait(int fd, unsigned events,
     if (abstime) {
         timespec now;
         clock_gettime(CLOCK_REALTIME, &now);
-        int64_t now_us = butil::timespec_to_microseconds(now);
-        int64_t abstime_us = butil::timespec_to_microseconds(*abstime);
+        int64_t now_us = flare::base::timespec_to_microseconds(now);
+        int64_t abstime_us = flare::base::timespec_to_microseconds(*abstime);
         if (abstime_us <= now_us) {
             errno = ETIMEDOUT;
             return -1;
@@ -528,7 +528,7 @@ int bthread_connect(int sockfd, const sockaddr* serv_addr,
         return ::connect(sockfd, serv_addr, addrlen);
     }
     // FIXME: Scoped non-blocking?
-    butil::make_non_blocking(sockfd);
+    flare::base::make_non_blocking(sockfd);
     const int rc = connect(sockfd, serv_addr, addrlen);
     if (rc == 0 || errno != EINPROGRESS) {
         return rc;

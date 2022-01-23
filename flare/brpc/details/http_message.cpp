@@ -22,9 +22,9 @@
 #include <iostream>
 #include <gflags/gflags.h>
 #include "flare/butil/macros.h"
-#include "flare/butil/logging.h"                       // LOG
+#include "flare/base/logging.h"                       // LOG
 #include "flare/butil/scoped_lock.h"
-#include "flare/butil/endpoint.h"
+#include "flare/base/endpoint.h"
 #include "flare/base/base64.h"
 #include "flare/bthread/bthread.h"                    // bthread_usleep
 #include "flare/brpc/log.h"
@@ -112,13 +112,13 @@ int HttpMessage::on_header_value(http_parser *parser,
             vs = new butil::IOBufBuilder;
             http_message->_vmsgbuilder = vs;
             if (parser->type == HTTP_REQUEST) {
-                *vs << "[ HTTP REQUEST @" << butil::my_ip() << " ]\n< "
+                *vs << "[ HTTP REQUEST @" << flare::base::my_ip() << " ]\n< "
                     << HttpMethod2Str((HttpMethod)parser->method) << ' '
                     << http_message->_url << " HTTP/" << parser->http_major
                     << '.' << parser->http_minor;
             } else {
                 // NOTE: http_message->header().status_code() may not be set yet.
-                *vs << "[ HTTP RESPONSE @" << butil::my_ip() << " ]\n< HTTP/"
+                *vs << "[ HTTP RESPONSE @" << flare::base::my_ip() << " ]\n< HTTP/"
                     << parser->http_major
                     << '.' << parser->http_minor << ' ' << parser->status_code
                     << ' ' << HttpReasonPhrase(parser->status_code);
@@ -190,7 +190,7 @@ int HttpMessage::UnlockAndFlushToBodyReader(std::unique_lock<butil::Mutex>& mu) 
     mu.unlock();
     for (size_t i = 0; i < body_seen.backing_block_num(); ++i) {
         std::string_view blk = body_seen.backing_block(i);
-        butil::Status st = r->OnReadOnePart(blk.data(), blk.size());
+        flare::base::flare_status st = r->OnReadOnePart(blk.data(), blk.size());
         if (!st.ok()) {
             mu.lock();
             _body_reader = NULL;
@@ -270,7 +270,7 @@ int HttpMessage::OnBody(const char *at, const size_t length) {
     if (UnlockAndFlushToBodyReader(mu) != 0) {
         return -1;
     }
-    butil::Status st = r->OnReadOnePart(at, length);
+    flare::base::flare_status st = r->OnReadOnePart(at, length);
     if (st.ok()) {
         return 0;
     }
@@ -312,7 +312,7 @@ int HttpMessage::OnMessageComplete() {
         ProgressiveReader* r = _body_reader;
         _body_reader = NULL;
         mu.unlock();
-        r->OnEndOfMessage(butil::Status());
+        r->OnEndOfMessage(flare::base::flare_status());
     }
     return 0;
 }
@@ -320,11 +320,11 @@ int HttpMessage::OnMessageComplete() {
 class FailAllRead : public ProgressiveReader {
 public:
     // @ProgressiveReader
-    butil::Status OnReadOnePart(const void* /*data*/, size_t /*length*/) {
-        return butil::Status(-1, "Trigger by FailAllRead at %s:%d",
+    flare::base::flare_status OnReadOnePart(const void* /*data*/, size_t /*length*/) {
+        return flare::base::flare_status(-1, "Trigger by FailAllRead at %s:%d",
                             __FILE__, __LINE__);
     }
-    void OnEndOfMessage(const butil::Status&) {}
+    void OnEndOfMessage(const flare::base::flare_status&) {}
 };
 
 static FailAllRead* s_fail_all_read = NULL;
@@ -334,7 +334,7 @@ static void CreateFailAllRead() { s_fail_all_read = new FailAllRead; }
 void HttpMessage::SetBodyReader(ProgressiveReader* r) {
     if (!_read_body_progressively) {
         return r->OnEndOfMessage(
-            butil::Status(EPERM, "Call SetBodyReader on HttpMessage with"
+            flare::base::flare_status(EPERM, "Call SetBodyReader on HttpMessage with"
                          " read_body_progressively=false"));
     }
     const int MAX_TRY = 3;
@@ -344,7 +344,7 @@ void HttpMessage::SetBodyReader(ProgressiveReader* r) {
         if (_body_reader != NULL) {
             mu.unlock();
             return r->OnEndOfMessage(
-                butil::Status(EPERM, "SetBodyReader is called more than once"));
+                flare::base::flare_status(EPERM, "SetBodyReader is called more than once"));
         }
         if (_body.empty()) {
             if (_stage <= HTTP_ON_BODY) {
@@ -352,7 +352,7 @@ void HttpMessage::SetBodyReader(ProgressiveReader* r) {
                 return;
             } else {  // The body is complete and successfully consumed.
                 mu.unlock();
-                return r->OnEndOfMessage(butil::Status());
+                return r->OnEndOfMessage(flare::base::flare_status());
             }
         } else if (_stage <= HTTP_ON_BODY && ++ntry >= MAX_TRY) {
             // Stop making _body empty after we've tried several times.
@@ -366,7 +366,7 @@ void HttpMessage::SetBodyReader(ProgressiveReader* r) {
         mu.unlock();
         for (size_t i = 0; i < body_seen.backing_block_num(); ++i) {
             std::string_view blk = body_seen.backing_block(i);
-            butil::Status st = r->OnReadOnePart(blk.data(), blk.size());
+            flare::base::flare_status st = r->OnReadOnePart(blk.data(), blk.size());
             if (!st.ok()) {
                 r->OnEndOfMessage(st);
                 // Make OnBody() or OnMessageComplete() fail on next call to
@@ -413,7 +413,7 @@ HttpMessage::~HttpMessage() {
         // _body_reader here just means the socket is broken before completion
         // of the message.
         saved_body_reader->OnEndOfMessage(
-            butil::Status(ECONNRESET, "The socket was broken"));
+            flare::base::flare_status(ECONNRESET, "The socket was broken"));
     }
 }
 
@@ -538,7 +538,7 @@ std::ostream& operator<<(std::ostream& os, const http_parser& parser) {
 // extension-method = token
 void MakeRawHttpRequest(butil::IOBuf* request,
                         HttpHeader* h,
-                        const butil::EndPoint& remote_side,
+                        const flare::base::end_point& remote_side,
                         const butil::IOBuf* content) {
     butil::IOBufBuilder os;
     os << HttpMethod2Str(h->method()) << ' ';

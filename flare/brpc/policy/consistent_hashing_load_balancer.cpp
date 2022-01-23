@@ -332,14 +332,14 @@ void ConsistentHashingLoadBalancer::Describe(
     os << "ConsistentHashingLoadBalancer {\n"
        << "  hash function: " << GetReplicaPolicy(_type)->name() << '\n'
        << "  replica per host: " << _num_replicas << '\n';
-    std::map<butil::EndPoint, double> load_map;
+    std::map<flare::base::end_point, double> load_map;
     GetLoads(&load_map);
     os << "  number of hosts: " << load_map.size() << '\n';
     os << "  load of hosts: {\n";
     double expected_load_per_server = 1.0 / load_map.size();
     double load_sum = 0;
     double load_sqr_sum = 0;
-    for (std::map<butil::EndPoint, double>::iterator 
+    for (std::map<flare::base::end_point, double>::iterator
             it = load_map.begin(); it!= load_map.end(); ++it) {
         os << "    " << it->first << ": " << it->second << '\n';
         double normalized_load = it->second / expected_load_per_server;
@@ -354,9 +354,9 @@ void ConsistentHashingLoadBalancer::Describe(
 }
 
 void ConsistentHashingLoadBalancer::GetLoads(
-    std::map<butil::EndPoint, double> *load_map) {
+    std::map<flare::base::end_point, double> *load_map) {
     load_map->clear();
-    std::map<butil::EndPoint, uint32_t> count_map;
+    std::map<flare::base::end_point, uint32_t> count_map;
     do {
         butil::DoublyBufferedData<std::vector<Node> >::ScopedPtr s;
         if (_db_hash_ring.Read(&s) != 0) {
@@ -372,14 +372,14 @@ void ConsistentHashingLoadBalancer::GetLoads(
                     (*s.get())[i].hash - (*s.get())[i - 1].hash;
         }
     } while (0);
-    for (std::map<butil::EndPoint, uint32_t>::iterator 
+    for (std::map<flare::base::end_point, uint32_t>::iterator
             it = count_map.begin(); it!= count_map.end(); ++it) {
         (*load_map)[it->first] = (double)it->second / UINT_MAX;
     }
 }
 
 bool ConsistentHashingLoadBalancer::SetParameters(const std::string_view& params) {
-    for (butil::KeyValuePairsSplitter sp(params.begin(), params.end(), ' ', '=');
+    for (flare::base::KeyValuePairsSplitter sp(params.begin(), params.end(), ' ', '=');
             sp; ++sp) {
         if (sp.value().empty()) {
             LOG(ERROR) << "Empty value for " << sp.key() << " in lb parameter";

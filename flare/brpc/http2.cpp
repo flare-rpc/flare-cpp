@@ -16,7 +16,7 @@
 // under the License.
 
 #include <limits>
-#include "flare/butil/logging.h"
+#include "flare/base/logging.h"
 #include "flare/brpc/details/hpack.h"
 #include "flare/brpc/errno.pb.h"
 #include "flare/brpc/http2.h"

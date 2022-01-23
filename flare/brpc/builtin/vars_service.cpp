@@ -18,7 +18,7 @@
 
 #include <ostream>
 #include <vector>                           // std::vector
-#include "flare/butil/string_splitter.h"
+#include "flare/base/string_splitter.h"
 #include "flare/bvar/bvar.h"
 
 #include "flare/brpc/closure_guard.h"        // ClosureGuard

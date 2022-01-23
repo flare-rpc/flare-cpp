@@ -4,11 +4,11 @@
 
 #include "flare/butil/rand_util.h"
 #include "flare/butil/fast_rand.h"
-#include "flare/butil/time.h"
+#include "flare/base/time.h"
 #include <algorithm>
 #include <limits>
 
-#include "flare/butil/logging.h"
+#include "flare/base/logging.h"
 #include "flare/butil/memory/scoped_ptr.h"
 #include "flare/butil/time/time.h"
 #include <gtest/gtest.h>
@@ -202,7 +202,7 @@ TEST(RandUtilTest, fast_rand_perf) {
     const int kTestIterations = 1000000;
     const int kRange = 17;
     uint64_t s = 0;
-    butil::Timer tm;
+    flare::base::stop_watcher tm;
     tm.start();
     for (int i = 0; i < kTestIterations; ++i) {
         s += butil::fast_rand_less_than(kRange);

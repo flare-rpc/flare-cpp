@@ -22,13 +22,13 @@
 #include <gflags/gflags.h>
 #include <gtest/gtest.h>
 #include "flare/butil/compat.h"
-#include "flare/butil/time.h"
+#include "flare/base/time.h"
 #include "flare/butil/macros.h"
 #include "flare/butil/errno.h"
 #include <flare/bthread/sys_futex.h>
 #include <flare/bthread/butex.h>
 #include "flare/bthread/bthread.h"
-#include "flare/butil/static_atomic.h"
+#include "flare/base/static_atomic.h"
 
 namespace {
 DEFINE_int32(thread_num, 1, "#pairs of threads doing ping pong");
@@ -191,7 +191,7 @@ TEST(PingPongTest, ping_pong) {
     long last_counter = 0;
     long last_wakeup = 0;
     while (!stop) {
-        butil::Timer tm;
+        flare::base::stop_watcher tm;
         tm.start();
         sleep(1);
         tm.stop();

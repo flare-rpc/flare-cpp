@@ -21,7 +21,7 @@
 
 #include <pthread.h>
 #include "flare/butil/macros.h"
-#include "flare/butil/static_atomic.h"
+#include "flare/base/static_atomic.h"
 #include "flare/bvar/passive_status.h"
 #include "flare/bthread/errno.h"                       // EAGAIN
 #include "flare/bthread/task_group.h"                  // TaskGroup

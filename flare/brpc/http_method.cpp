@@ -18,7 +18,7 @@
 
 #include <stdlib.h>                     // abort()
 #include "flare/butil/macros.h"
-#include "flare/butil/logging.h"
+#include "flare/base/logging.h"
 #include <pthread.h>
 #include <algorithm>
 #include "flare/brpc/http_method.h"

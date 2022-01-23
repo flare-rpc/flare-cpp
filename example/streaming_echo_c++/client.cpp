@@ -18,7 +18,7 @@
 // A client sending requests to server in batch every 1 second.
 
 #include <gflags/gflags.h>
-#include <flare/butil/logging.h>
+#include "flare/base/logging.h"
 #include <flare/brpc/channel.h>
 #include <flare/brpc/stream.h>
 #include "echo.pb.h"

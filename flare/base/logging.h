@@ -1,23 +1,3 @@
-// Licensed to the Apache Software Foundation (ASF) under one
-// or more contributor license agreements.  See the NOTICE file
-// distributed with this work for additional information
-// regarding copyright ownership.  The ASF licenses this file
-// to you under the Apache License, Version 2.0 (the
-// "License"); you may not use this file except in compliance
-// with the License.  You may obtain a copy of the License at
-//
-//   http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing,
-// software distributed under the License is distributed on an
-// "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-// KIND, either express or implied.  See the License for the
-// specific language governing permissions and limitations
-// under the License.
-
-// Date: 2012-10-08 23:53:50
-
-// Merged chromium log and streaming log.
 
 #ifndef BUTIL_LOGGING_H_
 #define BUTIL_LOGGING_H_
@@ -26,9 +6,9 @@
 #include <string>
 #include <cstring>
 #include <sstream>
-#include "flare/butil/macros.h"    // BAIDU_CONCAT
-#include "flare/butil/static_atomic.h" // Used by LOG_EVERY_N, LOG_FIRST_N etc
-#include "flare/butil/time.h"      // gettimeofday_us()
+#include "flare/base/profile.h"   
+#include "flare/base/static_atomic.h" // Used by LOG_EVERY_N, LOG_FIRST_N etc
+#include "flare/base/time.h"      // gettimeofday_us()
 
 # include <glog/logging.h>
 # include <glog/raw_logging.h>
@@ -74,7 +54,7 @@
 #endif
 
 #if NOTIMPLEMENTED_POLICY == 0
-#define NOTIMPLEMENTED() BAIDU_EAT_STREAM_PARAMS
+#define NOTIMPLEMENTED() FLARE_EAT_STREAM_PARAMS
 #elif NOTIMPLEMENTED_POLICY == 1
 // TODO, figure out how to generate a warning
 #define NOTIMPLEMENTED() COMPILE_ASSERT(false, NOT_IMPLEMENTED)
@@ -90,7 +70,7 @@
         LOG_IF(ERROR, !logged_once) << NOTIMPLEMENTED_MSG;      \
         logged_once = true;                                     \
     } while(0);                                                 \
-    BAIDU_EAT_STREAM_PARAMS
+    FLARE_EAT_STREAM_PARAMS
 #endif
 
 #if defined(NDEBUG) && defined(OS_CHROMEOS)
@@ -101,25 +81,25 @@
 #endif
 
 // Helper macro included by all *_EVERY_N macros.
-#define BAIDU_LOG_IF_EVERY_N_IMPL(logifmacro, severity, condition, N)   \
-    static std::atomic<int32_t> BAIDU_CONCAT(logeveryn_, __LINE__){-1}; \
-    const static int BAIDU_CONCAT(logeveryn_sc_, __LINE__) = (N);       \
-    const int BAIDU_CONCAT(logeveryn_c_, __LINE__) =                    \
-        BAIDU_CONCAT(logeveryn_, __LINE__).fetch_add( 1) + 1; \
-    logifmacro(severity, (condition) && BAIDU_CONCAT(logeveryn_c_, __LINE__) / \
-               BAIDU_CONCAT(logeveryn_sc_, __LINE__) * BAIDU_CONCAT(logeveryn_sc_, __LINE__) \
-               == BAIDU_CONCAT(logeveryn_c_, __LINE__))
+#define FLARE_LOG_IF_EVERY_N_IMPL(logifmacro, severity, condition, N)   \
+    static std::atomic<int32_t> FLARE_CONCAT(logeveryn_, __LINE__){-1}; \
+    const static int FLARE_CONCAT(logeveryn_sc_, __LINE__) = (N);       \
+    const int FLARE_CONCAT(logeveryn_c_, __LINE__) =                    \
+        FLARE_CONCAT(logeveryn_, __LINE__).fetch_add( 1) + 1; \
+    logifmacro(severity, (condition) && FLARE_CONCAT(logeveryn_c_, __LINE__) / \
+               FLARE_CONCAT(logeveryn_sc_, __LINE__) * FLARE_CONCAT(logeveryn_sc_, __LINE__) \
+               == FLARE_CONCAT(logeveryn_c_, __LINE__))
 
 // Helper macro included by all *_FIRST_N macros.
-#define BAIDU_LOG_IF_FIRST_N_IMPL(logifmacro, severity, condition, N)   \
-    static std::atomic<int32_t> BAIDU_CONCAT(logfstn_, __LINE__){0}; \
-    logifmacro(severity, (condition) && BAIDU_CONCAT(logfstn_, __LINE__) < N && \
-               BAIDU_CONCAT(logfstn_, __LINE__).fetch_add( 1) + 1 <= N)
+#define FLARE_LOG_IF_FIRST_N_IMPL(logifmacro, severity, condition, N)   \
+    static std::atomic<int32_t> FLARE_CONCAT(logfstn_, __LINE__){0}; \
+    logifmacro(severity, (condition) && FLARE_CONCAT(logfstn_, __LINE__) < N && \
+               FLARE_CONCAT(logfstn_, __LINE__).fetch_add( 1) + 1 <= N)
 
 // Helper macro included by all *_EVERY_SECOND macros.
-#define BAIDU_LOG_IF_EVERY_SECOND_IMPL(logifmacro, severity, condition) \
-    static butil::EveryManyUS BAIDU_CONCAT(logeverys_, __LINE__)(1000); \
-    logifmacro(severity, (condition) && BAIDU_CONCAT(logeverys_, __LINE__))
+#define FLARE_LOG_IF_EVERY_SECOND_IMPL(logifmacro, severity, condition) \
+    static ::flare::base::EveryManyUS FLARE_CONCAT(logeverys_, __LINE__)(1000); \
+    logifmacro(severity, (condition) && FLARE_CONCAT(logeverys_, __LINE__))
 
 // ===============================================================
 
@@ -135,9 +115,9 @@
 // The corresponding macro in glog is not thread-safe while this is.
 #ifndef LOG_EVERY_N
 # define LOG_EVERY_N(severity, N)                                \
-     BAIDU_LOG_IF_EVERY_N_IMPL(LOG_IF, severity, true, N)
+     FLARE_LOG_IF_EVERY_N_IMPL(LOG_IF, severity, true, N)
 # define LOG_IF_EVERY_N(severity, condition, N)                  \
-     BAIDU_LOG_IF_EVERY_N_IMPL(LOG_IF, severity, condition, N)
+     FLARE_LOG_IF_EVERY_N_IMPL(LOG_IF, severity, condition, N)
 #endif
 
 // Print logs for first N calls.
@@ -145,32 +125,32 @@
 // The corresponding macro in glog is not thread-safe while this is.
 #ifndef LOG_FIRST_N
 # define LOG_FIRST_N(severity, N)                                \
-     BAIDU_LOG_IF_FIRST_N_IMPL(LOG_IF, severity, true, N)
+     FLARE_LOG_IF_FIRST_N_IMPL(LOG_IF, severity, true, N)
 # define LOG_IF_FIRST_N(severity, condition, N)                  \
-     BAIDU_LOG_IF_FIRST_N_IMPL(LOG_IF, severity, condition, N)
+     FLARE_LOG_IF_FIRST_N_IMPL(LOG_IF, severity, condition, N)
 #endif
 
 // Print a log every second. (not present in glog). First call always prints.
 // Each call to this macro has a cost of calling gettimeofday.
 #ifndef LOG_EVERY_SECOND
 # define LOG_EVERY_SECOND(severity)                                \
-     BAIDU_LOG_IF_EVERY_SECOND_IMPL(LOG_IF, severity, true)
+     FLARE_LOG_IF_EVERY_SECOND_IMPL(LOG_IF, severity, true)
 # define LOG_IF_EVERY_SECOND(severity, condition)                \
-     BAIDU_LOG_IF_EVERY_SECOND_IMPL(LOG_IF, severity, condition)
+     FLARE_LOG_IF_EVERY_SECOND_IMPL(LOG_IF, severity, condition)
 #endif
 
 #ifndef PLOG_EVERY_N
 # define PLOG_EVERY_N(severity, N)                               \
-     BAIDU_LOG_IF_EVERY_N_IMPL(PLOG_IF, severity, true, N)
+     FLARE_LOG_IF_EVERY_N_IMPL(PLOG_IF, severity, true, N)
 # define PLOG_IF_EVERY_N(severity, condition, N)                 \
-     BAIDU_LOG_IF_EVERY_N_IMPL(PLOG_IF, severity, condition, N)
+     FLARE_LOG_IF_EVERY_N_IMPL(PLOG_IF, severity, condition, N)
 #endif
 
 #ifndef PLOG_FIRST_N
 # define PLOG_FIRST_N(severity, N)                               \
-     BAIDU_LOG_IF_FIRST_N_IMPL(PLOG_IF, severity, true, N)
+     FLARE_LOG_IF_FIRST_N_IMPL(PLOG_IF, severity, true, N)
 # define PLOG_IF_FIRST_N(severity, condition, N)                 \
-     BAIDU_LOG_IF_FIRST_N_IMPL(PLOG_IF, severity, condition, N)
+     FLARE_LOG_IF_FIRST_N_IMPL(PLOG_IF, severity, condition, N)
 #endif
 
 #ifndef PLOG_ONCE
@@ -180,9 +160,9 @@
 
 #ifndef PLOG_EVERY_SECOND
 # define PLOG_EVERY_SECOND(severity)                             \
-     BAIDU_LOG_IF_EVERY_SECOND_IMPL(PLOG_IF, severity, true)
+     FLARE_LOG_IF_EVERY_SECOND_IMPL(PLOG_IF, severity, true)
 # define PLOG_IF_EVERY_SECOND(severity, condition)                       \
-     BAIDU_LOG_IF_EVERY_SECOND_IMPL(PLOG_IF, severity, condition)
+     FLARE_LOG_IF_EVERY_SECOND_IMPL(PLOG_IF, severity, condition)
 #endif
 
 // DEBUG_MODE is for uses like

@@ -24,10 +24,10 @@
 #include <fcntl.h>
 #include <flare/bthread/bthread.h>
 #include <flare/butil/file_util.h>                     // butil::FilePath
-#include <flare/butil/time.h>
+#include "flare/base/time.h"
 #include <flare/brpc/channel.h>
 #include <flare/brpc/controller.h>
-#include <flare/butil/logging.h>
+#include "flare/base/logging.h"
 #include <json2pb/pb_to_json.h>
 #include "json_loader.h"
 #include "rpc_press_impl.h"
@@ -119,7 +119,7 @@ int RpcPress::init(const PressOptions* options) {
     sourceTree.MapPath("", proto_path.c_str());
     // Add paths in -inc
     if (!_options.proto_includes.empty()) {
-        butil::StringSplitter sp(_options.proto_includes.c_str(), ';');
+        flare::base::StringSplitter sp(_options.proto_includes.c_str(), ';');
         for (; sp; ++sp) {
             sourceTree.MapPath("", std::string(sp.field(), sp.length()));
         }
@@ -188,7 +188,7 @@ void RpcPress::handle_response(brpc::Controller* cntl,
                                Message* response, 
                                int64_t start_time){
     if (!cntl->Failed()){
-        int64_t rpc_call_time_us = butil::gettimeofday_us() - start_time;
+        int64_t rpc_call_time_us = flare::base::gettimeofday_us() - start_time;
         _latency_recorder << rpc_call_time_us;
 
         if (_output_json) {
@@ -226,13 +226,13 @@ void RpcPress::sync_client() {
     } else if (MAX_QUEUE_SIZE > 2000) {
         MAX_QUEUE_SIZE = 2000;
     }
-    timeq.push_back(butil::gettimeofday_us());
+    timeq.push_back(flare::base::gettimeofday_us());
     while (!_stop) {
         brpc::Controller* cntl = new brpc::Controller;
         msg_index = (msg_index + _options.test_thread_num) % _msgs.size();
         Message* request = _msgs[msg_index];
         Message* response = _pbrpc_client->get_output_message();
-        const int64_t start_time = butil::gettimeofday_us();
+        const int64_t start_time = flare::base::gettimeofday_us();
         google::protobuf::Closure* done = brpc::NewCallback<
             RpcPress, 
             RpcPress*, 
@@ -247,7 +247,7 @@ void RpcPress::sync_client() {
         if (_options.test_req_rate <= 0) { 
             brpc::Join(cid1);
         } else {
-            int64_t end_time = butil::gettimeofday_us();
+            int64_t end_time = flare::base::gettimeofday_us();
             int64_t expected_elp = 0;
             int64_t actual_elp = 0;
             timeq.push_back(end_time);

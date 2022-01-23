@@ -16,7 +16,7 @@
 // under the License.
 
 
-#include "flare/butil/logging.h"
+#include "flare/base/logging.h"
 #include "flare/brpc/adaptive_connection_type.h"
 
 

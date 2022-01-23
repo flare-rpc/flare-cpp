@@ -28,8 +28,8 @@ const uint64_t PB_TOTAL_BYETS_LIMITS =
 
 #include <google/protobuf/io/zero_copy_stream_impl_lite.h>
 #include <gflags/gflags.h>
-#include "flare/butil/logging.h"
-#include "flare/butil/memory/singleton_on_pthread_once.h"
+#include "flare/base/logging.h"
+#include "flare/base/singleton_on_pthread_once.h"
 #include "flare/brpc/protocol.h"
 #include "flare/brpc/controller.h"
 #include "flare/brpc/compress.h"
@@ -61,7 +61,7 @@ struct ProtocolMap {
     ProtocolEntry entries[MAX_PROTOCOL_SIZE];
 };
 inline ProtocolEntry* get_protocol_map() {
-    return butil::get_leaky_singleton<ProtocolMap>()->entries;
+    return flare::base::get_leaky_singleton<ProtocolMap>()->entries;
 }
 static pthread_mutex_t s_protocol_map_mutex = PTHREAD_MUTEX_INITIALIZER;
 

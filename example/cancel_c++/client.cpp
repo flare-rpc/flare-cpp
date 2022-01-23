@@ -18,8 +18,8 @@
 // A client to send 2 requests to server and accept the first returned response.
 
 #include <gflags/gflags.h>
-#include <flare/butil/logging.h>
-#include <flare/butil/time.h>
+#include "flare/base/logging.h"
+#include "flare/base/time.h"
 #include <flare/brpc/channel.h>
 #include "echo.pb.h"
 
@@ -88,7 +88,7 @@ int main(int argc, char* argv[]) {
         CancelRPC done1(id2);
         CancelRPC done2(id1);
         
-        butil::Timer tm;
+        flare::base::stop_watcher tm;
         tm.start();
         // Send 2 async calls and join them. They will cancel each other in
         // their done which is run before the RPC being Join()-ed. Canceling

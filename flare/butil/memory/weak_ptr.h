@@ -65,7 +65,7 @@
 
 #include "flare/butil/basictypes.h"
 #include "flare/butil/base_export.h"
-#include "flare/butil/logging.h"
+#include "flare/base/logging.h"
 #include "flare/butil/memory/ref_counted.h"
 #include "flare/butil/type_traits.h"
 

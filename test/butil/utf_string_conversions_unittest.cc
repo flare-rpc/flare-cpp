@@ -3,7 +3,7 @@
 // found in the LICENSE file.
 
 #include "flare/butil/basictypes.h"
-#include "flare/butil/logging.h"
+#include "flare/base/logging.h"
 #include "flare/butil/strings/string_piece.h"
 #include "flare/butil/strings/string_util.h"
 #include "flare/butil/strings/utf_string_conversions.h"

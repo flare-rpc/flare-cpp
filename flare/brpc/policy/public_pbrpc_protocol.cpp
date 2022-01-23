@@ -20,7 +20,7 @@
 #include <google/protobuf/message.h>               // Message
 #include <gflags/gflags.h>
 #include "flare/butil/third_party/snappy/snappy.h"        // snappy::Compress
-#include "flare/butil/time.h"
+#include "flare/base/time.h"
 #include "flare/brpc/controller.h"                       // Controller
 #include "flare/brpc/socket.h"                           // Socket
 #include "flare/brpc/server.h"                           // Server
@@ -119,7 +119,7 @@ void PublicPbrpcServiceAdaptor::SerializeResponseToIOBuf(
     ResponseHead* head = whole_res.mutable_responsehead();
     ResponseBody* body = whole_res.add_responsebody();
 
-    head->set_from_host(butil::ip2str(butil::my_ip()).c_str());
+    head->set_from_host(flare::base::ip2str(flare::base::my_ip()).c_str());
     body->set_version(meta.user_string());
     body->set_id(meta.correlation_id());
     if (cntl->Failed()) {
@@ -150,7 +150,7 @@ void PublicPbrpcServiceAdaptor::SerializeResponseToIOBuf(
 }
 
 void ProcessPublicPbrpcResponse(InputMessageBase* msg_base) {
-    const int64_t start_parse_us = butil::cpuwide_time_us();
+    const int64_t start_parse_us = flare::base::cpuwide_time_us();
     DestroyingPtr<MostCommonMessage> msg(static_cast<MostCommonMessage*>(msg_base));
     
     PublicPbrpcResponse pbres;
@@ -236,7 +236,7 @@ void PackPublicPbrpcRequest(butil::IOBuf* buf,
     RequestBody* body = pbreq.add_requestbody();
     butil::IOBufAsZeroCopyOutputStream request_stream(buf);
 
-    head->set_from_host(butil::ip2str(butil::my_ip()).c_str());
+    head->set_from_host(flare::base::ip2str(flare::base::my_ip()).c_str());
     head->set_content_type(CONTENT_TYPE);
     bool short_connection = (controller->connection_type() == CONNECTION_TYPE_SHORT);
     head->set_connection(!short_connection);

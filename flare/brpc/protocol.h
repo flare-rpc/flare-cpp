@@ -25,9 +25,9 @@
 #include <vector>                                  // std::vector
 #include <stdint.h>                                // uint64_t
 #include <gflags/gflags_declare.h>                 // DECLARE_xxx
-#include "flare/butil/endpoint.h"                         // butil::EndPoint
+#include "flare/base/endpoint.h"                         // flare::base::end_point
 #include "flare/butil/iobuf.h"
-#include "flare/butil/logging.h"
+#include "flare/base/logging.h"
 #include "flare/brpc/options.pb.h"                  // ProtocolType
 #include "flare/brpc/socket_id.h"                   // SocketId
 #include "flare/brpc/parse_result.h"                // ParseResult
@@ -134,8 +134,8 @@ struct Protocol {
     Verify verify;
 
     // [Optional]
-    // Convert `server_addr_and_port'(a parameter to Channel) to butil::EndPoint.
-    typedef bool (*ParseServerAddress)(butil::EndPoint* out,
+    // Convert `server_addr_and_port'(a parameter to Channel) to flare::base::end_point.
+    typedef bool (*ParseServerAddress)(flare::base::end_point* out,
                                        const char* server_addr_and_port);
     ParseServerAddress parse_server_address;
 

@@ -22,11 +22,11 @@
 #ifndef  BTHREAD_EXECUTION_QUEUE_INL_H
 #define  BTHREAD_EXECUTION_QUEUE_INL_H
 
-#include "flare/butil/static_atomic.h"             // std::atomic
+#include "flare/base/static_atomic.h"             // std::atomic
 #include "flare/butil/macros.h"                // BAIDU_CACHELINE_ALIGNMENT
 #include "flare/butil/memory/scoped_ptr.h"     // butil::scoped_ptr
-#include "flare/butil/logging.h"               // LOG
-#include "flare/butil/time.h"                  // butil::cpuwide_time_ns
+#include "flare/base/logging.h"               // LOG
+#include "flare/base/time.h"                  // flare::base::cpuwide_time_ns
 #include "flare/bvar/bvar.h"                  // bvar::Adder
 #include "flare/bthread/butex.h"              // butex_construct
 

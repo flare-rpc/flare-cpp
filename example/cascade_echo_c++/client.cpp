@@ -19,8 +19,8 @@
 // again according to the field `depth'
 
 #include <gflags/gflags.h>
-#include <flare/butil/logging.h>
-#include <flare/butil/time.h>
+#include "flare/base/logging.h"
+#include "flare/base/time.h"
 #include <flare/bthread/bthread.h>
 #include <flare/brpc/channel.h>
 #include <flare/brpc/server.h>

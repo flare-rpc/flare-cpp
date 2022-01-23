@@ -17,8 +17,8 @@
 
 #include <limits>                           //std::numeric_limits
 #include "flare/bvar/detail/sampler.h"
-#include "flare/butil/time.h"
-#include "flare/butil/logging.h"
+#include "flare/base/time.h"
+#include "flare/base/logging.h"
 #include <gtest/gtest.h>
 
 namespace {

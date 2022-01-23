@@ -16,7 +16,7 @@
 // under the License.
 
 
-#include "flare/butil/logging.h"
+#include "flare/base/logging.h"
 #include "flare/bthread/bthread.h"   // INVALID_BTHREAD_ID before bthread r32748
 #include "flare/brpc/progressive_attachment.h"
 #include "flare/brpc/socket.h"
@@ -224,12 +224,12 @@ void ProgressiveAttachment::MarkRPCAsDone(bool rpc_failed) {
     } while (true);
 }
 
-butil::EndPoint ProgressiveAttachment::remote_side() const {
-    return _httpsock ? _httpsock->remote_side() : butil::EndPoint();
+flare::base::end_point ProgressiveAttachment::remote_side() const {
+    return _httpsock ? _httpsock->remote_side() : flare::base::end_point();
 }
 
-butil::EndPoint ProgressiveAttachment::local_side() const {
-    return _httpsock ? _httpsock->local_side() : butil::EndPoint();
+flare::base::end_point ProgressiveAttachment::local_side() const {
+    return _httpsock ? _httpsock->local_side() : flare::base::end_point();
 }
 
 static int RunOnFailed(bthread_id_t id, void* data, int) {

@@ -21,11 +21,11 @@
 #include <limits>
 #include <sys/stat.h>
 #include <fcntl.h>                          // O_RDONLY
-#include "flare/butil/string_printf.h"             // string_printf
-#include "flare/butil/string_splitter.h"           // StringSplitter
+#include "flare/base/strings.h"             // string_printf
+#include "flare/base/string_splitter.h"           // StringSplitter
 #include "flare/butil/file_util.h"                 // butil::FilePath
 #include "flare/butil/files/scoped_file.h"         // ScopedFILE
-#include "flare/butil/time.h"
+#include "flare/base/time.h"
 #include "flare/butil/popen.h"                    // butil::read_command_output
 #include "flare/butil/process_util.h"             // butil::ReadCommandLine
 #include "flare/brpc/log.h"
@@ -35,7 +35,7 @@
 #include "flare/brpc/builtin/common.h"
 #include "flare/brpc/details/tcmalloc_extension.h"
 #include "flare/bthread/bthread.h"                // bthread_usleep
-#include "flare/butil/fd_guard.h"
+#include "flare/base/fd_guard.h"
 
 extern "C" {
 #if defined(OS_LINUX)
@@ -145,7 +145,7 @@ void PProfService::profile(
     }
     ProfilerStop();
 
-    butil::fd_guard fd(open(prof_name, O_RDONLY));
+    flare::base::fd_guard fd(open(prof_name, O_RDONLY));
     if (fd < 0) {
         cntl->SetFailed(ENOENT, "Fail to open %s", prof_name);
         return;
@@ -196,7 +196,7 @@ void PProfService::contention(
     }
     bthread::ContentionProfilerStop();
 
-    butil::fd_guard fd(open(prof_name, O_RDONLY));
+    flare::base::fd_guard fd(open(prof_name, O_RDONLY));
     if (fd < 0) {
         cntl->SetFailed(ENOENT, "Fail to open %s", prof_name);
         return;
@@ -292,7 +292,7 @@ static bool HasExt(const std::string& name, const std::string& ext) {
 static int ExtractSymbolsFromBinary(
     std::map<uintptr_t, std::string>& addr_map,
     const LibInfo& lib_info) {
-    butil::Timer tm;
+    flare::base::stop_watcher tm;
     tm.start();
     std::string cmd = "nm -C -p ";
     cmd.append(lib_info.path);
@@ -304,7 +304,7 @@ static int ExtractSymbolsFromBinary(
     }
     std::string line;
     while (std::getline(ss, line)) {
-        butil::StringSplitter sp(line.c_str(), ' ');
+        flare::base::StringSplitter sp(line.c_str(), ' ');
         if (sp == NULL) {
             continue;
         }
@@ -393,7 +393,7 @@ static int ExtractSymbolsFromBinary(
 }
 
 static void LoadSymbols() {
-    butil::Timer tm;
+    flare::base::stop_watcher tm;
     tm.start();
     butil::ScopedFILE fp(fopen("/proc/self/maps", "r"));
     if (fp == NULL) {
@@ -403,7 +403,7 @@ static void LoadSymbols() {
     size_t line_len = 0;
     ssize_t nr = 0;
     while ((nr = getline(&line, &line_len, fp.get())) != -1) {
-        butil::StringSplitter sp(line, line + nr, ' ');
+        flare::base::StringSplitter sp(line, line + nr, ' ');
         if (sp == NULL) {
             continue;
         }
@@ -466,7 +466,7 @@ static void LoadSymbols() {
 #endif
     ExtractSymbolsFromBinary(symbol_map, info);
 
-    butil::Timer tm2;
+    flare::base::stop_watcher tm2;
     tm2.start();
     size_t num_removed = 0;
     bool last_is_empty = false;
@@ -543,7 +543,7 @@ void PProfService::symbol(
         }
         std::vector<uintptr_t> addr_list;
         addr_list.reserve(32);
-        butil::StringSplitter sp(addr_cstr, '+');
+        flare::base::StringSplitter sp(addr_cstr, '+');
         for ( ; sp != NULL; ++sp) {
             char* endptr;
             uintptr_t addr = strtoull(sp.field(), &endptr, 16);

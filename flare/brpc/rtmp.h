@@ -20,7 +20,7 @@
 #define BRPC_RTMP_H
 
 #include "flare/butil/strings/string_piece.h"   // std::string_view
-#include "flare/butil/endpoint.h"               // butil::EndPoint
+#include "flare/base/endpoint.h"               // flare::base::end_point
 #include "flare/brpc/shared_object.h"          // SharedObject, intrusive_ptr
 #include "flare/brpc/socket_id.h"              // SocketUniquePtr
 #include "flare/brpc/controller.h"             // Controller, IOBuf
@@ -135,7 +135,7 @@ struct RtmpAACMessage {
     butil::IOBuf data;
 
     // Create AAC message from audio message.
-    butil::Status Create(const RtmpAudioMessage& msg);
+    flare::base::flare_status Create(const RtmpAudioMessage& msg);
 
     // Size of serialized message.
     size_t size() const { return data.size() + 2; }
@@ -154,8 +154,8 @@ static const AACObjectType AAC_OBJECT_UNKNOWN = (AACObjectType)0;
 
 struct AudioSpecificConfig {
     AudioSpecificConfig();
-    butil::Status Create(const butil::IOBuf& buf);
-    butil::Status Create(const void* data, size_t len);
+    flare::base::flare_status Create(const butil::IOBuf& buf);
+    flare::base::flare_status Create(const void* data, size_t len);
 
     AACObjectType  aac_object;
     uint8_t        aac_sample_rate;
@@ -243,7 +243,7 @@ struct RtmpAVCMessage {
     butil::IOBuf data;
 
     // Create a AVC message from a video message.
-    butil::Status Create(const RtmpVideoMessage&);
+    flare::base::flare_status Create(const RtmpVideoMessage&);
 
     // Size of serialized message.
     size_t size() const { return data.size() + 5; }
@@ -313,8 +313,8 @@ enum AVCNaluType {
 struct AVCDecoderConfigurationRecord {
     AVCDecoderConfigurationRecord();
     
-    butil::Status Create(const butil::IOBuf& buf);
-    butil::Status Create(const void* data, size_t len);
+    flare::base::flare_status Create(const butil::IOBuf& buf);
+    flare::base::flare_status Create(const void* data, size_t len);
 
     int             width;
     int             height;
@@ -325,7 +325,7 @@ struct AVCDecoderConfigurationRecord {
     std::vector<std::string> pps_list;
 
 private:
-    butil::Status ParseSPS(const std::string_view& buf, size_t sps_length);
+    flare::base::flare_status ParseSPS(const std::string_view& buf, size_t sps_length);
 };
 std::ostream& operator<<(std::ostream&, const AVCDecoderConfigurationRecord&);
 
@@ -405,13 +405,13 @@ public:
     explicit FlvWriter(butil::IOBuf* buf, const FlvWriterOptions& options);
     
     // Append a video/audio/metadata/cuepoint message into the output buffer.
-    butil::Status Write(const RtmpVideoMessage&);
-    butil::Status Write(const RtmpAudioMessage&);
-    butil::Status Write(const RtmpMetaData&);
-    butil::Status Write(const RtmpCuePoint&);
+    flare::base::flare_status Write(const RtmpVideoMessage&);
+    flare::base::flare_status Write(const RtmpAudioMessage&);
+    flare::base::flare_status Write(const RtmpMetaData&);
+    flare::base::flare_status Write(const RtmpCuePoint&);
 
 private:
-    butil::Status WriteScriptData(const butil::IOBuf& req_buf, uint32_t timestamp);
+    flare::base::flare_status WriteScriptData(const butil::IOBuf& req_buf, uint32_t timestamp);
 
 private:
     bool _write_header;
@@ -426,23 +426,23 @@ public:
     explicit FlvReader(butil::IOBuf* buf);
 
     // Get the next message type.
-    // If it is a valid flv tag, butil::Status::OK() is returned and the 
+    // If it is a valid flv tag, flare::base::flare_status::OK() is returned and the
     // type is written to *type. Otherwise an error would be returned,
     // leaving *type unchanged.
     // Note: If error_code of the return value is EAGAIN, the caller 
     // should wait more data and try call PeekMessageType again.
-    butil::Status PeekMessageType(FlvTagType* type);
+    flare::base::flare_status PeekMessageType(FlvTagType* type);
 
     // Read a video/audio/metadata message from the input buffer.
     // Caller should use the result of function PeekMessageType to select an
     // appropriate function, e.g., if *type is set to FLV_TAG_AUDIO in 
     // PeekMessageType, caller should call Read(RtmpAudioMessage*) subsequently.
-    butil::Status Read(RtmpVideoMessage* msg);
-    butil::Status Read(RtmpAudioMessage* msg);
-    butil::Status Read(RtmpMetaData* object, std::string* object_name);
+    flare::base::flare_status Read(RtmpVideoMessage* msg);
+    flare::base::flare_status Read(RtmpAudioMessage* msg);
+    flare::base::flare_status Read(RtmpMetaData* object, std::string* object_name);
 
 private:
-    butil::Status ReadHeader();
+    flare::base::flare_status ReadHeader();
 
 private:
     bool _read_header;
@@ -584,8 +584,8 @@ public:
     uint32_t chunk_stream_id() const { return _chunk_stream_id; }
 
     // Get ip/port of peer/self
-    virtual butil::EndPoint remote_side() const;
-    virtual butil::EndPoint local_side() const;
+    virtual flare::base::end_point remote_side() const;
+    virtual flare::base::end_point local_side() const;
 
     bool is_client_stream() const { return _is_client; }
     bool is_server_stream() const { return !_is_client; }
@@ -593,7 +593,7 @@ public:
     // True iff OnStop() was called.
     bool is_stopped() const { return _stopped; }
 
-    // When this stream is created, got from butil::gettimeofday_us().
+    // When this stream is created, got from flare::base::gettimeofday_us().
     int64_t create_realtime_us() const { return _create_realtime_us; }
     
     bool is_paused() const { return _paused; }
@@ -728,7 +728,7 @@ public:
     RtmpClient& operator=(const RtmpClient&);
 
     // Specify the servers to connect.
-    int Init(butil::EndPoint server_addr_and_port,
+    int Init(flare::base::end_point server_addr_and_port,
              const RtmpClientOptions& options);
     int Init(const char* server_addr_and_port,
              const RtmpClientOptions& options);
@@ -978,8 +978,8 @@ public:
     int SendAACMessage(const RtmpAACMessage& msg);
     int SendVideoMessage(const RtmpVideoMessage& msg);
     int SendAVCMessage(const RtmpAVCMessage& msg);
-    butil::EndPoint remote_side() const;
-    butil::EndPoint local_side() const;
+    flare::base::end_point remote_side() const;
+    flare::base::end_point local_side() const;
 
     // Call this function to stop current stream. New sub stream will be
     // tried to be created later.
@@ -1058,7 +1058,7 @@ public:
     virtual ~RtmpService() {}
 
     // Called when receiving a Pong response from `remote_side'.
-    virtual void OnPingResponse(const butil::EndPoint& remote_side,
+    virtual void OnPingResponse(const flare::base::end_point& remote_side,
                                 uint32_t ping_timestamp);
 
     // Called to create a server-side stream.
@@ -1080,7 +1080,7 @@ public:
     // Call done->Run() when the play request is processed (either accepted
     // or rejected)
     virtual void OnPlay(const RtmpPlayOptions&,
-                        butil::Status* status,
+                        flare::base::flare_status* status,
                         google::protobuf::Closure* done);
     
     // Called when receiving a publish request.
@@ -1089,7 +1089,7 @@ public:
     // Returns 0 on success, -1 otherwise.
     virtual void OnPublish(const std::string& stream_name,
                            RtmpPublishType publish_type,
-                           butil::Status* status,
+                           flare::base::flare_status* status,
                            google::protobuf::Closure* done);
     
     // Called when receiving a play2 request.

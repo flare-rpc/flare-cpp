@@ -18,8 +18,8 @@
 // A client sending requests to server asynchronously every 1 second.
 
 #include <gflags/gflags.h>
-#include <flare/butil/logging.h>
-#include <flare/butil/time.h>
+#include "flare/base/logging.h"
+#include "flare/base/time.h"
 #include <flare/brpc/channel.h>
 #include <flare/bvar/bvar.h>
 #include <flare/bthread/timer_thread.h>
@@ -162,7 +162,7 @@ void RunUpdateTask(void* data) {
     bool should_continue = context->Update();
     if (should_continue) {
         bthread::get_global_timer_thread()->schedule(RunUpdateTask, data, 
-            butil::microseconds_from_now(FLAGS_client_qps_change_interval_us));
+            flare::base::microseconds_from_now(FLAGS_client_qps_change_interval_us));
     } else {
         context->running.store(false, std::memory_order_release);
     }
@@ -191,7 +191,7 @@ void RunCase(test::ControlService_Stub &cntl_stub,
 
     TestCaseContext context(test_case);
     bthread::get_global_timer_thread()->schedule(RunUpdateTask, &context, 
-        butil::microseconds_from_now(FLAGS_client_qps_change_interval_us));
+        flare::base::microseconds_from_now(FLAGS_client_qps_change_interval_us));
 
     while (context.running.load(std::memory_order_acquire)) {
         test::NotifyRequest echo_req;

@@ -122,7 +122,7 @@ int DomainNamingService::GetServers(const char* dns_name,
     }
 #endif
 
-    butil::EndPoint point;
+    flare::base::end_point point;
     point.port = port;
     for (int i = 0; result->h_addr_list[i] != NULL; ++i) {
         if (result->h_addrtype == AF_INET) {

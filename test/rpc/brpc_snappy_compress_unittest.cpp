@@ -24,7 +24,7 @@
 #include "flare/butil/third_party/snappy/snappy.h"
 #include "flare/butil/macros.h"
 #include "flare/butil/iobuf.h"
-#include "flare/butil/time.h"
+#include "flare/base/time.h"
 #include "snappy_message.pb.h"
 #include "flare/brpc/policy/snappy_compress.h"
 #include "flare/brpc/policy/gzip_compress.h"
@@ -35,7 +35,7 @@ typedef bool (*Decompress)(const butil::IOBuf&, google::protobuf::Message*);
 inline void CompressMessage(const char* method_name,
                             int num, snappy_message::SnappyMessageProto& msg, 
                             int len, Compress compress, Decompress decompress) {
-    butil::Timer timer;
+    flare::base::stop_watcher timer;
     size_t compression_length = 0;
     int64_t total_compress_time = 0;
     int64_t total_decompress_time = 0;
@@ -166,7 +166,7 @@ TEST_F(test_compress_method, snappy_test) {
 TEST_F(test_compress_method, throughput_compare) {
     int len = 0;
     int len_subs[] = {128, 1024, 16*1024, 32*1024, 512*1024}; 
-    butil::Timer timer;
+    flare::base::stop_watcher timer;
     printf("%20s%20s%20s%20s%30s%30s%30s\n", "Compress method", "Compress size(B)", 
            "Compress time(us)", "Decompress time(us)", "Compress throughput(MB/s)", 
            "Decompress throughput(MB/s)", "Compress ratio");    
@@ -204,7 +204,7 @@ TEST_F(test_compress_method, throughput_compare_complete_random) {
     int rand_num = 0;
     int len = 0;
     int len_subs[] = {128, 1024, 16*1024, 32*1024, 512 * 1024}; 
-    butil::Timer timer;
+    flare::base::stop_watcher timer;
     printf("%20s%20s%20s%20s%30s%30s%30s\n", "Compress method", "Compress size(B)", 
            "Compress time(us)", "Decompress time(us)", "Compress throughput(MB/s)", 
            "Decompress throughput(MB/s)", "Compress ratio");

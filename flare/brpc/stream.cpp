@@ -19,7 +19,7 @@
 #include "flare/brpc/stream.h"
 
 #include <gflags/gflags.h>
-#include "flare/butil/time.h"
+#include "flare/base/time.h"
 #include "flare/butil/object_pool.h"
 #include "flare/butil/unique_ptr.h"
 #include "flare/bthread/unstable.h"
@@ -573,8 +573,8 @@ void Stream::StartIdleTimer() {
     if (_options.idle_timeout_ms < 0) {
         return;
     }
-    _start_idle_timer_us = butil::gettimeofday_us();
-    timespec due_time = butil::microseconds_to_timespec(
+    _start_idle_timer_us = flare::base::gettimeofday_us();
+    timespec due_time = flare::base::microseconds_to_timespec(
             _start_idle_timer_us + _options.idle_timeout_ms * 1000);
     const int rc = bthread_timer_add(&_idle_timer, due_time, OnIdleTimeout,
                                      (void*)(_consumer_queue.value));
@@ -636,8 +636,8 @@ void Stream::HandleRpcResponse(butil::IOBuf* response_buffer) {
     }
     _host_socket->PostponeEOF();
     _host_socket->ReAddress(&msg->_socket);
-    msg->_received_us = butil::gettimeofday_us(); 
-    msg->_base_real_us = butil::gettimeofday_us();
+    msg->_received_us = flare::base::gettimeofday_us();
+    msg->_base_real_us = flare::base::gettimeofday_us();
     msg->_arg = NULL; // ProcessRpcResponse() don't need arg
     policy::ProcessRpcResponse(msg);
 }

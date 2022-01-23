@@ -21,9 +21,9 @@
 #define  BVAR_STATUS_H
 
 #include <string>                       // std::string
-#include "flare/butil/static_atomic.h"
+#include "flare/base/static_atomic.h"
 #include "flare/butil/type_traits.h"
-#include "flare/butil/string_printf.h"
+#include "flare/base/strings.h"
 #include "flare/butil/synchronization/lock.h"
 #include "flare/bvar/detail/is_atomical.h"
 #include "flare/bvar/variable.h"
@@ -192,7 +192,7 @@ namespace bvar {
             if (fmt) {
                 va_list ap;
                 va_start(ap, fmt);
-                butil::string_vprintf(&_value, fmt, ap);
+                flare::base::string_vprintf(&_value, fmt, ap);
                 va_end(ap);
             }
             expose(name);
@@ -203,7 +203,7 @@ namespace bvar {
             if (fmt) {
                 va_list ap;
                 va_start(ap, fmt);
-                butil::string_vprintf(&_value, fmt, ap);
+                flare::base::string_vprintf(&_value, fmt, ap);
                 va_end(ap);
             }
             expose_as(prefix, name);
@@ -235,7 +235,7 @@ namespace bvar {
             va_start(ap, fmt);
             {
                 butil::AutoLock guard(_lock);
-                butil::string_vprintf(&_value, fmt, ap);
+                flare::base::string_vprintf(&_value, fmt, ap);
             }
             va_end(ap);
         }

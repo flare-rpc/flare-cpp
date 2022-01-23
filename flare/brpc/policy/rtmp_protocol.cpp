@@ -667,7 +667,7 @@ const char* RtmpContext::state2str(State s) {
     return "Unknown state";
 }
 
-void RtmpContext::SetState(const butil::EndPoint& remote_side, State new_state) {
+void RtmpContext::SetState(const flare::base::end_point& remote_side, State new_state) {
     const State old_state = _state;
     _state = new_state;
     RPC_VLOG << remote_side << ": " << state2str(old_state)
@@ -781,28 +781,28 @@ void RtmpContext::Destroy() {
     delete this;
 }
 
-butil::Status
+flare::base::flare_status
 RtmpUnsentMessage::AppendAndDestroySelf(butil::IOBuf* out, Socket* s) {
     std::unique_ptr<RtmpUnsentMessage> destroy_self(this);
     if (s == NULL) { // abandoned
         RPC_VLOG << "Socket=NULL";
-        return butil::Status::OK();
+        return flare::base::flare_status::OK();
     }
     RtmpContext* ctx = static_cast<RtmpContext*>(s->parsing_context());
     RtmpChunkStream* cstream = ctx->GetChunkStream(chunk_stream_id);
     if (cstream == NULL) {
         s->SetFailed(EINVAL, "Invalid chunk_stream_id=%u", chunk_stream_id);
-        return butil::Status(EINVAL, "Invalid chunk_stream_id=%u", chunk_stream_id);
+        return flare::base::flare_status(EINVAL, "Invalid chunk_stream_id=%u", chunk_stream_id);
     }
     if (cstream->SerializeMessage(out, header, &body) != 0) {
         s->SetFailed(EINVAL, "Fail to serialize message");
-        return butil::Status(EINVAL, "Fail to serialize message");
+        return flare::base::flare_status(EINVAL, "Fail to serialize message");
     }
     if (new_chunk_size) {
         ctx->_chunk_size_out = new_chunk_size;
     }
     if (!next) {
-        return butil::Status::OK();
+        return flare::base::flare_status::OK();
     }
     RtmpUnsentMessage* p = next.release();
     destroy_self.reset();
@@ -1046,7 +1046,7 @@ RtmpContext::RemoveTransaction(uint32_t transaction_id) {
     return handler;
 }
 
-int RtmpContext::SendConnectRequest(const butil::EndPoint& remote_side, int fd, bool simplified_rtmp) {
+int RtmpContext::SendConnectRequest(const flare::base::end_point& remote_side, int fd, bool simplified_rtmp) {
     butil::IOBuf req_buf;
     {
         butil::IOBufAsZeroCopyOutputStream zc_stream(&req_buf);
@@ -1070,7 +1070,7 @@ int RtmpContext::SendConnectRequest(const butil::EndPoint& remote_side, int fd, 
             std::string* const tcurl = req.mutable_tcurl();
             tcurl->reserve(32 + _client_options->app.size());
             tcurl->append("rtmp://");
-            tcurl->append(butil::endpoint2str(remote_side).c_str());
+            tcurl->append(flare::base::endpoint2str(remote_side).c_str());
             tcurl->push_back('/');
             tcurl->append(_client_options->app);
         } else {
@@ -1417,7 +1417,7 @@ struct ChunkStatus {
     ChunkStatus() : second("rtmp_chunk_in_second", &count) {}
 };
 inline void AddChunk() {
-    butil::get_leaky_singleton<ChunkStatus>()->count << 1;
+    flare::base::get_leaky_singleton<ChunkStatus>()->count << 1;
 }
 
 ParseResult RtmpChunkStream::Feed(const RtmpBasicHeader& bh,
@@ -1625,7 +1625,7 @@ ParseResult RtmpChunkStream::Feed(const RtmpBasicHeader& bh,
             st = g_client_msg_status;
         }
         if (st) {
-            butil::Timer tm;
+            flare::base::stop_watcher tm;
             tm.start();
             CHECK(st->OnRequested());
             const bool ret = OnMessage(bh, mh, &_r.msg_body, socket);
@@ -2711,7 +2711,7 @@ class OnPlayContinuation : public google::protobuf::Closure {
 public:
     void Run();
 public:
-    butil::Status status;
+    flare::base::flare_status status;
     butil::intrusive_ptr<RtmpServerStream> player_stream;
 };
 
@@ -3015,7 +3015,7 @@ class OnPublishContinuation : public google::protobuf::Closure {
 public:
     void Run();
 public:
-    butil::Status status;
+    flare::base::flare_status status;
     std::string publish_name;
     butil::intrusive_ptr<RtmpServerStream> publish_stream;
 };
@@ -3485,10 +3485,10 @@ void OnServerStreamCreated::Run(bool error,
         LOG(FATAL) << "RtmpContext must be created";
         return;
     }
-    const int64_t start_parse_us = butil::cpuwide_time_us();
+    const int64_t start_parse_us = flare::base::cpuwide_time_us();
     // TODO(gejun): Don't have received time right now.
     const int64_t received_us = start_parse_us;
-    const int64_t base_realtime = butil::gettimeofday_us() - received_us;
+    const int64_t base_realtime = flare::base::gettimeofday_us() - received_us;
     const bthread_id_t cid = _call_id;
     Controller* cntl = NULL;
     const int rc = bthread_id_lock(cid, (void**)&cntl);
@@ -3553,16 +3553,16 @@ void OnServerStreamCreated::Cancel() {
     delete this;
 }
 
-butil::Status
+flare::base::flare_status
 RtmpCreateStreamMessage::AppendAndDestroySelf(butil::IOBuf* out, Socket* s) {
     std::unique_ptr<RtmpCreateStreamMessage> destroy_self(this);
     if (s == NULL) {  // abandoned
-        return butil::Status::OK();
+        return flare::base::flare_status::OK();
     }
     // Serialize createStream command
     RtmpContext* ctx = static_cast<RtmpContext*>(socket->parsing_context());
     if (ctx == NULL) {
-        return butil::Status(EINVAL, "RtmpContext of %s is not created",
+        return flare::base::flare_status(EINVAL, "RtmpContext of %s is not created",
                             socket->description().c_str());
     }
     butil::IOBuf req_buf;
@@ -3605,7 +3605,7 @@ RtmpCreateStreamMessage::AppendAndDestroySelf(butil::IOBuf* out, Socket* s) {
     if (cstream == NULL) {
         socket->SetFailed(EINVAL, "Invalid chunk_stream_id=%u",
                           RTMP_CONTROL_CHUNK_STREAM_ID);
-        return butil::Status(EINVAL, "Invalid chunk_stream_id=%u",
+        return flare::base::flare_status(EINVAL, "Invalid chunk_stream_id=%u",
                             RTMP_CONTROL_CHUNK_STREAM_ID);
     }
     RtmpMessageHeader header;
@@ -3614,9 +3614,9 @@ RtmpCreateStreamMessage::AppendAndDestroySelf(butil::IOBuf* out, Socket* s) {
     header.stream_id = RTMP_CONTROL_MESSAGE_STREAM_ID;
     if (cstream->SerializeMessage(out, header, &req_buf) != 0) {
         socket->SetFailed(EINVAL, "Fail to serialize message");
-        return butil::Status(EINVAL, "Fail to serialize message");
+        return flare::base::flare_status(EINVAL, "Fail to serialize message");
     }
-    return butil::Status::OK();
+    return flare::base::flare_status::OK();
 }
 
 void PackRtmpRequest(butil::IOBuf* /*buf*/,

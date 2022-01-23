@@ -20,11 +20,11 @@
 #include <stdio.h>
 #include <signal.h>
 #include <gtest/gtest.h>
-#include "flare/butil/time.h"
+#include "flare/base/time.h"
 #include "flare/butil/macros.h"
 #include "flare/butil/errno.h"
 #include <limits.h>                            // INT_MAX
-#include "flare/butil/static_atomic.h"
+#include "flare/base/static_atomic.h"
 #include "flare/bthread/bthread.h"
 #include <flare/bthread/sys_futex.h>
 #include <flare/bthread/processor.h>
@@ -43,8 +43,8 @@ void* read_thread(void* arg) {
             if (x > 0) {
                 while ((x = m->fetch_sub(1)) > 0) {
                     ++njob;
-                    const long start = butil::cpuwide_time_ns();
-                    while (butil::cpuwide_time_ns() < start + 10000) {
+                    const long start = flare::base::cpuwide_time_ns();
+                    while (flare::base::cpuwide_time_ns() < start + 10000) {
                     }
                     if (stop) {
                         return new int(njob);
@@ -71,7 +71,7 @@ TEST(FutexTest, rdlock_performance) {
         ASSERT_EQ(0, pthread_create(&rth[i], NULL, read_thread, &lock1));
     }
 
-    const int64_t t1 = butil::cpuwide_time_ns();
+    const int64_t t1 = flare::base::cpuwide_time_ns();
     for (size_t i = 0; i < N; ++i) {
         if (nthread) {
             lock1.fetch_add(1);
@@ -83,7 +83,7 @@ TEST(FutexTest, rdlock_performance) {
             }
         }
     }
-    const int64_t t2 = butil::cpuwide_time_ns();
+    const int64_t t2 = flare::base::cpuwide_time_ns();
 
     bthread_usleep(3000000);
     stop = true;
@@ -126,7 +126,7 @@ TEST(FutexTest, futex_wake_many_waiters_perf) {
     
     sleep(1);
     int nwakeup = 0;
-    butil::Timer tm;
+    flare::base::stop_watcher tm;
     tm.start();
     for (size_t i = 0; i < N; ++i) {
         nwakeup += bthread::futex_wake_private(&lock1, 1);
@@ -153,7 +153,7 @@ void* waker(void* lock) {
     bthread_usleep(10000);
     const size_t REP = 100000;
     int nwakeup = 0;
-    butil::Timer tm;
+    flare::base::stop_watcher tm;
     tm.start();
     for (size_t i = 0; i < REP; ++i) {
         nwakeup += bthread::futex_wake_private(lock, 1);
@@ -168,7 +168,7 @@ void* batch_waker(void* lock) {
     bthread_usleep(10000);
     const size_t REP = 100000;
     int nwakeup = 0;
-    butil::Timer tm;
+    flare::base::stop_watcher tm;
     tm.start();
     for (size_t i = 0; i < REP; ++i) {
         if (nevent.fetch_add(1, std::memory_order_relaxed) == 0) {

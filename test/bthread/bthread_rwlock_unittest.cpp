@@ -20,7 +20,7 @@
 #include <stdio.h>
 #include <signal.h>
 #include <gtest/gtest.h>
-#include "flare/butil/time.h"
+#include "flare/base/time.h"
 #include "flare/butil/macros.h"
 
 namespace {
@@ -31,7 +31,7 @@ void* read_thread(void* arg) {
 #else
     pthread_mutex_t* lock = (pthread_mutex_t*)arg;
 #endif
-    const long t1 = butil::cpuwide_time_ns();
+    const long t1 = flare::base::cpuwide_time_ns();
     for (size_t i = 0; i < N; ++i) {
 #ifdef CHECK_RWLOCK
         pthread_rwlock_rdlock(lock);
@@ -41,7 +41,7 @@ void* read_thread(void* arg) {
         pthread_mutex_unlock(lock);
 #endif
     }
-    const long t2 = butil::cpuwide_time_ns();
+    const long t2 = flare::base::cpuwide_time_ns();
     return new long((t2 - t1)/N);
 }
 

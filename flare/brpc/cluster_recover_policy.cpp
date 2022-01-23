@@ -24,8 +24,8 @@
 #include "flare/brpc/server_id.h"
 #include "flare/brpc/socket.h"
 #include "flare/butil/fast_rand.h"
-#include "flare/butil/time.h"
-#include "flare/butil/string_splitter.h"
+#include "flare/base/time.h"
+#include "flare/base/string_splitter.h"
 
 namespace brpc {
 
@@ -51,7 +51,7 @@ bool DefaultClusterRecoverPolicy::StopRecoverIfNecessary() {
     if (!_recovering) {
         return false;
     }
-    int64_t now_ms = butil::gettimeofday_ms();
+    int64_t now_ms = flare::base::gettimeofday_ms();
     std::unique_lock<butil::Mutex> mu(_mutex);
     if (_last_usable_change_time_ms != 0 && _last_usable != 0 &&
             (now_ms - _last_usable_change_time_ms > _hold_seconds * 1000)) {
@@ -92,7 +92,7 @@ bool DefaultClusterRecoverPolicy::DoReject(const std::vector<ServerId>& server_l
     if (!_recovering) {
         return false;
     }
-    int64_t now_ms = butil::gettimeofday_ms();
+    int64_t now_ms = flare::base::gettimeofday_ms();
     uint64_t usable = GetUsableServerCount(now_ms, server_list);
     if (_last_usable != usable) {
         std::unique_lock<butil::Mutex> mu(_mutex);
@@ -112,7 +112,7 @@ bool GetRecoverPolicyByParams(const std::string_view& params,
     int64_t min_working_instances = -1;
     int64_t hold_seconds = -1;
     bool has_meet_params = false;
-    for (butil::KeyValuePairsSplitter sp(params.begin(), params.end(), ' ', '=');
+    for (flare::base::KeyValuePairsSplitter sp(params.begin(), params.end(), ' ', '=');
             sp; ++sp) {
         if (sp.value().empty()) {
             LOG(ERROR) << "Empty value for " << sp.key() << " in lb parameter";

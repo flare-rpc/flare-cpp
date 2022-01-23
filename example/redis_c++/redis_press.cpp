@@ -19,7 +19,7 @@
 
 #include <gflags/gflags.h>
 #include <flare/bthread/bthread.h>
-#include <flare/butil/logging.h>
+#include "flare/base/logging.h"
 #include <flare/butil/string_printf.h>
 #include <flare/bvar/bvar.h>
 #include <flare/brpc/channel.h>
@@ -54,9 +54,9 @@ static void* sender(void* void_args) {
     std::vector<std::pair<std::string, std::string> > kvs;
     kvs.resize(FLAGS_batch);
     for (int i = 0; i < FLAGS_batch; ++i) {
-        kvs[i].first = butil::string_printf(
+        kvs[i].first = flare::base::string_printf(
             "%s_%04d", FLAGS_key.c_str(), args->base_index + i);
-        kvs[i].second = butil::string_printf(
+        kvs[i].second = flare::base::string_printf(
             "%s_%04d", FLAGS_value.c_str(), args->base_index + i);
     }
 

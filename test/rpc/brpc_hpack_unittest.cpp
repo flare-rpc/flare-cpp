@@ -21,7 +21,7 @@
 
 #include <gtest/gtest.h>
 #include "flare/brpc/details/hpack.h"
-#include "flare/butil/logging.h"
+#include "flare/base/logging.h"
 
 class HPackTest : public testing::Test {
 };

@@ -18,7 +18,7 @@
 
 #include <limits>                                            // numeric_limits
 #include <gflags/gflags.h>
-#include "flare/butil/time.h"                                       // gettimeofday_us
+#include "flare/base/time.h"                                       // gettimeofday_us
 #include "flare/butil/fast_rand.h"
 #include "flare/brpc/log.h"
 #include "flare/brpc/socket.h"
@@ -369,7 +369,7 @@ void LocalityAwareLoadBalancer::Feedback(const CallInfo& info) {
 
 int64_t LocalityAwareLoadBalancer::Weight::Update(
     const CallInfo& ci, size_t index) {
-    const int64_t end_time_us = butil::gettimeofday_us();
+    const int64_t end_time_us = flare::base::gettimeofday_us();
     const int64_t latency = end_time_us - ci.begin_time_us;
     BAIDU_SCOPED_LOCK(_mutex);
     if (Disabled()) {
@@ -517,7 +517,7 @@ void LocalityAwareLoadBalancer::Describe(
     if (_db_servers.Read(&s) != 0) {
         os << "fail to read _db_servers";
     } else {
-        const int64_t now = butil::gettimeofday_us();
+        const int64_t now = flare::base::gettimeofday_us();
         const size_t n = s->weight_tree.size();
         os << '[';
         for (size_t i = 0; i < n; ++i) {

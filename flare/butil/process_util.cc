@@ -25,16 +25,17 @@
 #include <sys/uio.h>
 #include <unistd.h>                     // read, gitpid
 #include <sstream>                      // std::ostringstream
-#include "flare/butil/fd_guard.h"             // butil::fd_guard
-#include "flare/butil/logging.h"
+#include "flare/base/fd_guard.h"             // flare::base::fd_guard
+#include "flare/base/logging.h"
 #include "flare/butil/popen.h"                // read_command_output
 #include "flare/butil/process_util.h"
+#include "flare/butil/macros.h"
 
 namespace butil {
 
 ssize_t ReadCommandLine(char* buf, size_t len, bool with_args) {
 #if defined(OS_LINUX)
-    butil::fd_guard fd(open("/proc/self/cmdline", O_RDONLY));
+    flare::base::fd_guard fd(open("/proc/self/cmdline", O_RDONLY));
     if (fd < 0) {
         LOG(ERROR) << "Fail to open /proc/self/cmdline";
         return -1;

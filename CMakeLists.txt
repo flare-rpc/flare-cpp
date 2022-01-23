@@ -306,19 +306,12 @@ set(BUTIL_SOURCES
     ${PROJECT_SOURCE_DIR}/flare/butil/time/time.cc
     ${PROJECT_SOURCE_DIR}/flare/butil/time/time_posix.cc
     ${PROJECT_SOURCE_DIR}/flare/butil/version.cc
-    ${PROJECT_SOURCE_DIR}/flare/butil/logging.cc
-    ${PROJECT_SOURCE_DIR}/flare/butil/class_name.cpp
     ${PROJECT_SOURCE_DIR}/flare/butil/errno.cpp
     ${PROJECT_SOURCE_DIR}/flare/butil/find_cstr.cpp
-    ${PROJECT_SOURCE_DIR}/flare/butil/status.cpp
-    ${PROJECT_SOURCE_DIR}/flare/butil/string_printf.cpp
     ${PROJECT_SOURCE_DIR}/flare/butil/thread_local.cpp
     ${PROJECT_SOURCE_DIR}/flare/butil/unix_socket.cpp
-    ${PROJECT_SOURCE_DIR}/flare/butil/endpoint.cpp
-    ${PROJECT_SOURCE_DIR}/flare/butil/fd_utility.cpp
     ${PROJECT_SOURCE_DIR}/flare/butil/files/temp_file.cpp
     ${PROJECT_SOURCE_DIR}/flare/butil/files/file_watcher.cpp
-    ${PROJECT_SOURCE_DIR}/flare/butil/time.cpp
     ${PROJECT_SOURCE_DIR}/flare/butil/zero_copy_stream_as_streambuf.cpp
     ${PROJECT_SOURCE_DIR}/flare/butil/crc32c.cc
     ${PROJECT_SOURCE_DIR}/flare/butil/containers/case_ignored_flat_map.cpp

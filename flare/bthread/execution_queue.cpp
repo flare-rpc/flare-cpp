@@ -21,7 +21,7 @@
 
 #include "flare/bthread/execution_queue.h"
 
-#include "flare/butil/memory/singleton_on_pthread_once.h"
+#include "flare/base/singleton_on_pthread_once.h"
 #include "flare/butil/object_pool.h"           // butil::get_object
 #include "flare/butil/resource_pool.h"         // butil::get_resource
 
@@ -62,7 +62,7 @@ ExecutionQueueVars::ExecutionQueueVars()
 }
 
 inline ExecutionQueueVars* get_execq_vars() {
-    return butil::get_leaky_singleton<ExecutionQueueVars>();
+    return flare::base::get_leaky_singleton<ExecutionQueueVars>();
 }
 
 void ExecutionQueueBase::start_execute(TaskNode* node) {

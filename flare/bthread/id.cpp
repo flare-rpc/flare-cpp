@@ -20,7 +20,7 @@
 // Date: Sun Aug  3 12:46:15 CST 2014
 
 #include <deque>
-#include "flare/butil/logging.h"
+#include "flare/base/logging.h"
 #include "flare/bthread/butex.h"                       // butex_*
 #include "flare/bthread/mutex.h"
 #include "flare/bthread/list_of_abafree_id.h"

@@ -7,7 +7,7 @@
 #if ENABLE_THREAD_RESTRICTIONS
 
 #include "flare/butil/lazy_instance.h"
-#include "flare/butil/logging.h"
+#include "flare/base/logging.h"
 #include "flare/butil/threading/thread_local.h"
 
 namespace butil {

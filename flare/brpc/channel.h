@@ -153,7 +153,7 @@ public:
 
     // Connect this channel to a single server whose address is given by the
     // first parameter. Use default options if `options' is NULL.
-    int Init(butil::EndPoint server_addr_and_port, const ChannelOptions* options);
+    int Init(flare::base::end_point server_addr_and_port, const ChannelOptions* options);
     int Init(const char* server_addr_and_port, const ChannelOptions* options);
     int Init(const char* server_addr, int port, const ChannelOptions* options);
 
@@ -211,13 +211,13 @@ protected:
     static void CallMethodImpl(Controller* controller, SharedLoadBalancer* lb);
 
     int InitChannelOptions(const ChannelOptions* options);
-    int InitSingle(const butil::EndPoint& server_addr_and_port,
+    int InitSingle(const flare::base::end_point& server_addr_and_port,
                    const char* raw_server_address,
                    const ChannelOptions* options,
                    int raw_port = -1);
 
     std::string _service_name;
-    butil::EndPoint _server_address;
+    flare::base::end_point _server_address;
     SocketId _server_id;
     Protocol::SerializeRequest _serialize_request;
     Protocol::PackRequest _pack_request;

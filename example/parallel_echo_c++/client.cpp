@@ -19,9 +19,9 @@
 
 #include <gflags/gflags.h>
 #include <flare/bthread/bthread.h>
-#include <flare/butil/logging.h>
+#include "flare/base/logging.h"
 #include <flare/butil/string_printf.h>
-#include <flare/butil/time.h>
+#include "flare/base/time.h"
 #include <flare/butil/macros.h>
 #include <flare/brpc/parallel_channel.h>
 #include <flare/brpc/server.h>
@@ -151,7 +151,7 @@ int main(int argc, char* argv[]) {
     g_sub_channel_latency = new bvar::LatencyRecorder[FLAGS_channel_num];
     for (int i = 0; i < FLAGS_channel_num; ++i) {
         std::string name;
-        butil::string_printf(&name, "client_sub_%d", i);
+        flare::base::string_printf(&name, "client_sub_%d", i);
         g_sub_channel_latency[i].expose(name);
     }
 

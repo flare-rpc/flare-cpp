@@ -7,7 +7,7 @@
 #include <string>
 
 #include "flare/butil/debug/stack_trace.h"
-#include "flare/butil/logging.h"
+#include "flare/base/logging.h"
 #include <gtest/gtest.h>
 
 namespace butil {

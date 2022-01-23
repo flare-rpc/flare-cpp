@@ -38,7 +38,7 @@ Init() can connect one server or a cluster(multiple servers).
 
 ```c++
 // Take default values when options is NULL.
-int Init(EndPoint server_addr_and_port, const ChannelOptions* options);
+int Init(end_point server_addr_and_port, const ChannelOptions* options);
 int Init(const char* server_addr_and_port, const ChannelOptions* options);
 int Init(const char* server_addr, int port, const ChannelOptions* options);
 ```
@@ -174,7 +174,7 @@ public:
 
 // naming_service.h
 struct ServerNode {
-    butil::EndPoint addr;
+    flare::base::end_point addr;
     std::string tag;
 };
 ```
@@ -447,12 +447,12 @@ Facts about StartCancel:
 
 ## Get server-side address and port
 
-remote_side() tells where request was sent to, the return type is [butil::EndPoint](https://github.com/brpc/brpc/blob/master/src/butil/endpoint.h), which includes an ipv4 address and port. Calling this method before completion of RPC is undefined.
+remote_side() tells where request was sent to, the return type is [flare::base::end_point](https://github.com/brpc/brpc/blob/master/src/butil/endpoint.h), which includes an ipv4 address and port. Calling this method before completion of RPC is undefined.
 
 How to print:
 ```c++
 LOG(INFO) << "remote_side=" << cntl->remote_side();
-printf("remote_side=%s\n", butil::endpoint2str(cntl->remote_side()).c_str());
+printf("remote_side=%s\n", flare::base::endpoint2str(cntl->remote_side()).c_str());
 ```
 ## Get client-side address and port
 
@@ -461,7 +461,7 @@ local_side() gets address and port of the client-side sending RPC after r31384
 How to print:
 ```c++
 LOG(INFO) << "local_side=" << cntl->local_side();
-printf("local_side=%s\n", butil::endpoint2str(cntl->local_side()).c_str());
+printf("local_side=%s\n", flare::base::endpoint2str(cntl->local_side()).c_str());
 ```
 ## Should brpc::Controller be reused?
 

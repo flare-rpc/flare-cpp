@@ -18,7 +18,7 @@
 // Date: 2015/09/15 15:14:32
 
 #include "flare/bvar/detail/percentile.h"
-#include "flare/butil/logging.h"
+#include "flare/base/logging.h"
 
 namespace bvar {
 namespace detail {

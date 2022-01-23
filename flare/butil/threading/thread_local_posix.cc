@@ -6,7 +6,7 @@
 
 #include <pthread.h>
 
-#include "flare/butil/logging.h"
+#include "flare/base/logging.h"
 
 #if !defined(OS_ANDROID)
 

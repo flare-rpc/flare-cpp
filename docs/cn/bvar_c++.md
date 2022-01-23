@@ -105,7 +105,7 @@ About thread-safety:
 计时可以使用butil::Timer，接口如下：
 
 ```c++
-#include <flare/butil/time.h>
+#include "flare/base/time.h"
 namespace butil {
 class Timer {
 public:
@@ -113,7 +113,7 @@ public:
 
     Timer();
 
-    // butil::Timer tm(butil::Timer::STARTED);  // tm is already started after creation.
+    // flare::base::stop_watcher tm(flare::base::stop_watcher::STARTED);  // tm is already started after creation.
     explicit Timer(TimerType);
 
     // Start this timer

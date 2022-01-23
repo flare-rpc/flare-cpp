@@ -17,10 +17,10 @@
 
 
 #include <gflags/gflags.h>
-#include "flare/butil/fd_guard.h"                      // fd_guard
-#include "flare/butil/logging.h"                       // CHECK
-#include "flare/butil/time.h"                          // cpuwide_time_us
-#include "flare/butil/fd_utility.h"                    // make_non_blocking
+#include "flare/base/fd_guard.h"                      // fd_guard
+#include "flare/base/logging.h"                       // CHECK
+#include "flare/base/time.h"                          // cpuwide_time_us
+#include "flare/base/fd_utility.h"                    // make_non_blocking
 #include "flare/bthread/bthread.h"                     // bthread_start_background
 #include "flare/bthread/unstable.h"                   // bthread_flush
 #include "flare/bvar/bvar.h"                          // bvar::Adder
@@ -186,8 +186,8 @@ void InputMessenger::OnNewMessages(Socket* m) {
     std::unique_ptr<InputMessageBase, RunLastMessage> last_msg;
     bool read_eof = false;
     while (!read_eof) {
-        const int64_t received_us = butil::cpuwide_time_us();
-        const int64_t base_realtime = butil::gettimeofday_us() - received_us;
+        const int64_t received_us = flare::base::cpuwide_time_us();
+        const int64_t base_realtime = flare::base::gettimeofday_us() - received_us;
 
         // Calculate bytes to be read.
         size_t once_read = m->_avg_msg_size * 16;
@@ -419,7 +419,7 @@ int InputMessenger::AddNonProtocolHandler(const InputMessageHandler& handler) {
     return 0;
 }
 
-int InputMessenger::Create(const butil::EndPoint& remote_side,
+int InputMessenger::Create(const flare::base::end_point& remote_side,
                            time_t health_check_interval_s,
                            SocketId* id) {
     SocketOptions options;

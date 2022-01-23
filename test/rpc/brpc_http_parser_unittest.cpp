@@ -18,8 +18,8 @@
 #include <gtest/gtest.h>
 #include <iostream>
 
-#include "flare/butil/time.h"
-#include "flare/butil/logging.h"
+#include "flare/base/time.h"
+#include "flare/base/logging.h"
 #include "flare/brpc/details/http_parser.h"
 #include "flare/brpc/builtin/common.h"  // AppendFileName
 
@@ -35,7 +35,7 @@ protected:
 
 TEST_F(HttpParserTest, init_perf) {
     const size_t loops = 10000000;
-    butil::Timer timer;
+    flare::base::stop_watcher timer;
     timer.start();
     for (size_t i = 0; i < loops; ++i) {
         http_parser parser;

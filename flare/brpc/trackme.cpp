@@ -115,7 +115,7 @@ int ReadJPaasHostPort(int container_port) {
 }
 
 // Called in server.cpp
-void SetTrackMeAddress(butil::EndPoint pt) {
+void SetTrackMeAddress(flare::base::end_point pt) {
     BAIDU_SCOPED_LOCK(s_trackme_mutex);
     if (s_trackme_addr == NULL) {
         // JPAAS has NAT capabilities, read its log to figure out the open port
@@ -126,7 +126,7 @@ void SetTrackMeAddress(butil::EndPoint pt) {
                      << " instead of jpaas_container_port=" << pt.port;
             pt.port = jpaas_port;
         }
-        s_trackme_addr = new std::string(butil::endpoint2str(pt).c_str());
+        s_trackme_addr = new std::string(flare::base::endpoint2str(pt).c_str());
     }
 }
 
@@ -225,7 +225,7 @@ void TrackMe() {
     if (FLAGS_trackme_server.empty()) {
         return;
     }
-    int64_t now = butil::gettimeofday_us();
+    int64_t now = flare::base::gettimeofday_us();
     std::unique_lock<pthread_mutex_t> mu(s_trackme_mutex);
     if (s_trackme_last_time == 0) {
         // Delay the first ping randomly within s_trackme_interval. This

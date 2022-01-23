@@ -1,29 +1,11 @@
-// Licensed to the Apache Software Foundation (ASF) under one
-// or more contributor license agreements.  See the NOTICE file
-// distributed with this work for additional information
-// regarding copyright ownership.  The ASF licenses this file
-// to you under the Apache License, Version 2.0 (the
-// "License"); you may not use this file except in compliance
-// with the License.  You may obtain a copy of the License at
-//
-//   http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing,
-// software distributed under the License is distributed on an
-// "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-// KIND, either express or implied.  See the License for the
-// specific language governing permissions and limitations
-// under the License.
 
-// Date: Thu Dec 15 14:37:39 CST 2016
-
-#ifndef BUTIL_MEMORY_SINGLETON_ON_PTHREAD_ONCE_H
-#define BUTIL_MEMORY_SINGLETON_ON_PTHREAD_ONCE_H
+#ifndef FLARE_BASE_SINGLETON_ON_PTHREAD_ONCE_H_
+#define FLARE_BASE_SINGLETON_ON_PTHREAD_ONCE_H_
 
 #include <pthread.h>
-#include "flare/butil/static_atomic.h"
+#include "flare/base/static_atomic.h"
 
-namespace butil {
+namespace flare::base {
 
     template<typename T>
     class GetLeakySingleton {
@@ -70,6 +52,6 @@ namespace butil {
         return reinterpret_cast<T *>(GetLeakySingleton<T>::g_leaky_singleton_untyped.load(std::memory_order_acquire));
     }
 
-} // namespace butil
+} // namespace flare::base
 
-#endif // BUTIL_MEMORY_SINGLETON_ON_PTHREAD_ONCE_H
+#endif // FLARE_BASE_SINGLETON_ON_PTHREAD_ONCE_H_

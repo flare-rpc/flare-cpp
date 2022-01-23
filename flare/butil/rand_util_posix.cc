@@ -10,7 +10,7 @@
 
 #include "flare/butil/file_util.h"
 #include "flare/butil/lazy_instance.h"
-#include "flare/butil/logging.h"
+#include "flare/base/logging.h"
 
 namespace {
 

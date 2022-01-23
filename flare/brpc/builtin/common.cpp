@@ -20,8 +20,8 @@
 #include <sys/time.h>
 #include <fcntl.h>                           // O_RDONLY
 #include <gflags/gflags.h>
-#include "flare/butil/logging.h"
-#include "flare/butil/fd_guard.h"                  // fd_guard
+#include "flare/base/logging.h"
+#include "flare/base/fd_guard.h"                  // fd_guard
 #include "flare/butil/file_util.h"                 // butil::FilePath
 #include "flare/butil/third_party/murmurhash3/murmurhash3.h"
 #include "flare/butil/process_util.h"              // ReadCommandLine
@@ -142,7 +142,7 @@ std::ostream& operator<<(std::ostream& os, const Path& link) {
     return os;
 }
 
-const butil::EndPoint *Path::LOCAL = (butil::EndPoint *)0x01;
+const flare::base::end_point *Path::LOCAL = (flare::base::end_point *)0x01;
 
 void AppendFileName(std::string* dir, const std::string& filename) {
     if (dir->empty()) {
@@ -313,7 +313,7 @@ const char* ProfilingType2String(ProfilingType t) {
 }
 
 int FileChecksum(const char* file_path, unsigned char* checksum) {
-    butil::fd_guard fd(open(file_path, O_RDONLY));
+    flare::base::fd_guard fd(open(file_path, O_RDONLY));
     if (fd < 0) {
         PLOG(ERROR) << "Fail to open `" << file_path << "'";
         return -1;

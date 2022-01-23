@@ -13,7 +13,7 @@
 #include <limits>
 
 #include "flare/butil/file_util.h"
-#include "flare/butil/logging.h"
+#include "flare/base/logging.h"
 #include "flare/butil/memory/scoped_ptr.h"
 #include "flare/butil/build_config.h"
 #include <gtest/gtest.h>

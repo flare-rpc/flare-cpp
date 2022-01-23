@@ -19,7 +19,7 @@
 
 #include <map>
 #include <gflags/gflags.h>
-#include "flare/butil/memory/singleton_on_pthread_once.h"
+#include "flare/base/singleton_on_pthread_once.h"
 #include "flare/bvar/bvar.h"
 #include "flare/bvar/collector.h"
 
@@ -110,7 +110,7 @@ private:
 };
 
 Collector::Collector()
-    : _last_active_cpuwide_us(butil::cpuwide_time_us())
+    : _last_active_cpuwide_us(flare::base::cpuwide_time_us())
     , _created(false)
     , _stop(false)
     , _grab_thread(0)
@@ -151,7 +151,7 @@ static T deref_value(void* arg) {
 static CollectorSpeedLimit g_null_speed_limit = BVAR_COLLECTOR_SPEED_LIMIT_INITIALIZER;
 
 void Collector::grab_thread() {
-    _last_active_cpuwide_us = butil::cpuwide_time_us();
+    _last_active_cpuwide_us = flare::base::cpuwide_time_us();
     int64_t last_before_update_sl = _last_active_cpuwide_us;
 
     // This is the thread for collecting TLS submissions. User's callbacks are
@@ -248,7 +248,7 @@ void Collector::grab_thread() {
                 pthread_cond_signal(&_dump_thread_cond);
             }
         }
-        int64_t now = butil::cpuwide_time_us();
+        int64_t now = flare::base::cpuwide_time_us();
         int64_t interval = now - last_before_update_sl;
         last_before_update_sl = now;
         for (GrapMap::iterator it = ngrab_map.begin();
@@ -257,19 +257,19 @@ void Collector::grab_thread() {
                                it->second, interval);
         }
         
-        now = butil::cpuwide_time_us();
+        now = flare::base::cpuwide_time_us();
         // calcuate thread usage.
         busy_seconds += (now - _last_active_cpuwide_us) / 1000000.0;
         _last_active_cpuwide_us = now;
 
         // sleep for the next round.
         if (!_stop && abstime > now) {
-            timespec abstimespec = butil::microseconds_from_now(abstime - now);
+            timespec abstimespec = flare::base::microseconds_from_now(abstime - now);
             pthread_mutex_lock(&_sleep_mutex);
             pthread_cond_timedwait(&_sleep_cond, &_sleep_mutex, &abstimespec);
             pthread_mutex_unlock(&_sleep_mutex);
         }
-        _last_active_cpuwide_us = butil::cpuwide_time_us();
+        _last_active_cpuwide_us = flare::base::cpuwide_time_us();
     }
     // make sure _stop is true, we may have other reasons to quit above loop
     {
@@ -303,7 +303,7 @@ void Collector::update_speed_limit(CollectorSpeedLimit* sl,
     const size_t old_sampling_range = sl->sampling_range;
     if (!sl->ever_grabbed) {
         if (sl->first_sample_real_us) {
-            interval_us = butil::gettimeofday_us() - sl->first_sample_real_us;
+            interval_us = flare::base::gettimeofday_us() - sl->first_sample_real_us;
             if (interval_us < 0) {
                 interval_us = 0;
             }
@@ -347,9 +347,9 @@ size_t is_collectable_before_first_time_grabbed(CollectorSpeedLimit* sl) {
         int before_add = sl->count_before_grabbed.fetch_add(
             1, std::memory_order_relaxed);
         if (before_add == 0) {
-            sl->first_sample_real_us = butil::gettimeofday_us();
+            sl->first_sample_real_us = flare::base::gettimeofday_us();
         } else if (before_add >= FLAGS_bvar_collector_expected_per_second) {
-            butil::get_leaky_singleton<Collector>()->wakeup_grab_thread();
+            flare::base::get_leaky_singleton<Collector>()->wakeup_grab_thread();
         }
     }
     return sl->sampling_range;
@@ -357,7 +357,7 @@ size_t is_collectable_before_first_time_grabbed(CollectorSpeedLimit* sl) {
 
 // Call user's callbacks in this thread.
 void Collector::dump_thread() {
-    int64_t last_ns = butil::cpuwide_time_ns();
+    int64_t last_ns = flare::base::cpuwide_time_ns();
 
     // vars
     double busy_seconds = 0;
@@ -380,10 +380,10 @@ void Collector::dump_thread() {
         {
             BAIDU_SCOPED_LOCK(_dump_thread_mutex);
             while (!_stop && _dump_root.next() == &_dump_root) {
-                const int64_t now_ns = butil::cpuwide_time_ns();
+                const int64_t now_ns = flare::base::cpuwide_time_ns();
                 busy_seconds += (now_ns - last_ns) / 1000000000.0;
                 pthread_cond_wait(&_dump_thread_cond, &_dump_thread_mutex);
-                last_ns = butil::cpuwide_time_ns();
+                last_ns = flare::base::cpuwide_time_ns();
             }
             if (_stop) {
                 break;
@@ -408,7 +408,7 @@ void Collector::dump_thread() {
 }
 
 void Collected::submit(int64_t cpuwide_us) {
-    Collector* d = butil::get_leaky_singleton<Collector>();
+    Collector* d = flare::base::get_leaky_singleton<Collector>();
     // Destroy the sample in-place if the grab_thread did not run for twice
     // of the normal interval. This also applies to the situation that
     // grab_thread aborts due to severe errors.

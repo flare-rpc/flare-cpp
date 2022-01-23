@@ -22,7 +22,7 @@
 #include <gflags/gflags.h>
 #include <gtest/gtest.h>
 #include "flare/bthread/bthread.h"
-#include "flare/butil/static_atomic.h"
+#include "flare/base/static_atomic.h"
 #include "flare/brpc/policy/http_rpc_protocol.h"
 #include "flare/brpc/policy/http2_rpc_protocol.h"
 #include "flare/butil/gperftools_profiler.h"
@@ -57,12 +57,12 @@ TEST(H2UnsentMessage, request_throughput) {
     // calc H2UnsentRequest throughput
     butil::IOBuf dummy_buf;
     ProfilerStart("h2_unsent_req.prof");
-    int64_t start_us = butil::gettimeofday_us();
+    int64_t start_us = flare::base::gettimeofday_us();
     for (int i = 0; i < ntotal; ++i) {
         brpc::policy::H2UnsentRequest* req = brpc::policy::H2UnsentRequest::New(&cntl);
         req->AppendAndDestroySelf(&dummy_buf, h2_client_sock.get());
     }
-    int64_t end_us = butil::gettimeofday_us();
+    int64_t end_us = flare::base::gettimeofday_us();
     ProfilerStop();
     int64_t elapsed = end_us - start_us;
     LOG(INFO) << "H2UnsentRequest average qps="
@@ -71,7 +71,7 @@ TEST(H2UnsentMessage, request_throughput) {
 
     // calc H2UnsentResponse throughput
     dummy_buf.clear();
-    start_us = butil::gettimeofday_us();
+    start_us = flare::base::gettimeofday_us();
     for (int i = 0; i < ntotal; ++i) {
         // H2UnsentResponse::New would release cntl.http_response() and swap
         // cntl.response_attachment()
@@ -80,7 +80,7 @@ TEST(H2UnsentMessage, request_throughput) {
         brpc::policy::H2UnsentResponse* res = brpc::policy::H2UnsentResponse::New(&cntl, 0, false);
         res->AppendAndDestroySelf(&dummy_buf, h2_client_sock.get());
     }
-    end_us = butil::gettimeofday_us();
+    end_us = flare::base::gettimeofday_us();
     elapsed = end_us - start_us;
     LOG(INFO) << "H2UnsentResponse average qps="
         << (ntotal * 1000000L) / elapsed << "/s, data throughput="

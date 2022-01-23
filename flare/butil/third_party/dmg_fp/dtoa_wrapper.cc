@@ -5,7 +5,7 @@
 // The purpose of this file is to supply the macro definintions necessary
 // to make third_party/dmg_fp/dtoa.cc threadsafe.
 #include "flare/butil/lazy_instance.h"
-#include "flare/butil/logging.h"
+#include "flare/base/logging.h"
 #include "flare/butil/synchronization/lock.h"
 
 // We need two locks because they're sometimes grabbed at the same time.

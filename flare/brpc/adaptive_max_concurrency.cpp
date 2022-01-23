@@ -17,8 +17,8 @@
 
 #include <cstring>
 #include <strings.h>
-#include "flare/butil/string_printf.h"
-#include "flare/butil/logging.h"
+#include "flare/base/strings.h"
+#include "flare/base/logging.h"
 #include "flare/butil/strings/string_number_conversions.h"
 #include "flare/brpc/adaptive_max_concurrency.h"
 #include "flare/base/strings.h"
@@ -36,7 +36,7 @@ AdaptiveMaxConcurrency::AdaptiveMaxConcurrency(int max_concurrency)
         _value = UNLIMITED();
         _max_concurrency = 0;
     } else {
-        _value = butil::string_printf("%d", max_concurrency);
+        _value = flare::base::string_printf("%d", max_concurrency);
         _max_concurrency = max_concurrency;
     }
 }
@@ -76,7 +76,7 @@ void AdaptiveMaxConcurrency::operator=(int max_concurrency) {
         _value = UNLIMITED();
         _max_concurrency = 0;
     } else {
-        _value = butil::string_printf("%d", max_concurrency);
+        _value = flare::base::string_printf("%d", max_concurrency);
         _max_concurrency = max_concurrency;
     }
 }

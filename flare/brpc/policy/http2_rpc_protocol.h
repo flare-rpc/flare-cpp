@@ -126,7 +126,7 @@ struct H2Bvars {
     }
 };
 inline H2Bvars* get_h2_bvars() {
-    return butil::get_leaky_singleton<H2Bvars>();
+    return flare::base::get_leaky_singleton<H2Bvars>();
 }
 #endif
 
@@ -149,7 +149,7 @@ public:
     }
 
     // @SocketMessage
-    butil::Status AppendAndDestroySelf(butil::IOBuf* out, Socket*) override;
+    flare::base::flare_status AppendAndDestroySelf(butil::IOBuf* out, Socket*) override;
     size_t EstimatedByteSize() override;
 
     // @StreamUserData
@@ -199,7 +199,7 @@ public:
     void Destroy();
     void Print(std::ostream& os) const;
     // @SocketMessage
-    butil::Status AppendAndDestroySelf(butil::IOBuf* out, Socket*) override;
+    flare::base::flare_status AppendAndDestroySelf(butil::IOBuf* out, Socket*) override;
     size_t EstimatedByteSize() override;
     
 private:

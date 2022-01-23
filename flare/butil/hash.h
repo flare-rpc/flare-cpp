@@ -10,7 +10,7 @@
 
 #include "flare/butil/base_export.h"
 #include "flare/butil/basictypes.h"
-#include "flare/butil/logging.h"
+#include "flare/base/logging.h"
 
 namespace butil {
 

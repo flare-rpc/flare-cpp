@@ -17,10 +17,10 @@
 
 #include <gtest/gtest.h>
 #include "flare/butil/compat.h"
-#include "flare/butil/time.h"
+#include "flare/base/time.h"
 #include "flare/butil/macros.h"
-#include "flare/butil/string_printf.h"
-#include "flare/butil/logging.h"
+#include "flare/base/strings.h"
+#include "flare/base/logging.h"
 #include "flare/bthread/bthread.h"
 #include "flare/bthread/butex.h"
 #include "flare/bthread/task_control.h"
@@ -32,13 +32,13 @@ inline unsigned* get_butex(bthread_mutex_t & m) {
     return m.butex;
 }
 
-long start_time = butil::cpuwide_time_ms();
+long start_time = flare::base::cpuwide_time_ms();
 int c = 0;
 void* locker(void* arg) {
     bthread_mutex_t* m = (bthread_mutex_t*)arg;
     bthread_mutex_lock(m);
     printf("[%" PRIu64 "] I'm here, %d, %" PRId64 "ms\n", 
-           pthread_numeric_id(), ++c, butil::cpuwide_time_ms() - start_time);
+           pthread_numeric_id(), ++c, flare::base::cpuwide_time_ms() - start_time);
     bthread_usleep(10000);
     bthread_mutex_unlock(m);
     return NULL;
@@ -151,7 +151,7 @@ template <typename Mutex>
 void* add_with_mutex(void* void_arg) {
     PerfArgs<Mutex>* args = (PerfArgs<Mutex>*)void_arg;
     args->ready = true;
-    butil::Timer t;
+    flare::base::stop_watcher t;
     while (!g_stopped) {
         if (g_started) {
             break;
@@ -212,7 +212,7 @@ void PerfTest(Mutex* mutex,
         wait_time += args[i].elapse_ns;
         count += args[i].counter;
     }
-    LOG(INFO) << butil::class_name<Mutex>() << " in "
+    LOG(INFO) << flare::base::class_name<Mutex>() << " in "
               << ((void*)create_fn == (void*)pthread_create ? "pthread" : "bthread")
               << " thread_num=" << thread_num
               << " count=" << count

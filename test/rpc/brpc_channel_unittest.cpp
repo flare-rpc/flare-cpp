@@ -24,9 +24,9 @@
 #include <gtest/gtest.h>
 #include <gflags/gflags.h>
 #include <google/protobuf/descriptor.h>
-#include "flare/butil/time.h"
+#include "flare/base/time.h"
 #include "flare/butil/macros.h"
-#include "flare/butil/logging.h"
+#include "flare/base/logging.h"
 #include "flare/butil/files/temp_file.h"
 #include "flare/brpc/socket.h"
 #include "flare/brpc/acceptor.h"
@@ -100,7 +100,7 @@ public:
     }
 
     int VerifyCredential(const std::string&,
-                         const butil::EndPoint&,
+                         const flare::base::end_point&,
                          brpc::AuthContext* ctx) const {
         ctx->set_user(MOCK_CONTEXT);
         ctx->set_group(MOCK_CONTEXT);
@@ -127,7 +127,7 @@ static bool VerifyMyRequest(const brpc::InputMessageBase* msg_base) {
         EXPECT_EQ(meta.authentication_data(), MOCK_CREDENTIAL);
         MyAuthenticator authenticator;
         return authenticator.VerifyCredential(
-            "", butil::EndPoint(), ptr->mutable_auth_context()) == 0;
+            "", flare::base::end_point(), ptr->mutable_auth_context()) == 0;
     }
     return true;
 }
@@ -167,7 +167,7 @@ pthread_once_t register_mock_protocol = PTHREAD_ONCE_INIT;
 class ChannelTest : public ::testing::Test{
 protected:
     ChannelTest() 
-        : _ep(butil::IP_ANY, 8787)
+        : _ep(flare::base::IP_ANY, 8787)
         , _close_fd_once(false) {
         pthread_once(&register_mock_protocol, register_protocol);
         const brpc::InputMessageHandler pairs[] = {
@@ -176,7 +176,7 @@ protected:
         };
         EXPECT_EQ(0, _messenger.AddHandler(pairs[0]));
 
-        EXPECT_EQ(0, _server_list.save(butil::endpoint2str(_ep).c_str()));           
+        EXPECT_EQ(0, _server_list.save(flare::base::endpoint2str(_ep).c_str()));
         _naming_url = std::string("File://") + _server_list.fname();
     };
 
@@ -255,7 +255,7 @@ protected:
         ts->_svc.CallMethod(method, cntl, req, res, done);
     }
 
-    int StartAccept(butil::EndPoint ep) {
+    int StartAccept(flare::base::end_point ep) {
         int listening_fd = -1;
         while ((listening_fd = tcp_listen(ep)) < 0) {
             if (errno == EADDRINUSE) {
@@ -434,9 +434,9 @@ protected:
         EXPECT_EQ("received " + std::string(__FUNCTION__), res.message());
         if (short_connection) {
             // Sleep to let `_messenger' detect `Socket' being `SetFailed'
-            const int64_t start_time = butil::gettimeofday_us();
+            const int64_t start_time = flare::base::gettimeofday_us();
             while (_messenger.ConnectionCount() != 0) {
-                EXPECT_LT(butil::gettimeofday_us(), start_time + 100000L/*100ms*/);
+                EXPECT_LT(flare::base::gettimeofday_us(), start_time + 100000L/*100ms*/);
                 bthread_usleep(1000);
             }
         } else {
@@ -576,9 +576,9 @@ protected:
         }
         if (short_connection) {
             // Sleep to let `_messenger' detect `Socket' being `SetFailed'
-            const int64_t start_time = butil::gettimeofday_us();
+            const int64_t start_time = flare::base::gettimeofday_us();
             while (_messenger.ConnectionCount() != 0) {
-                EXPECT_LT(butil::gettimeofday_us(), start_time + 100000L/*100ms*/);
+                EXPECT_LT(flare::base::gettimeofday_us(), start_time + 100000L/*100ms*/);
                 bthread_usleep(1000);
             }
         } else {
@@ -628,9 +628,9 @@ protected:
         }
         if (short_connection) {
             // Sleep to let `_messenger' detect `Socket' being `SetFailed'
-            const int64_t start_time = butil::gettimeofday_us();
+            const int64_t start_time = flare::base::gettimeofday_us();
             while (_messenger.ConnectionCount() != 0) {
-                EXPECT_LT(butil::gettimeofday_us(), start_time + 100000L/*100ms*/);
+                EXPECT_LT(flare::base::gettimeofday_us(), start_time + 100000L/*100ms*/);
                 bthread_usleep(1000);
             }
         } else {
@@ -672,9 +672,9 @@ protected:
         
         if (short_connection) {
             // Sleep to let `_messenger' detect `Socket' being `SetFailed'
-            const int64_t start_time = butil::gettimeofday_us();
+            const int64_t start_time = flare::base::gettimeofday_us();
             while (_messenger.ConnectionCount() != 0) {
-                EXPECT_LT(butil::gettimeofday_us(), start_time + 100000L/*100ms*/);
+                EXPECT_LT(flare::base::gettimeofday_us(), start_time + 100000L/*100ms*/);
                 bthread_usleep(1000);
             }
         } else {
@@ -721,9 +721,9 @@ protected:
         }
         if (short_connection) {
             // Sleep to let `_messenger' detect `Socket' being `SetFailed'
-            const int64_t start_time = butil::gettimeofday_us();
+            const int64_t start_time = flare::base::gettimeofday_us();
             while (_messenger.ConnectionCount() != 0) {
-                EXPECT_LT(butil::gettimeofday_us(), start_time + 100000L/*100ms*/);
+                EXPECT_LT(flare::base::gettimeofday_us(), start_time + 100000L/*100ms*/);
                 bthread_usleep(1000);
             }
         } else {
@@ -756,7 +756,7 @@ protected:
 
         for (size_t i = 0; i < NCHANS; ++i) {
             ::test::EchoRequest* sub_req = req.add_requests();
-            sub_req->set_message(butil::string_printf("hello_%llu", (long long)i));
+            sub_req->set_message(flare::base::string_printf("hello_%llu", (long long)i));
             sub_req->set_code(i + 1);
         }
 
@@ -775,16 +775,16 @@ protected:
         ASSERT_GT(cntl.latency_us(), 0);
         ASSERT_EQ((int)NCHANS, res.responses_size());
         for (int i = 0; i < res.responses_size(); ++i) {
-            EXPECT_EQ(butil::string_printf("received hello_%d", i),
+            EXPECT_EQ(flare::base::string_printf("received hello_%d", i),
                       res.responses(i).message());
             ASSERT_EQ(1, res.responses(i).code_list_size());
             EXPECT_EQ(i + 1, res.responses(i).code_list(0));
         }
         if (short_connection) {
             // Sleep to let `_messenger' detect `Socket' being `SetFailed'
-            const int64_t start_time = butil::gettimeofday_us();
+            const int64_t start_time = flare::base::gettimeofday_us();
             while (_messenger.ConnectionCount() != 0) {
-                EXPECT_LT(butil::gettimeofday_us(), start_time + 100000L/*100ms*/);
+                EXPECT_LT(flare::base::gettimeofday_us(), start_time + 100000L/*100ms*/);
                 bthread_usleep(1000);
             }
         } else {
@@ -913,7 +913,7 @@ protected:
         CancelerArg carg = { 10000, cid };
         ASSERT_EQ(0, pthread_create(&th, NULL, Canceler, &carg));
         req.set_sleep_us(carg.sleep_before_cancel_us * 2);
-        butil::Timer tm;
+        flare::base::stop_watcher tm;
         tm.start();
         CallMethod(&channel, &cntl, &req, &res, async);
         tm.stop();
@@ -954,7 +954,7 @@ protected:
         CancelerArg carg = { 10000, cid };
         ASSERT_EQ(0, pthread_create(&th, NULL, Canceler, &carg));
         req.set_sleep_us(carg.sleep_before_cancel_us * 2);
-        butil::Timer tm;
+        flare::base::stop_watcher tm;
         tm.start();
         CallMethod(&channel, &cntl, &req, &res, async);
         tm.stop();
@@ -996,7 +996,7 @@ protected:
         CancelerArg carg = { 10000, cid };
         ASSERT_EQ(0, pthread_create(&th, NULL, Canceler, &carg));
         req.set_sleep_us(carg.sleep_before_cancel_us * 2);
-        butil::Timer tm;
+        flare::base::stop_watcher tm;
         tm.start();
         CallMethod(&channel, &cntl, &req, &res, async);
         tm.stop();
@@ -1083,9 +1083,9 @@ protected:
         EXPECT_EQ("received " + std::string(__FUNCTION__), res.message());
         if (short_connection) {
             // Sleep to let `_messenger' detect `Socket' being `SetFailed'
-            const int64_t start_time = butil::gettimeofday_us();
+            const int64_t start_time = flare::base::gettimeofday_us();
             while (_messenger.ConnectionCount() != 0) {
-                EXPECT_LT(butil::gettimeofday_us(), start_time + 100000L/*100ms*/);
+                EXPECT_LT(flare::base::gettimeofday_us(), start_time + 100000L/*100ms*/);
                 bthread_usleep(1000);
             }
         } else {
@@ -1178,7 +1178,7 @@ protected:
         req.set_message(__FUNCTION__);
         req.set_sleep_us(70000); // 70ms
         cntl.set_timeout_ms(17);
-        butil::Timer tm;
+        flare::base::stop_watcher tm;
         tm.start();
         CallMethod(&channel, &cntl, &req, &res, async);
         tm.stop();
@@ -1210,7 +1210,7 @@ protected:
         req.set_message(__FUNCTION__);
         cntl.set_timeout_ms(17);
         req.set_sleep_us(70000); // 70ms
-        butil::Timer tm;
+        flare::base::stop_watcher tm;
         tm.start();
         CallMethod(&channel, &cntl, &req, &res, async);
         tm.stop();
@@ -1259,7 +1259,7 @@ protected:
         test::EchoResponse res;
         req.set_message(__FUNCTION__);
         cntl.set_timeout_ms(30);
-        butil::Timer tm;
+        flare::base::stop_watcher tm;
         tm.start();
         CallMethod(&channel, &cntl, &req, &res, async);
         tm.stop();
@@ -1298,7 +1298,7 @@ protected:
         req.set_message(__FUNCTION__);
         cntl.set_timeout_ms(17);
         req.set_sleep_us(70000); // 70ms
-        butil::Timer tm;
+        flare::base::stop_watcher tm;
         tm.start();
         CallMethod(&channel, &cntl, &req, &res, async);
         tm.stop();
@@ -1489,9 +1489,9 @@ protected:
         EXPECT_EQ(0, cntl.ErrorCode()) << cntl.ErrorText();
         EXPECT_EQ("received " + std::string(__FUNCTION__), res.message());
         // Sleep to let `_messenger' detect `Socket' being `SetFailed'
-        const int64_t start_time = butil::gettimeofday_us();
+        const int64_t start_time = flare::base::gettimeofday_us();
         while (_messenger.ConnectionCount() != 0) {
-            EXPECT_LT(butil::gettimeofday_us(), start_time + 100000L/*100ms*/);
+            EXPECT_LT(flare::base::gettimeofday_us(), start_time + 100000L/*100ms*/);
             bthread_usleep(1000);
         }
 
@@ -1522,9 +1522,9 @@ protected:
         EXPECT_EQ(0, cntl.ErrorCode()) << cntl.ErrorText();
         EXPECT_EQ("received " + std::string(__FUNCTION__), res.message());
         // Sleep to let `_messenger' detect `Socket' being `SetFailed'
-        const int64_t start_time = butil::gettimeofday_us();
+        const int64_t start_time = flare::base::gettimeofday_us();
         while (_messenger.ConnectionCount() != 0) {
-            EXPECT_LT(butil::gettimeofday_us(), start_time + 100000L/*100ms*/);
+            EXPECT_LT(flare::base::gettimeofday_us(), start_time + 100000L/*100ms*/);
             bthread_usleep(1000);
         }
         StopAndJoin();
@@ -1558,9 +1558,9 @@ protected:
         ASSERT_EQ(0, cntl.sub(0)->ErrorCode());
 
         // Sleep to let `_messenger' detect `Socket' being `SetFailed'
-        const int64_t start_time = butil::gettimeofday_us();
+        const int64_t start_time = flare::base::gettimeofday_us();
         while (_messenger.ConnectionCount() != 0) {
-            EXPECT_LT(butil::gettimeofday_us(), start_time + 100000L/*100ms*/);
+            EXPECT_LT(flare::base::gettimeofday_us(), start_time + 100000L/*100ms*/);
             bthread_usleep(1000);
         }
         StopAndJoin();
@@ -1755,9 +1755,9 @@ protected:
             EXPECT_EQ(0, cntl.ErrorCode()) << cntl.ErrorText();
             EXPECT_EQ(1, cntl.retried_count());
 
-            const int64_t start_time = butil::gettimeofday_us();
+            const int64_t start_time = flare::base::gettimeofday_us();
             while (_messenger.ConnectionCount() != 0) {
-                EXPECT_LT(butil::gettimeofday_us(), start_time + 100000L/*100ms*/);
+                EXPECT_LT(flare::base::gettimeofday_us(), start_time + 100000L/*100ms*/);
                 bthread_usleep(1000);
             }
         } else {
@@ -1809,7 +1809,7 @@ protected:
         StopAndJoin();
     }
 
-    butil::EndPoint _ep;
+    flare::base::end_point _ep;
     butil::TempFile _server_list;                                        
     std::string _naming_url;
     
@@ -1868,7 +1868,7 @@ TEST_F(ChannelTest, init_as_single_server) {
         ASSERT_EQ(0, channel.Init("127.0.0.1", 8888, NULL));
     }
 
-    butil::EndPoint ep;
+    flare::base::end_point ep;
     brpc::Channel channel;
     ASSERT_EQ(0, str2endpoint("127.0.0.1:8888", &ep));
     ASSERT_EQ(0, channel.Init(ep, NULL));

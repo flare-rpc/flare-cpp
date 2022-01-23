@@ -17,10 +17,10 @@
 
 #include <execinfo.h>
 #include <gtest/gtest.h>
-#include "flare/butil/time.h"
+#include "flare/base/time.h"
 #include "flare/butil/macros.h"
-#include "flare/butil/logging.h"
-#include "flare/butil/logging.h"
+#include "flare/base/logging.h"
+#include "flare/base/logging.h"
 #include "flare/butil/gperftools_profiler.h"
 #include "flare/bthread/bthread.h"
 #include "flare/bthread/unstable.h"
@@ -123,7 +123,7 @@ void* repeated_sleep(void* arg) {
 
 void* spin_and_log(void* arg) {
     // This thread never yields CPU.
-    butil::EveryManyUS every_1s(1000000L);
+    flare::base::EveryManyUS every_1s(1000000L);
     size_t i = 0;
     while (!stop) {
         if (every_1s) {
@@ -264,11 +264,11 @@ void* adding_func(void* arg) {
     if (sleep_in_adding_func > 0) {
         long t1 = 0;
         if (10000 == s->fetch_add(1)) {
-            t1 = butil::cpuwide_time_us();
+            t1 = flare::base::cpuwide_time_us();
         }
         bthread_usleep(sleep_in_adding_func);
         if (t1) {
-            LOG(INFO) << "elapse is " << butil::cpuwide_time_us() - t1 << "ns";
+            LOG(INFO) << "elapse is " << flare::base::cpuwide_time_us() - t1 << "ns";
         }
     } else {
         s->fetch_add(1);
@@ -290,7 +290,7 @@ TEST_F(BthreadTest, small_threads) {
         size_t N = (sleep_in_adding_func ? 40000 : 100000);
         std::vector<bthread_t> th;
         th.reserve(N);
-        butil::Timer tm;
+        flare::base::stop_watcher tm;
         for (size_t j = 0; j < 3; ++j) {
             th.clear();
             if (j == 1) {
@@ -352,7 +352,7 @@ TEST_F(BthreadTest, start_bthreads_frequently) {
             ASSERT_EQ(0, bthread_start_urgent(
                           &th[i], NULL, bthread_starter, &counters[i].value));
         }
-        butil::Timer tm;
+        flare::base::stop_watcher tm;
         tm.start();
         bthread_usleep(200000L);
         stop = true;
@@ -372,7 +372,7 @@ TEST_F(BthreadTest, start_bthreads_frequently) {
 }
 
 void* log_start_latency(void* void_arg) {
-    butil::Timer* tm = static_cast<butil::Timer*>(void_arg);
+    flare::base::stop_watcher* tm = static_cast<flare::base::stop_watcher*>(void_arg);
     tm->stop();
     return NULL;
 }
@@ -383,13 +383,13 @@ TEST_F(BthreadTest, start_latency_when_high_idle) {
     long elp2 = 0;
     int REP = 0;
     for (int i = 0; i < 10000; ++i) {
-        butil::Timer tm;
+        flare::base::stop_watcher tm;
         tm.start();
         bthread_t th;
         bthread_start_urgent(&th, NULL, log_start_latency, &tm);
         bthread_join(th, NULL);
         bthread_t th2;
-        butil::Timer tm2;
+        flare::base::stop_watcher tm2;
         tm2.start();
         bthread_start_background(&th2, NULL, log_start_latency, &tm2);
         bthread_join(th2, NULL);
@@ -414,7 +414,7 @@ TEST_F(BthreadTest, stop_sleep) {
     bthread_t th;
     ASSERT_EQ(0, bthread_start_urgent(
                   &th, NULL, sleep_for_awhile_with_sleep, (void*)1000000L));
-    butil::Timer tm;
+    flare::base::stop_watcher tm;
     tm.start();
     bthread_usleep(10000);
     ASSERT_EQ(0, bthread_stop(th));

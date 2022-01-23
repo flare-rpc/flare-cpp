@@ -20,7 +20,7 @@
 #include <flare/bthread/execution_queue.h>
 #include <flare/bthread/sys_futex.h>
 #include <flare/bthread/countdown_event.h>
-#include "flare/butil/time.h"
+#include "flare/base/time.h"
 #include "flare/butil/fast_rand.h"
 #include "flare/butil/gperftools_profiler.h"
 
@@ -91,7 +91,7 @@ struct PushArg {
 void* push_thread(void *arg) {
     PushArg* pa = (PushArg*)arg;
     int64_t sum = 0;
-    butil::Timer timer;
+    flare::base::stop_watcher timer;
     timer.start();
     int num = 0;
     bthread::CountdownEvent e;
@@ -117,7 +117,7 @@ void* push_thread(void *arg) {
 void* push_thread_which_addresses_execq(void *arg) {
     PushArg* pa = (PushArg*)arg;
     int64_t sum = 0;
-    butil::Timer timer;
+    flare::base::stop_watcher timer;
     timer.start();
     int num = 0;
     bthread::ExecutionQueue<LongIntTask>::scoped_ptr_t ptr

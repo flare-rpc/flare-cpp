@@ -19,7 +19,7 @@
 
 #include <webfoot_naming.h>                             //webfoot::*
 #include <naming.pb.h>                                  //BnsInput BnsOutput
-#include "flare/butil/logging.h"                               // CHECK
+#include "flare/base/logging.h"                               // CHECK
 #include "flare/brpc/policy/baidu_naming_service.h"
 
 namespace brpc {
@@ -50,8 +50,8 @@ int BaiduNamingService::GetServers(const char *service_name,
     for (int i = 0; i < instance_number; i++) {
         const BnsInstance& instance = output.instance(i);
         if (instance.status() == 0) {
-            butil::ip_t ip;
-            if (butil::str2ip(instance.host_ip().c_str(), &ip) != 0) {
+            flare::base::ip_t ip;
+            if (flare::base::str2ip(instance.host_ip().c_str(), &ip) != 0) {
                 LOG(WARNING) << "Invalid ip=" << instance.host_ip();
                 continue;
             }

@@ -22,7 +22,7 @@
 #include "flare/butil/iobuf.h"                  // butil::IOBuf
 #include "flare/butil/strings/string_piece.h"   // std::string_view
 #include "flare/butil/arena.h"                  // butil::Arena
-#include "flare/butil/logging.h"                // CHECK
+#include "flare/base/logging.h"                // CHECK
 #include "parse_result.h"                 // ParseError
 
 

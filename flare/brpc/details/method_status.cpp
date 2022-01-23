@@ -151,7 +151,7 @@ void MethodStatus::SetConcurrencyLimiter(ConcurrencyLimiter* cl) {
 
 ConcurrencyRemover::~ConcurrencyRemover() {
     if (_status) {
-        _status->OnResponded(_c->ErrorCode(), butil::cpuwide_time_us() - _received_us);
+        _status->OnResponded(_c->ErrorCode(), flare::base::cpuwide_time_us() - _received_us);
         _status = NULL;
     }
     ServerPrivateAccessor(_c->server()).RemoveConcurrency(_c);

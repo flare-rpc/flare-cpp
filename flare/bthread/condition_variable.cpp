@@ -19,7 +19,7 @@
 
 // Date: Sun Aug  3 12:46:15 CST 2014
 
-#include "flare/butil/static_atomic.h"
+#include "flare/base/static_atomic.h"
 #include "flare/butil/macros.h"                         // BAIDU_CASSERT
 #include "flare/bthread/butex.h"                       // butex_*
 #include "flare/bthread/types.h"                       // bthread_cond_t

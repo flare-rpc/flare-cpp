@@ -20,7 +20,7 @@
 
 #include <queue>                           // heap functions
 #include "flare/butil/scoped_lock.h"
-#include "flare/butil/logging.h"
+#include "flare/base/logging.h"
 #include "flare/butil/third_party/murmurhash3/murmurhash3.h"   // fmix64
 #include "flare/butil/resource_pool.h"
 #include "flare/bvar/bvar.h"
@@ -192,7 +192,7 @@ TimerThread::Bucket::schedule(void (*fn)(void*), void* arg,
     task->next = NULL;
     task->fn = fn;
     task->arg = arg;
-    task->run_time = butil::timespec_to_microseconds(abstime);
+    task->run_time = flare::base::timespec_to_microseconds(abstime);
     uint32_t version = task->version.load(std::memory_order_relaxed);
     if (version == 0) {  // skip 0.
         task->version.fetch_add(2, std::memory_order_relaxed);
@@ -226,7 +226,7 @@ TimerThread::TaskId TimerThread::schedule(
         .schedule(fn, arg, abstime);
     if (result.earlier) {
         bool earlier = false;
-        const int64_t run_time = butil::timespec_to_microseconds(abstime);
+        const int64_t run_time = flare::base::timespec_to_microseconds(abstime);
         {
             BAIDU_SCOPED_LOCK(_mutex);
             if (run_time < _nearest_run_time) {
@@ -316,7 +316,7 @@ void TimerThread::run() {
     logging::ComlogInitializer comlog_initializer;
 #endif
 
-    int64_t last_sleep_time = butil::gettimeofday_us();
+    int64_t last_sleep_time = flare::base::gettimeofday_us();
     BT_VLOG << "Started TimerThread=" << pthread_self();
 
     // min heap of tasks (ordered by run_time)
@@ -367,7 +367,7 @@ void TimerThread::run() {
         bool pull_again = false;
         while (!tasks.empty()) {
             Task* task1 = tasks[0];  // the about-to-run task
-            if (butil::gettimeofday_us() < task1->run_time) {  // not ready yet.
+            if (flare::base::gettimeofday_us() < task1->run_time) {  // not ready yet.
                 break;
             }
             // Each time before we run the earliest task (that we think), 
@@ -422,14 +422,14 @@ void TimerThread::run() {
         }
         timespec* ptimeout = NULL;
         timespec next_timeout = { 0, 0 };
-        const int64_t now = butil::gettimeofday_us();
+        const int64_t now = flare::base::gettimeofday_us();
         if (next_run_time != std::numeric_limits<int64_t>::max()) {
-            next_timeout = butil::microseconds_to_timespec(next_run_time - now);
+            next_timeout = flare::base::microseconds_to_timespec(next_run_time - now);
             ptimeout = &next_timeout;
         }
         busy_seconds += (now - last_sleep_time) / 1000000.0;
         futex_wait_private(&_nsignals, expected_nsignals, ptimeout);
-        last_sleep_time = butil::gettimeofday_us();
+        last_sleep_time = flare::base::gettimeofday_us();
     }
     BT_VLOG << "Ended TimerThread=" << pthread_self();
 }

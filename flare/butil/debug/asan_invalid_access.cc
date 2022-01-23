@@ -8,7 +8,7 @@
 
 #include "flare/butil/debug/alias.h"
 #include "flare/butil/debug/asan_invalid_access.h"
-#include "flare/butil/logging.h"
+#include "flare/base/logging.h"
 #include "flare/butil/memory/scoped_ptr.h"
 
 namespace butil {

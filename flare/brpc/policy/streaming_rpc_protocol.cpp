@@ -22,8 +22,8 @@
 #include <google/protobuf/message.h>            // Message
 #include <gflags/gflags.h>
 #include "flare/butil/macros.h"
-#include "flare/butil/logging.h"                       // LOG()
-#include "flare/butil/time.h"
+#include "flare/base/logging.h"                       // LOG()
+#include "flare/base/time.h"
 #include "flare/butil/iobuf.h"                         // butil::IOBuf
 #include "flare/butil/raw_pack.h"                      // RawPacker RawUnpacker
 #include "flare/brpc/log.h"

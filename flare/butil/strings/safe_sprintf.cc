@@ -28,7 +28,7 @@
 //        errno = 13 (Access denied)
 //      In most of the anticipated use cases, that's probably the preferred
 //      behavior.
-#include "flare/butil/logging.h"
+#include "flare/base/logging.h"
 #define DEBUG_CHECK RAW_CHECK
 #else
 #define DEBUG_CHECK(x, msg) do { if (x) { } } while (0)

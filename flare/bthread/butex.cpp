@@ -19,14 +19,14 @@
 
 // Date: Tue Jul 22 17:30:12 CST 2014
 
-#include "flare/butil/static_atomic.h"                // std::atomic
+#include "flare/base/static_atomic.h"                // std::atomic
 #include "flare/butil/scoped_lock.h"              // BAIDU_SCOPED_LOCK
 #include "flare/butil/macros.h"
 #include "flare/butil/containers/linked_list.h"   // LinkNode
 #ifdef SHOW_BTHREAD_BUTEX_WAITER_COUNT_IN_VARS
-#include "flare/butil/memory/singleton_on_pthread_once.h"
+#include "flare/base/singleton_on_pthread_once.h"
 #endif
-#include "flare/butil/logging.h"
+#include "flare/base/logging.h"
 #include "flare/butil/object_pool.h"
 #include "flare/bthread/errno.h"                 // EWOULDBLOCK
 #include "flare/bthread/sys_futex.h"             // futex_*
@@ -63,7 +63,7 @@ struct ButexWaiterCount : public bvar::Adder<int64_t> {
     ButexWaiterCount() : bvar::Adder<int64_t>("bthread_butex_waiter_count") {}
 };
 inline bvar::Adder<int64_t>& butex_waiter_count() {
-    return *butil::get_leaky_singleton<ButexWaiterCount>();
+    return *flare::base::get_leaky_singleton<ButexWaiterCount>();
 }
 #endif
 
@@ -545,13 +545,13 @@ static int butex_wait_from_pthread(TaskGroup* g, Butex* b, int expected_value,
     timespec* ptimeout = NULL;
     timespec timeout;
     if (abstime != NULL) {
-        const int64_t timeout_us = butil::timespec_to_microseconds(*abstime) -
-            butil::gettimeofday_us();
+        const int64_t timeout_us = flare::base::timespec_to_microseconds(*abstime) -
+            flare::base::gettimeofday_us();
         if (timeout_us < MIN_SLEEP_US) {
             errno = ETIMEDOUT;
             return -1;
         }
-        timeout = butil::microseconds_to_timespec(timeout_us);
+        timeout = flare::base::microseconds_to_timespec(timeout_us);
         ptimeout = &timeout;
     }
 
@@ -634,8 +634,8 @@ int butex_wait(void* arg, int expected_value, const timespec* abstime) {
     if (abstime != NULL) {
         // Schedule timer before queueing. If the timer is triggered before
         // queueing, cancel queueing. This is a kind of optimistic locking.
-        if (butil::timespec_to_microseconds(*abstime) <
-            (butil::gettimeofday_us() + MIN_SLEEP_US)) {
+        if (flare::base::timespec_to_microseconds(*abstime) <
+            (flare::base::gettimeofday_us() + MIN_SLEEP_US)) {
             // Already timed out.
             errno = ETIMEDOUT;
             return -1;

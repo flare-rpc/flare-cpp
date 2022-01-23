@@ -23,9 +23,9 @@
 
 #include "flare/brpc/policy/http_rpc_protocol.h"
 #include "flare/butil/unique_ptr.h"                       // std::unique_ptr
-#include "flare/butil/string_splitter.h"                  // StringMultiSplitter
-#include "flare/butil/string_printf.h"
-#include "flare/butil/time.h"
+#include "flare/base/string_splitter.h"                  // StringMultiSplitter
+#include "flare/base/strings.h"
+#include "flare/base/time.h"
 #include "flare/butil/sys_byteorder.h"
 #include "flare/brpc/compress.h"
 #include "flare/brpc/errno.pb.h"                     // ENOSERVICE, ENOMETHOD
@@ -77,20 +77,20 @@ DEFINE_string(request_id_header, "x-request-id", "The http header to mark a sess
 
 // Read user address from the header specified by -http_header_of_user_ip
 static bool GetUserAddressFromHeaderImpl(const HttpHeader& headers,
-                                         butil::EndPoint* user_addr) {
+                                         flare::base::end_point* user_addr) {
     const std::string* user_addr_str =
         headers.GetHeader(FLAGS_http_header_of_user_ip);
     if (user_addr_str == NULL) {
         return false;
     }
     if (user_addr_str->find(':') == std::string::npos) {
-        if (butil::str2ip(user_addr_str->c_str(), &user_addr->ip) != 0) {
+        if (flare::base::str2ip(user_addr_str->c_str(), &user_addr->ip) != 0) {
             LOG(WARNING) << "Fail to parse ip from " << *user_addr_str;
             return false;
         }
         user_addr->port = 0;
     } else {
-        if (butil::str2endpoint(user_addr_str->c_str(), user_addr) != 0) {
+        if (flare::base::str2endpoint(user_addr_str->c_str(), user_addr) != 0) {
             LOG(WARNING) << "Fail to parse ip:port from " << *user_addr_str;
             return false;
         }
@@ -99,7 +99,7 @@ static bool GetUserAddressFromHeaderImpl(const HttpHeader& headers,
 }
 
 inline bool GetUserAddressFromHeader(const HttpHeader& headers,
-                                     butil::EndPoint* user_addr) {
+                                     flare::base::end_point* user_addr) {
     if (FLAGS_http_header_of_user_ip.empty()) {
         return false;
     }
@@ -211,9 +211,9 @@ static void PrintMessage(const butil::IOBuf& inbuf,
     butil::IOBuf buf2;
     char str[48];
     if (request_or_response) {
-        snprintf(str, sizeof(str), "[ HTTP REQUEST @%s ]", butil::my_ip_cstr());
+        snprintf(str, sizeof(str), "[ HTTP REQUEST @%s ]", flare::base::my_ip_cstr());
     } else {
-        snprintf(str, sizeof(str), "[ HTTP RESPONSE @%s ]", butil::my_ip_cstr());
+        snprintf(str, sizeof(str), "[ HTTP RESPONSE @%s ]", flare::base::my_ip_cstr());
     }
     buf2.append(str);
     size_t last_size;
@@ -258,7 +258,7 @@ static bool RemoveGrpcPrefix(butil::IOBuf* body, bool* compressed) {
 }
 
 void ProcessHttpResponse(InputMessageBase* msg) {
-    const int64_t start_parse_us = butil::cpuwide_time_us();
+    const int64_t start_parse_us = flare::base::cpuwide_time_us();
     DestroyingPtr<HttpContext> imsg_guard(static_cast<HttpContext*>(msg));
     Socket* socket = imsg_guard->socket();
     uint64_t cid_value;
@@ -375,7 +375,7 @@ void ProcessHttpResponse(InputMessageBase* msg) {
         // ErrorCode of RPC is unified to EHTTP.
         const int sc = res_header->status_code();
         if (sc < 200 || sc >= 300) {
-            std::string err = butil::string_printf(
+            std::string err = flare::base::string_printf(
                     "HTTP/%d.%d %d %s",
                     res_header->major_version(),
                     res_header->minor_version(),
@@ -570,7 +570,7 @@ void SerializeHttpRequest(butil::IOBuf* /*not used*/,
     // Fill log-id if user set it.
     if (cntl->has_log_id()) {
         hreq.SetHeader(common->LOG_ID,
-                       butil::string_printf("%llu", (unsigned long long)cntl->log_id()));
+                       flare::base::string_printf("%llu", (unsigned long long)cntl->log_id()));
     }
     if (!cntl->request_id().empty()) {
         hreq.SetHeader(FLAGS_request_id_header, cntl->request_id());
@@ -594,7 +594,7 @@ void SerializeHttpRequest(butil::IOBuf* /*not used*/,
             hreq.SetHeader(common->TE, common->TRAILERS);
             if (cntl->timeout_ms() >= 0) {
                 hreq.SetHeader(common->GRPC_TIMEOUT,
-                        butil::string_printf("%" PRId64 "m", cntl->timeout_ms()));
+                        flare::base::string_printf("%" PRId64 "m", cntl->timeout_ms()));
             }
             // Append compressed and length before body
             AddGrpcPrefix(&cntl->request_attachment(), grpc_compressed);
@@ -618,11 +618,11 @@ void SerializeHttpRequest(butil::IOBuf* /*not used*/,
 
     Span* span = accessor.span();
     if (span) {
-        hreq.SetHeader("x-bd-trace-id", butil::string_printf(
+        hreq.SetHeader("x-bd-trace-id", flare::base::string_printf(
                            "%llu", (unsigned long long)span->trace_id()));
-        hreq.SetHeader("x-bd-span-id", butil::string_printf(
+        hreq.SetHeader("x-bd-span-id", flare::base::string_printf(
                            "%llu", (unsigned long long)span->span_id()));
-        hreq.SetHeader("x-bd-parent-span-id", butil::string_printf(
+        hreq.SetHeader("x-bd-parent-span-id", flare::base::string_printf(
                            "%llu", (unsigned long long)span->parent_span_id()));
     }
 }
@@ -712,7 +712,7 @@ HttpResponseSender::~HttpResponseSender() {
     ControllerPrivateAccessor accessor(cntl);
     Span* span = accessor.span();
     if (span) {
-        span->set_start_send_us(butil::cpuwide_time_us());
+        span->set_start_send_us(flare::base::cpuwide_time_us());
     }
     ConcurrencyRemover concurrency_remover(_method_status, cntl, _received_us);
     Socket* socket = accessor.get_sending_socket();
@@ -820,7 +820,7 @@ HttpResponseSender::~HttpResponseSender() {
             }
             // Fill ErrorCode into header
             res_header->SetHeader(common->ERROR_CODE,
-                                  butil::string_printf("%d", cntl->ErrorCode()));
+                                  flare::base::string_printf("%d", cntl->ErrorCode()));
 
             // Fill body with ErrorText.
             // user may compress the output and change content-encoding. However
@@ -915,7 +915,7 @@ HttpResponseSender::~HttpResponseSender() {
     }
     if (span) {
         // TODO: this is not sent
-        span->set_sent_us(butil::cpuwide_time_us());
+        span->set_sent_us(flare::base::cpuwide_time_us());
     }
 }
 
@@ -923,7 +923,7 @@ HttpResponseSender::~HttpResponseSender() {
 // put it into `unresolved_path'
 static void FillUnresolvedPath(std::string* unresolved_path,
                                const std::string& uri_path,
-                               butil::StringSplitter& splitter) {
+                               flare::base::StringSplitter& splitter) {
     if (unresolved_path == NULL) {
         return;
     }
@@ -936,7 +936,7 @@ static void FillUnresolvedPath(std::string* unresolved_path,
         uri_path.c_str() + uri_path.size() - splitter.field();
     unresolved_path->reserve(path_len);
     unresolved_path->clear();
-    for (butil::StringSplitter slash_sp(
+    for (flare::base::StringSplitter slash_sp(
              splitter.field(), splitter.field() + path_len, '/');
          slash_sp != NULL; ++slash_sp) {
         if (!unresolved_path->empty()) {
@@ -950,7 +950,7 @@ inline const Server::MethodProperty*
 FindMethodPropertyByURIImpl(const std::string& uri_path, const Server* server,
                             std::string* unresolved_path) {
     ServerPrivateAccessor wrapper(server);
-    butil::StringSplitter splitter(uri_path.c_str(), '/');
+    flare::base::StringSplitter splitter(uri_path.c_str(), '/');
     // Show index page for empty URI
     if (NULL == splitter) {
         return wrapper.FindMethodPropertyByFullName(
@@ -1193,7 +1193,7 @@ bool VerifyHttpRequest(const InputMessageBase* msg) {
     if (authorization == NULL) {
         return false;
     }
-    butil::EndPoint user_addr;
+    flare::base::end_point user_addr;
     if (!GetUserAddressFromHeader(http_request->header(), &user_addr)) {
         user_addr = socket->remote_side();
     }
@@ -1212,7 +1212,7 @@ void EndRunningCallMethodInPool(
     ::google::protobuf::Closure* done);
 
 void ProcessHttpRequest(InputMessageBase *msg) {
-    const int64_t start_parse_us = butil::cpuwide_time_us();
+    const int64_t start_parse_us = flare::base::cpuwide_time_us();
     DestroyingPtr<HttpContext> imsg_guard(static_cast<HttpContext*>(msg));
     SocketUniquePtr socket_guard(imsg_guard->ReleaseSocket());
     Socket* socket = socket_guard.get();
@@ -1238,7 +1238,7 @@ void ProcessHttpRequest(InputMessageBase *msg) {
     imsg_guard->header().Swap(req_header);
     butil::IOBuf& req_body = imsg_guard->body();
 
-    butil::EndPoint user_addr;
+    flare::base::end_point user_addr;
     if (!GetUserAddressFromHeader(req_header, &user_addr)) {
         user_addr = socket->remote_side();
     }
@@ -1330,7 +1330,7 @@ void ProcessHttpRequest(InputMessageBase *msg) {
         google::protobuf::Closure* done = new HttpResponseSenderAsDone(&resp_sender);
         if (span) {
             span->ResetServerSpanName(md->full_name());
-            span->set_start_callback_us(butil::cpuwide_time_us());
+            span->set_start_callback_us(flare::base::cpuwide_time_us());
             span->AsParent();
         }
         // `cntl', `req' and `res' will be deleted inside `done'
@@ -1351,7 +1351,7 @@ void ProcessHttpRequest(InputMessageBase *msg) {
     } else if (sp->service->GetDescriptor() == BadMethodService::descriptor()) {
         BadMethodRequest breq;
         BadMethodResponse bres;
-        butil::StringSplitter split(path.c_str(), '/');
+        flare::base::StringSplitter split(path.c_str(), '/');
         breq.set_service_name(std::string(split.field(), split.length()));
         sp->service->CallMethod(sp->method, cntl, &breq, &bres, NULL);
         return;
@@ -1377,7 +1377,7 @@ void ProcessHttpRequest(InputMessageBase *msg) {
     if (!sp->is_builtin_service && !sp->params.is_tabbed) {
         if (socket->is_overcrowded()) {
             cntl->SetFailed(EOVERCROWDED, "Connection to %s is overcrowded",
-                            butil::endpoint2str(socket->remote_side()).c_str());
+                            flare::base::endpoint2str(socket->remote_side()).c_str());
             return;
         }
         if (!server_accessor.AddConcurrency(cntl)) {
@@ -1449,7 +1449,7 @@ void ProcessHttpRequest(InputMessageBase *msg) {
                         ConvertGrpcTimeoutToUS(req_header.GetHeader(common->GRPC_TIMEOUT));
                     if (timeout_value_us >= 0) {
                         accessor.set_deadline_us(
-                                butil::gettimeofday_us() + timeout_value_us);
+                                flare::base::gettimeofday_us() + timeout_value_us);
                     }
                 }
             } else {
@@ -1493,7 +1493,7 @@ void ProcessHttpRequest(InputMessageBase *msg) {
     imsg_guard.reset();  // optional, just release resourse ASAP
 
     if (span) {
-        span->set_start_callback_us(butil::cpuwide_time_us());
+        span->set_start_callback_us(flare::base::cpuwide_time_us());
         span->AsParent();
     }
     if (!FLAGS_usercode_in_pthread) {
@@ -1507,7 +1507,7 @@ void ProcessHttpRequest(InputMessageBase *msg) {
     }
 }
 
-bool ParseHttpServerAddress(butil::EndPoint* point, const char* server_addr_and_port) {
+bool ParseHttpServerAddress(flare::base::end_point* point, const char* server_addr_and_port) {
     std::string scheme;
     std::string host;
     int port = -1;

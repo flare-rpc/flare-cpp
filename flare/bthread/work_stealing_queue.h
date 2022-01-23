@@ -23,8 +23,8 @@
 #define BTHREAD_WORK_STEALING_QUEUE_H
 
 #include "flare/butil/macros.h"
-#include "flare/butil/static_atomic.h"
-#include "flare/butil/logging.h"
+#include "flare/base/static_atomic.h"
+#include "flare/base/logging.h"
 
 namespace bthread {
 

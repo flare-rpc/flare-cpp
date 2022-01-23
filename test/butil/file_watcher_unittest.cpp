@@ -17,7 +17,7 @@
 
 #include <gtest/gtest.h>
 #include "flare/butil/files/file_watcher.h"
-#include "flare/butil/logging.h"
+#include "flare/base/logging.h"
 
 namespace {
 class FileWatcherTest : public ::testing::Test{

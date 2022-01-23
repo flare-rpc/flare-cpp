@@ -20,8 +20,8 @@
 #include <sys/types.h>                          // socket
 #include <sys/socket.h>                         // ^
 #include <sys/un.h>                             // unix domain socket
-#include "flare/butil/fd_guard.h"                     // fd_guard
-#include "flare/butil/logging.h"
+#include "flare/base/fd_guard.h"                     // fd_guard
+#include "flare/base/logging.h"
 
 namespace butil {
 
@@ -30,7 +30,7 @@ int unix_socket_listen(const char* sockname, bool remove_previous_file) {
     addr.sun_family = AF_LOCAL;
     snprintf(addr.sun_path, sizeof(addr.sun_path), "%s", sockname);
 
-    fd_guard fd(socket(AF_LOCAL, SOCK_STREAM, 0));
+    flare::base::fd_guard fd(socket(AF_LOCAL, SOCK_STREAM, 0));
     if (fd < 0) {
         PLOG(ERROR) << "Fail to create unix socket";
         return -1;
@@ -59,7 +59,7 @@ int unix_socket_connect(const char* sockname) {
     addr.sun_family = AF_LOCAL;
     snprintf(addr.sun_path, sizeof(addr.sun_path), "%s", sockname);
 
-    fd_guard fd(socket(AF_LOCAL, SOCK_STREAM, 0));
+    flare::base::fd_guard fd(socket(AF_LOCAL, SOCK_STREAM, 0));
     if (fd < 0) {
         PLOG(ERROR) << "Fail to create unix socket";
         return -1;

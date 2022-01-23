@@ -27,7 +27,7 @@
 #include <gtest/gtest.h>
 #include "flare/bthread/bthread.h"
 #include "flare/butil/gperftools_profiler.h"
-#include "flare/butil/time.h"
+#include "flare/base/time.h"
 #include "flare/butil/fast_rand.h"
 #include "flare/butil/containers/doubly_buffered_data.h"
 #include "flare/brpc/describable.h"
@@ -200,7 +200,7 @@ namespace {
             for (; cur_count < N; ++cur_count) {
                 char addr[32];
                 snprintf(addr, sizeof(addr), "192.168.1.%d:8080", (int) cur_count);
-                butil::EndPoint dummy;
+                flare::base::end_point dummy;
                 ASSERT_EQ(0, str2endpoint(addr, &dummy));
                 brpc::ServerId id(8888);
                 brpc::SocketOptions options;
@@ -311,7 +311,7 @@ namespace {
             for (int i = 0; i < 256; ++i) {
                 char addr[32];
                 snprintf(addr, sizeof(addr), "192.%d.1.%d:8080", i, i);
-                butil::EndPoint dummy;
+                flare::base::end_point dummy;
                 ASSERT_EQ(0, str2endpoint(addr, &dummy));
                 brpc::ServerId id(8888);
                 if (3 == round) {
@@ -335,8 +335,8 @@ namespace {
                     ptr->SetLogOff();
                 }
             }
-            std::cout << "Time " << butil::class_name_str(*lb) << " ..." << std::endl;
-            butil::Timer tm;
+            std::cout << "Time " << flare::base::class_name_str(*lb) << " ..." << std::endl;
+            flare::base::stop_watcher tm;
             tm.start();
             for (size_t i = 0; i < ARRAY_SIZE(th); ++i) {
                 ASSERT_EQ(0, pthread_create(&th[i], NULL, select_server, &sa));
@@ -440,7 +440,7 @@ namespace {
             }
             sa.lb = lb;
 
-            std::string lb_name = butil::class_name_str(*lb);
+            std::string lb_name = flare::base::class_name_str(*lb);
             // Remove namespace
             size_t ns_pos = lb_name.find_last_of(':');
             if (ns_pos != std::string::npos) {
@@ -454,7 +454,7 @@ namespace {
             for (int i = 0; i < 256; ++i) {
                 char addr[32];
                 snprintf(addr, sizeof(addr), "192.168.1.%d:8080", i);
-                butil::EndPoint dummy;
+                flare::base::end_point dummy;
                 ASSERT_EQ(0, str2endpoint(addr, &dummy));
                 brpc::ServerId id(8888);
                 if (3 == round) {
@@ -580,12 +580,12 @@ namespace {
         for (size_t round = 0; round < ARRAY_SIZE(hashs); ++round) {
             brpc::policy::ConsistentHashingLoadBalancer chlb(hash_type[round]);
             std::vector<brpc::ServerId> ids;
-            std::vector<butil::EndPoint> addrs;
+            std::vector<flare::base::end_point> addrs;
             for (int j = 0; j < 5; ++j)
                 for (int i = 0; i < 5; ++i) {
                     const char *addr = servers[i];
                     //snprintf(addr, sizeof(addr), "192.168.1.%d:8080", i);
-                    butil::EndPoint dummy;
+                    flare::base::end_point dummy;
                     ASSERT_EQ(0, str2endpoint(addr, &dummy));
                     brpc::ServerId id(8888);
                     brpc::SocketOptions options;
@@ -604,7 +604,7 @@ namespace {
                 std::cout << chlb;
             }
             const size_t SELECT_TIMES = 1000000;
-            std::map < butil::EndPoint, size_t > times;
+            std::map < flare::base::end_point, size_t > times;
             brpc::SocketUniquePtr ptr;
             brpc::LoadBalancer::SelectIn in = {0, false, false, 0u, NULL};
             ::brpc::LoadBalancer::SelectOut out(&ptr);
@@ -614,7 +614,7 @@ namespace {
                 chlb.SelectServer(in, &out);
                 ++times[ptr->remote_side()];
             }
-            std::map<butil::EndPoint, double> load_map;
+            std::map<flare::base::end_point, double> load_map;
             chlb.GetLoads(&load_map);
             ASSERT_EQ(times.size(), load_map.size());
             double load_sum = 0;;
@@ -648,13 +648,13 @@ namespace {
                 "10.42.122.202:8836"
         };
         std::string weight[] = {"3", "2", "7", "200000000", "1ab", "-1", "0"};
-        std::map<butil::EndPoint, int> configed_weight;
+        std::map<flare::base::end_point, int> configed_weight;
         brpc::policy::WeightedRoundRobinLoadBalancer wrrlb;
 
         // Add server to selected list. The server with invalid weight will be skipped.
         for (size_t i = 0; i < ARRAY_SIZE(servers); ++i) {
             const char *addr = servers[i];
-            butil::EndPoint dummy;
+            flare::base::end_point dummy;
             ASSERT_EQ(0, str2endpoint(addr, &dummy));
             brpc::ServerId id(8888);
             brpc::SocketOptions options;
@@ -681,12 +681,12 @@ namespace {
         // There are 3 valid servers with weight 3, 2 and 7 respectively.
         // We run SelectServer for 12 times. The result number of each server seleted should be
         // consistent with weight configured.
-        std::map < butil::EndPoint, size_t > select_result;
+        std::map < flare::base::end_point, size_t > select_result;
         brpc::SocketUniquePtr ptr;
         brpc::LoadBalancer::SelectIn in = {0, false, false, 0u, NULL};
         brpc::LoadBalancer::SelectOut out(&ptr);
         int total_weight = 12;
-        std::vector<butil::EndPoint> select_servers;
+        std::vector<flare::base::end_point> select_servers;
         for (int i = 0; i != total_weight; ++i) {
             EXPECT_EQ(0, wrrlb.SelectServer(in, &out));
             select_servers.emplace_back(ptr->remote_side());
@@ -713,12 +713,12 @@ namespace {
                 "10.36.150.32:8833"
         };
         std::string weight[] = {"200000000", "2", "600000"};
-        std::map<butil::EndPoint, int> configed_weight;
+        std::map<flare::base::end_point, int> configed_weight;
         brpc::policy::WeightedRoundRobinLoadBalancer wrrlb;
         brpc::ExcludedServers *exclude = brpc::ExcludedServers::Create(3);
         for (size_t i = 0; i < ARRAY_SIZE(servers); ++i) {
             const char *addr = servers[i];
-            butil::EndPoint dummy;
+            flare::base::end_point dummy;
             ASSERT_EQ(0, str2endpoint(addr, &dummy));
             brpc::ServerId id(8888);
             brpc::SocketOptions options;
@@ -758,7 +758,7 @@ namespace {
                 "10.42.122.202:8836"
         };
         std::string weight[] = {"3", "2", "5", "10", "1ab", "-1", "0"};
-        std::map<butil::EndPoint, int> configed_weight;
+        std::map<flare::base::end_point, int> configed_weight;
         uint64_t configed_weight_sum = 0;
         brpc::policy::WeightedRandomizedLoadBalancer wrlb;
         size_t valid_weight_num = 4;
@@ -766,7 +766,7 @@ namespace {
         // Add server to selected list. The server with invalid weight will be skipped.
         for (size_t i = 0; i < ARRAY_SIZE(servers); ++i) {
             const char *addr = servers[i];
-            butil::EndPoint dummy;
+            flare::base::end_point dummy;
             ASSERT_EQ(0, str2endpoint(addr, &dummy));
             brpc::ServerId id(8888);
             brpc::SocketOptions options;
@@ -789,12 +789,12 @@ namespace {
         // There are 4 valid servers with weight 3, 2, 5 and 10 respectively.
         // We run SelectServer for multiple times. The result number of each server seleted should be
         // weight randomized with weight configured.
-        std::map < butil::EndPoint, size_t > select_result;
+        std::map < flare::base::end_point, size_t > select_result;
         brpc::SocketUniquePtr ptr;
         brpc::LoadBalancer::SelectIn in = {0, false, false, 0u, NULL};
         brpc::LoadBalancer::SelectOut out(&ptr);
         int run_times = configed_weight_sum * 10;
-        std::vector<butil::EndPoint> select_servers;
+        std::vector<flare::base::end_point> select_servers;
         for (int i = 0; i < run_times; ++i) {
             EXPECT_EQ(0, wrlb.SelectServer(in, &out));
             select_servers.emplace_back(ptr->remote_side());
@@ -838,7 +838,7 @@ namespace {
             brpc::LoadBalancer *lb = lbs[i];
             std::vector<brpc::ServerId> ids;
             for (size_t i = 0; i < ARRAY_SIZE(servers); ++i) {
-                butil::EndPoint dummy;
+                flare::base::end_point dummy;
                 ASSERT_EQ(0, str2endpoint(servers[i], &dummy));
                 brpc::ServerId id(8888);
                 brpc::SocketOptions options;
@@ -918,7 +918,7 @@ namespace {
         }
         brpc::SocketUniquePtr ptr[2];
         for (size_t i = 0; i < ARRAY_SIZE(servers); ++i) {
-            butil::EndPoint dummy;
+            flare::base::end_point dummy;
             ASSERT_EQ(0, str2endpoint(servers[i], &dummy));
             brpc::SocketOptions options;
             options.remote_side = dummy;
@@ -1066,20 +1066,20 @@ namespace {
             stub.Echo(&cntl, &req, &res, NULL);
         }
 
-        butil::EndPoint point(butil::IP_ANY, 7777);
+        flare::base::end_point point(flare::base::IP_ANY, 7777);
         brpc::Server server;
         EchoServiceImpl service;
         ASSERT_EQ(0, server.AddService(&service, brpc::SERVER_DOESNT_OWN_SERVICE));
         ASSERT_EQ(0, server.Start(point, NULL));
 
-        butil::EndPoint point2(butil::IP_ANY, 7778);
+        flare::base::end_point point2(flare::base::IP_ANY, 7778);
         brpc::Server server2;
         EchoServiceImpl service2;
         ASSERT_EQ(0, server2.AddService(&service2, brpc::SERVER_DOESNT_OWN_SERVICE));
         ASSERT_EQ(0, server2.Start(point2, NULL));
 
-        int64_t start_ms = butil::gettimeofday_ms();
-        while ((butil::gettimeofday_ms() - start_ms) < 3500) {
+        int64_t start_ms = flare::base::gettimeofday_ms();
+        while ((flare::base::gettimeofday_ms() - start_ms) < 3500) {
             Done *done = new Done;
             done->req.set_message("123");
             stub.Echo(&done->cntl, &done->req, &done->res, done);

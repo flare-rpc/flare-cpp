@@ -4,7 +4,7 @@
 
 #include "flare/butil/threading/simple_thread.h"
 
-#include "flare/butil/logging.h"
+#include "flare/base/logging.h"
 #include "flare/butil/strings/string_number_conversions.h"
 #include "flare/butil/threading/platform_thread.h"
 #include "flare/butil/threading/thread_restrictions.h"

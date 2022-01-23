@@ -6,7 +6,6 @@
 #define FLARE_BUTIL_STATIC_ATOMIC_H_
 
 #include <atomic>
-#include "flare/butil/macros.h"
 
 #define FLARE_STATIC_ATOMIC_INIT(val) { (val) }
 
@@ -51,12 +50,13 @@ namespace flare {
         }
 
     private:
-        DISALLOW_ASSIGN(static_atomic);
-        BAIDU_CASSERT(sizeof(T) == sizeof(std::atomic <T>), size_must_match);
+        static_atomic(const static_atomic &) = delete;
 
-        std::atomic <T> &ref() {
+        static_assert(sizeof(T) == sizeof(std::atomic<T>), "size must match");
+
+        std::atomic<T> &ref() {
             // Suppress strict-alias warnings.
-            std::atomic <T> *p = reinterpret_cast<std::atomic <T> *>(&val);
+            std::atomic<T> *p = reinterpret_cast<std::atomic<T> *>(&val);
             return *p;
         }
     };

@@ -17,7 +17,7 @@
 
 
 #include "flare/brpc/serialized_request.h"
-#include "flare/butil/logging.h"
+#include "flare/base/logging.h"
 
 namespace brpc {
 

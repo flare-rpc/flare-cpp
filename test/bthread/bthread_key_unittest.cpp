@@ -16,12 +16,12 @@
 // under the License.
 
 #include <algorithm>                         // std::sort
-#include "flare/butil/static_atomic.h"
+#include "flare/base/static_atomic.h"
 #include <gtest/gtest.h>
-#include "flare/butil/time.h"
+#include "flare/base/time.h"
 #include "flare/butil/macros.h"
 #include "flare/butil/scoped_lock.h"
-#include "flare/butil/logging.h"
+#include "flare/base/logging.h"
 #include "flare/bthread/bthread.h"
 #include "flare/bthread/unstable.h"
 

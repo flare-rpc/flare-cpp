@@ -19,8 +19,8 @@
 #include <inttypes.h>
 #include <google/protobuf/descriptor.h>
 #include <gflags/gflags.h>
-#include "flare/butil/time.h"                              // milliseconds_from_now
-#include "flare/butil/logging.h"
+#include "flare/base/time.h"                              // milliseconds_from_now
+#include "flare/base/logging.h"
 #include "flare/butil/third_party/murmurhash3/murmurhash3.h"
 #include "flare/butil/strings/string_util.h"
 #include "flare/bthread/unstable.h"                        // bthread_timer_add
@@ -203,7 +203,7 @@ int Channel::InitChannelOptions(const ChannelOptions* options) {
 int Channel::Init(const char* server_addr_and_port,
                   const ChannelOptions* options) {
     GlobalInitializeOrDie();
-    butil::EndPoint point;
+    flare::base::end_point point;
     const AdaptiveProtocolType& ptype = (options ? options->protocol : _options.protocol);
     const Protocol* protocol = FindProtocol(ptype);
     if (protocol == NULL || !protocol->support_client()) {
@@ -236,7 +236,7 @@ int Channel::Init(const char* server_addr_and_port,
 int Channel::Init(const char* server_addr, int port,
                   const ChannelOptions* options) {
     GlobalInitializeOrDie();
-    butil::EndPoint point;
+    flare::base::end_point point;
     const AdaptiveProtocolType& ptype = (options ? options->protocol : _options.protocol);
     const Protocol* protocol = FindProtocol(ptype);
     if (protocol == NULL || !protocol->support_client()) {
@@ -276,12 +276,12 @@ static int CreateSocketSSLContext(const ChannelOptions& options,
     return 0;
 }
 
-int Channel::Init(butil::EndPoint server_addr_and_port,
+int Channel::Init(flare::base::end_point server_addr_and_port,
                   const ChannelOptions* options) {
     return InitSingle(server_addr_and_port, "", options);
 }
 
-int Channel::InitSingle(const butil::EndPoint& server_addr_and_port,
+int Channel::InitSingle(const flare::base::end_point& server_addr_and_port,
                         const char* raw_server_address,
                         const ChannelOptions* options,
                         int raw_port) {
@@ -377,7 +377,7 @@ void Channel::CallMethod(const google::protobuf::MethodDescriptor* method,
                          const google::protobuf::Message* request,
                          google::protobuf::Message* response,
                          google::protobuf::Closure* done) {
-    const int64_t start_send_real_us = butil::gettimeofday_us();
+    const int64_t start_send_real_us = flare::base::gettimeofday_us();
     Controller* cntl = static_cast<Controller*>(controller_base);
     cntl->OnRPCBegin(start_send_real_us);
     // Override max_retry first to reset the range of correlation_id
@@ -433,7 +433,7 @@ void Channel::CallMethod(const google::protobuf::MethodDescriptor* method,
     cntl->set_used_by_rpc();
 
     if (cntl->_sender == NULL && IsTraceable(Span::tls_parent())) {
-        const int64_t start_send_us = butil::cpuwide_time_us();
+        const int64_t start_send_us = flare::base::cpuwide_time_us();
         const std::string* method_name = NULL;
         if (_get_method_name) {
             method_name = &_get_method_name(method, cntl);
@@ -517,7 +517,7 @@ void Channel::CallMethod(const google::protobuf::MethodDescriptor* method,
         }
         const int rc = bthread_timer_add(
             &cntl->_timeout_id,
-            butil::microseconds_to_timespec(
+            flare::base::microseconds_to_timespec(
                 cntl->backup_request_ms() * 1000L + start_send_real_us),
             HandleBackupRequest, (void*)correlation_id.value);
         if (BAIDU_UNLIKELY(rc != 0)) {
@@ -531,7 +531,7 @@ void Channel::CallMethod(const google::protobuf::MethodDescriptor* method,
         cntl->_deadline_us = cntl->timeout_ms() * 1000L + start_send_real_us;
         const int rc = bthread_timer_add(
             &cntl->_timeout_id,
-            butil::microseconds_to_timespec(cntl->_deadline_us),
+            flare::base::microseconds_to_timespec(cntl->_deadline_us),
             HandleTimeout, (void*)correlation_id.value);
         if (BAIDU_UNLIKELY(rc != 0)) {
             cntl->SetFailed(rc, "Fail to add timer for timeout");
@@ -550,7 +550,7 @@ void Channel::CallMethod(const google::protobuf::MethodDescriptor* method,
         if (cntl->_span) {
             cntl->SubmitSpan();
         }
-        cntl->OnRPCEnd(butil::gettimeofday_us());
+        cntl->OnRPCEnd(flare::base::gettimeofday_us());
     }
 }
 

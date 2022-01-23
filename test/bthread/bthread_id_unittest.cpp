@@ -17,7 +17,7 @@
 
 #include <iostream>
 #include <gtest/gtest.h>
-#include "flare/butil/time.h"
+#include "flare/base/time.h"
 #include "flare/butil/macros.h"
 #include "flare/bthread/bthread.h"
 #include "flare/bthread/task_group.h"
@@ -214,7 +214,7 @@ TEST(BthreadIdTest, many_error) {
 
 static void* locker(void* arg) {
     bthread_id_t id = { (uintptr_t)arg };
-    butil::Timer tm;
+    flare::base::stop_watcher tm;
     tm.start();
     EXPECT_EQ(0, bthread_id_lock(id, NULL));
     bthread_usleep(2000);
@@ -426,7 +426,7 @@ struct FailToLockIdArgs {
 
 static void* fail_to_lock_id(void* args_in) {
     FailToLockIdArgs* args = (FailToLockIdArgs*)args_in;
-    butil::Timer tm;
+    flare::base::stop_watcher tm;
     EXPECT_EQ(args->expected_return, bthread_id_lock(args->id, NULL));
     any_thread_quit = true;
     return NULL;

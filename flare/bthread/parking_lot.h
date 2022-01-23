@@ -22,7 +22,7 @@
 #ifndef BTHREAD_PARKING_LOT_H
 #define BTHREAD_PARKING_LOT_H
 
-#include "flare/butil/static_atomic.h"
+#include "flare/base/static_atomic.h"
 #include "flare/bthread/sys_futex.h"
 
 namespace bthread {

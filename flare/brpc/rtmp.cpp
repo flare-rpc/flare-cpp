@@ -52,7 +52,7 @@ struct RtmpBvars {
     }
 };
 inline RtmpBvars* get_rtmp_bvars() {
-    return butil::get_leaky_singleton<RtmpBvars>();
+    return flare::base::get_leaky_singleton<RtmpBvars>();
 }
 
 namespace policy {
@@ -68,7 +68,7 @@ FlvWriter::FlvWriter(butil::IOBuf* buf, const FlvWriterOptions& options)
     : _write_header(false), _buf(buf), _options(options) {
 }
 
-butil::Status FlvWriter::Write(const RtmpVideoMessage& msg) {
+flare::base::flare_status FlvWriter::Write(const RtmpVideoMessage& msg) {
     char buf[32];
     char* p = buf;
     if (!_write_header) {
@@ -93,10 +93,10 @@ butil::Status FlvWriter::Write(const RtmpVideoMessage& msg) {
     p = buf;
     policy::WriteBigEndian4Bytes(&p, 11 + msg.size());
     _buf->append(buf, p - buf);
-    return butil::Status::OK();
+    return flare::base::flare_status::OK();
 }
 
-butil::Status FlvWriter::Write(const RtmpAudioMessage& msg) {
+flare::base::flare_status FlvWriter::Write(const RtmpAudioMessage& msg) {
     char buf[32];
     char* p = buf;
     if (!_write_header) {
@@ -124,10 +124,10 @@ butil::Status FlvWriter::Write(const RtmpAudioMessage& msg) {
     p = buf;
     policy::WriteBigEndian4Bytes(&p, 11 + msg.size());
     _buf->append(buf, p - buf);
-    return butil::Status::OK();
+    return flare::base::flare_status::OK();
 }
 
-butil::Status FlvWriter::WriteScriptData(const butil::IOBuf& req_buf, uint32_t timestamp) {
+flare::base::flare_status FlvWriter::WriteScriptData(const butil::IOBuf& req_buf, uint32_t timestamp) {
     char buf[32];
     char* p = buf;
     if (!_write_header) {
@@ -150,10 +150,10 @@ butil::Status FlvWriter::WriteScriptData(const butil::IOBuf& req_buf, uint32_t t
     p = buf;
     policy::WriteBigEndian4Bytes(&p, 11 + req_buf.size());
     _buf->append(buf, p - buf);
-    return butil::Status::OK();
+    return flare::base::flare_status::OK();
 }
 
-butil::Status FlvWriter::Write(const RtmpCuePoint& cuepoint) {
+flare::base::flare_status FlvWriter::Write(const RtmpCuePoint& cuepoint) {
     butil::IOBuf req_buf;
     {
         butil::IOBufAsZeroCopyOutputStream zc_stream(&req_buf);
@@ -162,13 +162,13 @@ butil::Status FlvWriter::Write(const RtmpCuePoint& cuepoint) {
         WriteAMFString(RTMP_AMF0_ON_CUE_POINT, &ostream);
         WriteAMFObject(cuepoint.data, &ostream);
         if (!ostream.good()) {
-            return butil::Status(EINVAL, "Fail to serialize cuepoint");
+            return flare::base::flare_status(EINVAL, "Fail to serialize cuepoint");
         }
     }
     return WriteScriptData(req_buf, cuepoint.timestamp);
 }
 
-butil::Status FlvWriter::Write(const RtmpMetaData& metadata) {
+flare::base::flare_status FlvWriter::Write(const RtmpMetaData& metadata) {
     butil::IOBuf req_buf;
     {
         butil::IOBufAsZeroCopyOutputStream zc_stream(&req_buf);
@@ -176,7 +176,7 @@ butil::Status FlvWriter::Write(const RtmpMetaData& metadata) {
         WriteAMFString(RTMP_AMF0_ON_META_DATA, &ostream);
         WriteAMFObject(metadata.data, &ostream);
         if (!ostream.good()) {
-            return butil::Status(EINVAL, "Fail to serialize metadata");
+            return flare::base::flare_status(EINVAL, "Fail to serialize metadata");
         }
     }
     return WriteScriptData(req_buf, metadata.timestamp);
@@ -186,60 +186,60 @@ FlvReader::FlvReader(butil::IOBuf* buf)
     : _read_header(false), _buf(buf) {
 }
 
-butil::Status FlvReader::ReadHeader() {
+flare::base::flare_status FlvReader::ReadHeader() {
     if (!_read_header) {
         // 9 is the size of FlvHeader, which is usually composed of
         // { 'F', 'L', 'V', 0x01, 0x05, 0, 0, 0, 0x09 }.
         char header_buf[9 + 4/* PreviousTagSize0 */];
         const char* p = (const char*)_buf->fetch(header_buf, sizeof(header_buf));
         if (p == NULL) {
-            return butil::Status(EAGAIN, "Fail to read, not enough data");
+            return flare::base::flare_status(EAGAIN, "Fail to read, not enough data");
         }
         const char flv_header_signature[3] = { 'F', 'L', 'V' };
         if (memcmp(p, flv_header_signature, sizeof(flv_header_signature)) != 0) {
             LOG(FATAL) << "Fail to parse FLV header";
-            return butil::Status(EINVAL, "Fail to parse FLV header");
+            return flare::base::flare_status(EINVAL, "Fail to parse FLV header");
         }
         _buf->pop_front(sizeof(header_buf));
         _read_header = true;
     }
-    return butil::Status::OK();
+    return flare::base::flare_status::OK();
 }
 
-butil::Status FlvReader::PeekMessageType(FlvTagType* type_out) {
-    butil::Status st = ReadHeader();
+flare::base::flare_status FlvReader::PeekMessageType(FlvTagType* type_out) {
+    flare::base::flare_status st = ReadHeader();
     if (!st.ok()) {
         return st;
     }
     const char* p = (const char*)_buf->fetch1();
     if (p == NULL) {
-        return butil::Status(EAGAIN, "Fail to read, not enough data");
+        return flare::base::flare_status(EAGAIN, "Fail to read, not enough data");
     }
     FlvTagType type = (FlvTagType)*p;
     if (type != FLV_TAG_AUDIO && type != FLV_TAG_VIDEO &&
         type != FLV_TAG_SCRIPT_DATA) {
-        return butil::Status(EINVAL, "Fail to parse FLV tag");
+        return flare::base::flare_status(EINVAL, "Fail to parse FLV tag");
     }
     if (type_out) {
         *type_out = type;
     }
-    return butil::Status::OK();
+    return flare::base::flare_status::OK();
 }
 
-butil::Status FlvReader::Read(RtmpVideoMessage* msg) {
+flare::base::flare_status FlvReader::Read(RtmpVideoMessage* msg) {
     char tags[11];
     const unsigned char* p = (const unsigned char*)_buf->fetch(tags, sizeof(tags));
     if (p == NULL) {
-        return butil::Status(EAGAIN, "Fail to read, not enough data");
+        return flare::base::flare_status(EAGAIN, "Fail to read, not enough data");
     }
     if (*p != FLV_TAG_VIDEO) {
-        return butil::Status(EINVAL, "Fail to parse RtmpVideoMessage");
+        return flare::base::flare_status(EINVAL, "Fail to parse RtmpVideoMessage");
     }
     uint32_t msg_size = policy::ReadBigEndian3Bytes(p + 1);
     uint32_t timestamp = policy::ReadBigEndian3Bytes(p + 4);
     timestamp |= (*(p + 7) << 24);
     if (_buf->length() < 11 + msg_size + 4/*PreviousTagSize*/) {
-        return butil::Status(EAGAIN, "Fail to read, not enough data");
+        return flare::base::flare_status(EAGAIN, "Fail to read, not enough data");
     }
     _buf->pop_front(11);
     char first_byte = 0;
@@ -251,23 +251,23 @@ butil::Status FlvReader::Read(RtmpVideoMessage* msg) {
     _buf->cutn(&msg->data, msg_size - 1);
     _buf->pop_front(4/* PreviousTagSize0 */);
 
-    return butil::Status::OK();
+    return flare::base::flare_status::OK();
 }
 
-butil::Status FlvReader::Read(RtmpAudioMessage* msg) {
+flare::base::flare_status FlvReader::Read(RtmpAudioMessage* msg) {
     char tags[11];
     const unsigned char* p = (const unsigned char*)_buf->fetch(tags, sizeof(tags));
     if (p == NULL) {
-        return butil::Status(EAGAIN, "Fail to read, not enough data");
+        return flare::base::flare_status(EAGAIN, "Fail to read, not enough data");
     }
     if (*p != FLV_TAG_AUDIO) {
-        return butil::Status(EINVAL, "Fail to parse RtmpAudioMessage");
+        return flare::base::flare_status(EINVAL, "Fail to parse RtmpAudioMessage");
     }
     uint32_t msg_size = policy::ReadBigEndian3Bytes(p + 1);
     uint32_t timestamp = policy::ReadBigEndian3Bytes(p + 4);
     timestamp |= (*(p + 7) << 24);
     if (_buf->length() < 11 + msg_size + 4/*PreviousTagSize*/) {
-        return butil::Status(EAGAIN, "Fail to read, not enough data");
+        return flare::base::flare_status(EAGAIN, "Fail to read, not enough data");
     }
     _buf->pop_front(11);
     char first_byte = 0;
@@ -280,23 +280,23 @@ butil::Status FlvReader::Read(RtmpAudioMessage* msg) {
     _buf->cutn(&msg->data, msg_size - 1);
     _buf->pop_front(4/* PreviousTagSize0 */);
 
-    return butil::Status::OK();
+    return flare::base::flare_status::OK();
 }
 
-butil::Status FlvReader::Read(RtmpMetaData* msg, std::string* name) {
+flare::base::flare_status FlvReader::Read(RtmpMetaData* msg, std::string* name) {
     char tags[11];
     const unsigned char* p = (const unsigned char*)_buf->fetch(tags, sizeof(tags));
     if (p == NULL) {
-        return butil::Status(EAGAIN, "Fail to read, not enough data");
+        return flare::base::flare_status(EAGAIN, "Fail to read, not enough data");
     }
     if (*p != FLV_TAG_SCRIPT_DATA) {
-        return butil::Status(EINVAL, "Fail to parse RtmpScriptMessage");
+        return flare::base::flare_status(EINVAL, "Fail to parse RtmpScriptMessage");
     }
     uint32_t msg_size = policy::ReadBigEndian3Bytes(p + 1);
     uint32_t timestamp = policy::ReadBigEndian3Bytes(p + 4);
     timestamp |= (*(p + 7) << 24);
     if (_buf->length() < 11 + msg_size + 4/*PreviousTagSize*/) {
-        return butil::Status(EAGAIN, "Fail to read, not enough data");
+        return flare::base::flare_status(EAGAIN, "Fail to read, not enough data");
     }
     _buf->pop_front(11);
     butil::IOBuf req_buf;
@@ -306,14 +306,14 @@ butil::Status FlvReader::Read(RtmpMetaData* msg, std::string* name) {
         butil::IOBufAsZeroCopyInputStream zc_stream(req_buf);
         AMFInputStream istream(&zc_stream);
         if (!ReadAMFString(name, &istream)) {
-            return butil::Status(EINVAL, "Fail to read AMF string");
+            return flare::base::flare_status(EINVAL, "Fail to read AMF string");
         }
         if (!ReadAMFObject(&msg->data, &istream)) {
-            return butil::Status(EINVAL, "Fail to read AMF object");
+            return flare::base::flare_status(EINVAL, "Fail to read AMF object");
         }
     }
     msg->timestamp = timestamp;
-    return butil::Status::OK();
+    return flare::base::flare_status::OK();
 }
 
 const char* FlvVideoFrameType2Str(FlvVideoFrameType t) {
@@ -413,17 +413,17 @@ std::ostream& operator<<(std::ostream& os, const RtmpVideoMessage& msg) {
               << " data=" << butil::ToPrintable(msg.data) << '}';
 }
 
-butil::Status RtmpAACMessage::Create(const RtmpAudioMessage& msg) {
+flare::base::flare_status RtmpAACMessage::Create(const RtmpAudioMessage& msg) {
     if (msg.codec != FLV_AUDIO_AAC) {
-        return butil::Status(EINVAL, "codec=%s is not AAC",
+        return flare::base::flare_status(EINVAL, "codec=%s is not AAC",
                             FlvAudioCodec2Str(msg.codec));
     }
     const uint8_t* p = (const uint8_t*)msg.data.fetch1();
     if (p == NULL) {
-        return butil::Status(EINVAL, "Not enough data in AudioMessage");
+        return flare::base::flare_status(EINVAL, "Not enough data in AudioMessage");
     }
     if (*p > FLV_AAC_PACKET_RAW) {
-        return butil::Status(EINVAL, "Invalid AAC packet_type=%d", (int)*p);
+        return flare::base::flare_status(EINVAL, "Invalid AAC packet_type=%d", (int)*p);
     }
     this->timestamp = msg.timestamp;
     this->rate = msg.rate;
@@ -431,7 +431,7 @@ butil::Status RtmpAACMessage::Create(const RtmpAudioMessage& msg) {
     this->type = msg.type;
     this->packet_type = (FlvAACPacketType)*p;
     msg.data.append_to(&data, msg.data.size() - 1, 1);
-    return butil::Status::OK();
+    return flare::base::flare_status::OK();
 }
 
 AudioSpecificConfig::AudioSpecificConfig()
@@ -440,9 +440,9 @@ AudioSpecificConfig::AudioSpecificConfig()
     , aac_channels(0) {
 }
 
-butil::Status AudioSpecificConfig::Create(const butil::IOBuf& buf) {
+flare::base::flare_status AudioSpecificConfig::Create(const butil::IOBuf& buf) {
     if (buf.size() < 2u) {
-        return butil::Status(EINVAL, "data_size=%" PRIu64 " is too short",
+        return flare::base::flare_status(EINVAL, "data_size=%" PRIu64 " is too short",
                              (uint64_t)buf.size());
     }
     char tmpbuf[2];
@@ -450,9 +450,9 @@ butil::Status AudioSpecificConfig::Create(const butil::IOBuf& buf) {
     return Create(tmpbuf, arraysize(tmpbuf));
 }
 
-butil::Status AudioSpecificConfig::Create(const void* data, size_t len) {
+flare::base::flare_status AudioSpecificConfig::Create(const void* data, size_t len) {
     if (len < 2u) {
-        return butil::Status(EINVAL, "data_size=%" PRIu64 " is too short", (uint64_t)len);
+        return flare::base::flare_status(EINVAL, "data_size=%" PRIu64 " is too short", (uint64_t)len);
     }
     uint8_t profile_ObjectType = ((const char*)data)[0];
     uint8_t samplingFrequencyIndex = ((const char*)data)[1];
@@ -460,9 +460,9 @@ butil::Status AudioSpecificConfig::Create(const void* data, size_t len) {
     aac_sample_rate = ((profile_ObjectType << 1) & 0x0e) | ((samplingFrequencyIndex >> 7) & 0x01);
     aac_object = (AACObjectType)((profile_ObjectType >> 3) & 0x1f);
     if (aac_object == AAC_OBJECT_UNKNOWN) {
-        return butil::Status(EINVAL, "Invalid object type");
+        return flare::base::flare_status(EINVAL, "Invalid object type");
     }
-    return butil::Status::OK();
+    return flare::base::flare_status::OK();
 }
 
 bool RtmpAudioMessage::IsAACSequenceHeader() const {
@@ -476,25 +476,25 @@ bool RtmpAudioMessage::IsAACSequenceHeader() const {
     return *p == FLV_AAC_PACKET_SEQUENCE_HEADER;
 }
 
-butil::Status RtmpAVCMessage::Create(const RtmpVideoMessage& msg) {
+flare::base::flare_status RtmpAVCMessage::Create(const RtmpVideoMessage& msg) {
     if (msg.codec != FLV_VIDEO_AVC) {
-        return butil::Status(EINVAL, "codec=%s is not AVC",
+        return flare::base::flare_status(EINVAL, "codec=%s is not AVC",
                             FlvVideoCodec2Str(msg.codec));
     }
     uint8_t buf[4];
     const uint8_t* p = (const uint8_t*)msg.data.fetch(buf, sizeof(buf));
     if (p == NULL) {
-        return butil::Status(EINVAL, "Not enough data in VideoMessage");
+        return flare::base::flare_status(EINVAL, "Not enough data in VideoMessage");
     }
     if (*p > FLV_AVC_PACKET_END_OF_SEQUENCE) {
-        return butil::Status(EINVAL, "Invalid AVC packet_type=%d", (int)*p);
+        return flare::base::flare_status(EINVAL, "Invalid AVC packet_type=%d", (int)*p);
     }
     this->timestamp = msg.timestamp;
     this->frame_type = msg.frame_type;
     this->packet_type = (FlvAVCPacketType)*p;
     this->composition_time = policy::ReadBigEndian3Bytes(p + 1);
     msg.data.append_to(&data, msg.data.size() - 4, 4);
-    return butil::Status::OK();
+    return flare::base::flare_status::OK();
 }
 
 bool RtmpVideoMessage::IsAVCSequenceHeader() const {
@@ -570,7 +570,7 @@ std::ostream& operator<<(std::ostream& os,
     return os;
 }
 
-butil::Status AVCDecoderConfigurationRecord::Create(const butil::IOBuf& buf) {
+flare::base::flare_status AVCDecoderConfigurationRecord::Create(const butil::IOBuf& buf) {
     // the buf should be short generally, copy it out to continuous memory
     // to simplify parsing.
     DEFINE_SMALL_ARRAY(char, cont_buf, buf.size(), 64);
@@ -578,10 +578,10 @@ butil::Status AVCDecoderConfigurationRecord::Create(const butil::IOBuf& buf) {
     return Create(cont_buf, buf.size());
 }
 
-butil::Status AVCDecoderConfigurationRecord::Create(const void* data, size_t len) {
+flare::base::flare_status AVCDecoderConfigurationRecord::Create(const void* data, size_t len) {
     std::string_view buf((const char*)data, len);
     if (buf.size() < 6) {
-        return butil::Status(EINVAL, "Length=%lu is not long enough",
+        return flare::base::flare_status(EINVAL, "Length=%lu is not long enough",
                             (unsigned long)buf.size());
     }
     // skip configurationVersion at buf[0]
@@ -596,7 +596,7 @@ butil::Status AVCDecoderConfigurationRecord::Create(const void* data, size_t len
     // length encoded with 1, 2, or 4 bytes, respectively.
     length_size_minus1 = buf[4] & 0x03;
     if (length_size_minus1 == 2) {
-        return butil::Status(EINVAL, "lengthSizeMinusOne should never be 2");
+        return flare::base::flare_status(EINVAL, "lengthSizeMinusOne should never be 2");
     }
 
     // Parsing SPS
@@ -606,14 +606,14 @@ butil::Status AVCDecoderConfigurationRecord::Create(const void* data, size_t len
     sps_list.reserve(num_sps);
     for (int i = 0; i < num_sps; ++i) {
         if (buf.size() < 2) {
-            return butil::Status(EINVAL, "Not enough data to decode SPS-length");
+            return flare::base::flare_status(EINVAL, "Not enough data to decode SPS-length");
         }
         const uint16_t sps_length = policy::ReadBigEndian2Bytes(buf.data());
         if (buf.size() < 2u + sps_length) {
-            return butil::Status(EINVAL, "Not enough data to decode SPS");
+            return flare::base::flare_status(EINVAL, "Not enough data to decode SPS");
         }
         if (sps_length > 0) {
-            butil::Status st = ParseSPS(buf.data() + 2, sps_length);
+            flare::base::flare_status st = ParseSPS(buf.data() + 2, sps_length);
             if (!st.ok()) {
                 return st;
             }
@@ -624,37 +624,37 @@ butil::Status AVCDecoderConfigurationRecord::Create(const void* data, size_t len
     // Parsing PPS
     pps_list.clear();
     if (buf.empty()) {
-        return butil::Status(EINVAL, "Not enough data to decode PPS");
+        return flare::base::flare_status(EINVAL, "Not enough data to decode PPS");
     }
     const int num_pps = (int)buf[0];
     buf.remove_prefix(1);
     for (int i = 0; i < num_pps; ++i) {
         if (buf.size() < 2) {
-            return butil::Status(EINVAL, "Not enough data to decode PPS-length");
+            return flare::base::flare_status(EINVAL, "Not enough data to decode PPS-length");
         }
         const uint16_t pps_length = policy::ReadBigEndian2Bytes(buf.data());
         if (buf.size() < 2u + pps_length) {
-            return butil::Status(EINVAL, "Not enough data to decode PPS");
+            return flare::base::flare_status(EINVAL, "Not enough data to decode PPS");
         }
         if (pps_length > 0) {
             pps_list.push_back(flare::base::as_string(buf.substr(2, pps_length)));
         }
         buf.remove_prefix(2 + pps_length);
     }
-    return butil::Status::OK();
+    return flare::base::flare_status::OK();
 }
 
-butil::Status AVCDecoderConfigurationRecord::ParseSPS(
+flare::base::flare_status AVCDecoderConfigurationRecord::ParseSPS(
     const std::string_view& buf, size_t sps_length) {
     // for NALU, 7.3.1 NAL unit syntax
     // H.264-AVC-ISO_IEC_14496-10-2012.pdf, page 61.
     if (buf.empty()) {
-        return butil::Status(EINVAL, "SPS is empty");
+        return flare::base::flare_status(EINVAL, "SPS is empty");
     }
     const int8_t nutv = buf[0];
     const int8_t forbidden_zero_bit = (nutv >> 7) & 0x01;
     if (forbidden_zero_bit) {
-        return butil::Status(EINVAL, "forbidden_zero_bit shall equal 0");
+        return flare::base::flare_status(EINVAL, "forbidden_zero_bit shall equal 0");
     }
     // nal_ref_idc not equal to 0 specifies that the content of the NAL unit
     // contains:
@@ -664,7 +664,7 @@ butil::Status AVCDecoderConfigurationRecord::ParseSPS(
     // or a slice data partition of a reference picture.
     int8_t nal_ref_idc = (nutv >> 5) & 0x03;
     if (!nal_ref_idc) {
-        return butil::Status(EINVAL, "nal_ref_idc is 0");
+        return flare::base::flare_status(EINVAL, "nal_ref_idc is 0");
     }
     // 7.4.1 NAL unit semantics
     // H.264-AVC-ISO_IEC_14496-10-2012.pdf, page 61.
@@ -672,7 +672,7 @@ butil::Status AVCDecoderConfigurationRecord::ParseSPS(
     // the NAL unit as specified in Table 7-1.
     const AVCNaluType nal_unit_type = (AVCNaluType)(nutv & 0x1f);
     if (nal_unit_type != AVC_NALU_SPS) {
-        return butil::Status(EINVAL, "nal_unit_type is not %d", (int)AVC_NALU_SPS);
+        return flare::base::flare_status(EINVAL, "nal_unit_type is not %d", (int)AVC_NALU_SPS);
     }
     // Extract the rbsp from sps.
     DEFINE_SMALL_ARRAY(char, rbsp, sps_length - 1, 64);
@@ -687,29 +687,29 @@ butil::Status AVCDecoderConfigurationRecord::ParseSPS(
     // for SPS, 7.3.2.1.1 Sequence parameter set data syntax
     // H.264-AVC-ISO_IEC_14496-10-2012.pdf, page 62.
     if (rbsp_len < 3) {
-        return butil::Status(EINVAL, "rbsp must be at least 3 bytes");
+        return flare::base::flare_status(EINVAL, "rbsp must be at least 3 bytes");
     }
     // Decode rbsp.
     const char* p = rbsp;
     uint8_t profile_idc = *p++;
     if (!profile_idc) {
-        return butil::Status(EINVAL, "profile_idc is 0");
+        return flare::base::flare_status(EINVAL, "profile_idc is 0");
     }
     int8_t flags = *p++;
     if (flags & 0x03) {
-        return butil::Status(EINVAL, "Invalid flags=%d", (int)flags);
+        return flare::base::flare_status(EINVAL, "Invalid flags=%d", (int)flags);
     }
     uint8_t level_idc = *p++;
     if (!level_idc) {
-        return butil::Status(EINVAL, "level_idc is 0");
+        return flare::base::flare_status(EINVAL, "level_idc is 0");
     }
     BitStream bs(p, rbsp + rbsp_len - p);
     int32_t seq_parameter_set_id = -1;
     if (avc_nalu_read_uev(&bs, &seq_parameter_set_id) != 0) {
-        return butil::Status(EINVAL, "Fail to read seq_parameter_set_id");
+        return flare::base::flare_status(EINVAL, "Fail to read seq_parameter_set_id");
     }
     if (seq_parameter_set_id < 0) {
-        return butil::Status(EINVAL, "Invalid seq_parameter_set_id=%d",
+        return flare::base::flare_status(EINVAL, "Invalid seq_parameter_set_id=%d",
                             (int)seq_parameter_set_id);
     }
     int32_t chroma_format_idc = -1;
@@ -717,40 +717,40 @@ butil::Status AVCDecoderConfigurationRecord::ParseSPS(
         profile_idc == 244 || profile_idc == 44 || profile_idc == 83 ||
         profile_idc == 86 || profile_idc == 118 || profile_idc == 128) {
         if (avc_nalu_read_uev(&bs, &chroma_format_idc) != 0) {
-            return butil::Status(EINVAL, "Fail to read chroma_format_idc");
+            return flare::base::flare_status(EINVAL, "Fail to read chroma_format_idc");
         }
         if (chroma_format_idc == 3) {
             int8_t separate_colour_plane_flag = -1;
             if (avc_nalu_read_bit(&bs, &separate_colour_plane_flag) != 0) {
-                return butil::Status(EINVAL, "Fail to read separate_colour_plane_flag");
+                return flare::base::flare_status(EINVAL, "Fail to read separate_colour_plane_flag");
             }
         }
         int32_t bit_depth_luma_minus8 = -1;
         if (avc_nalu_read_uev(&bs, &bit_depth_luma_minus8) != 0) {
-            return butil::Status(EINVAL, "Fail to read bit_depth_luma_minus8");
+            return flare::base::flare_status(EINVAL, "Fail to read bit_depth_luma_minus8");
         }
         int32_t bit_depth_chroma_minus8 = -1;
         if (avc_nalu_read_uev(&bs, &bit_depth_chroma_minus8) != 0) {
-            return butil::Status(EINVAL, "Fail to read bit_depth_chroma_minus8");
+            return flare::base::flare_status(EINVAL, "Fail to read bit_depth_chroma_minus8");
         }
         int8_t qpprime_y_zero_transform_bypass_flag = -1;
         if (avc_nalu_read_bit(&bs, &qpprime_y_zero_transform_bypass_flag) != 0) {
-            return butil::Status(EINVAL, "Fail to read qpprime_y_zero_transform_bypass_flag");
+            return flare::base::flare_status(EINVAL, "Fail to read qpprime_y_zero_transform_bypass_flag");
         }
         int8_t seq_scaling_matrix_present_flag = -1;
         if (avc_nalu_read_bit(&bs, &seq_scaling_matrix_present_flag) != 0) {
-            return butil::Status(EINVAL, "Fail to read seq_scaling_matrix_present_flag");
+            return flare::base::flare_status(EINVAL, "Fail to read seq_scaling_matrix_present_flag");
         }
         if (seq_scaling_matrix_present_flag) {
             int nb_scmpfs = (chroma_format_idc != 3 ? 8 : 12);
             for (int i = 0; i < nb_scmpfs; i++) {
                 int8_t seq_scaling_matrix_present_flag_i = -1;
                 if (avc_nalu_read_bit(&bs, &seq_scaling_matrix_present_flag_i)) {
-                    return butil::Status(EINVAL, "Fail to read seq_scaling_"
+                    return flare::base::flare_status(EINVAL, "Fail to read seq_scaling_"
                                         "matrix_present_flag[%d]", i);
                 }
                 if (seq_scaling_matrix_present_flag_i) {
-                    return butil::Status(EINVAL, "Invalid seq_scaling_matrix_"
+                    return flare::base::flare_status(EINVAL, "Invalid seq_scaling_matrix_"
                                         "present_flag[%d]=%d nb_scmpfs=%d",
                                         i, (int)seq_scaling_matrix_present_flag_i,
                                         nb_scmpfs);
@@ -760,58 +760,58 @@ butil::Status AVCDecoderConfigurationRecord::ParseSPS(
     }
     int32_t log2_max_frame_num_minus4 = -1;
     if (avc_nalu_read_uev(&bs, &log2_max_frame_num_minus4) != 0) {
-        return butil::Status(EINVAL, "Fail to read log2_max_frame_num_minus4");
+        return flare::base::flare_status(EINVAL, "Fail to read log2_max_frame_num_minus4");
     }
     int32_t pic_order_cnt_type = -1;
     if (avc_nalu_read_uev(&bs, &pic_order_cnt_type) != 0) {
-        return butil::Status(EINVAL, "Fail to read pic_order_cnt_type");
+        return flare::base::flare_status(EINVAL, "Fail to read pic_order_cnt_type");
     }
     if (pic_order_cnt_type == 0) {
         int32_t log2_max_pic_order_cnt_lsb_minus4 = -1;
         if (avc_nalu_read_uev(&bs, &log2_max_pic_order_cnt_lsb_minus4) != 0) {
-            return butil::Status(EINVAL, "Fail to read log2_max_pic_order_cnt_lsb_minus4");
+            return flare::base::flare_status(EINVAL, "Fail to read log2_max_pic_order_cnt_lsb_minus4");
         }
     } else if (pic_order_cnt_type == 1) {
         int8_t delta_pic_order_always_zero_flag = -1;
         if (avc_nalu_read_bit(&bs, &delta_pic_order_always_zero_flag) != 0) {
-            return butil::Status(EINVAL, "Fail to read delta_pic_order_always_zero_flag");
+            return flare::base::flare_status(EINVAL, "Fail to read delta_pic_order_always_zero_flag");
         }
         int32_t offset_for_non_ref_pic = -1;
         if (avc_nalu_read_uev(&bs, &offset_for_non_ref_pic) != 0) {
-            return butil::Status(EINVAL, "Fail to read offset_for_non_ref_pic");
+            return flare::base::flare_status(EINVAL, "Fail to read offset_for_non_ref_pic");
         }
         int32_t offset_for_top_to_bottom_field = -1;
         if (avc_nalu_read_uev(&bs, &offset_for_top_to_bottom_field) != 0) {
-            return butil::Status(EINVAL, "Fail to read offset_for_top_to_bottom_field");
+            return flare::base::flare_status(EINVAL, "Fail to read offset_for_top_to_bottom_field");
         }
         int32_t num_ref_frames_in_pic_order_cnt_cycle = -1;
         if (avc_nalu_read_uev(&bs, &num_ref_frames_in_pic_order_cnt_cycle) != 0) {
-            return butil::Status(EINVAL, "Fail to read num_ref_frames_in_pic_order_cnt_cycle");
+            return flare::base::flare_status(EINVAL, "Fail to read num_ref_frames_in_pic_order_cnt_cycle");
         }
         if (num_ref_frames_in_pic_order_cnt_cycle) {
-            return butil::Status(EINVAL, "Invalid num_ref_frames_in_pic_order_cnt_cycle=%d",
+            return flare::base::flare_status(EINVAL, "Invalid num_ref_frames_in_pic_order_cnt_cycle=%d",
                                 num_ref_frames_in_pic_order_cnt_cycle);
         }
     }
     int32_t max_num_ref_frames = -1;
     if (avc_nalu_read_uev(&bs, &max_num_ref_frames) != 0) {
-        return butil::Status(EINVAL, "Fail to read max_num_ref_frames");
+        return flare::base::flare_status(EINVAL, "Fail to read max_num_ref_frames");
     }
     int8_t gaps_in_frame_num_value_allowed_flag = -1;
     if (avc_nalu_read_bit(&bs, &gaps_in_frame_num_value_allowed_flag) != 0) {
-        return butil::Status(EINVAL, "Fail to read gaps_in_frame_num_value_allowed_flag");
+        return flare::base::flare_status(EINVAL, "Fail to read gaps_in_frame_num_value_allowed_flag");
     }
     int32_t pic_width_in_mbs_minus1 = -1;
     if (avc_nalu_read_uev(&bs, &pic_width_in_mbs_minus1) != 0) {
-        return butil::Status(EINVAL, "Fail to read pic_width_in_mbs_minus1");
+        return flare::base::flare_status(EINVAL, "Fail to read pic_width_in_mbs_minus1");
     }
     int32_t pic_height_in_map_units_minus1 = -1;
     if (avc_nalu_read_uev(&bs, &pic_height_in_map_units_minus1) != 0) {
-        return butil::Status(EINVAL, "Fail to read pic_height_in_map_units_minus1");
+        return flare::base::flare_status(EINVAL, "Fail to read pic_height_in_map_units_minus1");
     }
     width = (int)(pic_width_in_mbs_minus1 + 1) * 16;
     height = (int)(pic_height_in_map_units_minus1 + 1) * 16;
-    return butil::Status::OK();
+    return flare::base::flare_status::OK();
 }
 
 static bool find_avc_annexb_nalu_start_code(const butil::IOBuf& buf,
@@ -1005,7 +1005,7 @@ public:
     }
 
     // Specify the servers to connect.
-    int Init(butil::EndPoint server_addr_and_port,
+    int Init(flare::base::end_point server_addr_and_port,
              const RtmpClientOptions& options);
     int Init(const char* server_addr_and_port,
              const RtmpClientOptions& options);
@@ -1018,7 +1018,7 @@ public:
     const RtmpClientOptions& options() const { return _connect_options; }
     SocketMap& socket_map() { return _socket_map; }
 
-    int CreateSocket(const butil::EndPoint& pt, SocketId* id);
+    int CreateSocket(const flare::base::end_point& pt, SocketId* id);
 
 private:
     DISALLOW_COPY_AND_ASSIGN(RtmpClientImpl);
@@ -1099,7 +1099,7 @@ private:
     RtmpClientOptions _connect_options;
 };
 
-int RtmpClientImpl::CreateSocket(const butil::EndPoint& pt, SocketId* id) {
+int RtmpClientImpl::CreateSocket(const flare::base::end_point& pt, SocketId* id) {
     SocketOptions sock_opt;
     sock_opt.remote_side = pt;
     sock_opt.app_connect = std::make_shared<RtmpConnect>();
@@ -1118,7 +1118,7 @@ int RtmpClientImpl::CommonInit(const RtmpClientOptions& options) {
     return 0;
 }
 
-int RtmpClientImpl::Init(butil::EndPoint server_addr_and_port,
+int RtmpClientImpl::Init(flare::base::end_point server_addr_and_port,
                          const RtmpClientOptions& options) {
     if (CommonInit(options) != 0) {
         return -1;
@@ -1182,7 +1182,7 @@ const RtmpClientOptions& RtmpClient::options() const {
     }
 }
 
-int RtmpClient::Init(butil::EndPoint server_addr_and_port,
+int RtmpClient::Init(flare::base::end_point server_addr_and_port,
                      const RtmpClientOptions& options) {
     butil::intrusive_ptr<RtmpClientImpl> tmp(new (std::nothrow) RtmpClientImpl);
     if (tmp == NULL) {
@@ -1249,7 +1249,7 @@ RtmpStreamBase::RtmpStreamBase(bool is_client)
     , _has_data_ever(false)
     , _message_stream_id(0)
     , _chunk_stream_id(0)
-    , _create_realtime_us(butil::gettimeofday_us())
+    , _create_realtime_us(flare::base::gettimeofday_us())
     , _is_server_accepted(false) {
 }
 
@@ -1604,11 +1604,11 @@ void RtmpStreamBase::CallOnStop() {
     OnStop();
 }
  
-butil::EndPoint RtmpStreamBase::remote_side() const
-{ return _rtmpsock ? _rtmpsock->remote_side() : butil::EndPoint(); }
+flare::base::end_point RtmpStreamBase::remote_side() const
+{ return _rtmpsock ? _rtmpsock->remote_side() : flare::base::end_point(); }
 
-butil::EndPoint RtmpStreamBase::local_side() const
-{ return _rtmpsock ? _rtmpsock->local_side() : butil::EndPoint(); }
+flare::base::end_point RtmpStreamBase::local_side() const
+{ return _rtmpsock ? _rtmpsock->local_side() : flare::base::end_point(); }
 
 // ============ RtmpClientStream =============
 
@@ -2293,7 +2293,7 @@ void RtmpRetryingClientStream::Init(
     _options = options;
     // retrying stream does not support this option.
     _options.wait_until_play_or_publish_is_sent = false;
-    _last_retry_start_time_us = butil::gettimeofday_us();
+    _last_retry_start_time_us = flare::base::gettimeofday_us();
     Recreate();
 }
 
@@ -2358,7 +2358,7 @@ void RtmpRetryingClientStream::Recreate() {
         sub_stream->Destroy();
         return;
     }
-    _last_creation_time_us = butil::gettimeofday_us();
+    _last_creation_time_us = flare::base::gettimeofday_us();
     // If Init() of sub_stream is called before setting _using_sub_stream,
     // OnStop() may happen before _using_sub_stream is set and the stopped
     // stream is wrongly left in the variable.
@@ -2401,7 +2401,7 @@ void RtmpRetryingClientStream::OnSubStreamStop(RtmpStreamBase* sub_stream) {
     // of RtmpRetryingClientStreamOptions.max_retry_duration_ms.
     if ((!_options.play_name.empty() && sub_stream->has_data_ever()) ||
         (!_options.publish_name.empty() && sub_stream->is_server_accepted())) {
-        const int64_t now = butil::gettimeofday_us();
+        const int64_t now = flare::base::gettimeofday_us();
         if (now >= _last_retry_start_time_us +
             3 * _options.retry_interval_ms * 1000L) {
             // re-enable fast retries when the interval is long enough.
@@ -2413,7 +2413,7 @@ void RtmpRetryingClientStream::OnSubStreamStop(RtmpStreamBase* sub_stream) {
     // Check max duration. Notice that this branch cannot be moved forward
     // above branch which may update _last_retry_start_time_us
     if (_options.max_retry_duration_ms > 0 &&
-        butil::gettimeofday_us() >
+        flare::base::gettimeofday_us() >
         (_last_retry_start_time_us + _options.max_retry_duration_ms * 1000L)) {
         // exceed the duration, stop retrying.
         return CallOnStopIfNeeded();
@@ -2433,13 +2433,13 @@ void RtmpRetryingClientStream::OnSubStreamStop(RtmpStreamBase* sub_stream) {
         return CallOnStopIfNeeded();
     }
     const int64_t wait_us = _last_creation_time_us +
-        _options.retry_interval_ms * 1000L - butil::gettimeofday_us();
+        _options.retry_interval_ms * 1000L - flare::base::gettimeofday_us();
     if (wait_us > 0) {
         // retry is too frequent, schedule the retry.
         // Add a ref for OnRecreateTimer which does deref.
         butil::intrusive_ptr<RtmpRetryingClientStream>(this).detach();
         if (bthread_timer_add(&_create_timer_id,
-                              butil::microseconds_from_now(wait_us),
+                              flare::base::microseconds_from_now(wait_us),
                               OnRecreateTimer, this) != 0) {
             LOG(ERROR) << "Fail to create timer";
             return CallOnStopIfNeeded();
@@ -2541,28 +2541,28 @@ void RtmpRetryingClientStream::StopCurrentStream() {
 
 void RtmpRetryingClientStream::OnPlayable() {}
 
-butil::EndPoint RtmpRetryingClientStream::remote_side() const {
+flare::base::end_point RtmpRetryingClientStream::remote_side() const {
     {
         BAIDU_SCOPED_LOCK(_stream_mutex);
         if (_using_sub_stream) {
             return _using_sub_stream->remote_side();
         }
     }
-    return butil::EndPoint();
+    return flare::base::end_point();
 }
 
-butil::EndPoint RtmpRetryingClientStream::local_side() const {
+flare::base::end_point RtmpRetryingClientStream::local_side() const {
     {
         BAIDU_SCOPED_LOCK(_stream_mutex);
         if (_using_sub_stream) {
             return _using_sub_stream->local_side();
         }
     }
-    return butil::EndPoint();
+    return flare::base::end_point();
 }
 
 // =========== RtmpService ===============
-void RtmpService::OnPingResponse(const butil::EndPoint&, uint32_t) {
+void RtmpService::OnPingResponse(const flare::base::end_point&, uint32_t) {
     // TODO: put into some bvars?
 }
 
@@ -2583,12 +2583,12 @@ void RtmpServerStream::Destroy() {
 }
 
 void RtmpServerStream::OnPlay(const RtmpPlayOptions& opt,
-                              butil::Status* status,
+                              flare::base::flare_status* status,
                               google::protobuf::Closure* done) {
     ClosureGuard done_guard(done);
     status->set_error(EPERM, "%s[%u] ignored play{stream_name=%s start=%f"
                       " duration=%f reset=%d}",
-                      butil::endpoint2str(remote_side()).c_str(), stream_id(),
+                      flare::base::endpoint2str(remote_side()).c_str(), stream_id(),
                       opt.stream_name.c_str(), opt.start, opt.duration,
                       (int)opt.reset);
 }
@@ -2600,11 +2600,11 @@ void RtmpServerStream::OnPlay2(const RtmpPlay2Options& opt) {
 
 void RtmpServerStream::OnPublish(const std::string& name,
                                  RtmpPublishType type,
-                                 butil::Status* status,
+                                 flare::base::flare_status* status,
                                  google::protobuf::Closure* done) {
     ClosureGuard done_guard(done);
     status->set_error(EPERM, "%s[%u] ignored publish{stream_name=%s type=%s}",
-                      butil::endpoint2str(remote_side()).c_str(), stream_id(),
+                      flare::base::endpoint2str(remote_side()).c_str(), stream_id(),
                       name.c_str(), RtmpPublishType2Str(type));
 }
 
@@ -2799,7 +2799,7 @@ static void SplitVHostFromApp(const std::string_view& app_and_vhost,
     }
     if (vhost) {
         std::string_view qstr = app_and_vhost.substr(q_pos + 1);
-        butil::StringSplitter sp(qstr.data(), qstr.data() + qstr.size(), '&');
+        flare::base::StringSplitter sp(qstr.data(), qstr.data() + qstr.size(), '&');
         for (; sp; ++sp) {
             std::string_view field(sp.field(), sp.length());
             if (flare::base::starts_with(field, "vhost=")) {

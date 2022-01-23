@@ -20,7 +20,7 @@
 #include "flare/butil/third_party/rapidjson/document.h"
 #include "flare/butil/third_party/rapidjson/memorybuffer.h"
 #include "flare/butil/third_party/rapidjson/writer.h"
-#include "flare/butil/string_printf.h"
+#include "flare/base/strings.h"
 #include "flare/base/str_split.h"
 #include "flare/butil/fast_rand.h"
 #include "flare/bthread/bthread.h"
@@ -356,7 +356,7 @@ int DiscoveryNamingService::GetServers(const char* service_name,
     }
     servers->clear();
     Controller cntl;
-    std::string uri_str = butil::string_printf(
+    std::string uri_str = flare::base::string_printf(
             "/discovery/fetchs?appid=%s&env=%s&status=%s", service_name,
             FLAGS_discovery_env.c_str(), FLAGS_discovery_status.c_str());
     if (!FLAGS_discovery_zone.empty()) {

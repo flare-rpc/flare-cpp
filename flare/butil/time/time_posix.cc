@@ -16,7 +16,7 @@
 #include <ostream>
 
 #include "flare/butil/basictypes.h"
-#include "flare/butil/logging.h"
+#include "flare/base/logging.h"
 #include "flare/butil/port.h"
 #include "flare/butil/build_config.h"
 

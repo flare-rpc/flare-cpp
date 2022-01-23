@@ -17,8 +17,8 @@
 
 #include <map>
 #include <gtest/gtest.h>
-#include "flare/butil/static_atomic.h"
-#include "flare/butil/time.h"
+#include "flare/base/static_atomic.h"
+#include "flare/base/time.h"
 #include "flare/butil/macros.h"
 #include "flare/butil/scoped_lock.h"
 #include "flare/butil/gperftools_profiler.h"
@@ -41,7 +41,7 @@ const long SIGNAL_INTERVAL_US = 10000;
 
 void* signaler(void* void_arg) {
     Arg* a = (Arg*)void_arg;
-    signal_start_time = butil::gettimeofday_us();
+    signal_start_time = flare::base::gettimeofday_us();
     while (!stop) {
         bthread_usleep(SIGNAL_INTERVAL_US);
         bthread_cond_signal(&a->c);
@@ -57,7 +57,7 @@ void* waiter(void* void_arg) {
         
         BAIDU_SCOPED_LOCK(wake_mutex);
         wake_tid.push_back(bthread_self());
-        wake_time.push_back(butil::gettimeofday_us());
+        wake_time.push_back(flare::base::gettimeofday_us());
     }
     bthread_mutex_unlock(&a->m);
     return NULL;
@@ -142,7 +142,7 @@ struct WrapperArg {
 
 void* cv_signaler(void* void_arg) {
     WrapperArg* a = (WrapperArg*)void_arg;
-    signal_start_time = butil::gettimeofday_us();
+    signal_start_time = flare::base::gettimeofday_us();
     while (!stop) {
         bthread_usleep(SIGNAL_INTERVAL_US);
         a->cond.notify_one();
@@ -421,7 +421,7 @@ static void launch_many_bthreads() {
     bthread_t tid;
     BthreadCond c;
     c.Init();
-    butil::Timer tm;
+    flare::base::stop_watcher tm;
     bthread_start_urgent(&tid, &BTHREAD_ATTR_PTHREAD, wait_cond_thread, &c);
     std::vector<bthread_t> tids;
     tids.reserve(32768);

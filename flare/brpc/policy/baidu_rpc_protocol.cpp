@@ -20,8 +20,8 @@
 #include <google/protobuf/message.h>            // Message
 #include <google/protobuf/io/zero_copy_stream_impl_lite.h>
 #include <google/protobuf/io/coded_stream.h>
-#include "flare/butil/logging.h"                       // LOG()
-#include "flare/butil/time.h"
+#include "flare/base/logging.h"                       // LOG()
+#include "flare/base/time.h"
 #include "flare/butil/iobuf.h"                         // butil::IOBuf
 #include "flare/butil/raw_pack.h"                      // RawPacker RawUnpacker
 #include "flare/brpc/controller.h"                    // Controller
@@ -143,7 +143,7 @@ void SendRpcResponse(int64_t correlation_id,
     ControllerPrivateAccessor accessor(cntl);
     Span* span = accessor.span();
     if (span) {
-        span->set_start_send_us(butil::cpuwide_time_us());
+        span->set_start_send_us(flare::base::cpuwide_time_us());
     }
     Socket* sock = accessor.get_sending_socket();
     std::unique_ptr<Controller, LogErrorTextAndDelete> recycle_cntl(cntl);
@@ -261,7 +261,7 @@ void SendRpcResponse(int64_t correlation_id,
 
     if (span) {
         // TODO: this is not sent
-        span->set_sent_us(butil::cpuwide_time_us());
+        span->set_sent_us(flare::base::cpuwide_time_us());
     }
 }
 
@@ -300,7 +300,7 @@ void EndRunningCallMethodInPool(
 };
 
 void ProcessRpcRequest(InputMessageBase* msg_base) {
-    const int64_t start_parse_us = butil::cpuwide_time_us();
+    const int64_t start_parse_us = flare::base::cpuwide_time_us();
     DestroyingPtr<MostCommonMessage> msg(static_cast<MostCommonMessage*>(msg_base));
     SocketUniquePtr socket_guard(msg->ReleaseSocket());
     Socket* socket = socket_guard.get();
@@ -389,7 +389,7 @@ void ProcessRpcRequest(InputMessageBase* msg_base) {
 
         if (socket->is_overcrowded()) {
             cntl->SetFailed(EOVERCROWDED, "Connection to %s is overcrowded",
-                            butil::endpoint2str(socket->remote_side()).c_str());
+                            flare::base::endpoint2str(socket->remote_side()).c_str());
             break;
         }
         
@@ -492,7 +492,7 @@ void ProcessRpcRequest(InputMessageBase* msg_base) {
         req_buf.clear();
 
         if (span) {
-            span->set_start_callback_us(butil::cpuwide_time_us());
+            span->set_start_callback_us(flare::base::cpuwide_time_us());
             span->AsParent();
         }
         if (!FLAGS_usercode_in_pthread) {
@@ -542,7 +542,7 @@ bool VerifyRpcRequest(const InputMessageBase* msg_base) {
 }
 
 void ProcessRpcResponse(InputMessageBase* msg_base) {
-    const int64_t start_parse_us = butil::cpuwide_time_us();
+    const int64_t start_parse_us = flare::base::cpuwide_time_us();
     DestroyingPtr<MostCommonMessage> msg(static_cast<MostCommonMessage*>(msg_base));
     RpcMeta meta;
     if (!ParsePbFromIOBuf(&meta, msg->meta)) {

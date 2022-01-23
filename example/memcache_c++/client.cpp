@@ -19,7 +19,7 @@
 
 #include <gflags/gflags.h>
 #include <flare/bthread/bthread.h>
-#include <flare/butil/logging.h>
+#include "flare/base/logging.h"
 #include <flare/butil/string_printf.h>
 #include <flare/brpc/channel.h>
 #include <flare/brpc/memcache.h>
@@ -54,8 +54,8 @@ static void* sender(void* arg) {
     std::vector<std::pair<std::string, std::string> > kvs;
     kvs.resize(FLAGS_batch);
     for (int i = 0; i < FLAGS_batch; ++i) {
-        kvs[i].first = butil::string_printf("%s%d", FLAGS_key.c_str(), base_index + i);
-        kvs[i].second = butil::string_printf("%s%d", FLAGS_value.c_str(), base_index + i);
+        kvs[i].first = flare::base::string_printf("%s%d", FLAGS_key.c_str(), base_index + i);
+        kvs[i].second = flare::base::string_printf("%s%d", FLAGS_value.c_str(), base_index + i);
     }
     brpc::MemcacheRequest request;
     for (int i = 0; i < FLAGS_batch; ++i) {
@@ -134,8 +134,8 @@ int main(int argc, char* argv[]) {
     brpc::MemcacheResponse response;
     brpc::Controller cntl;
     for (int i = 0; i < FLAGS_batch * FLAGS_thread_num; ++i) {
-        if (!request.Set(butil::string_printf("%s%d", FLAGS_key.c_str(), i),
-                         butil::string_printf("%s%d", FLAGS_value.c_str(), i),
+        if (!request.Set(flare::base::string_printf("%s%d", FLAGS_key.c_str(), i),
+                         flare::base::string_printf("%s%d", FLAGS_value.c_str(), i),
                          0xdeadbeef + i, FLAGS_exptime, 0)) {
             LOG(ERROR) << "Fail to SET " << i << "th request";
             return -1;

@@ -22,9 +22,9 @@
 #include <fstream>
 #include <gtest/gtest.h>
 #include <google/protobuf/descriptor.h>
-#include <flare/butil/time.h>
+#include "flare/base/time.h"
 #include <flare/butil/macros.h>
-#include <flare/butil/fd_guard.h>
+#include "flare/base/fd_guard.h"
 #include <flare/butil/files/scoped_file.h>
 #include "flare/brpc/global.h"
 #include "flare/brpc/socket.h"
@@ -298,7 +298,7 @@ void* ssl_perf_client(void* arg) {
     EXPECT_EQ(1, SSL_do_handshake(ssl));
 
     char buf[4096];
-    butil::Timer tm;
+    flare::base::stop_watcher tm;
     for (size_t i = 0; i < ARRAY_SIZE(BUFSIZE); ++i) {
         int size = BUFSIZE[i];
         tm.start();
@@ -327,8 +327,8 @@ void* ssl_perf_server(void* arg) {
 }
 
 TEST_F(SSLTest, ssl_perf) {
-    const butil::EndPoint ep(butil::IP_ANY, 5961);
-    butil::fd_guard listenfd(butil::tcp_listen(ep));
+    const flare::base::end_point ep(flare::base::IP_ANY, 5961);
+    flare::base::fd_guard listenfd(flare::base::tcp_listen(ep));
     ASSERT_GT(listenfd, 0);
     int clifd = tcp_connect(ep, NULL);
     ASSERT_GT(clifd, 0);

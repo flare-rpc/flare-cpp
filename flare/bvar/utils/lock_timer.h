@@ -20,7 +20,7 @@
 #ifndef  BVAR_LOCK_TIMER_H
 #define  BVAR_LOCK_TIMER_H
 
-#include "flare/butil/time.h"             // butil::Timer
+#include "flare/base/time.h"             // flare::base::stop_watcher
 #include "flare/butil/scoped_lock.h"      // std::lock_guard std::unique_lock
 #include "flare/butil/macros.h"           // DISALLOW_COPY_AND_ASSIGN
 
@@ -200,11 +200,11 @@ private:
     // This trick makes the recoding happens after the destructor of _lock_guard
     struct TimerAndMutex {
         TimerAndMutex(Mutex &m)
-            : timer(butil::Timer::STARTED), mutex(&m) {}
+            : timer(flare::base::stop_watcher::STARTED), mutex(&m) {}
         ~TimerAndMutex() {
             *mutex << timer.u_elapsed();
         }
-        butil::Timer timer;
+        flare::base::stop_watcher timer;
         Mutex* mutex;
     };
     // Don't change the order of the fields as the implementation depends on
@@ -219,7 +219,7 @@ class UniqueLockBase {
 public:
     typedef Mutex                   mutex_type;
     explicit UniqueLockBase(mutex_type& mutex) 
-        : _timer(butil::Timer::STARTED), _lock(mutex.mutex()),
+        : _timer(flare::base::stop_watcher::STARTED), _lock(mutex.mutex()),
           _mutex(&mutex) {
         _timer.stop();
     }
@@ -229,7 +229,7 @@ public:
     }
 
     UniqueLockBase(mutex_type& mutex, std::try_to_lock_t try_to_lock)
-        : _timer(butil::Timer::STARTED)
+        : _timer(flare::base::stop_watcher::STARTED)
         , _lock(mutex.mutex(), try_to_lock)
         , _mutex(&mutex) {
     
@@ -314,7 +314,7 @@ public:
 
 private:
     // Don't change the order or timer and _lck;
-    butil::Timer                                             _timer;
+    flare::base::stop_watcher                                             _timer;
     std::unique_lock<typename Mutex::mutex_type>            _lock;
     mutex_type*                                             _mutex;
 };

@@ -30,11 +30,11 @@
 #include <limits.h>                        // CHAR_BIT
 #include <stdexcept>                       // std::invalid_argument
 #include "flare/butil/build_config.h"             // ARCH_CPU_X86_64
-#include "flare/butil/static_atomic.h"                // std::atomic
+#include "flare/base/static_atomic.h"                // std::atomic
 #include "flare/butil/thread_local.h"             // thread_atexit
 #include "flare/butil/macros.h"                   // BAIDU_CASSERT
-#include "flare/butil/logging.h"                  // CHECK, LOG
-#include "flare/butil/fd_guard.h"                 // butil::fd_guard
+#include "flare/base/logging.h"                  // CHECK, LOG
+#include "flare/base/fd_guard.h"                 // flare::base::fd_guard
 #include "flare/butil/iobuf.h"
 
 namespace butil {
@@ -100,7 +100,7 @@ static ssize_t sys_pwritev(int fd, const struct iovec *vector,
 }
 
 inline iov_function get_preadv_func() {
-    butil::fd_guard fd(open("/dev/zero", O_RDONLY));
+    flare::base::fd_guard fd(open("/dev/zero", O_RDONLY));
     if (fd < 0) {
         PLOG(WARNING) << "Fail to open /dev/zero";
         return user_preadv;
@@ -120,7 +120,7 @@ inline iov_function get_preadv_func() {
 }
 
 inline iov_function get_pwritev_func() {
-    butil::fd_guard fd(open("/dev/null", O_WRONLY));
+    flare::base::fd_guard fd(open("/dev/null", O_WRONLY));
     if (fd < 0) {
         PLOG(ERROR) << "Fail to open /dev/null";
         return user_pwritev;

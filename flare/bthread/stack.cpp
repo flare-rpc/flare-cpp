@@ -24,7 +24,7 @@
 #include <algorithm>                              // std::max
 #include <stdlib.h>                               // posix_memalign
 #include "flare/butil/macros.h"                          // BAIDU_CASSERT
-#include "flare/butil/memory/singleton_on_pthread_once.h"
+#include "flare/base/singleton_on_pthread_once.h"
 #include "flare/butil/third_party/dynamic_annotations/dynamic_annotations.h" // RunningOnValgrind
 #include "flare/butil/third_party/valgrind/valgrind.h"   // VALGRIND_STACK_REGISTER
 #include "flare/bvar/passive_status.h"

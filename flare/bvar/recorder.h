@@ -22,7 +22,7 @@
 
 #include <stdint.h>                              // int64_t uint64_t
 #include "flare/butil/macros.h"                         // BAIDU_CASSERT
-#include "flare/butil/logging.h"                        // LOG
+#include "flare/base/logging.h"                        // LOG
 #include "flare/bvar/detail/combiner.h"                // detail::AgentCombiner
 #include "flare/bvar/variable.h"
 #include "flare/bvar/window.h"

@@ -22,7 +22,7 @@
 #ifndef BTHREAD_TASK_GROUP_H
 #define BTHREAD_TASK_GROUP_H
 
-#include "flare/butil/time.h"                             // cpuwide_time_ns
+#include "flare/base/time.h"                             // cpuwide_time_ns
 #include "flare/bthread/task_control.h"
 #include "flare/bthread/task_meta.h"                     // bthread_t, TaskMeta
 #include "flare/bthread/work_stealing_queue.h"           // WorkStealingQueue
@@ -139,7 +139,7 @@ public:
     bthread_t current_tid() const { return _cur_meta->tid; }
     // Uptime of current task in nanoseconds.
     int64_t current_uptime_ns() const
-    { return butil::cpuwide_time_ns() - _cur_meta->cpuwide_start_ns; }
+    { return flare::base::cpuwide_time_ns() - _cur_meta->cpuwide_start_ns; }
 
     // True iff current task is the one running run_main_task()
     bool is_current_main_task() const { return current_tid() == _main_tid; }

@@ -19,8 +19,8 @@
 #include <google/protobuf/descriptor.h>         // MethodDescriptor
 #include <google/protobuf/message.h>            // Message
 #include <gflags/gflags.h>
-#include "flare/butil/logging.h"                       // LOG()
-#include "flare/butil/time.h"
+#include "flare/base/logging.h"                       // LOG()
+#include "flare/base/time.h"
 #include "flare/butil/iobuf.h"                         // butil::IOBuf
 #include "flare/butil/sys_byteorder.h"
 #include "flare/brpc/controller.h"               // Controller
@@ -151,7 +151,7 @@ ParseResult ParseMemcacheMessage(butil::IOBuf* source,
 }
 
 void ProcessMemcacheResponse(InputMessageBase* msg_base) {
-    const int64_t start_parse_us = butil::cpuwide_time_us();
+    const int64_t start_parse_us = flare::base::cpuwide_time_us();
     DestroyingPtr<MostCommonMessage> msg(static_cast<MostCommonMessage*>(msg_base));
 
     const bthread_id_t cid = msg->pi.id_wait;

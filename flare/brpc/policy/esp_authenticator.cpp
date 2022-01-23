@@ -15,8 +15,8 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#include "flare/butil/logging.h"
-#include "flare/butil/memory/singleton_on_pthread_once.h"
+#include "flare/base/logging.h"
+#include "flare/base/singleton_on_pthread_once.h"
 #include "flare/brpc/policy/esp_authenticator.h"
 
 
@@ -35,14 +35,14 @@ int EspAuthenticator::GenerateCredential(std::string* auth_str) const {
 
 int EspAuthenticator::VerifyCredential(
         const std::string& /*auth_str*/,
-        const butil::EndPoint& /*client_addr*/,
+        const flare::base::end_point& /*client_addr*/,
         AuthContext* /*out_ctx*/) const {
     //nothing to do
     return 0;
 }
 
 const Authenticator* global_esp_authenticator() {
-    return butil::get_leaky_singleton<EspAuthenticator>();
+    return flare::base::get_leaky_singleton<EspAuthenticator>();
 }
 
 }  // namespace policy

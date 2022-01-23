@@ -19,9 +19,9 @@
 #include <gflags/gflags.h>
 #include <map>
 #include "flare/bthread/bthread.h"
-#include "flare/butil/time.h"
+#include "flare/base/time.h"
 #include "flare/butil/scoped_lock.h"
-#include "flare/butil/logging.h"
+#include "flare/base/logging.h"
 #include "flare/brpc/log.h"
 #include "flare/brpc/protocol.h"
 #include "flare/brpc/input_messenger.h"
@@ -285,7 +285,7 @@ void SocketMap::RemoveInternal(const SocketMapKey& key,
             : _options.defer_close_second;
         if (!remove_orphan && defer_close_second > 0) {
             // Start count down on this Socket 
-            sc->no_ref_us = butil::cpuwide_time_us();
+            sc->no_ref_us = flare::base::cpuwide_time_us();
         } else {
             Socket* const s = sc->socket;
             _map.erase(key);
@@ -325,7 +325,7 @@ void SocketMap::List(std::vector<SocketId>* ids) {
     }
 }
 
-void SocketMap::List(std::vector<butil::EndPoint>* pts) {
+void SocketMap::List(std::vector<flare::base::end_point>* pts) {
     pts->clear();
     BAIDU_SCOPED_LOCK(_mutex);
     for (Map::iterator it = _map.begin(); it != _map.end(); ++it) {
@@ -335,7 +335,7 @@ void SocketMap::List(std::vector<butil::EndPoint>* pts) {
 
 void SocketMap::ListOrphans(int64_t defer_us, std::vector<SocketMapKey>* out) {
     out->clear();
-    const int64_t now = butil::cpuwide_time_us();
+    const int64_t now = flare::base::cpuwide_time_us();
     BAIDU_SCOPED_LOCK(_mutex);
     for (Map::iterator it = _map.begin(); it != _map.end(); ++it) {
         SingleConnection& sc = it->second;

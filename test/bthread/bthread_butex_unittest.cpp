@@ -16,10 +16,10 @@
 // under the License.
 
 #include <gtest/gtest.h>
-#include "flare/butil/static_atomic.h"
-#include "flare/butil/time.h"
+#include "flare/base/static_atomic.h"
+#include "flare/base/time.h"
 #include "flare/butil/macros.h"
-#include "flare/butil/logging.h"
+#include "flare/base/logging.h"
 #include "flare/bthread/butex.h"
 #include "flare/bthread/task_control.h"
 #include "flare/bthread/task_group.h"
@@ -50,12 +50,12 @@ void* sleeper(void* arg) {
 }
 
 void* joiner(void* arg) {
-    const long t1 = butil::gettimeofday_us();
+    const long t1 = flare::base::gettimeofday_us();
     for (bthread_t* th = (bthread_t*)arg; *th; ++th) {
         if (0 != bthread_join(*th, NULL)) {
             LOG(FATAL) << "fail to join thread_" << th - (bthread_t*)arg;
         }
-        long elp = butil::gettimeofday_us() - t1;
+        long elp = flare::base::gettimeofday_us() - t1;
         EXPECT_LE(labs(elp - (th - (bthread_t*)arg + 1) * 100000L), 15000L)
             << "timeout when joining thread_" << th - (bthread_t*)arg;
         LOG(INFO) << "Joined thread " << *th << " at " << elp << "us ["
@@ -121,10 +121,10 @@ struct WaiterArg {
 
 void* waiter(void* arg) {
     WaiterArg * wa = (WaiterArg*)arg;
-    const long t1 = butil::gettimeofday_us();
+    const long t1 = flare::base::gettimeofday_us();
     const int rc = bthread::butex_wait(
         wa->butex, wa->expected_value, wa->ptimeout);
-    const long t2 = butil::gettimeofday_us();
+    const long t2 = flare::base::gettimeofday_us();
     if (rc == 0) {
         EXPECT_EQ(wa->expected_result, 0) << bthread_self();
     } else {
@@ -156,7 +156,7 @@ TEST(ButexTest, sanity) {
     bthread_t th;
     ASSERT_EQ(0, bthread_start_urgent(&th, NULL, waiter, unmatched_arg));
 
-    const timespec abstime = butil::seconds_from_now(1);
+    const timespec abstime = flare::base::seconds_from_now(1);
     for (size_t i = 0; i < 4*N; ++i) {
         args[i].expected_value = *b1;
         args[i].butex = b1;
@@ -193,7 +193,7 @@ struct ButexWaitArg {
 
 void* wait_butex(void* void_arg) {
     ButexWaitArg* arg = static_cast<ButexWaitArg*>(void_arg);
-    const timespec ts = butil::milliseconds_from_now(arg->wait_msec);
+    const timespec ts = flare::base::milliseconds_from_now(arg->wait_msec);
     int rc = bthread::butex_wait(arg->butex, arg->expected_val, &ts);
     int saved_errno = errno;
     if (arg->error_code) {
@@ -208,7 +208,7 @@ void* wait_butex(void* void_arg) {
 TEST(ButexTest, wait_without_stop) {
     int* butex = bthread::butex_create_checked<int>();
     *butex = 7;
-    butil::Timer tm;
+    flare::base::stop_watcher tm;
     const long WAIT_MSEC = 500;
     for (int i = 0; i < 2; ++i) {
         const bthread_attr_t attr =
@@ -229,7 +229,7 @@ TEST(ButexTest, wait_without_stop) {
 TEST(ButexTest, stop_after_running) {
     int* butex = bthread::butex_create_checked<int>();
     *butex = 7;
-    butil::Timer tm;
+    flare::base::stop_watcher tm;
     const long WAIT_MSEC = 500;
     const long SLEEP_MSEC = 10;
     for (int i = 0; i < 2; ++i) {
@@ -256,7 +256,7 @@ TEST(ButexTest, stop_after_running) {
 TEST(ButexTest, stop_before_running) {
     int* butex = bthread::butex_create_checked<int>();
     *butex = 7;
-    butil::Timer tm;
+    flare::base::stop_watcher tm;
     const long WAIT_MSEC = 500;
 
     for (int i = 0; i < 2; ++i) {
@@ -289,7 +289,7 @@ TEST(ButexTest, join_cant_be_wakeup) {
     const long WAIT_MSEC = 100;
     int* butex = bthread::butex_create_checked<int>();
     *butex = 7;
-    butil::Timer tm;
+    flare::base::stop_watcher tm;
     ButexWaitArg arg = { butex, *butex, 1000, EINTR };
 
     for (int i = 0; i < 2; ++i) {
@@ -316,7 +316,7 @@ TEST(ButexTest, join_cant_be_wakeup) {
 }
 
 TEST(ButexTest, stop_after_slept) {
-    butil::Timer tm;
+    flare::base::stop_watcher tm;
     const long SLEEP_MSEC = 100;
     const long WAIT_MSEC = 10;
     
@@ -343,7 +343,7 @@ TEST(ButexTest, stop_after_slept) {
 }
 
 TEST(ButexTest, stop_just_when_sleeping) {
-    butil::Timer tm;
+    flare::base::stop_watcher tm;
     const long SLEEP_MSEC = 100;
     
     for (int i = 0; i < 2; ++i) {
@@ -368,7 +368,7 @@ TEST(ButexTest, stop_just_when_sleeping) {
 }
 
 TEST(ButexTest, stop_before_sleeping) {
-    butil::Timer tm;
+    flare::base::stop_watcher tm;
     const long SLEEP_MSEC = 100;
 
     for (int i = 0; i < 2; ++i) {

@@ -20,7 +20,7 @@
 #include "flare/brpc/thrift_message.h"
 
 #include <algorithm>
-#include "flare/butil/logging.h"
+#include "flare/base/logging.h"
 
 #include <google/protobuf/stubs/once.h>
 #include <google/protobuf/io/coded_stream.h>

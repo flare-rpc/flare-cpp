@@ -26,7 +26,7 @@
 
 #include "flare/butil/synchronization/lock.h"
 #include "flare/butil/macros.h"
-#include "flare/butil/logging.h"
+#include "flare/base/logging.h"
 #include "flare/butil/errno.h"
 
 #if !defined(BUTIL_CXX11_ENABLED)

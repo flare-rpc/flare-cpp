@@ -120,9 +120,9 @@ typedef bool (*Verify)(const InputMessageBase* msg);
 
 ### parse_server_address
 ```c++
-typedef bool (*ParseServerAddress)(butil::EndPoint* out, const char* server_addr_and_port);
+typedef bool (*ParseServerAddress)(flare::base::end_point* out, const char* server_addr_and_port);
 ```
-把server_addr_and_port(Channel.Init的一个参数)转化为butil::EndPoint，可选。一些协议对server地址的表达和理解可能是不同的。
+把server_addr_and_port(Channel.Init的一个参数)转化为butil::end_point，可选。一些协议对server地址的表达和理解可能是不同的。
 
 ### get_method_name
 ```c++

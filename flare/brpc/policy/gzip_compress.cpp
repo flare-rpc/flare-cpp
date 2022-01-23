@@ -17,7 +17,7 @@
 
 
 #include <google/protobuf/io/gzip_stream.h>    // GzipXXXStream
-#include "flare/butil/logging.h"
+#include "flare/base/logging.h"
 #include "flare/brpc/policy/gzip_compress.h"
 #include "flare/brpc/protocol.h"
 

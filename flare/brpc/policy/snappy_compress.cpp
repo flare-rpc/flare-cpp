@@ -16,7 +16,7 @@
 // under the License.
 
 
-#include "flare/butil/logging.h"
+#include "flare/base/logging.h"
 #include "flare/butil/third_party/snappy/snappy.h"
 #include "flare/brpc/policy/snappy_compress.h"
 #include "flare/brpc/protocol.h"

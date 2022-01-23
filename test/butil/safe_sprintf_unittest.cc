@@ -9,7 +9,7 @@
 
 #include <limits>
 
-#include "flare/butil/logging.h"
+#include "flare/base/logging.h"
 #include "flare/butil/memory/scoped_ptr.h"
 #include <gtest/gtest.h>
 

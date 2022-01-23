@@ -115,7 +115,7 @@ void UserCodeBackupPool::UserCodeRunningLoop() {
     logging::ComlogInitializer comlog_initializer;
 #endif
     
-    int64_t last_time = butil::cpuwide_time_us();
+    int64_t last_time = flare::base::cpuwide_time_us();
     while (true) {
         bool blocked = false;
         UserCode usercode = { NULL, NULL };
@@ -132,9 +132,9 @@ void UserCodeBackupPool::UserCodeRunningLoop() {
                 g_too_many_usercode = false;
             }
         }
-        const int64_t begin_time = (blocked ? butil::cpuwide_time_us() : last_time);
+        const int64_t begin_time = (blocked ? flare::base::cpuwide_time_us() : last_time);
         usercode.fn(usercode.arg);
-        const int64_t end_time = butil::cpuwide_time_us();
+        const int64_t end_time = flare::base::cpuwide_time_us();
         inpool_count << 1;
         inpool_elapse_us << (end_time - begin_time);
         last_time = end_time;

@@ -17,7 +17,7 @@
 
 
 #include <gflags/gflags.h>
-#include "flare/butil/logging.h"
+#include "flare/base/logging.h"
 #include "flare/bthread/bthread.h"
 #include "flare/brpc/log.h"
 #include "flare/brpc/reloadable_flags.h"

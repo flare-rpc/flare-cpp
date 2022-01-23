@@ -6,7 +6,7 @@ FlatMap - Maybe the fastest hashmap, with tradeoff of space.
 
 ```c++
 #include <string>
-#include <flare/butil/logging.h>
+#include "flare/base/logging.h"
 #include <flare/butil/containers/flat_map.h>
 
 void flatmap_example() {

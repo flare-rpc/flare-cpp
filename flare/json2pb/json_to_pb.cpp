@@ -28,7 +28,7 @@
 #include "json_to_pb.h"
 #include "zero_copy_stream_reader.h"       // ZeroCopyStreamReader
 #include "encode_decode.h"
-#include "flare/butil/string_printf.h"
+#include "flare/base/strings.h"
 #include "protobuf_map.h"
 #include "rapidjson.h"
 #include "flare/base/base64.h"
@@ -38,7 +38,7 @@
         if (!perr->empty()) {                                           \
             perr->append(", ", 2);                                      \
         }                                                               \
-        butil::string_appendf(perr, fmt, ##__VA_ARGS__);                 \
+        flare::base::string_appendf(perr, fmt, ##__VA_ARGS__);                 \
     } else { }
 
 namespace json2pb {
@@ -64,15 +64,15 @@ static void string_append_value(const BUTIL_RAPIDJSON_NAMESPACE::Value& value,
     } else if (value.IsBool()) {
         output->append(value.GetBool() ? "true" : "false");
     } else if (value.IsInt()) {
-        butil::string_appendf(output, "%d", value.GetInt());
+        flare::base::string_appendf(output, "%d", value.GetInt());
     } else if (value.IsUint()) {
-        butil::string_appendf(output, "%u", value.GetUint());
+        flare::base::string_appendf(output, "%u", value.GetUint());
     } else if (value.IsInt64()) {
-        butil::string_appendf(output, "%" PRId64, value.GetInt64());
+        flare::base::string_appendf(output, "%" PRId64, value.GetInt64());
     } else if (value.IsUint64()) {
-        butil::string_appendf(output, "%" PRIu64, value.GetUint64());
+        flare::base::string_appendf(output, "%" PRIu64, value.GetUint64());
     } else if (value.IsDouble()) {
-        butil::string_appendf(output, "%f", value.GetDouble());
+        flare::base::string_appendf(output, "%f", value.GetDouble());
     } else if (value.IsString()) {
         output->push_back('"');
         output->append(value.GetString(), value.GetStringLength());
@@ -99,7 +99,7 @@ inline bool value_invalid(const google::protobuf::FieldDescriptor* field, const 
         }
         err->append("Invalid value `");
         string_append_value(value, err);
-        butil::string_appendf(err, "' for %sfield `%s' which SHOULD be %s",
+        flare::base::string_appendf(err, "' for %sfield `%s' which SHOULD be %s",
                        optional ? "optional " : "",
                        field->full_name().c_str(), type);
     }

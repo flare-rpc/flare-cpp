@@ -16,7 +16,7 @@
 // under the License.
 
 
-#include "flare/butil/class_name.h"
+#include "flare/base/class_name.h"
 #include "flare/brpc/thrift_service.h"
 #include "flare/brpc/details/method_status.h"
 
@@ -33,7 +33,7 @@ ThriftService::~ThriftService() {
 }
 
 void ThriftService::Describe(std::ostream &os, const DescribeOptions&) const {
-    os << butil::class_name_str(*this);
+    os << flare::base::class_name_str(*this);
 }
 
 void ThriftService::Expose(const std::string_view& prefix) {
@@ -41,7 +41,7 @@ void ThriftService::Expose(const std::string_view& prefix) {
         return;
     }
     std::string s;
-    const std::string& cached_name = butil::class_name_str(*this);
+    const std::string& cached_name = flare::base::class_name_str(*this);
     s.reserve(prefix.size() + 1 + cached_name.size());
     s.append(prefix.data(), prefix.size());
     s.push_back('_');

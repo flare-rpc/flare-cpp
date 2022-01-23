@@ -21,7 +21,7 @@
 
 #include <ostream>
 #include "flare/butil/macros.h"
-#include "flare/butil/class_name.h"
+#include "flare/base/class_name.h"
 
 namespace brpc {
 
@@ -39,7 +39,7 @@ class Describable {
 public:
     virtual ~Describable() {}
     virtual void Describe(std::ostream& os, const DescribeOptions&) const {
-        os << butil::class_name_str(*this);
+        os << flare::base::class_name_str(*this);
     }
 };
 
@@ -47,7 +47,7 @@ class NonConstDescribable {
 public:
     virtual ~NonConstDescribable() {}
     virtual void Describe(std::ostream& os, const DescribeOptions&) {
-        os << butil::class_name_str(*this);
+        os << flare::base::class_name_str(*this);
     }
 };
 

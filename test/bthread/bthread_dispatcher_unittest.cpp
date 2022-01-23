@@ -20,11 +20,11 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <gtest/gtest.h>
-#include "flare/butil/time.h"
+#include "flare/base/time.h"
 #include "flare/butil/macros.h"
 #include "flare/butil/scoped_lock.h"
-#include "flare/butil/fd_utility.h"
-#include "flare/butil/logging.h"
+#include "flare/base/fd_utility.h"
+#include "flare/base/logging.h"
 #include "flare/butil/gperftools_profiler.h"
 #include "flare/bthread/bthread.h"
 #include "flare/bthread/task_control.h"
@@ -238,7 +238,7 @@ TEST(DispatcherTest, dispatch_tasks) {
         m->buf = (char*)malloc(m->buf_cap);
         m->bytes = 0;
         m->times = 0;
-        ASSERT_EQ(0, butil::make_non_blocking(m->fd));
+        ASSERT_EQ(0, flare::base::make_non_blocking(m->fd));
         sm[i] = m;
 
 #if defined(OS_LINUX)
@@ -258,7 +258,7 @@ TEST(DispatcherTest, dispatch_tasks) {
     }
     
     ProfilerStart("dispatcher.prof");
-    butil::Timer tm;
+    flare::base::stop_watcher tm;
     tm.start();
 
     for (size_t i = 0; i < NEPOLL; ++i) {

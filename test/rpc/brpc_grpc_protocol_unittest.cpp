@@ -22,7 +22,7 @@
 #include "flare/brpc/server.h"
 #include "flare/brpc/channel.h"
 #include "flare/brpc/grpc.h"
-#include "flare/butil/time.h"
+#include "flare/base/time.h"
 #include "flare/base/strings.h"
 #include "grpc.pb.h"
 
@@ -73,7 +73,7 @@ public:
                 EXPECT_EQ(-1, cntl->deadline_us());
             } else {
                 EXPECT_NEAR(cntl->deadline_us(),
-                    butil::gettimeofday_us() + req->timeout_us(), 5000);
+                    flare::base::gettimeofday_us() + req->timeout_us(), 5000);
             }
         }
     }
@@ -173,7 +173,7 @@ TEST_F(GrpcTest, return_error) {
     stub.Method(&cntl, &req, &res, NULL);
     EXPECT_TRUE(cntl.Failed());
     EXPECT_EQ(cntl.ErrorCode(), brpc::EINTERNAL);
-    EXPECT_TRUE(flare::base::ends_with(cntl.ErrorText(), butil::string_printf("%s", g_prefix.c_str())));
+    EXPECT_TRUE(flare::base::ends_with(cntl.ErrorText(), flare::base::string_printf("%s", g_prefix.c_str())));
 }
 
 TEST_F(GrpcTest, RpcTimedOut) {

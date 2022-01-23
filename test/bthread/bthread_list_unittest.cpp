@@ -16,9 +16,9 @@
 // under the License.
 
 #include <gtest/gtest.h>
-#include "flare/butil/time.h"
+#include "flare/base/time.h"
 #include "flare/butil/macros.h"
-#include "flare/butil/logging.h"
+#include "flare/base/logging.h"
 #include "flare/bthread/task_group.h"
 #include "flare/bthread/bthread.h"
 

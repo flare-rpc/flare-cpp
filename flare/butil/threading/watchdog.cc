@@ -6,7 +6,7 @@
 
 #include "flare/butil/compiler_specific.h"
 #include "flare/butil/lazy_instance.h"
-#include "flare/butil/logging.h"
+#include "flare/base/logging.h"
 #include "flare/butil/threading/platform_thread.h"
 
 namespace butil {

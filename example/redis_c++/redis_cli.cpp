@@ -22,7 +22,7 @@
 #include <readline/readline.h>
 #include <readline/history.h>
 #include <gflags/gflags.h>
-#include <flare/butil/logging.h>
+#include "flare/base/logging.h"
 #include <flare/brpc/channel.h>
 #include <flare/brpc/redis.h>
 

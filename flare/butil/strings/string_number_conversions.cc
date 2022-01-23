@@ -11,7 +11,7 @@
 
 #include <limits>
 
-#include "flare/butil/logging.h"
+#include "flare/base/logging.h"
 #include "flare/butil/scoped_clear_errno.h"
 #include "flare/butil/strings/utf_string_conversions.h"
 #include "flare/butil/third_party/dmg_fp/dmg_fp.h"

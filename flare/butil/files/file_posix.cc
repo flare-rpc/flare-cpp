@@ -10,7 +10,7 @@
 #include <unistd.h>
 
 #include "flare/butil/files/file_path.h"
-#include "flare/butil/logging.h"
+#include "flare/base/logging.h"
 #include "flare/butil/posix/eintr_wrapper.h"
 #include "flare/butil/strings/utf_string_conversions.h"
 #include "flare/butil/threading/thread_restrictions.h"

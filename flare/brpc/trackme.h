@@ -21,14 +21,14 @@
 
 // [Internal] RPC users are not supposed to call functions below. 
 
-#include "flare/butil/endpoint.h"
+#include "flare/base/endpoint.h"
 
 
 namespace brpc {
 
 // Set the server address for reporting.
 // Currently only the first address will be saved.
-void SetTrackMeAddress(butil::EndPoint pt);
+void SetTrackMeAddress(flare::base::end_point pt);
 
 // Call this function every second (or every several seconds) to send
 // TrackMeRequest to -trackme_server every TRACKME_INTERVAL seconds.

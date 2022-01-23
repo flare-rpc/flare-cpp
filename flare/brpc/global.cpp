@@ -88,7 +88,7 @@
 #if defined(OS_LINUX)
 #include <malloc.h>                   // malloc_trim
 #endif
-#include "flare/butil/fd_guard.h"
+#include "flare/base/fd_guard.h"
 #include "flare/butil/files/file_watcher.h"
 
 extern "C" {
@@ -154,7 +154,7 @@ static pthread_once_t register_extensions_once = PTHREAD_ONCE_INIT;
 static GlobalExtensions* g_ext = NULL;
 
 static long ReadPortOfDummyServer(const char* filename) {
-    butil::fd_guard fd(open(filename, O_RDONLY));
+    flare::base::fd_guard fd(open(filename, O_RDONLY));
     if (fd < 0) {
         LOG(ERROR) << "Fail to open `" << DUMMY_SERVER_PORT_FILE << "'";
         return -1;
@@ -223,13 +223,13 @@ static void* GlobalUpdate(void*) {
     }
 
     std::vector<SocketId> conns;
-    const int64_t start_time_us = butil::gettimeofday_us();
+    const int64_t start_time_us = flare::base::gettimeofday_us();
     const int WARN_NOSLEEP_THRESHOLD = 2;
     int64_t last_time_us = start_time_us;
     int consecutive_nosleep = 0;
     int64_t last_return_free_memory_time = start_time_us;
     while (1) {
-        const int64_t sleep_us = 1000000L + last_time_us - butil::gettimeofday_us();
+        const int64_t sleep_us = 1000000L + last_time_us - flare::base::gettimeofday_us();
         if (sleep_us > 0) {
             if (bthread_usleep(sleep_us) < 0) {
                 PLOG_IF(FATAL, errno != ESTOP) << "Fail to sleep";
@@ -242,7 +242,7 @@ static void* GlobalUpdate(void*) {
                 LOG(WARNING) << __FUNCTION__ << " is too busy!";
             }
         }
-        last_time_us = butil::gettimeofday_us();
+        last_time_us = flare::base::gettimeofday_us();
 
         TrackMe();
 
@@ -256,7 +256,7 @@ static void* GlobalUpdate(void*) {
         }
 
         SocketMapList(&conns);
-        const int64_t now_ms = butil::cpuwide_time_ms();
+        const int64_t now_ms = flare::base::cpuwide_time_ms();
         for (size_t i = 0; i < conns.size(); ++i) {
             SocketUniquePtr ptr;
             if (Socket::Address(conns[i], &ptr) == 0) {

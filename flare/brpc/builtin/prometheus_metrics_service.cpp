@@ -103,9 +103,9 @@ const PrometheusMetricsDumper::SummaryItems*
 PrometheusMetricsDumper::ProcessLatencyRecorderSuffix(const std::string_view& name,
                                                       const std::string_view& desc) {
     static std::string latency_names[] = {
-        butil::string_printf("_latency_%d", (int)bvar::FLAGS_bvar_latency_p1),
-        butil::string_printf("_latency_%d", (int)bvar::FLAGS_bvar_latency_p2),
-        butil::string_printf("_latency_%d", (int)bvar::FLAGS_bvar_latency_p3),
+        flare::base::string_printf("_latency_%d", (int)bvar::FLAGS_bvar_latency_p1),
+        flare::base::string_printf("_latency_%d", (int)bvar::FLAGS_bvar_latency_p2),
+        flare::base::string_printf("_latency_%d", (int)bvar::FLAGS_bvar_latency_p3),
         "_latency_999", "_latency_9999", "_max_latency"
     };
     CHECK(NPERCENTILES == arraysize(latency_names));

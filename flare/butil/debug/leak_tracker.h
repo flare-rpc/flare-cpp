@@ -15,7 +15,7 @@
 #ifdef ENABLE_LEAK_TRACKER
 #include "flare/butil/containers/linked_list.h"
 #include "flare/butil/debug/stack_trace.h"
-#include "flare/butil/logging.h"
+#include "flare/base/logging.h"
 #endif  // ENABLE_LEAK_TRACKER
 
 // LeakTracker is a helper to verify that all instances of a class

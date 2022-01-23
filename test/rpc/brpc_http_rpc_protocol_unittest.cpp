@@ -25,10 +25,10 @@
 #include <gtest/gtest.h>
 #include <gflags/gflags.h>
 #include <google/protobuf/descriptor.h>
-#include "flare/butil/time.h"
+#include "flare/base/time.h"
 #include "flare/butil/macros.h"
 #include "flare/butil/files/scoped_file.h"
-#include "flare/butil/fd_guard.h"
+#include "flare/base/fd_guard.h"
 #include "flare/brpc/socket.h"
 #include "flare/brpc/acceptor.h"
 #include "flare/brpc/server.h"
@@ -75,7 +75,7 @@ public:
     }
 
     int VerifyCredential(const std::string& auth_str,
-                         const butil::EndPoint&,
+                         const flare::base::end_point&,
                          brpc::AuthContext* ctx) const {
         EXPECT_EQ(MOCK_CREDENTIAL, auth_str);
         ctx->set_user(MOCK_USER);
@@ -218,7 +218,7 @@ protected:
         brpc::SocketMessage* socket_message = NULL;
         brpc::policy::PackH2Request(NULL, &socket_message, cntl->call_id().value,
                                     NULL, cntl, request_buf, NULL);
-        butil::Status st = socket_message->AppendAndDestroySelf(out, _h2_client_sock.get());
+        flare::base::flare_status st = socket_message->AppendAndDestroySelf(out, _h2_client_sock.get());
         ASSERT_TRUE(st.ok());
         *h2_stream_id = h2_req->_stream_id;
     }
@@ -233,7 +233,7 @@ protected:
             EXPECT_TRUE(res.SerializeToZeroCopyStream(&wrapper));
         }
         brpc::policy::H2UnsentResponse* h2_res = brpc::policy::H2UnsentResponse::New(&cntl, h2_stream_id, false /*is grpc*/);
-        butil::Status st = h2_res->AppendAndDestroySelf(out, _h2_client_sock.get());
+        flare::base::flare_status st = h2_res->AppendAndDestroySelf(out, _h2_client_sock.get());
         ASSERT_TRUE(st.ok());
     }
 
@@ -261,32 +261,32 @@ TEST_F(HttpTest, indenting_ostream) {
 
 TEST_F(HttpTest, parse_http_address) {
     const std::string EXP_HOSTNAME = "www.baidu.com:9876";
-    butil::EndPoint EXP_ENDPOINT;
+    flare::base::end_point EXP_ENDPOINT;
     {
         std::string url = "https://" + EXP_HOSTNAME;
         EXPECT_TRUE(brpc::policy::ParseHttpServerAddress(&EXP_ENDPOINT, url.c_str()));
     }
     {
-        butil::EndPoint ep;
+        flare::base::end_point ep;
         std::string url = "http://" +
                           std::string(endpoint2str(EXP_ENDPOINT).c_str());
         EXPECT_TRUE(brpc::policy::ParseHttpServerAddress(&ep, url.c_str()));
         EXPECT_EQ(EXP_ENDPOINT, ep);
     }
     {
-        butil::EndPoint ep;
+        flare::base::end_point ep;
         std::string url = "https://" +
-            std::string(butil::ip2str(EXP_ENDPOINT.ip).c_str());
+            std::string(flare::base::ip2str(EXP_ENDPOINT.ip).c_str());
         EXPECT_TRUE(brpc::policy::ParseHttpServerAddress(&ep, url.c_str()));
         EXPECT_EQ(EXP_ENDPOINT.ip, ep.ip);
         EXPECT_EQ(443, ep.port);
     }
     {
-        butil::EndPoint ep;
+        flare::base::end_point ep;
         EXPECT_FALSE(brpc::policy::ParseHttpServerAddress(&ep, "invalid_url"));
     }
     {
-        butil::EndPoint ep;
+        flare::base::end_point ep;
         EXPECT_FALSE(brpc::policy::ParseHttpServerAddress(
             &ep, "https://no.such.machine:9090"));
     }
@@ -452,7 +452,7 @@ TEST_F(HttpTest, chunked_uploading) {
     const std::string req = "{\"message\":\"hello\"}";
     const std::string res_fname = "curl.out";
     std::string cmd;
-    butil::string_printf(&cmd, "curl -X POST -d '%s' -H 'Transfer-Encoding:chunked' "
+    flare::base::string_printf(&cmd, "curl -X POST -d '%s' -H 'Transfer-Encoding:chunked' "
                         "-H 'Content-Type:application/json' -o %s "
                         "http://localhost:%d/EchoService/Echo",
                         req.c_str(), res_fname.c_str(), port);
@@ -604,7 +604,7 @@ TEST_F(HttpTest, read_chunked_response_normally) {
         brpc::Channel channel;
         brpc::ChannelOptions options;
         options.protocol = brpc::PROTOCOL_HTTP;
-        ASSERT_EQ(0, channel.Init(butil::EndPoint(butil::my_ip(), port), &options));
+        ASSERT_EQ(0, channel.Init(flare::base::end_point(flare::base::my_ip(), port), &options));
         brpc::Controller cntl;
         cntl.http_request().uri() = "/DownloadService/Download";
         channel.CallMethod(NULL, &cntl, NULL, NULL, NULL);
@@ -626,7 +626,7 @@ TEST_F(HttpTest, read_failed_chunked_response) {
     brpc::Channel channel;
     brpc::ChannelOptions options;
     options.protocol = brpc::PROTOCOL_HTTP;
-    ASSERT_EQ(0, channel.Init(butil::EndPoint(butil::my_ip(), port), &options));
+    ASSERT_EQ(0, channel.Init(flare::base::end_point(flare::base::my_ip(), port), &options));
 
     brpc::Controller cntl;
     cntl.http_request().uri() = "/DownloadService/DownloadFailed";
@@ -651,7 +651,7 @@ public:
         butil::intrusive_ptr<ReadBody>(this).detach(); // ref
     }
                 
-    butil::Status OnReadOnePart(const void* data, size_t length) {
+    flare::base::flare_status OnReadOnePart(const void* data, size_t length) {
         _nread += length;
         while (length > 0) {
             size_t nappend = std::min(_buf.size() + length, PA_DATA_LEN) - _buf.size();
@@ -667,9 +667,9 @@ public:
                 _buf.clear();
             }
         }
-        return butil::Status::OK();
+        return flare::base::flare_status::OK();
     }
-    void OnEndOfMessage(const butil::Status& st) {
+    void OnEndOfMessage(const flare::base::flare_status& st) {
         butil::intrusive_ptr<ReadBody>(this, false); // deref
         ASSERT_LT(_buf.size(), PA_DATA_LEN);
         ASSERT_EQ(0, memcmp(_buf.data(), PA_DATA, _buf.size()));
@@ -678,14 +678,14 @@ public:
         LOG(INFO) << "Destroy ReadBody=" << this << ", " << st;
     }
     bool destroyed() const { return _destroyed; }
-    const butil::Status& destroying_status() const { return _destroying_st; }
+    const flare::base::flare_status& destroying_status() const { return _destroying_st; }
     size_t read_bytes() const { return _nread; }
 private:
     std::string _buf;
     size_t _nread;
     size_t _ncount;
     bool _destroyed;
-    butil::Status _destroying_st;
+    flare::base::flare_status _destroying_st;
 };
 
 static const int GENERAL_DELAY_US = 300000; // 0.3s
@@ -703,7 +703,7 @@ TEST_F(HttpTest, read_long_body_progressively) {
             brpc::Channel channel;
             brpc::ChannelOptions options;
             options.protocol = brpc::PROTOCOL_HTTP;
-            ASSERT_EQ(0, channel.Init(butil::EndPoint(butil::my_ip(), port), &options));
+            ASSERT_EQ(0, channel.Init(flare::base::end_point(flare::base::my_ip(), port), &options));
             {
                 brpc::Controller cntl;
                 cntl.response_will_be_read_progressively();
@@ -751,7 +751,7 @@ TEST_F(HttpTest, read_short_body_progressively) {
         brpc::Channel channel;
         brpc::ChannelOptions options;
         options.protocol = brpc::PROTOCOL_HTTP;
-        ASSERT_EQ(0, channel.Init(butil::EndPoint(butil::my_ip(), port), &options));
+        ASSERT_EQ(0, channel.Init(flare::base::end_point(flare::base::my_ip(), port), &options));
         {
             brpc::Controller cntl;
             cntl.response_will_be_read_progressively();
@@ -790,7 +790,7 @@ TEST_F(HttpTest, read_progressively_after_cntl_destroys) {
             brpc::Channel channel;
             brpc::ChannelOptions options;
             options.protocol = brpc::PROTOCOL_HTTP;
-            ASSERT_EQ(0, channel.Init(butil::EndPoint(butil::my_ip(), port), &options));
+            ASSERT_EQ(0, channel.Init(flare::base::end_point(flare::base::my_ip(), port), &options));
             {
                 brpc::Controller cntl;
                 cntl.response_will_be_read_progressively();
@@ -836,7 +836,7 @@ TEST_F(HttpTest, read_progressively_after_long_delay) {
             brpc::Channel channel;
             brpc::ChannelOptions options;
             options.protocol = brpc::PROTOCOL_HTTP;
-            ASSERT_EQ(0, channel.Init(butil::EndPoint(butil::my_ip(), port), &options));
+            ASSERT_EQ(0, channel.Init(flare::base::end_point(flare::base::my_ip(), port), &options));
             {
                 brpc::Controller cntl;
                 cntl.response_will_be_read_progressively();
@@ -883,7 +883,7 @@ TEST_F(HttpTest, skip_progressive_reading) {
     brpc::Channel channel;
     brpc::ChannelOptions options;
     options.protocol = brpc::PROTOCOL_HTTP;
-    ASSERT_EQ(0, channel.Init(butil::EndPoint(butil::my_ip(), port), &options));
+    ASSERT_EQ(0, channel.Init(flare::base::end_point(flare::base::my_ip(), port), &options));
     {
         brpc::Controller cntl;
         cntl.response_will_be_read_progressively();
@@ -905,10 +905,10 @@ TEST_F(HttpTest, skip_progressive_reading) {
 class AlwaysFailRead : public brpc::ProgressiveReader {
 public:
     // @ProgressiveReader
-    butil::Status OnReadOnePart(const void* /*data*/, size_t /*length*/) {
-        return butil::Status(-1, "intended fail at %s:%d", __FILE__, __LINE__);
+    flare::base::flare_status OnReadOnePart(const void* /*data*/, size_t /*length*/) {
+        return flare::base::flare_status(-1, "intended fail at %s:%d", __FILE__, __LINE__);
     }
-    void OnEndOfMessage(const butil::Status& st) {
+    void OnEndOfMessage(const flare::base::flare_status& st) {
         LOG(INFO) << "Destroy " << this << ": " << st;
         delete this;
     }
@@ -924,7 +924,7 @@ TEST_F(HttpTest, failed_on_read_one_part) {
     brpc::Channel channel;
     brpc::ChannelOptions options;
     options.protocol = brpc::PROTOCOL_HTTP;
-    ASSERT_EQ(0, channel.Init(butil::EndPoint(butil::my_ip(), port), &options));
+    ASSERT_EQ(0, channel.Init(flare::base::end_point(flare::base::my_ip(), port), &options));
     {
         brpc::Controller cntl;
         cntl.response_will_be_read_progressively();
@@ -951,7 +951,7 @@ TEST_F(HttpTest, broken_socket_stops_progressive_reading) {
     brpc::Channel channel;
     brpc::ChannelOptions options;
     options.protocol = brpc::PROTOCOL_HTTP;
-    ASSERT_EQ(0, channel.Init(butil::EndPoint(butil::my_ip(), port), &options));
+    ASSERT_EQ(0, channel.Init(flare::base::end_point(flare::base::my_ip(), port), &options));
     {
         brpc::Controller cntl;
         cntl.response_will_be_read_progressively();
@@ -993,7 +993,7 @@ TEST_F(HttpTest, http2_sanity) {
     brpc::Channel channel;
     brpc::ChannelOptions options;
     options.protocol = "h2";
-    ASSERT_EQ(0, channel.Init(butil::EndPoint(butil::my_ip(), port), &options));
+    ASSERT_EQ(0, channel.Init(flare::base::end_point(flare::base::my_ip(), port), &options));
 
     // Check that the first request with size larger than the default window can
     // be sent out, when remote settings are not received.
@@ -1140,7 +1140,7 @@ TEST_F(HttpTest, http2_window_used_up) {
         brpc::policy::PackH2Request(NULL, &socket_message, cntl.call_id().value,
                                     NULL, &cntl, request_buf, NULL);
         butil::IOBuf dummy;
-        butil::Status st = socket_message->AppendAndDestroySelf(&dummy, _h2_client_sock.get());
+        flare::base::flare_status st = socket_message->AppendAndDestroySelf(&dummy, _h2_client_sock.get());
         if (i == nsuc) {
             // the last message should fail according to flow control policy.
             ASSERT_FALSE(st.ok());
@@ -1216,7 +1216,7 @@ TEST_F(HttpTest, http2_not_closing_socket_when_rpc_timeout) {
     brpc::Channel channel;
     brpc::ChannelOptions options;
     options.protocol = "h2";
-    ASSERT_EQ(0, channel.Init(butil::EndPoint(butil::my_ip(), port), &options));
+    ASSERT_EQ(0, channel.Init(flare::base::end_point(flare::base::my_ip(), port), &options));
 
     test::EchoRequest req;
     test::EchoResponse res;
@@ -1293,7 +1293,7 @@ TEST_F(HttpTest, http2_header_after_data) {
         }
         {
             brpc::HPacker::Header header("content-length",
-                    butil::string_printf("%llu", (unsigned long long)data_buf.size()));
+                    flare::base::string_printf("%llu", (unsigned long long)data_buf.size()));
             hpacker.Encode(&header1_appender, header, options);
         }
         {
@@ -1394,9 +1394,9 @@ TEST_F(HttpTest, http2_goaway_sanity) {
     brpc::policy::PackH2Request(NULL, &socket_message, cntl.call_id().value,
                                 NULL, &cntl, butil::IOBuf(), NULL);
     butil::IOBuf dummy;
-    butil::Status st = socket_message->AppendAndDestroySelf(&dummy, _h2_client_sock.get());
+    flare::base::flare_status st = socket_message->AppendAndDestroySelf(&dummy, _h2_client_sock.get());
     ASSERT_EQ(st.error_code(), brpc::ELOGOFF);
-    ASSERT_TRUE(st.error_data().ends_with("the connection just issued GOAWAY"));
+    ASSERT_TRUE(flare::base::ends_with(st.error_data(), "the connection just issued GOAWAY"));
 }
 
 class AfterRecevingGoAway : public ::google::protobuf::Closure {
@@ -1409,8 +1409,8 @@ public:
 };
 
 TEST_F(HttpTest, http2_handle_goaway_streams) {
-    const butil::EndPoint ep(butil::IP_ANY, 5961);
-    butil::fd_guard listenfd(butil::tcp_listen(ep));
+    const flare::base::end_point ep(flare::base::IP_ANY, 5961);
+    flare::base::fd_guard listenfd(flare::base::tcp_listen(ep));
     ASSERT_GT(listenfd, 0);
 
     brpc::Channel channel;
@@ -1454,7 +1454,7 @@ TEST_F(HttpTest, spring_protobuf_content_type) {
     brpc::Channel channel;
     brpc::ChannelOptions options;
     options.protocol = "http";
-    ASSERT_EQ(0, channel.Init(butil::EndPoint(butil::my_ip(), port), &options));
+    ASSERT_EQ(0, channel.Init(flare::base::end_point(flare::base::my_ip(), port), &options));
 
     brpc::Controller cntl;
     test::EchoRequest req;

@@ -22,23 +22,23 @@
 #include <memory>           // std::unique_ptr
 #include <vector>
 #include "flare/butil/iobuf.h"
-#include "flare/butil/status.h"
+#include "flare/base/status.h"
 #include "flare/butil/arena.h"
 #include "flare/brpc/parse_result.h"
 
 namespace brpc {
 
 // Format a redis command and append it to `buf'.
-// Returns butil::Status::OK() on success.
-butil::Status RedisCommandFormat(butil::IOBuf* buf, const char* fmt, ...);
-butil::Status RedisCommandFormatV(butil::IOBuf* buf, const char* fmt, va_list args);
+// Returns flare::base::flare_status::OK() on success.
+flare::base::flare_status RedisCommandFormat(butil::IOBuf* buf, const char* fmt, ...);
+flare::base::flare_status RedisCommandFormatV(butil::IOBuf* buf, const char* fmt, va_list args);
 
 // Just convert the command to the text format of redis without processing the
 // specifiers(%) inside.
-butil::Status RedisCommandNoFormat(butil::IOBuf* buf, const std::string_view& command);
+flare::base::flare_status RedisCommandNoFormat(butil::IOBuf* buf, const std::string_view& command);
 
 // Concatenate components to form a redis command.
-butil::Status RedisCommandByComponents(butil::IOBuf* buf,
+flare::base::flare_status RedisCommandByComponents(butil::IOBuf* buf,
                                       const std::string_view* components,
                                       size_t num_components);
 

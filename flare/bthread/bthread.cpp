@@ -21,7 +21,7 @@
 
 #include <gflags/gflags.h>
 #include "flare/butil/macros.h"                       // BAIDU_CASSERT
-#include "flare/butil/logging.h"
+#include "flare/base/logging.h"
 #include "flare/bthread/task_group.h"                // TaskGroup
 #include "flare/bthread/task_control.h"              // TaskControl
 #include "flare/bthread/timer_thread.h"

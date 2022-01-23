@@ -19,7 +19,7 @@
 #define BRPC_SERVER_NODE_H
 
 #include <string>
-#include "flare/butil/endpoint.h"
+#include "flare/base/endpoint.h"
 
 namespace brpc {
 
@@ -27,17 +27,17 @@ namespace brpc {
 struct ServerNode {
     ServerNode() {}
     
-    explicit ServerNode(const butil::EndPoint& pt) : addr(pt) {}
+    explicit ServerNode(const flare::base::end_point& pt) : addr(pt) {}
 
-    ServerNode(butil::ip_t ip, int port, const std::string& tag2)
+    ServerNode(flare::base::ip_t ip, int port, const std::string& tag2)
         : addr(ip, port), tag(tag2) {}
 
-    ServerNode(const butil::EndPoint& pt, const std::string& tag2)
+    ServerNode(const flare::base::end_point& pt, const std::string& tag2)
         : addr(pt), tag(tag2) {}
 
-    ServerNode(butil::ip_t ip, int port) : addr(ip, port) {}
+    ServerNode(flare::base::ip_t ip, int port) : addr(ip, port) {}
 
-    butil::EndPoint addr;
+    flare::base::end_point addr;
     std::string tag;
 };
 

@@ -26,11 +26,11 @@
 #include "flare/idl_options.pb.h"                         // option(idl_support)
 #include "flare/bthread/unstable.h"                       // bthread_keytable_pool_init
 #include "flare/butil/macros.h"                            // ARRAY_SIZE
-#include "flare/butil/fd_guard.h"                          // fd_guard
-#include "flare/butil/logging.h"                           // CHECK
-#include "flare/butil/time.h"
-#include "flare/butil/class_name.h"
-#include "flare/butil/string_printf.h"
+#include "flare/base/fd_guard.h"                          // fd_guard
+#include "flare/base/logging.h"                           // CHECK
+#include "flare/base/time.h"
+#include "flare/base/class_name.h"
+#include "flare/base/strings.h"
 #include "flare/brpc/log.h"
 #include "flare/brpc/compress.h"
 #include "flare/brpc/policy/nova_pbrpc_protocol.h"
@@ -171,7 +171,7 @@ Server::MethodProperty::MethodProperty()
 }
 
 static timeval GetUptime(void* arg/*start_time*/) {
-    return butil::microseconds_to_timeval(butil::cpuwide_time_us() - (intptr_t)arg);
+    return flare::base::microseconds_to_timeval(flare::base::cpuwide_time_us() - (intptr_t)arg);
 }
 
 static void PrintStartTime(std::ostream& os, void* arg) {
@@ -271,11 +271,11 @@ static bvar::Vector<unsigned, 2> GetSessionLocalDataCount(void* arg) {
 }
 
 std::string Server::ServerPrefix() const {
-    return butil::string_printf("%s_%d", g_server_info_prefix, listen_address().port);
+    return flare::base::string_printf("%s_%d", g_server_info_prefix, listen_address().port);
 }
 
 void* Server::UpdateDerivedVars(void* arg) {
-    const int64_t start_us = butil::cpuwide_time_us();
+    const int64_t start_us = flare::base::cpuwide_time_us();
 
     Server* server = static_cast<Server*>(arg);
     const std::string prefix = server->ServerPrefix();
@@ -327,10 +327,10 @@ void* Server::UpdateDerivedVars(void* arg) {
     }
 #endif
 
-    int64_t last_time = butil::gettimeofday_us();
+    int64_t last_time = flare::base::gettimeofday_us();
     int consecutive_nosleep = 0;
     while (1) {
-        const int64_t sleep_us = 1000000L + last_time - butil::gettimeofday_us();
+        const int64_t sleep_us = 1000000L + last_time - flare::base::gettimeofday_us();
         if (sleep_us < 1000L) {
             if (++consecutive_nosleep >= 2) {
                 consecutive_nosleep = 0;
@@ -343,7 +343,7 @@ void* Server::UpdateDerivedVars(void* arg) {
                 return NULL;
             }
         }
-        last_time = butil::gettimeofday_us();
+        last_time = flare::base::gettimeofday_us();
 
         // Update stats of accepted sockets.
         if (server->_am) {
@@ -352,7 +352,7 @@ void* Server::UpdateDerivedVars(void* arg) {
         if (server->_internal_am) {
             server->_internal_am->ListConnections(&internal_conns);
         }
-        const int64_t now_ms = butil::cpuwide_time_ms();
+        const int64_t now_ms = flare::base::cpuwide_time_ms();
         for (size_t i = 0; i < conns.size(); ++i) {
             SocketUniquePtr ptr;
             if (Socket::Address(conns[i], &ptr) == 0) {
@@ -544,7 +544,7 @@ bool is_http_protocol(const char* name) {
 
 Acceptor* Server::BuildAcceptor() {
     std::set<std::string> whitelist;
-    for (butil::StringSplitter sp(_options.enabled_protocols.c_str(), ' ');
+    for (flare::base::StringSplitter sp(_options.enabled_protocols.c_str(), ' ');
          sp; ++sp) {
         std::string protocol(sp.field(), sp.length());
         whitelist.insert(protocol);
@@ -694,7 +694,7 @@ static bool CreateConcurrencyLimiter(const AdaptiveMaxConcurrency& amc,
 
 static AdaptiveMaxConcurrency g_default_max_concurrency_of_method(0);
 
-int Server::StartInternal(const butil::ip_t& ip,
+int Server::StartInternal(const flare::base::ip_t& ip,
                           const PortRange& port_range,
                           const ServerOptions *opt) {
     std::unique_ptr<Server, RevertServerStatus> revert_server(this);
@@ -938,7 +938,7 @@ int Server::StartInternal(const butil::ip_t& ip,
     _listen_addr.ip = ip;
     for (int port = port_range.min_port; port <= port_range.max_port; ++port) {
         _listen_addr.port = port;
-        butil::fd_guard sockfd(tcp_listen(_listen_addr));
+        flare::base::fd_guard sockfd(tcp_listen(_listen_addr));
         if (sockfd < 0) {
             if (port != port_range.max_port) { // not the last port, try next
                 continue;
@@ -996,9 +996,9 @@ int Server::StartInternal(const butil::ip_t& ip,
                 " against the purpose of \"being internal\".";
             return -1;
         }
-        butil::EndPoint internal_point = _listen_addr;
+        flare::base::end_point internal_point = _listen_addr;
         internal_point.port = _options.internal_port;
-        butil::fd_guard sockfd(tcp_listen(internal_point));
+        flare::base::fd_guard sockfd(tcp_listen(internal_point));
         if (sockfd < 0) {
             LOG(ERROR) << "Fail to listen " << internal_point << " (internal)";
             return -1;
@@ -1041,25 +1041,25 @@ int Server::StartInternal(const butil::ip_t& ip,
     LOG(INFO) << server_info.str() << '.';
 
     if (_options.has_builtin_services) {
-        LOG(INFO) << "Check out http://" << butil::my_hostname() << ':'
+        LOG(INFO) << "Check out http://" << flare::base::my_hostname() << ':'
                   << http_port << " in web browser.";
     } else {
         LOG(WARNING) << "Builtin services are disabled according to "
             "ServerOptions.has_builtin_services";
     }
     // For trackme reporting
-    SetTrackMeAddress(butil::EndPoint(butil::my_ip(), http_port));
+    SetTrackMeAddress(flare::base::end_point(flare::base::my_ip(), http_port));
     revert_server.release();
     return 0;
 }
 
-int Server::Start(const butil::EndPoint& endpoint, const ServerOptions* opt) {
+int Server::Start(const flare::base::end_point& endpoint, const ServerOptions* opt) {
     return StartInternal(
         endpoint.ip, PortRange(endpoint.port, endpoint.port), opt);
 }
 
 int Server::Start(const char* ip_port_str, const ServerOptions* opt) {
-    butil::EndPoint point;
+    flare::base::end_point point;
     if (str2endpoint(ip_port_str, &point) != 0 &&
         hostname2endpoint(ip_port_str, &point) != 0) {
         LOG(ERROR) << "Invalid address=`" << ip_port_str << '\'';
@@ -1073,14 +1073,14 @@ int Server::Start(int port, const ServerOptions* opt) {
         LOG(ERROR) << "Invalid port=" << port;
         return -1;
     }
-    return Start(butil::EndPoint(butil::IP_ANY, port), opt);
+    return Start(flare::base::end_point(flare::base::IP_ANY, port), opt);
 }
 
 int Server::Start(const char* ip_str, PortRange port_range,
                   const ServerOptions *opt) {
-    butil::ip_t ip;
-    if (butil::str2ip(ip_str, &ip) != 0 &&
-        butil::hostname2ip(ip_str, &ip) != 0) {
+    flare::base::ip_t ip;
+    if (flare::base::str2ip(ip_str, &ip) != 0 &&
+        flare::base::hostname2ip(ip_str, &ip) != 0) {
         LOG(ERROR) << "Invalid address=`" << ip_str << '\'';
         return -1;
     }
@@ -1442,11 +1442,11 @@ void Server::RemoveMethodsOf(google::protobuf::Service* service) {
             continue;
         }
         if (mp->http_url) {
-            butil::StringSplitter at_sp(mp->http_url->c_str(), '@');
+            flare::base::StringSplitter at_sp(mp->http_url->c_str(), '@');
             for (; at_sp; ++at_sp) {
                 std::string_view path(at_sp.field(), at_sp.length());
                 path = flare::base::strip_ascii_whitespace(path);
-                butil::StringSplitter slash_sp(
+                flare::base::StringSplitter slash_sp(
                     path.data(), path.data() + path.size(), '/');
                 if (slash_sp == NULL) {
                     LOG(ERROR) << "Invalid http_url=" << *mp->http_url;
@@ -1600,14 +1600,14 @@ void Server::GenerateVersionIfNeeded() {
             if (!_version.empty()) {
                 _version.push_back('+');
             }
-            _version.append(butil::class_name_str(*it->second.service));
+            _version.append(flare::base::class_name_str(*it->second.service));
         }
     }
     if (_options.nshead_service) {
         if (!_version.empty()) {
             _version.push_back('+');
         }
-        _version.append(butil::class_name_str(*_options.nshead_service));
+        _version.append(flare::base::class_name_str(*_options.nshead_service));
     }
 
 #ifdef ENABLE_THRIFT_FRAMED_PROTOCOL
@@ -1615,7 +1615,7 @@ void Server::GenerateVersionIfNeeded() {
         if (!_version.empty()) {
             _version.push_back('+');
         }
-        _version.append(butil::class_name_str(*_options.thrift_service));
+        _version.append(flare::base::class_name_str(*_options.thrift_service));
     }
 #endif
 
@@ -1623,14 +1623,14 @@ void Server::GenerateVersionIfNeeded() {
         if (!_version.empty()) {
             _version.push_back('+');
         }
-        _version.append(butil::class_name_str(*_options.rtmp_service));
+        _version.append(flare::base::class_name_str(*_options.rtmp_service));
     }
 
     if (_options.redis_service) {
         if (!_version.empty()) {
             _version.push_back('+');
         }
-        _version.append(butil::class_name_str(*_options.redis_service));
+        _version.append(flare::base::class_name_str(*_options.redis_service));
     }
 }
 
@@ -1747,7 +1747,7 @@ int StartDummyServerAt(int port, ProfilerLinker) {
         BAIDU_SCOPED_LOCK(g_dummy_server_mutex);
         if (g_dummy_server == NULL) {
             Server* dummy_server = new Server;
-            dummy_server->set_version(butil::string_printf(
+            dummy_server->set_version(flare::base::string_printf(
                         "DummyServerOf(%s)", GetProgramName()));
             ServerOptions options;
             options.num_threads = 0;

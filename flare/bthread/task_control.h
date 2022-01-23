@@ -26,7 +26,7 @@
 #include <iostream>                             // std::ostream
 #endif
 #include <stddef.h>                             // size_t
-#include "flare/butil/static_atomic.h"                     // std::atomic
+#include "flare/base/static_atomic.h"                     // std::atomic
 #include "flare/bvar/bvar.h"                          // bvar::PassiveStatus
 #include "flare/bthread/task_meta.h"                  // TaskMeta
 #include "flare/butil/resource_pool.h"                 // ResourcePool

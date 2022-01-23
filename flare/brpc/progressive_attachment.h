@@ -20,9 +20,9 @@
 #define BRPC_PROGRESSIVE_ATTACHMENT_H
 
 #include "flare/brpc/callback.h"
-#include "flare/butil/static_atomic.h"
+#include "flare/base/static_atomic.h"
 #include "flare/butil/iobuf.h"
-#include "flare/butil/endpoint.h"       // butil::EndPoint
+#include "flare/base/endpoint.h"       // flare::base::end_point
 #include "flare/bthread/types.h"        // bthread_id_t
 #include "flare/brpc/socket_id.h"       // SocketUniquePtr
 #include "flare/brpc/shared_object.h"   // SharedObject
@@ -40,8 +40,8 @@ public:
     int Write(const void* data, size_t n);
 
     // Get ip/port of peer/self.
-    butil::EndPoint remote_side() const;
-    butil::EndPoint local_side() const;
+    flare::base::end_point remote_side() const;
+    flare::base::end_point local_side() const;
 
     // [Not thread-safe and can only be called once]
     // Run the callback when the underlying connection is broken (thus

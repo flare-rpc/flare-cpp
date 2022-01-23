@@ -32,7 +32,7 @@
 
 #if defined(OS_POSIX)
 #include "flare/butil/file_descriptor_posix.h"
-#include "flare/butil/logging.h"
+#include "flare/base/logging.h"
 #include "flare/butil/posix/eintr_wrapper.h"
 #endif
 

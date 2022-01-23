@@ -133,7 +133,7 @@ void PackHttpRequest(butil::IOBuf* buf,
                      Controller* controller,
                      const butil::IOBuf& request,
                      const Authenticator* auth);
-bool ParseHttpServerAddress(butil::EndPoint* out, const char* server_addr_and_port);
+bool ParseHttpServerAddress(flare::base::end_point* out, const char* server_addr_and_port);
 const std::string& GetHttpMethodName(const google::protobuf::MethodDescriptor*,
                                      const Controller*);
 

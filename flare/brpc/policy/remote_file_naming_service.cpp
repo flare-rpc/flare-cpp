@@ -125,7 +125,7 @@ int RemoteFileNamingService::GetServers(const char *service_name_cstr,
             continue;
         }
         const_cast<char*>(addr.data())[addr.size()] = '\0'; // safe
-        butil::EndPoint point;
+        flare::base::end_point point;
         if (str2endpoint(addr.data(), &point) != 0 &&
             hostname2endpoint(addr.data(), &point) != 0) {
             LOG(ERROR) << "Invalid address=`" << addr << '\'';

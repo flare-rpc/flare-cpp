@@ -170,7 +170,7 @@ void TaskGroup::run_main_task() {
         }
     }
     // Don't forget to add elapse of last wait_task.
-    current_task()->stat.cputime_ns += butil::cpuwide_time_ns() - _last_run_ns;
+    current_task()->stat.cputime_ns += flare::base::cpuwide_time_ns() - _last_run_ns;
 }
 
 TaskGroup::TaskGroup(TaskControl* c)
@@ -182,7 +182,7 @@ TaskGroup::TaskGroup(TaskControl* c)
     , _control(c)
     , _num_nosignal(0)
     , _nsignaled(0)
-    , _last_run_ns(butil::cpuwide_time_ns())
+    , _last_run_ns(flare::base::cpuwide_time_ns())
     , _cumulated_cputime_ns(0)
     , _nswitch(0)
     , _last_context_remained(NULL)
@@ -235,7 +235,7 @@ int TaskGroup::init(size_t runqueue_capacity) {
     m->fn = NULL;
     m->arg = NULL;
     m->local_storage = LOCAL_STORAGE_INIT;
-    m->cpuwide_start_ns = butil::cpuwide_time_ns();
+    m->cpuwide_start_ns = flare::base::cpuwide_time_ns();
     m->stat = EMPTY_STAT;
     m->attr = BTHREAD_ATTR_TASKGROUP;
     m->tid = make_tid(*m->version_butex, slot);
@@ -244,7 +244,7 @@ int TaskGroup::init(size_t runqueue_capacity) {
     _cur_meta = m;
     _main_tid = m->tid;
     _main_stack = stk;
-    _last_run_ns = butil::cpuwide_time_ns();
+    _last_run_ns = flare::base::cpuwide_time_ns();
     return 0;
 }
 
@@ -283,7 +283,7 @@ void TaskGroup::task_runner(intptr_t skip_remained) {
             // considerable time because a single bvar::LatencyRecorder
             // contains many bvar.
             g->_control->exposed_pending_time() <<
-                (butil::cpuwide_time_ns() - m->cpuwide_start_ns) / 1000L;
+                (flare::base::cpuwide_time_ns() - m->cpuwide_start_ns) / 1000L;
         }
 
         // Not catch exceptions except ExitException which is for implementing
@@ -363,7 +363,7 @@ int TaskGroup::start_foreground(TaskGroup** pg,
     if (__builtin_expect(!fn, 0)) {
         return EINVAL;
     }
-    const int64_t start_ns = butil::cpuwide_time_ns();
+    const int64_t start_ns = flare::base::cpuwide_time_ns();
     const bthread_attr_t using_attr = (attr ? *attr : BTHREAD_ATTR_NORMAL);
     butil::ResourceId<TaskMeta> slot;
     TaskMeta* m = butil::get_resource(&slot);
@@ -418,7 +418,7 @@ int TaskGroup::start_background(bthread_t* __restrict th,
     if (__builtin_expect(!fn, 0)) {
         return EINVAL;
     }
-    const int64_t start_ns = butil::cpuwide_time_ns();
+    const int64_t start_ns = flare::base::cpuwide_time_ns();
     const bthread_attr_t using_attr = (attr ? *attr : BTHREAD_ATTR_NORMAL);
     butil::ResourceId<TaskMeta> slot;
     TaskMeta* m = butil::get_resource(&slot);
@@ -574,7 +574,7 @@ void TaskGroup::sched_to(TaskGroup** pg, TaskMeta* next_meta) {
     void* saved_unique_user_ptr = tls_unique_user_ptr;
 
     TaskMeta* const cur_meta = g->_cur_meta;
-    const int64_t now = butil::cpuwide_time_ns();
+    const int64_t now = flare::base::cpuwide_time_ns();
     const int64_t elp_ns = now - g->_last_run_ns;
     g->_last_run_ns = now;
     cur_meta->stat.cputime_ns += elp_ns;
@@ -744,7 +744,7 @@ void TaskGroup::_add_sleep_event(void* void_args) {
     TimerThread::TaskId sleep_id;
     sleep_id = get_global_timer_thread()->schedule(
         ready_to_run_from_timer_thread, void_args,
-        butil::microseconds_from_now(e.timeout_us));
+        flare::base::microseconds_from_now(e.timeout_us));
 
     if (!sleep_id) {
         // fail to schedule timer, go back to previous thread.
@@ -932,7 +932,7 @@ void print_task(std::ostream& os, bthread_t tid) {
            << " flags=" << attr.flags
            << " keytable_pool=" << attr.keytable_pool
            << "}\nhas_tls=" << has_tls
-           << "\nuptime_ns=" << butil::cpuwide_time_ns() - cpuwide_start_ns
+           << "\nuptime_ns=" << flare::base::cpuwide_time_ns() - cpuwide_start_ns
            << "\ncputime_ns=" << stat.cputime_ns
            << "\nnswitch=" << stat.nswitch;
     }

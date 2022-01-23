@@ -8,7 +8,7 @@
 
 #include <algorithm>
 
-#include "flare/butil/logging.h"
+#include "flare/base/logging.h"
 #include "flare/butil/strings/string_number_conversions.h"
 #include "flare/butil/strings/string_split.h"
 #include "flare/butil/strings/string_util.h"

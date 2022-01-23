@@ -24,7 +24,7 @@
 
 #include <stdint.h>                            // uint64_t
 #if defined(__cplusplus)
-#include "flare/butil/logging.h"                      // CHECK
+#include "flare/base/logging.h"                      // CHECK
 #endif
 
 typedef uint64_t bthread_t;

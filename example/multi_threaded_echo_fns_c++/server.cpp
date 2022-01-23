@@ -20,8 +20,8 @@
 #include <fcntl.h>  // O_RDONLY
 #include <vector>
 #include <gflags/gflags.h>
-#include <flare/butil/time.h>
-#include <flare/butil/logging.h>
+#include "flare/base/time.h"
+#include "flare/base/logging.h"
 #include <flare/butil/string_printf.h>
 #include <flare/butil/string_splitter.h>
 #include <flare/butil/rand_util.h>
@@ -72,8 +72,8 @@ public:
                 }
             }
             if (FLAGS_spin) {
-                int64_t end_time = butil::gettimeofday_us() + (int64_t)delay;
-                while (butil::gettimeofday_us() < end_time) {}
+                int64_t end_time = flare::base::gettimeofday_us() + (int64_t)delay;
+                while (flare::base::gettimeofday_us() < end_time) {}
             } else {
                 bthread_usleep((int64_t)delay);
             }
@@ -109,7 +109,7 @@ int main(int argc, char* argv[]) {
     // We need multiple servers in this example.
     brpc::Server* servers = new brpc::Server[FLAGS_server_num];
 
-    butil::StringSplitter sp(FLAGS_sleep_us.c_str(), ',');
+    flare::base::StringSplitter sp(FLAGS_sleep_us.c_str(), ',');
     std::vector<int64_t> sleep_list;
     for (; sp; ++sp) {
         sleep_list.push_back(strtoll(sp.field(), NULL, 10));
@@ -127,7 +127,7 @@ int main(int argc, char* argv[]) {
     for (int i = 0; i < FLAGS_server_num; ++i) {
         int64_t sleep_us = sleep_list[(size_t)i < sleep_list.size() ? i : (sleep_list.size() - 1)];
         echo_service_impls[i].set_index(i, sleep_us);
-        servers[i].set_version(butil::string_printf(
+        servers[i].set_version(flare::base::string_printf(
                     "example/multi_threaded_echo_fns_c++[%d]", i));
         if (servers[i].AddService(&echo_service_impls[i], 
                                   brpc::SERVER_DOESNT_OWN_SERVICE) != 0) {
@@ -151,7 +151,7 @@ int main(int argc, char* argv[]) {
             return -1;
         }
         char buf[64];
-        int nw = snprintf(buf, sizeof(buf), "%s:%d\n", butil::my_ip_cstr(), port);
+        int nw = snprintf(buf, sizeof(buf), "%s:%d\n", flare::base::my_ip_cstr(), port);
         if (write(fd, buf, nw) != nw) {
             LOG(ERROR) << "Fail to fully write int fd=" << fd;
         }

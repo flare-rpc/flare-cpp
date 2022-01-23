@@ -23,19 +23,19 @@
 #include <execinfo.h>
 #include <dlfcn.h>                               // dlsym
 #include <fcntl.h>                               // O_RDONLY
-#include "flare/butil/static_atomic.h"
+#include "flare/base/static_atomic.h"
 #include "flare/bvar/bvar.h"
 #include "flare/bvar/collector.h"
 #include "flare/butil/macros.h"                         // BAIDU_CASSERT
 #include "flare/butil/containers/flat_map.h"
 #include "flare/butil/iobuf.h"
-#include "flare/butil/fd_guard.h"
+#include "flare/base/fd_guard.h"
 #include "flare/butil/files/file.h"
 #include "flare/butil/files/file_path.h"
 #include "flare/butil/file_util.h"
 #include "flare/butil/unique_ptr.h"
 #include "flare/butil/third_party/murmurhash3/murmurhash3.h"
-#include "flare/butil/logging.h"
+#include "flare/base/logging.h"
 #include "flare/butil/object_pool.h"
 #include "flare/bthread/butex.h"                       // butex_*
 #include "flare/bthread/processor.h"                   // cpu_relax, barrier
@@ -197,7 +197,7 @@ void ContentionProfiler::flush_to_disk(bool ending) {
         BT_VLOG << "Append /proc/self/maps";
         // Failures are not critical, don't return directly.
         butil::IOPortal mem_maps;
-        const butil::fd_guard fd(open("/proc/self/maps", O_RDONLY));
+        const flare::base::fd_guard fd(open("/proc/self/maps", O_RDONLY));
         if (fd >= 0) {
             while (true) {
                 ssize_t nr = mem_maps.append_from_file_descriptor(fd, 8192);
@@ -232,7 +232,7 @@ void ContentionProfiler::flush_to_disk(bool ending) {
         _first_write = false;
         flag = O_TRUNC;
     }
-    butil::fd_guard fd(open(_filename.c_str(), O_WRONLY|O_CREAT|flag, 0666));
+    flare::base::fd_guard fd(open(_filename.c_str(), O_WRONLY|O_CREAT|flag, 0666));
     if (fd < 0) {
         PLOG(ERROR) << "Fail to open " << _filename;
         return;
@@ -554,7 +554,7 @@ BUTIL_FORCE_INLINE int pthread_mutex_lock_impl(pthread_mutex_t* mutex) {
         return sys_pthread_mutex_lock(mutex);
     }
     // Lock and monitor the waiting time.
-    const int64_t start_ns = butil::cpuwide_time_ns();
+    const int64_t start_ns = flare::base::cpuwide_time_ns();
     rc = sys_pthread_mutex_lock(mutex);
     if (!rc) { // Inside lock
         if (!csite) {
@@ -563,7 +563,7 @@ BUTIL_FORCE_INLINE int pthread_mutex_lock_impl(pthread_mutex_t* mutex) {
                 return rc;
             }
         }
-        csite->duration_ns = butil::cpuwide_time_ns() - start_ns;
+        csite->duration_ns = flare::base::cpuwide_time_ns() - start_ns;
         csite->sampling_range = sampling_range;
     } // else rare
     return rc;
@@ -586,7 +586,7 @@ BUTIL_FORCE_INLINE int pthread_mutex_unlock_impl(pthread_mutex_t* mutex) {
         if (fast_alt.list[i].mutex == mutex) {
             if (is_contention_site_valid(fast_alt.list[i].csite)) {
                 saved_csite = fast_alt.list[i].csite;
-                unlock_start_ns = butil::cpuwide_time_ns();
+                unlock_start_ns = flare::base::cpuwide_time_ns();
             }
             fast_alt.list[i] = fast_alt.list[--fast_alt.count];
             miss_in_tls = false;
@@ -598,13 +598,13 @@ BUTIL_FORCE_INLINE int pthread_mutex_unlock_impl(pthread_mutex_t* mutex) {
     // inside critical section.
     if (miss_in_tls) {
         if (remove_pthread_contention_site(mutex, &saved_csite)) {
-            unlock_start_ns = butil::cpuwide_time_ns();
+            unlock_start_ns = flare::base::cpuwide_time_ns();
         }
     }
     const int rc = sys_pthread_mutex_unlock(mutex);
     // [Outside lock]
     if (unlock_start_ns) {
-        const int64_t unlock_end_ns = butil::cpuwide_time_ns();
+        const int64_t unlock_end_ns = flare::base::cpuwide_time_ns();
         saved_csite.duration_ns += unlock_end_ns - unlock_start_ns;
         submit_contention(saved_csite, unlock_end_ns);
     }
@@ -740,12 +740,12 @@ int bthread_mutex_lock(bthread_mutex_t* m) {
         return bthread::mutex_lock_contended(m);
     }
     // Start sampling.
-    const int64_t start_ns = butil::cpuwide_time_ns();
+    const int64_t start_ns = flare::base::cpuwide_time_ns();
     // NOTE: Don't modify m->csite outside lock since multiple threads are
     // still contending with each other.
     const int rc = bthread::mutex_lock_contended(m);
     if (!rc) { // Inside lock
-        m->csite.duration_ns = butil::cpuwide_time_ns() - start_ns;
+        m->csite.duration_ns = flare::base::cpuwide_time_ns() - start_ns;
         m->csite.sampling_range = sampling_range;
     } // else rare
     return rc;
@@ -767,16 +767,16 @@ int bthread_mutex_timedlock(bthread_mutex_t* __restrict m,
         return bthread::mutex_timedlock_contended(m, abstime);
     }
     // Start sampling.
-    const int64_t start_ns = butil::cpuwide_time_ns();
+    const int64_t start_ns = flare::base::cpuwide_time_ns();
     // NOTE: Don't modify m->csite outside lock since multiple threads are
     // still contending with each other.
     const int rc = bthread::mutex_timedlock_contended(m, abstime);
     if (!rc) { // Inside lock
-        m->csite.duration_ns = butil::cpuwide_time_ns() - start_ns;
+        m->csite.duration_ns = flare::base::cpuwide_time_ns() - start_ns;
         m->csite.sampling_range = sampling_range;
     } else if (rc == ETIMEDOUT) {
         // Failed to lock due to ETIMEDOUT, submit the elapse directly.
-        const int64_t end_ns = butil::cpuwide_time_ns();
+        const int64_t end_ns = flare::base::cpuwide_time_ns();
         const bthread_contention_site_t csite = {end_ns - start_ns, sampling_range};
         bthread::submit_contention(csite, end_ns);
     }
@@ -800,9 +800,9 @@ int bthread_mutex_unlock(bthread_mutex_t* m) {
         bthread::butex_wake(whole);
         return 0;
     }
-    const int64_t unlock_start_ns = butil::cpuwide_time_ns();
+    const int64_t unlock_start_ns = flare::base::cpuwide_time_ns();
     bthread::butex_wake(whole);
-    const int64_t unlock_end_ns = butil::cpuwide_time_ns();
+    const int64_t unlock_end_ns = flare::base::cpuwide_time_ns();
     saved_csite.duration_ns += unlock_end_ns - unlock_start_ns;
     bthread::submit_contention(saved_csite, unlock_end_ns);
     return 0;

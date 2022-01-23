@@ -4,7 +4,7 @@
 
 #include "flare/butil/mac/bundle_locations.h"
 
-#include "flare/butil/logging.h"
+#include "flare/base/logging.h"
 #include "flare/butil/mac/foundation_util.h"
 #include "flare/butil/strings/sys_string_conversions.h"
 

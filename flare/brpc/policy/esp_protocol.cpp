@@ -19,7 +19,7 @@
 #include <google/protobuf/message.h>            // Message
 #include <gflags/gflags.h>
 
-#include "flare/butil/time.h"
+#include "flare/base/time.h"
 #include "flare/butil/iobuf.h"                         // butil::IOBuf
 
 #include "flare/brpc/controller.h"               // Controller
@@ -117,7 +117,7 @@ void PackEspRequest(butil::IOBuf* packet_buf,
 }
 
 void ProcessEspResponse(InputMessageBase* msg_base) {
-    const int64_t start_parse_us = butil::cpuwide_time_us();
+    const int64_t start_parse_us = flare::base::cpuwide_time_us();
     DestroyingPtr<MostCommonMessage> msg(static_cast<MostCommonMessage*>(msg_base));
     
     // Fetch correlation id that we saved before in `PackEspRequest'

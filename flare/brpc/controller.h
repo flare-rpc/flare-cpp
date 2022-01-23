@@ -26,7 +26,7 @@
 #include <string>
 #include "flare/butil/intrusive_ptr.hpp"             // butil::intrusive_ptr
 #include "flare/bthread/errno.h"                     // Redefine errno
-#include "flare/butil/endpoint.h"                    // butil::EndPoint
+#include "flare/base/endpoint.h"                    // flare::base::end_point
 #include "flare/butil/iobuf.h"                       // butil::IOBuf
 #include "flare/bthread/types.h"                     // bthread_id_t
 #include "flare/brpc/options.pb.h"                   // CompressType
@@ -201,7 +201,7 @@ public:
     // it gets queue time before server processes the RPC call.
     int64_t latency_us() const {
         if (_end_time_us == UNSET_MAGIC_NUM) {
-            return butil::cpuwide_time_us() - _begin_time_us;
+            return flare::base::cpuwide_time_us() - _begin_time_us;
         }
         return _end_time_us - _begin_time_us;
     }
@@ -444,13 +444,13 @@ public:
     // Client-side: successful or last server called. Accessible from 
     // PackXXXRequest() in protocols.
     // Server-side: returns the client sending the request
-    butil::EndPoint remote_side() const { return _remote_side; }
+    flare::base::end_point remote_side() const { return _remote_side; }
     
     // Client-side: the local address for talking with server, undefined until
     // this RPC succeeds (because the connection may not be established 
     // before RPC).
     // Server-side: the address that clients access.
-    butil::EndPoint local_side() const { return _local_side; }
+    flare::base::end_point local_side() const { return _local_side; }
 
     // Protocol of the request sent by client or received by server.
     ProtocolType request_protocol() const { return _request_protocol; }
@@ -706,8 +706,8 @@ private:
     uint32_t _flags; // all boolean fields inside Controller
     int32_t _error_code;
     std::string _error_text;
-    butil::EndPoint _remote_side;
-    butil::EndPoint _local_side;
+    flare::base::end_point _remote_side;
+    flare::base::end_point _local_side;
     
     void* _session_local_data;
     const Server* _server;

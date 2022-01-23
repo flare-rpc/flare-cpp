@@ -25,7 +25,7 @@
 #include <iostream>                      // std::ostream
 #include <pthread.h>                     // pthread_mutex_t
 #include <algorithm>                     // std::max, std::min
-#include "flare/butil/static_atomic.h"              // std::atomic
+#include "flare/base/static_atomic.h"              // std::atomic
 #include "flare/butil/macros.h"                 // BAIDU_CACHELINE_ALIGNMENT
 #include "flare/butil/scoped_lock.h"            // BAIDU_SCOPED_LOCK
 #include "flare/butil/thread_local.h"           // BAIDU_THREAD_LOCAL

@@ -38,7 +38,7 @@ Init函数分为连接一台服务器和连接服务集群。
 
 ```c++
 // options为NULL时取默认值
-int Init(EndPoint server_addr_and_port, const ChannelOptions* options);
+int Init(end_point server_addr_and_port, const ChannelOptions* options);
 int Init(const char* server_addr_and_port, const ChannelOptions* options);
 int Init(const char* server_addr, int port, const ChannelOptions* options);
 ```
@@ -172,7 +172,7 @@ public:
  
 // naming_service.h
 struct ServerNode {
-    butil::EndPoint addr;
+    flare::base::end_point addr;
     std::string tag;
 };
 ```
@@ -445,12 +445,12 @@ brpc::StartCancel(call_id)可取消对应的RPC，call_id必须**在发起RPC前
 
 ## 获取Server的地址和端口
 
-remote_side()方法可知道request被送向了哪个server，返回值类型是[butil::EndPoint](https://github.com/brpc/brpc/blob/master/src/butil/endpoint.h)，包含一个ip4地址和端口。在RPC结束前调用这个方法都是没有意义的。
+remote_side()方法可知道request被送向了哪个server，返回值类型是[flare::base::end_point](https://github.com/brpc/brpc/blob/master/src/butil/endpoint.h)，包含一个ip4地址和端口。在RPC结束前调用这个方法都是没有意义的。
 
 打印方式：
 ```c++
 LOG(INFO) << "remote_side=" << cntl->remote_side();
-printf("remote_side=%s\n", butil::endpoint2str(cntl->remote_side()).c_str());
+printf("remote_side=%s\n", flare::base::endpoint2str(cntl->remote_side()).c_str());
 ```
 ## 获取Client的地址和端口
 
@@ -459,7 +459,7 @@ r31384后通过local_side()方法可**在RPC结束后**获得发起RPC的地址�
 打印方式：
 ```c++
 LOG(INFO) << "local_side=" << cntl->local_side(); 
-printf("local_side=%s\n", butil::endpoint2str(cntl->local_side()).c_str());
+printf("local_side=%s\n", flare::base::endpoint2str(cntl->local_side()).c_str());
 ```
 ## 应该重用brpc::Controller吗?
 

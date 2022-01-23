@@ -26,7 +26,7 @@
 #define BUTIL_BOUNDED_QUEUE_H
 
 #include "flare/butil/macros.h"
-#include "flare/butil/logging.h"
+#include "flare/base/logging.h"
 
 namespace butil {
 

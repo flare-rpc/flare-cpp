@@ -17,13 +17,13 @@
 
 #include <gtest/gtest.h>
 #include <gflags/gflags.h>
-#include "flare/butil/static_atomic.h"
-#include "flare/butil/time.h"
+#include "flare/base/static_atomic.h"
+#include "flare/base/time.h"
 #include "flare/butil/macros.h"
-#include "flare/butil/logging.h"
+#include "flare/base/logging.h"
 #include "flare/butil/thread_local.h"
 #include <flare/bthread/butex.h>
-#include "flare/butil/logging.h"
+#include "flare/base/logging.h"
 #include "flare/bthread/bthread.h"
 #include "flare/bthread/task_control.h"
 

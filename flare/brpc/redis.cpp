@@ -18,7 +18,7 @@
 
 #include <google/protobuf/reflection_ops.h>     // ReflectionOps::Merge
 #include <gflags/gflags.h>
-#include "flare/butil/status.h"
+#include "flare/base/status.h"
 #include "flare/butil/strings/string_util.h"          // StringToLowerASCII
 #include "flare/brpc/redis.h"
 #include "flare/brpc/redis_command.h"
@@ -134,7 +134,7 @@ bool RedisRequest::AddCommand(const std::string_view& command) {
     if (_has_error) {
         return false;
     }
-    const butil::Status st = RedisCommandNoFormat(&_buf, command);
+    const flare::base::flare_status st = RedisCommandNoFormat(&_buf, command);
     if (st.ok()) {
         ++_ncommand;
         return true;
@@ -150,7 +150,7 @@ bool RedisRequest::AddCommandByComponents(const std::string_view* components,
     if (_has_error) {
         return false;
     }
-    const butil::Status st = RedisCommandByComponents(&_buf, components, n);
+    const flare::base::flare_status st = RedisCommandByComponents(&_buf, components, n);
     if (st.ok()) {
         ++_ncommand;
         return true;
@@ -167,7 +167,7 @@ bool RedisRequest::AddCommandWithArgs(const char* fmt, ...) {
     }
     va_list ap;
     va_start(ap, fmt);
-    const butil::Status st = RedisCommandFormatV(&_buf, fmt, ap);
+    const flare::base::flare_status st = RedisCommandFormatV(&_buf, fmt, ap);
     va_end(ap);
     if (st.ok()) {
         ++_ncommand;
@@ -183,7 +183,7 @@ bool RedisRequest::AddCommandV(const char* fmt, va_list ap) {
     if (_has_error) {
         return false;
     }
-    const butil::Status st = RedisCommandFormatV(&_buf, fmt, ap);
+    const flare::base::flare_status st = RedisCommandFormatV(&_buf, fmt, ap);
     if (st.ok()) {
         ++_ncommand;
         return true;

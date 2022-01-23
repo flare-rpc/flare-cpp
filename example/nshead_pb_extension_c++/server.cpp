@@ -19,7 +19,7 @@
 
 #include <google/protobuf/descriptor.h>
 #include <gflags/gflags.h>
-#include <flare/butil/logging.h>
+#include "flare/base/logging.h"
 #include <flare/brpc/server.h>
 #include <flare/brpc/nshead_pb_service_adaptor.h>
 #include "echo.pb.h"

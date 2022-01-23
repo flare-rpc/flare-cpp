@@ -19,7 +19,7 @@
 #include <stdlib.h>                                   // strtol
 #include <string>                                     // std::string
 #include <set>                                        // std::set
-#include "flare/butil/string_splitter.h"                     // StringSplitter
+#include "flare/base/string_splitter.h"                     // StringSplitter
 #include "flare/brpc/log.h"
 #include "flare/brpc/policy/list_naming_service.h"
 #include "flare/base/strings.h"
@@ -46,7 +46,7 @@ int ParseServerList(const char* service_name,
         LOG(FATAL) << "Param[service_name] is NULL";
         return -1;
     }
-    for (butil::StringSplitter sp(service_name, ','); sp != NULL; ++sp) {
+    for (flare::base::StringSplitter sp(service_name, ','); sp != NULL; ++sp) {
         line.assign(sp.field(), sp.length());
         std::string_view addr;
         std::string_view tag;
@@ -54,7 +54,7 @@ int ParseServerList(const char* service_name,
             continue;
         }
         const_cast<char*>(addr.data())[addr.size()] = '\0'; // safe
-        butil::EndPoint point;
+        flare::base::end_point point;
         if (str2endpoint(addr.data(), &point) != 0 &&
             hostname2endpoint(addr.data(), &point) != 0) {
             LOG(ERROR) << "Invalid address=`" << addr << '\'';

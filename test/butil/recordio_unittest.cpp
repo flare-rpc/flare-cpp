@@ -19,7 +19,7 @@
 #include <gtest/gtest.h>
 #include "flare/butil/recordio.h"
 #include "flare/butil/fast_rand.h"
-#include "flare/butil/string_printf.h"
+#include "flare/base/strings.h"
 #include "flare/butil/file_util.h"
 
 namespace {
@@ -250,7 +250,7 @@ TEST(RecordIOTest, write_read_random) {
     for (int i = 0; i < N; ++i) {
         butil::Record src;
         std::string value = rand_string(10, 20);
-        std::string name = butil::string_printf("name_%d_", i) + value;
+        std::string name = flare::base::string_printf("name_%d_", i) + value;
         src.MutableMeta(name)->append(value);
         ASSERT_EQ(0, rw.Write(src));
         if (butil::fast_rand_less_than(70) == 0) {

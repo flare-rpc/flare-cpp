@@ -97,7 +97,7 @@
 #include <functional>
 #include <iostream>                               // std::ostream
 #include "flare/butil/type_traits.h"
-#include "flare/butil/logging.h"
+#include "flare/base/logging.h"
 #include "flare/butil/find_cstr.h"
 #include "flare/butil/single_threaded_pool.h"            // SingleThreadedPool
 #include "flare/butil/containers/hash_tables.h"          // hash<>

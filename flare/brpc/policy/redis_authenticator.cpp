@@ -19,7 +19,7 @@
 
 #include "flare/base/base64.h"
 #include "flare/butil/iobuf.h"
-#include "flare/butil/string_printf.h"
+#include "flare/base/strings.h"
 #include "flare/butil/sys_byteorder.h"
 #include "flare/brpc/redis_command.h"
 

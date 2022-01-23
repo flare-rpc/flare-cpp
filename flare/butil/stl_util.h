@@ -13,7 +13,7 @@
 #include <string>
 #include <vector>
 
-#include "flare/butil/logging.h"
+#include "flare/base/logging.h"
 
 namespace butil {
 

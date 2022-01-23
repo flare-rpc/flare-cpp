@@ -18,7 +18,7 @@
 #include <stdio.h>
 #include <gtest/gtest.h>
 #include <vector>
-#include "flare/butil/string_printf.h"
+#include "flare/base/strings.h"
 #include "flare/butil/files/temp_file.h"
 #include "flare/brpc/socket.h"
 #include "flare/brpc/channel.h"
@@ -62,8 +62,8 @@ TEST_F(NamingServiceFilterTest, sanity) {
     std::string ns = std::string("file://") + tmp_file.fname();
     ASSERT_EQ(0, channel.Init(ns.c_str(), "rr", &opt));
 
-    butil::EndPoint ep;
-    ASSERT_EQ(0, butil::hostname2endpoint("10.128.0.1:1234", &ep));
+    flare::base::end_point ep;
+    ASSERT_EQ(0, flare::base::hostname2endpoint("10.128.0.1:1234", &ep));
     for (int i = 0; i < 10; ++i) {
         brpc::SocketUniquePtr tmp_sock;
         brpc::LoadBalancer::SelectIn sel_in = { 0, false, false, 0, NULL };

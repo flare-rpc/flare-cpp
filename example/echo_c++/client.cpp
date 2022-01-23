@@ -18,8 +18,8 @@
 // A client sending requests to server every 1 second.
 
 #include <gflags/gflags.h>
-#include <flare/butil/logging.h>
-#include <flare/butil/time.h>
+#include "flare/base/logging.h"
+#include "flare/base/time.h"
 #include <flare/brpc/channel.h>
 #include "echo.pb.h"
 

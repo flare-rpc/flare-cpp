@@ -7,7 +7,7 @@
 #include <stddef.h>
 #include <ostream>
 
-#include "flare/butil/logging.h"
+#include "flare/base/logging.h"
 
 namespace butil {
 

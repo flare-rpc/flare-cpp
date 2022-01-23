@@ -23,7 +23,7 @@
 #include <memory>
 #include <iostream>
 #include <sstream>
-#include "flare/butil/time.h"
+#include "flare/base/time.h"
 #include "flare/butil/macros.h"
 #include "flare/bvar/bvar.h"
 #include <gtest/gtest.h>

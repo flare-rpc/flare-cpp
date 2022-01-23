@@ -81,7 +81,7 @@ public:
         , _last_round(0)
         , _max_requests_in_one_file(0)
         , _max_files(0)
-        , _sched_write_time(butil::gettimeofday_us() + FLUSH_TIMEOUT)
+        , _sched_write_time(flare::base::gettimeofday_us() + FLUSH_TIMEOUT)
         , _last_file_time(0)
     {
         _command_name = bvar::read_command_name();
@@ -168,7 +168,7 @@ void RpcDumpContext::Dump(size_t round, SampledRequest* sample) {
     } else if (_unwritten_buf.size() >= UNWRITTEN_BUFSIZE) {
         // Too much unwritten data
         RPC_VLOG << "Write because _unwritten_buf=" << _unwritten_buf.size();
-    } else if (butil::gettimeofday_us() >= _sched_write_time) {
+    } else if (flare::base::gettimeofday_us() >= _sched_write_time) {
         // Not write for a while.
         RPC_VLOG << "Write because timeout";
     } else {
@@ -190,7 +190,7 @@ void RpcDumpContext::Dump(size_t round, SampledRequest* sample) {
             _filenames.pop_front();
         }
         // Make current time as postfix.
-        int64_t cur_file_time = butil::gettimeofday_us();
+        int64_t cur_file_time = flare::base::gettimeofday_us();
         // Make postfix monotonic.
         if (cur_file_time <= _last_file_time) {
             cur_file_time = _last_file_time + 1;
@@ -199,7 +199,7 @@ void RpcDumpContext::Dump(size_t round, SampledRequest* sample) {
         struct tm* timeinfo = localtime(&rawtime);
         char ts_buf[64];
         strftime(ts_buf, sizeof(ts_buf), "%Y%m%d_%H%M%S", timeinfo);
-        butil::string_printf(&_cur_filename, "%s/" DUMPED_FILE_PREFIX ".%s_%06u",
+        flare::base::string_printf(&_cur_filename, "%s/" DUMPED_FILE_PREFIX ".%s_%06u",
                             _dir.value().c_str(), ts_buf,
                             (unsigned)(cur_file_time - rawtime * 1000000L));
         _cur_fd = open(_cur_filename.c_str(), O_CREAT | O_WRONLY | O_TRUNC, 0666);
@@ -223,7 +223,7 @@ void RpcDumpContext::Dump(size_t round, SampledRequest* sample) {
         }
     }
     _unwritten_buf.clear();
-    _sched_write_time = butil::gettimeofday_us() + FLUSH_TIMEOUT;
+    _sched_write_time = flare::base::gettimeofday_us() + FLUSH_TIMEOUT;
     if (fail_to_write || _cur_req_count >= _max_requests_in_one_file) {
         // clean up
         if (_cur_fd >= 0) {

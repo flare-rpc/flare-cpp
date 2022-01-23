@@ -21,7 +21,7 @@
 
 #include <google/protobuf/message.h>
 #include "flare/butil/iobuf.h"
-#include "flare/butil/class_name.h"
+#include "flare/base/class_name.h"
 #include "flare/brpc/channel_base.h"
 #include "flare/brpc/controller.h"
 #include "flare/brpc/proto_base.pb.h"
@@ -198,7 +198,7 @@ T* ThriftFramedMessage::Cast() {
 
     if (!body.empty()) {
         if (!policy::ReadThriftStruct(body, _raw_instance, field_id)) {
-            LOG(ERROR) << "Fail to parse " << butil::class_name<T>();
+            LOG(ERROR) << "Fail to parse " << flare::base::class_name<T>();
         }
     }
     return raw_msg;

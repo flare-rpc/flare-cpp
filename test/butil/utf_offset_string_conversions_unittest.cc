@@ -4,7 +4,7 @@
 
 #include <algorithm>
 
-#include "flare/butil/logging.h"
+#include "flare/base/logging.h"
 #include "flare/butil/strings/string_piece.h"
 #include "flare/butil/strings/utf_offset_string_conversions.h"
 #include <gtest/gtest.h>

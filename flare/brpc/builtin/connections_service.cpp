@@ -56,14 +56,14 @@ inline const char* SSLStateToYesNo(SSLState s, bool use_html) {
 }
 
 struct NameOfPoint {
-    explicit NameOfPoint(const butil::EndPoint& pt_) : pt(pt_) {}
-    butil::EndPoint pt;
+    explicit NameOfPoint(const flare::base::end_point& pt_) : pt(pt_) {}
+    flare::base::end_point pt;
 };
 
 std::ostream& operator<<(std::ostream& os, const NameOfPoint& nop) {
     char buf[128];
     if (FLAGS_show_hostname_instead_of_ip &&
-        butil::endpoint2hostname(nop.pt, buf, sizeof(buf)) == 0) {
+        flare::base::endpoint2hostname(nop.pt, buf, sizeof(buf)) == 0) {
         return os << buf;
     } else {
         return os << nop.pt;
@@ -225,7 +225,7 @@ void ConnectionsService::PrintConnections(
                 if (pref_index == (int)PROTOCOL_NSHEAD &&
                     server->options().nshead_service != NULL) {
                     if (nshead_service_name.empty()) {
-                        nshead_service_name = BriefName(butil::class_name_str(
+                        nshead_service_name = BriefName(flare::base::class_name_str(
                                 *server->options().nshead_service));
                     }
                     pref_prot = nshead_service_name.c_str();

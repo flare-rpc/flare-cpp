@@ -23,7 +23,7 @@
 #include "flare/butil/macros.h"
 #include "flare/butil/iobuf.h"               // butil::IOBuf
 #include "flare/butil/scoped_lock.h"         // butil::unique_lock
-#include "flare/butil/endpoint.h"
+#include "flare/base/endpoint.h"
 #include "flare/brpc/details/http_parser.h"  // http_parser
 #include "flare/brpc/http_header.h"          // HttpHeader
 #include "flare/brpc/progressive_reader.h"   // ProgressiveReader
@@ -125,7 +125,7 @@ std::ostream& operator<<(std::ostream& os, const http_parser& parser);
 // content: could be NULL.
 void MakeRawHttpRequest(butil::IOBuf* request,
                         HttpHeader* header,
-                        const butil::EndPoint& remote_side,
+                        const flare::base::end_point& remote_side,
                         const butil::IOBuf* content);
 
 // Serialize a http response.

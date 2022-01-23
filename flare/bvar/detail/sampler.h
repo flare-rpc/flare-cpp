@@ -23,11 +23,11 @@
 #include <vector>
 #include "flare/butil/containers/linked_list.h"// LinkNode
 #include "flare/butil/scoped_lock.h"           // BAIDU_SCOPED_LOCK
-#include "flare/butil/logging.h"               // LOG()
+#include "flare/base/logging.h"               // LOG()
 #include "flare/butil/containers/bounded_queue.h"// BoundedQueue
 #include "flare/butil/type_traits.h"           // is_same
-#include "flare/butil/time.h"                  // gettimeofday_us
-#include "flare/butil/class_name.h"
+#include "flare/base/time.h"                  // gettimeofday_us
+#include "flare/base/class_name.h"
 
 namespace bvar {
 namespace detail {
@@ -136,7 +136,7 @@ public:
             // get_value() of _reducer can still be called.
             latest.data = _reducer->get_value();
         }
-        latest.time_us = butil::gettimeofday_us();
+        latest.time_us = flare::base::gettimeofday_us();
         _q.elim_push(latest);
     }
 

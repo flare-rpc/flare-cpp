@@ -19,8 +19,8 @@
 #include <random>
 #include <gtest/gtest.h>
 #include "flare/butil/find_cstr.h"
-#include "flare/butil/time.h"
-#include "flare/butil/logging.h"
+#include "flare/base/time.h"
+#include "flare/base/logging.h"
 
 namespace {
     class FindCstrTest : public ::testing::Test {
@@ -83,7 +83,7 @@ namespace {
         std::mt19937 g(rd());
         std::shuffle(all_keys.begin(), all_keys.end(), g);
         int sum = 0;
-        butil::Timer tm;
+        flare::base::stop_watcher tm;
         tm.start();
         for (size_t i = 0; i < all_keys.size(); ++i) {
             sum += butil::find_cstr(t1, all_keys[i])->second;

@@ -239,7 +239,7 @@ inline void Socket::SetLogOff() {
             // events. We need to `SetFailed' it to trigger health
             // checking, otherwise it may be blocked forever
             SetFailed(ELOGOFF, "The server at %s is stopping",
-                      butil::endpoint2str(remote_side()).c_str());
+                      flare::base::endpoint2str(remote_side()).c_str());
         }
     }
 }

@@ -21,11 +21,11 @@
 
 #include <string>
 #include "flare/butil/scoped_lock.h"
-#include "flare/butil/logging.h"
+#include "flare/base/logging.h"
 #include "flare/butil/containers/case_ignored_flat_map.h"
-#include "flare/butil/memory/singleton_on_pthread_once.h"
+#include "flare/base/singleton_on_pthread_once.h"
 
-namespace butil {
+namespace flare::base {
 template <typename T> class GetLeakySingleton;
 }
 
@@ -48,7 +48,7 @@ public:
     void List(std::ostream& os, char separator);
 
 private:
-friend class butil::GetLeakySingleton<Extension<T> >;
+friend class flare::base::GetLeakySingleton<Extension<T> >;
     Extension();
     ~Extension();
     butil::CaseIgnoredFlatMap<T*> _instance_map;

@@ -18,8 +18,8 @@
 
 #include <gflags/gflags.h>                            // DEFINE_int32
 #include "flare/butil/compat.h"
-#include "flare/butil/fd_utility.h"                         // make_close_on_exec
-#include "flare/butil/logging.h"                            // LOG
+#include "flare/base/fd_utility.h"                         // make_close_on_exec
+#include "flare/base/logging.h"                            // LOG
 #include "flare/butil/third_party/murmurhash3/murmurhash3.h"// fmix32
 #include "flare/bthread/bthread.h"                          // bthread_start_background
 #include "flare/brpc/event_dispatcher.h"
@@ -61,7 +61,7 @@ EventDispatcher::EventDispatcher()
 #else
     #error Not implemented
 #endif
-    CHECK_EQ(0, butil::make_close_on_exec(_epfd));
+    CHECK_EQ(0, flare::base::make_close_on_exec(_epfd));
 
     _wakeup_fds[0] = -1;
     _wakeup_fds[1] = -1;

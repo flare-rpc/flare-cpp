@@ -21,7 +21,7 @@
 #include <gflags/gflags.h>
 #include "flare/bthread/butex.h"
 #include "flare/butil/scoped_lock.h"
-#include "flare/butil/logging.h"
+#include "flare/base/logging.h"
 #include "flare/brpc/log.h"
 #include "flare/brpc/socket_map.h"
 #include "flare/brpc/details/naming_service_thread.h"
@@ -191,7 +191,7 @@ void NamingServiceThread::Actions::ResetServers(
 
     if (!_removed.empty() || !_added.empty()) {
         std::ostringstream info;
-        info << butil::class_name_str(*_owner->_ns) << "(\"" 
+        info << flare::base::class_name_str(*_owner->_ns) << "(\""
              << _owner->_service_name << "\"):";
         if (!_added.empty()) {
             info << " added "<< _added.size();

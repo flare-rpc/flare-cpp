@@ -11,7 +11,7 @@
 #include "flare/butil/base_export.h"
 #include "flare/butil/compiler_specific.h"
 #ifndef NDEBUG
-#include "flare/butil/logging.h"
+#include "flare/base/logging.h"
 #endif
 #include "flare/butil/threading/thread_collision_warner.h"
 

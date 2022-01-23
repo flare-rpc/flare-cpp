@@ -16,7 +16,7 @@
 // under the License.
 
 
-#include "flare/butil/logging.h"
+#include "flare/base/logging.h"
 #include "flare/brpc/compress.h"
 #include "flare/brpc/protocol.h"
 

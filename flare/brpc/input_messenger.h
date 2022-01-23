@@ -81,7 +81,7 @@ public:
     int AddHandler(const InputMessageHandler& handler);
 
     // [thread-safe] Create a socket to process input messages.
-    int Create(const butil::EndPoint& remote_side,
+    int Create(const flare::base::end_point& remote_side,
                time_t health_check_interval_s,
                SocketId* id);
     // Overwrite necessary fields in `base_options' and create a socket with

@@ -33,7 +33,7 @@
 #include "flare/butil/basictypes.h"
 #include "flare/butil/debug/debugger.h"
 #include "flare/butil/debug/proc_maps_linux.h"
-#include "flare/butil/logging.h"
+#include "flare/base/logging.h"
 #include "flare/butil/memory/scoped_ptr.h"
 #include "flare/butil/memory/singleton.h"
 #include "flare/butil/numerics/safe_conversions.h"

@@ -20,7 +20,7 @@
 
 #include <gflags/gflags.h>
 #include <memory>
-#include <flare/butil/logging.h>
+#include "flare/base/logging.h"
 #include <flare/brpc/server.h>
 #include <flare/butil/files/file_watcher.h>
 #include <flare/butil/files/scoped_file.h>
@@ -74,8 +74,8 @@ public:
             _bugs->find(request->rpc_version(), response);
         } 
         response->set_new_interval(FLAGS_reporting_interval);
-        butil::EndPoint server_addr;
-        CHECK_EQ(0, butil::str2endpoint(request->server_addr().c_str(), &server_addr));
+        flare::base::end_point server_addr;
+        CHECK_EQ(0, flare::base::str2endpoint(request->server_addr().c_str(), &server_addr));
         // NOTE(gejun): The ip reported is inaccessible in many cases, use 
         // remote_side instead right now.
         server_addr.ip = cntl->remote_side().ip;
@@ -187,7 +187,7 @@ void BugsLoader::load_bugs() {
         }
         // line format: 
         //   min_rev <sp> max_rev <sp> severity <sp> description
-        butil::StringMultiSplitter sp(line, line + nr, " \t");
+        flare::base::StringMultiSplitter sp(line, line + nr, " \t");
         if (!sp) {
             continue;
         }
@@ -213,7 +213,7 @@ void BugsLoader::load_bugs() {
             continue;
         }
         brpc::TrackMeSeverity severity = brpc::TrackMeOK;
-        butil::StringPiece severity_str(sp.field(), sp.length());
+        std::string_view severity_str(sp.field(), sp.length());
         if (severity_str == "f" || severity_str == "F") {
             severity = brpc::TrackMeFatal;
         } else if (severity_str == "w" || severity_str == "W") {\
@@ -229,7 +229,7 @@ void BugsLoader::load_bugs() {
         }
         // Treat everything until end of the line as description. So don't add 
         // comments starting with # or //, they are not recognized.
-        butil::StringPiece description(sp.field(), line + nr - sp.field());
+        std::string_view description(sp.field(), line + nr - sp.field());
         RevisionInfo info;
         info.min_rev = min_rev;
         info.max_rev = max_rev;

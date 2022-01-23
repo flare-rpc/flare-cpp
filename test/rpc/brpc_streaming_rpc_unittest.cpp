@@ -273,7 +273,7 @@ TEST_F(StreamingRpcTest, block) {
     out.clear();
     out.append(&dummy, sizeof(dummy));
     ASSERT_EQ(EAGAIN, brpc::StreamWrite(request_stream, out));
-    timespec duetime = butil::microseconds_from_now(1);
+    timespec duetime = flare::base::microseconds_from_now(1);
     p.first = false;
     LOG(INFO) << "Start wait";
     brpc::StreamWait(request_stream, &duetime, on_writable, &p);

@@ -16,7 +16,7 @@
 // under the License.
 
 #include <gflags/gflags.h>
-#include "flare/butil/logging.h"
+#include "flare/base/logging.h"
 #include "flare/butil/recordio.h"
 #include "flare/butil/sys_byteorder.h"
 

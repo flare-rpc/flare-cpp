@@ -8,7 +8,7 @@
 #include <stdio.h>
 
 #include "flare/butil/base_export.h"
-#include "flare/butil/logging.h"
+#include "flare/base/logging.h"
 #include "flare/butil/memory/scoped_ptr.h"
 #include "flare/butil/scoped_generic.h"
 #include "flare/butil/build_config.h"

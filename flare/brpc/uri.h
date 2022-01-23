@@ -21,8 +21,8 @@
 
 #include <string>                   // std::string
 #include "flare/butil/containers/flat_map.h"
-#include "flare/butil/status.h"
-#include "flare/butil/string_splitter.h"
+#include "flare/base/status.h"
+#include "flare/base/string_splitter.h"
 
 // To brpc developers: This is a class exposed to end-user. DON'T put impl.
 // details in this header, use opaque pointers instead.
@@ -75,7 +75,7 @@ public:
     void operator=(const std::string& url) { SetHttpURL(url); }
 
     // Status of previous SetHttpURL or opreator=.
-    const butil::Status& status() const { return _st; }
+    const flare::base::flare_status& status() const { return _st; }
 
     // Sub fields. Empty string if the field is not set.
 	const std::string& scheme() const { return _scheme; }
@@ -145,7 +145,7 @@ friend class HttpMessage;
     // Iterate _query_map and append all queries to `query'
     void AppendQueryString(std::string* query, bool append_question_mark) const;
 
-    butil::Status                            _st;
+    flare::base::flare_status                            _st;
     int                                     _port;
     mutable bool                            _query_was_modified;
     mutable bool                            _initialized_query_map;
@@ -198,7 +198,7 @@ inline std::ostream& operator<<(std::ostream& os, const URI& uri) {
 }
 
 // Split query in the format of "key1=value1&key2&key3=value3"
-class QuerySplitter : public butil::KeyValuePairsSplitter {
+class QuerySplitter : public flare::base::KeyValuePairsSplitter {
 public:
     inline QuerySplitter(const char* str_begin, const char* str_end)
         : KeyValuePairsSplitter(str_begin, str_end, '&', '=')

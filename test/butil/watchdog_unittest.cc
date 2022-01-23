@@ -4,7 +4,7 @@
 
 #include "flare/butil/threading/watchdog.h"
 
-#include "flare/butil/logging.h"
+#include "flare/base/logging.h"
 #include "flare/butil/synchronization/spin_wait.h"
 #include "flare/butil/threading/platform_thread.h"
 #include "flare/butil/time/time.h"

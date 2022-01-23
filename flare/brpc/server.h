@@ -384,7 +384,7 @@ public:
     
     // Start on an address in form of "0.0.0.0:8000".
     int Start(const char* ip_port_str, const ServerOptions* opt);
-    int Start(const butil::EndPoint& ip_port, const ServerOptions* opt);
+    int Start(const flare::base::end_point& ip_port, const ServerOptions* opt);
     // Start on IP_ANY:port.
     int Start(int port, const ServerOptions* opt);
     // Start on `ip_str' + any useable port in `range'
@@ -492,7 +492,7 @@ public:
     const std::string& version() const { return _version; }
 
     // Return the address this server is listening
-    butil::EndPoint listen_address() const { return _listen_addr; }
+    flare::base::end_point listen_address() const { return _listen_addr; }
     
     // Last time that Start() was successfully called. 0 if Start() was
     // never called
@@ -559,7 +559,7 @@ friend class Controller;
     // Create acceptor with handlers of protocols.
     Acceptor* BuildAcceptor();
 
-    int StartInternal(const butil::ip_t& ip,
+    int StartInternal(const flare::base::ip_t& ip,
                       const PortRange& port_range,
                       const ServerOptions *opt);
 
@@ -669,7 +669,7 @@ friend class Controller;
     SSLContextMap _ssl_ctx_map;
     
     ServerOptions _options;
-    butil::EndPoint _listen_addr;
+    flare::base::end_point _listen_addr;
 
     std::string _version;
     time_t _last_start_time;

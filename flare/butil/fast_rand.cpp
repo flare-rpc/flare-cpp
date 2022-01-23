@@ -21,7 +21,7 @@
 #include <math.h>
 #include "flare/butil/basictypes.h"
 #include "flare/butil/macros.h"
-#include "flare/butil/time.h"     // gettimeofday_us()
+#include "flare/base/time.h"     // gettimeofday_us()
 #include "flare/butil/fast_rand.h"
 
 namespace butil {
@@ -51,7 +51,7 @@ inline uint64_t xorshift128_next(FastRandSeed* seed) {
 
 // seed xorshift128+ with splitmix64.
 void init_fast_rand_seed(FastRandSeed* seed) {
-    SplitMix64Seed seed4seed = butil::gettimeofday_us();
+    SplitMix64Seed seed4seed = flare::base::gettimeofday_us();
     seed->s[0] = splitmix64_next(&seed4seed);
     seed->s[1] = splitmix64_next(&seed4seed);
 }

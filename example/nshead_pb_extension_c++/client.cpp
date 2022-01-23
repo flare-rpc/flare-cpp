@@ -19,8 +19,8 @@
 
 #include <gflags/gflags.h>
 
-#include <flare/butil/logging.h>
-#include <flare/butil/time.h>
+#include "flare/base/logging.h"
+#include "flare/base/time.h"
 #include <flare/butil/strings/string_piece.h>
 #include <flare/brpc/channel.h>
 #include <flare/brpc/nshead_message.h>

@@ -7,7 +7,7 @@
 #include <errno.h>
 #include <sys/time.h>
 
-#include "flare/butil/logging.h"
+#include "flare/base/logging.h"
 #include "flare/butil/synchronization/lock.h"
 #include "flare/butil/threading/thread_restrictions.h"
 #include "flare/butil/time/time.h"

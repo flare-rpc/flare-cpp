@@ -21,10 +21,10 @@
 #include <map>
 #include <random>
 #include <vector>
-#include "flare/butil/time.h"
+#include "flare/base/time.h"
 #include "flare/butil/macros.h"
-#include "flare/butil/string_printf.h"
-#include "flare/butil/logging.h"
+#include "flare/base/strings.h"
+#include "flare/base/logging.h"
 #include "flare/butil/containers/hash_tables.h"
 #include "flare/butil/containers/flat_map.h"
 #include "flare/butil/containers/pooled_map.h"
@@ -220,9 +220,9 @@ namespace {
         }
         input[input_len] = '\0';
         input2[input_len] = '\0';
-        butil::Timer tm1;
-        butil::Timer tm2;
-        butil::Timer tm3;
+        flare::base::stop_watcher tm1;
+        flare::base::stop_watcher tm2;
+        flare::base::stop_watcher tm3;
         int sum = 0;
         tm1.start();
         sum += strcasecmp(input, input2);
@@ -241,7 +241,7 @@ namespace {
     TEST_F(FlatMapTest, __builtin_ctzl_perf) {
         int s = 0;
         const size_t N = 10000;
-        butil::Timer tm1;
+        flare::base::stop_watcher tm1;
         tm1.start();
         for (size_t i = 1; i <= N; ++i) {
             s += __builtin_ctzl(i);
@@ -348,11 +348,11 @@ namespace {
         butil::hash_map<std::string, size_t> m3;
         const size_t N = 10000;
         ASSERT_EQ(0, m1.init(N));
-        butil::Timer tm1, tm1_2, tm2, tm3;
+        flare::base::stop_watcher tm1, tm1_2, tm2, tm3;
         size_t sum = 0;
         keys.reserve(N);
         for (size_t i = 0; i < N; ++i) {
-            keys.push_back(butil::string_printf("up_latency_as_key_%lu", i));
+            keys.push_back(flare::base::string_printf("up_latency_as_key_%lu", i));
         }
 
         tm1.start();
@@ -445,14 +445,14 @@ namespace {
             keys.push_back(rand());
         }
 
-        butil::Timer tm2;
+        flare::base::stop_watcher tm2;
         tm2.start();
         for (size_t i = 0; i < N; ++i) {
             m2[keys[i]] = i;
         }
         tm2.stop();
 
-        butil::Timer tm1;
+        flare::base::stop_watcher tm1;
         tm1.start();
         for (size_t i = 0; i < N; ++i) {
             m1[keys[i]] = i;
@@ -769,7 +769,7 @@ namespace {
 
         std::vector<int *> r;
         int sum;
-        butil::Timer tm;
+        flare::base::stop_watcher tm;
 
         r.reserve(ARRAY_SIZE(ptr) * REP);
         ASSERT_EQ(0, m2.init(ARRAY_SIZE(ptr)));
@@ -903,10 +903,10 @@ namespace {
     }
 
     TEST_F(FlatMapTest, perf_small_string_map) {
-        butil::Timer tm1;
-        butil::Timer tm2;
-        butil::Timer tm3;
-        butil::Timer tm4;
+        flare::base::stop_watcher tm1;
+        flare::base::stop_watcher tm2;
+        flare::base::stop_watcher tm3;
+        flare::base::stop_watcher tm4;
 
         for (int i = 0; i < 10; ++i) {
             tm3.start();
@@ -1106,7 +1106,7 @@ namespace {
         std::map < uint64_t, T > std_map;
         butil::PooledMap<uint64_t, T> pooled_map;
         butil::hash_map<uint64_t, T> hash_map;
-        butil::Timer id_tm, std_tm, pooled_tm, hash_tm;
+        flare::base::stop_watcher id_tm, std_tm, pooled_tm, hash_tm;
 
         size_t max_nkeys = 0;
         for (size_t i = 0; i < NPASS; ++i) {
@@ -1223,7 +1223,7 @@ namespace {
         butil::PooledMap<uint64_t, T> pooled_map;
         butil::hash_map<uint64_t, T> hash_map;
 
-        butil::Timer id_tm, std_tm, pooled_tm, hash_tm;
+        flare::base::stop_watcher id_tm, std_tm, pooled_tm, hash_tm;
 
         id_map.init((size_t) (nkeys[NPASS - 1] * 1.5));
         LOG(INFO) << "[ value = " << sizeof(T) << " bytes ]";

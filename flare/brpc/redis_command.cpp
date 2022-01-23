@@ -16,7 +16,7 @@
 // under the License.
 
 
-#include "flare/butil/logging.h"
+#include "flare/base/logging.h"
 #include "flare/brpc/log.h"
 #include "flare/brpc/redis_command.h"
 
@@ -72,10 +72,10 @@ static void FlushComponent(std::string* out, std::string* compbuf, int* ncomp) {
 // Some code is copied or modified from redisvFormatCommand() in
 // https://github.com/redis/hiredis/blob/master/hiredis.c to keep close
 // compatibility with hiredis.
-butil::Status
+flare::base::flare_status
 RedisCommandFormatV(butil::IOBuf* outbuf, const char* fmt, va_list ap) {
     if (outbuf == NULL || fmt == NULL) {
-        return butil::Status(EINVAL, "Param[outbuf] or [fmt] is NULL");
+        return flare::base::flare_status(EINVAL, "Param[outbuf] or [fmt] is NULL");
     }
     const size_t fmt_len = strlen(fmt);
     std::string nocount_buf;
@@ -223,7 +223,7 @@ RedisCommandFormatV(butil::IOBuf* outbuf, const char* fmt, va_list ap) {
                 
             fmt_invalid:
                 va_end(_cpy);
-                return butil::Status(EINVAL, "Invalid format");
+                return flare::base::flare_status(EINVAL, "Invalid format");
 
             fmt_valid:
                 ++nargs;
@@ -252,7 +252,7 @@ RedisCommandFormatV(butil::IOBuf* outbuf, const char* fmt, va_list ap) {
             quote_pos - std::min((size_t)(quote_pos - fmt), CTX_WIDTH);
         size_t ctx_size =
             std::min((size_t)(fmt + fmt_len - ctx_begin), CTX_WIDTH * 2 + 1);
-        return butil::Status(EINVAL, "Unmatched quote: ...%.*s... (offset=%lu)",
+        return flare::base::flare_status(EINVAL, "Unmatched quote: ...%.*s... (offset=%lu)",
                              (int)ctx_size, ctx_begin, quote_pos - fmt);
     }
     
@@ -266,21 +266,21 @@ RedisCommandFormatV(butil::IOBuf* outbuf, const char* fmt, va_list ap) {
     
     AppendHeader(*outbuf, '*', ncomponent);
     outbuf->append(nocount_buf);
-    return butil::Status::OK();
+    return flare::base::flare_status::OK();
 }
 
-butil::Status RedisCommandFormat(butil::IOBuf* buf, const char* fmt, ...) {
+flare::base::flare_status RedisCommandFormat(butil::IOBuf* buf, const char* fmt, ...) {
     va_list ap;
     va_start(ap, fmt);
-    const butil::Status st = RedisCommandFormatV(buf, fmt, ap);
+    const flare::base::flare_status st = RedisCommandFormatV(buf, fmt, ap);
     va_end(ap);
     return st;
 }
 
-butil::Status
+flare::base::flare_status
 RedisCommandNoFormat(butil::IOBuf* outbuf, const std::string_view& cmd) {
     if (outbuf == NULL || cmd == NULL) {
-        return butil::Status(EINVAL, "Param[outbuf] or [cmd] is NULL");
+        return flare::base::flare_status(EINVAL, "Param[outbuf] or [cmd] is NULL");
     }
     const size_t cmd_len = cmd.size();
     std::string nocount_buf;
@@ -328,7 +328,7 @@ RedisCommandNoFormat(butil::IOBuf* outbuf, const std::string_view& cmd) {
             quote_pos - std::min((size_t)(quote_pos - cmd.data()), CTX_WIDTH);
         size_t ctx_size =
             std::min((size_t)(cmd.data() + cmd.size() - ctx_begin), CTX_WIDTH * 2 + 1);
-        return butil::Status(EINVAL, "Unmatched quote: ...%.*s... (offset=%lu)",
+        return flare::base::flare_status(EINVAL, "Unmatched quote: ...%.*s... (offset=%lu)",
                              (int)ctx_size, ctx_begin, quote_pos - cmd.data());
     }
     
@@ -338,14 +338,14 @@ RedisCommandNoFormat(butil::IOBuf* outbuf, const std::string_view& cmd) {
 
     AppendHeader(*outbuf, '*', ncomponent);
     outbuf->append(nocount_buf);
-    return butil::Status::OK();
+    return flare::base::flare_status::OK();
 }
 
-butil::Status RedisCommandByComponents(butil::IOBuf* output,
+flare::base::flare_status RedisCommandByComponents(butil::IOBuf* output,
                                       const std::string_view* components,
                                       size_t ncomponents) {
     if (output == NULL) {
-        return butil::Status(EINVAL, "Param[output] is NULL");
+        return flare::base::flare_status(EINVAL, "Param[output] is NULL");
     }
     AppendHeader(*output, '*', ncomponents);
     for (size_t i = 0; i < ncomponents; ++i) {
@@ -353,7 +353,7 @@ butil::Status RedisCommandByComponents(butil::IOBuf* output,
         output->append(components[i].data(), components[i].size());
         output->append("\r\n", 2);
     }
-    return butil::Status::OK();
+    return flare::base::flare_status::OK();
 }
 
 RedisCommandParser::RedisCommandParser()

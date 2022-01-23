@@ -7,7 +7,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "flare/butil/logging.h"
+#include "flare/base/logging.h"
 #include "flare/butil/memory/singleton.h"
 #include "flare/butil/strings/string_util.h"
 

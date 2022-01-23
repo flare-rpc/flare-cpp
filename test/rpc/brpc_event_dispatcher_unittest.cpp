@@ -24,9 +24,9 @@
 #include <sys/socket.h>
 #include <gtest/gtest.h>
 #include "flare/butil/gperftools_profiler.h"
-#include "flare/butil/time.h"
+#include "flare/base/time.h"
 #include "flare/butil/macros.h"
-#include "flare/butil/fd_utility.h"
+#include "flare/base/fd_utility.h"
 #include "flare/brpc/event_dispatcher.h"
 #include "flare/brpc/details/has_epollrdhup.h"
 
@@ -203,7 +203,7 @@ TEST_F(EventDispatcherTest, dispatch_tasks) {
         sm[i] = new SocketExtra;
 
         const int fd = fds[i * 2];
-        butil::make_non_blocking(fd);
+        flare::base::make_non_blocking(fd);
         brpc::SocketId socket_id;
         brpc::SocketOptions options;
         options.fd = fd;
@@ -220,7 +220,7 @@ TEST_F(EventDispatcherTest, dispatch_tasks) {
     
     LOG(INFO) << "Begin to profile... (5 seconds)";
     ProfilerStart("event_dispatcher.prof");
-    butil::Timer tm;
+    flare::base::stop_watcher tm;
     tm.start();
     
     sleep(5);

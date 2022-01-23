@@ -17,7 +17,7 @@
 
 #include <algorithm>                        // std::sort
 #include <gtest/gtest.h>
-#include "flare/butil/time.h"
+#include "flare/base/time.h"
 #include "flare/butil/macros.h"
 #include "flare/butil/scoped_lock.h"
 #include "flare/bthread/work_stealing_queue.h"

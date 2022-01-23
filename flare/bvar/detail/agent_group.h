@@ -31,7 +31,7 @@
 #include "flare/butil/thread_local.h"              // thread_atexit
 #include "flare/butil/macros.h"                    // BAIDU_CACHELINE_ALIGNMENT
 #include "flare/butil/scoped_lock.h"
-#include "flare/butil/logging.h"
+#include "flare/base/logging.h"
 
 namespace bvar {
 namespace detail {

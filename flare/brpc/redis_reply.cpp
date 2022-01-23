@@ -17,8 +17,8 @@
 
 
 #include <limits>
-#include "flare/butil/logging.h"
-#include "flare/butil/string_printf.h"
+#include "flare/base/logging.h"
+#include "flare/base/strings.h"
 #include "flare/brpc/redis_reply.h"
 
 namespace brpc {
@@ -468,7 +468,7 @@ void RedisReply::FormatStringImpl(const char* fmt, va_list args, RedisReplyType 
     } else {
         std::string str;
         str.reserve(ret + 1);
-        butil::string_vappendf(&str, fmt, args);
+        flare::base::string_vappendf(&str, fmt, args);
         return SetStringImpl(str, type);
     }
 }

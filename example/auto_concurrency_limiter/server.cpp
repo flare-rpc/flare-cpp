@@ -18,11 +18,11 @@
 // A server to receive EchoRequest and send back EchoResponse.
 
 #include <gflags/gflags.h>
-#include <flare/butil/logging.h>
+#include "flare/base/logging.h"
 #include <flare/brpc/server.h>
 #include <flare/butil/static_atomic.h>
-#include <flare/butil/time.h>
-#include <flare/butil/logging.h>
+#include "flare/base/time.h"
+#include "flare/base/logging.h"
 #include <json2pb/json_to_pb.h>
 #include <flare/bthread/timer_thread.h>
 #include <flare/bthread/bthread.h>
@@ -120,7 +120,7 @@ public:
         }
         ComputeLatency();
         g_timer_thread.schedule(TimerTask, (void*)this, 
-            butil::microseconds_from_now(FLAGS_latency_change_interval_us));
+            flare::base::microseconds_from_now(FLAGS_latency_change_interval_us));
     }
 
     virtual void Echo(google::protobuf::RpcController* cntl_base,

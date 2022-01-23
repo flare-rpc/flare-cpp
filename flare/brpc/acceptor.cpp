@@ -18,9 +18,9 @@
 
 #include <inttypes.h>
 #include <gflags/gflags.h>
-#include "flare/butil/fd_guard.h"                 // fd_guard
-#include "flare/butil/fd_utility.h"               // make_close_on_exec
-#include "flare/butil/time.h"                     // gettimeofday_us
+#include "flare/base/fd_guard.h"                 // fd_guard
+#include "flare/base/fd_utility.h"               // make_close_on_exec
+#include "flare/base/time.h"                     // gettimeofday_us
 #include "flare/brpc/acceptor.h"
 
 
@@ -242,7 +242,7 @@ void Acceptor::OnNewConnectionsUntilEAGAIN(Socket* acception) {
     while (1) {
         struct sockaddr in_addr;
         socklen_t in_len = sizeof(in_addr);
-        butil::fd_guard in_fd(accept(acception->fd(), &in_addr, &in_len));
+        flare::base::fd_guard in_fd(accept(acception->fd(), &in_addr, &in_len));
         if (in_fd < 0) {
             // no EINTR because listened fd is non-blocking.
             if (errno == EAGAIN) {
@@ -269,7 +269,7 @@ void Acceptor::OnNewConnectionsUntilEAGAIN(Socket* acception) {
         SocketOptions options;
         options.keytable_pool = am->_keytable_pool;
         options.fd = in_fd;
-        options.remote_side = butil::EndPoint(*(sockaddr_in*)&in_addr);
+        options.remote_side = flare::base::end_point(*(sockaddr_in*)&in_addr);
         options.user = acception->user();
         options.on_edge_triggered_events = InputMessenger::OnNewMessages;
         options.initial_ssl_ctx = am->_ssl_ctx;

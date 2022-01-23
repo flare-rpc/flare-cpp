@@ -24,9 +24,9 @@
 #include <fstream>
 #include <gtest/gtest.h>
 #include <google/protobuf/descriptor.h>
-#include "flare/butil/time.h"
+#include "flare/base/time.h"
 #include "flare/butil/macros.h"
-#include "flare/butil/fd_guard.h"
+#include "flare/base/fd_guard.h"
 #include "flare/butil/files/scoped_file.h"
 #include "flare/brpc/socket.h"
 #include "flare/brpc/builtin/version_service.h"
@@ -81,7 +81,7 @@ public:
     }
 
     int VerifyCredential(const std::string&,
-                         const butil::EndPoint&,
+                         const flare::base::end_point&,
                          brpc::AuthContext*) const {
         return 0;
     }
@@ -200,7 +200,7 @@ TEST_F(ServerTest, sanity) {
         ASSERT_EQ(0, server.Start("127.0.0.1:8613", NULL));
     }
 
-    butil::EndPoint ep;
+    flare::base::end_point ep;
     MyAuthenticator auth;
     brpc::Server server;
     ASSERT_EQ(0, str2endpoint("127.0.0.1:8613", &ep));
@@ -227,7 +227,7 @@ TEST_F(ServerTest, sanity) {
 }
 
 TEST_F(ServerTest, invalid_protocol_in_enabled_protocols) {
-    butil::EndPoint ep;
+    flare::base::end_point ep;
     ASSERT_EQ(0, str2endpoint("127.0.0.1:8613", &ep));
     brpc::Server server;
     brpc::ServerOptions opt;
@@ -314,7 +314,7 @@ public:
 };
 
 TEST_F(ServerTest, empty_enabled_protocols) {
-    butil::EndPoint ep;
+    flare::base::end_point ep;
     ASSERT_EQ(0, str2endpoint("127.0.0.1:8613", &ep));
     brpc::Server server;
     EchoServiceImpl echo_svc;
@@ -341,7 +341,7 @@ TEST_F(ServerTest, empty_enabled_protocols) {
 }
 
 TEST_F(ServerTest, only_allow_protocols_in_enabled_protocols) {
-    butil::EndPoint ep;
+    flare::base::end_point ep;
     ASSERT_EQ(0, str2endpoint("127.0.0.1:8613", &ep));
     brpc::Server server;
     EchoServiceImpl echo_svc;
@@ -1000,7 +1000,7 @@ TEST_F(ServerTest, add_remove_service) {
     ASSERT_TRUE(NULL == server.FindServiceByFullName(
         test::EchoService::descriptor()->name()));
 
-    butil::EndPoint ep;
+    flare::base::end_point ep;
     ASSERT_EQ(0, str2endpoint("127.0.0.1:8613", &ep));
     ASSERT_EQ(0, server.Start(ep, NULL));
 
@@ -1028,7 +1028,7 @@ TEST_F(ServerTest, add_remove_service) {
     ASSERT_EQ(0ul, server.service_count());
 }
 
-void SendSleepRPC(butil::EndPoint ep, int sleep_ms, bool succ) {
+void SendSleepRPC(flare::base::end_point ep, int sleep_ms, bool succ) {
     brpc::Channel channel;
     ASSERT_EQ(0, channel.Init(ep, NULL));
 
@@ -1050,7 +1050,7 @@ void SendSleepRPC(butil::EndPoint ep, int sleep_ms, bool succ) {
 }
 
 TEST_F(ServerTest, close_idle_connections) {
-    butil::EndPoint ep;
+    flare::base::end_point ep;
     brpc::Server server;
     brpc::ServerOptions opt;
     opt.idle_timeout_sec = 1;
@@ -1070,8 +1070,8 @@ TEST_F(ServerTest, close_idle_connections) {
 }
 
 TEST_F(ServerTest, logoff_and_multiple_start) {
-    butil::Timer timer;
-    butil::EndPoint ep;
+    flare::base::stop_watcher timer;
+    flare::base::end_point ep;
     EchoServiceImpl echo_svc;
     brpc::Server server;
     ASSERT_EQ(0, server.AddService(&echo_svc,
@@ -1164,7 +1164,7 @@ TEST_F(ServerTest, logoff_and_multiple_start) {
     }
 }
 
-void SendMultipleRPC(butil::EndPoint ep, int count) {
+void SendMultipleRPC(flare::base::end_point ep, int count) {
     brpc::Channel channel;
     EXPECT_EQ(0, channel.Init(ep, NULL));
 
@@ -1185,7 +1185,7 @@ TEST_F(ServerTest, serving_requests) {
     brpc::Server server;
     ASSERT_EQ(0, server.AddService(&echo_svc,
                                    brpc::SERVER_DOESNT_OWN_SERVICE));
-    butil::EndPoint ep;
+    flare::base::end_point ep;
     ASSERT_EQ(0, str2endpoint("127.0.0.1:8613", &ep));
     ASSERT_EQ(0, server.Start(ep, NULL));
 
@@ -1224,11 +1224,11 @@ TEST_F(ServerTest, create_pid_file) {
 TEST_F(ServerTest, range_start) {
     const int START_PORT = 8713;
     const int END_PORT = 8719;
-    butil::fd_guard listen_fds[END_PORT - START_PORT];
-    butil::EndPoint point;
+    flare::base::fd_guard listen_fds[END_PORT - START_PORT];
+    flare::base::end_point point;
     for (int i = START_PORT; i < END_PORT; ++i) {
         point.port = i;
-        listen_fds[i - START_PORT].reset(butil::tcp_listen(point));
+        listen_fds[i - START_PORT].reset(flare::base::tcp_listen(point));
     }
 
     brpc::Server server;
@@ -1281,7 +1281,7 @@ TEST_F(ServerTest, base64_to_string) {
         ASSERT_EQ(0, chan.Init("localhost:8613", &opt));
         brpc::Controller cntl;
         cntl.http_request().uri() = "/EchoService/BytesEcho" +
-                butil::string_printf("%d", i + 1);
+                flare::base::string_printf("%d", i + 1);
         cntl.http_request().set_method(brpc::HTTP_METHOD_POST);
         cntl.http_request().set_content_type("application/json");
         cntl.set_pb_bytes_to_base64(true);

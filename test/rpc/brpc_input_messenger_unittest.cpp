@@ -24,10 +24,10 @@
 #include <netdb.h>                   //
 #include <gtest/gtest.h>
 #include "flare/butil/gperftools_profiler.h"
-#include "flare/butil/time.h"
+#include "flare/base/time.h"
 #include "flare/butil/macros.h"
-#include "flare/butil/fd_utility.h"
-#include "flare/butil/fd_guard.h"
+#include "flare/base/fd_utility.h"
+#include "flare/base/fd_guard.h"
 #include "flare/butil/unix_socket.h"
 #include "flare/brpc/acceptor.h"
 #include "flare/brpc/policy/hulu_pbrpc_protocol.h"
@@ -103,14 +103,14 @@ void* client_thread(void* arg) {
     char socket_name[64];
     snprintf(socket_name, sizeof(socket_name), "input_messenger.socket%lu",
              (id % NEPOLL));
-    butil::fd_guard fd(butil::unix_socket_connect(socket_name));
+    flare::base::fd_guard fd(butil::unix_socket_connect(socket_name));
     if (fd < 0) {
         PLOG(FATAL) << "Fail to connect to " << socket_name;
         return NULL;
     }
 #else
-    butil::EndPoint point(butil::IP_ANY, 7878);
-    butil::fd_guard fd(butil::tcp_connect(point, NULL));
+    flare::base::end_point point(flare::base::IP_ANY, 7878);
+    flare::base::fd_guard fd(butil::tcp_connect(point, NULL));
     if (fd < 0) {
         PLOG(FATAL) << "Fail to connect to " << point;
         return NULL;
@@ -164,10 +164,10 @@ TEST_F(MessengerTest, dispatch_tasks) {
         snprintf(buf, sizeof(buf), "input_messenger.socket%lu", i);
         int listening_fd = butil::unix_socket_listen(buf);
 #else
-        int listening_fd = tcp_listen(butil::EndPoint(butil::IP_ANY, 7878));
+        int listening_fd = tcp_listen(flare::base::end_point(flare::base::IP_ANY, 7878));
 #endif
         ASSERT_TRUE(listening_fd > 0);
-        butil::make_non_blocking(listening_fd);
+        flare::base::make_non_blocking(listening_fd);
         ASSERT_EQ(0, messenger[i].AddHandler(pairs[0]));
         ASSERT_EQ(0, messenger[i].StartAccept(listening_fd, -1, NULL));
     }
@@ -188,7 +188,7 @@ TEST_F(MessengerTest, dispatch_tasks) {
     for (size_t i = 0; i < NCLIENT; ++i) {
         start_client_bytes += cm[i]->bytes;
     }
-    butil::Timer tm;
+    flare::base::stop_watcher tm;
     tm.start();
     
     sleep(5);

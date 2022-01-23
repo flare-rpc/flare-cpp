@@ -16,7 +16,7 @@
 // under the License.
 
 #include <gtest/gtest.h>
-#include "flare/butil/time.h"
+#include "flare/base/time.h"
 #include "flare/butil/macros.h"
 #include "flare/butil/fast_rand.h"
 
@@ -194,7 +194,7 @@ TEST_F(ResourcePoolTest, get_int) {
     // Perf of this test is affected by previous case.
     const size_t N = 100000;
     
-    butil::Timer tm;
+    flare::base::stop_watcher tm;
     ResourceId<int> id;
 
     // warm up
@@ -250,7 +250,7 @@ TEST_F(ResourcePoolTest, get_perf) {
     new_list.reserve(N);
     ResourceId<SilentObj> id;
     
-    butil::Timer tm1, tm2;
+    flare::base::stop_watcher tm1, tm2;
 
     // warm up
     if (get_resource(&id)) {
@@ -291,7 +291,7 @@ void* get_and_return_int(void*) {
     const size_t N = 100000;
     std::vector<ResourceId<D> > v;
     v.reserve(N);
-    butil::Timer tm0, tm1, tm2;
+    flare::base::stop_watcher tm0, tm1, tm2;
     ResourceId<D> id = {0};
     D tmp = D();
     int sr = 0;
@@ -338,7 +338,7 @@ void* new_and_delete_int(void*) {
     const size_t N = 100000;
     std::vector<D*> v2;
     v2.reserve(N);
-    butil::Timer tm0, tm1, tm2;
+    flare::base::stop_watcher tm0, tm1, tm2;
     D tmp = D();
 
     for (int j = 0; j < 3; ++j) {

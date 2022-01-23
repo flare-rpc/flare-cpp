@@ -4,7 +4,7 @@
 
 #include "flare/butil/threading/non_thread_safe_impl.h"
 
-#include "flare/butil/logging.h"
+#include "flare/base/logging.h"
 
 namespace butil {
 

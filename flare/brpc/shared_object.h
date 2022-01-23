@@ -20,7 +20,7 @@
 #define BRPC_SHARED_OBJECT_H
 
 #include "flare/butil/intrusive_ptr.hpp"                   // butil::intrusive_ptr
-#include "flare/butil/static_atomic.h"
+#include "flare/base/static_atomic.h"
 
 
 namespace brpc {
