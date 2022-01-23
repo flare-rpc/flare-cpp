@@ -31,7 +31,7 @@
 namespace flare::memory {
 
 // Specialize following classes to override default parameters for type T.
-//   namespace butil {
+//   namespace flare::memory {
 //     template <> struct ResourcePoolBlockMaxSize<Foo> {
 //       static const size_t value = 1024;
 //     };

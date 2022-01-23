@@ -17,7 +17,7 @@
 
 // Date: Sun Dec  4 14:57:27 CST 2016
 
-namespace butil {
+namespace flare::container {
 
 static const signed char g_tolower_map_base[] = {
     -128, -127, -126, -125, -124, -123, -122, -121, -120,
@@ -50,4 +50,4 @@ static const signed char g_tolower_map_base[] = {
 
 extern const signed char* const g_tolower_map = g_tolower_map_base + 128;
 
-} // namespace butil
+} // namespace flare::container
