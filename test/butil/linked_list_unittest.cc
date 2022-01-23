@@ -79,7 +79,7 @@ TEST(linked_list, append) {
   EXPECT_EQ(&n1, list.tail());
   {
     const int expected[] = {1};
-    ExpectListContents(list, arraysize(expected), expected);
+    ExpectListContents(list, FLARE_ARRAY_SIZE(expected), expected);
   }
 
   Node n2(2);
@@ -89,7 +89,7 @@ TEST(linked_list, append) {
   EXPECT_EQ(&n2, list.tail());
   {
     const int expected[] = {1, 2};
-    ExpectListContents(list, arraysize(expected), expected);
+    ExpectListContents(list, FLARE_ARRAY_SIZE(expected), expected);
   }
 
   Node n3(3);
@@ -99,7 +99,7 @@ TEST(linked_list, append) {
   EXPECT_EQ(&n3, list.tail());
   {
     const int expected[] = {1, 2, 3};
-    ExpectListContents(list, arraysize(expected), expected);
+    ExpectListContents(list, FLARE_ARRAY_SIZE(expected), expected);
   }
 }
 
@@ -122,7 +122,7 @@ TEST(linked_list, remove_from_list) {
   EXPECT_EQ(&n5, list.tail());
   {
     const int expected[] = {1, 2, 3, 4, 5};
-    ExpectListContents(list, arraysize(expected), expected);
+    ExpectListContents(list, FLARE_ARRAY_SIZE(expected), expected);
   }
 
   // Remove from the middle.
@@ -132,7 +132,7 @@ TEST(linked_list, remove_from_list) {
   EXPECT_EQ(&n5, list.tail());
   {
     const int expected[] = {1, 2, 4, 5};
-    ExpectListContents(list, arraysize(expected), expected);
+    ExpectListContents(list, FLARE_ARRAY_SIZE(expected), expected);
   }
 
   // Remove from the tail.
@@ -142,7 +142,7 @@ TEST(linked_list, remove_from_list) {
   EXPECT_EQ(&n4, list.tail());
   {
     const int expected[] = {1, 2, 4};
-    ExpectListContents(list, arraysize(expected), expected);
+    ExpectListContents(list, FLARE_ARRAY_SIZE(expected), expected);
   }
 
   // Remove from the head.
@@ -152,7 +152,7 @@ TEST(linked_list, remove_from_list) {
   EXPECT_EQ(&n4, list.tail());
   {
     const int expected[] = {2, 4};
-    ExpectListContents(list, arraysize(expected), expected);
+    ExpectListContents(list, FLARE_ARRAY_SIZE(expected), expected);
   }
 
   // Empty the list.
@@ -174,7 +174,7 @@ TEST(linked_list, remove_from_list) {
   EXPECT_EQ(&n5, list.tail());
   {
     const int expected[] = {1, 2, 3, 4, 5};
-    ExpectListContents(list, arraysize(expected), expected);
+    ExpectListContents(list, FLARE_ARRAY_SIZE(expected), expected);
   }
 }
 
@@ -193,7 +193,7 @@ TEST(linked_list, insert_before) {
   EXPECT_EQ(&n2, list.tail());
   {
     const int expected[] = {1, 2};
-    ExpectListContents(list, arraysize(expected), expected);
+    ExpectListContents(list, FLARE_ARRAY_SIZE(expected), expected);
   }
 
   n3.insert_before(&n2);
@@ -202,7 +202,7 @@ TEST(linked_list, insert_before) {
   EXPECT_EQ(&n2, list.tail());
   {
     const int expected[] = {1, 3, 2};
-    ExpectListContents(list, arraysize(expected), expected);
+    ExpectListContents(list, FLARE_ARRAY_SIZE(expected), expected);
   }
 
   n4.insert_before(&n1);
@@ -211,7 +211,7 @@ TEST(linked_list, insert_before) {
   EXPECT_EQ(&n2, list.tail());
   {
     const int expected[] = {4, 1, 3, 2};
-    ExpectListContents(list, arraysize(expected), expected);
+    ExpectListContents(list, FLARE_ARRAY_SIZE(expected), expected);
   }
 }
 
@@ -230,7 +230,7 @@ TEST(linked_list, insert_after) {
   EXPECT_EQ(&n2, list.tail());
   {
     const int expected[] = {1, 2};
-    ExpectListContents(list, arraysize(expected), expected);
+    ExpectListContents(list, FLARE_ARRAY_SIZE(expected), expected);
   }
 
   n3.insert_after(&n2);
@@ -239,7 +239,7 @@ TEST(linked_list, insert_after) {
   EXPECT_EQ(&n3, list.tail());
   {
     const int expected[] = {1, 2, 3};
-    ExpectListContents(list, arraysize(expected), expected);
+    ExpectListContents(list, FLARE_ARRAY_SIZE(expected), expected);
   }
 
   n4.insert_after(&n1);
@@ -248,7 +248,7 @@ TEST(linked_list, insert_after) {
   EXPECT_EQ(&n3, list.tail());
   {
     const int expected[] = {1, 4, 2, 3};
-    ExpectListContents(list, arraysize(expected), expected);
+    ExpectListContents(list, FLARE_ARRAY_SIZE(expected), expected);
   }
 }
 

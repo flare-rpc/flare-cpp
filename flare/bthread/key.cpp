@@ -20,7 +20,7 @@
 // Date: Sun Aug  3 12:46:15 CST 2014
 
 #include <pthread.h>
-#include "flare/butil/macros.h"
+#include "flare/base/profile.h"
 #include "flare/base/static_atomic.h"
 #include "flare/bvar/passive_status.h"
 #include "flare/bthread/errno.h"                       // EAGAIN
@@ -74,7 +74,7 @@ static flare::static_atomic<size_t> nsubkeytable = FLARE_STATIC_ATOMIC_INIT(0);
 
 // The second-level array.
 // Align with cacheline to avoid false sharing.
-class BAIDU_CACHELINE_ALIGNMENT SubKeyTable {
+class FLARE_CACHELINE_ALIGNMENT SubKeyTable {
 public:
     SubKeyTable() {
         memset(_data, 0, sizeof(_data));
@@ -134,7 +134,7 @@ private:
 
 // The first-level array.
 // Align with cacheline to avoid false sharing.
-class BAIDU_CACHELINE_ALIGNMENT KeyTable {
+class FLARE_CACHELINE_ALIGNMENT KeyTable {
 public:
     KeyTable() : next(NULL) {
         memset(_subs, 0, sizeof(_subs));

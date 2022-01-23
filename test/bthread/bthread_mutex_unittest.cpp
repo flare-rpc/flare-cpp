@@ -16,7 +16,7 @@
 // under the License.
 
 #include <gtest/gtest.h>
-#include "flare/butil/compat.h"
+#include "flare/base/compat.h"
 #include "flare/base/time.h"
 #include "flare/butil/macros.h"
 #include "flare/base/strings.h"
@@ -64,10 +64,10 @@ TEST(MutexTest, used_in_pthread) {
     bthread_mutex_t m;
     ASSERT_EQ(0, bthread_mutex_init(&m, NULL));
     pthread_t th[8];
-    for (size_t i = 0; i < ARRAY_SIZE(th); ++i) {
+    for (size_t i = 0; i < FLARE_ARRAY_SIZE(th); ++i) {
         ASSERT_EQ(0, pthread_create(&th[i], NULL, locker, &m));
     }
-    for (size_t i = 0; i < ARRAY_SIZE(th); ++i) {
+    for (size_t i = 0; i < FLARE_ARRAY_SIZE(th); ++i) {
         pthread_join(th[i], NULL);
     }
     ASSERT_EQ(0u, *get_butex(m));
@@ -138,7 +138,7 @@ bool g_started = false;
 bool g_stopped = false;
 
 template <typename Mutex>
-struct BAIDU_CACHELINE_ALIGNMENT PerfArgs {
+struct FLARE_CACHELINE_ALIGNMENT PerfArgs {
     Mutex* mutex;
     int64_t counter;
     int64_t elapse_ns;
@@ -221,7 +221,7 @@ void PerfTest(Mutex* mutex,
 
 TEST(MutexTest, performance) {
     const int thread_num = 12;
-    butil::Mutex base_mutex;
+    flare::base::Mutex base_mutex;
     PerfTest(&base_mutex, (pthread_t*)NULL, thread_num, pthread_create, pthread_join);
     PerfTest(&base_mutex, (bthread_t*)NULL, thread_num, bthread_start_background, bthread_join);
     bthread::Mutex bth_mutex;

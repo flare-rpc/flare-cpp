@@ -137,26 +137,26 @@ TEST_F(LockTimerTest, signal_lock_time) {
     IntRecorder r0;
     MutexWithRecorder<pthread_mutex_t> m0(r0);
     pthread_t threads[4];
-    for (size_t i = 0; i < ARRAY_SIZE(threads); ++i) {
+    for (size_t i = 0; i < FLARE_ARRAY_SIZE(threads); ++i) {
         ASSERT_EQ(0, pthread_create(&threads[i], NULL, 
             signal_lock_thread<MutexWithRecorder<pthread_mutex_t> >, &m0));
     }
-    for (size_t i = 0; i < ARRAY_SIZE(threads); ++i) {
+    for (size_t i = 0; i < FLARE_ARRAY_SIZE(threads); ++i) {
         pthread_join(threads[i], NULL);
     }
     LOG(INFO) << r0;
-    ASSERT_EQ(OPS_PER_THREAD * ARRAY_SIZE(threads), (size_t)r0.get_value().num);
+    ASSERT_EQ(OPS_PER_THREAD * FLARE_ARRAY_SIZE(threads), (size_t)r0.get_value().num);
     LatencyRecorder r1;
     MutexWithLatencyRecorder<pthread_mutex_t> m1(r1);
-    for (size_t i = 0; i < ARRAY_SIZE(threads); ++i) {
+    for (size_t i = 0; i < FLARE_ARRAY_SIZE(threads); ++i) {
         ASSERT_EQ(0, pthread_create(&threads[i], NULL, 
             signal_lock_thread<MutexWithLatencyRecorder<pthread_mutex_t> >, &m1));
     }
-    for (size_t i = 0; i < ARRAY_SIZE(threads); ++i) {
+    for (size_t i = 0; i < FLARE_ARRAY_SIZE(threads); ++i) {
         pthread_join(threads[i], NULL);
     }
     LOG(INFO) << r1._latency;
-    ASSERT_EQ(OPS_PER_THREAD * ARRAY_SIZE(threads), (size_t)r1.count());
+    ASSERT_EQ(OPS_PER_THREAD * FLARE_ARRAY_SIZE(threads), (size_t)r1.count());
 }
 
 template <typename M0, typename M1>
@@ -186,15 +186,15 @@ TEST_F(LockTimerTest, double_lock_time) {
     arg.m0.set_recorder(r0);
     arg.m1.set_recorder(r1);
     pthread_t threads[4];
-    for (size_t i = 0; i < ARRAY_SIZE(threads); ++i) {
+    for (size_t i = 0; i < FLARE_ARRAY_SIZE(threads); ++i) {
         ASSERT_EQ(0, pthread_create(&threads[i], NULL, 
             double_lock_thread<M0, M1>, &arg));
     }
-    for (size_t i = 0; i < ARRAY_SIZE(threads); ++i) {
+    for (size_t i = 0; i < FLARE_ARRAY_SIZE(threads); ++i) {
         pthread_join(threads[i], NULL);
     }
-    ASSERT_EQ(OPS_PER_THREAD * ARRAY_SIZE(threads), (size_t)r0.get_value().num);
-    ASSERT_EQ(OPS_PER_THREAD * ARRAY_SIZE(threads), (size_t)r1.count());
+    ASSERT_EQ(OPS_PER_THREAD * FLARE_ARRAY_SIZE(threads), (size_t)r0.get_value().num);
+    ASSERT_EQ(OPS_PER_THREAD * FLARE_ARRAY_SIZE(threads), (size_t)r1.count());
     LOG(INFO) << r0;
     LOG(INFO) << r1._latency;
     r0.reset();
@@ -202,15 +202,15 @@ TEST_F(LockTimerTest, double_lock_time) {
     DoubleLockArg<M1, M0> arg1;
     arg1.m0.set_recorder(r1);
     arg1.m1.set_recorder(r0);
-    for (size_t i = 0; i < ARRAY_SIZE(threads); ++i) {
+    for (size_t i = 0; i < FLARE_ARRAY_SIZE(threads); ++i) {
         ASSERT_EQ(0, pthread_create(&threads[i], NULL, 
             double_lock_thread<M1, M0>, &arg1));
     }
-    for (size_t i = 0; i < ARRAY_SIZE(threads); ++i) {
+    for (size_t i = 0; i < FLARE_ARRAY_SIZE(threads); ++i) {
         pthread_join(threads[i], NULL);
     }
-    ASSERT_EQ(OPS_PER_THREAD * ARRAY_SIZE(threads), (size_t)r0.get_value().num);
-    ASSERT_EQ(OPS_PER_THREAD * ARRAY_SIZE(threads), (size_t)r1.count());
+    ASSERT_EQ(OPS_PER_THREAD * FLARE_ARRAY_SIZE(threads), (size_t)r0.get_value().num);
+    ASSERT_EQ(OPS_PER_THREAD * FLARE_ARRAY_SIZE(threads), (size_t)r1.count());
     LOG(INFO) << r0;
     LOG(INFO) << r1._latency;
 }

@@ -16,7 +16,7 @@
 #include <list>
 #include <utility>
 #include "flare/butil/memory/ref_counted.h"
-#include "flare/butil/synchronization/lock.h"
+#include "flare/base/lock.h"
 #endif
 
 namespace butil {
@@ -147,7 +147,7 @@ class BUTIL_EXPORT WaitableEvent {
 
     bool Dequeue(Waiter* waiter, void* tag);
 
-    butil::Lock lock_;
+    flare::base::Lock lock_;
     const bool manual_reset_;
     bool signaled_;
     std::list<Waiter*> waiters_;

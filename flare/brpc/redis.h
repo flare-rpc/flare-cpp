@@ -65,7 +65,7 @@ public:
     // redisCommandArgv() in hiredis.
     // Example:
     //   std::string_view components[] = { "set", "key", "value" };
-    //   request.AddCommandByComponents(components, arraysize(components));
+    //   request.AddCommandByComponents(components, FLARE_ARRAY_SIZE(components));
     bool AddCommandByComponents(const std::string_view* components, size_t n);
     
     // Add a command with variadic args to this request.

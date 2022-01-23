@@ -28,7 +28,7 @@
 #include "flare/bthread/bthread.h"
 #include "flare/butil/gperftools_profiler.h"
 #include "flare/base/time.h"
-#include "flare/butil/fast_rand.h"
+#include "flare/base/fast_rand.h"
 #include "flare/container/doubly_buffered_data.h"
 #include "flare/brpc/describable.h"
 #include "flare/brpc/socket.h"
@@ -338,7 +338,7 @@ namespace {
             std::cout << "Time " << flare::base::class_name_str(*lb) << " ..." << std::endl;
             flare::base::stop_watcher tm;
             tm.start();
-            for (size_t i = 0; i < ARRAY_SIZE(th); ++i) {
+            for (size_t i = 0; i < FLARE_ARRAY_SIZE(th); ++i) {
                 ASSERT_EQ(0, pthread_create(&th[i], NULL, select_server, &sa));
             }
             std::vector<brpc::ServerId> removed;
@@ -372,14 +372,14 @@ namespace {
             global_stop = true;
             LOG(INFO) << "Stop all...";
 
-            void *retval[ARRAY_SIZE(th)];
-            for (size_t i = 0; i < ARRAY_SIZE(th); ++i) {
+            void *retval[FLARE_ARRAY_SIZE(th)];
+            for (size_t i = 0; i < FLARE_ARRAY_SIZE(th); ++i) {
                 ASSERT_EQ(0, pthread_join(th[i], &retval[i]));
             }
             tm.stop();
 
             CountMap total_count;
-            for (size_t i = 0; i < ARRAY_SIZE(th); ++i) {
+            for (size_t i = 0; i < FLARE_ARRAY_SIZE(th); ++i) {
                 CountMap *selected_count = (CountMap *) retval[i];
                 size_t count = 0;
                 for (CountMap::const_iterator it = selected_count->begin();
@@ -461,9 +461,9 @@ namespace {
                     id.tag = "100";
                 } else if (4 == round) {
                     if (i % 50 == 0) {
-                        id.tag = std::to_string(i * 2 + butil::fast_rand_less_than(40) + 80);
+                        id.tag = std::to_string(i * 2 + flare::base::fast_rand_less_than(40) + 80);
                     } else {
-                        id.tag = std::to_string(butil::fast_rand_less_than(40) + 80);
+                        id.tag = std::to_string(flare::base::fast_rand_less_than(40) + 80);
                     }
                 }
                 brpc::SocketOptions options;
@@ -474,7 +474,7 @@ namespace {
                 lb->AddServer(id);
             }
 
-            for (size_t i = 0; i < ARRAY_SIZE(th); ++i) {
+            for (size_t i = 0; i < FLARE_ARRAY_SIZE(th); ++i) {
                 ASSERT_EQ(0, pthread_create(&th[i], NULL, select_server, &sa));
             }
             bthread_usleep(10000);
@@ -485,7 +485,7 @@ namespace {
             global_stop = true;
 
             CountMap total_count;
-            for (size_t i = 0; i < ARRAY_SIZE(th); ++i) {
+            for (size_t i = 0; i < FLARE_ARRAY_SIZE(th); ++i) {
                 void *retval;
                 ASSERT_EQ(0, pthread_join(th[i], &retval));
                 CountMap *selected_count = (CountMap *) retval;
@@ -577,7 +577,7 @@ namespace {
                 "10.92.149.48:8833",
                 "10.42.122.201:8833",
         };
-        for (size_t round = 0; round < ARRAY_SIZE(hashs); ++round) {
+        for (size_t round = 0; round < FLARE_ARRAY_SIZE(hashs); ++round) {
             brpc::policy::ConsistentHashingLoadBalancer chlb(hash_type[round]);
             std::vector<brpc::ServerId> ids;
             std::vector<flare::base::end_point> addrs;
@@ -652,7 +652,7 @@ namespace {
         brpc::policy::WeightedRoundRobinLoadBalancer wrrlb;
 
         // Add server to selected list. The server with invalid weight will be skipped.
-        for (size_t i = 0; i < ARRAY_SIZE(servers); ++i) {
+        for (size_t i = 0; i < FLARE_ARRAY_SIZE(servers); ++i) {
             const char *addr = servers[i];
             flare::base::end_point dummy;
             ASSERT_EQ(0, str2endpoint(addr, &dummy));
@@ -716,7 +716,7 @@ namespace {
         std::map<flare::base::end_point, int> configed_weight;
         brpc::policy::WeightedRoundRobinLoadBalancer wrrlb;
         brpc::ExcludedServers *exclude = brpc::ExcludedServers::Create(3);
-        for (size_t i = 0; i < ARRAY_SIZE(servers); ++i) {
+        for (size_t i = 0; i < FLARE_ARRAY_SIZE(servers); ++i) {
             const char *addr = servers[i];
             flare::base::end_point dummy;
             ASSERT_EQ(0, str2endpoint(addr, &dummy));
@@ -764,7 +764,7 @@ namespace {
         size_t valid_weight_num = 4;
 
         // Add server to selected list. The server with invalid weight will be skipped.
-        for (size_t i = 0; i < ARRAY_SIZE(servers); ++i) {
+        for (size_t i = 0; i < FLARE_ARRAY_SIZE(servers); ++i) {
             const char *addr = servers[i];
             flare::base::end_point dummy;
             ASSERT_EQ(0, str2endpoint(addr, &dummy));
@@ -837,7 +837,7 @@ namespace {
         for (int i = 0; i < (int) lbs.size(); ++i) {
             brpc::LoadBalancer *lb = lbs[i];
             std::vector<brpc::ServerId> ids;
-            for (size_t i = 0; i < ARRAY_SIZE(servers); ++i) {
+            for (size_t i = 0; i < FLARE_ARRAY_SIZE(servers); ++i) {
                 flare::base::end_point dummy;
                 ASSERT_EQ(0, str2endpoint(servers[i], &dummy));
                 brpc::ServerId id(8888);
@@ -908,7 +908,7 @@ namespace {
                 "10.42.122.201:8833",
         };
         brpc::LoadBalancer *lb = NULL;
-        int rand = butil::fast_rand_less_than(2);
+        int rand = flare::base::fast_rand_less_than(2);
         if (rand == 0) {
             brpc::policy::RandomizedLoadBalancer rlb;
             lb = rlb.New("min_working_instances=2 hold_seconds=2");
@@ -917,7 +917,7 @@ namespace {
             lb = rrlb.New("min_working_instances=2 hold_seconds=2");
         }
         brpc::SocketUniquePtr ptr[2];
-        for (size_t i = 0; i < ARRAY_SIZE(servers); ++i) {
+        for (size_t i = 0; i < FLARE_ARRAY_SIZE(servers); ++i) {
             flare::base::end_point dummy;
             ASSERT_EQ(0, str2endpoint(servers[i], &dummy));
             brpc::SocketOptions options;
@@ -1025,7 +1025,7 @@ namespace {
         brpc::ChannelOptions options;
         options.protocol = "http";
         ASSERT_EQ(channel.Init("list://127.0.0.1:7777 50, 127.0.0.1:7778 50",
-                               lb_algo[butil::fast_rand_less_than(ARRAY_SIZE(lb_algo))],
+                               lb_algo[flare::base::fast_rand_less_than(FLARE_ARRAY_SIZE(lb_algo))],
                                &options), -1);
     }
 
@@ -1046,7 +1046,7 @@ namespace {
         // Disable retry to make health check happen one by one
         options.max_retry = 0;
         ASSERT_EQ(channel.Init("list://127.0.0.1:7777 50, 127.0.0.1:7778 50",
-                               lb_algo[butil::fast_rand_less_than(ARRAY_SIZE(lb_algo))],
+                               lb_algo[flare::base::fast_rand_less_than(FLARE_ARRAY_SIZE(lb_algo))],
                                &options), 0);
         test::EchoRequest req;
         req.set_message("123");

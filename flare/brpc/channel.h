@@ -25,7 +25,7 @@
 #include <ostream>                          // std::ostream
 #include "flare/bthread/errno.h"                  // Redefine errno
 #include "flare/container/intrusive_ptr.h"          // flare::container::intrusive_ptr
-#include "flare/butil/ptr_container.h"
+#include "flare/container/ptr_container.h"
 #include "flare/brpc/ssl_options.h"               // ChannelSSLOptions
 #include "flare/brpc/channel_base.h"              // ChannelBase
 #include "flare/brpc/adaptive_protocol_type.h"    // AdaptiveProtocolType
@@ -132,7 +132,7 @@ struct ChannelOptions {
 private:
     // SSLOptions is large and not often used, allocate it on heap to
     // prevent ChannelOptions from being bloated in most cases.
-    butil::PtrContainer<ChannelSSLOptions> _ssl_options;
+    flare::container::ptr_container<ChannelSSLOptions> _ssl_options;
 };
 
 // A Channel represents a communication line to one server or multiple servers

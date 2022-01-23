@@ -11,7 +11,7 @@
 #include "flare/base/type_traits.h"
 #include "flare/base/errno.h"
 #include "flare/base/static_atomic.h"
-#include "flare/butil/unique_ptr.h"
+#include <memory>
 
 namespace flare::container {
 

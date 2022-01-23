@@ -58,9 +58,9 @@ TEST_F(TimeTest, TimeT) {
   // C library time and exploded time.
   time_t now_t_1 = time(NULL);
   struct tm tms;
-#if defined(OS_WIN)
+#if defined(FLARE_PLATFORM_WINDOWS)
   localtime_s(&tms, &now_t_1);
-#elif defined(OS_POSIX)
+#elif defined(FLARE_PLATFORM_POSIX)
   localtime_r(&now_t_1, &tms);
 #endif
 
@@ -102,13 +102,13 @@ TEST_F(TimeTest, JsTime) {
   EXPECT_EQ(800730.0, t.ToJsTime());
 }
 
-#if defined(OS_POSIX)
+#if defined(FLARE_PLATFORM_POSIX)
 TEST_F(TimeTest, FromTimeVal) {
   Time now = Time::Now();
   Time also_now = Time::FromTimeVal(now.ToTimeVal());
   EXPECT_EQ(now, also_now);
 }
-#endif  // OS_POSIX
+#endif  // FLARE_PLATFORM_POSIX
 
 TEST_F(TimeTest, FromExplodedWithMilliseconds) {
   // Some platform implementations of FromExploded are liable to drop
@@ -172,10 +172,10 @@ TEST_F(TimeTest, DISABLED_ParseTimeTest1) {
   struct tm local_time;
   memset(&local_time, 0, sizeof(local_time));
   char time_buf[BUFFER_SIZE] = {0};
-#if defined(OS_WIN)
+#if defined(FLARE_PLATFORM_WINDOWS)
   localtime_s(&local_time, &current_time);
-  asctime_s(time_buf, arraysize(time_buf), &local_time);
-#elif defined(OS_POSIX)
+  asctime_s(time_buf, FLARE_ARRAY_SIZE(time_buf), &local_time);
+#elif defined(FLARE_PLATFORM_POSIX)
   localtime_r(&current_time, &local_time);
   asctime_r(&local_time, time_buf);
 #endif
@@ -557,7 +557,7 @@ TEST_F(TimeTest, MaxConversions) {
   EXPECT_TRUE(t.is_max());
   EXPECT_EQ(std::numeric_limits<time_t>::max(), t.ToTimeT());
 
-#if defined(OS_POSIX)
+#if defined(FLARE_PLATFORM_POSIX)
   struct timeval tval;
   tval.tv_sec = std::numeric_limits<time_t>::max();
   tval.tv_usec = static_cast<suseconds_t>(Time::kMicrosecondsPerSecond) - 1;
@@ -569,14 +569,14 @@ TEST_F(TimeTest, MaxConversions) {
       tval.tv_usec);
 #endif
 
-#if defined(OS_MACOSX)
+#if defined(FLARE_PLATFORM_OSX)
   t = Time::FromCFAbsoluteTime(std::numeric_limits<CFAbsoluteTime>::infinity());
   EXPECT_TRUE(t.is_max());
   EXPECT_EQ(std::numeric_limits<CFAbsoluteTime>::infinity(),
             t.ToCFAbsoluteTime());
 #endif
 
-#if defined(OS_WIN)
+#if defined(FLARE_PLATFORM_WINDOWS)
   FILETIME ftime;
   ftime.dwHighDateTime = std::numeric_limits<DWORD>::max();
   ftime.dwLowDateTime = std::numeric_limits<DWORD>::max();
@@ -588,7 +588,7 @@ TEST_F(TimeTest, MaxConversions) {
 #endif
 }
 
-#if defined(OS_MACOSX)
+#if defined(FLARE_PLATFORM_OSX)
 TEST_F(TimeTest, TimeTOverflow) {
   Time t = Time::FromInternalValue(std::numeric_limits<int64_t>::max() - 1);
   EXPECT_FALSE(t.is_max());
@@ -596,7 +596,7 @@ TEST_F(TimeTest, TimeTOverflow) {
 }
 #endif
 
-#if defined(OS_ANDROID)
+#if defined(FLARE_PLATFORM_ANDROID)
 TEST_F(TimeTest, FromLocalExplodedCrashOnAndroid) {
   // This crashed inside Time:: FromLocalExploded() on Android 4.1.2.
   // See http://crbug.com/287821
@@ -616,7 +616,7 @@ TEST_F(TimeTest, FromLocalExplodedCrashOnAndroid) {
   Time t = Time::FromLocalExploded(midnight);
   EXPECT_EQ(1381633200, t.ToTimeT());
 }
-#endif  // OS_ANDROID
+#endif  // FLARE_PLATFORM_ANDROID
 
 TEST(TimeTicks, Deltas) {
   for (int index = 0; index < 50; index++) {
@@ -646,7 +646,7 @@ TEST(TimeTicks, Deltas) {
 }
 
 static void HighResClockTest(TimeTicks (*GetTicks)()) {
-#if defined(OS_WIN)
+#if defined(FLARE_PLATFORM_WINDOWS)
   // HighResNow doesn't work on some systems.  Since the product still works
   // even if it doesn't work, it makes this entire test questionable.
   if (!TimeTicks::IsHighResClockWorking())
@@ -690,7 +690,7 @@ TEST(TimeTicks, HighResNow) {
 
 // Fails frequently on Android http://crbug.com/352633 with:
 // Expected: (delta_thread.InMicroseconds()) > (0), actual: 0 vs 0
-#if defined(OS_ANDROID)
+#if defined(FLARE_PLATFORM_ANDROID)
 #define MAYBE_ThreadNow DISABLED_ThreadNow
 #else
 #define MAYBE_ThreadNow ThreadNow
@@ -745,7 +745,7 @@ TEST(TimeDelta, FromAndIn) {
   EXPECT_EQ(13, TimeDelta::FromMicroseconds(13).InMicroseconds());
 }
 
-#if defined(OS_POSIX)
+#if defined(FLARE_PLATFORM_POSIX)
 TEST(TimeDelta, TimeSpecConversion) {
   struct timespec result = TimeDelta::FromSeconds(0).ToTimeSpec();
   EXPECT_EQ(result.tv_sec, 0);
@@ -764,7 +764,7 @@ TEST(TimeDelta, TimeSpecConversion) {
   EXPECT_EQ(result.tv_sec, 1);
   EXPECT_EQ(result.tv_nsec, 1000);
 }
-#endif  // OS_POSIX
+#endif  // FLARE_PLATFORM_POSIX
 
 // Our internal time format is serialized in things like databases, so it's
 // important that it's consistent across all our platforms.  We use the 1601

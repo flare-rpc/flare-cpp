@@ -21,7 +21,7 @@
 #include <signal.h>
 #include <gflags/gflags.h>
 #include <gtest/gtest.h>
-#include "flare/butil/compat.h"
+#include "flare/base/compat.h"
 #include "flare/base/time.h"
 #include "flare/butil/macros.h"
 #include "flare/base/errno.h"
@@ -43,11 +43,11 @@ void quit_handler(int) {
     stop = true;
 }
 
-struct BAIDU_CACHELINE_ALIGNMENT AlignedIntWrapper {
+struct FLARE_CACHELINE_ALIGNMENT AlignedIntWrapper {
     int value;
 };
 
-struct BAIDU_CACHELINE_ALIGNMENT PlayerArg {
+struct FLARE_CACHELINE_ALIGNMENT PlayerArg {
     int read_fd;
     int write_fd;
     int* wait_addr;

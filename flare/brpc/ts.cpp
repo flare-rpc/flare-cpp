@@ -1277,7 +1277,7 @@ flare::base::flare_status TsWriter::Write(const RtmpVideoMessage& msg) {
 
     // always append a aud nalu for each frame.
     tsmsg.payload.append(fresh_nalu_header_and_aud_nalu_7,
-                         arraysize(fresh_nalu_header_and_aud_nalu_7));
+                         FLARE_ARRAY_SIZE(fresh_nalu_header_and_aud_nalu_7));
     butil::IOBuf nalus;
     bool has_idr = false;
     for (AVCNaluIterator it(&avc_msg.data, _avc_seq_header.length_size_minus1,
@@ -1305,20 +1305,20 @@ flare::base::flare_status TsWriter::Write(const RtmpVideoMessage& msg) {
         bool first = true;
         for (size_t i = 0; i < _avc_seq_header.sps_list.size(); ++i) {
             if (first) {
-                tsmsg.payload.append(fresh_nalu_header, arraysize(fresh_nalu_header));
+                tsmsg.payload.append(fresh_nalu_header, FLARE_ARRAY_SIZE(fresh_nalu_header));
                 first = false;
             } else {
-                tsmsg.payload.append(cont_nalu_header, arraysize(cont_nalu_header));
+                tsmsg.payload.append(cont_nalu_header, FLARE_ARRAY_SIZE(cont_nalu_header));
             }
             tsmsg.payload.append(_avc_seq_header.sps_list[i]);
             RPC_VLOG << "Append sps[" << i << "]=" << _avc_seq_header.sps_list[i].size();
         }
         for (size_t i = 0; i < _avc_seq_header.pps_list.size(); ++i) {
             if (first) {
-                tsmsg.payload.append(fresh_nalu_header, arraysize(fresh_nalu_header));
+                tsmsg.payload.append(fresh_nalu_header, FLARE_ARRAY_SIZE(fresh_nalu_header));
                 first = false;
             } else {
-                tsmsg.payload.append(cont_nalu_header, arraysize(cont_nalu_header));
+                tsmsg.payload.append(cont_nalu_header, FLARE_ARRAY_SIZE(cont_nalu_header));
             }
             tsmsg.payload.append(_avc_seq_header.pps_list[i]);
             RPC_VLOG << "Append pps[" << i << "]=" << _avc_seq_header.pps_list[i].size();

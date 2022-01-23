@@ -110,7 +110,7 @@ private:
         const std::vector<ServerNodeWithId>& src,
         std::vector<ServerId>* dst, const NamingServiceFilter* filter);
 
-    butil::Mutex _mutex;
+    flare::base::Mutex _mutex;
     bthread_t _tid;
     NamingService* _ns;
     std::string _protocol;

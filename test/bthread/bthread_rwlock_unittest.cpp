@@ -21,7 +21,7 @@
 #include <signal.h>
 #include <gtest/gtest.h>
 #include "flare/base/time.h"
-#include "flare/butil/macros.h"
+#include "flare/base/profile.h"
 
 namespace {
 void* read_thread(void* arg) {
@@ -59,12 +59,12 @@ TEST(RWLockTest, rdlock_performance) {
 #endif
     pthread_t rth[16];
     pthread_t wth;
-    for (size_t i = 0; i < ARRAY_SIZE(rth); ++i) {
+    for (size_t i = 0; i < FLARE_ARRAY_SIZE(rth); ++i) {
         ASSERT_EQ(0, pthread_create(&rth[i], NULL, read_thread, &lock1));
     }
     ASSERT_EQ(0, pthread_create(&wth, NULL, write_thread, &lock1));
     
-    for (size_t i = 0; i < ARRAY_SIZE(rth); ++i) {
+    for (size_t i = 0; i < FLARE_ARRAY_SIZE(rth); ++i) {
         long* res = NULL;
         pthread_join(rth[i], (void**)&res);
         printf("read thread %lu = %ldns\n", i, *res);

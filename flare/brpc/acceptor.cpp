@@ -160,7 +160,7 @@ int Acceptor::Initialize() {
 
 // NOTE: Join() can happen before StopAccept()
 void Acceptor::Join() {
-    std::unique_lock<butil::Mutex> mu(_map_mutex);
+    std::unique_lock<flare::base::Mutex> mu(_map_mutex);
     if (_status != STOPPING && _status != RUNNING) {  // no need to join.
         return;
     }
@@ -202,7 +202,7 @@ void Acceptor::ListConnections(std::vector<SocketId>* conn_list,
     // ConnectionCount is inaccurate, enough space is reserved
     conn_list->reserve(ConnectionCount() + 10);
 
-    std::unique_lock<butil::Mutex> mu(_map_mutex);
+    std::unique_lock<flare::base::Mutex> mu(_map_mutex);
     if (!_socket_map.initialized()) {
         // Optional. Uninitialized FlatMap should be iteratable.
         return;

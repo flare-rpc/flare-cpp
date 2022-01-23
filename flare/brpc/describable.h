@@ -20,7 +20,7 @@
 #define BRPC_DESCRIBABLE_H
 
 #include <ostream>
-#include "flare/butil/macros.h"
+#include "flare/base/profile.h"
 #include "flare/base/class_name.h"
 
 namespace brpc {
@@ -103,7 +103,7 @@ protected:
         return _dest->sputc(ch);
     }
 private:
-    DISALLOW_COPY_AND_ASSIGN(IndentingOStream);
+    FLARE_DISALLOW_COPY_AND_ASSIGN(IndentingOStream);
     std::streambuf* _dest;
     bool _is_at_start_of_line;
     std::string _indent;

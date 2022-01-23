@@ -18,7 +18,7 @@
 #include <map>
 #include <gtest/gtest.h>
 #include "flare/butil/recordio.h"
-#include "flare/butil/fast_rand.h"
+#include "flare/base/fast_rand.h"
 #include "flare/base/strings.h"
 #include "flare/butil/file_util.h"
 
@@ -230,11 +230,11 @@ TEST(RecordIOTest, incomplete_reader) {
 }
 
 static std::string rand_string(int min_len, int max_len) {
-    const int len = butil::fast_rand_in(min_len, max_len);
+    const int len = flare::base::fast_rand_in(min_len, max_len);
     std::string str;
     str.reserve(len);
     for (int i = 0; i < len; ++i) {
-        str.push_back(butil::fast_rand_in('a', 'Z'));
+        str.push_back(flare::base::fast_rand_in('a', 'Z'));
     }
     return str;
 }
@@ -253,7 +253,7 @@ TEST(RecordIOTest, write_read_random) {
         std::string name = flare::base::string_printf("name_%d_", i) + value;
         src.MutableMeta(name)->append(value);
         ASSERT_EQ(0, rw.Write(src));
-        if (butil::fast_rand_less_than(70) == 0) {
+        if (flare::base::fast_rand_less_than(70) == 0) {
             breaking_offsets[i] = nbytes;
         } else {
             name_value_list.push_back(std::make_pair(name, value));

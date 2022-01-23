@@ -881,11 +881,11 @@ AMFArray::AMFArray() : _size(0) {
 
 AMFArray::AMFArray(const AMFArray& rhs) 
     : _size(rhs._size) {
-    const size_t inline_size = std::min((size_t)_size, arraysize(_fields));
+    const size_t inline_size = std::min((size_t)_size, FLARE_ARRAY_SIZE(_fields));
     for (size_t i = 0; i < inline_size; ++i) {
         _fields[i] = rhs._fields[i];
     }
-    if (_size > arraysize(_fields)) {
+    if (_size > FLARE_ARRAY_SIZE(_fields)) {
         _morefields = rhs._morefields;
     }
 }
@@ -905,7 +905,7 @@ AMFArray& AMFArray::operator=(const AMFArray& rhs) {
 }
 
 void AMFArray::Clear() {
-    const size_t inline_size = std::min((size_t)_size, arraysize(_fields));
+    const size_t inline_size = std::min((size_t)_size, FLARE_ARRAY_SIZE(_fields));
     for (size_t i = 0; i < inline_size; ++i) {
         _fields[i].Clear();
     }
@@ -914,10 +914,10 @@ void AMFArray::Clear() {
 }
 
 AMFField* AMFArray::AddField() {
-    if (_size < arraysize(_fields)) {
+    if (_size < FLARE_ARRAY_SIZE(_fields)) {
         return &_fields[_size++];
     }
-    size_t more_size = _size - arraysize(_fields);
+    size_t more_size = _size - FLARE_ARRAY_SIZE(_fields);
     if (more_size < _morefields.size()) {
         ++_size;
         return &_morefields[more_size];
@@ -931,7 +931,7 @@ void AMFArray::RemoveLastField() {
     if (_size == 0) {
         return;
     }
-    if (_size <= arraysize(_fields)) {
+    if (_size <= FLARE_ARRAY_SIZE(_fields)) {
         _fields[--_size].Clear();
         return;
     }

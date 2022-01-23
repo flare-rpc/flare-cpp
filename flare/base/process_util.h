@@ -19,19 +19,19 @@
 
 // Date: Wed Apr 11 14:35:56 CST 2018
 
-#ifndef BUTIL_PROCESS_UTIL_H
-#define BUTIL_PROCESS_UTIL_H
+#ifndef FLARE_BASE_PROCESS_UTIL_H_
+#define FLARE_BASE_PROCESS_UTIL_H_
 
 #include <sys/types.h>
 
-namespace butil {
+namespace flare::base {
 
-// Read command line of this program. If `with_args' is true, args are
-// included and separated with spaces.
-// Returns length of the command line on sucess, -1 otherwise.
-// NOTE: `buf' does not end with zero.
-ssize_t ReadCommandLine(char* buf, size_t len, bool with_args);
+    // Read command line of this program. If `with_args' is true, args are
+    // included and separated with spaces.
+    // Returns length of the command line on sucess, -1 otherwise.
+    // NOTE: `buf' does not end with zero.
+    ssize_t read_command_line(char *buf, size_t len, bool with_args);
 
-} // namespace butil
+} // namespace flare::base
 
-#endif // BUTIL_PROCESS_UTIL_H
+#endif // FLARE_BASE_PROCESS_UTIL_H_

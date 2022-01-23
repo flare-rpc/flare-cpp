@@ -253,7 +253,6 @@ set(BUTIL_SOURCES
     ${PROJECT_SOURCE_DIR}/flare/butil/files/file_path_constants.cc
     ${PROJECT_SOURCE_DIR}/flare/butil/files/memory_mapped_file.cc
     ${PROJECT_SOURCE_DIR}/flare/butil/files/memory_mapped_file_posix.cc
-    ${PROJECT_SOURCE_DIR}/flare/butil/files/scoped_file.cc
     ${PROJECT_SOURCE_DIR}/flare/butil/files/scoped_temp_dir.cc
     ${PROJECT_SOURCE_DIR}/flare/butil/file_util.cc
     ${PROJECT_SOURCE_DIR}/flare/butil/file_util_posix.cc
@@ -266,10 +265,8 @@ set(BUTIL_SOURCES
     ${PROJECT_SOURCE_DIR}/flare/butil/memory/ref_counted_memory.cc
     ${PROJECT_SOURCE_DIR}/flare/butil/memory/singleton.cc
     ${PROJECT_SOURCE_DIR}/flare/butil/memory/weak_ptr.cc
-    ${PROJECT_SOURCE_DIR}/flare/butil/process_util.cc
     ${PROJECT_SOURCE_DIR}/flare/butil/rand_util.cc
     ${PROJECT_SOURCE_DIR}/flare/butil/rand_util_posix.cc
-    ${PROJECT_SOURCE_DIR}/flare/butil/fast_rand.cpp
     ${PROJECT_SOURCE_DIR}/flare/butil/safe_strerror_posix.cc
     ${PROJECT_SOURCE_DIR}/flare/butil/sha1_portable.cc
     ${PROJECT_SOURCE_DIR}/flare/butil/strings/latin1_string_conversions.cc
@@ -306,14 +303,12 @@ set(BUTIL_SOURCES
     ${PROJECT_SOURCE_DIR}/flare/butil/time/time_posix.cc
     ${PROJECT_SOURCE_DIR}/flare/butil/version.cc
     ${PROJECT_SOURCE_DIR}/flare/butil/unix_socket.cpp
-    ${PROJECT_SOURCE_DIR}/flare/butil/files/temp_file.cpp
     ${PROJECT_SOURCE_DIR}/flare/butil/files/file_watcher.cpp
     ${PROJECT_SOURCE_DIR}/flare/butil/zero_copy_stream_as_streambuf.cpp
     ${PROJECT_SOURCE_DIR}/flare/butil/crc32c.cc
     ${PROJECT_SOURCE_DIR}/flare/butil/iobuf.cpp
     ${PROJECT_SOURCE_DIR}/flare/butil/binary_printer.cpp
     ${PROJECT_SOURCE_DIR}/flare/butil/recordio.cc
-    ${PROJECT_SOURCE_DIR}/flare/butil/popen.cpp
     )
 
 if(CMAKE_SYSTEM_NAME STREQUAL "Linux")

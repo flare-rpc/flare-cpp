@@ -27,7 +27,7 @@
 #include "flare/base/time.h"
 #include "flare/butil/macros.h"
 #include "flare/base/logging.h"
-#include "flare/butil/files/temp_file.h"
+#include "flare/base/temp_file.h"
 #include "flare/brpc/socket.h"
 #include "flare/brpc/acceptor.h"
 #include "flare/brpc/server.h"
@@ -1788,7 +1788,7 @@ protected:
         if (short_connection) {
             opt.connection_type = brpc::CONNECTION_TYPE_SHORT;
         }
-        butil::TempFile server_list;                                        
+        flare::base::temp_file server_list;
         EXPECT_EQ(0, server_list.save_format(
                       "127.0.0.1:100\n"
                       "127.0.0.1:200\n"
@@ -1810,7 +1810,7 @@ protected:
     }
 
     flare::base::end_point _ep;
-    butil::TempFile _server_list;                                        
+    flare::base::temp_file _server_list;
     std::string _naming_url;
     
     brpc::Acceptor _messenger;
@@ -1902,7 +1902,7 @@ TEST_F(ChannelTest, init_using_empty_fns) {
     brpc::ChannelOptions opt;
     opt.succeed_without_server = false;
     brpc::Channel channel;
-    butil::TempFile server_list;
+    flare::base::temp_file server_list;
     ASSERT_EQ(0, server_list.save(""));
     std::string naming_url = std::string("file://") + server_list.fname();
     // empty file list results in error.
@@ -1924,7 +1924,7 @@ TEST_F(ChannelTest, init_using_empty_lns) {
 
 TEST_F(ChannelTest, init_using_naming_service) {
     brpc::Channel* channel = new brpc::Channel();
-    butil::TempFile server_list;
+    flare::base::temp_file server_list;
     ASSERT_EQ(0, server_list.save("127.0.0.1:8888"));
     std::string naming_url = std::string("filE://") + server_list.fname();
     // Rr are intended to test case-insensitivity.
@@ -2021,10 +2021,10 @@ TEST_F(ChannelTest, parse_hostname) {
         "localhost:1234",
         "baidu.com:1234"
     };
-    butil::TempFile tmp_file;
+    flare::base::temp_file tmp_file;
     {
         FILE* fp = fopen(tmp_file.fname(), "w");
-        for (size_t i = 0; i < ARRAY_SIZE(address_list); ++i) {
+        for (size_t i = 0; i < FLARE_ARRAY_SIZE(address_list); ++i) {
             ASSERT_TRUE(fprintf(fp, "%s\n", address_list[i]));
         }
         fclose(fp);

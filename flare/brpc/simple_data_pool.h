@@ -47,7 +47,7 @@ public:
     Stat stat() const;
     
 private:
-    butil::Mutex _mutex;
+    flare::base::Mutex _mutex;
     unsigned _capacity;
     unsigned _size;
     std::atomic<unsigned> _ncreated;

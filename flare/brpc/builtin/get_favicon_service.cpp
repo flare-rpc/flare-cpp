@@ -55,7 +55,7 @@ static butil::IOBuf* s_favicon_buf = NULL;
 static void InitFavIcon() {
     s_favicon_buf = new butil::IOBuf;
     s_favicon_buf->append((const void *)s_favicon_array, 
-                          arraysize(s_favicon_array));
+                          FLARE_ARRAY_SIZE(s_favicon_array));
 }
 static const butil::IOBuf& GetFavIcon() {
     pthread_once(&s_favicon_buf_once, InitFavIcon);

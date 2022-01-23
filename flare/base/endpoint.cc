@@ -12,8 +12,8 @@
 #include "flare/base/fd_guard.h"                    // fd_guard
 #include "flare/base/endpoint.h"                    // ip_t
 #include "flare/base/logging.h"
+#include "flare/base/strings.h"
 #include "flare/base/singleton_on_pthread_once.h"
-#include "flare/butil/strings/string_piece.h"
 #include <sys/socket.h>                        // SO_REUSEADDR SO_REUSEPORT
 
 //supported since Linux 3.9.
@@ -22,7 +22,7 @@ DEFINE_bool(reuse_port, false, "Enable SO_REUSEPORT for all listened sockets");
 DEFINE_bool(reuse_addr, true, "Enable SO_REUSEADDR for all listened sockets");
 
 __BEGIN_DECLS
-int BAIDU_WEAK bthread_connect(
+int FLARE_WEAK bthread_connect(
         int sockfd, const struct sockaddr *serv_addr, socklen_t addrlen) {
     return connect(sockfd, serv_addr, addrlen);
 }
@@ -65,8 +65,8 @@ namespace flare::base {
             return -1;
         }
         // remove baidu-specific domain name (that every name has)
-        butil::StringPiece str(host);
-        if (str.ends_with(".baidu.com")) {
+        std::string_view str(host);
+        if (flare::base::ends_with(host, ".baidu.com")) {
             host[str.size() - 10] = '\0';
         }
         return 0;

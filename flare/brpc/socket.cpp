@@ -16,7 +16,7 @@
 // under the License.
 
 
-#include "flare/butil/compat.h"                        // OS_MACOSX
+#include "flare/base/compat.h"                        // OS_MACOSX
 #include <openssl/ssl.h>
 #include <openssl/err.h>
 #ifdef USE_MESALINK
@@ -30,7 +30,7 @@
 #include "flare/base/fd_utility.h"                     // make_non_blocking
 #include "flare/base/fd_guard.h"                       // fd_guard
 #include "flare/base/time.h"                           // cpuwide_time_us
-#include "flare/butil/object_pool.h"                    // get_object
+#include "flare/memory/object_pool.h"                    // get_object
 #include "flare/base/logging.h"                        // CHECK
 #include "flare/butil/macros.h"
 #include "flare/base/class_name.h"                     // flare::base::class_name
@@ -102,7 +102,7 @@ BRPC_VALIDATE_GFLAG(connect_timeout_as_unreachable,
 
 const int WAIT_EPOLLOUT_TIMEOUT_MS = 50;
 
-class BAIDU_CACHELINE_ALIGNMENT SocketPool {
+class FLARE_CACHELINE_ALIGNMENT SocketPool {
 friend class Socket;
 public:
     explicit SocketPool(const SocketOptions& opt);
@@ -122,7 +122,7 @@ public:
 private:
     // options used to create this instance
     SocketOptions _options;
-    butil::Mutex _mutex;
+    flare::base::Mutex _mutex;
     std::vector<SocketId> _pool;
     flare::base::end_point _remote_side;
     std::atomic<int> _numfree; // #free sockets in all sub pools.
@@ -297,7 +297,7 @@ bool Socket::CreatedByConnect() const {
 SocketMessage* const DUMMY_USER_MESSAGE = (SocketMessage*)0x1;
 const uint32_t MAX_PIPELINED_COUNT = 32768;
 
-struct BAIDU_CACHELINE_ALIGNMENT Socket::WriteRequest {
+struct FLARE_CACHELINE_ALIGNMENT Socket::WriteRequest {
     static WriteRequest* const UNCONNECTED;
     
     butil::IOBuf data;
@@ -469,7 +469,7 @@ void Socket::ReturnSuccessfulWriteRequest(Socket::WriteRequest* p) {
     DCHECK(p->data.empty());
     AddOutputMessages(1);
     const bthread_id_t id_wait = p->id_wait;
-    butil::return_object(p);
+    flare::memory::return_object(p);
     if (id_wait != INVALID_BTHREAD_ID) {
         NotifyOnFailed(id_wait);
     }
@@ -482,7 +482,7 @@ void Socket::ReturnFailedWriteRequest(Socket::WriteRequest* p, int error_code,
     }
     p->data.clear();  // data is probably not written.
     const bthread_id_t id_wait = p->id_wait;
-    butil::return_object(p);
+    flare::memory::return_object(p);
     if (id_wait != INVALID_BTHREAD_ID) {
         bthread_id_error2(id_wait, error_code, error_text);
     }
@@ -583,8 +583,8 @@ int Socket::ResetFileDescriptor(int fd) {
 //   version: from version part of _versioned_nref, must be an EVEN number.
 //   slot: designated by ResourcePool.
 int Socket::Create(const SocketOptions& options, SocketId* id) {
-    butil::ResourceId<Socket> slot;
-    Socket* const m = butil::get_resource(&slot, Forbidden());
+    flare::memory::ResourceId<Socket> slot;
+    Socket* const m = flare::memory::get_resource(&slot, Forbidden());
     if (m == NULL) {
         LOG(FATAL) << "Fail to get_resource<Socket>";
         return -1;
@@ -927,7 +927,7 @@ void Socket::NotifyOnFailed(bthread_id_t id) {
 
 // For unit-test.
 int Socket::Status(SocketId id, int32_t* nref) {
-    const butil::ResourceId<Socket> slot = SlotOfSocketId(id);
+    const flare::memory::ResourceId<Socket> slot = SlotOfSocketId(id);
     Socket* const m = address_resource(slot);
     if (m != NULL) {
         const uint64_t vref = m->_versioned_ref.load(std::memory_order_relaxed);
@@ -1451,7 +1451,7 @@ int Socket::Write(butil::IOBuf* data, const WriteOptions* options_in) {
         return SetError(opt.id_wait, EOVERCROWDED);
     }
 
-    WriteRequest* req = butil::get_object<WriteRequest>();
+    WriteRequest* req = flare::memory::get_object<WriteRequest>();
     if (!req) {
         return SetError(opt.id_wait, ENOMEM);
     }
@@ -1488,7 +1488,7 @@ int Socket::Write(SocketMessagePtr<>& msg, const WriteOptions* options_in) {
         return SetError(opt.id_wait, EOVERCROWDED);
     }
     
-    WriteRequest* req = butil::get_object<WriteRequest>();
+    WriteRequest* req = flare::memory::get_object<WriteRequest>();
     if (!req) {
         return SetError(opt.id_wait, ENOMEM);
     }
@@ -2025,7 +2025,7 @@ void Socket::DebugSocket(std::ostream& os, SocketId id) {
         FLARE_SCOPED_LOCK(ptr->_id_wait_list_mutex);
         if (bthread::get_sizes) {
             nidsize = bthread::get_sizes(
-                &ptr->_id_wait_list, idsizes, arraysize(idsizes));
+                &ptr->_id_wait_list, idsizes, FLARE_ARRAY_SIZE(idsizes));
         }
     }
     const int preferred_index = ptr->preferred_index();

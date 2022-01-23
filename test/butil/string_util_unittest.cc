@@ -86,14 +86,14 @@ TEST(StringUtilTest, TruncateUTF8ToByteSize) {
 
   {
     const char array[] = "\x00\x00\xc2\x81\xc2\x81";
-    const std::string array_string(array, arraysize(array));
+    const std::string array_string(array, FLARE_ARRAY_SIZE(array));
     EXPECT_TRUE(Truncated(array_string, 4, &output));
     EXPECT_EQ(output.compare(std::string("\x00\x00\xc2\x81", 4)), 0);
   }
 
   {
     const char array[] = "\x00\xc2\x81\xc2\x81";
-    const std::string array_string(array, arraysize(array));
+    const std::string array_string(array, FLARE_ARRAY_SIZE(array));
     EXPECT_TRUE(Truncated(array_string, 4, &output));
     EXPECT_EQ(output.compare(std::string("\x00\xc2\x81", 3)), 0);
   }
@@ -160,7 +160,7 @@ TEST(StringUtilTest, TruncateUTF8ToByteSize) {
 
   {
     const char array[] = "\x00\x00\xfe\xff";
-    const std::string array_string(array, arraysize(array));
+    const std::string array_string(array, FLARE_ARRAY_SIZE(array));
     EXPECT_TRUE(Truncated(array_string, 4, &output));
     EXPECT_EQ(output.compare(std::string("\x00\x00", 2)), 0);
   }
@@ -174,7 +174,7 @@ TEST(StringUtilTest, TruncateUTF8ToByteSize) {
   }
   {
     const char array[] = "\xff\x00\x00\xfe";
-    const std::string array_string(array, arraysize(array));
+    const std::string array_string(array, FLARE_ARRAY_SIZE(array));
     EXPECT_TRUE(Truncated(array_string, 4, &output));
     EXPECT_EQ(output.compare(std::string("\xff\x00\x00", 3)), 0);
   }
@@ -224,7 +224,7 @@ TEST(StringUtilTest, TruncateUTF8ToByteSize) {
 
 TEST(StringUtilTest, TrimWhitespace) {
   string16 output;  // Allow contents to carry over to next testcase
-  for (size_t i = 0; i < arraysize(trim_cases); ++i) {
+  for (size_t i = 0; i < FLARE_ARRAY_SIZE(trim_cases); ++i) {
     const trim_case& value = trim_cases[i];
     EXPECT_EQ(value.return_value,
               TrimWhitespace(WideToUTF16(value.input), value.positions,
@@ -243,7 +243,7 @@ TEST(StringUtilTest, TrimWhitespace) {
   EXPECT_EQ(string16(), output);
 
   std::string output_ascii;
-  for (size_t i = 0; i < arraysize(trim_cases_ascii); ++i) {
+  for (size_t i = 0; i < FLARE_ARRAY_SIZE(trim_cases_ascii); ++i) {
     const trim_case_ascii& value = trim_cases_ascii[i];
     EXPECT_EQ(value.return_value,
               TrimWhitespace(value.input, value.positions, &output_ascii));
@@ -278,7 +278,7 @@ static const struct collapse_case {
 };
 
 TEST(StringUtilTest, CollapseWhitespace) {
-  for (size_t i = 0; i < arraysize(collapse_cases); ++i) {
+  for (size_t i = 0; i < FLARE_ARRAY_SIZE(collapse_cases); ++i) {
     const collapse_case& value = collapse_cases[i];
     EXPECT_EQ(WideToUTF16(value.output),
               CollapseWhitespace(WideToUTF16(value.input), value.trim));
@@ -310,7 +310,7 @@ static const struct collapse_case_ascii {
 };
 
 TEST(StringUtilTest, CollapseWhitespaceASCII) {
-  for (size_t i = 0; i < arraysize(collapse_cases_ascii); ++i) {
+  for (size_t i = 0; i < FLARE_ARRAY_SIZE(collapse_cases_ascii); ++i) {
     const collapse_case_ascii& value = collapse_cases_ascii[i];
     EXPECT_EQ(value.output, CollapseWhitespaceASCII(value.input, value.trim));
   }
@@ -395,7 +395,7 @@ TEST(StringUtilTest, ConvertASCII) {
     L"0123ABCDwxyz \a\b\t\r\n!+,.~"
   };
 
-  for (size_t i = 0; i < arraysize(char_cases); ++i) {
+  for (size_t i = 0; i < FLARE_ARRAY_SIZE(char_cases); ++i) {
     EXPECT_TRUE(IsStringASCII(char_cases[i]));
     string16 utf16 = ASCIIToUTF16(char_cases[i]);
     EXPECT_EQ(WideToUTF16(wchar_cases[i]), utf16);
@@ -414,7 +414,7 @@ TEST(StringUtilTest, ConvertASCII) {
 
   // Convert strings with an embedded NUL character.
   const char chars_with_nul[] = "test\0string";
-  const int length_with_nul = arraysize(chars_with_nul) - 1;
+  const int length_with_nul = FLARE_ARRAY_SIZE(chars_with_nul) - 1;
   std::string string_with_nul(chars_with_nul, length_with_nul);
   std::wstring wide_with_nul = ASCIIToWide(string_with_nul);
   EXPECT_EQ(static_cast<std::wstring::size_type>(length_with_nul),
@@ -993,9 +993,9 @@ TEST(StringUtilTest, LcpyTest) {
   {
     char dst[10];
     wchar_t wdst[10];
-    EXPECT_EQ(7U, butil::strlcpy(dst, "abcdefg", arraysize(dst)));
+    EXPECT_EQ(7U, butil::strlcpy(dst, "abcdefg", FLARE_ARRAY_SIZE(dst)));
     EXPECT_EQ(0, memcmp(dst, "abcdefg", 8));
-    EXPECT_EQ(7U, butil::wcslcpy(wdst, L"abcdefg", arraysize(wdst)));
+    EXPECT_EQ(7U, butil::wcslcpy(wdst, L"abcdefg", FLARE_ARRAY_SIZE(wdst)));
     EXPECT_EQ(0, memcmp(wdst, L"abcdefg", sizeof(wchar_t) * 8));
   }
 
@@ -1016,9 +1016,9 @@ TEST(StringUtilTest, LcpyTest) {
   {
     char dst[8];
     wchar_t wdst[8];
-    EXPECT_EQ(7U, butil::strlcpy(dst, "abcdefg", arraysize(dst)));
+    EXPECT_EQ(7U, butil::strlcpy(dst, "abcdefg", FLARE_ARRAY_SIZE(dst)));
     EXPECT_EQ(0, memcmp(dst, "abcdefg", 8));
-    EXPECT_EQ(7U, butil::wcslcpy(wdst, L"abcdefg", arraysize(wdst)));
+    EXPECT_EQ(7U, butil::wcslcpy(wdst, L"abcdefg", FLARE_ARRAY_SIZE(wdst)));
     EXPECT_EQ(0, memcmp(wdst, L"abcdefg", sizeof(wchar_t) * 8));
   }
 
@@ -1026,9 +1026,9 @@ TEST(StringUtilTest, LcpyTest) {
   {
     char dst[7];
     wchar_t wdst[7];
-    EXPECT_EQ(7U, butil::strlcpy(dst, "abcdefg", arraysize(dst)));
+    EXPECT_EQ(7U, butil::strlcpy(dst, "abcdefg", FLARE_ARRAY_SIZE(dst)));
     EXPECT_EQ(0, memcmp(dst, "abcdef", 7));
-    EXPECT_EQ(7U, butil::wcslcpy(wdst, L"abcdefg", arraysize(wdst)));
+    EXPECT_EQ(7U, butil::wcslcpy(wdst, L"abcdefg", FLARE_ARRAY_SIZE(wdst)));
     EXPECT_EQ(0, memcmp(wdst, L"abcdef", sizeof(wchar_t) * 7));
   }
 
@@ -1036,9 +1036,9 @@ TEST(StringUtilTest, LcpyTest) {
   {
     char dst[3];
     wchar_t wdst[3];
-    EXPECT_EQ(7U, butil::strlcpy(dst, "abcdefg", arraysize(dst)));
+    EXPECT_EQ(7U, butil::strlcpy(dst, "abcdefg", FLARE_ARRAY_SIZE(dst)));
     EXPECT_EQ(0, memcmp(dst, "ab", 3));
-    EXPECT_EQ(7U, butil::wcslcpy(wdst, L"abcdefg", arraysize(wdst)));
+    EXPECT_EQ(7U, butil::wcslcpy(wdst, L"abcdefg", FLARE_ARRAY_SIZE(wdst)));
     EXPECT_EQ(0, memcmp(wdst, L"ab", sizeof(wchar_t) * 3));
   }
 }
@@ -1161,7 +1161,7 @@ class WriteIntoTest : public testing::Test {
     // Using std::string(buffer.c_str()) instead of |buffer| truncates the
     // string at the first \0.
     EXPECT_EQ(std::string(kOriginal,
-                          std::min(num_chars, arraysize(kOriginal) - 1)),
+                          std::min(num_chars, FLARE_ARRAY_SIZE(kOriginal) - 1)),
               std::string(buffer.c_str()));
     EXPECT_EQ(num_chars, buffer.size());
   }

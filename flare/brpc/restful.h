@@ -98,7 +98,7 @@ public:
     size_t size() const { return _dedup_map.size(); }
     
 private:
-    DISALLOW_COPY_AND_ASSIGN(RestfulMap);
+    FLARE_DISALLOW_COPY_AND_ASSIGN(RestfulMap);
     
     std::string _service_name;
     // refreshed each time 

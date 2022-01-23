@@ -25,7 +25,7 @@
 #include <mesalink/openssl/bio.h>
 #include <mesalink/openssl/evp.h>
 #include <mesalink/openssl/pem.h>
-#include "flare/butil/unique_ptr.h"
+#include <memory>
 #include "flare/base/logging.h"
 #include "flare/base/string_splitter.h"
 #include "flare/brpc/socket.h"

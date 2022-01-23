@@ -348,7 +348,7 @@ public:
     AVCNaluType nalu_type() const { return _nalu_type; }
 private:
     // `data' is mutable, improper to be copied.
-    DISALLOW_COPY_AND_ASSIGN(AVCNaluIterator);
+    FLARE_DISALLOW_COPY_AND_ASSIGN(AVCNaluIterator);
     bool next_as_annexb();
     bool next_as_ibmf();
     void set_end() { _data = NULL; }
@@ -646,7 +646,7 @@ friend class policy::OnServerStreamCreated;
     uint32_t _chunk_stream_id;
     int64_t _create_realtime_us;
     SocketUniquePtr _rtmpsock;
-    butil::Mutex _call_mutex;
+    flare::base::Mutex _call_mutex;
     std::atomic<bool> _is_server_accepted;
 };
 
@@ -873,7 +873,7 @@ friend class RtmpRetryingClientStream;
         STATE_DESTROYING,
     };
     State _state;
-    butil::Mutex _state_mutex;
+    flare::base::Mutex _state_mutex;
     RtmpClientStreamOptions _options;
 };
 
@@ -1006,7 +1006,7 @@ friend class RetryingClientMessageHandler;
     
     flare::container::intrusive_ptr<RtmpStreamBase> _using_sub_stream;
     flare::container::intrusive_ptr<RtmpRetryingClientStream> _self_ref;
-    mutable butil::Mutex _stream_mutex;
+    mutable flare::base::Mutex _stream_mutex;
     RtmpRetryingClientStreamOptions _options;
     std::atomic<bool> _destroying;
     std::atomic<bool> _called_on_stop;

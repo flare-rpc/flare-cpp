@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#if defined(OS_WIN)
+#if defined(FLARE_PLATFORM_WINDOWS)
 #include <windows.h>
 #include <process.h>
 #endif
@@ -11,7 +11,7 @@
 #include "flare/butil/threading/thread_local_storage.h"
 #include <gtest/gtest.h>
 
-#if defined(OS_WIN)
+#if defined(FLARE_PLATFORM_WINDOWS)
 // Ignore warnings about ptr->int conversions that we use when
 // storing ints into ThreadLocalStorage.
 #pragma warning(disable : 4311 4312)

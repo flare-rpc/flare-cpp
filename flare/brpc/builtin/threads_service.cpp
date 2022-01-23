@@ -18,7 +18,7 @@
 
 #include "flare/base/time.h"
 #include "flare/base/logging.h"
-#include "flare/butil/popen.h"
+#include "flare/base/popen.h"
 #include "flare/brpc/controller.h"           // Controller
 #include "flare/brpc/closure_guard.h"        // ClosureGuard
 #include "flare/brpc/builtin/threads_service.h"
@@ -40,7 +40,7 @@ void ThreadsService::default_method(::google::protobuf::RpcController* cntl_base
     flare::base::stop_watcher tm;
     tm.start();
     butil::IOBufBuilder pstack_output;
-    const int rc = butil::read_command_output(pstack_output, cmd.c_str());
+    const int rc = flare::base::read_command_output(pstack_output, cmd.c_str());
     if (rc < 0) {
         LOG(ERROR) << "Fail to popen `" << cmd << "'";
         return;

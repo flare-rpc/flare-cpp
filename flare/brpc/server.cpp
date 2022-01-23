@@ -1697,7 +1697,7 @@ void* thread_local_data() {
     if (tl_options == NULL) { // not in server threads.
         return NULL;
     }
-    if (BAIDU_UNLIKELY(tl_options->thread_local_data_factory == NULL)) {
+    if (FLARE_UNLIKELY(tl_options->thread_local_data_factory == NULL)) {
         CHECK(false) << "The protocol impl. may not set tls correctly";
         return NULL;
     }

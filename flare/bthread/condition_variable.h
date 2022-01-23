@@ -42,7 +42,7 @@ __END_DECLS
 namespace bthread {
 
 class ConditionVariable {
-    DISALLOW_COPY_AND_ASSIGN(ConditionVariable);
+    FLARE_DISALLOW_COPY_AND_ASSIGN(ConditionVariable);
 public:
     typedef bthread_cond_t*         native_handler_type;
     

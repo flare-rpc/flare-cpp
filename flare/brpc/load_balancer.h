@@ -174,7 +174,7 @@ private:
     LoadBalancer* _lb;
     std::atomic<int> _weight_sum;
     volatile bool _exposed;
-    butil::Mutex _st_mutex;
+    flare::base::Mutex _st_mutex;
     bvar::PassiveStatus<std::string> _st;
 };
 

@@ -73,7 +73,7 @@ TEST(SysStrings, SysUTF8ToWide) {
 }
 
 // FIXME(gejun): Following cases fail due to failure of setlocale
-#if 0 //defined(OS_LINUX)  // Tests depend on setting a specific Linux locale.
+#if 0 //defined(FLARE_PLATFORM_LINUX)  // Tests depend on setting a specific Linux locale.
 
 TEST(SysStrings, SysWideToNativeMB) {
   ScopedLocale locale("en_US.utf-8");
@@ -161,7 +161,7 @@ static const wchar_t* const kConvertRoundtripCases[] = {
 
 TEST(SysStrings, SysNativeMBAndWide) {
   ScopedLocale locale("en_US.utf-8");
-  for (size_t i = 0; i < arraysize(kConvertRoundtripCases); ++i) {
+  for (size_t i = 0; i < FLARE_ARRAY_SIZE(kConvertRoundtripCases); ++i) {
     std::wstring wide = kConvertRoundtripCases[i];
     std::wstring trip = SysNativeMBToWide(SysWideToNativeMB(wide));
     EXPECT_EQ(wide.size(), trip.size());
@@ -169,20 +169,20 @@ TEST(SysStrings, SysNativeMBAndWide) {
   }
 
   // We assume our test is running in UTF-8, so double check through ICU.
-  for (size_t i = 0; i < arraysize(kConvertRoundtripCases); ++i) {
+  for (size_t i = 0; i < FLARE_ARRAY_SIZE(kConvertRoundtripCases); ++i) {
     std::wstring wide = kConvertRoundtripCases[i];
     std::wstring trip = SysNativeMBToWide(WideToUTF8(wide));
     EXPECT_EQ(wide.size(), trip.size());
     EXPECT_EQ(wide, trip);
   }
 
-  for (size_t i = 0; i < arraysize(kConvertRoundtripCases); ++i) {
+  for (size_t i = 0; i < FLARE_ARRAY_SIZE(kConvertRoundtripCases); ++i) {
     std::wstring wide = kConvertRoundtripCases[i];
     std::wstring trip = UTF8ToWide(SysWideToNativeMB(wide));
     EXPECT_EQ(wide.size(), trip.size());
     EXPECT_EQ(wide, trip);
   }
 }
-#endif  // OS_LINUX
+#endif  // FLARE_PLATFORM_LINUX
 
 }  // namespace butil

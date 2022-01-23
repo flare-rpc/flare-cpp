@@ -18,10 +18,10 @@
 #include <gtest/gtest.h>
 #include "flare/base/time.h"
 #include "flare/butil/macros.h"
-#include "flare/butil/fast_rand.h"
+#include "flare/base/fast_rand.h"
 
 #define BAIDU_CLEAR_RESOURCE_POOL_AFTER_ALL_THREADS_QUIT
-#include "flare/butil/resource_pool.h"
+#include "flare/memory/resource_pool.h"
 
 namespace {
 struct MyObject {};
@@ -29,7 +29,7 @@ struct MyObject {};
 int nfoo_dtor = 0;
 struct Foo {
     Foo() {
-        x = butil::fast_rand() % 2;
+        x = flare::base::fast_rand() % 2;
     }
     ~Foo() {
         ++nfoo_dtor;
@@ -109,7 +109,7 @@ struct YellObj {
 
 TEST_F(ResourcePoolTest, change_config) {
     int a[2];
-    printf("%lu\n", ARRAY_SIZE(a));
+    printf("%lu\n", FLARE_ARRAY_SIZE(a));
     
     ResourcePoolInfo info = describe_resources<MyObject>();
     ResourcePoolInfo zero_info = { 0, 0, 0, 0, 3, 3, 0 };
@@ -377,18 +377,18 @@ TEST_F(ResourcePoolTest, get_and_return_int_single_thread) {
 
 TEST_F(ResourcePoolTest, get_and_return_int_multiple_threads) {
     pthread_t tid[16];
-    for (size_t i = 0; i < ARRAY_SIZE(tid); ++i) {
+    for (size_t i = 0; i < FLARE_ARRAY_SIZE(tid); ++i) {
         ASSERT_EQ(0, pthread_create(&tid[i], NULL, get_and_return_int, NULL));
     }
-    for (size_t i = 0; i < ARRAY_SIZE(tid); ++i) {
+    for (size_t i = 0; i < FLARE_ARRAY_SIZE(tid); ++i) {
         pthread_join(tid[i], NULL);
     }
 
     pthread_t tid2[16];
-    for (size_t i = 0; i < ARRAY_SIZE(tid2); ++i) {
+    for (size_t i = 0; i < FLARE_ARRAY_SIZE(tid2); ++i) {
         ASSERT_EQ(0, pthread_create(&tid2[i], NULL, new_and_delete_int, NULL));
     }
-    for (size_t i = 0; i < ARRAY_SIZE(tid2); ++i) {
+    for (size_t i = 0; i < FLARE_ARRAY_SIZE(tid2); ++i) {
         pthread_join(tid2[i], NULL);
     }
 

@@ -69,8 +69,8 @@ struct HeaderEqualTo {
     }
 };
 
-class BAIDU_CACHELINE_ALIGNMENT IndexTable {
-DISALLOW_COPY_AND_ASSIGN(IndexTable);
+class FLARE_CACHELINE_ALIGNMENT IndexTable {
+FLARE_DISALLOW_COPY_AND_ASSIGN(IndexTable);
     typedef HPacker::Header Header;
 public:
     IndexTable()
@@ -82,7 +82,7 @@ public:
     int Init(const IndexTableOptions& options);
 
     const Header* HeaderAt(int index) const {
-        if (BAIDU_UNLIKELY(index < _start_index)) {
+        if (FLARE_UNLIKELY(index < _start_index)) {
             return NULL;
         }
         return _header_queue.bottom(index - _start_index);
@@ -279,8 +279,8 @@ struct HuffmanNode {
     int32_t value;
 };
 
-class BAIDU_CACHELINE_ALIGNMENT HuffmanTree {
-DISALLOW_COPY_AND_ASSIGN(HuffmanTree);
+class FLARE_CACHELINE_ALIGNMENT HuffmanTree {
+FLARE_DISALLOW_COPY_AND_ASSIGN(HuffmanTree);
 public:
     typedef uint16_t NodeId;
     enum ConstValue {
@@ -346,7 +346,7 @@ private:
 };
 
 class HuffmanEncoder {
-DISALLOW_COPY_AND_ASSIGN(HuffmanEncoder);
+FLARE_DISALLOW_COPY_AND_ASSIGN(HuffmanEncoder);
 public:
     HuffmanEncoder(butil::IOBufAppender* out, const HuffmanCode* table)
         : _out(out)
@@ -403,7 +403,7 @@ private:
 };
 
 class HuffmanDecoder {
-DISALLOW_COPY_AND_ASSIGN(HuffmanDecoder);
+FLARE_DISALLOW_COPY_AND_ASSIGN(HuffmanDecoder);
 public:
     HuffmanDecoder(std::string* out, const HuffmanTree* tree)
         // FIXME: resizing of out is costly
@@ -417,12 +417,12 @@ public:
         for (int i = 7; i >= 0; --i) {
             if (byte & (1u << i)) {
                 _cur_node = _tree->node(_cur_node->right_child);
-                if (BAIDU_UNLIKELY(!_cur_node)) {
+                if (FLARE_UNLIKELY(!_cur_node)) {
                     LOG(ERROR) << "Decoder stream reaches NULL_NODE";
                     return -1;
                 }
                 if (_cur_node->value != HuffmanTree::INVALID_VALUE) {
-                    if (BAIDU_UNLIKELY(_cur_node->value == HPACK_HUFFMAN_EOS)) {
+                    if (FLARE_UNLIKELY(_cur_node->value == HPACK_HUFFMAN_EOS)) {
                         LOG(ERROR) << "Decoder stream reaches EOS";
                         return -1;
                     }
@@ -435,12 +435,12 @@ public:
                 _padding &= 1;
             } else {
                 _cur_node = _tree->node(_cur_node->left_child);
-                if (BAIDU_UNLIKELY(!_cur_node)) {
+                if (FLARE_UNLIKELY(!_cur_node)) {
                     LOG(ERROR) << "Decoder stream reaches NULL_NODE";
                     return -1;
                 }
                 if (_cur_node->value != HuffmanTree::INVALID_VALUE) {
-                    if (BAIDU_UNLIKELY(_cur_node->value == HPACK_HUFFMAN_EOS)) {
+                    if (FLARE_UNLIKELY(_cur_node->value == HPACK_HUFFMAN_EOS)) {
                         LOG(ERROR) << "Decoder stream reaches EOS";
                         return -1;
                     }

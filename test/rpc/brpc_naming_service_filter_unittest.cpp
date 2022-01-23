@@ -19,7 +19,7 @@
 #include <gtest/gtest.h>
 #include <vector>
 #include "flare/base/strings.h"
-#include "flare/butil/files/temp_file.h"
+#include "flare/base/temp_file.h"
 #include "flare/brpc/socket.h"
 #include "flare/brpc/channel.h"
 #include "flare/brpc/load_balancer.h"
@@ -47,10 +47,10 @@ TEST_F(NamingServiceFilterTest, sanity) {
         "localhost:1234",
         "baidu.com:1234"
     };
-    butil::TempFile tmp_file;
+    flare::base::temp_file tmp_file;
     {
         FILE* fp = fopen(tmp_file.fname(), "w");
-        for (size_t i = 0; i < ARRAY_SIZE(address_list); ++i) {
+        for (size_t i = 0; i < FLARE_ARRAY_SIZE(address_list); ++i) {
             ASSERT_TRUE(fprintf(fp, "%s\n", address_list[i]));
         }
         fclose(fp);

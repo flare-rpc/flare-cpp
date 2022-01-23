@@ -120,7 +120,7 @@ public:
         return tmp;
     }
 private:
-    DISALLOW_COPY_AND_ASSIGN(ScopedNonServiceError);
+    FLARE_DISALLOW_COPY_AND_ASSIGN(ScopedNonServiceError);
     const Server* _server;
 };
 

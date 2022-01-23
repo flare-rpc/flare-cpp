@@ -36,8 +36,8 @@ DEFINE_int32(bvar_collector_expected_per_second, 1000,
 // CAUTION: Don't change this value unless you know exactly what it means.
 static const int64_t COLLECTOR_GRAB_INTERVAL_US = 100000L; // 100ms
 
-BAIDU_CASSERT(!(COLLECTOR_SAMPLING_BASE & (COLLECTOR_SAMPLING_BASE - 1)),
-              must_be_power_of_2);
+static_assert(!(COLLECTOR_SAMPLING_BASE & (COLLECTOR_SAMPLING_BASE - 1)),
+              "must be power of 2");
 
 // Combine two circular linked list into one.
 struct CombineCollected {
@@ -99,7 +99,7 @@ private:
     bool _stop;         // Set to true in dtor.
     pthread_t _grab_thread;     // For joining.
     pthread_t _dump_thread;
-    int64_t _ngrab BAIDU_CACHELINE_ALIGNMENT;
+    int64_t _ngrab FLARE_CACHELINE_ALIGNMENT;
     int64_t _ndrop;
     int64_t _ndump;
     pthread_mutex_t _dump_thread_mutex;

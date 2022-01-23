@@ -18,7 +18,7 @@
 
 #include <algorithm>
 
-#include "flare/butil/fast_rand.h"
+#include "flare/base/fast_rand.h"
 #include "flare/brpc/socket.h"
 #include "flare/brpc/policy/weighted_randomized_load_balancer.h"
 #include "flare/butil/strings/string_number_conversions.h"
@@ -120,7 +120,7 @@ int WeightedRandomizedLoadBalancer::SelectServer(const SelectIn& in, SelectOut* 
     }
     uint64_t weight_sum = s->weight_sum;
     for (size_t i = 0; i < n; ++i) {
-        uint64_t random_weight = butil::fast_rand_less_than(weight_sum);
+        uint64_t random_weight = flare::base::fast_rand_less_than(weight_sum);
         const Server random_server(0, 0, random_weight);
         const auto& server = std::lower_bound(s->server_list.begin(), s->server_list.end(), random_server, server_compare);
         const SocketId id = server->id;

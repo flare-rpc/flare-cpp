@@ -17,7 +17,7 @@
 
 
 #include "flare/butil/macros.h"
-#include "flare/butil/fast_rand.h"
+#include "flare/base/fast_rand.h"
 #include "flare/brpc/socket.h"
 #include "flare/brpc/policy/randomized_load_balancer.h"
 #include "flare/butil/strings/string_number_conversions.h"
@@ -30,7 +30,7 @@ const uint32_t prime_offset[] = {
 };
 
 inline uint32_t GenRandomStride() {
-    return prime_offset[butil::fast_rand_less_than(ARRAY_SIZE(prime_offset))];
+    return prime_offset[flare::base::fast_rand_less_than(ARRAY_SIZE(prime_offset))];
 }
 
 bool RandomizedLoadBalancer::Add(Servers& bg, const ServerId& id) {
@@ -118,7 +118,7 @@ int RandomizedLoadBalancer::SelectServer(const SelectIn& in, SelectOut* out) {
         }
     }
     uint32_t stride = 0;
-    size_t offset = butil::fast_rand_less_than(n);
+    size_t offset = flare::base::fast_rand_less_than(n);
     for (size_t i = 0; i < n; ++i) {
         const SocketId id = s->server_list[offset].id;
         if (((i + 1) == n  // always take last chance

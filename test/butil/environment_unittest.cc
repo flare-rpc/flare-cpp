@@ -86,7 +86,7 @@ TEST_F(EnvironmentTest, UnSetVar) {
   EXPECT_FALSE(env->HasVar(kFooUpper));
 }
 
-#if defined(OS_WIN)
+#if defined(FLARE_PLATFORM_WINDOWS)
 
 TEST_F(EnvironmentTest, AlterEnvironment) {
   const wchar_t empty[] = L"\0";

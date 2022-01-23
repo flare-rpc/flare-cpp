@@ -144,7 +144,7 @@ private:
 
     // RedisReply does not own the memory of fields, copying must be done
     // by calling CopyFrom[Different|Same]Arena.
-    DISALLOW_COPY_AND_ASSIGN(RedisReply);
+    FLARE_DISALLOW_COPY_AND_ASSIGN(RedisReply);
 
     void FormatStringImpl(const char* fmt, va_list args, RedisReplyType type);
     void SetStringImpl(const std::string_view& str, RedisReplyType type);

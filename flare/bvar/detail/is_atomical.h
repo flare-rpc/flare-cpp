@@ -24,13 +24,7 @@ namespace bvar {
 namespace detail {
 template <class T> struct is_atomical
 : std::integral_constant<bool, (std::is_integral<T>::value ||
-                                 std::is_floating_point<T>::value)
-                                 // FIXME(gejun): Not work in gcc3.4
-                                 // butil::is_enum<T>::value ||
-                                 // NOTE(gejun): Ops on pointers are not
-                                 // atomic generally
-                                 // butil::is_pointer<T>::value
-                          > {};
+                                 std::is_floating_point<T>::value)> {};
 template <class T> struct is_atomical<const T> : is_atomical<T> { };
 template <class T> struct is_atomical<volatile T> : is_atomical<T> { };
 template <class T> struct is_atomical<const volatile T> : is_atomical<T> { };

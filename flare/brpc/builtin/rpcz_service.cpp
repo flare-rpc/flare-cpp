@@ -227,7 +227,7 @@ struct CompareByStartRealTime {
 };
 
 static flare::base::ip_t loopback_ip = flare::base::IP_ANY;
-static int ALLOW_UNUSED init_loopback_ip_dummy = flare::base::str2ip("127.0.0.1", &loopback_ip);
+static int FLARE_ALLOW_UNUSED init_loopback_ip_dummy = flare::base::str2ip("127.0.0.1", &loopback_ip);
 
 static void PrintClientSpan(
     std::ostream& os, const RpczSpan& span,

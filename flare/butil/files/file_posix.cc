@@ -11,7 +11,7 @@
 
 #include "flare/butil/files/file_path.h"
 #include "flare/base/logging.h"
-#include "flare/butil/posix/eintr_wrapper.h"
+#include "flare/base/profile/eintr_wrapper.h"
 #include "flare/butil/strings/utf_string_conversions.h"
 #include "flare/butil/threading/thread_restrictions.h"
 

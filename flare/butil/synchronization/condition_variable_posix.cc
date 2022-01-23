@@ -8,11 +8,11 @@
 #include <sys/time.h>
 
 #include "flare/base/logging.h"
-#include "flare/butil/synchronization/lock.h"
+#include "flare/base/lock.h"
 #include "flare/butil/threading/thread_restrictions.h"
 #include "flare/butil/time/time.h"
 
-namespace butil {
+namespace flare::base {
 
 ConditionVariable::ConditionVariable(Mutex* user_lock)
     : user_mutex_(user_lock->native_handle()) {
@@ -33,15 +33,15 @@ void ConditionVariable::Wait() {
   DCHECK_EQ(0, rv);
 }
 
-void ConditionVariable::TimedWait(const TimeDelta& max_time) {
+void ConditionVariable::TimedWait(const butil::TimeDelta& max_time) {
   butil::ThreadRestrictions::AssertWaitAllowed();
   int64_t usecs = max_time.InMicroseconds();
   struct timespec relative_time;
-  relative_time.tv_sec = usecs / Time::kMicrosecondsPerSecond;
+  relative_time.tv_sec = usecs / butil::Time::kMicrosecondsPerSecond;
   relative_time.tv_nsec =
-      (usecs % Time::kMicrosecondsPerSecond) * Time::kNanosecondsPerMicrosecond;
+      (usecs % butil::Time::kMicrosecondsPerSecond) * butil::Time::kNanosecondsPerMicrosecond;
 
-#if defined(OS_MACOSX)
+#if defined(FLARE_PLATFORM_OSX)
   int rv = pthread_cond_timedwait_relative_np(
       &condition_, user_mutex_, &relative_time);
 #else
@@ -58,7 +58,7 @@ void ConditionVariable::TimedWait(const TimeDelta& max_time) {
   DCHECK_GE(absolute_time.tv_sec, now.tv_sec);  // Overflow paranoia
 
   int rv = pthread_cond_timedwait(&condition_, user_mutex_, &absolute_time);
-#endif  // OS_MACOSX
+#endif  // FLARE_PLATFORM_OSX
 
   DCHECK(rv == 0 || rv == ETIMEDOUT);
 }
@@ -73,4 +73,4 @@ void ConditionVariable::Signal() {
   DCHECK_EQ(0, rv);
 }
 
-}  // namespace butil
+}  // namespace flare::base

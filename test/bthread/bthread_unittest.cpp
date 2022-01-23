@@ -169,7 +169,7 @@ void* misc(void* arg) {
     EXPECT_EQ(0, bthread_start_urgent(&th[5], NULL, spin_and_log, (void*)85));
     EXPECT_EQ(0, bthread_start_urgent(&th[6], NULL, launcher, (void*)6));
     EXPECT_EQ(0, bthread_start_urgent(&th[7], NULL, stopper, NULL));
-    for (size_t i = 0; i < ARRAY_SIZE(th); ++i) {
+    for (size_t i = 0; i < FLARE_ARRAY_SIZE(th); ++i) {
         EXPECT_EQ(0, bthread_join(th[i], NULL));
     }
     return NULL;
@@ -329,7 +329,7 @@ void* bthread_starter(void* void_counter) {
     return NULL;
 }
 
-struct BAIDU_CACHELINE_ALIGNMENT AlignedCounter {
+struct FLARE_CACHELINE_ALIGNMENT AlignedCounter {
     AlignedCounter() : value(0) {}
     std::atomic<size_t> value;
 };

@@ -299,7 +299,7 @@ public:
     }
     
 private:
-    DISALLOW_COPY_AND_ASSIGN(VarsDumper);
+    FLARE_DISALLOW_COPY_AND_ASSIGN(VarsDumper);
     
     butil::IOBufBuilder & _os;
     bool _use_html;

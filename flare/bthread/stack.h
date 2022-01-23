@@ -26,7 +26,7 @@
 #include <gflags/gflags.h>          // DECLARE_int32
 #include "flare/bthread/types.h"
 #include "flare/bthread/context.h"        // bthread_fcontext_t
-#include "flare/butil/object_pool.h"
+#include "flare/memory/object_pool.h"
 
 namespace bthread {
 

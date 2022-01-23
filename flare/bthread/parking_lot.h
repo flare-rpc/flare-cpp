@@ -28,7 +28,7 @@
 namespace bthread {
 
 // Park idle workers.
-class BAIDU_CACHELINE_ALIGNMENT ParkingLot {
+class FLARE_CACHELINE_ALIGNMENT ParkingLot {
 public:
     class State {
     public:

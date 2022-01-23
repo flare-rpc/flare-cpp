@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "flare/butil/compiler_specific.h"
+#include "flare/base/profile.h"
 #include "flare/butil/threading/platform_thread.h"
 
 #include <gtest/gtest.h>
@@ -39,15 +39,15 @@ TEST(PlatformThreadTest, Trivial) {
 
 TEST(PlatformThreadTest, TrivialTimesTen) {
   TrivialThread thread[10];
-  PlatformThreadHandle handle[arraysize(thread)];
+  PlatformThreadHandle handle[FLARE_ARRAY_SIZE(thread)];
 
-  for (size_t n = 0; n < arraysize(thread); n++)
+  for (size_t n = 0; n < FLARE_ARRAY_SIZE(thread); n++)
     ASSERT_FALSE(thread[n].did_run());
-  for (size_t n = 0; n < arraysize(thread); n++)
+  for (size_t n = 0; n < FLARE_ARRAY_SIZE(thread); n++)
     ASSERT_TRUE(PlatformThread::Create(0, &thread[n], &handle[n]));
-  for (size_t n = 0; n < arraysize(thread); n++)
+  for (size_t n = 0; n < FLARE_ARRAY_SIZE(thread); n++)
     PlatformThread::Join(handle[n]);
-  for (size_t n = 0; n < arraysize(thread); n++)
+  for (size_t n = 0; n < FLARE_ARRAY_SIZE(thread); n++)
     ASSERT_TRUE(thread[n].did_run());
 }
 
@@ -96,15 +96,15 @@ TEST(PlatformThreadTest, FunctionTimesTen) {
   PlatformThreadId main_thread_id = PlatformThread::CurrentId();
 
   FunctionTestThread thread[10];
-  PlatformThreadHandle handle[arraysize(thread)];
+  PlatformThreadHandle handle[FLARE_ARRAY_SIZE(thread)];
 
-  for (size_t n = 0; n < arraysize(thread); n++)
+  for (size_t n = 0; n < FLARE_ARRAY_SIZE(thread); n++)
     ASSERT_FALSE(thread[n].did_run());
-  for (size_t n = 0; n < arraysize(thread); n++)
+  for (size_t n = 0; n < FLARE_ARRAY_SIZE(thread); n++)
     ASSERT_TRUE(PlatformThread::Create(0, &thread[n], &handle[n]));
-  for (size_t n = 0; n < arraysize(thread); n++)
+  for (size_t n = 0; n < FLARE_ARRAY_SIZE(thread); n++)
     PlatformThread::Join(handle[n]);
-  for (size_t n = 0; n < arraysize(thread); n++) {
+  for (size_t n = 0; n < FLARE_ARRAY_SIZE(thread); n++) {
     ASSERT_TRUE(thread[n].did_run());
     EXPECT_NE(thread[n].thread_id(), main_thread_id);
 

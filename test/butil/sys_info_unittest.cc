@@ -13,7 +13,7 @@
 typedef testing::Test SysInfoTest;
 using butil::FilePath;
 
-#if defined(OS_POSIX) && !defined(OS_MACOSX) && !defined(OS_ANDROID)
+#if defined(FLARE_PLATFORM_POSIX) && !defined(FLARE_PLATFORM_OSX) && !defined(FLARE_PLATFORM_ANDROID)
 TEST_F(SysInfoTest, MaxSharedMemorySize) {
   // We aren't actually testing that it's correct, just that it's sane.
   EXPECT_GT(butil::SysInfo::MaxSharedMemorySize(), 0u);
@@ -41,7 +41,7 @@ TEST_F(SysInfoTest, AmountOfFreeDiskSpace) {
             << tmp_path.value();
 }
 
-#if defined(OS_WIN) || defined(OS_MACOSX)
+#if defined(FLARE_PLATFORM_WINDOWS) || defined(FLARE_PLATFORM_OSX)
 TEST_F(SysInfoTest, OperatingSystemVersionNumbers) {
   int32_t os_major_version = -1;
   int32_t os_minor_version = -1;

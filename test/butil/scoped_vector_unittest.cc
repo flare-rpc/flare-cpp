@@ -293,7 +293,7 @@ TEST(ScopedVectorTest, InsertRange) {
   LifeCycleWatcher watchers[5];
 
   std::vector<LifeCycleObject*> vec;
-  for(LifeCycleWatcher* it = watchers; it != watchers + arraysize(watchers);
+  for(LifeCycleWatcher* it = watchers; it != watchers + FLARE_ARRAY_SIZE(watchers);
       ++it) {
     EXPECT_EQ(LC_INITIAL, it->life_cycle_state());
     vec.push_back(it->NewLifeCycleObject());
@@ -303,7 +303,7 @@ TEST(ScopedVectorTest, InsertRange) {
   {
     butil::ScopedVector<LifeCycleObject> scoped_vector;
     scoped_vector.insert(scoped_vector.end(), vec.begin() + 1, vec.begin() + 3);
-    for(LifeCycleWatcher* it = watchers; it != watchers + arraysize(watchers);
+    for(LifeCycleWatcher* it = watchers; it != watchers + FLARE_ARRAY_SIZE(watchers);
         ++it)
       EXPECT_EQ(LC_CONSTRUCTED, it->life_cycle_state());
   }
@@ -311,7 +311,7 @@ TEST(ScopedVectorTest, InsertRange) {
     EXPECT_EQ(LC_CONSTRUCTED, it->life_cycle_state());
   for(LifeCycleWatcher* it = watchers + 1; it != watchers + 3; ++it)
     EXPECT_EQ(LC_DESTROYED, it->life_cycle_state());
-  for(LifeCycleWatcher* it = watchers + 3; it != watchers + arraysize(watchers);
+  for(LifeCycleWatcher* it = watchers + 3; it != watchers + FLARE_ARRAY_SIZE(watchers);
       ++it)
     EXPECT_EQ(LC_CONSTRUCTED, it->life_cycle_state());
 }

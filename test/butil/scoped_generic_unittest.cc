@@ -4,7 +4,7 @@
 
 #include <vector>
 
-#include "flare/butil/scoped_generic.h"
+#include "flare/base/scoped_generic.h"
 #include <gtest/gtest.h>
 
 namespace butil {
@@ -24,11 +24,11 @@ struct IntTraits {
   std::vector<int>* freed_ints;
 };
 
-typedef ScopedGeneric<int, IntTraits> ScopedInt;
+typedef flare::base::scoped_generic<int, IntTraits> ScopedInt;
 
 }  // namespace
 
-TEST(ScopedGenericTest, ScopedGeneric) {
+TEST(ScopedGenericTest, scoped_generic) {
   std::vector<int> values_freed;
   IntTraits traits(&values_freed);
 

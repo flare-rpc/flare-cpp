@@ -6,13 +6,13 @@
 // to make third_party/dmg_fp/dtoa.cc threadsafe.
 #include "flare/butil/lazy_instance.h"
 #include "flare/base/logging.h"
-#include "flare/butil/synchronization/lock.h"
+#include "flare/base/lock.h"
 
 // We need two locks because they're sometimes grabbed at the same time.
 // A single lock would lead to an attempted recursive grab.
-static butil::LazyInstance<butil::Lock>::Leaky
+static butil::LazyInstance<flare::base::Lock>::Leaky
     dtoa_lock_0 = LAZY_INSTANCE_INITIALIZER;
-static butil::LazyInstance<butil::Lock>::Leaky
+static butil::LazyInstance<flare::base::Lock>::Leaky
     dtoa_lock_1 = LAZY_INSTANCE_INITIALIZER;
 
 /*
@@ -33,13 +33,13 @@ static butil::LazyInstance<butil::Lock>::Leaky
 
 inline static void ACQUIRE_DTOA_LOCK(size_t n) {
   DCHECK(n < 2);
-  butil::Lock* lock = n == 0 ? dtoa_lock_0.Pointer() : dtoa_lock_1.Pointer();
+  flare::base::Lock* lock = n == 0 ? dtoa_lock_0.Pointer() : dtoa_lock_1.Pointer();
   lock->Acquire();
 }
 
 inline static void FREE_DTOA_LOCK(size_t n) {
   DCHECK(n < 2);
-  butil::Lock* lock = n == 0 ? dtoa_lock_0.Pointer() : dtoa_lock_1.Pointer();
+  flare::base::Lock* lock = n == 0 ? dtoa_lock_0.Pointer() : dtoa_lock_1.Pointer();
   lock->Release();
 }
 

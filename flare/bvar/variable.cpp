@@ -22,7 +22,6 @@
 #include <fstream>                              // std::ifstream
 #include <sstream>                              // std::ostringstream
 #include <gflags/gflags.h>
-#include "flare/butil/macros.h"                        // BAIDU_CASSERT
 #include "flare/container/flat_map.h"           // flare::container::FlatMap
 #include "flare/base/scoped_lock.h"                   // BAIDU_SCOPE_LOCK
 #include "flare/base/string_splitter.h"               // flare::base::StringSplitter
@@ -55,7 +54,7 @@ static bool validate_bvar_abort_on_same_name(const char*, bool v) {
     }
     return true;
 }
-const bool ALLOW_UNUSED dummy_bvar_abort_on_same_name = ::GFLAGS_NS::RegisterFlagValidator(
+const bool FLARE_ALLOW_UNUSED dummy_bvar_abort_on_same_name = ::GFLAGS_NS::RegisterFlagValidator(
     &FLAGS_bvar_abort_on_same_name, validate_bvar_abort_on_same_name);
 
 
@@ -64,7 +63,7 @@ DEFINE_bool(bvar_log_dumpped,  false,
             " into logstream before call Dumpper");
 
 const size_t SUB_MAP_COUNT = 32;  // must be power of 2
-BAIDU_CASSERT(!(SUB_MAP_COUNT & (SUB_MAP_COUNT - 1)), must_be_power_of_2);
+static_assert(!(SUB_MAP_COUNT & (SUB_MAP_COUNT - 1)), "must be power of 2");
 
 class VarEntry {
 public:
@@ -340,7 +339,7 @@ int CharArrayStreamBuf::overflow(int ch) {
     }
     size_t new_size = std::max(_size * 3 / 2, (size_t)64);
     char* new_data = (char*)malloc(new_size);
-    if (BAIDU_UNLIKELY(new_data == NULL)) {
+    if (FLARE_UNLIKELY(new_data == NULL)) {
         setp(NULL, NULL);
         return std::streambuf::traits_type::eof();
     }
@@ -794,7 +793,7 @@ static bool validate_bvar_dump(const char*, bool enabled) {
     }
     return true;
 }
-const bool ALLOW_UNUSED dummy_bvar_dump = ::GFLAGS_NS::RegisterFlagValidator(
+const bool FLARE_ALLOW_UNUSED dummy_bvar_dump = ::GFLAGS_NS::RegisterFlagValidator(
     &FLAGS_bvar_dump, validate_bvar_dump);
 
 // validators (to make these gflags reloadable in brpc)
@@ -809,11 +808,11 @@ static bool validate_bvar_dump_interval(const char*, int32_t v) {
     }
     return true;
 }
-const bool ALLOW_UNUSED dummy_bvar_dump_interval = ::GFLAGS_NS::RegisterFlagValidator(
+const bool FLARE_ALLOW_UNUSED dummy_bvar_dump_interval = ::GFLAGS_NS::RegisterFlagValidator(
     &FLAGS_bvar_dump_interval, validate_bvar_dump_interval);
 
 static bool validate_bvar_log_dumpped(const char *, bool) { return true; }
-const bool ALLOW_UNUSED dummy_bvar_log_dumpped = ::GFLAGS_NS::RegisterFlagValidator(
+const bool FLARE_ALLOW_UNUSED dummy_bvar_log_dumpped = ::GFLAGS_NS::RegisterFlagValidator(
         &FLAGS_bvar_log_dumpped, validate_bvar_log_dumpped);
 
 static bool wakeup_dumping_thread(const char*, const std::string&) {
@@ -823,15 +822,15 @@ static bool wakeup_dumping_thread(const char*, const std::string&) {
     return true;
 }
 
-const bool ALLOW_UNUSED dummy_bvar_dump_file = ::GFLAGS_NS::RegisterFlagValidator(
+const bool FLARE_ALLOW_UNUSED dummy_bvar_dump_file = ::GFLAGS_NS::RegisterFlagValidator(
     &FLAGS_bvar_dump_file, wakeup_dumping_thread);
-const bool ALLOW_UNUSED dummy_bvar_dump_filter = ::GFLAGS_NS::RegisterFlagValidator(
+const bool FLARE_ALLOW_UNUSED dummy_bvar_dump_filter = ::GFLAGS_NS::RegisterFlagValidator(
     &FLAGS_bvar_dump_include, wakeup_dumping_thread);
-const bool ALLOW_UNUSED dummy_bvar_dump_exclude = ::GFLAGS_NS::RegisterFlagValidator(
+const bool FLARE_ALLOW_UNUSED dummy_bvar_dump_exclude = ::GFLAGS_NS::RegisterFlagValidator(
     &FLAGS_bvar_dump_exclude, wakeup_dumping_thread);
-const bool ALLOW_UNUSED dummy_bvar_dump_prefix = ::GFLAGS_NS::RegisterFlagValidator(
+const bool FLARE_ALLOW_UNUSED dummy_bvar_dump_prefix = ::GFLAGS_NS::RegisterFlagValidator(
     &FLAGS_bvar_dump_prefix, wakeup_dumping_thread);
-const bool ALLOW_UNUSED dummy_bvar_dump_tabs = ::GFLAGS_NS::RegisterFlagValidator(
+const bool FLARE_ALLOW_UNUSED dummy_bvar_dump_tabs = ::GFLAGS_NS::RegisterFlagValidator(
     &FLAGS_bvar_dump_tabs, wakeup_dumping_thread);
 
 void to_underscored_name(std::string* name, const std::string_view& src) {

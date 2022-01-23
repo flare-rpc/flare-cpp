@@ -24,7 +24,7 @@
 #include "flare/base/fd_guard.h"                  // fd_guard
 #include "flare/butil/file_util.h"                 // butil::FilePath
 #include "flare/hash/murmurhash3.h"
-#include "flare/butil/process_util.h"              // ReadCommandLine
+#include "flare/base/process_util.h"              // read_command_line
 #include "flare/brpc/server.h"
 #include "flare/brpc/builtin/common.h"
 
@@ -338,7 +338,7 @@ namespace brpc {
     static char s_cmdline[256];
 
     static void CreateProgramName() {
-        const ssize_t nr = butil::ReadCommandLine(s_cmdline, sizeof(s_cmdline) - 1, false);
+        const ssize_t nr = flare::base::read_command_line(s_cmdline, sizeof(s_cmdline) - 1, false);
         if (nr > 0) {
             s_cmdline[nr] = '\0';
             s_program_name = s_cmdline;

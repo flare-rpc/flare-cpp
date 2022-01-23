@@ -27,7 +27,7 @@
 #include <google/protobuf/descriptor.h>
 #include "flare/base/time.h"
 #include "flare/butil/macros.h"
-#include "flare/butil/files/scoped_file.h"
+#include "flare/base/scoped_file.h"
 #include "flare/base/fd_guard.h"
 #include "flare/brpc/socket.h"
 #include "flare/brpc/acceptor.h"
@@ -460,7 +460,7 @@ TEST_F(HttpTest, chunked_uploading) {
 
     // Check response
     const std::string exp_res = "{\"message\":\"world\"}";
-    butil::ScopedFILE fp(res_fname.c_str(), "r");
+    flare::base::scoped_file fp(res_fname.c_str(), "r");
     char buf[128];
     ASSERT_TRUE(fgets(buf, sizeof(buf), fp));
     EXPECT_EQ(exp_res, std::string(buf));

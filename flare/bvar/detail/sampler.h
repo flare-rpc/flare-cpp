@@ -64,7 +64,7 @@ protected:
 friend class SamplerCollector;
     bool _used;
     // Sync destroy() and take_sample().
-    butil::Mutex _mutex;
+    flare::base::Mutex _mutex;
 };
 
 // Representing a non-existing operator so that we can test

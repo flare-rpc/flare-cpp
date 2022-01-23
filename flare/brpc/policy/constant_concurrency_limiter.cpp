@@ -18,28 +18,28 @@
 #include "flare/brpc/policy/constant_concurrency_limiter.h"
 
 namespace brpc {
-namespace policy {
+    namespace policy {
 
-ConstantConcurrencyLimiter::ConstantConcurrencyLimiter(int max_concurrency)
-    : _max_concurrency(max_concurrency) {
-}
+        ConstantConcurrencyLimiter::ConstantConcurrencyLimiter(int max_concurrency)
+                : _max_concurrency(max_concurrency) {
+        }
 
-bool ConstantConcurrencyLimiter::OnRequested(int current_concurrency) {
-    return current_concurrency <= _max_concurrency;
-}
+        bool ConstantConcurrencyLimiter::OnRequested(int current_concurrency) {
+            return current_concurrency <= _max_concurrency;
+        }
 
-void ConstantConcurrencyLimiter::OnResponded(int error_code, int64_t latency) {
-}
+        void ConstantConcurrencyLimiter::OnResponded(int error_code, int64_t latency) {
+        }
 
-int ConstantConcurrencyLimiter::MaxConcurrency() {
-    return _max_concurrency.load(std::memory_order_relaxed);
-}
+        int ConstantConcurrencyLimiter::MaxConcurrency() {
+            return _max_concurrency.load(std::memory_order_relaxed);
+        }
 
-ConstantConcurrencyLimiter*
-ConstantConcurrencyLimiter::New(const AdaptiveMaxConcurrency& amc) const {
-    CHECK_EQ(amc.type(), AdaptiveMaxConcurrency::CONSTANT());
-    return new ConstantConcurrencyLimiter(static_cast<int>(amc));
-}
+        ConstantConcurrencyLimiter *
+        ConstantConcurrencyLimiter::New(const AdaptiveMaxConcurrency &amc) const {
+            CHECK_EQ(amc.type(), AdaptiveMaxConcurrency::CONSTANT());
+            return new ConstantConcurrencyLimiter(static_cast<int>(amc));
+        }
 
-}  // namespace policy
+    }  // namespace policy
 }  // namespace brpc

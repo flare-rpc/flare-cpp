@@ -19,7 +19,7 @@
 #include <limits>                                            // numeric_limits
 #include <gflags/gflags.h>
 #include "flare/base/time.h"                                       // gettimeofday_us
-#include "flare/butil/fast_rand.h"
+#include "flare/base/fast_rand.h"
 #include "flare/brpc/log.h"
 #include "flare/brpc/socket.h"
 #include "flare/brpc/reloadable_flags.h"
@@ -274,7 +274,7 @@ int LocalityAwareLoadBalancer::SelectServer(const SelectIn& in, SelectOut* out) 
     size_t ntry = 0;
     size_t nloop = 0;
     int64_t total = _total.load(std::memory_order_relaxed);
-    int64_t dice = butil::fast_rand_less_than(total);
+    int64_t dice = flare::base::fast_rand_less_than(total);
     size_t index = 0;
     int64_t self = 0;
     while (total > 0) {
@@ -343,7 +343,7 @@ int LocalityAwareLoadBalancer::SelectServer(const SelectIn& in, SelectOut* out) 
             }
         }
         total = _total.load(std::memory_order_relaxed);
-        dice = butil::fast_rand_less_than(total);
+        dice = flare::base::fast_rand_less_than(total);
         index = 0;
     }
     return EHOSTDOWN;
@@ -473,7 +473,7 @@ void LocalityAwareLoadBalancer::Destroy() {
 }
 
 void LocalityAwareLoadBalancer::Weight::Describe(std::ostream& os, int64_t now) {
-    std::unique_lock<butil::Mutex> mu(_mutex);
+    std::unique_lock<flare::base::Mutex> mu(_mutex);
     int64_t begin_time_sum = _begin_time_sum;
     int begin_time_count = _begin_time_count;
     int64_t weight = _weight;

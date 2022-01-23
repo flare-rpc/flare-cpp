@@ -20,8 +20,8 @@
 #include <fcntl.h>                    // O_CREAT
 #include "flare/butil/file_util.h"
 #include "flare/butil/raw_pack.h"
-#include "flare/butil/unique_ptr.h"
-#include "flare/butil/fast_rand.h"
+#include <memory>
+#include "flare/base/fast_rand.h"
 #include "flare/butil/files/file_enumerator.h"
 #include "flare/bvar/bvar.h"
 #include "flare/brpc/log.h"

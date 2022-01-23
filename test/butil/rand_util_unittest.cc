@@ -3,7 +3,7 @@
 // found in the LICENSE file.
 
 #include "flare/butil/rand_util.h"
-#include "flare/butil/fast_rand.h"
+#include "flare/base/fast_rand.h"
 #include "flare/base/time.h"
 #include <algorithm>
 #include <limits>
@@ -26,7 +26,7 @@ TEST(RandUtilTest, Sanity) {
     EXPECT_EQ(butil::RandInt(kIntMax, kIntMax), kIntMax);
 
     for (int i = 0; i < 10; ++i) {
-        uint64_t value = butil::fast_rand_in(
+        uint64_t value = flare::base::fast_rand_in(
             (uint64_t)0, std::numeric_limits<uint64_t>::max());
         if (value != std::numeric_limits<uint64_t>::min() &&
             value != std::numeric_limits<uint64_t>::max()) {
@@ -36,7 +36,7 @@ TEST(RandUtilTest, Sanity) {
         }
     }
     for (int i = 0; i < 10; ++i) {
-        int64_t value = butil::fast_rand_in(
+        int64_t value = flare::base::fast_rand_in(
             std::numeric_limits<int64_t>::min(),
             std::numeric_limits<int64_t>::max());
         if (value != std::numeric_limits<int64_t>::min() &&
@@ -46,19 +46,19 @@ TEST(RandUtilTest, Sanity) {
             EXPECT_NE(9, i) << "Never meet random except min/max of int64";
         }
     }
-    EXPECT_EQ(butil::fast_rand_in(-1, -1), -1);
-    EXPECT_EQ(butil::fast_rand_in(1, 1), 1);
-    EXPECT_EQ(butil::fast_rand_in(0, 0), 0);
-    EXPECT_EQ(butil::fast_rand_in(std::numeric_limits<int64_t>::min(),
+    EXPECT_EQ(flare::base::fast_rand_in(-1, -1), -1);
+    EXPECT_EQ(flare::base::fast_rand_in(1, 1), 1);
+    EXPECT_EQ(flare::base::fast_rand_in(0, 0), 0);
+    EXPECT_EQ(flare::base::fast_rand_in(std::numeric_limits<int64_t>::min(),
                                   std::numeric_limits<int64_t>::min()),
               std::numeric_limits<int64_t>::min());
-    EXPECT_EQ(butil::fast_rand_in(std::numeric_limits<int64_t>::max(),
+    EXPECT_EQ(flare::base::fast_rand_in(std::numeric_limits<int64_t>::max(),
                                   std::numeric_limits<int64_t>::max()),
               std::numeric_limits<int64_t>::max());
-    EXPECT_EQ(butil::fast_rand_in(std::numeric_limits<uint64_t>::min(),
+    EXPECT_EQ(flare::base::fast_rand_in(std::numeric_limits<uint64_t>::min(),
                                   std::numeric_limits<uint64_t>::min()),
               std::numeric_limits<uint64_t>::min());
-    EXPECT_EQ(butil::fast_rand_in(std::numeric_limits<uint64_t>::max(),
+    EXPECT_EQ(flare::base::fast_rand_in(std::numeric_limits<uint64_t>::max(),
                                   std::numeric_limits<uint64_t>::max()),
               std::numeric_limits<uint64_t>::max());
 }
@@ -69,7 +69,7 @@ TEST(RandUtilTest, RandDouble) {
     EXPECT_GT(1.0, number);
     EXPECT_LE(0.0, number);
 
-    volatile double number2 = butil::fast_rand_double();
+    volatile double number2 = flare::base::fast_rand_double();
     EXPECT_GT(1.0, number2);
     EXPECT_LE(0.0, number2);
 }
@@ -132,7 +132,7 @@ TEST(RandUtilTest, RandGeneratorIsUniform) {
         int count = 0;
         while (count < kMaxAttempts) {
             uint64_t value = (round == 0 ? butil::RandGenerator(kTopOfRange)
-                              : butil::fast_rand_less_than(kTopOfRange));
+                              : flare::base::fast_rand_less_than(kTopOfRange));
             cumulative_average = (count * cumulative_average + value) / (count + 1);
 
             // Don't quit too quickly for things to start converging, or we may have
@@ -163,7 +163,7 @@ TEST(RandUtilTest, RandUint64ProducesBothValuesOfAllBits) {
         uint64_t found_zeros = kAllOnes;
         bool fail = true;
         for (size_t i = 0; i < 1000; ++i) {
-            uint64_t value = (round == 0 ? butil::RandUint64() : butil::fast_rand());
+            uint64_t value = (round == 0 ? butil::RandUint64() : flare::base::fast_rand());
             found_ones |= value;
             found_zeros &= value;
 
@@ -205,7 +205,7 @@ TEST(RandUtilTest, fast_rand_perf) {
     flare::base::stop_watcher tm;
     tm.start();
     for (int i = 0; i < kTestIterations; ++i) {
-        s += butil::fast_rand_less_than(kRange);
+        s += flare::base::fast_rand_less_than(kRange);
     }
     tm.stop();
     LOG(INFO) << "Each fast_rand_less_than took " << tm.n_elapsed() / kTestIterations

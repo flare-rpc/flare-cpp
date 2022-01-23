@@ -15,11 +15,11 @@
 #include <gtest/gtest.h>
 #include "multiprocess_func_list.h"
 
-#if defined(OS_MACOSX)
+#if defined(FLARE_PLATFORM_OSX)
 #include "flare/butil/mac/scoped_nsautorelease_pool.h"
 #endif
 
-#if defined(OS_POSIX)
+#if defined(FLARE_PLATFORM_POSIX)
 #include <errno.h>
 #include <fcntl.h>
 #include <sys/mman.h>
@@ -28,12 +28,12 @@
 #include <unistd.h>
 #endif
 
-#if defined(OS_WIN)
+#if defined(FLARE_PLATFORM_WINDOWS)
 #include "flare/butil/win/scoped_handle.h"
 #endif
 
 static const int kNumThreads = 5;
-#if !defined(OS_IOS)  // iOS does not allow multiple processes.
+#if !defined(FLARE_PLATFORM_IPHONE)  // iOS does not allow multiple processes.
 static const int kNumTasks = 5;
 #endif
 
@@ -56,7 +56,7 @@ class MultipleThreadMain : public PlatformThread::Delegate {
 
   // PlatformThread::Delegate interface.
   virtual void ThreadMain() OVERRIDE {
-#if defined(OS_MACOSX)
+#if defined(FLARE_PLATFORM_OSX)
     mac::ScopedNSAutoreleasePool pool;
 #endif
     const uint32_t kDataSize = 1024;
@@ -93,7 +93,7 @@ const char* const MultipleThreadMain::s_test_name_ =
 // TODO(port):
 // This test requires the ability to pass file descriptors between processes.
 // We haven't done that yet in Chrome for POSIX.
-#if defined(OS_WIN)
+#if defined(FLARE_PLATFORM_WINDOWS)
 // Each thread will open the shared memory.  Each thread will take the memory,
 // and keep changing it while trying to lock it, with some small pauses in
 // between. Verify that each thread's value in the shared memory is always
@@ -144,7 +144,7 @@ class MultipleLockThread : public PlatformThread::Delegate {
 
 // Android doesn't support SharedMemory::Open/Delete/
 // CreateNamedDeprecated(openExisting=true)
-#if !defined(OS_ANDROID)
+#if !defined(FLARE_PLATFORM_ANDROID)
 TEST(SharedMemoryTest, OpenClose) {
   const uint32_t kDataSize = 1024;
   std::string test_name = "SharedMemoryOpenCloseTest";
@@ -272,7 +272,7 @@ TEST(SharedMemoryTest, MultipleThreads) {
   // kNumThreads.
 
   int threadcounts[] = { 1, kNumThreads };
-  for (size_t i = 0; i < arraysize(threadcounts); i++) {
+  for (size_t i = 0; i < FLARE_ARRAY_SIZE(threadcounts); i++) {
     int numthreads = threadcounts[i];
     scoped_ptr<PlatformThreadHandle[]> thread_handles;
     scoped_ptr<MultipleThreadMain*[]> thread_delegates;
@@ -301,7 +301,7 @@ TEST(SharedMemoryTest, MultipleThreads) {
 // (defined above), which requires the ability to pass file
 // descriptors between processes.  We haven't done that yet in Chrome
 // for POSIX.
-#if defined(OS_WIN)
+#if defined(FLARE_PLATFORM_WINDOWS)
 // Create a set of threads to each open a shared memory segment and write to it
 // with the lock held. Verify that they are always reading/writing consistent
 // data.
@@ -409,11 +409,11 @@ TEST(SharedMemoryTest, ShareReadOnly) {
   // pipe would transform it into read/write.
   SharedMemoryHandle handle = readonly_shmem.handle();
 
-#if defined(OS_ANDROID)
+#if defined(FLARE_PLATFORM_ANDROID)
   // The "read-only" handle is still writable on Android:
   // http://crbug.com/320865
   (void)handle;
-#elif defined(OS_POSIX)
+#elif defined(FLARE_PLATFORM_POSIX)
   EXPECT_EQ(O_RDONLY, fcntl(handle.fd, F_GETFL) & O_ACCMODE)
       << "The descriptor itself should be read-only.";
 
@@ -427,7 +427,7 @@ TEST(SharedMemoryTest, ShareReadOnly) {
   if (writable != MAP_FAILED)
     EXPECT_EQ(0, munmap(writable, readonly_shmem.mapped_size()));
 
-#elif defined(OS_WIN)
+#elif defined(FLARE_PLATFORM_WINDOWS)
   EXPECT_EQ(NULL, MapViewOfFile(handle, FILE_MAP_WRITE, 0, 0, 0))
       << "Shouldn't be able to map memory writable.";
 
@@ -445,7 +445,7 @@ TEST(SharedMemoryTest, ShareReadOnly) {
     butil::win::ScopedHandle writable_handle(temp_handle);
 #else
 #error Unexpected platform; write a test that tries to make 'handle' writable.
-#endif  // defined(OS_POSIX) || defined(OS_WIN)
+#endif  // defined(FLARE_PLATFORM_POSIX) || defined(FLARE_PLATFORM_WINDOWS)
 }
 
 TEST(SharedMemoryTest, ShareToSelf) {
@@ -513,7 +513,7 @@ TEST(SharedMemoryTest, MapTwice) {
   EXPECT_EQ(old_address, memory.memory());
 }
 
-#if defined(OS_POSIX)
+#if defined(FLARE_PLATFORM_POSIX)
 // Create a shared memory object, mmap it, and mprotect it to PROT_EXEC.
 TEST(SharedMemoryTest, AnonymousExecutable) {
   const uint32_t kTestSize = 1 << 16;
@@ -533,7 +533,7 @@ TEST(SharedMemoryTest, AnonymousExecutable) {
 // Android supports a different permission model than POSIX for its "ashmem"
 // shared memory implementation. So the tests about file permissions are not
 // included on Android.
-#if !defined(OS_ANDROID)
+#if !defined(FLARE_PLATFORM_ANDROID)
 
 // Set a umask and restore the old mask on destruction.
 class ScopedUmaskSetter {
@@ -593,9 +593,9 @@ TEST(SharedMemoryTest, FilePermissionsNamed) {
   EXPECT_FALSE(shm_stat.st_mode & S_IRWXO);
   EXPECT_FALSE(shm_stat.st_mode & S_IRWXG);
 }
-#endif  // !defined(OS_ANDROID)
+#endif  // !defined(FLARE_PLATFORM_ANDROID)
 
-#endif  // defined(OS_POSIX)
+#endif  // defined(FLARE_PLATFORM_POSIX)
 
 // Map() will return addresses which are aligned to the platform page size, this
 // varies from platform to platform though.  Since we'd like to advertise a
@@ -610,7 +610,7 @@ TEST(SharedMemoryTest, MapMinimumAlignment) {
   shared_memory.Close();
 }
 
-#if !defined(OS_IOS)  // iOS does not allow multiple processes.
+#if !defined(FLARE_PLATFORM_IPHONE)  // iOS does not allow multiple processes.
 
 // On POSIX it is especially important we test shmem across processes,
 // not just across threads.  But the test is enabled on all platforms.
@@ -624,7 +624,7 @@ class SharedMemoryProcessTest : public MultiProcessTest {
 
   static int TaskTestMain() {
     int errors = 0;
-#if defined(OS_MACOSX)
+#if defined(FLARE_PLATFORM_OSX)
     mac::ScopedNSAutoreleasePool pool;
 #endif
     const uint32_t kDataSize = 1024;
@@ -681,6 +681,6 @@ MULTIPROCESS_TEST_MAIN(SharedMemoryTestMain) {
   return SharedMemoryProcessTest::TaskTestMain();
 }
 
-#endif  // !OS_IOS
+#endif  // !FLARE_PLATFORM_IPHONE
 
 }  // namespace butil

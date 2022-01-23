@@ -20,7 +20,7 @@
 #include <sys/socket.h>                // socketpair
 #include <errno.h>                     // errno
 #include <fcntl.h>                     // O_RDONLY
-#include <flare/butil/files/temp_file.h>      // TempFile
+#include <flare/base/temp_file.h>      // temp_file
 #include <flare/container/flat_map.h>
 #include <flare/butil/macros.h>
 #include "flare/base/time.h"                 // Timer
@@ -29,7 +29,7 @@
 #include "flare/base/logging.h"
 #include "flare/base/fd_guard.h"
 #include "flare/base/errno.h"
-#include <flare/butil/fast_rand.h>
+#include <flare/base/fast_rand.h>
 
 #if BAZEL_TEST
 #include "test/iobuf.pb.h"
@@ -288,7 +288,7 @@ namespace {
                              {" world4", 7},
                              {"hello5",  6},
                              {" world5", 7}};
-        ASSERT_EQ(0, b.appendv(vec, arraysize(vec)));
+        ASSERT_EQ(0, b.appendv(vec, FLARE_ARRAY_SIZE(vec)));
         ASSERT_EQ("hello1 world1hello2 world2hello3 world3hello4 world4hello5 world5",
                   b.to_string());
 
@@ -296,7 +296,7 @@ namespace {
         vec[2].iov_len = 4;  // "hello2"
         vec[5].iov_len = 3;  // " world3"
         b.clear();
-        ASSERT_EQ(0, b.appendv(vec, arraysize(vec)));
+        ASSERT_EQ(0, b.appendv(vec, FLARE_ARRAY_SIZE(vec)));
         ASSERT_EQ("hello1 world1hell world2hello3 wohello4 world4hello5 world5",
                   b.to_string());
 
@@ -319,7 +319,7 @@ namespace {
                               {str + len1,        len2},
                               {str + len1 + len2, len3}};
         b.clear();
-        ASSERT_EQ(0, b.appendv(vec2, arraysize(vec2)));
+        ASSERT_EQ(0, b.appendv(vec2, FLARE_ARRAY_SIZE(vec2)));
         ASSERT_EQ(full_len, b.size());
         ASSERT_EQ(0, memcmp(str, b.to_string().data(), full_len));
     }
@@ -390,7 +390,7 @@ namespace {
         // We replace butil::IOBuf::Block with FakeBlock with only nshared (in
         // the same offset)
         FakeBlock *blocks[butil::IOBuf::INITIAL_CAP + 16];
-        const size_t NBLOCKS = ARRAY_SIZE(blocks);
+        const size_t NBLOCKS = FLARE_ARRAY_SIZE(blocks);
         butil::IOBuf::BlockRef r[NBLOCKS];
         const size_t LENGTH = 7UL;
         for (size_t i = 0; i < NBLOCKS; ++i) {
@@ -795,7 +795,7 @@ namespace {
         std::string ref;
         int fds[2];
 
-        for (size_t j = 0; j < ARRAY_SIZE(b1); ++j) {
+        for (size_t j = 0; j < FLARE_ARRAY_SIZE(b1); ++j) {
             std::string s;
             for (int i = 10; i > 0; --i) {
                 s.push_back(j * 10 + i);
@@ -812,8 +812,8 @@ namespace {
 
         ASSERT_EQ((ssize_t) ref.length(),
                   butil::IOBuf::cut_multiple_into_file_descriptor(
-                          fds[1], b1, ARRAY_SIZE(b1)));
-        for (size_t j = 0; j < ARRAY_SIZE(b1); ++j) {
+                          fds[1], b1, FLARE_ARRAY_SIZE(b1)));
+        for (size_t j = 0; j < FLARE_ARRAY_SIZE(b1); ++j) {
             ASSERT_TRUE(b1[j]->empty());
             delete (butil::IOPortal *) b1[j];
             b1[j] = NULL;
@@ -945,7 +945,7 @@ namespace {
         size_t w[3] = {16, 128, 1024};
         //char name[32];
 
-        for (size_t i = 0; i < ARRAY_SIZE(w); ++i) {
+        for (size_t i = 0; i < FLARE_ARRAY_SIZE(w); ++i) {
             // snprintf(name, sizeof(name), "iobuf_cut%lu.prof", w[i]);
             // ProfilerStart(name);
 
@@ -1000,10 +1000,10 @@ namespace {
         bool write_to_dev_null = true;
         size_t nappend, ncut;
 
-        butil::TempFile f;
+        flare::base::temp_file f;
         ASSERT_EQ(0, f.save_bin(ref.data(), ref.length()));
 
-        for (size_t i = 0; i < ARRAY_SIZE(w); ++i) {
+        for (size_t i = 0; i < FLARE_ARRAY_SIZE(w); ++i) {
             ps.reserve(ref.size() / (w[i] + 12) + 1);
             // LOG(INFO) << "ps.cap=" << ps.capacity();
 
@@ -1060,7 +1060,7 @@ namespace {
             remove(name);
         }
 
-        for (size_t i = 0; i < ARRAY_SIZE(w); ++i) {
+        for (size_t i = 0; i < FLARE_ARRAY_SIZE(w); ++i) {
             snprintf(name, sizeof(name), "iobuf_asac%lu.prof", w[i]);
             show_prof_and_rm("test_iobuf", name, 10);
         }
@@ -1351,7 +1351,7 @@ namespace {
     }
 
     TEST_F(IOBufTest, append_from_fd_with_offset) {
-        butil::TempFile file;
+        flare::base::temp_file file;
         file.save("dummy");
         flare::base::fd_guard fd(open(file.fname(), O_RDWR | O_TRUNC));
         ASSERT_TRUE(fd >= 0) << file.fname() << ' ' << flare_error();
@@ -1393,13 +1393,13 @@ namespace {
         pthread_t threads[8];
         long fd = open(".out.txt", O_RDWR | O_CREAT | O_TRUNC, 0644);
         ASSERT_TRUE(fd >= 0) << flare_error();
-        for (size_t i = 0; i < ARRAY_SIZE(threads); ++i) {
+        for (size_t i = 0; i < FLARE_ARRAY_SIZE(threads); ++i) {
             ASSERT_EQ(0, pthread_create(&threads[i], NULL, cut_into_fd, (void *) fd));
         }
-        for (size_t i = 0; i < ARRAY_SIZE(threads); ++i) {
+        for (size_t i = 0; i < FLARE_ARRAY_SIZE(threads); ++i) {
             pthread_join(threads[i], NULL);
         }
-        for (int i = 0; i < number_per_thread * (int) ARRAY_SIZE(threads); ++i) {
+        for (int i = 0; i < number_per_thread * (int) FLARE_ARRAY_SIZE(threads); ++i) {
             off_t offset = i * sizeof(int);
             butil::IOPortal in;
             ASSERT_EQ((ssize_t) sizeof(int), in.pappend_from_file_descriptor(fd, offset, sizeof(int)));
@@ -1592,13 +1592,13 @@ namespace {
     TEST_F(IOBufTest, copy_to_string_from_iterator) {
         butil::IOBuf b0;
         for (size_t i = 0; i < 1 * 1024 * 1024lu; ++i) {
-            b0.push_back(butil::fast_rand_in('a', 'z'));
+            b0.push_back(flare::base::fast_rand_in('a', 'z'));
         }
         butil::IOBuf b1(b0);
         butil::IOBufBytesIterator iter(b0);
         size_t nc = 0;
         while (nc < b0.length()) {
-            size_t to_copy = butil::fast_rand_in(1024lu, 64 * 1024lu);
+            size_t to_copy = flare::base::fast_rand_in(1024lu, 64 * 1024lu);
             butil::IOBuf b;
             b1.cutn(&b, to_copy);
             std::string s;

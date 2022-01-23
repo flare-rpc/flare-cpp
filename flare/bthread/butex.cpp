@@ -29,7 +29,7 @@
 #endif
 
 #include "flare/base/logging.h"
-#include "flare/butil/object_pool.h"
+#include "flare/memory/object_pool.h"
 #include "flare/bthread/errno.h"                 // EWOULDBLOCK
 #include "flare/bthread/sys_futex.h"             // futex_*
 #include "flare/bthread/processor.h"             // cpu_relax
@@ -116,7 +116,7 @@ namespace bthread {
         PTHREAD_NOT_SIGNALLED, PTHREAD_SIGNALLED
     };
 
-    struct BAIDU_CACHELINE_ALIGNMENT Butex {
+    struct FLARE_CACHELINE_ALIGNMENT Butex {
         Butex() {}
 
         ~Butex() {}
@@ -126,8 +126,8 @@ namespace bthread {
         internal::FastPthreadMutex waiter_lock;
     };
 
-    BAIDU_CASSERT(offsetof(Butex, value) == 0, offsetof_value_must_0);
-    BAIDU_CASSERT(sizeof(Butex) == BAIDU_CACHELINE_SIZE, butex_fits_in_one_cacheline);
+    static_assert(offsetof(Butex, value) == 0, "offsetof_value_must_0");
+    static_assert(sizeof(Butex) == FLARE_CACHE_LINE_SIZE, "butex_fits_in_one_cacheline");
 
     static void wakeup_pthread(ButexPthreadWaiter *pw) {
         // release fence makes wait_pthread see changes before wakeup.
@@ -245,7 +245,7 @@ namespace bthread {
 // infrequent, even rare. The extra spurious wakeups should be acceptable.
 
     void *butex_create() {
-        Butex *b = butil::get_object<Butex>();
+        Butex *b = flare::memory::get_object<Butex>();
         if (b) {
             return &b->value;
         }
@@ -258,7 +258,7 @@ namespace bthread {
         }
         Butex *b = static_cast<Butex *>(
                 container_of(static_cast<std::atomic<int> *>(butex), Butex, value));
-        butil::return_object(b);
+        flare::memory::return_object(b);
     }
 
     inline TaskGroup *get_task_group(TaskControl *c) {
@@ -699,7 +699,7 @@ namespace bthread {
 
 }  // namespace bthread
 
-namespace butil {
+namespace flare::memory {
     template<>
     struct ObjectPoolBlockMaxItem<bthread::Butex> {
         static const size_t value = 128;

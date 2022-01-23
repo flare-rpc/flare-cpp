@@ -334,10 +334,10 @@ TEST_F(RedisTest, by_components) {
     std::string_view comp3[] = { "incrby", "counter2", "10" };
     std::string_view comp4[] = { "decrby", "counter2", "20" };
 
-    request.AddCommandByComponents(comp1, arraysize(comp1));
-    request.AddCommandByComponents(comp2, arraysize(comp2));
-    request.AddCommandByComponents(comp3, arraysize(comp3));
-    request.AddCommandByComponents(comp4, arraysize(comp4));
+    request.AddCommandByComponents(comp1, FLARE_ARRAY_SIZE(comp1));
+    request.AddCommandByComponents(comp2, FLARE_ARRAY_SIZE(comp2));
+    request.AddCommandByComponents(comp3, FLARE_ARRAY_SIZE(comp3));
+    request.AddCommandByComponents(comp4, FLARE_ARRAY_SIZE(comp4));
 
     channel.CallMethod(NULL, &cntl, &request, &response, NULL);
     ASSERT_FALSE(cntl.Failed()) << cntl.ErrorText();
@@ -361,7 +361,7 @@ static std::string GeneratePassword() {
     std::string result;
     result.reserve(12);
     for (size_t i = 0; i < result.capacity(); ++i) {
-        result.push_back(butil::fast_rand_in('a', 'z'));
+        result.push_back(flare::base::fast_rand_in('a', 'z'));
     }
     return result;
 }
@@ -591,7 +591,7 @@ TEST_F(RedisTest, command_parser) {
                 if (i == size - 1) {
                     ASSERT_EQ(brpc::PARSE_OK, parser.Consume(buf, &command_out, &arena));
                 } else {
-                    if (butil::fast_rand_less_than(2) == 0) {
+                    if (flare::base::fast_rand_less_than(2) == 0) {
                         ASSERT_EQ(brpc::PARSE_ERROR_NOT_ENOUGH_DATA,
                                 parser.Consume(buf, &command_out, &arena));
                     }
@@ -808,7 +808,7 @@ TEST_F(RedisTest, redis_reply_codec) {
     }
 }
 
-butil::Mutex s_mutex;
+flare::base::Mutex s_mutex;
 std::unordered_map<std::string, std::string> m;
 std::unordered_map<std::string, int64_t> int_map;
 

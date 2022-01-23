@@ -41,7 +41,7 @@ public:
     }
     
 private:
-    DISALLOW_COPY_AND_ASSIGN(ComlogInitializer);
+    FLARE_DISALLOW_COPY_AND_ASSIGN(ComlogInitializer);
 };
 
 }

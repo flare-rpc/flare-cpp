@@ -18,12 +18,10 @@
 #include <limits>                           //std::numeric_limits
 
 #include "flare/bvar/reducer.h"
-
 #include "flare/base/time.h"
-#include "flare/butil/macros.h"
 #include "flare/base/strings.h"
 #include "flare/base/string_splitter.h"
-
+#include "flare/container/hash_tables.h"
 #include <gtest/gtest.h>
 
 namespace {
@@ -285,13 +283,13 @@ TEST_F(ReducerTest, non_primitive_mt) {
     bvar::Adder<std::string> cater;
     pthread_t th[8];
     g_stop = false;
-    for (size_t i = 0; i < arraysize(th); ++i) {
+    for (size_t i = 0; i < FLARE_ARRAY_SIZE(th); ++i) {
         pthread_create(&th[i], NULL, string_appender, &cater);
     }
     usleep(50000);
     g_stop = true;
     flare::container::hash_map<pthread_t, int> appended_count;
-    for (size_t i = 0; i < arraysize(th); ++i) {
+    for (size_t i = 0; i < FLARE_ARRAY_SIZE(th); ++i) {
         StringAppenderResult* res = NULL;
         pthread_join(th[i], (void**)&res);
         appended_count[th[i]] = res->count;
@@ -307,7 +305,7 @@ TEST_F(ReducerTest, non_primitive_mt) {
         ASSERT_EQ(0, memcmp(":abcdefghijklmnopqrstuvwxyz", endptr, 27));
     }
     ASSERT_EQ(appended_count.size(), got_count.size());
-    for (size_t i = 0; i < arraysize(th); ++i) {
+    for (size_t i = 0; i < FLARE_ARRAY_SIZE(th); ++i) {
         ASSERT_EQ(appended_count[th[i]], got_count[th[i]]);
     }
 }

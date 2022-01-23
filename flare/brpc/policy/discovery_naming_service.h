@@ -21,7 +21,7 @@
 
 #include "flare/brpc/periodic_naming_service.h"
 #include "flare/brpc/channel.h"
-#include "flare/butil/synchronization/lock.h"
+#include "flare/base/lock.h"
 
 namespace brpc {
 namespace policy {

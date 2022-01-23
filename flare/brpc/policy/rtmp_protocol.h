@@ -379,14 +379,14 @@ private:
     RtmpService* _service;
     
     // Mapping message_stream_id to message streams.
-    butil::Mutex _stream_mutex;
+    flare::base::Mutex _stream_mutex;
     struct MessageStreamInfo {
         flare::container::intrusive_ptr<RtmpStreamBase> stream;
     };
     flare::container::FlatMap<uint32_t, MessageStreamInfo> _mstream_map;
 
     // Mapping transaction id to handlers.
-    butil::Mutex _trans_mutex;
+    flare::base::Mutex _trans_mutex;
     uint32_t _trans_id_allocator;
     flare::container::FlatMap<uint32_t, RtmpTransactionHandler*> _trans_map;
 

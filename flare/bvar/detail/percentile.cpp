@@ -109,7 +109,7 @@ Percentile::value_type Percentile::get_value() const {
 
 Percentile &Percentile::operator<<(int64_t latency) {
     agent_type* agent = _combiner->get_or_create_tls_agent();
-    if (BAIDU_UNLIKELY(!agent)) {
+    if (FLARE_UNLIKELY(!agent)) {
         LOG(FATAL) << "Fail to create agent";
         return *this;
     }

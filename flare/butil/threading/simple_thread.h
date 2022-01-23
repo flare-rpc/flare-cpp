@@ -48,7 +48,7 @@
 #include "flare/butil/basictypes.h"
 #include "flare/butil/compiler_specific.h"
 #include "flare/butil/threading/platform_thread.h"
-#include "flare/butil/synchronization/lock.h"
+#include "flare/base/lock.h"
 #include "flare/butil/synchronization/waitable_event.h"
 
 namespace butil {
@@ -181,7 +181,7 @@ class BUTIL_EXPORT DelegateSimpleThreadPool
   int num_threads_;
   std::vector<DelegateSimpleThread*> threads_;
   std::queue<Delegate*> delegates_;
-  butil::Lock lock_;            // Locks delegates_
+  flare::base::Lock lock_;            // Locks delegates_
   WaitableEvent dry_;    // Not signaled when there is no work to do.
 };
 

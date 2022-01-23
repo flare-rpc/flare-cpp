@@ -77,7 +77,7 @@ TEST(CondTest, sanity) {
     wake_time.clear();
     
     bthread_t wth[8];
-    const size_t NW = ARRAY_SIZE(wth);
+    const size_t NW = FLARE_ARRAY_SIZE(wth);
     for (size_t i = 0; i < NW; ++i) {
         ASSERT_EQ(0, bthread_start_urgent(&wth[i], NULL, waiter, &a));
     }
@@ -182,7 +182,7 @@ TEST(CondTest, cpp_wrapper) {
     pthread_t mutex_waiter_threads[8];
     pthread_t signal_thread;
     WrapperArg a;
-    for (size_t i = 0; i < ARRAY_SIZE(bmutex_waiter_threads); ++i) {
+    for (size_t i = 0; i < FLARE_ARRAY_SIZE(bmutex_waiter_threads); ++i) {
         ASSERT_EQ(0, pthread_create(&bmutex_waiter_threads[i], NULL,
                                     cv_bmutex_waiter, &a));
         ASSERT_EQ(0, pthread_create(&mutex_waiter_threads[i], NULL,
@@ -196,7 +196,7 @@ TEST(CondTest, cpp_wrapper) {
     }
     pthread_join(signal_thread, NULL);
     a.cond.notify_all();
-    for (size_t i = 0; i < ARRAY_SIZE(bmutex_waiter_threads); ++i) {
+    for (size_t i = 0; i < FLARE_ARRAY_SIZE(bmutex_waiter_threads); ++i) {
         pthread_join(bmutex_waiter_threads[i], NULL);
         pthread_join(mutex_waiter_threads[i], NULL);
     }

@@ -140,7 +140,7 @@ struct TestCaseContext {
         const int lower_bound = qps_stage.lower_bound();
         const int upper_bound = qps_stage.upper_bound();
         if (qps_stage.type() == test::FLUCTUATE) {
-            qps = butil::fast_rand_less_than(upper_bound - lower_bound) + lower_bound;
+            qps = flare::base::fast_rand_less_than(upper_bound - lower_bound) + lower_bound;
         } else if (qps_stage.type() == test::SMOOTH) {
             qps = lower_bound + (upper_bound - lower_bound) / 
                 double(qps_stage.duration_sec()) * (qps_stage.duration_sec() - next_stage_sec

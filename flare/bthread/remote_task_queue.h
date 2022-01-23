@@ -73,9 +73,9 @@ public:
     
 private:
 friend class TaskGroup;
-    DISALLOW_COPY_AND_ASSIGN(RemoteTaskQueue);
+    FLARE_DISALLOW_COPY_AND_ASSIGN(RemoteTaskQueue);
     flare::container::bounded_queue<bthread_t> _tasks;
-    butil::Mutex _mutex;
+    flare::base::Mutex _mutex;
 };
 
 }  // namespace bthread

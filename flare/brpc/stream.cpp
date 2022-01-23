@@ -20,8 +20,8 @@
 
 #include <gflags/gflags.h>
 #include "flare/base/time.h"
-#include "flare/butil/object_pool.h"
-#include "flare/butil/unique_ptr.h"
+#include "flare/memory/object_pool.h"
+#include <memory>
 #include "flare/bthread/unstable.h"
 #include "flare/brpc/log.h"
 #include "flare/brpc/socket.h"

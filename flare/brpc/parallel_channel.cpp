@@ -119,14 +119,14 @@ public:
         } else {
             mem = malloc(req_size);
             memsize = req_size;
-            if (BAIDU_UNLIKELY(NULL == mem)) {
+            if (FLARE_UNLIKELY(NULL == mem)) {
                 return NULL;
             }
         }
 #else
         mem = malloc(req_size);
         memsize = req_size;
-        if (BAIDU_UNLIKELY(NULL == mem)) {
+        if (FLARE_UNLIKELY(NULL == mem)) {
             return NULL;
         }
 #endif
@@ -426,7 +426,7 @@ private:
     int _ndone;
     int _nchan;
 #if defined(__clang__)
-    int ALLOW_UNUSED _memsize;
+    int FLARE_ALLOW_UNUSED _memsize;
 #else
     int _memsize;
 #endif

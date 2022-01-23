@@ -192,18 +192,18 @@ TEST(RecorderTest, perf) {
     bvar::IntRecorder recorder;
     ASSERT_TRUE(recorder.valid());
     pthread_t threads[8];
-    for (size_t i = 0; i < ARRAY_SIZE(threads); ++i) {
+    for (size_t i = 0; i < FLARE_ARRAY_SIZE(threads); ++i) {
         pthread_create(&threads[i], NULL, &thread_counter, (void *)&recorder);
     }
     long totol_time = 0;
-    for (size_t i = 0; i < ARRAY_SIZE(threads); ++i) {
+    for (size_t i = 0; i < FLARE_ARRAY_SIZE(threads); ++i) {
         void *ret; 
         pthread_join(threads[i], &ret);
         totol_time += (long)ret;
     }
     ASSERT_EQ(((int64_t)OPS_PER_THREAD - 1) / 2, recorder.average());
-    LOG(INFO) << "Recorder takes " << totol_time / (OPS_PER_THREAD * ARRAY_SIZE(threads)) 
-              << "ns per sample with " << ARRAY_SIZE(threads) 
+    LOG(INFO) << "Recorder takes " << totol_time / (OPS_PER_THREAD * FLARE_ARRAY_SIZE(threads))
+              << "ns per sample with " << FLARE_ARRAY_SIZE(threads)
               << " threads";
 }
 } // namespace

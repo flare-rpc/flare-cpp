@@ -18,7 +18,7 @@
 #include "flare/butil/build_config.h"
 #include <gtest/gtest.h>
 
-#if defined(OS_POSIX)
+#if defined(FLARE_PLATFORM_POSIX)
 #include <sys/mman.h>
 #include <unistd.h>
 #endif
@@ -45,9 +45,9 @@ Type HideValueFromCompiler(volatile Type value) {
 // - NO_TCMALLOC (should be defined if compiled with use_allocator!="tcmalloc")
 // - ADDRESS_SANITIZER and SYZYASAN because they have their own memory allocator
 // - IOS does not use tcmalloc
-// - OS_MACOSX does not use tcmalloc
+// - FLARE_PLATFORM_OSX does not use tcmalloc
 #if !defined(NO_TCMALLOC) && !defined(ADDRESS_SANITIZER) && \
-    !defined(OS_IOS) && !defined(OS_MACOSX) && !defined(SYZYASAN)
+    !defined(FLARE_PLATFORM_IPHONE) && !defined(FLARE_PLATFORM_OSX) && !defined(SYZYASAN)
   #define TCMALLOC_TEST(function) function
 #else
   #define TCMALLOC_TEST(function) DISABLED_##function
@@ -59,12 +59,12 @@ const size_t kTooBigAllocSize = INT_MAX;
 
 // Detect runtime TCMalloc bypasses.
 bool IsTcMallocBypassed() {
-#if defined(OS_LINUX)
+#if defined(FLARE_PLATFORM_LINUX)
   // This should detect a TCMalloc bypass from Valgrind.
   char* g_slice = getenv("G_SLICE");
   if (g_slice && !strcmp(g_slice, "always-malloc"))
     return true;
-#elif defined(OS_WIN)
+#elif defined(FLARE_PLATFORM_WINDOWS)
   // This should detect a TCMalloc bypass from setting
   // the CHROME_ALLOCATOR environment variable.
   char* allocator = getenv("CHROME_ALLOCATOR");
@@ -81,7 +81,7 @@ bool CallocDiesOnOOM() {
 #if defined(ADDRESS_SANITIZER) || \
     defined(MEMORY_SANITIZER) || \
     defined(THREAD_SANITIZER) || \
-    (defined(OS_LINUX) && defined(NO_TCMALLOC))
+    (defined(FLARE_PLATFORM_LINUX) && defined(NO_TCMALLOC))
   return true;
 #else
   return false;
@@ -149,7 +149,7 @@ TEST(SecurityTest, TCMALLOC_TEST(MemoryAllocationRestrictionsNewArray)) {
 
 // The tests bellow check for overflows in new[] and calloc().
 
-#if defined(OS_IOS) || defined(OS_WIN) || defined(THREAD_SANITIZER)
+#if defined(FLARE_PLATFORM_IPHONE) || defined(FLARE_PLATFORM_WINDOWS) || defined(THREAD_SANITIZER)
   #define DISABLE_ON_IOS_AND_WIN_AND_TSAN(function) DISABLED_##function
 #else
   #define DISABLE_ON_IOS_AND_WIN_AND_TSAN(function) function
@@ -165,7 +165,7 @@ TEST(SecurityTest, TCMALLOC_TEST(MemoryAllocationRestrictionsNewArray)) {
 // FAILS_ is too clunky.
 void OverflowTestsSoftExpectTrue(bool overflow_detected) {
   if (!overflow_detected) {
-#if defined(OS_LINUX) || defined(OS_ANDROID) || defined(OS_MACOSX)
+#if defined(FLARE_PLATFORM_LINUX) || defined(FLARE_PLATFORM_ANDROID) || defined(FLARE_PLATFORM_OSX)
     // Sadly, on Linux, Android, and OSX we don't have a good story yet. Don't
     // fail the test, but report.
     printf("Platform has overflow: %s\n",
@@ -199,13 +199,13 @@ TEST(SecurityTest, DISABLE_ON_IOS_AND_WIN_AND_TSAN(NewOverflow)) {
   }
   // On windows, the compiler prevents static array sizes of more than
   // 0x7fffffff (error C2148).
-#if !defined(OS_WIN) || !defined(ARCH_CPU_64_BITS)
+#if !defined(FLARE_PLATFORM_WINDOWS) || !defined(ARCH_CPU_64_BITS)
   {
     scoped_ptr<char[][kArraySize2]> array_pointer(new (nothrow)
         char[kDynamicArraySize][kArraySize2]);
     OverflowTestsSoftExpectTrue(!array_pointer);
   }
-#endif  // !defined(OS_WIN) || !defined(ARCH_CPU_64_BITS)
+#endif  // !defined(FLARE_PLATFORM_WINDOWS) || !defined(ARCH_CPU_64_BITS)
 }
 #endif
 
@@ -239,7 +239,7 @@ TEST(SecurityTest, CallocOverflow) {
   }
 }
 
-#if defined(OS_LINUX) && defined(__x86_64__)
+#if defined(FLARE_PLATFORM_LINUX) && defined(__x86_64__)
 // Check if ptr1 and ptr2 are separated by less than size chars.
 bool ArePointersToSameArea(void* ptr1, void* ptr2, size_t size) {
   ptrdiff_t ptr_diff = reinterpret_cast<char*>(std::max(ptr1, ptr2)) -
@@ -295,6 +295,6 @@ TEST(SecurityTest, TCMALLOC_TEST(RandomMemoryAllocations)) {
   EXPECT_FALSE(impossible_random_address);
 }
 
-#endif  // defined(OS_LINUX) && defined(__x86_64__)
+#endif  // defined(FLARE_PLATFORM_LINUX) && defined(__x86_64__)
 
 }  // namespace

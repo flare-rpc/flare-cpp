@@ -123,7 +123,7 @@ public:
     void Describe(std::ostream& os, const DescribeOptions&) const;
     
 private:
-    DISALLOW_COPY_AND_ASSIGN(HPacker);
+    FLARE_DISALLOW_COPY_AND_ASSIGN(HPacker);
     int FindHeaderFromIndexTable(const Header& h) const;
     int FindNameFromIndexTable(const std::string& name) const;
     const Header* HeaderAt(int index) const;

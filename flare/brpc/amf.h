@@ -261,12 +261,12 @@ private:
 std::ostream& operator<<(std::ostream& os, const AMFArray&);
 
 inline const AMFField& AMFArray::operator[](size_t index) const {
-    return (index < arraysize(_fields) ? _fields[index] :
-            _morefields[index - arraysize(_fields)]);
+    return (index < FLARE_ARRAY_SIZE(_fields) ? _fields[index] :
+            _morefields[index - FLARE_ARRAY_SIZE(_fields)]);
 }
 inline AMFField& AMFArray::operator[](size_t index) {
-    return (index < arraysize(_fields) ? _fields[index] :
-            _morefields[index - arraysize(_fields)]);
+    return (index < FLARE_ARRAY_SIZE(_fields) ? _fields[index] :
+            _morefields[index - FLARE_ARRAY_SIZE(_fields)]);
 }
 
 // Parse types of the stream.

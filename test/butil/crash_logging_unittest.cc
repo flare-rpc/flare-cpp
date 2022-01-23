@@ -45,7 +45,7 @@ class CrashLoggingTest : public testing::Test {
 TEST_F(CrashLoggingTest, SetClearSingle) {
   const char* kTestKey = "test-key";
   butil::debug::CrashKey keys[] = { { kTestKey, 255 } };
-  butil::debug::InitCrashKeys(keys, arraysize(keys), 255);
+  butil::debug::InitCrashKeys(keys, FLARE_ARRAY_SIZE(keys), 255);
 
   butil::debug::SetCrashKeyValue(kTestKey, "value");
   EXPECT_EQ("value", (*key_values_)[kTestKey]);
@@ -60,7 +60,7 @@ TEST_F(CrashLoggingTest, SetChunked) {
   const char* kChunk2 = "chunky-2";
   const char* kChunk3 = "chunky-3";
   butil::debug::CrashKey keys[] = { { kTestKey, 15 } };
-  butil::debug::InitCrashKeys(keys, arraysize(keys), 5);
+  butil::debug::InitCrashKeys(keys, FLARE_ARRAY_SIZE(keys), 5);
 
   std::map<std::string, std::string>& values = *key_values_;
 
@@ -105,7 +105,7 @@ TEST_F(CrashLoggingTest, SetChunked) {
 TEST_F(CrashLoggingTest, ScopedCrashKey) {
   const char* kTestKey = "test-key";
   butil::debug::CrashKey keys[] = { { kTestKey, 255 } };
-  butil::debug::InitCrashKeys(keys, arraysize(keys), 255);
+  butil::debug::InitCrashKeys(keys, FLARE_ARRAY_SIZE(keys), 255);
 
   EXPECT_EQ(0u, key_values_->size());
   EXPECT_TRUE(key_values_->end() == key_values_->find(kTestKey));
@@ -125,7 +125,7 @@ TEST_F(CrashLoggingTest, InitSize) {
     { "chunked-6", 30 },
   };
 
-  size_t num_keys = butil::debug::InitCrashKeys(keys, arraysize(keys), 5);
+  size_t num_keys = butil::debug::InitCrashKeys(keys, FLARE_ARRAY_SIZE(keys), 5);
 
   EXPECT_EQ(10u, num_keys);
 

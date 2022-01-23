@@ -24,10 +24,10 @@
 #include "flare/base/strings.h"             // string_printf
 #include "flare/base/string_splitter.h"           // StringSplitter
 #include "flare/butil/file_util.h"                 // butil::FilePath
-#include "flare/butil/files/scoped_file.h"         // ScopedFILE
+#include "flare/base/scoped_file.h"         // scoped_file
 #include "flare/base/time.h"
-#include "flare/butil/popen.h"                    // butil::read_command_output
-#include "flare/butil/process_util.h"             // butil::ReadCommandLine
+#include "flare/base/popen.h"                    // flare::base::read_command_output
+#include "flare/base/process_util.h"             // flare::base::read_command_line
 #include "flare/brpc/log.h"
 #include "flare/brpc/controller.h"                // Controller
 #include "flare/brpc/closure_guard.h"             // ClosureGuard
@@ -297,7 +297,7 @@ static int ExtractSymbolsFromBinary(
     std::string cmd = "nm -C -p ";
     cmd.append(lib_info.path);
     std::stringstream ss;
-    const int rc = butil::read_command_output(ss, cmd.c_str());
+    const int rc = flare::base::read_command_output(ss, cmd.c_str());
     if (rc < 0) {
         LOG(ERROR) << "Fail to popen `" << cmd << "'";
         return -1;
@@ -395,7 +395,7 @@ static int ExtractSymbolsFromBinary(
 static void LoadSymbols() {
     flare::base::stop_watcher tm;
     tm.start();
-    butil::ScopedFILE fp(fopen("/proc/self/maps", "r"));
+    flare::base::scoped_file fp(fopen("/proc/self/maps", "r"));
     if (fp == NULL) {
         return;
     }
@@ -561,7 +561,7 @@ void PProfService::cmdline(::google::protobuf::RpcController* controller_base,
     Controller* cntl = static_cast<Controller*>(controller_base);
     cntl->http_response().set_content_type("text/plain" /*FIXME*/);
     char buf[1024];  // should be enough?
-    const ssize_t nr = butil::ReadCommandLine(buf, sizeof(buf), true);
+    const ssize_t nr = flare::base::read_command_line(buf, sizeof(buf), true);
     if (nr < 0) {
         cntl->SetFailed(ENOENT, "Fail to read cmdline");
         return;

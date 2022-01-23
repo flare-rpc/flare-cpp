@@ -22,7 +22,7 @@
 #include "flare/butil/third_party/rapidjson/writer.h"
 #include "flare/base/strings.h"
 #include "flare/base/str_split.h"
-#include "flare/butil/fast_rand.h"
+#include "flare/base/fast_rand.h"
 #include "flare/bthread/bthread.h"
 #include "flare/brpc/channel.h"
 #include "flare/brpc/controller.h"
@@ -211,7 +211,7 @@ void* DiscoveryClient::PeriodicRenew(void* arg) {
     DiscoveryClient* d = static_cast<DiscoveryClient*>(arg);
     int consecutive_renew_error = 0;
     int64_t init_sleep_s = FLAGS_discovery_renew_interval_s / 2 +
-        butil::fast_rand_less_than(FLAGS_discovery_renew_interval_s / 2);
+        flare::base::fast_rand_less_than(FLAGS_discovery_renew_interval_s / 2);
     if (bthread_usleep(init_sleep_s * 1000000) != 0) {
         if (errno == ESTOP) {
             return NULL;

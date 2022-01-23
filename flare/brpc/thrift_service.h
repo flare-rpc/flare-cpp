@@ -56,7 +56,7 @@ public:
     void Describe(std::ostream &os, const DescribeOptions&) const;
 
 private:
-DISALLOW_COPY_AND_ASSIGN(ThriftService);
+FLARE_DISALLOW_COPY_AND_ASSIGN(ThriftService);
 friend class policy::ThriftClosure;
 friend void policy::ProcessThriftRequest(InputMessageBase* msg_base);
 friend class StatusService;

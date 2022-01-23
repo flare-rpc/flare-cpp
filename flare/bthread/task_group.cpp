@@ -22,11 +22,10 @@
 #include <sys/types.h>
 #include <stddef.h>                         // size_t
 #include <gflags/gflags.h>
-#include "flare/butil/compat.h"                   // OS_MACOSX
-#include "flare/butil/macros.h"                   // ARRAY_SIZE
+#include "flare/base/compat.h"                   // FLARE_PLATFORM_OSX
 #include "flare/base/scoped_lock.h"              // FLARE_SCOPED_LOCK
-#include "flare/butil/fast_rand.h"
-#include "flare/butil/unique_ptr.h"
+#include "flare/base/fast_rand.h"
+#include <memory>
 #include "flare/hash/murmurhash3.h" // fmix64
 #include "flare/bthread/errno.h"                  // ESTOP
 #include "flare/bthread/butex.h"                  // butex_*
@@ -47,13 +46,13 @@ static bool pass_bool(const char*, bool) { return true; }
 DEFINE_bool(show_bthread_creation_in_vars, false, "When this flags is on, The time "
             "from bthread creation to first run will be recorded and shown "
             "in /vars");
-const bool ALLOW_UNUSED dummy_show_bthread_creation_in_vars =
+const bool FLARE_ALLOW_UNUSED dummy_show_bthread_creation_in_vars =
     ::GFLAGS_NS::RegisterFlagValidator(&FLAGS_show_bthread_creation_in_vars,
                                     pass_bool);
 
 DEFINE_bool(show_per_worker_usage_in_vars, false,
             "Show per-worker usage in /vars/bthread_per_worker_usage_<tid>");
-const bool ALLOW_UNUSED dummy_show_per_worker_usage_in_vars =
+const bool FLARE_ALLOW_UNUSED dummy_show_per_worker_usage_in_vars =
     ::GFLAGS_NS::RegisterFlagValidator(&FLAGS_show_per_worker_usage_in_vars,
                                     pass_bool);
 
@@ -158,7 +157,7 @@ void TaskGroup::run_main_task() {
         }
         if (FLAGS_show_per_worker_usage_in_vars && !usage_bvar) {
             char name[32];
-#if defined(OS_MACOSX)
+#if defined(FLARE_PLATFORM_OSX)
             snprintf(name, sizeof(name), "bthread_worker_usage_%" PRIu64,
                      pthread_numeric_id());
 #else
@@ -193,8 +192,8 @@ TaskGroup::TaskGroup(TaskControl* c)
     , _remote_num_nosignal(0)
     , _remote_nsignaled(0)
 {
-    _steal_seed = butil::fast_rand();
-    _steal_offset = OFFSET_TABLE[_steal_seed % ARRAY_SIZE(OFFSET_TABLE)];
+    _steal_seed = flare::base::fast_rand();
+    _steal_offset = OFFSET_TABLE[_steal_seed % FLARE_ARRAY_SIZE(OFFSET_TABLE)];
     _pl = &c->_pl[flare::hash::fmix64(pthread_numeric_id()) % TaskControl::PARKING_LOT_NUM];
     CHECK(c);
 }
@@ -223,8 +222,8 @@ int TaskGroup::init(size_t runqueue_capacity) {
         LOG(FATAL) << "Fail to get main stack container";
         return -1;
     }
-    butil::ResourceId<TaskMeta> slot;
-    TaskMeta* m = butil::get_resource<TaskMeta>(&slot);
+    flare::memory::ResourceId<TaskMeta> slot;
+    TaskMeta* m = flare::memory::get_resource<TaskMeta>(&slot);
     if (NULL == m) {
         LOG(FATAL) << "Fail to get TaskMeta";
         return -1;
@@ -365,8 +364,8 @@ int TaskGroup::start_foreground(TaskGroup** pg,
     }
     const int64_t start_ns = flare::base::cpuwide_time_ns();
     const bthread_attr_t using_attr = (attr ? *attr : BTHREAD_ATTR_NORMAL);
-    butil::ResourceId<TaskMeta> slot;
-    TaskMeta* m = butil::get_resource(&slot);
+    flare::memory::ResourceId<TaskMeta> slot;
+    TaskMeta* m = flare::memory::get_resource(&slot);
     if (__builtin_expect(!m, 0)) {
         return ENOMEM;
     }
@@ -420,8 +419,8 @@ int TaskGroup::start_background(bthread_t* __restrict th,
     }
     const int64_t start_ns = flare::base::cpuwide_time_ns();
     const bthread_attr_t using_attr = (attr ? *attr : BTHREAD_ATTR_NORMAL);
-    butil::ResourceId<TaskMeta> slot;
-    TaskMeta* m = butil::get_resource(&slot);
+    flare::memory::ResourceId<TaskMeta> slot;
+    TaskMeta* m = flare::memory::get_resource(&slot);
     if (__builtin_expect(!m, 0)) {
         return ENOMEM;
     }
@@ -685,7 +684,7 @@ void TaskGroup::ready_to_run_remote(bthread_t tid, bool nosignal) {
     }
 }
 
-void TaskGroup::flush_nosignal_tasks_remote_locked(butil::Mutex& locked_mutex) {
+void TaskGroup::flush_nosignal_tasks_remote_locked(flare::base::Mutex& locked_mutex) {
     const int val = _remote_num_nosignal;
     if (!val) {
         locked_mutex.unlock();

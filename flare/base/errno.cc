@@ -68,7 +68,7 @@ const char* flare_error(int error_code) {
             return flare::base::tls_error_buf;
         }
 #else
-        s = strerror_r(error_code, butil::tls_error_buf, butil::ERROR_BUFSIZE);
+        s = strerror_r(error_code, flare::base::tls_error_buf, flare::base::ERROR_BUFSIZE);
         if (s) {
             return s;
         }

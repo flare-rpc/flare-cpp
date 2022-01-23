@@ -144,12 +144,12 @@ public:
 
 private:
     // Copying a concurrent structure makes no sense.
-    DISALLOW_COPY_AND_ASSIGN(WorkStealingQueue);
+    FLARE_DISALLOW_COPY_AND_ASSIGN(WorkStealingQueue);
 
     std::atomic<size_t> _bottom;
     size_t _capacity;
     T* _buffer;
-    std::atomic<size_t> BAIDU_CACHELINE_ALIGNMENT _top;
+    std::atomic<size_t> FLARE_CACHELINE_ALIGNMENT _top;
 };
 
 }  // namespace bthread

@@ -228,7 +228,7 @@ TEST_F(GrpcTest, GrpcTimeOut) {
     };
 
     // test all timeout format
-    for (size_t i = 0; i < arraysize(timeouts); i = i + 2) {
+    for (size_t i = 0; i < FLARE_ARRAY_SIZE(timeouts); i = i + 2) {
         test::GrpcRequest req;
         test::GrpcResponse res;
         brpc::Controller cntl;

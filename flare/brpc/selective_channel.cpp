@@ -91,7 +91,7 @@ public:
     void Describe(std::ostream& os, const DescribeOptions&);
 
 private:
-    butil::Mutex _mutex;
+    flare::base::Mutex _mutex;
     // Find out duplicated sub channels.
     ChannelToIdMap _chan_map;
 };

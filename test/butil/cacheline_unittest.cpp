@@ -20,21 +20,21 @@
 #include <stdio.h>
 #include <gtest/gtest.h>
 #include "flare/base/time.h"
-#include "flare/butil/macros.h"
+#include "flare/base/profile.h"
 
 namespace {
 
 class CachelineTest : public testing::Test {
 };
 
-struct BAIDU_CACHELINE_ALIGNMENT Bar {
+struct FLARE_CACHELINE_ALIGNMENT Bar {
     int y;
 };
 
 struct Foo {
     char dummy1[0];
     int z;
-    int BAIDU_CACHELINE_ALIGNMENT x[0];
+    int FLARE_CACHELINE_ALIGNMENT x[0];
     int y;
     int m;
     Bar bar;

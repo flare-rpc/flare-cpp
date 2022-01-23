@@ -26,8 +26,8 @@
 #include "flare/base/strings.h"
 #include "flare/base/time.h"
 #include "flare/base/logging.h"
-#include "flare/butil/object_pool.h"
-#include "flare/butil/fast_rand.h"
+#include "flare/memory/object_pool.h"
+#include "flare/base/fast_rand.h"
 #include "flare/butil/file_util.h"
 #include "flare/brpc/shared_object.h"
 #include "flare/brpc/reloadable_flags.h"
@@ -63,7 +63,7 @@ struct IdGen {
     bool init;
     uint16_t seq;
     uint64_t current_random;
-    butil::FastRandSeed seed;
+    flare::base::FastRandSeed seed;
 };
 
 static __thread IdGen tls_trace_id_gen = { false, 0, 0, { { 0, 0 } } };
@@ -101,7 +101,7 @@ inline uint64_t GenerateTraceId() {
 
 Span* Span::CreateClientSpan(const std::string& full_method_name,
                              int64_t base_real_us) {
-    Span* span = butil::get_object<Span>(Forbidden());
+    Span* span = flare::memory::get_object<Span>(Forbidden());
     if (__builtin_expect(span == NULL, 0)) {
         return NULL;
     }
@@ -150,7 +150,7 @@ Span* Span::CreateServerSpan(
     const std::string& full_method_name,
     uint64_t trace_id, uint64_t span_id, uint64_t parent_span_id,
     int64_t base_real_us) {
-    Span* span = butil::get_object<Span>(Forbidden());
+    Span* span = flare::memory::get_object<Span>(Forbidden());
     if (__builtin_expect(span == NULL, 0)) {
         return NULL;
     }
@@ -199,11 +199,11 @@ void Span::destroy() {
     while (p) {
         Span* p_next = p->_next_client;
         p->_info.clear();
-        butil::return_object(p);
+        flare::memory::return_object(p);
         p = p_next;
     }
     _info.clear();
-    butil::return_object(this);
+    flare::memory::return_object(this);
 }
 
 void Span::Annotate(const char* fmt, ...) {

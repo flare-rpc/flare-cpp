@@ -105,13 +105,13 @@ static void* check(void*) {
 TEST(SamplerTest, multi_threaded) {
     pthread_t th[10];
     DebugSampler::_s_ndestroy = 0;
-    for (size_t i = 0; i < arraysize(th); ++i) {
+    for (size_t i = 0; i < FLARE_ARRAY_SIZE(th); ++i) {
         ASSERT_EQ(0, pthread_create(&th[i], NULL, check, NULL));
     }
-    for (size_t i = 0; i < arraysize(th); ++i) {
+    for (size_t i = 0; i < FLARE_ARRAY_SIZE(th); ++i) {
         ASSERT_EQ(0, pthread_join(th[i], NULL));
     }
     sleep(1);
-    EXPECT_EQ(100 * arraysize(th), (size_t)DebugSampler::_s_ndestroy);
+    EXPECT_EQ(100 * FLARE_ARRAY_SIZE(th), (size_t)DebugSampler::_s_ndestroy);
 }
 } // namespace

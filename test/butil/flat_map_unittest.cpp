@@ -171,7 +171,7 @@ namespace {
         ASSERT_LT(bcs[0], m1.bucket_count());
         // larger than m1.bucket_count
         ASSERT_GT(bcs[2], m1.bucket_count());
-        for (size_t i = 0; i < arraysize(bcs); ++i) {
+        for (size_t i = 0; i < FLARE_ARRAY_SIZE(bcs); ++i) {
             Map m5;
             ASSERT_EQ(0, m5.init(bcs[i]));
             const size_t old_bucket_count5 = m5.bucket_count();
@@ -759,7 +759,7 @@ namespace {
     TEST_F(FlatMapTest, perf_cmp_with_map_storing_pointers) {
         const size_t REP = 4;
         int *ptr[2048];
-        for (size_t i = 0; i < ARRAY_SIZE(ptr); ++i) {
+        for (size_t i = 0; i < FLARE_ARRAY_SIZE(ptr); ++i) {
             ptr[i] = new int;
         }
 
@@ -771,10 +771,10 @@ namespace {
         int sum;
         flare::base::stop_watcher tm;
 
-        r.reserve(ARRAY_SIZE(ptr) * REP);
-        ASSERT_EQ(0, m2.init(ARRAY_SIZE(ptr)));
+        r.reserve(FLARE_ARRAY_SIZE(ptr) * REP);
+        ASSERT_EQ(0, m2.init(FLARE_ARRAY_SIZE(ptr)));
 
-        for (size_t i = 0; i < ARRAY_SIZE(ptr); ++i) {
+        for (size_t i = 0; i < FLARE_ARRAY_SIZE(ptr); ++i) {
             m1.insert(ptr[i]);
             m2.insert(ptr[i]);
             m3.insert(ptr[i]);
@@ -811,7 +811,7 @@ namespace {
         tm.stop();
         LOG(INFO) << "std::set takes " << tm.n_elapsed() / r.size();
 
-        for (size_t i = 0; i < ARRAY_SIZE(ptr); ++i) {
+        for (size_t i = 0; i < FLARE_ARRAY_SIZE(ptr); ++i) {
             delete ptr[i];
         }
     }
@@ -1099,7 +1099,7 @@ namespace {
     template<typename T>
     void perf_insert_erase(bool random, const T &value) {
         size_t nkeys[] = {100, 1000, 10000};
-        const size_t NPASS = ARRAY_SIZE(nkeys);
+        const size_t NPASS = FLARE_ARRAY_SIZE(nkeys);
 
         std::vector<uint64_t> keys;
         flare::container::FlatMap<uint64_t, T> id_map;
@@ -1215,7 +1215,7 @@ namespace {
     template<typename T>
     void perf_seek(const T &value) {
         size_t nkeys[] = {100, 1000, 10000};
-        const size_t NPASS = ARRAY_SIZE(nkeys);
+        const size_t NPASS = FLARE_ARRAY_SIZE(nkeys);
         std::vector<uint64_t> keys;
         std::vector<uint64_t> rkeys;
         flare::container::FlatMap<uint64_t, T> id_map;

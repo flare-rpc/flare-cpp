@@ -67,7 +67,7 @@ TEST(FutexTest, rdlock_performance) {
     const size_t N = 100000;
     std::atomic<int> lock1(0);
     pthread_t rth[8];
-    for (size_t i = 0; i < ARRAY_SIZE(rth); ++i) {
+    for (size_t i = 0; i < FLARE_ARRAY_SIZE(rth); ++i) {
         ASSERT_EQ(0, pthread_create(&rth[i], NULL, read_thread, &lock1));
     }
 
@@ -94,7 +94,7 @@ TEST(FutexTest, rdlock_performance) {
 
     int njob = 0;
     int* res;
-    for (size_t i = 0; i < ARRAY_SIZE(rth); ++i) {
+    for (size_t i = 0; i < FLARE_ARRAY_SIZE(rth); ++i) {
         pthread_join(rth[i], (void**)&res);
         njob += *res;
         delete res;
@@ -193,17 +193,17 @@ TEST(FutexTest, many_futex_wake_nop_perf) {
     pthread_t th[8];
     int lock1;
     std::cout << "[Direct wake]" << std::endl;
-    for (size_t i = 0; i < ARRAY_SIZE(th); ++i) {
+    for (size_t i = 0; i < FLARE_ARRAY_SIZE(th); ++i) {
         ASSERT_EQ(0, pthread_create(&th[i], NULL, waker, &lock1));
     }
-    for (size_t i = 0; i < ARRAY_SIZE(th); ++i) {
+    for (size_t i = 0; i < FLARE_ARRAY_SIZE(th); ++i) {
         ASSERT_EQ(0, pthread_join(th[i], NULL));
     }
     std::cout << "[Batch wake]" << std::endl;
-    for (size_t i = 0; i < ARRAY_SIZE(th); ++i) {
+    for (size_t i = 0; i < FLARE_ARRAY_SIZE(th); ++i) {
         ASSERT_EQ(0, pthread_create(&th[i], NULL, batch_waker, &lock1));
     }
-    for (size_t i = 0; i < ARRAY_SIZE(th); ++i) {
+    for (size_t i = 0; i < FLARE_ARRAY_SIZE(th); ++i) {
         ASSERT_EQ(0, pthread_join(th[i], NULL));
     }
 }

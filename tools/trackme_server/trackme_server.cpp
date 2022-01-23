@@ -23,7 +23,7 @@
 #include "flare/base/logging.h"
 #include <flare/brpc/server.h>
 #include <flare/butil/files/file_watcher.h>
-#include <flare/butil/files/scoped_file.h>
+#include <flare/base/scoped_file.h>
 #include <flare/brpc/trackme.pb.h>
 
 DEFINE_string(bug_file, "./bugs", "A file containing revision and information of bugs");
@@ -169,7 +169,7 @@ void BugsLoader::run() {
 }
 
 void BugsLoader::load_bugs() {
-    butil::ScopedFILE fp(fopen(_bugs_file.c_str(), "r"));
+    flare::base::scoped_file fp(fopen(_bugs_file.c_str(), "r"));
     if (!fp) {
         PLOG(WARNING) << "Fail to open `" << _bugs_file << '\'';
         return;

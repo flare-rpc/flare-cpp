@@ -37,7 +37,7 @@
 #include "flare/butil/memory/scoped_ptr.h"
 #include "flare/butil/memory/singleton.h"
 #include "flare/butil/numerics/safe_conversions.h"
-#include "flare/butil/posix/eintr_wrapper.h"
+#include "flare/base/profile/eintr_wrapper.h"
 #include "flare/butil/strings/string_number_conversions.h"
 #include "flare/butil/build_config.h"
 

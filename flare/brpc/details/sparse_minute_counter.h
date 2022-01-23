@@ -53,7 +53,7 @@ public:
     bool TryPop(int64_t now_ms, T* popped);
 
 private:
-    DISALLOW_COPY_AND_ASSIGN(SparseMinuteCounter);
+    FLARE_DISALLOW_COPY_AND_ASSIGN(SparseMinuteCounter);
     typedef flare::container::bounded_queue<Item> Q;
     static Q* CreateQueue(uint32_t cap);
     static void DestroyQueue(Q* q);

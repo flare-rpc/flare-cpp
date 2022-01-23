@@ -27,7 +27,7 @@
 
 namespace brpc {
 
-class BAIDU_CACHELINE_ALIGNMENT Stream : public SocketConnection {
+class FLARE_CACHELINE_ALIGNMENT Stream : public SocketConnection {
 public:
     // |--------------------------------------------------|
     // |----------- Implement SocketConnection -----------|

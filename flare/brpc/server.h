@@ -26,11 +26,11 @@
 #include "flare/bthread/bthread.h"      // Server may need some bthread functions,
                                   // e.g. bthread_usleep
 #include <google/protobuf/service.h>                 // google::protobuf::Service
-#include "flare/butil/macros.h"                            // DISALLOW_COPY_AND_ASSIGN
+#include "flare/butil/macros.h"                            // FLARE_DISALLOW_COPY_AND_ASSIGN
 #include "flare/container/doubly_buffered_data.h"   // DoublyBufferedData
 #include "flare/bvar/bvar.h"
 #include "flare/container/case_ignored_flat_map.h"  // [CaseIgnored]FlatMap
-#include "flare/butil/ptr_container.h"
+#include "flare/container/ptr_container.h"
 #include "flare/brpc/controller.h"                   // brpc::Controller
 #include "flare/brpc/ssl_options.h"                  // ServerSSLOptions
 #include "flare/brpc/describable.h"                  // User often needs this
@@ -244,7 +244,7 @@ struct ServerOptions {
 private:
     // SSLOptions is large and not often used, allocate it on heap to
     // prevent ServerOptions from being bloated in most cases.
-    butil::PtrContainer<ServerSSLOptions> _ssl_options;
+    flare::container::ptr_container<ServerSSLOptions> _ssl_options;
 };
 
 // This struct is originally designed to contain basic statistics of the
@@ -624,7 +624,7 @@ friend class Controller;
     AdaptiveMaxConcurrency& MaxConcurrencyOf(MethodProperty*);
     int MaxConcurrencyOf(const MethodProperty*) const;
     
-    DISALLOW_COPY_AND_ASSIGN(Server);
+    FLARE_DISALLOW_COPY_AND_ASSIGN(Server);
 
     // Put frequently-accessed data pool at first.
     SimpleDataPool* _session_local_data_pool;
@@ -679,7 +679,7 @@ friend class Controller;
 
     // mutable is required for `ServerPrivateAccessor' to change this bvar
     mutable bvar::Adder<int64_t> _nerror_bvar;
-    mutable std::atomic<int32_t> BAIDU_CACHELINE_ALIGNMENT _concurrency;
+    mutable std::atomic<int32_t> FLARE_CACHELINE_ALIGNMENT _concurrency;
 
 };
 

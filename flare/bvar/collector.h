@@ -21,7 +21,7 @@
 #define BVAR_COLLECTOR_H
 
 #include "flare/container/linked_list.h"
-#include "flare/butil/fast_rand.h"
+#include "flare/base/fast_rand.h"
 #include "flare/base/time.h"
 #include "flare/base/static_atomic.h"
 #include "flare/bvar/passive_status.h"
@@ -113,7 +113,7 @@ inline size_t is_collectable(CollectorSpeedLimit* speed_limit) {
     if (speed_limit->ever_grabbed) { // most common case
         const size_t sampling_range = speed_limit->sampling_range;
         // fast_rand is faster than fast_rand_in
-        if ((butil::fast_rand() & (COLLECTOR_SAMPLING_BASE - 1)) >= sampling_range) {
+        if ((flare::base::fast_rand() & (COLLECTOR_SAMPLING_BASE - 1)) >= sampling_range) {
             return 0;
         }
         return sampling_range;

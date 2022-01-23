@@ -163,7 +163,7 @@ public:
         const int lower_bound = latency_stage.lower_bound();
         const int upper_bound = latency_stage.upper_bound();
         if (latency_stage.type() == test::FLUCTUATE) {
-            _latency.store(butil::fast_rand_less_than(upper_bound - lower_bound) + lower_bound,
+            _latency.store(flare::base::fast_rand_less_than(upper_bound - lower_bound) + lower_bound,
                            std::memory_order_relaxed);
         } else if (latency_stage.type() == test::SMOOTH) {
             int latency = lower_bound + (upper_bound - lower_bound) / 

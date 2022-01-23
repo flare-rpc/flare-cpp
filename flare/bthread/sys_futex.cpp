@@ -25,7 +25,7 @@
 #include <pthread.h>
 #include <unordered_map>
 
-#if defined(OS_MACOSX)
+#if defined(FLARE_PLATFORM_OSX)
 
 namespace bthread {
 

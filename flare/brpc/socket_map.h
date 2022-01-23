@@ -177,7 +177,7 @@ private:
     typedef flare::container::FlatMap<SocketMapKey, SingleConnection,
                            SocketMapKeyHasher> Map;
     SocketMapOptions _options;
-    butil::Mutex _mutex;
+    flare::base::Mutex _mutex;
     Map _map;
     bool _exposed_in_bvar;
     bvar::PassiveStatus<std::string>* _this_map_bvar;

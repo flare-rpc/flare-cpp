@@ -17,7 +17,7 @@
 
 
 #include "flare/butil/macros.h"
-#include "flare/butil/fast_rand.h"
+#include "flare/base/fast_rand.h"
 #include "flare/brpc/socket.h"
 #include "flare/brpc/policy/dynpart_load_balancer.h"
 
@@ -151,7 +151,7 @@ int DynPartLoadBalancer::SelectServer(const SelectIn& in, SelectOut* out) {
         out->ptr->reset(ptrs[0].first.release());
         return 0;
     }
-    uint32_t r = butil::fast_rand_less_than(total_weight);
+    uint32_t r = flare::base::fast_rand_less_than(total_weight);
     for (int i = 0; i < nptr; ++i) {
         if (ptrs[i].second > r) {
             out->ptr->reset(ptrs[i].first.release());

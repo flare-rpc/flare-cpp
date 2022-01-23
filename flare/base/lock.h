@@ -96,69 +96,68 @@ namespace flare::base {
     };
 
 // TODO: Remove this type.
-    class FLARE_EXPORT Lock
+    class FLARE_EXPORT Lock : public Mutex {
+        FLARE_DISALLOW_COPY_AND_ASSIGN(Lock);
 
-    : public Mutex {
-    DISALLOW_COPY_AND_ASSIGN(Lock);
     public:
 
-    Lock() {}
+        Lock() {}
 
-    ~
+        ~
 
-    Lock() {}
+        Lock() {}
 
-    void Acquire() { lock(); }
+        void Acquire() { lock(); }
 
-    void Release() { unlock(); }
+        void Release() { unlock(); }
 
-    bool Try() { return try_lock(); }
+        bool Try() { return try_lock(); }
 
-    void AssertAcquired() const {}
-};
-
-// A helper class that acquires the given Lock while the AutoLock is in scope.
-class AutoLock {
-public:
-    struct AlreadyAcquired {
+        void AssertAcquired() const {}
     };
 
-    explicit AutoLock(Lock &lock) : lock_(lock) {
-        lock_.Acquire();
-    }
+// A helper class that acquires the given Lock while the AutoLock is in scope.
+    class AutoLock {
+    public:
+        struct AlreadyAcquired {
+        };
 
-    AutoLock(Lock &lock, const AlreadyAcquired &) : lock_(lock) {
-        lock_.AssertAcquired();
-    }
+        explicit AutoLock(Lock &lock) : lock_(lock) {
+            lock_.Acquire();
+        }
 
-    ~AutoLock() {
-        lock_.AssertAcquired();
-        lock_.Release();
-    }
+        AutoLock(Lock &lock, const AlreadyAcquired &) : lock_(lock) {
+            lock_.AssertAcquired();
+        }
 
-private:
-    Lock &lock_;
-    FLARE_DISALLOW_COPY_AND_ASSIGN(AutoLock);
-};
+        ~AutoLock() {
+            lock_.AssertAcquired();
+            lock_.Release();
+        }
+
+    private:
+        Lock &lock_;
+        FLARE_DISALLOW_COPY_AND_ASSIGN(AutoLock);
+    };
 
 // AutoUnlock is a helper that will Release() the |lock| argument in the
 // constructor, and re-Acquire() it in the destructor.
-class AutoUnlock {
-public:
-    explicit AutoUnlock(Lock &lock) : lock_(lock) {
-        // We require our caller to have the lock.
-        lock_.AssertAcquired();
-        lock_.Release();
-    }
+    class AutoUnlock {
+    public:
+        explicit AutoUnlock(Lock &lock) : lock_(lock) {
+            // We require our caller to have the lock.
+            lock_.AssertAcquired();
+            lock_.Release();
+        }
 
-    ~AutoUnlock() {
-        lock_.Acquire();
-    }
+        ~AutoUnlock() {
+            lock_.Acquire();
+        }
 
-private:
-    Lock &lock_;
-    FLARE_DISALLOW_COPY_AND_ASSIGN(AutoUnlock);
-};
+    private:
+        Lock &lock_;
+        FLARE_DISALLOW_COPY_AND_ASSIGN(AutoUnlock);
+    };
 
 }  // namespace flare::base
 

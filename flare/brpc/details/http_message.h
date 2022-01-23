@@ -93,15 +93,15 @@ protected:
     size_t _parsed_length;
     
 private:
-    DISALLOW_COPY_AND_ASSIGN(HttpMessage);
-    int UnlockAndFlushToBodyReader(std::unique_lock<butil::Mutex>& locked);
+    FLARE_DISALLOW_COPY_AND_ASSIGN(HttpMessage);
+    int UnlockAndFlushToBodyReader(std::unique_lock<flare::base::Mutex>& locked);
 
     HttpParserStage _stage;
     std::string _url;
     HttpHeader _header;
     bool _read_body_progressively;
     // For mutual exclusion between on_body and SetBodyReader.
-    butil::Mutex _body_mutex;
+    flare::base::Mutex _body_mutex;
     // Read body progressively
     ProgressiveReader* _body_reader;
     butil::IOBuf _body;

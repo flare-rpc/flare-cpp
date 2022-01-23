@@ -18,7 +18,7 @@
 // Date: 2014/09/22 11:57:43
 
 #include <gflags/gflags.h>
-#include "flare/butil/unique_ptr.h"
+#include <memory>
 #include "flare/bvar/latency_recorder.h"
 #include "flare/base/strings.h"
 
@@ -33,11 +33,11 @@ DEFINE_int32(bvar_latency_p3, 99, "Third latency percentile");
 static bool valid_percentile(const char*, int32_t v) {
     return v > 0 && v < 100;
 }
-const bool ALLOW_UNUSED dummy_bvar_latency_p1 = ::GFLAGS_NS::RegisterFlagValidator(
+const bool FLARE_ALLOW_UNUSED dummy_bvar_latency_p1 = ::GFLAGS_NS::RegisterFlagValidator(
     &FLAGS_bvar_latency_p1, valid_percentile);
-const bool ALLOW_UNUSED dummy_bvar_latency_p2 = ::GFLAGS_NS::RegisterFlagValidator(
+const bool FLARE_ALLOW_UNUSED dummy_bvar_latency_p2 = ::GFLAGS_NS::RegisterFlagValidator(
     &FLAGS_bvar_latency_p2, valid_percentile);
-const bool ALLOW_UNUSED dummy_bvar_latency_p3 = ::GFLAGS_NS::RegisterFlagValidator(
+const bool FLARE_ALLOW_UNUSED dummy_bvar_latency_p3 = ::GFLAGS_NS::RegisterFlagValidator(
     &FLAGS_bvar_latency_p3, valid_percentile);
 
 namespace detail {
@@ -78,7 +78,7 @@ int CDF::describe_series(
     }
     values[n++] = std::make_pair(100, cb->get_number(0.999));
     values[n++] = std::make_pair(101, cb->get_number(0.9999));
-    CHECK_EQ(n, arraysize(values));
+    CHECK_EQ(n, FLARE_ARRAY_SIZE(values));
     os << "{\"label\":\"cdf\",\"data\":[";
     for (size_t i = 0; i < n; ++i) {
         if (i) {

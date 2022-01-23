@@ -25,9 +25,9 @@
 #include "flare/base/static_atomic.h"                    // std::atomic
 #include "flare/bthread/types.h"                      // bthread_id_t
 #include "flare/butil/iobuf.h"                        // butil::IOBuf, IOPortal
-#include "flare/butil/macros.h"                       // DISALLOW_COPY_AND_ASSIGN
+#include "flare/butil/macros.h"                       // FLARE_DISALLOW_COPY_AND_ASSIGN
 #include "flare/base/endpoint.h"                     // flare::base::end_point
-#include "flare/butil/resource_pool.h"                // butil::ResourceId
+#include "flare/memory/resource_pool.h"                // flare::memory::ResourceId
 #include "flare/bthread/butex.h"                      // butex_create_checked
 #include "flare/brpc/authenticator.h"           // Authenticator
 #include "flare/brpc/errno.pb.h"                // EFAILEDSOCKET
@@ -197,7 +197,7 @@ struct SocketOptions {
 
 // Abstractions on reading from and writing into file descriptors.
 // NOTE: accessed by multiple threads(frequently), align it by cacheline.
-class BAIDU_CACHELINE_ALIGNMENT/*note*/ Socket {
+class FLARE_CACHELINE_ALIGNMENT/*note*/ Socket {
 friend class EventDispatcher;
 friend class InputMessenger;
 friend class Acceptor;
@@ -529,7 +529,7 @@ public:
     bthread_keytable_pool_t* keytable_pool() const { return _keytable_pool; }
 
 private:
-    DISALLOW_COPY_AND_ASSIGN(Socket);
+    FLARE_DISALLOW_COPY_AND_ASSIGN(Socket);
 
     int ConductError(bthread_id_t);
     int StartWrite(WriteRequest*, const WriteOptions&);
@@ -796,7 +796,7 @@ private:
 
     std::atomic<SocketId> _agent_socket_id;
 
-    butil::Mutex _pipeline_mutex;
+    flare::base::Mutex _pipeline_mutex;
     std::deque<PipelinedInfo>* _pipeline_q;
 
     // For storing call-id of in-progress RPC.
@@ -814,7 +814,7 @@ private:
     // Storing data that are not flushed into `fd' yet.
     std::atomic<WriteRequest*> _write_head;
 
-    butil::Mutex _stream_mutex;
+    flare::base::Mutex _stream_mutex;
     std::set<StreamId> *_stream_set;
 
     std::atomic<int64_t> _ninflight_app_health_check;

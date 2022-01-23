@@ -508,7 +508,7 @@ namespace brpc {
                     flare::base::microseconds_to_timespec(
                             cntl->backup_request_ms() * 1000L + start_send_real_us),
                     HandleBackupRequest, (void *) correlation_id.value);
-            if (BAIDU_UNLIKELY(rc != 0)) {
+            if (FLARE_UNLIKELY(rc != 0)) {
                 cntl->SetFailed(rc, "Fail to add timer for backup request");
                 return cntl->HandleSendFailed();
             }
@@ -521,7 +521,7 @@ namespace brpc {
                     &cntl->_timeout_id,
                     flare::base::microseconds_to_timespec(cntl->_deadline_us),
                     HandleTimeout, (void *) correlation_id.value);
-            if (BAIDU_UNLIKELY(rc != 0)) {
+            if (FLARE_UNLIKELY(rc != 0)) {
                 cntl->SetFailed(rc, "Fail to add timer for timeout");
                 return cntl->HandleSendFailed();
             }

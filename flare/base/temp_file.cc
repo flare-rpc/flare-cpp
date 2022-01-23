@@ -1,21 +1,3 @@
-// Licensed to the Apache Software Foundation (ASF) under one
-// or more contributor license agreements.  See the NOTICE file
-// distributed with this work for additional information
-// regarding copyright ownership.  The ASF licenses this file
-// to you under the Apache License, Version 2.0 (the
-// "License"); you may not use this file except in compliance
-// with the License.  You may obtain a copy of the License at
-//
-//   http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing,
-// software distributed under the License is distributed on an
-// "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-// KIND, either express or implied.  See the License for the
-// specific language governing permissions and limitations
-// under the License.
-
-// Date: Thu Oct 28 15:27:05 2010
 
 #include <fcntl.h>                                  // open
 #include <unistd.h>                                 // close
@@ -25,14 +7,14 @@
 #include <stdarg.h>                                 // va_list
 #include <errno.h>                                  // errno
 #include <new>                                      // placement new
-#include "temp_file.h"                              // TempFile
+#include "flare/base/temp_file.h"                              // temp_file
 
 // Initializing array. Needs to be macro.
 #define BASE_FILES_TEMP_FILE_PATTERN "temp_file_XXXXXX";
 
-namespace butil {
+namespace flare::base {
 
-TempFile::TempFile() : _ever_opened(0) {
+temp_file::temp_file() : _ever_opened(0) {
     char temp_name[] = BASE_FILES_TEMP_FILE_PATTERN;
     _fd = mkstemp(temp_name);
     if (_fd >= 0) {
@@ -44,9 +26,9 @@ TempFile::TempFile() : _ever_opened(0) {
         
 }
 
-TempFile::TempFile(const char* ext) {
+temp_file::temp_file(const char* ext) {
     if (NULL == ext || '\0' == *ext) {
-        new (this) TempFile();
+        new (this) temp_file();
         return;
     }
 
@@ -76,14 +58,14 @@ TempFile::TempFile(const char* ext) {
     unlink(temp_name);
 }
 
-int TempFile::_reopen_if_necessary() {
+int temp_file::_reopen_if_necessary() {
     if (_fd < 0) {
         _fd = open(_fname, O_CREAT | O_WRONLY | O_TRUNC, 0600);
     }
     return _fd;
 }
 
-TempFile::~TempFile() {
+temp_file::~temp_file() {
     if (_fd >= 0) {
         close(_fd);
         _fd = -1;
@@ -95,11 +77,11 @@ TempFile::~TempFile() {
     }
 }
     
-int TempFile::save(const char *content) {
+int temp_file::save(const char *content) {
     return save_bin(content, strlen(content));
 }
 
-int TempFile::save_format(const char *fmt, ...) {
+int temp_file::save_format(const char *fmt, ...) {
     if (_reopen_if_necessary() < 0) {
         return -1;
     }
@@ -133,7 +115,7 @@ static ssize_t temp_file_write_all(int fd, const void *buf, size_t count) {
     }
 }
 
-int TempFile::save_bin(const void *buf, size_t count) {
+int temp_file::save_bin(const void *buf, size_t count) {
     if (_reopen_if_necessary() < 0) {
         return -1;
     }
@@ -151,4 +133,4 @@ int TempFile::save_bin(const void *buf, size_t count) {
     return 0;        
 }
 
-} // namespace butil
+} // namespace flare::base

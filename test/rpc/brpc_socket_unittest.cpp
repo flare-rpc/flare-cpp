@@ -42,7 +42,7 @@
 #include "flare/brpc/channel.h"
 #include "flare/brpc/controller.h"
 #include "health_check.pb.h"
-#if defined(OS_MACOSX)
+#if defined(FLARE_PLATFORM_OSX)
 #include <sys/event.h>
 #endif
 
@@ -163,10 +163,10 @@ TEST_F(SocketTest, authentication) {
     ASSERT_EQ(0, brpc::Socket::Address(id, &s));
     
     bthread_t th[64];
-    for (size_t i = 0; i < ARRAY_SIZE(th); ++i) {
+    for (size_t i = 0; i < FLARE_ARRAY_SIZE(th); ++i) {
         ASSERT_EQ(0, bthread_start_urgent(&th[i], NULL, auth_fighter, s.get()));
     }
-    for (size_t i = 0; i < ARRAY_SIZE(th); ++i) {
+    for (size_t i = 0; i < FLARE_ARRAY_SIZE(th); ++i) {
         ASSERT_EQ(0, bthread_join(th[i], NULL));
     }
     // Only one fighter wins
@@ -390,9 +390,9 @@ TEST_F(SocketTest, single_threaded_connect_and_write) {
                 bthread_usleep(1000);
                 ASSERT_LT(flare::base::gettimeofday_us(), start_time + 1000000L) << "Too long!";
             }
-#if defined(OS_LINUX)
+#if defined(FLARE_PLATFORM_LINUX)
             ASSERT_EQ(0, bthread_fd_wait(s->fd(), EPOLLIN));
-#elif defined(OS_MACOSX)
+#elif defined(FLARE_PLATFORM_OSX)
             ASSERT_EQ(0, bthread_fd_wait(s->fd(), EVFILT_READ));
 #endif
             char dest[sizeof(buf)];
@@ -463,14 +463,14 @@ TEST_F(SocketTest, fail_to_connect) {
         ASSERT_EQ(point, s->remote_side());
         ASSERT_EQ(id, s->id());
         pthread_t th[8];
-        WriterArg args[ARRAY_SIZE(th)];
-        for (size_t i = 0; i < ARRAY_SIZE(th); ++i) {
+        WriterArg args[FLARE_ARRAY_SIZE(th)];
+        for (size_t i = 0; i < FLARE_ARRAY_SIZE(th); ++i) {
             args[i].times = REP;
             args[i].offset = i * REP;
             args[i].socket_id = id;
             ASSERT_EQ(0, pthread_create(&th[i], NULL, FailedWriter, &args[i]));
         }
-        for (size_t i = 0; i < ARRAY_SIZE(th); ++i) {
+        for (size_t i = 0; i < FLARE_ARRAY_SIZE(th); ++i) {
             ASSERT_EQ(0, pthread_join(th[i], NULL));
         }
         ASSERT_EQ(-1, s->SetFailed());  // already SetFailed
@@ -666,7 +666,7 @@ TEST_F(SocketTest, health_check) {
     // HULU uses host byte order directly...
     *(uint32_t*)(buf + 4) = len + meta_len;
     *(uint32_t*)(buf + 8) = meta_len;
-    const bool use_my_message = (butil::fast_rand_less_than(2) == 0);
+    const bool use_my_message = (flare::base::fast_rand_less_than(2) == 0);
     brpc::SocketMessagePtr<MyMessage> msg;
     int appended_msg = 0;
     butil::IOBuf src;
@@ -813,9 +813,9 @@ TEST_F(SocketTest, multi_threaded_write) {
         printf("Round %d\n", k + 1);
         ASSERT_EQ(0, socketpair(AF_UNIX, SOCK_STREAM, 0, fds));
         pthread_t th[8];
-        WriterArg args[ARRAY_SIZE(th)];
+        WriterArg args[FLARE_ARRAY_SIZE(th)];
         std::vector<size_t> result;
-        result.reserve(ARRAY_SIZE(th) * REP);
+        result.reserve(FLARE_ARRAY_SIZE(th) * REP);
 
         brpc::SocketId id = 8888;
         flare::base::end_point dummy;
@@ -835,7 +835,7 @@ TEST_F(SocketTest, multi_threaded_write) {
         ASSERT_EQ(id, s->id());
         flare::base::make_non_blocking(fds[0]);
 
-        for (size_t i = 0; i < ARRAY_SIZE(th); ++i) {
+        for (size_t i = 0; i < FLARE_ARRAY_SIZE(th); ++i) {
             args[i].times = REP;
             args[i].offset = i * REP;
             args[i].socket_id = id;
@@ -872,25 +872,25 @@ TEST_F(SocketTest, multi_threaded_write) {
                 result.push_back(strtol(buf, NULL, 10));
                 dest.pop_front(NUMBER_WIDTH);
             }
-            if (result.size() >= REP * ARRAY_SIZE(th)) {
+            if (result.size() >= REP * FLARE_ARRAY_SIZE(th)) {
                 break;
             }
         }
-        for (size_t i = 0; i < ARRAY_SIZE(th); ++i) {
+        for (size_t i = 0; i < FLARE_ARRAY_SIZE(th); ++i) {
             ASSERT_EQ(0, pthread_join(th[i], NULL));
         }
         ASSERT_TRUE(dest.empty());
         bthread::g_task_control->print_rq_sizes(std::cout);
         std::cout << std::endl;
 
-        ASSERT_EQ(REP * ARRAY_SIZE(th), result.size()) 
+        ASSERT_EQ(REP * FLARE_ARRAY_SIZE(th), result.size())
             << "write_head=" << s->_write_head;
         std::sort(result.begin(), result.end());
         result.resize(std::unique(result.begin(),
                                   result.end()) - result.begin());
-        ASSERT_EQ(REP * ARRAY_SIZE(th), result.size());
+        ASSERT_EQ(REP * FLARE_ARRAY_SIZE(th), result.size());
         ASSERT_EQ(0UL, *result.begin());
-        ASSERT_EQ(REP * ARRAY_SIZE(th) - 1, *(result.end() - 1));
+        ASSERT_EQ(REP * FLARE_ARRAY_SIZE(th) - 1, *(result.end() - 1));
 
         ASSERT_EQ(0, s->SetFailed());
         s.release()->Dereference();
@@ -961,7 +961,7 @@ TEST_F(SocketTest, multi_threaded_write_perf) {
     int fds[2];
     ASSERT_EQ(0, socketpair(AF_UNIX, SOCK_STREAM, 0, fds));
     bthread_t th[3];
-    WriterArg args[ARRAY_SIZE(th)];
+    WriterArg args[FLARE_ARRAY_SIZE(th)];
 
     brpc::SocketId id = 8888;
     flare::base::end_point dummy;
@@ -981,7 +981,7 @@ TEST_F(SocketTest, multi_threaded_write_perf) {
     ASSERT_EQ(dummy, s->remote_side());
     ASSERT_EQ(id, s->id());
 
-    for (size_t i = 0; i < ARRAY_SIZE(th); ++i) {
+    for (size_t i = 0; i < FLARE_ARRAY_SIZE(th); ++i) {
         args[i].times = REP;
         args[i].offset = i * REP;
         args[i].socket_id = id;
@@ -1003,10 +1003,10 @@ TEST_F(SocketTest, multi_threaded_write_perf) {
 
     printf("tp=%" PRIu64 "M/s\n", (new_nread - old_nread) / tm.u_elapsed());
     
-    for (size_t i = 0; i < ARRAY_SIZE(th); ++i) {
+    for (size_t i = 0; i < FLARE_ARRAY_SIZE(th); ++i) {
         args[i].times = 0;
     }
-    for (size_t i = 0; i < ARRAY_SIZE(th); ++i) {
+    for (size_t i = 0; i < FLARE_ARRAY_SIZE(th); ++i) {
         ASSERT_EQ(0, bthread_join(th[i], NULL));
     }
     ASSERT_EQ(0, s->SetFailed());

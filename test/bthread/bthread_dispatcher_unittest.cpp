@@ -16,7 +16,7 @@
 // under the License.
 
 #include <sys/uio.h>               // writev
-#include "flare/butil/compat.h"
+#include "flare/base/compat.h"
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <gtest/gtest.h>
@@ -29,7 +29,7 @@
 #include "flare/bthread/bthread.h"
 #include "flare/bthread/task_control.h"
 #include "flare/bthread/task_group.h"
-#if defined(OS_MACOSX)
+#if defined(FLARE_PLATFORM_OSX)
 #include <sys/types.h>                           // struct kevent
 #include <sys/event.h>                           // kevent(), kqueue()
 #endif
@@ -45,13 +45,13 @@ namespace {
 volatile bool client_stop = false;
 volatile bool server_stop = false;
 
-struct BAIDU_CACHELINE_ALIGNMENT ClientMeta {
+struct FLARE_CACHELINE_ALIGNMENT ClientMeta {
     int fd;
     size_t times;
     size_t bytes;
 };
 
-struct BAIDU_CACHELINE_ALIGNMENT SocketMeta {
+struct FLARE_CACHELINE_ALIGNMENT SocketMeta {
     int fd;
     int epfd;
     std::atomic<int> req;
@@ -110,17 +110,17 @@ void* epoll_thread(void* arg) {
     EpollMeta* em = (EpollMeta*)arg;
     em->nthread = 0;
     em->nfold = 0;
-#if defined(OS_LINUX)
+#if defined(FLARE_PLATFORM_LINUX)
     epoll_event e[32];
-#elif defined(OS_MACOSX)
+#elif defined(FLARE_PLATFORM_OSX)
     struct kevent e[32];
 #endif
 
     while (!server_stop) {
-#if defined(OS_LINUX)
-        const int n = epoll_wait(em->epfd, e, ARRAY_SIZE(e), -1);
-#elif defined(OS_MACOSX)
-        const int n = kevent(em->epfd, NULL, 0, e, ARRAY_SIZE(e), NULL);
+#if defined(FLARE_PLATFORM_LINUX)
+        const int n = epoll_wait(em->epfd, e, FLARE_ARRAY_SIZE(e), -1);
+#elif defined(FLARE_PLATFORM_OSX)
+        const int n = kevent(em->epfd, NULL, 0, e, FLARE_ARRAY_SIZE(e), NULL);
 #endif
         if (server_stop) {
             break;
@@ -129,18 +129,18 @@ void* epoll_thread(void* arg) {
             if (EINTR == errno) {
                 continue;
             }
-#if defined(OS_LINUX)
+#if defined(FLARE_PLATFORM_LINUX)
             PLOG(FATAL) << "Fail to epoll_wait";
-#elif defined(OS_MACOSX)
+#elif defined(FLARE_PLATFORM_OSX)
             PLOG(FATAL) << "Fail to kevent";
 #endif
             break;
         }
 
         for (int i = 0; i < n; ++i) {
-#if defined(OS_LINUX)
+#if defined(FLARE_PLATFORM_LINUX)
             SocketMeta* m = (SocketMeta*)e[i].data.ptr;
-#elif defined(OS_MACOSX)
+#elif defined(FLARE_PLATFORM_OSX)
             SocketMeta* m = (SocketMeta*)e[i].udata;
 #endif
             if (m->req.fetch_add(1, std::memory_order_acquire) == 0) {
@@ -220,9 +220,9 @@ TEST(DispatcherTest, dispatch_tasks) {
     SocketMeta* sm[NCLIENT];
 
     for (size_t i = 0; i < NEPOLL; ++i) {
-#if defined(OS_LINUX)
+#if defined(FLARE_PLATFORM_LINUX)
         epfd[i] = epoll_create(1024);
-#elif defined(OS_MACOSX)
+#elif defined(FLARE_PLATFORM_OSX)
         epfd[i] = kqueue();
 #endif
         ASSERT_GT(epfd[i], 0);
@@ -241,10 +241,10 @@ TEST(DispatcherTest, dispatch_tasks) {
         ASSERT_EQ(0, flare::base::make_non_blocking(m->fd));
         sm[i] = m;
 
-#if defined(OS_LINUX)
+#if defined(FLARE_PLATFORM_LINUX)
         epoll_event evt = { (uint32_t)(EPOLLIN | EPOLLET), { m } };
         ASSERT_EQ(0, epoll_ctl(m->epfd, EPOLL_CTL_ADD, m->fd, &evt));
-#elif defined(OS_MACOSX)
+#elif defined(FLARE_PLATFORM_OSX)
         struct kevent kqueue_event;
         EV_SET(&kqueue_event, m->fd, EVFILT_READ, EV_ADD | EV_ENABLE | EV_CLEAR, 0, 0, m);
         ASSERT_EQ(0, kevent(m->epfd, &kqueue_event, 1, NULL, 0, NULL));
@@ -298,10 +298,10 @@ TEST(DispatcherTest, dispatch_tasks) {
     }
     server_stop = true;
     for (size_t i = 0; i < NEPOLL; ++i) {
-#if defined(OS_LINUX)
+#if defined(FLARE_PLATFORM_LINUX)
         epoll_event evt = { EPOLLOUT,  { NULL } };
         ASSERT_EQ(0, epoll_ctl(epfd[i], EPOLL_CTL_ADD, 0, &evt));
-#elif defined(OS_MACOSX)
+#elif defined(FLARE_PLATFORM_OSX)
         struct kevent kqueue_event;
         EV_SET(&kqueue_event, 0, EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, NULL);
         ASSERT_EQ(0, kevent(epfd[i], &kqueue_event, 1, NULL, 0, NULL));

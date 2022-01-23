@@ -21,7 +21,7 @@
 #include <gflags/gflags.h>
 #include "flare/butil/files/file_enumerator.h"
 #include "flare/butil/file_util.h"                     // butil::FilePath
-#include "flare/butil/popen.h"                         // butil::read_command_output
+#include "flare/base/popen.h"                         // flare::base::read_command_output
 #include "flare/base/fd_guard.h"                      // flare::base::fd_guard
 #include "flare/brpc/log.h"
 #include "flare/brpc/controller.h"
@@ -328,7 +328,7 @@ static int MakeProfName(ProfilingType type, char* buf, size_t buf_len) {
 static void ConsumeWaiters(ProfilingType type, const Controller* cur_cntl,
                            std::vector<ProfilingWaiter>* waiters) {
     waiters->clear();
-    if ((int)type >= (int)arraysize(g_env)) {
+    if ((int)type >= (int)FLARE_ARRAY_SIZE(g_env)) {
         LOG(ERROR) << "Invalid type=" << type;
         return;
     }
@@ -524,7 +524,7 @@ static void DisplayResult(Controller* cntl,
                    // we see non-zero errno, it's real error.
         butil::IOBufBuilder pprof_output;
         RPC_VLOG << "Running cmd=" << cmd;
-        const int rc = butil::read_command_output(pprof_output, cmd.c_str());
+        const int rc = flare::base::read_command_output(pprof_output, cmd.c_str());
         if (rc != 0) {
             butil::FilePath pprof_path(pprof_tool);
             if (!butil::PathExists(pprof_path)) {

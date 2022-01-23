@@ -93,7 +93,7 @@
 
 extern "C" {
 // defined in gperftools/malloc_extension_c.h
-void BAIDU_WEAK MallocExtension_ReleaseFreeMemory(void);
+void FLARE_WEAK MallocExtension_ReleaseFreeMemory(void);
 }
 
 namespace brpc {

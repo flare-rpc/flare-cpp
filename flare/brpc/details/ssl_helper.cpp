@@ -24,7 +24,7 @@
 #include <openssl/err.h>
 #include <openssl/x509.h>
 #include <openssl/x509v3.h>
-#include "flare/butil/unique_ptr.h"
+#include <memory>
 #include "flare/base/logging.h"
 #include "flare/butil/ssl_compat.h"
 #include "flare/base/string_splitter.h"
@@ -624,7 +624,7 @@ static unsigned long SSLGetThreadId() {
 // may crash probably due to some TLS data used inside OpenSSL
 // Also according to performance test, there is little difference
 // between pthread mutex and bthread mutex
-static butil::Mutex* g_ssl_mutexs = NULL;
+static flare::base::Mutex* g_ssl_mutexs = NULL;
 
 static void SSLLockCallback(int mode, int n, const char* file, int line) {
     (void)file;
@@ -643,7 +643,7 @@ static void SSLLockCallback(int mode, int n, const char* file, int line) {
 
 int SSLThreadInit() {
 #if OPENSSL_VERSION_NUMBER < 0x10100000L
-    g_ssl_mutexs = new butil::Mutex[CRYPTO_num_locks()];
+    g_ssl_mutexs = new flare::base::Mutex[CRYPTO_num_locks()];
     CRYPTO_set_locking_callback(SSLLockCallback);
 # ifdef CRYPTO_LOCK_ECDH
     CRYPTO_THREADID_set_callback(SSLGetThreadId);

@@ -119,7 +119,7 @@ private:
     bool _non_protocol;
     size_t _capacity;
 
-    butil::Mutex _add_handler_mutex;
+    flare::base::Mutex _add_handler_mutex;
 };
 
 // Get the global InputMessenger at client-side.

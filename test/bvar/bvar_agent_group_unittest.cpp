@@ -123,29 +123,29 @@ TEST_F(AgentGroupTest, test_all_perf) {
     long id = AgentGroup<agent_type>::create_new_agent();
     ASSERT_TRUE(id >= 0) << id;
     pthread_t threads[24];
-    for (size_t i = 0; i < ARRAY_SIZE(threads); ++i) {
+    for (size_t i = 0; i < FLARE_ARRAY_SIZE(threads); ++i) {
         pthread_create(&threads[i], NULL, &thread_counter, (void *)id);
     }
     long totol_time = 0;
-    for (size_t i = 0; i < ARRAY_SIZE(threads); ++i) {
+    for (size_t i = 0; i < FLARE_ARRAY_SIZE(threads); ++i) {
         void *ret; 
         pthread_join(threads[i], &ret);
         totol_time += (long)ret;
     }
     LOG(INFO) << "ThreadAgent takes " 
-              << totol_time / (OPS_PER_THREAD * ARRAY_SIZE(threads));
+              << totol_time / (OPS_PER_THREAD * FLARE_ARRAY_SIZE(threads));
     totol_time = 0;
     g_counter.store(0, std::memory_order_relaxed);
-    for (size_t i = 0; i < ARRAY_SIZE(threads); ++i) {
+    for (size_t i = 0; i < FLARE_ARRAY_SIZE(threads); ++i) {
         pthread_create(&threads[i], NULL, global_add, (void *)id);
     }
-    for (size_t i = 0; i < ARRAY_SIZE(threads); ++i) {
+    for (size_t i = 0; i < FLARE_ARRAY_SIZE(threads); ++i) {
         void *ret; 
         pthread_join(threads[i], &ret);
         totol_time += (long)ret;
     }
     LOG(INFO) << "Global Atomic takes " 
-              << totol_time / (OPS_PER_THREAD * ARRAY_SIZE(threads));
+              << totol_time / (OPS_PER_THREAD * FLARE_ARRAY_SIZE(threads));
     AgentGroup<agent_type>::destroy_agent(id);
     //sleep(1000);
 }

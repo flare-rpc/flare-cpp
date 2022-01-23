@@ -22,7 +22,7 @@
 
 #define BAIDU_CLEAR_OBJECT_POOL_AFTER_ALL_THREADS_QUIT
 
-#include "flare/butil/object_pool.h"
+#include "flare/memory/object_pool.h"
 
 namespace {
     std::random_device rd;
@@ -45,7 +45,7 @@ namespace {
     };
 }
 
-namespace butil {
+namespace flare::memory {
     template<>
     struct ObjectPoolBlockMaxSize<MyObject> {
         static const size_t value = 128;
@@ -67,10 +67,10 @@ namespace butil {
             return foo->x != 0;
         }
     };
-}
+}  // namespace flare::memory
 
 namespace {
-    using namespace butil;
+    using namespace flare::memory;
 
     class ObjectPoolTest : public ::testing::Test {
     protected:
@@ -109,7 +109,7 @@ namespace {
 
     TEST_F(ObjectPoolTest, change_config) {
         int a[2];
-        printf("%lu\n", ARRAY_SIZE(a));
+        printf("%lu\n", FLARE_ARRAY_SIZE(a));
 
         ObjectPoolInfo info = describe_objects<MyObject>();
         ObjectPoolInfo zero_info = {0, 0, 0, 0, 3, 3, 0};
@@ -352,18 +352,18 @@ namespace {
 
     TEST_F(ObjectPoolTest, get_and_return_int_multiple_threads) {
         pthread_t tid[16];
-        for (size_t i = 0; i < ARRAY_SIZE(tid); ++i) {
+        for (size_t i = 0; i < FLARE_ARRAY_SIZE(tid); ++i) {
             ASSERT_EQ(0, pthread_create(&tid[i], NULL, get_and_return_int, NULL));
         }
-        for (size_t i = 0; i < ARRAY_SIZE(tid); ++i) {
+        for (size_t i = 0; i < FLARE_ARRAY_SIZE(tid); ++i) {
             pthread_join(tid[i], NULL);
         }
 
         pthread_t tid2[16];
-        for (size_t i = 0; i < ARRAY_SIZE(tid2); ++i) {
+        for (size_t i = 0; i < FLARE_ARRAY_SIZE(tid2); ++i) {
             ASSERT_EQ(0, pthread_create(&tid2[i], NULL, new_and_delete_int, NULL));
         }
-        for (size_t i = 0; i < ARRAY_SIZE(tid2); ++i) {
+        for (size_t i = 0; i < FLARE_ARRAY_SIZE(tid2); ++i) {
             pthread_join(tid2[i], NULL);
         }
 

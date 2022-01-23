@@ -8,7 +8,7 @@
 #include <unistd.h>
 
 #include "flare/butil/files/file_path.h"
-#include "flare/butil/files/scoped_file.h"
+#include "flare/base/scoped_file.h"
 
 namespace butil {
 

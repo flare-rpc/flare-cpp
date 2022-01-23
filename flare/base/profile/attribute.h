@@ -73,4 +73,46 @@ namespace flare::base::base_internal {
 # define FLARE_DEPRECATED
 #endif
 
+// Mark function as weak. This is GCC only feature.
+#if defined(FLARE_COMPILER_GNUC) || defined(FLARE_COMPILER_CLANG)
+# define FLARE_WEAK __attribute__((weak))
+#else
+# define FLARE_WEAK
+#endif
+
+#if (defined(FLARE_COMPILER_GNUC) || defined(FLARE_COMPILER_CLANG)) && __cplusplus >= 201103
+#define FLARE_WARN_UNUSED_RESULT __attribute__((warn_unused_result))
+#else
+#define FLARE_WARN_UNUSED_RESULT
+#endif
+
+#ifdef _MSC_VER
+# define FLARE_CACHELINE_ALIGNMENT __declspec(align(BAIDU_CACHELINE_SIZE))
+#endif /* _MSC_VER */
+
+#ifdef __GNUC__
+# define FLARE_CACHELINE_ALIGNMENT __attribute__((aligned(FLARE_CACHE_LINE_SIZE)))
+#endif /* __GNUC__ */
+
+#ifndef FLARE_CACHELINE_ALIGNMENT
+# define FLARE_CACHELINE_ALIGNMENT /*FLARE_CACHELINE_ALIGNMENT*/
+#endif
+
+
+// Mark a branch likely or unlikely to be true.
+// We can't remove the BAIDU_ prefix because the name is likely to conflict,
+// namely kylin already has the macro.
+#if defined(FLARE_COMPILER_GNUC) || defined(FLARE_COMPILER_CLANG)
+#  if defined(__cplusplus)
+#    define FLARE_LIKELY(expr) (__builtin_expect((bool)(expr), true))
+#    define FLARE_UNLIKELY(expr) (__builtin_expect((bool)(expr), false))
+#  else
+#    define FLARE_LIKELY(expr) (__builtin_expect(!!(expr), 1))
+#    define FLARE_UNLIKELY(expr) (__builtin_expect(!!(expr), 0))
+#  endif
+#else
+#  define FLARE_LIKELY(expr) (expr)
+#  define FLARE_UNLIKELY(expr) (expr)
+#endif
+
 #endif // FLARE_BASE_PROFILE_ATTRIBUTE_H_

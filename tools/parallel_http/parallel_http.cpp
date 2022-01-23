@@ -22,7 +22,7 @@
 #include <deque>
 #include <flare/bthread/bthread.h>
 #include "flare/base/logging.h"
-#include <flare/butil/files/scoped_file.h>
+#include <flare/base/scoped_file.h>
 #include <flare/brpc/channel.h>
 
 DEFINE_string(url_file, "", "The file containing urls to fetch. If this flag is"
@@ -38,7 +38,7 @@ struct AccessThreadArgs {
     const std::deque<std::string>* url_list;
     size_t offset;
     std::deque<std::pair<std::string, butil::IOBuf> > output_queue;
-    butil::Mutex output_queue_mutex;
+    flare::base::Mutex output_queue_mutex;
     std::atomic<int> current_concurrency;
 };
 
@@ -105,7 +105,7 @@ int main(int argc, char** argv) {
     //     FLAGS_path = "/" + FLAGS_path;
     // }
 
-    butil::ScopedFILE fp_guard;
+    flare::base::scoped_file fp_guard;
     FILE* fp = NULL;
     if (!FLAGS_url_file.empty()) {
         fp_guard.reset(fopen(FLAGS_url_file.c_str(), "r"));

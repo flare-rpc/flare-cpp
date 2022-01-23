@@ -83,7 +83,7 @@ ParseResult ParseStreamingMessage(butil::IOBuf* source,
     } else if (source->length() < sizeof(header_buf) + body_size) {
         return MakeParseError(PARSE_ERROR_NOT_ENOUGH_DATA);
     }
-    if (BAIDU_UNLIKELY(meta_size > body_size)) {
+    if (FLARE_UNLIKELY(meta_size > body_size)) {
         LOG(ERROR) << "meta_size=" << meta_size << " is bigger than body_size="
                    << body_size;
         // Pop the message

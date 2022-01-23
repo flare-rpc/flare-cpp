@@ -690,9 +690,9 @@ TEST_F(BuiltinServiceTest, dir) {
         cntl.http_request()._unresolved_path = "/usr/include/errno.h";
         service.default_method(&cntl, &req, &res, &done);
         EXPECT_FALSE(cntl.Failed());
-#if defined(OS_LINUX)
+#if defined(FLARE_PLATFORM_LINUX)
         CheckContent(cntl, "ERRNO_H");
-#elif defined(OS_MACOSX)
+#elif defined(FLARE_PLATFORM_OSX)
         CheckContent(cntl, "sys/errno.h");
 #endif
     }

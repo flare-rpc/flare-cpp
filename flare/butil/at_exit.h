@@ -9,7 +9,7 @@
 
 #include "flare/butil/base_export.h"
 #include "flare/butil/basictypes.h"
-#include "flare/butil/synchronization/lock.h"
+#include "flare/base/lock.h"
 
 namespace butil {
 
@@ -57,7 +57,7 @@ class BUTIL_EXPORT AtExitManager {
     AtExitCallbackType func;
     void* param;
   };
-  butil::Lock lock_;
+  flare::base::Lock lock_;
   std::stack<Callback> stack_;
   AtExitManager* next_manager_;  // Stack of managers to allow shadowing.
 

@@ -4,7 +4,7 @@
 
 #include "flare/butil/compiler_specific.h"
 #include "flare/butil/memory/scoped_ptr.h"
-#include "flare/butil/synchronization/lock.h"
+#include "flare/base/lock.h"
 #include "flare/butil/threading/platform_thread.h"
 #include "flare/butil/threading/simple_thread.h"
 #include "flare/butil/threading/thread_collision_warner.h"
@@ -266,30 +266,30 @@ TEST(ThreadCollisionTest, MTSynchedScopedBookCriticalSectionTest) {
   // a lock.
   class QueueUser : public butil::DelegateSimpleThread::Delegate {
    public:
-    QueueUser(NonThreadSafeQueue& queue, butil::Lock& lock)
+    QueueUser(NonThreadSafeQueue& queue, flare::base::Lock& lock)
         : queue_(queue),
           lock_(lock) {}
 
     virtual void Run() OVERRIDE {
       {
-        butil::AutoLock auto_lock(lock_);
+        flare::base::AutoLock auto_lock(lock_);
         queue_.push(0);
       }
       {
-        butil::AutoLock auto_lock(lock_);
+        flare::base::AutoLock auto_lock(lock_);
         queue_.pop();
       }
     }
    private:
     NonThreadSafeQueue& queue_;
-    butil::Lock& lock_;
+    flare::base::Lock& lock_;
   };
 
   AssertReporter* local_reporter = new AssertReporter();
 
   NonThreadSafeQueue queue(local_reporter);
 
-  butil::Lock lock;
+  flare::base::Lock lock;
 
   QueueUser queue_user_a(queue, lock);
   QueueUser queue_user_b(queue, lock);
@@ -340,34 +340,34 @@ TEST(ThreadCollisionTest, MTSynchedScopedRecursiveBookCriticalSectionTest) {
   // a lock.
   class QueueUser : public butil::DelegateSimpleThread::Delegate {
    public:
-    QueueUser(NonThreadSafeQueue& queue, butil::Lock& lock)
+    QueueUser(NonThreadSafeQueue& queue, flare::base::Lock& lock)
         : queue_(queue),
           lock_(lock) {}
 
     virtual void Run() OVERRIDE {
       {
-        butil::AutoLock auto_lock(lock_);
+        flare::base::AutoLock auto_lock(lock_);
         queue_.push(0);
       }
       {
-        butil::AutoLock auto_lock(lock_);
+        flare::base::AutoLock auto_lock(lock_);
         queue_.bar();
       }
       {
-        butil::AutoLock auto_lock(lock_);
+        flare::base::AutoLock auto_lock(lock_);
         queue_.pop();
       }
     }
    private:
     NonThreadSafeQueue& queue_;
-    butil::Lock& lock_;
+    flare::base::Lock& lock_;
   };
 
   AssertReporter* local_reporter = new AssertReporter();
 
   NonThreadSafeQueue queue(local_reporter);
 
-  butil::Lock lock;
+  flare::base::Lock lock;
 
   QueueUser queue_user_a(queue, lock);
   QueueUser queue_user_b(queue, lock);

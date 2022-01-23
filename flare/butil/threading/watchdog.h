@@ -23,71 +23,77 @@
 #include "flare/butil/base_export.h"
 #include "flare/butil/compiler_specific.h"
 #include "flare/butil/synchronization/condition_variable.h"
-#include "flare/butil/synchronization/lock.h"
+#include "flare/base/lock.h"
 #include "flare/butil/threading/platform_thread.h"
 #include "flare/butil/time/time.h"
 
 namespace butil {
 
-class BUTIL_EXPORT Watchdog {
- public:
-  // Constructor specifies how long the Watchdog will wait before alarming.
-  Watchdog(const TimeDelta& duration,
-           const std::string& thread_watched_name,
-           bool enabled);
-  virtual ~Watchdog();
+    class BUTIL_EXPORT Watchdog {
+    public:
+        // Constructor specifies how long the Watchdog will wait before alarming.
+        Watchdog(const TimeDelta &duration,
+                 const std::string &thread_watched_name,
+                 bool enabled);
 
-  // Notify watchdog thread to finish up. Sets the state_ to SHUTDOWN.
-  void Cleanup();
+        virtual ~Watchdog();
 
-  // Returns true if we state_ is JOINABLE (which indicates that Watchdog has
-  // exited).
-  bool IsJoinable();
+        // Notify watchdog thread to finish up. Sets the state_ to SHUTDOWN.
+        void Cleanup();
 
-  // Start timing, and alarm when time expires (unless we're disarm()ed.)
-  void Arm();  // Arm  starting now.
-  void ArmSomeTimeDeltaAgo(const TimeDelta& time_delta);
-  void ArmAtStartTime(const TimeTicks start_time);
+        // Returns true if we state_ is JOINABLE (which indicates that Watchdog has
+        // exited).
+        bool IsJoinable();
 
-  // Reset time, and do not set off the alarm.
-  void Disarm();
+        // Start timing, and alarm when time expires (unless we're disarm()ed.)
+        void Arm();  // Arm  starting now.
+        void ArmSomeTimeDeltaAgo(const TimeDelta &time_delta);
 
-  // Alarm is called if the time expires after an Arm() without someone calling
-  // Disarm().  This method can be overridden to create testable classes.
-  virtual void Alarm();
+        void ArmAtStartTime(const TimeTicks start_time);
 
-  // Reset static data to initial state. Useful for tests, to ensure
-  // they are independent.
-  static void ResetStaticData();
+        // Reset time, and do not set off the alarm.
+        void Disarm();
 
- private:
-  class ThreadDelegate : public PlatformThread::Delegate {
-   public:
-    explicit ThreadDelegate(Watchdog* watchdog) : watchdog_(watchdog) {
-    }
-    virtual void ThreadMain() OVERRIDE;
-   private:
-    void SetThreadName() const;
+        // Alarm is called if the time expires after an Arm() without someone calling
+        // Disarm().  This method can be overridden to create testable classes.
+        virtual void Alarm();
 
-    Watchdog* watchdog_;
-  };
+        // Reset static data to initial state. Useful for tests, to ensure
+        // they are independent.
+        static void ResetStaticData();
 
-  enum State {ARMED, DISARMED, SHUTDOWN, JOINABLE };
+    private:
+        class ThreadDelegate : public PlatformThread::Delegate {
+        public:
+            explicit ThreadDelegate(Watchdog *watchdog) : watchdog_(watchdog) {
+            }
 
-  bool enabled_;
+            virtual void ThreadMain() OVERRIDE;
 
-  Lock lock_;  // Mutex for state_.
-  ConditionVariable condition_variable_;
-  State state_;
-  const TimeDelta duration_;  // How long after start_time_ do we alarm?
-  const std::string thread_watched_name_;
-  PlatformThreadHandle handle_;
-  ThreadDelegate delegate_;  // Store it, because it must outlive the thread.
+        private:
+            void SetThreadName() const;
 
-  TimeTicks start_time_;  // Start of epoch, and alarm after duration_.
+            Watchdog *watchdog_;
+        };
 
-  DISALLOW_COPY_AND_ASSIGN(Watchdog);
-};
+        enum State {
+            ARMED, DISARMED, SHUTDOWN, JOINABLE
+        };
+
+        bool enabled_;
+
+        flare::base::Lock lock_;  // Mutex for state_.
+        flare::base::ConditionVariable condition_variable_;
+        State state_;
+        const TimeDelta duration_;  // How long after start_time_ do we alarm?
+        const std::string thread_watched_name_;
+        PlatformThreadHandle handle_;
+        ThreadDelegate delegate_;  // Store it, because it must outlive the thread.
+
+        TimeTicks start_time_;  // Start of epoch, and alarm after duration_.
+
+        DISALLOW_COPY_AND_ASSIGN(Watchdog);
+    };
 
 }  // namespace butil
 

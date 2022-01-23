@@ -17,7 +17,7 @@
 
 
 #include <gflags/gflags.h>                            // DEFINE_int32
-#include "flare/butil/compat.h"
+#include "flare/base/compat.h"
 #include "flare/base/fd_utility.h"                         // make_close_on_exec
 #include "flare/base/logging.h"                            // LOG
 #include "flare/hash/murmurhash3.h"// fmix32

@@ -13,21 +13,21 @@
 #include "flare/butil/strings/stringprintf.h"
 #include <gtest/gtest.h>
 
-#if defined(OS_WIN)
+#if defined(FLARE_PLATFORM_WINDOWS)
 #include <windows.h>
 #endif
-#if defined(OS_POSIX)
+#if defined(FLARE_PLATFORM_POSIX)
 #include <errno.h>
 #endif
-#if defined(OS_MACOSX)
+#if defined(FLARE_PLATFORM_OSX)
 #include <malloc/malloc.h>
 #include "flare/butil/process/memory_unittest_mac.h"
 #endif
-#if defined(OS_LINUX)
+#if defined(FLARE_PLATFORM_LINUX)
 #include <malloc.h>
 #endif
 
-#if defined(OS_WIN)
+#if defined(FLARE_PLATFORM_WINDOWS)
 // HeapQueryInformation function pointer.
 typedef BOOL (WINAPI* HeapQueryFn)  \
     (HANDLE, HEAP_INFORMATION_CLASS, PVOID, SIZE_T, PSIZE_T);
@@ -95,9 +95,9 @@ TEST(ProcessMemoryTest, EnableLFH) {
     EXPECT_NE(flag, 1u);
   }
 }
-#endif  // defined(OS_WIN)
+#endif  // defined(FLARE_PLATFORM_WINDOWS)
 
-#if defined(OS_MACOSX)
+#if defined(FLARE_PLATFORM_OSX)
 
 // For the following Mac tests:
 // Note that butil::EnableTerminationOnHeapCorruption() is called as part of
@@ -147,14 +147,14 @@ TEST(ProcessMemoryTest, MacTerminateOnHeapCorruption) {
 #endif  // ARCH_CPU_64_BITS || defined(ADDRESS_SANITIZER)
 }
 
-#endif  // defined(OS_MACOSX)
+#endif  // defined(FLARE_PLATFORM_OSX)
 
 // Android doesn't implement set_new_handler, so we can't use the
 // OutOfMemoryTest cases.
 // OpenBSD does not support these tests either.
 // TODO(vandebo) make this work on Windows too.
-#if !defined(OS_ANDROID) && !defined(OS_OPENBSD) && \
-    !defined(OS_WIN)
+#if !defined(FLARE_PLATFORM_ANDROID) && !defined(OS_OPENBSD) && \
+    !defined(FLARE_PLATFORM_WINDOWS)
 
 #if defined(USE_TCMALLOC)
 extern "C" {
@@ -242,7 +242,7 @@ TEST_F(OutOfMemoryDeathTest, Valloc) {
     }, "");
 }
 
-#if defined(OS_LINUX)
+#if defined(FLARE_PLATFORM_LINUX)
 
 // pvalloc does not crash in gcc 3.4
 #if PVALLOC_AVAILABLE == 1 && (!defined(__GNUC__) || __GNUC__ >= 4)
@@ -275,10 +275,10 @@ TEST_F(OutOfMemoryDeathTest, ViaSharedLibraries) {
 }
 */
 
-#endif  // OS_LINUX
+#endif  // FLARE_PLATFORM_LINUX
 
 // Android doesn't implement posix_memalign().
-#if defined(OS_POSIX) && !defined(OS_ANDROID)
+#if defined(FLARE_PLATFORM_POSIX) && !defined(FLARE_PLATFORM_ANDROID)
 TEST_F(OutOfMemoryDeathTest, Posix_memalign) {
   // Grab the return value of posix_memalign to silence a compiler warning
   // about unused return values. We don't actually care about the return
@@ -288,9 +288,9 @@ TEST_F(OutOfMemoryDeathTest, Posix_memalign) {
       EXPECT_EQ(ENOMEM, posix_memalign(&value_, 8, test_size_));
     }, "");
 }
-#endif  // defined(OS_POSIX) && !defined(OS_ANDROID)
+#endif  // defined(FLARE_PLATFORM_POSIX) && !defined(FLARE_PLATFORM_ANDROID)
 
-#if defined(OS_MACOSX)
+#if defined(FLARE_PLATFORM_OSX)
 
 // Purgeable zone tests
 
@@ -378,7 +378,7 @@ TEST_F(OutOfMemoryDeathTest, PsychoticallyBigObjCObject) {
 }
 
 #endif  // !ARCH_CPU_64_BITS
-#endif  // OS_MACOSX
+#endif  // FLARE_PLATFORM_OSX
 
 class OutOfMemoryHandledTest : public OutOfMemoryTest {
  public:
@@ -430,4 +430,4 @@ TEST_F(OutOfMemoryHandledTest, UncheckedCalloc) {
   EXPECT_TRUE(value_ == NULL);
 }
 #endif  // !defined(MEMORY_TOOL_REPLACES_ALLOCATOR)
-#endif  // !defined(OS_ANDROID) && !defined(OS_OPENBSD) && !defined(OS_WIN)
+#endif  // !defined(FLARE_PLATFORM_ANDROID) && !defined(OS_OPENBSD) && !defined(FLARE_PLATFORM_WINDOWS)

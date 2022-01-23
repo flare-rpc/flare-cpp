@@ -32,11 +32,11 @@
 #include "flare/base/time.h"
 #include "flare/base/singleton_on_pthread_once.h"
 #include "flare/base/scoped_lock.h"
-#include "flare/butil/files/scoped_file.h"
+#include "flare/base/scoped_file.h"
 #include "flare/butil/files/dir_reader_posix.h"
 #include "flare/butil/file_util.h"
-#include "flare/butil/process_util.h"            // ReadCommandLine
-#include "flare/butil/popen.h"                   // read_command_output
+#include "flare/base/process_util.h"            // read_command_line
+#include "flare/base/popen.h"                   // read_command_output
 #include "flare/bvar/passive_status.h"
 #include "flare/base/static_atomic.h"
 
@@ -45,7 +45,7 @@ namespace bvar {
     template<class T, class M>
     M get_member_type(M T::*);
 
-#define BVAR_MEMBER_TYPE(member) BAIDU_TYPEOF(bvar::get_member_type(member))
+#define BVAR_MEMBER_TYPE(member) decltype(bvar::get_member_type(member))
 
     int do_link_default_variables = 0;
     const int64_t CACHED_INTERVAL_US = 100000L; // 100ms
@@ -80,7 +80,7 @@ namespace bvar {
 #if defined(OS_LINUX)
         // Read status from /proc/self/stat. Information from `man proc' is out of date,
         // see http://man7.org/linux/man-pages/man5/proc.5.html
-        butil::ScopedFILE fp("/proc/self/stat", "r");
+        flare::base::scoped_file fp("/proc/self/stat", "r");
         if (NULL == fp) {
             PLOG_ONCE(WARNING) << "Fail to open /proc/self/stat";
             return false;
@@ -108,7 +108,7 @@ namespace bvar {
         snprintf(cmdbuf, sizeof(cmdbuf),
                 "ps -p %ld -o pid,ppid,pgid,sess"
                 ",tpgid,flags,pri,nice | tail -n1", (long)pid);
-        if (butil::read_command_output(oss, cmdbuf) != 0) {
+        if (flare::base::read_command_output(oss, cmdbuf) != 0) {
             LOG(ERROR) << "Fail to read stat";
             return -1;
         }
@@ -213,7 +213,7 @@ namespace bvar {
         m = ProcMemory();
         errno = 0;
 #if defined(OS_LINUX)
-        butil::ScopedFILE fp("/proc/self/statm", "r");
+        flare::base::scoped_file fp("/proc/self/statm", "r");
         if (NULL == fp) {
             PLOG_ONCE(WARNING) << "Fail to open /proc/self/statm";
             return false;
@@ -233,7 +233,7 @@ namespace bvar {
         std::ostringstream oss;
         char cmdbuf[128];
         snprintf(cmdbuf, sizeof(cmdbuf), "ps -p %ld -o rss=,vsz=", (long)pid);
-        if (butil::read_command_output(oss, cmdbuf) != 0) {
+        if (flare::base::read_command_output(oss, cmdbuf) != 0) {
             LOG(ERROR) << "Fail to read memory state";
             return -1;
         }
@@ -281,7 +281,7 @@ namespace bvar {
 
     static bool read_load_average(LoadAverage &m) {
 #if defined(OS_LINUX)
-        butil::ScopedFILE fp("/proc/loadavg", "r");
+        flare::base::scoped_file fp("/proc/loadavg", "r");
         if (NULL == fp) {
             PLOG_ONCE(WARNING) << "Fail to open /proc/loadavg";
             return false;
@@ -296,7 +296,7 @@ namespace bvar {
         return true;
 #elif defined(OS_MACOSX)
         std::ostringstream oss;
-        if (butil::read_command_output(oss, "sysctl -n vm.loadavg") != 0) {
+        if (flare::base::read_command_output(oss, "sysctl -n vm.loadavg") != 0) {
             LOG(ERROR) << "Fail to read loadavg";
             return -1;
         }
@@ -355,7 +355,7 @@ namespace bvar {
         char cmdbuf[128];
         snprintf(cmdbuf, sizeof(cmdbuf),
                 "lsof -p %ld | grep -v \"txt\" | wc -l", (long)pid);
-        if (butil::read_command_output(oss, cmdbuf) != 0) {
+        if (flare::base::read_command_output(oss, cmdbuf) != 0) {
             LOG(ERROR) << "Fail to read open files";
             return -1;
         }
@@ -436,7 +436,7 @@ namespace bvar {
 
     static bool read_proc_io(ProcIO *s) {
 #if defined(OS_LINUX)
-        butil::ScopedFILE fp("/proc/self/io", "r");
+        flare::base::scoped_file fp("/proc/self/io", "r");
         if (NULL == fp) {
             PLOG_ONCE(WARNING) << "Fail to open /proc/self/io";
             return false;
@@ -545,7 +545,7 @@ namespace bvar {
 
     static bool read_disk_stat(DiskStat *s) {
 #if defined(OS_LINUX)
-        butil::ScopedFILE fp("/proc/diskstats", "r");
+        flare::base::scoped_file fp("/proc/diskstats", "r");
         if (NULL == fp) {
             PLOG_ONCE(WARNING) << "Fail to open /proc/diskstats";
             return false;
@@ -604,7 +604,7 @@ namespace bvar {
 
         ReadSelfCmdline() {
             char buf[1024];
-            const ssize_t nr = butil::ReadCommandLine(buf, sizeof(buf), true);
+            const ssize_t nr = flare::base::read_command_line(buf, sizeof(buf), true);
             content.append(buf, nr);
         }
     };
@@ -618,7 +618,7 @@ namespace bvar {
 
         ReadVersion() {
             std::ostringstream oss;
-            if (butil::read_command_output(oss, "uname -ap") != 0) {
+            if (flare::base::read_command_output(oss, "uname -ap") != 0) {
                 LOG(ERROR) << "Fail to read kernel version";
                 return;
             }

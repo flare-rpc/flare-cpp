@@ -70,18 +70,18 @@ const size_t NKEY_PER_WORKER = 32;
 static void worker1_impl(Counters* cs) {
     cs->nenterthread.fetch_add(1, std::memory_order_relaxed);
     bthread_key_t k[NKEY_PER_WORKER];
-    CountersWrapper* ws[arraysize(k)];
-    for (size_t i = 0; i < arraysize(k); ++i) {
+    CountersWrapper* ws[FLARE_ARRAY_SIZE(k)];
+    for (size_t i = 0; i < FLARE_ARRAY_SIZE(k); ++i) {
         ASSERT_EQ(0, bthread_key_create(&k[i], destroy_counters_wrapper));
     }
-    for (size_t i = 0; i < arraysize(k); ++i) {
+    for (size_t i = 0; i < FLARE_ARRAY_SIZE(k); ++i) {
         ws[i] = new CountersWrapper(cs, k[i]);
     }
     // Get just-created tls should return NULL.
-    for (size_t i = 0; i < arraysize(k); ++i) {
+    for (size_t i = 0; i < FLARE_ARRAY_SIZE(k); ++i) {
         ASSERT_EQ(NULL, bthread_getspecific(k[i]));
     }
-    for (size_t i = 0; i < arraysize(k); ++i) {
+    for (size_t i = 0; i < FLARE_ARRAY_SIZE(k); ++i) {
         cs->ncreate.fetch_add(1, std::memory_order_relaxed);
         ASSERT_EQ(0, bthread_setspecific(k[i], ws[i]))
             << "i=" << i << " is_bthread=" << !!bthread_self();
@@ -90,7 +90,7 @@ static void worker1_impl(Counters* cs) {
     // Sleep a while to make some context switches. TLS should be unchanged.
     bthread_usleep(10000);
     
-    for (size_t i = 0; i < arraysize(k); ++i) {
+    for (size_t i = 0; i < FLARE_ARRAY_SIZE(k); ++i) {
         ASSERT_EQ(ws[i], bthread_getspecific(k[i])) << "i=" << i;
     }
     cs->nleavethread.fetch_add(1, std::memory_order_relaxed);
@@ -106,25 +106,25 @@ TEST(KeyTest, creating_key_in_parallel) {
     memset(&args, 0, sizeof(args));
     pthread_t th[8];
     bthread_t bth[8];
-    for (size_t i = 0; i < arraysize(th); ++i) {
+    for (size_t i = 0; i < FLARE_ARRAY_SIZE(th); ++i) {
         ASSERT_EQ(0, pthread_create(&th[i], NULL, worker1, &args));
     }
-    for (size_t i = 0; i < arraysize(bth); ++i) {
+    for (size_t i = 0; i < FLARE_ARRAY_SIZE(bth); ++i) {
         ASSERT_EQ(0, bthread_start_background(&bth[i], NULL, worker1, &args));
     }
-    for (size_t i = 0; i < arraysize(th); ++i) {
+    for (size_t i = 0; i < FLARE_ARRAY_SIZE(th); ++i) {
         ASSERT_EQ(0, pthread_join(th[i], NULL));
     }
-    for (size_t i = 0; i < arraysize(bth); ++i) {
+    for (size_t i = 0; i < FLARE_ARRAY_SIZE(bth); ++i) {
         ASSERT_EQ(0, bthread_join(bth[i], NULL));
     }
-    ASSERT_EQ(arraysize(th) + arraysize(bth),
+    ASSERT_EQ(FLARE_ARRAY_SIZE(th) + FLARE_ARRAY_SIZE(bth),
               args.nenterthread.load(std::memory_order_relaxed));
-    ASSERT_EQ(arraysize(th) + arraysize(bth),
+    ASSERT_EQ(FLARE_ARRAY_SIZE(th) + FLARE_ARRAY_SIZE(bth),
               args.nleavethread.load(std::memory_order_relaxed));
-    ASSERT_EQ(NKEY_PER_WORKER * (arraysize(th) + arraysize(bth)),
+    ASSERT_EQ(NKEY_PER_WORKER * (FLARE_ARRAY_SIZE(th) + FLARE_ARRAY_SIZE(bth)),
               args.ncreate.load(std::memory_order_relaxed));
-    ASSERT_EQ(NKEY_PER_WORKER * (arraysize(th) + arraysize(bth)),
+    ASSERT_EQ(NKEY_PER_WORKER * (FLARE_ARRAY_SIZE(th) + FLARE_ARRAY_SIZE(bth)),
               args.ndestroy.load(std::memory_order_relaxed));
 }
 
@@ -154,23 +154,23 @@ TEST(KeyTest, use_one_key_in_different_threads) {
     seqs.clear();
 
     pthread_t th[16];
-    for (size_t i = 0; i < arraysize(th); ++i) {
+    for (size_t i = 0; i < FLARE_ARRAY_SIZE(th); ++i) {
         ASSERT_EQ(0, pthread_create(&th[i], NULL, worker2, &k));
     }
     bthread_t bth[1];
-    for (size_t i = 0; i < arraysize(bth); ++i) {
+    for (size_t i = 0; i < FLARE_ARRAY_SIZE(bth); ++i) {
         ASSERT_EQ(0, bthread_start_urgent(&bth[i], NULL, worker2, &k));
     }
-    for (size_t i = 0; i < arraysize(th); ++i) {
+    for (size_t i = 0; i < FLARE_ARRAY_SIZE(th); ++i) {
         ASSERT_EQ(0, pthread_join(th[i], NULL));
     }
-    for (size_t i = 0; i < arraysize(bth); ++i) {
+    for (size_t i = 0; i < FLARE_ARRAY_SIZE(bth); ++i) {
         ASSERT_EQ(0, bthread_join(bth[i], NULL));
     }
-    ASSERT_EQ(arraysize(th) + arraysize(bth), seqs.size());
+    ASSERT_EQ(FLARE_ARRAY_SIZE(th) + FLARE_ARRAY_SIZE(bth), seqs.size());
     std::sort(seqs.begin(), seqs.end());
     ASSERT_EQ(seqs.end(), std::unique(seqs.begin(), seqs.end()));
-    ASSERT_EQ(arraysize(th) + arraysize(bth) - 1, *(seqs.end()-1) - *seqs.begin());
+    ASSERT_EQ(FLARE_ARRAY_SIZE(th) + FLARE_ARRAY_SIZE(bth) - 1, *(seqs.end()-1) - *seqs.begin());
 
     ASSERT_EQ(0, bthread_key_delete(k));
 }

@@ -16,7 +16,7 @@
 // Death tests on Android are currently very flaky. No need to add more flaky
 // tests, as they just make it hard to spot real problems.
 // TODO(markus): See if the restrictions on Android can eventually be lifted.
-#if defined(GTEST_HAS_DEATH_TEST) && !defined(OS_ANDROID)
+#if defined(GTEST_HAS_DEATH_TEST) && !defined(FLARE_PLATFORM_ANDROID)
 #define ALLOW_DEATH_TEST
 #endif
 
@@ -61,7 +61,7 @@ TEST(SafeSPrintfTest, NoArguments) {
   // always add a trailing NUL; it always deduplicates '%' characters).
   static const char text[] = "hello world";
   char ref[20], buf[20];
-  memset(ref, 'X', sizeof(char) * arraysize(buf));
+  memset(ref, 'X', sizeof(char) * FLARE_ARRAY_SIZE(buf));
   memcpy(buf, ref, sizeof(buf));
 
   // A negative buffer size should always result in an error.

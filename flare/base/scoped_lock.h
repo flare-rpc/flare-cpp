@@ -3,10 +3,11 @@
 #define FLARE_BASE_SCOPED_LOCK_H_
 
 #include <mutex>                           // std::lock_guard
-#include "flare/butil/synchronization/lock.h"
+#include "flare/base/lock.h"
 #include "flare/base/logging.h"
 #include "flare/base/errno.h"
 #include "flare/base/profile.h"
+#include "flare/base/compat.h"
 
 namespace flare::base {
     namespace detail {

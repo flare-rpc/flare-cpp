@@ -20,7 +20,7 @@
 #include <string>                                       // std::string
 #include <set>                                          // std::set
 #include "flare/butil/files/file_watcher.h"                    // FileWatcher
-#include "flare/butil/files/scoped_file.h"                     // ScopedFILE
+#include "flare/base/scoped_file.h"                     // scoped_file
 #include "flare/bthread/bthread.h"                            // bthread_usleep
 #include "flare/brpc/log.h"
 #include "flare/brpc/policy/file_naming_service.h"
@@ -78,7 +78,7 @@ int FileNamingService::GetServers(const char *service_name,
     // set to de-duplicate and keep the order.
     std::set<ServerNode> presence;
 
-    butil::ScopedFILE fp(fopen(service_name, "r"));
+    flare::base::scoped_file fp(fopen(service_name, "r"));
     if (!fp) {
         PLOG(ERROR) << "Fail to open `" << service_name << "'";
         return errno;

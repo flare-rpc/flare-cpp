@@ -20,7 +20,7 @@
 #define BRPC_CLOSURE_GUARD_H
 
 #include <google/protobuf/service.h>
-#include "flare/butil/macros.h"
+#include "flare/base/profile.h"
 
 
 namespace brpc {
@@ -63,7 +63,7 @@ public:
     
 private:
     // Copying this object makes no sense.
-    DISALLOW_COPY_AND_ASSIGN(ClosureGuard);
+    FLARE_DISALLOW_COPY_AND_ASSIGN(ClosureGuard);
     
     google::protobuf::Closure* _done;
 };

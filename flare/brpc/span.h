@@ -138,7 +138,7 @@ public:
     const std::string& info() const { return _info; }
     
 private:
-    DISALLOW_COPY_AND_ASSIGN(Span);
+    FLARE_DISALLOW_COPY_AND_ASSIGN(Span);
 
     void dump_and_destroy(size_t round_index);
     void destroy();

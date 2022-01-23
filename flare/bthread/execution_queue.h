@@ -37,7 +37,7 @@ struct TaskNode;
 class ExecutionQueueBase;
 
 class TaskIteratorBase {
-DISALLOW_COPY_AND_ASSIGN(TaskIteratorBase);
+FLARE_DISALLOW_COPY_AND_ASSIGN(TaskIteratorBase);
 friend class ExecutionQueueBase;
 public:
     // Returns true when the ExecutionQueue is stopped and there will never be

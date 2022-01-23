@@ -99,8 +99,8 @@ private:
     // The Socket tso accept connections.
     SocketId _acception_id;
 
-    butil::Mutex _map_mutex;
-    butil::ConditionVariable _empty_cond;
+    flare::base::Mutex _map_mutex;
+    flare::base::ConditionVariable _empty_cond;
     
     // The map containing all the accepted sockets
     SocketMap _socket_map;

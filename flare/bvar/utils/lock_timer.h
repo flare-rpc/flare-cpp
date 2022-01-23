@@ -22,8 +22,6 @@
 
 #include "flare/base/time.h"             // flare::base::stop_watcher
 #include "flare/base/scoped_lock.h"      // std::lock_guard std::unique_lock
-#include "flare/butil/macros.h"           // DISALLOW_COPY_AND_ASSIGN
-
 #include "flare/bvar/recorder.h"         // IntRecorder
 #include "flare/bvar/latency_recorder.h" // LatencyRecorder
 
@@ -146,7 +144,7 @@ namespace detail {
 template <typename Mutex, typename Recorder,
           typename MCtor, typename MDtor>
 class MutexWithRecorderBase {
-    DISALLOW_COPY_AND_ASSIGN(MutexWithRecorderBase);
+    FLARE_DISALLOW_COPY_AND_ASSIGN(MutexWithRecorderBase);
 public:
     typedef Mutex                                   mutex_type;
     typedef Recorder                                recorder_type;
@@ -190,7 +188,7 @@ private:
 
 template <typename Mutex> 
 class LockGuardBase {
-    DISALLOW_COPY_AND_ASSIGN(LockGuardBase);
+    FLARE_DISALLOW_COPY_AND_ASSIGN(LockGuardBase);
 public:
     LockGuardBase(Mutex& m)
         : _timer(m), _lock_guard(m.mutex()) {
@@ -215,7 +213,7 @@ private:
 
 template <typename Mutex>
 class UniqueLockBase {
-    DISALLOW_COPY_AND_ASSIGN(UniqueLockBase);
+    FLARE_DISALLOW_COPY_AND_ASSIGN(UniqueLockBase);
 public:
     typedef Mutex                   mutex_type;
     explicit UniqueLockBase(mutex_type& mutex) 

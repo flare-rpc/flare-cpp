@@ -56,7 +56,7 @@ public:
     bool dump(const std::string& name, const std::string_view& desc) override;
 
 private:
-    DISALLOW_COPY_AND_ASSIGN(PrometheusMetricsDumper);
+    FLARE_DISALLOW_COPY_AND_ASSIGN(PrometheusMetricsDumper);
 
     // Return true iff name ends with suffix output by LatencyRecorder.
     bool DumpLatencyRecorderSuffix(const std::string_view& name,
@@ -108,7 +108,7 @@ PrometheusMetricsDumper::ProcessLatencyRecorderSuffix(const std::string_view& na
         flare::base::string_printf("_latency_%d", (int)bvar::FLAGS_bvar_latency_p3),
         "_latency_999", "_latency_9999", "_max_latency"
     };
-    CHECK(NPERCENTILES == arraysize(latency_names));
+    CHECK(NPERCENTILES == FLARE_ARRAY_SIZE(latency_names));
     const std::string desc_str = std::move(flare::base::as_string(desc));;
     std::string_view metric_name(name);
     for (int i = 0; i < NPERCENTILES; ++i) {

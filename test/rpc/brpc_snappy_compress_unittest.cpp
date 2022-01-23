@@ -170,7 +170,7 @@ TEST_F(test_compress_method, throughput_compare) {
     printf("%20s%20s%20s%20s%30s%30s%30s\n", "Compress method", "Compress size(B)", 
            "Compress time(us)", "Decompress time(us)", "Compress throughput(MB/s)", 
            "Decompress throughput(MB/s)", "Compress ratio");    
-    for (size_t num = 0; num < ARRAY_SIZE(len_subs); ++num) {
+    for (size_t num = 0; num < FLARE_ARRAY_SIZE(len_subs); ++num) {
         len = len_subs[num];
         snappy_message::SnappyMessageProto old_msg;
         char* text = new char[len + 1];
@@ -208,7 +208,7 @@ TEST_F(test_compress_method, throughput_compare_complete_random) {
     printf("%20s%20s%20s%20s%30s%30s%30s\n", "Compress method", "Compress size(B)", 
            "Compress time(us)", "Decompress time(us)", "Compress throughput(MB/s)", 
            "Decompress throughput(MB/s)", "Compress ratio");
-    for (size_t num = 0; num < ARRAY_SIZE(len_subs); ++num) {
+    for (size_t num = 0; num < FLARE_ARRAY_SIZE(len_subs); ++num) {
         len = len_subs[num];
         snappy_message::SnappyMessageProto old_msg;
         char* text = new char[len + 1];

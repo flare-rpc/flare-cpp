@@ -24,7 +24,7 @@
 #include "flare/base/static_atomic.h"
 #include "flare/base/type_traits.h"
 #include "flare/base/strings.h"
-#include "flare/butil/synchronization/lock.h"
+#include "flare/base/lock.h"
 #include "flare/bvar/detail/is_atomical.h"
 #include "flare/bvar/variable.h"
 
@@ -64,25 +64,25 @@ namespace bvar {
 
 #ifdef BAIDU_INTERNAL
         void get_value(boost::any* value) const override {
-            butil::AutoLock guard(_lock);
+            flare::base::AutoLock guard(_lock);
             *value = _value;
         }
 #endif
 
         T get_value() const {
-            butil::AutoLock guard(_lock);
+            flare::base::AutoLock guard(_lock);
             const T res = _value;
             return res;
         }
 
         void set_value(const T &value) {
-            butil::AutoLock guard(_lock);
+            flare::base::AutoLock guard(_lock);
             _value = value;
         }
 
     private:
         T _value;
-        mutable butil::Lock _lock;
+        mutable flare::base::Lock _lock;
     };
 
     template<typename T>
@@ -220,7 +220,7 @@ namespace bvar {
         }
 
         std::string get_value() const {
-            butil::AutoLock guard(_lock);
+            flare::base::AutoLock guard(_lock);
             return _value;
         }
 
@@ -234,20 +234,20 @@ namespace bvar {
             va_list ap;
             va_start(ap, fmt);
             {
-                butil::AutoLock guard(_lock);
+                flare::base::AutoLock guard(_lock);
                 flare::base::string_vprintf(&_value, fmt, ap);
             }
             va_end(ap);
         }
 
         void set_value(const std::string &s) {
-            butil::AutoLock guard(_lock);
+            flare::base::AutoLock guard(_lock);
             _value = s;
         }
 
     private:
         std::string _value;
-        mutable butil::Lock _lock;
+        mutable flare::base::Lock _lock;
     };
 
 }  // namespace bvar

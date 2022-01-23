@@ -19,7 +19,7 @@
 #include <gtest/gtest.h>
 #include <vector>
 #include "flare/base/strings.h"
-#include "flare/butil/files/temp_file.h"
+#include "flare/base/temp_file.h"
 #include "flare/bthread/bthread.h"
 #ifdef BAIDU_INTERNAL
 #include "flare/brpc/policy/baidu_naming_service.h"
@@ -107,31 +107,31 @@ TEST(NamingServiceTest, sanity) {
         "localhost:1234",
         "baidu.com:1234"
     };
-    butil::TempFile tmp_file;
+    flare::base::temp_file tmp_file;
     {
         FILE* fp = fopen(tmp_file.fname(), "w");
-        for (size_t i = 0; i < ARRAY_SIZE(address_list); ++i) {
+        for (size_t i = 0; i < FLARE_ARRAY_SIZE(address_list); ++i) {
             ASSERT_TRUE(fprintf(fp, "%s\n", address_list[i]));
         }
         fclose(fp);
     }
     brpc::policy::FileNamingService fns;
     ASSERT_EQ(0, fns.GetServers(tmp_file.fname(), &servers));
-    ASSERT_EQ(ARRAY_SIZE(address_list), servers.size());
-    for (size_t i = 0; i < ARRAY_SIZE(address_list) - 2; ++i) {
+    ASSERT_EQ(FLARE_ARRAY_SIZE(address_list), servers.size());
+    for (size_t i = 0; i < FLARE_ARRAY_SIZE(address_list) - 2; ++i) {
         std::ostringstream oss;
         oss << servers[i];
         ASSERT_EQ(address_list[i], oss.str()) << "i=" << i;
     }
 
     std::string s;
-    for (size_t i = 0; i < ARRAY_SIZE(address_list); ++i) {
+    for (size_t i = 0; i < FLARE_ARRAY_SIZE(address_list); ++i) {
         ASSERT_EQ(0, flare::base::string_appendf(&s, "%s,", address_list[i]));
     }
     brpc::policy::ListNamingService lns;
     ASSERT_EQ(0, lns.GetServers(s.c_str(), &servers));
-    ASSERT_EQ(ARRAY_SIZE(address_list), servers.size());
-    for (size_t i = 0; i < ARRAY_SIZE(address_list) - 2; ++i) {
+    ASSERT_EQ(FLARE_ARRAY_SIZE(address_list), servers.size());
+    for (size_t i = 0; i < FLARE_ARRAY_SIZE(address_list) - 2; ++i) {
         std::ostringstream oss;
         oss << servers[i];
         ASSERT_EQ(address_list[i], oss.str()) << "i=" << i;
@@ -170,25 +170,25 @@ TEST(NamingServiceTest, wrong_name) {
         "baidu.com:1234",
         "LOCAL:1234"
     };
-    butil::TempFile tmp_file;
+    flare::base::temp_file tmp_file;
     {
         FILE *fp = fopen(tmp_file.fname(), "w");
-        for (size_t i = 0; i < ARRAY_SIZE(address_list); ++i) {
+        for (size_t i = 0; i < FLARE_ARRAY_SIZE(address_list); ++i) {
             ASSERT_TRUE(fprintf(fp, "%s\n", address_list[i]));
         }
         fclose(fp);
     }
     brpc::policy::FileNamingService fns;
     ASSERT_EQ(0, fns.GetServers(tmp_file.fname(), &servers));
-    ASSERT_EQ(ARRAY_SIZE(address_list) - 4, servers.size());
+    ASSERT_EQ(FLARE_ARRAY_SIZE(address_list) - 4, servers.size());
 
     std::string s;
-    for (size_t i = 0; i < ARRAY_SIZE(address_list); ++i) {
+    for (size_t i = 0; i < FLARE_ARRAY_SIZE(address_list); ++i) {
         ASSERT_EQ(0, flare::base::string_appendf(&s, ", %s", address_list[i]));
     }
     brpc::policy::ListNamingService lns;
     ASSERT_EQ(0, lns.GetServers(s.c_str(), &servers));
-    ASSERT_EQ(ARRAY_SIZE(address_list) - 4, servers.size());
+    ASSERT_EQ(FLARE_ARRAY_SIZE(address_list) - 4, servers.size());
 }
 
 class UserNamingServiceImpl : public test::UserNamingService {
@@ -405,11 +405,11 @@ TEST(NamingServiceTest, consul_with_backup_file) {
         "10.128.0.1:1234",
         "10.129.0.1:1234",
     };
-    butil::TempFile tmp_file;
+    flare::base::temp_file tmp_file;
     const char * service_name = tmp_file.fname();
     {
         FILE* fp = fopen(tmp_file.fname(), "w");
-        for (size_t i = 0; i < ARRAY_SIZE(address_list); ++i) {
+        for (size_t i = 0; i < FLARE_ARRAY_SIZE(address_list); ++i) {
             ASSERT_TRUE(fprintf(fp, "%s\n", address_list[i]));
         }
         fclose(fp);
@@ -419,8 +419,8 @@ TEST(NamingServiceTest, consul_with_backup_file) {
     std::vector<brpc::ServerNode> servers;
     brpc::policy::ConsulNamingService cns;
     ASSERT_EQ(0, cns.GetServers(service_name, &servers));
-    ASSERT_EQ(ARRAY_SIZE(address_list), servers.size());
-    for (size_t i = 0; i < ARRAY_SIZE(address_list); ++i) {
+    ASSERT_EQ(FLARE_ARRAY_SIZE(address_list), servers.size());
+    for (size_t i = 0; i < FLARE_ARRAY_SIZE(address_list); ++i) {
         std::ostringstream oss;
         oss << servers[i];
         ASSERT_EQ(address_list[i], oss.str()) << "i=" << i;

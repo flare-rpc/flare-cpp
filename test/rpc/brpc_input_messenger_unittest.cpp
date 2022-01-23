@@ -78,7 +78,7 @@ inline uint32_t fmix32 ( uint32_t h ) {
 
 volatile bool client_stop = false;
 
-struct BAIDU_CACHELINE_ALIGNMENT ClientMeta {
+struct FLARE_CACHELINE_ALIGNMENT ClientMeta {
     size_t times;
     size_t bytes;
 };

@@ -33,7 +33,7 @@
 #if defined(OS_POSIX)
 #include "flare/butil/file_descriptor_posix.h"
 #include "flare/base/logging.h"
-#include "flare/butil/posix/eintr_wrapper.h"
+#include "flare/base/profile/eintr_wrapper.h"
 #endif
 
 namespace butil {
@@ -423,7 +423,7 @@ BUTIL_EXPORT bool GetShmemTempDir(bool executable, FilePath* path);
 
 namespace file_util {
 
-// Functor for |ScopedFILE| (below).
+// Functor for |scoped_file| (below).
 struct ScopedFILEClose {
   inline void operator()(FILE* x) const {
     if (x)
@@ -432,7 +432,7 @@ struct ScopedFILEClose {
 };
 
 // Automatically closes |FILE*|s.
-typedef scoped_ptr<FILE, ScopedFILEClose> ScopedFILE;
+typedef scoped_ptr<FILE, ScopedFILEClose> scoped_file;
 
 }  // namespace file_util
 

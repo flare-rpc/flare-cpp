@@ -376,7 +376,7 @@ int H2Context::Init() {
 H2StreamContext* H2Context::RemoveStream(int stream_id) {
     H2StreamContext* sctx = NULL;
     {
-        std::unique_lock<butil::Mutex> mu(_stream_mutex);
+        std::unique_lock<flare::base::Mutex> mu(_stream_mutex);
         if (!_pending_streams.erase(stream_id, &sctx)) {
             return NULL;
         }
@@ -394,7 +394,7 @@ void H2Context::RemoveGoAwayStreams(
     if (goaway_stream_id == 0) {  // quick path
         StreamMap tmp;
         {
-            std::unique_lock<butil::Mutex> mu(_stream_mutex);
+            std::unique_lock<flare::base::Mutex> mu(_stream_mutex);
             _goaway_stream_id = goaway_stream_id;
             _pending_streams.swap(tmp);
         }
@@ -402,7 +402,7 @@ void H2Context::RemoveGoAwayStreams(
             out_streams->push_back(it->second);
         }
     } else {
-        std::unique_lock<butil::Mutex> mu(_stream_mutex);
+        std::unique_lock<flare::base::Mutex> mu(_stream_mutex);
         _goaway_stream_id = goaway_stream_id;
         for (StreamMap::const_iterator it = _pending_streams.begin();
              it != _pending_streams.end(); ++it) {
@@ -417,7 +417,7 @@ void H2Context::RemoveGoAwayStreams(
 }
 
 H2StreamContext* H2Context::FindStream(int stream_id) {
-    std::unique_lock<butil::Mutex> mu(_stream_mutex);
+    std::unique_lock<flare::base::Mutex> mu(_stream_mutex);
     H2StreamContext** psctx = _pending_streams.seek(stream_id);
     if (psctx) {
         return *psctx;
@@ -426,7 +426,7 @@ H2StreamContext* H2Context::FindStream(int stream_id) {
 }
 
 int H2Context::TryToInsertStream(int stream_id, H2StreamContext* ctx) {
-    std::unique_lock<butil::Mutex> mu(_stream_mutex);
+    std::unique_lock<flare::base::Mutex> mu(_stream_mutex);
     if (_goaway_stream_id >= 0 && stream_id > _goaway_stream_id) {
         return 1;
     }
@@ -568,8 +568,8 @@ H2ParseResult H2Context::OnHeaders(
         --frag_size;
     }
     if (has_priority) {
-        const uint32_t ALLOW_UNUSED stream_dep = LoadUint32(it);
-        const uint32_t ALLOW_UNUSED weight = LoadUint8(it);
+        const uint32_t FLARE_ALLOW_UNUSED stream_dep = LoadUint32(it);
+        const uint32_t FLARE_ALLOW_UNUSED weight = LoadUint8(it);
         frag_size -= 5;
     }
     if (frag_size < pad_length) {
@@ -895,7 +895,7 @@ H2ParseResult H2Context::OnSettings(
         // be changed using WINDOW_UPDATE frames.
         // https://tools.ietf.org/html/rfc7540#section-6.9.2
         // TODO(gejun): Has race conditions with AppendAndDestroySelf
-        std::unique_lock<butil::Mutex> mu(_stream_mutex);
+        std::unique_lock<flare::base::Mutex> mu(_stream_mutex);
         for (StreamMap::const_iterator it = _pending_streams.begin();
              it != _pending_streams.end(); ++it) {
             if (!AddWindowSize(&it->second->_remote_window_left, window_diff)) {
@@ -971,7 +971,7 @@ H2ParseResult H2Context::OnGoAway(
     // Skip Additional Debug Data
     it.forward(h.payload_size - 8);
     const int last_stream_id = static_cast<int>(LoadUint32(it));
-    const H2Error ALLOW_UNUSED h2_error = static_cast<H2Error>(LoadUint32(it));
+    const H2Error FLARE_ALLOW_UNUSED h2_error = static_cast<H2Error>(LoadUint32(it));
     // TODO(zhujiashun): client and server should unify the code.
     // Server Push is not supported so it works fine now.
     if (is_client_side()) {
@@ -1136,7 +1136,7 @@ ParseResult ParseH2Message(butil::IOBuf *source, Socket *socket,
 }
 
 void H2Context::AddAbandonedStream(uint32_t stream_id) {
-    std::unique_lock<butil::Mutex> mu(_abandoned_streams_mutex);
+    std::unique_lock<flare::base::Mutex> mu(_abandoned_streams_mutex);
     _abandoned_streams.push_back(stream_id);
 }
 
@@ -1147,7 +1147,7 @@ inline void H2Context::ClearAbandonedStreams() {
 }
 
 void H2Context::ClearAbandonedStreamsImpl() {
-    std::unique_lock<butil::Mutex> mu(_abandoned_streams_mutex);
+    std::unique_lock<flare::base::Mutex> mu(_abandoned_streams_mutex);
     while (!_abandoned_streams.empty()) {
         const uint32_t stream_id = _abandoned_streams.back();
         _abandoned_streams.pop_back();
@@ -1470,7 +1470,7 @@ struct RemoveRefOnQuit {
     RemoveRefOnQuit(H2UnsentRequest* msg) : _msg(msg) {}
     ~RemoveRefOnQuit() { _msg->RemoveRefManually(); }
 private:
-    DISALLOW_COPY_AND_ASSIGN(RemoveRefOnQuit);
+    FLARE_DISALLOW_COPY_AND_ASSIGN(RemoveRefOnQuit);
     H2UnsentRequest* _msg;
 };
 
@@ -1481,7 +1481,7 @@ void H2UnsentRequest::DestroyStreamUserData(SocketUniquePtr& sending_sock,
     RemoveRefOnQuit deref_self(this);
     if (sending_sock != NULL && error_code != 0) {
         CHECK_EQ(cntl, _cntl);
-        std::unique_lock<butil::Mutex> mu(_mutex);
+        std::unique_lock<flare::base::Mutex> mu(_mutex);
         _cntl = NULL;
         if (_stream_id != 0) {
             H2Context* ctx = static_cast<H2Context*>(sending_sock->parsing_context());
@@ -1535,7 +1535,7 @@ H2UnsentRequest::AppendAndDestroySelf(butil::IOBuf* out, Socket* socket) {
 
     // Although the critical section looks huge, it should rarely be contended
     // since timeout of RPC is much larger than the delay of sending.
-    std::unique_lock<butil::Mutex> mu(_mutex);
+    std::unique_lock<flare::base::Mutex> mu(_mutex);
     if (_cntl == NULL) {
         return flare::base::flare_status(ECANCELED, "The RPC was already failed");
     }
@@ -1597,7 +1597,7 @@ size_t H2UnsentRequest::EstimatedByteSize() {
     for (size_t i = 0; i < _size; ++i) {
         sz += _list[i].name.size() + _list[i].value.size() + 1;
     }
-    std::unique_lock<butil::Mutex> mu(_mutex);
+    std::unique_lock<flare::base::Mutex> mu(_mutex);
     if (_cntl == NULL) {
         return 0;
     }
@@ -1617,7 +1617,7 @@ void H2UnsentRequest::Print(std::ostream& os) const {
     for (size_t i = 0; i < _size; ++i) {
         os << "> " << _list[i].name << " = " << _list[i].value << '\n';
     }
-    std::unique_lock<butil::Mutex> mu(_mutex);
+    std::unique_lock<flare::base::Mutex> mu(_mutex);
     if (_cntl == NULL) {
         return;
     }

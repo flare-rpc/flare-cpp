@@ -27,7 +27,7 @@
 #include "flare/base/time.h"
 #include "flare/butil/macros.h"
 #include "flare/base/fd_guard.h"
-#include "flare/butil/files/scoped_file.h"
+#include "flare/base/scoped_file.h"
 #include "flare/brpc/socket.h"
 #include "flare/brpc/builtin/version_service.h"
 #include "flare/brpc/builtin/health_service.h"

@@ -23,12 +23,12 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include <pwd.h>
-#include "flare/butil/fast_rand.h"
+#include "flare/base/fast_rand.h"
 #include "flare/brpc/log.h"
 #include "flare/brpc/channel.h"
 #include "flare/brpc/trackme.pb.h"
 #include "flare/brpc/policy/hasher.h"
-#include "flare/butil/files/scoped_file.h"
+#include "flare/base/scoped_file.h"
 
 namespace brpc {
 
@@ -91,7 +91,7 @@ int ReadJPaasHostPort(int container_port) {
     char* line = NULL;
     size_t line_len = 0;
     ssize_t nr = 0;
-    butil::ScopedFILE fp(fopen(JPAAS_LOG_PATH, "r"));
+    flare::base::scoped_file fp(fopen(JPAAS_LOG_PATH, "r"));
     if (!fp) {
         RPC_VLOG << "Fail to open `" << JPAAS_LOG_PATH << '\'';
         return -1;
@@ -231,7 +231,7 @@ void TrackMe() {
         // Delay the first ping randomly within s_trackme_interval. This
         // protects trackme_server from ping storms.
         s_trackme_last_time =
-            now + butil::fast_rand_less_than(s_trackme_interval) * 1000000L;
+            now + flare::base::fast_rand_less_than(s_trackme_interval) * 1000000L;
     }
     if (now > s_trackme_last_time + 1000000L * s_trackme_interval) {
         s_trackme_last_time = now;

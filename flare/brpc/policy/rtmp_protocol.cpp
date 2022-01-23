@@ -19,7 +19,7 @@
 #include <openssl/hmac.h> // HMAC_CTX_init
 #include <google/protobuf/io/zero_copy_stream_impl_lite.h>
 #include "flare/base/scoped_lock.h"
-#include "flare/butil/fast_rand.h"
+#include "flare/base/fast_rand.h"
 #include "flare/butil/sys_byteorder.h"
 #include "flare/brpc/log.h"
 #include "flare/brpc/server.h"
@@ -112,7 +112,7 @@ static pthread_once_t s_sr_once = PTHREAD_ONCE_INIT;
 static void InitRtmpHandshakeServerRandom() {
     char buf[1528];
     for (int i = 0; i < 191; ++i) {
-        ((uint64_t*)buf)[i] = butil::fast_rand();
+        ((uint64_t*)buf)[i] = flare::base::fast_rand();
     }
     s_rtmp_handshake_server_random = new butil::IOBuf;
     s_rtmp_handshake_server_random->append(buf, sizeof(buf));
@@ -127,7 +127,7 @@ static pthread_once_t s_cr_once = PTHREAD_ONCE_INIT;
 static void InitRtmpHandshakeClientRandom() {
     char buf[1528];
     for (int i = 0; i < 191; ++i) {
-        ((uint64_t*)buf)[i] = butil::fast_rand();
+        ((uint64_t*)buf)[i] = flare::base::fast_rand();
     }
     s_rtmp_handshake_client_random = new butil::IOBuf;
     s_rtmp_handshake_client_random->append(buf, sizeof(buf));
@@ -326,11 +326,11 @@ public:
 
 // ===== impl. =====
 void KeyBlock::Generate() {
-    _offset_data = butil::fast_rand() & 0xFFFFFFFF;
+    _offset_data = flare::base::fast_rand() & 0xFFFFFFFF;
     const uint8_t* p = (const uint8_t*)&_offset_data;
     _offset = ((uint32_t)p[0] + p[1] + p[2] + p[3]) % (SIZE - KEY_SIZE - 4);
     for (size_t i = 0; i < sizeof(_buf) / 8; ++i) {
-        ((uint64_t*)_buf)[i] = butil::fast_rand();
+        ((uint64_t*)_buf)[i] = flare::base::fast_rand();
     }
 }
 
@@ -353,11 +353,11 @@ void KeyBlock::Save(void* buf) const {
 }
 
 void DigestBlock::Generate() {
-    _offset_data = butil::fast_rand() & 0xFFFFFFFF;
+    _offset_data = flare::base::fast_rand() & 0xFFFFFFFF;
     const uint8_t* p = (const uint8_t*)&_offset_data;
     _offset = ((uint32_t)p[0] + p[1] + p[2] + p[3]) % (SIZE - DIGEST_SIZE - 4);
     for (size_t i = 0; i < sizeof(_buf) / 8; ++i) {
-        ((uint64_t*)_buf)[i] = butil::fast_rand();
+        ((uint64_t*)_buf)[i] = flare::base::fast_rand();
     }
 }
 
@@ -537,7 +537,7 @@ bool C2S2Base::ComputeDigest(const void* key, int key_size,
 bool C2S2Base::Generate(const void* key, int key_size,
                         const void* c1s1_digest) {
     for (int i = 0; i < (SIZE - DIGEST_SIZE) / 8; ++i) {
-        ((uint64_t*)random)[i] = butil::fast_rand();
+        ((uint64_t*)random)[i] = flare::base::fast_rand();
     }
     return ComputeDigest(key, key_size, c1s1_digest, digest);
 }
@@ -934,7 +934,7 @@ bool RtmpContext::AddClientStream(RtmpStreamBase* stream) {
     }
     uint32_t chunk_stream_id = 0;
     {
-        std::unique_lock<butil::Mutex> mu(_stream_mutex);
+        std::unique_lock<flare::base::Mutex> mu(_stream_mutex);
         MessageStreamInfo& info = _mstream_map[stream_id];
         if (info.stream != NULL) {
             mu.unlock();
@@ -951,7 +951,7 @@ bool RtmpContext::AddClientStream(RtmpStreamBase* stream) {
 bool RtmpContext::AddServerStream(RtmpStreamBase* stream) {
     uint32_t stream_id = 0;
     {
-        std::unique_lock<butil::Mutex> mu(_stream_mutex);
+        std::unique_lock<flare::base::Mutex> mu(_stream_mutex);
         if (!AllocateMessageStreamId(&stream_id)) {
             return false;
         }
@@ -982,7 +982,7 @@ bool RtmpContext::RemoveMessageStream(RtmpStreamBase* stream) {
     // for deref the stream outside _stream_mutex.
     flare::container::intrusive_ptr<RtmpStreamBase> deref_ptr;
     {
-        std::unique_lock<butil::Mutex> mu(_stream_mutex);
+        std::unique_lock<flare::base::Mutex> mu(_stream_mutex);
         MessageStreamInfo* info = _mstream_map.seek(stream_id);
         if (info == NULL) {
             mu.unlock();
@@ -1807,7 +1807,7 @@ bool RtmpChunkStream::OnMessage(const RtmpBasicHeader& bh,
         }
     }
     const uint32_t index = mh.message_type - 1;
-    if (index >= arraysize(s_msg_handlers)) {
+    if (index >= FLARE_ARRAY_SIZE(s_msg_handlers)) {
         RTMP_ERROR(socket, mh) << "Unknown message_type=" << (int)mh.message_type;
         return false;
     }

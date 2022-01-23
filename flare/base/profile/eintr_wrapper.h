@@ -13,20 +13,19 @@
 // Don't wrap close calls in HANDLE_EINTR. Use IGNORE_EINTR if the return
 // value of close is significant. See http://crbug.com/269623.
 
-#ifndef BUTIL_POSIX_EINTR_WRAPPER_H_
-#define BUTIL_POSIX_EINTR_WRAPPER_H_
+#ifndef FLARE_BASE_PROFILE_EINTR_WRAPPER_H_
+#define FLARE_BASE_PROFILE_EINTR_WRAPPER_H_
 
-#include "flare/butil/build_config.h"
-#include "flare/butil/macros.h"   // BAIDU_TYPEOF
+#include "flare/base/profile/platform.h"
 
-#if defined(OS_POSIX)
+#if defined(FLARE_PLATFORM_POSIX)
 
 #include <errno.h>
 
 #if defined(NDEBUG)
 
 #define HANDLE_EINTR(x) ({ \
-  BAIDU_TYPEOF(x) eintr_wrapper_result; \
+  decltype(x) eintr_wrapper_result; \
   do { \
     eintr_wrapper_result = (x); \
   } while (eintr_wrapper_result == -1 && errno == EINTR); \
@@ -37,7 +36,7 @@
 
 #define HANDLE_EINTR(x) ({ \
   int eintr_wrapper_counter = 0; \
-  BAIDU_TYPEOF(x) eintr_wrapper_result; \
+  decltype(x) eintr_wrapper_result; \
   do { \
     eintr_wrapper_result = (x); \
   } while (eintr_wrapper_result == -1 && errno == EINTR && \
@@ -48,7 +47,7 @@
 #endif  // NDEBUG
 
 #define IGNORE_EINTR(x) ({ \
-  BAIDU_TYPEOF(x) eintr_wrapper_result;     \
+  decltype(x) eintr_wrapper_result;     \
   do { \
     eintr_wrapper_result = (x); \
     if (eintr_wrapper_result == -1 && errno == EINTR) { \
@@ -63,6 +62,6 @@
 #define HANDLE_EINTR(x) (x)
 #define IGNORE_EINTR(x) (x)
 
-#endif  // OS_POSIX
+#endif  // FLARE_PLATFORM_POSIX
 
-#endif  // BUTIL_POSIX_EINTR_WRAPPER_H_
+#endif  // FLARE_BASE_PROFILE_EINTR_WRAPPER_H_

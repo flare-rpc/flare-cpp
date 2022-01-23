@@ -50,7 +50,7 @@ public:
     void reset() { _start_time = flare::base::cpuwide_time_us(); }
 
 private:
-    DISALLOW_COPY_AND_ASSIGN(ScopedTimer);
+    FLARE_DISALLOW_COPY_AND_ASSIGN(ScopedTimer);
     int64_t _start_time;
     T* _bvar;
 };

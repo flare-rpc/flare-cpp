@@ -213,7 +213,7 @@ int TaskControl::add_workers(int num) {
 TaskGroup* TaskControl::choose_one_group() {
     const size_t ngroup = _ngroup.load(std::memory_order_acquire);
     if (ngroup != 0) {
-        return _groups[butil::fast_rand_less_than(ngroup)];
+        return _groups[flare::base::fast_rand_less_than(ngroup)];
     }
     CHECK(false) << "Impossible: ngroup is 0";
     return NULL;
@@ -264,7 +264,7 @@ int TaskControl::_add_group(TaskGroup* g) {
     if (__builtin_expect(NULL == g, 0)) {
         return -1;
     }
-    std::unique_lock<butil::Mutex> mu(_modify_group_mutex);
+    std::unique_lock<flare::base::Mutex> mu(_modify_group_mutex);
     if (_stop) {
         return -1;
     }

@@ -21,8 +21,7 @@
 
 // To brpc developers: This is a header included by user, don't depend
 // on internal structures, use opaque pointers instead.
-
-#include "flare/butil/strings/string_piece.h"
+#include <string_view>
 #include "flare/brpc/options.pb.h"
 
 namespace brpc {

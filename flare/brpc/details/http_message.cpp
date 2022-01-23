@@ -180,7 +180,7 @@ int HttpMessage::on_headers_complete(http_parser *parser) {
     return 0;
 }
 
-int HttpMessage::UnlockAndFlushToBodyReader(std::unique_lock<butil::Mutex>& mu) {
+int HttpMessage::UnlockAndFlushToBodyReader(std::unique_lock<flare::base::Mutex>& mu) {
     if (_body.empty()) {
         mu.unlock();
         return 0;
@@ -247,7 +247,7 @@ int HttpMessage::OnBody(const char *at, const size_t length) {
         return 0;
     }
     // Progressive read.
-    std::unique_lock<butil::Mutex> mu(_body_mutex);
+    std::unique_lock<flare::base::Mutex> mu(_body_mutex);
     ProgressiveReader* r = _body_reader;
     while (r == NULL) {
         // When _body is full, the sleep-waiting may block parse handler
@@ -299,7 +299,7 @@ int HttpMessage::OnMessageComplete() {
         return 0;
     }
     // Progressive read.
-    std::unique_lock<butil::Mutex> mu(_body_mutex);
+    std::unique_lock<flare::base::Mutex> mu(_body_mutex);
     _stage = HTTP_ON_MESSAGE_COMPLETE;
     if (_body_reader != NULL) {
         // Solve the case: SetBodyReader quit at ntry=MAX_TRY with non-empty
@@ -340,7 +340,7 @@ void HttpMessage::SetBodyReader(ProgressiveReader* r) {
     const int MAX_TRY = 3;
     int ntry = 0;
     do {
-        std::unique_lock<butil::Mutex> mu(_body_mutex);
+        std::unique_lock<flare::base::Mutex> mu(_body_mutex);
         if (_body_reader != NULL) {
             mu.unlock();
             return r->OnEndOfMessage(

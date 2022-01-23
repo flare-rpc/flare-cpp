@@ -22,7 +22,7 @@
 #include <json2pb/json_to_pb.h>                    // JsonToProtoMessage
 
 #include "flare/brpc/policy/http_rpc_protocol.h"
-#include "flare/butil/unique_ptr.h"                       // std::unique_ptr
+#include <memory>                       // std::unique_ptr
 #include "flare/base/string_splitter.h"                  // StringMultiSplitter
 #include "flare/base/strings.h"
 #include "flare/base/time.h"
@@ -156,7 +156,7 @@ static void CreateCommonStrings() {
 int InitCommonStrings() {
     return pthread_once(&g_common_strings_once, CreateCommonStrings);
 }
-static const int ALLOW_UNUSED force_creation_of_common = InitCommonStrings();
+static const int FLARE_ALLOW_UNUSED force_creation_of_common = InitCommonStrings();
 const CommonStrings* get_common_strings() { return common; }
 
 HttpContentType ParseContentType(std::string_view ct, bool* is_grpc_ct) {

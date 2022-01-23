@@ -17,13 +17,12 @@
 
 // Date: 2017/11/06 10:57:08
 
-#include "flare/butil/popen.h"
+#include "flare/base/popen.h"
 #include "flare/base/errno.h"
-#include "flare/butil/strings/string_piece.h"
-#include "flare/butil/build_config.h"
+#include "flare/base/strings.h"
 #include <gtest/gtest.h>
 
-namespace butil {
+namespace flare::base {
 extern int read_command_output_through_clone(std::ostream&, const char*);
 extern int read_command_output_through_popen(std::ostream&, const char*);
 }
@@ -35,29 +34,29 @@ class PopenTest : public testing::Test {
 
 TEST(PopenTest, posix_popen) {
     std::ostringstream oss;
-    int rc = butil::read_command_output_through_popen(oss, "echo \"Hello World\"");
+    int rc = flare::base::read_command_output_through_popen(oss, "echo \"Hello World\"");
     ASSERT_EQ(0, rc) << flare_error(errno);
     ASSERT_EQ("Hello World\n", oss.str());
 
     oss.str("");
-    rc = butil::read_command_output_through_popen(oss, "exit 1");
+    rc = flare::base::read_command_output_through_popen(oss, "exit 1");
     EXPECT_EQ(1, rc) << flare_error(errno);
     ASSERT_TRUE(oss.str().empty()) << oss.str();
     oss.str("");
-    rc = butil::read_command_output_through_popen(oss, "kill -9 $$");
+    rc = flare::base::read_command_output_through_popen(oss, "kill -9 $$");
     ASSERT_EQ(-1, rc);
     ASSERT_EQ(errno, ECHILD);
-    ASSERT_TRUE(butil::StringPiece(oss.str()).ends_with("was killed by signal 9"));
+    ASSERT_TRUE(flare::base::ends_with(oss.str(), "was killed by signal 9"));
     oss.str("");
-    rc = butil::read_command_output_through_popen(oss, "kill -15 $$");
+    rc = flare::base::read_command_output_through_popen(oss, "kill -15 $$");
     ASSERT_EQ(-1, rc);
     ASSERT_EQ(errno, ECHILD);
-    ASSERT_TRUE(butil::StringPiece(oss.str()).ends_with("was killed by signal 15"));
+    ASSERT_TRUE(flare::base::ends_with(oss.str(), "was killed by signal 15"));
 
     // TODO(zhujiashun): Fix this in macos
     /*
     oss.str("");
-     ASSERT_EQ(0, butil::read_command_output_through_popen(oss, "for i in `seq 1 100000`; do echo -n '=' ; done"));
+     ASSERT_EQ(0, flare::base::read_command_output_through_popen(oss, "for i in `seq 1 100000`; do echo -n '=' ; done"));
     ASSERT_EQ(100000u, oss.str().length());
     std::string expected;
     expected.resize(100000, '=');
@@ -65,31 +64,31 @@ TEST(PopenTest, posix_popen) {
     */
 }
 
-#if defined(OS_LINUX)
+#if defined(FLARE_PLATFORM_LINUX)
 
 TEST(PopenTest, clone) {
     std::ostringstream oss;
-    int rc = butil::read_command_output_through_clone(oss, "echo \"Hello World\"");
+    int rc = flare::base::read_command_output_through_clone(oss, "echo \"Hello World\"");
     ASSERT_EQ(0, rc) << flare_error(errno);
     ASSERT_EQ("Hello World\n", oss.str());
 
     oss.str("");
-    rc = butil::read_command_output_through_clone(oss, "exit 1");
+    rc = flare::base::read_command_output_through_clone(oss, "exit 1");
     ASSERT_EQ(1, rc) << flare_error(errno);
     ASSERT_TRUE(oss.str().empty()) << oss.str();
     oss.str("");
-    rc = butil::read_command_output_through_clone(oss, "kill -9 $$");
+    rc = flare::base::read_command_output_through_clone(oss, "kill -9 $$");
     ASSERT_EQ(-1, rc);
     ASSERT_EQ(errno, ECHILD);
-    ASSERT_TRUE(butil::StringPiece(oss.str()).ends_with("was killed by signal 9"));
+    ASSERT_TRUE(std::string_view(oss.str()).ends_with("was killed by signal 9"));
     oss.str("");
-    rc = butil::read_command_output_through_clone(oss, "kill -15 $$");
+    rc = flare::base::read_command_output_through_clone(oss, "kill -15 $$");
     ASSERT_EQ(-1, rc);
     ASSERT_EQ(errno, ECHILD);
-    ASSERT_TRUE(butil::StringPiece(oss.str()).ends_with("was killed by signal 15"));
+    ASSERT_TRUE(std::string_view(oss.str()).ends_with("was killed by signal 15"));
 
     oss.str("");
-    ASSERT_EQ(0, butil::read_command_output_through_clone(oss, "for i in `seq 1 100000`; do echo -n '=' ; done"));
+    ASSERT_EQ(0, flare::base::read_command_output_through_clone(oss, "for i in `seq 1 100000`; do echo -n '=' ; done"));
     ASSERT_EQ(100000u, oss.str().length());
     std::string expected;
     expected.resize(100000, '=');
@@ -137,6 +136,6 @@ TEST(PopenTest, does_vfork_suspend_all_threads) {
     ASSERT_EQ(cpid, waitpid(cpid, &ws, __WALL));
 }
 
-#endif  // OS_LINUX
+#endif  // FLARE_PLATFORM_LINUX
 
 }
