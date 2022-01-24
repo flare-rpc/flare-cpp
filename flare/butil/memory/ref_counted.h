@@ -10,6 +10,7 @@
 #include "flare/butil/atomic_ref_count.h"
 #include "flare/butil/base_export.h"
 #include "flare/butil/compiler_specific.h"
+#include "flare/base/profile.h"
 #ifndef NDEBUG
 #include "flare/base/logging.h"
 #endif
