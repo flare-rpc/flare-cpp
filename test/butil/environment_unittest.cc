@@ -3,7 +3,7 @@
 // found in the LICENSE file.
 
 #include "flare/butil/environment.h"
-#include "flare/butil/memory/scoped_ptr.h"
+#include "flare/memory/scoped_ptr.h"
 #include <gtest/gtest.h>
 #include <gtest/gtest.h>
 

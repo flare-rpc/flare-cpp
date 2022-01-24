@@ -14,7 +14,7 @@
 
 #include "flare/butil/file_util.h"
 #include "flare/base/logging.h"
-#include "flare/butil/memory/scoped_ptr.h"
+#include "flare/memory/scoped_ptr.h"
 #include "flare/butil/build_config.h"
 #include <gtest/gtest.h>
 
@@ -101,7 +101,7 @@ TEST(SecurityTest, TCMALLOC_TEST(IsTCMallocDynamicallyBypassed)) {
 
 TEST(SecurityTest, TCMALLOC_TEST(MemoryAllocationRestrictionsMalloc)) {
   if (!IsTcMallocBypassed()) {
-    scoped_ptr<char, butil::FreeDeleter> ptr(static_cast<char*>(
+    scoped_ptr<char, flare::memory::FreeDeleter> ptr(static_cast<char*>(
         HideValueFromCompiler(malloc(kTooBigAllocSize))));
     ASSERT_TRUE(!ptr);
   }
@@ -109,7 +109,7 @@ TEST(SecurityTest, TCMALLOC_TEST(MemoryAllocationRestrictionsMalloc)) {
 
 TEST(SecurityTest, TCMALLOC_TEST(MemoryAllocationRestrictionsCalloc)) {
   if (!IsTcMallocBypassed()) {
-    scoped_ptr<char, butil::FreeDeleter> ptr(static_cast<char*>(
+    scoped_ptr<char, flare::memory::FreeDeleter> ptr(static_cast<char*>(
         HideValueFromCompiler(calloc(kTooBigAllocSize, 1))));
     ASSERT_TRUE(!ptr);
   }
@@ -119,7 +119,7 @@ TEST(SecurityTest, TCMALLOC_TEST(MemoryAllocationRestrictionsRealloc)) {
   if (!IsTcMallocBypassed()) {
     char* orig_ptr = static_cast<char*>(malloc(1));
     ASSERT_TRUE(orig_ptr);
-    scoped_ptr<char, butil::FreeDeleter> ptr(static_cast<char*>(
+    scoped_ptr<char, flare::memory::FreeDeleter> ptr(static_cast<char*>(
         HideValueFromCompiler(realloc(orig_ptr, kTooBigAllocSize))));
     ASSERT_TRUE(!ptr);
     // If realloc() did not succeed, we need to free orig_ptr.
@@ -212,7 +212,7 @@ TEST(SecurityTest, DISABLE_ON_IOS_AND_WIN_AND_TSAN(NewOverflow)) {
 // Call calloc(), eventually free the memory and return whether or not
 // calloc() did succeed.
 bool CallocReturnsNull(size_t nmemb, size_t size) {
-  scoped_ptr<char, butil::FreeDeleter> array_pointer(
+  scoped_ptr<char, flare::memory::FreeDeleter> array_pointer(
       static_cast<char*>(calloc(nmemb, size)));
   // We need the call to HideValueFromCompiler(): we have seen LLVM
   // optimize away the call to calloc() entirely and assume

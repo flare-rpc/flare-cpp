@@ -7,7 +7,7 @@
 #include "flare/butil/callback_helpers.h"
 #include "flare/butil/callback_internal.h"
 #include "flare/butil/memory/ref_counted.h"
-#include "flare/butil/memory/scoped_ptr.h"
+#include "flare/memory/scoped_ptr.h"
 #include <gtest/gtest.h>
 
 namespace butil {

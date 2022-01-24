@@ -7,7 +7,7 @@
 #include <algorithm>
 
 #include "flare/base/logging.h"
-#include "flare/butil/memory/scoped_ptr.h"
+#include "flare/memory/scoped_ptr.h"
 #include "flare/butil/strings/string_piece.h"
 #include "flare/butil/strings/utf_string_conversion_utils.h"
 

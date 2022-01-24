@@ -9,7 +9,7 @@
 
 #include "flare/butil/basictypes.h"
 #include "flare/base/logging.h"
-#include "flare/butil/move.h"
+#include "flare/memory/move.h"
 #include "flare/butil/stl_util.h"
 
 namespace butil {

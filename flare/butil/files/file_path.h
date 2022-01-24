@@ -217,13 +217,13 @@ class BUTIL_EXPORT FilePath {
   // only contains one component, returns a FilePath identifying
   // kCurrentDirectory.  If this object already refers to the root directory,
   // returns a FilePath identifying the root directory.
-  FilePath DirName() const WARN_UNUSED_RESULT;
+  FilePath DirName() const FLARE_WARN_UNUSED_RESULT;
 
   // Returns a FilePath corresponding to the last path component of this
   // object, either a file or a directory.  If this object already refers to
   // the root directory, returns a FilePath identifying the root directory;
   // this is the only situation in which BaseName will return an absolute path.
-  FilePath BaseName() const WARN_UNUSED_RESULT;
+  FilePath BaseName() const FLARE_WARN_UNUSED_RESULT;
 
   // Returns ".jpg" for path "C:\pics\jojo.jpg", or an empty string if
   // the file has no extension.  If non-empty, Extension() will always start
@@ -249,11 +249,11 @@ class BUTIL_EXPORT FilePath {
   // Returns "C:\pics\jojo" for path "C:\pics\jojo.jpg"
   // NOTE: this is slightly different from the similar file_util implementation
   // which returned simply 'jojo'.
-  FilePath RemoveExtension() const WARN_UNUSED_RESULT;
+  FilePath RemoveExtension() const FLARE_WARN_UNUSED_RESULT;
 
   // Removes the path's file extension, as in RemoveExtension(), but
   // ignores double extensions.
-  FilePath RemoveFinalExtension() const WARN_UNUSED_RESULT;
+  FilePath RemoveFinalExtension() const FLARE_WARN_UNUSED_RESULT;
 
   // Inserts |suffix| after the file name portion of |path| but before the
   // extension.  Returns "" if BaseName() == "." or "..".
@@ -263,21 +263,21 @@ class BUTIL_EXPORT FilePath {
   // path == "C:\pics\jojo"     suffix == " (1)", returns "C:\pics\jojo (1)"
   // path == "C:\pics.old\jojo" suffix == " (1)", returns "C:\pics.old\jojo (1)"
   FilePath InsertBeforeExtension(
-      const StringType& suffix) const WARN_UNUSED_RESULT;
+      const StringType& suffix) const FLARE_WARN_UNUSED_RESULT;
   FilePath InsertBeforeExtensionASCII(
-      const butil::StringPiece& suffix) const WARN_UNUSED_RESULT;
+      const butil::StringPiece& suffix) const FLARE_WARN_UNUSED_RESULT;
 
   // Adds |extension| to |file_name|. Returns the current FilePath if
   // |extension| is empty. Returns "" if BaseName() == "." or "..".
   FilePath AddExtension(
-      const StringType& extension) const WARN_UNUSED_RESULT;
+      const StringType& extension) const FLARE_WARN_UNUSED_RESULT;
 
   // Replaces the extension of |file_name| with |extension|.  If |file_name|
   // does not have an extension, then |extension| is added.  If |extension| is
   // empty, then the extension is removed from |file_name|.
   // Returns "" if BaseName() == "." or "..".
   FilePath ReplaceExtension(
-      const StringType& extension) const WARN_UNUSED_RESULT;
+      const StringType& extension) const FLARE_WARN_UNUSED_RESULT;
 
   // Returns true if the file path matches the specified extension. The test is
   // case insensitive. Don't forget the leading period if appropriate.
@@ -289,8 +289,8 @@ class BUTIL_EXPORT FilePath {
   // If this object's path is kCurrentDirectory, a new FilePath corresponding
   // only to |component| is returned.  |component| must be a relative path;
   // it is an error to pass an absolute path.
-  FilePath Append(const StringType& component) const WARN_UNUSED_RESULT;
-  FilePath Append(const FilePath& component) const WARN_UNUSED_RESULT;
+  FilePath Append(const StringType& component) const FLARE_WARN_UNUSED_RESULT;
+  FilePath Append(const FilePath& component) const FLARE_WARN_UNUSED_RESULT;
 
   // Although Windows StringType is std::wstring, since the encoding it uses for
   // paths is well defined, it can handle ASCII path components as well.
@@ -299,7 +299,7 @@ class BUTIL_EXPORT FilePath {
   // ASCII is a valid subset, regardless of the encoding, since many operating
   // system paths will always be ASCII.
   FilePath AppendASCII(const butil::StringPiece& component)
-      const WARN_UNUSED_RESULT;
+      const FLARE_WARN_UNUSED_RESULT;
 
   // Returns true if this FilePath contains an absolute path.  On Windows, an
   // absolute path begins with either a drive letter specification followed by
@@ -308,15 +308,15 @@ class BUTIL_EXPORT FilePath {
   bool IsAbsolute() const;
 
   // Returns true if the patch ends with a path separator character.
-  bool EndsWithSeparator() const WARN_UNUSED_RESULT;
+  bool EndsWithSeparator() const FLARE_WARN_UNUSED_RESULT;
 
   // Returns a copy of this FilePath that ends with a trailing separator. If
   // the input path is empty, an empty FilePath will be returned.
-  FilePath AsEndingWithSeparator() const WARN_UNUSED_RESULT;
+  FilePath AsEndingWithSeparator() const FLARE_WARN_UNUSED_RESULT;
 
   // Returns a copy of this FilePath that does not end with a trailing
   // separator.
-  FilePath StripTrailingSeparators() const WARN_UNUSED_RESULT;
+  FilePath StripTrailingSeparators() const FLARE_WARN_UNUSED_RESULT;
 
   // Returns true if this FilePath contains an attempt to reference a parent
   // directory (e.g. has a path component that is "..").

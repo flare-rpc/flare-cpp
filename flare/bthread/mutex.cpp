@@ -21,6 +21,7 @@
 
 #include <pthread.h>
 #include <execinfo.h>
+#include <filesystem>
 #include <dlfcn.h>                               // dlsym
 #include <fcntl.h>                               // O_RDONLY
 #include "flare/base/static_atomic.h"
@@ -29,9 +30,6 @@
 #include "flare/container/flat_map.h"
 #include "flare/io/iobuf.h"
 #include "flare/base/fd_guard.h"
-#include "flare/butil/files/file.h"
-#include "flare/butil/files/file_path.h"
-#include "flare/butil/file_util.h"
 #include <memory>
 #include "flare/hash/murmurhash3.h"
 #include "flare/base/logging.h"
@@ -219,12 +217,12 @@ namespace bthread {
             }
         }
         // Write _disk_buf into _filename
-        butil::File::Error error;
-        butil::FilePath path(_filename);
-        butil::FilePath dir = path.DirName();
-        if (!butil::CreateDirectoryAndGetError(dir, &error)) {
-            LOG(ERROR) << "Fail to create directory=`" << dir.value()
-                       << "', " << error;
+        std::error_code ec;
+        std::filesystem::path path(_filename);
+        auto dir = path.parent_path();
+        if (!std::filesystem::create_directories(dir, ec)) {
+            LOG(ERROR) << "Fail to create directory=`" << dir.c_str()
+                       << "', " << ec.message();
             return;
         }
         // Truncate on first write, append on later writes.

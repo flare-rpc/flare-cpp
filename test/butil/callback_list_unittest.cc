@@ -7,7 +7,7 @@
 #include "flare/butil/basictypes.h"
 #include "flare/butil/bind.h"
 #include "flare/butil/bind_helpers.h"
-#include "flare/butil/memory/scoped_ptr.h"
+#include "flare/memory/scoped_ptr.h"
 #include <gtest/gtest.h>
 
 namespace butil {

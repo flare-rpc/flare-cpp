@@ -3,7 +3,7 @@
 // found in the LICENSE file.
 
 #include "flare/butil/compiler_specific.h"
-#include "flare/butil/memory/scoped_ptr.h"
+#include "flare/memory/scoped_ptr.h"
 #include "flare/base/lock.h"
 #include "flare/butil/threading/platform_thread.h"
 #include "flare/butil/threading/simple_thread.h"

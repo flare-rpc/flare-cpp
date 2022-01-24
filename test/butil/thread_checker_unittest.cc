@@ -4,7 +4,7 @@
 
 #include "flare/butil/basictypes.h"
 #include "flare/base/logging.h"
-#include "flare/butil/memory/scoped_ptr.h"
+#include "flare/memory/scoped_ptr.h"
 #include "flare/butil/threading/thread_checker.h"
 #include "flare/butil/threading/simple_thread.h"
 #include <gtest/gtest.h>

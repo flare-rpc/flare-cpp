@@ -27,7 +27,7 @@
 #include "flare/butil/basictypes.h"
 #include "flare/butil/files/file.h"
 #include "flare/butil/files/file_path.h"
-#include "flare/butil/memory/scoped_ptr.h"
+#include "flare/memory/scoped_ptr.h"
 #include "flare/butil/strings/string16.h"
 
 #if defined(OS_POSIX)

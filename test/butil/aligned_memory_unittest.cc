@@ -3,7 +3,7 @@
 // found in the LICENSE file.
 
 #include "flare/butil/memory/aligned_memory.h"
-#include "flare/butil/memory/scoped_ptr.h"
+#include "flare/memory/scoped_ptr.h"
 #include <gtest/gtest.h>
 
 #define EXPECT_ALIGNED(ptr, align) \

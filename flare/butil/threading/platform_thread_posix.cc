@@ -9,7 +9,7 @@
 
 #include "flare/butil/lazy_instance.h"
 #include "flare/base/logging.h"
-#include "flare/butil/memory/scoped_ptr.h"
+#include "flare/memory/scoped_ptr.h"
 #include "flare/butil/safe_strerror_posix.h"
 #include "flare/butil/synchronization/waitable_event.h"
 #include "flare/butil/threading/thread_id_name_manager.h"

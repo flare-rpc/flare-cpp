@@ -24,7 +24,7 @@
 
 #include "flare/base/static_atomic.h"             // std::atomic
 #include "flare/base/profile.h"                // FLARE_CACHELINE_ALIGNMENT
-#include "flare/butil/memory/scoped_ptr.h"     // butil::scoped_ptr
+#include "flare/memory/scoped_ptr.h"     // flare::memory::scoped_ptr
 #include "flare/base/logging.h"               // LOG
 #include "flare/base/time.h"                  // flare::base::cpuwide_time_ns
 #include "flare/bvar/bvar.h"                  // bvar::Adder
@@ -198,7 +198,7 @@ namespace bthread {
                           clear_task_mem clear_func,
                           void *meta, void *type_specific_function);
 
-        static scoped_ptr_t address(uint64_t id) WARN_UNUSED_RESULT;
+        static scoped_ptr_t address(uint64_t id) FLARE_WARN_UNUSED_RESULT;
 
         void start_execute(TaskNode *node);
 
@@ -221,15 +221,15 @@ namespace bthread {
 
         static void *_execute_tasks(void *arg);
 
-        static inline uint32_t _version_of_id(uint64_t id) WARN_UNUSED_RESULT {
+        static inline uint32_t _version_of_id(uint64_t id) FLARE_WARN_UNUSED_RESULT {
             return (uint32_t) (id >> 32);
         }
 
-        static inline uint32_t _version_of_vref(int64_t vref) WARN_UNUSED_RESULT {
+        static inline uint32_t _version_of_vref(int64_t vref) FLARE_WARN_UNUSED_RESULT {
             return (uint32_t) (vref >> 32);
         }
 
-        static inline uint32_t _ref_of_vref(int64_t vref) WARN_UNUSED_RESULT {
+        static inline uint32_t _ref_of_vref(int64_t vref) FLARE_WARN_UNUSED_RESULT {
             return (int32_t) (vref & 0xFFFFFFFFul);
         }
 
@@ -303,7 +303,7 @@ namespace bthread {
                                 clear_task_mem, meta, (void *) execute_func);
         }
 
-        inline static scoped_ptr_t address(id_t id) WARN_UNUSED_RESULT {
+        inline static scoped_ptr_t address(id_t id) FLARE_WARN_UNUSED_RESULT {
             Base::scoped_ptr_t ptr = Base::address(id.value);
             Base *b = ptr.release();
             scoped_ptr_t ret((self_type *) b);

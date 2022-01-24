@@ -332,7 +332,7 @@ class scoped_refptr {
   }
 
   // Release ownership of ptr_, keeping its reference counter unchanged.
-  T* release() WARN_UNUSED_RESULT {
+  T* release() FLARE_WARN_UNUSED_RESULT {
       T* saved_ptr = NULL;
       swap(&saved_ptr);
       return saved_ptr;

@@ -35,7 +35,7 @@
 #include "flare/butil/files/file_path.h"
 #include "flare/base/scoped_file.h"
 #include "flare/base/logging.h"
-#include "flare/butil/memory/scoped_ptr.h"
+#include "flare/memory/scoped_ptr.h"
 #include "flare/butil/memory/singleton.h"
 #include "flare/base/profile/eintr_wrapper.h"
 #include "flare/butil/stl_util.h"

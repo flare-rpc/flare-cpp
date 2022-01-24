@@ -3,7 +3,7 @@
 // found in the LICENSE file.
 
 #include "flare/butil/basictypes.h"
-#include "flare/butil/memory/scoped_ptr.h"
+#include "flare/memory/scoped_ptr.h"
 #include "flare/butil/memory/shared_memory.h"
 #include "flare/butil/process/kill.h"
 #include "flare/butil/rand_util.h"
