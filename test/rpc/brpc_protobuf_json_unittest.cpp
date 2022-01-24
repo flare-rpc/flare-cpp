@@ -22,7 +22,7 @@
 #include <string>
 #include <google/protobuf/text_format.h>
 #include "flare/io/iobuf.h"
-#include "flare/butil/third_party/rapidjson/rapidjson.h"
+#include "flare/rapidjson/rapidjson.h"
 #include "flare/base/time.h"
 #include "flare/base/gperftools_profiler.h"
 #include "json2pb/pb_to_json.h"
