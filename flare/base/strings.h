@@ -10,6 +10,7 @@
 #include <cstring>
 #include <algorithm>
 #include <optional>
+#include <limits>
 #include <stdarg.h>
 #include <string_view>
 #include "flare/base/profile.h"
