@@ -24,8 +24,8 @@
 #include <algorithm>                              // std::max
 #include <stdlib.h>                               // posix_memalign
 #include "flare/base/singleton_on_pthread_once.h"
-#include "flare/butil/third_party/dynamic_annotations/dynamic_annotations.h" // RunningOnValgrind
-#include "flare/butil/third_party/valgrind/valgrind.h"   // VALGRIND_STACK_REGISTER
+#include "flare/base/dynamic_annotations/dynamic_annotations.h" // RunningOnValgrind
+#include "flare/base/valgrind/valgrind.h"   // VALGRIND_STACK_REGISTER
 #include "flare/bvar/passive_status.h"
 #include "flare/bthread/types.h"                        // BTHREAD_STACKTYPE_*
 #include "flare/bthread/stack.h"

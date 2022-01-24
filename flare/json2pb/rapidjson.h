@@ -27,18 +27,18 @@
 
 #endif
 
-#include "flare/butil/third_party/rapidjson/allocators.h"
-#include "flare/butil/third_party/rapidjson/document.h"
-#include "flare/butil/third_party/rapidjson/encodedstream.h"
-#include "flare/butil/third_party/rapidjson/encodings.h"
-#include "flare/butil/third_party/rapidjson/filereadstream.h"
-#include "flare/butil/third_party/rapidjson/filewritestream.h"
-#include "flare/butil/third_party/rapidjson/prettywriter.h"
-#include "flare/butil/third_party/rapidjson/rapidjson.h"
-#include "flare/butil/third_party/rapidjson/reader.h"
-#include "flare/butil/third_party/rapidjson/stringbuffer.h"
-#include "flare/butil/third_party/rapidjson/writer.h"
-#include "flare/butil/third_party/rapidjson/optimized_writer.h"
+#include "flare/rapidjson/allocators.h"
+#include "flare/rapidjson/document.h"
+#include "flare/rapidjson/encodedstream.h"
+#include "flare/rapidjson/encodings.h"
+#include "flare/rapidjson/filereadstream.h"
+#include "flare/rapidjson/filewritestream.h"
+#include "flare/rapidjson/prettywriter.h"
+#include "flare/rapidjson/rapidjson.h"
+#include "flare/rapidjson/reader.h"
+#include "flare/rapidjson/stringbuffer.h"
+#include "flare/rapidjson/writer.h"
+#include "flare/rapidjson/optimized_writer.h"
 
 #if __GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 8)
 #pragma GCC diagnostic pop

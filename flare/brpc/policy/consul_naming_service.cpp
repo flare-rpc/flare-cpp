@@ -20,9 +20,9 @@
 #include <string>                                       // std::string
 #include <set>                                          // std::set
 #include "flare/base/strings.h"
-#include "flare/butil/third_party/rapidjson/document.h"
-#include "flare/butil/third_party/rapidjson/stringbuffer.h"
-#include "flare/butil/third_party/rapidjson/prettywriter.h"
+#include "flare/rapidjson/document.h"
+#include "flare/rapidjson/stringbuffer.h"
+#include "flare/rapidjson/prettywriter.h"
 #include "flare/butil/time/time.h"
 #include "flare/bthread/bthread.h"
 #include "flare/brpc/log.h"
@@ -55,9 +55,9 @@ DEFINE_int32(consul_retry_interval_ms, 500,
 
 constexpr char kConsulIndex[] = "X-Consul-Index";
 
-std::string RapidjsonValueToString(const BUTIL_RAPIDJSON_NAMESPACE::Value& value) {
-    BUTIL_RAPIDJSON_NAMESPACE::StringBuffer buffer;
-    BUTIL_RAPIDJSON_NAMESPACE::PrettyWriter<BUTIL_RAPIDJSON_NAMESPACE::StringBuffer> writer(buffer);
+std::string RapidjsonValueToString(const RAPIDJSON_NAMESPACE::Value& value) {
+    RAPIDJSON_NAMESPACE::StringBuffer buffer;
+    RAPIDJSON_NAMESPACE::PrettyWriter<RAPIDJSON_NAMESPACE::StringBuffer> writer(buffer);
     value.Accept(writer);
     return buffer.GetString();
 }
@@ -128,7 +128,7 @@ int ConsulNamingService::GetServers(const char* service_name,
     // set to de-duplicate and keep the order.
     std::set<ServerNode> presence;
 
-    BUTIL_RAPIDJSON_NAMESPACE::Document services;
+    RAPIDJSON_NAMESPACE::Document services;
     services.Parse(cntl.response_attachment().to_string().c_str());
     if (!services.IsArray()) {
         LOG(ERROR) << "The consul's response for "
@@ -136,7 +136,7 @@ int ConsulNamingService::GetServers(const char* service_name,
         return -1;
     }
 
-    for (BUTIL_RAPIDJSON_NAMESPACE::SizeType i = 0; i < services.Size(); ++i) {
+    for (RAPIDJSON_NAMESPACE::SizeType i = 0; i < services.Size(); ++i) {
         auto itr_service = services[i].FindMember("Service");
         if (itr_service == services[i].MemberEnd()) {
             LOG(ERROR) << "No service info in node: "
@@ -144,7 +144,7 @@ int ConsulNamingService::GetServers(const char* service_name,
             continue;
         }
 
-        const BUTIL_RAPIDJSON_NAMESPACE::Value& service = itr_service->value;
+        const RAPIDJSON_NAMESPACE::Value& service = itr_service->value;
         auto itr_address = service.FindMember("Address");
         auto itr_port = service.FindMember("Port");
         if (itr_address == service.MemberEnd() ||
@@ -172,7 +172,7 @@ int ConsulNamingService::GetServers(const char* service_name,
             if (itr_tags->value.IsArray()) {
                 if (itr_tags->value.Size() > 0) {
                     // Tags in consul is an array, here we only use the first one.
-                    const BUTIL_RAPIDJSON_NAMESPACE::Value& tag = itr_tags->value[0];
+                    const RAPIDJSON_NAMESPACE::Value& tag = itr_tags->value[0];
                     if (tag.IsString()) {
                         node.tag = tag.GetString();
                     } else {

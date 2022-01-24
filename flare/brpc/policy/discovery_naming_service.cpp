@@ -17,9 +17,9 @@
 
 
 #include <gflags/gflags.h>
-#include "flare/butil/third_party/rapidjson/document.h"
-#include "flare/butil/third_party/rapidjson/memorybuffer.h"
-#include "flare/butil/third_party/rapidjson/writer.h"
+#include "flare/rapidjson/document.h"
+#include "flare/rapidjson/memorybuffer.h"
+#include "flare/rapidjson/writer.h"
 #include "flare/base/strings.h"
 #include "flare/base/str_split.h"
 #include "flare/base/fast_rand.h"
@@ -71,7 +71,7 @@ static int ListDiscoveryNodes(const char* discovery_api_addr, std::string* serve
     servers->assign("list://");
 
     const std::string response = cntl.response_attachment().to_string();
-    BUTIL_RAPIDJSON_NAMESPACE::Document d;
+    RAPIDJSON_NAMESPACE::Document d;
     d.Parse(response.c_str());
     if (!d.IsObject()) {
         LOG(ERROR) << "Fail to parse " << response << " as json object";
@@ -82,13 +82,13 @@ static int ListDiscoveryNodes(const char* discovery_api_addr, std::string* serve
         LOG(ERROR) << "No data field in discovery nodes response";
         return -1;
     }
-    const BUTIL_RAPIDJSON_NAMESPACE::Value& data = itr->value;
+    const RAPIDJSON_NAMESPACE::Value& data = itr->value;
     if (!data.IsArray()) {
         LOG(ERROR) << "data field is not an array";
         return -1;
     }
-    for (BUTIL_RAPIDJSON_NAMESPACE::SizeType i = 0; i < data.Size(); ++i) {
-        const BUTIL_RAPIDJSON_NAMESPACE::Value& addr_item = data[i];
+    for (RAPIDJSON_NAMESPACE::SizeType i = 0; i < data.Size(); ++i) {
+        const RAPIDJSON_NAMESPACE::Value& addr_item = data[i];
         auto itr_addr = addr_item.FindMember("addr");
         auto itr_status = addr_item.FindMember("status");
         if (itr_addr == addr_item.MemberEnd() ||
@@ -150,7 +150,7 @@ DiscoveryClient::~DiscoveryClient() {
 
 static int ParseCommonResult(const flare::io::IOBuf& buf, std::string* error_text) {
     const std::string s = buf.to_string();
-    BUTIL_RAPIDJSON_NAMESPACE::Document d;
+    RAPIDJSON_NAMESPACE::Document d;
     d.Parse(s.c_str());
     if (!d.IsObject()) {
         LOG(ERROR) << "Fail to parse " << buf << " as json object";
@@ -371,7 +371,7 @@ int DiscoveryNamingService::GetServers(const char* service_name,
     }
 
     const std::string response = cntl.response_attachment().to_string();
-    BUTIL_RAPIDJSON_NAMESPACE::Document d;
+    RAPIDJSON_NAMESPACE::Document d;
     d.Parse(response.c_str());
     if (!d.IsObject()) {
         LOG(ERROR) << "Fail to parse " << response << " as json object";
@@ -382,31 +382,31 @@ int DiscoveryNamingService::GetServers(const char* service_name,
         LOG(ERROR) << "No data field in discovery/fetchs response";
         return -1;
     }
-    const BUTIL_RAPIDJSON_NAMESPACE::Value& data = itr_data->value;
+    const RAPIDJSON_NAMESPACE::Value& data = itr_data->value;
     auto itr_service = data.FindMember(service_name);
     if (itr_service == data.MemberEnd()) {
         LOG(ERROR) << "No " << service_name << " field in discovery response";
         return -1;
     }
-    const BUTIL_RAPIDJSON_NAMESPACE::Value& services = itr_service->value;
+    const RAPIDJSON_NAMESPACE::Value& services = itr_service->value;
     auto itr_instances = services.FindMember("instances");
     if (itr_instances == services.MemberEnd()) {
         LOG(ERROR) << "Fail to find instances";
         return -1;
     }
-    const BUTIL_RAPIDJSON_NAMESPACE::Value& instances = itr_instances->value;
+    const RAPIDJSON_NAMESPACE::Value& instances = itr_instances->value;
     if (!instances.IsArray()) {
         LOG(ERROR) << "Fail to parse instances as an array";
         return -1;
     }
 
-    for (BUTIL_RAPIDJSON_NAMESPACE::SizeType i = 0; i < instances.Size(); ++i) {
+    for (RAPIDJSON_NAMESPACE::SizeType i = 0; i < instances.Size(); ++i) {
         std::string metadata;
         // convert metadata in object to string
         auto itr_metadata = instances[i].FindMember("metadata");
         if (itr_metadata != instances[i].MemberEnd()) {
-            BUTIL_RAPIDJSON_NAMESPACE::MemoryBuffer buffer;
-            BUTIL_RAPIDJSON_NAMESPACE::Writer<BUTIL_RAPIDJSON_NAMESPACE::MemoryBuffer> writer(buffer);
+            RAPIDJSON_NAMESPACE::MemoryBuffer buffer;
+            RAPIDJSON_NAMESPACE::Writer<RAPIDJSON_NAMESPACE::MemoryBuffer> writer(buffer);
             itr_metadata->value.Accept(writer);
             metadata.assign(buffer.GetBuffer(), buffer.GetSize());
         }
@@ -416,8 +416,8 @@ int DiscoveryNamingService::GetServers(const char* service_name,
             LOG(ERROR) << "Fail to find addrs or addrs is not an array";
             return -1;
         }
-        const BUTIL_RAPIDJSON_NAMESPACE::Value& addrs = itr->value;
-        for (BUTIL_RAPIDJSON_NAMESPACE::SizeType j = 0; j < addrs.Size(); ++j) {
+        const RAPIDJSON_NAMESPACE::Value& addrs = itr->value;
+        for (RAPIDJSON_NAMESPACE::SizeType j = 0; j < addrs.Size(); ++j) {
             if (!addrs[j].IsString()) {
                 continue;
             }

@@ -12,7 +12,7 @@
 #define BUTIL_ATOMIC_REF_COUNT_H_
 
 #include "flare/base/static_atomic.h"
-#include "flare/butil/third_party/dynamic_annotations/dynamic_annotations.h"
+#include "flare/base/dynamic_annotations/dynamic_annotations.h"
 
 namespace butil {
 

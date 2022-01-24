@@ -5,7 +5,7 @@
 #include "flare/butil/debug/proc_maps_linux.h"
 #include "flare/butil/files/file_path.h"
 #include "flare/butil/strings/stringprintf.h"
-#include "flare/butil/third_party/dynamic_annotations/dynamic_annotations.h"
+#include "flare/base/dynamic_annotations/dynamic_annotations.h"
 #include <gtest/gtest.h>
 
 namespace butil {

@@ -23,7 +23,7 @@
 #include "flare/base/static_atomic.h"
 #include "flare/butil/base_export.h"
 #include "flare/butil/memory/aligned_memory.h"
-#include "flare/butil/third_party/dynamic_annotations/dynamic_annotations.h"
+#include "flare/base/dynamic_annotations/dynamic_annotations.h"
 #include "flare/butil/threading/thread_restrictions.h"
 
 namespace butil {

@@ -10,7 +10,7 @@
 #include "flare/butil/debug/leak_annotations.h"
 #include "flare/base/logging.h"
 #include "flare/butil/memory/aligned_memory.h"
-#include "flare/butil/third_party/dynamic_annotations/dynamic_annotations.h"
+#include "flare/base/dynamic_annotations/dynamic_annotations.h"
 #include "flare/butil/threading/thread_restrictions.h"
 
 // LazyInstance uses its own struct initializer-list style static
