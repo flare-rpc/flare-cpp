@@ -4,7 +4,7 @@
 
 #include "flare/butil/strings/string_split.h"
 
-#include "flare/butil/logging.h"
+#include "flare/base/logging.h"
 #include "flare/butil/strings/string_util.h"
 #include "flare/butil/strings/utf_string_conversions.h"
 #include "flare/butil/third_party/icu/icu_utf.h"

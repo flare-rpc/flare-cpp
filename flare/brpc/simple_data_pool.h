@@ -19,7 +19,7 @@
 #ifndef BRPC_SIMPLE_DATA_POOL_H
 #define BRPC_SIMPLE_DATA_POOL_H
 
-#include "flare/butil/scoped_lock.h"
+#include "flare/base/scoped_lock.h"
 #include "flare/brpc/data_factory.h"
 
 
@@ -47,7 +47,7 @@ public:
     Stat stat() const;
     
 private:
-    butil::Mutex _mutex;
+    flare::base::Mutex _mutex;
     unsigned _capacity;
     unsigned _size;
     std::atomic<unsigned> _ncreated;

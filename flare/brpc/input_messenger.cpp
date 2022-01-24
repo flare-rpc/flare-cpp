@@ -17,10 +17,10 @@
 
 
 #include <gflags/gflags.h>
-#include "flare/butil/fd_guard.h"                      // fd_guard
-#include "flare/butil/logging.h"                       // CHECK
-#include "flare/butil/time.h"                          // cpuwide_time_us
-#include "flare/butil/fd_utility.h"                    // make_non_blocking
+#include "flare/base/fd_guard.h"                      // fd_guard
+#include "flare/base/logging.h"                       // CHECK
+#include "flare/base/time.h"                          // cpuwide_time_us
+#include "flare/base/fd_utility.h"                    // make_non_blocking
 #include "flare/bthread/bthread.h"                     // bthread_start_background
 #include "flare/bthread/unstable.h"                   // bthread_flush
 #include "flare/bvar/bvar.h"                          // bvar::Adder
@@ -170,7 +170,7 @@ void InputMessenger::OnNewMessages(Socket* m) {
     // - If the socket has only one message, the message will be parsed and
     //   processed in this bthread. nova-pbrpc and http works in this way.
     // - If the socket has several messages, all messages will be parsed (
-    //   meaning cutting from butil::IOBuf. serializing from protobuf is part of
+    //   meaning cutting from flare::io::IOBuf. serializing from protobuf is part of
     //   "process") in this bthread. All messages except the last one will be
     //   processed in separate bthreads. To minimize the overhead, scheduling
     //   is batched(notice the BTHREAD_NOSIGNAL and bthread_flush).
@@ -186,8 +186,8 @@ void InputMessenger::OnNewMessages(Socket* m) {
     std::unique_ptr<InputMessageBase, RunLastMessage> last_msg;
     bool read_eof = false;
     while (!read_eof) {
-        const int64_t received_us = butil::cpuwide_time_us();
-        const int64_t base_realtime = butil::gettimeofday_us() - received_us;
+        const int64_t received_us = flare::base::cpuwide_time_us();
+        const int64_t base_realtime = flare::base::gettimeofday_us() - received_us;
 
         // Calculate bytes to be read.
         size_t once_read = m->_avg_msg_size * 16;
@@ -213,7 +213,7 @@ void InputMessenger::OnNewMessages(Socket* m) {
                 const int saved_errno = errno;
                 PLOG(WARNING) << "Fail to read from " << *m;
                 m->SetFailed(saved_errno, "Fail to read from %s: %s",
-                             m->description().c_str(), berror(saved_errno));
+                             m->description().c_str(), flare_error(saved_errno));
                 return;
             } else if (!m->MoreReadEvents(&progress)) {
                 return;
@@ -242,7 +242,7 @@ void InputMessenger::OnNewMessages(Socket* m) {
                 } else if (pr.error() == PARSE_ERROR_TRY_OTHERS) {
                     LOG(WARNING)
                         << "Close " << *m << " due to unknown message: "
-                        << butil::ToPrintable(m->_read_buf);
+                        << flare::io::ToPrintable(m->_read_buf);
                     m->SetFailed(EINVAL, "Close %s due to unknown message",
                                  m->description().c_str());
                     return;
@@ -354,7 +354,7 @@ int InputMessenger::AddHandler(const InputMessageHandler& handler) {
         CHECK(false) << "Invalid argument";
         return -1;
     }
-    BAIDU_SCOPED_LOCK(_add_handler_mutex);
+    FLARE_SCOPED_LOCK(_add_handler_mutex);
     if (NULL == _handlers) {
         _handlers = new (std::nothrow) InputMessageHandler[_capacity];
         if (NULL == _handlers) {
@@ -399,7 +399,7 @@ int InputMessenger::AddNonProtocolHandler(const InputMessageHandler& handler) {
         CHECK(false) << "Invalid argument";
         return -1;
     }
-    BAIDU_SCOPED_LOCK(_add_handler_mutex);
+    FLARE_SCOPED_LOCK(_add_handler_mutex);
     if (NULL == _handlers) {
         _handlers = new (std::nothrow) InputMessageHandler[_capacity];
         if (NULL == _handlers) {
@@ -419,7 +419,7 @@ int InputMessenger::AddNonProtocolHandler(const InputMessageHandler& handler) {
     return 0;
 }
 
-int InputMessenger::Create(const butil::EndPoint& remote_side,
+int InputMessenger::Create(const flare::base::end_point& remote_side,
                            time_t health_check_interval_s,
                            SocketId* id) {
     SocketOptions options;

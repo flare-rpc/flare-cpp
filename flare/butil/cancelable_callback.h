@@ -47,7 +47,7 @@
 #include "flare/butil/callback.h"
 #include "flare/butil/callback_internal.h"
 #include "flare/butil/compiler_specific.h"
-#include "flare/butil/logging.h"
+#include "flare/base/logging.h"
 #include "flare/butil/memory/weak_ptr.h"
 
 namespace butil {

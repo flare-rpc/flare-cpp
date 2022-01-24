@@ -19,7 +19,7 @@
 #define BRPC_POLICY_AUTO_CONCURRENCY_LIMITER_H
 
 #include "flare/bvar/bvar.h"
-#include "flare/butil/containers/bounded_queue.h"
+#include "flare/container/bounded_queue.h"
 #include "flare/brpc/concurrency_limiter.h"
 
 namespace brpc {
@@ -73,12 +73,12 @@ private:
     double _explore_ratio;
   
     // modified per sample.
-    std::atomic<int64_t> BAIDU_CACHELINE_ALIGNMENT _last_sampling_time_us;
-    butil::Mutex _sw_mutex;
+    std::atomic<int64_t> FLARE_CACHELINE_ALIGNMENT _last_sampling_time_us;
+    flare::base::Mutex _sw_mutex;
     SampleWindow _sw;
 
     // modified per request.
-    std::atomic<int32_t> BAIDU_CACHELINE_ALIGNMENT _total_succ_req;
+    std::atomic<int32_t> FLARE_CACHELINE_ALIGNMENT _total_succ_req;
 };
 
 }  // namespace policy

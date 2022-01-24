@@ -19,9 +19,9 @@
 #include <gflags/gflags.h>
 #include <fcntl.h>                    // O_CREAT
 #include "flare/butil/file_util.h"
-#include "flare/butil/raw_pack.h"
-#include "flare/butil/unique_ptr.h"
-#include "flare/butil/fast_rand.h"
+#include "flare/io/raw_pack.h"
+#include <memory>
+#include "flare/base/fast_rand.h"
 #include "flare/butil/files/file_enumerator.h"
 #include "flare/bvar/bvar.h"
 #include "flare/brpc/log.h"
@@ -73,7 +73,7 @@ public:
     
     void Dump(size_t round, SampledRequest*);
     
-    static bool Serialize(butil::IOBuf& buf, SampledRequest* sample);
+    static bool Serialize(flare::io::IOBuf& buf, SampledRequest* sample);
     
     RpcDumpContext()
         : _cur_req_count(0)
@@ -81,7 +81,7 @@ public:
         , _last_round(0)
         , _max_requests_in_one_file(0)
         , _max_files(0)
-        , _sched_write_time(butil::gettimeofday_us() + FLUSH_TIMEOUT)
+        , _sched_write_time(flare::base::gettimeofday_us() + FLUSH_TIMEOUT)
         , _last_file_time(0)
     {
         _command_name = bvar::read_command_name();
@@ -112,7 +112,7 @@ private:
     // current filename, being here just to reuse memory.
     std::string _cur_filename;
     // buffering output to file so they can be written in batch.
-    butil::IOBuf _unwritten_buf;
+    flare::io::IOBuf _unwritten_buf;
 };
 
 bvar::CollectorSpeedLimit g_rpc_dump_sl = BVAR_COLLECTOR_SPEED_LIMIT_INITIALIZER;
@@ -168,7 +168,7 @@ void RpcDumpContext::Dump(size_t round, SampledRequest* sample) {
     } else if (_unwritten_buf.size() >= UNWRITTEN_BUFSIZE) {
         // Too much unwritten data
         RPC_VLOG << "Write because _unwritten_buf=" << _unwritten_buf.size();
-    } else if (butil::gettimeofday_us() >= _sched_write_time) {
+    } else if (flare::base::gettimeofday_us() >= _sched_write_time) {
         // Not write for a while.
         RPC_VLOG << "Write because timeout";
     } else {
@@ -190,7 +190,7 @@ void RpcDumpContext::Dump(size_t round, SampledRequest* sample) {
             _filenames.pop_front();
         }
         // Make current time as postfix.
-        int64_t cur_file_time = butil::gettimeofday_us();
+        int64_t cur_file_time = flare::base::gettimeofday_us();
         // Make postfix monotonic.
         if (cur_file_time <= _last_file_time) {
             cur_file_time = _last_file_time + 1;
@@ -199,7 +199,7 @@ void RpcDumpContext::Dump(size_t round, SampledRequest* sample) {
         struct tm* timeinfo = localtime(&rawtime);
         char ts_buf[64];
         strftime(ts_buf, sizeof(ts_buf), "%Y%m%d_%H%M%S", timeinfo);
-        butil::string_printf(&_cur_filename, "%s/" DUMPED_FILE_PREFIX ".%s_%06u",
+        flare::base::string_printf(&_cur_filename, "%s/" DUMPED_FILE_PREFIX ".%s_%06u",
                             _dir.value().c_str(), ts_buf,
                             (unsigned)(cur_file_time - rawtime * 1000000L));
         _cur_fd = open(_cur_filename.c_str(), O_CREAT | O_WRONLY | O_TRUNC, 0666);
@@ -223,7 +223,7 @@ void RpcDumpContext::Dump(size_t round, SampledRequest* sample) {
         }
     }
     _unwritten_buf.clear();
-    _sched_write_time = butil::gettimeofday_us() + FLUSH_TIMEOUT;
+    _sched_write_time = flare::base::gettimeofday_us() + FLUSH_TIMEOUT;
     if (fail_to_write || _cur_req_count >= _max_requests_in_one_file) {
         // clean up
         if (_cur_fd >= 0) {
@@ -234,13 +234,13 @@ void RpcDumpContext::Dump(size_t round, SampledRequest* sample) {
     }
 }
 
-bool RpcDumpContext::Serialize(butil::IOBuf& buf, SampledRequest* sample) {
+bool RpcDumpContext::Serialize(flare::io::IOBuf& buf, SampledRequest* sample) {
     // Use the header of baidu_std.
     char rpc_header[12];
-    butil::IOBuf::Area header_area = buf.reserve(sizeof(rpc_header));
+    flare::io::IOBuf::Area header_area = buf.reserve(sizeof(rpc_header));
     
     const size_t starting_size = buf.size();
-    butil::IOBufAsZeroCopyOutputStream buf_stream(&buf);
+    flare::io::IOBufAsZeroCopyOutputStream buf_stream(&buf);
     if (!sample->meta.SerializeToZeroCopyStream(&buf_stream)) {
         LOG(ERROR) << "Fail to serialize";
         return false;
@@ -250,14 +250,14 @@ bool RpcDumpContext::Serialize(butil::IOBuf& buf, SampledRequest* sample) {
 
     uint32_t* dummy = (uint32_t*)rpc_header;  // suppress strict-alias warning
     *dummy = *(uint32_t*)"PRPC";
-    butil::RawPacker(rpc_header + 4)
+    flare::io::RawPacker(rpc_header + 4)
         .pack32(meta_size + sample->request.size())
         .pack32(meta_size);
     CHECK_EQ(0, buf.unsafe_assign(header_area, rpc_header));
     return true;
 }
 
-SampleIterator::SampleIterator(const butil::StringPiece& dir)
+SampleIterator::SampleIterator(const std::string_view& dir)
     : _cur_fd(-1)
     , _enum(NULL)
     , _dir(std::string(dir.data(), dir.size())) {
@@ -319,7 +319,7 @@ SampledRequest* SampleIterator::Next() {
     }
 }
 
-SampledRequest* SampleIterator::Pop(butil::IOBuf& buf, bool* format_error) {
+SampledRequest* SampleIterator::Pop(flare::io::IOBuf& buf, bool* format_error) {
     char backing_buf[12];
     const char* p = (const char*)buf.fetch(backing_buf, sizeof(backing_buf));
     if (NULL == p) {  // buf.length() < sizeof(backing_buf)
@@ -332,7 +332,7 @@ SampledRequest* SampleIterator::Pop(butil::IOBuf& buf, bool* format_error) {
     }
     uint32_t body_size;
     uint32_t meta_size;
-    butil::RawUnpacker(p + 4).unpack32(body_size).unpack32(meta_size);
+    flare::io::RawUnpacker(p + 4).unpack32(body_size).unpack32(meta_size);
     if (body_size > FLAGS_max_body_size) {
         LOG(ERROR) << "Too big body=" << body_size;
         *format_error = true;
@@ -347,7 +347,7 @@ SampledRequest* SampleIterator::Pop(butil::IOBuf& buf, bool* format_error) {
         return NULL;
     }
     buf.pop_front(sizeof(backing_buf));
-    butil::IOBuf meta_buf;
+    flare::io::IOBuf meta_buf;
     buf.cutn(&meta_buf, meta_size);
     std::unique_ptr<SampledRequest> req(new SampledRequest);
     if (!ParsePbFromIOBuf(&req->meta, meta_buf)) {

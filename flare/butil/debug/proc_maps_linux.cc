@@ -11,7 +11,7 @@
 #endif
 
 #include "flare/butil/file_util.h"
-#include "flare/butil/files/scoped_file.h"
+#include "flare/base/scoped_file.h"
 #include "flare/butil/strings/string_split.h"
 
 #if defined(OS_ANDROID) && !defined(__LP64__)
@@ -47,7 +47,7 @@ bool ReadProcMaps(std::string* proc_maps) {
   // file for details.
   const long kReadSize = sysconf(_SC_PAGESIZE);
 
-  butil::ScopedFD fd(HANDLE_EINTR(open("/proc/self/maps", O_RDONLY)));
+  flare::base::ScopedFD fd(HANDLE_EINTR(open("/proc/self/maps", O_RDONLY)));
   if (!fd.is_valid()) {
     DPLOG(ERROR) << "Couldn't open /proc/self/maps";
     return false;

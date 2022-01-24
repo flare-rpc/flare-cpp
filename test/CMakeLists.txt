@@ -51,7 +51,7 @@ else ()
     message(FATAL_ERROR "Googletest is not available")
 endif ()
 
-set(CMAKE_CPP_FLAGS "${DEFINE_CLOCK_GETTIME} -DBRPC_WITH_GLOG=${WITH_GLOG_VAL} -DGFLAGS_NS=${GFLAGS_NS}")
+set(CMAKE_CPP_FLAGS "${DEFINE_CLOCK_GETTIME}  -DGFLAGS_NS=${GFLAGS_NS}")
 set(CMAKE_CPP_FLAGS "${CMAKE_CPP_FLAGS} -DBTHREAD_USE_FAST_PTHREAD_MUTEX -D__const__= -D_GNU_SOURCE -DUSE_SYMBOLIZE -DNO_TCMALLOC -D__STDC_FORMAT_MACROS -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -DUNIT_TEST -Dprivate=public -Dprotected=public -DBVAR_NOT_LINK_DEFAULT_VARIABLES -D__STRICT_ANSI__ -include ${PROJECT_SOURCE_DIR}/test/sstream_workaround.h")
 set(CMAKE_CXX_FLAGS "${CMAKE_CPP_FLAGS} -g -O2 -pipe -Wall -W -fPIC -fstrict-aliasing -Wno-invalid-offsetof -Wno-unused-parameter -fno-omit-frame-pointer")
 use_cxx17()
@@ -75,14 +75,8 @@ file(COPY ${PROJECT_SOURCE_DIR}/test/run_tests.sh DESTINATION ${CMAKE_CURRENT_BI
 
 SET(TEST_BUTIL_SOURCES
         ${PROJECT_SOURCE_DIR}/test/butil/recordio_unittest.cpp
-        ${PROJECT_SOURCE_DIR}/test/butil/popen_unittest.cpp
-        ${PROJECT_SOURCE_DIR}/test/butil/bounded_queue_unittest.cc
         ${PROJECT_SOURCE_DIR}/test/butil/at_exit_unittest.cc
-        ${PROJECT_SOURCE_DIR}/test/butil/base64_unittest.cc
         ${PROJECT_SOURCE_DIR}/test/butil/big_endian_unittest.cc
-        ${PROJECT_SOURCE_DIR}/test/butil/hash_tables_unittest.cc
-        ${PROJECT_SOURCE_DIR}/test/butil/linked_list_unittest.cc
-        ${PROJECT_SOURCE_DIR}/test/butil/small_map_unittest.cc
         ${PROJECT_SOURCE_DIR}/test/butil/crash_logging_unittest.cc
         ${PROJECT_SOURCE_DIR}/test/butil/leak_tracker_unittest.cc
         ${PROJECT_SOURCE_DIR}/test/butil/stack_trace_unittest.cc
@@ -103,8 +97,6 @@ SET(TEST_BUTIL_SOURCES
         ${PROJECT_SOURCE_DIR}/test/butil/scoped_vector_unittest.cc
         ${PROJECT_SOURCE_DIR}/test/butil/singleton_unittest.cc
         ${PROJECT_SOURCE_DIR}/test/butil/weak_ptr_unittest.cc
-        ${PROJECT_SOURCE_DIR}/test/butil/observer_list_unittest.cc
-        ${PROJECT_SOURCE_DIR}/test/butil/rand_util_unittest.cc
         ${PROJECT_SOURCE_DIR}/test/butil/safe_numerics_unittest.cc
         ${PROJECT_SOURCE_DIR}/test/butil/scoped_clear_errno_unittest.cc
         ${PROJECT_SOURCE_DIR}/test/butil/scoped_generic_unittest.cc
@@ -127,7 +119,6 @@ SET(TEST_BUTIL_SOURCES
         ${PROJECT_SOURCE_DIR}/test/butil/condition_variable_unittest.cc
         ${PROJECT_SOURCE_DIR}/test/butil/lock_unittest.cc
         ${PROJECT_SOURCE_DIR}/test/butil/waitable_event_unittest.cc
-        ${PROJECT_SOURCE_DIR}/test/butil/type_traits_unittest.cc
         ${PROJECT_SOURCE_DIR}/test/butil/non_thread_safe_unittest.cc
         ${PROJECT_SOURCE_DIR}/test/butil/platform_thread_unittest.cc
         ${PROJECT_SOURCE_DIR}/test/butil/simple_thread_unittest.cc
@@ -136,39 +127,25 @@ SET(TEST_BUTIL_SOURCES
         ${PROJECT_SOURCE_DIR}/test/butil/thread_id_name_manager_unittest.cc
         ${PROJECT_SOURCE_DIR}/test/butil/thread_local_storage_unittest.cc
         ${PROJECT_SOURCE_DIR}/test/butil/thread_local_unittest.cc
-        ${PROJECT_SOURCE_DIR}/test/butil/watchdog_unittest.cc
         ${PROJECT_SOURCE_DIR}/test/butil/time_unittest.cc
         ${PROJECT_SOURCE_DIR}/test/butil/version_unittest.cc
-        ${PROJECT_SOURCE_DIR}/test/butil/logging_unittest.cc
-        ${PROJECT_SOURCE_DIR}/test/butil/cacheline_unittest.cpp
-        ${PROJECT_SOURCE_DIR}/test/butil/class_name_unittest.cpp
-        ${PROJECT_SOURCE_DIR}/test/butil/endpoint_unittest.cpp
         ${PROJECT_SOURCE_DIR}/test/butil/unique_ptr_unittest.cpp
-        ${PROJECT_SOURCE_DIR}/test/butil/errno_unittest.cpp
-        ${PROJECT_SOURCE_DIR}/test/butil/fd_guard_unittest.cpp
-        ${PROJECT_SOURCE_DIR}/test/butil/file_watcher_unittest.cpp
-        ${PROJECT_SOURCE_DIR}/test/butil/find_cstr_unittest.cpp
         ${PROJECT_SOURCE_DIR}/test/butil/scoped_lock_unittest.cpp
-        ${PROJECT_SOURCE_DIR}/test/butil/status_unittest.cpp
-        ${PROJECT_SOURCE_DIR}/test/butil/string_printf_unittest.cpp
         ${PROJECT_SOURCE_DIR}/test/butil/string_splitter_unittest.cpp
         ${PROJECT_SOURCE_DIR}/test/butil/synchronous_event_unittest.cpp
-        ${PROJECT_SOURCE_DIR}/test/butil/temp_file_unittest.cpp
         ${PROJECT_SOURCE_DIR}/test/butil/baidu_thread_local_unittest.cpp
-        ${PROJECT_SOURCE_DIR}/test/butil/baidu_time_unittest.cpp
-        ${PROJECT_SOURCE_DIR}/test/butil/flat_map_unittest.cpp
         ${PROJECT_SOURCE_DIR}/test/butil/crc32c_unittest.cc
-        ${PROJECT_SOURCE_DIR}/test/butil/iobuf_unittest.cpp
-        ${PROJECT_SOURCE_DIR}/test/butil/object_pool_unittest.cpp
         ${PROJECT_SOURCE_DIR}/test/butil/scoped_locale.cc
         ${PROJECT_SOURCE_DIR}/test/butil/butil_unittest_main.cpp
         ${PROJECT_SOURCE_DIR}/test/butil/butil_unittest_main.cpp
         )
-
+set(IO_TEST_SRC
+        ${PROJECT_SOURCE_DIR}/test/io/iobuf_unittest.cc
+        )
 if (CMAKE_SYSTEM_NAME STREQUAL "Linux")
     SET(TEST_BUTIL_SOURCES ${TEST_BUTIL_SOURCES}
-            ${PROJECT_SOURCE_DIR}/test/proc_maps_linux_unittest.cc
-            ${PROJECT_SOURCE_DIR}/test/test_file_util_linux.cc)
+            ${PROJECT_SOURCE_DIR}/test/butil/proc_maps_linux_unittest.cc
+            ${PROJECT_SOURCE_DIR}/test/butil/test_file_util_linux.cc)
 endif ()
 
 # bthread_* functions are used in logging.cc, and they need to be marked as
@@ -181,7 +158,7 @@ if (CMAKE_SYSTEM_NAME STREQUAL "Darwin")
 endif ()
 
 add_library(BUTIL_DEBUG_LIB OBJECT ${BUTIL_SOURCES})
-add_library(FLARE_BASE_DEBUG_LIB OBJECT ${FLARE_BASE_SRC})
+add_library(FLARE_BASE_DEBUG_LIB OBJECT ${FLARE_SRC})
 add_library(SOURCES_DEBUG_LIB OBJECT ${SOURCES})
 add_dependencies(SOURCES_DEBUG_LIB PROTO_LIB)
 
@@ -199,18 +176,25 @@ set_target_properties(brpc-shared-debug PROPERTIES
         LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/test)
 
 target_link_libraries(brpc-shared-debug ${DYNAMIC_LIB})
-if (BRPC_WITH_GLOG)
     target_link_libraries(brpc-shared-debug ${GLOG_LIB})
-endif ()
 
 # test_butil
-add_executable(test_butil ${TEST_BUTIL_SOURCES}
-        ${CMAKE_CURRENT_BINARY_DIR}/iobuf.pb.cc)
+add_executable(test_butil ${TEST_BUTIL_SOURCES})
 target_link_libraries(test_butil brpc-shared-debug
         gtest
         ${GPERFTOOLS_LIBRARIES})
 
 add_test(NAME test_butil COMMAND test_butil)
+
+# test_io
+add_executable(test_io ${TEST_IO_SRC}
+        ${CMAKE_CURRENT_BINARY_DIR}/iobuf.pb.cc)
+target_link_libraries(test_io brpc-shared-debug
+        gtest
+        gtest_main
+        ${GPERFTOOLS_LIBRARIES})
+
+add_test(NAME test_io COMMAND test_io)
 
 # test_bvar
 # -DBVAR_NOT_LINK_DEFAULT_VARIABLES not work for gcc >= 5.0, just remove the file to prevent linking into unit tests
@@ -227,3 +211,5 @@ add_subdirectory(rpc)
 
 #
 add_subdirectory(base)
+add_subdirectory(container)
+add_subdirectory(memory)

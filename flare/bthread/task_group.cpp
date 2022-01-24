@@ -22,12 +22,11 @@
 #include <sys/types.h>
 #include <stddef.h>                         // size_t
 #include <gflags/gflags.h>
-#include "flare/butil/compat.h"                   // OS_MACOSX
-#include "flare/butil/macros.h"                   // ARRAY_SIZE
-#include "flare/butil/scoped_lock.h"              // BAIDU_SCOPED_LOCK
-#include "flare/butil/fast_rand.h"
-#include "flare/butil/unique_ptr.h"
-#include "flare/butil/third_party/murmurhash3/murmurhash3.h" // fmix64
+#include "flare/base/compat.h"                   // FLARE_PLATFORM_OSX
+#include "flare/base/scoped_lock.h"              // FLARE_SCOPED_LOCK
+#include "flare/base/fast_rand.h"
+#include <memory>
+#include "flare/hash/murmurhash3.h" // fmix64
 #include "flare/bthread/errno.h"                  // ESTOP
 #include "flare/bthread/butex.h"                  // butex_*
 #include "flare/bthread/sys_futex.h"              // futex_wake_private
@@ -47,13 +46,13 @@ static bool pass_bool(const char*, bool) { return true; }
 DEFINE_bool(show_bthread_creation_in_vars, false, "When this flags is on, The time "
             "from bthread creation to first run will be recorded and shown "
             "in /vars");
-const bool ALLOW_UNUSED dummy_show_bthread_creation_in_vars =
+const bool FLARE_ALLOW_UNUSED dummy_show_bthread_creation_in_vars =
     ::GFLAGS_NS::RegisterFlagValidator(&FLAGS_show_bthread_creation_in_vars,
                                     pass_bool);
 
 DEFINE_bool(show_per_worker_usage_in_vars, false,
             "Show per-worker usage in /vars/bthread_per_worker_usage_<tid>");
-const bool ALLOW_UNUSED dummy_show_per_worker_usage_in_vars =
+const bool FLARE_ALLOW_UNUSED dummy_show_per_worker_usage_in_vars =
     ::GFLAGS_NS::RegisterFlagValidator(&FLAGS_show_per_worker_usage_in_vars,
                                     pass_bool);
 
@@ -68,7 +67,7 @@ extern void return_keytable(bthread_keytable_pool_t*, KeyTable*);
 
 // [Hacky] This is a special TLS set by bthread-rpc privately... to save
 // overhead of creation keytable, may be removed later.
-BAIDU_THREAD_LOCAL void* tls_unique_user_ptr = NULL;
+FLARE_THREAD_LOCAL void* tls_unique_user_ptr = NULL;
 
 const TaskStatistics EMPTY_STAT = { 0, 0 };
 
@@ -80,7 +79,7 @@ int TaskGroup::get_attr(bthread_t tid, bthread_attr_t* out) {
     TaskMeta* const m = address_meta(tid);
     if (m != NULL) {
         const uint32_t given_ver = get_version(tid);
-        BAIDU_SCOPED_LOCK(m->version_lock);
+        FLARE_SCOPED_LOCK(m->version_lock);
         if (given_ver == *m->version_butex) {
             *out = m->attr;
             return 0;
@@ -94,7 +93,7 @@ void TaskGroup::set_stopped(bthread_t tid) {
     TaskMeta* const m = address_meta(tid);
     if (m != NULL) {
         const uint32_t given_ver = get_version(tid);
-        BAIDU_SCOPED_LOCK(m->version_lock);
+        FLARE_SCOPED_LOCK(m->version_lock);
         if (given_ver == *m->version_butex) {
             m->stop = true;
         }
@@ -105,7 +104,7 @@ bool TaskGroup::is_stopped(bthread_t tid) {
     TaskMeta* const m = address_meta(tid);
     if (m != NULL) {
         const uint32_t given_ver = get_version(tid);
-        BAIDU_SCOPED_LOCK(m->version_lock);
+        FLARE_SCOPED_LOCK(m->version_lock);
         if (given_ver == *m->version_butex) {
             return m->stop;
         }
@@ -158,7 +157,7 @@ void TaskGroup::run_main_task() {
         }
         if (FLAGS_show_per_worker_usage_in_vars && !usage_bvar) {
             char name[32];
-#if defined(OS_MACOSX)
+#if defined(FLARE_PLATFORM_OSX)
             snprintf(name, sizeof(name), "bthread_worker_usage_%" PRIu64,
                      pthread_numeric_id());
 #else
@@ -170,7 +169,7 @@ void TaskGroup::run_main_task() {
         }
     }
     // Don't forget to add elapse of last wait_task.
-    current_task()->stat.cputime_ns += butil::cpuwide_time_ns() - _last_run_ns;
+    current_task()->stat.cputime_ns += flare::base::cpuwide_time_ns() - _last_run_ns;
 }
 
 TaskGroup::TaskGroup(TaskControl* c)
@@ -182,7 +181,7 @@ TaskGroup::TaskGroup(TaskControl* c)
     , _control(c)
     , _num_nosignal(0)
     , _nsignaled(0)
-    , _last_run_ns(butil::cpuwide_time_ns())
+    , _last_run_ns(flare::base::cpuwide_time_ns())
     , _cumulated_cputime_ns(0)
     , _nswitch(0)
     , _last_context_remained(NULL)
@@ -193,9 +192,9 @@ TaskGroup::TaskGroup(TaskControl* c)
     , _remote_num_nosignal(0)
     , _remote_nsignaled(0)
 {
-    _steal_seed = butil::fast_rand();
-    _steal_offset = OFFSET_TABLE[_steal_seed % ARRAY_SIZE(OFFSET_TABLE)];
-    _pl = &c->_pl[butil::fmix64(pthread_numeric_id()) % TaskControl::PARKING_LOT_NUM];
+    _steal_seed = flare::base::fast_rand();
+    _steal_offset = OFFSET_TABLE[_steal_seed % FLARE_ARRAY_SIZE(OFFSET_TABLE)];
+    _pl = &c->_pl[flare::hash::fmix64(pthread_numeric_id()) % TaskControl::PARKING_LOT_NUM];
     CHECK(c);
 }
 
@@ -223,8 +222,8 @@ int TaskGroup::init(size_t runqueue_capacity) {
         LOG(FATAL) << "Fail to get main stack container";
         return -1;
     }
-    butil::ResourceId<TaskMeta> slot;
-    TaskMeta* m = butil::get_resource<TaskMeta>(&slot);
+    flare::memory::ResourceId<TaskMeta> slot;
+    TaskMeta* m = flare::memory::get_resource<TaskMeta>(&slot);
     if (NULL == m) {
         LOG(FATAL) << "Fail to get TaskMeta";
         return -1;
@@ -235,7 +234,7 @@ int TaskGroup::init(size_t runqueue_capacity) {
     m->fn = NULL;
     m->arg = NULL;
     m->local_storage = LOCAL_STORAGE_INIT;
-    m->cpuwide_start_ns = butil::cpuwide_time_ns();
+    m->cpuwide_start_ns = flare::base::cpuwide_time_ns();
     m->stat = EMPTY_STAT;
     m->attr = BTHREAD_ATTR_TASKGROUP;
     m->tid = make_tid(*m->version_butex, slot);
@@ -244,7 +243,7 @@ int TaskGroup::init(size_t runqueue_capacity) {
     _cur_meta = m;
     _main_tid = m->tid;
     _main_stack = stk;
-    _last_run_ns = butil::cpuwide_time_ns();
+    _last_run_ns = flare::base::cpuwide_time_ns();
     return 0;
 }
 
@@ -283,7 +282,7 @@ void TaskGroup::task_runner(intptr_t skip_remained) {
             // considerable time because a single bvar::LatencyRecorder
             // contains many bvar.
             g->_control->exposed_pending_time() <<
-                (butil::cpuwide_time_ns() - m->cpuwide_start_ns) / 1000L;
+                (flare::base::cpuwide_time_ns() - m->cpuwide_start_ns) / 1000L;
         }
 
         // Not catch exceptions except ExitException which is for implementing
@@ -327,7 +326,7 @@ void TaskGroup::task_runner(intptr_t skip_remained) {
         // or join to the bthread after changing version will be rejected.
         // The spinlock is for visibility of TaskGroup::get_attr.
         {
-            BAIDU_SCOPED_LOCK(m->version_lock);
+            FLARE_SCOPED_LOCK(m->version_lock);
             if (0 == ++*m->version_butex) {
                 ++*m->version_butex;
             }
@@ -363,10 +362,10 @@ int TaskGroup::start_foreground(TaskGroup** pg,
     if (__builtin_expect(!fn, 0)) {
         return EINVAL;
     }
-    const int64_t start_ns = butil::cpuwide_time_ns();
+    const int64_t start_ns = flare::base::cpuwide_time_ns();
     const bthread_attr_t using_attr = (attr ? *attr : BTHREAD_ATTR_NORMAL);
-    butil::ResourceId<TaskMeta> slot;
-    TaskMeta* m = butil::get_resource(&slot);
+    flare::memory::ResourceId<TaskMeta> slot;
+    TaskMeta* m = flare::memory::get_resource(&slot);
     if (__builtin_expect(!m, 0)) {
         return ENOMEM;
     }
@@ -418,10 +417,10 @@ int TaskGroup::start_background(bthread_t* __restrict th,
     if (__builtin_expect(!fn, 0)) {
         return EINVAL;
     }
-    const int64_t start_ns = butil::cpuwide_time_ns();
+    const int64_t start_ns = flare::base::cpuwide_time_ns();
     const bthread_attr_t using_attr = (attr ? *attr : BTHREAD_ATTR_NORMAL);
-    butil::ResourceId<TaskMeta> slot;
-    TaskMeta* m = butil::get_resource(&slot);
+    flare::memory::ResourceId<TaskMeta> slot;
+    TaskMeta* m = flare::memory::get_resource(&slot);
     if (__builtin_expect(!m, 0)) {
         return ENOMEM;
     }
@@ -574,7 +573,7 @@ void TaskGroup::sched_to(TaskGroup** pg, TaskMeta* next_meta) {
     void* saved_unique_user_ptr = tls_unique_user_ptr;
 
     TaskMeta* const cur_meta = g->_cur_meta;
-    const int64_t now = butil::cpuwide_time_ns();
+    const int64_t now = flare::base::cpuwide_time_ns();
     const int64_t elp_ns = now - g->_last_run_ns;
     g->_last_run_ns = now;
     cur_meta->stat.cputime_ns += elp_ns;
@@ -685,7 +684,7 @@ void TaskGroup::ready_to_run_remote(bthread_t tid, bool nosignal) {
     }
 }
 
-void TaskGroup::flush_nosignal_tasks_remote_locked(butil::Mutex& locked_mutex) {
+void TaskGroup::flush_nosignal_tasks_remote_locked(flare::base::Mutex& locked_mutex) {
     const int val = _remote_num_nosignal;
     if (!val) {
         locked_mutex.unlock();
@@ -744,7 +743,7 @@ void TaskGroup::_add_sleep_event(void* void_args) {
     TimerThread::TaskId sleep_id;
     sleep_id = get_global_timer_thread()->schedule(
         ready_to_run_from_timer_thread, void_args,
-        butil::microseconds_from_now(e.timeout_us));
+        flare::base::microseconds_from_now(e.timeout_us));
 
     if (!sleep_id) {
         // fail to schedule timer, go back to previous thread.
@@ -755,7 +754,7 @@ void TaskGroup::_add_sleep_event(void* void_args) {
     // Set TaskMeta::current_sleep which is for interruption.
     const uint32_t given_ver = get_version(e.tid);
     {
-        BAIDU_SCOPED_LOCK(e.meta->version_lock);
+        FLARE_SCOPED_LOCK(e.meta->version_lock);
         if (given_ver == *e.meta->version_butex && !e.meta->interrupted) {
             e.meta->current_sleep = sleep_id;
             return;
@@ -814,7 +813,7 @@ static int interrupt_and_consume_waiters(
         return EINVAL;
     }
     const uint32_t given_ver = get_version(tid);
-    BAIDU_SCOPED_LOCK(m->version_lock);
+    FLARE_SCOPED_LOCK(m->version_lock);
     if (given_ver == *m->version_butex) {
         *pw = m->current_waiter.exchange(NULL, std::memory_order_acquire);
         *sleep_id = m->current_sleep;
@@ -829,7 +828,7 @@ static int set_butex_waiter(bthread_t tid, ButexWaiter* w) {
     TaskMeta* const m = TaskGroup::address_meta(tid);
     if (m != NULL) {
         const uint32_t given_ver = get_version(tid);
-        BAIDU_SCOPED_LOCK(m->version_lock);
+        FLARE_SCOPED_LOCK(m->version_lock);
         if (given_ver == *m->version_butex) {
             // Release fence makes m->interrupted visible to butex_wait
             m->current_waiter.store(w, std::memory_order_release);
@@ -906,7 +905,7 @@ void print_task(std::ostream& os, bthread_t tid) {
     int64_t cpuwide_start_ns = 0;
     TaskStatistics stat = {0, 0};
     {
-        BAIDU_SCOPED_LOCK(m->version_lock);
+        FLARE_SCOPED_LOCK(m->version_lock);
         if (given_ver == *m->version_butex) {
             matched = true;
             stop = m->stop;
@@ -932,7 +931,7 @@ void print_task(std::ostream& os, bthread_t tid) {
            << " flags=" << attr.flags
            << " keytable_pool=" << attr.keytable_pool
            << "}\nhas_tls=" << has_tls
-           << "\nuptime_ns=" << butil::cpuwide_time_ns() - cpuwide_start_ns
+           << "\nuptime_ns=" << flare::base::cpuwide_time_ns() - cpuwide_start_ns
            << "\ncputime_ns=" << stat.cputime_ns
            << "\nnswitch=" << stat.nswitch;
     }

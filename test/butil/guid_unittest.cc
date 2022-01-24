@@ -8,7 +8,7 @@
 
 #include <gtest/gtest.h>
 
-#if defined(OS_POSIX)
+#if defined(FLARE_PLATFORM_POSIX)
 TEST(GUIDTest, GUIDGeneratesAllZeroes) {
   uint64_t bytes[] = { 0, 0 };
   std::string clientid = butil::RandomDataToGUIDString(bytes);

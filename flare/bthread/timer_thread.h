@@ -23,8 +23,8 @@
 
 #include <vector>                     // std::vector
 #include <pthread.h>                  // pthread_*
-#include "flare/butil/static_atomic.h"
-#include "flare/butil/time.h"                // time utilities
+#include "flare/base/static_atomic.h"
+#include "flare/base/time.h"                // time utilities
 #include "flare/bthread/mutex.h"
 
 namespace bthread {

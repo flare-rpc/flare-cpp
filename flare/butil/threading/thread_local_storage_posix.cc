@@ -4,7 +4,7 @@
 
 #include "flare/butil/threading/thread_local_storage.h"
 
-#include "flare/butil/logging.h"
+#include "flare/base/logging.h"
 
 namespace butil {
 

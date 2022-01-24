@@ -17,9 +17,9 @@
 
 #include "flare/brpc/policy/redis_authenticator.h"
 
-#include "flare/butil/base64.h"
-#include "flare/butil/iobuf.h"
-#include "flare/butil/string_printf.h"
+#include "flare/base/base64.h"
+#include "flare/io/iobuf.h"
+#include "flare/base/strings.h"
 #include "flare/butil/sys_byteorder.h"
 #include "flare/brpc/redis_command.h"
 
@@ -27,7 +27,7 @@ namespace brpc {
 namespace policy {
 
 int RedisAuthenticator::GenerateCredential(std::string* auth_str) const {
-    butil::IOBuf buf;
+    flare::io::IOBuf buf;
     brpc::RedisCommandFormat(&buf, "AUTH %s", passwd_.c_str());
     *auth_str = buf.to_string();
     return 0;

@@ -16,14 +16,14 @@
 // under the License.
 
 
-#include "flare/butil/time.h"
-#include "flare/butil/logging.h"
-#include "flare/butil/popen.h"
+#include "flare/base/time.h"
+#include "flare/base/logging.h"
+#include "flare/base/popen.h"
 #include "flare/brpc/controller.h"           // Controller
 #include "flare/brpc/closure_guard.h"        // ClosureGuard
 #include "flare/brpc/builtin/threads_service.h"
 #include "flare/brpc/builtin/common.h"
-#include "flare/butil/string_printf.h"
+#include "flare/base/strings.h"
 
 namespace brpc {
 
@@ -34,20 +34,20 @@ void ThreadsService::default_method(::google::protobuf::RpcController* cntl_base
     ClosureGuard done_guard(done);
     Controller *cntl = static_cast<Controller*>(cntl_base);
     cntl->http_response().set_content_type("text/plain");
-    butil::IOBuf& resp = cntl->response_attachment();
+    flare::io::IOBuf& resp = cntl->response_attachment();
 
-    std::string cmd = butil::string_printf("pstack %lld", (long long)getpid());
-    butil::Timer tm;
+    std::string cmd = flare::base::string_printf("pstack %lld", (long long)getpid());
+    flare::base::stop_watcher tm;
     tm.start();
-    butil::IOBufBuilder pstack_output;
-    const int rc = butil::read_command_output(pstack_output, cmd.c_str());
+    flare::io::IOBufBuilder pstack_output;
+    const int rc = flare::base::read_command_output(pstack_output, cmd.c_str());
     if (rc < 0) {
         LOG(ERROR) << "Fail to popen `" << cmd << "'";
         return;
     }
     pstack_output.move_to(resp);
     tm.stop();
-    resp.append(butil::string_printf("\n\ntime=%" PRId64 "ms", tm.m_elapsed()));
+    resp.append(flare::base::string_printf("\n\ntime=%" PRId64 "ms", tm.m_elapsed()));
 }
 
 } // namespace brpc

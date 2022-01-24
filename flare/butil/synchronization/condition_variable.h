@@ -62,53 +62,57 @@
 // For a discussion of the many very subtle implementation details, see the FAQ
 // at the end of condition_variable_win.cc.
 
-#ifndef BUTIL_SYNCHRONIZATION_CONDITION_VARIABLE_H_
-#define BUTIL_SYNCHRONIZATION_CONDITION_VARIABLE_H_
+#ifndef FLARE_BASE_CONDITION_VARIABLE_H_
+#define FLARE_BASE_CONDITION_VARIABLE_H_
 
-#include "flare/butil/build_config.h"
+#include "flare/base/profile.h"
 
-#if defined(OS_POSIX)
+#if defined(FLARE_PLATFORM_POSIX)
+
 #include <pthread.h>
+
 #endif
 
-#include "flare/butil/base_export.h"
-#include "flare/butil/basictypes.h"
-#include "flare/butil/synchronization/lock.h"
+#include "flare/base/lock.h"
 
 namespace butil {
+    class TimeDelta;
+}
+namespace flare::base {
 
-class ConditionVarImpl;
-class TimeDelta;
+    class ConditionVarImpl;
+    \
+    class FLARE_EXPORT ConditionVariable {
+    public:
+        // Construct a cv for use with ONLY one user lock.
+        explicit ConditionVariable(Mutex *user_lock);
 
-class BUTIL_EXPORT ConditionVariable {
- public:
-  // Construct a cv for use with ONLY one user lock.
-  explicit ConditionVariable(Mutex* user_lock);
+        ~ConditionVariable();
 
-  ~ConditionVariable();
+        // Wait() releases the caller's critical section atomically as it starts to
+        // sleep, and the reacquires it when it is signaled.
+        void Wait();
 
-  // Wait() releases the caller's critical section atomically as it starts to
-  // sleep, and the reacquires it when it is signaled.
-  void Wait();
-  void TimedWait(const TimeDelta& max_time);
+        void TimedWait(const butil::TimeDelta &max_time);
 
-  // Broadcast() revives all waiting threads.
-  void Broadcast();
-  // Signal() revives one waiting thread.
-  void Signal();
+        // Broadcast() revives all waiting threads.
+        void Broadcast();
 
- private:
+        // Signal() revives one waiting thread.
+        void Signal();
 
-#if defined(OS_WIN)
-  ConditionVarImpl* impl_;
-#elif defined(OS_POSIX)
-  pthread_cond_t condition_;
-  pthread_mutex_t* user_mutex_;
+    private:
+
+#if defined(FLARE_PLATFORM_WINDOWS)
+        ConditionVarImpl* impl_;
+#elif defined(FLARE_PLATFORM_POSIX)
+        pthread_cond_t condition_;
+        pthread_mutex_t *user_mutex_;
 #endif
 
-  DISALLOW_COPY_AND_ASSIGN(ConditionVariable);
-};
+        FLARE_DISALLOW_COPY_AND_ASSIGN(ConditionVariable);
+    };
 
-}  // namespace butil
+}  // namespace flare::base
 
-#endif  // BUTIL_SYNCHRONIZATION_CONDITION_VARIABLE_H_
+#endif  // FLARE_BASE_CONDITION_VARIABLE_H_

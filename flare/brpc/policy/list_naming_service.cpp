@@ -19,18 +19,19 @@
 #include <stdlib.h>                                   // strtol
 #include <string>                                     // std::string
 #include <set>                                        // std::set
-#include "flare/butil/string_splitter.h"                     // StringSplitter
+#include "flare/base/string_splitter.h"                     // StringSplitter
 #include "flare/brpc/log.h"
 #include "flare/brpc/policy/list_naming_service.h"
+#include "flare/base/strings.h"
 
 
 namespace brpc {
 namespace policy {
 
 // Defined in file_naming_service.cpp
-bool SplitIntoServerAndTag(const butil::StringPiece& line,
-                           butil::StringPiece* server_addr,
-                           butil::StringPiece* tag);
+bool SplitIntoServerAndTag(const std::string_view& line,
+                           std::string_view* server_addr,
+                           std::string_view* tag);
 
 int ParseServerList(const char* service_name,
                     std::vector<ServerNode>* servers) {
@@ -45,15 +46,15 @@ int ParseServerList(const char* service_name,
         LOG(FATAL) << "Param[service_name] is NULL";
         return -1;
     }
-    for (butil::StringSplitter sp(service_name, ','); sp != NULL; ++sp) {
+    for (flare::base::StringSplitter sp(service_name, ','); sp != NULL; ++sp) {
         line.assign(sp.field(), sp.length());
-        butil::StringPiece addr;
-        butil::StringPiece tag;
+        std::string_view addr;
+        std::string_view tag;
         if (!SplitIntoServerAndTag(line, &addr, &tag)) {
             continue;
         }
         const_cast<char*>(addr.data())[addr.size()] = '\0'; // safe
-        butil::EndPoint point;
+        flare::base::end_point point;
         if (str2endpoint(addr.data(), &point) != 0 &&
             hostname2endpoint(addr.data(), &point) != 0) {
             LOG(ERROR) << "Invalid address=`" << addr << '\'';
@@ -61,7 +62,7 @@ int ParseServerList(const char* service_name,
         }
         ServerNode node;
         node.addr = point;
-        tag.CopyToString(&node.tag);
+        flare::base::copy_to_string(tag, &node.tag);
         if (presence.insert(node).second) {
             servers->push_back(node);
         } else {

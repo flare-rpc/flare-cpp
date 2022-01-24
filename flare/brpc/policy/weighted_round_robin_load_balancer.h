@@ -22,7 +22,7 @@
 #include <map>                              
 #include <vector>
 #include <unordered_set>
-#include "flare/butil/containers/doubly_buffered_data.h"
+#include "flare/container/doubly_buffered_data.h"
 #include "flare/brpc/load_balancer.h"
 
 namespace brpc {
@@ -37,7 +37,7 @@ public:
     size_t AddServersInBatch(const std::vector<ServerId>& servers);
     size_t RemoveServersInBatch(const std::vector<ServerId>& servers);
     int SelectServer(const SelectIn& in, SelectOut* out);
-    LoadBalancer* New(const butil::StringPiece&) const;
+    LoadBalancer* New(const std::string_view&) const;
     void Destroy();
     void Describe(std::ostream&, const DescribeOptions& options);
 
@@ -81,7 +81,7 @@ private:
                                           const std::unordered_set<SocketId>& filter,
                                           TLS& tls);
 
-    butil::DoublyBufferedData<Servers, TLS> _db_servers;
+    flare::container::DoublyBufferedData<Servers, TLS> _db_servers;
 };
 
 }  // namespace policy

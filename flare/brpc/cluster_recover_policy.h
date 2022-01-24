@@ -21,7 +21,7 @@
 
 #include <cstdint>
 #include <memory>
-#include "flare/butil/synchronization/lock.h"
+#include "flare/base/lock.h"
 #include "flare/butil/strings/string_piece.h"
 #include "flare/butil/strings/string_number_conversions.h"
 
@@ -71,7 +71,7 @@ private:
 private:
     bool _recovering;
     int64_t _min_working_instances;
-    butil::Mutex _mutex;
+    flare::base::Mutex _mutex;
     uint64_t _last_usable;
     int64_t _last_usable_change_time_ms;
     int64_t _hold_seconds;
@@ -80,7 +80,7 @@ private:
 };
 
 // Return a DefaultClusterRecoverPolicy object by params.
-bool GetRecoverPolicyByParams(const butil::StringPiece& params,
+bool GetRecoverPolicyByParams(const std::string_view& params,
                               std::shared_ptr<ClusterRecoverPolicy>* ptr_out);
 
 } // namespace brpc

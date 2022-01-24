@@ -16,7 +16,7 @@
 // under the License.
 
 #include <gtest/gtest.h>
-#include "flare/butil/unique_ptr.h"
+#include <memory>
 
 namespace {
 

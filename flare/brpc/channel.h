@@ -24,8 +24,8 @@
 
 #include <ostream>                          // std::ostream
 #include "flare/bthread/errno.h"                  // Redefine errno
-#include "flare/butil/intrusive_ptr.hpp"          // butil::intrusive_ptr
-#include "flare/butil/ptr_container.h"
+#include "flare/container/intrusive_ptr.h"          // flare::container::intrusive_ptr
+#include "flare/container/ptr_container.h"
 #include "flare/brpc/ssl_options.h"               // ChannelSSLOptions
 #include "flare/brpc/channel_base.h"              // ChannelBase
 #include "flare/brpc/adaptive_protocol_type.h"    // AdaptiveProtocolType
@@ -132,7 +132,7 @@ struct ChannelOptions {
 private:
     // SSLOptions is large and not often used, allocate it on heap to
     // prevent ChannelOptions from being bloated in most cases.
-    butil::PtrContainer<ChannelSSLOptions> _ssl_options;
+    flare::container::ptr_container<ChannelSSLOptions> _ssl_options;
 };
 
 // A Channel represents a communication line to one server or multiple servers
@@ -153,7 +153,7 @@ public:
 
     // Connect this channel to a single server whose address is given by the
     // first parameter. Use default options if `options' is NULL.
-    int Init(butil::EndPoint server_addr_and_port, const ChannelOptions* options);
+    int Init(flare::base::end_point server_addr_and_port, const ChannelOptions* options);
     int Init(const char* server_addr_and_port, const ChannelOptions* options);
     int Init(const char* server_addr, int port, const ChannelOptions* options);
 
@@ -211,13 +211,13 @@ protected:
     static void CallMethodImpl(Controller* controller, SharedLoadBalancer* lb);
 
     int InitChannelOptions(const ChannelOptions* options);
-    int InitSingle(const butil::EndPoint& server_addr_and_port,
+    int InitSingle(const flare::base::end_point& server_addr_and_port,
                    const char* raw_server_address,
                    const ChannelOptions* options,
                    int raw_port = -1);
 
     std::string _service_name;
-    butil::EndPoint _server_address;
+    flare::base::end_point _server_address;
     SocketId _server_id;
     Protocol::SerializeRequest _serialize_request;
     Protocol::PackRequest _pack_request;
@@ -226,7 +226,7 @@ protected:
     // are in the middle of RPC procedure using this channel.
     // It will be destroyed after channel's destruction and all
     // the RPC above has finished
-    butil::intrusive_ptr<SharedLoadBalancer> _lb;
+    flare::container::intrusive_ptr<SharedLoadBalancer> _lb;
     ChannelOptions _options;
     int _preferred_index;
 };

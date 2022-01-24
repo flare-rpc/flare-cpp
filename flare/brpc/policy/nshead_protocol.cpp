@@ -19,8 +19,8 @@
 #include <google/protobuf/descriptor.h>         // MethodDescriptor
 #include <google/protobuf/message.h>            // Message
 #include <gflags/gflags.h>
-#include "flare/butil/time.h"
-#include "flare/butil/iobuf.h"                         // butil::IOBuf
+#include "flare/base/time.h"
+#include "flare/io/iobuf.h"                         // flare::io::IOBuf
 #include "flare/brpc/log.h"
 #include "flare/brpc/controller.h"               // Controller
 #include "flare/brpc/socket.h"                   // Socket
@@ -70,7 +70,7 @@ void NsheadClosure::Run() {
     ControllerPrivateAccessor accessor(&_controller);
     Span* span = accessor.span();
     if (span) {
-        span->set_start_send_us(butil::cpuwide_time_us());
+        span->set_start_send_us(flare::base::cpuwide_time_us());
     }
     Socket* sock = accessor.get_sending_socket();
     MethodStatus* method_status = _server->options().nshead_service->_status;
@@ -106,7 +106,7 @@ void NsheadClosure::Run() {
             int response_size = sizeof(nshead_t) + _response.head.body_len;
             span->set_response_size(response_size);
         }
-        butil::IOBuf write_buf;
+        flare::io::IOBuf write_buf;
         write_buf.append(&_response.head, sizeof(nshead_t));
         write_buf.append(_response.body.movable());
         // Have the risk of unlimited pending responses, in which case, tell
@@ -123,7 +123,7 @@ void NsheadClosure::Run() {
     }
     if (span) {
         // TODO: this is not sent
-        span->set_sent_us(butil::cpuwide_time_us());
+        span->set_sent_us(flare::base::cpuwide_time_us());
     }
 }
 
@@ -137,7 +137,7 @@ void NsheadClosure::SetMethodName(const std::string& full_method_name) {
 
 namespace policy {
 
-ParseResult ParseNsheadMessage(butil::IOBuf* source,
+ParseResult ParseNsheadMessage(flare::io::IOBuf* source,
                                Socket*, bool /*read_eof*/, const void* /*arg*/) {
     char header_buf[sizeof(nshead_t)];
     const size_t n = source->copy_to(header_buf, sizeof(header_buf));
@@ -202,7 +202,7 @@ static void EndRunningCallMethodInPool(NsheadService* service,
 };
 
 void ProcessNsheadRequest(InputMessageBase* msg_base) {
-    const int64_t start_parse_us = butil::cpuwide_time_us();   
+    const int64_t start_parse_us = flare::base::cpuwide_time_us();
 
     DestroyingPtr<MostCommonMessage> msg(static_cast<MostCommonMessage*>(msg_base));
     SocketUniquePtr socket_guard(msg->ReleaseSocket());
@@ -291,7 +291,7 @@ void ProcessNsheadRequest(InputMessageBase* msg_base) {
         }
         if (socket->is_overcrowded()) {
             cntl->SetFailed(EOVERCROWDED, "Connection to %s is overcrowded",
-                            butil::endpoint2str(socket->remote_side()).c_str());
+                            flare::base::endpoint2str(socket->remote_side()).c_str());
             break;
         }
         if (!server_accessor.AddConcurrency(cntl)) {
@@ -310,7 +310,7 @@ void ProcessNsheadRequest(InputMessageBase* msg_base) {
     msg.reset();  // optional, just release resourse ASAP
     if (span) {
         span->ResetServerSpanName(service->_cached_name);
-        span->set_start_callback_us(butil::cpuwide_time_us());
+        span->set_start_callback_us(flare::base::cpuwide_time_us());
         span->AsParent();
     }
     if (!FLAGS_usercode_in_pthread) {
@@ -326,7 +326,7 @@ void ProcessNsheadRequest(InputMessageBase* msg_base) {
 }
 
 void ProcessNsheadResponse(InputMessageBase* msg_base) {
-    const int64_t start_parse_us = butil::cpuwide_time_us();
+    const int64_t start_parse_us = flare::base::cpuwide_time_us();
     DestroyingPtr<MostCommonMessage> msg(static_cast<MostCommonMessage*>(msg_base));
     
     // Fetch correlation id that we saved before in `PackNsheadRequest'
@@ -335,7 +335,7 @@ void ProcessNsheadResponse(InputMessageBase* msg_base) {
     const int rc = bthread_id_lock(cid, (void**)&cntl);
     if (rc != 0) {
         LOG_IF(ERROR, rc != EINVAL && rc != EPERM)
-            << "Fail to lock correlation_id=" << cid << ": " << berror(rc);
+            << "Fail to lock correlation_id=" << cid << ": " << flare_error(rc);
         return;
     }
 
@@ -370,7 +370,7 @@ bool VerifyNsheadRequest(const InputMessageBase* msg_base) {
     return true;
 }
 
-void SerializeNsheadRequest(butil::IOBuf* request_buf, Controller* cntl,
+void SerializeNsheadRequest(flare::io::IOBuf* request_buf, Controller* cntl,
                             const google::protobuf::Message* req_base) {
     if (req_base == NULL) {
         return cntl->SetFailed(EREQUEST, "request is NULL");
@@ -394,12 +394,12 @@ void SerializeNsheadRequest(butil::IOBuf* request_buf, Controller* cntl,
 }
 
 void PackNsheadRequest(
-    butil::IOBuf* packet_buf,
+    flare::io::IOBuf* packet_buf,
     SocketMessage**,
     uint64_t correlation_id,
     const google::protobuf::MethodDescriptor*,
     Controller* cntl,
-    const butil::IOBuf& request,
+    const flare::io::IOBuf& request,
     const Authenticator*) {
     ControllerPrivateAccessor accessor(cntl);
     if (cntl->connection_type() == CONNECTION_TYPE_SINGLE) {

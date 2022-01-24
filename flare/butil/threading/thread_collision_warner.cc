@@ -4,7 +4,7 @@
 
 #include "flare/butil/threading/thread_collision_warner.h"
 
-#include "flare/butil/logging.h"
+#include "flare/base/logging.h"
 #include "flare/butil/threading/platform_thread.h"
 
 namespace butil {

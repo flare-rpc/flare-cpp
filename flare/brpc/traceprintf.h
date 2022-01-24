@@ -39,7 +39,7 @@ void AnnotateSpan(const char* fmt, ...);
 #define TRACEPRINTF(fmt, args...)                                       \
     do {                                                                \
         if (::brpc::CanAnnotateSpan()) {                          \
-            ::brpc::AnnotateSpan("[" __FILE__ ":" BAIDU_SYMBOLSTR(__LINE__) "] " fmt, ##args);           \
+            ::brpc::AnnotateSpan("[" __FILE__ ":" FLARE_SYMBOLSTR(__LINE__) "] " fmt, ##args);           \
         }                                                               \
     } while (0)
 

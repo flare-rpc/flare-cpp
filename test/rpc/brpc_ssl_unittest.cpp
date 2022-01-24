@@ -22,10 +22,10 @@
 #include <fstream>
 #include <gtest/gtest.h>
 #include <google/protobuf/descriptor.h>
-#include <flare/butil/time.h>
+#include "flare/base/time.h"
 #include <flare/butil/macros.h>
-#include <flare/butil/fd_guard.h>
-#include <flare/butil/files/scoped_file.h>
+#include "flare/base/fd_guard.h"
+#include <flare/base/scoped_file.h>
 #include "flare/brpc/global.h"
 #include "flare/brpc/socket.h"
 #include "flare/brpc/server.h"
@@ -35,11 +35,11 @@
 #include "echo.pb.h"
 
 namespace brpc {
-void ExtractHostnames(X509* x, std::vector<std::string>* hostnames);
+    void ExtractHostnames(X509 *x, std::vector<std::string> *hostnames);
 } // namespace brpc
 
 
-int main(int argc, char* argv[]) {
+int main(int argc, char *argv[]) {
     testing::InitGoogleTest(&argc, argv);
     GFLAGS_NS::ParseCommandLineFlags(&argc, &argv, true);
     brpc::GlobalInitializeOrDie();
@@ -53,13 +53,15 @@ const std::string EXP_RESPONSE = "world";
 class EchoServiceImpl : public test::EchoService {
 public:
     EchoServiceImpl() : count(0) {}
+
     virtual ~EchoServiceImpl() { g_delete = true; }
-    virtual void Echo(google::protobuf::RpcController* cntl_base,
-                      const test::EchoRequest* request,
-                      test::EchoResponse* response,
-                      google::protobuf::Closure* done) {
+
+    virtual void Echo(google::protobuf::RpcController *cntl_base,
+                      const test::EchoRequest *request,
+                      test::EchoResponse *response,
+                      google::protobuf::Closure *done) {
         brpc::ClosureGuard done_guard(done);
-        brpc::Controller* cntl = (brpc::Controller*)cntl_base;
+        brpc::Controller *cntl = (brpc::Controller *) cntl_base;
         count.fetch_add(1, std::memory_order_relaxed);
         EXPECT_EQ(EXP_REQUEST, request->message());
         EXPECT_TRUE(cntl->is_ssl());
@@ -75,21 +77,24 @@ public:
     std::atomic<int64_t> count;
 };
 
-class SSLTest : public ::testing::Test{
+class SSLTest : public ::testing::Test {
 protected:
     SSLTest() {};
-    virtual ~SSLTest(){};
+
+    virtual ~SSLTest() {};
+
     virtual void SetUp() {};
+
     virtual void TearDown() {};
 };
 
-void* RunClosure(void* arg) {
-    google::protobuf::Closure* done = (google::protobuf::Closure*)arg;
+void *RunClosure(void *arg) {
+    google::protobuf::Closure *done = (google::protobuf::Closure *) arg;
     done->Run();
     return NULL;
 }
 
-void SendMultipleRPC(brpc::Channel* channel, int count) {
+void SendMultipleRPC(brpc::Channel *channel, int count) {
     for (int i = 0; i < count; ++i) {
         brpc::Controller cntl;
         test::EchoRequest req;
@@ -115,7 +120,7 @@ TEST_F(SSLTest, sanity) {
 
     EchoServiceImpl echo_svc;
     ASSERT_EQ(0, server.AddService(
-        &echo_svc, brpc::SERVER_DOESNT_OWN_SERVICE));
+            &echo_svc, brpc::SERVER_DOESNT_OWN_SERVICE));
     ASSERT_EQ(0, server.Start(port, &options));
 
     test::EchoRequest req;
@@ -145,7 +150,7 @@ TEST_F(SSLTest, sanity) {
         coptions.mutable_ssl_options()->sni_name = "localhost";
         ASSERT_EQ(0, channel.Init("127.0.0.1", port, &coptions));
         for (int i = 0; i < NUM; ++i) {
-            google::protobuf::Closure* thrd_func =
+            google::protobuf::Closure *thrd_func =
                     brpc::NewCallback(SendMultipleRPC, &channel, COUNT);
             EXPECT_EQ(0, pthread_create(&tids[i], NULL, RunClosure, thrd_func));
         }
@@ -162,7 +167,7 @@ TEST_F(SSLTest, sanity) {
         coptions.mutable_ssl_options()->sni_name = "localhost";
         ASSERT_EQ(0, channel.Init("127.0.0.1", port, &coptions));
         for (int i = 0; i < NUM; ++i) {
-            google::protobuf::Closure* thrd_func =
+            google::protobuf::Closure *thrd_func =
                     brpc::NewCallback(SendMultipleRPC, &channel, COUNT);
             EXPECT_EQ(0, pthread_create(&tids[i], NULL, RunClosure, thrd_func));
         }
@@ -175,7 +180,7 @@ TEST_F(SSLTest, sanity) {
     ASSERT_EQ(0, server.Join());
 }
 
-void CheckCert(const char* cname, const char* cert) {
+void CheckCert(const char *cname, const char *cert) {
     const int port = 8613;
     brpc::Channel channel;
     brpc::ChannelOptions coptions;
@@ -190,15 +195,15 @@ void CheckCert(const char* cname, const char* cert) {
     brpc::SocketUniquePtr sock;
     ASSERT_EQ(0, brpc::Socket::Address(ids[0], &sock));
 
-    X509* x509 = sock->GetPeerCertificate();
+    X509 *x509 = sock->GetPeerCertificate();
     ASSERT_TRUE(x509 != NULL);
     std::vector<std::string> cnames;
     brpc::ExtractHostnames(x509, &cnames);
     ASSERT_EQ(cert, cnames[0]) << x509;
 }
 
-std::string GetRawPemString(const char* fname) {
-    butil::ScopedFILE fp(fname, "r");
+std::string GetRawPemString(const char *fname) {
+    flare::base::scoped_file fp(fname, "r");
     char buf[4096];
     int size = read(fileno(fp), buf, sizeof(buf));
     std::string raw;
@@ -228,7 +233,7 @@ TEST_F(SSLTest, ssl_sni) {
     }
     EchoServiceImpl echo_svc;
     ASSERT_EQ(0, server.AddService(
-        &echo_svc, brpc::SERVER_DOESNT_OWN_SERVICE));
+            &echo_svc, brpc::SERVER_DOESNT_OWN_SERVICE));
     ASSERT_EQ(0, server.Start(port, &options));
 
     CheckCert("cert1.com", "cert1");
@@ -252,7 +257,7 @@ TEST_F(SSLTest, ssl_reload) {
     }
     EchoServiceImpl echo_svc;
     ASSERT_EQ(0, server.AddService(
-        &echo_svc, brpc::SERVER_DOESNT_OWN_SERVICE));
+            &echo_svc, brpc::SERVER_DOESNT_OWN_SERVICE));
     ASSERT_EQ(0, server.Start(port, &options));
 
     CheckCert("cert2.com", "cert1");    // default cert
@@ -293,13 +298,13 @@ TEST_F(SSLTest, ssl_reload) {
 const int BUFSIZE[] = {64, 128, 256, 1024, 4096};
 const int REP = 100000;
 
-void* ssl_perf_client(void* arg) {
-    SSL* ssl = (SSL*)arg;
+void *ssl_perf_client(void *arg) {
+    SSL *ssl = (SSL *) arg;
     EXPECT_EQ(1, SSL_do_handshake(ssl));
 
     char buf[4096];
-    butil::Timer tm;
-    for (size_t i = 0; i < ARRAY_SIZE(BUFSIZE); ++i) {
+    flare::base::stop_watcher tm;
+    for (size_t i = 0; i < FLARE_ARRAY_SIZE(BUFSIZE); ++i) {
         int size = BUFSIZE[i];
         tm.start();
         for (int j = 0; j < REP; ++j) {
@@ -313,11 +318,11 @@ void* ssl_perf_client(void* arg) {
     return NULL;
 }
 
-void* ssl_perf_server(void* arg) {
-    SSL* ssl = (SSL*)arg;
+void *ssl_perf_server(void *arg) {
+    SSL *ssl = (SSL *) arg;
     EXPECT_EQ(1, SSL_do_handshake(ssl));
     char buf[4096];
-    for (size_t i = 0; i < ARRAY_SIZE(BUFSIZE); ++i) {
+    for (size_t i = 0; i < FLARE_ARRAY_SIZE(BUFSIZE); ++i) {
         int size = BUFSIZE[i];
         for (int j = 0; j < REP; ++j) {
             SSL_read(ssl, buf, size);
@@ -327,8 +332,8 @@ void* ssl_perf_server(void* arg) {
 }
 
 TEST_F(SSLTest, ssl_perf) {
-    const butil::EndPoint ep(butil::IP_ANY, 5961);
-    butil::fd_guard listenfd(butil::tcp_listen(ep));
+    const flare::base::end_point ep(flare::base::IP_ANY, 5961);
+    flare::base::fd_guard listenfd(flare::base::tcp_listen(ep));
     ASSERT_GT(listenfd, 0);
     int clifd = tcp_connect(ep, NULL);
     ASSERT_GT(clifd, 0);
@@ -336,19 +341,19 @@ TEST_F(SSLTest, ssl_perf) {
     ASSERT_GT(servfd, 0);
 
     brpc::ChannelSSLOptions opt;
-    SSL_CTX* cli_ctx = brpc::CreateClientSSLContext(opt);
-    SSL_CTX* serv_ctx =
+    SSL_CTX *cli_ctx = brpc::CreateClientSSLContext(opt);
+    SSL_CTX *serv_ctx =
             brpc::CreateServerSSLContext("cert1.crt", "cert1.key",
                                          brpc::SSLOptions(), NULL);
-    SSL* cli_ssl = brpc::CreateSSLSession(cli_ctx, 0, clifd, false);
+    SSL *cli_ssl = brpc::CreateSSLSession(cli_ctx, 0, clifd, false);
 #if defined(SSL_CTRL_SET_TLSEXT_HOSTNAME) || defined(USE_MESALINK)
     SSL_set_tlsext_host_name(cli_ssl, "localhost");
 #endif
-    SSL* serv_ssl = brpc::CreateSSLSession(serv_ctx, 0, servfd, true);
+    SSL *serv_ssl = brpc::CreateSSLSession(serv_ctx, 0, servfd, true);
     pthread_t cpid;
     pthread_t spid;
     ASSERT_EQ(0, pthread_create(&cpid, NULL, ssl_perf_client, cli_ssl));
-    ASSERT_EQ(0, pthread_create(&spid, NULL, ssl_perf_server , serv_ssl));
+    ASSERT_EQ(0, pthread_create(&spid, NULL, ssl_perf_server, serv_ssl));
     ASSERT_EQ(0, pthread_join(cpid, NULL));
     ASSERT_EQ(0, pthread_join(spid, NULL));
     close(clifd);

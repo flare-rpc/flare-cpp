@@ -41,7 +41,7 @@
 #include <map>
 #include <vector>
 #include <stdint.h>
-#include "flare/butil/iobuf.h"
+#include "flare/io/iobuf.h"
 #include "flare/brpc/rtmp.h"
 
 
@@ -1224,12 +1224,12 @@ public:
 // Convert Rtmp audio/video messages into ts packets.
 class TsWriter {
 public:
-    explicit TsWriter(butil::IOBuf* outbuf);
+    explicit TsWriter(flare::io::IOBuf* outbuf);
     ~TsWriter();
 
     // Append a video/audio message into the output buffer.
-    butil::Status Write(const RtmpVideoMessage&);
-    butil::Status Write(const RtmpAudioMessage&);
+    flare::base::flare_status Write(const RtmpVideoMessage&);
+    flare::base::flare_status Write(const RtmpAudioMessage&);
 
     int64_t discontinuity_counter() const { return _discontinuity_counter; }
     void add_pat_pmt_on_next_write() { _encoded_pat_pmt = false; }
@@ -1237,11 +1237,11 @@ public:
 private:
     struct TsMessage;
 
-    butil::Status Encode(TsMessage* msg, TsStream stream, TsPid pid);
-    butil::Status EncodePATPMT(TsStream vs, TsPid vpid, TsStream as, TsPid apid);
-    butil::Status EncodePES(TsMessage* msg, TsStream sid, TsPid pid, bool pure_audio);
+    flare::base::flare_status Encode(TsMessage* msg, TsStream stream, TsPid pid);
+    flare::base::flare_status EncodePATPMT(TsStream vs, TsPid vpid, TsStream as, TsPid apid);
+    flare::base::flare_status EncodePES(TsMessage* msg, TsStream sid, TsPid pid, bool pure_audio);
 
-    butil::IOBuf* _outbuf;
+    flare::io::IOBuf* _outbuf;
     AVCNaluFormat _nalu_format;
     bool _has_avc_seq_header;
     bool _has_aac_seq_header;

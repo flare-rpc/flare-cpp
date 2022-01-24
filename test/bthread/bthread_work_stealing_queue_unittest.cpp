@@ -17,9 +17,9 @@
 
 #include <algorithm>                        // std::sort
 #include <gtest/gtest.h>
-#include "flare/butil/time.h"
+#include "flare/base/time.h"
 #include "flare/butil/macros.h"
-#include "flare/butil/scoped_lock.h"
+#include "flare/base/scoped_lock.h"
 #include "flare/bthread/work_stealing_queue.h"
 
 namespace {
@@ -88,7 +88,7 @@ TEST(WSQTest, sanity) {
     ASSERT_EQ(0, q.init(CAP));
     pthread_t rth[8];
     pthread_t wth, pop_th;
-    for (size_t i = 0; i < ARRAY_SIZE(rth); ++i) {
+    for (size_t i = 0; i < FLARE_ARRAY_SIZE(rth); ++i) {
         ASSERT_EQ(0, pthread_create(&rth[i], NULL, steal_thread, &q));
     }
     ASSERT_EQ(0, pthread_create(&wth, NULL, push_thread, &q));
@@ -97,7 +97,7 @@ TEST(WSQTest, sanity) {
     std::vector<value_type> values;
     values.reserve(N);
     size_t nstolen = 0, npopped = 0;
-    for (size_t i = 0; i < ARRAY_SIZE(rth); ++i) {
+    for (size_t i = 0; i < FLARE_ARRAY_SIZE(rth); ++i) {
         std::vector<value_type>* res = NULL;
         pthread_join(rth[i], (void**)&res);
         for (size_t j = 0; j < res->size(); ++j, ++nstolen) {

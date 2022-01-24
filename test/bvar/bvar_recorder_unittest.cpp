@@ -22,7 +22,7 @@
 #include <cstddef>
 #include <memory>
 #include <iostream>
-#include "flare/butil/time.h"
+#include "flare/base/time.h"
 #include "flare/butil/macros.h"
 #include "flare/bvar/recorder.h"
 #include "flare/bvar/latency_recorder.h"
@@ -89,10 +89,10 @@ TEST(RecorderTest, window) {
     bvar::Window<bvar::IntRecorder> w3(&c1, 3);
 
     const int N = 10000;
-    int64_t last_time = butil::gettimeofday_us();
+    int64_t last_time = flare::base::gettimeofday_us();
     for (int i = 1; i <= N; ++i) {
         c1 << i;
-        int64_t now = butil::gettimeofday_us();
+        int64_t now = flare::base::gettimeofday_us();
         if (now - last_time >= 1000000L) {
             last_time = now;
             LOG(INFO) << "c1=" << c1 << " w1=" << w1 << " w2=" << w2 << " w3=" << w3;
@@ -179,7 +179,7 @@ const size_t OPS_PER_THREAD = 20000000;
 
 static void *thread_counter(void *arg) {
     bvar::IntRecorder *recorder = (bvar::IntRecorder *)arg;
-    butil::Timer timer;
+    flare::base::stop_watcher timer;
     timer.start();
     for (int i = 0; i < (int)OPS_PER_THREAD; ++i) {
         *recorder << i;
@@ -192,18 +192,18 @@ TEST(RecorderTest, perf) {
     bvar::IntRecorder recorder;
     ASSERT_TRUE(recorder.valid());
     pthread_t threads[8];
-    for (size_t i = 0; i < ARRAY_SIZE(threads); ++i) {
+    for (size_t i = 0; i < FLARE_ARRAY_SIZE(threads); ++i) {
         pthread_create(&threads[i], NULL, &thread_counter, (void *)&recorder);
     }
     long totol_time = 0;
-    for (size_t i = 0; i < ARRAY_SIZE(threads); ++i) {
+    for (size_t i = 0; i < FLARE_ARRAY_SIZE(threads); ++i) {
         void *ret; 
         pthread_join(threads[i], &ret);
         totol_time += (long)ret;
     }
     ASSERT_EQ(((int64_t)OPS_PER_THREAD - 1) / 2, recorder.average());
-    LOG(INFO) << "Recorder takes " << totol_time / (OPS_PER_THREAD * ARRAY_SIZE(threads)) 
-              << "ns per sample with " << ARRAY_SIZE(threads) 
+    LOG(INFO) << "Recorder takes " << totol_time / (OPS_PER_THREAD * FLARE_ARRAY_SIZE(threads))
+              << "ns per sample with " << FLARE_ARRAY_SIZE(threads)
               << " threads";
 }
 } // namespace

@@ -12,7 +12,7 @@
 #include "flare/butil/compiler_specific.h"
 #include "flare/butil/numerics/safe_conversions.h"
 #include "flare/butil/numerics/safe_math.h"
-#include "flare/butil/type_traits.h"
+#include "flare/base/type_traits.h"
 #include <gtest/gtest.h>
 
 using std::numeric_limits;
@@ -24,7 +24,7 @@ using butil::internal::RANGE_VALID;
 using butil::internal::RANGE_INVALID;
 using butil::internal::RANGE_OVERFLOW;
 using butil::internal::RANGE_UNDERFLOW;
-using butil::enable_if;
+using std::enable_if;
 
 // MSVS 2013 ia32 may not reset the FPU between calculations, and the test
 // framework masks the exceptions. So we just force a manual reset after NaN.

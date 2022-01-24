@@ -20,7 +20,7 @@
 #define BUTIL_MEMORY_SINGLETON_H_
 
 #include "flare/butil/at_exit.h"
-#include "flare/butil/static_atomic.h"
+#include "flare/base/static_atomic.h"
 #include "flare/butil/base_export.h"
 #include "flare/butil/memory/aligned_memory.h"
 #include "flare/butil/third_party/dynamic_annotations/dynamic_annotations.h"

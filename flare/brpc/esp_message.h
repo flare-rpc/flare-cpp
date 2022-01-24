@@ -25,7 +25,7 @@
 #include <google/protobuf/reflection_ops.h>     // ReflectionOps::Merge
 
 #include "flare/brpc/esp_head.h"
-#include "flare/butil/iobuf.h"
+#include "flare/io/iobuf.h"
 #include "flare/brpc/proto_base.pb.h"
 
 namespace brpc {
@@ -33,7 +33,7 @@ namespace brpc {
 class EspMessage : public ::google::protobuf::Message {
 public:
     EspHead head;
-    butil::IOBuf body;
+    flare::io::IOBuf body;
 
 public:
     EspMessage();

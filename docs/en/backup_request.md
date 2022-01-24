@@ -26,11 +26,11 @@ The way of adding it by yourself:
 
 ```c++
 #include <flare/bvar/bvar.h>
-#include <flare/butil/time.h>
+#include "flare/base/time.h"
 ...
 bvar::LatencyRecorder my_func_latency("my_func");
 ...
-butil::Timer tm;
+flare::base::stop_watcher tm;
 tm.start();
 my_func();
 tm.stop();

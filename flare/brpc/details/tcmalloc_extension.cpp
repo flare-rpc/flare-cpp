@@ -20,6 +20,7 @@
 #include <stdlib.h>                              // getenv
 #include "flare/butil/compiler_specific.h"
 #include "flare/brpc/details/tcmalloc_extension.h"
+#include "flare/base/profile.h"
 
 namespace {
 typedef MallocExtension* (*GetInstanceFn)();
@@ -31,7 +32,7 @@ static void InitGetInstanceFn() {
 }
 } // namespace
 
-MallocExtension* BAIDU_WEAK MallocExtension::instance() {
+MallocExtension* FLARE_WEAK MallocExtension::instance() {
     // On fedora 26, this weak function is NOT overriden by the one in tcmalloc
     // which is dynamically linked.The same issue can't be re-produced in
     // Ubuntu and the exact cause is unknown yet. Using dlsym to get the

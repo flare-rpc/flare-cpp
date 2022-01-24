@@ -5,7 +5,7 @@
 #include "flare/butil/files/scoped_temp_dir.h"
 
 #include "flare/butil/file_util.h"
-#include "flare/butil/logging.h"
+#include "flare/base/logging.h"
 
 namespace butil {
 

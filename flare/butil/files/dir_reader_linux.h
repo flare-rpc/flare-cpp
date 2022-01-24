@@ -11,8 +11,9 @@
 #include <sys/syscall.h>
 #include <unistd.h>
 
-#include "flare/butil/logging.h"
-#include "flare/butil/posix/eintr_wrapper.h"
+#include "flare/base/logging.h"
+#include "flare/base/profile/eintr_wrapper.h"
+#include "flare/butil/macros.h"
 
 // See the comments in dir_reader_posix.h about this.
 

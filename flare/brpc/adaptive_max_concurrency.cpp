@@ -17,10 +17,11 @@
 
 #include <cstring>
 #include <strings.h>
-#include "flare/butil/string_printf.h"
-#include "flare/butil/logging.h"
+#include "flare/base/strings.h"
+#include "flare/base/logging.h"
 #include "flare/butil/strings/string_number_conversions.h"
 #include "flare/brpc/adaptive_max_concurrency.h"
+#include "flare/base/strings.h"
 
 namespace brpc {
 
@@ -35,13 +36,13 @@ AdaptiveMaxConcurrency::AdaptiveMaxConcurrency(int max_concurrency)
         _value = UNLIMITED();
         _max_concurrency = 0;
     } else {
-        _value = butil::string_printf("%d", max_concurrency);
+        _value = flare::base::string_printf("%d", max_concurrency);
         _max_concurrency = max_concurrency;
     }
 }
 
 inline bool CompareStringPieceWithoutCase(
-    const butil::StringPiece& s1, const char* s2) {
+    const std::string_view& s1, const char* s2) {
     DCHECK(s2 != NULL);
     if (std::strlen(s2) != s1.size()) {
         return false;
@@ -49,23 +50,23 @@ inline bool CompareStringPieceWithoutCase(
     return ::strncasecmp(s1.data(), s2, s1.size()) == 0;
 }
 
-AdaptiveMaxConcurrency::AdaptiveMaxConcurrency(const butil::StringPiece& value)
+AdaptiveMaxConcurrency::AdaptiveMaxConcurrency(const std::string_view& value)
     : _max_concurrency(0) {
     int max_concurrency = 0;
     if (butil::StringToInt(value, &max_concurrency)) {
         operator=(max_concurrency);
     } else {
-        value.CopyToString(&_value);
+        flare::base::copy_to_string(value, &_value);
         _max_concurrency = -1;
     }
 }
 
-void AdaptiveMaxConcurrency::operator=(const butil::StringPiece& value) {
+void AdaptiveMaxConcurrency::operator=(const std::string_view& value) {
     int max_concurrency = 0;
     if (butil::StringToInt(value, &max_concurrency)) {
         return operator=(max_concurrency);
     } else {
-        value.CopyToString(&_value);
+        flare::base::copy_to_string(value, &_value);
         _max_concurrency = -1;
     }
 }
@@ -75,7 +76,7 @@ void AdaptiveMaxConcurrency::operator=(int max_concurrency) {
         _value = UNLIMITED();
         _max_concurrency = 0;
     } else {
-        _value = butil::string_printf("%d", max_concurrency);
+        _value = flare::base::string_printf("%d", max_concurrency);
         _max_concurrency = max_concurrency;
     }
 }
@@ -101,7 +102,7 @@ const std::string& AdaptiveMaxConcurrency::CONSTANT() {
 }
 
 bool operator==(const AdaptiveMaxConcurrency& adaptive_concurrency,
-                const butil::StringPiece& concurrency) {
+                const std::string_view& concurrency) {
     return CompareStringPieceWithoutCase(concurrency, 
                                          adaptive_concurrency.value().c_str());
 }

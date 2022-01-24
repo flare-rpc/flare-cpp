@@ -29,23 +29,22 @@
 #else
 #endif
 
-#include "flare/butil/time.h"
-#include "flare/butil/memory/singleton_on_pthread_once.h"
-#include "flare/butil/scoped_lock.h"
-#include "flare/butil/files/scoped_file.h"
-#include "flare/butil/files/dir_reader_posix.h"
-#include "flare/butil/file_util.h"
-#include "flare/butil/process_util.h"            // ReadCommandLine
-#include "flare/butil/popen.h"                   // read_command_output
+#include <filesystem>
+#include "flare/base/time.h"
+#include "flare/base/singleton_on_pthread_once.h"
+#include "flare/base/scoped_lock.h"
+#include "flare/base/scoped_file.h"
+#include "flare/base/process_util.h"            // read_command_line
+#include "flare/base/popen.h"                   // read_command_output
 #include "flare/bvar/passive_status.h"
-#include "flare/butil/static_atomic.h"
+#include "flare/base/static_atomic.h"
 
 namespace bvar {
 
     template<class T, class M>
     M get_member_type(M T::*);
 
-#define BVAR_MEMBER_TYPE(member) BAIDU_TYPEOF(bvar::get_member_type(member))
+#define BVAR_MEMBER_TYPE(member) decltype(bvar::get_member_type(member))
 
     int do_link_default_variables = 0;
     const int64_t CACHED_INTERVAL_US = 100000L; // 100ms
@@ -77,10 +76,10 @@ namespace bvar {
     static bool read_proc_status(ProcStat &stat) {
         stat = ProcStat();
         errno = 0;
-#if defined(OS_LINUX)
+#if defined(FLARE_PLATFORM_LINUX)
         // Read status from /proc/self/stat. Information from `man proc' is out of date,
         // see http://man7.org/linux/man-pages/man5/proc.5.html
-        butil::ScopedFILE fp("/proc/self/stat", "r");
+        flare::base::scoped_file fp("/proc/self/stat", "r");
         if (NULL == fp) {
             PLOG_ONCE(WARNING) << "Fail to open /proc/self/stat";
             return false;
@@ -99,7 +98,7 @@ namespace bvar {
             return false;
         }
         return true;
-#elif defined(OS_MACOSX)
+#elif defined(FLARE_PLATFORM_OSX)
         // TODO(zhujiashun): get remaining state in MacOS.
         memset(&stat, 0, sizeof(stat));
         static pid_t pid = getpid();
@@ -108,7 +107,7 @@ namespace bvar {
         snprintf(cmdbuf, sizeof(cmdbuf),
                 "ps -p %ld -o pid,ppid,pgid,sess"
                 ",tpgid,flags,pri,nice | tail -n1", (long)pid);
-        if (butil::read_command_output(oss, cmdbuf) != 0) {
+        if (flare::base::read_command_output(oss, cmdbuf) != 0) {
             LOG(ERROR) << "Fail to read stat";
             return -1;
         }
@@ -145,8 +144,8 @@ namespace bvar {
         // and 64-bit numbers.
         template<typename ReadFn>
         static const T &get_value(const ReadFn &fn) {
-            CachedReader *p = butil::get_leaky_singleton<CachedReader>();
-            const int64_t now = butil::gettimeofday_us();
+            CachedReader *p = flare::base::get_leaky_singleton<CachedReader>();
+            const int64_t now = flare::base::gettimeofday_us();
             if (now > p->_mtime_us + CACHED_INTERVAL_US) {
                 pthread_mutex_lock(&p->_mutex);
                 if (now > p->_mtime_us + CACHED_INTERVAL_US) {
@@ -212,8 +211,8 @@ namespace bvar {
     static bool read_proc_memory(ProcMemory &m) {
         m = ProcMemory();
         errno = 0;
-#if defined(OS_LINUX)
-        butil::ScopedFILE fp("/proc/self/statm", "r");
+#if defined(FLARE_PLATFORM_LINUX)
+        flare::base::scoped_file fp("/proc/self/statm", "r");
         if (NULL == fp) {
             PLOG_ONCE(WARNING) << "Fail to open /proc/self/statm";
             return false;
@@ -225,7 +224,7 @@ namespace bvar {
             return false;
         }
         return true;
-#elif defined(OS_MACOSX)
+#elif defined(FLARE_PLATFORM_OSX)
         // TODO(zhujiashun): get remaining memory info in MacOS.
         memset(&m, 0, sizeof(m));
         static pid_t pid = getpid();
@@ -233,7 +232,7 @@ namespace bvar {
         std::ostringstream oss;
         char cmdbuf[128];
         snprintf(cmdbuf, sizeof(cmdbuf), "ps -p %ld -o rss=,vsz=", (long)pid);
-        if (butil::read_command_output(oss, cmdbuf) != 0) {
+        if (flare::base::read_command_output(oss, cmdbuf) != 0) {
             LOG(ERROR) << "Fail to read memory state";
             return -1;
         }
@@ -280,8 +279,8 @@ namespace bvar {
     };
 
     static bool read_load_average(LoadAverage &m) {
-#if defined(OS_LINUX)
-        butil::ScopedFILE fp("/proc/loadavg", "r");
+#if defined(FLARE_PLATFORM_LINUX)
+        flare::base::scoped_file fp("/proc/loadavg", "r");
         if (NULL == fp) {
             PLOG_ONCE(WARNING) << "Fail to open /proc/loadavg";
             return false;
@@ -294,9 +293,9 @@ namespace bvar {
             return false;
         }
         return true;
-#elif defined(OS_MACOSX)
+#elif defined(FLARE_PLATFORM_OSX)
         std::ostringstream oss;
-        if (butil::read_command_output(oss, "sysctl -n vm.loadavg") != 0) {
+        if (flare::base::read_command_output(oss, "sysctl -n vm.loadavg") != 0) {
             LOG(ERROR) << "Fail to read loadavg";
             return -1;
         }
@@ -335,18 +334,21 @@ namespace bvar {
 // ==================================================
 
     static int get_fd_count(int limit) {
-#if defined(OS_LINUX)
-        butil::DirReaderPosix dr("/proc/self/fd");
-        int count = 0;
-        if (!dr.IsValid()) {
+#if defined(FLARE_PLATFORM_LINUX)
+        try {
+            std::filesystem::directory_iterator di("/proc/self/fd");
+            // Have to limit the scaning which consumes a lot of CPU when #fd
+            // are huge (100k+)
+            int count = 0;
+            std::filesystem::directory_iterator endDi;
+            for (; di != endDi && count <= limit + 3; ++count, ++di) {}
+            return count - 3; /* skipped ., .. and the fd in di*/
+        } catch(...) {
             PLOG(WARNING) << "Fail to open /proc/self/fd";
             return -1;
         }
-        // Have to limit the scaning which consumes a lot of CPU when #fd
-        // are huge (100k+)
-        for (; dr.Next() && count <= limit + 3; ++count) {}
-        return count - 3 /* skipped ., .. and the fd in dr*/;
-#elif defined(OS_MACOSX)
+
+#elif defined(FLARE_PLATFORM_OSX)
         // TODO(zhujiashun): following code will cause core dump with some
         // probability under mac when program exits. Fix it.
         /*
@@ -355,7 +357,7 @@ namespace bvar {
         char cmdbuf[128];
         snprintf(cmdbuf, sizeof(cmdbuf),
                 "lsof -p %ld | grep -v \"txt\" | wc -l", (long)pid);
-        if (butil::read_command_output(oss, cmdbuf) != 0) {
+        if (flare::base::read_command_output(oss, cmdbuf) != 0) {
             LOG(ERROR) << "Fail to read open files";
             return -1;
         }
@@ -435,8 +437,8 @@ namespace bvar {
     };
 
     static bool read_proc_io(ProcIO *s) {
-#if defined(OS_LINUX)
-        butil::ScopedFILE fp("/proc/self/io", "r");
+#if defined(FLARE_PLATFORM_LINUX)
+        flare::base::scoped_file fp("/proc/self/io", "r");
         if (NULL == fp) {
             PLOG_ONCE(WARNING) << "Fail to open /proc/self/io";
             return false;
@@ -450,7 +452,7 @@ namespace bvar {
             return false;
         }
         return true;
-#elif defined(OS_MACOSX)
+#elif defined(FLARE_PLATFORM_OSX)
         // TODO(zhujiashun): get rchar, wchar, syscr, syscw, cancelled_write_bytes
         // in MacOS.
         memset(s, 0, sizeof(ProcIO));
@@ -544,8 +546,8 @@ namespace bvar {
     };
 
     static bool read_disk_stat(DiskStat *s) {
-#if defined(OS_LINUX)
-        butil::ScopedFILE fp("/proc/diskstats", "r");
+#if defined(FLARE_PLATFORM_LINUX)
+        flare::base::scoped_file fp("/proc/diskstats", "r");
         if (NULL == fp) {
             PLOG_ONCE(WARNING) << "Fail to open /proc/diskstats";
             return false;
@@ -571,7 +573,7 @@ namespace bvar {
             return false;
         }
         return true;
-#elif defined(OS_MACOSX)
+#elif defined(FLARE_PLATFORM_OSX)
         // TODO(zhujiashun)
         return false;
 #else
@@ -604,13 +606,13 @@ namespace bvar {
 
         ReadSelfCmdline() {
             char buf[1024];
-            const ssize_t nr = butil::ReadCommandLine(buf, sizeof(buf), true);
+            const ssize_t nr = flare::base::read_command_line(buf, sizeof(buf), true);
             content.append(buf, nr);
         }
     };
 
     static void get_cmdline(std::ostream &os, void *) {
-        os << butil::get_leaky_singleton<ReadSelfCmdline>()->content;
+        os << flare::base::get_leaky_singleton<ReadSelfCmdline>()->content;
     }
 
     struct ReadVersion {
@@ -618,7 +620,7 @@ namespace bvar {
 
         ReadVersion() {
             std::ostringstream oss;
-            if (butil::read_command_output(oss, "uname -ap") != 0) {
+            if (flare::base::read_command_output(oss, "uname -ap") != 0) {
                 LOG(ERROR) << "Fail to read kernel version";
                 return;
             }
@@ -627,15 +629,15 @@ namespace bvar {
     };
 
     static void get_kernel_version(std::ostream &os, void *) {
-        os << butil::get_leaky_singleton<ReadVersion>()->content;
+        os << flare::base::get_leaky_singleton<ReadVersion>()->content;
     }
 
 // ======================================
 
-    static int64_t g_starting_time = butil::gettimeofday_us();
+    static int64_t g_starting_time = flare::base::gettimeofday_us();
 
     static timeval get_uptime(void *) {
-        int64_t uptime_us = butil::gettimeofday_us() - g_starting_time;
+        int64_t uptime_us = flare::base::gettimeofday_us() - g_starting_time;
         timeval tm;
         tm.tv_sec = uptime_us / 1000000L;
         tm.tv_usec = uptime_us - tm.tv_sec * 1000000L;
@@ -685,7 +687,7 @@ namespace bvar {
             buf[sizeof(buf) - 1] = '\0';
             os << buf;
         } else {
-            os << "unknown (" << berror() << ')';
+            os << "unknown (" << flare_error() << ')';
         }
     }
 
@@ -769,9 +771,9 @@ namespace bvar {
     }
 
     static TimePercent get_cputime_percent(void *) {
-        TimePercent tp = {butil::timeval_to_microseconds(g_ru_stime.get_value()) +
-                          butil::timeval_to_microseconds(g_ru_utime.get_value()),
-                          butil::timeval_to_microseconds(g_uptime.get_value())};
+        TimePercent tp = {flare::base::timeval_to_microseconds(g_ru_stime.get_value()) +
+                          flare::base::timeval_to_microseconds(g_ru_utime.get_value()),
+                          flare::base::timeval_to_microseconds(g_uptime.get_value())};
         return tp;
     }
 
@@ -780,8 +782,8 @@ namespace bvar {
             "process_cpu_usage", &g_cputime_percent, FLAGS_bvar_dump_interval);
 
     static TimePercent get_stime_percent(void *) {
-        TimePercent tp = {butil::timeval_to_microseconds(g_ru_stime.get_value()),
-                          butil::timeval_to_microseconds(g_uptime.get_value())};
+        TimePercent tp = {flare::base::timeval_to_microseconds(g_ru_stime.get_value()),
+                          flare::base::timeval_to_microseconds(g_uptime.get_value())};
         return tp;
     }
 
@@ -790,8 +792,8 @@ namespace bvar {
             "process_cpu_usage_system", &g_stime_percent, FLAGS_bvar_dump_interval);
 
     static TimePercent get_utime_percent(void *) {
-        TimePercent tp = {butil::timeval_to_microseconds(g_ru_utime.get_value()),
-                          butil::timeval_to_microseconds(g_uptime.get_value())};
+        TimePercent tp = {flare::base::timeval_to_microseconds(g_ru_utime.get_value()),
+                          flare::base::timeval_to_microseconds(g_uptime.get_value())};
         return tp;
     }
 
@@ -877,10 +879,10 @@ namespace bvar {
     PassiveStatus <std::string> g_gcc_version("gcc_version", get_gcc_version, NULL);
 
     void get_work_dir(std::ostream &os, void *) {
-        butil::FilePath path;
-        const bool rc = butil::GetCurrentDirectory(&path);
-        LOG_IF(WARNING, !rc) << "Fail to GetCurrentDirectory";
-        os << path.value();
+        std::error_code ec;
+        std::filesystem::path curr = std::filesystem::current_path(ec);
+        LOG_IF(WARNING, ec) << "Fail to GetCurrentDirectory";
+        os << curr.c_str();
     }
 
     PassiveStatus <std::string> g_work_dir("process_work_dir", get_work_dir, NULL);

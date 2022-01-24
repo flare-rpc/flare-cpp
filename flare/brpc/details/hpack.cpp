@@ -20,9 +20,9 @@
 
 #include <limits>                                       // std::numeric_limits
 #include <vector>
-#include "flare/butil/containers/bounded_queue.h"              // butil::BoundedQueue
-#include "flare/butil/containers/flat_map.h"                   // butil::FlatMap
-#include "flare/butil/containers/case_ignored_flat_map.h"      // butil::FlatMap
+#include "flare/container/bounded_queue.h"              // flare::container::bounded_queue
+#include "flare/container/flat_map.h"                   // flare::container::FlatMap
+#include "flare/container/case_ignored_flat_map.h"      // flare::container::FlatMap
 #include "flare/brpc/details/hpack-static-table.h"       // s_static_headers
 
 
@@ -51,8 +51,8 @@ struct HeaderAndHashCode {
 
 struct HeaderHasher {
     size_t operator()(const HPacker::Header& h) const {
-        return butil::CaseIgnoredHasher()(h.name)
-            * 101 + butil::DefaultHasher<std::string>()(h.value);
+        return flare::container::CaseIgnoredHasher()(h.name)
+            * 101 + flare::container::DefaultHasher<std::string>()(h.value);
     }
     size_t operator()(const HeaderAndHashCode& h) const {
         return h.hash_code;
@@ -61,16 +61,16 @@ struct HeaderHasher {
 
 struct HeaderEqualTo {
     bool operator()(const HPacker::Header& h1, const HPacker::Header& h2) const {
-        return butil::CaseIgnoredEqual()(h1.name, h2.name)
-            && butil::DefaultEqualTo<std::string>()(h1.value, h2.value);
+        return flare::container::CaseIgnoredEqual()(h1.name, h2.name)
+            && flare::container::DefaultEqualTo<std::string>()(h1.value, h2.value);
     }
     bool operator()(const HPacker::Header& h1, const HeaderAndHashCode& h2) const {
         return operator()(h1, *h2.header);
     }
 };
 
-class BAIDU_CACHELINE_ALIGNMENT IndexTable {
-DISALLOW_COPY_AND_ASSIGN(IndexTable);
+class FLARE_CACHELINE_ALIGNMENT IndexTable {
+FLARE_DISALLOW_COPY_AND_ASSIGN(IndexTable);
     typedef HPacker::Header Header;
 public:
     IndexTable()
@@ -82,7 +82,7 @@ public:
     int Init(const IndexTableOptions& options);
 
     const Header* HeaderAt(int index) const {
-        if (BAIDU_UNLIKELY(index < _start_index)) {
+        if (FLARE_UNLIKELY(index < _start_index)) {
             return NULL;
         }
         return _header_queue.bottom(index - _start_index);
@@ -203,7 +203,7 @@ private:
     uint64_t _add_times;  // Increase when adding a new entry.
     size_t _max_size;
     size_t _size;
-    butil::BoundedQueue<Header> _header_queue;
+    flare::container::bounded_queue<Header> _header_queue;
 
     // -----------------------  Encoder only ----------------------------
     // Indexes that map entry to the latest time it was added.
@@ -213,8 +213,8 @@ private:
     // Since the encoder just cares whether this header is in the index table
     // rather than which the index number is, only the latest entry of the same
     // header is indexed here, which is definitely the last one to be removed.
-    butil::FlatMap<Header, uint64_t, HeaderHasher, HeaderEqualTo> _header_index;
-    butil::CaseIgnoredFlatMap<uint64_t> _name_index;
+    flare::container::FlatMap<Header, uint64_t, HeaderHasher, HeaderEqualTo> _header_index;
+    flare::container::CaseIgnoredFlatMap<uint64_t> _name_index;
 };
 
 int IndexTable::Init(const IndexTableOptions& options) {
@@ -233,9 +233,9 @@ int IndexTable::Init(const IndexTableOptions& options) {
         LOG(ERROR) << "Fail to malloc space for " << num_headers << " headers";
         return -1;
     }
-    butil::BoundedQueue<Header> tmp(
+    flare::container::bounded_queue<Header> tmp(
         header_queue_storage, num_headers * sizeof(Header),
-        butil::OWNS_STORAGE);
+        flare::container::OWNS_STORAGE);
     _header_queue.swap(tmp);
     _start_index = options.start_index;
     _need_indexes = options.need_indexes;
@@ -279,8 +279,8 @@ struct HuffmanNode {
     int32_t value;
 };
 
-class BAIDU_CACHELINE_ALIGNMENT HuffmanTree {
-DISALLOW_COPY_AND_ASSIGN(HuffmanTree);
+class FLARE_CACHELINE_ALIGNMENT HuffmanTree {
+FLARE_DISALLOW_COPY_AND_ASSIGN(HuffmanTree);
 public:
     typedef uint16_t NodeId;
     enum ConstValue {
@@ -346,9 +346,9 @@ private:
 };
 
 class HuffmanEncoder {
-DISALLOW_COPY_AND_ASSIGN(HuffmanEncoder);
+FLARE_DISALLOW_COPY_AND_ASSIGN(HuffmanEncoder);
 public:
-    HuffmanEncoder(butil::IOBufAppender* out, const HuffmanCode* table)
+    HuffmanEncoder(flare::io::IOBufAppender* out, const HuffmanCode* table)
         : _out(out)
         , _table(table)
         , _partial_byte(0)
@@ -395,7 +395,7 @@ public:
     uint32_t out_bytes() const { return _out_bytes; }
 
 private:
-    butil::IOBufAppender* _out;
+    flare::io::IOBufAppender* _out;
     const HuffmanCode* _table;
     uint8_t  _partial_byte;
     uint16_t _remain_bit;
@@ -403,7 +403,7 @@ private:
 };
 
 class HuffmanDecoder {
-DISALLOW_COPY_AND_ASSIGN(HuffmanDecoder);
+FLARE_DISALLOW_COPY_AND_ASSIGN(HuffmanDecoder);
 public:
     HuffmanDecoder(std::string* out, const HuffmanTree* tree)
         // FIXME: resizing of out is costly
@@ -417,12 +417,12 @@ public:
         for (int i = 7; i >= 0; --i) {
             if (byte & (1u << i)) {
                 _cur_node = _tree->node(_cur_node->right_child);
-                if (BAIDU_UNLIKELY(!_cur_node)) {
+                if (FLARE_UNLIKELY(!_cur_node)) {
                     LOG(ERROR) << "Decoder stream reaches NULL_NODE";
                     return -1;
                 }
                 if (_cur_node->value != HuffmanTree::INVALID_VALUE) {
-                    if (BAIDU_UNLIKELY(_cur_node->value == HPACK_HUFFMAN_EOS)) {
+                    if (FLARE_UNLIKELY(_cur_node->value == HPACK_HUFFMAN_EOS)) {
                         LOG(ERROR) << "Decoder stream reaches EOS";
                         return -1;
                     }
@@ -435,12 +435,12 @@ public:
                 _padding &= 1;
             } else {
                 _cur_node = _tree->node(_cur_node->left_child);
-                if (BAIDU_UNLIKELY(!_cur_node)) {
+                if (FLARE_UNLIKELY(!_cur_node)) {
                     LOG(ERROR) << "Decoder stream reaches NULL_NODE";
                     return -1;
                 }
                 if (_cur_node->value != HuffmanTree::INVALID_VALUE) {
-                    if (BAIDU_UNLIKELY(_cur_node->value == HPACK_HUFFMAN_EOS)) {
+                    if (FLARE_UNLIKELY(_cur_node->value == HPACK_HUFFMAN_EOS)) {
                         LOG(ERROR) << "Decoder stream reaches EOS";
                         return -1;
                     }
@@ -478,7 +478,7 @@ private:
 // Primitive Type Representations
 
 // Encode variant intger and return the size
-inline void EncodeInteger(butil::IOBufAppender* out, uint8_t msb,
+inline void EncodeInteger(flare::io::IOBufAppender* out, uint8_t msb,
                           uint8_t prefix_size, uint32_t value) {
     uint8_t max_prefix_value = (1 << prefix_size) - 1;
     if (value < max_prefix_value) {
@@ -531,7 +531,7 @@ static void CreateStaticTableOnceOrDie() {
 // Assume that no header would be larger than 10MB
 static const size_t MAX_HPACK_INTEGER = 10 * 1024 * 1024ul;
 
-inline ssize_t DecodeInteger(butil::IOBufBytesIterator& iter,
+inline ssize_t DecodeInteger(flare::io::IOBufBytesIterator& iter,
                              uint8_t prefix_size, uint32_t* value) {
     if (iter == NULL) {
         return 0; // No enough data
@@ -568,13 +568,13 @@ inline ssize_t DecodeInteger(butil::IOBufBytesIterator& iter,
 }
 
 template <bool LOWERCASE> // use template to remove dead branches.
-inline void EncodeString(butil::IOBufAppender* out, const std::string& s,
+inline void EncodeString(flare::io::IOBufAppender* out, const std::string& s,
                          bool huffman_encoding) {
     if (!huffman_encoding) {
         EncodeInteger(out, 0x00, 7, s.size());
         if (LOWERCASE) {
             for (size_t i = 0; i < s.size(); ++i) {
-                out->push_back(butil::ascii_tolower(s[i]));
+                out->push_back(flare::base::ascii_tolower(s[i]));
             }
         } else {
             out->append(s);
@@ -585,7 +585,7 @@ inline void EncodeString(butil::IOBufAppender* out, const std::string& s,
     uint32_t bit_len = 0;
     if (LOWERCASE) {
         for (size_t i = 0; i < s.size(); ++i) {
-            bit_len += s_huffman_table[(uint8_t)butil::ascii_tolower(s[i])].bit_len;
+            bit_len += s_huffman_table[(uint8_t)flare::base::ascii_tolower(s[i])].bit_len;
         }
     } else {
         for (size_t i = 0; i < s.size(); ++i) {
@@ -596,7 +596,7 @@ inline void EncodeString(butil::IOBufAppender* out, const std::string& s,
     HuffmanEncoder e(out, s_huffman_table);
     if (LOWERCASE) {
         for (size_t i = 0; i < s.size(); ++i) {
-            e.Encode(butil::ascii_tolower(s[i]));
+            e.Encode(flare::base::ascii_tolower(s[i]));
         }
     } else {
         for (size_t i = 0; i < s.size(); ++i) {
@@ -606,7 +606,7 @@ inline void EncodeString(butil::IOBufAppender* out, const std::string& s,
     e.EndStream();
 }
 
-inline ssize_t DecodeString(butil::IOBufBytesIterator& iter, std::string* out) {
+inline ssize_t DecodeString(flare::io::IOBufBytesIterator& iter, std::string* out) {
     if (iter == NULL) {
         return 0;
     }
@@ -696,7 +696,7 @@ inline int HPacker::FindNameFromIndexTable(const std::string& name) const {
     return _encode_table->GetIndexOfName(name);
 }
 
-void HPacker::Encode(butil::IOBufAppender* out, const Header& header,
+void HPacker::Encode(flare::io::IOBufAppender* out, const Header& header,
                      const HPackOptions& options) {
     if (options.index_policy != HPACK_NEVER_INDEX_HEADER) {
         const int index = FindHeaderFromIndexTable(header);
@@ -734,7 +734,7 @@ inline const HPacker::Header* HPacker::HeaderAt(int index) const {
 }
 
 inline ssize_t HPacker::DecodeWithKnownPrefix(
-    butil::IOBufBytesIterator& iter, Header* h, uint8_t prefix_size) const {
+    flare::io::IOBufBytesIterator& iter, Header* h, uint8_t prefix_size) const {
     int index = 0;
     ssize_t index_bytes = DecodeInteger(iter, prefix_size, (uint32_t*)&index);
     ssize_t name_bytes = 0;
@@ -765,7 +765,7 @@ inline ssize_t HPacker::DecodeWithKnownPrefix(
     return index_bytes + name_bytes + value_bytes;
 }
 
-ssize_t HPacker::Decode(butil::IOBufBytesIterator& iter, Header* h) {
+ssize_t HPacker::Decode(flare::io::IOBufBytesIterator& iter, Header* h) {
     if (iter == NULL) {
         return 0;
     }
@@ -871,7 +871,7 @@ void tolower(std::string* s) {
     const char* d = s->c_str();
     for (size_t i = 0; i < s->size(); ++i) {
         const char c = d[i];
-        const char c2 = butil::ascii_tolower(c);
+        const char c2 = flare::base::ascii_tolower(c);
         if (c2 != c) {
             (*s)[i] = c2;
         }

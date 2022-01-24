@@ -10,10 +10,10 @@
 #include <string.h>
 #include <unistd.h>
 
-#include "flare/butil/logging.h"
+#include "flare/base/logging.h"
 #include <gtest/gtest.h>
 
-#if defined(OS_ANDROID)
+#if defined(FLARE_PLATFORM_ANDROID)
 #include "flare/butil/os_compat_android.h"
 #endif
 

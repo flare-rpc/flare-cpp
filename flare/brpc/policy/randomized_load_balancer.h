@@ -21,7 +21,7 @@
 
 #include <vector>                                      // std::vector
 #include <map>                                         // std::map
-#include "flare/butil/containers/doubly_buffered_data.h"
+#include "flare/container/doubly_buffered_data.h"
 #include "flare/brpc/load_balancer.h"
 #include "flare/brpc/cluster_recover_policy.h"
 
@@ -38,7 +38,7 @@ public:
     size_t AddServersInBatch(const std::vector<ServerId>& servers);
     size_t RemoveServersInBatch(const std::vector<ServerId>& servers);
     int SelectServer(const SelectIn& in, SelectOut* out);
-    RandomizedLoadBalancer* New(const butil::StringPiece&) const;
+    RandomizedLoadBalancer* New(const std::string_view&) const;
     void Destroy();
     void Describe(std::ostream& os, const DescribeOptions&);
     
@@ -47,13 +47,13 @@ private:
         std::vector<ServerId> server_list;
         std::map<ServerId, size_t> server_map;
     };
-    bool SetParameters(const butil::StringPiece& params);
+    bool SetParameters(const std::string_view& params);
     static bool Add(Servers& bg, const ServerId& id);
     static bool Remove(Servers& bg, const ServerId& id);
     static size_t BatchAdd(Servers& bg, const std::vector<ServerId>& servers);
     static size_t BatchRemove(Servers& bg, const std::vector<ServerId>& servers);
 
-    butil::DoublyBufferedData<Servers> _db_servers;
+    flare::container::DoublyBufferedData<Servers> _db_servers;
     std::shared_ptr<ClusterRecoverPolicy> _cluster_recover_policy;
 };
 

@@ -63,7 +63,7 @@ enum ProtocolType {
 ### parse
 
 ```c++
-typedef ParseResult (*Parse)(butil::IOBuf* source, Socket *socket, bool read_eof, const void *arg);
+typedef ParseResult (*Parse)(flare::io::IOBuf* source, Socket *socket, bool read_eof, const void *arg);
 ```
 用于把消息从source上切割下来，client端和server端使用同一个parse函数。返回的消息会被递给process_request(server端)或process_response(client端)。
 
@@ -79,7 +79,7 @@ ParseResult可能是错误，也可能包含一个切割下来的message，可�
 
 ### serialize_request
 ```c++
-typedef bool (*SerializeRequest)(butil::IOBuf* request_buf,
+typedef bool (*SerializeRequest)(flare::io::IOBuf* request_buf,
                                  Controller* cntl,
                                  const google::protobuf::Message* request);
 ```
@@ -87,11 +87,11 @@ typedef bool (*SerializeRequest)(butil::IOBuf* request_buf,
 
 ### pack_request
 ```c++
-typedef int (*PackRequest)(butil::IOBuf* msg, 
+typedef int (*PackRequest)(flare::io::IOBuf* msg, 
                            uint64_t correlation_id,
                            const google::protobuf::MethodDescriptor* method,
                            Controller* controller,
-                           const butil::IOBuf& request_buf,
+                           const flare::io::IOBuf& request_buf,
                            const Authenticator* auth);
 ```
 把request_buf打包入msg，每次向server发送消息前（包括重试）都会调用。当auth不为空时，需要打包认证信息。成功返回0，否则-1。
@@ -120,9 +120,9 @@ typedef bool (*Verify)(const InputMessageBase* msg);
 
 ### parse_server_address
 ```c++
-typedef bool (*ParseServerAddress)(butil::EndPoint* out, const char* server_addr_and_port);
+typedef bool (*ParseServerAddress)(flare::base::end_point* out, const char* server_addr_and_port);
 ```
-把server_addr_and_port(Channel.Init的一个参数)转化为butil::EndPoint，可选。一些协议对server地址的表达和理解可能是不同的。
+把server_addr_and_port(Channel.Init的一个参数)转化为butil::end_point，可选。一些协议对server地址的表达和理解可能是不同的。
 
 ### get_method_name
 ```c++

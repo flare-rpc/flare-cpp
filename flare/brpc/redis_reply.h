@@ -19,10 +19,10 @@
 #ifndef BRPC_REDIS_REPLY_H
 #define BRPC_REDIS_REPLY_H
 
-#include "flare/butil/iobuf.h"                  // butil::IOBuf
-#include "flare/butil/strings/string_piece.h"   // butil::StringPiece
-#include "flare/butil/arena.h"                  // butil::Arena
-#include "flare/butil/logging.h"                // CHECK
+#include "flare/io/iobuf.h"                  // flare::io::IOBuf
+#include "flare/butil/strings/string_piece.h"   // std::string_view
+#include "flare/memory/arena.h"                  // flare::memory::Arena
+#include "flare/base/logging.h"                // CHECK
 #include "parse_result.h"                 // ParseError
 
 
@@ -45,7 +45,7 @@ class RedisReply {
 public:
     // The initial value for a reply is a nil.
     // All needed memory is allocated on `arena'.
-    RedisReply(butil::Arena* arena);
+    RedisReply(flare::memory::Arena* arena);
 
     // Type of the reply.
     RedisReplyType type() const { return _type; }
@@ -68,18 +68,18 @@ public:
     void SetArray(int size);
 
     // Set the reply to a status.
-    void SetStatus(const butil::StringPiece& str);
+    void SetStatus(const std::string_view& str);
     void FormatStatus(const char* fmt, ...);
 
     // Set the reply to an error.
-    void SetError(const butil::StringPiece& str);
+    void SetError(const std::string_view& str);
     void FormatError(const char* fmt, ...);
 
     // Set this reply to integer `value'.
     void SetInteger(int64_t value);
 
     // Set this reply to a (bulk) string.
-    void SetString(const butil::StringPiece& str);
+    void SetString(const std::string_view& str);
     void FormatString(const char* fmt, ...);
 
     // Convert the reply into a signed 64-bit integer(according to
@@ -98,7 +98,7 @@ public:
     // Convert the reply to a StringPiece. If the reply is not a string,
     // call stacks are logged and "" is returned. 
     // If you need a std::string, call .data().as_string() (which allocates mem)
-    butil::StringPiece data() const;
+    std::string_view data() const;
 
     // Return number of sub replies in the array if this reply is an array, or
     // return the length of string if this reply is a string, otherwise 0 is
@@ -119,10 +119,10 @@ public:
     // reply. As a contrast, if the parsing needs `buf' to be intact,
     // the complexity in worst case may be O(N^2).
     // Returns PARSE_ERROR_ABSOLUTELY_WRONG if the parsing failed.
-    ParseError ConsumePartialIOBuf(butil::IOBuf& buf);
+    ParseError ConsumePartialIOBuf(flare::io::IOBuf& buf);
 
     // Serialize to iobuf appender using redis protocol
-    bool SerializeTo(butil::IOBufAppender* appender);
+    bool SerializeTo(flare::io::IOBufAppender* appender);
 
     // Swap internal fields with another reply.
     void Swap(RedisReply& other);
@@ -144,10 +144,10 @@ private:
 
     // RedisReply does not own the memory of fields, copying must be done
     // by calling CopyFrom[Different|Same]Arena.
-    DISALLOW_COPY_AND_ASSIGN(RedisReply);
+    FLARE_DISALLOW_COPY_AND_ASSIGN(RedisReply);
 
     void FormatStringImpl(const char* fmt, va_list args, RedisReplyType type);
-    void SetStringImpl(const butil::StringPiece& str, RedisReplyType type);
+    void SetStringImpl(const std::string_view& str, RedisReplyType type);
     
     RedisReplyType _type;
     int _length;  // length of short_str/long_str, count of replies
@@ -161,7 +161,7 @@ private:
         } array;
         uint64_t padding[2]; // For swapping, must cover all bytes.
     } _data;
-    butil::Arena* _arena;
+    flare::memory::Arena* _arena;
 };
 
 // =========== inline impl. ==============
@@ -179,7 +179,7 @@ inline void RedisReply::Reset() {
     // _arena should not be reset because further memory allocation needs it.
 }
 
-inline RedisReply::RedisReply(butil::Arena* arena)
+inline RedisReply::RedisReply(flare::memory::Arena* arena)
     : _arena(arena) {
     Reset();
 }
@@ -218,7 +218,7 @@ inline void RedisReply::SetNullString() {
     _length = npos;
 }
 
-inline void RedisReply::SetStatus(const butil::StringPiece& str) {
+inline void RedisReply::SetStatus(const std::string_view& str) {
     return SetStringImpl(str, REDIS_REPLY_STATUS);
 }
 inline void RedisReply::FormatStatus(const char* fmt, ...) {
@@ -228,7 +228,7 @@ inline void RedisReply::FormatStatus(const char* fmt, ...) {
     va_end(ap);
 }
 
-inline void RedisReply::SetError(const butil::StringPiece& str) {
+inline void RedisReply::SetError(const std::string_view& str) {
     return SetStringImpl(str, REDIS_REPLY_ERROR);
 }
 inline void RedisReply::FormatError(const char* fmt, ...) {
@@ -247,7 +247,7 @@ inline void RedisReply::SetInteger(int64_t value) {
     _data.integer = value;
 }
 
-inline void RedisReply::SetString(const butil::StringPiece& str) {
+inline void RedisReply::SetString(const std::string_view& str) {
     return SetStringImpl(str, REDIS_REPLY_STRING);
 }
 inline void RedisReply::FormatString(const char* fmt, ...) {
@@ -270,17 +270,17 @@ inline const char* RedisReply::c_str() const {
     return "";
 }
 
-inline butil::StringPiece RedisReply::data() const {
+inline std::string_view RedisReply::data() const {
     if (is_string()) {
         if (_length < (int)sizeof(_data.short_str)) { // SSO
-            return butil::StringPiece(_data.short_str, _length);
+            return std::string_view(_data.short_str, _length);
         } else {
-            return butil::StringPiece(_data.long_str, _length);
+            return std::string_view(_data.long_str, _length);
         }
     }
     CHECK(false) << "The reply is " << RedisReplyTypeToString(_type)
                  << ", not a string";
-    return butil::StringPiece();
+    return std::string_view();
 }
 
 inline const char* RedisReply::error_message() const {

@@ -18,7 +18,7 @@
 // Date: 2015/09/15 15:42:55
 
 #include "flare/bvar/detail/percentile.h"
-#include "flare/butil/logging.h"
+#include "flare/base/logging.h"
 #include <gtest/gtest.h>
 #include <fstream>
 

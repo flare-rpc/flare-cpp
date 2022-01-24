@@ -21,7 +21,7 @@
 
 #include "flare/brpc/periodic_naming_service.h"
 #include "flare/brpc/channel.h"
-#include "flare/butil/synchronization/lock.h"
+#include "flare/base/lock.h"
 
 namespace brpc {
 namespace policy {
@@ -64,7 +64,7 @@ private:
     bthread_t _th;
     std::atomic<bool> _registered;
     DiscoveryRegisterParam _params;
-    butil::EndPoint _current_discovery_server;
+    flare::base::end_point _current_discovery_server;
 };
 
 class DiscoveryNamingService : public PeriodicNamingService {

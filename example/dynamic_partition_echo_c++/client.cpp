@@ -19,9 +19,9 @@
 
 #include <gflags/gflags.h>
 #include <flare/bthread/bthread.h>
-#include <flare/butil/logging.h>
+#include "flare/base/logging.h"
 #include <flare/butil/string_printf.h>
-#include <flare/butil/time.h>
+#include "flare/base/time.h"
 #include <flare/butil/macros.h>
 #include <flare/brpc/partition_channel.h>
 #include <deque>
@@ -55,7 +55,7 @@ static void* sender(void* arg) {
 
     SenderInfo* info = NULL;
     {
-        BAIDU_SCOPED_LOCK(g_latency_mutex);
+        FLARE_SCOPED_LOCK(g_latency_mutex);
         g_sender_info.push_back(SenderInfo());
         info = &g_sender_info.back();
     }

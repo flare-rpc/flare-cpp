@@ -63,9 +63,9 @@ Adjusting heap profiles for 1-in-524288 sampling rate
 Heap version 2
 Total: 38.9 MB
     35.8  92.0%  92.0%     35.8  92.0% ::cpp_alloc
-     2.1   5.4%  97.4%      2.1   5.4% butil::FlatMap
-     0.5   1.3%  98.7%      0.5   1.3% butil::IOBuf::append
-     0.5   1.3% 100.0%      0.5   1.3% butil::IOBufAsZeroCopyOutputStream::Next
+     2.1   5.4%  97.4%      2.1   5.4% flare::container::FlatMap
+     0.5   1.3%  98.7%      0.5   1.3% flare::io::IOBuf::append
+     0.5   1.3% 100.0%      0.5   1.3% flare::io::IOBufAsZeroCopyOutputStream::Next
      0.0   0.0% 100.0%      0.6   1.5% MallocExtension::GetHeapSample
      0.0   0.0% 100.0%      0.5   1.3% ProfileHandler::Init
      0.0   0.0% 100.0%      0.5   1.3% ProfileHandlerRegisterCallback

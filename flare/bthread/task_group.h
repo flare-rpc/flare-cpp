@@ -22,12 +22,12 @@
 #ifndef BTHREAD_TASK_GROUP_H
 #define BTHREAD_TASK_GROUP_H
 
-#include "flare/butil/time.h"                             // cpuwide_time_ns
+#include "flare/base/time.h"                             // cpuwide_time_ns
 #include "flare/bthread/task_control.h"
 #include "flare/bthread/task_meta.h"                     // bthread_t, TaskMeta
 #include "flare/bthread/work_stealing_queue.h"           // WorkStealingQueue
 #include "flare/bthread/remote_task_queue.h"             // RemoteTaskQueue
-#include "flare/butil/resource_pool.h"                    // ResourceId
+#include "flare/memory/resource_pool.h"                    // ResourceId
 #include "flare/bthread/parking_lot.h"
 
 namespace bthread {
@@ -139,7 +139,7 @@ public:
     bthread_t current_tid() const { return _cur_meta->tid; }
     // Uptime of current task in nanoseconds.
     int64_t current_uptime_ns() const
-    { return butil::cpuwide_time_ns() - _cur_meta->cpuwide_start_ns; }
+    { return flare::base::cpuwide_time_ns() - _cur_meta->cpuwide_start_ns; }
 
     // True iff current task is the one running run_main_task()
     bool is_current_main_task() const { return current_tid() == _main_tid; }
@@ -157,7 +157,7 @@ public:
 
     // Push a bthread into the runqueue from another non-worker thread.
     void ready_to_run_remote(bthread_t tid, bool nosignal = false);
-    void flush_nosignal_tasks_remote_locked(butil::Mutex& locked_mutex);
+    void flush_nosignal_tasks_remote_locked(flare::base::Mutex& locked_mutex);
     void flush_nosignal_tasks_remote();
 
     // Automatically decide the caller is remote or local, and call

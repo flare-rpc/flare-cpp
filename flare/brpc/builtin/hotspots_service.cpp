@@ -21,8 +21,8 @@
 #include <gflags/gflags.h>
 #include "flare/butil/files/file_enumerator.h"
 #include "flare/butil/file_util.h"                     // butil::FilePath
-#include "flare/butil/popen.h"                         // butil::read_command_output
-#include "flare/butil/fd_guard.h"                      // butil::fd_guard
+#include "flare/base/popen.h"                         // flare::base::read_command_output
+#include "flare/base/fd_guard.h"                      // flare::base::fd_guard
 #include "flare/brpc/log.h"
 #include "flare/brpc/controller.h"
 #include "flare/brpc/server.h"
@@ -30,6 +30,7 @@
 #include "flare/brpc/builtin/pprof_perl.h"
 #include "flare/brpc/builtin/hotspots_service.h"
 #include "flare/brpc/details/tcmalloc_extension.h"
+#include "flare/base/strings.h"
 
 extern "C" {
 int __attribute__((weak)) ProfilerStart(const char* fname);
@@ -45,7 +46,7 @@ namespace brpc {
 enum class DisplayType{
     kUnknown,
     kDot,
-#if defined(OS_LINUX)
+#if defined(FLARE_PLATFORM_LINUX)
     kFlameGraph,
 #endif
     kText
@@ -54,7 +55,7 @@ enum class DisplayType{
 static const char* DisplayTypeToString(DisplayType type) {
     switch (type) {
         case DisplayType::kDot: return "dot";
-#if defined(OS_LINUX)
+#if defined(FLARE_PLATFORM_LINUX)
         case DisplayType::kFlameGraph: return "flame";
 #endif
         case DisplayType::kText: return "text";
@@ -63,13 +64,13 @@ static const char* DisplayTypeToString(DisplayType type) {
 }
 
 static DisplayType StringToDisplayType(const std::string& val) {
-    static butil::CaseIgnoredFlatMap<DisplayType>* display_type_map;
+    static flare::container::CaseIgnoredFlatMap<DisplayType>* display_type_map;
     static std::once_flag flag;
     std::call_once(flag, []() {
-        display_type_map = new butil::CaseIgnoredFlatMap<DisplayType>;
+        display_type_map = new flare::container::CaseIgnoredFlatMap<DisplayType>;
         display_type_map->init(10);
         (*display_type_map)["dot"] = DisplayType::kDot;
-#if defined(OS_LINUX)
+#if defined(FLARE_PLATFORM_LINUX)
         (*display_type_map)["flame"] = DisplayType::kFlameGraph;
 #endif
         (*display_type_map)["text"] = DisplayType::kText;
@@ -83,11 +84,11 @@ static DisplayType StringToDisplayType(const std::string& val) {
 
 static std::string DisplayTypeToPProfArgument(DisplayType type) {
     switch (type) {
-#if defined(OS_LINUX)
+#if defined(FLARE_PLATFORM_LINUX)
         case DisplayType::kDot: return " --dot ";
         case DisplayType::kFlameGraph: return " --collapsed ";
         case DisplayType::kText: return " --text ";
-#elif defined(OS_MACOSX)
+#elif defined(FLARE_PLATFORM_OSX)
         case DisplayType::kDot: return " -dot ";
         case DisplayType::kText: return " -text ";
 #endif
@@ -129,7 +130,7 @@ struct ProfilingClient {
     int64_t end_us;
     int seconds;
     int64_t id;
-    butil::EndPoint point;
+    flare::base::end_point point;
 };
 
 struct ProfilingResult {
@@ -137,7 +138,7 @@ struct ProfilingResult {
     
     int64_t id;
     int status_code;
-    butil::IOBuf result;
+    flare::io::IOBuf result;
 };
 
 static bool g_written_pprof_perl = false;
@@ -161,7 +162,7 @@ static ProfilingEnvironment g_env[4] = {
 // The `content' should be small so that it can be written into file in one
 // fwrite (at most time).
 static bool WriteSmallFile(const char* filepath_in,
-                           const butil::StringPiece& content) {
+                           const std::string_view& content) {
     butil::File::Error error;
     butil::FilePath path(filepath_in);
     butil::FilePath dir = path.DirName();
@@ -185,7 +186,7 @@ static bool WriteSmallFile(const char* filepath_in,
 }
 
 static bool WriteSmallFile(const char* filepath_in,
-                           const butil::IOBuf& content) {
+                           const flare::io::IOBuf& content) {
     butil::File::Error error;
     butil::FilePath path(filepath_in);
     butil::FilePath dir = path.DirName();
@@ -199,7 +200,7 @@ static bool WriteSmallFile(const char* filepath_in,
         LOG(ERROR) << "Fail to open `" << path.value() << '\'';
         return false;
     }
-    butil::IOBufAsZeroCopyInputStream iter(content);
+    flare::io::IOBufAsZeroCopyInputStream iter(content);
     const void* data = NULL;
     int size = 0;
     while (iter.Next(&data, &size)) {
@@ -244,9 +245,9 @@ static const char* GetBaseName(const std::string* full_base_name) {
 }
 
 static const char* GetBaseName(const char* full_base_name) {
-    butil::StringPiece s(full_base_name);
+    std::string_view s(full_base_name);
     size_t offset = s.find_last_of('/');
-    if (offset == butil::StringPiece::npos) {
+    if (offset == std::string_view::npos) {
         offset = 0;
     } else {
         ++offset;
@@ -258,8 +259,8 @@ static const char* GetBaseName(const char* full_base_name) {
 // NOTE: this function MUST be applied to all parameters finally passed to
 // system related functions (popen/system/exec ...) to avoid potential
 // injections from URL and other user inputs.
-static bool ValidProfilePath(const butil::StringPiece& path) {
-    if (!path.starts_with(FLAGS_rpc_profiling_dir)) {
+static bool ValidProfilePath(const std::string_view& path) {
+    if (!flare::base::starts_with(path, FLAGS_rpc_profiling_dir)) {
         // Must be under the directory.
         return false;
     }
@@ -327,13 +328,13 @@ static int MakeProfName(ProfilingType type, char* buf, size_t buf_len) {
 static void ConsumeWaiters(ProfilingType type, const Controller* cur_cntl,
                            std::vector<ProfilingWaiter>* waiters) {
     waiters->clear();
-    if ((int)type >= (int)arraysize(g_env)) {
+    if ((int)type >= (int)FLARE_ARRAY_SIZE(g_env)) {
         LOG(ERROR) << "Invalid type=" << type;
         return;
     }
     ProfilingEnvironment& env = g_env[type];
     if (env.client) {
-        BAIDU_SCOPED_LOCK(env.mutex);
+        FLARE_SCOPED_LOCK(env.mutex);
         if (env.client == NULL) {
             return;
         }
@@ -372,14 +373,14 @@ static void NotifyWaiters(ProfilingType type, const Controller* cur_cntl,
     }
 }
 
-#if defined(OS_MACOSX)
+#if defined(FLARE_PLATFORM_OSX)
 static const char* s_pprof_binary_path = nullptr;
 static bool check_GOOGLE_PPROF_BINARY_PATH() {
     char* str = getenv("GOOGLE_PPROF_BINARY_PATH");
     if (str == NULL) {
         return false;
     }
-    butil::fd_guard fd(open(str, O_RDONLY));
+    flare::base::fd_guard fd(open(str, O_RDONLY));
     if (fd < 0) {
         return false;
     }
@@ -396,15 +397,15 @@ static bool has_GOOGLE_PPROF_BINARY_PATH() {
 static void DisplayResult(Controller* cntl,
                           google::protobuf::Closure* done,
                           const char* prof_name,
-                          const butil::IOBuf& result_prefix) {
+                          const flare::io::IOBuf& result_prefix) {
     ClosureGuard done_guard(done);
-    butil::IOBuf prof_result;
+    flare::io::IOBuf prof_result;
     if (cntl->IsCanceled()) {
         // If the page is refreshed, older connections are likely to be
         // already closed by browser.
         return;
     }
-    butil::IOBuf& resp = cntl->response_attachment();
+    flare::io::IOBuf& resp = cntl->response_attachment();
     const bool use_html = UseHTML(cntl->http_request());
     const bool show_ccount = cntl->http_request().uri().GetQuery("ccount");
     const std::string* base_name = cntl->http_request().uri().GetQuery("base");
@@ -416,7 +417,7 @@ static void DisplayResult(Controller* cntl,
         if (display_type == DisplayType::kUnknown) {
             return cntl->SetFailed(EINVAL, "Invalid display_type=%s", display_type_query->c_str());
         }
-#if defined(OS_LINUX)
+#if defined(FLARE_PLATFORM_LINUX)
         if (display_type == DisplayType::kFlameGraph && !flamegraph_tool) {
             return cntl->SetFailed(EINVAL, "Failed to find environment variable "
                 "FLAMEGRAPH_PL_PATH, please read cpu_profiler doc"
@@ -433,7 +434,7 @@ static void DisplayResult(Controller* cntl,
                 EINVAL, "The profile denoted by `base' does not exist");
         }
     }
-    butil::IOBufBuilder os;
+    flare::io::IOBufBuilder os;
     os << result_prefix;
     char expected_result_name[256];
     MakeCacheName(expected_result_name, sizeof(expected_result_name),
@@ -480,7 +481,7 @@ static void DisplayResult(Controller* cntl,
 
     std::string pprof_tool{GeneratePerlScriptPath(PPROF_FILENAME)};
 
-#if defined(OS_LINUX)
+#if defined(FLARE_PLATFORM_LINUX)
     cmd_builder << "perl " << pprof_tool
                 << DisplayTypeToPProfArgument(display_type)
                 << (show_ccount ? " --contention " : "");
@@ -496,7 +497,7 @@ static void DisplayResult(Controller* cntl,
         cmd_builder << " 2>/dev/null " << " | " << "perl " << flamegraph_tool;
     }
     cmd_builder << " 2>&1 ";
-#elif defined(OS_MACOSX)
+#elif defined(FLARE_PLATFORM_OSX)
     cmd_builder << s_pprof_binary_path << " "
                 << DisplayTypeToPProfArgument(display_type)
                 << (show_ccount ? " -contentions " : "");
@@ -521,9 +522,9 @@ static void DisplayResult(Controller* cntl,
         }
         errno = 0; // read_command_output may not set errno, clear it to make sure if
                    // we see non-zero errno, it's real error.
-        butil::IOBufBuilder pprof_output;
+        flare::io::IOBufBuilder pprof_output;
         RPC_VLOG << "Running cmd=" << cmd;
-        const int rc = butil::read_command_output(pprof_output, cmd.c_str());
+        const int rc = flare::base::read_command_output(pprof_output, cmd.c_str());
         if (rc != 0) {
             butil::FilePath pprof_path(pprof_tool);
             if (!butil::PathExists(pprof_path)) {
@@ -534,7 +535,7 @@ static void DisplayResult(Controller* cntl,
                 continue;
             }
             if (rc < 0) {
-                os << "Fail to execute `" << cmd << "', " << berror()
+                os << "Fail to execute `" << cmd << "', " << flare_error()
                    << (use_html ? "</body></html>" : "\n");
                 os.move_to(resp);
                 cntl->http_response().set_status_code(
@@ -551,8 +552,8 @@ static void DisplayResult(Controller* cntl,
 
         // Append the profile name as the visual reminder for what
         // current profile is.
-        butil::IOBuf before_label;
-        butil::IOBuf tmp;
+        flare::io::IOBuf before_label;
+        flare::io::IOBuf tmp;
         if (cntl->http_request().uri().GetQuery("view") == NULL) {
             tmp.append(prof_name);
             tmp.append("[addToProfEnd]");
@@ -604,11 +605,11 @@ static void DoProfiling(ProfilingType type,
                         ::google::protobuf::Closure* done) {
     ClosureGuard done_guard(done);
     Controller *cntl = static_cast<Controller*>(cntl_base);
-    butil::IOBuf& resp = cntl->response_attachment();
+    flare::io::IOBuf& resp = cntl->response_attachment();
     const bool use_html = UseHTML(cntl->http_request());
     cntl->http_response().set_content_type(use_html ? "text/html" : "text/plain");
 
-    butil::IOBufBuilder os;
+    flare::io::IOBufBuilder os;
     if (use_html) {
         os << "<!DOCTYPE html><html><head>\n"
             "<meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\" />\n"
@@ -670,7 +671,7 @@ static void DoProfiling(ProfilingType type,
     }
 
     {
-        BAIDU_SCOPED_LOCK(g_env[type].mutex);
+        FLARE_SCOPED_LOCK(g_env[type].mutex);
         if (g_env[type].client) {
             if (NULL == g_env[type].waiters) {
                 g_env[type].waiters = new std::vector<ProfilingWaiter>;
@@ -691,7 +692,7 @@ static void DoProfiling(ProfilingType type,
         }
         CHECK(NULL == g_env[type].client);
         g_env[type].client = new ProfilingClient;
-        g_env[type].client->end_us = butil::cpuwide_time_us() + seconds * 1000000L;
+        g_env[type].client->end_us = flare::base::cpuwide_time_us() + seconds * 1000000L;
         g_env[type].client->seconds = seconds;
         // This id work arounds an issue of chrome (or jquery under chrome) that
         // the ajax call in another tab may be delayed until ajax call in
@@ -712,14 +713,14 @@ static void DoProfiling(ProfilingType type,
 
     char prof_name[128];
     if (MakeProfName(type, prof_name, sizeof(prof_name)) != 0) {
-        os << "Fail to create prof name: " << berror()
+        os << "Fail to create prof name: " << flare_error()
            << (use_html ? "</body></html>" : "\n");
         os.move_to(resp);
         cntl->http_response().set_status_code(HTTP_STATUS_INTERNAL_SERVER_ERROR);
         return NotifyWaiters(type, cntl, view);
     }
 
-#if defined(OS_MACOSX)
+#if defined(FLARE_PLATFORM_OSX)
     if (!has_GOOGLE_PPROF_BINARY_PATH()) {
         os << "no GOOGLE_PPROF_BINARY_PATH in env"
            << (use_html ? "</body></html>" : "\n");
@@ -835,9 +836,9 @@ static void StartProfiling(ProfilingType type,
                            ::google::protobuf::Closure* done) {
     ClosureGuard done_guard(done);
     Controller *cntl = static_cast<Controller*>(cntl_base);
-    butil::IOBuf& resp = cntl->response_attachment();
+    flare::io::IOBuf& resp = cntl->response_attachment();
     const bool use_html = UseHTML(cntl->http_request());
-    butil::IOBufBuilder os;
+    flare::io::IOBufBuilder os;
     bool enabled = false;
     const char* extra_desc = "";
     if (type == PROFILING_CPU) {
@@ -855,7 +856,7 @@ static void StartProfiling(ProfilingType type,
     }
     const char* const type_str = ProfilingType2String(type);
 
-#if defined(OS_MACOSX)
+#if defined(FLARE_PLATFORM_OSX)
     if (!has_GOOGLE_PPROF_BINARY_PATH()) {
         enabled = false;
         extra_desc = "(no GOOGLE_PPROF_BINARY_PATH in env)";
@@ -887,7 +888,7 @@ static void StartProfiling(ProfilingType type,
         if (display_type == DisplayType::kUnknown) {
             return cntl->SetFailed(EINVAL, "Invalid display_type=%s", display_type_query->c_str());
         }
-#if defined(OS_LINUX)
+#if defined(FLARE_PLATFORM_LINUX)
         if (display_type == DisplayType::kFlameGraph && !getenv("FLAMEGRAPH_PL_PATH")) {
             return cntl->SetFailed(EINVAL, "Failed to find environment variable "
                 "FLAMEGRAPH_PL_PATH, please read cpu_profiler doc"
@@ -900,7 +901,7 @@ static void StartProfiling(ProfilingType type,
     size_t nwaiters = 0;
     ProfilingEnvironment & env = g_env[type];
     if (view == NULL) {
-        BAIDU_SCOPED_LOCK(env.mutex);
+        FLARE_SCOPED_LOCK(env.mutex);
         if (env.client) {
             profiling_client = *env.client;
             nwaiters = (env.waiters ? env.waiters->size() : 0);
@@ -1076,7 +1077,7 @@ static void StartProfiling(ProfilingType type,
     os << "<div><pre style='display:inline'>Display: </pre>"
         "<select id='display_type' onchange='onSelectProf()'>"
         "<option value=dot" << (display_type == DisplayType::kDot ? " selected" : "") << ">dot</option>"
-#if defined(OS_LINUX)
+#if defined(FLARE_PLATFORM_LINUX)
         "<option value=flame" << (display_type == DisplayType::kFlameGraph ? " selected" : "") << ">flame</option>"
 #endif
         "<option value=text" << (display_type == DisplayType::kText ? " selected" : "") << ">text</option></select>";
@@ -1130,7 +1131,7 @@ static void StartProfiling(ProfilingType type,
     os << "<div id=\"profiling-result\">";
     if (profiling_client.seconds != 0) {
         const int wait_seconds =
-            (int)ceil((profiling_client.end_us - butil::cpuwide_time_us())
+            (int)ceil((profiling_client.end_us - flare::base::cpuwide_time_us())
                       / 1000000.0);
         os << "Your request is merged with the request from "
            << profiling_client.point;

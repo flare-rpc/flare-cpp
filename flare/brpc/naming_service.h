@@ -22,7 +22,7 @@
 #include <vector>                                   // std::vector
 #include <string>                                   // std::string
 #include <ostream>                                  // std::ostream
-#include "flare/butil/endpoint.h"                         // butil::EndPoint
+#include "flare/base/endpoint.h"                         // flare::base::end_point
 #include "flare/butil/macros.h"                           // BAIDU_CONCAT
 #include "flare/brpc/describable.h"
 #include "flare/brpc/destroyable.h"

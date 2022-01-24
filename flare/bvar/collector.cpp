@@ -19,7 +19,7 @@
 
 #include <map>
 #include <gflags/gflags.h>
-#include "flare/butil/memory/singleton_on_pthread_once.h"
+#include "flare/base/singleton_on_pthread_once.h"
 #include "flare/bvar/bvar.h"
 #include "flare/bvar/collector.h"
 
@@ -36,8 +36,8 @@ DEFINE_int32(bvar_collector_expected_per_second, 1000,
 // CAUTION: Don't change this value unless you know exactly what it means.
 static const int64_t COLLECTOR_GRAB_INTERVAL_US = 100000L; // 100ms
 
-BAIDU_CASSERT(!(COLLECTOR_SAMPLING_BASE & (COLLECTOR_SAMPLING_BASE - 1)),
-              must_be_power_of_2);
+static_assert(!(COLLECTOR_SAMPLING_BASE & (COLLECTOR_SAMPLING_BASE - 1)),
+              "must be power of 2");
 
 // Combine two circular linked list into one.
 struct CombineCollected {
@@ -49,7 +49,7 @@ struct CombineCollected {
             s1 = s2;
             return;
         }
-        s1->InsertBeforeAsList(s2);
+        s1->insert_before_as_list(s2);
     }
 };
 
@@ -99,18 +99,18 @@ private:
     bool _stop;         // Set to true in dtor.
     pthread_t _grab_thread;     // For joining.
     pthread_t _dump_thread;
-    int64_t _ngrab BAIDU_CACHELINE_ALIGNMENT;
+    int64_t _ngrab FLARE_CACHELINE_ALIGNMENT;
     int64_t _ndrop;
     int64_t _ndump;
     pthread_mutex_t _dump_thread_mutex;
     pthread_cond_t _dump_thread_cond;
-    butil::LinkNode<Collected> _dump_root;
+    flare::container::link_node<Collected> _dump_root;
     pthread_mutex_t _sleep_mutex;
     pthread_cond_t _sleep_cond;
 };
 
 Collector::Collector()
-    : _last_active_cpuwide_us(butil::cpuwide_time_us())
+    : _last_active_cpuwide_us(flare::base::cpuwide_time_us())
     , _created(false)
     , _stop(false)
     , _grab_thread(0)
@@ -124,7 +124,7 @@ Collector::Collector()
     pthread_cond_init(&_sleep_cond, NULL);
     int rc = pthread_create(&_grab_thread, NULL, run_grab_thread, this);
     if (rc != 0) {
-        LOG(ERROR) << "Fail to create Collector, " << berror(rc);
+        LOG(ERROR) << "Fail to create Collector, " << flare_error(rc);
     } else {
         _created = true;
     }
@@ -151,7 +151,7 @@ static T deref_value(void* arg) {
 static CollectorSpeedLimit g_null_speed_limit = BVAR_COLLECTOR_SPEED_LIMIT_INITIALIZER;
 
 void Collector::grab_thread() {
-    _last_active_cpuwide_us = butil::cpuwide_time_us();
+    _last_active_cpuwide_us = flare::base::cpuwide_time_us();
     int64_t last_before_update_sl = _last_active_cpuwide_us;
 
     // This is the thread for collecting TLS submissions. User's callbacks are
@@ -192,22 +192,22 @@ void Collector::grab_thread() {
         }
 
         // Collect TLS submissions and give them to dump_thread.
-        butil::LinkNode<Collected>* head = this->reset();
+        flare::container::link_node<Collected>* head = this->reset();
         if (head) {
-            butil::LinkNode<Collected> tmp_root;
-            head->InsertBeforeAsList(&tmp_root);
+            flare::container::link_node<Collected> tmp_root;
+            head->insert_before_as_list(&tmp_root);
             head = NULL;
             
             // Group samples by preprocessors.
-            for (butil::LinkNode<Collected>* p = tmp_root.next(); p != &tmp_root;) {
-                butil::LinkNode<Collected>* saved_next = p->next();
-                p->RemoveFromList();
+            for (flare::container::link_node<Collected>* p = tmp_root.next(); p != &tmp_root;) {
+                flare::container::link_node<Collected>* saved_next = p->next();
+                p->remove_from_list();
                 CollectorPreprocessor* prep = p->value()->preprocessor();
                 prep_map[prep].push_back(p->value());
                 p = saved_next;
             }
             // Iterate prep_map
-            butil::LinkNode<Collected> root;
+            flare::container::link_node<Collected> root;
             for (PreprocessorMap::iterator it = prep_map.begin();
                  it != prep_map.end(); ++it) {
                 std::vector<Collected*> & list = it->second;
@@ -235,20 +235,20 @@ void Collector::grab_thread() {
                         ++_ndrop;
                         p->destroy();
                     } else {
-                        p->InsertBefore(&root);
+                        p->insert_before(&root);
                     }
                 }
             }
             // Give the samples to dump_thread
             if (root.next() != &root) {  // non empty
-                butil::LinkNode<Collected>* head2 = root.next();
-                root.RemoveFromList();
-                BAIDU_SCOPED_LOCK(_dump_thread_mutex);
-                head2->InsertBeforeAsList(&_dump_root);
+                flare::container::link_node<Collected>* head2 = root.next();
+                root.remove_from_list();
+                FLARE_SCOPED_LOCK(_dump_thread_mutex);
+                head2->insert_before_as_list(&_dump_root);
                 pthread_cond_signal(&_dump_thread_cond);
             }
         }
-        int64_t now = butil::cpuwide_time_us();
+        int64_t now = flare::base::cpuwide_time_us();
         int64_t interval = now - last_before_update_sl;
         last_before_update_sl = now;
         for (GrapMap::iterator it = ngrab_map.begin();
@@ -257,23 +257,23 @@ void Collector::grab_thread() {
                                it->second, interval);
         }
         
-        now = butil::cpuwide_time_us();
+        now = flare::base::cpuwide_time_us();
         // calcuate thread usage.
         busy_seconds += (now - _last_active_cpuwide_us) / 1000000.0;
         _last_active_cpuwide_us = now;
 
         // sleep for the next round.
         if (!_stop && abstime > now) {
-            timespec abstimespec = butil::microseconds_from_now(abstime - now);
+            timespec abstimespec = flare::base::microseconds_from_now(abstime - now);
             pthread_mutex_lock(&_sleep_mutex);
             pthread_cond_timedwait(&_sleep_cond, &_sleep_mutex, &abstimespec);
             pthread_mutex_unlock(&_sleep_mutex);
         }
-        _last_active_cpuwide_us = butil::cpuwide_time_us();
+        _last_active_cpuwide_us = flare::base::cpuwide_time_us();
     }
     // make sure _stop is true, we may have other reasons to quit above loop
     {
-        BAIDU_SCOPED_LOCK(_dump_thread_mutex);
+        FLARE_SCOPED_LOCK(_dump_thread_mutex);
         _stop = true; 
         pthread_cond_signal(&_dump_thread_cond);
     }
@@ -303,7 +303,7 @@ void Collector::update_speed_limit(CollectorSpeedLimit* sl,
     const size_t old_sampling_range = sl->sampling_range;
     if (!sl->ever_grabbed) {
         if (sl->first_sample_real_us) {
-            interval_us = butil::gettimeofday_us() - sl->first_sample_real_us;
+            interval_us = flare::base::gettimeofday_us() - sl->first_sample_real_us;
             if (interval_us < 0) {
                 interval_us = 0;
             }
@@ -347,9 +347,9 @@ size_t is_collectable_before_first_time_grabbed(CollectorSpeedLimit* sl) {
         int before_add = sl->count_before_grabbed.fetch_add(
             1, std::memory_order_relaxed);
         if (before_add == 0) {
-            sl->first_sample_real_us = butil::gettimeofday_us();
+            sl->first_sample_real_us = flare::base::gettimeofday_us();
         } else if (before_add >= FLAGS_bvar_collector_expected_per_second) {
-            butil::get_leaky_singleton<Collector>()->wakeup_grab_thread();
+            flare::base::get_leaky_singleton<Collector>()->wakeup_grab_thread();
         }
     }
     return sl->sampling_range;
@@ -357,7 +357,7 @@ size_t is_collectable_before_first_time_grabbed(CollectorSpeedLimit* sl) {
 
 // Call user's callbacks in this thread.
 void Collector::dump_thread() {
-    int64_t last_ns = butil::cpuwide_time_ns();
+    int64_t last_ns = flare::base::cpuwide_time_ns();
 
     // vars
     double busy_seconds = 0;
@@ -369,36 +369,36 @@ void Collector::dump_thread() {
     bvar::PerSecond<bvar::PassiveStatus<int64_t> > ndumped_second(
         "bvar::collector_dump_second", &ndumped_var);
 
-    butil::LinkNode<Collected> root;
+    flare::container::link_node<Collected> root;
     size_t round = 0;
 
     // The main loop
     while (!_stop) {
         ++round;
         // Get new samples set by grab_thread.
-        butil::LinkNode<Collected>* newhead = NULL;
+        flare::container::link_node<Collected>* newhead = NULL;
         {
-            BAIDU_SCOPED_LOCK(_dump_thread_mutex);
+            FLARE_SCOPED_LOCK(_dump_thread_mutex);
             while (!_stop && _dump_root.next() == &_dump_root) {
-                const int64_t now_ns = butil::cpuwide_time_ns();
+                const int64_t now_ns = flare::base::cpuwide_time_ns();
                 busy_seconds += (now_ns - last_ns) / 1000000000.0;
                 pthread_cond_wait(&_dump_thread_cond, &_dump_thread_mutex);
-                last_ns = butil::cpuwide_time_ns();
+                last_ns = flare::base::cpuwide_time_ns();
             }
             if (_stop) {
                 break;
             }
             newhead = _dump_root.next();
-            _dump_root.RemoveFromList();
+            _dump_root.remove_from_list();
         }
         CHECK(newhead != &_dump_root);
-        newhead->InsertBeforeAsList(&root);
+        newhead->insert_before_as_list(&root);
 
         // Call callbacks.
-        for (butil::LinkNode<Collected>* p = root.next(); !_stop && p != &root;) {
+        for (flare::container::link_node<Collected>* p = root.next(); !_stop && p != &root;) {
             // We remove p from the list, save next first.
-            butil::LinkNode<Collected>* saved_next = p->next();
-            p->RemoveFromList();
+            flare::container::link_node<Collected>* saved_next = p->next();
+            p->remove_from_list();
             Collected* s = p->value();
             s->dump_and_destroy(round);
             ++_ndump;
@@ -408,7 +408,7 @@ void Collector::dump_thread() {
 }
 
 void Collected::submit(int64_t cpuwide_us) {
-    Collector* d = butil::get_leaky_singleton<Collector>();
+    Collector* d = flare::base::get_leaky_singleton<Collector>();
     // Destroy the sample in-place if the grab_thread did not run for twice
     // of the normal interval. This also applies to the situation that
     // grab_thread aborts due to severe errors.

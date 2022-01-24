@@ -4,7 +4,7 @@
 
 #include "flare/butil/debug/dump_without_crashing.h"
 
-#include "flare/butil/logging.h"
+#include "flare/base/logging.h"
 
 namespace {
 

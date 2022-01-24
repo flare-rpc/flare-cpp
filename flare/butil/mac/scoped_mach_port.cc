@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 #include "flare/butil/mac/scoped_mach_port.h"
-#include "flare/butil/logging.h"
+#include "flare/base/logging.h"
 
 namespace butil {
 namespace mac {

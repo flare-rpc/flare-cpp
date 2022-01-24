@@ -19,7 +19,7 @@
 #ifndef  BRPC_METHOD_STATUS_H
 #define  BRPC_METHOD_STATUS_H
 
-#include "flare/butil/macros.h"                  // DISALLOW_COPY_AND_ASSIGN
+#include "flare/butil/macros.h"                  // FLARE_DISALLOW_COPY_AND_ASSIGN
 #include "flare/bvar/bvar.h"                    // vars
 #include "flare/brpc/describable.h"
 #include "flare/brpc/concurrency_limiter.h"
@@ -50,7 +50,7 @@ public:
 
     // Expose internal vars.
     // Return 0 on success, -1 otherwise.
-    int Expose(const butil::StringPiece& prefix);
+    int Expose(const std::string_view& prefix);
 
     // Describe internal vars, used by /status
     void Describe(std::ostream &os, const DescribeOptions&) const override;
@@ -60,7 +60,7 @@ public:
 
 private:
 friend class Server;
-    DISALLOW_COPY_AND_ASSIGN(MethodStatus);
+    FLARE_DISALLOW_COPY_AND_ASSIGN(MethodStatus);
 
     // Note: SetConcurrencyLimiter() is not thread safe and can only be called 
     // before the server is started. 
@@ -83,7 +83,7 @@ public:
         , _received_us(received_us) {}
     ~ConcurrencyRemover();
 private:
-    DISALLOW_COPY_AND_ASSIGN(ConcurrencyRemover);
+    FLARE_DISALLOW_COPY_AND_ASSIGN(ConcurrencyRemover);
     MethodStatus* _status;
     Controller* _c;
     uint64_t _received_us;

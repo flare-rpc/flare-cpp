@@ -13,7 +13,7 @@
 #include <algorithm>
 
 #include "flare/butil/lazy_instance.h"
-#include "flare/butil/logging.h"
+#include "flare/base/logging.h"
 #include "flare/butil/threading/thread_id_name_manager.h"
 //#include "flare/butil/tracked_objects.h"
 

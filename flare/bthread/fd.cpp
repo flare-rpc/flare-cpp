@@ -19,18 +19,18 @@
 
 // Date: Thu Aug  7 18:56:27 CST 2014
 
-#include "flare/butil/compat.h"
+#include "flare/base/compat.h"
 #include <new>                                   // std::nothrow
 #include <sys/poll.h>                            // poll()
-#if defined(OS_MACOSX)
+#if defined(FLARE_PLATFORM_OSX)
 #include <sys/types.h>                           // struct kevent
 #include <sys/event.h>                           // kevent(), kqueue()
 #endif
-#include "flare/butil/static_atomic.h"
-#include "flare/butil/time.h"
-#include "flare/butil/fd_utility.h"                     // make_non_blocking
-#include "flare/butil/logging.h"
-#include "flare/butil/third_party/murmurhash3/murmurhash3.h"   // fmix32
+#include "flare/base/static_atomic.h"
+#include "flare/base/time.h"
+#include "flare/base/fd_utility.h"                     // make_non_blocking
+#include "flare/base/logging.h"
+#include "flare/hash/murmurhash3.h"   // fmix32
 #include "flare/bthread/butex.h"                       // butex_*
 #include "flare/bthread/task_group.h"                  // TaskGroup
 #include "flare/bthread/bthread.h"                             // bthread_start_urgent
@@ -39,7 +39,7 @@
 
 namespace bthread {
 
-extern BAIDU_THREAD_LOCAL TaskGroup* tls_task_group;
+extern FLARE_THREAD_LOCAL TaskGroup* tls_task_group;
 
 template <typename T, size_t NBLOCK, size_t BLOCK_SIZE>
 class LazyArray {
@@ -126,9 +126,9 @@ public:
             _start_mutex.unlock();
             return -1;
         }
-#if defined(OS_LINUX)
+#if defined(FLARE_PLATFORM_LINUX)
         _epfd = epoll_create(epoll_size);
-#elif defined(OS_MACOSX)
+#elif defined(FLARE_PLATFORM_OSX)
         _epfd = kqueue();
 #endif
         _start_mutex.unlock();
@@ -170,11 +170,11 @@ public:
             PLOG(FATAL) << "Fail to create closing_epoll_pipe";
             return -1;
         }
-#if defined(OS_LINUX)
+#if defined(FLARE_PLATFORM_LINUX)
         epoll_event evt = { EPOLLOUT, { NULL } };
         if (epoll_ctl(saved_epfd, EPOLL_CTL_ADD,
                       closing_epoll_pipe[1], &evt) < 0) {
-#elif defined(OS_MACOSX)
+#elif defined(FLARE_PLATFORM_OSX)
         struct kevent kqueue_event;
         EV_SET(&kqueue_event, closing_epoll_pipe[1], EVFILT_WRITE, EV_ADD | EV_ENABLE,
                 0, 0, NULL);
@@ -187,7 +187,7 @@ public:
 
         const int rc = bthread_join(_tid, NULL);
         if (rc) {
-            LOG(FATAL) << "Fail to join EpollThread, " << berror(rc);
+            LOG(FATAL) << "Fail to join EpollThread, " << flare_error(rc);
             return -1;
         }
         close(closing_epoll_pipe[0]);
@@ -230,7 +230,7 @@ public:
         // and EPOLL_CTL_ADD shall have release fence.
         const int expected_val = butex->load(std::memory_order_relaxed);
 
-#if defined(OS_LINUX)
+#if defined(FLARE_PLATFORM_LINUX)
 # ifdef BAIDU_KERNEL_FIXED_EPOLLONESHOT_BUG
         epoll_event evt = { events | EPOLLONESHOT, { butex } };
         if (epoll_ctl(_epfd, EPOLL_CTL_MOD, fd, &evt) < 0) {
@@ -250,7 +250,7 @@ public:
             return -1;
         }
 # endif
-#elif defined(OS_MACOSX)
+#elif defined(FLARE_PLATFORM_OSX)
         struct kevent kqueue_event;
         EV_SET(&kqueue_event, fd, events, EV_ADD | EV_ENABLE | EV_ONESHOT,
                 0, 0, butex);
@@ -288,9 +288,9 @@ public:
             butex->fetch_add(1, std::memory_order_relaxed);
             butex_wake_all(butex);
         }
-#if defined(OS_LINUX)
+#if defined(FLARE_PLATFORM_LINUX)
         epoll_ctl(_epfd, EPOLL_CTL_DEL, fd, NULL);
-#elif defined(OS_MACOSX)
+#elif defined(FLARE_PLATFORM_OSX)
         struct kevent evt;
         EV_SET(&evt, fd, EVFILT_WRITE, EV_DELETE, 0, 0, NULL);
         kevent(_epfd, &evt, 1, NULL, 0, NULL);
@@ -314,9 +314,9 @@ private:
     void* run() {
         const int initial_epfd = _epfd;
         const size_t MAX_EVENTS = 32;
-#if defined(OS_LINUX)
+#if defined(FLARE_PLATFORM_LINUX)
         epoll_event* e = new (std::nothrow) epoll_event[MAX_EVENTS];
-#elif defined(OS_MACOSX)
+#elif defined(FLARE_PLATFORM_OSX)
         typedef struct kevent KEVENT;
         struct kevent* e = new (std::nothrow) KEVENT[MAX_EVENTS];
 #endif
@@ -325,16 +325,16 @@ private:
             return NULL;
         }
 
-#if defined(OS_LINUX)
+#if defined(FLARE_PLATFORM_LINUX)
 # ifndef BAIDU_KERNEL_FIXED_EPOLLONESHOT_BUG
         DLOG(INFO) << "Use DEL+ADD instead of EPOLLONESHOT+MOD due to kernel bug. Performance will be much lower.";
 # endif
 #endif
         while (!_stop) {
             const int epfd = _epfd;
-#if defined(OS_LINUX)
+#if defined(FLARE_PLATFORM_LINUX)
             const int n = epoll_wait(epfd, e, MAX_EVENTS, -1);
-#elif defined(OS_MACOSX)
+#elif defined(FLARE_PLATFORM_OSX)
             const int n = kevent(epfd, NULL, 0, e, MAX_EVENTS, NULL);
 #endif
             if (_stop) {
@@ -346,8 +346,8 @@ private:
 #ifndef NDEBUG
                     break_nums.fetch_add(1, std::memory_order_relaxed);
                     int* p = &errno;
-                    const char* b = berror();
-                    const char* b2 = berror(errno);
+                    const char* b = flare_error();
+                    const char* b2 = flare_error(errno);
                     DLOG(FATAL) << "Fail to epoll epfd=" << epfd << ", "
                                 << errno << " " << p << " " <<  b << " " <<  b2;
 #endif
@@ -358,7 +358,7 @@ private:
                 break;
             }
 
-#if defined(OS_LINUX)
+#if defined(FLARE_PLATFORM_LINUX)
 # ifndef BAIDU_KERNEL_FIXED_EPOLLONESHOT_BUG
             for (int i = 0; i < n; ++i) {
                 epoll_ctl(epfd, EPOLL_CTL_DEL, e[i].data.fd, NULL);
@@ -366,7 +366,7 @@ private:
 # endif
 #endif
             for (int i = 0; i < n; ++i) {
-#if defined(OS_LINUX)
+#if defined(FLARE_PLATFORM_LINUX)
 # ifdef BAIDU_KERNEL_FIXED_EPOLLONESHOT_BUG
                 EpollButex* butex = static_cast<EpollButex*>(e[i].data.ptr);
 # else
@@ -374,7 +374,7 @@ private:
                 EpollButex* butex = pbutex ?
                     pbutex->load(std::memory_order_consume) : NULL;
 # endif
-#elif defined(OS_MACOSX)
+#elif defined(FLARE_PLATFORM_OSX)
                 EpollButex* butex = static_cast<EpollButex*>(e[i].udata);
 #endif
                 if (butex != NULL && butex != CLOSING_GUARD) {
@@ -393,7 +393,7 @@ private:
     int _epfd;
     bool _stop;
     bthread_t _tid;
-    butil::Mutex _start_mutex;
+    flare::base::Mutex _start_mutex;
 };
 
 EpollThread epoll_thread[BTHREAD_EPOLL_THREAD_NUM];
@@ -405,7 +405,7 @@ static inline EpollThread& get_epoll_thread(int fd) {
         return et;
     }
 
-    EpollThread& et = epoll_thread[butil::fmix32(fd) % BTHREAD_EPOLL_THREAD_NUM];
+    EpollThread& et = epoll_thread[flare::hash::fmix32(fd) % BTHREAD_EPOLL_THREAD_NUM];
     et.start(BTHREAD_DEFAULT_EPOLL_SIZE);
     return et;
 }
@@ -422,7 +422,7 @@ int stop_and_join_epoll_threads() {
     return rc;
 }
 
-#if defined(OS_LINUX)
+#if defined(FLARE_PLATFORM_LINUX)
 short epoll_to_poll_events(uint32_t epoll_events) {
     // Most POLL* and EPOLL* are same values.
     short poll_events = (epoll_events &
@@ -433,7 +433,7 @@ short epoll_to_poll_events(uint32_t epoll_events) {
     CHECK_EQ((uint32_t)poll_events, epoll_events);
     return poll_events;
 }
-#elif defined(OS_MACOSX)
+#elif defined(FLARE_PLATFORM_OSX)
 static short kqueue_to_poll_events(int kqueue_events) {
     //TODO: add more values?
     short poll_events = 0;
@@ -454,17 +454,17 @@ int pthread_fd_wait(int fd, unsigned events,
     if (abstime) {
         timespec now;
         clock_gettime(CLOCK_REALTIME, &now);
-        int64_t now_us = butil::timespec_to_microseconds(now);
-        int64_t abstime_us = butil::timespec_to_microseconds(*abstime);
+        int64_t now_us = flare::base::timespec_to_microseconds(now);
+        int64_t abstime_us = flare::base::timespec_to_microseconds(*abstime);
         if (abstime_us <= now_us) {
             errno = ETIMEDOUT;
             return -1;
         }
         diff_ms = (abstime_us - now_us + 999L) / 1000L;
     }
-#if defined(OS_LINUX)
+#if defined(FLARE_PLATFORM_LINUX)
     const short poll_events = bthread::epoll_to_poll_events(events);
-#elif defined(OS_MACOSX)
+#elif defined(FLARE_PLATFORM_OSX)
     const short poll_events = bthread::kqueue_to_poll_events(events);
 #endif
     if (poll_events == 0) {
@@ -528,14 +528,14 @@ int bthread_connect(int sockfd, const sockaddr* serv_addr,
         return ::connect(sockfd, serv_addr, addrlen);
     }
     // FIXME: Scoped non-blocking?
-    butil::make_non_blocking(sockfd);
+    flare::base::make_non_blocking(sockfd);
     const int rc = connect(sockfd, serv_addr, addrlen);
     if (rc == 0 || errno != EINPROGRESS) {
         return rc;
     }
-#if defined(OS_LINUX)
+#if defined(FLARE_PLATFORM_LINUX)
     if (bthread_fd_wait(sockfd, EPOLLOUT) < 0) {
-#elif defined(OS_MACOSX)
+#elif defined(FLARE_PLATFORM_OSX)
     if (bthread_fd_wait(sockfd, EVFILT_WRITE) < 0) {
 #endif
         return -1;

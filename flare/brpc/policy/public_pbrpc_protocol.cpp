@@ -20,7 +20,7 @@
 #include <google/protobuf/message.h>               // Message
 #include <gflags/gflags.h>
 #include "flare/butil/third_party/snappy/snappy.h"        // snappy::Compress
-#include "flare/butil/time.h"
+#include "flare/base/time.h"
 #include "flare/brpc/controller.h"                       // Controller
 #include "flare/brpc/socket.h"                           // Socket
 #include "flare/brpc/server.h"                           // Server
@@ -119,7 +119,7 @@ void PublicPbrpcServiceAdaptor::SerializeResponseToIOBuf(
     ResponseHead* head = whole_res.mutable_responsehead();
     ResponseBody* body = whole_res.add_responsebody();
 
-    head->set_from_host(butil::ip2str(butil::my_ip()).c_str());
+    head->set_from_host(flare::base::ip2str(flare::base::my_ip()).c_str());
     body->set_version(meta.user_string());
     body->set_id(meta.correlation_id());
     if (cntl->Failed()) {
@@ -141,7 +141,7 @@ void PublicPbrpcServiceAdaptor::SerializeResponseToIOBuf(
             head->set_compress_type(COMPRESS_TYPE);
         }
     }
-    butil::IOBufAsZeroCopyOutputStream wrapper(&raw_res->body);
+    flare::io::IOBufAsZeroCopyOutputStream wrapper(&raw_res->body);
     if (!whole_res.SerializeToZeroCopyStream(&wrapper)) {
         cntl->CloseConnection("Close connection due to failure of "
                                  "serializing the whole response");
@@ -150,7 +150,7 @@ void PublicPbrpcServiceAdaptor::SerializeResponseToIOBuf(
 }
 
 void ProcessPublicPbrpcResponse(InputMessageBase* msg_base) {
-    const int64_t start_parse_us = butil::cpuwide_time_us();
+    const int64_t start_parse_us = flare::base::cpuwide_time_us();
     DestroyingPtr<MostCommonMessage> msg(static_cast<MostCommonMessage*>(msg_base));
     
     PublicPbrpcResponse pbres;
@@ -169,7 +169,7 @@ void ProcessPublicPbrpcResponse(InputMessageBase* msg_base) {
     const int rc = bthread_id_lock(cid, (void**)&cntl);
     if (rc != 0) {
         LOG_IF(ERROR, rc != EINVAL && rc != EPERM)
-            << "Fail to lock correlation_id=" << cid << ": " << berror(rc);
+            << "Fail to lock correlation_id=" << cid << ": " << flare_error(rc);
         return;
     }
     
@@ -192,7 +192,7 @@ void ProcessPublicPbrpcResponse(InputMessageBase* msg_base) {
                              COMPRESS_TYPE_SNAPPY : COMPRESS_TYPE_NONE);
         bool parse_result = false;
         if (type == COMPRESS_TYPE_SNAPPY) {
-            butil::IOBuf tmp;
+            flare::io::IOBuf tmp;
             tmp.append(res_data);
             parse_result = ParseFromCompressedData(tmp, cntl->response(), type);
         } else {
@@ -213,7 +213,7 @@ void ProcessPublicPbrpcResponse(InputMessageBase* msg_base) {
     accessor.OnResponse(cid, saved_error);
 }
 
-void SerializePublicPbrpcRequest(butil::IOBuf* buf, Controller* cntl,
+void SerializePublicPbrpcRequest(flare::io::IOBuf* buf, Controller* cntl,
                                  const google::protobuf::Message* request) {
     CompressType type = cntl->request_compress_type();
     if (type != COMPRESS_TYPE_NONE && type != COMPRESS_TYPE_SNAPPY) {
@@ -224,19 +224,19 @@ void SerializePublicPbrpcRequest(butil::IOBuf* buf, Controller* cntl,
     return SerializeRequestDefault(buf, cntl, request);
 }
        
-void PackPublicPbrpcRequest(butil::IOBuf* buf,
+void PackPublicPbrpcRequest(flare::io::IOBuf* buf,
                             SocketMessage**,
                             uint64_t correlation_id,
                             const google::protobuf::MethodDescriptor* method,
                             Controller* controller,
-                            const butil::IOBuf& request,
+                            const flare::io::IOBuf& request,
                             const Authenticator* /*not supported*/) {
     PublicPbrpcRequest pbreq;
     RequestHead* head = pbreq.mutable_requesthead();
     RequestBody* body = pbreq.add_requestbody();
-    butil::IOBufAsZeroCopyOutputStream request_stream(buf);
+    flare::io::IOBufAsZeroCopyOutputStream request_stream(buf);
 
-    head->set_from_host(butil::ip2str(butil::my_ip()).c_str());
+    head->set_from_host(flare::base::ip2str(flare::base::my_ip()).c_str());
     head->set_content_type(CONTENT_TYPE);
     bool short_connection = (controller->connection_type() == CONNECTION_TYPE_SHORT);
     head->set_connection(!short_connection);

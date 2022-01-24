@@ -21,7 +21,7 @@
 #include <gflags/gflags.h>
 
 #include "flare/brpc/errno.pb.h"
-#include "flare/butil/time.h"
+#include "flare/base/time.h"
 
 namespace brpc {
 
@@ -199,7 +199,7 @@ bool CircuitBreaker::OnCallEnd(int error_code, int64_t latency) {
 void CircuitBreaker::Reset() {
     _long_window.Reset();
     _short_window.Reset();
-    _last_reset_time_ms = butil::cpuwide_time_ms();
+    _last_reset_time_ms = flare::base::cpuwide_time_ms();
     _broken.store(false, std::memory_order_release);
 }
 
@@ -211,7 +211,7 @@ void CircuitBreaker::MarkAsBroken() {
 }
 
 void CircuitBreaker::UpdateIsolationDuration() {
-    int64_t now_time_ms = butil::cpuwide_time_ms();
+    int64_t now_time_ms = flare::base::cpuwide_time_ms();
     int isolation_duration_ms = _isolation_duration_ms.load(std::memory_order_relaxed);
     const int max_isolation_duration_ms =
         FLAGS_circuit_breaker_max_isolation_duration_ms;

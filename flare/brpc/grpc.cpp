@@ -22,7 +22,7 @@
 #include "flare/brpc/grpc.h"
 #include "flare/brpc/errno.pb.h"
 #include "flare/brpc/http_status_code.h"
-#include "flare/butil/logging.h"
+#include "flare/base/logging.h"
 
 namespace brpc {
 

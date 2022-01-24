@@ -6,6 +6,7 @@
 #define FLARE_BASE_MATH_LOG_H_
 
 #include <cmath>
+#include <assert.h>
 #include "flare/base/profile.h"
 
 namespace flare::base {

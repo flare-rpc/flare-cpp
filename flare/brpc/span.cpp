@@ -21,13 +21,13 @@
 #include <leveldb/db.h>
 #include <leveldb/comparator.h>
 #include "flare/bthread/bthread.h"
-#include "flare/butil/scoped_lock.h"
-#include "flare/butil/thread_local.h"
-#include "flare/butil/string_printf.h"
-#include "flare/butil/time.h"
-#include "flare/butil/logging.h"
-#include "flare/butil/object_pool.h"
-#include "flare/butil/fast_rand.h"
+#include "flare/base/scoped_lock.h"
+#include "flare/base/thread.h"
+#include "flare/base/strings.h"
+#include "flare/base/time.h"
+#include "flare/base/logging.h"
+#include "flare/memory/object_pool.h"
+#include "flare/base/fast_rand.h"
 #include "flare/butil/file_util.h"
 #include "flare/brpc/shared_object.h"
 #include "flare/brpc/reloadable_flags.h"
@@ -63,7 +63,7 @@ struct IdGen {
     bool init;
     uint16_t seq;
     uint64_t current_random;
-    butil::FastRandSeed seed;
+    flare::base::FastRandSeed seed;
 };
 
 static __thread IdGen tls_trace_id_gen = { false, 0, 0, { { 0, 0 } } };
@@ -101,7 +101,7 @@ inline uint64_t GenerateTraceId() {
 
 Span* Span::CreateClientSpan(const std::string& full_method_name,
                              int64_t base_real_us) {
-    Span* span = butil::get_object<Span>(Forbidden());
+    Span* span = flare::memory::get_object<Span>(Forbidden());
     if (__builtin_expect(span == NULL, 0)) {
         return NULL;
     }
@@ -150,7 +150,7 @@ Span* Span::CreateServerSpan(
     const std::string& full_method_name,
     uint64_t trace_id, uint64_t span_id, uint64_t parent_span_id,
     int64_t base_real_us) {
-    Span* span = butil::get_object<Span>(Forbidden());
+    Span* span = flare::memory::get_object<Span>(Forbidden());
     if (__builtin_expect(span == NULL, 0)) {
         return NULL;
     }
@@ -199,40 +199,40 @@ void Span::destroy() {
     while (p) {
         Span* p_next = p->_next_client;
         p->_info.clear();
-        butil::return_object(p);
+        flare::memory::return_object(p);
         p = p_next;
     }
     _info.clear();
-    butil::return_object(this);
+    flare::memory::return_object(this);
 }
 
 void Span::Annotate(const char* fmt, ...) {
-    const int64_t anno_time = butil::cpuwide_time_us() + _base_real_us;
-    butil::string_appendf(&_info, BRPC_SPAN_INFO_SEP "%lld ",
+    const int64_t anno_time = flare::base::cpuwide_time_us() + _base_real_us;
+    flare::base::string_appendf(&_info, BRPC_SPAN_INFO_SEP "%lld ",
                          (long long)anno_time);
     va_list ap;
     va_start(ap, fmt);
-    butil::string_vappendf(&_info, fmt, ap);
+    flare::base::string_vappendf(&_info, fmt, ap);
     va_end(ap);
 }
 
 void Span::Annotate(const char* fmt, va_list args) {
-    const int64_t anno_time = butil::cpuwide_time_us() + _base_real_us;
-    butil::string_appendf(&_info, BRPC_SPAN_INFO_SEP "%lld ",
+    const int64_t anno_time = flare::base::cpuwide_time_us() + _base_real_us;
+    flare::base::string_appendf(&_info, BRPC_SPAN_INFO_SEP "%lld ",
                          (long long)anno_time);
-    butil::string_vappendf(&_info, fmt, args);
+    flare::base::string_vappendf(&_info, fmt, args);
 }
 
 void Span::Annotate(const std::string& info) {
-    const int64_t anno_time = butil::cpuwide_time_us() + _base_real_us;
-    butil::string_appendf(&_info, BRPC_SPAN_INFO_SEP "%lld ",
+    const int64_t anno_time = flare::base::cpuwide_time_us() + _base_real_us;
+    flare::base::string_appendf(&_info, BRPC_SPAN_INFO_SEP "%lld ",
                          (long long)anno_time);
     _info.append(info);
 }
 
 void Span::AnnotateCStr(const char* info, size_t length) {
-    const int64_t anno_time = butil::cpuwide_time_us() + _base_real_us;
-    butil::string_appendf(&_info, BRPC_SPAN_INFO_SEP "%lld ",
+    const int64_t anno_time = flare::base::cpuwide_time_us() + _base_real_us;
+    flare::base::string_appendf(&_info, BRPC_SPAN_INFO_SEP "%lld ",
                          (long long)anno_time);
     if (length <= 0) {
         _info.append(info);
@@ -268,7 +268,7 @@ SpanInfoExtractor::SpanInfoExtractor(const char* info)
 bool SpanInfoExtractor::PopAnnotation(
     int64_t before_this_time, int64_t* time, std::string* annotation) {
     for (; _sp != NULL; ++_sp) {
-        butil::StringSplitter sp_time(_sp.field(), _sp.field() + _sp.length(), ' ');
+        flare::base::StringSplitter sp_time(_sp.field(), _sp.field() + _sp.length(), ' ');
         if (sp_time) {
             char* endptr;
             const int64_t anno_time = strtoll(sp_time.field(), &endptr, 10);
@@ -330,7 +330,7 @@ private:
         delete id_db;
         delete time_db;
         if (!FLAGS_rpcz_keep_span_db) {
-            std::string cmd = butil::string_printf("rm -rf %s %s",
+            std::string cmd = flare::base::string_printf("rm -rf %s %s",
                                                   id_db_name.c_str(),
                                                   time_db_name.c_str());
             butil::ignore_result(system(cmd.c_str()));
@@ -379,7 +379,7 @@ bvar::CollectorPreprocessor* Span::preprocessor() {
 static void ResetSpanDB(SpanDB* db) {
     SpanDB* old_db = NULL;
     {
-        BAIDU_SCOPED_LOCK(g_span_db_mutex);
+        FLARE_SCOPED_LOCK(g_span_db_mutex);
         old_db = g_span_db;
         g_span_db = db;
         if (g_span_db) {
@@ -409,8 +409,8 @@ static int StartIndexingIfNeeded() {
     return started_span_indexing ? 0 : -1;
 }
 
-inline int GetSpanDB(butil::intrusive_ptr<SpanDB>* db) {
-    BAIDU_SCOPED_LOCK(g_span_db_mutex);
+inline int GetSpanDB(flare::container::intrusive_ptr<SpanDB>* db) {
+    FLARE_SCOPED_LOCK(g_span_db_mutex);
     if (g_span_db != NULL) {
         *db = g_span_db;
         return 0;
@@ -431,7 +431,7 @@ static void Span2Proto(const Span* span, RpczSpan* out) {
     out->set_log_id(span->log_id());
     out->set_base_cid(span->base_cid().value);
     out->set_ending_cid(span->ending_cid().value);
-    out->set_remote_ip(butil::ip2int(span->remote_side().ip));
+    out->set_remote_ip(flare::base::ip2int(span->remote_side().ip));
     out->set_remote_port(span->remote_side().port);
     out->set_type(span->type());
     out->set_async(span->async());
@@ -638,7 +638,7 @@ void Span::dump_and_destroy(size_t /*round*/) {
 
     std::string value_buf;
 
-    butil::intrusive_ptr<SpanDB> db;
+    flare::container::intrusive_ptr<SpanDB> db;
     if (GetSpanDB(&db) != 0) {
         if (g_span_ending) {
             destroy();
@@ -665,7 +665,7 @@ void Span::dump_and_destroy(size_t /*round*/) {
     }
 
     // Remove old spans
-    const int64_t now = butil::gettimeofday_us();
+    const int64_t now = flare::base::gettimeofday_us();
     if (now > g_last_delete_tm + SPAN_DELETE_INTERVAL_US) {
         g_last_delete_tm = now;
         leveldb::Status st = db->RemoveSpansBefore(
@@ -681,7 +681,7 @@ void Span::dump_and_destroy(size_t /*round*/) {
 }
 
 int FindSpan(uint64_t trace_id, uint64_t span_id, RpczSpan* response) {
-    butil::intrusive_ptr<SpanDB> db;
+    flare::container::intrusive_ptr<SpanDB> db;
     if (GetSpanDB(&db) != 0) {
         return -1;
     }
@@ -703,7 +703,7 @@ int FindSpan(uint64_t trace_id, uint64_t span_id, RpczSpan* response) {
 
 void FindSpans(uint64_t trace_id, std::deque<RpczSpan>* out) {
     out->clear();
-    butil::intrusive_ptr<SpanDB> db;
+    flare::container::intrusive_ptr<SpanDB> db;
     if (GetSpanDB(&db) != 0) {
         return;
     }
@@ -735,7 +735,7 @@ void FindSpans(uint64_t trace_id, std::deque<RpczSpan>* out) {
 void ListSpans(int64_t starting_realtime, size_t max_scan,
                std::deque<BriefSpan>* out, SpanFilter* filter) {
     out->clear();
-    butil::intrusive_ptr<SpanDB> db;
+    flare::container::intrusive_ptr<SpanDB> db;
     if (GetSpanDB(&db) != 0) {
         return;
     }
@@ -772,7 +772,7 @@ void ListSpans(int64_t starting_realtime, size_t max_scan,
 }
 
 void DescribeSpanDB(std::ostream& os) {
-    butil::intrusive_ptr<SpanDB> db;
+    flare::container::intrusive_ptr<SpanDB> db;
     if (GetSpanDB(&db) != 0) {
         return;
     }

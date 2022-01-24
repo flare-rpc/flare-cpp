@@ -69,7 +69,7 @@ TEST(LeakTrackerTest, Basic) {
 
 // Try some orderings of create/remove to hit different cases in the linked-list
 // assembly.
-TEST(LeakTrackerTest, LinkedList) {
+TEST(LeakTrackerTest, linked_list) {
   EXPECT_EQ(0, LeakTracker<ClassB>::NumLiveInstances());
 
   scoped_ptr<ClassA> a1(new ClassA);

@@ -51,7 +51,7 @@ TEST(AlignedMemoryTest, StackAlignment) {
 
   // TODO(ios): __attribute__((aligned(X))) with X >= 128 does not works on
   // the stack when building for arm64 on iOS, http://crbug.com/349003
-#if !(defined(OS_IOS) && defined(ARCH_CPU_ARM64)) &&    \
+#if !(defined(FLARE_PLATFORM_IPHONE) && defined(ARCH_CPU_ARM64)) &&    \
     defined(GOOD_GCC_STACK_ALIGNMENT)
   EXPECT_ALIGNED(raw128.void_data(), 128);
 
@@ -68,14 +68,14 @@ TEST(AlignedMemoryTest, StackAlignment) {
   EXPECT_ALIGNED(raw256.void_data(), 256);
 
   // TODO(ios): This test hits an armv7 bug in clang. crbug.com/138066
-#if !(defined(OS_IOS) && defined(ARCH_CPU_ARM_FAMILY)) &&       \
+#if !(defined(FLARE_PLATFORM_IPHONE) && defined(ARCH_CPU_ARM_FAMILY)) &&       \
     defined(GOOD_GCC_STACK_ALIGNMENT)
   AlignedMemory<8, 4096> raw4096;
   EXPECT_EQ(4096u, ALIGNOF(raw4096));
   EXPECT_ALIGNED(raw4096.void_data(), 4096);
-#endif  // !(defined(OS_IOS) && defined(ARCH_CPU_ARM_FAMILY))
+#endif  // !(defined(FLARE_PLATFORM_IPHONE) && defined(ARCH_CPU_ARM_FAMILY))
 #endif  // !(defined(OS_NACL) && defined(ARCH_CPU_X86_64))
-#endif  // !(defined(OS_IOS) && defined(ARCH_CPU_ARM64))
+#endif  // !(defined(FLARE_PLATFORM_IPHONE) && defined(ARCH_CPU_ARM64))
 }
 
 TEST(AlignedMemoryTest, DynamicAllocation) {

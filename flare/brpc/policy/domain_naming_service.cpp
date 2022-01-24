@@ -16,7 +16,7 @@
 // under the License.
 
 
-#include "flare/butil/build_config.h"                       // OS_MACOSX
+#include "flare/butil/build_config.h"                       // FLARE_PLATFORM_OSX
 #include <netdb.h>                                    // gethostbyname_r
 #include <stdlib.h>                                   // strtol
 #include <string>                                     // std::string
@@ -78,7 +78,7 @@ int DomainNamingService::GetServers(const char* dns_name,
         return -1;
     }
 
-#if defined(OS_MACOSX)
+#if defined(FLARE_PLATFORM_OSX)
     _aux_buf_len = 0; // suppress unused warning
     // gethostbyname on MAC is thread-safe (with current usage) since the
     // returned hostent is TLS. Check following link for the ref:
@@ -112,7 +112,7 @@ int DomainNamingService::GetServers(const char* dns_name,
     } while (1);
     if (ret != 0) {
         // `hstrerror' is thread safe under linux
-        LOG(WARNING) << "Can't resolve `" << buf << "', return=`" << berror(ret)
+        LOG(WARNING) << "Can't resolve `" << buf << "', return=`" << flare_error(ret)
                      << "' herror=`" << hstrerror(error) << '\'';
         return -1;
     }
@@ -122,7 +122,7 @@ int DomainNamingService::GetServers(const char* dns_name,
     }
 #endif
 
-    butil::EndPoint point;
+    flare::base::end_point point;
     point.port = port;
     for (int i = 0; result->h_addr_list[i] != NULL; ++i) {
         if (result->h_addrtype == AF_INET) {

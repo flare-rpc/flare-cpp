@@ -26,7 +26,7 @@
 #include <gflags/gflags.h>
 #include <google/protobuf/descriptor.h>
 #include <google/protobuf/io/zero_copy_stream_impl_lite.h>
-#include "flare/butil/time.h"
+#include "flare/base/time.h"
 #include "flare/butil/macros.h"
 #include "flare/brpc/socket.h"
 #include "flare/brpc/acceptor.h"
@@ -152,7 +152,7 @@ public:
         LOG(INFO) << __FUNCTION__ << "(" << this << ")";
     }
     void OnPlay(const brpc::RtmpPlayOptions& opt,
-                butil::Status* status,
+                flare::base::flare_status* status,
                 google::protobuf::Closure* done) {
         brpc::ClosureGuard done_guard(done);
         LOG(INFO) << remote_side() << "|stream=" << stream_id()
@@ -222,7 +222,7 @@ void PlayingDummyStream::SendData() {
         vmsg.frame_type = brpc::FLV_VIDEO_FRAME_KEYFRAME;
         vmsg.codec = brpc::FLV_VIDEO_AVC;
         vmsg.data.clear();
-        vmsg.data.append(butil::string_printf("video_%d(ms_id=%u)",
+        vmsg.data.append(flare::base::string_printf("video_%d(ms_id=%u)",
                                              i, stream_id()));
         //failing to send is possible
         SendVideoMessage(vmsg);
@@ -232,7 +232,7 @@ void PlayingDummyStream::SendData() {
         amsg.bits = brpc::FLV_SOUND_16BIT;
         amsg.type = brpc::FLV_SOUND_STEREO;
         amsg.data.clear();
-        amsg.data.append(butil::string_printf("audio_%d(ms_id=%u)",
+        amsg.data.append(flare::base::string_printf("audio_%d(ms_id=%u)",
                                              i, stream_id()));
         SendAudioMessage(amsg);
 
@@ -274,7 +274,7 @@ public:
     }
     void OnPublish(const std::string& stream_name,
                    brpc::RtmpPublishType publish_type,
-                   butil::Status* status,
+                   flare::base::flare_status* status,
                    google::protobuf::Closure* done) {
         brpc::ClosureGuard done_guard(done);
         LOG(INFO) << remote_side() << "|stream=" << stream_id()
@@ -327,9 +327,9 @@ public:
         pthread_mutex_destroy(&_mutex);
     }
     void move_created_streams(
-        std::vector<butil::intrusive_ptr<PublishStream> >* out) {
+        std::vector<flare::container::intrusive_ptr<PublishStream> >* out) {
         out->clear();
-        BAIDU_SCOPED_LOCK(_mutex);
+        FLARE_SCOPED_LOCK(_mutex);
         out->swap(_created_streams);
     }
 
@@ -339,14 +339,14 @@ private:
         const brpc::RtmpConnectRequest&) {
         PublishStream* stream = new PublishStream(_sleep_ms);
         {
-            BAIDU_SCOPED_LOCK(_mutex);
+            FLARE_SCOPED_LOCK(_mutex);
             _created_streams.push_back(stream);
         }
         return stream;
     }
     int64_t _sleep_ms;
     pthread_mutex_t _mutex;
-    std::vector<butil::intrusive_ptr<PublishStream> > _created_streams;
+    std::vector<flare::container::intrusive_ptr<PublishStream> > _created_streams;
 };
 
 class RtmpSubStream : public brpc::RtmpClientStream {
@@ -354,7 +354,7 @@ public:
     explicit RtmpSubStream(brpc::RtmpMessageHandler* mh)
         : _message_handler(mh) {}
     // @RtmpStreamBase
-    void OnMetaData(brpc::RtmpMetaData*, const butil::StringPiece&);
+    void OnMetaData(brpc::RtmpMetaData*, const std::string_view&);
     void OnSharedObjectMessage(brpc::RtmpSharedObjectMessage* msg);
     void OnAudioMessage(brpc::RtmpAudioMessage* msg);
     void OnVideoMessage(brpc::RtmpVideoMessage* msg);
@@ -368,7 +368,7 @@ void RtmpSubStream::OnFirstMessage() {
     _message_handler->OnPlayable();
 }
 
-void RtmpSubStream::OnMetaData(brpc::RtmpMetaData* obj, const butil::StringPiece& name) {
+void RtmpSubStream::OnMetaData(brpc::RtmpMetaData* obj, const std::string_view& name) {
     _message_handler->OnMetaData(obj, name);
 }
 
@@ -397,7 +397,7 @@ public:
 
     // @SubStreamCreator
     void NewSubStream(brpc::RtmpMessageHandler* message_handler,
-                      butil::intrusive_ptr<brpc::RtmpStreamBase>* sub_stream);
+                      flare::container::intrusive_ptr<brpc::RtmpStreamBase>* sub_stream);
     void LaunchSubStream(brpc::RtmpStreamBase* sub_stream,
                          brpc::RtmpRetryingClientStreamOptions* options);
 
@@ -411,7 +411,7 @@ RtmpSubStreamCreator::RtmpSubStreamCreator(const brpc::RtmpClient* client)
 RtmpSubStreamCreator::~RtmpSubStreamCreator() {}
  
 void RtmpSubStreamCreator::NewSubStream(brpc::RtmpMessageHandler* message_handler,
-                                        butil::intrusive_ptr<brpc::RtmpStreamBase>* sub_stream) {
+                                        flare::container::intrusive_ptr<brpc::RtmpStreamBase>* sub_stream) {
     if (sub_stream) { 
         (*sub_stream).reset(new RtmpSubStream(message_handler));
     }
@@ -426,11 +426,11 @@ void RtmpSubStreamCreator::LaunchSubStream(
 }
 
 TEST(RtmpTest, parse_rtmp_url) {
-    butil::StringPiece host;
-    butil::StringPiece vhost;
-    butil::StringPiece port;
-    butil::StringPiece app;
-    butil::StringPiece stream_name;
+    std::string_view host;
+    std::string_view vhost;
+    std::string_view port;
+    std::string_view app;
+    std::string_view stream_name;
 
     brpc::ParseRtmpURL("rtmp://HOST/APP/STREAM",
                              &host, &vhost, &port, &app, &stream_name);
@@ -543,8 +543,8 @@ TEST(RtmpTest, successfully_play_streams) {
     for (int i = 0; i < NSTREAM; ++i) {
         cstreams[i].reset(new TestRtmpClientStream);
         brpc::RtmpClientStreamOptions opt;
-        opt.play_name = butil::string_printf("play_name_%d", i);
-        //opt.publish_name = butil::string_printf("pub_name_%d", i);
+        opt.play_name = flare::base::string_printf("play_name_%d", i);
+        //opt.publish_name = flare::base::string_printf("pub_name_%d", i);
         opt.wait_until_play_or_publish_is_sent = true;
         cstreams[i]->Init(&rtmp_client, opt);
     }
@@ -606,7 +606,7 @@ TEST(RtmpTest, successfully_publish_streams) {
     for (int i = 0; i < NSTREAM; ++i) {
         cstreams[i].reset(new TestRtmpClientStream);
         brpc::RtmpClientStreamOptions opt;
-        opt.publish_name = butil::string_printf("pub_name_%d", i);
+        opt.publish_name = flare::base::string_printf("pub_name_%d", i);
         opt.wait_until_play_or_publish_is_sent = true;
         cstreams[i]->Init(&rtmp_client, opt);
     }
@@ -616,7 +616,7 @@ TEST(RtmpTest, successfully_publish_streams) {
         vmsg.timestamp = 1000 + i * 20;
         vmsg.frame_type = brpc::FLV_VIDEO_FRAME_KEYFRAME;
         vmsg.codec = brpc::FLV_VIDEO_AVC;
-        vmsg.data.append(butil::string_printf("video_%d", i));
+        vmsg.data.append(flare::base::string_printf("video_%d", i));
         for (int j = 0; j < NSTREAM; j += 2) {
             ASSERT_EQ(0, cstreams[j]->SendVideoMessage(vmsg));
         }
@@ -627,14 +627,14 @@ TEST(RtmpTest, successfully_publish_streams) {
         amsg.rate = brpc::FLV_SOUND_RATE_44100HZ;
         amsg.bits = brpc::FLV_SOUND_16BIT;
         amsg.type = brpc::FLV_SOUND_STEREO;
-        amsg.data.append(butil::string_printf("audio_%d", i));
+        amsg.data.append(flare::base::string_printf("audio_%d", i));
         for (int j = 1; j < NSTREAM; j += 2) {
             ASSERT_EQ(0, cstreams[j]->SendAudioMessage(amsg));
         }
         
         bthread_usleep(500000);
     }
-    std::vector<butil::intrusive_ptr<PublishStream> > created_streams;
+    std::vector<flare::container::intrusive_ptr<PublishStream> > created_streams;
     rtmp_service.move_created_streams(&created_streams);
     ASSERT_EQ(NSTREAM, (int)created_streams.size());
     for (int i = 0; i < NSTREAM; ++i) {
@@ -677,7 +677,7 @@ TEST(RtmpTest, failed_to_publish_streams) {
     for (int i = 0; i < NSTREAM; ++i) {
         cstreams[i]->assertions_on_failure();
     }
-    std::vector<butil::intrusive_ptr<PublishStream> > created_streams;
+    std::vector<flare::container::intrusive_ptr<PublishStream> > created_streams;
     rtmp_service.move_created_streams(&created_streams);
     ASSERT_EQ(NSTREAM, (int)created_streams.size());
     for (int i = 0; i < NSTREAM; ++i) {
@@ -702,7 +702,7 @@ TEST(RtmpTest, failed_to_connect_client_streams) {
     for (int i = 0; i < NSTREAM; ++i) {
         cstreams[i].reset(new TestRtmpClientStream);
         brpc::RtmpClientStreamOptions opt;
-        opt.play_name = butil::string_printf("play_name_%d", i);
+        opt.play_name = flare::base::string_printf("play_name_%d", i);
         opt.wait_until_play_or_publish_is_sent = true;
         cstreams[i]->Init(&rtmp_client, opt);
         cstreams[i]->assertions_on_failure();
@@ -720,14 +720,14 @@ TEST(RtmpTest, destroy_client_streams_before_init) {
 
     // Create multiple streams.
     const int NSTREAM = 2;
-    butil::intrusive_ptr<TestRtmpClientStream> cstreams[NSTREAM];
+    flare::container::intrusive_ptr<TestRtmpClientStream> cstreams[NSTREAM];
     for (int i = 0; i < NSTREAM; ++i) {
         cstreams[i].reset(new TestRtmpClientStream);
         cstreams[i]->Destroy();
         ASSERT_EQ(1, cstreams[i]->_called_on_stop);
         ASSERT_EQ(brpc::RtmpClientStream::STATE_DESTROYING, cstreams[i]->_state);
         brpc::RtmpClientStreamOptions opt;
-        opt.play_name = butil::string_printf("play_name_%d", i);
+        opt.play_name = flare::base::string_printf("play_name_%d", i);
         opt.wait_until_play_or_publish_is_sent = true;
         cstreams[i]->Init(&rtmp_client, opt);
         cstreams[i]->assertions_on_failure();
@@ -745,13 +745,13 @@ TEST(RtmpTest, destroy_retrying_client_streams_before_init) {
 
     // Create multiple streams.
     const int NSTREAM = 2;
-    butil::intrusive_ptr<TestRtmpRetryingClientStream> cstreams[NSTREAM];
+    flare::container::intrusive_ptr<TestRtmpRetryingClientStream> cstreams[NSTREAM];
     for (int i = 0; i < NSTREAM; ++i) {
         cstreams[i].reset(new TestRtmpRetryingClientStream);
         cstreams[i]->Destroy();
         ASSERT_EQ(1, cstreams[i]->_called_on_stop);
         brpc::RtmpRetryingClientStreamOptions opt;
-        opt.play_name = butil::string_printf("play_name_%d", i);
+        opt.play_name = flare::base::string_printf("play_name_%d", i);
         brpc::SubStreamCreator* sc = new RtmpSubStreamCreator(&rtmp_client);
         cstreams[i]->Init(sc, opt);
         ASSERT_EQ(1, cstreams[i]->_called_on_stop);
@@ -775,11 +775,11 @@ TEST(RtmpTest, destroy_client_streams_during_creation) {
 
     // Create multiple streams.
     const int NSTREAM = 2;
-    butil::intrusive_ptr<TestRtmpClientStream> cstreams[NSTREAM];
+    flare::container::intrusive_ptr<TestRtmpClientStream> cstreams[NSTREAM];
     for (int i = 0; i < NSTREAM; ++i) {
         cstreams[i].reset(new TestRtmpClientStream);
         brpc::RtmpClientStreamOptions opt;
-        opt.play_name = butil::string_printf("play_name_%d", i);
+        opt.play_name = flare::base::string_printf("play_name_%d", i);
         cstreams[i]->Init(&rtmp_client, opt);
         ASSERT_EQ(0, cstreams[i]->_called_on_stop);
         usleep(500*1000);
@@ -807,11 +807,11 @@ TEST(RtmpTest, destroy_retrying_client_streams_during_creation) {
 
     // Create multiple streams.
     const int NSTREAM = 2;
-    butil::intrusive_ptr<TestRtmpRetryingClientStream> cstreams[NSTREAM];
+    flare::container::intrusive_ptr<TestRtmpRetryingClientStream> cstreams[NSTREAM];
     for (int i = 0; i < NSTREAM; ++i) {
         cstreams[i].reset(new TestRtmpRetryingClientStream);
         brpc::RtmpRetryingClientStreamOptions opt;
-        opt.play_name = butil::string_printf("play_name_%d", i);
+        opt.play_name = flare::base::string_printf("play_name_%d", i);
         brpc::SubStreamCreator* sc = new RtmpSubStreamCreator(&rtmp_client);
         cstreams[i]->Init(sc, opt);
         ASSERT_EQ(0, cstreams[i]->_called_on_stop);
@@ -845,7 +845,7 @@ TEST(RtmpTest, retrying_stream) {
         cstreams[i].reset(new TestRtmpRetryingClientStream);
         brpc::Controller cntl;
         brpc::RtmpRetryingClientStreamOptions opt;
-        opt.play_name = butil::string_printf("name_%d", i);
+        opt.play_name = flare::base::string_printf("name_%d", i);
         brpc::SubStreamCreator* sc = new RtmpSubStreamCreator(&rtmp_client);
         cstreams[i]->Init(sc, opt);
     }

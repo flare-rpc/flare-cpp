@@ -19,7 +19,7 @@
 #include <gflags/gflags.h>
 #include <string>                                       // std::string
 #include <set>                                          // std::set
-#include "flare/butil/string_printf.h"
+#include "flare/base/strings.h"
 #include "flare/butil/third_party/rapidjson/document.h"
 #include "flare/butil/third_party/rapidjson/stringbuffer.h"
 #include "flare/butil/third_party/rapidjson/prettywriter.h"
@@ -97,7 +97,7 @@ int ConsulNamingService::GetServers(const char* service_name,
     servers->clear();
     std::string consul_url(_consul_url);
     if (!_consul_index.empty()) {
-        butil::string_appendf(&consul_url, "&index=%s&wait=%ds", _consul_index.c_str(),
+        flare::base::string_appendf(&consul_url, "&index=%s&wait=%ds", _consul_index.c_str(),
                               FLAGS_consul_blocking_query_wait_secs);
     }
 
@@ -156,7 +156,7 @@ int ConsulNamingService::GetServers(const char* service_name,
             continue;
         }
 
-        butil::EndPoint end_point;
+        flare::base::end_point end_point;
         if (str2endpoint(service["Address"].GetString(),
                          service["Port"].GetUint(),
                          &end_point) != 0) {

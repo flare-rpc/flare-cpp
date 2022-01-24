@@ -20,8 +20,8 @@
 #define BRPC_DESCRIBABLE_H
 
 #include <ostream>
-#include "flare/butil/macros.h"
-#include "flare/butil/class_name.h"
+#include "flare/base/profile.h"
+#include "flare/base/class_name.h"
 
 namespace brpc {
 
@@ -39,7 +39,7 @@ class Describable {
 public:
     virtual ~Describable() {}
     virtual void Describe(std::ostream& os, const DescribeOptions&) const {
-        os << butil::class_name_str(*this);
+        os << flare::base::class_name_str(*this);
     }
 };
 
@@ -47,7 +47,7 @@ class NonConstDescribable {
 public:
     virtual ~NonConstDescribable() {}
     virtual void Describe(std::ostream& os, const DescribeOptions&) {
-        os << butil::class_name_str(*this);
+        os << flare::base::class_name_str(*this);
     }
 };
 
@@ -103,7 +103,7 @@ protected:
         return _dest->sputc(ch);
     }
 private:
-    DISALLOW_COPY_AND_ASSIGN(IndentingOStream);
+    FLARE_DISALLOW_COPY_AND_ASSIGN(IndentingOStream);
     std::streambuf* _dest;
     bool _is_at_start_of_line;
     std::string _indent;

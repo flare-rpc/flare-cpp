@@ -23,7 +23,7 @@
 #define  BTHREAD_MUTEX_H
 
 #include "flare/bthread/types.h"
-#include "flare/butil/scoped_lock.h"
+#include "flare/base/scoped_lock.h"
 #include "flare/bvar/utils/lock_timer.h"
 
 __BEGIN_DECLS
@@ -63,7 +63,7 @@ public:
     bool try_lock() { return !bthread_mutex_trylock(&_mutex); }
     // TODO(chenzhangyi01): Complement interfaces for C++11
 private:
-    DISALLOW_COPY_AND_ASSIGN(Mutex);
+    FLARE_DISALLOW_COPY_AND_ASSIGN(Mutex);
     bthread_mutex_t _mutex;   
 };
 
@@ -77,12 +77,12 @@ public:
     void unlock();
     bool try_lock();
 private:
-    DISALLOW_COPY_AND_ASSIGN(FastPthreadMutex);
+    FLARE_DISALLOW_COPY_AND_ASSIGN(FastPthreadMutex);
     int lock_contended();
     unsigned _futex;
 };
 #else
-typedef butil::Mutex FastPthreadMutex;
+typedef flare::base::Mutex FastPthreadMutex;
 #endif
 }
 
@@ -98,7 +98,7 @@ public:
 #if !defined(NDEBUG)
         const int rc = bthread_mutex_lock(_pmutex);
         if (rc) {
-            LOG(FATAL) << "Fail to lock bthread_mutex_t=" << _pmutex << ", " << berror(rc);
+            LOG(FATAL) << "Fail to lock bthread_mutex_t=" << _pmutex << ", " << flare_error(rc);
             _pmutex = NULL;
         }
 #else
@@ -117,12 +117,12 @@ public:
     }
 
 private:
-    DISALLOW_COPY_AND_ASSIGN(lock_guard);
+    FLARE_DISALLOW_COPY_AND_ASSIGN(lock_guard);
     bthread_mutex_t* _pmutex;
 };
 
 template <> class unique_lock<bthread_mutex_t> {
-    DISALLOW_COPY_AND_ASSIGN(unique_lock);
+    FLARE_DISALLOW_COPY_AND_ASSIGN(unique_lock);
 public:
     typedef bthread_mutex_t         mutex_type;
     unique_lock() : _mutex(NULL), _owns_lock(false) {}

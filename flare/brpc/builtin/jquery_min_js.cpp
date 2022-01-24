@@ -17,7 +17,7 @@
 
 
 #include <pthread.h>
-#include "flare/butil/logging.h"
+#include "flare/base/logging.h"
 #include "flare/brpc/policy/gzip_compress.h"
 #include "flare/brpc/builtin/jquery_min_js.h"
 
@@ -25,19 +25,19 @@
 namespace brpc {
 
 static pthread_once_t s_jquery_min_buf_once = PTHREAD_ONCE_INIT; 
-static butil::IOBuf* s_jquery_min_buf = NULL;
-static butil::IOBuf* s_jquery_min_buf_gzip = NULL;
+static flare::io::IOBuf* s_jquery_min_buf = NULL;
+static flare::io::IOBuf* s_jquery_min_buf_gzip = NULL;
 static void InitJQueryMinBuf() {
-    s_jquery_min_buf = new butil::IOBuf;
+    s_jquery_min_buf = new flare::io::IOBuf;
     s_jquery_min_buf->append(jquery_min_js());
-    s_jquery_min_buf_gzip = new butil::IOBuf;
+    s_jquery_min_buf_gzip = new flare::io::IOBuf;
     CHECK(policy::GzipCompress(*s_jquery_min_buf, s_jquery_min_buf_gzip, NULL));
 }
-const butil::IOBuf& jquery_min_js_iobuf() {
+const flare::io::IOBuf& jquery_min_js_iobuf() {
     pthread_once(&s_jquery_min_buf_once, InitJQueryMinBuf);
     return *s_jquery_min_buf;
 }
-const butil::IOBuf& jquery_min_js_iobuf_gzip() {
+const flare::io::IOBuf& jquery_min_js_iobuf_gzip() {
     pthread_once(&s_jquery_min_buf_once, InitJQueryMinBuf);
     return *s_jquery_min_buf_gzip;
 }

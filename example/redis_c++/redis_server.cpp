@@ -26,7 +26,7 @@
 #include <gflags/gflags.h>
 #include <unordered_map>
 
-#include <flare/butil/time.h>
+#include "flare/base/time.h"
 
 DEFINE_int32(port, 6379, "TCP Port of this server");
 
@@ -56,7 +56,7 @@ public:
 private:
     const static int kHashSlotNum = 32;
     std::unordered_map<std::string, std::string> _map[kHashSlotNum];
-    butil::Mutex _mutex[kHashSlotNum];
+    flare::base::Mutex _mutex[kHashSlotNum];
 };
 
 class GetCommandHandler : public brpc::RedisCommandHandler {

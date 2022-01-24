@@ -56,7 +56,7 @@ public:
         cntl->http_response().set_content_type("text/plain");
        
         // Use printed query string and body as the response.
-        butil::IOBufBuilder os;
+        flare::io::IOBufBuilder os;
         os << "queries:";
         for (brpc::URI::QueryIterator it = cntl->http_request().uri().QueryBegin();
                 it != cntl->http_request().uri().QueryEnd(); ++it) {
@@ -308,7 +308,7 @@ Due to generality, brpc does not decompress request bodies automatically, but us
 ...
 const std::string* encoding = cntl->http_request().GetHeader("Content-Encoding");
 if (encoding != NULL && *encoding == "gzip") {
-    butil::IOBuf uncompressed;
+    flare::io::IOBuf uncompressed;
     if (!brpc::policy::GzipDecompress(cntl->request_attachment(), &uncompressed)) {
         LOG(ERROR) << "Fail to un-gzip request body";
         return;
@@ -338,7 +338,7 @@ brpc server is capable of sending large or infinite sized body, in following ste
   ```c++
   #include <flare/brpc/progressive_attachment.h>
   ...
-  butil::intrusive_ptr<brpc::ProgressiveAttachment> pa = cntl->CreateProgressiveAttachment();
+  flare::container::intrusive_ptr<brpc::ProgressiveAttachment> pa = cntl->CreateProgressiveAttachment();
   ```
 
 2. Call `ProgressiveAttachment::Write()` to send the data.
@@ -346,7 +346,7 @@ brpc server is capable of sending large or infinite sized body, in following ste
    * If the write occurs before running of the server-side done, the sent data is cached until the done is called.
    * If the write occurs after running of the server-side done, the sent data is written out in chunked mode immediately.
 
-3. After usage, destruct all `butil::intrusive_ptr<brpc::ProgressiveAttachment>` to release related resources.
+3. After usage, destruct all `flare::container::intrusive_ptr<brpc::ProgressiveAttachment>` to release related resources.
 
 # Progressive receiving
 

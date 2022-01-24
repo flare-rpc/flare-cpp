@@ -33,11 +33,11 @@
 #include "flare/butil/basictypes.h"
 #include "flare/butil/files/file_enumerator.h"
 #include "flare/butil/files/file_path.h"
-#include "flare/butil/files/scoped_file.h"
-#include "flare/butil/logging.h"
+#include "flare/base/scoped_file.h"
+#include "flare/base/logging.h"
 #include "flare/butil/memory/scoped_ptr.h"
 #include "flare/butil/memory/singleton.h"
-#include "flare/butil/posix/eintr_wrapper.h"
+#include "flare/base/profile/eintr_wrapper.h"
 #include "flare/butil/stl_util.h"
 #include "flare/butil/strings/string_util.h"
 #include "flare/butil/strings/stringprintf.h"
@@ -164,7 +164,7 @@ bool DetermineDevShmExecutable() {
   bool result = false;
   FilePath path;
 
-  ScopedFD fd(CreateAndOpenFdForTemporaryFile(FilePath("/dev/shm"), &path));
+  flare::base::ScopedFD fd(CreateAndOpenFdForTemporaryFile(FilePath("/dev/shm"), &path));
   if (fd.is_valid()) {
     DeleteFile(path, false);
     long sysconf_result = sysconf(_SC_PAGESIZE);

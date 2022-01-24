@@ -20,9 +20,9 @@
 #include <google/protobuf/descriptor.h>         // MethodDescriptor
 #include <google/protobuf/message.h>            // Message
 #include <gflags/gflags.h>
-#include "flare/butil/logging.h"                       // LOG()
-#include "flare/butil/time.h"
-#include "flare/butil/iobuf.h"                         // butil::IOBuf
+#include "flare/base/logging.h"                       // LOG()
+#include "flare/base/time.h"
+#include "flare/io/iobuf.h"                         // flare::io::IOBuf
 #include "flare/brpc/controller.h"               // Controller
 #include "flare/brpc/details/controller_private_accessor.h"
 #include "flare/brpc/socket.h"                   // Socket
@@ -32,6 +32,7 @@
 #include "flare/brpc/redis.h"
 #include "flare/brpc/redis_command.h"
 #include "flare/brpc/policy/redis_protocol.h"
+#include "flare/base/strings.h"
 
 namespace brpc {
 
@@ -72,13 +73,13 @@ public:
     int batched_size;
 
     RedisCommandParser parser;
-    butil::Arena arena;
+    flare::memory::Arena arena;
 };
 
 int ConsumeCommand(RedisConnContext* ctx,
-                   const std::vector<butil::StringPiece>& args,
+                   const std::vector<std::string_view>& args,
                    bool flush_batched,
-                   butil::IOBufAppender* appender) {
+                   flare::io::IOBufAppender* appender) {
     RedisReply output(&ctx->arena);
     RedisCommandHandlerResult result = REDIS_CMD_HANDLED;
     if (ctx->transaction_handler) {
@@ -93,7 +94,7 @@ int ConsumeCommand(RedisConnContext* ctx,
         RedisCommandHandler* ch = ctx->redis_service->FindCommandHandler(args[0]);
         if (!ch) {
             char buf[64];
-            snprintf(buf, sizeof(buf), "ERR unknown command `%s`", args[0].as_string().c_str());
+            snprintf(buf, sizeof(buf), "ERR unknown command `%s`", flare::base::as_string(args[0]).c_str());
             output.SetError(buf);
         } else {
             result = ch->Run(args, &output, flush_batched);
@@ -143,7 +144,7 @@ void RedisConnContext::Destroy() {
 
 // ========== impl of RedisConnContext ==========
 
-ParseResult ParseRedisMessage(butil::IOBuf* source, Socket* socket,
+ParseResult ParseRedisMessage(flare::io::IOBuf* source, Socket* socket,
                               bool read_eof, const void* arg) {
     if (read_eof || source->empty()) {
         return MakeParseError(PARSE_ERROR_NOT_ENOUGH_DATA);
@@ -159,8 +160,8 @@ ParseResult ParseRedisMessage(butil::IOBuf* source, Socket* socket,
             ctx = new RedisConnContext(rs);
             socket->reset_parsing_context(ctx);
         }
-        std::vector<butil::StringPiece> current_args;
-        butil::IOBufAppender appender;
+        std::vector<std::string_view> current_args;
+        flare::io::IOBufAppender appender;
         ParseError err = PARSE_OK;
 
         err = ctx->parser.Consume(*source, &current_args, &ctx->arena);
@@ -168,7 +169,7 @@ ParseResult ParseRedisMessage(butil::IOBuf* source, Socket* socket,
             return MakeParseError(err);
         }
         while (true) {
-            std::vector<butil::StringPiece> next_args;
+            std::vector<std::string_view> next_args;
             err = ctx->parser.Consume(*source, &next_args, &ctx->arena);
             if (err != PARSE_OK) {
                 break;
@@ -182,7 +183,7 @@ ParseResult ParseRedisMessage(butil::IOBuf* source, Socket* socket,
                     true /*must be the last message*/, &appender) != 0) {
             return MakeParseError(PARSE_ERROR_ABSOLUTELY_WRONG);
         }
-        butil::IOBuf sendbuf;
+        flare::io::IOBuf sendbuf;
         appender.move_to(sendbuf);
         CHECK(!sendbuf.empty());
         Socket::WriteOptions wopt;
@@ -248,7 +249,7 @@ ParseResult ParseRedisMessage(butil::IOBuf* source, Socket* socket,
 }
 
 void ProcessRedisResponse(InputMessageBase* msg_base) {
-    const int64_t start_parse_us = butil::cpuwide_time_us();
+    const int64_t start_parse_us = flare::base::cpuwide_time_us();
     DestroyingPtr<InputResponse> msg(static_cast<InputResponse*>(msg_base));
 
     const bthread_id_t cid = msg->id_wait;
@@ -256,7 +257,7 @@ void ProcessRedisResponse(InputMessageBase* msg_base) {
     const int rc = bthread_id_lock(cid, (void**)&cntl);
     if (rc != 0) {
         LOG_IF(ERROR, rc != EINVAL && rc != EPERM)
-            << "Fail to lock correlation_id=" << cid << ": " << berror(rc);
+            << "Fail to lock correlation_id=" << cid << ": " << flare_error(rc);
         return;
     }
 
@@ -295,7 +296,7 @@ void ProcessRedisResponse(InputMessageBase* msg_base) {
 
 void ProcessRedisRequest(InputMessageBase* msg_base) { }
 
-void SerializeRedisRequest(butil::IOBuf* buf,
+void SerializeRedisRequest(flare::io::IOBuf* buf,
                            Controller* cntl,
                            const google::protobuf::Message* request) {
     if (request == NULL) {
@@ -315,12 +316,12 @@ void SerializeRedisRequest(butil::IOBuf* buf,
     }
 }
 
-void PackRedisRequest(butil::IOBuf* buf,
+void PackRedisRequest(flare::io::IOBuf* buf,
                       SocketMessage**,
                       uint64_t /*correlation_id*/,
                       const google::protobuf::MethodDescriptor*,
                       Controller* cntl,
-                      const butil::IOBuf& request,
+                      const flare::io::IOBuf& request,
                       const Authenticator* auth) {
     if (auth) {
         std::string auth_str;

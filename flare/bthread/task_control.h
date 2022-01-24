@@ -26,10 +26,10 @@
 #include <iostream>                             // std::ostream
 #endif
 #include <stddef.h>                             // size_t
-#include "flare/butil/static_atomic.h"                     // std::atomic
+#include "flare/base/static_atomic.h"                     // std::atomic
 #include "flare/bvar/bvar.h"                          // bvar::PassiveStatus
 #include "flare/bthread/task_meta.h"                  // TaskMeta
-#include "flare/butil/resource_pool.h"                 // ResourcePool
+#include "flare/memory/resource_pool.h"                 // ResourcePool
 #include "flare/bthread/work_stealing_queue.h"        // WorkStealingQueue
 #include "flare/bthread/parking_lot.h"
 
@@ -93,14 +93,14 @@ private:
 
     std::atomic<size_t> _ngroup;
     TaskGroup** _groups;
-    butil::Mutex _modify_group_mutex;
+    flare::base::Mutex _modify_group_mutex;
 
     bool _stop;
     std::atomic<int> _concurrency;
     std::vector<pthread_t> _workers;
 
     bvar::Adder<int64_t> _nworkers;
-    butil::Mutex _pending_time_mutex;
+    flare::base::Mutex _pending_time_mutex;
     std::atomic<bvar::LatencyRecorder*> _pending_time;
     bvar::PassiveStatus<double> _cumulated_worker_time;
     bvar::PerSecond<bvar::PassiveStatus<double> > _worker_usage_second;

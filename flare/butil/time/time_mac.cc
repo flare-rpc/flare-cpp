@@ -14,7 +14,7 @@
 #include <time.h>
 
 #include "flare/butil/basictypes.h"
-#include "flare/butil/logging.h"
+#include "flare/base/logging.h"
 #include "flare/butil/mac/scoped_cftyperef.h"
 #include "flare/butil/mac/scoped_mach_port.h"
 

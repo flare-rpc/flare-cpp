@@ -9,7 +9,7 @@
 
 #include "flare/butil/debug/stack_trace.h"
 #include "flare/butil/format_macros.h"
-#include "flare/butil/logging.h"
+#include "flare/base/logging.h"
 #include "flare/butil/strings/string_util.h"
 #include "flare/butil/strings/stringprintf.h"
 

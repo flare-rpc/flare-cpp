@@ -18,8 +18,8 @@
 
 #include <google/protobuf/descriptor.h>
 #include "flare/butil/sys_byteorder.h"
-#include "flare/butil/logging.h"
-#include "flare/butil/find_cstr.h"
+#include "flare/base/logging.h"
+#include "flare/container/find_cstr.h"
 #include "flare/brpc/log.h"
 #include "flare/brpc/amf.h"
 
@@ -133,14 +133,14 @@ void AMFField::SlowerClear() {
 
 const AMFField* AMFObject::Find(const char* name) const {
     std::map<std::string, AMFField>::const_iterator it =
-        butil::find_cstr(_fields, name);
+        flare::container::find_cstr(_fields, name);
     if (it != _fields.end()) {
         return &it->second;
     }
     return NULL;
 }
 
-void AMFField::SetString(const butil::StringPiece& str) {
+void AMFField::SetString(const std::string_view& str) {
     // TODO: Try to reuse the space.
     Clear();
     if (str.size() < SSO_LIMIT) {
@@ -218,7 +218,7 @@ AMFArray* AMFField::MutableArray() {
 
 // ============= AMFObject =============
 
-void AMFObject::SetString(const std::string& name, const butil::StringPiece& str) {
+void AMFObject::SetString(const std::string& name, const std::string_view& str) {
     _fields[name].SetString(str);
 }
 
@@ -881,11 +881,11 @@ AMFArray::AMFArray() : _size(0) {
 
 AMFArray::AMFArray(const AMFArray& rhs) 
     : _size(rhs._size) {
-    const size_t inline_size = std::min((size_t)_size, arraysize(_fields));
+    const size_t inline_size = std::min((size_t)_size, FLARE_ARRAY_SIZE(_fields));
     for (size_t i = 0; i < inline_size; ++i) {
         _fields[i] = rhs._fields[i];
     }
-    if (_size > arraysize(_fields)) {
+    if (_size > FLARE_ARRAY_SIZE(_fields)) {
         _morefields = rhs._morefields;
     }
 }
@@ -905,7 +905,7 @@ AMFArray& AMFArray::operator=(const AMFArray& rhs) {
 }
 
 void AMFArray::Clear() {
-    const size_t inline_size = std::min((size_t)_size, arraysize(_fields));
+    const size_t inline_size = std::min((size_t)_size, FLARE_ARRAY_SIZE(_fields));
     for (size_t i = 0; i < inline_size; ++i) {
         _fields[i].Clear();
     }
@@ -914,10 +914,10 @@ void AMFArray::Clear() {
 }
 
 AMFField* AMFArray::AddField() {
-    if (_size < arraysize(_fields)) {
+    if (_size < FLARE_ARRAY_SIZE(_fields)) {
         return &_fields[_size++];
     }
-    size_t more_size = _size - arraysize(_fields);
+    size_t more_size = _size - FLARE_ARRAY_SIZE(_fields);
     if (more_size < _morefields.size()) {
         ++_size;
         return &_morefields[more_size];
@@ -931,7 +931,7 @@ void AMFArray::RemoveLastField() {
     if (_size == 0) {
         return;
     }
-    if (_size <= arraysize(_fields)) {
+    if (_size <= FLARE_ARRAY_SIZE(_fields)) {
         _fields[--_size].Clear();
         return;
     }
@@ -941,7 +941,7 @@ void AMFArray::RemoveLastField() {
 
 // [ Write ]
 
-void WriteAMFString(const butil::StringPiece& str, AMFOutputStream* stream) {
+void WriteAMFString(const std::string_view& str, AMFOutputStream* stream) {
     if (str.size() < 65536u) {
         stream->put_u8(AMF_MARKER_STRING);
         stream->put_u16(str.size());
@@ -1070,13 +1070,13 @@ static void WriteAMFField(const AMFField& field, AMFOutputStream* stream) {
         break;
     case AMF_MARKER_STRING: {
         stream->put_u8(AMF_MARKER_STRING);
-        const butil::StringPiece str = field.AsString();
+        const std::string_view str = field.AsString();
         stream->put_u16(str.size());
         stream->putn(str.data(), str.size());
     } break;
     case AMF_MARKER_LONG_STRING: {
         stream->put_u8(AMF_MARKER_LONG_STRING);
-        const butil::StringPiece str = field.AsString();
+        const std::string_view str = field.AsString();
         stream->put_u32(str.size());
         stream->putn(str.data(), str.size());
     } break;

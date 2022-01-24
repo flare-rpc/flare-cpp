@@ -65,9 +65,6 @@ COPTS = [
     "-D__STDC_CONSTANT_MACROS",
     "-DGFLAGS_NS=google",
 ] + select({
-    ":with_glog": ["-DBRPC_WITH_GLOG=1"],
-    "//conditions:default": ["-DBRPC_WITH_GLOG=0"],
-}) + select({
     ":with_mesalink": ["-DUSE_MESALINK"],
     "//conditions:default": [""],
 }) + select({
@@ -107,28 +104,6 @@ LINKOPTS = [
     "//conditions:default": [],
 })
 
-genrule(
-    name = "config_h",
-    outs = [
-        "src/butil/config.h",
-    ],
-    cmd = """cat << EOF  >$@""" + """
-// This file is auto-generated.
-#ifndef  BUTIL_CONFIG_H
-#define  BUTIL_CONFIG_H
-
-#ifdef BRPC_WITH_GLOG
-#undef BRPC_WITH_GLOG
-#endif
-#define BRPC_WITH_GLOG """ + select({
-    ":with_glog": "1",
-    "//conditions:default": "0",
-}) +
-"""
-#endif  // BUTIL_CONFIG_H
-EOF
-    """
-)
 
 BUTIL_SRCS = [
     "src/butil/third_party/dmg_fp/g_fmt.cc",

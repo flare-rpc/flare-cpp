@@ -20,10 +20,8 @@
 #ifndef  BVAR_LOCK_TIMER_H
 #define  BVAR_LOCK_TIMER_H
 
-#include "flare/butil/time.h"             // butil::Timer
-#include "flare/butil/scoped_lock.h"      // std::lock_guard std::unique_lock
-#include "flare/butil/macros.h"           // DISALLOW_COPY_AND_ASSIGN
-
+#include "flare/base/time.h"             // flare::base::stop_watcher
+#include "flare/base/scoped_lock.h"      // std::lock_guard std::unique_lock
 #include "flare/bvar/recorder.h"         // IntRecorder
 #include "flare/bvar/latency_recorder.h" // LatencyRecorder
 
@@ -69,7 +67,7 @@
 // void critical_routine_with_lock_guard() {
 //     std::lock_guard<my_mutex_t> guard(mutex);
 //     // ^^^
-//     // Or you can use BAIDU_SCOPED_LOCK(mutex) to make it simple
+//     // Or you can use FLARE_SCOPED_LOCK(mutex) to make it simple
 //     ... 
 //     doing something inside the critical section
 //     ...
@@ -120,7 +118,7 @@ struct MutexConstructor<pthread_mutex_t> {
     bool operator()(pthread_mutex_t* mutex) const { 
 #ifndef NDEBUG
         const int rc = pthread_mutex_init(mutex, NULL);
-        CHECK_EQ(0, rc) << "Fail to init pthread_mutex, " << berror(rc);
+        CHECK_EQ(0, rc) << "Fail to init pthread_mutex, " << flare_error(rc);
         return rc == 0;
 #else
         return pthread_mutex_init(mutex, NULL) == 0;
@@ -133,7 +131,7 @@ struct MutexDestructor<pthread_mutex_t> {
     bool operator()(pthread_mutex_t* mutex) const { 
 #ifndef NDEBUG
         const int rc = pthread_mutex_destroy(mutex);
-        CHECK_EQ(0, rc) << "Fail to destroy pthread_mutex, " << berror(rc);
+        CHECK_EQ(0, rc) << "Fail to destroy pthread_mutex, " << flare_error(rc);
         return rc == 0;
 #else
         return pthread_mutex_destroy(mutex) == 0;
@@ -146,7 +144,7 @@ namespace detail {
 template <typename Mutex, typename Recorder,
           typename MCtor, typename MDtor>
 class MutexWithRecorderBase {
-    DISALLOW_COPY_AND_ASSIGN(MutexWithRecorderBase);
+    FLARE_DISALLOW_COPY_AND_ASSIGN(MutexWithRecorderBase);
 public:
     typedef Mutex                                   mutex_type;
     typedef Recorder                                recorder_type;
@@ -190,7 +188,7 @@ private:
 
 template <typename Mutex> 
 class LockGuardBase {
-    DISALLOW_COPY_AND_ASSIGN(LockGuardBase);
+    FLARE_DISALLOW_COPY_AND_ASSIGN(LockGuardBase);
 public:
     LockGuardBase(Mutex& m)
         : _timer(m), _lock_guard(m.mutex()) {
@@ -200,11 +198,11 @@ private:
     // This trick makes the recoding happens after the destructor of _lock_guard
     struct TimerAndMutex {
         TimerAndMutex(Mutex &m)
-            : timer(butil::Timer::STARTED), mutex(&m) {}
+            : timer(flare::base::stop_watcher::STARTED), mutex(&m) {}
         ~TimerAndMutex() {
             *mutex << timer.u_elapsed();
         }
-        butil::Timer timer;
+        flare::base::stop_watcher timer;
         Mutex* mutex;
     };
     // Don't change the order of the fields as the implementation depends on
@@ -215,11 +213,11 @@ private:
 
 template <typename Mutex>
 class UniqueLockBase {
-    DISALLOW_COPY_AND_ASSIGN(UniqueLockBase);
+    FLARE_DISALLOW_COPY_AND_ASSIGN(UniqueLockBase);
 public:
     typedef Mutex                   mutex_type;
     explicit UniqueLockBase(mutex_type& mutex) 
-        : _timer(butil::Timer::STARTED), _lock(mutex.mutex()),
+        : _timer(flare::base::stop_watcher::STARTED), _lock(mutex.mutex()),
           _mutex(&mutex) {
         _timer.stop();
     }
@@ -229,7 +227,7 @@ public:
     }
 
     UniqueLockBase(mutex_type& mutex, std::try_to_lock_t try_to_lock)
-        : _timer(butil::Timer::STARTED)
+        : _timer(flare::base::stop_watcher::STARTED)
         , _lock(mutex.mutex(), try_to_lock)
         , _mutex(&mutex) {
     
@@ -314,7 +312,7 @@ public:
 
 private:
     // Don't change the order or timer and _lck;
-    butil::Timer                                             _timer;
+    flare::base::stop_watcher                                             _timer;
     std::unique_lock<typename Mutex::mutex_type>            _lock;
     mutex_type*                                             _mutex;
 };

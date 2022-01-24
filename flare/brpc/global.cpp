@@ -27,7 +27,7 @@
 #include <fcntl.h>                               // O_RDONLY
 #include <signal.h>
 
-#include "flare/butil/build_config.h"                  // OS_LINUX
+#include "flare/butil/build_config.h"                  // FLARE_PLATFORM_LINUX
 // Naming services
 #ifdef BAIDU_INTERNAL
 #include "flare/brpc/policy/baidu_naming_service.h"
@@ -85,15 +85,15 @@
 #include "flare/brpc/server.h"
 #include "flare/brpc/trackme.h"             // TrackMe
 #include "flare/brpc/details/usercode_backup_pool.h"
-#if defined(OS_LINUX)
+#if defined(FLARE_PLATFORM_LINUX)
 #include <malloc.h>                   // malloc_trim
 #endif
-#include "flare/butil/fd_guard.h"
-#include "flare/butil/files/file_watcher.h"
+#include "flare/base/fd_guard.h"
+#include "flare/base/file_watcher.h"
 
 extern "C" {
 // defined in gperftools/malloc_extension_c.h
-void BAIDU_WEAK MallocExtension_ReleaseFreeMemory(void);
+void FLARE_WEAK MallocExtension_ReleaseFreeMemory(void);
 }
 
 namespace brpc {
@@ -154,7 +154,7 @@ static pthread_once_t register_extensions_once = PTHREAD_ONCE_INIT;
 static GlobalExtensions* g_ext = NULL;
 
 static long ReadPortOfDummyServer(const char* filename) {
-    butil::fd_guard fd(open(filename, O_RDONLY));
+    flare::base::fd_guard fd(open(filename, O_RDONLY));
     if (fd < 0) {
         LOG(ERROR) << "Fail to open `" << DUMMY_SERVER_PORT_FILE << "'";
         return -1;
@@ -163,7 +163,7 @@ static long ReadPortOfDummyServer(const char* filename) {
     const ssize_t nr = read(fd, port_str, sizeof(port_str));
     if (nr <= 0) {
         LOG(ERROR) << "Fail to read `" << DUMMY_SERVER_PORT_FILE << "': "
-                   << (nr == 0 ? "nothing to read" : berror());
+                   << (nr == 0 ? "nothing to read" : flare_error());
         return -1;
     }
     port_str[std::min((size_t)nr, sizeof(port_str)-1)] = '\0';
@@ -179,18 +179,18 @@ static long ReadPortOfDummyServer(const char* filename) {
     return port;
 }
 
-// Expose counters of butil::IOBuf
+// Expose counters of flare::io::IOBuf
 static int64_t GetIOBufBlockCount(void*) {
-    return butil::IOBuf::block_count();
+    return flare::io::IOBuf::block_count();
 }
 static int64_t GetIOBufBlockCountHitTLSThreshold(void*) {
-    return butil::IOBuf::block_count_hit_tls_threshold();
+    return flare::io::IOBuf::block_count_hit_tls_threshold();
 }
 static int64_t GetIOBufNewBigViewCount(void*) {
-    return butil::IOBuf::new_bigview_count();
+    return flare::io::IOBuf::new_bigview_count();
 }
 static int64_t GetIOBufBlockMemory(void*) {
-    return butil::IOBuf::block_memory();
+    return flare::io::IOBuf::block_memory();
 }
 
 // Defined in server.cpp
@@ -216,20 +216,20 @@ static void* GlobalUpdate(void*) {
     bvar::PassiveStatus<int> var_running_server_count(
         "rpc_server_count", GetRunningServerCount, NULL);
 
-    butil::FileWatcher fw;
+    flare::base::file_watcher fw;
     if (fw.init_from_not_exist(DUMMY_SERVER_PORT_FILE) < 0) {
-        LOG(FATAL) << "Fail to init FileWatcher on `" << DUMMY_SERVER_PORT_FILE << "'";
+        LOG(FATAL) << "Fail to init file_watcher on `" << DUMMY_SERVER_PORT_FILE << "'";
         return NULL;
     }
 
     std::vector<SocketId> conns;
-    const int64_t start_time_us = butil::gettimeofday_us();
+    const int64_t start_time_us = flare::base::gettimeofday_us();
     const int WARN_NOSLEEP_THRESHOLD = 2;
     int64_t last_time_us = start_time_us;
     int consecutive_nosleep = 0;
     int64_t last_return_free_memory_time = start_time_us;
     while (1) {
-        const int64_t sleep_us = 1000000L + last_time_us - butil::gettimeofday_us();
+        const int64_t sleep_us = 1000000L + last_time_us - flare::base::gettimeofday_us();
         if (sleep_us > 0) {
             if (bthread_usleep(sleep_us) < 0) {
                 PLOG_IF(FATAL, errno != ESTOP) << "Fail to sleep";
@@ -242,7 +242,7 @@ static void* GlobalUpdate(void*) {
                 LOG(WARNING) << __FUNCTION__ << " is too busy!";
             }
         }
-        last_time_us = butil::gettimeofday_us();
+        last_time_us = flare::base::gettimeofday_us();
 
         TrackMe();
 
@@ -256,7 +256,7 @@ static void* GlobalUpdate(void*) {
         }
 
         SocketMapList(&conns);
-        const int64_t now_ms = butil::cpuwide_time_ms();
+        const int64_t now_ms = flare::base::cpuwide_time_ms();
         for (size_t i = 0; i < conns.size(); ++i) {
             SocketUniquePtr ptr;
             if (Socket::Address(conns[i], &ptr) == 0) {
@@ -278,7 +278,7 @@ static void* GlobalUpdate(void*) {
             if (MallocExtension_ReleaseFreeMemory != NULL) {
                 MallocExtension_ReleaseFreeMemory();
             } else {
-#if defined(OS_LINUX)
+#if defined(FLARE_PLATFORM_LINUX)
                 // GNU specific.
                 malloc_trim(10 * 1024 * 1024/*leave 10M pad*/);
 #endif

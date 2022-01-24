@@ -18,8 +18,8 @@
 
 #include "flare/bthread/bthread.h"                  // bthread_id_xx
 #include "flare/bthread/unstable.h"                 // bthread_timer_add
-#include "flare/butil/static_atomic.h"
-#include "flare/butil/time.h"
+#include "flare/base/static_atomic.h"
+#include "flare/base/time.h"
 #include "flare/butil/macros.h"
 #include "flare/brpc/details/controller_private_accessor.h"
 #include "flare/brpc/parallel_channel.h"
@@ -83,7 +83,7 @@ public:
         }
 
         ParallelChannelDone* shared_data;
-        butil::intrusive_ptr<ResponseMerger> merger;
+        flare::container::intrusive_ptr<ResponseMerger> merger;
         SubCall ap;
         Controller cntl;
     };
@@ -119,14 +119,14 @@ public:
         } else {
             mem = malloc(req_size);
             memsize = req_size;
-            if (BAIDU_UNLIKELY(NULL == mem)) {
+            if (FLARE_UNLIKELY(NULL == mem)) {
                 return NULL;
             }
         }
 #else
         mem = malloc(req_size);
         memsize = req_size;
-        if (BAIDU_UNLIKELY(NULL == mem)) {
+        if (FLARE_UNLIKELY(NULL == mem)) {
             return NULL;
         }
 #endif
@@ -386,7 +386,7 @@ public:
         // NOTE: we don't destroy self here, controller destroys this done in
         // Reset() so that user can access sub controllers before Reset().
         if (user_done) {
-            _cntl->OnRPCEnd(butil::gettimeofday_us());
+            _cntl->OnRPCEnd(flare::base::gettimeofday_us());
             user_done->Run();
         }
         CHECK_EQ(0, bthread_id_unlock_and_destroy(saved_cid));
@@ -426,7 +426,7 @@ private:
     int _ndone;
     int _nchan;
 #if defined(__clang__)
-    int ALLOW_UNUSED _memsize;
+    int FLARE_ALLOW_UNUSED _memsize;
 #else
     int _memsize;
 #endif
@@ -555,7 +555,7 @@ void ParallelChannel::CallMethod(
     google::protobuf::Message* response,
     google::protobuf::Closure* done) {
     Controller* cntl = static_cast<Controller*>(cntl_base);
-    cntl->OnRPCBegin(butil::gettimeofday_us());
+    cntl->OnRPCBegin(flare::base::gettimeofday_us());
     // Make sure cntl->sub_count() always equal #sub-channels
     const int nchan = _chans.size();
     cntl->_pchan_sub_count = nchan;
@@ -664,7 +664,7 @@ void ParallelChannel::CallMethod(
         // Setup timer for RPC timetout
         const int rc = bthread_timer_add(
             &cntl->_timeout_id,
-            butil::microseconds_to_timespec(cntl->_deadline_us),
+            flare::base::microseconds_to_timespec(cntl->_deadline_us),
             HandleTimeout, (void*)cid.value);
         if (rc != 0) {
             cntl->SetFailed(rc, "Fail to add timer");
@@ -692,7 +692,7 @@ void ParallelChannel::CallMethod(
     }
     if (done == NULL) {
         Join(cid);
-        cntl->OnRPCEnd(butil::gettimeofday_us());
+        cntl->OnRPCEnd(flare::base::gettimeofday_us());
     }
     return;
 

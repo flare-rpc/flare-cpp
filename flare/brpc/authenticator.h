@@ -20,7 +20,7 @@
 #define BRPC_AUTHENTICATOR_H
 
 #include <ostream>
-#include "flare/butil/endpoint.h"                    // butil::EndPoint
+#include "flare/base/endpoint.h"                    // flare::base::end_point
 #include "flare/butil/macros.h"                      // BAIDU_CONCAT
 #include "flare/brpc/extension.h"              // Extension<T>
 
@@ -71,7 +71,7 @@ public:
     // pointer from `Controller'.
     // Returns 0 on success, error code otherwise
     virtual int VerifyCredential(const std::string& auth_str,
-                                 const butil::EndPoint& client_addr,
+                                 const flare::base::end_point& client_addr,
                                  AuthContext* out_ctx) const = 0;
 
 };

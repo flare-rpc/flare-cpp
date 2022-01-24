@@ -19,8 +19,8 @@
 #include <google/protobuf/message.h>            // Message
 #include <gflags/gflags.h>
 
-#include "flare/butil/time.h"
-#include "flare/butil/iobuf.h"                         // butil::IOBuf
+#include "flare/base/time.h"
+#include "flare/io/iobuf.h"                         // flare::io::IOBuf
 
 #include "flare/brpc/controller.h"               // Controller
 #include "flare/brpc/socket.h"                   // Socket
@@ -38,7 +38,7 @@ namespace brpc {
 namespace policy {
 
 ParseResult ParseEspMessage(
-        butil::IOBuf* source,
+        flare::io::IOBuf* source,
         Socket*, 
         bool /*read_eof*/, 
         const void* /*arg*/) {
@@ -63,7 +63,7 @@ ParseResult ParseEspMessage(
 }
 
 void SerializeEspRequest(
-        butil::IOBuf* request_buf, 
+        flare::io::IOBuf* request_buf,
         Controller* cntl,
         const google::protobuf::Message* req_base) {
 
@@ -86,12 +86,12 @@ void SerializeEspRequest(
     request_buf->append(req->body);
 }
 
-void PackEspRequest(butil::IOBuf* packet_buf,
+void PackEspRequest(flare::io::IOBuf* packet_buf,
                     SocketMessage**,
                     uint64_t correlation_id,
                     const google::protobuf::MethodDescriptor*,
                     Controller* cntl,
-                    const butil::IOBuf& request,
+                    const flare::io::IOBuf& request,
                     const Authenticator* auth) {
 
     ControllerPrivateAccessor accessor(cntl);
@@ -117,7 +117,7 @@ void PackEspRequest(butil::IOBuf* packet_buf,
 }
 
 void ProcessEspResponse(InputMessageBase* msg_base) {
-    const int64_t start_parse_us = butil::cpuwide_time_us();
+    const int64_t start_parse_us = flare::base::cpuwide_time_us();
     DestroyingPtr<MostCommonMessage> msg(static_cast<MostCommonMessage*>(msg_base));
     
     // Fetch correlation id that we saved before in `PackEspRequest'
@@ -126,7 +126,7 @@ void ProcessEspResponse(InputMessageBase* msg_base) {
     const int rc = bthread_id_lock(cid, (void**)&cntl);
     if (rc != 0) {
         LOG_IF(ERROR, rc != EINVAL && rc != EPERM)
-            << "Fail to lock correlation_id=" << cid << ", " << berror(rc);
+            << "Fail to lock correlation_id=" << cid << ", " << flare_error(rc);
         return;
     }
 

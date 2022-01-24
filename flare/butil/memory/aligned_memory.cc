@@ -4,7 +4,7 @@
 
 #include "flare/butil/memory/aligned_memory.h"
 
-#include "flare/butil/logging.h"
+#include "flare/base/logging.h"
 
 #if defined(OS_ANDROID)
 #include <malloc.h>

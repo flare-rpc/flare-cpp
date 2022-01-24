@@ -22,7 +22,7 @@
 #ifndef  BTHREAD_CONDITION_VARIABLE_H
 #define  BTHREAD_CONDITION_VARIABLE_H
 
-#include "flare/butil/time.h"
+#include "flare/base/time.h"
 #include "flare/bthread/mutex.h"
 
 __BEGIN_DECLS
@@ -42,7 +42,7 @@ __END_DECLS
 namespace bthread {
 
 class ConditionVariable {
-    DISALLOW_COPY_AND_ASSIGN(ConditionVariable);
+    FLARE_DISALLOW_COPY_AND_ASSIGN(ConditionVariable);
 public:
     typedef bthread_cond_t*         native_handler_type;
     
@@ -67,12 +67,12 @@ public:
     // rather than std::timeout
     int wait_for(std::unique_lock<bthread::Mutex>& lock,
                  long timeout_us) {
-        return wait_until(lock, butil::microseconds_from_now(timeout_us));
+        return wait_until(lock, flare::base::microseconds_from_now(timeout_us));
     }
 
     int wait_for(std::unique_lock<bthread_mutex_t>& lock,
                  long timeout_us) {
-        return wait_until(lock, butil::microseconds_from_now(timeout_us));
+        return wait_until(lock, flare::base::microseconds_from_now(timeout_us));
     }
 
     int wait_until(std::unique_lock<bthread::Mutex>& lock,

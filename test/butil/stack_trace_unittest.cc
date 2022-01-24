@@ -7,7 +7,7 @@
 #include <string>
 
 #include "flare/butil/debug/stack_trace.h"
-#include "flare/butil/logging.h"
+#include "flare/base/logging.h"
 #include <gtest/gtest.h>
 
 namespace butil {
@@ -17,7 +17,7 @@ typedef testing::Test StackTraceTest;
 
 // Note: On Linux, this test currently only fully works on Debug builds.
 // See comments in the #ifdef soup if you intend to change this.
-#if defined(OS_WIN)
+#if defined(FLARE_PLATFORM_WINDOWS)
 // Always fails on Windows: crbug.com/32070
 #define MAYBE_OutputToStream DISABLED_OutputToStream
 #else
@@ -35,12 +35,12 @@ TEST_F(StackTraceTest, MAYBE_OutputToStream) {
   // ToString() should produce the same output.
   EXPECT_EQ(backtrace_message, trace.ToString());
 
-#if defined(OS_POSIX) && !defined(OS_MACOSX) && NDEBUG
+#if defined(FLARE_PLATFORM_POSIX) && !defined(FLARE_PLATFORM_OSX) && NDEBUG
   // Stack traces require an extra data table that bloats our binaries,
   // so they're turned off for release builds.  We stop the test here,
   // at least letting us verify that the calls don't crash.
   return;
-#endif  // defined(OS_POSIX) && !defined(OS_MACOSX) && NDEBUG
+#endif  // defined(FLARE_PLATFORM_POSIX) && !defined(FLARE_PLATFORM_OSX) && NDEBUG
 
   size_t frames_found = 0;
   trace.Addresses(&frames_found);
@@ -52,7 +52,7 @@ TEST_F(StackTraceTest, MAYBE_OutputToStream) {
             std::string::npos) <<
       "Unable to resolve symbols.  Skipping rest of test.";
 
-#if defined(OS_MACOSX)
+#if defined(FLARE_PLATFORM_OSX)
 #if 0
   // Disabled due to -fvisibility=hidden in build config.
 
@@ -92,7 +92,7 @@ TEST_F(StackTraceTest, MAYBE_OutputToStream) {
       << "Expected to find main in backtrace:\n"
       << backtrace_message;
 
-#if defined(OS_WIN)
+#if defined(FLARE_PLATFORM_WINDOWS)
 // MSVC doesn't allow the use of C99's __func__ within C++, so we fake it with
 // MSVC's __FUNCTION__ macro.
 #define __func__ __FUNCTION__
@@ -104,7 +104,7 @@ TEST_F(StackTraceTest, MAYBE_OutputToStream) {
       << "Expected to find " << __func__ << " in backtrace:\n"
       << backtrace_message;
 
-#endif  // define(OS_MACOSX)
+#endif  // define(FLARE_PLATFORM_OSX)
 }
 
 // The test is used for manual testing, e.g., to see the raw output.
@@ -121,7 +121,7 @@ TEST_F(StackTraceTest, DebugPrintBacktrace) {
 }
 #endif  // !defined(__UCLIBC__)
 
-#if defined(OS_POSIX) && !defined(OS_ANDROID)
+#if defined(FLARE_PLATFORM_POSIX) && !defined(FLARE_PLATFORM_ANDROID)
 
 namespace {
 
@@ -196,7 +196,7 @@ TEST_F(StackTraceTest, itoa_r) {
   EXPECT_EQ("0688", itoa_r_wrapper(0x688, 128, 16, 4));
   EXPECT_EQ("00688", itoa_r_wrapper(0x688, 128, 16, 5));
 }
-#endif  // defined(OS_POSIX) && !defined(OS_ANDROID)
+#endif  // defined(FLARE_PLATFORM_POSIX) && !defined(FLARE_PLATFORM_ANDROID)
 
 }  // namespace debug
 }  // namespace butil

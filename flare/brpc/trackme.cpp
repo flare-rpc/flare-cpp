@@ -23,12 +23,12 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include <pwd.h>
-#include "flare/butil/fast_rand.h"
+#include "flare/base/fast_rand.h"
 #include "flare/brpc/log.h"
 #include "flare/brpc/channel.h"
 #include "flare/brpc/trackme.pb.h"
 #include "flare/brpc/policy/hasher.h"
-#include "flare/butil/files/scoped_file.h"
+#include "flare/base/scoped_file.h"
 
 namespace brpc {
 
@@ -91,7 +91,7 @@ int ReadJPaasHostPort(int container_port) {
     char* line = NULL;
     size_t line_len = 0;
     ssize_t nr = 0;
-    butil::ScopedFILE fp(fopen(JPAAS_LOG_PATH, "r"));
+    flare::base::scoped_file fp(fopen(JPAAS_LOG_PATH, "r"));
     if (!fp) {
         RPC_VLOG << "Fail to open `" << JPAAS_LOG_PATH << '\'';
         return -1;
@@ -115,8 +115,8 @@ int ReadJPaasHostPort(int container_port) {
 }
 
 // Called in server.cpp
-void SetTrackMeAddress(butil::EndPoint pt) {
-    BAIDU_SCOPED_LOCK(s_trackme_mutex);
+void SetTrackMeAddress(flare::base::end_point pt) {
+    FLARE_SCOPED_LOCK(s_trackme_mutex);
     if (s_trackme_addr == NULL) {
         // JPAAS has NAT capabilities, read its log to figure out the open port
         // accessible from outside.
@@ -126,7 +126,7 @@ void SetTrackMeAddress(butil::EndPoint pt) {
                      << " instead of jpaas_container_port=" << pt.port;
             pt.port = jpaas_port;
         }
-        s_trackme_addr = new std::string(butil::endpoint2str(pt).c_str());
+        s_trackme_addr = new std::string(flare::base::endpoint2str(pt).c_str());
     }
 }
 
@@ -139,7 +139,7 @@ static void HandleTrackMeResponse(Controller* cntl, TrackMeResponse* res) {
         cur_info.error_text = res->error_text();
         bool already_reported = false;
         {
-            BAIDU_SCOPED_LOCK(s_trackme_mutex);
+            FLARE_SCOPED_LOCK(s_trackme_mutex);
             if (g_bug_info != NULL && *g_bug_info == cur_info) {
                 // we've shown the bug.
                 already_reported = true;
@@ -225,13 +225,13 @@ void TrackMe() {
     if (FLAGS_trackme_server.empty()) {
         return;
     }
-    int64_t now = butil::gettimeofday_us();
+    int64_t now = flare::base::gettimeofday_us();
     std::unique_lock<pthread_mutex_t> mu(s_trackme_mutex);
     if (s_trackme_last_time == 0) {
         // Delay the first ping randomly within s_trackme_interval. This
         // protects trackme_server from ping storms.
         s_trackme_last_time =
-            now + butil::fast_rand_less_than(s_trackme_interval) * 1000000L;
+            now + flare::base::fast_rand_less_than(s_trackme_interval) * 1000000L;
     }
     if (now > s_trackme_last_time + 1000000L * s_trackme_interval) {
         s_trackme_last_time = now;

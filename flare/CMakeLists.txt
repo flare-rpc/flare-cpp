@@ -22,7 +22,7 @@ endif ()
 
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
-add_library(FLARE_BASE_LIB ${FLARE_BASE_SRC})
+add_library(FLARE_BASE_LIB ${FLARE_SRC})
 add_library(BUTIL_LIB OBJECT ${BUTIL_SOURCES})
 add_library(SOURCES_LIB OBJECT ${SOURCES})
 add_dependencies(SOURCES_LIB PROTO_LIB)
@@ -43,9 +43,7 @@ add_library(brpc-static STATIC $<TARGET_OBJECTS:BUTIL_LIB>
 
 target_link_libraries(brpc-shared ${DYNAMIC_LIB})
 
-if (BRPC_WITH_GLOG)
-    target_link_libraries(brpc-shared ${GLOG_LIB})
-endif ()
+target_link_libraries(brpc-shared ${GLOG_LIB})
 
 if (BRPC_WITH_THRIFT)
     target_link_libraries(brpc-shared thrift)

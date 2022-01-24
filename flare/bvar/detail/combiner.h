@@ -22,11 +22,11 @@
 
 #include <string>                       // std::string
 #include <vector>                       // std::vector
-#include "flare/butil/static_atomic.h"
-#include "flare/butil/scoped_lock.h"           // BAIDU_SCOPED_LOCK
-#include "flare/butil/type_traits.h"           // butil::add_cr_non_integral
-#include "flare/butil/synchronization/lock.h"  // butil::Lock
-#include "flare/butil/containers/linked_list.h"// LinkNode
+#include "flare/base/static_atomic.h"
+#include "flare/base/scoped_lock.h"           // FLARE_SCOPED_LOCK
+#include "flare/base/type_traits.h"           // flare::base::add_cr_non_integral
+#include "flare/base/lock.h"  // flare::base::Lock
+#include "flare/container/linked_list.h"// link_node
 #include "flare/bvar/detail/agent_group.h"    // detail::AgentGroup
 #include "flare/bvar/detail/is_atomical.h"
 #include "flare/bvar/detail/call_op_returning_void.h"
@@ -77,24 +77,24 @@ namespace bvar {
 
         public:
             void load(T *out) {
-                butil::AutoLock guard(_lock);
+                flare::base::AutoLock guard(_lock);
                 *out = _value;
             }
 
             void store(const T &new_value) {
-                butil::AutoLock guard(_lock);
+                flare::base::AutoLock guard(_lock);
                 _value = new_value;
             }
 
             void exchange(T *prev, const T &new_value) {
-                butil::AutoLock guard(_lock);
+                flare::base::AutoLock guard(_lock);
                 *prev = _value;
                 _value = new_value;
             }
 
             template<typename Op, typename T1>
             void modify(const Op &op, const T1 &value2) {
-                butil::AutoLock guard(_lock);
+                flare::base::AutoLock guard(_lock);
                 call_op_returning_void(op, _value, value2);
             }
 
@@ -108,12 +108,12 @@ namespace bvar {
 
         private:
             T _value;
-            butil::Lock _lock;
+            flare::base::Lock _lock;
         };
 
         template<typename T>
         class ElementContainer<
-                T, typename butil::enable_if<is_atomical<T>::value>::type> {
+                T, typename std::enable_if<is_atomical<T>::value>::type> {
         public:
             // We don't need any memory fencing here, every op is relaxed.
 
@@ -152,7 +152,7 @@ namespace bvar {
             }
 
         private:
-            std::atomic <T> _value;
+            std::atomic<T> _value;
         };
 
         template<typename ResultTp, typename ElementTp, typename BinaryOp>
@@ -164,7 +164,7 @@ namespace bvar {
 
             friend class GlobalValue<self_type>;
 
-            struct Agent : public butil::LinkNode<Agent> {
+            struct Agent : public flare::container::link_node<Agent> {
                 Agent() : combiner(NULL) {}
 
                 ~Agent() {
@@ -236,9 +236,9 @@ namespace bvar {
             // [Threadsafe] May be called from anywhere
             ResultTp combine_agents() const {
                 ElementTp tls_value;
-                butil::AutoLock guard(_lock);
+                flare::base::AutoLock guard(_lock);
                 ResultTp ret = _global_result;
-                for (butil::LinkNode <Agent> *node = _agents.head();
+                for (flare::container::link_node<Agent> *node = _agents.head();
                      node != _agents.end(); node = node->next()) {
                     node->value()->element.load(&tls_value);
                     call_op_returning_void(_op, ret, tls_value);
@@ -246,17 +246,19 @@ namespace bvar {
                 return ret;
             }
 
-            typename butil::add_cr_non_integral<ElementTp>::type element_identity() const { return _element_identity; }
+            typename flare::base::add_cr_non_integral<ElementTp>::type
+            element_identity() const { return _element_identity; }
 
-            typename butil::add_cr_non_integral<ResultTp>::type result_identity() const { return _result_identity; }
+            typename flare::base::add_cr_non_integral<ResultTp>::type
+            result_identity() const { return _result_identity; }
 
             // [Threadsafe] May be called from anywhere.
             ResultTp reset_all_agents() {
                 ElementTp prev;
-                butil::AutoLock guard(_lock);
+                flare::base::AutoLock guard(_lock);
                 ResultTp tmp = _global_result;
                 _global_result = _result_identity;
-                for (butil::LinkNode <Agent> *node = _agents.head();
+                for (flare::container::link_node<Agent> *node = _agents.head();
                      node != _agents.end(); node = node->next()) {
                     node->value()->element.exchange(&prev, _element_identity);
                     call_op_returning_void(_op, tmp, prev);
@@ -270,12 +272,12 @@ namespace bvar {
                     return;
                 }
                 ElementTp local;
-                butil::AutoLock guard(_lock);
+                flare::base::AutoLock guard(_lock);
                 // TODO: For non-atomic types, we can pass the reference to op directly.
                 // But atomic types cannot. The code is a little troublesome to write.
                 agent->element.load(&local);
                 call_op_returning_void(_op, _global_result, local);
-                agent->RemoveFromList();
+                agent->remove_from_list();
             }
 
             // Always called from the thread owning the agent
@@ -284,7 +286,7 @@ namespace bvar {
                     return;
                 }
                 ElementTp prev;
-                butil::AutoLock guard(_lock);
+                flare::base::AutoLock guard(_lock);
                 agent->element.exchange(&prev, _element_identity);
                 call_op_returning_void(_op, _global_result, prev);
             }
@@ -306,22 +308,22 @@ namespace bvar {
                 agent->reset(_element_identity, this);
                 // TODO: Is uniqueness-checking necessary here?
                 {
-                    butil::AutoLock guard(_lock);
-                    _agents.Append(agent);
+                    flare::base::AutoLock guard(_lock);
+                    _agents.append(agent);
                 }
                 return agent;
             }
 
             void clear_all_agents() {
-                butil::AutoLock guard(_lock);
+                flare::base::AutoLock guard(_lock);
                 // reseting agents is must because the agent object may be reused.
                 // Set element to be default-constructed so that if it's non-pod,
                 // internal allocations should be released.
-                for (butil::LinkNode <Agent> *
+                for (flare::container::link_node<Agent> *
                         node = _agents.head(); node != _agents.end();) {
                     node->value()->reset(ElementTp(), NULL);
-                    butil::LinkNode <Agent> *const saved_next = node->next();
-                    node->RemoveFromList();
+                    flare::container::link_node<Agent> *const saved_next = node->next();
+                    node->remove_from_list();
                     node = saved_next;
                 }
             }
@@ -333,11 +335,11 @@ namespace bvar {
         private:
             AgentId _id;
             BinaryOp _op;
-            mutable butil::Lock _lock;
+            mutable flare::base::Lock _lock;
             ResultTp _global_result;
             ResultTp _result_identity;
             ElementTp _element_identity;
-            butil::LinkedList <Agent> _agents;
+            flare::container::linked_list<Agent> _agents;
         };
 
     }  // namespace detail

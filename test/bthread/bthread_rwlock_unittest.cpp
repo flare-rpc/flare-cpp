@@ -20,8 +20,8 @@
 #include <stdio.h>
 #include <signal.h>
 #include <gtest/gtest.h>
-#include "flare/butil/time.h"
-#include "flare/butil/macros.h"
+#include "flare/base/time.h"
+#include "flare/base/profile.h"
 
 namespace {
 void* read_thread(void* arg) {
@@ -31,7 +31,7 @@ void* read_thread(void* arg) {
 #else
     pthread_mutex_t* lock = (pthread_mutex_t*)arg;
 #endif
-    const long t1 = butil::cpuwide_time_ns();
+    const long t1 = flare::base::cpuwide_time_ns();
     for (size_t i = 0; i < N; ++i) {
 #ifdef CHECK_RWLOCK
         pthread_rwlock_rdlock(lock);
@@ -41,7 +41,7 @@ void* read_thread(void* arg) {
         pthread_mutex_unlock(lock);
 #endif
     }
-    const long t2 = butil::cpuwide_time_ns();
+    const long t2 = flare::base::cpuwide_time_ns();
     return new long((t2 - t1)/N);
 }
 
@@ -59,12 +59,12 @@ TEST(RWLockTest, rdlock_performance) {
 #endif
     pthread_t rth[16];
     pthread_t wth;
-    for (size_t i = 0; i < ARRAY_SIZE(rth); ++i) {
+    for (size_t i = 0; i < FLARE_ARRAY_SIZE(rth); ++i) {
         ASSERT_EQ(0, pthread_create(&rth[i], NULL, read_thread, &lock1));
     }
     ASSERT_EQ(0, pthread_create(&wth, NULL, write_thread, &lock1));
     
-    for (size_t i = 0; i < ARRAY_SIZE(rth); ++i) {
+    for (size_t i = 0; i < FLARE_ARRAY_SIZE(rth); ++i) {
         long* res = NULL;
         pthread_join(rth[i], (void**)&res);
         printf("read thread %lu = %ldns\n", i, *res);

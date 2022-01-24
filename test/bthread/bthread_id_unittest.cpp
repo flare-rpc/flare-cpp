@@ -17,7 +17,7 @@
 
 #include <iostream>
 #include <gtest/gtest.h>
-#include "flare/butil/time.h"
+#include "flare/base/time.h"
 #include "flare/butil/macros.h"
 #include "flare/bthread/bthread.h"
 #include "flare/bthread/task_group.h"
@@ -65,16 +65,16 @@ TEST(BthreadIdTest, join_after_destroy) {
     ASSERT_EQ(get_version(id1), bthread::id_value(id1));
     ASSERT_EQ(get_version(id1), bthread::id_value(id2));
     pthread_t th[8];
-    SignalArg args[ARRAY_SIZE(th)];
-    for (size_t i = 0; i < ARRAY_SIZE(th); ++i) {
+    SignalArg args[FLARE_ARRAY_SIZE(th)];
+    for (size_t i = 0; i < FLARE_ARRAY_SIZE(th); ++i) {
         args[i].sleep_us_before_fight = 0;
         args[i].sleep_us_before_signal = 0;
         args[i].id = (i == 0 ? id1 : id2);
         ASSERT_EQ(0, pthread_create(&th[i], NULL, signaller, &args[i]));
     }
-    void* ret[ARRAY_SIZE(th)];
+    void* ret[FLARE_ARRAY_SIZE(th)];
     size_t non_null_ret = 0;
-    for (size_t i = 0; i < ARRAY_SIZE(th); ++i) {
+    for (size_t i = 0; i < FLARE_ARRAY_SIZE(th); ++i) {
         ASSERT_EQ(0, pthread_join(th[i], &ret[i]));
         non_null_ret += (ret[i] != NULL);
     }
@@ -92,8 +92,8 @@ TEST(BthreadIdTest, join_before_destroy) {
     ASSERT_EQ(0, bthread_id_create(&id1, &x, NULL));
     ASSERT_EQ(get_version(id1), bthread::id_value(id1));
     pthread_t th[8];
-    SignalArg args[ARRAY_SIZE(th)];
-    for (size_t i = 0; i < ARRAY_SIZE(th); ++i) {
+    SignalArg args[FLARE_ARRAY_SIZE(th)];
+    for (size_t i = 0; i < FLARE_ARRAY_SIZE(th); ++i) {
         args[i].sleep_us_before_fight = 10000;
         args[i].sleep_us_before_signal = 0;
         args[i].id = id1;
@@ -103,9 +103,9 @@ TEST(BthreadIdTest, join_before_destroy) {
     ASSERT_EQ(0xdead + 1, x);
     ASSERT_EQ(get_version(id1) + 4, bthread::id_value(id1));
 
-    void* ret[ARRAY_SIZE(th)];
+    void* ret[FLARE_ARRAY_SIZE(th)];
     size_t non_null_ret = 0;
-    for (size_t i = 0; i < ARRAY_SIZE(th); ++i) {
+    for (size_t i = 0; i < FLARE_ARRAY_SIZE(th); ++i) {
         ASSERT_EQ(0, pthread_join(th[i], &ret[i]));
         non_null_ret += (ret[i] != NULL);
     }
@@ -214,7 +214,7 @@ TEST(BthreadIdTest, many_error) {
 
 static void* locker(void* arg) {
     bthread_id_t id = { (uintptr_t)arg };
-    butil::Timer tm;
+    flare::base::stop_watcher tm;
     tm.start();
     EXPECT_EQ(0, bthread_id_lock(id, NULL));
     bthread_usleep(2000);
@@ -229,11 +229,11 @@ TEST(BthreadIdTest, id_lock) {
     ASSERT_EQ(0, bthread_id_create(&id1, NULL, NULL));
     ASSERT_EQ(get_version(id1), bthread::id_value(id1));
     pthread_t th[8];
-    for (size_t i = 0; i < ARRAY_SIZE(th); ++i) {
+    for (size_t i = 0; i < FLARE_ARRAY_SIZE(th); ++i) {
         ASSERT_EQ(0, pthread_create(&th[i], NULL, locker,
                                     (void*)id1.value));
     }
-    for (size_t i = 0; i < ARRAY_SIZE(th); ++i) {
+    for (size_t i = 0; i < FLARE_ARRAY_SIZE(th); ++i) {
         ASSERT_EQ(0, pthread_join(th[i], NULL));
     }
 }
@@ -256,12 +256,12 @@ TEST(BthreadIdTest, id_lock_and_destroy) {
     ASSERT_EQ(0, bthread_id_create(&id1, NULL, NULL));
     ASSERT_EQ(get_version(id1), bthread::id_value(id1));
     pthread_t th[8];
-    for (size_t i = 0; i < ARRAY_SIZE(th); ++i) {
+    for (size_t i = 0; i < FLARE_ARRAY_SIZE(th); ++i) {
         ASSERT_EQ(0, pthread_create(&th[i], NULL, failed_locker,
                                     (void*)id1.value));
     }
     int non_null = 0;
-    for (size_t i = 0; i < ARRAY_SIZE(th); ++i) {
+    for (size_t i = 0; i < FLARE_ARRAY_SIZE(th); ++i) {
         void* ret = NULL;
         ASSERT_EQ(0, pthread_join(th[i], &ret));
         non_null += (ret != NULL);
@@ -275,8 +275,8 @@ TEST(BthreadIdTest, join_after_destroy_before_unlock) {
     ASSERT_EQ(0, bthread_id_create(&id1, &x, NULL));
     ASSERT_EQ(get_version(id1), bthread::id_value(id1));
     pthread_t th[8];
-    SignalArg args[ARRAY_SIZE(th)];
-    for (size_t i = 0; i < ARRAY_SIZE(th); ++i) {
+    SignalArg args[FLARE_ARRAY_SIZE(th)];
+    for (size_t i = 0; i < FLARE_ARRAY_SIZE(th); ++i) {
         args[i].sleep_us_before_fight = 0;
         args[i].sleep_us_before_signal = 20000;
         args[i].id = id1;
@@ -288,9 +288,9 @@ TEST(BthreadIdTest, join_after_destroy_before_unlock) {
     ASSERT_EQ(0xdead + 1, x);
     ASSERT_EQ(get_version(id1) + 4, bthread::id_value(id1));
 
-    void* ret[ARRAY_SIZE(th)];
+    void* ret[FLARE_ARRAY_SIZE(th)];
     size_t non_null_ret = 0;
-    for (size_t i = 0; i < ARRAY_SIZE(th); ++i) {
+    for (size_t i = 0; i < FLARE_ARRAY_SIZE(th); ++i) {
         ASSERT_EQ(0, pthread_join(th[i], &ret[i]));
         non_null_ret += (ret[i] != NULL);
     }
@@ -319,23 +319,23 @@ TEST(BthreadIdTest, stop_a_wait_after_fight_before_signal) {
     ASSERT_EQ(0, bthread_id_trylock(id1, &data));
     ASSERT_EQ(&x, data);
     bthread_t th[8];
-    StoppedWaiterArgs args[ARRAY_SIZE(th)];
-    for (size_t i = 0; i < ARRAY_SIZE(th); ++i) {
+    StoppedWaiterArgs args[FLARE_ARRAY_SIZE(th)];
+    for (size_t i = 0; i < FLARE_ARRAY_SIZE(th); ++i) {
         args[i].id = id1;
         args[i].thread_started = false;
         ASSERT_EQ(0, bthread_start_urgent(&th[i], NULL, stopped_waiter, &args[i]));
     }
     // stop does not wake up bthread_id_join
-    for (size_t i = 0; i < ARRAY_SIZE(th); ++i) {
+    for (size_t i = 0; i < FLARE_ARRAY_SIZE(th); ++i) {
         bthread_stop(th[i]);
     }
     bthread_usleep(10000);
-    for (size_t i = 0; i < ARRAY_SIZE(th); ++i) {
+    for (size_t i = 0; i < FLARE_ARRAY_SIZE(th); ++i) {
         ASSERT_TRUE(bthread::TaskGroup::exists(th[i]));
     }
     // destroy the id to end the joinings.
     ASSERT_EQ(0, bthread_id_unlock_and_destroy(id1));
-    for (size_t i = 0; i < ARRAY_SIZE(th); ++i) {
+    for (size_t i = 0; i < FLARE_ARRAY_SIZE(th); ++i) {
         ASSERT_EQ(0, bthread_join(th[i], NULL));
     }
 }
@@ -358,21 +358,21 @@ TEST(BthreadIdTest, list_signal) {
     bthread_id_list_t list;
     ASSERT_EQ(0, bthread_id_list_init(&list, 32, 32));
     bthread_id_t id[16];
-    int data[ARRAY_SIZE(id)];
-    for (size_t i = 0; i < ARRAY_SIZE(id); ++i) {
+    int data[FLARE_ARRAY_SIZE(id)];
+    for (size_t i = 0; i < FLARE_ARRAY_SIZE(id); ++i) {
         data[i] = i;
         ASSERT_EQ(0, bthread_id_create(&id[i], &data[i], handle_data));
         ASSERT_EQ(get_version(id[i]), bthread::id_value(id[i]));
         ASSERT_EQ(0, bthread_id_list_add(&list, id[i]));
     }
-    pthread_t th[ARRAY_SIZE(id)];
-    for (size_t i = 0; i < ARRAY_SIZE(th); ++i) {
+    pthread_t th[FLARE_ARRAY_SIZE(id)];
+    for (size_t i = 0; i < FLARE_ARRAY_SIZE(th); ++i) {
         ASSERT_EQ(0, pthread_create(&th[i], NULL, waiter, (void*)(intptr_t)id[i].value));
     }
     bthread_usleep(10000);
     ASSERT_EQ(0, bthread_id_list_reset(&list, EBADF));
 
-    for (size_t i = 0; i < ARRAY_SIZE(th); ++i) {
+    for (size_t i = 0; i < FLARE_ARRAY_SIZE(th); ++i) {
         ASSERT_EQ((int)(i + 1), data[i]);
         ASSERT_EQ(0, pthread_join(th[i], NULL));
         // already reset.
@@ -426,7 +426,7 @@ struct FailToLockIdArgs {
 
 static void* fail_to_lock_id(void* args_in) {
     FailToLockIdArgs* args = (FailToLockIdArgs*)args_in;
-    butil::Timer tm;
+    flare::base::stop_watcher tm;
     EXPECT_EQ(args->expected_return, bthread_id_lock(args->id, NULL));
     any_thread_quit = true;
     return NULL;

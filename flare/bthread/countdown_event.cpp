@@ -19,7 +19,7 @@
 
 // Date: 2016/06/03 13:15:24
 
-#include "flare/butil/static_atomic.h"     // std::atomic<int>
+#include "flare/base/static_atomic.h"     // std::atomic<int>
 #include "flare/bthread/butex.h"
 #include "flare/bthread/countdown_event.h"
 

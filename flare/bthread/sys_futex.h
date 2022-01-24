@@ -22,10 +22,10 @@
 #ifndef BTHREAD_SYS_FUTEX_H
 #define BTHREAD_SYS_FUTEX_H
 
-#include "flare/butil/build_config.h"         // OS_MACOSX
+#include "flare/base/profile.h"         // FLARE_PLATFORM_OSX
 #include <unistd.h>                     // syscall
 #include <time.h>                       // timespec
-#if defined(OS_LINUX)
+#if defined(FLARE_PLATFORM_LINUX)
 #include <syscall.h>                    // SYS_futex
 #include <linux/futex.h>                // FUTEX_WAIT, FUTEX_WAKE
 
@@ -53,7 +53,7 @@ inline int futex_requeue_private(void* addr1, int nwake, void* addr2) {
 
 }  // namespace bthread
 
-#elif defined(OS_MACOSX)
+#elif defined(FLARE_PLATFORM_OSX)
 
 namespace bthread {
 

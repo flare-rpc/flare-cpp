@@ -8,7 +8,7 @@
 #include <vector>
 
 #include "flare/butil/basictypes.h"
-#include "flare/butil/logging.h"
+#include "flare/base/logging.h"
 #include "flare/butil/move.h"
 #include "flare/butil/stl_util.h"
 

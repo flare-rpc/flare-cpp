@@ -23,7 +23,7 @@
 #define BTHREAD_COMLOG_INITIALIZER_H
 
 #include <com_log.h>                       // com_openlog_r, com_closelog_r
-#include "flare/butil/macros.h"
+#include "flare/base/profile.h"
 
 namespace bthread {
 
@@ -41,7 +41,7 @@ public:
     }
     
 private:
-    DISALLOW_COPY_AND_ASSIGN(ComlogInitializer);
+    FLARE_DISALLOW_COPY_AND_ASSIGN(ComlogInitializer);
 };
 
 }

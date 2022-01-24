@@ -7,7 +7,7 @@
 
 #include <limits>
 
-#include "flare/butil/logging.h"
+#include "flare/base/logging.h"
 #include "flare/butil/numerics/safe_conversions_impl.h"
 
 namespace butil {

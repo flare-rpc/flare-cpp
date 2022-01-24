@@ -25,12 +25,12 @@
 namespace bthread {
 
 // Utilities to manipulate bthread_t
-inline bthread_t make_tid(uint32_t version, butil::ResourceId<TaskMeta> slot) {
+inline bthread_t make_tid(uint32_t version, flare::memory::ResourceId<TaskMeta> slot) {
     return (((bthread_t)version) << 32) | (bthread_t)slot.value;
 }
 
-inline butil::ResourceId<TaskMeta> get_slot(bthread_t tid) {
-    butil::ResourceId<TaskMeta> id = { (tid & 0xFFFFFFFFul) };
+inline flare::memory::ResourceId<TaskMeta> get_slot(bthread_t tid) {
+    flare::memory::ResourceId<TaskMeta> id = { (tid & 0xFFFFFFFFul) };
     return id;
 }
 inline uint32_t get_version(bthread_t tid) {

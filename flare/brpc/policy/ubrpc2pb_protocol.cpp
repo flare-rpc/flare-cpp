@@ -20,8 +20,8 @@
 #include <google/protobuf/message.h>            // Message
 #include <gflags/gflags.h>
 
-#include "flare/butil/time.h"
-#include "flare/butil/iobuf.h"                         // butil::IOBuf
+#include "flare/base/time.h"
+#include "flare/io/iobuf.h"                         // flare::io::IOBuf
 #include "flare/brpc/controller.h"               // Controller
 #include "flare/brpc/socket.h"                   // Socket
 #include "flare/brpc/server.h"                   // Server
@@ -45,7 +45,7 @@ static const unsigned int UBRPC_NSHEAD_VERSION = 1000;
 void UbrpcAdaptor::ParseNsheadMeta(
     const Server&, const NsheadMessage& request, Controller* cntl,
     NsheadMeta* out_meta) const {
-    butil::IOBufAsZeroCopyInputStream zc_stream(request.body);
+    flare::io::IOBufAsZeroCopyInputStream zc_stream(request.body);
     mcpack2pb::InputStream stream(&zc_stream);
     if (!::mcpack2pb::unbox(&stream)) {
         cntl->SetFailed(EREQUEST, "Request is not a compack/mcpack2 object");
@@ -147,7 +147,7 @@ void UbrpcAdaptor::ParseNsheadMeta(
     }
 
     // Change request.body with the user's request.
-    butil::IOBuf& buf = const_cast<butil::IOBuf&>(request.body);
+    flare::io::IOBuf& buf = const_cast<flare::io::IOBuf&>(request.body);
     buf.pop_front(user_req_offset);
     if (buf.size() != user_req_size) {
         if (buf.size() < user_req_size) {
@@ -175,7 +175,7 @@ void UbrpcAdaptor::ParseRequestFromIOBuf(
         return cntl->SetFailed(EREQUEST, "Fail to find parser of %s",
                                msg_name.c_str());
     }
-    butil::IOBufAsZeroCopyInputStream bodystream(raw_req.body);
+    flare::io::IOBufAsZeroCopyInputStream bodystream(raw_req.body);
     if (!handler.parse_body(pb_req, &bodystream, raw_req.body.size())) {
         cntl->SetFailed(EREQUEST, "Fail to parse %s", msg_name.c_str());
         return;
@@ -183,8 +183,8 @@ void UbrpcAdaptor::ParseRequestFromIOBuf(
 }
 
 static void AppendError(const NsheadMeta& meta,
-                        Controller* cntl, butil::IOBuf& buf) {
-    butil::IOBufAsZeroCopyOutputStream wrapper(&buf);
+                        Controller* cntl, flare::io::IOBuf& buf) {
+    flare::io::IOBufAsZeroCopyOutputStream wrapper(&buf);
     mcpack2pb::OutputStream ostream(&wrapper);
     mcpack2pb::Serializer sr(&ostream);
     sr.begin_object();
@@ -235,7 +235,7 @@ void UbrpcAdaptor::SerializeResponseToIOBuf(
         return AppendError(meta, cntl, raw_res->body);
     }
 
-    butil::IOBufAsZeroCopyOutputStream owrapper(&raw_res->body);
+    flare::io::IOBufAsZeroCopyOutputStream owrapper(&raw_res->body);
     mcpack2pb::OutputStream ostream(&owrapper);
     mcpack2pb::Serializer sr(&ostream);
     sr.begin_object();
@@ -273,7 +273,7 @@ void UbrpcAdaptor::SerializeResponseToIOBuf(
     }
 }
 
-static void ParseResponse(Controller* cntl, butil::IOBuf& buf,
+static void ParseResponse(Controller* cntl, flare::io::IOBuf& buf,
                           google::protobuf::Message* res) {
     if (res == NULL) {
         // silently ignore response.
@@ -285,7 +285,7 @@ static void ParseResponse(Controller* cntl, butil::IOBuf& buf,
         return cntl->SetFailed(ERESPONSE, "Fail to find parser of %s",
                                msg_name.c_str());
     }
-    butil::IOBufAsZeroCopyInputStream zc_stream(buf);
+    flare::io::IOBufAsZeroCopyInputStream zc_stream(buf);
     mcpack2pb::InputStream stream(&zc_stream);
     if (!::mcpack2pb::unbox(&stream)) {
         cntl->SetFailed(ERESPONSE, "Response is not a compack/mcpack2 object");
@@ -429,7 +429,7 @@ static void ParseResponse(Controller* cntl, butil::IOBuf& buf,
         }
         buf.pop_back(buf.size() - user_res_size);
     }
-    butil::IOBufAsZeroCopyInputStream bufstream(buf);
+    flare::io::IOBufAsZeroCopyInputStream bufstream(buf);
     if (!handler.parse_body(res, &bufstream, buf.size())) {
         cntl->SetFailed(ERESPONSE, "Fail to parse %s from response.content[0]."
                         "result_params.%s", msg_name.c_str(), response_name);
@@ -438,7 +438,7 @@ static void ParseResponse(Controller* cntl, butil::IOBuf& buf,
 }
 
 void ProcessUbrpcResponse(InputMessageBase* msg_base) {
-    const int64_t start_parse_us = butil::cpuwide_time_us();
+    const int64_t start_parse_us = flare::base::cpuwide_time_us();
     DestroyingPtr<MostCommonMessage> msg(static_cast<MostCommonMessage*>(msg_base));
     Socket* socket = msg->socket();
     
@@ -448,7 +448,7 @@ void ProcessUbrpcResponse(InputMessageBase* msg_base) {
     const int rc = bthread_id_lock(cid, (void**)&cntl);
     if (rc != 0) {
         LOG_IF(ERROR, rc != EINVAL && rc != EPERM)
-            << "Fail to lock correlation_id=" << cid << ": " << berror(rc);
+            << "Fail to lock correlation_id=" << cid << ": " << flare_error(rc);
         return;
     }
     
@@ -469,7 +469,7 @@ void ProcessUbrpcResponse(InputMessageBase* msg_base) {
     accessor.OnResponse(cid, saved_error);
 } 
 
-static void SerializeUbrpcRequest(butil::IOBuf* buf, Controller* cntl,
+static void SerializeUbrpcRequest(flare::io::IOBuf* buf, Controller* cntl,
                                   const google::protobuf::Message* request,
                                   mcpack2pb::SerializationFormat format) {
     CompressType type = cntl->request_compress_type();
@@ -487,7 +487,7 @@ static void SerializeUbrpcRequest(butil::IOBuf* buf, Controller* cntl,
                                msg_name.c_str());
     }
 
-    butil::IOBufAsZeroCopyOutputStream owrapper(buf);
+    flare::io::IOBufAsZeroCopyOutputStream owrapper(buf);
     mcpack2pb::OutputStream ostream(&owrapper);
     mcpack2pb::Serializer sr(&ostream);
     sr.begin_object();
@@ -525,22 +525,22 @@ static void SerializeUbrpcRequest(butil::IOBuf* buf, Controller* cntl,
     }
 }
 
-void SerializeUbrpcCompackRequest(butil::IOBuf* buf, Controller* cntl,
+void SerializeUbrpcCompackRequest(flare::io::IOBuf* buf, Controller* cntl,
                                   const google::protobuf::Message* request) {
     return SerializeUbrpcRequest(buf, cntl, request, mcpack2pb::FORMAT_COMPACK);
 }
 
-void SerializeUbrpcMcpack2Request(butil::IOBuf* buf, Controller* cntl,
+void SerializeUbrpcMcpack2Request(flare::io::IOBuf* buf, Controller* cntl,
                                   const google::protobuf::Message* request) {
     return SerializeUbrpcRequest(buf, cntl, request, mcpack2pb::FORMAT_MCPACK_V2);
 }
 
-void PackUbrpcRequest(butil::IOBuf* buf,
+void PackUbrpcRequest(flare::io::IOBuf* buf,
                       SocketMessage**,
                       uint64_t correlation_id,
                       const google::protobuf::MethodDescriptor*,
                       Controller* controller,
-                      const butil::IOBuf& request,
+                      const flare::io::IOBuf& request,
                       const Authenticator* /*not supported*/) {
     ControllerPrivateAccessor accessor(controller);
     if (controller->connection_type() == CONNECTION_TYPE_SINGLE) {

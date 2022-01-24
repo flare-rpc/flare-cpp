@@ -18,8 +18,8 @@
 
 #include <limits>                                            // numeric_limits
 #include <gflags/gflags.h>
-#include "flare/butil/time.h"                                       // gettimeofday_us
-#include "flare/butil/fast_rand.h"
+#include "flare/base/time.h"                                       // gettimeofday_us
+#include "flare/base/fast_rand.h"
 #include "flare/brpc/log.h"
 #include "flare/brpc/socket.h"
 #include "flare/brpc/reloadable_flags.h"
@@ -263,7 +263,7 @@ size_t LocalityAwareLoadBalancer::RemoveServersInBatch(
 }
 
 int LocalityAwareLoadBalancer::SelectServer(const SelectIn& in, SelectOut* out) {
-    butil::DoublyBufferedData<Servers>::ScopedPtr s;
+    flare::container::DoublyBufferedData<Servers>::ScopedPtr s;
     if (_db_servers.Read(&s) != 0) {
         return ENOMEM;
     }
@@ -274,7 +274,7 @@ int LocalityAwareLoadBalancer::SelectServer(const SelectIn& in, SelectOut* out) 
     size_t ntry = 0;
     size_t nloop = 0;
     int64_t total = _total.load(std::memory_order_relaxed);
-    int64_t dice = butil::fast_rand_less_than(total);
+    int64_t dice = flare::base::fast_rand_less_than(total);
     size_t index = 0;
     int64_t self = 0;
     while (total > 0) {
@@ -343,14 +343,14 @@ int LocalityAwareLoadBalancer::SelectServer(const SelectIn& in, SelectOut* out) 
             }
         }
         total = _total.load(std::memory_order_relaxed);
-        dice = butil::fast_rand_less_than(total);
+        dice = flare::base::fast_rand_less_than(total);
         index = 0;
     }
     return EHOSTDOWN;
 }
 
 void LocalityAwareLoadBalancer::Feedback(const CallInfo& info) {        
-    butil::DoublyBufferedData<Servers>::ScopedPtr s;
+    flare::container::DoublyBufferedData<Servers>::ScopedPtr s;
     if (_db_servers.Read(&s) != 0) {
         return;
     }
@@ -369,9 +369,9 @@ void LocalityAwareLoadBalancer::Feedback(const CallInfo& info) {
 
 int64_t LocalityAwareLoadBalancer::Weight::Update(
     const CallInfo& ci, size_t index) {
-    const int64_t end_time_us = butil::gettimeofday_us();
+    const int64_t end_time_us = flare::base::gettimeofday_us();
     const int64_t latency = end_time_us - ci.begin_time_us;
-    BAIDU_SCOPED_LOCK(_mutex);
+    FLARE_SCOPED_LOCK(_mutex);
     if (Disabled()) {
         // The weight was disabled and will be removed soon, do nothing
         // and the diff is 0.
@@ -464,7 +464,7 @@ int64_t LocalityAwareLoadBalancer::Weight::Update(
 }
 
 LocalityAwareLoadBalancer* LocalityAwareLoadBalancer::New(
-    const butil::StringPiece&) const {
+    const std::string_view&) const {
     return new (std::nothrow) LocalityAwareLoadBalancer;
 }
 
@@ -473,7 +473,7 @@ void LocalityAwareLoadBalancer::Destroy() {
 }
 
 void LocalityAwareLoadBalancer::Weight::Describe(std::ostream& os, int64_t now) {
-    std::unique_lock<butil::Mutex> mu(_mutex);
+    std::unique_lock<flare::base::Mutex> mu(_mutex);
     int64_t begin_time_sum = _begin_time_sum;
     int begin_time_count = _begin_time_count;
     int64_t weight = _weight;
@@ -513,11 +513,11 @@ void LocalityAwareLoadBalancer::Describe(
     }
     os << "LocalityAware{total="
        << _total.load(std::memory_order_relaxed) << ' ';
-    butil::DoublyBufferedData<Servers>::ScopedPtr s;
+    flare::container::DoublyBufferedData<Servers>::ScopedPtr s;
     if (_db_servers.Read(&s) != 0) {
         os << "fail to read _db_servers";
     } else {
-        const int64_t now = butil::gettimeofday_us();
+        const int64_t now = flare::base::gettimeofday_us();
         const size_t n = s->weight_tree.size();
         os << '[';
         for (size_t i = 0; i < n; ++i) {
@@ -548,14 +548,14 @@ LocalityAwareLoadBalancer::Weight::Weight(int64_t initial_weight)
     , _old_index((size_t)-1L)
     , _old_weight(0)
     , _avg_latency(0)
-    , _time_q(_time_q_items, sizeof(_time_q_items), butil::NOT_OWN_STORAGE) {
+    , _time_q(_time_q_items, sizeof(_time_q_items), flare::container::NOT_OWN_STORAGE) {
 }
 
 LocalityAwareLoadBalancer::Weight::~Weight() {
 }
 
 int64_t LocalityAwareLoadBalancer::Weight::Disable() {
-    BAIDU_SCOPED_LOCK(_mutex);
+    FLARE_SCOPED_LOCK(_mutex);
     const int64_t saved = _weight;
     _base_weight = -1;
     _weight = 0;
@@ -563,7 +563,7 @@ int64_t LocalityAwareLoadBalancer::Weight::Disable() {
 }
 
 int64_t LocalityAwareLoadBalancer::Weight::MarkOld(size_t index) {
-    BAIDU_SCOPED_LOCK(_mutex);
+    FLARE_SCOPED_LOCK(_mutex);
     const int64_t saved = _weight;
     _old_weight = saved;
     _old_diff_sum = 0;
@@ -572,7 +572,7 @@ int64_t LocalityAwareLoadBalancer::Weight::MarkOld(size_t index) {
 }
         
 std::pair<int64_t, int64_t> LocalityAwareLoadBalancer::Weight::ClearOld() {
-    BAIDU_SCOPED_LOCK(_mutex);
+    FLARE_SCOPED_LOCK(_mutex);
     const int64_t old_weight = _old_weight;
     const int64_t diff = _old_diff_sum;
     _old_diff_sum = 0;

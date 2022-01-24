@@ -21,7 +21,7 @@
 
 #include <vector>                           // std::vector
 #include <gflags/gflags_declare.h>
-#include "flare/butil/endpoint.h"
+#include "flare/base/endpoint.h"
 #include "flare/brpc/http_header.h"
 
 
@@ -70,15 +70,15 @@ struct PrintedAsDateTime {
 std::ostream& operator<<(std::ostream& os, const PrintedAsDateTime&);
 
 struct Path {
-    static const butil::EndPoint *LOCAL;
-    Path(const char* uri2, const butil::EndPoint* html_addr2)
+    static const flare::base::end_point *LOCAL;
+    Path(const char* uri2, const flare::base::end_point* html_addr2)
         : uri(uri2), html_addr(html_addr2), text(NULL) {}
     
-    Path(const char* uri2, const butil::EndPoint* html_addr2, const char* text2)
+    Path(const char* uri2, const flare::base::end_point* html_addr2, const char* text2)
         : uri(uri2), html_addr(html_addr2), text(text2) {}
 
     const char* uri;
-    const butil::EndPoint* html_addr;
+    const flare::base::end_point* html_addr;
     const char* text;
 };
 std::ostream& operator<<(std::ostream& os, const Path& link);

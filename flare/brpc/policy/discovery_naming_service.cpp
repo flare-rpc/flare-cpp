@@ -20,9 +20,9 @@
 #include "flare/butil/third_party/rapidjson/document.h"
 #include "flare/butil/third_party/rapidjson/memorybuffer.h"
 #include "flare/butil/third_party/rapidjson/writer.h"
-#include "flare/butil/string_printf.h"
-#include "flare/butil/strings/string_split.h"
-#include "flare/butil/fast_rand.h"
+#include "flare/base/strings.h"
+#include "flare/base/str_split.h"
+#include "flare/base/fast_rand.h"
 #include "flare/bthread/bthread.h"
 #include "flare/brpc/channel.h"
 #include "flare/brpc/controller.h"
@@ -148,7 +148,7 @@ DiscoveryClient::~DiscoveryClient() {
     }
 }
 
-static int ParseCommonResult(const butil::IOBuf& buf, std::string* error_text) {
+static int ParseCommonResult(const flare::io::IOBuf& buf, std::string* error_text) {
     const std::string s = buf.to_string();
     BUTIL_RAPIDJSON_NAMESPACE::Document d;
     d.Parse(s.c_str());
@@ -186,7 +186,7 @@ int DiscoveryClient::DoRenew() const {
     cntl.http_request().set_method(HTTP_METHOD_POST);
     cntl.http_request().uri() = "/discovery/renew";
     cntl.http_request().set_content_type("application/x-www-form-urlencoded");
-    butil::IOBufBuilder os;
+    flare::io::IOBufBuilder os;
     os << "appid=" << _params.appid
         << "&hostname=" << _params.hostname
         << "&env=" << _params.env
@@ -211,7 +211,7 @@ void* DiscoveryClient::PeriodicRenew(void* arg) {
     DiscoveryClient* d = static_cast<DiscoveryClient*>(arg);
     int consecutive_renew_error = 0;
     int64_t init_sleep_s = FLAGS_discovery_renew_interval_s / 2 +
-        butil::fast_rand_less_than(FLAGS_discovery_renew_interval_s / 2);
+        flare::base::fast_rand_less_than(FLAGS_discovery_renew_interval_s / 2);
     if (bthread_usleep(init_sleep_s * 1000000) != 0) {
         if (errno == ESTOP) {
             return NULL;
@@ -270,12 +270,11 @@ int DiscoveryClient::DoRegister() {
     cntl.http_request().set_method(HTTP_METHOD_POST);
     cntl.http_request().uri() = "/discovery/register";
     cntl.http_request().set_content_type("application/x-www-form-urlencoded");
-    butil::IOBufBuilder os;
+    flare::io::IOBufBuilder os;
     os << "appid=" << _params.appid
         << "&hostname=" << _params.hostname;
 
-    std::vector<butil::StringPiece> addrs;
-    butil::SplitString(_params.addrs, ',', &addrs);
+    std::vector<std::string_view> addrs = flare::base::string_split(_params.addrs, ',');
     for (size_t i = 0; i < addrs.size(); ++i) {
         if (!addrs[i].empty()) {
             os << "&addrs=" << addrs[i];
@@ -320,7 +319,7 @@ int DiscoveryClient::DoCancel() const {
     cntl.http_request().set_method(HTTP_METHOD_POST);
     cntl.http_request().uri() = "/discovery/cancel";
     cntl.http_request().set_content_type("application/x-www-form-urlencoded");
-    butil::IOBufBuilder os;
+    flare::io::IOBufBuilder os;
     os << "appid=" << _params.appid
         << "&hostname=" << _params.hostname
         << "&env=" << _params.env
@@ -357,7 +356,7 @@ int DiscoveryNamingService::GetServers(const char* service_name,
     }
     servers->clear();
     Controller cntl;
-    std::string uri_str = butil::string_printf(
+    std::string uri_str = flare::base::string_printf(
             "/discovery/fetchs?appid=%s&env=%s&status=%s", service_name,
             FLAGS_discovery_env.c_str(), FLAGS_discovery_status.c_str());
     if (!FLAGS_discovery_zone.empty()) {
@@ -424,9 +423,9 @@ int DiscoveryNamingService::GetServers(const char* service_name,
             }
             // The result returned by discovery include protocol prefix, such as
             // http://172.22.35.68:6686, which should be removed.
-            butil::StringPiece addr(addrs[j].GetString(), addrs[j].GetStringLength());
-            butil::StringPiece::size_type pos = addr.find("://");
-            if (pos != butil::StringPiece::npos) {
+            std::string_view addr(addrs[j].GetString(), addrs[j].GetStringLength());
+            std::string_view::size_type pos = addr.find("://");
+            if (pos != std::string_view::npos) {
                 if (pos != 4 /* sizeof("grpc") */ ||
                         strncmp("grpc", addr.data(), 4) != 0) {
                     // Skip server that has prefix but not start with "grpc"

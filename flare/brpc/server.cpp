@@ -26,11 +26,11 @@
 #include "flare/idl_options.pb.h"                         // option(idl_support)
 #include "flare/bthread/unstable.h"                       // bthread_keytable_pool_init
 #include "flare/butil/macros.h"                            // ARRAY_SIZE
-#include "flare/butil/fd_guard.h"                          // fd_guard
-#include "flare/butil/logging.h"                           // CHECK
-#include "flare/butil/time.h"
-#include "flare/butil/class_name.h"
-#include "flare/butil/string_printf.h"
+#include "flare/base/fd_guard.h"                          // fd_guard
+#include "flare/base/logging.h"                           // CHECK
+#include "flare/base/time.h"
+#include "flare/base/class_name.h"
+#include "flare/base/strings.h"
 #include "flare/brpc/log.h"
 #include "flare/brpc/compress.h"
 #include "flare/brpc/policy/nova_pbrpc_protocol.h"
@@ -40,6 +40,8 @@
 #include "flare/brpc/details/ssl_helper.h"           // CreateServerSSLContext
 #include "flare/brpc/protocol.h"                     // ListProtocols
 #include "flare/brpc/nshead_service.h"               // NsheadService
+#include "flare/base/strings.h"
+
 #ifdef ENABLE_THRIFT_FRAMED_PROTOCOL
 #include "flare/brpc/thrift_service.h"               // ThriftService
 #endif
@@ -52,7 +54,6 @@
 #include "flare/brpc/builtin/status_service.h"
 #include "flare/brpc/builtin/protobufs_service.h"
 #include "flare/brpc/builtin/threads_service.h"
-#include "flare/brpc/builtin/vlog_service.h"
 #include "flare/brpc/builtin/index_service.h"        // IndexService
 #include "flare/brpc/builtin/connections_service.h"  // ConnectionsService
 #include "flare/brpc/builtin/flags_service.h"        // FlagsService
@@ -170,7 +171,7 @@ Server::MethodProperty::MethodProperty()
 }
 
 static timeval GetUptime(void* arg/*start_time*/) {
-    return butil::microseconds_to_timeval(butil::cpuwide_time_us() - (intptr_t)arg);
+    return flare::base::microseconds_to_timeval(flare::base::cpuwide_time_us() - (intptr_t)arg);
 }
 
 static void PrintStartTime(std::ostream& os, void* arg) {
@@ -270,11 +271,11 @@ static bvar::Vector<unsigned, 2> GetSessionLocalDataCount(void* arg) {
 }
 
 std::string Server::ServerPrefix() const {
-    return butil::string_printf("%s_%d", g_server_info_prefix, listen_address().port);
+    return flare::base::string_printf("%s_%d", g_server_info_prefix, listen_address().port);
 }
 
 void* Server::UpdateDerivedVars(void* arg) {
-    const int64_t start_us = butil::cpuwide_time_us();
+    const int64_t start_us = flare::base::cpuwide_time_us();
 
     Server* server = static_cast<Server*>(arg);
     const std::string prefix = server->ServerPrefix();
@@ -326,10 +327,10 @@ void* Server::UpdateDerivedVars(void* arg) {
     }
 #endif
 
-    int64_t last_time = butil::gettimeofday_us();
+    int64_t last_time = flare::base::gettimeofday_us();
     int consecutive_nosleep = 0;
     while (1) {
-        const int64_t sleep_us = 1000000L + last_time - butil::gettimeofday_us();
+        const int64_t sleep_us = 1000000L + last_time - flare::base::gettimeofday_us();
         if (sleep_us < 1000L) {
             if (++consecutive_nosleep >= 2) {
                 consecutive_nosleep = 0;
@@ -342,7 +343,7 @@ void* Server::UpdateDerivedVars(void* arg) {
                 return NULL;
             }
         }
-        last_time = butil::gettimeofday_us();
+        last_time = flare::base::gettimeofday_us();
 
         // Update stats of accepted sockets.
         if (server->_am) {
@@ -351,7 +352,7 @@ void* Server::UpdateDerivedVars(void* arg) {
         if (server->_internal_am) {
             server->_internal_am->ListConnections(&internal_conns);
         }
-        const int64_t now_ms = butil::cpuwide_time_ms();
+        const int64_t now_ms = flare::base::cpuwide_time_ms();
         for (size_t i = 0; i < conns.size(); ++i) {
             SocketUniquePtr ptr;
             if (Socket::Address(conns[i], &ptr) == 0) {
@@ -501,12 +502,6 @@ int Server::AddBuiltinServices() {
         return -1;
     }
 
-#if !BRPC_WITH_GLOG
-    if (AddBuiltinService(new (std::nothrow) VLogService)) {
-        LOG(ERROR) << "Fail to add VLogService";
-        return -1;
-    }
-#endif
 
     if (AddBuiltinService(new (std::nothrow) PProfService)) {
         LOG(ERROR) << "Fail to add PProfService";
@@ -549,7 +544,7 @@ bool is_http_protocol(const char* name) {
 
 Acceptor* Server::BuildAcceptor() {
     std::set<std::string> whitelist;
-    for (butil::StringSplitter sp(_options.enabled_protocols.c_str(), ' ');
+    for (flare::base::StringSplitter sp(_options.enabled_protocols.c_str(), ' ');
          sp; ++sp) {
         std::string protocol(sp.field(), sp.length());
         whitelist.insert(protocol);
@@ -699,7 +694,7 @@ static bool CreateConcurrencyLimiter(const AdaptiveMaxConcurrency& amc,
 
 static AdaptiveMaxConcurrency g_default_max_concurrency_of_method(0);
 
-int Server::StartInternal(const butil::ip_t& ip,
+int Server::StartInternal(const flare::base::ip_t& ip,
                           const PortRange& port_range,
                           const ServerOptions *opt) {
     std::unique_ptr<Server, RevertServerStatus> revert_server(this);
@@ -943,7 +938,7 @@ int Server::StartInternal(const butil::ip_t& ip,
     _listen_addr.ip = ip;
     for (int port = port_range.min_port; port <= port_range.max_port; ++port) {
         _listen_addr.port = port;
-        butil::fd_guard sockfd(tcp_listen(_listen_addr));
+        flare::base::fd_guard sockfd(tcp_listen(_listen_addr));
         if (sockfd < 0) {
             if (port != port_range.max_port) { // not the last port, try next
                 continue;
@@ -1001,9 +996,9 @@ int Server::StartInternal(const butil::ip_t& ip,
                 " against the purpose of \"being internal\".";
             return -1;
         }
-        butil::EndPoint internal_point = _listen_addr;
+        flare::base::end_point internal_point = _listen_addr;
         internal_point.port = _options.internal_port;
-        butil::fd_guard sockfd(tcp_listen(internal_point));
+        flare::base::fd_guard sockfd(tcp_listen(internal_point));
         if (sockfd < 0) {
             LOG(ERROR) << "Fail to listen " << internal_point << " (internal)";
             return -1;
@@ -1046,25 +1041,25 @@ int Server::StartInternal(const butil::ip_t& ip,
     LOG(INFO) << server_info.str() << '.';
 
     if (_options.has_builtin_services) {
-        LOG(INFO) << "Check out http://" << butil::my_hostname() << ':'
+        LOG(INFO) << "Check out http://" << flare::base::my_hostname() << ':'
                   << http_port << " in web browser.";
     } else {
         LOG(WARNING) << "Builtin services are disabled according to "
             "ServerOptions.has_builtin_services";
     }
     // For trackme reporting
-    SetTrackMeAddress(butil::EndPoint(butil::my_ip(), http_port));
+    SetTrackMeAddress(flare::base::end_point(flare::base::my_ip(), http_port));
     revert_server.release();
     return 0;
 }
 
-int Server::Start(const butil::EndPoint& endpoint, const ServerOptions* opt) {
+int Server::Start(const flare::base::end_point& endpoint, const ServerOptions* opt) {
     return StartInternal(
         endpoint.ip, PortRange(endpoint.port, endpoint.port), opt);
 }
 
 int Server::Start(const char* ip_port_str, const ServerOptions* opt) {
-    butil::EndPoint point;
+    flare::base::end_point point;
     if (str2endpoint(ip_port_str, &point) != 0 &&
         hostname2endpoint(ip_port_str, &point) != 0) {
         LOG(ERROR) << "Invalid address=`" << ip_port_str << '\'';
@@ -1078,14 +1073,14 @@ int Server::Start(int port, const ServerOptions* opt) {
         LOG(ERROR) << "Invalid port=" << port;
         return -1;
     }
-    return Start(butil::EndPoint(butil::IP_ANY, port), opt);
+    return Start(flare::base::end_point(flare::base::IP_ANY, port), opt);
 }
 
 int Server::Start(const char* ip_str, PortRange port_range,
                   const ServerOptions *opt) {
-    butil::ip_t ip;
-    if (butil::str2ip(ip_str, &ip) != 0 &&
-        butil::hostname2ip(ip_str, &ip) != 0) {
+    flare::base::ip_t ip;
+    if (flare::base::str2ip(ip_str, &ip) != 0 &&
+        flare::base::hostname2ip(ip_str, &ip) != 0) {
         LOG(ERROR) << "Invalid address=`" << ip_str << '\'';
         return -1;
     }
@@ -1247,8 +1242,8 @@ int Server::AddServiceInternal(google::protobuf::Service* service,
         }
     }
 
-    butil::StringPiece restful_mappings = svc_opt.restful_mappings;
-    restful_mappings.trim_spaces();
+    std::string_view restful_mappings = svc_opt.restful_mappings;
+    restful_mappings = flare::base::strip_ascii_whitespace(restful_mappings);
     if (!restful_mappings.empty()) {
         // Parse the mappings.
         std::vector<RestfulMapping> mappings;
@@ -1406,12 +1401,12 @@ int Server::AddService(google::protobuf::Service* service,
 
 int Server::AddService(google::protobuf::Service* service,
                        ServiceOwnership ownership,
-                       const butil::StringPiece& restful_mappings,
+                       const std::string_view& restful_mappings,
                        bool allow_default_url) {
     ServiceOptions options;
     options.ownership = ownership;
     // TODO: This is weird
-    options.restful_mappings = restful_mappings.as_string();
+    options.restful_mappings = flare::base::as_string(restful_mappings);
     options.allow_default_url = allow_default_url;
     return AddServiceInternal(service, false, options);
 }
@@ -1447,22 +1442,22 @@ void Server::RemoveMethodsOf(google::protobuf::Service* service) {
             continue;
         }
         if (mp->http_url) {
-            butil::StringSplitter at_sp(mp->http_url->c_str(), '@');
+            flare::base::StringSplitter at_sp(mp->http_url->c_str(), '@');
             for (; at_sp; ++at_sp) {
-                butil::StringPiece path(at_sp.field(), at_sp.length());
-                path.trim_spaces();
-                butil::StringSplitter slash_sp(
+                std::string_view path(at_sp.field(), at_sp.length());
+                path = flare::base::strip_ascii_whitespace(path);
+                flare::base::StringSplitter slash_sp(
                     path.data(), path.data() + path.size(), '/');
                 if (slash_sp == NULL) {
                     LOG(ERROR) << "Invalid http_url=" << *mp->http_url;
                     break;
                 }
-                butil::StringPiece v_svc_name(slash_sp.field(), slash_sp.length());
+                std::string_view v_svc_name(slash_sp.field(), slash_sp.length());
                 const ServiceProperty* vsp = FindServicePropertyByName(v_svc_name);
                 if (vsp == NULL) {
                     if (_global_restful_map) {
                         std::string path_str;
-                        path.CopyToString(&path_str);
+                        flare::base::copy_to_string(path, &path_str);
                         if (_global_restful_map->RemoveByPathString(path_str)) {
                             continue;
                         }
@@ -1472,7 +1467,7 @@ void Server::RemoveMethodsOf(google::protobuf::Service* service) {
                     break;
                 }
                 std::string path_str;
-                path.CopyToString(&path_str);
+                flare::base::copy_to_string(path, &path_str);
                 if (!vsp->restful_map->RemoveByPathString(path_str)) {
                     LOG(ERROR) << "Fail to find path=" << path
                                << " in restful_map of service=" << v_svc_name;
@@ -1555,13 +1550,13 @@ void Server::ClearServices() {
 }
 
 google::protobuf::Service* Server::FindServiceByFullName(
-    const butil::StringPiece& full_name) const {
+    const std::string_view& full_name) const {
     ServiceProperty* ss = _fullname_service_map.seek(full_name);
     return (ss ? ss->service : NULL);
 }
 
 google::protobuf::Service* Server::FindServiceByName(
-    const butil::StringPiece& name) const {
+    const std::string_view& name) const {
     ServiceProperty* ss = _service_map.seek(name);
     return (ss ? ss->service : NULL);
 }
@@ -1605,14 +1600,14 @@ void Server::GenerateVersionIfNeeded() {
             if (!_version.empty()) {
                 _version.push_back('+');
             }
-            _version.append(butil::class_name_str(*it->second.service));
+            _version.append(flare::base::class_name_str(*it->second.service));
         }
     }
     if (_options.nshead_service) {
         if (!_version.empty()) {
             _version.push_back('+');
         }
-        _version.append(butil::class_name_str(*_options.nshead_service));
+        _version.append(flare::base::class_name_str(*_options.nshead_service));
     }
 
 #ifdef ENABLE_THRIFT_FRAMED_PROTOCOL
@@ -1620,7 +1615,7 @@ void Server::GenerateVersionIfNeeded() {
         if (!_version.empty()) {
             _version.push_back('+');
         }
-        _version.append(butil::class_name_str(*_options.thrift_service));
+        _version.append(flare::base::class_name_str(*_options.thrift_service));
     }
 #endif
 
@@ -1628,14 +1623,14 @@ void Server::GenerateVersionIfNeeded() {
         if (!_version.empty()) {
             _version.push_back('+');
         }
-        _version.append(butil::class_name_str(*_options.rtmp_service));
+        _version.append(flare::base::class_name_str(*_options.rtmp_service));
     }
 
     if (_options.redis_service) {
         if (!_version.empty()) {
             _version.push_back('+');
         }
-        _version.append(butil::class_name_str(*_options.redis_service));
+        _version.append(flare::base::class_name_str(*_options.redis_service));
     }
 }
 
@@ -1667,7 +1662,7 @@ void Server::PutPidFileIfNeeded() {
         int rc = mkdir(dir_name.c_str(),
                        S_IFDIR | S_IRUSR | S_IWUSR | S_IXUSR | S_IRGRP);
         if (rc != 0 && errno != EEXIST
-#if defined(OS_MACOSX)
+#if defined(FLARE_PLATFORM_OSX)
         && errno != EISDIR
 #endif
         ) {
@@ -1702,7 +1697,7 @@ void* thread_local_data() {
     if (tl_options == NULL) { // not in server threads.
         return NULL;
     }
-    if (BAIDU_UNLIKELY(tl_options->thread_local_data_factory == NULL)) {
+    if (FLARE_UNLIKELY(tl_options->thread_local_data_factory == NULL)) {
         CHECK(false) << "The protocol impl. may not set tls correctly";
         return NULL;
     }
@@ -1749,10 +1744,10 @@ int StartDummyServerAt(int port, ProfilerLinker) {
         return -1;
     }
     if (g_dummy_server == NULL) {  // (1)
-        BAIDU_SCOPED_LOCK(g_dummy_server_mutex);
+        FLARE_SCOPED_LOCK(g_dummy_server_mutex);
         if (g_dummy_server == NULL) {
             Server* dummy_server = new Server;
-            dummy_server->set_version(butil::string_printf(
+            dummy_server->set_version(flare::base::string_printf(
                         "DummyServerOf(%s)", GetProgramName()));
             ServerOptions options;
             options.num_threads = 0;
@@ -1777,13 +1772,13 @@ bool IsDummyServerRunning() {
 }
 
 const Server::MethodProperty*
-Server::FindMethodPropertyByFullName(const butil::StringPiece&fullname) const  {
+Server::FindMethodPropertyByFullName(const std::string_view&fullname) const  {
     return _method_map.seek(fullname);
 }
 
 const Server::MethodProperty*
-Server::FindMethodPropertyByFullName(const butil::StringPiece& service_name/*full*/,
-                                     const butil::StringPiece& method_name) const {
+Server::FindMethodPropertyByFullName(const std::string_view& service_name/*full*/,
+                                     const std::string_view& method_name) const {
     const size_t fullname_len = service_name.size() + 1 + method_name.size();
     if (fullname_len <= 256) {
         // Avoid allocation in most cases.
@@ -1791,7 +1786,7 @@ Server::FindMethodPropertyByFullName(const butil::StringPiece& service_name/*ful
         memcpy(buf, service_name.data(), service_name.size());
         buf[service_name.size()] = '.';
         memcpy(buf + service_name.size() + 1, method_name.data(), method_name.size());
-        return FindMethodPropertyByFullName(butil::StringPiece(buf, fullname_len));
+        return FindMethodPropertyByFullName(std::string_view(buf, fullname_len));
     } else {
         std::string full_method_name;
         full_method_name.reserve(fullname_len);
@@ -1803,7 +1798,7 @@ Server::FindMethodPropertyByFullName(const butil::StringPiece& service_name/*ful
 }
 
 const Server::MethodProperty*
-Server::FindMethodPropertyByNameAndIndex(const butil::StringPiece& service_name,
+Server::FindMethodPropertyByNameAndIndex(const std::string_view& service_name,
                                          int method_index) const {
     const Server::ServiceProperty* sp = FindServicePropertyByName(service_name);
     if (NULL == sp) {
@@ -1818,12 +1813,12 @@ Server::FindMethodPropertyByNameAndIndex(const butil::StringPiece& service_name,
 }
 
 const Server::ServiceProperty*
-Server::FindServicePropertyByFullName(const butil::StringPiece& fullname) const {
+Server::FindServicePropertyByFullName(const std::string_view& fullname) const {
     return _fullname_service_map.seek(fullname);
 }
 
 const Server::ServiceProperty*
-Server::FindServicePropertyByName(const butil::StringPiece& name) const {
+Server::FindServicePropertyByName(const std::string_view& name) const {
     return _service_map.seek(name);
 }
 
@@ -2071,7 +2066,7 @@ int Server::MaxConcurrencyOf(const MethodProperty* mp) const {
     return mp->max_concurrency;
 }
 
-AdaptiveMaxConcurrency& Server::MaxConcurrencyOf(const butil::StringPiece& full_method_name) {
+AdaptiveMaxConcurrency& Server::MaxConcurrencyOf(const std::string_view& full_method_name) {
     MethodProperty* mp = _method_map.seek(full_method_name);
     if (mp == NULL) {
         LOG(ERROR) << "Fail to find method=" << full_method_name;
@@ -2081,12 +2076,12 @@ AdaptiveMaxConcurrency& Server::MaxConcurrencyOf(const butil::StringPiece& full_
     return MaxConcurrencyOf(mp);
 }
 
-int Server::MaxConcurrencyOf(const butil::StringPiece& full_method_name) const {
+int Server::MaxConcurrencyOf(const std::string_view& full_method_name) const {
     return MaxConcurrencyOf(_method_map.seek(full_method_name));
 }
 
-AdaptiveMaxConcurrency& Server::MaxConcurrencyOf(const butil::StringPiece& full_service_name,
-                              const butil::StringPiece& method_name) {
+AdaptiveMaxConcurrency& Server::MaxConcurrencyOf(const std::string_view& full_service_name,
+                              const std::string_view& method_name) {
     MethodProperty* mp = const_cast<MethodProperty*>(
         FindMethodPropertyByFullName(full_service_name, method_name));
     if (mp == NULL) {
@@ -2098,19 +2093,19 @@ AdaptiveMaxConcurrency& Server::MaxConcurrencyOf(const butil::StringPiece& full_
     return MaxConcurrencyOf(mp);
 }
 
-int Server::MaxConcurrencyOf(const butil::StringPiece& full_service_name,
-                             const butil::StringPiece& method_name) const {
+int Server::MaxConcurrencyOf(const std::string_view& full_service_name,
+                             const std::string_view& method_name) const {
     return MaxConcurrencyOf(FindMethodPropertyByFullName(
                                 full_service_name, method_name));
 }
 
 AdaptiveMaxConcurrency& Server::MaxConcurrencyOf(google::protobuf::Service* service,
-                              const butil::StringPiece& method_name) {
+                              const std::string_view& method_name) {
     return MaxConcurrencyOf(service->GetDescriptor()->full_name(), method_name);
 }
 
 int Server::MaxConcurrencyOf(google::protobuf::Service* service,
-                             const butil::StringPiece& method_name) const {
+                             const std::string_view& method_name) const {
     return MaxConcurrencyOf(service->GetDescriptor()->full_name(), method_name);
 }
 
@@ -2124,7 +2119,7 @@ int Server::SSLSwitchCTXByHostname(struct ssl_st* ssl,
         return strict_sni ? SSL_TLSEXT_ERR_ALERT_FATAL : SSL_TLSEXT_ERR_NOACK;
     }
 
-    butil::DoublyBufferedData<CertMaps>::ScopedPtr s;
+    flare::container::DoublyBufferedData<CertMaps>::ScopedPtr s;
     if (server->_reload_cert_maps.Read(&s) != 0) {
         return SSL_TLSEXT_ERR_ALERT_FATAL;
     }

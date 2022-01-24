@@ -17,7 +17,7 @@
 
 
 #include "flare/butil/macros.h"
-#include "flare/butil/fast_rand.h"
+#include "flare/base/fast_rand.h"
 #include "flare/brpc/socket.h"
 #include "flare/brpc/policy/randomized_load_balancer.h"
 #include "flare/butil/strings/string_number_conversions.h"
@@ -30,7 +30,7 @@ const uint32_t prime_offset[] = {
 };
 
 inline uint32_t GenRandomStride() {
-    return prime_offset[butil::fast_rand_less_than(ARRAY_SIZE(prime_offset))];
+    return prime_offset[flare::base::fast_rand_less_than(ARRAY_SIZE(prime_offset))];
 }
 
 bool RandomizedLoadBalancer::Add(Servers& bg, const ServerId& id) {
@@ -104,7 +104,7 @@ size_t RandomizedLoadBalancer::RemoveServersInBatch(
 }
 
 int RandomizedLoadBalancer::SelectServer(const SelectIn& in, SelectOut* out) {
-    butil::DoublyBufferedData<Servers>::ScopedPtr s;
+    flare::container::DoublyBufferedData<Servers>::ScopedPtr s;
     if (_db_servers.Read(&s) != 0) {
         return ENOMEM;
     }
@@ -118,7 +118,7 @@ int RandomizedLoadBalancer::SelectServer(const SelectIn& in, SelectOut* out) {
         }
     }
     uint32_t stride = 0;
-    size_t offset = butil::fast_rand_less_than(n);
+    size_t offset = flare::base::fast_rand_less_than(n);
     for (size_t i = 0; i < n; ++i) {
         const SocketId id = s->server_list[offset].id;
         if (((i + 1) == n  // always take last chance
@@ -144,7 +144,7 @@ int RandomizedLoadBalancer::SelectServer(const SelectIn& in, SelectOut* out) {
 }
 
 RandomizedLoadBalancer* RandomizedLoadBalancer::New(
-    const butil::StringPiece& params) const {
+    const std::string_view& params) const {
     RandomizedLoadBalancer* lb = new (std::nothrow) RandomizedLoadBalancer;
     if (lb && !lb->SetParameters(params)) {
         delete lb;
@@ -164,7 +164,7 @@ void RandomizedLoadBalancer::Describe(
         return;
     }
     os << "Randomized{";
-    butil::DoublyBufferedData<Servers>::ScopedPtr s;
+    flare::container::DoublyBufferedData<Servers>::ScopedPtr s;
     if (_db_servers.Read(&s) != 0) {
         os << "fail to read _db_servers";
     } else {
@@ -176,7 +176,7 @@ void RandomizedLoadBalancer::Describe(
     os << '}';
 }
 
-bool RandomizedLoadBalancer::SetParameters(const butil::StringPiece& params) {
+bool RandomizedLoadBalancer::SetParameters(const std::string_view& params) {
     return GetRecoverPolicyByParams(params, &_cluster_recover_policy);
 }
 

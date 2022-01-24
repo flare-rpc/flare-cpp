@@ -26,11 +26,11 @@
 #include "flare/bthread/bthread.h"      // Server may need some bthread functions,
                                   // e.g. bthread_usleep
 #include <google/protobuf/service.h>                 // google::protobuf::Service
-#include "flare/butil/macros.h"                            // DISALLOW_COPY_AND_ASSIGN
-#include "flare/butil/containers/doubly_buffered_data.h"   // DoublyBufferedData
+#include "flare/butil/macros.h"                            // FLARE_DISALLOW_COPY_AND_ASSIGN
+#include "flare/container/doubly_buffered_data.h"   // DoublyBufferedData
 #include "flare/bvar/bvar.h"
-#include "flare/butil/containers/case_ignored_flat_map.h"  // [CaseIgnored]FlatMap
-#include "flare/butil/ptr_container.h"
+#include "flare/container/case_ignored_flat_map.h"  // [CaseIgnored]FlatMap
+#include "flare/container/ptr_container.h"
 #include "flare/brpc/controller.h"                   // brpc::Controller
 #include "flare/brpc/ssl_options.h"                  // ServerSSLOptions
 #include "flare/brpc/describable.h"                  // User often needs this
@@ -244,7 +244,7 @@ struct ServerOptions {
 private:
     // SSLOptions is large and not often used, allocate it on heap to
     // prevent ServerOptions from being bloated in most cases.
-    butil::PtrContainer<ServerSSLOptions> _ssl_options;
+    flare::container::ptr_container<ServerSSLOptions> _ssl_options;
 };
 
 // This struct is originally designed to contain basic statistics of the
@@ -334,7 +334,7 @@ public:
 
         const std::string& service_name() const;
     };
-    typedef butil::FlatMap<std::string, ServiceProperty> ServiceMap;
+    typedef flare::container::FlatMap<std::string, ServiceProperty> ServiceMap;
 
     struct MethodProperty {
         bool is_builtin_service;
@@ -359,7 +359,7 @@ public:
 
         MethodProperty();
     };
-    typedef butil::FlatMap<std::string, MethodProperty> MethodMap;
+    typedef flare::container::FlatMap<std::string, MethodProperty> MethodMap;
 
     struct ThreadLocalOptions {
         bthread_key_t tls_key;
@@ -384,7 +384,7 @@ public:
     
     // Start on an address in form of "0.0.0.0:8000".
     int Start(const char* ip_port_str, const ServerOptions* opt);
-    int Start(const butil::EndPoint& ip_port, const ServerOptions* opt);
+    int Start(const flare::base::end_point& ip_port, const ServerOptions* opt);
     // Start on IP_ANY:port.
     int Start(int port, const ServerOptions* opt);
     // Start on `ip_str' + any useable port in `range'
@@ -420,7 +420,7 @@ public:
                    ServiceOwnership ownership);
     int AddService(google::protobuf::Service* service,
                    ServiceOwnership ownership,
-                   const butil::StringPiece& restful_mappings,
+                   const std::string_view& restful_mappings,
                    bool allow_default_url = false);
     int AddService(google::protobuf::Service* service,
                    const ServiceOptions& options);
@@ -454,14 +454,14 @@ public:
     // Notice that for performance concerns, this function does not lock service
     // list internally thus races with AddService()/RemoveService().
     google::protobuf::Service*
-    FindServiceByFullName(const butil::StringPiece& full_name) const;
+    FindServiceByFullName(const std::string_view& full_name) const;
 
     // Find a service by its ServiceDescriptor::name().
     // Returns the registered service pointer, NULL on not found.
     // Notice that for performance concerns, this function does not lock service
     // list internally thus races with AddService()/RemoveService().
     google::protobuf::Service*
-    FindServiceByName(const butil::StringPiece& name) const;
+    FindServiceByName(const std::string_view& name) const;
 
     // Put all services registered by user into `services'
     void ListServices(std::vector<google::protobuf::Service*>* services);
@@ -492,7 +492,7 @@ public:
     const std::string& version() const { return _version; }
 
     // Return the address this server is listening
-    butil::EndPoint listen_address() const { return _listen_addr; }
+    flare::base::end_point listen_address() const { return _listen_addr; }
     
     // Last time that Start() was successfully called. 0 if Start() was
     // never called
@@ -519,18 +519,18 @@ public:
     // an auto concurrency limiter, eg `options.max_concurrency = "auto"`.If you
     // still called non-const version of the interface, your changes to the
     // maximum concurrency will not take effect.
-    AdaptiveMaxConcurrency& MaxConcurrencyOf(const butil::StringPiece& full_method_name);
-    int MaxConcurrencyOf(const butil::StringPiece& full_method_name) const;
+    AdaptiveMaxConcurrency& MaxConcurrencyOf(const std::string_view& full_method_name);
+    int MaxConcurrencyOf(const std::string_view& full_method_name) const;
     
-    AdaptiveMaxConcurrency& MaxConcurrencyOf(const butil::StringPiece& full_service_name,
-                          const butil::StringPiece& method_name);
-    int MaxConcurrencyOf(const butil::StringPiece& full_service_name,
-                         const butil::StringPiece& method_name) const;
+    AdaptiveMaxConcurrency& MaxConcurrencyOf(const std::string_view& full_service_name,
+                          const std::string_view& method_name);
+    int MaxConcurrencyOf(const std::string_view& full_service_name,
+                         const std::string_view& method_name) const;
 
     AdaptiveMaxConcurrency& MaxConcurrencyOf(google::protobuf::Service* service,
-                          const butil::StringPiece& method_name);
+                          const std::string_view& method_name);
     int MaxConcurrencyOf(google::protobuf::Service* service,
-                         const butil::StringPiece& method_name) const;
+                         const std::string_view& method_name) const;
 
 private:
 friend class StatusService;
@@ -559,7 +559,7 @@ friend class Controller;
     // Create acceptor with handlers of protocols.
     Acceptor* BuildAcceptor();
 
-    int StartInternal(const butil::ip_t& ip,
+    int StartInternal(const flare::base::ip_t& ip,
                       const PortRange& port_range,
                       const ServerOptions *opt);
 
@@ -579,26 +579,26 @@ friend class Controller;
     void PutPidFileIfNeeded();
 
     const MethodProperty*
-    FindMethodPropertyByFullName(const butil::StringPiece& fullname) const;
+    FindMethodPropertyByFullName(const std::string_view& fullname) const;
 
     const MethodProperty*
-    FindMethodPropertyByFullName(const butil::StringPiece& full_service_name,
-                                 const butil::StringPiece& method_name) const;
+    FindMethodPropertyByFullName(const std::string_view& full_service_name,
+                                 const std::string_view& method_name) const;
 
     const MethodProperty*
-    FindMethodPropertyByNameAndIndex(const butil::StringPiece& service_name,
+    FindMethodPropertyByNameAndIndex(const std::string_view& service_name,
                                      int method_index) const;
     
     const ServiceProperty*
-    FindServicePropertyByFullName(const butil::StringPiece& fullname) const;
+    FindServicePropertyByFullName(const std::string_view& fullname) const;
 
     const ServiceProperty*
-    FindServicePropertyByName(const butil::StringPiece& name) const;
+    FindServicePropertyByName(const std::string_view& name) const;
     
     std::string ServerPrefix() const;
 
     // Mapping from hostname to corresponding SSL_CTX
-    typedef butil::CaseIgnoredFlatMap<std::shared_ptr<SocketSSLContext> > CertMap;
+    typedef flare::container::CaseIgnoredFlatMap<std::shared_ptr<SocketSSLContext> > CertMap;
     struct CertMaps {
         CertMap cert_map;
         CertMap wildcard_cert_map;
@@ -609,7 +609,7 @@ friend class Controller;
         std::vector<std::string> filters;
     };
     // Mapping from [certficate + private-key] to SSLContext
-    typedef butil::FlatMap<std::string, SSLContext> SSLContextMap;
+    typedef flare::container::FlatMap<std::string, SSLContext> SSLContextMap;
 
     void FreeSSLContexts();
 
@@ -624,7 +624,7 @@ friend class Controller;
     AdaptiveMaxConcurrency& MaxConcurrencyOf(MethodProperty*);
     int MaxConcurrencyOf(const MethodProperty*) const;
     
-    DISALLOW_COPY_AND_ASSIGN(Server);
+    FLARE_DISALLOW_COPY_AND_ASSIGN(Server);
 
     // Put frequently-accessed data pool at first.
     SimpleDataPool* _session_local_data_pool;
@@ -663,13 +663,13 @@ friend class Controller;
     std::shared_ptr<SocketSSLContext> _default_ssl_ctx;
 
     // Reloadable SSL mappings
-    butil::DoublyBufferedData<CertMaps> _reload_cert_maps;
+    flare::container::DoublyBufferedData<CertMaps> _reload_cert_maps;
 
     // Holds the memory of all SSL_CTXs
     SSLContextMap _ssl_ctx_map;
     
     ServerOptions _options;
-    butil::EndPoint _listen_addr;
+    flare::base::end_point _listen_addr;
 
     std::string _version;
     time_t _last_start_time;
@@ -679,7 +679,7 @@ friend class Controller;
 
     // mutable is required for `ServerPrivateAccessor' to change this bvar
     mutable bvar::Adder<int64_t> _nerror_bvar;
-    mutable std::atomic<int32_t> BAIDU_CACHELINE_ALIGNMENT _concurrency;
+    mutable std::atomic<int32_t> FLARE_CACHELINE_ALIGNMENT _concurrency;
 
 };
 

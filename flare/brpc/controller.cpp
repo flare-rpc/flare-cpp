@@ -21,10 +21,10 @@
 #include <google/protobuf/descriptor.h>
 #include <gflags/gflags.h>
 #include "flare/bthread/bthread.h"
-#include "flare/butil/build_config.h"    // OS_MACOSX
-#include "flare/butil/string_printf.h"
-#include "flare/butil/logging.h"
-#include "flare/butil/time.h"
+#include "flare/butil/build_config.h"    // FLARE_PLATFORM_OSX
+#include "flare/base/strings.h"
+#include "flare/base/logging.h"
+#include "flare/base/time.h"
 #include "flare/bthread/bthread.h"
 #include "flare/bthread/unstable.h"
 #include "flare/bvar/bvar.h"
@@ -51,30 +51,30 @@
 
 // This is the only place that both client/server must link, so we put
 // registrations of errno here.
-BAIDU_REGISTER_ERRNO(brpc::ENOSERVICE, "No such service");
-BAIDU_REGISTER_ERRNO(brpc::ENOMETHOD, "No such method");
-BAIDU_REGISTER_ERRNO(brpc::EREQUEST, "Bad request");
-BAIDU_REGISTER_ERRNO(brpc::ERPCAUTH, "Authentication failed");
-BAIDU_REGISTER_ERRNO(brpc::ETOOMANYFAILS, "Too many sub channels failed");
-BAIDU_REGISTER_ERRNO(brpc::EPCHANFINISH, "ParallelChannel finished");
-BAIDU_REGISTER_ERRNO(brpc::EBACKUPREQUEST, "Sending backup request");
-BAIDU_REGISTER_ERRNO(brpc::ERPCTIMEDOUT, "RPC call is timed out");
-BAIDU_REGISTER_ERRNO(brpc::EFAILEDSOCKET, "Broken socket");
-BAIDU_REGISTER_ERRNO(brpc::EHTTP, "Bad http call");
-BAIDU_REGISTER_ERRNO(brpc::EOVERCROWDED, "The server is overcrowded");
-BAIDU_REGISTER_ERRNO(brpc::ERTMPPUBLISHABLE, "RtmpRetryingClientStream is publishable");
-BAIDU_REGISTER_ERRNO(brpc::ERTMPCREATESTREAM, "createStream was rejected by the RTMP server");
-BAIDU_REGISTER_ERRNO(brpc::EEOF, "Got EOF");
-BAIDU_REGISTER_ERRNO(brpc::EUNUSED, "The socket was not needed");
-BAIDU_REGISTER_ERRNO(brpc::ESSL, "SSL related operation failed");
-BAIDU_REGISTER_ERRNO(brpc::EH2RUNOUTSTREAMS, "The H2 socket was run out of streams");
+FLARE_REGISTER_ERRNO(brpc::ENOSERVICE, "No such service");
+FLARE_REGISTER_ERRNO(brpc::ENOMETHOD, "No such method");
+FLARE_REGISTER_ERRNO(brpc::EREQUEST, "Bad request");
+FLARE_REGISTER_ERRNO(brpc::ERPCAUTH, "Authentication failed");
+FLARE_REGISTER_ERRNO(brpc::ETOOMANYFAILS, "Too many sub channels failed");
+FLARE_REGISTER_ERRNO(brpc::EPCHANFINISH, "ParallelChannel finished");
+FLARE_REGISTER_ERRNO(brpc::EBACKUPREQUEST, "Sending backup request");
+FLARE_REGISTER_ERRNO(brpc::ERPCTIMEDOUT, "RPC call is timed out");
+FLARE_REGISTER_ERRNO(brpc::EFAILEDSOCKET, "Broken socket");
+FLARE_REGISTER_ERRNO(brpc::EHTTP, "Bad http call");
+FLARE_REGISTER_ERRNO(brpc::EOVERCROWDED, "The server is overcrowded");
+FLARE_REGISTER_ERRNO(brpc::ERTMPPUBLISHABLE, "RtmpRetryingClientStream is publishable");
+FLARE_REGISTER_ERRNO(brpc::ERTMPCREATESTREAM, "createStream was rejected by the RTMP server");
+FLARE_REGISTER_ERRNO(brpc::EEOF, "Got EOF");
+FLARE_REGISTER_ERRNO(brpc::EUNUSED, "The socket was not needed");
+FLARE_REGISTER_ERRNO(brpc::ESSL, "SSL related operation failed");
+FLARE_REGISTER_ERRNO(brpc::EH2RUNOUTSTREAMS, "The H2 socket was run out of streams");
 
-BAIDU_REGISTER_ERRNO(brpc::EINTERNAL, "General internal error");
-BAIDU_REGISTER_ERRNO(brpc::ERESPONSE, "Bad response");
-BAIDU_REGISTER_ERRNO(brpc::ELOGOFF, "Server is stopping");
-BAIDU_REGISTER_ERRNO(brpc::ELIMIT, "Reached server's max_concurrency");
-BAIDU_REGISTER_ERRNO(brpc::ECLOSE, "Close socket initiatively");
-BAIDU_REGISTER_ERRNO(brpc::EITP, "Bad Itp response");
+FLARE_REGISTER_ERRNO(brpc::EINTERNAL, "General internal error");
+FLARE_REGISTER_ERRNO(brpc::ERESPONSE, "Bad response");
+FLARE_REGISTER_ERRNO(brpc::ELOGOFF, "Server is stopping");
+FLARE_REGISTER_ERRNO(brpc::ELIMIT, "Reached server's max_concurrency");
+FLARE_REGISTER_ERRNO(brpc::ECLOSE, "Close socket initiatively");
+FLARE_REGISTER_ERRNO(brpc::EITP, "Bad Itp response");
 
 
 DECLARE_bool(log_as_json);
@@ -155,10 +155,10 @@ Controller::~Controller() {
 class IgnoreAllRead : public ProgressiveReader {
 public:
     // @ProgressiveReader
-    butil::Status OnReadOnePart(const void* /*data*/, size_t /*length*/) {
-        return butil::Status::OK();
+    flare::base::flare_status OnReadOnePart(const void* /*data*/, size_t /*length*/) {
+        return flare::base::flare_status::OK();
     }
-    void OnEndOfMessage(const butil::Status&) {}
+    void OnEndOfMessage(const flare::base::flare_status&) {}
 };
 
 static IgnoreAllRead* s_ignore_all_read = NULL;
@@ -171,11 +171,11 @@ static void CreateIgnoreAllRead() { s_ignore_all_read = new IgnoreAllRead; }
 // they'll be set uniformly after this method is called.
 void Controller::ResetNonPods() {
     if (_span) {
-        Span::Submit(_span, butil::cpuwide_time_us());
+        Span::Submit(_span, flare::base::cpuwide_time_us());
     }
     _error_text.clear();
-    _remote_side = butil::EndPoint();
-    _local_side = butil::EndPoint();
+    _remote_side = flare::base::end_point();
+    _local_side = flare::base::end_point();
     if (_session_local_data) {
         _server->_session_local_data_pool->Return(_session_local_data);
     }
@@ -368,7 +368,7 @@ void Controller::AppendServerIdentiy() {
         _error_text.push_back('[');
         char ipbuf[64];
         int len = snprintf(ipbuf, sizeof(ipbuf), "%s:%d",
-                           butil::my_ip_cstr(), _server->listen_address().port);
+                           flare::base::my_ip_cstr(), _server->listen_address().port);
         unsigned char digest[MD5_DIGEST_LENGTH];
         MD5((const unsigned char*)ipbuf, len, digest);
         for (size_t i = 0; i < sizeof(digest); ++i) {
@@ -377,8 +377,8 @@ void Controller::AppendServerIdentiy() {
         }
         _error_text.push_back(']');
     } else {
-        butil::string_appendf(&_error_text, "[%s:%d]",
-                             butil::my_ip_cstr(), _server->listen_address().port);
+        flare::base::string_appendf(&_error_text, "[%s:%d]",
+                             flare::base::my_ip_cstr(), _server->listen_address().port);
     }
 }
 
@@ -408,7 +408,7 @@ void Controller::SetFailed(const std::string& reason) {
         _error_text.push_back(' ');
     }
     if (_current_call.nretry != 0) {
-        butil::string_appendf(&_error_text, "[R%d]", _current_call.nretry);
+        flare::base::string_appendf(&_error_text, "[R%d]", _current_call.nretry);
     } else {
         AppendServerIdentiy();
     }
@@ -430,17 +430,17 @@ void Controller::SetFailed(int error_code, const char* reason_fmt, ...) {
         _error_text.push_back(' ');
     }
     if (_current_call.nretry != 0) {
-        butil::string_appendf(&_error_text, "[R%d]", _current_call.nretry);
+        flare::base::string_appendf(&_error_text, "[R%d]", _current_call.nretry);
     } else {
         AppendServerIdentiy();
     }
     const size_t old_size = _error_text.size();
     if (_error_code != -1) {
-        butil::string_appendf(&_error_text, "[E%d]", _error_code);
+        flare::base::string_appendf(&_error_text, "[E%d]", _error_code);
     }
     va_list ap;
     va_start(ap, reason_fmt);
-    butil::string_vappendf(&_error_text, reason_fmt, ap);
+    flare::base::string_vappendf(&_error_text, reason_fmt, ap);
     va_end(ap);
     if (_span) {
         _span->set_error_code(_error_code);
@@ -458,17 +458,17 @@ void Controller::CloseConnection(const char* reason_fmt, ...) {
         _error_text.push_back(' ');
     }
     if (_current_call.nretry != 0) {
-        butil::string_appendf(&_error_text, "[R%d]", _current_call.nretry);
+        flare::base::string_appendf(&_error_text, "[R%d]", _current_call.nretry);
     } else {
         AppendServerIdentiy();
     }
     const size_t old_size = _error_text.size();
     if (_error_code != -1) {
-        butil::string_appendf(&_error_text, "[E%d]", _error_code);
+        flare::base::string_appendf(&_error_text, "[E%d]", _error_code);
     }
     va_list ap;
     va_start(ap, reason_fmt);
-    butil::string_vappendf(&_error_text, reason_fmt, ap);
+    flare::base::string_vappendf(&_error_text, reason_fmt, ap);
     va_end(ap);
     if (_span) {
         _span->set_error_code(_error_code);
@@ -590,7 +590,7 @@ void Controller::OnVersionedRPCReturned(const CompletionInfo& info,
         if (timeout_ms() >= 0) {
             rc = bthread_timer_add(
                     &_timeout_id,
-                    butil::microseconds_to_timespec(_deadline_us),
+                    flare::base::microseconds_to_timespec(_deadline_us),
                     HandleTimeout, (void*)_correlation_id.value);
         }
         if (rc != 0) {
@@ -617,7 +617,7 @@ void Controller::OnVersionedRPCReturned(const CompletionInfo& info,
         }
         ++_current_call.nretry;
         add_flag(FLAGS_BACKUP_REQUEST);
-        return IssueRPC(butil::gettimeofday_us());
+        return IssueRPC(flare::base::gettimeofday_us());
     } else if (_retry_policy ? _retry_policy->DoRetry(this)
                : DefaultRetryPolicy()->DoRetry(this)) {
         // The error must come from _current_call because:
@@ -644,7 +644,7 @@ void Controller::OnVersionedRPCReturned(const CompletionInfo& info,
             _http_response->Clear();
         }
         response_attachment().clear();
-        return IssueRPC(butil::gettimeofday_us());
+        return IssueRPC(flare::base::gettimeofday_us());
     }
 
 END_OF_RPC:
@@ -730,7 +730,7 @@ void Controller::Call::OnComplete(
 
         if (enable_circuit_breaker) {
             sending_sock->FeedbackCircuitBreaker(error_code,
-                butil::gettimeofday_us() - begin_time_us);
+                flare::base::gettimeofday_us() - begin_time_us);
         }
     }
 
@@ -907,7 +907,7 @@ void Controller::EndRPC(const CompletionInfo& info) {
             // Join is not signalled when the done does not Run() and the done
             // can't Run() because all backup threads are blocked by Join().
 
-            OnRPCEnd(butil::gettimeofday_us());
+            OnRPCEnd(flare::base::gettimeofday_us());
             const bool destroy_cid_in_done = has_flag(FLAGS_DESTROY_CID_IN_DONE);
             _done->Run();
             // NOTE: Don't touch this Controller anymore, because it's likely to be
@@ -938,7 +938,7 @@ void Controller::RunDoneInBackupThread(void* arg) {
 void Controller::DoneInBackupThread() {
     // OnRPCEnd for sync RPC is called in Channel::CallMethod to count in
     // latency of the context-switch.
-    OnRPCEnd(butil::gettimeofday_us());
+    OnRPCEnd(flare::base::gettimeofday_us());
     const CallId saved_cid = _correlation_id;
     const bool destroy_cid_in_done = has_flag(FLAGS_DESTROY_CID_IN_DONE);
     _done->Run();
@@ -949,7 +949,7 @@ void Controller::DoneInBackupThread() {
 }
 
 void Controller::SubmitSpan() {
-    const int64_t now = butil::cpuwide_time_us();
+    const int64_t now = flare::base::cpuwide_time_us();
     _span->set_start_callback_us(now);
     if (_span->local_parent()) {
         _span->local_parent()->AsParent();
@@ -1117,12 +1117,12 @@ void Controller::IssueRPC(int64_t start_realtime_us) {
             using_auth = _auth;
         } else if (auth_error != 0) {
             SetFailed(auth_error, "Fail to authenticate, %s",
-                      berror(auth_error));
+                      flare_error(auth_error));
             return HandleSendFailed();
         }
     }
     // Make request
-    butil::IOBuf packet;
+    flare::io::IOBuf packet;
     SocketMessage* user_packet = NULL;
     _pack_request(&packet, &user_packet, cid.value, _method, this,
                   _request_buf, using_auth);
@@ -1141,11 +1141,11 @@ void Controller::IssueRPC(int64_t start_realtime_us) {
     timespec* pabstime = NULL;
     if (_connect_timeout_ms > 0) {
         if (_deadline_us >= 0) {
-            connect_abstime = butil::microseconds_to_timespec(
+            connect_abstime = flare::base::microseconds_to_timespec(
                 std::min(_connect_timeout_ms * 1000L + start_realtime_us,
                          _deadline_us));
         } else {
-            connect_abstime = butil::microseconds_to_timespec(
+            connect_abstime = flare::base::microseconds_to_timespec(
                 _connect_timeout_ms * 1000L + start_realtime_us);
         }
         pabstime = &connect_abstime;
@@ -1169,7 +1169,7 @@ void Controller::IssueRPC(int64_t start_realtime_us) {
     }
     if (span) {
         if (_current_call.nretry == 0) {
-            span->set_sent_us(butil::cpuwide_time_us());
+            span->set_sent_us(flare::base::cpuwide_time_us());
             span->set_request_size(packet_size);
         } else {
             span->Annotate("Requested(%lld) [%d]",
@@ -1212,16 +1212,16 @@ int Controller::HandleSocketFailed(bthread_id_t id, void* data, int error_code,
     if (error_code == ERPCTIMEDOUT) {
         cntl->SetFailed(error_code, "Reached timeout=%" PRId64 "ms @%s",
                         cntl->timeout_ms(),
-                        butil::endpoint2str(cntl->remote_side()).c_str());
+                        flare::base::endpoint2str(cntl->remote_side()).c_str());
     } else if (error_code == EBACKUPREQUEST) {
         cntl->SetFailed(error_code, "Reached backup timeout=%" PRId64 "ms @%s",
                         cntl->backup_request_ms(),
-                        butil::endpoint2str(cntl->remote_side()).c_str());
+                        flare::base::endpoint2str(cntl->remote_side()).c_str());
     } else if (!error_text.empty()) {
         cntl->SetFailed(error_code, "%s", error_text.c_str());
     } else {
-        cntl->SetFailed(error_code, "%s @%s", berror(error_code),
-                        butil::endpoint2str(cntl->remote_side()).c_str());
+        cntl->SetFailed(error_code, "%s @%s", flare_error(error_code),
+                        flare::base::endpoint2str(cntl->remote_side()).c_str());
     }
     CompletionInfo info = { id, false };
     cntl->OnVersionedRPCReturned(info, true, saved_error);
@@ -1366,7 +1366,7 @@ void Controller::set_stream_creator(StreamCreator* sc) {
     _stream_creator = sc;
 }
 
-butil::intrusive_ptr<ProgressiveAttachment>
+flare::container::intrusive_ptr<ProgressiveAttachment>
 Controller::CreateProgressiveAttachment(StopStyle stop_style) {
     if (has_progressive_writer()) {
         LOG(ERROR) << "One controller can only have one ProgressiveAttachment";
@@ -1398,17 +1398,17 @@ void Controller::ReadProgressiveAttachmentBy(ProgressiveReader* r) {
     }
     if (!is_response_read_progressively()) {
         return r->OnEndOfMessage(
-            butil::Status(EINVAL, "Can't read progressive attachment from a "
+            flare::base::flare_status(EINVAL, "Can't read progressive attachment from a "
                          "controller without calling "
                          "response_will_be_read_progressively() before"));
     }
     if (_rpa == NULL) {
         return r->OnEndOfMessage(
-            butil::Status(EINVAL, "ReadableProgressiveAttachment is NULL"));
+            flare::base::flare_status(EINVAL, "ReadableProgressiveAttachment is NULL"));
     }
     if (has_progressive_reader()) {
         return r->OnEndOfMessage(
-            butil::Status(EPERM, "%s can't be called more than once",
+            flare::base::flare_status(EPERM, "%s can't be called more than once",
                          __FUNCTION__));
     }
     add_flag(FLAGS_PROGRESSIVE_READER);
@@ -1439,7 +1439,7 @@ int Controller::GetSockOption(int level, int optname, void* optval, socklen_t* o
     }
 }
 
-#if defined(OS_MACOSX)
+#if defined(FLARE_PLATFORM_OSX)
 typedef sig_t SignalHandler;
 #else
 typedef sighandler_t SignalHandler;
@@ -1503,7 +1503,7 @@ class DoNothingClosure : public google::protobuf::Closure {
     void Run() { }
 };
 google::protobuf::Closure* DoNothing() {
-    return butil::get_leaky_singleton<DoNothingClosure>();
+    return flare::base::get_leaky_singleton<DoNothingClosure>();
 }
 
 KVMap& Controller::SessionKV() {

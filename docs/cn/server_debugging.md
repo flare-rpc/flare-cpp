@@ -127,7 +127,7 @@ TRACEPRINTF主要适合若干次的函数调用，如果一个函数调用了很
 仿照如下代码对foobar的运行时间进行监控。
 
 ```c++
-#include <flare/butil/time.h>
+#include "flare/base/time.h"
 #include <flare/bvar/bvar.h>
  
 bvar::LatencyRecorder g_foobar_latency("foobar");
@@ -135,7 +135,7 @@ bvar::LatencyRecorder g_foobar_latency("foobar");
 ...
 void search() {
     ...
-    butil::Timer tm;
+    flare::base::stop_watcher tm;
     tm.start();
     foobar();
     tm.stop();

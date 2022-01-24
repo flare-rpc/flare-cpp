@@ -19,7 +19,7 @@
 #ifndef BRPC_EVENT_DISPATCHER_H
 #define BRPC_EVENT_DISPATCHER_H
 
-#include "flare/butil/macros.h"                     // DISALLOW_COPY_AND_ASSIGN
+#include "flare/butil/macros.h"                     // FLARE_DISALLOW_COPY_AND_ASSIGN
 #include "flare/bthread/types.h"                   // bthread_t, bthread_attr_t
 #include "flare/brpc/socket.h"                     // Socket, SocketId
 
@@ -71,7 +71,7 @@ public:
     int RemoveEpollOut(SocketId socket_id, int fd, bool pollin);
 
 private:
-    DISALLOW_COPY_AND_ASSIGN(EventDispatcher);
+    FLARE_DISALLOW_COPY_AND_ASSIGN(EventDispatcher);
 
     // Calls Run()
     static void* RunThis(void* arg);

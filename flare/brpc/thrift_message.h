@@ -20,8 +20,8 @@
 #define BRPC_THRIFT_MESSAGE_H
 
 #include <google/protobuf/message.h>
-#include "flare/butil/iobuf.h"
-#include "flare/butil/class_name.h"
+#include "flare/io/iobuf.h"
+#include "flare/base/class_name.h"
 #include "flare/brpc/channel_base.h"
 #include "flare/brpc/controller.h"
 #include "flare/brpc/proto_base.pb.h"
@@ -57,7 +57,7 @@ public:
 class ThriftFramedMessage : public ::google::protobuf::Message {
 friend class ThriftStub;
 public:
-    butil::IOBuf body; // ~= "{ raw_instance }"
+    flare::io::IOBuf body; // ~= "{ raw_instance }"
     int16_t field_id;  // must be set when body is set.
     
 private:
@@ -130,7 +130,7 @@ private:
 
 namespace policy {
 // Implemented in policy/thrift_protocol.cpp
-bool ReadThriftStruct(const butil::IOBuf& body,
+bool ReadThriftStruct(const flare::io::IOBuf& body,
                       ThriftMessageBase* raw_msg,
                       int16_t expected_fid);
 }
@@ -198,7 +198,7 @@ T* ThriftFramedMessage::Cast() {
 
     if (!body.empty()) {
         if (!policy::ReadThriftStruct(body, _raw_instance, field_id)) {
-            LOG(ERROR) << "Fail to parse " << butil::class_name<T>();
+            LOG(ERROR) << "Fail to parse " << flare::base::class_name<T>();
         }
     }
     return raw_msg;

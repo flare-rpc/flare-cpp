@@ -15,7 +15,7 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#include "flare/butil/compat.h"
+#include "flare/base/compat.h"
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/utsname.h>                           // uname
@@ -23,16 +23,16 @@
 #include <gtest/gtest.h>
 #include <pthread.h>
 #include "flare/butil/gperftools_profiler.h"
-#include "flare/butil/time.h"
+#include "flare/base/time.h"
 #include "flare/butil/macros.h"
-#include "flare/butil/fd_utility.h"
-#include "flare/butil/logging.h"
+#include "flare/base/fd_utility.h"
+#include "flare/base/logging.h"
 #include "flare/bthread/task_control.h"
 #include "flare/bthread/task_group.h"
 #include "flare/bthread/interrupt_pthread.h"
 #include "flare/bthread/bthread.h"
 #include "flare/bthread/unstable.h"
-#if defined(OS_MACOSX)
+#if defined(FLARE_PLATFORM_OSX)
 #include <sys/types.h>                           // struct kevent
 #include <sys/event.h>                           // kevent(), kqueue()
 #endif
@@ -68,7 +68,7 @@ struct SocketMeta {
     int epfd;
 };
 
-struct BAIDU_CACHELINE_ALIGNMENT ClientMeta {
+struct FLARE_CACHELINE_ALIGNMENT ClientMeta {
     int fd;
     size_t count;
     size_t times;
@@ -95,12 +95,12 @@ void* process_thread(void* arg) {
         return NULL;
     }
 #ifdef CREATE_THREAD_TO_PROCESS
-# if defined(OS_LINUX)
+# if defined(FLARE_PLATFORM_LINUX)
     epoll_event evt = { EPOLLIN | EPOLLONESHOT, { m } };
     if (epoll_ctl(m->epfd, EPOLL_CTL_MOD, m->fd, &evt) < 0) {
         epoll_ctl(m->epfd, EPOLL_CTL_ADD, m->fd, &evt);
     }
-# elif defined(OS_MACOSX)
+# elif defined(FLARE_PLATFORM_OSX)
     struct kevent kqueue_event;
     EV_SET(&kqueue_event, m->fd, EVFILT_READ, EV_ADD | EV_ENABLE | EV_ONESHOT,
             0, 0, m);
@@ -114,17 +114,17 @@ void* epoll_thread(void* arg) {
     bthread_usleep(1);
     EpollMeta* m = (EpollMeta*)arg;
     const int epfd = m->epfd;
-#if defined(OS_LINUX)
+#if defined(FLARE_PLATFORM_LINUX)
     epoll_event e[32];
-#elif defined(OS_MACOSX)
+#elif defined(FLARE_PLATFORM_OSX)
     struct kevent e[32];
 #endif
 
     while (!stop) {
 
-#if defined(OS_LINUX)
+#if defined(FLARE_PLATFORM_LINUX)
 # ifndef USE_BLOCKING_EPOLL
-        const int n = epoll_wait(epfd, e, ARRAY_SIZE(e), 0);
+        const int n = epoll_wait(epfd, e, FLARE_ARRAY_SIZE(e), 0);
         if (stop) {
             break;
         }
@@ -133,7 +133,7 @@ void* epoll_thread(void* arg) {
             continue;
         }
 # else
-        const int n = epoll_wait(epfd, e, ARRAY_SIZE(e), -1);
+        const int n = epoll_wait(epfd, e, FLARE_ARRAY_SIZE(e), -1);
         if (stop) {
             break;
         }
@@ -141,8 +141,8 @@ void* epoll_thread(void* arg) {
             continue;
         }
 # endif
-#elif defined(OS_MACOSX)
-        const int n = kevent(epfd, NULL, 0, e, ARRAY_SIZE(e), NULL);
+#elif defined(FLARE_PLATFORM_OSX)
+        const int n = kevent(epfd, NULL, 0, e, FLARE_ARRAY_SIZE(e), NULL);
         if (stop) {
             break;
         }
@@ -154,9 +154,9 @@ void* epoll_thread(void* arg) {
             if (EINTR == errno) {
                 continue;
             }
-#if defined(OS_LINUX)
+#if defined(FLARE_PLATFORM_LINUX)
             PLOG(FATAL) << "Fail to epoll_wait";
-#elif defined(OS_MACOSX)
+#elif defined(FLARE_PLATFORM_OSX)
             PLOG(FATAL) << "Fail to kevent";
 #endif
             break;
@@ -166,9 +166,9 @@ void* epoll_thread(void* arg) {
         bthread_fvec vec[n];
         for (int i = 0; i < n; ++i) {
             vec[i].fn = process_thread;
-# if defined(OS_LINUX)
+# if defined(FLARE_PLATFORM_LINUX)
             vec[i].arg = e[i].data.ptr;
-# elif defined(OS_MACOSX)
+# elif defined(FLARE_PLATFORM_OSX)
             vec[i].arg = e[i].udata;
 # endif
         }
@@ -176,9 +176,9 @@ void* epoll_thread(void* arg) {
         bthread_startv(tid, vec, n, &BTHREAD_ATTR_SMALL);
 #else
         for (int i = 0; i < n; ++i) {
-# if defined(OS_LINUX)
+# if defined(FLARE_PLATFORM_LINUX)
             process_thread(e[i].data.ptr);
-# elif defined(OS_MACOSX)
+# elif defined(FLARE_PLATFORM_OSX)
             process_thread(e[i].udata);
 # endif 
         }
@@ -197,12 +197,12 @@ void* client_thread(void* arg) {
 #ifdef RUN_CLIENT_IN_BTHREAD
         ssize_t rc;
         do {
-# if defined(OS_LINUX)
+# if defined(FLARE_PLATFORM_LINUX)
             const int wait_rc = bthread_fd_wait(m->fd, EPOLLIN);
-# elif defined(OS_MACOSX)
+# elif defined(FLARE_PLATFORM_OSX)
             const int wait_rc = bthread_fd_wait(m->fd, EVFILT_READ);
 # endif
-            EXPECT_EQ(0, wait_rc) << berror();
+            EXPECT_EQ(0, wait_rc) << flare_error();
             rc = read(m->fd, &m->count, sizeof(m->count));
         } while (rc < 0 && errno == EAGAIN);
 #else
@@ -250,9 +250,9 @@ TEST(FDTest, ping_pong) {
     ClientMeta* cm[NCLIENT];
 
     for (size_t i = 0; i < NEPOLL; ++i) {
-#if defined(OS_LINUX)
+#if defined(FLARE_PLATFORM_LINUX)
         epfd[i] = epoll_create(1024);
-#elif defined(OS_MACOSX)
+#elif defined(FLARE_PLATFORM_OSX)
         epfd[i] = kqueue();
 #endif
         ASSERT_GT(epfd[i], 0);
@@ -267,25 +267,25 @@ TEST(FDTest, ping_pong) {
         ASSERT_EQ(0, fcntl(m->fd, F_SETFL, fcntl(m->fd, F_GETFL, 0) | O_NONBLOCK));
 
 #ifdef CREATE_THREAD_TO_PROCESS
-# if defined(OS_LINUX)
+# if defined(FLARE_PLATFORM_LINUX)
         epoll_event evt = { EPOLLIN | EPOLLONESHOT, { m } };
-# elif defined(OS_MACOSX)
+# elif defined(FLARE_PLATFORM_OSX)
         struct kevent kqueue_event;
         EV_SET(&kqueue_event, m->fd, EVFILT_READ, EV_ADD | EV_ENABLE | EV_ONESHOT,
                 0, 0, m);
 # endif
 #else
-# if defined(OS_LINUX)
+# if defined(FLARE_PLATFORM_LINUX)
         epoll_event evt = { EPOLLIN, { m } };
-# elif defined(OS_MACOSX)
+# elif defined(FLARE_PLATFORM_OSX)
         struct kevent kqueue_event;
         EV_SET(&kqueue_event, m->fd, EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, m);
 # endif
 #endif
 
-#if defined(OS_LINUX)
+#if defined(FLARE_PLATFORM_LINUX)
         ASSERT_EQ(0, epoll_ctl(m->epfd, EPOLL_CTL_ADD, m->fd, &evt));
-#elif defined(OS_MACOSX)
+#elif defined(FLARE_PLATFORM_OSX)
         ASSERT_EQ(0, kevent(m->epfd, &kqueue_event, 1, NULL, 0, NULL));
 #endif
         cm[i] = new ClientMeta;
@@ -293,7 +293,7 @@ TEST(FDTest, ping_pong) {
         cm[i]->count = i;
         cm[i]->times = REP;
 #ifdef RUN_CLIENT_IN_BTHREAD
-        butil::make_non_blocking(cm[i]->fd);
+        flare::base::make_non_blocking(cm[i]->fd);
         ASSERT_EQ(0, bthread_start_urgent(&cth[i], NULL, client_thread, cm[i]));
 #else
         ASSERT_EQ(0, pthread_create(&cth[i], NULL, client_thread, cm[i]));
@@ -301,7 +301,7 @@ TEST(FDTest, ping_pong) {
     }
 
     ProfilerStart("ping_pong.prof");
-    butil::Timer tm;
+    flare::base::stop_watcher tm;
     tm.start();
 
     for (size_t i = 0; i < NEPOLL; ++i) {
@@ -327,10 +327,10 @@ TEST(FDTest, ping_pong) {
     LOG(INFO) << "tid=" << REP*NCLIENT*1000000L/tm.u_elapsed();
     stop = true;
     for (size_t i = 0; i < NEPOLL; ++i) {
-#if defined(OS_LINUX)
+#if defined(FLARE_PLATFORM_LINUX)
         epoll_event evt = { EPOLLOUT,  { NULL } };
         ASSERT_EQ(0, epoll_ctl(epfd[i], EPOLL_CTL_ADD, 0, &evt));
-#elif defined(OS_MACOSX)
+#elif defined(FLARE_PLATFORM_OSX)
         struct kevent kqueue_event;
         EV_SET(&kqueue_event, 0, EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, NULL);
         ASSERT_EQ(0, kevent(epfd[i], &kqueue_event, 1, NULL, 0, NULL));
@@ -350,7 +350,7 @@ TEST(FDTest, ping_pong) {
 }
 
 TEST(FDTest, mod_closed_fd) {
-#if defined(OS_LINUX)
+#if defined(FLARE_PLATFORM_LINUX)
     // Conclusion:
     //   If fd is never added into epoll, MOD returns ENOENT
     //   If fd is inside epoll and valid, MOD returns 0
@@ -375,7 +375,7 @@ TEST(FDTest, mod_closed_fd) {
 
     errno = 0;
     ASSERT_EQ(-1, epoll_ctl(epfd, EPOLL_CTL_MOD, fd[0], &e));
-    ASSERT_EQ(EBADF, errno) << berror();
+    ASSERT_EQ(EBADF, errno) << flare_error();
 
     ASSERT_EQ(0, pipe(new_fd));
     ASSERT_EQ(fd[0], new_fd[0]);
@@ -383,14 +383,14 @@ TEST(FDTest, mod_closed_fd) {
     
     errno = 0;
     ASSERT_EQ(-1, epoll_ctl(epfd, EPOLL_CTL_MOD, fd[0], &e));
-    ASSERT_EQ(ENOENT, errno) << berror();
+    ASSERT_EQ(ENOENT, errno) << flare_error();
     
     ASSERT_EQ(0, close(epfd));
 #endif
 }
 
 TEST(FDTest, add_existing_fd) {
-#if defined(OS_LINUX)
+#if defined(FLARE_PLATFORM_LINUX)
     const int epfd = epoll_create(1024);
     epoll_event e = { EPOLLIN, { NULL } };
     ASSERT_EQ(0, epoll_ctl(epfd, EPOLL_CTL_ADD, 0, &e));
@@ -402,12 +402,12 @@ TEST(FDTest, add_existing_fd) {
 }
 
 void* epoll_waiter(void* arg) {
-#if defined(OS_LINUX)
+#if defined(FLARE_PLATFORM_LINUX)
     epoll_event e;
     if (1 == epoll_wait((int)(intptr_t)arg, &e, 1, -1)) {
         std::cout << e.events << std::endl;
     }
-#elif defined(OS_MACOSX)
+#elif defined(FLARE_PLATFORM_OSX)
     struct kevent e;
     if (1 == kevent((int)(intptr_t)arg, NULL, 0, &e, 1, NULL)) {
         std::cout << e.flags << std::endl;
@@ -418,9 +418,9 @@ void* epoll_waiter(void* arg) {
 }
 
 TEST(FDTest, interrupt_pthread) {
-#if defined(OS_LINUX)
+#if defined(FLARE_PLATFORM_LINUX)
     const int epfd = epoll_create(1024);
-#elif defined(OS_MACOSX)
+#elif defined(FLARE_PLATFORM_OSX)
     const int epfd = kqueue();
 #endif
     pthread_t th, th2;
@@ -444,33 +444,33 @@ void* close_the_fd(void* arg) {
 
 TEST(FDTest, invalid_epoll_events) {
     errno = 0;
-#if defined(OS_LINUX)
+#if defined(FLARE_PLATFORM_LINUX)
     ASSERT_EQ(-1, bthread_fd_wait(-1, EPOLLIN));
-#elif defined(OS_MACOSX)
+#elif defined(FLARE_PLATFORM_OSX)
     ASSERT_EQ(-1, bthread_fd_wait(-1, EVFILT_READ));
 #endif
     ASSERT_EQ(EINVAL, errno);
     errno = 0;
-#if defined(OS_LINUX)
+#if defined(FLARE_PLATFORM_LINUX)
     ASSERT_EQ(-1, bthread_fd_timedwait(-1, EPOLLIN, NULL));
-#elif defined(OS_MACOSX)
+#elif defined(FLARE_PLATFORM_OSX)
     ASSERT_EQ(-1, bthread_fd_timedwait(-1, EVFILT_READ, NULL));
 #endif
     ASSERT_EQ(EINVAL, errno);
 
     int fds[2];
     ASSERT_EQ(0, pipe(fds));
-#if defined(OS_LINUX)
+#if defined(FLARE_PLATFORM_LINUX)
     ASSERT_EQ(-1, bthread_fd_wait(fds[0], EPOLLET));
     ASSERT_EQ(EINVAL, errno);
 #endif
     bthread_t th;
     ASSERT_EQ(0, bthread_start_urgent(&th, NULL, close_the_fd, &fds[1]));
-    butil::Timer tm;
+    flare::base::stop_watcher tm;
     tm.start();
-#if defined(OS_LINUX)
+#if defined(FLARE_PLATFORM_LINUX)
     ASSERT_EQ(0, bthread_fd_wait(fds[0], EPOLLIN | EPOLLET));
-#elif defined(OS_MACOSX)
+#elif defined(FLARE_PLATFORM_OSX)
     ASSERT_EQ(0, bthread_fd_wait(fds[0], EVFILT_READ));
 #endif
     tm.stop();
@@ -480,10 +480,10 @@ TEST(FDTest, invalid_epoll_events) {
 }
 
 void* wait_for_the_fd(void* arg) {
-    timespec ts = butil::milliseconds_from_now(50);
-#if defined(OS_LINUX)
+    timespec ts = flare::base::milliseconds_from_now(50);
+#if defined(FLARE_PLATFORM_LINUX)
     bthread_fd_timedwait(*(int*)arg, EPOLLIN, &ts);
-#elif defined(OS_MACOSX)
+#elif defined(FLARE_PLATFORM_OSX)
     bthread_fd_timedwait(*(int*)arg, EVFILT_READ, &ts);
 #endif
     return NULL;
@@ -496,7 +496,7 @@ TEST(FDTest, timeout) {
     ASSERT_EQ(0, pthread_create(&th, NULL, wait_for_the_fd, &fds[0]));
     bthread_t bth;
     ASSERT_EQ(0, bthread_start_urgent(&bth, NULL, wait_for_the_fd, &fds[0]));
-    butil::Timer tm;
+    flare::base::stop_watcher tm;
     tm.start();
     ASSERT_EQ(0, pthread_join(th, NULL));
     ASSERT_EQ(0, bthread_join(bth, NULL));
@@ -511,7 +511,7 @@ TEST(FDTest, close_should_wakeup_waiter) {
     ASSERT_EQ(0, pipe(fds));
     bthread_t bth;
     ASSERT_EQ(0, bthread_start_urgent(&bth, NULL, wait_for_the_fd, &fds[0]));
-    butil::Timer tm;
+    flare::base::stop_watcher tm;
     tm.start();
     ASSERT_EQ(0, bthread_close(fds[0]));
     ASSERT_EQ(0, bthread_join(bth, NULL));
@@ -519,9 +519,9 @@ TEST(FDTest, close_should_wakeup_waiter) {
     ASSERT_LT(tm.m_elapsed(), 5);
 
     // Launch again, should quit soon due to EBADF
-#if defined(OS_LINUX)
+#if defined(FLARE_PLATFORM_LINUX)
     ASSERT_EQ(-1, bthread_fd_timedwait(fds[0], EPOLLIN, NULL));
-#elif defined(OS_MACOSX)
+#elif defined(FLARE_PLATFORM_OSX)
     ASSERT_EQ(-1, bthread_fd_timedwait(fds[0], EVFILT_READ, NULL));
 #endif
     ASSERT_EQ(EBADF, errno);

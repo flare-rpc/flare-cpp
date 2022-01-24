@@ -21,14 +21,14 @@
 #include <signal.h>
 #include <gflags/gflags.h>
 #include <gtest/gtest.h>
-#include "flare/butil/compat.h"
-#include "flare/butil/time.h"
+#include "flare/base/compat.h"
+#include "flare/base/time.h"
 #include "flare/butil/macros.h"
-#include "flare/butil/errno.h"
+#include "flare/base/errno.h"
 #include <flare/bthread/sys_futex.h>
 #include <flare/bthread/butex.h>
 #include "flare/bthread/bthread.h"
-#include "flare/butil/static_atomic.h"
+#include "flare/base/static_atomic.h"
 
 namespace {
 DEFINE_int32(thread_num, 1, "#pairs of threads doing ping pong");
@@ -43,11 +43,11 @@ void quit_handler(int) {
     stop = true;
 }
 
-struct BAIDU_CACHELINE_ALIGNMENT AlignedIntWrapper {
+struct FLARE_CACHELINE_ALIGNMENT AlignedIntWrapper {
     int value;
 };
 
-struct BAIDU_CACHELINE_ALIGNMENT PlayerArg {
+struct FLARE_CACHELINE_ALIGNMENT PlayerArg {
     int read_fd;
     int write_fd;
     int* wait_addr;
@@ -191,7 +191,7 @@ TEST(PingPongTest, ping_pong) {
     long last_counter = 0;
     long last_wakeup = 0;
     while (!stop) {
-        butil::Timer tm;
+        flare::base::stop_watcher tm;
         tm.start();
         sleep(1);
         tm.stop();

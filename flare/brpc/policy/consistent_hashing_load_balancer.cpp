@@ -19,8 +19,8 @@
 #include <algorithm>                                           // std::set_union
 #include <array>
 #include <gflags/gflags.h>
-#include "flare/butil/containers/flat_map.h"
-#include "flare/butil/errno.h"
+#include "flare/container/flat_map.h"
+#include "flare/base/errno.h"
 #include "flare/butil/strings/string_number_conversions.h"
 #include "flare/brpc/socket.h"
 #include "flare/brpc/policy/consistent_hashing_load_balancer.h"
@@ -174,7 +174,7 @@ size_t ConsistentHashingLoadBalancer::RemoveBatch(
         bg = fg;
         return 0;
     }
-    butil::FlatSet<ServerId> id_set;
+    flare::container::FlatSet<ServerId> id_set;
     bool use_set = true;
     if (id_set.init(servers.size() * 2) == 0) {
         for (size_t i = 0; i < servers.size(); ++i) {
@@ -186,7 +186,7 @@ size_t ConsistentHashingLoadBalancer::RemoveBatch(
     } else {
         use_set = false;
     }
-    CHECK(use_set) << "Fail to construct id_set, " << berror();
+    CHECK(use_set) << "Fail to construct id_set, " << flare_error();
     bg.clear();
     for (size_t i = 0; i < fg.size(); ++i) {
         const bool removed = 
@@ -272,7 +272,7 @@ size_t ConsistentHashingLoadBalancer::RemoveServersInBatch(
     return n;
 }
 
-LoadBalancer *ConsistentHashingLoadBalancer::New(const butil::StringPiece& params) const {
+LoadBalancer *ConsistentHashingLoadBalancer::New(const std::string_view& params) const {
     ConsistentHashingLoadBalancer* lb = 
         new (std::nothrow) ConsistentHashingLoadBalancer(_type);
     if (lb && !lb->SetParameters(params)) {
@@ -296,7 +296,7 @@ int ConsistentHashingLoadBalancer::SelectServer(
         LOG(ERROR) << "request_code must be 32-bit currently";
         return EINVAL;
     }
-    butil::DoublyBufferedData<std::vector<Node> >::ScopedPtr s;
+    flare::container::DoublyBufferedData<std::vector<Node> >::ScopedPtr s;
     if (_db_hash_ring.Read(&s) != 0) {
         return ENOMEM;
     }
@@ -332,14 +332,14 @@ void ConsistentHashingLoadBalancer::Describe(
     os << "ConsistentHashingLoadBalancer {\n"
        << "  hash function: " << GetReplicaPolicy(_type)->name() << '\n'
        << "  replica per host: " << _num_replicas << '\n';
-    std::map<butil::EndPoint, double> load_map;
+    std::map<flare::base::end_point, double> load_map;
     GetLoads(&load_map);
     os << "  number of hosts: " << load_map.size() << '\n';
     os << "  load of hosts: {\n";
     double expected_load_per_server = 1.0 / load_map.size();
     double load_sum = 0;
     double load_sqr_sum = 0;
-    for (std::map<butil::EndPoint, double>::iterator 
+    for (std::map<flare::base::end_point, double>::iterator
             it = load_map.begin(); it!= load_map.end(); ++it) {
         os << "    " << it->first << ": " << it->second << '\n';
         double normalized_load = it->second / expected_load_per_server;
@@ -354,11 +354,11 @@ void ConsistentHashingLoadBalancer::Describe(
 }
 
 void ConsistentHashingLoadBalancer::GetLoads(
-    std::map<butil::EndPoint, double> *load_map) {
+    std::map<flare::base::end_point, double> *load_map) {
     load_map->clear();
-    std::map<butil::EndPoint, uint32_t> count_map;
+    std::map<flare::base::end_point, uint32_t> count_map;
     do {
-        butil::DoublyBufferedData<std::vector<Node> >::ScopedPtr s;
+        flare::container::DoublyBufferedData<std::vector<Node> >::ScopedPtr s;
         if (_db_hash_ring.Read(&s) != 0) {
             break;
         }
@@ -372,14 +372,14 @@ void ConsistentHashingLoadBalancer::GetLoads(
                     (*s.get())[i].hash - (*s.get())[i - 1].hash;
         }
     } while (0);
-    for (std::map<butil::EndPoint, uint32_t>::iterator 
+    for (std::map<flare::base::end_point, uint32_t>::iterator
             it = count_map.begin(); it!= count_map.end(); ++it) {
         (*load_map)[it->first] = (double)it->second / UINT_MAX;
     }
 }
 
-bool ConsistentHashingLoadBalancer::SetParameters(const butil::StringPiece& params) {
-    for (butil::KeyValuePairsSplitter sp(params.begin(), params.end(), ' ', '=');
+bool ConsistentHashingLoadBalancer::SetParameters(const std::string_view& params) {
+    for (flare::base::KeyValuePairsSplitter sp(params.begin(), params.end(), ' ', '=');
             sp; ++sp) {
         if (sp.value().empty()) {
             LOG(ERROR) << "Empty value for " << sp.key() << " in lb parameter";

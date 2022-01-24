@@ -141,24 +141,24 @@ User may set [status-code](http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.htm
 
 ## Get address of client
 
-controller->remote_side() gets address of the client which sent the request. The return type is butil::EndPoint. If client is nginx, remote_side() is address of nginx. To get address of the "real" client before nginx, set `proxy_header ClientIp $remote_addr;` in nginx and call `controller->http_request().GetHeader("ClientIp")` in RPC to get the address.
+controller->remote_side() gets address of the client which sent the request. The return type is flare::base::end_point. If client is nginx, remote_side() is address of nginx. To get address of the "real" client before nginx, set `proxy_header ClientIp $remote_addr;` in nginx and call `controller->http_request().GetHeader("ClientIp")` in RPC to get the address.
 
 Printing method:
 
 ```c++
 LOG(INFO) << "remote_side=" << cntl->remote_side();
-printf("remote_side=%s\n", butil::endpoint2str(cntl->remote_side()).c_str());
+printf("remote_side=%s\n", flare::base::endpoint2str(cntl->remote_side()).c_str());
 ```
 
 ## Get address of server
 
-controller->local_side() gets server-side address of the RPC connection, return type is butil::EndPoint.
+controller->local_side() gets server-side address of the RPC connection, return type is flare::base::end_point.
 
 Printing method:
 
 ```c++
 LOG(INFO) << "local_side=" << cntl->local_side();
-printf("local_side=%s\n", butil::endpoint2str(cntl->local_side()).c_str());
+printf("local_side=%s\n", flare::base::endpoint2str(cntl->local_side()).c_str());
 ```
 
 ## Asynchronous Service
@@ -207,7 +207,7 @@ Call following methods of [Server](https://github.com/brpc/brpc/blob/master/src/
 
 ```c++
 int Start(const char* ip_and_port_str, const ServerOptions* opt);
-int Start(EndPoint ip_and_port, const ServerOptions* opt);
+int Start(end_point ip_and_port, const ServerOptions* opt);
 int Start(int port, const ServerOptions* opt);
 int Start(const char *ip_str, PortRange port_range, const ServerOptions *opt);  // r32009后增加
 ```
@@ -542,7 +542,7 @@ public:
     // and later fetch this pointer from `Controller'.
     // Returns 0 on success, error code otherwise
     virtual int VerifyCredential(const std::string& auth_str,
-                                 const base::EndPoint& client_addr,
+                                 const base::end_point& client_addr,
                                  AuthContext* out_ctx) const = 0;
     }; 
 

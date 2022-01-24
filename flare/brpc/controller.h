@@ -24,10 +24,10 @@
 
 #include <gflags/gflags.h>                     // Users often need gflags
 #include <string>
-#include "flare/butil/intrusive_ptr.hpp"             // butil::intrusive_ptr
+#include "flare/container/intrusive_ptr.h"             // flare::container::intrusive_ptr
 #include "flare/bthread/errno.h"                     // Redefine errno
-#include "flare/butil/endpoint.h"                    // butil::EndPoint
-#include "flare/butil/iobuf.h"                       // butil::IOBuf
+#include "flare/base/endpoint.h"                    // flare::base::end_point
+#include "flare/io/iobuf.h"                       // flare::io::IOBuf
 #include "flare/bthread/types.h"                     // bthread_id_t
 #include "flare/brpc/options.pb.h"                   // CompressType
 #include "flare/brpc/errno.pb.h"                     // error code
@@ -201,7 +201,7 @@ public:
     // it gets queue time before server processes the RPC call.
     int64_t latency_us() const {
         if (_end_time_us == UNSET_MAGIC_NUM) {
-            return butil::cpuwide_time_us() - _begin_time_us;
+            return flare::base::cpuwide_time_us() - _begin_time_us;
         }
         return _end_time_us - _begin_time_us;
     }
@@ -254,7 +254,7 @@ public:
 
     // User attached data or body of http request, which is wired to network
     // directly instead of being serialized into protobuf messages.
-    butil::IOBuf& request_attachment() { return _request_attachment; }
+    flare::io::IOBuf& request_attachment() { return _request_attachment; }
 
     ConnectionType connection_type() const { return _connection_type; }
     // Get the called method. May-be NULL for non-pb services.
@@ -391,13 +391,13 @@ public:
     
     // User attached data or body of http response, which is wired to network
     // directly instead of being serialized into protobuf messages.
-    butil::IOBuf& response_attachment() { return _response_attachment; }
+    flare::io::IOBuf& response_attachment() { return _response_attachment; }
 
     // Create a ProgressiveAttachment to write (often after RPC).
     // If `stop_style' is FORCE_STOP, the underlying socket will be failed
     // immediately when the socket becomes idle or server is stopped.
     // Default value of `stop_style' is WAIT_FOR_STOP.
-    butil::intrusive_ptr<ProgressiveAttachment>
+    flare::container::intrusive_ptr<ProgressiveAttachment>
     CreateProgressiveAttachment(StopStyle stop_style = WAIT_FOR_STOP);
 
     bool has_progressive_writer() const { return _wpa != NULL; }
@@ -444,13 +444,13 @@ public:
     // Client-side: successful or last server called. Accessible from 
     // PackXXXRequest() in protocols.
     // Server-side: returns the client sending the request
-    butil::EndPoint remote_side() const { return _remote_side; }
+    flare::base::end_point remote_side() const { return _remote_side; }
     
     // Client-side: the local address for talking with server, undefined until
     // this RPC succeeds (because the connection may not be established 
     // before RPC).
     // Server-side: the address that clients access.
-    butil::EndPoint local_side() const { return _local_side; }
+    flare::base::end_point local_side() const { return _local_side; }
 
     // Protocol of the request sent by client or received by server.
     ProtocolType request_protocol() const { return _request_protocol; }
@@ -478,7 +478,7 @@ public:
     bool Failed() const override;
 
     // If Failed() is true, return description of the errors.
-    // NOTE: ErrorText() != berror(ErrorCode()). 
+    // NOTE: ErrorText() != flare_error(ErrorCode()).
     std::string ErrorText() const override;
 
     // Last error code. Equals 0 iff Failed() is false.
@@ -498,8 +498,8 @@ public:
     const HttpHeader& http_response() const
     { return _http_response != NULL ? *_http_response : DefaultHttpHeader(); }
 
-    const butil::IOBuf& request_attachment() const { return _request_attachment; }
-    const butil::IOBuf& response_attachment() const { return _response_attachment; }
+    const flare::io::IOBuf& request_attachment() const { return _request_attachment; }
+    const flare::io::IOBuf& response_attachment() const { return _response_attachment; }
 
     // Get the object to write key/value which will be flushed into
     // LOG(INFO) when this controller is deleted.
@@ -706,14 +706,14 @@ private:
     uint32_t _flags; // all boolean fields inside Controller
     int32_t _error_code;
     std::string _error_text;
-    butil::EndPoint _remote_side;
-    butil::EndPoint _local_side;
+    flare::base::end_point _remote_side;
+    flare::base::end_point _local_side;
     
     void* _session_local_data;
     const Server* _server;
     bthread_id_t _oncancel_id;
     const AuthContext* _auth_context;        // Authentication result
-    butil::intrusive_ptr<MongoContext> _mongo_session_data;
+    flare::container::intrusive_ptr<MongoContext> _mongo_session_data;
     SampledRequest* _sampled_request;
 
     ProtocolType _request_protocol;
@@ -756,7 +756,7 @@ private:
     RPCSender* _sender;
     uint64_t _request_code;
     SocketId _single_server_id;
-    butil::intrusive_ptr<SharedLoadBalancer> _lb;
+    flare::container::intrusive_ptr<SharedLoadBalancer> _lb;
 
     // for passing parameters to created bthread, don't modify it otherwhere.
     CompletionInfo _tmp_completion_info;
@@ -771,7 +771,7 @@ private:
     Protocol::PackRequest _pack_request;
     const google::protobuf::MethodDescriptor* _method;
     const Authenticator* _auth;
-    butil::IOBuf _request_buf;
+    flare::io::IOBuf _request_buf;
     IdlNames _idl_names;
     int64_t _idl_result;
 
@@ -781,13 +781,13 @@ private:
     std::unique_ptr<KVMap> _session_kv;
 
     // Fields with large size but low access frequency 
-    butil::IOBuf _request_attachment;
-    butil::IOBuf _response_attachment;
+    flare::io::IOBuf _request_attachment;
+    flare::io::IOBuf _response_attachment;
 
     // Writable progressive attachment
-    butil::intrusive_ptr<ProgressiveAttachment> _wpa;
+    flare::container::intrusive_ptr<ProgressiveAttachment> _wpa;
     // Readable progressive attachment
-    butil::intrusive_ptr<ReadableProgressiveAttachment> _rpa;
+    flare::container::intrusive_ptr<ReadableProgressiveAttachment> _rpa;
 
     // TODO: Replace following fields with StreamCreator
     // Defined at client side

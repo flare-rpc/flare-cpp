@@ -22,7 +22,7 @@
 #include <string>
 #include <google/protobuf/message.h>
 
-#include "flare/butil/iobuf.h"
+#include "flare/io/iobuf.h"
 #include "flare/butil/strings/string_piece.h"
 #include "flare/brpc/proto_base.pb.h"
 
@@ -51,42 +51,42 @@ public:
     }
     void Swap(MemcacheRequest* other);
 
-    bool Get(const butil::StringPiece& key);
+    bool Get(const std::string_view& key);
 
     // If the cas_value(Data Version Check) is non-zero, the requested operation
     // MUST only succeed if the item exists and has a cas_value identical to the
     // provided value.
-    bool Set(const butil::StringPiece& key, const butil::StringPiece& value,
+    bool Set(const std::string_view& key, const std::string_view& value,
              uint32_t flags, uint32_t exptime, uint64_t cas_value);
     
-    bool Add(const butil::StringPiece& key, const butil::StringPiece& value,
+    bool Add(const std::string_view& key, const std::string_view& value,
              uint32_t flags, uint32_t exptime, uint64_t cas_value);
 
-    bool Replace(const butil::StringPiece& key, const butil::StringPiece& value,
+    bool Replace(const std::string_view& key, const std::string_view& value,
                  uint32_t flags, uint32_t exptime, uint64_t cas_value);
     
-    bool Append(const butil::StringPiece& key, const butil::StringPiece& value,
+    bool Append(const std::string_view& key, const std::string_view& value,
                 uint32_t flags, uint32_t exptime, uint64_t cas_value);
 
-    bool Prepend(const butil::StringPiece& key, const butil::StringPiece& value,
+    bool Prepend(const std::string_view& key, const std::string_view& value,
                  uint32_t flags, uint32_t exptime, uint64_t cas_value);
 
-    bool Delete(const butil::StringPiece& key);
+    bool Delete(const std::string_view& key);
     bool Flush(uint32_t timeout);
 
-    bool Increment(const butil::StringPiece& key, uint64_t delta,
+    bool Increment(const std::string_view& key, uint64_t delta,
                    uint64_t initial_value, uint32_t exptime);
-    bool Decrement(const butil::StringPiece& key, uint64_t delta,
+    bool Decrement(const std::string_view& key, uint64_t delta,
                    uint64_t initial_value, uint32_t exptime);
     
-    bool Touch(const butil::StringPiece& key, uint32_t exptime);
+    bool Touch(const std::string_view& key, uint32_t exptime);
 
     bool Version();
 
     int pipelined_count() const { return _pipelined_count; }
 
-    butil::IOBuf& raw_buffer() { return _buf; }
-    const butil::IOBuf& raw_buffer() const { return _buf; }
+    flare::io::IOBuf& raw_buffer() { return _buf; }
+    const flare::io::IOBuf& raw_buffer() const { return _buf; }
 
     // Protobuf methods.
     MemcacheRequest* New() const;
@@ -111,12 +111,12 @@ protected:
     ::google::protobuf::Metadata GetMetadata() const override;
     
 private:
-    bool GetOrDelete(uint8_t command, const butil::StringPiece& key);
-    bool Counter(uint8_t command, const butil::StringPiece& key, uint64_t delta,
+    bool GetOrDelete(uint8_t command, const std::string_view& key);
+    bool Counter(uint8_t command, const std::string_view& key, uint64_t delta,
                  uint64_t initial_value, uint32_t exptime);
     
-    bool Store(uint8_t command, const butil::StringPiece& key,
-               const butil::StringPiece& value,
+    bool Store(uint8_t command, const std::string_view& key,
+               const std::string_view& value,
                uint32_t flags, uint32_t exptime, uint64_t cas_value);
 
     void SharedCtor();
@@ -124,7 +124,7 @@ private:
     void SetCachedSize(int size) const;
 
     int _pipelined_count;
-    butil::IOBuf _buf;
+    flare::io::IOBuf _buf;
     mutable int _cached_size_;
 };
 
@@ -180,7 +180,7 @@ public:
 
     const std::string& LastError() const { return _err; }
    
-    bool PopGet(butil::IOBuf* value, uint32_t* flags, uint64_t* cas_value);
+    bool PopGet(flare::io::IOBuf* value, uint32_t* flags, uint64_t* cas_value);
     bool PopGet(std::string* value, uint32_t* flags, uint64_t* cas_value);
     bool PopSet(uint64_t* cas_value);
     bool PopAdd(uint64_t* cas_value);
@@ -193,8 +193,8 @@ public:
     bool PopDecrement(uint64_t* new_value, uint64_t* cas_value);
     bool PopTouch();
     bool PopVersion(std::string* version);
-    butil::IOBuf& raw_buffer() { return _buf; }
-    const butil::IOBuf& raw_buffer() const { return _buf; }
+    flare::io::IOBuf& raw_buffer() { return _buf; }
+    const flare::io::IOBuf& raw_buffer() const { return _buf; }
     static const char* status_str(Status);
       
     // implements Message ----------------------------------------------
@@ -229,7 +229,7 @@ private:
     void SetCachedSize(int size) const;
 
     std::string _err;
-    butil::IOBuf _buf;
+    flare::io::IOBuf _buf;
     mutable int _cached_size_;
 };
 

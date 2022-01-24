@@ -172,7 +172,7 @@ TEST(SplitStringUsingSubstrTest, EmptyString) {
   std::vector<std::string> results;
   SplitStringUsingSubstr(std::string(), "DELIMITER", &results);
   const char* const expected[] = { "" };
-  AssertElements(results, expected, arraysize(expected));
+  AssertElements(results, expected, FLARE_ARRAY_SIZE(expected));
 }
 
 TEST(StringUtilTest, SplitString) {
@@ -307,7 +307,7 @@ TEST(SplitStringUsingSubstrTest, StringWithNoDelimiter) {
   std::vector<std::string> results;
   SplitStringUsingSubstr("alongwordwithnodelimiter", "DELIMITER", &results);
   const char* const expected[] = { "alongwordwithnodelimiter" };
-  AssertElements(results, expected, arraysize(expected));
+  AssertElements(results, expected, FLARE_ARRAY_SIZE(expected));
 }
 
 TEST(SplitStringUsingSubstrTest, LeadingDelimitersSkipped) {
@@ -317,7 +317,7 @@ TEST(SplitStringUsingSubstrTest, LeadingDelimitersSkipped) {
       "DELIMITER",
       &results);
   const char* const expected[] = { "", "", "", "one", "two", "three" };
-  AssertElements(results, expected, arraysize(expected));
+  AssertElements(results, expected, FLARE_ARRAY_SIZE(expected));
 }
 
 TEST(SplitStringUsingSubstrTest, ConsecutiveDelimitersSkipped) {
@@ -327,7 +327,7 @@ TEST(SplitStringUsingSubstrTest, ConsecutiveDelimitersSkipped) {
       "DELIMITER",
       &results);
   const char* const expected[] = { "uno", "", "", "dos", "tres", "", "cuatro" };
-  AssertElements(results, expected, arraysize(expected));
+  AssertElements(results, expected, FLARE_ARRAY_SIZE(expected));
 
 }
 
@@ -338,7 +338,7 @@ TEST(SplitStringUsingSubstrTest, TrailingDelimitersSkipped) {
       "DELIMITER",
       &results);
   const char* const expected[] = { "un", "deux", "trois", "quatre", "", "", "" };
-  AssertElements(results, expected, arraysize(expected));
+  AssertElements(results, expected, FLARE_ARRAY_SIZE(expected));
 }
 
 TEST(StringSplitTest, StringSplitDontTrim) {

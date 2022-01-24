@@ -19,7 +19,7 @@
 #include <vector>
 
 #include "flare/butil/basictypes.h"
-#include "flare/butil/logging.h"
+#include "flare/base/logging.h"
 #include "flare/butil/memory/singleton.h"
 #include "flare/butil/strings/utf_string_conversion_utils.h"
 #include "flare/butil/strings/utf_string_conversions.h"

@@ -7,5 +7,7 @@
 
 #include "flare/base/profile/attribute.h"
 #include "flare/base/profile/config.h"
+#include "flare/base/profile/macros.h"
+#include "flare/base/profile/eintr_wrapper.h"
 
 #endif  // FLARE_BASE_PROFILE_H_

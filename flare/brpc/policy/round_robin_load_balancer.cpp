@@ -17,7 +17,7 @@
 
 
 #include "flare/butil/macros.h"
-#include "flare/butil/fast_rand.h"
+#include "flare/base/fast_rand.h"
 #include "flare/brpc/socket.h"
 #include "flare/brpc/policy/round_robin_load_balancer.h"
 
@@ -30,7 +30,7 @@ const uint32_t prime_offset[] = {
 };
 
 inline uint32_t GenRandomStride() {
-    return prime_offset[butil::fast_rand_less_than(ARRAY_SIZE(prime_offset))];
+    return prime_offset[flare::base::fast_rand_less_than(ARRAY_SIZE(prime_offset))];
 }
 
 bool RoundRobinLoadBalancer::Add(Servers& bg, const ServerId& id) {
@@ -104,7 +104,7 @@ size_t RoundRobinLoadBalancer::RemoveServersInBatch(
 }
 
 int RoundRobinLoadBalancer::SelectServer(const SelectIn& in, SelectOut* out) {
-    butil::DoublyBufferedData<Servers, TLS>::ScopedPtr s;
+    flare::container::DoublyBufferedData<Servers, TLS>::ScopedPtr s;
     if (_db_servers.Read(&s) != 0) {
         return ENOMEM;
     }
@@ -142,7 +142,7 @@ int RoundRobinLoadBalancer::SelectServer(const SelectIn& in, SelectOut* out) {
 }
 
 RoundRobinLoadBalancer* RoundRobinLoadBalancer::New(
-    const butil::StringPiece& params) const {
+    const std::string_view& params) const {
     RoundRobinLoadBalancer* lb = new (std::nothrow) RoundRobinLoadBalancer;
     if (lb && !lb->SetParameters(params)) {
         delete lb;
@@ -162,7 +162,7 @@ void RoundRobinLoadBalancer::Describe(
         return;
     }
     os << "RoundRobin{";
-    butil::DoublyBufferedData<Servers, TLS>::ScopedPtr s;
+    flare::container::DoublyBufferedData<Servers, TLS>::ScopedPtr s;
     if (_db_servers.Read(&s) != 0) {
         os << "fail to read _db_servers";
     } else {
@@ -174,7 +174,7 @@ void RoundRobinLoadBalancer::Describe(
     os << '}';
 }
 
-bool RoundRobinLoadBalancer::SetParameters(const butil::StringPiece& params) {
+bool RoundRobinLoadBalancer::SetParameters(const std::string_view& params) {
     return GetRecoverPolicyByParams(params, &_cluster_recover_policy);
 }
 

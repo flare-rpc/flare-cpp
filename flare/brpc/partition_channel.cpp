@@ -16,7 +16,7 @@
 // under the License.
 
 
-#include "flare/butil/containers/flat_map.h"
+#include "flare/container/flat_map.h"
 #include "flare/brpc/log.h"
 #include "flare/brpc/load_balancer.h"
 #include "flare/brpc/details/naming_service_thread.h"
@@ -414,7 +414,7 @@ private:
         SelectiveChannel::ChannelHandle handle;  // uninitialized
         std::vector<ServerId> tmp;
     };
-    typedef butil::FlatMap<int, SubPartitionChannel*> PartChanMap;
+    typedef flare::container::FlatMap<int, SubPartitionChannel*> PartChanMap;
     
     PartChanMap _part_chan_map;
     SelectiveChannel* _schan;

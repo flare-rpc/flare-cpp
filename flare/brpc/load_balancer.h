@@ -101,7 +101,7 @@ public:
 
     // Create/destroy an instance.
     // Caller is responsible for Destroy() the instance after usage.
-    virtual LoadBalancer* New(const butil::StringPiece& params) const = 0;
+    virtual LoadBalancer* New(const std::string_view& params) const = 0;
 
 protected:
     virtual ~LoadBalancer() { }
@@ -165,16 +165,16 @@ public:
     }
 
 private:
-    static bool ParseParameters(const butil::StringPiece& lb_protocol,
+    static bool ParseParameters(const std::string_view& lb_protocol,
                                 std::string* lb_name,
-                                butil::StringPiece* lb_params);
+                                std::string_view* lb_params);
     static void DescribeLB(std::ostream& os, void* arg);
     void ExposeLB();
 
     LoadBalancer* _lb;
     std::atomic<int> _weight_sum;
     volatile bool _exposed;
-    butil::Mutex _st_mutex;
+    flare::base::Mutex _st_mutex;
     bvar::PassiveStatus<std::string> _st;
 };
 

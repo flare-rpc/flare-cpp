@@ -18,7 +18,7 @@
 // A server to receive HttpRequest and send back HttpResponse.
 
 #include <gflags/gflags.h>
-#include <flare/butil/logging.h>
+#include "flare/base/logging.h"
 #include <flare/brpc/server.h>
 #include <flare/brpc/restful.h>
 #include "http.pb.h"
@@ -52,7 +52,7 @@ public:
             static_cast<brpc::Controller*>(cntl_base);
         // Fill response.
         cntl->http_response().set_content_type("text/plain");
-        butil::IOBufBuilder os;
+        flare::io::IOBufBuilder os;
         os << "queries:";
         for (brpc::URI::QueryIterator it = cntl->http_request().uri().QueryBegin();
                 it != cntl->http_request().uri().QueryEnd(); ++it) {
@@ -70,7 +70,7 @@ public:
     virtual ~FileServiceImpl() {};
 
     struct Args {
-        butil::intrusive_ptr<brpc::ProgressiveAttachment> pa;
+        flare::container::intrusive_ptr<brpc::ProgressiveAttachment> pa;
     };
 
     static void* SendLargeFile(void* raw_args) {

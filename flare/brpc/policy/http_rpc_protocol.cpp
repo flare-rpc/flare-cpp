@@ -22,10 +22,10 @@
 #include <json2pb/json_to_pb.h>                    // JsonToProtoMessage
 
 #include "flare/brpc/policy/http_rpc_protocol.h"
-#include "flare/butil/unique_ptr.h"                       // std::unique_ptr
-#include "flare/butil/string_splitter.h"                  // StringMultiSplitter
-#include "flare/butil/string_printf.h"
-#include "flare/butil/time.h"
+#include <memory>                       // std::unique_ptr
+#include "flare/base/string_splitter.h"                  // StringMultiSplitter
+#include "flare/base/strings.h"
+#include "flare/base/time.h"
 #include "flare/butil/sys_byteorder.h"
 #include "flare/brpc/compress.h"
 #include "flare/brpc/errno.pb.h"                     // ENOSERVICE, ENOMETHOD
@@ -41,6 +41,7 @@
 #include "flare/brpc/policy/http2_rpc_protocol.h"
 #include "flare/brpc/details/usercode_backup_pool.h"
 #include "flare/brpc/grpc.h"
+#include "flare/base/strings.h"
 
 extern "C" {
 void bthread_assign_data(void* data);
@@ -76,20 +77,20 @@ DEFINE_string(request_id_header, "x-request-id", "The http header to mark a sess
 
 // Read user address from the header specified by -http_header_of_user_ip
 static bool GetUserAddressFromHeaderImpl(const HttpHeader& headers,
-                                         butil::EndPoint* user_addr) {
+                                         flare::base::end_point* user_addr) {
     const std::string* user_addr_str =
         headers.GetHeader(FLAGS_http_header_of_user_ip);
     if (user_addr_str == NULL) {
         return false;
     }
     if (user_addr_str->find(':') == std::string::npos) {
-        if (butil::str2ip(user_addr_str->c_str(), &user_addr->ip) != 0) {
+        if (flare::base::str2ip(user_addr_str->c_str(), &user_addr->ip) != 0) {
             LOG(WARNING) << "Fail to parse ip from " << *user_addr_str;
             return false;
         }
         user_addr->port = 0;
     } else {
-        if (butil::str2endpoint(user_addr_str->c_str(), user_addr) != 0) {
+        if (flare::base::str2endpoint(user_addr_str->c_str(), user_addr) != 0) {
             LOG(WARNING) << "Fail to parse ip:port from " << *user_addr_str;
             return false;
         }
@@ -98,7 +99,7 @@ static bool GetUserAddressFromHeaderImpl(const HttpHeader& headers,
 }
 
 inline bool GetUserAddressFromHeader(const HttpHeader& headers,
-                                     butil::EndPoint* user_addr) {
+                                     flare::base::end_point* user_addr) {
     if (FLAGS_http_header_of_user_ip.empty()) {
         return false;
     }
@@ -155,22 +156,22 @@ static void CreateCommonStrings() {
 int InitCommonStrings() {
     return pthread_once(&g_common_strings_once, CreateCommonStrings);
 }
-static const int ALLOW_UNUSED force_creation_of_common = InitCommonStrings();
+static const int FLARE_ALLOW_UNUSED force_creation_of_common = InitCommonStrings();
 const CommonStrings* get_common_strings() { return common; }
 
-HttpContentType ParseContentType(butil::StringPiece ct, bool* is_grpc_ct) {
+HttpContentType ParseContentType(std::string_view ct, bool* is_grpc_ct) {
     // According to http://www.w3.org/Protocols/rfc2616/rfc2616-sec3.html#sec3.7
     //   media-type  = type "/" subtype *( ";" parameter )
     //   type        = token
     //   subtype     = token
 
-    const butil::StringPiece prefix = "application/";
-    if (!ct.starts_with(prefix)) {
+    const std::string_view prefix = "application/";
+    if (!flare::base::starts_with(ct, prefix)) {
         return HTTP_CONTENT_OTHERS;
     }
     ct.remove_prefix(prefix.size());
 
-    if (ct.starts_with("grpc")) {
+    if (flare::base::starts_with(ct,"grpc")) {
         if (ct.size() == (size_t)4 || ct[4] == ';') {
             if (is_grpc_ct) {
                 *is_grpc_ct = true;
@@ -188,13 +189,13 @@ HttpContentType ParseContentType(butil::StringPiece ct, bool* is_grpc_ct) {
     }
 
     HttpContentType type = HTTP_CONTENT_OTHERS;
-    if (ct.starts_with("json")) {
+    if (flare::base::starts_with(ct,"json")) {
         type = HTTP_CONTENT_JSON;
         ct.remove_prefix(4);
-    } else if (ct.starts_with("proto")) {
+    } else if (flare::base::starts_with(ct,"proto")) {
         type = HTTP_CONTENT_PROTO;
         ct.remove_prefix(5);
-    } else if (ct.starts_with("x-protobuf")) {
+    } else if (flare::base::starts_with(ct,"x-protobuf")) {
         type = HTTP_CONTENT_PROTO;
         ct.remove_prefix(10);
     } else {
@@ -203,16 +204,16 @@ HttpContentType ParseContentType(butil::StringPiece ct, bool* is_grpc_ct) {
     return (ct.empty() || ct.front() == ';') ? type : HTTP_CONTENT_OTHERS;
 }
 
-static void PrintMessage(const butil::IOBuf& inbuf,
+static void PrintMessage(const flare::io::IOBuf& inbuf,
                          bool request_or_response,
                          bool has_content) {
-    butil::IOBuf buf1 = inbuf;
-    butil::IOBuf buf2;
+    flare::io::IOBuf buf1 = inbuf;
+    flare::io::IOBuf buf2;
     char str[48];
     if (request_or_response) {
-        snprintf(str, sizeof(str), "[ HTTP REQUEST @%s ]", butil::my_ip_cstr());
+        snprintf(str, sizeof(str), "[ HTTP REQUEST @%s ]", flare::base::my_ip_cstr());
     } else {
-        snprintf(str, sizeof(str), "[ HTTP RESPONSE @%s ]", butil::my_ip_cstr());
+        snprintf(str, sizeof(str), "[ HTTP RESPONSE @%s ]", flare::base::my_ip_cstr());
     }
     buf2.append(str);
     size_t last_size;
@@ -226,21 +227,21 @@ static void PrintMessage(const butil::IOBuf& inbuf,
     if (!has_content) {
         LOG(INFO) << '\n' << buf2 << buf1;
     } else {
-        LOG(INFO) << '\n' << buf2 << butil::ToPrintableString(buf1, FLAGS_http_verbose_max_body_length);
+        LOG(INFO) << '\n' << buf2 << flare::io::ToPrintableString(buf1, FLAGS_http_verbose_max_body_length);
     }
 }
 
-static void AddGrpcPrefix(butil::IOBuf* body, bool compressed) {
+static void AddGrpcPrefix(flare::io::IOBuf* body, bool compressed) {
     char buf[5];
     buf[0] = (compressed ? 1 : 0);
     *(uint32_t*)(buf + 1) = butil::HostToNet32(body->size());
-    butil::IOBuf tmp_buf;
+    flare::io::IOBuf tmp_buf;
     tmp_buf.append(buf, sizeof(buf));
-    tmp_buf.append(butil::IOBuf::Movable(*body));
+    tmp_buf.append(flare::io::IOBuf::Movable(*body));
     body->swap(tmp_buf);
 }
 
-static bool RemoveGrpcPrefix(butil::IOBuf* body, bool* compressed) {
+static bool RemoveGrpcPrefix(flare::io::IOBuf* body, bool* compressed) {
     if (body->empty()) {
         *compressed = false;
         return true;
@@ -257,7 +258,7 @@ static bool RemoveGrpcPrefix(butil::IOBuf* body, bool* compressed) {
 }
 
 void ProcessHttpResponse(InputMessageBase* msg) {
-    const int64_t start_parse_us = butil::cpuwide_time_us();
+    const int64_t start_parse_us = flare::base::cpuwide_time_us();
     DestroyingPtr<HttpContext> imsg_guard(static_cast<HttpContext*>(msg));
     Socket* socket = imsg_guard->socket();
     uint64_t cid_value;
@@ -277,7 +278,7 @@ void ProcessHttpResponse(InputMessageBase* msg) {
     const int rc = bthread_id_lock(cid, (void**)&cntl);
     if (rc != 0) {
         LOG_IF(ERROR, rc != EINVAL && rc != EPERM)
-            << "Fail to lock correlation_id=" << cid << ": " << berror(rc);
+            << "Fail to lock correlation_id=" << cid << ": " << flare_error(rc);
         return;
     }
 
@@ -294,7 +295,7 @@ void ProcessHttpResponse(InputMessageBase* msg) {
 
     HttpHeader* res_header = &cntl->http_response();
     res_header->Swap(imsg_guard->header());
-    butil::IOBuf& res_body = imsg_guard->body();
+    flare::io::IOBuf& res_body = imsg_guard->body();
     CHECK(cntl->response_attachment().empty());
     const int saved_error = cntl->ErrorCode();
 
@@ -374,7 +375,7 @@ void ProcessHttpResponse(InputMessageBase* msg) {
         // ErrorCode of RPC is unified to EHTTP.
         const int sc = res_header->status_code();
         if (sc < 200 || sc >= 300) {
-            std::string err = butil::string_printf(
+            std::string err = flare::base::string_printf(
                     "HTTP/%d.%d %d %s",
                     res_header->major_version(),
                     res_header->minor_version(),
@@ -422,7 +423,7 @@ void ProcessHttpResponse(InputMessageBase* msg) {
         if (encoding != NULL && *encoding == common->GZIP) {
             TRACEPRINTF("Decompressing response=%lu",
                         (unsigned long)res_body.size());
-            butil::IOBuf uncompressed;
+            flare::io::IOBuf uncompressed;
             if (!policy::GzipDecompress(res_body, &uncompressed)) {
                 cntl->SetFailed(ERESPONSE, "Fail to un-gzip response body");
                 break;
@@ -436,7 +437,7 @@ void ProcessHttpResponse(InputMessageBase* msg) {
             }
         } else if (content_type == HTTP_CONTENT_JSON) {
             // message body is json
-            butil::IOBufAsZeroCopyInputStream wrapper(res_body);
+            flare::io::IOBufAsZeroCopyInputStream wrapper(res_body);
             std::string err;
             json2pb::Json2PbOptions options;
             options.base64_to_bytes = cntl->has_pb_bytes_to_base64();
@@ -458,7 +459,7 @@ void ProcessHttpResponse(InputMessageBase* msg) {
     accessor.OnResponse(cid, saved_error);
 }
 
-void SerializeHttpRequest(butil::IOBuf* /*not used*/,
+void SerializeHttpRequest(flare::io::IOBuf* /*not used*/,
                           Controller* cntl,
                           const google::protobuf::Message* pbreq) {
     HttpHeader& hreq = cntl->http_request();
@@ -505,7 +506,7 @@ void SerializeHttpRequest(butil::IOBuf* /*not used*/,
             is_grpc = (is_http2 && is_grpc_ct);
         }
 
-        butil::IOBufAsZeroCopyOutputStream wrapper(&cntl->request_attachment());
+        flare::io::IOBufAsZeroCopyOutputStream wrapper(&cntl->request_attachment());
         if (content_type == HTTP_CONTENT_PROTO) {
             // Serialize content as protobuf
             if (!pbreq->SerializeToZeroCopyStream(&wrapper)) {
@@ -551,7 +552,7 @@ void SerializeHttpRequest(butil::IOBuf* /*not used*/,
         const size_t request_size = cntl->request_attachment().size();
         if (request_size >= (size_t)FLAGS_http_body_compress_threshold) {
             TRACEPRINTF("Compressing request=%lu", (unsigned long)request_size);
-            butil::IOBuf compressed;
+            flare::io::IOBuf compressed;
             if (GzipCompress(cntl->request_attachment(), &compressed, NULL)) {
                 cntl->request_attachment().swap(compressed);
                 if (is_grpc) {
@@ -569,7 +570,7 @@ void SerializeHttpRequest(butil::IOBuf* /*not used*/,
     // Fill log-id if user set it.
     if (cntl->has_log_id()) {
         hreq.SetHeader(common->LOG_ID,
-                       butil::string_printf("%llu", (unsigned long long)cntl->log_id()));
+                       flare::base::string_printf("%llu", (unsigned long long)cntl->log_id()));
     }
     if (!cntl->request_id().empty()) {
         hreq.SetHeader(FLAGS_request_id_header, cntl->request_id());
@@ -593,7 +594,7 @@ void SerializeHttpRequest(butil::IOBuf* /*not used*/,
             hreq.SetHeader(common->TE, common->TRAILERS);
             if (cntl->timeout_ms() >= 0) {
                 hreq.SetHeader(common->GRPC_TIMEOUT,
-                        butil::string_printf("%" PRId64 "m", cntl->timeout_ms()));
+                        flare::base::string_printf("%" PRId64 "m", cntl->timeout_ms()));
             }
             // Append compressed and length before body
             AddGrpcPrefix(&cntl->request_attachment(), grpc_compressed);
@@ -617,21 +618,21 @@ void SerializeHttpRequest(butil::IOBuf* /*not used*/,
 
     Span* span = accessor.span();
     if (span) {
-        hreq.SetHeader("x-bd-trace-id", butil::string_printf(
+        hreq.SetHeader("x-bd-trace-id", flare::base::string_printf(
                            "%llu", (unsigned long long)span->trace_id()));
-        hreq.SetHeader("x-bd-span-id", butil::string_printf(
+        hreq.SetHeader("x-bd-span-id", flare::base::string_printf(
                            "%llu", (unsigned long long)span->span_id()));
-        hreq.SetHeader("x-bd-parent-span-id", butil::string_printf(
+        hreq.SetHeader("x-bd-parent-span-id", flare::base::string_printf(
                            "%llu", (unsigned long long)span->parent_span_id()));
     }
 }
 
-void PackHttpRequest(butil::IOBuf* buf,
+void PackHttpRequest(flare::io::IOBuf* buf,
                      SocketMessage**,
                      uint64_t correlation_id,
                      const google::protobuf::MethodDescriptor*,
                      Controller* cntl,
-                     const butil::IOBuf& /*unused*/,
+                     const flare::io::IOBuf& /*unused*/,
                      const Authenticator* auth) {
     if (cntl->connection_type() == CONNECTION_TYPE_SINGLE) {
         return cntl->SetFailed(EREQUEST, "http can't work with CONNECTION_TYPE_SINGLE");
@@ -711,7 +712,7 @@ HttpResponseSender::~HttpResponseSender() {
     ControllerPrivateAccessor accessor(cntl);
     Span* span = accessor.span();
     if (span) {
-        span->set_start_send_us(butil::cpuwide_time_us());
+        span->set_start_send_us(flare::base::cpuwide_time_us());
     }
     ConcurrencyRemover concurrency_remover(_method_status, cntl, _received_us);
     Socket* socket = accessor.get_sending_socket();
@@ -752,7 +753,7 @@ HttpResponseSender::~HttpResponseSender() {
         !cntl->Failed()) {
         // ^ pb response in failed RPC is undefined, no need to convert.
         
-        butil::IOBufAsZeroCopyOutputStream wrapper(&cntl->response_attachment());
+        flare::io::IOBufAsZeroCopyOutputStream wrapper(&cntl->response_attachment());
         if (content_type == HTTP_CONTENT_PROTO) {
             if (!res->SerializeToZeroCopyStream(&wrapper)) {
                 cntl->SetFailed(ERESPONSE, "Fail to serialize %s", res->GetTypeName().c_str());
@@ -819,7 +820,7 @@ HttpResponseSender::~HttpResponseSender() {
             }
             // Fill ErrorCode into header
             res_header->SetHeader(common->ERROR_CODE,
-                                  butil::string_printf("%d", cntl->ErrorCode()));
+                                  flare::base::string_printf("%d", cntl->ErrorCode()));
 
             // Fill body with ErrorText.
             // user may compress the output and change content-encoding. However
@@ -844,7 +845,7 @@ HttpResponseSender::~HttpResponseSender() {
         if (response_size >= (size_t)FLAGS_http_body_compress_threshold
             && (is_http2 || SupportGzip(cntl))) {
             TRACEPRINTF("Compressing response=%lu", (unsigned long)response_size);
-            butil::IOBuf tmpbuf;
+            flare::io::IOBuf tmpbuf;
             if (GzipCompress(cntl->response_attachment(), &tmpbuf, NULL)) {
                 cntl->response_attachment().swap(tmpbuf);
                 if (is_grpc) {
@@ -890,11 +891,11 @@ HttpResponseSender::~HttpResponseSender() {
             rc = socket->Write(h2_response, &wopt);
         }
     } else {
-        butil::IOBuf* content = NULL;
+        flare::io::IOBuf* content = NULL;
         if (cntl->Failed() || !cntl->has_progressive_writer()) {
             content = &cntl->response_attachment();
         }
-        butil::IOBuf res_buf;
+        flare::io::IOBuf res_buf;
         MakeRawHttpResponse(&res_buf, res_header, content);
         if (FLAGS_http_verbose) {
             PrintMessage(res_buf, false, !!content);
@@ -914,7 +915,7 @@ HttpResponseSender::~HttpResponseSender() {
     }
     if (span) {
         // TODO: this is not sent
-        span->set_sent_us(butil::cpuwide_time_us());
+        span->set_sent_us(flare::base::cpuwide_time_us());
     }
 }
 
@@ -922,7 +923,7 @@ HttpResponseSender::~HttpResponseSender() {
 // put it into `unresolved_path'
 static void FillUnresolvedPath(std::string* unresolved_path,
                                const std::string& uri_path,
-                               butil::StringSplitter& splitter) {
+                               flare::base::StringSplitter& splitter) {
     if (unresolved_path == NULL) {
         return;
     }
@@ -935,7 +936,7 @@ static void FillUnresolvedPath(std::string* unresolved_path,
         uri_path.c_str() + uri_path.size() - splitter.field();
     unresolved_path->reserve(path_len);
     unresolved_path->clear();
-    for (butil::StringSplitter slash_sp(
+    for (flare::base::StringSplitter slash_sp(
              splitter.field(), splitter.field() + path_len, '/');
          slash_sp != NULL; ++slash_sp) {
         if (!unresolved_path->empty()) {
@@ -949,15 +950,15 @@ inline const Server::MethodProperty*
 FindMethodPropertyByURIImpl(const std::string& uri_path, const Server* server,
                             std::string* unresolved_path) {
     ServerPrivateAccessor wrapper(server);
-    butil::StringSplitter splitter(uri_path.c_str(), '/');
+    flare::base::StringSplitter splitter(uri_path.c_str(), '/');
     // Show index page for empty URI
     if (NULL == splitter) {
         return wrapper.FindMethodPropertyByFullName(
             IndexService::descriptor()->full_name(), common->DEFAULT_METHOD);
     }
-    butil::StringPiece service_name(splitter.field(), splitter.length());
+    std::string_view service_name(splitter.field(), splitter.length());
     const bool full_service_name =
-        (service_name.find('.') != butil::StringPiece::npos);
+        (service_name.find('.') != std::string_view::npos);
     const Server::ServiceProperty* const sp = 
         (full_service_name ?
          wrapper.FindServicePropertyByFullName(service_name) :
@@ -969,10 +970,10 @@ FindMethodPropertyByURIImpl(const std::string& uri_path, const Server* server,
     // Find restful methods by uri.
     if (sp->restful_map) {
         ++splitter;
-        butil::StringPiece left_path;
+        std::string_view left_path;
         if (splitter) {
             // The -1 is for including /, always safe because of ++splitter
-            left_path.set(splitter.field() - 1, uri_path.c_str() +
+            left_path = std::string_view(splitter.field() - 1, uri_path.c_str() +
                           uri_path.size() - splitter.field() + 1);
         }
         return sp->restful_map->FindMethodProperty(left_path, unresolved_path);
@@ -984,9 +985,9 @@ FindMethodPropertyByURIImpl(const std::string& uri_path, const Server* server,
 
     // Regard URI as [service_name]/[method_name]
     const Server::MethodProperty* mp = NULL;
-    butil::StringPiece method_name;
+    std::string_view method_name;
     if (++splitter != NULL) {
-        method_name.set(splitter.field(), splitter.length());
+        method_name = std::string_view(splitter.field(), splitter.length());
         // Copy splitter rather than modifying it directly since it's used
         // in later branches.
         mp = wrapper.FindMethodPropertyByFullName(service_name, method_name);
@@ -1039,7 +1040,7 @@ FindMethodPropertyByURI(const std::string& uri_path, const Server* server,
     return NULL;
 }
 
-ParseResult ParseHttpMessage(butil::IOBuf *source, Socket *socket,
+ParseResult ParseHttpMessage(flare::io::IOBuf *source, Socket *socket,
                              bool read_eof, const void* /*arg*/) {
     HttpContext* http_imsg = 
         static_cast<HttpContext*>(socket->parsing_context());
@@ -1146,7 +1147,7 @@ ParseResult ParseHttpMessage(butil::IOBuf *source, Socket *socket,
                 return MakeParseError(PARSE_ERROR_NOT_ENOUGH_DATA);
             }
             // Send 400 back.
-            butil::IOBuf bad_req;
+            flare::io::IOBuf bad_req;
             HttpHeader header;
             header.set_status_code(HTTP_STATUS_BAD_REQUEST);
             MakeRawHttpRequest(&bad_req, &header, socket->remote_side(), NULL);
@@ -1192,7 +1193,7 @@ bool VerifyHttpRequest(const InputMessageBase* msg) {
     if (authorization == NULL) {
         return false;
     }
-    butil::EndPoint user_addr;
+    flare::base::end_point user_addr;
     if (!GetUserAddressFromHeader(http_request->header(), &user_addr)) {
         user_addr = socket->remote_side();
     }
@@ -1211,7 +1212,7 @@ void EndRunningCallMethodInPool(
     ::google::protobuf::Closure* done);
 
 void ProcessHttpRequest(InputMessageBase *msg) {
-    const int64_t start_parse_us = butil::cpuwide_time_us();
+    const int64_t start_parse_us = flare::base::cpuwide_time_us();
     DestroyingPtr<HttpContext> imsg_guard(static_cast<HttpContext*>(msg));
     SocketUniquePtr socket_guard(imsg_guard->ReleaseSocket());
     Socket* socket = socket_guard.get();
@@ -1235,9 +1236,9 @@ void ProcessHttpRequest(InputMessageBase *msg) {
     ControllerPrivateAccessor accessor(cntl);
     HttpHeader& req_header = cntl->http_request();
     imsg_guard->header().Swap(req_header);
-    butil::IOBuf& req_body = imsg_guard->body();
+    flare::io::IOBuf& req_body = imsg_guard->body();
 
-    butil::EndPoint user_addr;
+    flare::base::end_point user_addr;
     if (!GetUserAddressFromHeader(req_header, &user_addr)) {
         user_addr = socket->remote_side();
     }
@@ -1329,7 +1330,7 @@ void ProcessHttpRequest(InputMessageBase *msg) {
         google::protobuf::Closure* done = new HttpResponseSenderAsDone(&resp_sender);
         if (span) {
             span->ResetServerSpanName(md->full_name());
-            span->set_start_callback_us(butil::cpuwide_time_us());
+            span->set_start_callback_us(flare::base::cpuwide_time_us());
             span->AsParent();
         }
         // `cntl', `req' and `res' will be deleted inside `done'
@@ -1350,7 +1351,7 @@ void ProcessHttpRequest(InputMessageBase *msg) {
     } else if (sp->service->GetDescriptor() == BadMethodService::descriptor()) {
         BadMethodRequest breq;
         BadMethodResponse bres;
-        butil::StringSplitter split(path.c_str(), '/');
+        flare::base::StringSplitter split(path.c_str(), '/');
         breq.set_service_name(std::string(split.field(), split.length()));
         sp->service->CallMethod(sp->method, cntl, &breq, &bres, NULL);
         return;
@@ -1376,7 +1377,7 @@ void ProcessHttpRequest(InputMessageBase *msg) {
     if (!sp->is_builtin_service && !sp->params.is_tabbed) {
         if (socket->is_overcrowded()) {
             cntl->SetFailed(EOVERCROWDED, "Connection to %s is overcrowded",
-                            butil::endpoint2str(socket->remote_side()).c_str());
+                            flare::base::endpoint2str(socket->remote_side()).c_str());
             return;
         }
         if (!server_accessor.AddConcurrency(cntl)) {
@@ -1448,7 +1449,7 @@ void ProcessHttpRequest(InputMessageBase *msg) {
                         ConvertGrpcTimeoutToUS(req_header.GetHeader(common->GRPC_TIMEOUT));
                     if (timeout_value_us >= 0) {
                         accessor.set_deadline_us(
-                                butil::gettimeofday_us() + timeout_value_us);
+                                flare::base::gettimeofday_us() + timeout_value_us);
                     }
                 }
             } else {
@@ -1457,7 +1458,7 @@ void ProcessHttpRequest(InputMessageBase *msg) {
             if (encoding != NULL && *encoding == common->GZIP) {
                 TRACEPRINTF("Decompressing request=%lu",
                             (unsigned long)req_body.size());
-                butil::IOBuf uncompressed;
+                flare::io::IOBuf uncompressed;
                 if (!policy::GzipDecompress(req_body, &uncompressed)) {
                     cntl->SetFailed(EREQUEST, "Fail to un-gzip request body");
                     return;
@@ -1471,7 +1472,7 @@ void ProcessHttpRequest(InputMessageBase *msg) {
                     return;
                 }
             } else {
-                butil::IOBufAsZeroCopyInputStream wrapper(req_body);
+                flare::io::IOBufAsZeroCopyInputStream wrapper(req_body);
                 std::string err;
                 json2pb::Json2PbOptions options;
                 options.base64_to_bytes = sp->params.pb_bytes_to_base64;
@@ -1492,7 +1493,7 @@ void ProcessHttpRequest(InputMessageBase *msg) {
     imsg_guard.reset();  // optional, just release resourse ASAP
 
     if (span) {
-        span->set_start_callback_us(butil::cpuwide_time_us());
+        span->set_start_callback_us(flare::base::cpuwide_time_us());
         span->AsParent();
     }
     if (!FLAGS_usercode_in_pthread) {
@@ -1506,7 +1507,7 @@ void ProcessHttpRequest(InputMessageBase *msg) {
     }
 }
 
-bool ParseHttpServerAddress(butil::EndPoint* point, const char* server_addr_and_port) {
+bool ParseHttpServerAddress(flare::base::end_point* point, const char* server_addr_and_port) {
     std::string scheme;
     std::string host;
     int port = -1;

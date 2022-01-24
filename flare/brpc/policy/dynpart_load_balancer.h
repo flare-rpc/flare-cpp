@@ -21,7 +21,7 @@
 
 #include <vector>                                      // std::vector
 #include <map>                                         // std::map
-#include "flare/butil/containers/doubly_buffered_data.h"
+#include "flare/container/doubly_buffered_data.h"
 #include "flare/brpc/load_balancer.h"
 
 
@@ -38,7 +38,7 @@ public:
     size_t AddServersInBatch(const std::vector<ServerId>& servers);
     size_t RemoveServersInBatch(const std::vector<ServerId>& servers);
     int SelectServer(const SelectIn& in, SelectOut* out);
-    DynPartLoadBalancer* New(const butil::StringPiece&) const;
+    DynPartLoadBalancer* New(const std::string_view&) const;
     void Destroy();
     void Describe(std::ostream&, const DescribeOptions& options);
 
@@ -52,7 +52,7 @@ private:
     static size_t BatchAdd(Servers& bg, const std::vector<ServerId>& servers);
     static size_t BatchRemove(Servers& bg, const std::vector<ServerId>& servers);
 
-    butil::DoublyBufferedData<Servers> _db_servers;
+    flare::container::DoublyBufferedData<Servers> _db_servers;
 };
 
 }  // namespace policy

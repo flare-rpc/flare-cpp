@@ -21,7 +21,7 @@
 
 #include <gflags/gflags.h>
 #include <flare/bthread/bthread.h>
-#include <flare/butil/logging.h>
+#include "flare/base/logging.h"
 #include <flare/brpc/server.h>
 #include <flare/brpc/channel.h>
 #include <flare/brpc/thrift_message.h>

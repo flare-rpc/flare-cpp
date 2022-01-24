@@ -65,9 +65,9 @@
 
 #include "flare/butil/basictypes.h"
 #include "flare/butil/base_export.h"
-#include "flare/butil/logging.h"
+#include "flare/base/logging.h"
 #include "flare/butil/memory/ref_counted.h"
-#include "flare/butil/type_traits.h"
+#include "flare/base/type_traits.h"
 
 namespace butil {
 
@@ -151,9 +151,9 @@ class SupportsWeakPtrBase {
   template<typename Derived>
   static WeakPtr<Derived> StaticAsWeakPtr(Derived* t) {
     typedef
-        is_convertible<Derived, internal::SupportsWeakPtrBase&> convertible;
-    COMPILE_ASSERT(convertible::value,
-                   AsWeakPtr_argument_inherits_from_SupportsWeakPtr);
+        std::is_convertible<Derived, internal::SupportsWeakPtrBase&> convertible;
+    //COMPILE_ASSERT(convertible::value,
+    //               AsWeakPtr_argument_inherits_from_SupportsWeakPtr);
     return AsWeakPtrImpl<Derived>(t, *t);
   }
 

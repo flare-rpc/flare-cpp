@@ -94,7 +94,7 @@ TEST(ScopedTempDir, MultipleInvocations) {
   EXPECT_FALSE(other_dir.CreateUniqueTempDir());
 }
 
-#if defined(OS_WIN)
+#if defined(FLARE_PLATFORM_WINDOWS)
 TEST(ScopedTempDir, LockedTempDir) {
   ScopedTempDir dir;
   EXPECT_TRUE(dir.CreateUniqueTempDir());
@@ -108,6 +108,6 @@ TEST(ScopedTempDir, LockedTempDir) {
   // Now, we should be able to delete.
   EXPECT_TRUE(dir.Delete());
 }
-#endif  // defined(OS_WIN)
+#endif  // defined(FLARE_PLATFORM_WINDOWS)
 
 }  // namespace butil

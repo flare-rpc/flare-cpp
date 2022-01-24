@@ -19,13 +19,13 @@
 #include <vector>
 #include <gflags/gflags.h>
 #include "flare/brpc/cluster_recover_policy.h"
-#include "flare/butil/scoped_lock.h"
-#include "flare/butil/synchronization/lock.h"
+#include "flare/base/scoped_lock.h"
+#include "flare/base/lock.h"
 #include "flare/brpc/server_id.h"
 #include "flare/brpc/socket.h"
-#include "flare/butil/fast_rand.h"
-#include "flare/butil/time.h"
-#include "flare/butil/string_splitter.h"
+#include "flare/base/fast_rand.h"
+#include "flare/base/time.h"
+#include "flare/base/string_splitter.h"
 
 namespace brpc {
 
@@ -43,7 +43,7 @@ DefaultClusterRecoverPolicy::DefaultClusterRecoverPolicy(
     , _usable_cache_time_ms(0) { }
 
 void DefaultClusterRecoverPolicy::StartRecover() {
-    std::unique_lock<butil::Mutex> mu(_mutex);
+    std::unique_lock<flare::base::Mutex> mu(_mutex);
     _recovering = true;
 }
 
@@ -51,8 +51,8 @@ bool DefaultClusterRecoverPolicy::StopRecoverIfNecessary() {
     if (!_recovering) {
         return false;
     }
-    int64_t now_ms = butil::gettimeofday_ms();
-    std::unique_lock<butil::Mutex> mu(_mutex);
+    int64_t now_ms = flare::base::gettimeofday_ms();
+    std::unique_lock<flare::base::Mutex> mu(_mutex);
     if (_last_usable_change_time_ms != 0 && _last_usable != 0 &&
             (now_ms - _last_usable_change_time_ms > _hold_seconds * 1000)) {
         _recovering = false;
@@ -80,7 +80,7 @@ uint64_t DefaultClusterRecoverPolicy::GetUsableServerCount(
         }
     }
     {
-        std::unique_lock<butil::Mutex> mu(_mutex);
+        std::unique_lock<flare::base::Mutex> mu(_mutex);
         _usable_cache = usable;
         _usable_cache_time_ms = now_ms;
     }
@@ -92,27 +92,27 @@ bool DefaultClusterRecoverPolicy::DoReject(const std::vector<ServerId>& server_l
     if (!_recovering) {
         return false;
     }
-    int64_t now_ms = butil::gettimeofday_ms();
+    int64_t now_ms = flare::base::gettimeofday_ms();
     uint64_t usable = GetUsableServerCount(now_ms, server_list);
     if (_last_usable != usable) {
-        std::unique_lock<butil::Mutex> mu(_mutex);
+        std::unique_lock<flare::base::Mutex> mu(_mutex);
         if (_last_usable != usable) {
             _last_usable = usable;
             _last_usable_change_time_ms = now_ms;
         }
     }
-    if (butil::fast_rand_less_than(_min_working_instances) >= usable) {
+    if (flare::base::fast_rand_less_than(_min_working_instances) >= usable) {
         return true;
     }
     return false;
 }
 
-bool GetRecoverPolicyByParams(const butil::StringPiece& params,
+bool GetRecoverPolicyByParams(const std::string_view& params,
                               std::shared_ptr<ClusterRecoverPolicy>* ptr_out) {
     int64_t min_working_instances = -1;
     int64_t hold_seconds = -1;
     bool has_meet_params = false;
-    for (butil::KeyValuePairsSplitter sp(params.begin(), params.end(), ' ', '=');
+    for (flare::base::KeyValuePairsSplitter sp(params.begin(), params.end(), ' ', '=');
             sp; ++sp) {
         if (sp.value().empty()) {
             LOG(ERROR) << "Empty value for " << sp.key() << " in lb parameter";

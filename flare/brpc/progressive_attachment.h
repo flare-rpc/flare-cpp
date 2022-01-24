@@ -20,9 +20,9 @@
 #define BRPC_PROGRESSIVE_ATTACHMENT_H
 
 #include "flare/brpc/callback.h"
-#include "flare/butil/static_atomic.h"
-#include "flare/butil/iobuf.h"
-#include "flare/butil/endpoint.h"       // butil::EndPoint
+#include "flare/base/static_atomic.h"
+#include "flare/io/iobuf.h"
+#include "flare/base/endpoint.h"       // flare::base::end_point
 #include "flare/bthread/types.h"        // bthread_id_t
 #include "flare/brpc/socket_id.h"       // SocketUniquePtr
 #include "flare/brpc/shared_object.h"   // SharedObject
@@ -36,12 +36,12 @@ public:
     // Write `data' as one HTTP chunk to peer ASAP.
     // Returns 0 on success, -1 otherwise and errno is set.
     // Errnos are same as what Socket.Write may set.
-    int Write(const butil::IOBuf& data);
+    int Write(const flare::io::IOBuf& data);
     int Write(const void* data, size_t n);
 
     // Get ip/port of peer/self.
-    butil::EndPoint remote_side() const;
-    butil::EndPoint local_side() const;
+    flare::base::end_point remote_side() const;
+    flare::base::end_point local_side() const;
 
     // [Not thread-safe and can only be called once]
     // Run the callback when the underlying connection is broken (thus
@@ -66,9 +66,9 @@ protected:
     bool _before_http_1_1;
     bool _pause_from_mark_rpc_as_done;
     std::atomic<int> _rpc_state;
-    butil::Mutex _mutex;
+    flare::base::Mutex _mutex;
     SocketUniquePtr _httpsock;
-    butil::IOBuf _saved_buf;
+    flare::io::IOBuf _saved_buf;
     bthread_id_t _notify_id;
 
 private:

@@ -18,7 +18,7 @@
 // A server to receive EchoRequest and send back EchoResponse.
 
 #include <gflags/gflags.h>
-#include <flare/butil/logging.h>
+#include "flare/base/logging.h"
 #include <flare/brpc/server.h>
 #include "echo.pb.h"
 #include <flare/brpc/stream.h>
@@ -33,7 +33,7 @@ DEFINE_int32(logoff_ms, 2000, "Maximum duration of server's LOGOFF state "
 class StreamReceiver : public brpc::StreamInputHandler {
 public:
     virtual int on_received_messages(brpc::StreamId id, 
-                                     butil::IOBuf *const messages[], 
+                                     flare::io::IOBuf *const messages[],
                                      size_t size) {
         std::ostringstream os;
         for (size_t i = 0; i < size; ++i) {

@@ -20,7 +20,7 @@
 #define BRPC_NAMING_SERVICE_THREAD_H
 
 #include <string>
-#include "flare/butil/intrusive_ptr.hpp"               // butil::intrusive_ptr
+#include "flare/container/intrusive_ptr.h"               // flare::container::intrusive_ptr
 #include "flare/bthread/bthread.h"                    // bthread_t
 #include "flare/brpc/server_id.h"                     // ServerId
 #include "flare/brpc/shared_object.h"                 // SharedObject
@@ -110,7 +110,7 @@ private:
         const std::vector<ServerNodeWithId>& src,
         std::vector<ServerId>* dst, const NamingServiceFilter* filter);
 
-    butil::Mutex _mutex;
+    flare::base::Mutex _mutex;
     bthread_t _tid;
     NamingService* _ns;
     std::string _protocol;
@@ -130,7 +130,7 @@ std::ostream& operator<<(std::ostream& os, const NamingServiceThread&);
 // available, unless `options->succeed_without_server' is on, this function
 // returns -1.
 // Returns 0 on success, -1 otherwise.
-int GetNamingServiceThread(butil::intrusive_ptr<NamingServiceThread>* ns_thread,
+int GetNamingServiceThread(flare::container::intrusive_ptr<NamingServiceThread>* ns_thread,
                            const char* url,
                            const GetNamingServiceThreadOptions* options);
 

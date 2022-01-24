@@ -18,14 +18,15 @@
 
 #include <iostream>
 #include <unordered_map>
-#include <flare/butil/time.h>
-#include <flare/butil/logging.h>
+#include "flare/base/time.h"
+#include "flare/base/logging.h"
 #include <flare/brpc/redis.h>
 #include <flare/brpc/channel.h>
 #include <flare/brpc/policy/redis_authenticator.h>
 #include <flare/brpc/server.h>
 #include <flare/brpc/redis_command.h>
 #include <gtest/gtest.h>
+#include "flare/base/strings.h"
 
 namespace brpc {
 DECLARE_int32(idle_timeout_second);
@@ -328,15 +329,15 @@ TEST_F(RedisTest, by_components) {
     brpc::RedisResponse response;
     brpc::Controller cntl;
 
-    butil::StringPiece comp1[] = { "incr", "counter2" };
-    butil::StringPiece comp2[] = { "decr", "counter2" };
-    butil::StringPiece comp3[] = { "incrby", "counter2", "10" };
-    butil::StringPiece comp4[] = { "decrby", "counter2", "20" };
+    std::string_view comp1[] = { "incr", "counter2" };
+    std::string_view comp2[] = { "decr", "counter2" };
+    std::string_view comp3[] = { "incrby", "counter2", "10" };
+    std::string_view comp4[] = { "decrby", "counter2", "20" };
 
-    request.AddCommandByComponents(comp1, arraysize(comp1));
-    request.AddCommandByComponents(comp2, arraysize(comp2));
-    request.AddCommandByComponents(comp3, arraysize(comp3));
-    request.AddCommandByComponents(comp4, arraysize(comp4));
+    request.AddCommandByComponents(comp1, FLARE_ARRAY_SIZE(comp1));
+    request.AddCommandByComponents(comp2, FLARE_ARRAY_SIZE(comp2));
+    request.AddCommandByComponents(comp3, FLARE_ARRAY_SIZE(comp3));
+    request.AddCommandByComponents(comp4, FLARE_ARRAY_SIZE(comp4));
 
     channel.CallMethod(NULL, &cntl, &request, &response, NULL);
     ASSERT_FALSE(cntl.Failed()) << cntl.ErrorText();
@@ -360,7 +361,7 @@ static std::string GeneratePassword() {
     std::string result;
     result.reserve(12);
     for (size_t i = 0; i < result.capacity(); ++i) {
-        result.push_back(butil::fast_rand_in('a', 'z'));
+        result.push_back(flare::base::fast_rand_in('a', 'z'));
     }
     return result;
 }
@@ -554,7 +555,7 @@ TEST_F(RedisTest, quote_and_escape) {
     request.Clear();
 }
 
-std::string GetCompleteCommand(const std::vector<butil::StringPiece>& commands) {
+std::string GetCompleteCommand(const std::vector<std::string_view>& commands) {
 	std::string res;
     for (int i = 0; i < (int)commands.size(); ++i) {
         if (i != 0) {
@@ -568,9 +569,9 @@ std::string GetCompleteCommand(const std::vector<butil::StringPiece>& commands) 
 
 TEST_F(RedisTest, command_parser) {
     brpc::RedisCommandParser parser;
-    butil::IOBuf buf;
-    std::vector<butil::StringPiece> command_out;
-    butil::Arena arena;
+    flare::io::IOBuf buf;
+    std::vector<std::string_view> command_out;
+    flare::memory::Arena arena;
     {
         // parse from whole command
         std::string command = "set abc edc";
@@ -590,7 +591,7 @@ TEST_F(RedisTest, command_parser) {
                 if (i == size - 1) {
                     ASSERT_EQ(brpc::PARSE_OK, parser.Consume(buf, &command_out, &arena));
                 } else {
-                    if (butil::fast_rand_less_than(2) == 0) {
+                    if (flare::base::fast_rand_less_than(2) == 0) {
                         ASSERT_EQ(brpc::PARSE_ERROR_NOT_ENOUGH_DATA,
                                 parser.Consume(buf, &command_out, &arena));
                     }
@@ -636,12 +637,12 @@ TEST_F(RedisTest, command_parser) {
 }
 
 TEST_F(RedisTest, redis_reply_codec) {
-    butil::Arena arena;
+    flare::memory::Arena arena;
     // status
     {
         brpc::RedisReply r(&arena);
-        butil::IOBuf buf;
-        butil::IOBufAppender appender;
+        flare::io::IOBuf buf;
+        flare::io::IOBufAppender appender;
         r.SetStatus("OK");
         ASSERT_TRUE(r.SerializeTo(&appender));
         appender.move_to(buf);
@@ -657,8 +658,8 @@ TEST_F(RedisTest, redis_reply_codec) {
     // error
     {
         brpc::RedisReply r(&arena);
-        butil::IOBuf buf;
-        butil::IOBufAppender appender;
+        flare::io::IOBuf buf;
+        flare::io::IOBufAppender appender;
         r.SetError("not exist \'key\'");
         ASSERT_TRUE(r.SerializeTo(&appender));
         appender.move_to(buf);
@@ -673,8 +674,8 @@ TEST_F(RedisTest, redis_reply_codec) {
     // string
     {
         brpc::RedisReply r(&arena);
-        butil::IOBuf buf;
-        butil::IOBufAppender appender;
+        flare::io::IOBuf buf;
+        flare::io::IOBufAppender appender;
         r.SetNullString();
         ASSERT_TRUE(r.SerializeTo(&appender));
         appender.move_to(buf);
@@ -712,8 +713,8 @@ TEST_F(RedisTest, redis_reply_codec) {
     // integer
     {
         brpc::RedisReply r(&arena);
-        butil::IOBuf buf;
-        butil::IOBufAppender appender;
+        flare::io::IOBuf buf;
+        flare::io::IOBufAppender appender;
         int t = 2;
         int input[] = { -1, 1234567 };
         const char* output[] = { ":-1\r\n", ":1234567\r\n" };
@@ -733,8 +734,8 @@ TEST_F(RedisTest, redis_reply_codec) {
     // array
     {
         brpc::RedisReply r(&arena);
-        butil::IOBuf buf;
-        butil::IOBufAppender appender;
+        flare::io::IOBuf buf;
+        flare::io::IOBufAppender appender;
         r.SetArray(3);
         brpc::RedisReply& sub_reply = r[0];
         sub_reply.SetArray(2);
@@ -807,7 +808,7 @@ TEST_F(RedisTest, redis_reply_codec) {
     }
 }
 
-butil::Mutex s_mutex;
+flare::base::Mutex s_mutex;
 std::unordered_map<std::string, std::string> m;
 std::unordered_map<std::string, int64_t> int_map;
 
@@ -816,19 +817,19 @@ public:
     RedisServiceImpl()
         : _batch_count(0) {}
 
-    brpc::RedisCommandHandlerResult OnBatched(const std::vector<butil::StringPiece>& args,
+    brpc::RedisCommandHandlerResult OnBatched(const std::vector<std::string_view>& args,
                    brpc::RedisReply* output, bool flush_batched) {
         if (_batched_command.empty() && flush_batched) {
             if (args[0] == "set") {
-                DoSet(args[1].as_string(), args[2].as_string(), output);
+                DoSet(flare::base::as_string(args[1]), flare::base::as_string(args[2]), output);
             } else if (args[0] == "get") {
-                DoGet(args[1].as_string(), output);
+                DoGet(flare::base::as_string(args[1]), output);
             }
             return brpc::REDIS_CMD_HANDLED;
         }
         std::vector<std::string> comm;
         for (int i = 0; i < (int)args.size(); ++i) {
-            comm.push_back(args[i].as_string());
+            comm.push_back(flare::base::as_string(args[i]));
         }
         _batched_command.push_back(comm);
         if (flush_batched) {
@@ -873,7 +874,7 @@ public:
         : _rs(rs)
         , _batch_process(batch_process) {}
 
-    brpc::RedisCommandHandlerResult Run(const std::vector<butil::StringPiece>& args,
+    brpc::RedisCommandHandlerResult Run(const std::vector<std::string_view>& args,
                                         brpc::RedisReply* output,
                                         bool flush_batched) {
         if (args.size() < 3) {
@@ -883,7 +884,7 @@ public:
         if (_batch_process) {
             return _rs->OnBatched(args, output, flush_batched);
         } else {
-            DoSet(args[1].as_string(), args[2].as_string(), output);
+            DoSet(flare::base::as_string(args[1]), flare::base::as_string(args[2]), output);
             return brpc::REDIS_CMD_HANDLED;
         }
     }
@@ -904,7 +905,7 @@ public:
         : _rs(rs)
         , _batch_process(batch_process) {}
 
-    brpc::RedisCommandHandlerResult Run(const std::vector<butil::StringPiece>& args,
+    brpc::RedisCommandHandlerResult Run(const std::vector<std::string_view>& args,
                                         brpc::RedisReply* output,
                                         bool flush_batched) {
         if (args.size() < 2) {
@@ -914,7 +915,7 @@ public:
         if (_batch_process) {
             return _rs->OnBatched(args, output, flush_batched);
         } else {
-            DoGet(args[1].as_string(), output);
+            DoGet(flare::base::as_string(args[1]), output);
             return brpc::REDIS_CMD_HANDLED;
         }
     }
@@ -937,7 +938,7 @@ class IncrCommandHandler : public brpc::RedisCommandHandler {
 public:
     IncrCommandHandler() {}
 
-    brpc::RedisCommandHandlerResult Run(const std::vector<butil::StringPiece>& args,
+    brpc::RedisCommandHandlerResult Run(const std::vector<std::string_view>& args,
                                         brpc::RedisReply* output,
                                         bool flush_batched) {
         if (args.size() < 2) {
@@ -946,7 +947,7 @@ public:
         }
         int64_t value;
         s_mutex.lock();
-        value = ++int_map[args[1].as_string()];
+        value = ++int_map[flare::base::as_string(args[1])];
         s_mutex.unlock();
         output->SetInteger(value);
         return brpc::REDIS_CMD_HANDLED;
@@ -996,7 +997,7 @@ TEST_F(RedisTest, server_sanity) {
     ASSERT_EQ(brpc::REDIS_REPLY_STRING, response.reply(5).type());
     ASSERT_STREQ("value2", response.reply(5).c_str());
     ASSERT_EQ(brpc::REDIS_REPLY_ERROR, response.reply(6).type());
-    ASSERT_TRUE(butil::StringPiece(response.reply(6).error_message()).starts_with("ERR unknown command"));
+    ASSERT_TRUE(flare::base::starts_with(response.reply(6).error_message(), "ERR unknown command"));
 
     cntl.Reset(); 
     request.Clear();
@@ -1004,7 +1005,7 @@ TEST_F(RedisTest, server_sanity) {
     std::string value3("value3");
     value3.append(1, '\0');
     value3.append(1, 'a');
-    std::vector<butil::StringPiece> pieces;
+    std::vector<std::string_view> pieces;
     pieces.push_back("set");
     pieces.push_back("key3");
     pieces.push_back(value3);
@@ -1078,7 +1079,7 @@ class MultiCommandHandler : public brpc::RedisCommandHandler {
 public:
     MultiCommandHandler() {}
 
-    brpc::RedisCommandHandlerResult Run(const std::vector<butil::StringPiece>& args,
+    brpc::RedisCommandHandlerResult Run(const std::vector<std::string_view>& args,
                                         brpc::RedisReply* output,
                                         bool flush_batched) {
         output->SetStatus("OK");
@@ -1091,7 +1092,7 @@ public:
 
     class MultiTransactionHandler : public brpc::RedisCommandHandler {
     public:
-        brpc::RedisCommandHandlerResult Run(const std::vector<butil::StringPiece>& args,
+        brpc::RedisCommandHandlerResult Run(const std::vector<std::string_view>& args,
                                             brpc::RedisReply* output,
                                             bool flush_batched) {
             if (args[0] == "multi") {
@@ -1101,7 +1102,7 @@ public:
             if (args[0] != "exec") {
                 std::vector<std::string> comm;
                 for (int i = 0; i < (int)args.size(); ++i) {
-                    comm.push_back(args[i].as_string());
+                    comm.push_back(flare::base::as_string(args[i]));
                 }
                 _commands.push_back(comm);
                 output->SetStatus("QUEUED");

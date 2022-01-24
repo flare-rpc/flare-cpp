@@ -18,7 +18,7 @@
 #ifndef BUTIL_FD_GUARD_H
 #define BUTIL_FD_GUARD_H
 
-#include "flare/butil/files/scoped_file.h"
+#include "flare/base/scoped_file.h"
 
 namespace butil {
 namespace files {

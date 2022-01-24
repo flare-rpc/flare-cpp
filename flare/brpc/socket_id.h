@@ -23,7 +23,7 @@
 // on internal structures, use opaque pointers instead.
 
 #include <stdint.h>               // uint64_t
-#include "flare/butil/unique_ptr.h"      // std::unique_ptr
+#include <memory>      // std::unique_ptr
 
 
 namespace brpc {

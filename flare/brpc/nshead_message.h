@@ -21,7 +21,7 @@
 
 #include <google/protobuf/message.h>
 #include "flare/brpc/nshead.h"                     // nshead_t
-#include "flare/butil/iobuf.h"                     // IOBuf
+#include "flare/io/iobuf.h"                     // IOBuf
 #include "flare/brpc/proto_base.pb.h"
 
 namespace brpc {
@@ -30,7 +30,7 @@ namespace brpc {
 class NsheadMessage : public ::google::protobuf::Message {
 public:
     nshead_t head;
-    butil::IOBuf body;
+    flare::io::IOBuf body;
     
 public:
     NsheadMessage();

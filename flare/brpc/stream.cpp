@@ -19,9 +19,9 @@
 #include "flare/brpc/stream.h"
 
 #include <gflags/gflags.h>
-#include "flare/butil/time.h"
-#include "flare/butil/object_pool.h"
-#include "flare/butil/unique_ptr.h"
+#include "flare/base/time.h"
+#include "flare/memory/object_pool.h"
+#include <memory>
 #include "flare/bthread/unstable.h"
 #include "flare/brpc/log.h"
 #include "flare/brpc/socket.h"
@@ -36,7 +36,7 @@ namespace brpc {
 
 DECLARE_bool(usercode_in_pthread);
 
-const static butil::IOBuf *TIMEOUT_TASK = (butil::IOBuf*)-1L;
+const static flare::io::IOBuf *TIMEOUT_TASK = (flare::io::IOBuf*)-1L;
 
 Stream::Stream() 
     : _host_socket(NULL)
@@ -125,7 +125,7 @@ void Stream::BeforeRecycle(Socket *) {
 }
 
 ssize_t Stream::CutMessageIntoFileDescriptor(int /*fd*/, 
-                                             butil::IOBuf **data_list, 
+                                             flare::io::IOBuf **data_list,
                                              size_t size) {
     if (_host_socket == NULL) {
         CHECK(false) << "Not connected";
@@ -140,7 +140,7 @@ ssize_t Stream::CutMessageIntoFileDescriptor(int /*fd*/,
         errno = EBADF;
         return -1;
     }
-    butil::IOBuf out;
+    flare::io::IOBuf out;
     ssize_t len = 0;
     for (size_t i = 0; i < size; ++i) {
         StreamFrameMeta fm;
@@ -157,11 +157,11 @@ ssize_t Stream::CutMessageIntoFileDescriptor(int /*fd*/,
     return len;
 }
 
-void Stream::WriteToHostSocket(butil::IOBuf* b) {
+void Stream::WriteToHostSocket(flare::io::IOBuf* b) {
     BRPC_HANDLE_EOVERCROWDED(_host_socket->Write(b));
 }
 
-ssize_t Stream::CutMessageIntoSSLChannel(SSL*, butil::IOBuf**, size_t) {
+ssize_t Stream::CutMessageIntoSSLChannel(SSL*, flare::io::IOBuf**, size_t) {
     CHECK(false) << "Stream does support SSL";
     errno = EINVAL;
     return -1;
@@ -197,7 +197,7 @@ int Stream::Connect(Socket* ptr, const timespec*,
         bthread_mutex_unlock(&_connect_mutex);
         bthread_t tid;
         if (bthread_start_urgent(&tid, &BTHREAD_ATTR_NORMAL, RunOnConnect, meta) != 0) {
-            LOG(FATAL) << "Fail to start bthread, " << berror();
+            LOG(FATAL) << "Fail to start bthread, " << flare_error();
             RunOnConnect(meta);
         }
         return 0;
@@ -251,7 +251,7 @@ void Stream::TriggerOnConnectIfNeed() {
         bthread_mutex_unlock(&_connect_mutex);
         bthread_t tid;
         if (bthread_start_urgent(&tid, &BTHREAD_ATTR_NORMAL, RunOnConnect, meta) != 0) {
-            LOG(FATAL) << "Fail to start bthread, " << berror();
+            LOG(FATAL) << "Fail to start bthread, " << flare_error();
             RunOnConnect(meta);
         }
         return;
@@ -259,7 +259,7 @@ void Stream::TriggerOnConnectIfNeed() {
     bthread_mutex_unlock(&_connect_mutex);
 }
 
-int Stream::AppendIfNotFull(const butil::IOBuf &data) {
+int Stream::AppendIfNotFull(const flare::io::IOBuf &data) {
     if (_options.max_buf_size > 0) {
         std::unique_lock<bthread_mutex_t> lck(_congestion_control_mutex);
         if (_produced >= _remote_consumed + (size_t)_options.max_buf_size) {
@@ -275,12 +275,12 @@ int Stream::AppendIfNotFull(const butil::IOBuf &data) {
         }
         _produced += data.length();
     }
-    butil::IOBuf copied_data(data);
+    flare::io::IOBuf copied_data(data);
     const int rc = _fake_socket_weak_ref->Write(&copied_data);
     if (rc != 0) {
         // Stream may be closed by peer before
-        LOG(WARNING) << "Fail to write to _fake_socket, " << berror();
-        BAIDU_SCOPED_LOCK(_congestion_control_mutex);
+        LOG(WARNING) << "Fail to write to _fake_socket, " << flare_error();
+        FLARE_SCOPED_LOCK(_congestion_control_mutex);
         _produced -= data.length();
         return -1;
     }
@@ -329,7 +329,7 @@ int Stream::TriggerOnWritable(bthread_id_t id, void *data, int error_code) {
             : &BTHREAD_ATTR_NORMAL;
         bthread_t tid;
         if (bthread_start_background(&tid, attr, RunOnWritable, wm) != 0) {
-            LOG(FATAL) << "Fail to start bthread" << berror();
+            LOG(FATAL) << "Fail to start bthread" << flare_error();
             RunOnWritable(wm);
         }
     } else {
@@ -354,7 +354,7 @@ void Stream::Wait(void (*on_writable)(StreamId, void*, int), void* arg,
     bthread_id_t wait_id;
     const int rc = bthread_id_create(&wait_id, wm, TriggerOnWritable);
     if (rc != 0) {
-        CHECK(false) << "Fail to create bthread_id, " << berror(rc);
+        CHECK(false) << "Fail to create bthread_id, " << flare_error(rc);
         wm->error_code = rc;
         RunOnWritable(wm);
         return;
@@ -369,7 +369,7 @@ void Stream::Wait(void (*on_writable)(StreamId, void*, int), void* arg,
                                          OnTimedOut, 
                                          reinterpret_cast<void*>(wait_id.value));
         if (rc != 0) {
-            LOG(ERROR) << "Fail to add timer, " << berror(rc);
+            LOG(ERROR) << "Fail to add timer, " << flare_error(rc);
             CHECK_EQ(0, TriggerOnWritable(wait_id, wm, rc));
         }
     }
@@ -405,7 +405,7 @@ int Stream::Wait(const timespec* due_time) {
     return rc;
 }
 
-int Stream::OnReceived(const StreamFrameMeta& fm, butil::IOBuf *buf, Socket* sock) {
+int Stream::OnReceived(const StreamFrameMeta& fm, flare::io::IOBuf *buf, Socket* sock) {
     if (_host_socket == NULL) {
         if (SetHostSocket(sock) != 0) {
             return -1;
@@ -421,11 +421,11 @@ int Stream::OnReceived(const StreamFrameMeta& fm, butil::IOBuf *buf, Socket* soc
             _pending_buf->append(*buf);
             buf->clear();
         } else {
-            _pending_buf = new butil::IOBuf;
+            _pending_buf = new flare::io::IOBuf;
             _pending_buf->swap(*buf);
         }
         if (!fm.has_continuation()) {
-            butil::IOBuf *tmp = _pending_buf;
+            flare::io::IOBuf *tmp = _pending_buf;
             _pending_buf = NULL;
             if (bthread::execution_queue_execute(_consumer_queue, tmp) != 0) {
                 CHECK(false) << "Fail to push into channel";
@@ -452,7 +452,7 @@ int Stream::OnReceived(const StreamFrameMeta& fm, butil::IOBuf *buf, Socket* soc
 
 class MessageBatcher {
 public:
-    MessageBatcher(butil::IOBuf* storage[], size_t cap, Stream* s) 
+    MessageBatcher(flare::io::IOBuf* storage[], size_t cap, Stream* s)
         : _storage(storage)
         , _cap(cap)
         , _size(0)
@@ -470,7 +470,7 @@ public:
         }
         _size = 0;
     }
-    void push(butil::IOBuf* buf) {
+    void push(flare::io::IOBuf* buf) {
         if (_size == _cap) {
             flush();
         }
@@ -480,14 +480,14 @@ public:
     }
     size_t total_length() { return _total_length; }
 private:
-    butil::IOBuf** _storage;
+    flare::io::IOBuf** _storage;
     size_t _cap;
     size_t _size;
     size_t _total_length;
     Stream* _s;
 };
 
-int Stream::Consume(void *meta, bthread::TaskIterator<butil::IOBuf*>& iter) {
+int Stream::Consume(void *meta, bthread::TaskIterator<flare::io::IOBuf*>& iter) {
     Stream* s = (Stream*)meta;
     s->StopIdleTimer();
     if (iter.is_queue_stopped()) {
@@ -502,11 +502,11 @@ int Stream::Consume(void *meta, bthread::TaskIterator<butil::IOBuf*>& iter) {
         delete s;
         return 0;
     }
-    DEFINE_SMALL_ARRAY(butil::IOBuf*, buf_list, s->_options.messages_in_batch, 256);
+    DEFINE_SMALL_ARRAY(flare::io::IOBuf*, buf_list, s->_options.messages_in_batch, 256);
     MessageBatcher mb(buf_list, s->_options.messages_in_batch, s);
     bool has_timeout_task = false;
     for (; iter; ++iter) {
-        butil::IOBuf* t= *iter;
+        flare::io::IOBuf* t= *iter;
         if (t == TIMEOUT_TASK) {
             has_timeout_task = true;
         } else {
@@ -538,7 +538,7 @@ void Stream::SendFeedback() {
     fm.set_stream_id(_remote_settings.stream_id());
     fm.set_source_stream_id(id());
     fm.mutable_feedback()->set_consumed_size(_local_consumed);
-    butil::IOBuf out;
+    flare::io::IOBuf out;
     policy::PackStreamMessage(&out, fm, NULL);
     WriteToHostSocket(&out);
 }
@@ -565,16 +565,16 @@ void Stream::FillSettings(StreamSettings *settings) {
 }
 
 void OnIdleTimeout(void *arg) {
-    bthread::ExecutionQueueId<butil::IOBuf*> q = { (uint64_t)arg };
-    bthread::execution_queue_execute(q, (butil::IOBuf*)TIMEOUT_TASK);
+    bthread::ExecutionQueueId<flare::io::IOBuf*> q = { (uint64_t)arg };
+    bthread::execution_queue_execute(q, (flare::io::IOBuf*)TIMEOUT_TASK);
 }
 
 void Stream::StartIdleTimer() {
     if (_options.idle_timeout_ms < 0) {
         return;
     }
-    _start_idle_timer_us = butil::gettimeofday_us();
-    timespec due_time = butil::microseconds_to_timespec(
+    _start_idle_timer_us = flare::base::gettimeofday_us();
+    timespec due_time = flare::base::microseconds_to_timespec(
             _start_idle_timer_us + _options.idle_timeout_ms * 1000);
     const int rc = bthread_timer_add(&_idle_timer, due_time, OnIdleTimeout,
                                      (void*)(_consumer_queue.value));
@@ -618,10 +618,10 @@ int Stream::SetFailed(StreamId id) {
     return 0;
 }
 
-void Stream::HandleRpcResponse(butil::IOBuf* response_buffer) {
+void Stream::HandleRpcResponse(flare::io::IOBuf* response_buffer) {
     CHECK(!_remote_settings.IsInitialized());
     CHECK(_host_socket != NULL);
-    std::unique_ptr<butil::IOBuf> buf_guard(response_buffer);
+    std::unique_ptr<flare::io::IOBuf> buf_guard(response_buffer);
     ParseResult pr = policy::ParseRpcMessage(response_buffer, NULL, true, NULL);
     if (!pr.is_ok()) {
         CHECK(false);
@@ -636,13 +636,13 @@ void Stream::HandleRpcResponse(butil::IOBuf* response_buffer) {
     }
     _host_socket->PostponeEOF();
     _host_socket->ReAddress(&msg->_socket);
-    msg->_received_us = butil::gettimeofday_us(); 
-    msg->_base_real_us = butil::gettimeofday_us();
+    msg->_received_us = flare::base::gettimeofday_us();
+    msg->_base_real_us = flare::base::gettimeofday_us();
     msg->_arg = NULL; // ProcessRpcResponse() don't need arg
     policy::ProcessRpcResponse(msg);
 }
 
-int StreamWrite(StreamId stream_id, const butil::IOBuf &message) {
+int StreamWrite(StreamId stream_id, const flare::io::IOBuf &message) {
     SocketUniquePtr ptr;
     if (Socket::Address(stream_id, &ptr) != 0) {
         return EINVAL;

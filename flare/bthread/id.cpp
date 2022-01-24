@@ -20,11 +20,11 @@
 // Date: Sun Aug  3 12:46:15 CST 2014
 
 #include <deque>
-#include "flare/butil/logging.h"
+#include "flare/base/logging.h"
 #include "flare/bthread/butex.h"                       // butex_*
 #include "flare/bthread/mutex.h"
 #include "flare/bthread/list_of_abafree_id.h"
-#include "flare/butil/resource_pool.h"
+#include "flare/memory/resource_pool.h"
 #include "flare/bthread/bthread.h"
 
 namespace bthread {
@@ -90,7 +90,7 @@ public:
     }
     
 private:
-    DISALLOW_COPY_AND_ASSIGN(SmallQueue);
+    FLARE_DISALLOW_COPY_AND_ASSIGN(SmallQueue);
     
     int _begin;
     int _size;
@@ -107,7 +107,7 @@ struct PendingError {
     PendingError() : id(INVALID_BTHREAD_ID), error_code(0), location(NULL) {}
 };
 
-struct BAIDU_CACHELINE_ALIGNMENT Id {
+struct FLARE_CACHELINE_ALIGNMENT Id {
     // first_ver ~ locked_ver - 1: unlocked versions
     // locked_ver: locked
     // unlockable_ver: locked and about to be destroyed
@@ -148,9 +148,9 @@ struct BAIDU_CACHELINE_ALIGNMENT Id {
     inline uint32_t end_ver() const { return last_ver() + 1; }
 };
 
-BAIDU_CASSERT(sizeof(Id) % 64 == 0, sizeof_Id_must_align);
+static_assert(sizeof(Id) % 64 == 0, "sizeof_Id_must_align");
 
-typedef butil::ResourceId<Id> IdResourceId;
+typedef flare::memory::ResourceId<Id> IdResourceId;
 
 inline bthread_id_t make_id(uint32_t version, IdResourceId slot) {
     const bthread_id_t tmp =
@@ -285,7 +285,7 @@ void id_status(bthread_id_t id, std::ostream &os) {
 }
 
 void id_pool_status(std::ostream &os) {
-    os << butil::describe_resources<Id>() << '\n';
+    os << flare::memory::describe_resources<Id>() << '\n';
 }
 
 struct IdTraits {
@@ -304,7 +304,7 @@ struct IdResetter {
         : _error_code(ec), _error_text(et) {}
     void operator()(bthread_id_t & id) const {
         bthread_id_error2_verbose(
-            id, _error_code, _error_text, __FILE__ ":" BAIDU_SYMBOLSTR(__LINE__));
+            id, _error_code, _error_text, __FILE__ ":" FLARE_SYMBOLSTR(__LINE__));
         id = INVALID_BTHREAD_ID;
     }
 private:

@@ -18,8 +18,8 @@
 
 #include <openssl/hmac.h> // HMAC_CTX_init
 #include <google/protobuf/io/zero_copy_stream_impl_lite.h>
-#include "flare/butil/scoped_lock.h"
-#include "flare/butil/fast_rand.h"
+#include "flare/base/scoped_lock.h"
+#include "flare/base/fast_rand.h"
 #include "flare/butil/sys_byteorder.h"
 #include "flare/brpc/log.h"
 #include "flare/brpc/server.h"
@@ -28,6 +28,7 @@
 #include "flare/brpc/span.h"
 #include "flare/brpc/policy/dh.h"
 #include "flare/brpc/policy/rtmp_protocol.h"
+#include "flare/base/strings.h"
 
 // For printing logs with useful prefixes.
 #define RTMP_LOG(level, socket, mh)                                     \
@@ -106,32 +107,32 @@ static const size_t MAGIC_NUMBER_SIZE = 4; /* magic number */
 // ========== The handshaking described in RTMP spec ==========
 
 // The random data for handshaking
-static butil::IOBuf* s_rtmp_handshake_server_random = NULL;
+static flare::io::IOBuf* s_rtmp_handshake_server_random = NULL;
 static pthread_once_t s_sr_once = PTHREAD_ONCE_INIT;
 static void InitRtmpHandshakeServerRandom() {
     char buf[1528];
     for (int i = 0; i < 191; ++i) {
-        ((uint64_t*)buf)[i] = butil::fast_rand();
+        ((uint64_t*)buf)[i] = flare::base::fast_rand();
     }
-    s_rtmp_handshake_server_random = new butil::IOBuf;
+    s_rtmp_handshake_server_random = new flare::io::IOBuf;
     s_rtmp_handshake_server_random->append(buf, sizeof(buf));
 }
-static const butil::IOBuf& GetRtmpHandshakeServerRandom() {
+static const flare::io::IOBuf& GetRtmpHandshakeServerRandom() {
     pthread_once(&s_sr_once, InitRtmpHandshakeServerRandom);
     return *s_rtmp_handshake_server_random;
 }
 
-static butil::IOBuf* s_rtmp_handshake_client_random = NULL;
+static flare::io::IOBuf* s_rtmp_handshake_client_random = NULL;
 static pthread_once_t s_cr_once = PTHREAD_ONCE_INIT;
 static void InitRtmpHandshakeClientRandom() {
     char buf[1528];
     for (int i = 0; i < 191; ++i) {
-        ((uint64_t*)buf)[i] = butil::fast_rand();
+        ((uint64_t*)buf)[i] = flare::base::fast_rand();
     }
-    s_rtmp_handshake_client_random = new butil::IOBuf;
+    s_rtmp_handshake_client_random = new flare::io::IOBuf;
     s_rtmp_handshake_client_random->append(buf, sizeof(buf));
 }
-static const butil::IOBuf& GetRtmpHandshakeClientRandom() {
+static const flare::io::IOBuf& GetRtmpHandshakeClientRandom() {
     pthread_once(&s_cr_once, InitRtmpHandshakeClientRandom);
     return *s_rtmp_handshake_client_random;
 }
@@ -325,11 +326,11 @@ public:
 
 // ===== impl. =====
 void KeyBlock::Generate() {
-    _offset_data = butil::fast_rand() & 0xFFFFFFFF;
+    _offset_data = flare::base::fast_rand() & 0xFFFFFFFF;
     const uint8_t* p = (const uint8_t*)&_offset_data;
     _offset = ((uint32_t)p[0] + p[1] + p[2] + p[3]) % (SIZE - KEY_SIZE - 4);
     for (size_t i = 0; i < sizeof(_buf) / 8; ++i) {
-        ((uint64_t*)_buf)[i] = butil::fast_rand();
+        ((uint64_t*)_buf)[i] = flare::base::fast_rand();
     }
 }
 
@@ -352,11 +353,11 @@ void KeyBlock::Save(void* buf) const {
 }
 
 void DigestBlock::Generate() {
-    _offset_data = butil::fast_rand() & 0xFFFFFFFF;
+    _offset_data = flare::base::fast_rand() & 0xFFFFFFFF;
     const uint8_t* p = (const uint8_t*)&_offset_data;
     _offset = ((uint32_t)p[0] + p[1] + p[2] + p[3]) % (SIZE - DIGEST_SIZE - 4);
     for (size_t i = 0; i < sizeof(_buf) / 8; ++i) {
-        ((uint64_t*)_buf)[i] = butil::fast_rand();
+        ((uint64_t*)_buf)[i] = flare::base::fast_rand();
     }
 }
 
@@ -536,7 +537,7 @@ bool C2S2Base::ComputeDigest(const void* key, int key_size,
 bool C2S2Base::Generate(const void* key, int key_size,
                         const void* c1s1_digest) {
     for (int i = 0; i < (SIZE - DIGEST_SIZE) / 8; ++i) {
-        ((uint64_t*)random)[i] = butil::fast_rand();
+        ((uint64_t*)random)[i] = flare::base::fast_rand();
     }
     return ComputeDigest(key, key_size, c1s1_digest, digest);
 }
@@ -600,7 +601,7 @@ WriteBasicHeader(char** buf, RtmpChunkType chunk_type, uint32_t cs_id) {
 // Returns 0 on success, -1 otherwise.
 // Writing *all* is possible because we only call this fn during handshaking
 // and connecting, the data in total is generally less than socket buffer.
-static int WriteAll(int fd, butil::IOBuf* buf) {
+static int WriteAll(int fd, flare::io::IOBuf* buf) {
     while (!buf->empty()) {
         ssize_t nw = buf->cut_into_file_descriptor(fd);
         if (nw < 0) {
@@ -627,7 +628,7 @@ static int WriteAll(int fd, butil::IOBuf* buf) {
 // Used in rtmp.cpp
 int SendC0C1(int fd, bool* is_simple_handshake) {
     bool done_adobe_hs = false;
-    butil::IOBuf tmp;
+    flare::io::IOBuf tmp;
     if (!FLAGS_rtmp_client_use_simple_handshake) {
         adobe_hs::C1 c1;
         if (c1.Generate(adobe_hs::SCHEMA1)) {
@@ -666,7 +667,7 @@ const char* RtmpContext::state2str(State s) {
     return "Unknown state";
 }
 
-void RtmpContext::SetState(const butil::EndPoint& remote_side, State new_state) {
+void RtmpContext::SetState(const flare::base::end_point& remote_side, State new_state) {
     const State old_state = _state;
     _state = new_state;
     RPC_VLOG << remote_side << ": " << state2str(old_state)
@@ -692,7 +693,7 @@ RtmpUnsentMessage* MakeUnsentControlMessage(
 }
 
 RtmpUnsentMessage* MakeUnsentControlMessage(
-    uint8_t message_type, uint32_t chunk_stream_id, const butil::IOBuf& body) {
+    uint8_t message_type, uint32_t chunk_stream_id, const flare::io::IOBuf& body) {
     RtmpUnsentMessage* msg = new RtmpUnsentMessage;
     msg->header.message_length = body.size();
     msg->header.message_type = message_type;
@@ -703,7 +704,7 @@ RtmpUnsentMessage* MakeUnsentControlMessage(
 }
 
 RtmpUnsentMessage* MakeUnsentControlMessage(
-    uint8_t message_type, const butil::IOBuf& body) {
+    uint8_t message_type, const flare::io::IOBuf& body) {
     return MakeUnsentControlMessage(
         message_type, RTMP_CONTROL_CHUNK_STREAM_ID, body);
 }
@@ -740,7 +741,7 @@ RtmpContext::~RtmpContext() {
     if (!_mstream_map.empty()) {
         size_t ncstream = 0;
         size_t nsstream = 0;
-        for (butil::FlatMap<uint32_t, MessageStreamInfo>::iterator
+        for (flare::container::FlatMap<uint32_t, MessageStreamInfo>::iterator
                  it = _mstream_map.begin(); it != _mstream_map.end(); ++it) {
             if (it->second.stream->is_server_stream()) {
                 ++nsstream;
@@ -755,7 +756,7 @@ RtmpContext::~RtmpContext() {
     }
     
     // cancel incomplete transactions
-    for (butil::FlatMap<uint32_t, RtmpTransactionHandler*>::iterator
+    for (flare::container::FlatMap<uint32_t, RtmpTransactionHandler*>::iterator
              it = _trans_map.begin(); it != _trans_map.end(); ++it) {
         if (it->second) {
             it->second->Cancel();
@@ -780,28 +781,28 @@ void RtmpContext::Destroy() {
     delete this;
 }
 
-butil::Status
-RtmpUnsentMessage::AppendAndDestroySelf(butil::IOBuf* out, Socket* s) {
+flare::base::flare_status
+RtmpUnsentMessage::AppendAndDestroySelf(flare::io::IOBuf* out, Socket* s) {
     std::unique_ptr<RtmpUnsentMessage> destroy_self(this);
     if (s == NULL) { // abandoned
         RPC_VLOG << "Socket=NULL";
-        return butil::Status::OK();
+        return flare::base::flare_status::OK();
     }
     RtmpContext* ctx = static_cast<RtmpContext*>(s->parsing_context());
     RtmpChunkStream* cstream = ctx->GetChunkStream(chunk_stream_id);
     if (cstream == NULL) {
         s->SetFailed(EINVAL, "Invalid chunk_stream_id=%u", chunk_stream_id);
-        return butil::Status(EINVAL, "Invalid chunk_stream_id=%u", chunk_stream_id);
+        return flare::base::flare_status(EINVAL, "Invalid chunk_stream_id=%u", chunk_stream_id);
     }
     if (cstream->SerializeMessage(out, header, &body) != 0) {
         s->SetFailed(EINVAL, "Fail to serialize message");
-        return butil::Status(EINVAL, "Fail to serialize message");
+        return flare::base::flare_status(EINVAL, "Fail to serialize message");
     }
     if (new_chunk_size) {
         ctx->_chunk_size_out = new_chunk_size;
     }
     if (!next) {
-        return butil::Status::OK();
+        return flare::base::flare_status::OK();
     }
     RtmpUnsentMessage* p = next.release();
     destroy_self.reset();
@@ -914,8 +915,8 @@ void RtmpContext::DeallocateMessageStreamId(uint32_t stream_id) {
 }
 
 bool RtmpContext::FindMessageStream(
-    uint32_t stream_id, butil::intrusive_ptr<RtmpStreamBase>* stream) {
-    BAIDU_SCOPED_LOCK(_stream_mutex);
+    uint32_t stream_id, flare::container::intrusive_ptr<RtmpStreamBase>* stream) {
+    FLARE_SCOPED_LOCK(_stream_mutex);
     MessageStreamInfo* info = _mstream_map.seek(stream_id);
     if (info == NULL || info->stream == NULL) {
         return false;
@@ -933,7 +934,7 @@ bool RtmpContext::AddClientStream(RtmpStreamBase* stream) {
     }
     uint32_t chunk_stream_id = 0;
     {
-        std::unique_lock<butil::Mutex> mu(_stream_mutex);
+        std::unique_lock<flare::base::Mutex> mu(_stream_mutex);
         MessageStreamInfo& info = _mstream_map[stream_id];
         if (info.stream != NULL) {
             mu.unlock();
@@ -950,7 +951,7 @@ bool RtmpContext::AddClientStream(RtmpStreamBase* stream) {
 bool RtmpContext::AddServerStream(RtmpStreamBase* stream) {
     uint32_t stream_id = 0;
     {
-        std::unique_lock<butil::Mutex> mu(_stream_mutex);
+        std::unique_lock<flare::base::Mutex> mu(_stream_mutex);
         if (!AllocateMessageStreamId(&stream_id)) {
             return false;
         }
@@ -979,9 +980,9 @@ bool RtmpContext::RemoveMessageStream(RtmpStreamBase* stream) {
         return false;
     }
     // for deref the stream outside _stream_mutex.
-    butil::intrusive_ptr<RtmpStreamBase> deref_ptr; 
+    flare::container::intrusive_ptr<RtmpStreamBase> deref_ptr;
     {
-        std::unique_lock<butil::Mutex> mu(_stream_mutex);
+        std::unique_lock<flare::base::Mutex> mu(_stream_mutex);
         MessageStreamInfo* info = _mstream_map.seek(stream_id);
         if (info == NULL) {
             mu.unlock();
@@ -1014,7 +1015,7 @@ bool RtmpContext::AddTransaction(uint32_t* out_transaction_id,
                                  RtmpTransactionHandler* handler) {
     uint32_t transaction_id = 0;
     uint32_t step = 1;
-    BAIDU_SCOPED_LOCK(_trans_mutex);
+    FLARE_SCOPED_LOCK(_trans_mutex);
     for (int i = 0; i < 10; ++i) {
         transaction_id = _trans_id_allocator;
         _trans_id_allocator += step;
@@ -1035,7 +1036,7 @@ RtmpTransactionHandler*
 RtmpContext::RemoveTransaction(uint32_t transaction_id) {
     RtmpTransactionHandler* handler = NULL;
     {
-        BAIDU_SCOPED_LOCK(_trans_mutex);
+        FLARE_SCOPED_LOCK(_trans_mutex);
         RtmpTransactionHandler** phandler = _trans_map.seek(transaction_id);
         if (phandler != NULL) {
             handler = *phandler;
@@ -1045,10 +1046,10 @@ RtmpContext::RemoveTransaction(uint32_t transaction_id) {
     return handler;
 }
 
-int RtmpContext::SendConnectRequest(const butil::EndPoint& remote_side, int fd, bool simplified_rtmp) {
-    butil::IOBuf req_buf;
+int RtmpContext::SendConnectRequest(const flare::base::end_point& remote_side, int fd, bool simplified_rtmp) {
+    flare::io::IOBuf req_buf;
     {
-        butil::IOBufAsZeroCopyOutputStream zc_stream(&req_buf);
+        flare::io::IOBufAsZeroCopyOutputStream zc_stream(&req_buf);
         AMFOutputStream ostream(&zc_stream);
         WriteAMFString(RTMP_AMF0_COMMAND_CONNECT, &ostream);
         WriteAMFUint32(1, &ostream);
@@ -1069,7 +1070,7 @@ int RtmpContext::SendConnectRequest(const butil::EndPoint& remote_side, int fd, 
             std::string* const tcurl = req.mutable_tcurl();
             tcurl->reserve(32 + _client_options->app.size());
             tcurl->append("rtmp://");
-            tcurl->append(butil::endpoint2str(remote_side).c_str());
+            tcurl->append(flare::base::endpoint2str(remote_side).c_str());
             tcurl->push_back('/');
             tcurl->append(_client_options->app);
         } else {
@@ -1096,7 +1097,7 @@ int RtmpContext::SendConnectRequest(const butil::EndPoint& remote_side, int fd, 
     header.message_type = RTMP_MESSAGE_COMMAND_AMF0;
     header.stream_id = RTMP_CONTROL_MESSAGE_STREAM_ID;
 
-    butil::IOBuf msg_buf;
+    flare::io::IOBuf msg_buf;
     if (simplified_rtmp) {
         char buf[5];
         char* p = buf;
@@ -1119,7 +1120,7 @@ int RtmpContext::SendConnectRequest(const butil::EndPoint& remote_side, int fd, 
         header2.message_length = sizeof(cntl_buf);
         header2.message_type = RTMP_MESSAGE_WINDOW_ACK_SIZE;
         header2.stream_id = RTMP_CONTROL_MESSAGE_STREAM_ID;
-        butil::IOBuf tmp;
+        flare::io::IOBuf tmp;
         tmp.append(cntl_buf, sizeof(cntl_buf));
         if (cstream->SerializeMessage(&msg_buf, header2, &tmp) != 0) {
             LOG(ERROR) << "Fail to serialize WindowAckSize message";
@@ -1136,7 +1137,7 @@ int RtmpContext::SendConnectRequest(const butil::EndPoint& remote_side, int fd, 
         header3.message_length = sizeof(cntl_buf);
         header3.message_type = RTMP_MESSAGE_SET_CHUNK_SIZE;
         header3.stream_id = RTMP_CONTROL_MESSAGE_STREAM_ID;
-        butil::IOBuf tmp;
+        flare::io::IOBuf tmp;
         tmp.append(cntl_buf, sizeof(cntl_buf));
         if (cstream->SerializeMessage(&msg_buf, header3, &tmp) != 0) {
             LOG(ERROR) << "Fail to serialize SetChunkSize message";
@@ -1148,7 +1149,7 @@ int RtmpContext::SendConnectRequest(const butil::EndPoint& remote_side, int fd, 
     return WriteAll(fd, &msg_buf);
 }
 
-ParseResult RtmpContext::Feed(butil::IOBuf* source, Socket* socket) {
+ParseResult RtmpContext::Feed(flare::io::IOBuf* source, Socket* socket) {
     switch (_state) {
     case STATE_UNINITIALIZED:
         if (socket->CreatedByConnect()) {
@@ -1168,7 +1169,7 @@ ParseResult RtmpContext::Feed(butil::IOBuf* source, Socket* socket) {
     return MakeParseError(PARSE_ERROR_NO_RESOURCE);
 }
 
-ParseResult RtmpContext::WaitForC0C1orSimpleRtmp(butil::IOBuf* source, Socket* socket) {
+ParseResult RtmpContext::WaitForC0C1orSimpleRtmp(flare::io::IOBuf* source, Socket* socket) {
     if (source->length() < RTMP_HANDSHAKE_SIZE0 + MAGIC_NUMBER_SIZE) {
         return MakeParseError(PARSE_ERROR_NOT_ENOUGH_DATA);
     }
@@ -1189,7 +1190,7 @@ ParseResult RtmpContext::WaitForC0C1orSimpleRtmp(butil::IOBuf* source, Socket* s
     source->cutn(c0c1_buf, sizeof(c0c1_buf));
     SetState(socket->remote_side(), STATE_RECEIVED_C0C1);
 
-    butil::IOBuf tmp;
+    flare::io::IOBuf tmp;
     adobe_hs::C1 c1;
     if (c1.Load(c0c1_buf + RTMP_HANDSHAKE_SIZE0)) {
         RPC_VLOG << socket->remote_side() << ": Loaded C1 with schema"
@@ -1246,7 +1247,7 @@ ParseResult RtmpContext::WaitForC0C1orSimpleRtmp(butil::IOBuf* source, Socket* s
     return WaitForC2(source, socket);
 }
     
-ParseResult RtmpContext::WaitForC2(butil::IOBuf* source, Socket* socket) {
+ParseResult RtmpContext::WaitForC2(flare::io::IOBuf* source, Socket* socket) {
     if (source->length() < RTMP_HANDSHAKE_SIZE2) {
         return MakeParseError(PARSE_ERROR_NOT_ENOUGH_DATA);
     }
@@ -1265,7 +1266,7 @@ ParseResult RtmpContext::WaitForC2(butil::IOBuf* source, Socket* socket) {
     return OnChunks(source, socket);
 }
 
-ParseResult RtmpContext::WaitForS0S1(butil::IOBuf* source, Socket* socket) {
+ParseResult RtmpContext::WaitForS0S1(flare::io::IOBuf* source, Socket* socket) {
     if (source->length() < RTMP_HANDSHAKE_SIZE0 + RTMP_HANDSHAKE_SIZE1) {
         return MakeParseError(PARSE_ERROR_NOT_ENOUGH_DATA);
     }
@@ -1274,7 +1275,7 @@ ParseResult RtmpContext::WaitForS0S1(butil::IOBuf* source, Socket* socket) {
     source->cutn(s0s1_buf, sizeof(s0s1_buf));
     SetState(socket->remote_side(), STATE_RECEIVED_S0S1);
 
-    butil::IOBuf tmp;
+    flare::io::IOBuf tmp;
     bool done_adobe_hs = false;
     if (!_only_check_simple_s0s1) {
         adobe_hs::S1 s1;
@@ -1307,7 +1308,7 @@ ParseResult RtmpContext::WaitForS0S1(butil::IOBuf* source, Socket* socket) {
     return WaitForS2(source, socket);
 }
     
-ParseResult RtmpContext::WaitForS2(butil::IOBuf* source, Socket* socket) {
+ParseResult RtmpContext::WaitForS2(flare::io::IOBuf* source, Socket* socket) {
     if (source->length() < RTMP_HANDSHAKE_SIZE2) {
         return MakeParseError(PARSE_ERROR_NOT_ENOUGH_DATA);
     }
@@ -1322,7 +1323,7 @@ ParseResult RtmpContext::WaitForS2(butil::IOBuf* source, Socket* socket) {
     return OnChunks(source, socket);
 }
 
-ParseResult RtmpContext::OnChunks(butil::IOBuf* source, Socket* socket) {
+ParseResult RtmpContext::OnChunks(flare::io::IOBuf* source, Socket* socket) {
     // Parse basic header.
     const char* p = (const char*)source->fetch1();
     if (NULL == p) {
@@ -1416,11 +1417,11 @@ struct ChunkStatus {
     ChunkStatus() : second("rtmp_chunk_in_second", &count) {}
 };
 inline void AddChunk() {
-    butil::get_leaky_singleton<ChunkStatus>()->count << 1;
+    flare::base::get_leaky_singleton<ChunkStatus>()->count << 1;
 }
 
 ParseResult RtmpChunkStream::Feed(const RtmpBasicHeader& bh,
-                                  butil::IOBuf* source, Socket* socket) {
+                                  flare::io::IOBuf* source, Socket* socket) {
     // Parse message header. Notice that basic header is still in source.
     uint32_t header_len = bh.header_length;
     bool has_extended_ts = false;
@@ -1624,7 +1625,7 @@ ParseResult RtmpChunkStream::Feed(const RtmpBasicHeader& bh,
             st = g_client_msg_status;
         }
         if (st) {
-            butil::Timer tm;
+            flare::base::stop_watcher tm;
             tm.start();
             CHECK(st->OnRequested());
             const bool ret = OnMessage(bh, mh, &_r.msg_body, socket);
@@ -1642,9 +1643,9 @@ ParseResult RtmpChunkStream::Feed(const RtmpBasicHeader& bh,
     return MakeMessage(NULL);
 }
 
-int RtmpChunkStream::SerializeMessage(butil::IOBuf* buf,
+int RtmpChunkStream::SerializeMessage(flare::io::IOBuf* buf,
                                       const RtmpMessageHeader& mh,
-                                      butil::IOBuf* body) {
+                                      flare::io::IOBuf* body) {
     const size_t bh_size = GetBasicHeaderLength(_cs_id);
     if (bh_size == 0) {
         CHECK(false) << "Invalid chunk_stream_id=" << _cs_id;
@@ -1760,7 +1761,7 @@ static const RtmpChunkStream::MessageHandler s_msg_handlers[] = {
     &RtmpChunkStream::OnAggregateMessage, // 22
 };
 
-typedef butil::FlatMap<std::string, RtmpChunkStream::CommandHandler> CommandHandlerMap;
+typedef flare::container::FlatMap<std::string, RtmpChunkStream::CommandHandler> CommandHandlerMap;
 static CommandHandlerMap* s_cmd_handlers = NULL;
 static pthread_once_t s_cmd_handlers_init_once = PTHREAD_ONCE_INIT;
 static void InitCommandHandlers() {
@@ -1789,7 +1790,7 @@ static void InitCommandHandlers() {
 
 bool RtmpChunkStream::OnMessage(const RtmpBasicHeader& bh,
                                 const RtmpMessageHeader& mh,
-                                butil::IOBuf* msg_body,
+                                flare::io::IOBuf* msg_body,
                                 Socket* socket) {
     // Make sure msg_body is consistent with the header. Previous code
     // forgot to clear msg_body before appending new message.
@@ -1806,7 +1807,7 @@ bool RtmpChunkStream::OnMessage(const RtmpBasicHeader& bh,
         }
     }
     const uint32_t index = mh.message_type - 1;
-    if (index >= arraysize(s_msg_handlers)) {
+    if (index >= FLARE_ARRAY_SIZE(s_msg_handlers)) {
         RTMP_ERROR(socket, mh) << "Unknown message_type=" << (int)mh.message_type;
         return false;
     }
@@ -1828,7 +1829,7 @@ bool RtmpChunkStream::OnMessage(const RtmpBasicHeader& bh,
 }
 
 bool RtmpChunkStream::OnSetChunkSize(
-    const RtmpMessageHeader& mh, butil::IOBuf* msg_body, Socket* socket) {
+    const RtmpMessageHeader& mh, flare::io::IOBuf* msg_body, Socket* socket) {
     if (mh.message_length != 4u) {
         RTMP_ERROR(socket, mh) << "Expected message_length=4, actually "
                                << mh.message_length;
@@ -1850,7 +1851,7 @@ bool RtmpChunkStream::OnSetChunkSize(
 }
 
 bool RtmpChunkStream::OnAbortMessage(
-    const RtmpMessageHeader& mh, butil::IOBuf* msg_body, Socket* socket) {
+    const RtmpMessageHeader& mh, flare::io::IOBuf* msg_body, Socket* socket) {
     if (mh.message_length != 4u) {
         RTMP_ERROR(socket, mh) << "Expected message_length=4, actually "
                                << mh.message_length;
@@ -1868,7 +1869,7 @@ bool RtmpChunkStream::OnAbortMessage(
 }
 
 bool RtmpChunkStream::OnAck(
-    const RtmpMessageHeader& mh, butil::IOBuf* msg_body, Socket* socket) {
+    const RtmpMessageHeader& mh, flare::io::IOBuf* msg_body, Socket* socket) {
     if (mh.message_length != 4u) {
         RTMP_ERROR(socket, mh) << "Expected message_length=4, actually "
                                << mh.message_length;
@@ -1884,7 +1885,7 @@ bool RtmpChunkStream::OnAck(
 }
 
 bool RtmpChunkStream::OnWindowAckSize(
-    const RtmpMessageHeader& mh, butil::IOBuf* msg_body, Socket* socket) {
+    const RtmpMessageHeader& mh, flare::io::IOBuf* msg_body, Socket* socket) {
     if (mh.message_length != 4u) {
         RTMP_ERROR(socket, mh) << "Expected message_length=4, actually "
                                << mh.message_length;
@@ -1901,7 +1902,7 @@ bool RtmpChunkStream::OnWindowAckSize(
 }
 
 bool RtmpChunkStream::OnSetPeerBandwidth(
-    const RtmpMessageHeader& mh, butil::IOBuf* msg_body, Socket* socket) {
+    const RtmpMessageHeader& mh, flare::io::IOBuf* msg_body, Socket* socket) {
     if (mh.message_length != 5u) {
         RTMP_ERROR(socket, mh) << "Expected message_length=5, actually "
                                << mh.message_length;
@@ -1918,7 +1919,7 @@ bool RtmpChunkStream::OnSetPeerBandwidth(
 }
 
 bool RtmpChunkStream::OnUserControlMessage(
-    const RtmpMessageHeader& mh, butil::IOBuf* msg_body, Socket* socket) {
+    const RtmpMessageHeader& mh, flare::io::IOBuf* msg_body, Socket* socket) {
     if (mh.message_length > 32) {
         RTMP_ERROR(socket, mh) << "No user control message long as "
                                << mh.message_length << " bytes";
@@ -1927,7 +1928,7 @@ bool RtmpChunkStream::OnUserControlMessage(
     char buf[mh.message_length]; // safe to put on stack.
     msg_body->cutn(buf, mh.message_length);
     const uint16_t event_type = ReadBigEndian2Bytes(buf);
-    butil::StringPiece event_data(buf + 2, mh.message_length - 2);
+    std::string_view event_data(buf + 2, mh.message_length - 2);
     switch ((RtmpUserControlEventType)event_type) {
     case RTMP_USER_CONTROL_EVENT_STREAM_BEGIN:
         return OnStreamBegin(mh, event_data, socket);
@@ -1953,7 +1954,7 @@ bool RtmpChunkStream::OnUserControlMessage(
 }
 
 bool RtmpChunkStream::OnStreamBegin(const RtmpMessageHeader& mh,
-                                    const butil::StringPiece& event_data,
+                                    const std::string_view& event_data,
                                     Socket* socket) {
     RtmpService* service = connection_context()->service();
     if (service != NULL) {
@@ -1970,7 +1971,7 @@ bool RtmpChunkStream::OnStreamBegin(const RtmpMessageHeader& mh,
 }
 
 bool RtmpChunkStream::OnStreamEOF(const RtmpMessageHeader& mh,
-                                  const butil::StringPiece& event_data,
+                                  const std::string_view& event_data,
                                   Socket* socket) {
     RtmpService* service = connection_context()->service();
     if (service != NULL) {
@@ -1987,7 +1988,7 @@ bool RtmpChunkStream::OnStreamEOF(const RtmpMessageHeader& mh,
 }
 
 bool RtmpChunkStream::OnStreamDry(const RtmpMessageHeader& mh,
-                                  const butil::StringPiece& event_data,
+                                  const std::string_view& event_data,
                                   Socket* socket) {
     RtmpService* service = connection_context()->service();
     if (service != NULL) {
@@ -2004,7 +2005,7 @@ bool RtmpChunkStream::OnStreamDry(const RtmpMessageHeader& mh,
 }
 
 bool RtmpChunkStream::OnStreamIsRecorded(const RtmpMessageHeader& mh,
-                                         const butil::StringPiece& event_data,
+                                         const std::string_view& event_data,
                                          Socket* socket) {
     RtmpService* service = connection_context()->service();
     if (service != NULL) {
@@ -2021,7 +2022,7 @@ bool RtmpChunkStream::OnStreamIsRecorded(const RtmpMessageHeader& mh,
 }
 
 bool RtmpChunkStream::OnSetBufferLength(const RtmpMessageHeader& mh,
-                                        const butil::StringPiece& event_data,
+                                        const std::string_view& event_data,
                                         Socket* socket) {
     RtmpService* service = connection_context()->service();
     if (service == NULL) {
@@ -2042,7 +2043,7 @@ bool RtmpChunkStream::OnSetBufferLength(const RtmpMessageHeader& mh,
         // Ignore SetBufferSize for control stream.
         return true;
     }
-    butil::intrusive_ptr<RtmpStreamBase> stream;
+    flare::container::intrusive_ptr<RtmpStreamBase> stream;
     if (!connection_context()->FindMessageStream(stream_id, &stream)) {
         RTMP_WARNING(socket, mh) << "Fail to find stream_id=" << stream_id;
         return false;
@@ -2052,7 +2053,7 @@ bool RtmpChunkStream::OnSetBufferLength(const RtmpMessageHeader& mh,
 }
 
 bool RtmpChunkStream::OnPingRequest(const RtmpMessageHeader& mh,
-                                    const butil::StringPiece& event_data,
+                                    const std::string_view& event_data,
                                     Socket* socket) {
     RtmpService* service = connection_context()->service();
     if (service != NULL) {
@@ -2079,7 +2080,7 @@ bool RtmpChunkStream::OnPingRequest(const RtmpMessageHeader& mh,
 }
 
 bool RtmpChunkStream::OnPingResponse(const RtmpMessageHeader& mh,
-                                     const butil::StringPiece& event_data,
+                                     const std::string_view& event_data,
                                      Socket* socket) {
     RtmpService* service = connection_context()->service();
     if (service == NULL) {
@@ -2097,7 +2098,7 @@ bool RtmpChunkStream::OnPingResponse(const RtmpMessageHeader& mh,
 }
 
 bool RtmpChunkStream::OnBufferEmpty(const RtmpMessageHeader& mh,
-                                    const butil::StringPiece& event_data,
+                                    const std::string_view& event_data,
                                     Socket* socket) {
     // Ignore right now.
     // NOTE: If we need to fetch the data from FMS as fast as possible,
@@ -2115,7 +2116,7 @@ bool RtmpChunkStream::OnBufferEmpty(const RtmpMessageHeader& mh,
 }
 
 bool RtmpChunkStream::OnBufferReady(const RtmpMessageHeader& mh,
-                                    const butil::StringPiece& event_data,
+                                    const std::string_view& event_data,
                                     Socket* socket) {
     if (event_data.size() != 4) {
         RTMP_ERROR(socket, mh) << "Invalid BufferReady.event_data.size="
@@ -2130,7 +2131,7 @@ bool RtmpChunkStream::OnBufferReady(const RtmpMessageHeader& mh,
 }
 
 bool RtmpChunkStream::OnAudioMessage(
-    const RtmpMessageHeader& mh, butil::IOBuf* msg_body, Socket* socket) {
+    const RtmpMessageHeader& mh, flare::io::IOBuf* msg_body, Socket* socket) {
     char first_byte = 0;
     if (!msg_body->cut1(&first_byte)) {
         // pretty common, don't print logs.
@@ -2147,7 +2148,7 @@ bool RtmpChunkStream::OnAudioMessage(
 
     const int vlvl = RPC_VLOG_LEVEL + 1;
     VLOG(vlvl) << socket->remote_side() << "[" << mh.stream_id << "] " << msg;
-    butil::intrusive_ptr<RtmpStreamBase> stream;
+    flare::container::intrusive_ptr<RtmpStreamBase> stream;
     if (!connection_context()->FindMessageStream(mh.stream_id, &stream)) {
         LOG_EVERY_SECOND(WARNING) << socket->remote_side()
                                   << ": Fail to find stream_id=" << mh.stream_id;
@@ -2158,7 +2159,7 @@ bool RtmpChunkStream::OnAudioMessage(
 }
 
 bool RtmpChunkStream::OnVideoMessage(
-    const RtmpMessageHeader& mh, butil::IOBuf* msg_body, Socket* socket) {
+    const RtmpMessageHeader& mh, flare::io::IOBuf* msg_body, Socket* socket) {
     char first_byte = 0;
     if (!msg_body->cut1(&first_byte)) {
         // pretty common, don't print logs.
@@ -2179,7 +2180,7 @@ bool RtmpChunkStream::OnVideoMessage(
 
     const int vlvl = RPC_VLOG_LEVEL + 1;
     VLOG(vlvl) << socket->remote_side() << "[" << mh.stream_id << "] " << msg;
-    butil::intrusive_ptr<RtmpStreamBase> stream;
+    flare::container::intrusive_ptr<RtmpStreamBase> stream;
     if (!connection_context()->FindMessageStream(mh.stream_id, &stream)) {
         LOG_EVERY_SECOND(WARNING) << socket->remote_side()
                                   << ": Fail to find stream_id=" << mh.stream_id;
@@ -2190,8 +2191,8 @@ bool RtmpChunkStream::OnVideoMessage(
 }
 
 bool RtmpChunkStream::OnDataMessageAMF0(
-    const RtmpMessageHeader& mh, butil::IOBuf* msg_body, Socket* socket) {
-    butil::IOBufAsZeroCopyInputStream zc_stream(*msg_body);
+    const RtmpMessageHeader& mh, flare::io::IOBuf* msg_body, Socket* socket) {
+    flare::io::IOBufAsZeroCopyInputStream zc_stream(*msg_body);
     AMFInputStream istream(&zc_stream);
     std::string name;
     if (!ReadAMFString(&name, &istream)) {
@@ -2220,7 +2221,7 @@ bool RtmpChunkStream::OnDataMessageAMF0(
             return false;
         }
         // TODO: execq?
-        butil::intrusive_ptr<RtmpStreamBase> stream;
+        flare::container::intrusive_ptr<RtmpStreamBase> stream;
         if (!connection_context()->FindMessageStream(mh.stream_id, &stream)) {
             LOG_EVERY_SECOND(WARNING) << socket->remote_side()
                                       << ": Fail to find stream_id=" << mh.stream_id;
@@ -2239,7 +2240,7 @@ bool RtmpChunkStream::OnDataMessageAMF0(
             return false;
         }
         // TODO: execq?
-        butil::intrusive_ptr<RtmpStreamBase> stream;
+        flare::container::intrusive_ptr<RtmpStreamBase> stream;
         if (!connection_context()->FindMessageStream(mh.stream_id, &stream)) {
             LOG_EVERY_SECOND(WARNING) << socket->remote_side()
                                       << ": Fail to find stream_id=" << mh.stream_id;
@@ -2256,14 +2257,14 @@ bool RtmpChunkStream::OnDataMessageAMF0(
 }
 
 bool RtmpChunkStream::OnSharedObjectMessageAMF0(
-    const RtmpMessageHeader&, butil::IOBuf*, Socket* socket) {
+    const RtmpMessageHeader&, flare::io::IOBuf*, Socket* socket) {
     LOG_EVERY_SECOND(ERROR) << socket->remote_side() << ": Not implemented";
     return false;
 }
 
 bool RtmpChunkStream::OnCommandMessageAMF0(
-    const RtmpMessageHeader& mh, butil::IOBuf* msg_body, Socket* socket) {
-    butil::IOBufAsZeroCopyInputStream zc_stream(*msg_body);
+    const RtmpMessageHeader& mh, flare::io::IOBuf* msg_body, Socket* socket) {
+    flare::io::IOBufAsZeroCopyInputStream zc_stream(*msg_body);
     AMFInputStream istream(&zc_stream);
     std::string command_name;
     if (!ReadAMFString(&command_name, &istream)) {
@@ -2284,25 +2285,25 @@ bool RtmpChunkStream::OnCommandMessageAMF0(
 }
 
 bool RtmpChunkStream::OnDataMessageAMF3(
-    const RtmpMessageHeader& mh, butil::IOBuf* msg_body, Socket* socket) {
+    const RtmpMessageHeader& mh, flare::io::IOBuf* msg_body, Socket* socket) {
     msg_body->pop_front(1);
     return OnDataMessageAMF0(mh, msg_body, socket);
 }
 
 bool RtmpChunkStream::OnSharedObjectMessageAMF3(
-    const RtmpMessageHeader&, butil::IOBuf*, Socket*) {
+    const RtmpMessageHeader&, flare::io::IOBuf*, Socket*) {
     LOG(ERROR) << "Not implemented";
     return false;
 }
 
 bool RtmpChunkStream::OnCommandMessageAMF3(
-    const RtmpMessageHeader& mh, butil::IOBuf* msg_body, Socket* socket) {
+    const RtmpMessageHeader& mh, flare::io::IOBuf* msg_body, Socket* socket) {
     msg_body->pop_front(1);
     return OnCommandMessageAMF0(mh, msg_body, socket);
 }
 
 bool RtmpChunkStream::OnAggregateMessage(
-    const RtmpMessageHeader&, butil::IOBuf*, Socket*) {
+    const RtmpMessageHeader&, flare::io::IOBuf*, Socket*) {
     LOG(ERROR) << "Not implemented";
     return false;
 }
@@ -2378,13 +2379,13 @@ bool RtmpChunkStream::OnConnect(const RtmpMessageHeader& mh,
     msgs.push().reset(scs_msg);
     
     // _result
-    butil::IOBuf req_buf;
+    flare::io::IOBuf req_buf;
     RtmpInfo info;
     RtmpConnectResponse response;
     // TODO: Set this field.
     std::string error_text; 
     {
-        butil::IOBufAsZeroCopyOutputStream zc_stream(&req_buf);
+        flare::io::IOBufAsZeroCopyOutputStream zc_stream(&req_buf);
         AMFOutputStream ostream(&zc_stream);
         WriteAMFString((!error_text.empty() ? RTMP_AMF0_COMMAND_ERROR :
                         RTMP_AMF0_COMMAND_RESULT), &ostream);
@@ -2420,7 +2421,7 @@ bool RtmpChunkStream::OnConnect(const RtmpMessageHeader& mh,
     // onBWDone
     req_buf.clear();
     {
-        butil::IOBufAsZeroCopyOutputStream zc_stream(&req_buf);
+        flare::io::IOBufAsZeroCopyOutputStream zc_stream(&req_buf);
         AMFOutputStream ostream(&zc_stream);
         WriteAMFString(RTMP_AMF0_COMMAND_ON_BW_DONE, &ostream);
         WriteAMFUint32(0, &ostream);
@@ -2556,7 +2557,7 @@ bool RtmpChunkStream::OnStatus(const RtmpMessageHeader& mh,
         RTMP_ERROR(socket, mh) << "Fail to read onStatus.InfoObject";
         return false;
     }
-    butil::intrusive_ptr<RtmpStreamBase> stream;
+    flare::container::intrusive_ptr<RtmpStreamBase> stream;
     if (!connection_context()->FindMessageStream(mh.stream_id, &stream)) {
         RTMP_WARNING(socket, mh) << "Fail to find stream_id=" << mh.stream_id;
         return false;
@@ -2594,7 +2595,7 @@ bool RtmpChunkStream::OnCreateStream(const RtmpMessageHeader& mh,
     }
     const AMFField* stream_name_field = cmd_obj.Find("StreamName");
     if (stream_name_field != NULL && stream_name_field->IsString()) {
-        stream_name_field->AsString().CopyToString(&stream_name);
+        flare::base::copy_to_string(stream_name_field->AsString(), &stream_name);
     }
     if (is_publish) {
         const AMFField* publish_type_field = cmd_obj.Find("PublishType");
@@ -2605,7 +2606,7 @@ bool RtmpChunkStream::OnCreateStream(const RtmpMessageHeader& mh,
     RPC_VLOG << socket->remote_side() << "[" << mh.stream_id
              << "] createStream{transaction_id=" << transaction_id << '}';
     std::string error_text;
-    butil::intrusive_ptr<RtmpServerStream> stream(
+    flare::container::intrusive_ptr<RtmpServerStream> stream(
         service->NewStream(connection_context()->_connect_req));
     if (connection_context()->_connect_req.stream_multiplexing() &&
         stream != NULL) {
@@ -2624,20 +2625,20 @@ bool RtmpChunkStream::OnCreateStream(const RtmpMessageHeader& mh,
                                              RtmpServerStream::RunOnFailed);
             if (rc) {
                 LOG(ERROR) << "Fail to create RtmpServerStream._onfail_id: "
-                           << berror(rc);
+                           << flare_error(rc);
                 stream->OnStopInternal();
                 return false;
             }
             // Add a ref for RunOnFailed.
-            butil::intrusive_ptr<RtmpServerStream>(stream).detach();
+            flare::container::intrusive_ptr<RtmpServerStream>(stream).detach();
             socket->fail_me_at_server_stop();
             socket->NotifyOnFailed(stream->_onfail_id);
         }
     }
     // Respond createStream
-    butil::IOBuf req_buf;
+    flare::io::IOBuf req_buf;
     {
-        butil::IOBufAsZeroCopyOutputStream zc_stream(&req_buf);
+        flare::io::IOBufAsZeroCopyOutputStream zc_stream(&req_buf);
         AMFOutputStream ostream(&zc_stream);
         WriteAMFString((!error_text.empty() ? RTMP_AMF0_COMMAND_ERROR :
                         RTMP_AMF0_COMMAND_RESULT), &ostream);
@@ -2681,9 +2682,9 @@ bool RtmpChunkStream::OnCreateStream(const RtmpMessageHeader& mh,
     if (stream_name.empty()) {
         return true;
     }
-    butil::IOBuf cmd_buf;
+    flare::io::IOBuf cmd_buf;
     {
-        butil::IOBufAsZeroCopyOutputStream zc_ostream(&cmd_buf);
+        flare::io::IOBufAsZeroCopyOutputStream zc_ostream(&cmd_buf);
         AMFOutputStream ostream(&zc_ostream);
         WriteAMFUint32(0, &ostream);  // TransactionId
         WriteAMFNull(&ostream);       // CommandObject
@@ -2692,7 +2693,7 @@ bool RtmpChunkStream::OnCreateStream(const RtmpMessageHeader& mh,
             WriteAMFString(RtmpPublishType2Str(publish_type), &ostream);
         }
     }
-    butil::IOBufAsZeroCopyInputStream zc_istream(cmd_buf);
+    flare::io::IOBufAsZeroCopyInputStream zc_istream(cmd_buf);
     AMFInputStream cmd_istream(&zc_istream);
     RtmpMessageHeader header;
     header.timestamp = mh.timestamp;
@@ -2710,8 +2711,8 @@ class OnPlayContinuation : public google::protobuf::Closure {
 public:
     void Run();
 public:
-    butil::Status status;
-    butil::intrusive_ptr<RtmpServerStream> player_stream;
+    flare::base::flare_status status;
+    flare::container::intrusive_ptr<RtmpServerStream> player_stream;
 };
 
 void OnPlayContinuation::Run() {
@@ -2786,7 +2787,7 @@ bool RtmpChunkStream::OnPlay(const RtmpMessageHeader& mh,
              << " duration=" << play_opt.duration
              << " reset=" << play_opt.reset << '}';
 
-    butil::IOBuf req_buf;
+    flare::io::IOBuf req_buf;
     TemporaryArrayBuilder<SocketMessagePtr<RtmpUnsentMessage>, 5> msgs;
     
     // TODO(gejun): RTMP spec sends StreamIsRecorded before StreamBegin
@@ -2806,7 +2807,7 @@ bool RtmpChunkStream::OnPlay(const RtmpMessageHeader& mh,
         // play command sent by the client has set the reset flag. 
         req_buf.clear();
         {
-            butil::IOBufAsZeroCopyOutputStream zc_stream(&req_buf);
+            flare::io::IOBufAsZeroCopyOutputStream zc_stream(&req_buf);
             AMFOutputStream ostream(&zc_stream);
             WriteAMFString(RTMP_AMF0_COMMAND_ON_STATUS, &ostream);
             WriteAMFUint32(0, &ostream);
@@ -2829,7 +2830,7 @@ bool RtmpChunkStream::OnPlay(const RtmpMessageHeader& mh,
     // Play.Start
     req_buf.clear();
     {
-        butil::IOBufAsZeroCopyOutputStream zc_stream(&req_buf);
+        flare::io::IOBufAsZeroCopyOutputStream zc_stream(&req_buf);
         AMFOutputStream ostream(&zc_stream);
         WriteAMFString(RTMP_AMF0_COMMAND_ON_STATUS, &ostream);
         WriteAMFUint32(0, &ostream);
@@ -2851,7 +2852,7 @@ bool RtmpChunkStream::OnPlay(const RtmpMessageHeader& mh,
     // |RtmpSampleAccess(true, true)
     req_buf.clear();
     {
-        butil::IOBufAsZeroCopyOutputStream zc_stream(&req_buf);
+        flare::io::IOBufAsZeroCopyOutputStream zc_stream(&req_buf);
         AMFOutputStream ostream(&zc_stream);
         WriteAMFString(RTMP_AMF0_SAMPLE_ACCESS, &ostream);
         WriteAMFBool(true, &ostream);
@@ -2868,7 +2869,7 @@ bool RtmpChunkStream::OnPlay(const RtmpMessageHeader& mh,
     // onStatus(NetStream.Data.Start)
     req_buf.clear();
     {
-        butil::IOBufAsZeroCopyOutputStream zc_stream(&req_buf);
+        flare::io::IOBufAsZeroCopyOutputStream zc_stream(&req_buf);
         AMFOutputStream ostream(&zc_stream);
         WriteAMFString(RTMP_AMF0_COMMAND_ON_STATUS, &ostream);
         RtmpInfo info;
@@ -2883,7 +2884,7 @@ bool RtmpChunkStream::OnPlay(const RtmpMessageHeader& mh,
     msg4->body = req_buf;
     msgs.push().reset(msg4);
 
-    butil::intrusive_ptr<RtmpStreamBase> stream_guard;
+    flare::container::intrusive_ptr<RtmpStreamBase> stream_guard;
     if (!connection_context()->FindMessageStream(mh.stream_id, &stream_guard)) {
         RTMP_WARNING(socket, mh) << "Fail to find stream_id=" << mh.stream_id;
         return false;
@@ -2937,7 +2938,7 @@ bool RtmpChunkStream::OnPlay2(const RtmpMessageHeader& mh,
         RTMP_ERROR(socket, mh) << "Fail to read play2.Parameters";
         return false;
     }
-    butil::intrusive_ptr<RtmpStreamBase> stream;
+    flare::container::intrusive_ptr<RtmpStreamBase> stream;
     if (!connection_context()->FindMessageStream(mh.stream_id, &stream)) {
         RTMP_WARNING(socket, mh) << "Fail to find stream_id=" << mh.stream_id;
         return false;
@@ -2967,7 +2968,7 @@ bool RtmpChunkStream::OnDeleteStream(const RtmpMessageHeader& mh,
         RTMP_ERROR(socket, mh) << "Fail to read deleteStream.StreamId";
         return false;
     }
-    butil::intrusive_ptr<RtmpStreamBase> stream;
+    flare::container::intrusive_ptr<RtmpStreamBase> stream;
     if (!connection_context()->FindMessageStream(stream_id, &stream)) {
         // TODO: frequent, commented now
         //RTMP_WARNING(socket, mh) << "Fail to find stream_id=" << stream_id;
@@ -2996,7 +2997,7 @@ bool RtmpChunkStream::OnCloseStream(const RtmpMessageHeader& mh,
         RTMP_ERROR(socket, mh) << "Fail to read closeStream.CommandObject";
         return false;
     }
-    butil::intrusive_ptr<RtmpStreamBase> stream;
+    flare::container::intrusive_ptr<RtmpStreamBase> stream;
     if (!connection_context()->FindMessageStream(mh.stream_id, &stream)) {
         // TODO: frequent, commented now
         //RTMP_WARNING(socket, mh) << "Fail to find stream_id=" << mh.stream_id;
@@ -3014,9 +3015,9 @@ class OnPublishContinuation : public google::protobuf::Closure {
 public:
     void Run();
 public:
-    butil::Status status;
+    flare::base::flare_status status;
     std::string publish_name;
-    butil::intrusive_ptr<RtmpServerStream> publish_stream;
+    flare::container::intrusive_ptr<RtmpServerStream> publish_stream;
 };
 
 void OnPublishContinuation::Run() {
@@ -3033,9 +3034,9 @@ void OnPublishContinuation::Run() {
         }
         return;
     }
-    butil::IOBuf req_buf;
+    flare::io::IOBuf req_buf;
     {
-        butil::IOBufAsZeroCopyOutputStream zc_stream(&req_buf);
+        flare::io::IOBufAsZeroCopyOutputStream zc_stream(&req_buf);
         AMFOutputStream ostream(&zc_stream);
         WriteAMFString(RTMP_AMF0_COMMAND_ON_STATUS, &ostream);
         WriteAMFUint32(0, &ostream);
@@ -3097,7 +3098,7 @@ bool RtmpChunkStream::OnPublish(const RtmpMessageHeader& mh,
              << " stream_name=" << publish_name
              << " type=" << RtmpPublishType2Str(publish_type) << '}';
 
-    butil::intrusive_ptr<RtmpStreamBase> stream_guard;
+    flare::container::intrusive_ptr<RtmpStreamBase> stream_guard;
     if (!connection_context()->FindMessageStream(mh.stream_id, &stream_guard)) {
         RTMP_WARNING(socket, mh) << "Fail to find stream_id=" << mh.stream_id;
         return false;
@@ -3116,9 +3117,9 @@ bool RtmpChunkStream::OnPublish(const RtmpMessageHeader& mh,
 }
 
 static bool SendFMLEStartResponse(Socket* sock, double transaction_id) {
-    butil::IOBuf req_buf;
+    flare::io::IOBuf req_buf;
     {
-        butil::IOBufAsZeroCopyOutputStream zc_stream(&req_buf);
+        flare::io::IOBufAsZeroCopyOutputStream zc_stream(&req_buf);
         AMFOutputStream ostream(&zc_stream);
         WriteAMFString(RTMP_AMF0_COMMAND_RESULT, &ostream);
         WriteAMFNumber(transaction_id, &ostream);
@@ -3246,16 +3247,16 @@ bool RtmpChunkStream::OnSeek(const RtmpMessageHeader& mh,
         return false;
     }
 
-    butil::intrusive_ptr<RtmpStreamBase> stream;
+    flare::container::intrusive_ptr<RtmpStreamBase> stream;
     if (!connection_context()->FindMessageStream(mh.stream_id, &stream)) {
         RTMP_WARNING(socket, mh) << "Fail to find stream_id=" << mh.stream_id;
         return false;
     }
     // TODO(gejun): Run in execq.
     int rc = static_cast<RtmpServerStream*>(stream.get())->OnSeek(milliseconds);
-    butil::IOBuf req_buf;
+    flare::io::IOBuf req_buf;
     {
-        butil::IOBufAsZeroCopyOutputStream zc_stream(&req_buf);
+        flare::io::IOBufAsZeroCopyOutputStream zc_stream(&req_buf);
         AMFOutputStream ostream(&zc_stream);
         if (rc == 0) {
             WriteAMFString(RTMP_AMF0_COMMAND_ON_STATUS, &ostream);
@@ -3320,7 +3321,7 @@ bool RtmpChunkStream::OnPause(const RtmpMessageHeader& mh,
         return false;
     }
 
-    butil::intrusive_ptr<RtmpStreamBase> stream;
+    flare::container::intrusive_ptr<RtmpStreamBase> stream;
     if (!connection_context()->FindMessageStream(mh.stream_id, &stream)) {
         RTMP_WARNING(socket, mh) << "Fail to find stream_id=" << mh.stream_id;
         return false;
@@ -3337,9 +3338,9 @@ bool RtmpChunkStream::OnPause(const RtmpMessageHeader& mh,
         pause_or_unpause, milliseconds);
 
     // Send back status.
-    butil::IOBuf req_buf;
+    flare::io::IOBuf req_buf;
     {
-        butil::IOBufAsZeroCopyOutputStream zc_stream(&req_buf);
+        flare::io::IOBufAsZeroCopyOutputStream zc_stream(&req_buf);
         AMFOutputStream ostream(&zc_stream);
         if (rc == 0) {
             WriteAMFString(RTMP_AMF0_COMMAND_ON_STATUS, &ostream);
@@ -3406,7 +3407,7 @@ bool RtmpChunkStream::OnPause(const RtmpMessageHeader& mh,
 
 // ============== protocol handlers =============
 
-inline ParseResult IsPossiblyRtmp(const butil::IOBuf* source) {
+inline ParseResult IsPossiblyRtmp(const flare::io::IOBuf* source) {
     const char* p = (const char*)source->fetch1();
     if (p == NULL) {
         return MakeParseError(PARSE_ERROR_NOT_ENOUGH_DATA);
@@ -3417,7 +3418,7 @@ inline ParseResult IsPossiblyRtmp(const butil::IOBuf* source) {
     return MakeMessage(NULL);
 }
 
-ParseResult ParseRtmpMessage(butil::IOBuf* source, Socket *socket, bool read_eof,
+ParseResult ParseRtmpMessage(flare::io::IOBuf* source, Socket *socket, bool read_eof,
                              const void* arg) {
     RtmpContext* rtmp_ctx = static_cast<RtmpContext*>(socket->parsing_context());
     if (rtmp_ctx == NULL) {
@@ -3465,7 +3466,7 @@ public:
              AMFInputStream* istream, Socket* socket);
     void Cancel();
 private:
-    butil::intrusive_ptr<RtmpClientStream> _stream;
+    flare::container::intrusive_ptr<RtmpClientStream> _stream;
     CallId _call_id;
 };
 
@@ -3484,16 +3485,16 @@ void OnServerStreamCreated::Run(bool error,
         LOG(FATAL) << "RtmpContext must be created";
         return;
     }
-    const int64_t start_parse_us = butil::cpuwide_time_us();
+    const int64_t start_parse_us = flare::base::cpuwide_time_us();
     // TODO(gejun): Don't have received time right now.
     const int64_t received_us = start_parse_us;
-    const int64_t base_realtime = butil::gettimeofday_us() - received_us;
+    const int64_t base_realtime = flare::base::gettimeofday_us() - received_us;
     const bthread_id_t cid = _call_id;
     Controller* cntl = NULL;
     const int rc = bthread_id_lock(cid, (void**)&cntl);
     if (rc != 0) {
         LOG_IF(ERROR, rc != EINVAL && rc != EPERM)
-            << "Fail to lock correlation_id=" << cid << ": " << berror(rc);
+            << "Fail to lock correlation_id=" << cid << ": " << flare_error(rc);
         return;
     }
     
@@ -3552,21 +3553,21 @@ void OnServerStreamCreated::Cancel() {
     delete this;
 }
 
-butil::Status
-RtmpCreateStreamMessage::AppendAndDestroySelf(butil::IOBuf* out, Socket* s) {
+flare::base::flare_status
+RtmpCreateStreamMessage::AppendAndDestroySelf(flare::io::IOBuf* out, Socket* s) {
     std::unique_ptr<RtmpCreateStreamMessage> destroy_self(this);
     if (s == NULL) {  // abandoned
-        return butil::Status::OK();
+        return flare::base::flare_status::OK();
     }
     // Serialize createStream command
     RtmpContext* ctx = static_cast<RtmpContext*>(socket->parsing_context());
     if (ctx == NULL) {
-        return butil::Status(EINVAL, "RtmpContext of %s is not created",
+        return flare::base::flare_status(EINVAL, "RtmpContext of %s is not created",
                             socket->description().c_str());
     }
-    butil::IOBuf req_buf;
+    flare::io::IOBuf req_buf;
     {
-        butil::IOBufAsZeroCopyOutputStream zc_stream(&req_buf);
+        flare::io::IOBufAsZeroCopyOutputStream zc_stream(&req_buf);
         AMFOutputStream ostream(&zc_stream);
         WriteAMFString(RTMP_AMF0_COMMAND_CREATE_STREAM, &ostream);
         WriteAMFUint32(transaction_id, &ostream);
@@ -3604,7 +3605,7 @@ RtmpCreateStreamMessage::AppendAndDestroySelf(butil::IOBuf* out, Socket* s) {
     if (cstream == NULL) {
         socket->SetFailed(EINVAL, "Invalid chunk_stream_id=%u",
                           RTMP_CONTROL_CHUNK_STREAM_ID);
-        return butil::Status(EINVAL, "Invalid chunk_stream_id=%u",
+        return flare::base::flare_status(EINVAL, "Invalid chunk_stream_id=%u",
                             RTMP_CONTROL_CHUNK_STREAM_ID);
     }
     RtmpMessageHeader header;
@@ -3613,17 +3614,17 @@ RtmpCreateStreamMessage::AppendAndDestroySelf(butil::IOBuf* out, Socket* s) {
     header.stream_id = RTMP_CONTROL_MESSAGE_STREAM_ID;
     if (cstream->SerializeMessage(out, header, &req_buf) != 0) {
         socket->SetFailed(EINVAL, "Fail to serialize message");
-        return butil::Status(EINVAL, "Fail to serialize message");
+        return flare::base::flare_status(EINVAL, "Fail to serialize message");
     }
-    return butil::Status::OK();
+    return flare::base::flare_status::OK();
 }
 
-void PackRtmpRequest(butil::IOBuf* /*buf*/,
+void PackRtmpRequest(flare::io::IOBuf* /*buf*/,
                      SocketMessage** user_message,
                      uint64_t /*correlation_id*/,
                      const google::protobuf::MethodDescriptor* /*NULL*/,
                      Controller* cntl,
-                     const butil::IOBuf& /*request*/,
+                     const flare::io::IOBuf& /*request*/,
                      const Authenticator*) {
     // Send createStream command
     ControllerPrivateAccessor accessor(cntl);
@@ -3663,7 +3664,7 @@ void PackRtmpRequest(butil::IOBuf* /*buf*/,
     *user_message = msg;
 }
 
-void SerializeRtmpRequest(butil::IOBuf* /*buf*/,
+void SerializeRtmpRequest(flare::io::IOBuf* /*buf*/,
                           Controller* /*cntl*/,
                           const google::protobuf::Message* /*NULL*/) {
 }

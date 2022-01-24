@@ -6,11 +6,11 @@ FlatMap - Maybe the fastest hashmap, with tradeoff of space.
 
 ```c++
 #include <string>
-#include <flare/butil/logging.h>
+#include "flare/base/logging.h"
 #include <flare/butil/containers/flat_map.h>
 
 void flatmap_example() {
-    butil::FlatMap<int, std::string> map;
+    flare::container::FlatMap<int, std::string> map;
     // bucket_count: initial count of buckets, big enough to avoid resize.
     // load_factor: element_count * 100 / bucket_count, 80 as default.
     int bucket_count = 1000;
@@ -26,7 +26,7 @@ void flatmap_example() {
     CHECK_EQ(1UL, map.erase(10));
 
     LOG(INFO) << "All elements of the map:";
-    for (butil::FlatMap<int, std::string>::const_iterator it = map.begin(); it != map.end(); ++it) {
+    for (flare::container::FlatMap<int, std::string>::const_iterator it = map.begin(); it != map.end(); ++it) {
         LOG(INFO) << it->first << " : " << it->second;
     }
     map.clear();

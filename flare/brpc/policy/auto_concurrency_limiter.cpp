@@ -80,7 +80,7 @@ DEFINE_int32(auto_cl_latency_fluctuation_correction_factor, 1,
 
 AutoConcurrencyLimiter::AutoConcurrencyLimiter()
     : _max_concurrency(FLAGS_auto_cl_initial_max_concurrency)
-    , _remeasure_start_us(NextResetTime(butil::gettimeofday_us()))
+    , _remeasure_start_us(NextResetTime(flare::base::gettimeofday_us()))
     , _reset_latency_us(0)
     , _min_latency_us(-1)
     , _ema_max_qps(-1)
@@ -104,7 +104,7 @@ void AutoConcurrencyLimiter::OnResponded(int error_code, int64_t latency_us) {
         return;
     }
 
-    const int64_t now_time_us = butil::gettimeofday_us();
+    const int64_t now_time_us = flare::base::gettimeofday_us();
     int64_t last_sampling_time_us = 
         _last_sampling_time_us.load(std::memory_order_relaxed);
 
@@ -137,14 +137,14 @@ int AutoConcurrencyLimiter::MaxConcurrency() {
 int64_t AutoConcurrencyLimiter::NextResetTime(int64_t sampling_time_us) {
     int64_t reset_start_us = sampling_time_us + 
         (FLAGS_auto_cl_noload_latency_remeasure_interval_ms / 2 + 
-        butil::fast_rand_less_than(FLAGS_auto_cl_noload_latency_remeasure_interval_ms / 2)) * 1000;
+        flare::base::fast_rand_less_than(FLAGS_auto_cl_noload_latency_remeasure_interval_ms / 2)) * 1000;
     return reset_start_us;
 }
 
 bool AutoConcurrencyLimiter::AddSample(int error_code, 
                                        int64_t latency_us, 
                                        int64_t sampling_time_us) {
-    std::unique_lock<butil::Mutex> lock_guard(_sw_mutex);
+    std::unique_lock<flare::base::Mutex> lock_guard(_sw_mutex);
     if (_reset_latency_us != 0) {
         // min_latency is about to be reset soon.
         if (_reset_latency_us > sampling_time_us) {

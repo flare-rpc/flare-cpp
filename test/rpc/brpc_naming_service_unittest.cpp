@@ -18,8 +18,8 @@
 #include <stdio.h>
 #include <gtest/gtest.h>
 #include <vector>
-#include "flare/butil/string_printf.h"
-#include "flare/butil/files/temp_file.h"
+#include "flare/base/strings.h"
+#include "flare/base/temp_file.h"
 #include "flare/bthread/bthread.h"
 #ifdef BAIDU_INTERNAL
 #include "flare/brpc/policy/baidu_naming_service.h"
@@ -32,6 +32,7 @@
 #include "flare/brpc/policy/discovery_naming_service.h"
 #include "echo.pb.h"
 #include "flare/brpc/server.h"
+#include "flare/base/strings.h"
 
 
 namespace brpc {
@@ -51,7 +52,7 @@ DECLARE_int32(discovery_renew_interval_s);
 
 namespace {
 
-bool IsIPListEqual(const std::set<butil::ip_t>& s1, const std::set<butil::ip_t>& s2) {
+bool IsIPListEqual(const std::set<flare::base::ip_t>& s1, const std::set<flare::base::ip_t>& s2) {
     if (s1.size() != s2.size()) {
         return false;
     }
@@ -76,25 +77,25 @@ TEST(NamingServiceTest, sanity) {
     ASSERT_EQ(2u, servers.size());
     ASSERT_EQ(1234, servers[0].addr.port);
     ASSERT_EQ(1234, servers[1].addr.port);
-    const std::set<butil::ip_t> expected_ips{servers[0].addr.ip, servers[1].addr.ip};
+    const std::set<flare::base::ip_t> expected_ips{servers[0].addr.ip, servers[1].addr.ip};
 
     ASSERT_EQ(0, dns.GetServers("baidu.com", &servers));
     ASSERT_EQ(2u, servers.size());
-    const std::set<butil::ip_t> ip_list1{servers[0].addr.ip, servers[1].addr.ip};
+    const std::set<flare::base::ip_t> ip_list1{servers[0].addr.ip, servers[1].addr.ip};
     ASSERT_TRUE(IsIPListEqual(expected_ips, ip_list1));
     ASSERT_EQ(80, servers[0].addr.port);
     ASSERT_EQ(80, servers[1].addr.port);
 
     ASSERT_EQ(0, dns.GetServers("baidu.com:1234/useless1/useless2", &servers));
     ASSERT_EQ(2u, servers.size());
-    const std::set<butil::ip_t> ip_list2{servers[0].addr.ip, servers[1].addr.ip};
+    const std::set<flare::base::ip_t> ip_list2{servers[0].addr.ip, servers[1].addr.ip};
     ASSERT_TRUE(IsIPListEqual(expected_ips, ip_list2));
     ASSERT_EQ(1234, servers[0].addr.port);
     ASSERT_EQ(1234, servers[1].addr.port);
 
     ASSERT_EQ(0, dns.GetServers("baidu.com/useless1/useless2", &servers));
     ASSERT_EQ(2u, servers.size());
-    const std::set<butil::ip_t> ip_list3{servers[0].addr.ip, servers[1].addr.ip};
+    const std::set<flare::base::ip_t> ip_list3{servers[0].addr.ip, servers[1].addr.ip};
     ASSERT_TRUE(IsIPListEqual(expected_ips, ip_list3));
     ASSERT_EQ(80, servers[0].addr.port);
     ASSERT_EQ(80, servers[1].addr.port);
@@ -106,31 +107,31 @@ TEST(NamingServiceTest, sanity) {
         "localhost:1234",
         "baidu.com:1234"
     };
-    butil::TempFile tmp_file;
+    flare::base::temp_file tmp_file;
     {
         FILE* fp = fopen(tmp_file.fname(), "w");
-        for (size_t i = 0; i < ARRAY_SIZE(address_list); ++i) {
+        for (size_t i = 0; i < FLARE_ARRAY_SIZE(address_list); ++i) {
             ASSERT_TRUE(fprintf(fp, "%s\n", address_list[i]));
         }
         fclose(fp);
     }
     brpc::policy::FileNamingService fns;
     ASSERT_EQ(0, fns.GetServers(tmp_file.fname(), &servers));
-    ASSERT_EQ(ARRAY_SIZE(address_list), servers.size());
-    for (size_t i = 0; i < ARRAY_SIZE(address_list) - 2; ++i) {
+    ASSERT_EQ(FLARE_ARRAY_SIZE(address_list), servers.size());
+    for (size_t i = 0; i < FLARE_ARRAY_SIZE(address_list) - 2; ++i) {
         std::ostringstream oss;
         oss << servers[i];
         ASSERT_EQ(address_list[i], oss.str()) << "i=" << i;
     }
 
     std::string s;
-    for (size_t i = 0; i < ARRAY_SIZE(address_list); ++i) {
-        ASSERT_EQ(0, butil::string_appendf(&s, "%s,", address_list[i]));
+    for (size_t i = 0; i < FLARE_ARRAY_SIZE(address_list); ++i) {
+        ASSERT_EQ(0, flare::base::string_appendf(&s, "%s,", address_list[i]));
     }
     brpc::policy::ListNamingService lns;
     ASSERT_EQ(0, lns.GetServers(s.c_str(), &servers));
-    ASSERT_EQ(ARRAY_SIZE(address_list), servers.size());
-    for (size_t i = 0; i < ARRAY_SIZE(address_list) - 2; ++i) {
+    ASSERT_EQ(FLARE_ARRAY_SIZE(address_list), servers.size());
+    for (size_t i = 0; i < FLARE_ARRAY_SIZE(address_list) - 2; ++i) {
         std::ostringstream oss;
         oss << servers[i];
         ASSERT_EQ(address_list[i], oss.str()) << "i=" << i;
@@ -169,25 +170,25 @@ TEST(NamingServiceTest, wrong_name) {
         "baidu.com:1234",
         "LOCAL:1234"
     };
-    butil::TempFile tmp_file;
+    flare::base::temp_file tmp_file;
     {
         FILE *fp = fopen(tmp_file.fname(), "w");
-        for (size_t i = 0; i < ARRAY_SIZE(address_list); ++i) {
+        for (size_t i = 0; i < FLARE_ARRAY_SIZE(address_list); ++i) {
             ASSERT_TRUE(fprintf(fp, "%s\n", address_list[i]));
         }
         fclose(fp);
     }
     brpc::policy::FileNamingService fns;
     ASSERT_EQ(0, fns.GetServers(tmp_file.fname(), &servers));
-    ASSERT_EQ(ARRAY_SIZE(address_list) - 4, servers.size());
+    ASSERT_EQ(FLARE_ARRAY_SIZE(address_list) - 4, servers.size());
 
     std::string s;
-    for (size_t i = 0; i < ARRAY_SIZE(address_list); ++i) {
-        ASSERT_EQ(0, butil::string_appendf(&s, ", %s", address_list[i]));
+    for (size_t i = 0; i < FLARE_ARRAY_SIZE(address_list); ++i) {
+        ASSERT_EQ(0, flare::base::string_appendf(&s, ", %s", address_list[i]));
     }
     brpc::policy::ListNamingService lns;
     ASSERT_EQ(0, lns.GetServers(s.c_str(), &servers));
-    ASSERT_EQ(ARRAY_SIZE(address_list) - 4, servers.size());
+    ASSERT_EQ(FLARE_ARRAY_SIZE(address_list) - 4, servers.size());
 }
 
 class UserNamingServiceImpl : public test::UserNamingService {
@@ -228,10 +229,10 @@ TEST(NamingServiceTest, remotefile) {
     ASSERT_EQ(0, server2.AddService(&svc2, brpc::SERVER_DOESNT_OWN_SERVICE));
     ASSERT_EQ(0, server2.Start("localhost:8636", NULL));
 
-    butil::EndPoint n1;
-    ASSERT_EQ(0, butil::str2endpoint("0.0.0.0:8635", &n1));
-    butil::EndPoint n2;
-    ASSERT_EQ(0, butil::str2endpoint("0.0.0.0:8636", &n2));
+    flare::base::end_point n1;
+    ASSERT_EQ(0, flare::base::str2endpoint("0.0.0.0:8635", &n1));
+    flare::base::end_point n2;
+    ASSERT_EQ(0, flare::base::str2endpoint("0.0.0.0:8636", &n2));
     std::vector<brpc::ServerNode> expected_servers;
     expected_servers.push_back(brpc::ServerNode(n1, "tag1"));
     expected_servers.push_back(brpc::ServerNode(n2, "tag2"));
@@ -404,11 +405,11 @@ TEST(NamingServiceTest, consul_with_backup_file) {
         "10.128.0.1:1234",
         "10.129.0.1:1234",
     };
-    butil::TempFile tmp_file;
+    flare::base::temp_file tmp_file;
     const char * service_name = tmp_file.fname();
     {
         FILE* fp = fopen(tmp_file.fname(), "w");
-        for (size_t i = 0; i < ARRAY_SIZE(address_list); ++i) {
+        for (size_t i = 0; i < FLARE_ARRAY_SIZE(address_list); ++i) {
             ASSERT_TRUE(fprintf(fp, "%s\n", address_list[i]));
         }
         fclose(fp);
@@ -418,8 +419,8 @@ TEST(NamingServiceTest, consul_with_backup_file) {
     std::vector<brpc::ServerNode> servers;
     brpc::policy::ConsulNamingService cns;
     ASSERT_EQ(0, cns.GetServers(service_name, &servers));
-    ASSERT_EQ(ARRAY_SIZE(address_list), servers.size());
-    for (size_t i = 0; i < ARRAY_SIZE(address_list); ++i) {
+    ASSERT_EQ(FLARE_ARRAY_SIZE(address_list), servers.size());
+    for (size_t i = 0; i < FLARE_ARRAY_SIZE(address_list); ++i) {
         std::ostringstream oss;
         oss << servers[i];
         ASSERT_EQ(address_list[i], oss.str()) << "i=" << i;
@@ -438,10 +439,10 @@ TEST(NamingServiceTest, consul_with_backup_file) {
 
     bthread_usleep(5000000);
 
-    butil::EndPoint n1;
-    ASSERT_EQ(0, butil::str2endpoint("10.121.36.189:8003", &n1));
-    butil::EndPoint n2;
-    ASSERT_EQ(0, butil::str2endpoint("10.121.36.190:8003", &n2));
+    flare::base::end_point n1;
+    ASSERT_EQ(0, flare::base::str2endpoint("10.121.36.189:8003", &n1));
+    flare::base::end_point n2;
+    ASSERT_EQ(0, flare::base::str2endpoint("10.121.36.190:8003", &n2));
     std::vector<brpc::ServerNode> expected_servers;
     expected_servers.push_back(brpc::ServerNode(n1, "1"));
     expected_servers.push_back(brpc::ServerNode(n2, "2"));
@@ -582,7 +583,7 @@ public:
         auto body = cntl->request_attachment().to_string();
         for (brpc::QuerySplitter sp(body); sp; ++sp) {
             if (sp.key() == "addrs") {
-                _addrs.insert(sp.value().as_string());
+                _addrs.insert(flare::base::as_string(sp.value()));
             }
         }
         cntl->response_attachment().append(R"({

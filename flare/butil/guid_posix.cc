@@ -4,13 +4,13 @@
 
 #include "flare/butil/guid.h"
 
-#include "flare/butil/rand_util.h"
+#include "flare/base/rand_util.h"
 #include "flare/butil/strings/stringprintf.h"
 
 namespace butil {
 
 std::string GenerateGUID() {
-  uint64_t sixteen_bytes[2] = { butil::RandUint64(), butil::RandUint64() };
+  uint64_t sixteen_bytes[2] = { flare::base::RandUint64(), flare::base::RandUint64() };
   return RandomDataToGUIDString(sixteen_bytes);
 }
 

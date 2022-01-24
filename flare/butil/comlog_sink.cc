@@ -21,9 +21,9 @@
 #include "flare/butil/memory/singleton.h"
 #include "flare/butil/comlog_sink.h"
 #include "flare/butil/files/file_path.h"
-#include "flare/butil/fd_guard.h"
+#include "flare/base/fd_guard.h"
 #include "flare/butil/file_util.h"
-#include "flare/butil/endpoint.h"
+#include "flare/base/endpoint.h"
 
 namespace logging {
 DECLARE_bool(log_year);
@@ -165,7 +165,7 @@ int ComlogSink::SetupFromConfig(const std::string& conf_path_str) {
 
 // This is definitely linux specific.
 static std::string GetProcessName() {
-    butil::fd_guard fd(open("/proc/self/cmdline", O_RDONLY));
+    flare::base::fd_guard fd(open("/proc/self/cmdline", O_RDONLY));
     if (fd < 0) {
         return "unknown";
     }
@@ -375,7 +375,7 @@ bool ComlogSink::OnLogMessage(int severity, const char* file, int line,
         comlog_level = comlog_levels[severity];
     }
     if (FLAGS_log_hostname) {
-        butil::StringPiece hostname(butil::my_hostname());
+        butil::StringPiece hostname(flare::base::my_hostname());
         if (hostname.ends_with(".baidu.com")) { // make it shorter
             hostname.remove_suffix(10);
         }

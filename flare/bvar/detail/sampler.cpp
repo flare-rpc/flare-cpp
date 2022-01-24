@@ -17,8 +17,8 @@
 
 // Date: Tue Jul 28 18:14:40 CST 2015
 
-#include "flare/butil/time.h"
-#include "flare/butil/memory/singleton_on_pthread_once.h"
+#include "flare/base/time.h"
+#include "flare/base/singleton_on_pthread_once.h"
 #include "flare/bvar/reducer.h"
 #include "flare/bvar/detail/sampler.h"
 #include "flare/bvar/passive_status.h"
@@ -39,7 +39,7 @@ struct CombineSampler {
             s1 = s2;
             return;
         }
-        s1->InsertBeforeAsList(s2);
+        s1->insert_before_as_list(s2);
     }
 };
 
@@ -83,13 +83,13 @@ private:
     // * A forked program can be forked again.
 
     static void child_callback_atfork() {
-        butil::get_leaky_singleton<SamplerCollector>()->after_forked_as_child();
+        flare::base::get_leaky_singleton<SamplerCollector>()->after_forked_as_child();
     }
 
     void create_sampling_thread() {
         const int rc = pthread_create(&_tid, NULL, sampling_thread, this);
         if (rc != 0) {
-            LOG(FATAL) << "Fail to create sampling_thread, " << berror(rc);
+            LOG(FATAL) << "Fail to create sampling_thread, " << flare_error(rc);
         } else {
             _created = true;
             if (!registered_atfork) {
@@ -145,24 +145,24 @@ void SamplerCollector::run() {
     }
 #endif
 
-    butil::LinkNode<Sampler> root;
+    flare::container::link_node<Sampler> root;
     int consecutive_nosleep = 0;
     while (!_stop) {
-        int64_t abstime = butil::gettimeofday_us();
+        int64_t abstime = flare::base::gettimeofday_us();
         Sampler* s = this->reset();
         if (s) {
-            s->InsertBeforeAsList(&root);
+            s->insert_before_as_list(&root);
         }
         int nremoved = 0;
         int nsampled = 0;
-        for (butil::LinkNode<Sampler>* p = root.next(); p != &root;) {
+        for (flare::container::link_node<Sampler>* p = root.next(); p != &root;) {
             // We may remove p from the list, save next first.
-            butil::LinkNode<Sampler>* saved_next = p->next();
+            flare::container::link_node<Sampler>* saved_next = p->next();
             Sampler* s = p->value();
             s->_mutex.lock();
             if (!s->_used) {
                 s->_mutex.unlock();
-                p->RemoveFromList();
+                p->remove_from_list();
                 delete s;
                 ++nremoved;
             } else {
@@ -173,13 +173,13 @@ void SamplerCollector::run() {
             p = saved_next;
         }
         bool slept = false;
-        int64_t now = butil::gettimeofday_us();
+        int64_t now = flare::base::gettimeofday_us();
         _cumulated_time_us += now - abstime;
         abstime += 1000000L;
         while (abstime > now) {
             ::usleep(abstime - now);
             slept = true;
-            now = butil::gettimeofday_us();
+            now = flare::base::gettimeofday_us();
         }
         if (slept) {
             consecutive_nosleep = 0;
@@ -198,7 +198,7 @@ Sampler::Sampler() : _used(true) {}
 Sampler::~Sampler() {}
 
 void Sampler::schedule() {
-    *butil::get_leaky_singleton<SamplerCollector>() << this;
+    *flare::base::get_leaky_singleton<SamplerCollector>() << this;
 }
 
 void Sampler::destroy() {

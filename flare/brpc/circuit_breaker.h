@@ -18,7 +18,7 @@
 #ifndef BRPC_CIRCUIT_BREAKER_H
 #define BRPC_CIRCUIT_BREAKER_H
 
-#include "flare/butil/static_atomic.h"
+#include "flare/base/static_atomic.h"
 
 namespace brpc {
 

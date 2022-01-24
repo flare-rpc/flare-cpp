@@ -8,7 +8,7 @@
 #include <string.h>
 
 #include "flare/butil/files/file_path.h"
-#include "flare/butil/logging.h"
+#include "flare/base/logging.h"
 #include "flare/butil/mac/bundle_locations.h"
 //#include "flare/butil/mac/mac_logging.h"
 #include "flare/butil/strings/sys_string_conversions.h"

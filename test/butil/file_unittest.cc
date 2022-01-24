@@ -311,7 +311,7 @@ TEST(FileTest, Length) {
 }
 
 // Flakily fails: http://crbug.com/86494
-#if defined(OS_ANDROID)
+#if defined(FLARE_PLATFORM_ANDROID)
 TEST(FileTest, TouchGetInfo) {
 #else
 TEST(FileTest, DISABLED_TouchGetInfo) {
@@ -362,7 +362,7 @@ TEST(FileTest, DISABLED_TouchGetInfo) {
   EXPECT_FALSE(info.is_symbolic_link);
 
   // ext2/ext3 and HPS/HPS+ seem to have a timestamp granularity of 1s.
-#if defined(OS_POSIX)
+#if defined(FLARE_PLATFORM_POSIX)
   EXPECT_EQ(info.last_accessed.ToTimeVal().tv_sec,
             new_last_accessed.ToTimeVal().tv_sec);
   EXPECT_EQ(info.last_modified.ToTimeVal().tv_sec,
@@ -442,7 +442,7 @@ TEST(FileTest, Seek) {
   EXPECT_EQ(kOffset, file.Seek(butil::File::FROM_END, -kOffset));
 }
 
-#if defined(OS_WIN)
+#if defined(FLARE_PLATFORM_WINDOWS)
 TEST(FileTest, GetInfoForDirectory) {
   butil::ScopedTempDir temp_dir;
   ASSERT_TRUE(temp_dir.CreateUniqueTempDir());
@@ -465,4 +465,4 @@ TEST(FileTest, GetInfoForDirectory) {
   EXPECT_FALSE(info.is_symbolic_link);
   EXPECT_EQ(0, info.size);
 }
-#endif  // defined(OS_WIN)
+#endif  // defined(FLARE_PLATFORM_WINDOWS)

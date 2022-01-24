@@ -23,7 +23,7 @@
 #include <vector>                             // std::vector
 #include <algorithm>                          // std::find
 #include <errno.h>                            // errno
-#include "flare/butil/logging.h"
+#include "flare/base/logging.h"
 
 // Synchronous event notification.
 // Observers to an event will be called immediately in the same context where

@@ -21,25 +21,25 @@
 
 #include <memory>           // std::unique_ptr
 #include <vector>
-#include "flare/butil/iobuf.h"
-#include "flare/butil/status.h"
-#include "flare/butil/arena.h"
+#include "flare/io/iobuf.h"
+#include "flare/base/status.h"
+#include "flare/memory/arena.h"
 #include "flare/brpc/parse_result.h"
 
 namespace brpc {
 
 // Format a redis command and append it to `buf'.
-// Returns butil::Status::OK() on success.
-butil::Status RedisCommandFormat(butil::IOBuf* buf, const char* fmt, ...);
-butil::Status RedisCommandFormatV(butil::IOBuf* buf, const char* fmt, va_list args);
+// Returns flare::base::flare_status::OK() on success.
+flare::base::flare_status RedisCommandFormat(flare::io::IOBuf* buf, const char* fmt, ...);
+flare::base::flare_status RedisCommandFormatV(flare::io::IOBuf* buf, const char* fmt, va_list args);
 
 // Just convert the command to the text format of redis without processing the
 // specifiers(%) inside.
-butil::Status RedisCommandNoFormat(butil::IOBuf* buf, const butil::StringPiece& command);
+flare::base::flare_status RedisCommandNoFormat(flare::io::IOBuf* buf, const std::string_view& command);
 
 // Concatenate components to form a redis command.
-butil::Status RedisCommandByComponents(butil::IOBuf* buf,
-                                      const butil::StringPiece* components,
+flare::base::flare_status RedisCommandByComponents(flare::io::IOBuf* buf,
+                                      const std::string_view* components,
                                       size_t num_components);
 
 // A parser used to parse redis raw command.
@@ -50,8 +50,8 @@ public:
     // Parse raw message from `buf'. Return PARSE_OK and set the parsed command
     // to `args' and length to `len' if successful. Memory of args are allocated 
     // in `arena'.
-    ParseError Consume(butil::IOBuf& buf, std::vector<butil::StringPiece>* args,
-                       butil::Arena* arena);
+    ParseError Consume(flare::io::IOBuf& buf, std::vector<std::string_view>* args,
+                       flare::memory::Arena* arena);
 
 private:
     // Reset parser to the initial state.
@@ -60,7 +60,7 @@ private:
     bool _parsing_array;            // if the parser has met array indicator '*'
     int _length;                    // array length
     int _index;                     // current parsing array index
-    std::vector<butil::StringPiece> _args;  // parsed command string
+    std::vector<std::string_view> _args;  // parsed command string
 };
 
 } // namespace brpc

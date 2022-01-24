@@ -6,7 +6,7 @@
 #define BUTIL_THREADING_THREAD_CHECKER_IMPL_H_
 
 #include "flare/butil/base_export.h"
-#include "flare/butil/synchronization/lock.h"
+#include "flare/base/lock.h"
 #include "flare/butil/threading/platform_thread.h"
 
 namespace butil {
@@ -32,7 +32,7 @@ class BUTIL_EXPORT ThreadCheckerImpl {
  private:
   void EnsureThreadIdAssigned() const;
 
-  mutable butil::Lock lock_;
+  mutable flare::base::Lock lock_;
   // This is mutable so that CalledOnValidThread can set it.
   // It's guarded by |lock_|.
   mutable PlatformThreadRef valid_thread_id_;

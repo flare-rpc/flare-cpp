@@ -5,7 +5,7 @@ streaming_log - Print log to std::ostreams
 # SYNOPSIS
 
 ```c++
-#include <flare/butil/logging.h>
+#include "flare/base/logging.h"
 
 LOG(FATAL) << "Fatal error occurred! contexts=" << ...;
 LOG(WARNING) << "Unusual thing happened ..." << ...;

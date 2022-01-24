@@ -18,9 +18,9 @@
 
 #include <inttypes.h>
 #include <gflags/gflags.h>
-#include "flare/butil/fd_guard.h"                 // fd_guard
-#include "flare/butil/fd_utility.h"               // make_close_on_exec
-#include "flare/butil/time.h"                     // gettimeofday_us
+#include "flare/base/fd_guard.h"                 // fd_guard
+#include "flare/base/fd_utility.h"               // make_close_on_exec
+#include "flare/base/time.h"                     // gettimeofday_us
 #include "flare/brpc/acceptor.h"
 
 
@@ -52,7 +52,7 @@ int Acceptor::StartAccept(int listened_fd, int idle_timeout_sec,
         return -1;
     }
     
-    BAIDU_SCOPED_LOCK(_map_mutex);
+    FLARE_SCOPED_LOCK(_map_mutex);
     if (_status == UNINITIALIZED) {
         if (Initialize() != 0) {
             LOG(FATAL) << "Fail to initialize Acceptor";
@@ -114,7 +114,7 @@ void Acceptor::StopAccept(int /*closewait_ms*/) {
     // the requests may be deleted and invalid.
 
     {
-        BAIDU_SCOPED_LOCK(_map_mutex);
+        FLARE_SCOPED_LOCK(_map_mutex);
         if (_status != RUNNING) {
             return;
         }
@@ -160,7 +160,7 @@ int Acceptor::Initialize() {
 
 // NOTE: Join() can happen before StopAccept()
 void Acceptor::Join() {
-    std::unique_lock<butil::Mutex> mu(_map_mutex);
+    std::unique_lock<flare::base::Mutex> mu(_map_mutex);
     if (_status != STOPPING && _status != RUNNING) {  // no need to join.
         return;
     }
@@ -180,7 +180,7 @@ void Acceptor::Join() {
     }
     
     {
-        BAIDU_SCOPED_LOCK(_map_mutex);
+        FLARE_SCOPED_LOCK(_map_mutex);
         _status = READY;
     }
 }
@@ -202,7 +202,7 @@ void Acceptor::ListConnections(std::vector<SocketId>* conn_list,
     // ConnectionCount is inaccurate, enough space is reserved
     conn_list->reserve(ConnectionCount() + 10);
 
-    std::unique_lock<butil::Mutex> mu(_map_mutex);
+    std::unique_lock<flare::base::Mutex> mu(_map_mutex);
     if (!_socket_map.initialized()) {
         // Optional. Uninitialized FlatMap should be iteratable.
         return;
@@ -242,7 +242,7 @@ void Acceptor::OnNewConnectionsUntilEAGAIN(Socket* acception) {
     while (1) {
         struct sockaddr in_addr;
         socklen_t in_len = sizeof(in_addr);
-        butil::fd_guard in_fd(accept(acception->fd(), &in_addr, &in_len));
+        flare::base::fd_guard in_fd(accept(acception->fd(), &in_addr, &in_len));
         if (in_fd < 0) {
             // no EINTR because listened fd is non-blocking.
             if (errno == EAGAIN) {
@@ -269,7 +269,7 @@ void Acceptor::OnNewConnectionsUntilEAGAIN(Socket* acception) {
         SocketOptions options;
         options.keytable_pool = am->_keytable_pool;
         options.fd = in_fd;
-        options.remote_side = butil::EndPoint(*(sockaddr_in*)&in_addr);
+        options.remote_side = flare::base::end_point(*(sockaddr_in*)&in_addr);
         options.user = acception->user();
         options.on_edge_triggered_events = InputMessenger::OnNewMessages;
         options.initial_ssl_ctx = am->_ssl_ctx;
@@ -290,7 +290,7 @@ void Acceptor::OnNewConnectionsUntilEAGAIN(Socket* acception) {
         if (Socket::AddressFailedAsWell(socket_id, &sock) >= 0) {
             bool is_running = true;
             {
-                BAIDU_SCOPED_LOCK(am->_map_mutex);
+                FLARE_SCOPED_LOCK(am->_map_mutex);
                 is_running = (am->status() == RUNNING);
                 // Always add this socket into `_socket_map' whether it
                 // has been `SetFailed' or not, whether `Acceptor' is
@@ -323,7 +323,7 @@ void Acceptor::OnNewConnections(Socket* acception) {
 }
 
 void Acceptor::BeforeRecycle(Socket* sock) {
-    BAIDU_SCOPED_LOCK(_map_mutex);
+    FLARE_SCOPED_LOCK(_map_mutex);
     if (sock->id() == _acception_id) {
         // Set _listened_fd to -1 when acception socket has been recycled
         // so that we are ensured no more events will arrive (and `Join'

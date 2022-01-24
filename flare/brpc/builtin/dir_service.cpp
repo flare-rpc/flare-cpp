@@ -19,8 +19,8 @@
 #include <ostream>
 #include <dirent.h>                    // opendir
 #include <fcntl.h>                     // O_RDONLY
-#include "flare/butil/fd_guard.h"
-#include "flare/butil/fd_utility.h"
+#include "flare/base/fd_guard.h"
+#include "flare/base/fd_utility.h"
 
 #include "flare/brpc/closure_guard.h"        // ClosureGuard
 #include "flare/brpc/controller.h"           // Controller
@@ -49,15 +49,15 @@ void DirService::default_method(::google::protobuf::RpcController* cntl_base,
     }
     DIR* dir = opendir(open_path.c_str());
     if (NULL == dir) {
-        butil::fd_guard fd(open(open_path.c_str(), O_RDONLY));
+        flare::base::fd_guard fd(open(open_path.c_str(), O_RDONLY));
         if (fd < 0) {
             cntl->SetFailed(errno, "Cannot open `%s'", open_path.c_str());
             return;
         }
-        butil::make_non_blocking(fd);
-        butil::make_close_on_exec(fd);
+        flare::base::make_non_blocking(fd);
+        flare::base::make_close_on_exec(fd);
 
-        butil::IOPortal read_portal;
+        flare::io::IOPortal read_portal;
         size_t total_read = 0;
         do {
             const ssize_t nr = read_portal.append_from_file_descriptor(
@@ -71,7 +71,7 @@ void DirService::default_method(::google::protobuf::RpcController* cntl_base,
             }
             total_read += nr;
         } while (total_read < MAX_READ);
-        butil::IOBuf& resp = cntl->response_attachment();
+        flare::io::IOBuf& resp = cntl->response_attachment();
         resp.swap(read_portal);
         if (total_read >= MAX_READ) {
             std::ostringstream oss;
@@ -81,7 +81,7 @@ void DirService::default_method(::google::protobuf::RpcController* cntl_base,
         cntl->http_response().set_content_type("text/plain");
     } else {
         const bool use_html = UseHTML(cntl->http_request());
-        const butil::EndPoint* const html_addr = (use_html ? Path::LOCAL : NULL);
+        const flare::base::end_point* const html_addr = (use_html ? Path::LOCAL : NULL);
         cntl->http_response().set_content_type(
             use_html ? "text/html" : "text/plain");
 
@@ -100,7 +100,7 @@ void DirService::default_method(::google::protobuf::RpcController* cntl_base,
         CHECK_EQ(0, closedir(dir));
         
         std::sort(files.begin(), files.end());
-        butil::IOBufBuilder os;
+        flare::io::IOBufBuilder os;
         if (use_html) {
             os << "<!DOCTYPE html><html><body><pre>";
         }

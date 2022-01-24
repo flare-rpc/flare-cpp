@@ -4,8 +4,8 @@
 
 #include "flare/butil/threading/thread_local_storage.h"
 
-#include "flare/butil/static_atomic.h"
-#include "flare/butil/logging.h"
+#include "flare/base/static_atomic.h"
+#include "flare/base/logging.h"
 
 using butil::internal::PlatformThreadLocalStorage;
 

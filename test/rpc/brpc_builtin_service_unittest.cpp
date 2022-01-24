@@ -26,7 +26,7 @@
 #include <gflags/gflags.h>
 #include <google/protobuf/descriptor.h>
 #include "flare/butil/gperftools_profiler.h"
-#include "flare/butil/time.h"
+#include "flare/base/time.h"
 #include "flare/butil/macros.h"
 #include "flare/brpc/socket.h"
 #include "flare/brpc/server.h"
@@ -39,7 +39,6 @@
 #include "flare/brpc/builtin/list_service.h"
 #include "flare/brpc/builtin/status_service.h"
 #include "flare/brpc/builtin/threads_service.h"
-#include "flare/brpc/builtin/vlog_service.h"
 #include "flare/brpc/builtin/index_service.h"        // IndexService
 #include "flare/brpc/builtin/connections_service.h"  // ConnectionsService
 #include "flare/brpc/builtin/flags_service.h"        // FlagsService
@@ -132,7 +131,7 @@ void CheckFieldInContent(const brpc::Controller& cntl,
 void CheckAnnotation(const brpc::Controller& cntl, int64_t expect) {
     const std::string& content = cntl.response_attachment().to_string();
     std::string expect_str;
-    butil::string_printf(&expect_str, "MyAnnotation: %" PRId64, expect);
+    flare::base::string_printf(&expect_str, "MyAnnotation: %" PRId64, expect);
     std::size_t pos = content.find(expect_str);
     ASSERT_TRUE(pos != std::string::npos) << expect;
 }
@@ -195,23 +194,7 @@ protected:
         EXPECT_EQ(expect_type, cntl.http_response().content_type());
         ASSERT_EQ(0, _server.RemoveService(&echo_svc));
     }
-    
-    void TestVLog(bool use_html) {
-#if !BRPC_WITH_GLOG
-        std::string expect_type = (use_html ? "text/html" : "text/plain");
-        brpc::VLogService service;
-        brpc::VLogRequest req;
-        brpc::VLogResponse res;
-        brpc::Controller cntl;
-        ClosureChecker done;
-        SetUpController(&cntl, use_html);
-        MyVLogSite();
-        service.default_method(&cntl, &req, &res, &done);
-        EXPECT_FALSE(cntl.Failed());
-        EXPECT_EQ(expect_type, cntl.http_response().content_type());
-        CheckContent(cntl, "brpc_builtin_service_unittest");
-#endif
-    }
+
     
     void TestConnections(bool use_html) {
         std::string expect_type = (use_html ? "text/html" : "text/plain");
@@ -221,7 +204,7 @@ protected:
         brpc::Controller cntl;
         ClosureChecker done;
         SetUpController(&cntl, use_html);
-        butil::EndPoint ep;
+        flare::base::end_point ep;
         ASSERT_EQ(0, str2endpoint("127.0.0.1:9798", &ep));
         ASSERT_EQ(0, _server.Start(ep, NULL));
         int self_port = -1;
@@ -373,7 +356,7 @@ protected:
         
         ASSERT_EQ(0, _server.AddService(new EchoServiceImpl(),
                                         brpc::SERVER_OWNS_SERVICE));
-        butil::EndPoint ep;
+        flare::base::end_point ep;
         ASSERT_EQ(0, str2endpoint("127.0.0.1:9748", &ep));
         ASSERT_EQ(0, _server.Start(ep, NULL));
         brpc::Channel channel;
@@ -591,10 +574,6 @@ TEST_F(BuiltinServiceTest, threads) {
     pthread_join(tid, NULL);
 }
 
-TEST_F(BuiltinServiceTest, vlog) {
-    TestVLog(false);
-    TestVLog(true);
-}
 
 TEST_F(BuiltinServiceTest, connections) {
     TestConnections(false);
@@ -711,9 +690,9 @@ TEST_F(BuiltinServiceTest, dir) {
         cntl.http_request()._unresolved_path = "/usr/include/errno.h";
         service.default_method(&cntl, &req, &res, &done);
         EXPECT_FALSE(cntl.Failed());
-#if defined(OS_LINUX)
+#if defined(FLARE_PLATFORM_LINUX)
         CheckContent(cntl, "ERRNO_H");
-#elif defined(OS_MACOSX)
+#elif defined(FLARE_PLATFORM_OSX)
         CheckContent(cntl, "sys/errno.h");
 #endif
     }
@@ -754,7 +733,7 @@ TEST_F(BuiltinServiceTest, ids) {
         ClosureChecker done;
         brpc::Controller cntl;
         std::string id_string;
-        butil::string_printf(&id_string, "%llu", (unsigned long long)id.value);
+        flare::base::string_printf(&id_string, "%llu", (unsigned long long)id.value);
         cntl.http_request()._unresolved_path = id_string;
         service.default_method(&cntl, &req, &res, &done);
         EXPECT_FALSE(cntl.Failed());
@@ -792,7 +771,7 @@ TEST_F(BuiltinServiceTest, bthreads) {
         ClosureChecker done;
         brpc::Controller cntl;
         std::string id_string;
-        butil::string_printf(&id_string, "%llu", (unsigned long long)th);
+        flare::base::string_printf(&id_string, "%llu", (unsigned long long)th);
         cntl.http_request()._unresolved_path = id_string;
         service.default_method(&cntl, &req, &res, &done);
         EXPECT_FALSE(cntl.Failed());
@@ -826,7 +805,7 @@ TEST_F(BuiltinServiceTest, sockets) {
         ClosureChecker done;
         brpc::Controller cntl;
         std::string id_string;
-        butil::string_printf(&id_string, "%llu", (unsigned long long)id);
+        flare::base::string_printf(&id_string, "%llu", (unsigned long long)id);
         cntl.http_request()._unresolved_path = id_string;
         service.default_method(&cntl, &req, &res, &done);
         EXPECT_FALSE(cntl.Failed());

@@ -21,13 +21,13 @@
 #define  BVAR_DETAIL_SAMPLER_H
 
 #include <vector>
-#include "flare/butil/containers/linked_list.h"// LinkNode
-#include "flare/butil/scoped_lock.h"           // BAIDU_SCOPED_LOCK
-#include "flare/butil/logging.h"               // LOG()
-#include "flare/butil/containers/bounded_queue.h"// BoundedQueue
-#include "flare/butil/type_traits.h"           // is_same
-#include "flare/butil/time.h"                  // gettimeofday_us
-#include "flare/butil/class_name.h"
+#include "flare/container/linked_list.h"
+#include "flare/base/scoped_lock.h"           // FLARE_SCOPED_LOCK
+#include "flare/base/logging.h"               // LOG()
+#include "flare/container/bounded_queue.h"// bounded_queue
+#include "flare/base/type_traits.h"           // is_same
+#include "flare/base/time.h"                  // gettimeofday_us
+#include "flare/base/class_name.h"
 
 namespace bvar {
 namespace detail {
@@ -42,7 +42,7 @@ struct Sample {
 };
 
 // The base class for all samplers whose take_sample() are called periodically.
-class Sampler : public butil::LinkNode<Sampler> {
+class Sampler : public flare::container::link_node<Sampler> {
 public:
     Sampler();
         
@@ -64,7 +64,7 @@ protected:
 friend class SamplerCollector;
     bool _used;
     // Sync destroy() and take_sample().
-    butil::Mutex _mutex;
+    flare::base::Mutex _mutex;
 };
 
 // Representing a non-existing operator so that we can test
@@ -111,8 +111,8 @@ public:
             if (NULL == mem) {
                 return;
             }
-            butil::BoundedQueue<Sample<T> > new_q(
-                mem, memsize, butil::OWNS_STORAGE);
+            flare::container::bounded_queue<Sample<T> > new_q(
+                mem, memsize, flare::container::OWNS_STORAGE);
             Sample<T> tmp;
             while (_q.pop(&tmp)) {
                 new_q.push(tmp);
@@ -121,7 +121,7 @@ public:
         }
 
         Sample<T> latest;
-        if (butil::is_same<InvOp, VoidOp>::value) {
+        if (std::is_same<InvOp, VoidOp>::value) {
             // The operator can't be inversed.
             // We reset the reducer and save the result as a sample.
             // Suming up samples gives the result within a window.
@@ -136,7 +136,7 @@ public:
             // get_value() of _reducer can still be called.
             latest.data = _reducer->get_value();
         }
-        latest.time_us = butil::gettimeofday_us();
+        latest.time_us = flare::base::gettimeofday_us();
         _q.elim_push(latest);
     }
 
@@ -145,7 +145,7 @@ public:
             LOG(FATAL) << "Invalid window_size=" << window_size;
             return false;
         }
-        BAIDU_SCOPED_LOCK(_mutex);
+        FLARE_SCOPED_LOCK(_mutex);
         if (_q.size() <= 1UL) {
             // We need more samples to get reasonable result.
             return false;
@@ -156,7 +156,7 @@ public:
         }
         Sample<T>* latest = _q.bottom();
         DCHECK(latest != oldest);
-        if (butil::is_same<InvOp, VoidOp>::value) {
+        if (std::is_same<InvOp, VoidOp>::value) {
             // No inverse op. Sum up all samples within the window.
             result->data = latest->data;
             for (int i = 1; true; ++i) {
@@ -181,7 +181,7 @@ public:
             LOG(ERROR) << "Invalid window_size=" << window_size;
             return -1;
         }
-        BAIDU_SCOPED_LOCK(_mutex);
+        FLARE_SCOPED_LOCK(_mutex);
         if (window_size > _window_size) {
             _window_size = window_size;
         }
@@ -193,7 +193,7 @@ public:
             LOG(FATAL) << "Invalid window_size=" << window_size;
             return;
         }
-        BAIDU_SCOPED_LOCK(_mutex);
+        FLARE_SCOPED_LOCK(_mutex);
         if (_q.size() <= 1) {
             // We need more samples to get reasonable result.
             return;
@@ -214,7 +214,7 @@ public:
 private:
     R* _reducer;
     time_t _window_size;
-    butil::BoundedQueue<Sample<T> > _q;
+    flare::container::bounded_queue<Sample<T> > _q;
 };
 
 }  // namespace detail

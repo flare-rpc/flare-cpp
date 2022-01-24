@@ -19,10 +19,10 @@
 
 // Date: Tue Jul 10 17:40:58 CST 2012
 
-#include "flare/butil/scoped_lock.h"             // BAIDU_SCOPED_LOCK
-#include "flare/butil/errno.h"                   // berror
-#include "flare/butil/logging.h"
-#include "flare/butil/third_party/murmurhash3/murmurhash3.h"
+#include "flare/base/scoped_lock.h"             // FLARE_SCOPED_LOCK
+#include "flare/base/errno.h"                    // flare_error
+#include "flare/base/logging.h"
+#include "flare/hash/murmurhash3.h"
 #include "flare/bthread/sys_futex.h"            // futex_wake_private
 #include "flare/bthread/interrupt_pthread.h"
 #include "flare/bthread/processor.h"            // cpu_relax
@@ -45,7 +45,7 @@ DECLARE_int32(bthread_concurrency);
 DECLARE_int32(bthread_min_concurrency);
 
 extern pthread_mutex_t g_task_control_mutex;
-extern BAIDU_THREAD_LOCAL TaskGroup* tls_task_group;
+extern FLARE_THREAD_LOCAL TaskGroup* tls_task_group;
 void (*g_worker_startfn)() = NULL;
 
 // May be called in other modules to run startfn in non-worker pthreads.
@@ -164,7 +164,7 @@ int TaskControl::init(int concurrency) {
     for (int i = 0; i < _concurrency; ++i) {
         const int rc = pthread_create(&_workers[i], NULL, worker_thread, this);
         if (rc) {
-            LOG(ERROR) << "Fail to create _workers[" << i << "], " << berror(rc);
+            LOG(ERROR) << "Fail to create _workers[" << i << "], " << flare_error(rc);
             return -1;
         }
     }
@@ -200,7 +200,7 @@ int TaskControl::add_workers(int num) {
                 &_workers[i + old_concurency], NULL, worker_thread, this);
         if (rc) {
             LOG(WARNING) << "Fail to create _workers[" << i + old_concurency
-                         << "], " << berror(rc);
+                         << "], " << flare_error(rc);
             _concurrency.fetch_sub(1, std::memory_order_release);
             break;
         }
@@ -213,7 +213,7 @@ int TaskControl::add_workers(int num) {
 TaskGroup* TaskControl::choose_one_group() {
     const size_t ngroup = _ngroup.load(std::memory_order_acquire);
     if (ngroup != 0) {
-        return _groups[butil::fast_rand_less_than(ngroup)];
+        return _groups[flare::base::fast_rand_less_than(ngroup)];
     }
     CHECK(false) << "Impossible: ngroup is 0";
     return NULL;
@@ -228,7 +228,7 @@ void TaskControl::stop_and_join() {
 
     // Stop workers
     {
-        BAIDU_SCOPED_LOCK(_modify_group_mutex);
+        FLARE_SCOPED_LOCK(_modify_group_mutex);
         _stop = true;
         _ngroup.exchange(0, std::memory_order_relaxed);
     }
@@ -264,7 +264,7 @@ int TaskControl::_add_group(TaskGroup* g) {
     if (__builtin_expect(NULL == g, 0)) {
         return -1;
     }
-    std::unique_lock<butil::Mutex> mu(_modify_group_mutex);
+    std::unique_lock<flare::base::Mutex> mu(_modify_group_mutex);
     if (_stop) {
         return -1;
     }
@@ -296,7 +296,7 @@ int TaskControl::_destroy_group(TaskGroup* g) {
     }
     bool erased = false;
     {
-        BAIDU_SCOPED_LOCK(_modify_group_mutex);
+        FLARE_SCOPED_LOCK(_modify_group_mutex);
         const size_t ngroup = _ngroup.load(std::memory_order_relaxed);
         for (size_t i = 0; i < ngroup; ++i) {
             if (_groups[i] == g) {
@@ -327,7 +327,7 @@ int TaskControl::_destroy_group(TaskGroup* g) {
     if (erased) {
         get_global_timer_thread()->schedule(
             delete_task_group, g,
-            butil::microseconds_from_now(FLAGS_task_group_delete_delay * 1000000L));
+            flare::base::microseconds_from_now(FLAGS_task_group_delete_delay * 1000000L));
     }
     return 0;
 }
@@ -372,7 +372,7 @@ void TaskControl::signal_task(int num_task) {
     if (num_task > 2) {
         num_task = 2;
     }
-    int start_index = butil::fmix64(pthread_numeric_id()) % PARKING_LOT_NUM;
+    int start_index = flare::hash::fmix64(pthread_numeric_id()) % PARKING_LOT_NUM;
     num_task -= _pl[start_index].signal(1);
     if (num_task > 0) {
         for (int i = 1; i < PARKING_LOT_NUM && num_task > 0; ++i) {
@@ -386,7 +386,7 @@ void TaskControl::signal_task(int num_task) {
         FLAGS_bthread_min_concurrency > 0 &&    // test min_concurrency for performance
         _concurrency.load(std::memory_order_relaxed) < FLAGS_bthread_concurrency) {
         // TODO: Reduce this lock
-        BAIDU_SCOPED_LOCK(g_task_control_mutex);
+        FLARE_SCOPED_LOCK(g_task_control_mutex);
         if (_concurrency.load(std::memory_order_acquire) < FLAGS_bthread_concurrency) {
             add_workers(1);
         }
@@ -397,7 +397,7 @@ void TaskControl::print_rq_sizes(std::ostream& os) {
     const size_t ngroup = _ngroup.load(std::memory_order_relaxed);
     DEFINE_SMALL_ARRAY(int, nums, ngroup, 128);
     {
-        BAIDU_SCOPED_LOCK(_modify_group_mutex);
+        FLARE_SCOPED_LOCK(_modify_group_mutex);
         // ngroup > _ngroup: nums[_ngroup ... ngroup-1] = 0
         // ngroup < _ngroup: just ignore _groups[_ngroup ... ngroup-1]
         for (size_t i = 0; i < ngroup; ++i) {
@@ -411,7 +411,7 @@ void TaskControl::print_rq_sizes(std::ostream& os) {
 
 double TaskControl::get_cumulated_worker_time() {
     int64_t cputime_ns = 0;
-    BAIDU_SCOPED_LOCK(_modify_group_mutex);
+    FLARE_SCOPED_LOCK(_modify_group_mutex);
     const size_t ngroup = _ngroup.load(std::memory_order_relaxed);
     for (size_t i = 0; i < ngroup; ++i) {
         if (_groups[i]) {
@@ -423,7 +423,7 @@ double TaskControl::get_cumulated_worker_time() {
 
 int64_t TaskControl::get_cumulated_switch_count() {
     int64_t c = 0;
-    BAIDU_SCOPED_LOCK(_modify_group_mutex);
+    FLARE_SCOPED_LOCK(_modify_group_mutex);
     const size_t ngroup = _ngroup.load(std::memory_order_relaxed);
     for (size_t i = 0; i < ngroup; ++i) {
         if (_groups[i]) {
@@ -435,7 +435,7 @@ int64_t TaskControl::get_cumulated_switch_count() {
 
 int64_t TaskControl::get_cumulated_signal_count() {
     int64_t c = 0;
-    BAIDU_SCOPED_LOCK(_modify_group_mutex);
+    FLARE_SCOPED_LOCK(_modify_group_mutex);
     const size_t ngroup = _ngroup.load(std::memory_order_relaxed);
     for (size_t i = 0; i < ngroup; ++i) {
         TaskGroup* g = _groups[i];

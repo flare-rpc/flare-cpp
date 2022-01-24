@@ -76,7 +76,7 @@ public:
     size_t get_sizes(size_t* counts, size_t n);
 
 private:
-    DISALLOW_COPY_AND_ASSIGN(ListOfABAFreeId);
+    FLARE_DISALLOW_COPY_AND_ASSIGN(ListOfABAFreeId);
     struct IdBlock {
         Id ids[IdTraits::BLOCK_SIZE];
         IdBlock* next;
@@ -130,7 +130,7 @@ template <typename Id, typename IdTraits>
 int ListOfABAFreeId<Id, IdTraits>::add(Id id) {
     // Scan for at most 4 positions, if any of them is empty, use the position.
     Id* saved_pos[4];
-    for (size_t i = 0; i < arraysize(saved_pos); ++i) {
+    for (size_t i = 0; i < FLARE_ARRAY_SIZE(saved_pos); ++i) {
         Id* const pos = _cur_block->ids + _cur_index;
         forward_index();
         // The position is not used.

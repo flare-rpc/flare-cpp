@@ -18,7 +18,7 @@
 
 #include <limits.h>
 #include <openssl/md5.h>
-#include "flare/butil/third_party/murmurhash3/murmurhash3.h"
+#include "flare/hash/murmurhash3.h"
 #include "flare/brpc/policy/hasher.h"
 
 
@@ -41,7 +41,7 @@ uint32_t MD5Hash32(const void* key, size_t len) {
             | (results[0] & 0xFF);
 }
 
-uint32_t MD5Hash32V(const butil::StringPiece* keys, size_t num_keys) {
+uint32_t MD5Hash32V(const std::string_view* keys, size_t num_keys) {
     MD5_CTX ctx;
     MD5_Init(&ctx);
     for (size_t i = 0; i < num_keys; ++i) {
@@ -58,18 +58,18 @@ uint32_t MD5Hash32V(const butil::StringPiece* keys, size_t num_keys) {
 
 uint32_t MurmurHash32(const void* key, size_t len) {
     uint32_t hash;
-    butil::MurmurHash3_x86_32(key, (int)len, 0, &hash);
+    flare::hash::MurmurHash3_x86_32(key, (int)len, 0, &hash);
     return hash;
 }
 
-uint32_t MurmurHash32V(const butil::StringPiece* keys, size_t num_keys) {
-    butil::MurmurHash3_x86_32_Context ctx;
-    butil::MurmurHash3_x86_32_Init(&ctx, 0);
+uint32_t MurmurHash32V(const std::string_view* keys, size_t num_keys) {
+    flare::hash::MurmurHash3_x86_32_Context ctx;
+    flare::hash::MurmurHash3_x86_32_Init(&ctx, 0);
     for (size_t i = 0; i < num_keys; ++i) {
-        butil::MurmurHash3_x86_32_Update(&ctx, keys[i].data(), keys[i].size());
+        flare::hash::MurmurHash3_x86_32_Update(&ctx, keys[i].data(), keys[i].size());
     }
     uint32_t hash;
-    butil::MurmurHash3_x86_32_Final(&hash, &ctx);
+    flare::hash::MurmurHash3_x86_32_Final(&hash, &ctx);
     return hash;
 }
 

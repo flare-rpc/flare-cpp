@@ -5,7 +5,7 @@
 #ifndef BUTIL_ATOMIC_SEQUENCE_NUM_H_
 #define BUTIL_ATOMIC_SEQUENCE_NUM_H_
 
-#include "flare/butil/static_atomic.h"
+#include "flare/base/static_atomic.h"
 #include "flare/butil/basictypes.h"
 
 namespace butil {

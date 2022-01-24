@@ -14,7 +14,7 @@
 
 #include "flare/butil/files/file_enumerator.h"
 #include "flare/butil/files/file_path.h"
-#include "flare/butil/logging.h"
+#include "flare/base/logging.h"
 #include "flare/butil/strings/string_piece.h"
 #include "flare/butil/strings/string_util.h"
 #include "flare/butil/strings/stringprintf.h"

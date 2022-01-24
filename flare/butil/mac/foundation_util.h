@@ -11,7 +11,7 @@
 #include <vector>
 
 #include "flare/butil/base_export.h"
-#include "flare/butil/logging.h"
+#include "flare/base/logging.h"
 #include "flare/butil/mac/scoped_cftyperef.h"
 
 #if defined(__OBJC__)

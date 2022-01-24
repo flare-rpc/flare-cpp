@@ -21,8 +21,7 @@
 #define  BVAR_RECORDER_H
 
 #include <stdint.h>                              // int64_t uint64_t
-#include "flare/butil/macros.h"                         // BAIDU_CASSERT
-#include "flare/butil/logging.h"                        // LOG
+#include "flare/base/logging.h"                        // LOG
 #include "flare/bvar/detail/combiner.h"                // detail::AgentCombiner
 #include "flare/bvar/variable.h"
 #include "flare/bvar/window.h"
@@ -89,8 +88,8 @@ public:
     const static size_t SUM_BIT_WIDTH=44;
     const static uint64_t MAX_SUM_PER_THREAD = (1ul << SUM_BIT_WIDTH) - 1;
     const static uint64_t MAX_NUM_PER_THREAD = (1ul << (64ul - SUM_BIT_WIDTH)) - 1;
-    BAIDU_CASSERT(SUM_BIT_WIDTH > 32 && SUM_BIT_WIDTH < 64, 
-                  SUM_BIT_WIDTH_must_be_between_33_and_63);
+    static_assert(SUM_BIT_WIDTH > 32 && SUM_BIT_WIDTH < 64,
+                  "SUM_BIT_WIDTH must be between 33 and 63");
 
     struct AddStat {
         void operator()(Stat& s1, const Stat& s2) const { s1 += s2; }
@@ -117,11 +116,11 @@ public:
 
     IntRecorder() : _sampler(NULL) {}
 
-    explicit IntRecorder(const butil::StringPiece& name) : _sampler(NULL) {
+    explicit IntRecorder(const std::string_view& name) : _sampler(NULL) {
         expose(name);
     }
 
-    IntRecorder(const butil::StringPiece& prefix, const butil::StringPiece& name)
+    IntRecorder(const std::string_view& prefix, const std::string_view& name)
         : _sampler(NULL) {
         expose_as(prefix, name);
     }
@@ -172,7 +171,7 @@ public:
 
     // This name is useful for printing overflow log in operator<< since
     // IntRecorder is often used as the source of data and not exposed.
-    void set_debug_name(const butil::StringPiece& name) {
+    void set_debug_name(const std::string_view& name) {
         _debug_name.assign(name.data(), name.size());
     }
     
@@ -236,7 +235,7 @@ private:
 };
 
 inline IntRecorder& IntRecorder::operator<<(int64_t sample) {
-    if (BAIDU_UNLIKELY((int64_t)(int)sample != sample)) {
+    if (FLARE_UNLIKELY((int64_t)(int)sample != sample)) {
         const char* reason = NULL;
         if (sample > std::numeric_limits<int>::max()) {
             reason = "overflows";
@@ -259,7 +258,7 @@ inline IntRecorder& IntRecorder::operator<<(int64_t sample) {
         }
     }
     agent_type* agent = _combiner.get_or_create_tls_agent();
-    if (BAIDU_UNLIKELY(!agent)) {
+    if (FLARE_UNLIKELY(!agent)) {
         LOG(FATAL) << "Fail to create agent";
         return *this;
     }
@@ -271,7 +270,7 @@ inline IntRecorder& IntRecorder::operator<<(int64_t sample) {
     do {
         num = _get_num(n);
         sum = _get_sum(n);
-        if (BAIDU_UNLIKELY((num + 1 > MAX_NUM_PER_THREAD) ||
+        if (FLARE_UNLIKELY((num + 1 > MAX_NUM_PER_THREAD) ||
                            _will_overflow(_extend_sign_bit(sum), sample))) {
             // Although agent->element might have been cleared at this 
             // point, it is just OK because the very value is 0 in

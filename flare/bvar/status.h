@@ -21,10 +21,10 @@
 #define  BVAR_STATUS_H
 
 #include <string>                       // std::string
-#include "flare/butil/static_atomic.h"
-#include "flare/butil/type_traits.h"
-#include "flare/butil/string_printf.h"
-#include "flare/butil/synchronization/lock.h"
+#include "flare/base/static_atomic.h"
+#include "flare/base/type_traits.h"
+#include "flare/base/strings.h"
+#include "flare/base/lock.h"
 #include "flare/bvar/detail/is_atomical.h"
 #include "flare/bvar/variable.h"
 
@@ -46,12 +46,12 @@ namespace bvar {
 
         Status(const T &value) : _value(value) {}
 
-        Status(const butil::StringPiece &name, const T &value) : _value(value) {
+        Status(const std::string_view &name, const T &value) : _value(value) {
             this->expose(name);
         }
 
-        Status(const butil::StringPiece &prefix,
-               const butil::StringPiece &name, const T &value) : _value(value) {
+        Status(const std::string_view &prefix,
+               const std::string_view &name, const T &value) : _value(value) {
             this->expose_as(prefix, name);
         }
 
@@ -64,29 +64,29 @@ namespace bvar {
 
 #ifdef BAIDU_INTERNAL
         void get_value(boost::any* value) const override {
-            butil::AutoLock guard(_lock);
+            flare::base::AutoLock guard(_lock);
             *value = _value;
         }
 #endif
 
         T get_value() const {
-            butil::AutoLock guard(_lock);
+            flare::base::AutoLock guard(_lock);
             const T res = _value;
             return res;
         }
 
         void set_value(const T &value) {
-            butil::AutoLock guard(_lock);
+            flare::base::AutoLock guard(_lock);
             _value = value;
         }
 
     private:
         T _value;
-        mutable butil::Lock _lock;
+        mutable flare::base::Lock _lock;
     };
 
     template<typename T>
-    class Status<T, typename butil::enable_if<detail::is_atomical<T>::value>::type>
+    class Status<T, typename std::enable_if<detail::is_atomical<T>::value>::type>
             : public Variable {
     public:
         struct PlaceHolderOp {
@@ -95,7 +95,7 @@ namespace bvar {
 
         class SeriesSampler : public detail::Sampler {
         public:
-            typedef typename butil::conditional<
+            typedef typename std::conditional<
                     true, detail::AddTo < T>, PlaceHolderOp>
             ::type Op;
 
@@ -116,13 +116,13 @@ namespace bvar {
 
         Status(const T &value) : _value(value), _series_sampler(NULL) {}
 
-        Status(const butil::StringPiece &name, const T &value)
+        Status(const std::string_view &name, const T &value)
                 : _value(value), _series_sampler(NULL) {
             this->expose(name);
         }
 
-        Status(const butil::StringPiece &prefix,
-               const butil::StringPiece &name, const T &value)
+        Status(const std::string_view &prefix,
+               const std::string_view &name, const T &value)
                 : _value(value), _series_sampler(NULL) {
             this->expose_as(prefix, name);
         }
@@ -164,8 +164,8 @@ namespace bvar {
         }
 
     protected:
-        int expose_impl(const butil::StringPiece &prefix,
-                        const butil::StringPiece &name,
+        int expose_impl(const std::string_view &prefix,
+                        const std::string_view &name,
                         DisplayFilter display_filter) override {
             const int rc = Variable::expose_impl(prefix, name, display_filter);
             if (rc == 0 &&
@@ -188,22 +188,22 @@ namespace bvar {
     public:
         Status() {}
 
-        Status(const butil::StringPiece &name, const char *fmt, ...) {
+        Status(const std::string_view &name, const char *fmt, ...) {
             if (fmt) {
                 va_list ap;
                 va_start(ap, fmt);
-                butil::string_vprintf(&_value, fmt, ap);
+                flare::base::string_vprintf(&_value, fmt, ap);
                 va_end(ap);
             }
             expose(name);
         }
 
-        Status(const butil::StringPiece &prefix,
-               const butil::StringPiece &name, const char *fmt, ...) {
+        Status(const std::string_view &prefix,
+               const std::string_view &name, const char *fmt, ...) {
             if (fmt) {
                 va_list ap;
                 va_start(ap, fmt);
-                butil::string_vprintf(&_value, fmt, ap);
+                flare::base::string_vprintf(&_value, fmt, ap);
                 va_end(ap);
             }
             expose_as(prefix, name);
@@ -220,7 +220,7 @@ namespace bvar {
         }
 
         std::string get_value() const {
-            butil::AutoLock guard(_lock);
+            flare::base::AutoLock guard(_lock);
             return _value;
         }
 
@@ -234,20 +234,20 @@ namespace bvar {
             va_list ap;
             va_start(ap, fmt);
             {
-                butil::AutoLock guard(_lock);
-                butil::string_vprintf(&_value, fmt, ap);
+                flare::base::AutoLock guard(_lock);
+                flare::base::string_vprintf(&_value, fmt, ap);
             }
             va_end(ap);
         }
 
         void set_value(const std::string &s) {
-            butil::AutoLock guard(_lock);
+            flare::base::AutoLock guard(_lock);
             _value = s;
         }
 
     private:
         std::string _value;
-        mutable butil::Lock _lock;
+        mutable flare::base::Lock _lock;
     };
 
 }  // namespace bvar

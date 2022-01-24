@@ -19,8 +19,8 @@
 
 #include <gtest/gtest.h>
 #include <flare/bthread/countdown_event.h>
-#include "flare/butil/static_atomic.h"
-#include "flare/butil/time.h"
+#include "flare/base/static_atomic.h"
+#include "flare/base/time.h"
 
 namespace {
 struct Arg {
@@ -51,14 +51,14 @@ TEST(CountdonwEventTest, sanity) {
 
 TEST(CountdonwEventTest, timed_wait) {
     bthread::CountdownEvent event;
-    int rc = event.timed_wait(butil::milliseconds_from_now(100));
+    int rc = event.timed_wait(flare::base::milliseconds_from_now(100));
     ASSERT_EQ(rc, ETIMEDOUT);
     event.signal();
-    rc = event.timed_wait(butil::milliseconds_from_now(100));
+    rc = event.timed_wait(flare::base::milliseconds_from_now(100));
     ASSERT_EQ(rc, 0);
     bthread::CountdownEvent event1;
     event1.signal();
-    rc = event.timed_wait(butil::milliseconds_from_now(1));
+    rc = event.timed_wait(flare::base::milliseconds_from_now(1));
     ASSERT_EQ(rc, 0);
 }
 } // namespace

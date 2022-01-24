@@ -19,19 +19,20 @@
 #include <stdio.h>                                      // getline
 #include <string>                                       // std::string
 #include <set>                                          // std::set
-#include "flare/butil/files/file_watcher.h"                    // FileWatcher
-#include "flare/butil/files/scoped_file.h"                     // ScopedFILE
+#include "flare/base/file_watcher.h"                    // file_watcher
+#include "flare/base/scoped_file.h"                     // scoped_file
 #include "flare/bthread/bthread.h"                            // bthread_usleep
 #include "flare/brpc/log.h"
 #include "flare/brpc/policy/file_naming_service.h"
+#include "flare/base/strings.h"
 
 
 namespace brpc {
 namespace policy {
 
-bool SplitIntoServerAndTag(const butil::StringPiece& line,
-                           butil::StringPiece* server_addr,
-                           butil::StringPiece* tag) {
+bool SplitIntoServerAndTag(const std::string_view& line,
+                           std::string_view* server_addr,
+                           std::string_view* tag) {
     size_t i = 0;
     for (; i < line.size() && isspace(line[i]); ++i) {}
     if (i == line.size() || line[i] == '#') {  // blank line or comments
@@ -42,7 +43,7 @@ bool SplitIntoServerAndTag(const butil::StringPiece& line,
     ssize_t tag_size = 0;
     for (; i < line.size() && !isspace(line[i]); ++i) {}
     if (server_addr) {
-        server_addr->set(addr_start, line.data() + i - addr_start);
+        *server_addr = std::string_view(addr_start, line.data() + i - addr_start);
     }
     if (i != line.size()) {
         for (++i; i < line.size() && isspace(line[i]); ++i) {}
@@ -57,9 +58,9 @@ bool SplitIntoServerAndTag(const butil::StringPiece& line,
         }
         if (tag) {
             if (tag_size) {
-                tag->set(tag_start, tag_size);
+                *tag = std::string_view(tag_start, tag_size);
             } else {
-                tag->clear();
+                *tag = std::string_view();
             }
         }
     }
@@ -77,7 +78,7 @@ int FileNamingService::GetServers(const char *service_name,
     // set to de-duplicate and keep the order.
     std::set<ServerNode> presence;
 
-    butil::ScopedFILE fp(fopen(service_name, "r"));
+    flare::base::scoped_file fp(fopen(service_name, "r"));
     if (!fp) {
         PLOG(ERROR) << "Fail to open `" << service_name << "'";
         return errno;
@@ -86,14 +87,14 @@ int FileNamingService::GetServers(const char *service_name,
         if (line[nr - 1] == '\n') { // remove ending newline
             --nr;
         }
-        butil::StringPiece addr;
-        butil::StringPiece tag;
-        if (!SplitIntoServerAndTag(butil::StringPiece(line, nr),
+        std::string_view addr;
+        std::string_view tag;
+        if (!SplitIntoServerAndTag(std::string_view(line, nr),
                                    &addr, &tag)) {
             continue;
         }
         const_cast<char*>(addr.data())[addr.size()] = '\0'; // safe
-        butil::EndPoint point;
+        flare::base::end_point point;
         if (str2endpoint(addr.data(), &point) != 0 &&
             hostname2endpoint(addr.data(), &point) != 0) {
             LOG(ERROR) << "Invalid address=`" << addr << '\'';
@@ -101,7 +102,7 @@ int FileNamingService::GetServers(const char *service_name,
         }
         ServerNode node;
         node.addr = point;
-        tag.CopyToString(&node.tag);
+        flare::base::copy_to_string(tag, &node.tag);
         if (presence.insert(node).second) {
             servers->push_back(node);
         } else {
@@ -117,9 +118,9 @@ int FileNamingService::GetServers(const char *service_name,
 int FileNamingService::RunNamingService(const char* service_name,
                                         NamingServiceActions* actions) {
     std::vector<ServerNode> servers;
-    butil::FileWatcher fw;
+    flare::base::file_watcher fw;
     if (fw.init(service_name) < 0) {
-        LOG(ERROR) << "Fail to init FileWatcher on `" << service_name << "'";
+        LOG(ERROR) << "Fail to init file_watcher on `" << service_name << "'";
         return -1;
     }
     for (;;) {
@@ -130,7 +131,7 @@ int FileNamingService::RunNamingService(const char* service_name,
         actions->ResetServers(servers);
 
         for (;;) {
-            butil::FileWatcher::Change change = fw.check_and_consume();
+            flare::base::file_watcher::Change change = fw.check_and_consume();
             if (change > 0) {
                 break;
             }

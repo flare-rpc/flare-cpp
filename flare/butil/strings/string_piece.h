@@ -36,7 +36,7 @@
 
 #include "flare/butil/base_export.h"
 #include "flare/butil/basictypes.h"
-#include "flare/butil/containers/hash_tables.h"
+#include "flare/container/hash_tables.h"
 #include "flare/butil/strings/string16.h"
 
 namespace butil {
@@ -529,7 +529,7 @@ namespace butil {
     result = (result * 131) + *i;                                       \
   return result;                                                        \
 
-namespace BUTIL_HASH_NAMESPACE {
+namespace FLARE_HASH_NAMESPACE {
 #if defined(COMPILER_GCC)
 
     template<>
@@ -557,6 +557,6 @@ namespace BUTIL_HASH_NAMESPACE {
 
 #endif  // COMPILER
 
-}  // namespace BUTIL_HASH_NAMESPACE
+}  // namespace FLARE_HASH_NAMESPACE
 
 #endif  // BUTIL_STRINGS_STRING_PIECE_H_

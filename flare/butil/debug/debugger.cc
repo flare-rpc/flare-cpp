@@ -3,7 +3,7 @@
 // found in the LICENSE file.
 
 #include "flare/butil/debug/debugger.h"
-#include "flare/butil/logging.h"
+#include "flare/base/logging.h"
 #include "flare/butil/threading/platform_thread.h"
 
 namespace butil {

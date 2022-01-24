@@ -21,7 +21,7 @@
 
 #include "flare/brpc/periodic_naming_service.h"
 #include "flare/brpc/channel.h"
-#include "flare/butil/unique_ptr.h"
+#include <memory>
 
 
 namespace brpc {

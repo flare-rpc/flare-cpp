@@ -37,7 +37,7 @@ void IdsService::default_method(::google::protobuf::RpcController* cntl_base,
     ClosureGuard done_guard(done);
     Controller *cntl = static_cast<Controller*>(cntl_base);
     cntl->http_response().set_content_type("text/plain");
-    butil::IOBufBuilder os;
+    flare::io::IOBufBuilder os;
     const std::string& constraint = cntl->http_request().unresolved_path();
     
     if (constraint.empty()) {

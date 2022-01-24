@@ -23,7 +23,7 @@
 #define BTHREAD_ERRNO_H
 
 #include <errno.h>                    // errno
-#include "flare/butil/errno.h"               // berror(), DEFINE_BTHREAD_ERRNO
+#include "flare/base/errno.h"                // flare_error(), DEFINE_BTHREAD_ERRNO
 
 __BEGIN_DECLS
 

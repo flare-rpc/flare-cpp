@@ -10,7 +10,7 @@
 #include <string.h>
 #include <wchar.h>
 
-#include "flare/butil/logging.h"
+#include "flare/base/logging.h"
 
 namespace butil {
 

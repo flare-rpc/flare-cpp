@@ -19,10 +19,10 @@
 #include <ostream>
 #include <iomanip>
 #include <gflags/gflags.h>
-#include "flare/butil/string_printf.h"
-#include "flare/butil/string_splitter.h"
+#include "flare/base/strings.h"
+#include "flare/base/string_splitter.h"
 #include "flare/butil/macros.h"
-#include "flare/butil/time.h"
+#include "flare/base/time.h"
 #include "flare/brpc/closure_guard.h"        // ClosureGuard
 #include "flare/brpc/controller.h"           // Controller
 #include "flare/brpc/builtin/common.h"
@@ -151,7 +151,7 @@ void RpczService::stats(::google::protobuf::RpcController* cntl_base,
         return;
     }
 
-    butil::IOBufBuilder os;
+    flare::io::IOBufBuilder os;
     DescribeSpanDB(os);
     os.move_to(cntl->response_attachment());
 }
@@ -195,7 +195,7 @@ static void PrintAnnotations(
             PrintRealTime(os, anno_time);
             PrintElapse(os, anno_time, last_time);
             os << ' ' << a;
-            if (a.empty() || butil::back_char(a) != '\n') {
+            if (a.empty() || flare::base::back_char(a) != '\n') {
                 os << '\n';
             }
         }
@@ -226,8 +226,8 @@ struct CompareByStartRealTime {
     }
 };
 
-static butil::ip_t loopback_ip = butil::IP_ANY;
-static int ALLOW_UNUSED init_loopback_ip_dummy = butil::str2ip("127.0.0.1", &loopback_ip);
+static flare::base::ip_t loopback_ip = flare::base::IP_ANY;
+static int FLARE_ALLOW_UNUSED init_loopback_ip_dummy = flare::base::str2ip("127.0.0.1", &loopback_ip);
 
 static void PrintClientSpan(
     std::ostream& os, const RpczSpan& span,
@@ -244,10 +244,10 @@ static void PrintClientSpan(
                                           last_time, extr, num_extr));
     const Protocol* protocol = FindProtocol(span.protocol());
     const char* protocol_name = (protocol ? protocol->name : "Unknown");
-    const butil::EndPoint remote_side(butil::int2ip(span.remote_ip()), span.remote_port());
-    butil::EndPoint abs_remote_side = remote_side;
+    const flare::base::end_point remote_side(flare::base::int2ip(span.remote_ip()), span.remote_port());
+    flare::base::end_point abs_remote_side = remote_side;
     if (abs_remote_side.ip == loopback_ip) {
-        abs_remote_side.ip = butil::my_ip();
+        abs_remote_side.ip = flare::base::my_ip();
     }
     os << " Requesting " << span.full_method_name() << '@' << remote_side
        << ' ' << protocol_name << ' ' << LOG_ID_STR << '=';
@@ -315,8 +315,8 @@ static void PrintServerSpan(std::ostream& os, const RpczSpan& span,
     SpanInfoExtractor server_extr(span.info().c_str());
     SpanInfoExtractor* extr[1] = { &server_extr };
     int64_t last_time = span.received_real_us();
-    const butil::EndPoint remote_side(
-        butil::int2ip(span.remote_ip()), span.remote_port());
+    const flare::base::end_point remote_side(
+        flare::base::int2ip(span.remote_ip()), span.remote_port());
     PrintRealDateTime(os, last_time);
     const Protocol* protocol = FindProtocol(span.protocol());
     const char* protocol_name = (protocol ? protocol->name : "Unknown");
@@ -483,7 +483,7 @@ void RpczService::default_method(::google::protobuf::RpcController* cntl_base,
     cntl->http_response().set_content_type(
         use_html ? "text/html" : "text/plain");
 
-    butil::IOBufBuilder os;
+    flare::io::IOBufBuilder os;
     if (use_html) {
         os << "<!DOCTYPE html><html><head>\n"
            << "<script language=\"javascript\" type=\"text/javascript\" src=\"/js/jquery_min\"></script>\n"
@@ -505,7 +505,7 @@ void RpczService::default_method(::google::protobuf::RpcController* cntl_base,
         os.move_to(cntl->response_attachment());
         return;
     }
-    butil::EndPoint my_addr(butil::my_ip(),
+    flare::base::end_point my_addr(flare::base::my_ip(),
                            cntl->server()->listen_address().port);
     
     const std::string* trace_id_str =
@@ -566,7 +566,7 @@ void RpczService::default_method(::google::protobuf::RpcController* cntl_base,
             cntl->http_request().uri().GetQuery(TIME_STR);
         int64_t start_tm;
         if (time_str == NULL) {
-            start_tm = butil::gettimeofday_us();
+            start_tm = flare::base::gettimeofday_us();
         } else {
             start_tm = ParseDateTime(*time_str);
             if (start_tm < 0) {
@@ -671,7 +671,7 @@ void RpczService::default_method(::google::protobuf::RpcController* cntl_base,
             if (span.error_code() == 0) {
                 os << " [OK]";
             } else {
-                os << " [" << berror(span.error_code()) << "] ";
+                os << " [" << flare_error(span.error_code()) << "] ";
             }
             os << std::endl;
         }

@@ -16,11 +16,11 @@
 // under the License.
 
 #include <gtest/gtest.h>
-#include "flare/butil/compat.h"
-#include "flare/butil/time.h"
+#include "flare/base/compat.h"
+#include "flare/base/time.h"
 #include "flare/butil/macros.h"
-#include "flare/butil/string_printf.h"
-#include "flare/butil/logging.h"
+#include "flare/base/strings.h"
+#include "flare/base/logging.h"
 #include "flare/bthread/bthread.h"
 #include "flare/bthread/butex.h"
 #include "flare/bthread/task_control.h"
@@ -32,13 +32,13 @@ inline unsigned* get_butex(bthread_mutex_t & m) {
     return m.butex;
 }
 
-long start_time = butil::cpuwide_time_ms();
+long start_time = flare::base::cpuwide_time_ms();
 int c = 0;
 void* locker(void* arg) {
     bthread_mutex_t* m = (bthread_mutex_t*)arg;
     bthread_mutex_lock(m);
     printf("[%" PRIu64 "] I'm here, %d, %" PRId64 "ms\n", 
-           pthread_numeric_id(), ++c, butil::cpuwide_time_ms() - start_time);
+           pthread_numeric_id(), ++c, flare::base::cpuwide_time_ms() - start_time);
     bthread_usleep(10000);
     bthread_mutex_unlock(m);
     return NULL;
@@ -64,10 +64,10 @@ TEST(MutexTest, used_in_pthread) {
     bthread_mutex_t m;
     ASSERT_EQ(0, bthread_mutex_init(&m, NULL));
     pthread_t th[8];
-    for (size_t i = 0; i < ARRAY_SIZE(th); ++i) {
+    for (size_t i = 0; i < FLARE_ARRAY_SIZE(th); ++i) {
         ASSERT_EQ(0, pthread_create(&th[i], NULL, locker, &m));
     }
-    for (size_t i = 0; i < ARRAY_SIZE(th); ++i) {
+    for (size_t i = 0; i < FLARE_ARRAY_SIZE(th); ++i) {
         pthread_join(th[i], NULL);
     }
     ASSERT_EQ(0u, *get_butex(m));
@@ -109,7 +109,7 @@ TEST(MutexTest, cpp_wrapper) {
     mutex.lock();
     mutex.unlock();
     {
-        BAIDU_SCOPED_LOCK(mutex);
+        FLARE_SCOPED_LOCK(mutex);
     }
     {
         std::unique_lock<bthread::Mutex> lck1;
@@ -121,7 +121,7 @@ TEST(MutexTest, cpp_wrapper) {
     ASSERT_TRUE(mutex.try_lock());
     mutex.unlock();
     {
-        BAIDU_SCOPED_LOCK(*mutex.native_handler());
+        FLARE_SCOPED_LOCK(*mutex.native_handler());
     }
     {
         std::unique_lock<bthread_mutex_t> lck1;
@@ -138,7 +138,7 @@ bool g_started = false;
 bool g_stopped = false;
 
 template <typename Mutex>
-struct BAIDU_CACHELINE_ALIGNMENT PerfArgs {
+struct FLARE_CACHELINE_ALIGNMENT PerfArgs {
     Mutex* mutex;
     int64_t counter;
     int64_t elapse_ns;
@@ -151,7 +151,7 @@ template <typename Mutex>
 void* add_with_mutex(void* void_arg) {
     PerfArgs<Mutex>* args = (PerfArgs<Mutex>*)void_arg;
     args->ready = true;
-    butil::Timer t;
+    flare::base::stop_watcher t;
     while (!g_stopped) {
         if (g_started) {
             break;
@@ -160,7 +160,7 @@ void* add_with_mutex(void* void_arg) {
     }
     t.start();
     while (!g_stopped) {
-        BAIDU_SCOPED_LOCK(*args->mutex);
+        FLARE_SCOPED_LOCK(*args->mutex);
         ++args->counter;
     }
     t.stop();
@@ -212,7 +212,7 @@ void PerfTest(Mutex* mutex,
         wait_time += args[i].elapse_ns;
         count += args[i].counter;
     }
-    LOG(INFO) << butil::class_name<Mutex>() << " in "
+    LOG(INFO) << flare::base::class_name<Mutex>() << " in "
               << ((void*)create_fn == (void*)pthread_create ? "pthread" : "bthread")
               << " thread_num=" << thread_num
               << " count=" << count
@@ -221,7 +221,7 @@ void PerfTest(Mutex* mutex,
 
 TEST(MutexTest, performance) {
     const int thread_num = 12;
-    butil::Mutex base_mutex;
+    flare::base::Mutex base_mutex;
     PerfTest(&base_mutex, (pthread_t*)NULL, thread_num, pthread_create, pthread_join);
     PerfTest(&base_mutex, (bthread_t*)NULL, thread_num, bthread_start_background, bthread_join);
     bthread::Mutex bth_mutex;
@@ -232,7 +232,7 @@ TEST(MutexTest, performance) {
 void* loop_until_stopped(void* arg) {
     bthread::Mutex *m = (bthread::Mutex*)arg;
     while (!g_stopped) {
-        BAIDU_SCOPED_LOCK(*m);
+        FLARE_SCOPED_LOCK(*m);
         bthread_usleep(20);
     }
     return NULL;

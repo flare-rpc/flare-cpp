@@ -16,7 +16,7 @@
 // under the License.
 
 
-#include "flare/butil/compat.h"                        // OS_MACOSX
+#include "flare/base/compat.h"                        // FLARE_PLATFORM_OSX
 #include <openssl/ssl.h>
 #include <openssl/err.h>
 #ifdef USE_MESALINK
@@ -27,13 +27,13 @@
 #include <netinet/tcp.h>                         // getsockopt
 #include <gflags/gflags.h>
 #include "flare/bthread/unstable.h"                    // bthread_timer_del
-#include "flare/butil/fd_utility.h"                     // make_non_blocking
-#include "flare/butil/fd_guard.h"                       // fd_guard
-#include "flare/butil/time.h"                           // cpuwide_time_us
-#include "flare/butil/object_pool.h"                    // get_object
-#include "flare/butil/logging.h"                        // CHECK
+#include "flare/base/fd_utility.h"                     // make_non_blocking
+#include "flare/base/fd_guard.h"                       // fd_guard
+#include "flare/base/time.h"                           // cpuwide_time_us
+#include "flare/memory/object_pool.h"                    // get_object
+#include "flare/base/logging.h"                        // CHECK
 #include "flare/butil/macros.h"
-#include "flare/butil/class_name.h"                     // butil::class_name
+#include "flare/base/class_name.h"                     // flare::base::class_name
 #include "flare/brpc/log.h"
 #include "flare/brpc/reloadable_flags.h"          // BRPC_VALIDATE_GFLAG
 #include "flare/brpc/errno.pb.h"
@@ -48,7 +48,7 @@
 #include "flare/brpc/policy/rtmp_protocol.h"  // FIXME
 #include "flare/brpc/periodic_task.h"
 #include "flare/brpc/details/health_check.h"
-#if defined(OS_MACOSX)
+#if defined(FLARE_PLATFORM_OSX)
 #include <sys/event.h>
 #endif
 
@@ -102,7 +102,7 @@ BRPC_VALIDATE_GFLAG(connect_timeout_as_unreachable,
 
 const int WAIT_EPOLLOUT_TIMEOUT_MS = 50;
 
-class BAIDU_CACHELINE_ALIGNMENT SocketPool {
+class FLARE_CACHELINE_ALIGNMENT SocketPool {
 friend class Socket;
 public:
     explicit SocketPool(const SocketOptions& opt);
@@ -122,9 +122,9 @@ public:
 private:
     // options used to create this instance
     SocketOptions _options;
-    butil::Mutex _mutex;
+    flare::base::Mutex _mutex;
     std::vector<SocketId> _pool;
-    butil::EndPoint _remote_side;
+    flare::base::end_point _remote_side;
     std::atomic<int> _numfree; // #free sockets in all sub pools.
     std::atomic<int> _numinflight; // #inflight sockets in all sub pools.
 };
@@ -297,10 +297,10 @@ bool Socket::CreatedByConnect() const {
 SocketMessage* const DUMMY_USER_MESSAGE = (SocketMessage*)0x1;
 const uint32_t MAX_PIPELINED_COUNT = 32768;
 
-struct BAIDU_CACHELINE_ALIGNMENT Socket::WriteRequest {
+struct FLARE_CACHELINE_ALIGNMENT Socket::WriteRequest {
     static WriteRequest* const UNCONNECTED;
     
-    butil::IOBuf data;
+    flare::io::IOBuf data;
     WriteRequest* next;
     bthread_id_t id_wait;
     Socket* socket;
@@ -332,7 +332,7 @@ struct BAIDU_CACHELINE_ALIGNMENT Socket::WriteRequest {
         SocketMessage* msg = user_message();
         if (msg) {
             if (msg != DUMMY_USER_MESSAGE) {
-                butil::IOBuf dummy_buf;
+                flare::io::IOBuf dummy_buf;
                 // We don't care about the return value since the request
                 // is already failed.
                 (void)msg->AppendAndDestroySelf(&dummy_buf, NULL);
@@ -355,7 +355,7 @@ void Socket::WriteRequest::Setup(Socket* s) {
     if (msg) {
         clear_user_message();
         if (msg != DUMMY_USER_MESSAGE) {
-            butil::Status st = msg->AppendAndDestroySelf(&data, s);
+            flare::base::flare_status st = msg->AppendAndDestroySelf(&data, s);
             if (!st.ok()) {
                 // Abandon the request.
                 data.clear();
@@ -469,7 +469,7 @@ void Socket::ReturnSuccessfulWriteRequest(Socket::WriteRequest* p) {
     DCHECK(p->data.empty());
     AddOutputMessages(1);
     const bthread_id_t id_wait = p->id_wait;
-    butil::return_object(p);
+    flare::memory::return_object(p);
     if (id_wait != INVALID_BTHREAD_ID) {
         NotifyOnFailed(id_wait);
     }
@@ -482,7 +482,7 @@ void Socket::ReturnFailedWriteRequest(Socket::WriteRequest* p, int error_code,
     }
     p->data.clear();  // data is probably not written.
     const bthread_id_t id_wait = p->id_wait;
-    butil::return_object(p);
+    flare::memory::return_object(p);
     if (id_wait != INVALID_BTHREAD_ID) {
         bthread_id_error2(id_wait, error_code, error_text);
     }
@@ -523,28 +523,28 @@ int Socket::ResetFileDescriptor(int fd) {
     // MUST store `_fd' before adding itself into epoll device to avoid
     // race conditions with the callback function inside epoll
     _fd.store(fd, std::memory_order_release);
-    _reset_fd_real_us = butil::gettimeofday_us();
+    _reset_fd_real_us = flare::base::gettimeofday_us();
     if (!ValidFileDescriptor(fd)) {
         return 0;
     }
     // OK to fail, non-socket fd does not support this.
-    if (butil::get_local_side(fd, &_local_side) != 0) {
-        _local_side = butil::EndPoint();
+    if (flare::base::get_local_side(fd, &_local_side) != 0) {
+        _local_side = flare::base::end_point();
     }
 
     // FIXME : close-on-exec should be set by new syscalls or worse: set right
     // after fd-creation syscall. Setting at here has higher probabilities of
     // race condition.
-    butil::make_close_on_exec(fd);
+    flare::base::make_close_on_exec(fd);
 
     // Make the fd non-blocking.
-    if (butil::make_non_blocking(fd) != 0) {
+    if (flare::base::make_non_blocking(fd) != 0) {
         PLOG(ERROR) << "Fail to set fd=" << fd << " to non-blocking";
         return -1;
     }
     // turn off nagling.
     // OK to fail, namely unix domain socket does not support this.
-    butil::make_no_delay(fd);
+    flare::base::make_no_delay(fd);
     if (_tos > 0 &&
         setsockopt(fd, IPPROTO_IP, IP_TOS, &_tos, sizeof(_tos)) < 0) {
         PLOG(FATAL) << "Fail to set tos of fd=" << fd << " to " << _tos;
@@ -583,8 +583,8 @@ int Socket::ResetFileDescriptor(int fd) {
 //   version: from version part of _versioned_nref, must be an EVEN number.
 //   slot: designated by ResourcePool.
 int Socket::Create(const SocketOptions& options, SocketId* id) {
-    butil::ResourceId<Socket> slot;
-    Socket* const m = butil::get_resource(&slot, Forbidden());
+    flare::memory::ResourceId<Socket> slot;
+    Socket* const m = flare::memory::get_resource(&slot, Forbidden());
     if (m == NULL) {
         LOG(FATAL) << "Fail to get_resource<Socket>";
         return -1;
@@ -609,7 +609,7 @@ int Socket::Create(const SocketOptions& options, SocketId* id) {
     m->_preferred_index = -1;
     m->_hc_count = 0;
     CHECK(m->_read_buf.empty());
-    const int64_t cpuwide_now = butil::cpuwide_time_us();
+    const int64_t cpuwide_now = flare::base::cpuwide_time_us();
     m->_last_readtime_us.store(cpuwide_now, std::memory_order_relaxed);
     m->reset_parsing_context(options.initial_parsing_context);
     m->_correlation_id = 0;
@@ -618,8 +618,8 @@ int Socket::Create(const SocketOptions& options, SocketId* id) {
     m->_auth_flag_error.store(0, std::memory_order_relaxed);
     const int rc2 = bthread_id_create(&m->_auth_id, NULL, NULL);
     if (rc2) {
-        LOG(ERROR) << "Fail to create auth_id: " << berror(rc2);
-        m->SetFailed(rc2, "Fail to create auth_id: %s", berror(rc2));
+        LOG(ERROR) << "Fail to create auth_id: " << flare_error(rc2);
+        m->SetFailed(rc2, "Fail to create auth_id: %s", flare_error(rc2));
         return -1;
     }
     // Disable SSL check if there is no SSL context
@@ -640,8 +640,8 @@ int Socket::Create(const SocketOptions& options, SocketId* id) {
     // NOTE: last two params are useless in bthread > r32787
     const int rc = bthread_id_list_init(&m->_id_wait_list, 512, 512);
     if (rc) {
-        LOG(ERROR) << "Fail to init _id_wait_list: " << berror(rc);
-        m->SetFailed(rc, "Fail to init _id_wait_list: %s", berror(rc));
+        LOG(ERROR) << "Fail to init _id_wait_list: " << flare_error(rc);
+        m->SetFailed(rc, "Fail to init _id_wait_list: %s", flare_error(rc));
         return -1;
     }
     m->_last_writetime_us.store(cpuwide_now, std::memory_order_relaxed);
@@ -653,7 +653,7 @@ int Socket::Create(const SocketOptions& options, SocketId* id) {
         const int saved_errno = errno;
         PLOG(ERROR) << "Fail to ResetFileDescriptor";
         m->SetFailed(saved_errno, "Fail to ResetFileDescriptor: %s", 
-                     berror(saved_errno));
+                     flare_error(saved_errno));
         return -1;
     }
     *id = m->_this_id;
@@ -697,7 +697,7 @@ int Socket::WaitAndReset(int32_t expected_nref) {
             g_vars->channel_conn << -1;
         }
     }
-    _local_side = butil::EndPoint();
+    _local_side = flare::base::end_point();
     if (_ssl_session) {
         SSL_free(_ssl_session);
         _ssl_session = NULL;
@@ -715,16 +715,16 @@ int Socket::WaitAndReset(int32_t expected_nref) {
     bthread_id_error(_auth_id, 0);
     const int rc = bthread_id_create(&_auth_id, NULL, NULL);
     if (rc != 0) {
-        LOG(FATAL) << "Fail to create _auth_id, " << berror(rc);
+        LOG(FATAL) << "Fail to create _auth_id, " << flare_error(rc);
         return -1;
     }
 
-    const int64_t cpuwide_now = butil::cpuwide_time_us();
+    const int64_t cpuwide_now = flare::base::cpuwide_time_us();
     _last_readtime_us.store(cpuwide_now, std::memory_order_relaxed);
     _last_writetime_us.store(cpuwide_now, std::memory_order_relaxed);
     _logoff_flag.store(false, std::memory_order_relaxed);
     {
-        BAIDU_SCOPED_LOCK(_pipeline_mutex);
+        FLARE_SCOPED_LOCK(_pipeline_mutex);
         if (_pipeline_q) {
             _pipeline_q->clear();
         }
@@ -826,7 +826,7 @@ int Socket::SetFailed(int error_code, const char* error_fmt, ...) {
             if (error_fmt != NULL) {
                 va_list ap;
                 va_start(ap, error_fmt);
-                butil::string_vprintf(&error_text, error_fmt, ap);
+                flare::base::string_vprintf(&error_text, error_fmt, ap);
                 va_end(ap);
             }
             pthread_mutex_lock(&_id_wait_list_mutex);
@@ -885,7 +885,7 @@ void Socket::FeedbackCircuitBreaker(int error_code, int64_t latency_us) {
 
 int Socket::ReleaseReferenceIfIdle(int idle_seconds) {
     const int64_t last_active_us = last_active_time_us();
-    if (butil::cpuwide_time_us() - last_active_us <= idle_seconds * 1000000L) {
+    if (flare::base::cpuwide_time_us() - last_active_us <= idle_seconds * 1000000L) {
         return 0;
     }
     LOG_IF(WARNING, FLAGS_log_idle_connection_close)
@@ -927,7 +927,7 @@ void Socket::NotifyOnFailed(bthread_id_t id) {
 
 // For unit-test.
 int Socket::Status(SocketId id, int32_t* nref) {
-    const butil::ResourceId<Socket> slot = SlotOfSocketId(id);
+    const flare::memory::ResourceId<Socket> slot = SlotOfSocketId(id);
     Socket* const m = address_resource(slot);
     if (m != NULL) {
         const uint64_t vref = m->_versioned_ref.load(std::memory_order_relaxed);
@@ -1115,14 +1115,14 @@ int Socket::Connect(const timespec* abstime,
     } else {
         _ssl_state = SSL_OFF;
     }
-    butil::fd_guard sockfd(socket(AF_INET, SOCK_STREAM, 0));
+    flare::base::fd_guard sockfd(socket(AF_INET, SOCK_STREAM, 0));
     if (sockfd < 0) {
         PLOG(ERROR) << "Fail to create socket";
         return -1;
     }
-    CHECK_EQ(0, butil::make_close_on_exec(sockfd));
+    CHECK_EQ(0, flare::base::make_close_on_exec(sockfd));
     // We need to do async connect (to manage the timeout by ourselves).
-    CHECK_EQ(0, butil::make_non_blocking(sockfd));
+    CHECK_EQ(0, flare::base::make_non_blocking(sockfd));
     
     struct sockaddr_in serv_addr;
     bzero((char*)&serv_addr, sizeof(serv_addr));
@@ -1168,7 +1168,7 @@ int Socket::Connect(const timespec* abstime,
             const int saved_errno = errno;
             PLOG(WARNING) << "Fail to add fd=" << sockfd << " into epoll";
             s->SetFailed(saved_errno, "Fail to add fd=%d into epoll: %s",
-                         (int)sockfd, berror(saved_errno));
+                         (int)sockfd, flare_error(saved_errno));
             return -1;
         }
         
@@ -1183,8 +1183,8 @@ int Socket::Connect(const timespec* abstime,
                                        HandleEpollOutTimeout,
                                        (void*)connect_id);
             if (rc) {
-                LOG(ERROR) << "Fail to add timer: " << berror(rc);
-                s->SetFailed(rc, "Fail to add timer: %s", berror(rc));
+                LOG(ERROR) << "Fail to add timer: " << flare_error(rc);
+                s->SetFailed(rc, "Fail to add timer: %s", flare_error(rc));
                 return -1;
             }
         }
@@ -1335,7 +1335,7 @@ void Socket::AfterAppConnected(int err, void* data) {
         }
 
         s->SetFailed(err, "Fail to connect %s: %s",
-                     s->description().c_str(), berror(err));
+                     s->description().c_str(), flare_error(err));
         s->ReleaseAllFailedWriteRequests(req);
     }
 }
@@ -1368,7 +1368,7 @@ int Socket::KeepWriteIfConnected(int fd, int err, void* data) {
 }
 
 void Socket::CheckConnectedAndKeepWrite(int fd, int err, void* data) {
-    butil::fd_guard sockfd(fd);
+    flare::base::fd_guard sockfd(fd);
     WriteRequest* req = static_cast<WriteRequest*>(data);
     Socket* s = req->socket;
     CHECK_GE(sockfd, 0);
@@ -1427,7 +1427,7 @@ X509* Socket::GetPeerCertificate() const {
     return SSL_get_peer_certificate(_ssl_session);
 }
 
-int Socket::Write(butil::IOBuf* data, const WriteOptions* options_in) {
+int Socket::Write(flare::io::IOBuf* data, const WriteOptions* options_in) {
     WriteOptions opt;
     if (options_in) {
         opt = *options_in;
@@ -1451,7 +1451,7 @@ int Socket::Write(butil::IOBuf* data, const WriteOptions* options_in) {
         return SetError(opt.id_wait, EOVERCROWDED);
     }
 
-    WriteRequest* req = butil::get_object<WriteRequest>();
+    WriteRequest* req = flare::memory::get_object<WriteRequest>();
     if (!req) {
         return SetError(opt.id_wait, ENOMEM);
     }
@@ -1488,7 +1488,7 @@ int Socket::Write(SocketMessagePtr<>& msg, const WriteOptions* options_in) {
         return SetError(opt.id_wait, EOVERCROWDED);
     }
     
-    WriteRequest* req = butil::get_object<WriteRequest>();
+    WriteRequest* req = flare::memory::get_object<WriteRequest>();
     if (!req) {
         return SetError(opt.id_wait, ENOMEM);
     }
@@ -1549,7 +1549,7 @@ int Socket::StartWrite(WriteRequest* req, const WriteOptions& opt) {
     // Write once in the calling thread. If the write is not complete,
     // continue it in KeepWrite thread.
     if (_conn) {
-        butil::IOBuf* data_arr[1] = { &req->data };
+        flare::io::IOBuf* data_arr[1] = { &req->data };
         nw = _conn->CutMessageIntoFileDescriptor(fd(), data_arr, 1);
     } else {
         nw = req->data.cut_into_file_descriptor(fd());
@@ -1561,7 +1561,7 @@ int Socket::StartWrite(WriteRequest* req, const WriteOptions& opt) {
             // EPIPE is common in pooled connections + backup requests.
             PLOG_IF(WARNING, errno != EPIPE) << "Fail to write into " << *this;
             SetFailed(saved_errno, "Fail to write into %s: %s", 
-                      description().c_str(), berror(saved_errno));
+                      description().c_str(), flare_error(saved_errno));
             goto FAIL_TO_WRITE;
         }
     } else {
@@ -1615,7 +1615,7 @@ void* Socket::KeepWrite(void* void_arg) {
                 const int saved_errno = errno;
                 PLOG(WARNING) << "Fail to keep-write into " << *s;
                 s->SetFailed(saved_errno, "Fail to keep-write into %s: %s",
-                             s->description().c_str(), berror(saved_errno));
+                             s->description().c_str(), flare_error(saved_errno));
                 break;
             }
         } else {
@@ -1641,13 +1641,13 @@ void* Socket::KeepWrite(void* void_arg) {
             // which may turn on _overcrowded to stop pending requests from
             // growing infinitely.
             const timespec duetime =
-                butil::milliseconds_from_now(WAIT_EPOLLOUT_TIMEOUT_MS);
+                flare::base::milliseconds_from_now(WAIT_EPOLLOUT_TIMEOUT_MS);
             const int rc = s->WaitEpollOut(s->fd(), pollin, &duetime);
             if (rc < 0 && errno != ETIMEDOUT) {
                 const int saved_errno = errno;
                 PLOG(WARNING) << "Fail to wait epollout of " << *s;
                 s->SetFailed(saved_errno, "Fail to wait epollout of %s: %s",
-                             s->description().c_str(), berror(saved_errno));
+                             s->description().c_str(), flare_error(saved_errno));
                 break;
             }
         }
@@ -1670,8 +1670,8 @@ void* Socket::KeepWrite(void* void_arg) {
 }
 
 ssize_t Socket::DoWrite(WriteRequest* req) {
-    // Group butil::IOBuf in the list into a batch array.
-    butil::IOBuf* data_list[DATA_LIST_MAX];
+    // Group flare::io::IOBuf in the list into a batch array.
+    flare::io::IOBuf* data_list[DATA_LIST_MAX];
     size_t ndata = 0;
     for (WriteRequest* p = req; p != NULL && ndata < DATA_LIST_MAX;
          p = p->next) {
@@ -1683,7 +1683,7 @@ ssize_t Socket::DoWrite(WriteRequest* req) {
         if (_conn) {
             return _conn->CutMessageIntoFileDescriptor(fd(), data_list, ndata);
         } else {
-            ssize_t nw = butil::IOBuf::cut_multiple_into_file_descriptor(
+            ssize_t nw = flare::io::IOBuf::cut_multiple_into_file_descriptor(
                 fd(), data_list, ndata);
             return nw;
         }
@@ -1695,7 +1695,7 @@ ssize_t Socket::DoWrite(WriteRequest* req) {
         return _conn->CutMessageIntoSSLChannel(_ssl_session, data_list, ndata);
     }
     int ssl_error = 0;
-    ssize_t nw = butil::IOBuf::cut_multiple_into_SSL_channel(
+    ssize_t nw = flare::io::IOBuf::cut_multiple_into_SSL_channel(
         _ssl_session, data_list, ndata, &ssl_error);
     switch (ssl_error) {
     case SSL_ERROR_NONE:
@@ -1767,9 +1767,9 @@ int Socket::SSLHandshake(int fd, bool server_mode) {
         int ssl_error = SSL_get_error(_ssl_session, rc);
         switch (ssl_error) {
         case SSL_ERROR_WANT_READ:
-#if defined(OS_LINUX)
+#if defined(FLARE_PLATFORM_LINUX)
             if (bthread_fd_wait(fd, EPOLLIN) != 0) {
-#elif defined(OS_MACOSX)
+#elif defined(FLARE_PLATFORM_OSX)
             if (bthread_fd_wait(fd, EVFILT_READ) != 0) {
 #endif
                 return -1;
@@ -1777,9 +1777,9 @@ int Socket::SSLHandshake(int fd, bool server_mode) {
             break;
 
         case SSL_ERROR_WANT_WRITE:
-#if defined(OS_LINUX)
+#if defined(FLARE_PLATFORM_LINUX)
             if (bthread_fd_wait(fd, EPOLLOUT) != 0) {
-#elif defined(OS_MACOSX)
+#elif defined(FLARE_PLATFORM_OSX)
             if (bthread_fd_wait(fd, EVFILT_WRITE) != 0) {
 #endif
                 return -1;
@@ -1931,9 +1931,9 @@ int Socket::StartInputEvent(SocketId id, uint32_t events,
         return 0;
     }
     if (s->fd() < 0) {
-#if defined(OS_LINUX)
+#if defined(FLARE_PLATFORM_LINUX)
         CHECK(!(events & EPOLLIN)) << "epoll_events=" << events;
-#elif defined(OS_MACOSX)
+#elif defined(FLARE_PLATFORM_OSX)
         CHECK((short)events != EVFILT_READ) << "kqueue filter=" << events;
 #endif
         return -1;
@@ -1990,7 +1990,7 @@ ObjectPtr<T> ShowObject(const T* obj) { return ObjectPtr<T>(obj); }
 template <typename T>
 std::ostream& operator<<(std::ostream& os, const ObjectPtr<T>& obj) {
     if (obj._obj != NULL) {
-        os << '(' << butil::class_name_str(*obj._obj) << "*)";
+        os << '(' << flare::base::class_name_str(*obj._obj) << "*)";
     }
     return os << obj._obj;
 }
@@ -2016,16 +2016,16 @@ void Socket::DebugSocket(std::ostream& os, SocketId id) {
     size_t idsizes[4];
     size_t nidsize = 0;
     {
-        BAIDU_SCOPED_LOCK(ptr->_pipeline_mutex);
+        FLARE_SCOPED_LOCK(ptr->_pipeline_mutex);
         if (ptr->_pipeline_q) {
             npipelined = ptr->_pipeline_q->size();
         }
     }
     {
-        BAIDU_SCOPED_LOCK(ptr->_id_wait_list_mutex);
+        FLARE_SCOPED_LOCK(ptr->_id_wait_list_mutex);
         if (bthread::get_sizes) {
             nidsize = bthread::get_sizes(
-                &ptr->_id_wait_list, idsizes, arraysize(idsizes));
+                &ptr->_id_wait_list, idsizes, FLARE_ARRAY_SIZE(idsizes));
         }
     }
     const int preferred_index = ptr->preferred_index();
@@ -2066,7 +2066,7 @@ void Socket::DebugSocket(std::ostream& os, SocketId id) {
        << "\nnevent=" << ptr->_nevent.load(std::memory_order_relaxed)
        << "\nfd=" << fd
        << "\ntos=" << ptr->_tos
-       << "\nreset_fd_to_now=" << butil::gettimeofday_us() - ptr->_reset_fd_real_us << "us"
+       << "\nreset_fd_to_now=" << flare::base::gettimeofday_us() - ptr->_reset_fd_real_us << "us"
        << "\nremote_side=" << ptr->_remote_side
        << "\nlocal_side=" << ptr->_local_side
        << "\non_et_events=" << (void*)ptr->_on_edge_triggered_events
@@ -2077,10 +2077,10 @@ void Socket::DebugSocket(std::ostream& os, SocketId id) {
     if (messenger != NULL) {
         os << " (" << messenger->NameOfProtocol(preferred_index) << ')';
     }
-    const int64_t cpuwide_now = butil::cpuwide_time_us();
+    const int64_t cpuwide_now = flare::base::cpuwide_time_us();
     os << "\nhc_count=" << ptr->_hc_count
        << "\navg_input_msg_size=" << ptr->_avg_msg_size
-        // NOTE: We're assuming that butil::IOBuf.size() is thread-safe, it is now
+        // NOTE: We're assuming that flare::io::IOBuf.size() is thread-safe, it is now
         // however it's not guaranteed.
        << "\nread_buf=" << ptr->_read_buf.size()
        << "\nlast_read_to_now=" << cpuwide_now - ptr->_last_readtime_us << "us"
@@ -2097,7 +2097,7 @@ void Socket::DebugSocket(std::ostream& os, SocketId id) {
     Destroyable* const parsing_context = ptr->parsing_context();
     Describable* parsing_context_desc = dynamic_cast<Describable*>(parsing_context);
     if (parsing_context_desc) {
-        os << "\nparsing_context=" << butil::class_name_str(*parsing_context) << '{';
+        os << "\nparsing_context=" << flare::base::class_name_str(*parsing_context) << '{';
         DescribeOptions opt;
         opt.verbose = true;
         IndentingOStream os2(os, 2);
@@ -2139,7 +2139,7 @@ void Socket::DebugSocket(std::ostream& os, SocketId id) {
         Print(os, ptr->_ssl_session, "\n  ");
         os << "\n}";
     }
-#if defined(OS_MACOSX)
+#if defined(FLARE_PLATFORM_OSX)
     struct tcp_connection_info ti;
     socklen_t len = sizeof(ti);
     if (fd >= 0 && getsockopt(fd, IPPROTO_TCP, TCP_CONNECTION_INFO, &ti, &len) == 0) {
@@ -2159,7 +2159,7 @@ void Socket::DebugSocket(std::ostream& os, SocketId id) {
            << "\n  rttvar=" << ti.tcpi_rttvar
            << "\n}";
     }
-#elif defined(OS_LINUX)
+#elif defined(FLARE_PLATFORM_LINUX)
     struct tcp_info ti;
     socklen_t len = sizeof(ti);
     if (fd >= 0 && getsockopt(fd, SOL_TCP, TCP_INFO, &ti, &len) == 0) {
@@ -2202,7 +2202,7 @@ int Socket::CheckHealth() {
         LOG(INFO) << "Checking " << *this;
     }
     const timespec duetime =
-        butil::milliseconds_from_now(FLAGS_health_check_timeout_ms);
+        flare::base::milliseconds_from_now(FLAGS_health_check_timeout_ms);
     const int connected_fd = Connect(&duetime, NULL, NULL);
     if (connected_fd >= 0) {
         ::close(connected_fd);
@@ -2302,7 +2302,7 @@ inline int SocketPool::GetSocket(SocketUniquePtr* ptr) {
     if (connection_pool_size > 0) {
         for (;;) {
             {
-                BAIDU_SCOPED_LOCK(_mutex);
+                FLARE_SCOPED_LOCK(_mutex);
                 if (_pool.empty()) {
                     break;
                 }
@@ -2337,7 +2337,7 @@ inline void SocketPool::ReturnSocket(Socket* sock) {
     if (_numfree.fetch_add(1, std::memory_order_relaxed) <
         connection_pool_size) {
         const SocketId sid = sock->id();
-        BAIDU_SCOPED_LOCK(_mutex);
+        FLARE_SCOPED_LOCK(_mutex);
         _pool.push_back(sid);
     } else {
         // Cancel the addition and close the pooled socket.
@@ -2589,7 +2589,7 @@ void Socket::CancelUnwrittenBytes(size_t bytes) {
 }
 void Socket::AddOutputBytes(size_t bytes) {
     GetOrNewSharedPart()->out_size.fetch_add(bytes, std::memory_order_relaxed);
-    _last_writetime_us.store(butil::cpuwide_time_us(),
+    _last_writetime_us.store(flare::base::cpuwide_time_us(),
                              std::memory_order_relaxed);
     CancelUnwrittenBytes(bytes);
 }
@@ -2622,18 +2622,18 @@ std::string Socket::description() const {
     // NOTE: The output should be consistent with operator<<()
     std::string result;
     result.reserve(64);
-    butil::string_appendf(&result, "Socket{id=%" PRIu64, id());
+    flare::base::string_appendf(&result, "Socket{id=%" PRIu64, id());
     const int saved_fd = fd();
     if (saved_fd >= 0) {
-        butil::string_appendf(&result, " fd=%d", saved_fd);
+        flare::base::string_appendf(&result, " fd=%d", saved_fd);
     }
-    butil::string_appendf(&result, " addr=%s",
-                          butil::endpoint2str(remote_side()).c_str());
+    flare::base::string_appendf(&result, " addr=%s",
+                          flare::base::endpoint2str(remote_side()).c_str());
     const int local_port = local_side().port;
     if (local_port > 0) {
-        butil::string_appendf(&result, ":%d", local_port);
+        flare::base::string_appendf(&result, ":%d", local_port);
     }
-    butil::string_appendf(&result, "} (0x%p)", this);
+    flare::base::string_appendf(&result, "} (0x%p)", this);
     return result;
 }
 

@@ -20,8 +20,8 @@
 #include <google/protobuf/message.h>            // Message
 #include <gflags/gflags.h>
 
-#include "flare/butil/time.h"
-#include "flare/butil/iobuf.h"                        // butil::IOBuf
+#include "flare/base/time.h"
+#include "flare/io/iobuf.h"                        // flare::io::IOBuf
 #include "flare/brpc/log.h"
 #include "flare/brpc/controller.h"                    // Controller
 #include "flare/brpc/socket.h"                        // Socket
@@ -66,8 +66,8 @@ struct thrift_head_t {
 
 // A faster implementation of TProtocol::readMessageBegin without depending
 // on thrift stuff.
-static butil::Status
-ReadThriftMessageBegin(butil::IOBuf* body,
+static flare::base::flare_status
+ReadThriftMessageBegin(flare::io::IOBuf* body,
                        std::string* method_name,
                        ::apache::thrift::protocol::TMessageType* mtype,
                        uint32_t* seq_id) {
@@ -78,27 +78,27 @@ ReadThriftMessageBegin(butil::IOBuf* body,
     uint32_t version_and_len_buf[2];
     size_t k = body->copy_to(version_and_len_buf, sizeof(version_and_len_buf));
     if (k != sizeof(version_and_len_buf) ) {
-        return butil::Status(-1, "Fail to copy %" PRIu64 " bytes from body",
+        return flare::base::flare_status(-1, "Fail to copy %" PRIu64 " bytes from body",
                              sizeof(version_and_len_buf));
     }
     *mtype = (apache::thrift::protocol::TMessageType)
         (ntohl(version_and_len_buf[0]) & 0x000000FF);
     const uint32_t method_name_length = ntohl(version_and_len_buf[1]);
     if (method_name_length > MAX_THRIFT_METHOD_NAME_LENGTH) {
-        return butil::Status(-1, "method_name_length=%u is too long",
+        return flare::base::flare_status(-1, "method_name_length=%u is too long",
                              method_name_length);
     }
 
     char buf[sizeof(version_and_len_buf) + method_name_length + 4];
     k = body->cutn(buf, sizeof(buf));
     if (k != sizeof(buf)) {
-        return butil::Status(-1, "Fail to cut %" PRIu64 " bytes", sizeof(buf));
+        return flare::base::flare_status(-1, "Fail to cut %" PRIu64 " bytes", sizeof(buf));
     }
     method_name->assign(buf + sizeof(version_and_len_buf), method_name_length);
     // suppress strict-aliasing warning
     uint32_t* p_seq_id = (uint32_t*)(buf + sizeof(version_and_len_buf) + method_name_length);
     *seq_id = ntohl(*p_seq_id);
-    return butil::Status::OK();
+    return flare::base::flare_status::OK();
 }
 
 inline size_t ThriftMessageBeginSize(const std::string& method_name) {
@@ -120,7 +120,7 @@ WriteThriftMessageBegin(char* buf,
     *p = htonl(seq_id);
 }
 
-bool ReadThriftStruct(const butil::IOBuf& body,
+bool ReadThriftStruct(const flare::io::IOBuf& body,
                       ThriftMessageBase* raw_msg,
                       int16_t expected_fid) {
     const size_t body_len  = body.size();
@@ -164,7 +164,7 @@ bool ReadThriftStruct(const butil::IOBuf& body,
     return success;
 }
 
-void ReadThriftException(const butil::IOBuf& body,
+void ReadThriftException(const flare::io::IOBuf& body,
                          ::apache::thrift::TApplicationException* x) {
     size_t body_len  = body.size();
     uint8_t* thrift_buffer = (uint8_t*)malloc(body_len);
@@ -236,7 +236,7 @@ void ThriftClosure::DoRun() {
     ControllerPrivateAccessor accessor(&_controller);
     Span* span = accessor.span();
     if (span) {
-        span->set_start_send_us(butil::cpuwide_time_us());
+        span->set_start_send_us(flare::base::cpuwide_time_us());
     }
     Socket* sock = accessor.get_sending_socket();
     MethodStatus* method_status = (server->options().thrift_service ? 
@@ -276,7 +276,7 @@ void ThriftClosure::DoRun() {
     }
     const uint32_t seq_id = (uint32_t)_controller.log_id();
 
-    butil::IOBuf write_buf;
+    flare::io::IOBuf write_buf;
 
     // The following code was taken and modified from thrift auto generated code
     if (_controller.Failed()) {
@@ -353,11 +353,11 @@ void ThriftClosure::DoRun() {
 
     if (span) {
         // TODO: this is not sent
-        span->set_sent_us(butil::cpuwide_time_us());
+        span->set_sent_us(flare::base::cpuwide_time_us());
     }
 }
 
-ParseResult ParseThriftMessage(butil::IOBuf* source,
+ParseResult ParseThriftMessage(flare::io::IOBuf* source,
                                Socket*, bool /*read_eof*/, const void* /*arg*/) {
     char header_buf[sizeof(thrift_head_t) + 4];
     const size_t n = source->copy_to(header_buf, sizeof(header_buf));
@@ -442,7 +442,7 @@ static void EndRunningCallMethodInPool(ThriftService* service,
 };
 
 void ProcessThriftRequest(InputMessageBase* msg_base) {
-    const int64_t start_parse_us = butil::cpuwide_time_us();   
+    const int64_t start_parse_us = flare::base::cpuwide_time_us();
 
     DestroyingPtr<MostCommonMessage> msg(static_cast<MostCommonMessage*>(msg_base));
     SocketUniquePtr socket_guard(msg->ReleaseSocket());
@@ -472,7 +472,7 @@ void ProcessThriftRequest(InputMessageBase* msg_base) {
 
     uint32_t seq_id;
     ::apache::thrift::protocol::TMessageType mtype;
-    butil::Status st = ReadThriftMessageBegin(
+    flare::base::flare_status st = ReadThriftMessageBegin(
         &msg->payload, &cntl->_thrift_method_name, &mtype, &seq_id);
     if (!st.ok()) {
         return cntl->SetFailed(EREQUEST, "%s", st.error_cstr());
@@ -522,7 +522,7 @@ void ProcessThriftRequest(InputMessageBase* msg_base) {
     }
     if (socket->is_overcrowded()) {
         return cntl->SetFailed(EOVERCROWDED, "Connection to %s is overcrowded",
-                butil::endpoint2str(socket->remote_side()).c_str());
+                flare::base::endpoint2str(socket->remote_side()).c_str());
     }
     if (!server_accessor.AddConcurrency(cntl)) {
         return cntl->SetFailed(ELIMIT, "Reached server's max_concurrency=%d",
@@ -537,7 +537,7 @@ void ProcessThriftRequest(InputMessageBase* msg_base) {
 
     if (span) {
         span->ResetServerSpanName(cntl->thrift_method_name());
-        span->set_start_callback_us(butil::cpuwide_time_us());
+        span->set_start_callback_us(flare::base::cpuwide_time_us());
         span->AsParent();
     }
 
@@ -556,7 +556,7 @@ void ProcessThriftRequest(InputMessageBase* msg_base) {
 }
 
 void ProcessThriftResponse(InputMessageBase* msg_base) {
-    const int64_t start_parse_us = butil::cpuwide_time_us();
+    const int64_t start_parse_us = flare::base::cpuwide_time_us();
     DestroyingPtr<MostCommonMessage> msg(static_cast<MostCommonMessage*>(msg_base));
     
     // Fetch correlation id that we saved before in `PacThriftRequest'
@@ -565,7 +565,7 @@ void ProcessThriftResponse(InputMessageBase* msg_base) {
     const int rc = bthread_id_lock(cid, (void**)&cntl);
     if (rc != 0) {
         LOG_IF(ERROR, rc != EINVAL && rc != EPERM)
-            << "Fail to lock correlation_id=" << cid << ": " << berror(rc);
+            << "Fail to lock correlation_id=" << cid << ": " << flare_error(rc);
         return;
     }
 
@@ -585,7 +585,7 @@ void ProcessThriftResponse(InputMessageBase* msg_base) {
         ::apache::thrift::protocol::TMessageType mtype;
         uint32_t seq_id = 0; // unchecked
         
-        butil::Status st = ReadThriftMessageBegin(&msg->payload, &fname, &mtype, &seq_id);
+        flare::base::flare_status st = ReadThriftMessageBegin(&msg->payload, &fname, &mtype, &seq_id);
         if (!st.ok()) {
             cntl->SetFailed(ERESPONSE, "%s", st.error_cstr());
             break;
@@ -641,7 +641,7 @@ bool VerifyThriftRequest(const InputMessageBase* msg_base) {
     return true;
 }
 
-void SerializeThriftRequest(butil::IOBuf* request_buf, Controller* cntl,
+void SerializeThriftRequest(flare::io::IOBuf* request_buf, Controller* cntl,
                             const google::protobuf::Message* req_base) {
     if (req_base == NULL) {
         return cntl->SetFailed(EREQUEST, "request is NULL");
@@ -721,12 +721,12 @@ void SerializeThriftRequest(butil::IOBuf* request_buf, Controller* cntl,
 }
 
 void PackThriftRequest(
-    butil::IOBuf* packet_buf,
+    flare::io::IOBuf* packet_buf,
     SocketMessage**,
     uint64_t correlation_id,
     const google::protobuf::MethodDescriptor*,
     Controller* cntl,
-    const butil::IOBuf& request,
+    const flare::io::IOBuf& request,
     const Authenticator*) {
     ControllerPrivateAccessor accessor(cntl);
     if (cntl->connection_type() == CONNECTION_TYPE_SINGLE) {

@@ -24,7 +24,7 @@
 
 #include <pthread.h>                 // pthread_spin_init
 #include "flare/bthread/butex.h"           // butex_construct/destruct
-#include "flare/butil/static_atomic.h"          // std::atomic
+#include "flare/base/static_atomic.h"          // std::atomic
 #include "flare/bthread/types.h"           // bthread_attr_t
 #include "flare/bthread/stack.h"           // ContextualStack
 

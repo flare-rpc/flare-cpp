@@ -28,8 +28,8 @@ const uint64_t PB_TOTAL_BYETS_LIMITS =
 
 #include <google/protobuf/io/zero_copy_stream_impl_lite.h>
 #include <gflags/gflags.h>
-#include "flare/butil/logging.h"
-#include "flare/butil/memory/singleton_on_pthread_once.h"
+#include "flare/base/logging.h"
+#include "flare/base/singleton_on_pthread_once.h"
 #include "flare/brpc/protocol.h"
 #include "flare/brpc/controller.h"
 #include "flare/brpc/compress.h"
@@ -61,7 +61,7 @@ struct ProtocolMap {
     ProtocolEntry entries[MAX_PROTOCOL_SIZE];
 };
 inline ProtocolEntry* get_protocol_map() {
-    return butil::get_leaky_singleton<ProtocolMap>()->entries;
+    return flare::base::get_leaky_singleton<ProtocolMap>()->entries;
 }
 static pthread_mutex_t s_protocol_map_mutex = PTHREAD_MUTEX_INITIALIZER;
 
@@ -77,7 +77,7 @@ int RegisterProtocol(ProtocolType type, const Protocol& protocol) {
         return -1;
     }
     ProtocolEntry* const protocol_map = get_protocol_map();
-    BAIDU_SCOPED_LOCK(s_protocol_map_mutex);
+    FLARE_SCOPED_LOCK(s_protocol_map_mutex);
     if (protocol_map[index].valid.load(std::memory_order_relaxed)) {
         LOG(ERROR) << "ProtocolType=" << type << " was registered";
         return -1;
@@ -121,7 +121,7 @@ void ListProtocols(std::vector<std::pair<ProtocolType, Protocol> >* vec) {
     }
 }
 
-void SerializeRequestDefault(butil::IOBuf* buf,
+void SerializeRequestDefault(flare::io::IOBuf* buf,
                              Controller* cntl,
                              const google::protobuf::Message* request) {
     // Check sanity of request.
@@ -147,14 +147,14 @@ void SerializeRequestDefault(butil::IOBuf* buf,
 // ======================================================
 
 inline bool CompareStringPieceWithoutCase(
-        const butil::StringPiece& s1, const char* s2) {
+        const std::string_view& s1, const char* s2) {
     if (strlen(s2) != s1.size()) {
         return false;
     }
     return strncasecmp(s1.data(), s2, s1.size()) == 0;
 }
 
-ProtocolType StringToProtocolType(const butil::StringPiece& name,
+ProtocolType StringToProtocolType(const std::string_view& name,
                                   bool print_log_on_unknown) {
     // Force init of s_protocol_name.
     GlobalInitializeOrDie();
@@ -214,8 +214,8 @@ bool ParsePbFromZeroCopyStream(
     return ParsePbFromZeroCopyStreamInlined(msg, input);
 }
 
-bool ParsePbFromIOBuf(google::protobuf::Message* msg, const butil::IOBuf& buf) {
-    butil::IOBufAsZeroCopyInputStream stream(buf);
+bool ParsePbFromIOBuf(google::protobuf::Message* msg, const flare::io::IOBuf& buf) {
+    flare::io::IOBufAsZeroCopyInputStream stream(buf);
     return ParsePbFromZeroCopyStreamInlined(msg, &stream);
 }
 

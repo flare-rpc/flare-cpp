@@ -19,7 +19,7 @@
 #include "flare/brpc/policy/http2_rpc_protocol.h"
 #include "flare/brpc/details/controller_private_accessor.h"
 #include "flare/brpc/server.h"
-#include "flare/butil/base64.h"
+#include "flare/base/base64.h"
 #include "flare/brpc/log.h"
 
 namespace brpc {
@@ -80,17 +80,17 @@ static const char* H2ConnectionState2Str(H2ConnectionState s) {
 }
 
 // A series of utilities to load numbers from http2 streams.
-inline uint8_t LoadUint8(butil::IOBufBytesIterator& it) {
+inline uint8_t LoadUint8(flare::io::IOBufBytesIterator& it) {
     uint8_t v = *it;
     ++it;
     return v;
 }
-inline uint16_t LoadUint16(butil::IOBufBytesIterator& it) {
+inline uint16_t LoadUint16(flare::io::IOBufBytesIterator& it) {
     uint16_t v = *it; ++it;
     v = ((v << 8) | *it); ++it;
     return v;
 }
-inline uint32_t LoadUint32(butil::IOBufBytesIterator& it) {
+inline uint32_t LoadUint32(flare::io::IOBufBytesIterator& it) {
     uint32_t v = *it; ++it;
     v = ((v << 8) | *it); ++it;
     v = ((v << 8) | *it); ++it;
@@ -140,7 +140,7 @@ inline void SerializeFrameHead(void* out_buf, const H2FrameHead& h) {
 }
 
 static int WriteAck(Socket* s, const void* data, size_t n) {
-    butil::IOBuf sendbuf;
+    flare::io::IOBuf sendbuf;
     sendbuf.append(data, n);
     Socket::WriteOptions wopt;
     wopt.ignore_eovercrowded = true;
@@ -160,7 +160,7 @@ enum H2SettingsIdentifier {
 
 // Parse from n bytes from the iterator.
 // Returns true on success.
-bool ParseH2Settings(H2Settings* out, butil::IOBufBytesIterator& it, size_t n) {
+bool ParseH2Settings(H2Settings* out, flare::io::IOBufBytesIterator& it, size_t n) {
     const uint32_t npairs = n / 6;
     if (npairs * 6 != n) {
         LOG(ERROR) << "Invalid payload_size=" << n;
@@ -376,7 +376,7 @@ int H2Context::Init() {
 H2StreamContext* H2Context::RemoveStream(int stream_id) {
     H2StreamContext* sctx = NULL;
     {
-        std::unique_lock<butil::Mutex> mu(_stream_mutex);
+        std::unique_lock<flare::base::Mutex> mu(_stream_mutex);
         if (!_pending_streams.erase(stream_id, &sctx)) {
             return NULL;
         }
@@ -394,7 +394,7 @@ void H2Context::RemoveGoAwayStreams(
     if (goaway_stream_id == 0) {  // quick path
         StreamMap tmp;
         {
-            std::unique_lock<butil::Mutex> mu(_stream_mutex);
+            std::unique_lock<flare::base::Mutex> mu(_stream_mutex);
             _goaway_stream_id = goaway_stream_id;
             _pending_streams.swap(tmp);
         }
@@ -402,7 +402,7 @@ void H2Context::RemoveGoAwayStreams(
             out_streams->push_back(it->second);
         }
     } else {
-        std::unique_lock<butil::Mutex> mu(_stream_mutex);
+        std::unique_lock<flare::base::Mutex> mu(_stream_mutex);
         _goaway_stream_id = goaway_stream_id;
         for (StreamMap::const_iterator it = _pending_streams.begin();
              it != _pending_streams.end(); ++it) {
@@ -417,7 +417,7 @@ void H2Context::RemoveGoAwayStreams(
 }
 
 H2StreamContext* H2Context::FindStream(int stream_id) {
-    std::unique_lock<butil::Mutex> mu(_stream_mutex);
+    std::unique_lock<flare::base::Mutex> mu(_stream_mutex);
     H2StreamContext** psctx = _pending_streams.seek(stream_id);
     if (psctx) {
         return *psctx;
@@ -426,7 +426,7 @@ H2StreamContext* H2Context::FindStream(int stream_id) {
 }
 
 int H2Context::TryToInsertStream(int stream_id, H2StreamContext* ctx) {
-    std::unique_lock<butil::Mutex> mu(_stream_mutex);
+    std::unique_lock<flare::base::Mutex> mu(_stream_mutex);
     if (_goaway_stream_id >= 0 && stream_id > _goaway_stream_id) {
         return 1;
     }
@@ -439,7 +439,7 @@ int H2Context::TryToInsertStream(int stream_id, H2StreamContext* ctx) {
 }
 
 ParseResult H2Context::ConsumeFrameHead(
-    butil::IOBufBytesIterator& it, H2FrameHead* frame_head) {
+    flare::io::IOBufBytesIterator& it, H2FrameHead* frame_head) {
     uint8_t length_buf[3];
     size_t n = it.copy_and_forward(length_buf, sizeof(length_buf));
     if (n < 3) {
@@ -468,7 +468,7 @@ ParseResult H2Context::ConsumeFrameHead(
 }
 
 ParseResult H2Context::Consume(
-    butil::IOBufBytesIterator& it, Socket* socket) {
+    flare::io::IOBufBytesIterator& it, Socket* socket) {
     if (_conn_state == H2_CONNECTION_UNINITIALIZED) {
         if (is_server_side()) {
             // Wait for the client connection preface prefix
@@ -546,7 +546,7 @@ ParseResult H2Context::Consume(
 }
 
 H2ParseResult H2Context::OnHeaders(
-    butil::IOBufBytesIterator& it, const H2FrameHead& frame_head) {
+    flare::io::IOBufBytesIterator& it, const H2FrameHead& frame_head) {
     // HEADERS frames MUST be associated with a stream.  If a HEADERS frame
     // is received whose stream identifier field is 0x0, the recipient MUST
     // respond with a connection error (Section 5.4.1) of type PROTOCOL_ERROR.
@@ -568,8 +568,8 @@ H2ParseResult H2Context::OnHeaders(
         --frag_size;
     }
     if (has_priority) {
-        const uint32_t ALLOW_UNUSED stream_dep = LoadUint32(it);
-        const uint32_t ALLOW_UNUSED weight = LoadUint8(it);
+        const uint32_t FLARE_ALLOW_UNUSED stream_dep = LoadUint32(it);
+        const uint32_t FLARE_ALLOW_UNUSED weight = LoadUint8(it);
         frag_size -= 5;
     }
     if (frag_size < pad_length) {
@@ -617,13 +617,13 @@ H2ParseResult H2Context::OnHeaders(
 }
 
 H2ParseResult H2StreamContext::OnHeaders(
-    butil::IOBufBytesIterator& it, const H2FrameHead& frame_head,
+    flare::io::IOBufBytesIterator& it, const H2FrameHead& frame_head,
     uint32_t frag_size, uint8_t pad_length) {
     _parsed_length += FRAME_HEAD_SIZE + frame_head.payload_size;
 #if defined(BRPC_H2_STREAM_STATE)
     SetState(H2_STREAM_OPEN);
 #endif
-    butil::IOBufBytesIterator it2(it, frag_size);
+    flare::io::IOBufBytesIterator it2(it, frag_size);
     if (ConsumeHeaders(it2) < 0) {
         LOG(ERROR) << "Invalid header, frag_size=" << frag_size
             << ", stream_id=" << frame_head.stream_id;
@@ -656,7 +656,7 @@ H2ParseResult H2StreamContext::OnHeaders(
 }
 
 H2ParseResult H2Context::OnContinuation(
-    butil::IOBufBytesIterator& it, const H2FrameHead& frame_head) {
+    flare::io::IOBufBytesIterator& it, const H2FrameHead& frame_head) {
     H2StreamContext* sctx = FindStream(frame_head.stream_id);
     if (sctx == NULL) {
         if (is_client_side()) {
@@ -675,11 +675,11 @@ H2ParseResult H2Context::OnContinuation(
 }
 
 H2ParseResult H2StreamContext::OnContinuation(
-    butil::IOBufBytesIterator& it, const H2FrameHead& frame_head) {
+    flare::io::IOBufBytesIterator& it, const H2FrameHead& frame_head) {
     _parsed_length += FRAME_HEAD_SIZE + frame_head.payload_size;
     it.append_and_forward(&_remaining_header_fragment, frame_head.payload_size);
     const size_t size = _remaining_header_fragment.size();
-    butil::IOBufBytesIterator it2(_remaining_header_fragment);
+    flare::io::IOBufBytesIterator it2(_remaining_header_fragment);
     if (ConsumeHeaders(it2) < 0) {
         LOG(ERROR) << "Invalid header: payload_size=" << frame_head.payload_size
             << ", stream_id=" << frame_head.stream_id;
@@ -700,7 +700,7 @@ H2ParseResult H2StreamContext::OnContinuation(
 }
 
 H2ParseResult H2Context::OnData(
-    butil::IOBufBytesIterator& it, const H2FrameHead& frame_head) {
+    flare::io::IOBufBytesIterator& it, const H2FrameHead& frame_head) {
     uint32_t frag_size = frame_head.payload_size;
     uint8_t pad_length = 0;
     if (frame_head.flags & H2_FLAGS_PADDED) {
@@ -729,14 +729,14 @@ H2ParseResult H2Context::OnData(
 }
 
 H2ParseResult H2StreamContext::OnData(
-    butil::IOBufBytesIterator& it, const H2FrameHead& frame_head,
+    flare::io::IOBufBytesIterator& it, const H2FrameHead& frame_head,
     uint32_t frag_size, uint8_t pad_length) {
     _parsed_length += FRAME_HEAD_SIZE + frame_head.payload_size;
-    butil::IOBuf data;
+    flare::io::IOBuf data;
     it.append_and_forward(&data, frag_size);
     it.forward(pad_length);
     for (size_t i = 0; i < data.backing_block_num(); ++i) {
-        const butil::StringPiece blk = data.backing_block(i);
+        const std::string_view blk = data.backing_block(i);
         if (OnBody(blk.data(), blk.size()) != 0) {
             LOG(ERROR) << "Fail to parse data";
             return MakeH2Error(H2_PROTOCOL_ERROR);
@@ -777,7 +777,7 @@ H2ParseResult H2StreamContext::OnData(
 }
 
 H2ParseResult H2Context::OnResetStream(
-    butil::IOBufBytesIterator& it, const H2FrameHead& frame_head) {
+    flare::io::IOBufBytesIterator& it, const H2FrameHead& frame_head) {
     if (frame_head.payload_size != 4) {
         LOG(ERROR) << "Invalid payload_size=" << frame_head.payload_size;
         return MakeH2Error(H2_FRAME_SIZE_ERROR);
@@ -844,7 +844,7 @@ H2ParseResult H2StreamContext::OnEndStream() {
 }
 
 H2ParseResult H2Context::OnSettings(
-    butil::IOBufBytesIterator& it, const H2FrameHead& frame_head) {
+    flare::io::IOBufBytesIterator& it, const H2FrameHead& frame_head) {
     // SETTINGS frames always apply to a connection, never a single stream.
     // The stream identifier for a SETTINGS frame MUST be zero (0x0).  If an
     // endpoint receives a SETTINGS frame whose stream identifier field is
@@ -895,7 +895,7 @@ H2ParseResult H2Context::OnSettings(
         // be changed using WINDOW_UPDATE frames.
         // https://tools.ietf.org/html/rfc7540#section-6.9.2
         // TODO(gejun): Has race conditions with AppendAndDestroySelf
-        std::unique_lock<butil::Mutex> mu(_stream_mutex);
+        std::unique_lock<flare::base::Mutex> mu(_stream_mutex);
         for (StreamMap::const_iterator it = _pending_streams.begin();
              it != _pending_streams.end(); ++it) {
             if (!AddWindowSize(&it->second->_remote_window_left, window_diff)) {
@@ -914,19 +914,19 @@ H2ParseResult H2Context::OnSettings(
 }
 
 H2ParseResult H2Context::OnPriority(
-    butil::IOBufBytesIterator&, const H2FrameHead&) {
+    flare::io::IOBufBytesIterator&, const H2FrameHead&) {
     LOG(ERROR) << "Not support PRIORITY frame yet";
     return MakeH2Error(H2_PROTOCOL_ERROR);
 }
 
 H2ParseResult H2Context::OnPushPromise(
-    butil::IOBufBytesIterator&, const H2FrameHead&) {
+    flare::io::IOBufBytesIterator&, const H2FrameHead&) {
     LOG(ERROR) << "Not support PUSH_PROMISE frame yet";
     return MakeH2Error(H2_PROTOCOL_ERROR);
 }
 
 H2ParseResult H2Context::OnPing(
-    butil::IOBufBytesIterator& it, const H2FrameHead& frame_head) {
+    flare::io::IOBufBytesIterator& it, const H2FrameHead& frame_head) {
     if (frame_head.payload_size != 8) {
         LOG(ERROR) << "Invalid payload_size=" << frame_head.payload_size;
         return MakeH2Error(H2_FRAME_SIZE_ERROR);
@@ -955,7 +955,7 @@ static void* ProcessHttpResponseWrapper(void* void_arg) {
 }
 
 H2ParseResult H2Context::OnGoAway(
-    butil::IOBufBytesIterator& it, const H2FrameHead& h) {
+    flare::io::IOBufBytesIterator& it, const H2FrameHead& h) {
     if (h.payload_size < 8) {
         LOG(ERROR) << "Invalid payload_size=" << h.payload_size;
         return MakeH2Error(H2_FRAME_SIZE_ERROR);
@@ -971,7 +971,7 @@ H2ParseResult H2Context::OnGoAway(
     // Skip Additional Debug Data
     it.forward(h.payload_size - 8);
     const int last_stream_id = static_cast<int>(LoadUint32(it));
-    const H2Error ALLOW_UNUSED h2_error = static_cast<H2Error>(LoadUint32(it));
+    const H2Error FLARE_ALLOW_UNUSED h2_error = static_cast<H2Error>(LoadUint32(it));
     // TODO(zhujiashun): client and server should unify the code.
     // Server Push is not supported so it works fine now.
     if (is_client_side()) {
@@ -1004,7 +1004,7 @@ H2ParseResult H2Context::OnGoAway(
 }
                           
 H2ParseResult H2Context::OnWindowUpdate(
-    butil::IOBufBytesIterator& it, const H2FrameHead& frame_head) {
+    flare::io::IOBufBytesIterator& it, const H2FrameHead& frame_head) {
     if (frame_head.payload_size != 4) {
         LOG(ERROR) << "Invalid payload_size=" << frame_head.payload_size;
         return MakeH2Error(H2_FRAME_SIZE_ERROR);
@@ -1056,7 +1056,7 @@ void H2Context::Describe(std::ostream& os, const DescribeOptions& opt) const {
     os << '}';
     size_t abandoned_size = 0;
     {
-        BAIDU_SCOPED_LOCK(_abandoned_streams_mutex);
+        FLARE_SCOPED_LOCK(_abandoned_streams_mutex);
         abandoned_size = _abandoned_streams.size();
     }
     os << sep << "abandoned_streams=" << abandoned_size
@@ -1098,7 +1098,7 @@ bvar::PerSecond<bvar::Adder<int64_t> > g_parse_time_per_second(
     "h2_parse_second", &g_parse_time);
 #endif
 
-ParseResult ParseH2Message(butil::IOBuf *source, Socket *socket,
+ParseResult ParseH2Message(flare::io::IOBuf *source, Socket *socket,
                            bool read_eof, const void *arg) {
 #if defined(BRPC_PROFILE_H2)
     bvar::ScopedTimer<bvar::Adder<int64_t> > tm(g_parse_time);
@@ -1117,7 +1117,7 @@ ParseResult ParseH2Message(butil::IOBuf *source, Socket *socket,
         }
         socket->initialize_parsing_context(&ctx);
     }
-    butil::IOBufBytesIterator it(*source);
+    flare::io::IOBufBytesIterator it(*source);
     size_t last_bytes_left = it.bytes_left();
     CHECK_EQ(last_bytes_left, source->size());
     while (true) {
@@ -1136,7 +1136,7 @@ ParseResult ParseH2Message(butil::IOBuf *source, Socket *socket,
 }
 
 void H2Context::AddAbandonedStream(uint32_t stream_id) {
-    std::unique_lock<butil::Mutex> mu(_abandoned_streams_mutex);
+    std::unique_lock<flare::base::Mutex> mu(_abandoned_streams_mutex);
     _abandoned_streams.push_back(stream_id);
 }
 
@@ -1147,7 +1147,7 @@ inline void H2Context::ClearAbandonedStreams() {
 }
 
 void H2Context::ClearAbandonedStreamsImpl() {
-    std::unique_lock<butil::Mutex> mu(_abandoned_streams_mutex);
+    std::unique_lock<flare::base::Mutex> mu(_abandoned_streams_mutex);
     while (!_abandoned_streams.empty()) {
         const uint32_t stream_id = _abandoned_streams.back();
         _abandoned_streams.pop_back();
@@ -1220,7 +1220,7 @@ bool H2StreamContext::ConsumeWindowSize(int64_t size) {
     return true;
 }
 
-int H2StreamContext::ConsumeHeaders(butil::IOBufBytesIterator& it) {
+int H2StreamContext::ConsumeHeaders(flare::io::IOBufBytesIterator& it) {
     HPacker& hpacker = _conn_ctx->hpacker();
     HttpHeader& h = header();
     while (it) {
@@ -1291,14 +1291,14 @@ int H2StreamContext::ConsumeHeaders(butil::IOBufBytesIterator& it) {
         }
 
         if (FLAGS_http_verbose) {
-            butil::IOBufBuilder* vs = this->_vmsgbuilder;
+            flare::io::IOBufBuilder* vs = this->_vmsgbuilder;
             if (vs == NULL) {
-                vs = new butil::IOBufBuilder;
+                vs = new flare::io::IOBufBuilder;
                 this->_vmsgbuilder = vs;
                 if (_conn_ctx->is_server_side()) {
-                    *vs << "[ H2 REQUEST @" << butil::my_ip() << " ]";
+                    *vs << "[ H2 REQUEST @" << flare::base::my_ip() << " ]";
                 } else {
-                    *vs << "[ H2 RESPONSE @" << butil::my_ip() << " ]";
+                    *vs << "[ H2 RESPONSE @" << flare::base::my_ip() << " ]";
                 }
             }
             // print \n first to be consistent with code in http_message.cpp
@@ -1310,10 +1310,10 @@ int H2StreamContext::ConsumeHeaders(butil::IOBufBytesIterator& it) {
 
 const CommonStrings* get_common_strings();
 
-static void PackH2Message(butil::IOBuf* out,
-                          butil::IOBuf& headers,
-                          butil::IOBuf& trailer_headers,
-                          const butil::IOBuf& data,
+static void PackH2Message(flare::io::IOBuf* out,
+                          flare::io::IOBuf& headers,
+                          flare::io::IOBuf& trailer_headers,
+                          const flare::io::IOBuf& data,
                           int stream_id,
                           H2Context* conn_ctx) {
     const H2Settings& remote_settings = conn_ctx->remote_settings();
@@ -1327,7 +1327,7 @@ static void PackH2Message(butil::IOBuf* out,
         headers_head.flags |= H2_FLAGS_END_HEADERS;
         SerializeFrameHead(headbuf, headers_head);
         out->append(headbuf, sizeof(headbuf));
-        out->append(butil::IOBuf::Movable(headers));
+        out->append(flare::io::IOBuf::Movable(headers));
     } else {
         headers_head.payload_size = remote_settings.max_frame_size;
         SerializeFrameHead(headbuf, headers_head);
@@ -1349,7 +1349,7 @@ static void PackH2Message(butil::IOBuf* out,
     }
     if (!data.empty()) {
         H2FrameHead data_head = {0, H2_FRAME_DATA, 0, stream_id};
-        butil::IOBufBytesIterator it(data);
+        flare::io::IOBufBytesIterator it(data);
         while (it.bytes_left()) {
             if (it.bytes_left() <= remote_settings.max_frame_size) {
                 data_head.payload_size = it.bytes_left();
@@ -1371,7 +1371,7 @@ static void PackH2Message(butil::IOBuf* out,
         headers_head.flags |= H2_FLAGS_END_HEADERS;
         SerializeFrameHead(headbuf, headers_head);
         out->append(headbuf, sizeof(headbuf));
-        out->append(butil::IOBuf::Movable(trailer_headers));
+        out->append(flare::io::IOBuf::Movable(trailer_headers));
     }
     const int64_t conn_wu = conn_ctx->ReleaseDeferredWindowUpdate();
     if (conn_wu > 0) {
@@ -1427,10 +1427,10 @@ H2UnsentRequest* H2UnsentRequest::New(Controller* c) {
             if (uri.port() < 0) {
                 *val = uri.host();
             } else {
-                butil::string_printf(val, "%s:%d", uri.host().c_str(), uri.port());
+                flare::base::string_printf(val, "%s:%d", uri.host().c_str(), uri.port());
             }
         } else if (c->remote_side().port != 0) {
-            *val = butil::endpoint2str(c->remote_side()).c_str();
+            *val = flare::base::endpoint2str(c->remote_side()).c_str();
         }
     }
     if (need_content_type) {
@@ -1448,7 +1448,7 @@ H2UnsentRequest* H2UnsentRequest::New(Controller* c) {
         // characters in this part and even if users did, most of them are
         // invalid and rejected by http_parser_parse_url().
         std::string encoded_user_info;
-        butil::Base64Encode(user_info, &encoded_user_info);
+        flare::base::base64_encode(user_info, &encoded_user_info);
         std::string* val = &msg->push(common->AUTHORIZATION);
         val->reserve(6 + encoded_user_info.size());
         val->append("Basic ");
@@ -1470,7 +1470,7 @@ struct RemoveRefOnQuit {
     RemoveRefOnQuit(H2UnsentRequest* msg) : _msg(msg) {}
     ~RemoveRefOnQuit() { _msg->RemoveRefManually(); }
 private:
-    DISALLOW_COPY_AND_ASSIGN(RemoveRefOnQuit);
+    FLARE_DISALLOW_COPY_AND_ASSIGN(RemoveRefOnQuit);
     H2UnsentRequest* _msg;
 };
 
@@ -1481,7 +1481,7 @@ void H2UnsentRequest::DestroyStreamUserData(SocketUniquePtr& sending_sock,
     RemoveRefOnQuit deref_self(this);
     if (sending_sock != NULL && error_code != 0) {
         CHECK_EQ(cntl, _cntl);
-        std::unique_lock<butil::Mutex> mu(_mutex);
+        std::unique_lock<flare::base::Mutex> mu(_mutex);
         _cntl = NULL;
         if (_stream_id != 0) {
             H2Context* ctx = static_cast<H2Context*>(sending_sock->parsing_context());
@@ -1496,14 +1496,14 @@ bvar::PerSecond<bvar::Adder<int64_t> > g_append_request_time_per_second(
     "h2_append_request_second",     &g_append_request_time);
 #endif
 
-butil::Status
-H2UnsentRequest::AppendAndDestroySelf(butil::IOBuf* out, Socket* socket) {
+flare::base::flare_status
+H2UnsentRequest::AppendAndDestroySelf(flare::io::IOBuf* out, Socket* socket) {
 #if defined(BRPC_PROFILE_H2)
     bvar::ScopedTimer<bvar::Adder<int64_t> > tm(g_append_request_time);
 #endif
     RemoveRefOnQuit deref_self(this);
     if (socket == NULL) {
-        return butil::Status::OK();
+        return flare::base::flare_status::OK();
     }
     H2Context* ctx = static_cast<H2Context*>(socket->parsing_context());
 
@@ -1513,7 +1513,7 @@ H2UnsentRequest::AppendAndDestroySelf(butil::IOBuf* out, Socket* socket) {
         ctx = new H2Context(socket, NULL);
         if (ctx->Init() != 0) {
             delete ctx;
-            return butil::Status(EINTERNAL, "Fail to init H2Context");
+            return flare::base::flare_status(EINTERNAL, "Fail to init H2Context");
         }
         socket->initialize_parsing_context(&ctx);
         
@@ -1530,14 +1530,14 @@ H2UnsentRequest::AppendAndDestroySelf(butil::IOBuf* out, Socket* socket) {
 
     // TODO(zhujiashun): also check this in server push
     if (ctx->VolatilePendingStreamSize() > ctx->remote_settings().max_concurrent_streams) {
-        return butil::Status(ELIMIT, "Pending Stream count exceeds max concurrent stream");
+        return flare::base::flare_status(ELIMIT, "Pending Stream count exceeds max concurrent stream");
     }
 
     // Although the critical section looks huge, it should rarely be contended
     // since timeout of RPC is much larger than the delay of sending.
-    std::unique_lock<butil::Mutex> mu(_mutex);
+    std::unique_lock<flare::base::Mutex> mu(_mutex);
     if (_cntl == NULL) {
-        return butil::Status(ECANCELED, "The RPC was already failed");
+        return flare::base::flare_status(ECANCELED, "The RPC was already failed");
     }
 
     const int id = ctx->AllocateClientStreamId();
@@ -1547,7 +1547,7 @@ H2UnsentRequest::AppendAndDestroySelf(butil::IOBuf* out, Socket* socket) {
         // other RPC successfully sent requests and waiting for responses.
         RPC_VLOG << "Fail to allocate stream_id on " << *socket
                  << " h2req=" << (StreamUserData*)this;
-        return butil::Status(EH2RUNOUTSTREAMS, "Fail to allocate stream_id");
+        return flare::base::flare_status(EH2RUNOUTSTREAMS, "Fail to allocate stream_id");
     }
 
     _sctx->Init(ctx, id);
@@ -1555,22 +1555,22 @@ H2UnsentRequest::AppendAndDestroySelf(butil::IOBuf* out, Socket* socket) {
     if (!_cntl->request_attachment().empty()) {
         const int64_t data_size = _cntl->request_attachment().size();
         if (!_sctx->ConsumeWindowSize(data_size)) {
-            return butil::Status(ELIMIT, "remote_window_left is not enough, data_size=%" PRId64, data_size);
+            return flare::base::flare_status(ELIMIT, "remote_window_left is not enough, data_size=%" PRId64, data_size);
         }
     }
 
     const int rc = ctx->TryToInsertStream(id, _sctx.get());
     if (rc < 0) {
-        return butil::Status(EINTERNAL, "Fail to insert existing stream_id");
+        return flare::base::flare_status(EINTERNAL, "Fail to insert existing stream_id");
     } else if (rc > 0) {
-        return butil::Status(ELOGOFF, "the connection just issued GOAWAY");
+        return flare::base::flare_status(ELOGOFF, "the connection just issued GOAWAY");
     }
     _stream_id = _sctx->stream_id();
     // After calling TryToInsertStream, the ownership of _sctx is transferred to ctx
     _sctx.release();
 
     HPacker& hpacker = ctx->hpacker();
-    butil::IOBufAppender appender;
+    flare::io::IOBufAppender appender;
     HPackOptions options;
     options.encode_name = FLAGS_h2_hpack_encode_name;
     options.encode_value = FLAGS_h2_hpack_encode_value;
@@ -1585,11 +1585,11 @@ H2UnsentRequest::AppendAndDestroySelf(butil::IOBuf* out, Socket* socket) {
             hpacker.Encode(&appender, header, options);
         }
     }
-    butil::IOBuf frag;
+    flare::io::IOBuf frag;
     appender.move_to(frag);
-    butil::IOBuf dummy_buf;
+    flare::io::IOBuf dummy_buf;
     PackH2Message(out, frag, dummy_buf, _cntl->request_attachment(), _stream_id, ctx);
-    return butil::Status::OK();
+    return flare::base::flare_status::OK();
 }
 
 size_t H2UnsentRequest::EstimatedByteSize() {
@@ -1597,7 +1597,7 @@ size_t H2UnsentRequest::EstimatedByteSize() {
     for (size_t i = 0; i < _size; ++i) {
         sz += _list[i].name.size() + _list[i].value.size() + 1;
     }
-    std::unique_lock<butil::Mutex> mu(_mutex);
+    std::unique_lock<flare::base::Mutex> mu(_mutex);
     if (_cntl == NULL) {
         return 0;
     }
@@ -1613,11 +1613,11 @@ size_t H2UnsentRequest::EstimatedByteSize() {
 }
 
 void H2UnsentRequest::Print(std::ostream& os) const {
-    os << "[ H2 REQUEST @" << butil::my_ip() << " ]\n";
+    os << "[ H2 REQUEST @" << flare::base::my_ip() << " ]\n";
     for (size_t i = 0; i < _size; ++i) {
         os << "> " << _list[i].name << " = " << _list[i].value << '\n';
     }
-    std::unique_lock<butil::Mutex> mu(_mutex);
+    std::unique_lock<flare::base::Mutex> mu(_mutex);
     if (_cntl == NULL) {
         return;
     }
@@ -1628,11 +1628,11 @@ void H2UnsentRequest::Print(std::ostream& os) const {
             os << "> " << it->first << " = " << it->second << '\n';
         }
     }
-    const butil::IOBuf* body = &_cntl->request_attachment();
+    const flare::io::IOBuf* body = &_cntl->request_attachment();
     if (!body->empty()) {
         os << "> \n";
     }
-    os << butil::ToPrintable(*body, FLAGS_http_verbose_max_body_length);
+    os << flare::io::ToPrintable(*body, FLAGS_http_verbose_max_body_length);
 
 }
 
@@ -1661,7 +1661,7 @@ H2UnsentResponse* H2UnsentResponse::New(Controller* c, int stream_id, bool is_gr
     if (h->status_code() == 200) {
         msg->push(common->H2_STATUS, common->STATUS_200);
     } else {
-        butil::string_printf(&msg->push(common->H2_STATUS),
+        flare::base::string_printf(&msg->push(common->H2_STATUS),
                             "%d", h->status_code());
     }
     if (need_content_type) {
@@ -1684,14 +1684,14 @@ bvar::PerSecond<bvar::Adder<int64_t> > g_append_response_time_per_second(
     "h2_append_response_second",     &g_append_response_time);
 #endif
 
-butil::Status
-H2UnsentResponse::AppendAndDestroySelf(butil::IOBuf* out, Socket* socket) {
+flare::base::flare_status
+H2UnsentResponse::AppendAndDestroySelf(flare::io::IOBuf* out, Socket* socket) {
 #if defined(BRPC_PROFILE_H2)
     bvar::ScopedTimer<bvar::Adder<int64_t> > tm(g_append_response_time);
 #endif
     DestroyingPtr<H2UnsentResponse> destroy_self(this);
     if (socket == NULL) {
-        return butil::Status::OK();
+        return flare::base::flare_status::OK();
     }
     H2Context* ctx = static_cast<H2Context*>(socket->parsing_context());
 
@@ -1707,11 +1707,11 @@ H2UnsentResponse::AppendAndDestroySelf(butil::IOBuf* out, Socket* socket) {
         SerializeFrameHead(rstbuf, 4, H2_FRAME_RST_STREAM, 0, _stream_id);
         SaveUint32(rstbuf + FRAME_HEAD_SIZE, H2_FLOW_CONTROL_ERROR);
         out->append(rstbuf, sizeof(rstbuf));
-        return butil::Status::OK();
+        return flare::base::flare_status::OK();
     }
 
     HPacker& hpacker = ctx->hpacker();
-    butil::IOBufAppender appender;
+    flare::io::IOBufAppender appender;
     HPackOptions options;
     options.encode_name = FLAGS_h2_hpack_encode_name;
     options.encode_value = FLAGS_h2_hpack_encode_value;
@@ -1726,13 +1726,13 @@ H2UnsentResponse::AppendAndDestroySelf(butil::IOBuf* out, Socket* socket) {
             hpacker.Encode(&appender, header, options);
         }
     }
-    butil::IOBuf frag;
+    flare::io::IOBuf frag;
     appender.move_to(frag);
 
-    butil::IOBuf trailer_frag;
+    flare::io::IOBuf trailer_frag;
     if (_is_grpc) {
         HPacker::Header status_header("grpc-status",
-                                      butil::string_printf("%d", _grpc_status));
+                                      flare::base::string_printf("%d", _grpc_status));
         hpacker.Encode(&appender, status_header, options);
         if (!_grpc_message.empty()) {
             HPacker::Header msg_header("grpc-message", _grpc_message);
@@ -1742,7 +1742,7 @@ H2UnsentResponse::AppendAndDestroySelf(butil::IOBuf* out, Socket* socket) {
     }
 
     PackH2Message(out, frag, trailer_frag, _data, _stream_id, ctx);
-    return butil::Status::OK();
+    return flare::base::flare_status::OK();
 }
 
 size_t H2UnsentResponse::EstimatedByteSize() {
@@ -1761,7 +1761,7 @@ size_t H2UnsentResponse::EstimatedByteSize() {
 }
 
 void H2UnsentResponse::Print(std::ostream& os) const {
-    os << "[ H2 RESPONSE @" << butil::my_ip() << " ]\n";
+    os << "[ H2 RESPONSE @" << flare::base::my_ip() << " ]\n";
     for (size_t i = 0; i < _size; ++i) {
         os << "> " << _list[i].name << " = " << _list[i].value << '\n';
     }
@@ -1774,15 +1774,15 @@ void H2UnsentResponse::Print(std::ostream& os) const {
     if (!_data.empty()) {
         os << "> \n";
     }
-    os << butil::ToPrintable(_data, FLAGS_http_verbose_max_body_length);
+    os << flare::io::ToPrintable(_data, FLAGS_http_verbose_max_body_length);
 }
 
-void PackH2Request(butil::IOBuf*,
+void PackH2Request(flare::io::IOBuf*,
                    SocketMessage** user_message,
                    uint64_t correlation_id,
                    const google::protobuf::MethodDescriptor*,
                    Controller* cntl,
-                   const butil::IOBuf&,
+                   const flare::io::IOBuf&,
                    const Authenticator* auth) {
     ControllerPrivateAccessor accessor(cntl);
     
@@ -1832,7 +1832,7 @@ void H2GlobalStreamCreator::DestroyStreamCreator(Controller* cntl) {
 }
 
 StreamCreator* get_h2_global_stream_creator() {
-    return butil::get_leaky_singleton<H2GlobalStreamCreator>();
+    return flare::base::get_leaky_singleton<H2GlobalStreamCreator>();
 }
 
 }  // namespace policy

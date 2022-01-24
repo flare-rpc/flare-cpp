@@ -18,7 +18,7 @@
 
 #include "flare/butil/base_export.h"
 #include "flare/butil/basictypes.h"
-#include "flare/butil/files/scoped_file.h"
+#include "flare/base/scoped_file.h"
 #include "flare/butil/move.h"
 #include "flare/butil/time/time.h"
 
@@ -300,7 +300,7 @@ class BUTIL_EXPORT File {
 #if defined(OS_WIN)
   win::ScopedHandle file_;
 #elif defined(OS_POSIX)
-  ScopedFD file_;
+  flare::base::ScopedFD file_;
 #endif
 
   Error error_details_;

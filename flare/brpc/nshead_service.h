@@ -107,14 +107,14 @@ public:
     void Describe(std::ostream &os, const DescribeOptions&) const;
 
 private:
-DISALLOW_COPY_AND_ASSIGN(NsheadService);
+FLARE_DISALLOW_COPY_AND_ASSIGN(NsheadService);
 friend class NsheadClosure;
 friend void policy::ProcessNsheadRequest(InputMessageBase* msg_base);
 friend class StatusService;
 friend class Server;
 
 private:
-    void Expose(const butil::StringPiece& prefix);
+    void Expose(const std::string_view& prefix);
     
     // Tracking status of non NsheadPbService
     MethodStatus* _status;

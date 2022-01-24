@@ -17,8 +17,8 @@
 
 
 #include <limits>
-#include "flare/butil/logging.h"
-#include "flare/butil/string_printf.h"
+#include "flare/base/logging.h"
+#include "flare/base/strings.h"
 #include "flare/brpc/redis_reply.h"
 
 namespace brpc {
@@ -38,7 +38,7 @@ const char* RedisReplyTypeToString(RedisReplyType type) {
     }
 }
 
-bool RedisReply::SerializeTo(butil::IOBufAppender* appender) {
+bool RedisReply::SerializeTo(flare::io::IOBufAppender* appender) {
     switch (_type) {
         case REDIS_REPLY_ERROR:
             // fall through
@@ -89,7 +89,7 @@ bool RedisReply::SerializeTo(butil::IOBufAppender* appender) {
     return false;
 }
 
-ParseError RedisReply::ConsumePartialIOBuf(butil::IOBuf& buf) {
+ParseError RedisReply::ConsumePartialIOBuf(flare::io::IOBuf& buf) {
     if (_type == REDIS_REPLY_ARRAY && _data.array.last_index >= 0) {
         // The parsing was suspended while parsing sub replies,
         // continue the parsing.
@@ -115,7 +115,7 @@ ParseError RedisReply::ConsumePartialIOBuf(butil::IOBuf& buf) {
     switch (fc) {
     case '-':   // Error          "-<message>\r\n"
     case '+': { // Simple String  "+<string>\r\n"
-        butil::IOBuf str;
+        flare::io::IOBuf str;
         if (buf.cut_until(&str, "\r\n") != 0) {
             const size_t len = buf.size();
             if (len > std::numeric_limits<uint32_t>::max()) {
@@ -150,8 +150,8 @@ ParseError RedisReply::ConsumePartialIOBuf(butil::IOBuf& buf) {
         char intbuf[32];  // enough for fc + 64-bit decimal + \r\n
         const size_t ncopied = buf.copy_to(intbuf, sizeof(intbuf) - 1);
         intbuf[ncopied] = '\0';
-        const size_t crlf_pos = butil::StringPiece(intbuf, ncopied).find("\r\n");
-        if (crlf_pos == butil::StringPiece::npos) {  // not enough data
+        const size_t crlf_pos = std::string_view(intbuf, ncopied).find("\r\n");
+        if (crlf_pos == std::string_view::npos) {  // not enough data
             return PARSE_ERROR_NOT_ENOUGH_DATA;
         }
         char* endptr = NULL;
@@ -275,7 +275,7 @@ public:
         : _str(str, length) {}
     void Print(std::ostream& os) const;
 private:
-    butil::StringPiece _str;
+    std::string_view _str;
 };
 
 static std::ostream&
@@ -290,25 +290,25 @@ void RedisStringPrinter::Print(std::ostream& os) const {
         const char c = _str[i];
         if (c <= 0) { // unprintable chars
             if (i != flush_start) {
-                os << butil::StringPiece(_str.data() + flush_start, i - flush_start);
+                os << std::string_view(_str.data() + flush_start, i - flush_start);
             }
             char buf[8] = "\\u0000";
             uint8_t d1 = ((uint8_t)c) & 0xF;
             uint8_t d2 = ((uint8_t)c) >> 4;
             buf[4] = (d1 < 10 ? d1 + '0' : (d1 - 10) + 'A');
             buf[5] = (d2 < 10 ? d2 + '0' : (d2 - 10) + 'A');
-            os << butil::StringPiece(buf, 6);
+            os << std::string_view(buf, 6);
             flush_start = i + 1;
         } else if (c == '"' || c == '\\') {  // need to escape
             if (i != flush_start) {
-                os << butil::StringPiece(_str.data() + flush_start, i - flush_start);
+                os << std::string_view(_str.data() + flush_start, i - flush_start);
             }
             os << '\\' << c;
             flush_start = i + 1;
         }
     }
     if (flush_start != _str.size()) {
-        os << butil::StringPiece(_str.data() + flush_start, _str.size() - flush_start);
+        os << std::string_view(_str.data() + flush_start, _str.size() - flush_start);
     }
 }
 
@@ -432,7 +432,7 @@ void RedisReply::SetArray(int size) {
     _data.array.replies = subs;
 }
 
-void RedisReply::SetStringImpl(const butil::StringPiece& str, RedisReplyType type) {
+void RedisReply::SetStringImpl(const std::string_view& str, RedisReplyType type) {
     if (_type != REDIS_REPLY_NIL) {
         Reset();
     }
@@ -468,7 +468,7 @@ void RedisReply::FormatStringImpl(const char* fmt, va_list args, RedisReplyType 
     } else {
         std::string str;
         str.reserve(ret + 1);
-        butil::string_vappendf(&str, fmt, args);
+        flare::base::string_vappendf(&str, fmt, args);
         return SetStringImpl(str, type);
     }
 }

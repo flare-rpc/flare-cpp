@@ -5,7 +5,7 @@
 #include "flare/butil/files/memory_mapped_file.h"
 
 #include "flare/butil/files/file_path.h"
-#include "flare/butil/logging.h"
+#include "flare/base/logging.h"
 
 namespace butil {
 

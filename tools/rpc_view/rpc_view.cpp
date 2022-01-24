@@ -17,7 +17,7 @@
 
 
 #include <gflags/gflags.h>
-#include <flare/butil/logging.h>
+#include "flare/base/logging.h"
 #include <flare/brpc/server.h>
 #include <flare/brpc/channel.h>
 #include "view.pb.h"
@@ -37,8 +37,8 @@ static void handle_response(brpc::Controller* client_cntl,
     server_cntl->response_attachment() = client_cntl->response_attachment();
     // Insert "rpc_view: <target>" before </body> so that users are always
     // visually notified with target server w/o confusions.
-    butil::IOBuf& content = server_cntl->response_attachment();
-    butil::IOBuf before_body;
+    flare::io::IOBuf& content = server_cntl->response_attachment();
+    flare::io::IOBuf before_body;
     if (content.cut_until(&before_body, "</body>") == 0) {
         before_body.append(
             "<style type=\"text/css\">\n"

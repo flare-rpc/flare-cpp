@@ -18,9 +18,9 @@
 
 #include <stdio.h>                                  // snprintf
 
-#include "flare/butil/logging.h"                           // BAIDU_*
+#include "flare/base/logging.h"                           // BAIDU_*
 #include "flare/butil/macros.h"                            // ARRAY_SIZE
-#include "flare/butil/thread_local.h"                      // thread_local
+#include "flare/base/thread.h"                      // thread_local
 #include "flare/brpc/errno.pb.h"
 #include "flare/brpc/http_status_code.h"
 
@@ -100,7 +100,7 @@ static void InitReasonPhrases() {
     }
 }
 
-static BAIDU_THREAD_LOCAL char tls_phrase_cache[64];
+static FLARE_THREAD_LOCAL char tls_phrase_cache[64];
 
 const char *HttpReasonPhrase(int status_code) {
     pthread_once(&init_reason_phrases_once, InitReasonPhrases);

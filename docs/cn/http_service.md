@@ -56,7 +56,7 @@ public:
         cntl->http_response().set_content_type("text/plain");
        
         // 把请求的query-string和body打印结果作为回复内容。
-        butil::IOBufBuilder os;
+        flare::io::IOBufBuilder os;
         os << "queries:";
         for (brpc::URI::QueryIterator it = cntl->http_request().uri().QueryBegin();
                 it != cntl->http_request().uri().QueryEnd(); ++it) {
@@ -307,7 +307,7 @@ http服务常对http body进行压缩，可以有效减少网页的传输时间�
 ...
 const std::string* encoding = cntl->http_request().GetHeader("Content-Encoding");
 if (encoding != NULL && *encoding == "gzip") {
-    butil::IOBuf uncompressed;
+    flare::io::IOBuf uncompressed;
     if (!brpc::policy::GzipDecompress(cntl->request_attachment(), &uncompressed)) {
         LOG(ERROR) << "Fail to un-gzip request body";
         return;
@@ -337,7 +337,7 @@ brpc server支持发送超大或无限长的body。方法如下:
   ```c++
   #include <flare/brpc/progressive_attachment.h>
   ...
-  butil::intrusive_ptr<brpc::ProgressiveAttachment> pa = cntl->CreateProgressiveAttachment();
+  flare::container::intrusive_ptr<brpc::ProgressiveAttachment> pa = cntl->CreateProgressiveAttachment();
   ```
 
 2. 调用ProgressiveAttachment::Write()发送数据。
@@ -345,7 +345,7 @@ brpc server支持发送超大或无限长的body。方法如下:
    * 如果写入发生在server-side done调用前，发送的数据将会被缓存直到回调结束后才会开始发送。
    * 如果写入发生在server-side done调用后，发送的数据将立刻以chunked mode写出。
 
-3. 发送完毕后确保所有的`butil::intrusive_ptr<brpc::ProgressiveAttachment>`都析构以释放资源。
+3. 发送完毕后确保所有的`flare::container::intrusive_ptr<brpc::ProgressiveAttachment>`都析构以释放资源。
 
 # 持续接收
 

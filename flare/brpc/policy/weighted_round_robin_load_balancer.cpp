@@ -18,7 +18,7 @@
 
 #include <algorithm>
 
-#include "flare/butil/fast_rand.h"
+#include "flare/base/fast_rand.h"
 #include "flare/brpc/socket.h"
 #include "flare/brpc/policy/weighted_round_robin_load_balancer.h"
 #include "flare/butil/strings/string_number_conversions.h"
@@ -152,7 +152,7 @@ size_t WeightedRoundRobinLoadBalancer::RemoveServersInBatch(
 }
 
 int WeightedRoundRobinLoadBalancer::SelectServer(const SelectIn& in, SelectOut* out) {
-    butil::DoublyBufferedData<Servers, TLS>::ScopedPtr s;
+    flare::container::DoublyBufferedData<Servers, TLS>::ScopedPtr s;
     if (_db_servers.Read(&s) != 0) {
         return ENOMEM;
     }
@@ -162,7 +162,7 @@ int WeightedRoundRobinLoadBalancer::SelectServer(const SelectIn& in, SelectOut* 
     TLS& tls = s.tls();
     if (tls.IsNeededCaculateNewStride(s->weight_sum, s->server_list.size())) {
       if (tls.stride == 0) {
-          tls.position = butil::fast_rand_less_than(s->server_list.size());
+          tls.position = flare::base::fast_rand_less_than(s->server_list.size());
       }
       tls.stride = GetStride(s->weight_sum, s->server_list.size());
     }
@@ -242,7 +242,7 @@ SocketId WeightedRoundRobinLoadBalancer::GetServerInNextStride(
 }
 
 LoadBalancer* WeightedRoundRobinLoadBalancer::New(
-    const butil::StringPiece&) const {
+    const std::string_view&) const {
     return new (std::nothrow) WeightedRoundRobinLoadBalancer;
 }
 
@@ -257,7 +257,7 @@ void WeightedRoundRobinLoadBalancer::Describe(
         return;
     }
     os << "WeightedRoundRobin{";
-    butil::DoublyBufferedData<Servers, TLS>::ScopedPtr s;
+    flare::container::DoublyBufferedData<Servers, TLS>::ScopedPtr s;
     if (_db_servers.Read(&s) != 0) {
         os << "fail to read _db_servers";
     } else {

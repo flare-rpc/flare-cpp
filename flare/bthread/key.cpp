@@ -20,8 +20,8 @@
 // Date: Sun Aug  3 12:46:15 CST 2014
 
 #include <pthread.h>
-#include "flare/butil/macros.h"
-#include "flare/butil/static_atomic.h"
+#include "flare/base/profile.h"
+#include "flare/base/static_atomic.h"
 #include "flare/bvar/passive_status.h"
 #include "flare/bthread/errno.h"                       // EAGAIN
 #include "flare/bthread/task_group.h"                  // TaskGroup
@@ -74,7 +74,7 @@ static flare::static_atomic<size_t> nsubkeytable = FLARE_STATIC_ATOMIC_INIT(0);
 
 // The second-level array.
 // Align with cacheline to avoid false sharing.
-class BAIDU_CACHELINE_ALIGNMENT SubKeyTable {
+class FLARE_CACHELINE_ALIGNMENT SubKeyTable {
 public:
     SubKeyTable() {
         memset(_data, 0, sizeof(_data));
@@ -134,7 +134,7 @@ private:
 
 // The first-level array.
 // Align with cacheline to avoid false sharing.
-class BAIDU_CACHELINE_ALIGNMENT KeyTable {
+class FLARE_CACHELINE_ALIGNMENT KeyTable {
 public:
     KeyTable() : next(NULL) {
         memset(_subs, 0, sizeof(_subs));
@@ -206,7 +206,7 @@ private:
 
 static KeyTable* borrow_keytable(bthread_keytable_pool_t* pool) {
     if (pool != NULL && pool->free_keytables) {
-        BAIDU_SCOPED_LOCK(pool->mutex);
+        FLARE_SCOPED_LOCK(pool->mutex);
         KeyTable* p = (KeyTable*)pool->free_keytables;
         if (p) {
             pool->free_keytables = p->next;
@@ -251,7 +251,7 @@ static void arg_as_dtor(void* data, const void* arg) {
 }
 
 static int get_key_count(void*) {
-    BAIDU_SCOPED_LOCK(bthread::s_key_mutex);
+    FLARE_SCOPED_LOCK(bthread::s_key_mutex);
     return (int)nkey - (int)nfreekey;
 }
 static size_t get_keytable_count(void*) {
@@ -292,7 +292,7 @@ int bthread_keytable_pool_destroy(bthread_keytable_pool_t* pool) {
     }
     bthread::KeyTable* saved_free_keytables = NULL;
     {
-        BAIDU_SCOPED_LOCK(pool->mutex);
+        FLARE_SCOPED_LOCK(pool->mutex);
         if (pool->free_keytables) {
             saved_free_keytables = (bthread::KeyTable*)pool->free_keytables;
             pool->free_keytables = NULL;
@@ -384,7 +384,7 @@ int bthread_key_create2(bthread_key_t* key,
                         const void* dtor_args) {
     uint32_t index = 0;
     {
-        BAIDU_SCOPED_LOCK(bthread::s_key_mutex);
+        FLARE_SCOPED_LOCK(bthread::s_key_mutex);
         if (bthread::nfreekey > 0) {
             index = bthread::s_free_keys[--bthread::nfreekey];
         } else if (bthread::nkey < bthread::KEYS_MAX) {
@@ -415,7 +415,7 @@ int bthread_key_create(bthread_key_t* key, void (*dtor)(void*)) {
 int bthread_key_delete(bthread_key_t key) {
     if (key.index < bthread::KEYS_MAX &&
         key.version == bthread::s_key_info[key.index].version) {
-        BAIDU_SCOPED_LOCK(bthread::s_key_mutex);
+        FLARE_SCOPED_LOCK(bthread::s_key_mutex);
         if (key.version == bthread::s_key_info[key.index].version) {
             if (++bthread::s_key_info[key.index].version == 0) {
                 ++bthread::s_key_info[key.index].version;
@@ -449,7 +449,7 @@ int bthread_setspecific(bthread_key_t key, void* data) {
         }
         if (!bthread::tls_ever_created_keytable) {
             bthread::tls_ever_created_keytable = true;
-            CHECK_EQ(0, butil::thread_atexit(bthread::cleanup_pthread, kt));
+            CHECK_EQ(0, flare::base::thread_atexit(bthread::cleanup_pthread, kt));
         }
     }
     return kt->set_data(key, data);

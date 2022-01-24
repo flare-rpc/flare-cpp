@@ -18,12 +18,10 @@
 #include <limits>                           //std::numeric_limits
 
 #include "flare/bvar/reducer.h"
-
-#include "flare/butil/time.h"
-#include "flare/butil/macros.h"
-#include "flare/butil/string_printf.h"
-#include "flare/butil/string_splitter.h"
-
+#include "flare/base/time.h"
+#include "flare/base/strings.h"
+#include "flare/base/string_splitter.h"
+#include "flare/container/hash_tables.h"
 #include <gtest/gtest.h>
 
 namespace {
@@ -66,7 +64,7 @@ const size_t OPS_PER_THREAD = 500000;
 
 static void *thread_counter(void *arg) {
     bvar::Adder<uint64_t> *reducer = (bvar::Adder<uint64_t> *)arg;
-    butil::Timer timer;
+    flare::base::stop_watcher timer;
     timer.start();
     for (size_t i = 0; i < OPS_PER_THREAD; ++i) {
         (*reducer) << 2;
@@ -77,7 +75,7 @@ static void *thread_counter(void *arg) {
 
 void *add_atomic(void *arg) {
     std::atomic<uint64_t> *counter = (std::atomic<uint64_t> *)arg;
-    butil::Timer timer;
+    flare::base::stop_watcher timer;
     timer.start();
     for (size_t i = 0; i < OPS_PER_THREAD / 100; ++i) {
         counter->fetch_add(2, std::memory_order_relaxed);
@@ -205,27 +203,17 @@ void ReducerTest_window() {
     bvar::Window<bvar::Miner<int> > w8(&c3, 2);
     bvar::Window<bvar::Miner<int> > w9(&c3, 3);
 
-#if !BRPC_WITH_GLOG
-    logging::StringSink log_str;
-    logging::LogSink* old_sink = logging::SetLogSink(&log_str);
-    c2.get_value();
-    ASSERT_EQ(&log_str, logging::SetLogSink(old_sink));
-    ASSERT_NE(std::string::npos, log_str.find(
-                  "You should not call Reducer<int, bvar::detail::MaxTo<int>>"
-                  "::get_value() when a Window<> is used because the operator"
-                  " does not have inverse."));
-#endif
     const int N = 6000;
     int count = 0;
     int total_count = 0;
-    int64_t last_time = butil::gettimeofday_us();
+    int64_t last_time = flare::base::gettimeofday_us();
     for (int i = 1; i <= N; ++i) {
         c1 << 1;
         c2 << N - i;
         c3 << i;
         ++count;
         ++total_count;
-        int64_t now = butil::gettimeofday_us();
+        int64_t now = flare::base::gettimeofday_us();
         if (now - last_time >= 1000000L) {
             last_time = now;
             ASSERT_EQ(total_count, c1.get_value());
@@ -247,18 +235,6 @@ void ReducerTest_window() {
     }
 }
 
-TEST_F(ReducerTest, window) {
-#if !BRPC_WITH_GLOG
-    ReducerTest_window();
-    logging::StringSink log_str;
-    logging::LogSink* old_sink = logging::SetLogSink(&log_str);
-    sleep(1);
-    ASSERT_EQ(&log_str, logging::SetLogSink(old_sink));
-    if (log_str.find("Removed ") != std::string::npos) {
-        ASSERT_NE(std::string::npos, log_str.find("Removed 3, sampled 0")) << log_str;
-    }
-#endif
-}
 
 struct Foo {
     int x;
@@ -287,7 +263,7 @@ struct StringAppenderResult {
 static void* string_appender(void* arg) {
     bvar::Adder<std::string>* cater = (bvar::Adder<std::string>*)arg;
     int count = 0;
-    std::string id = butil::string_printf("%lld", (long long)pthread_self());
+    std::string id = flare::base::string_printf("%lld", (long long)pthread_self());
     std::string tmp = "a";
     for (count = 0; !count || !g_stop; ++count) {
         *cater << id << ":";
@@ -307,29 +283,29 @@ TEST_F(ReducerTest, non_primitive_mt) {
     bvar::Adder<std::string> cater;
     pthread_t th[8];
     g_stop = false;
-    for (size_t i = 0; i < arraysize(th); ++i) {
+    for (size_t i = 0; i < FLARE_ARRAY_SIZE(th); ++i) {
         pthread_create(&th[i], NULL, string_appender, &cater);
     }
     usleep(50000);
     g_stop = true;
-    butil::hash_map<pthread_t, int> appended_count;
-    for (size_t i = 0; i < arraysize(th); ++i) {
+    flare::container::hash_map<pthread_t, int> appended_count;
+    for (size_t i = 0; i < FLARE_ARRAY_SIZE(th); ++i) {
         StringAppenderResult* res = NULL;
         pthread_join(th[i], (void**)&res);
         appended_count[th[i]] = res->count;
         delete res;
     }
-    butil::hash_map<pthread_t, int> got_count;
+    flare::container::hash_map<pthread_t, int> got_count;
     std::string res = cater.get_value();
-    for (butil::StringSplitter sp(res.c_str(), '.'); sp; ++sp) {
+    for (flare::base::StringSplitter sp(res.c_str(), '.'); sp; ++sp) {
         char* endptr = NULL;
         ++got_count[(pthread_t)strtoll(sp.field(), &endptr, 10)];
         ASSERT_EQ(27LL, sp.field() + sp.length() - endptr)
-            << butil::StringPiece(sp.field(), sp.length());
+            << std::string_view(sp.field(), sp.length());
         ASSERT_EQ(0, memcmp(":abcdefghijklmnopqrstuvwxyz", endptr, 27));
     }
     ASSERT_EQ(appended_count.size(), got_count.size());
-    for (size_t i = 0; i < arraysize(th); ++i) {
+    for (size_t i = 0; i < FLARE_ARRAY_SIZE(th); ++i) {
         ASSERT_EQ(appended_count[th[i]], got_count[th[i]]);
     }
 }

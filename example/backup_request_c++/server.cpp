@@ -18,7 +18,7 @@
 // A server sleeping for even-th requests to trigger backup request of client.
 
 #include <gflags/gflags.h>
-#include <flare/butil/logging.h>
+#include "flare/base/logging.h"
 #include <flare/brpc/server.h>
 #include "echo.pb.h"
 

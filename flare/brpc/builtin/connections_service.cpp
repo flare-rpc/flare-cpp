@@ -56,14 +56,14 @@ inline const char* SSLStateToYesNo(SSLState s, bool use_html) {
 }
 
 struct NameOfPoint {
-    explicit NameOfPoint(const butil::EndPoint& pt_) : pt(pt_) {}
-    butil::EndPoint pt;
+    explicit NameOfPoint(const flare::base::end_point& pt_) : pt(pt_) {}
+    flare::base::end_point pt;
 };
 
 std::ostream& operator<<(std::ostream& os, const NameOfPoint& nop) {
     char buf[128];
     if (FLAGS_show_hostname_instead_of_ip &&
-        butil::endpoint2hostname(nop.pt, buf, sizeof(buf)) == 0) {
+        flare::base::endpoint2hostname(nop.pt, buf, sizeof(buf)) == 0) {
         return os << buf;
     } else {
         return os << nop.pt;
@@ -225,7 +225,7 @@ void ConnectionsService::PrintConnections(
                 if (pref_index == (int)PROTOCOL_NSHEAD &&
                     server->options().nshead_service != NULL) {
                     if (nshead_service_name.empty()) {
-                        nshead_service_name = BriefName(butil::class_name_str(
+                        nshead_service_name = BriefName(flare::base::class_name_str(
                                 *server->options().nshead_service));
                     }
                     pref_prot = nshead_service_name.c_str();
@@ -252,7 +252,7 @@ void ConnectionsService::PrintConnections(
             uint32_t srtt = 0;
             uint32_t rtt_var = 0;
             // get rtt
-#if defined(OS_LINUX)
+#if defined(FLARE_PLATFORM_LINUX)
             struct tcp_info ti;
             socklen_t len = sizeof(ti);
             if (0 == getsockopt(rttfd, SOL_TCP, TCP_INFO, &ti, &len)) {
@@ -260,7 +260,7 @@ void ConnectionsService::PrintConnections(
                 srtt = ti.tcpi_rtt;
                 rtt_var = ti.tcpi_rttvar;
             }
-#elif defined(OS_MACOSX)
+#elif defined(FLARE_PLATFORM_OSX)
             struct tcp_connection_info ti;
             socklen_t len = sizeof(ti);
             if (0 == getsockopt(rttfd, IPPROTO_TCP, TCP_CONNECTION_INFO, &ti, &len)) {
@@ -337,7 +337,7 @@ void ConnectionsService::default_method(
     const Server* server = cntl->server();
     Acceptor* am = server->_am;
     Acceptor* internal_am = server->_internal_am;
-    butil::IOBufBuilder os;
+    flare::io::IOBufBuilder os;
     const bool use_html = UseHTML(cntl->http_request());
     cntl->http_response().set_content_type(
         use_html ? "text/html" : "text/plain");

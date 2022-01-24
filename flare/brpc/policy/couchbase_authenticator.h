@@ -35,7 +35,7 @@ class CouchbaseAuthenticator : public Authenticator {
 
   int GenerateCredential(std::string* auth_str) const;
 
-  int VerifyCredential(const std::string&, const butil::EndPoint&,
+  int VerifyCredential(const std::string&, const flare::base::end_point&,
                        brpc::AuthContext*) const {
     return 0;
   }

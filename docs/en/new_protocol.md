@@ -63,7 +63,7 @@ It is difficult to implement callbacks of the protocol. These codes are not like
 ### parse
 
 ```c++
-typedef ParseResult (*Parse)(butil::IOBuf* source, Socket *socket, bool read_eof, const void *arg);
+typedef ParseResult (*Parse)(flare::io::IOBuf* source, Socket *socket, bool read_eof, const void *arg);
 ```
 This function is used to cut messages from source. Client side and server side must share the same parse function. The returned message will be passed to `process_request`(server side) or `process_response`(client side).
 
@@ -79,7 +79,7 @@ ParseResult could be an error or a cut message, its possible value contains:
 
 ### serialize_request
 ```c++
-typedef bool (*SerializeRequest)(butil::IOBuf* request_buf,
+typedef bool (*SerializeRequest)(flare::io::IOBuf* request_buf,
                                  Controller* cntl,
                                  const google::protobuf::Message* request);
 ```
@@ -87,11 +87,11 @@ This function is used to serialize request into request_buf that client must imp
 
 ### pack_request
 ```c++
-typedef int (*PackRequest)(butil::IOBuf* msg, 
+typedef int (*PackRequest)(flare::io::IOBuf* msg, 
                            uint64_t correlation_id,
                            const google::protobuf::MethodDescriptor* method,
                            Controller* controller,
-                           const butil::IOBuf& request_buf,
+                           const flare::io::IOBuf& request_buf,
                            const Authenticator* auth);
 ```
 This function is used to pack request_buf into msg, which is called every time before sending messages to server(including retrying). When auth is not NULL, authentication information is also needed to be packed. Return 0 if succeed, otherwise -1.
@@ -116,9 +116,9 @@ This function is used to authenticate connections, it is called when the first m
 
 ### parse_server_address
 ```c++
-typedef bool (*ParseServerAddress)(butil::EndPoint* out, const char* server_addr_and_port);
+typedef bool (*ParseServerAddress)(flare::base::end_point* out, const char* server_addr_and_port);
 ```
-This function converts server_addr_and_port(an argument of Channel.Init) to butil::EndPoint, which is optional. Some protocols may differ in the expression and understanding of server addresses.
+This function converts server_addr_and_port(an argument of Channel.Init) to flare::base::end_point, which is optional. Some protocols may differ in the expression and understanding of server addresses.
 
 ### get_method_name
 ```c++

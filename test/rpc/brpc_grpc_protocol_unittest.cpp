@@ -22,7 +22,8 @@
 #include "flare/brpc/server.h"
 #include "flare/brpc/channel.h"
 #include "flare/brpc/grpc.h"
-#include "flare/butil/time.h"
+#include "flare/base/time.h"
+#include "flare/base/strings.h"
 #include "grpc.pb.h"
 
 int main(int argc, char* argv[]) {
@@ -72,7 +73,7 @@ public:
                 EXPECT_EQ(-1, cntl->deadline_us());
             } else {
                 EXPECT_NEAR(cntl->deadline_us(),
-                    butil::gettimeofday_us() + req->timeout_us(), 5000);
+                    flare::base::gettimeofday_us() + req->timeout_us(), 5000);
             }
         }
     }
@@ -172,7 +173,7 @@ TEST_F(GrpcTest, return_error) {
     stub.Method(&cntl, &req, &res, NULL);
     EXPECT_TRUE(cntl.Failed());
     EXPECT_EQ(cntl.ErrorCode(), brpc::EINTERNAL);
-    EXPECT_TRUE(butil::StringPiece(cntl.ErrorText()).ends_with(butil::string_printf("%s", g_prefix.c_str())));
+    EXPECT_TRUE(flare::base::ends_with(cntl.ErrorText(), flare::base::string_printf("%s", g_prefix.c_str())));
 }
 
 TEST_F(GrpcTest, RpcTimedOut) {
@@ -205,7 +206,7 @@ TEST_F(GrpcTest, MethodNotExist) {
     stub.MethodNotExist(&cntl, &req, &res, NULL);
     EXPECT_TRUE(cntl.Failed());
     EXPECT_EQ(cntl.ErrorCode(), brpc::EINTERNAL);
-    ASSERT_TRUE(butil::StringPiece(cntl.ErrorText()).ends_with("Method MethodNotExist() not implemented."));
+    ASSERT_TRUE(flare::base::ends_with(cntl.ErrorText(), "Method MethodNotExist() not implemented."));
 }
 
 TEST_F(GrpcTest, GrpcTimeOut) {
@@ -227,7 +228,7 @@ TEST_F(GrpcTest, GrpcTimeOut) {
     };
 
     // test all timeout format
-    for (size_t i = 0; i < arraysize(timeouts); i = i + 2) {
+    for (size_t i = 0; i < FLARE_ARRAY_SIZE(timeouts); i = i + 2) {
         test::GrpcRequest req;
         test::GrpcResponse res;
         brpc::Controller cntl;

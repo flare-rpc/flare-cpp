@@ -23,7 +23,7 @@
 #include <limits>                                 // std::numeric_limits
 #include <math.h>                                 // round
 #include <gflags/gflags_declare.h>
-#include "flare/butil/logging.h"                         // LOG
+#include "flare/base/logging.h"                         // LOG
 #include "flare/bvar/detail/sampler.h"
 #include "flare/bvar/detail/series.h"
 #include "flare/bvar/variable.h"
@@ -111,7 +111,7 @@ public:
     value_type get_value() const { return get_value(_window_size); }
     
     void describe(std::ostream& os, bool quote_string) const override {
-        if (butil::is_same<value_type, std::string>::value && quote_string) {
+        if (std::is_same<value_type, std::string>::value && quote_string) {
             os << '"' << get_value() << '"';
         } else {
             os << get_value();
@@ -141,8 +141,8 @@ public:
     }
 
 protected:
-    int expose_impl(const butil::StringPiece& prefix,
-                    const butil::StringPiece& name,
+    int expose_impl(const std::string_view& prefix,
+                    const std::string_view& name,
                     DisplayFilter display_filter) override {
         const int rc = Variable::expose_impl(prefix, name, display_filter);
         if (rc == 0 &&
@@ -179,12 +179,12 @@ public:
     // Different from PerSecond, we require window_size here because get_value
     // of Window is largely affected by window_size while PerSecond is not.
     Window(R* var, time_t window_size) : Base(var, window_size) {}
-    Window(const butil::StringPiece& name, R* var, time_t window_size)
+    Window(const std::string_view& name, R* var, time_t window_size)
         : Base(var, window_size) {
         this->expose(name);
     }
-    Window(const butil::StringPiece& prefix,
-           const butil::StringPiece& name, R* var, time_t window_size)
+    Window(const std::string_view& prefix,
+           const std::string_view& name, R* var, time_t window_size)
         : Base(var, window_size) {
         this->expose_as(prefix, name);
     }
@@ -202,20 +202,20 @@ public:
     // If window_size is non-positive or absent, use FLAGS_bvar_dump_interval.
     PerSecond(R* var) : Base(var, -1) {}
     PerSecond(R* var, time_t window_size) : Base(var, window_size) {}
-    PerSecond(const butil::StringPiece& name, R* var) : Base(var, -1) {
+    PerSecond(const std::string_view& name, R* var) : Base(var, -1) {
         this->expose(name);
     }
-    PerSecond(const butil::StringPiece& name, R* var, time_t window_size)
+    PerSecond(const std::string_view& name, R* var, time_t window_size)
         : Base(var, window_size) {
         this->expose(name);
     }
-    PerSecond(const butil::StringPiece& prefix,
-              const butil::StringPiece& name, R* var)
+    PerSecond(const std::string_view& prefix,
+              const std::string_view& name, R* var)
         : Base(var, -1) {
         this->expose_as(prefix, name);
     }
-    PerSecond(const butil::StringPiece& prefix,
-              const butil::StringPiece& name, R* var, time_t window_size)
+    PerSecond(const std::string_view& prefix,
+              const std::string_view& name, R* var, time_t window_size)
         : Base(var, window_size) {
         this->expose_as(prefix, name);
     }
@@ -230,7 +230,7 @@ public:
         if (s.time_us <= 0) {
             return static_cast<value_type>(0);
         }
-        if (butil::is_floating_point<value_type>::value) {
+        if (std::is_floating_point<value_type>::value) {
             return static_cast<value_type>(s.data * 1000000.0 / s.time_us);
         } else {
             return static_cast<value_type>(round(s.data * 1000000.0 / s.time_us));

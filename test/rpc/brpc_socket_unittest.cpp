@@ -25,9 +25,10 @@
 #include <gtest/gtest.h>
 #include <gflags/gflags.h>
 #include "flare/butil/gperftools_profiler.h"
-#include "flare/butil/time.h"
+#include "flare/base/time.h"
 #include "flare/butil/macros.h"
-#include "flare/butil/fd_utility.h"
+#include "flare/base/fd_utility.h"
+#include "flare/base/strings.h"
 #include "flare/bthread/unstable.h"
 #include "flare/bthread/task_control.h"
 #include "flare/brpc/socket.h"
@@ -41,7 +42,7 @@
 #include "flare/brpc/channel.h"
 #include "flare/brpc/controller.h"
 #include "health_check.pb.h"
-#if defined(OS_MACOSX)
+#if defined(FLARE_PLATFORM_OSX)
 #include <sys/event.h>
 #endif
 
@@ -113,7 +114,7 @@ TEST_F(SocketTest, not_recycle_until_zero_nref) {
     int fds[2];
     ASSERT_EQ(0, socketpair(AF_UNIX, SOCK_STREAM, 0, fds));
     brpc::SocketId id = 8888;
-    butil::EndPoint dummy;
+    flare::base::end_point dummy;
     ASSERT_EQ(0, str2endpoint("192.168.1.26:8080", &dummy));
     brpc::SocketOptions options;
     options.fd = fds[1];
@@ -162,10 +163,10 @@ TEST_F(SocketTest, authentication) {
     ASSERT_EQ(0, brpc::Socket::Address(id, &s));
     
     bthread_t th[64];
-    for (size_t i = 0; i < ARRAY_SIZE(th); ++i) {
+    for (size_t i = 0; i < FLARE_ARRAY_SIZE(th); ++i) {
         ASSERT_EQ(0, bthread_start_urgent(&th[i], NULL, auth_fighter, s.get()));
     }
-    for (size_t i = 0; i < ARRAY_SIZE(th); ++i) {
+    for (size_t i = 0; i < FLARE_ARRAY_SIZE(th); ++i) {
         ASSERT_EQ(0, bthread_join(th[i], NULL));
     }
     // Only one fighter wins
@@ -185,13 +186,13 @@ public:
     MyMessage(const char* str, size_t len, int* called = NULL)
         : _str(str), _len(len), _called(called) {}
 private:
-    butil::Status AppendAndDestroySelf(butil::IOBuf* out_buf, brpc::Socket*) {
+    flare::base::flare_status AppendAndDestroySelf(flare::io::IOBuf* out_buf, brpc::Socket*) {
         out_buf->append(_str, _len);
         if (_called) {
             *_called = g_called_seq.fetch_add(1, std::memory_order_relaxed);
         }
         delete this;
-        return butil::Status::OK();
+        return flare::base::flare_status::OK();
     };
     const char* _str;
     size_t _len;
@@ -200,19 +201,19 @@ private:
 
 class MyErrorMessage : public brpc::SocketMessage {
 public:
-    explicit MyErrorMessage(const butil::Status& st) : _status(st) {}
+    explicit MyErrorMessage(const flare::base::flare_status& st) : _status(st) {}
 private:
-    butil::Status AppendAndDestroySelf(butil::IOBuf*, brpc::Socket*) {
+    flare::base::flare_status AppendAndDestroySelf(flare::io::IOBuf*, brpc::Socket*) {
         return _status;
     };
-    butil::Status _status;
+    flare::base::flare_status _status;
 };
 
 TEST_F(SocketTest, single_threaded_write) {
     int fds[2];
     ASSERT_EQ(0, socketpair(AF_UNIX, SOCK_STREAM, 0, fds));
     brpc::SocketId id = 8888;
-    butil::EndPoint dummy;
+    flare::base::end_point dummy;
     ASSERT_EQ(0, str2endpoint("192.168.1.26:8080", &dummy));
     brpc::SocketOptions options;
     options.fd = fds[1];
@@ -236,7 +237,7 @@ TEST_F(SocketTest, single_threaded_write) {
                 ASSERT_EQ(0, s->Write(msg));
             } else if (i % 4 == 1) {
                 brpc::SocketMessagePtr<MyErrorMessage> msg(
-                    new MyErrorMessage(butil::Status(EINVAL, "Invalid input")));
+                    new MyErrorMessage(flare::base::flare_status(EINVAL, "Invalid input")));
                 bthread_id_t wait_id;
                 WaitData data;
                 ASSERT_EQ(0, bthread_id_create2(&wait_id, &data, OnWaitIdReset));
@@ -271,7 +272,7 @@ TEST_F(SocketTest, single_threaded_write) {
                     ASSERT_LT(seq[j-1], seq[j]) << "j=" << j;
                 }
             } else {
-                butil::IOBuf src;
+                flare::io::IOBuf src;
                 src.append(buf);
                 ASSERT_EQ(len, src.length());
                 ASSERT_EQ(0, s->Write(&src));
@@ -290,7 +291,7 @@ TEST_F(SocketTest, single_threaded_write) {
 void EchoProcessHuluRequest(brpc::InputMessageBase* msg_base) {
     brpc::DestroyingPtr<brpc::policy::MostCommonMessage> msg(
         static_cast<brpc::policy::MostCommonMessage*>(msg_base));
-    butil::IOBuf buf;
+    flare::io::IOBuf buf;
     buf.append(msg->meta);
     buf.append(msg->payload);
     ASSERT_EQ(0, msg->socket()->Write(&buf));
@@ -328,10 +329,10 @@ TEST_F(SocketTest, single_threaded_connect_and_write) {
           EchoProcessHuluRequest, NULL, NULL, "dummy_hulu" }
     };
 
-    butil::EndPoint point(butil::IP_ANY, 7878);
+    flare::base::end_point point(flare::base::IP_ANY, 7878);
     int listening_fd = tcp_listen(point);
     ASSERT_TRUE(listening_fd > 0);
-    butil::make_non_blocking(listening_fd);
+    flare::base::make_non_blocking(listening_fd);
     ASSERT_EQ(0, messenger->AddHandler(pairs[0]));
     ASSERT_EQ(0, messenger->StartAccept(listening_fd, -1, NULL));
 
@@ -368,7 +369,7 @@ TEST_F(SocketTest, single_threaded_connect_and_write) {
                     new MyMessage(buf, 12 + meta_len + len, &called));
                 ASSERT_EQ(0, s->Write(msg));
             } else {
-                butil::IOBuf src;
+                flare::io::IOBuf src;
                 src.append(buf, 12 + meta_len + len);
                 ASSERT_EQ(12 + meta_len + len, src.length());
                 ASSERT_EQ(0, s->Write(&src));
@@ -384,14 +385,14 @@ TEST_F(SocketTest, single_threaded_connect_and_write) {
                 my_connect->MakeConnectDone();
                 ASSERT_LT(0, called); // serialized
             }
-            int64_t start_time = butil::gettimeofday_us();
+            int64_t start_time = flare::base::gettimeofday_us();
             while (s->fd() < 0) {
                 bthread_usleep(1000);
-                ASSERT_LT(butil::gettimeofday_us(), start_time + 1000000L) << "Too long!";
+                ASSERT_LT(flare::base::gettimeofday_us(), start_time + 1000000L) << "Too long!";
             }
-#if defined(OS_LINUX)
+#if defined(FLARE_PLATFORM_LINUX)
             ASSERT_EQ(0, bthread_fd_wait(s->fd(), EPOLLIN));
-#elif defined(OS_MACOSX)
+#elif defined(FLARE_PLATFORM_OSX)
             ASSERT_EQ(0, bthread_fd_wait(s->fd(), EVFILT_READ));
 #endif
             char dest[sizeof(buf)];
@@ -430,9 +431,9 @@ void* FailedWriter(void* void_arg) {
     for (size_t i = 0; i < arg->times; ++i) {
         bthread_id_t id;
         EXPECT_EQ(0, bthread_id_create(&id, NULL, NULL));
-        snprintf(buf, sizeof(buf), "%0" BAIDU_SYMBOLSTR(NUMBER_WIDTH) "lu",
+        snprintf(buf, sizeof(buf), "%0" FLARE_SYMBOLSTR(NUMBER_WIDTH) "lu",
                  i + arg->offset);
-        butil::IOBuf src;
+        flare::io::IOBuf src;
         src.append(buf);
         brpc::Socket::WriteOptions wopt;
         wopt.id_wait = id;
@@ -447,7 +448,7 @@ void* FailedWriter(void* void_arg) {
 
 TEST_F(SocketTest, fail_to_connect) {
     const size_t REP = 10;
-    butil::EndPoint point(butil::IP_ANY, 7563/*not listened*/);
+    flare::base::end_point point(flare::base::IP_ANY, 7563/*not listened*/);
     brpc::SocketId id = 8888;
     brpc::SocketOptions options;
     options.remote_side = point;
@@ -462,24 +463,24 @@ TEST_F(SocketTest, fail_to_connect) {
         ASSERT_EQ(point, s->remote_side());
         ASSERT_EQ(id, s->id());
         pthread_t th[8];
-        WriterArg args[ARRAY_SIZE(th)];
-        for (size_t i = 0; i < ARRAY_SIZE(th); ++i) {
+        WriterArg args[FLARE_ARRAY_SIZE(th)];
+        for (size_t i = 0; i < FLARE_ARRAY_SIZE(th); ++i) {
             args[i].times = REP;
             args[i].offset = i * REP;
             args[i].socket_id = id;
             ASSERT_EQ(0, pthread_create(&th[i], NULL, FailedWriter, &args[i]));
         }
-        for (size_t i = 0; i < ARRAY_SIZE(th); ++i) {
+        for (size_t i = 0; i < FLARE_ARRAY_SIZE(th); ++i) {
             ASSERT_EQ(0, pthread_join(th[i], NULL));
         }
         ASSERT_EQ(-1, s->SetFailed());  // already SetFailed
         ASSERT_EQ(-1, s->fd());
     }
     // KeepWrite is possibly still running.
-    int64_t start_time = butil::gettimeofday_us();
+    int64_t start_time = flare::base::gettimeofday_us();
     while (global_sock != NULL) {
         bthread_usleep(1000);
-        ASSERT_LT(butil::gettimeofday_us(), start_time + 1000000L) << "Too long!";
+        ASSERT_LT(flare::base::gettimeofday_us(), start_time + 1000000L) << "Too long!";
     }
     ASSERT_EQ(-1, brpc::Socket::Status(id));
     // The id is invalid.
@@ -489,7 +490,7 @@ TEST_F(SocketTest, fail_to_connect) {
 
 TEST_F(SocketTest, not_health_check_when_nref_hits_0) {
     brpc::SocketId id = 8888;
-    butil::EndPoint point(butil::IP_ANY, 7584/*not listened*/);
+    flare::base::end_point point(flare::base::IP_ANY, 7584/*not listened*/);
     brpc::SocketOptions options;
     options.remote_side = point;
     options.user = new CheckRecycle;
@@ -514,7 +515,7 @@ TEST_F(SocketTest, not_health_check_when_nref_hits_0) {
         // HULU uses host byte order directly...
         *(uint32_t*)(buf + 4) = len + meta_len;
         *(uint32_t*)(buf + 8) = meta_len;
-        butil::IOBuf src;
+        flare::io::IOBuf src;
         src.append(buf, 12 + meta_len + len);
         ASSERT_EQ(12 + meta_len + len, src.length());
 #ifdef CONNECT_IN_KEEPWRITE
@@ -527,7 +528,7 @@ TEST_F(SocketTest, not_health_check_when_nref_hits_0) {
         ASSERT_EQ(0, bthread_id_join(wait_id));
         ASSERT_EQ(wait_id.value, data.id.value);
         ASSERT_EQ(ECONNREFUSED, data.error_code);
-        ASSERT_TRUE(butil::StringPiece(data.error_text).starts_with(
+        ASSERT_TRUE(flare::base::starts_with(data.error_text,
                         "Fail to connect "));
 #else
         ASSERT_EQ(-1, s->Write(&src));
@@ -540,10 +541,10 @@ TEST_F(SocketTest, not_health_check_when_nref_hits_0) {
     // is NULL(set in CheckRecycle::BeforeRecycle). Notice that you should
     // not spin until Socket::Status(id) becomes -1 and assert global_sock
     // to be NULL because invalidating id happens before calling BeforeRecycle.
-    const int64_t start_time = butil::gettimeofday_us();
+    const int64_t start_time = flare::base::gettimeofday_us();
     while (global_sock != NULL) {
         bthread_usleep(1000);
-        ASSERT_LT(butil::gettimeofday_us(), start_time + 1000000L);
+        ASSERT_LT(flare::base::gettimeofday_us(), start_time + 1000000L);
     }
     ASSERT_EQ(-1, brpc::Socket::Status(id));
 }
@@ -575,7 +576,7 @@ TEST_F(SocketTest, app_level_health_check) {
     GFLAGS_NS::SetCommandLineOption("health_check_path", "/HealthCheckTestService");
     GFLAGS_NS::SetCommandLineOption("health_check_interval", "1");
 
-    butil::EndPoint point(butil::IP_ANY, 7777);
+    flare::base::end_point point(flare::base::IP_ANY, 7777);
     brpc::ChannelOptions options;
     options.protocol = "http";
     options.max_retry = 0;
@@ -636,7 +637,7 @@ TEST_F(SocketTest, health_check) {
     brpc::Acceptor* messenger = new brpc::Acceptor;
 
     brpc::SocketId id = 8888;
-    butil::EndPoint point(butil::IP_ANY, 7878);
+    flare::base::end_point point(flare::base::IP_ANY, 7878);
     const int kCheckInteval = 1;
     brpc::SocketOptions options;
     options.remote_side = point;
@@ -665,10 +666,10 @@ TEST_F(SocketTest, health_check) {
     // HULU uses host byte order directly...
     *(uint32_t*)(buf + 4) = len + meta_len;
     *(uint32_t*)(buf + 8) = meta_len;
-    const bool use_my_message = (butil::fast_rand_less_than(2) == 0);
+    const bool use_my_message = (flare::base::fast_rand_less_than(2) == 0);
     brpc::SocketMessagePtr<MyMessage> msg;
     int appended_msg = 0;
-    butil::IOBuf src;
+    flare::io::IOBuf src;
     if (use_my_message) {
         LOG(INFO) << "Use MyMessage";
         msg.reset(new MyMessage(buf, 12 + meta_len + len, &appended_msg));
@@ -690,7 +691,7 @@ TEST_F(SocketTest, health_check) {
     ASSERT_EQ(0, bthread_id_join(wait_id));
     ASSERT_EQ(wait_id.value, data.id.value);
     ASSERT_EQ(ECONNREFUSED, data.error_code);
-    ASSERT_TRUE(butil::StringPiece(data.error_text).starts_with(
+    ASSERT_TRUE(flare::base::starts_with(data.error_text,
                     "Fail to connect "));
     if (use_my_message) {
         ASSERT_TRUE(appended_msg);
@@ -717,15 +718,15 @@ TEST_F(SocketTest, health_check) {
 
     int listening_fd = tcp_listen(point);
     ASSERT_TRUE(listening_fd > 0);
-    butil::make_non_blocking(listening_fd);
+    flare::base::make_non_blocking(listening_fd);
     ASSERT_EQ(0, messenger->AddHandler(pairs[0]));
     ASSERT_EQ(0, messenger->StartAccept(listening_fd, -1, NULL));
 
-    int64_t start_time = butil::gettimeofday_us();
+    int64_t start_time = flare::base::gettimeofday_us();
     nref = -1;
     while (brpc::Socket::Status(id, &nref) != 0) {
         bthread_usleep(1000);
-        ASSERT_LT(butil::gettimeofday_us(),
+        ASSERT_LT(flare::base::gettimeofday_us(),
                   start_time + kCheckInteval * 1000000L + 100000L/*100ms*/);
     }
     //ASSERT_EQ(2, nref);
@@ -742,10 +743,10 @@ TEST_F(SocketTest, health_check) {
     // SetFailed again, should reconnect and succeed soon.
     ASSERT_EQ(0, s->SetFailed());
     ASSERT_EQ(fd, s->fd());
-    start_time = butil::gettimeofday_us();
+    start_time = flare::base::gettimeofday_us();
     while (brpc::Socket::Status(id) != 0) {
         bthread_usleep(1000);
-        ASSERT_LT(butil::gettimeofday_us(), start_time + 1000000L);
+        ASSERT_LT(flare::base::gettimeofday_us(), start_time + 1000000L);
     }
     ASSERT_TRUE(global_sock);
 
@@ -766,10 +767,10 @@ TEST_F(SocketTest, health_check) {
 
     ASSERT_EQ(0, brpc::Socket::SetFailed(id));
     // HealthCheckThread is possibly still addressing the Socket.
-    start_time = butil::gettimeofday_us();
+    start_time = flare::base::gettimeofday_us();
     while (global_sock != NULL) {
         bthread_usleep(1000);
-        ASSERT_LT(butil::gettimeofday_us(), start_time + 1000000L);
+        ASSERT_LT(flare::base::gettimeofday_us(), start_time + 1000000L);
     }
     ASSERT_EQ(-1, brpc::Socket::Status(id));
     // The id is invalid.
@@ -786,9 +787,9 @@ void* Writer(void* void_arg) {
     }
     char buf[32];
     for (size_t i = 0; i < arg->times; ++i) {
-        snprintf(buf, sizeof(buf), "%0" BAIDU_SYMBOLSTR(NUMBER_WIDTH) "lu",
+        snprintf(buf, sizeof(buf), "%0" FLARE_SYMBOLSTR(NUMBER_WIDTH) "lu",
                  i + arg->offset);
-        butil::IOBuf src;
+        flare::io::IOBuf src;
         src.append(buf);
         if (sock->Write(&src) != 0) {
             if (errno == brpc::EOVERCROWDED) {
@@ -798,7 +799,7 @@ void* Writer(void* void_arg) {
                 continue;
             }
             printf("Fail to write into SocketId=%" PRIu64 ", %s\n",
-                   arg->socket_id, berror());
+                   arg->socket_id, flare_error());
             break;
         }
     }
@@ -812,12 +813,12 @@ TEST_F(SocketTest, multi_threaded_write) {
         printf("Round %d\n", k + 1);
         ASSERT_EQ(0, socketpair(AF_UNIX, SOCK_STREAM, 0, fds));
         pthread_t th[8];
-        WriterArg args[ARRAY_SIZE(th)];
+        WriterArg args[FLARE_ARRAY_SIZE(th)];
         std::vector<size_t> result;
-        result.reserve(ARRAY_SIZE(th) * REP);
+        result.reserve(FLARE_ARRAY_SIZE(th) * REP);
 
         brpc::SocketId id = 8888;
-        butil::EndPoint dummy;
+        flare::base::end_point dummy;
         ASSERT_EQ(0, str2endpoint("192.168.1.26:8080", &dummy));
         brpc::SocketOptions options;
         options.fd = fds[1];
@@ -832,9 +833,9 @@ TEST_F(SocketTest, multi_threaded_write) {
         ASSERT_EQ(fds[1], s->fd());
         ASSERT_EQ(dummy, s->remote_side());
         ASSERT_EQ(id, s->id());
-        butil::make_non_blocking(fds[0]);
+        flare::base::make_non_blocking(fds[0]);
 
-        for (size_t i = 0; i < ARRAY_SIZE(th); ++i) {
+        for (size_t i = 0; i < FLARE_ARRAY_SIZE(th); ++i) {
             args[i].times = REP;
             args[i].offset = i * REP;
             args[i].socket_id = id;
@@ -846,8 +847,8 @@ TEST_F(SocketTest, multi_threaded_write) {
             bthread_usleep(100000);
         }
         
-        butil::IOPortal dest;
-        const int64_t start_time = butil::gettimeofday_us();
+        flare::io::IOPortal dest;
+        const int64_t start_time = flare::base::gettimeofday_us();
         for (;;) {
             ssize_t nr = dest.append_from_file_descriptor(fds[0], 32768);
             if (nr < 0) {
@@ -855,10 +856,10 @@ TEST_F(SocketTest, multi_threaded_write) {
                     continue;
                 }
                 if (EAGAIN != errno) {
-                    ASSERT_EQ(EAGAIN, errno) << berror();
+                    ASSERT_EQ(EAGAIN, errno) << flare_error();
                 }
                 bthread_usleep(1000);
-                if (butil::gettimeofday_us() >= start_time + 2000000L) {
+                if (flare::base::gettimeofday_us() >= start_time + 2000000L) {
                     LOG(FATAL) << "Wait too long!";
                     break;
                 }
@@ -871,25 +872,25 @@ TEST_F(SocketTest, multi_threaded_write) {
                 result.push_back(strtol(buf, NULL, 10));
                 dest.pop_front(NUMBER_WIDTH);
             }
-            if (result.size() >= REP * ARRAY_SIZE(th)) {
+            if (result.size() >= REP * FLARE_ARRAY_SIZE(th)) {
                 break;
             }
         }
-        for (size_t i = 0; i < ARRAY_SIZE(th); ++i) {
+        for (size_t i = 0; i < FLARE_ARRAY_SIZE(th); ++i) {
             ASSERT_EQ(0, pthread_join(th[i], NULL));
         }
         ASSERT_TRUE(dest.empty());
         bthread::g_task_control->print_rq_sizes(std::cout);
         std::cout << std::endl;
 
-        ASSERT_EQ(REP * ARRAY_SIZE(th), result.size()) 
+        ASSERT_EQ(REP * FLARE_ARRAY_SIZE(th), result.size())
             << "write_head=" << s->_write_head;
         std::sort(result.begin(), result.end());
         result.resize(std::unique(result.begin(),
                                   result.end()) - result.begin());
-        ASSERT_EQ(REP * ARRAY_SIZE(th), result.size());
+        ASSERT_EQ(REP * FLARE_ARRAY_SIZE(th), result.size());
         ASSERT_EQ(0UL, *result.begin());
-        ASSERT_EQ(REP * ARRAY_SIZE(th) - 1, *(result.end() - 1));
+        ASSERT_EQ(REP * FLARE_ARRAY_SIZE(th) - 1, *(result.end() - 1));
 
         ASSERT_EQ(0, s->SetFailed());
         s.release()->Dereference();
@@ -906,11 +907,11 @@ void* FastWriter(void* void_arg) {
         return NULL;
     }
     char buf[] = "hello reader side!";
-    int64_t begin_ts = butil::cpuwide_time_us();
+    int64_t begin_ts = flare::base::cpuwide_time_us();
     int64_t nretry = 0;
     size_t c = 0;
     for (; c < arg->times; ++c) {
-        butil::IOBuf src;
+        flare::io::IOBuf src;
         src.append(buf, 16);
         if (sock->Write(&src) != 0) {
             if (errno == brpc::EOVERCROWDED) {
@@ -921,11 +922,11 @@ void* FastWriter(void* void_arg) {
                 continue;
             }
             printf("Fail to write into SocketId=%" PRIu64 ", %s\n",
-                   arg->socket_id, berror());
+                   arg->socket_id, flare_error());
             break;
         }
     }
-    int64_t end_ts = butil::cpuwide_time_us();
+    int64_t end_ts = flare::base::cpuwide_time_us();
     int64_t total_time = end_ts - begin_ts;
     printf("total=%ld count=%ld nretry=%ld\n",
            (long)total_time * 1000/ c, (long)c, (long)nretry);
@@ -960,10 +961,10 @@ TEST_F(SocketTest, multi_threaded_write_perf) {
     int fds[2];
     ASSERT_EQ(0, socketpair(AF_UNIX, SOCK_STREAM, 0, fds));
     bthread_t th[3];
-    WriterArg args[ARRAY_SIZE(th)];
+    WriterArg args[FLARE_ARRAY_SIZE(th)];
 
     brpc::SocketId id = 8888;
-    butil::EndPoint dummy;
+    flare::base::end_point dummy;
     ASSERT_EQ(0, str2endpoint("192.168.1.26:8080", &dummy));
     brpc::SocketOptions options;
     options.fd = fds[1];
@@ -980,7 +981,7 @@ TEST_F(SocketTest, multi_threaded_write_perf) {
     ASSERT_EQ(dummy, s->remote_side());
     ASSERT_EQ(id, s->id());
 
-    for (size_t i = 0; i < ARRAY_SIZE(th); ++i) {
+    for (size_t i = 0; i < FLARE_ARRAY_SIZE(th); ++i) {
         args[i].times = REP;
         args[i].offset = i * REP;
         args[i].socket_id = id;
@@ -991,7 +992,7 @@ TEST_F(SocketTest, multi_threaded_write_perf) {
     ReaderArg reader_arg = { fds[0], 0 };
     pthread_create(&rth, NULL, reader, &reader_arg);
 
-    butil::Timer tm;
+    flare::base::stop_watcher tm;
     ProfilerStart("write.prof");
     const uint64_t old_nread = reader_arg.nread;
     tm.start();
@@ -1002,10 +1003,10 @@ TEST_F(SocketTest, multi_threaded_write_perf) {
 
     printf("tp=%" PRIu64 "M/s\n", (new_nread - old_nread) / tm.u_elapsed());
     
-    for (size_t i = 0; i < ARRAY_SIZE(th); ++i) {
+    for (size_t i = 0; i < FLARE_ARRAY_SIZE(th); ++i) {
         args[i].times = 0;
     }
-    for (size_t i = 0; i < ARRAY_SIZE(th); ++i) {
+    for (size_t i = 0; i < FLARE_ARRAY_SIZE(th); ++i) {
         ASSERT_EQ(0, bthread_join(th[i], NULL));
     }
     ASSERT_EQ(0, s->SetFailed());

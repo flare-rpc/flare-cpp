@@ -22,12 +22,12 @@
 #include <iostream>                            // std::ostream
 #include <deque>                               // std::deque
 #include <set>                                 // std::set
-#include "flare/butil/static_atomic.h"                    // std::atomic
+#include "flare/base/static_atomic.h"                    // std::atomic
 #include "flare/bthread/types.h"                      // bthread_id_t
-#include "flare/butil/iobuf.h"                        // butil::IOBuf, IOPortal
-#include "flare/butil/macros.h"                       // DISALLOW_COPY_AND_ASSIGN
-#include "flare/butil/endpoint.h"                     // butil::EndPoint
-#include "flare/butil/resource_pool.h"                // butil::ResourceId
+#include "flare/io/iobuf.h"                        // flare::io::IOBuf, IOPortal
+#include "flare/butil/macros.h"                       // FLARE_DISALLOW_COPY_AND_ASSIGN
+#include "flare/base/endpoint.h"                     // flare::base::end_point
+#include "flare/memory/resource_pool.h"                // flare::memory::ResourceId
 #include "flare/bthread/butex.h"                      // butex_create_checked
 #include "flare/brpc/authenticator.h"           // Authenticator
 #include "flare/brpc/errno.pb.h"                // EFAILEDSOCKET
@@ -87,8 +87,8 @@ public:
                         int (*on_connect)(int, int, void*), void*) = 0;
 
     // Cut IOBufs into fd or SSL Channel
-    virtual ssize_t CutMessageIntoFileDescriptor(int, butil::IOBuf**, size_t) = 0;
-    virtual ssize_t CutMessageIntoSSLChannel(SSL*, butil::IOBuf**, size_t) = 0;
+    virtual ssize_t CutMessageIntoFileDescriptor(int, flare::io::IOBuf**, size_t) = 0;
+    virtual ssize_t CutMessageIntoSSLChannel(SSL*, flare::io::IOBuf**, size_t) = 0;
 };
 
 // Application-level connect. After TCP connected, the client sends some
@@ -177,7 +177,7 @@ struct SocketOptions {
     // ownership. Socket will close the fd(if needed) and call
     // user->BeforeRecycle() before recycling.
     int fd;
-    butil::EndPoint remote_side;
+    flare::base::end_point remote_side;
     SocketUser* user;
     // When *edge-triggered* events happen on the file descriptor, callback
     // `on_edge_triggered_events' will be called. Inside the callback, user
@@ -197,7 +197,7 @@ struct SocketOptions {
 
 // Abstractions on reading from and writing into file descriptors.
 // NOTE: accessed by multiple threads(frequently), align it by cacheline.
-class BAIDU_CACHELINE_ALIGNMENT/*note*/ Socket {
+class FLARE_CACHELINE_ALIGNMENT/*note*/ Socket {
 friend class EventDispatcher;
 friend class InputMessenger;
 friend class Acceptor;
@@ -267,7 +267,7 @@ public:
             , pipelined_count(0), with_auth(false)
             , ignore_eovercrowded(false) {}
     };
-    int Write(butil::IOBuf *msg, const WriteOptions* options = NULL);
+    int Write(flare::io::IOBuf *msg, const WriteOptions* options = NULL);
 
     // Write an user-defined message. `msg' is released when Write() is
     // successful and *may* remain unchanged otherwise.
@@ -277,10 +277,10 @@ public:
     int fd() const { return _fd.load(std::memory_order_relaxed); }
 
     // ip/port of the local end of the connection
-    butil::EndPoint local_side() const { return _local_side; }
+    flare::base::end_point local_side() const { return _local_side; }
 
     // ip/port of the other end of the connection.
-    butil::EndPoint remote_side() const { return _remote_side; }
+    flare::base::end_point remote_side() const { return _remote_side; }
 
     // Positive value enables health checking.
     // Initialized by SocketOptions.health_check_interval_s.
@@ -529,7 +529,7 @@ public:
     bthread_keytable_pool_t* keytable_pool() const { return _keytable_pool; }
 
 private:
-    DISALLOW_COPY_AND_ASSIGN(Socket);
+    FLARE_DISALLOW_COPY_AND_ASSIGN(Socket);
 
     int ConductError(bthread_id_t);
     int StartWrite(WriteRequest*, const WriteOptions&);
@@ -693,10 +693,10 @@ private:
     int64_t _reset_fd_real_us; // When _fd was reset, in microseconds.
 
     // Address of peer. Initialized by SocketOptions.remote_side.
-    butil::EndPoint _remote_side;
+    flare::base::end_point _remote_side;
 
     // Address of self. Initialized in ResetFileDescriptor().
-    butil::EndPoint _local_side;
+    flare::base::end_point _local_side;
 
     // Called when edge-triggered events happened on `_fd'. Read comments
     // of EventDispatcher::AddConsumer (event_dispatcher.h)
@@ -731,7 +731,7 @@ private:
     uint32_t _avg_msg_size;
 
     // Storing data read from `_fd' but cut-off yet.
-    butil::IOPortal _read_buf;
+    flare::io::IOPortal _read_buf;
 
     // Set with cpuwide_time_us() at last read operation
     std::atomic<int64_t> _last_readtime_us;
@@ -796,7 +796,7 @@ private:
 
     std::atomic<SocketId> _agent_socket_id;
 
-    butil::Mutex _pipeline_mutex;
+    flare::base::Mutex _pipeline_mutex;
     std::deque<PipelinedInfo>* _pipeline_q;
 
     // For storing call-id of in-progress RPC.
@@ -814,7 +814,7 @@ private:
     // Storing data that are not flushed into `fd' yet.
     std::atomic<WriteRequest*> _write_head;
 
-    butil::Mutex _stream_mutex;
+    flare::base::Mutex _stream_mutex;
     std::set<StreamId> *_stream_set;
 
     std::atomic<int64_t> _ninflight_app_health_check;

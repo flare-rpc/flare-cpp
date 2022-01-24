@@ -166,14 +166,14 @@ public:
     { return _type == AMF_MARKER_OBJECT || _type == AMF_MARKER_ECMA_ARRAY; }
     bool IsArray() const { return _type == AMF_MARKER_STRICT_ARRAY; }
     
-    butil::StringPiece AsString() const
-    { return butil::StringPiece((_is_shortstr ? _shortstr : _str), _strsize); }
+    std::string_view AsString() const
+    { return std::string_view((_is_shortstr ? _shortstr : _str), _strsize); }
     bool AsBool() const { return _b; }
     double AsNumber() const { return _num; }
     const AMFObject& AsObject() const { return *_obj; }
     const AMFArray& AsArray() const { return *_arr; }
 
-    void SetString(const butil::StringPiece& str);
+    void SetString(const std::string_view& str);
     void SetBool(bool val);
     void SetNumber(double val);
     void SetNull();
@@ -209,7 +209,7 @@ public:
     void Remove(const std::string& name) { _fields.erase(name); }
     void Clear() { _fields.clear(); }
     
-    void SetString(const std::string& name, const butil::StringPiece& val);
+    void SetString(const std::string& name, const std::string_view& val);
     void SetBool(const std::string& name, bool val);
     void SetNumber(const std::string& name, double val);
     void SetNull(const std::string& name);
@@ -241,7 +241,7 @@ public:
     AMFField& operator[](size_t index);
     size_t size() const { return _size; }
 
-    void AddString(const butil::StringPiece& val) { AddField()->SetString(val); }
+    void AddString(const std::string_view& val) { AddField()->SetString(val); }
     void AddBool(bool val) { AddField()->SetBool(val); }
     void AddNumber(double val) { AddField()->SetNumber(val); }
     void AddNull() { AddField()->SetNull(); }
@@ -261,12 +261,12 @@ private:
 std::ostream& operator<<(std::ostream& os, const AMFArray&);
 
 inline const AMFField& AMFArray::operator[](size_t index) const {
-    return (index < arraysize(_fields) ? _fields[index] :
-            _morefields[index - arraysize(_fields)]);
+    return (index < FLARE_ARRAY_SIZE(_fields) ? _fields[index] :
+            _morefields[index - FLARE_ARRAY_SIZE(_fields)]);
 }
 inline AMFField& AMFArray::operator[](size_t index) {
-    return (index < arraysize(_fields) ? _fields[index] :
-            _morefields[index - arraysize(_fields)]);
+    return (index < FLARE_ARRAY_SIZE(_fields) ? _fields[index] :
+            _morefields[index - FLARE_ARRAY_SIZE(_fields)]);
 }
 
 // Parse types of the stream.
@@ -284,7 +284,7 @@ bool ReadAMFArray(AMFArray* arr, AMFInputStream* stream);
 
 // Serialize types into the stream.
 // Check stream->good() for successfulness after one or multiple WriteAMFxxx.
-void WriteAMFString(const butil::StringPiece& val, AMFOutputStream* stream);
+void WriteAMFString(const std::string_view& val, AMFOutputStream* stream);
 void WriteAMFBool(bool val, AMFOutputStream* stream);
 void WriteAMFNumber(double val, AMFOutputStream* stream);
 void WriteAMFUint32(uint32_t val, AMFOutputStream* stream);

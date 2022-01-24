@@ -17,7 +17,7 @@ Both client and server in brpc have `Controller`, which can be set with `setFail
 
 All error codes in brpc are defined in [errno.proto](https://github.com/brpc/brpc/blob/master/src/brpc/errno.proto), in which those begin with *SYS_* are defined by linux system and exactly same with the ones defined in `/usr/include/errno.h`. The reason that we put it in .proto is to cross language. The rest of the error codes are defined by brpc.
 
-[berror(error_code)](https://github.com/brpc/brpc/blob/master/src/butil/errno.h) gets description for the error code, and `berror()` gets description for current [system errno](http://www.cplusplus.com/reference/cerrno/errno/). Note that **ErrorText() != berror(ErorCode())** since `ErrorText()` contains more specific information. brpc includes berror by default so that you can use it in your project directly.
+[flare_error(error_code)](https://github.com/brpc/brpc/blob/master/src/butil/errno.h) gets description for the error code, and `flare_error()` gets description for current [system errno](http://www.cplusplus.com/reference/cerrno/errno/). Note that **ErrorText() != flare_error(ErorCode())** since `ErrorText()` contains more specific information. brpc includes flare_error by default so that you can use it in your project directly.
 
 Following table shows common error codes and their descriptions: 
 
@@ -51,27 +51,27 @@ static const int EMYERROR = 30;   // C/C++
 const int EMYERROR2 = -31;        // C++ only
 ```
 
-If you need to get the error description through `berror`, register it in the global scope of your c/cpp file by `BAIDU_REGISTER_ERRNO(error_code, description)`, for example:
+If you need to get the error description through `flare_error`, register it in the global scope of your c/cpp file by `FLARE_REGISTER_ERRNO(error_code, description)`, for example:
 
 ```c++
-BAIDU_REGISTER_ERRNO(ESTOP, "the thread is stopping")
-BAIDU_REGISTER_ERRNO(EMYERROR, "my error")
+FLARE_REGISTER_ERRNO(ESTOP, "the thread is stopping")
+FLARE_REGISTER_ERRNO(EMYERROR, "my error")
 ```
 
-Note that `strerror` and `strerror_r` do not recognize error codes defined by `BAIDU_REGISTER_ERRNO`. Neither does the `%m` used in `printf`. You must use `%s` paired with `berror`:
+Note that `strerror` and `strerror_r` do not recognize error codes defined by `FLARE_REGISTER_ERRNO`. Neither does the `%m` used in `printf`. You must use `%s` paired with `flare_error`:
 
 ```c++
 errno = ESTOP;
 printf("Describe errno: %m\n");                              // [Wrong] Describe errno: Unknown error -114
 printf("Describe errno: %s\n", strerror_r(errno, NULL, 0));  // [Wrong] Describe errno: Unknown error -114
-printf("Describe errno: %s\n", berror());                    // [Correct] Describe errno: the thread is stopping
-printf("Describe errno: %s\n", berror(errno));               // [Correct] Describe errno: the thread is stopping
+printf("Describe errno: %s\n", flare_error());                    // [Correct] Describe errno: the thread is stopping
+printf("Describe errno: %s\n", flare_error(errno));               // [Correct] Describe errno: the thread is stopping
 ```
 
 When the registration of an error code is duplicated, a linking error is generated provided it's defined in C++:
 
 ```
-redefinition of `class BaiduErrnoHelper<30>'
+redefinition of `class flare_errno_helper<30>'
 ```
 
 Or the program aborts before start:
@@ -84,4 +84,4 @@ You have to make sure that different modules have same understandings on same Er
 
 - Prefer system error codes which have fixed values and meanings, generally.
 - Share code on error definitions between multiple modules to prevent inconsistencies after modifications.
-- Use `BAIDU_REGISTER_ERRNO` to describe new error code to ensure that same error code is defined only once inside a process.
+- Use `FLARE_REGISTER_ERRNO` to describe new error code to ensure that same error code is defined only once inside a process.

@@ -22,10 +22,10 @@
 #include <iostream>
 #include <gflags/gflags.h>
 #include "flare/butil/macros.h"
-#include "flare/butil/logging.h"                       // LOG
-#include "flare/butil/scoped_lock.h"
-#include "flare/butil/endpoint.h"
-#include "flare/butil/base64.h"
+#include "flare/base/logging.h"                       // LOG
+#include "flare/base/scoped_lock.h"
+#include "flare/base/endpoint.h"
+#include "flare/base/base64.h"
 #include "flare/bthread/bthread.h"                    // bthread_usleep
 #include "flare/brpc/log.h"
 #include "flare/brpc/reloadable_flags.h"
@@ -107,18 +107,18 @@ int HttpMessage::on_header_value(http_parser *parser,
         http_message->_cur_value->append(at, length);
     }
     if (FLAGS_http_verbose) {
-        butil::IOBufBuilder* vs = http_message->_vmsgbuilder;
+        flare::io::IOBufBuilder* vs = http_message->_vmsgbuilder;
         if (vs == NULL) {
-            vs = new butil::IOBufBuilder;
+            vs = new flare::io::IOBufBuilder;
             http_message->_vmsgbuilder = vs;
             if (parser->type == HTTP_REQUEST) {
-                *vs << "[ HTTP REQUEST @" << butil::my_ip() << " ]\n< "
+                *vs << "[ HTTP REQUEST @" << flare::base::my_ip() << " ]\n< "
                     << HttpMethod2Str((HttpMethod)parser->method) << ' '
                     << http_message->_url << " HTTP/" << parser->http_major
                     << '.' << parser->http_minor;
             } else {
                 // NOTE: http_message->header().status_code() may not be set yet.
-                *vs << "[ HTTP RESPONSE @" << butil::my_ip() << " ]\n< HTTP/"
+                *vs << "[ HTTP RESPONSE @" << flare::base::my_ip() << " ]\n< HTTP/"
                     << parser->http_major
                     << '.' << parser->http_minor << ' ' << parser->status_code
                     << ' ' << HttpReasonPhrase(parser->status_code);
@@ -180,17 +180,17 @@ int HttpMessage::on_headers_complete(http_parser *parser) {
     return 0;
 }
 
-int HttpMessage::UnlockAndFlushToBodyReader(std::unique_lock<butil::Mutex>& mu) {
+int HttpMessage::UnlockAndFlushToBodyReader(std::unique_lock<flare::base::Mutex>& mu) {
     if (_body.empty()) {
         mu.unlock();
         return 0;
     }
-    butil::IOBuf body_seen = _body.movable();
+    flare::io::IOBuf body_seen = _body.movable();
     ProgressiveReader* r = _body_reader;
     mu.unlock();
     for (size_t i = 0; i < body_seen.backing_block_num(); ++i) {
-        butil::StringPiece blk = body_seen.backing_block(i);
-        butil::Status st = r->OnReadOnePart(blk.data(), blk.size());
+        std::string_view blk = body_seen.backing_block(i);
+        flare::base::flare_status st = r->OnReadOnePart(blk.data(), blk.size());
         if (!st.ok()) {
             mu.lock();
             _body_reader = NULL;
@@ -229,7 +229,7 @@ int HttpMessage::OnBody(const char *at, const size_t length) {
             if (_vbodylen < (size_t)FLAGS_http_verbose_max_body_length) {
                 int plen = std::min(length, (size_t)FLAGS_http_verbose_max_body_length
                                     - _vbodylen);
-                std::string str = butil::ToPrintableString(
+                std::string str = flare::io::ToPrintableString(
                     at, plen, std::numeric_limits<size_t>::max());
                 _vmsgbuilder->write(str.data(), str.size());
             }
@@ -247,7 +247,7 @@ int HttpMessage::OnBody(const char *at, const size_t length) {
         return 0;
     }
     // Progressive read.
-    std::unique_lock<butil::Mutex> mu(_body_mutex);
+    std::unique_lock<flare::base::Mutex> mu(_body_mutex);
     ProgressiveReader* r = _body_reader;
     while (r == NULL) {
         // When _body is full, the sleep-waiting may block parse handler
@@ -270,7 +270,7 @@ int HttpMessage::OnBody(const char *at, const size_t length) {
     if (UnlockAndFlushToBodyReader(mu) != 0) {
         return -1;
     }
-    butil::Status st = r->OnReadOnePart(at, length);
+    flare::base::flare_status st = r->OnReadOnePart(at, length);
     if (st.ok()) {
         return 0;
     }
@@ -299,7 +299,7 @@ int HttpMessage::OnMessageComplete() {
         return 0;
     }
     // Progressive read.
-    std::unique_lock<butil::Mutex> mu(_body_mutex);
+    std::unique_lock<flare::base::Mutex> mu(_body_mutex);
     _stage = HTTP_ON_MESSAGE_COMPLETE;
     if (_body_reader != NULL) {
         // Solve the case: SetBodyReader quit at ntry=MAX_TRY with non-empty
@@ -312,7 +312,7 @@ int HttpMessage::OnMessageComplete() {
         ProgressiveReader* r = _body_reader;
         _body_reader = NULL;
         mu.unlock();
-        r->OnEndOfMessage(butil::Status());
+        r->OnEndOfMessage(flare::base::flare_status());
     }
     return 0;
 }
@@ -320,11 +320,11 @@ int HttpMessage::OnMessageComplete() {
 class FailAllRead : public ProgressiveReader {
 public:
     // @ProgressiveReader
-    butil::Status OnReadOnePart(const void* /*data*/, size_t /*length*/) {
-        return butil::Status(-1, "Trigger by FailAllRead at %s:%d",
+    flare::base::flare_status OnReadOnePart(const void* /*data*/, size_t /*length*/) {
+        return flare::base::flare_status(-1, "Trigger by FailAllRead at %s:%d",
                             __FILE__, __LINE__);
     }
-    void OnEndOfMessage(const butil::Status&) {}
+    void OnEndOfMessage(const flare::base::flare_status&) {}
 };
 
 static FailAllRead* s_fail_all_read = NULL;
@@ -334,17 +334,17 @@ static void CreateFailAllRead() { s_fail_all_read = new FailAllRead; }
 void HttpMessage::SetBodyReader(ProgressiveReader* r) {
     if (!_read_body_progressively) {
         return r->OnEndOfMessage(
-            butil::Status(EPERM, "Call SetBodyReader on HttpMessage with"
+            flare::base::flare_status(EPERM, "Call SetBodyReader on HttpMessage with"
                          " read_body_progressively=false"));
     }
     const int MAX_TRY = 3;
     int ntry = 0;
     do {
-        std::unique_lock<butil::Mutex> mu(_body_mutex);
+        std::unique_lock<flare::base::Mutex> mu(_body_mutex);
         if (_body_reader != NULL) {
             mu.unlock();
             return r->OnEndOfMessage(
-                butil::Status(EPERM, "SetBodyReader is called more than once"));
+                flare::base::flare_status(EPERM, "SetBodyReader is called more than once"));
         }
         if (_body.empty()) {
             if (_stage <= HTTP_ON_BODY) {
@@ -352,7 +352,7 @@ void HttpMessage::SetBodyReader(ProgressiveReader* r) {
                 return;
             } else {  // The body is complete and successfully consumed.
                 mu.unlock();
-                return r->OnEndOfMessage(butil::Status());
+                return r->OnEndOfMessage(flare::base::flare_status());
             }
         } else if (_stage <= HTTP_ON_BODY && ++ntry >= MAX_TRY) {
             // Stop making _body empty after we've tried several times.
@@ -362,11 +362,11 @@ void HttpMessage::SetBodyReader(ProgressiveReader* r) {
             _body_reader = r;
             return;
         }
-        butil::IOBuf body_seen = _body.movable();
+        flare::io::IOBuf body_seen = _body.movable();
         mu.unlock();
         for (size_t i = 0; i < body_seen.backing_block_num(); ++i) {
-            butil::StringPiece blk = body_seen.backing_block(i);
-            butil::Status st = r->OnReadOnePart(blk.data(), blk.size());
+            std::string_view blk = body_seen.backing_block(i);
+            flare::base::flare_status st = r->OnReadOnePart(blk.data(), blk.size());
             if (!st.ok()) {
                 r->OnEndOfMessage(st);
                 // Make OnBody() or OnMessageComplete() fail on next call to
@@ -413,7 +413,7 @@ HttpMessage::~HttpMessage() {
         // _body_reader here just means the socket is broken before completion
         // of the message.
         saved_body_reader->OnEndOfMessage(
-            butil::Status(ECONNRESET, "The socket was broken"));
+            flare::base::flare_status(ECONNRESET, "The socket was broken"));
     }
 }
 
@@ -431,14 +431,14 @@ ssize_t HttpMessage::ParseFromArray(const char *data, const size_t length) {
     if (_parser.http_errno != 0) {
         // May try HTTP on other formats, failure is norm.
         RPC_VLOG << "Fail to parse http message, parser=" << _parser
-                 << ", buf=`" << butil::StringPiece(data, length) << '\'';
+                 << ", buf=`" << std::string_view(data, length) << '\'';
         return -1;
     } 
     _parsed_length += nprocessed;
     return nprocessed;
 }
 
-ssize_t HttpMessage::ParseFromIOBuf(const butil::IOBuf &buf) {
+ssize_t HttpMessage::ParseFromIOBuf(const flare::io::IOBuf &buf) {
     if (Completed()) {
         if (buf.empty()) {
             return 0;
@@ -449,7 +449,7 @@ ssize_t HttpMessage::ParseFromIOBuf(const butil::IOBuf &buf) {
     }
     size_t nprocessed = 0;
     for (size_t i = 0; i < buf.backing_block_num(); ++i) {
-        butil::StringPiece blk = buf.backing_block(i);
+        std::string_view blk = buf.backing_block(i);
         if (blk.empty()) {
             // length=0 will be treated as EOF by http_parser, must skip.
             continue;
@@ -459,7 +459,7 @@ ssize_t HttpMessage::ParseFromIOBuf(const butil::IOBuf &buf) {
         if (_parser.http_errno != 0) {
             // May try HTTP on other formats, failure is norm.
             RPC_VLOG << "Fail to parse http message, parser=" << _parser
-                     << ", buf=" << butil::ToPrintable(buf);
+                     << ", buf=" << flare::io::ToPrintable(buf);
             return -1;
         }
         if (Completed()) {
@@ -536,11 +536,11 @@ std::ostream& operator<<(std::ostream& os, const http_parser& parser) {
 //                | "CONNECT"                ; Section 9.9
 //                | extension-method
 // extension-method = token
-void MakeRawHttpRequest(butil::IOBuf* request,
+void MakeRawHttpRequest(flare::io::IOBuf* request,
                         HttpHeader* h,
-                        const butil::EndPoint& remote_side,
-                        const butil::IOBuf* content) {
-    butil::IOBufBuilder os;
+                        const flare::base::end_point& remote_side,
+                        const flare::io::IOBuf* content) {
+    flare::io::IOBufBuilder os;
     os << HttpMethod2Str(h->method()) << ' ';
     const URI& uri = h->uri();
     uri.PrintWithoutHost(os); // host is sent by "Host" header.
@@ -595,7 +595,7 @@ void MakeRawHttpRequest(butil::IOBuf* request,
         // characters in this part and even if users did, most of them are
         // invalid and rejected by http_parser_parse_url().
         std::string encoded_user_info;
-        butil::Base64Encode(user_info, &encoded_user_info);
+        flare::base::base64_encode(user_info, &encoded_user_info);
         os << "Authorization: Basic " << encoded_user_info << BRPC_CRLF;
     }
     os << BRPC_CRLF;  // CRLF before content
@@ -613,10 +613,10 @@ void MakeRawHttpRequest(butil::IOBuf* request,
 //                CRLF
 //                [ message-body ]          ; Section 7.2
 // Status-Line = HTTP-Version SP Status-Code SP Reason-Phrase CRLF
-void MakeRawHttpResponse(butil::IOBuf* response,
+void MakeRawHttpResponse(flare::io::IOBuf* response,
                          HttpHeader* h,
-                         butil::IOBuf* content) {
-    butil::IOBufBuilder os;
+                         flare::io::IOBuf* content) {
+    flare::io::IOBufBuilder os;
     os << "HTTP/" << h->major_version() << '.'
        << h->minor_version() << ' ' << h->status_code()
        << ' ' << h->reason_phrase() << BRPC_CRLF;
@@ -638,7 +638,7 @@ void MakeRawHttpResponse(butil::IOBuf* response,
     os << BRPC_CRLF;  // CRLF before content
     os.move_to(*response);
     if (content) {
-        response->append(butil::IOBuf::Movable(*content));
+        response->append(flare::io::IOBuf::Movable(*content));
     }
 }
 #undef BRPC_CRLF

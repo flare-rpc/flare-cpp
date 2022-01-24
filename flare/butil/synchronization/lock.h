@@ -27,7 +27,7 @@
 
 #include "flare/butil/base_export.h"
 #include "flare/butil/macros.h"
-#include "flare/butil/compat.h"
+#include "flare/base/compat.h"
 
 namespace butil {
 

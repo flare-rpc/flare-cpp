@@ -8,7 +8,7 @@
 #include <limits>
 
 #include "flare/butil/macros.h"
-#include "flare/butil/type_traits.h"
+#include "flare/base/type_traits.h"
 
 namespace butil {
 namespace internal {

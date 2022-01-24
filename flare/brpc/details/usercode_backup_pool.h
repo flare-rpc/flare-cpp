@@ -19,7 +19,7 @@
 #ifndef  BRPC_USERCODE_BACKUP_POOL_H
 #define  BRPC_USERCODE_BACKUP_POOL_H
 
-#include "flare/butil/static_atomic.h"
+#include "flare/base/static_atomic.h"
 #include "flare/bthread/bthread.h"
 #include <gflags/gflags_declare.h>
 

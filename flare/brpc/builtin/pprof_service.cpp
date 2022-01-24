@@ -21,13 +21,13 @@
 #include <limits>
 #include <sys/stat.h>
 #include <fcntl.h>                          // O_RDONLY
-#include "flare/butil/string_printf.h"             // string_printf
-#include "flare/butil/string_splitter.h"           // StringSplitter
+#include "flare/base/strings.h"             // string_printf
+#include "flare/base/string_splitter.h"           // StringSplitter
 #include "flare/butil/file_util.h"                 // butil::FilePath
-#include "flare/butil/files/scoped_file.h"         // ScopedFILE
-#include "flare/butil/time.h"
-#include "flare/butil/popen.h"                    // butil::read_command_output
-#include "flare/butil/process_util.h"             // butil::ReadCommandLine
+#include "flare/base/scoped_file.h"         // scoped_file
+#include "flare/base/time.h"
+#include "flare/base/popen.h"                    // flare::base::read_command_output
+#include "flare/base/process_util.h"             // flare::base::read_command_line
 #include "flare/brpc/log.h"
 #include "flare/brpc/controller.h"                // Controller
 #include "flare/brpc/closure_guard.h"             // ClosureGuard
@@ -35,10 +35,10 @@
 #include "flare/brpc/builtin/common.h"
 #include "flare/brpc/details/tcmalloc_extension.h"
 #include "flare/bthread/bthread.h"                // bthread_usleep
-#include "flare/butil/fd_guard.h"
+#include "flare/base/fd_guard.h"
 
 extern "C" {
-#if defined(OS_LINUX)
+#if defined(FLARE_PLATFORM_LINUX)
 extern char *program_invocation_name;
 #endif
 int __attribute__((weak)) ProfilerStart(const char* fname);
@@ -103,7 +103,7 @@ void PProfService::profile(
     if ((void*)ProfilerStart == NULL || (void*)ProfilerStop == NULL) {
         cntl->SetFailed(ENOMETHOD, "%s, to enable cpu profiler, check out "
                         "docs/cn/cpu_profiler.md",
-                        berror(ENOMETHOD));
+                        flare_error(ENOMETHOD));
         return;
     }    
     int sleep_sec = ReadSeconds(cntl);
@@ -127,7 +127,7 @@ void PProfService::profile(
 
     char prof_name[256];
     if (MakeProfName(PROFILING_CPU, prof_name, sizeof(prof_name)) != 0) {
-        cntl->SetFailed(errno, "Fail to create .prof file, %s", berror());
+        cntl->SetFailed(errno, "Fail to create .prof file, %s", flare_error());
         return;
     }
     butil::File::Error error;
@@ -145,12 +145,12 @@ void PProfService::profile(
     }
     ProfilerStop();
 
-    butil::fd_guard fd(open(prof_name, O_RDONLY));
+    flare::base::fd_guard fd(open(prof_name, O_RDONLY));
     if (fd < 0) {
         cntl->SetFailed(ENOENT, "Fail to open %s", prof_name);
         return;
     }
-    butil::IOPortal portal;
+    flare::io::IOPortal portal;
     portal.append_from_file_descriptor(fd, ULONG_MAX);
     cntl->response_attachment().swap(portal);
 }
@@ -184,7 +184,7 @@ void PProfService::contention(
 
     char prof_name[256];
     if (MakeProfName(PROFILING_CONTENTION, prof_name, sizeof(prof_name)) != 0) {
-        cntl->SetFailed(errno, "Fail to create .prof file, %s", berror());
+        cntl->SetFailed(errno, "Fail to create .prof file, %s", flare_error());
         return;
     }
     if (!bthread::ContentionProfilerStart(prof_name)) {
@@ -196,12 +196,12 @@ void PProfService::contention(
     }
     bthread::ContentionProfilerStop();
 
-    butil::fd_guard fd(open(prof_name, O_RDONLY));
+    flare::base::fd_guard fd(open(prof_name, O_RDONLY));
     if (fd < 0) {
         cntl->SetFailed(ENOENT, "Fail to open %s", prof_name);
         return;
     }
-    butil::IOPortal portal;
+    flare::io::IOPortal portal;
     portal.append_from_file_descriptor(fd, ULONG_MAX);
     cntl->response_attachment().swap(portal);
 }
@@ -251,7 +251,7 @@ void PProfService::growth(
     if (malloc_ext == NULL) {
         cntl->SetFailed(ENOMETHOD, "%s, to enable growth profiler, check out "
                         "docs/cn/heap_profiler.md",
-                        berror(ENOMETHOD));
+                        flare_error(ENOMETHOD));
         return;
     }
     // Log requester
@@ -292,19 +292,19 @@ static bool HasExt(const std::string& name, const std::string& ext) {
 static int ExtractSymbolsFromBinary(
     std::map<uintptr_t, std::string>& addr_map,
     const LibInfo& lib_info) {
-    butil::Timer tm;
+    flare::base::stop_watcher tm;
     tm.start();
     std::string cmd = "nm -C -p ";
     cmd.append(lib_info.path);
     std::stringstream ss;
-    const int rc = butil::read_command_output(ss, cmd.c_str());
+    const int rc = flare::base::read_command_output(ss, cmd.c_str());
     if (rc < 0) {
         LOG(ERROR) << "Fail to popen `" << cmd << "'";
         return -1;
     }
     std::string line;
     while (std::getline(ss, line)) {
-        butil::StringSplitter sp(line.c_str(), ' ');
+        flare::base::StringSplitter sp(line.c_str(), ' ');
         if (sp == NULL) {
             continue;
         }
@@ -393,9 +393,9 @@ static int ExtractSymbolsFromBinary(
 }
 
 static void LoadSymbols() {
-    butil::Timer tm;
+    flare::base::stop_watcher tm;
     tm.start();
-    butil::ScopedFILE fp(fopen("/proc/self/maps", "r"));
+    flare::base::scoped_file fp(fopen("/proc/self/maps", "r"));
     if (fp == NULL) {
         return;
     }
@@ -403,7 +403,7 @@ static void LoadSymbols() {
     size_t line_len = 0;
     ssize_t nr = 0;
     while ((nr = getline(&line, &line_len, fp.get())) != -1) {
-        butil::StringSplitter sp(line, line + nr, ' ');
+        flare::base::StringSplitter sp(line, line + nr, ' ');
         if (sp == NULL) {
             continue;
         }
@@ -459,14 +459,14 @@ static void LoadSymbols() {
     info.start_addr = 0;
     info.end_addr = std::numeric_limits<uintptr_t>::max();
     info.offset = 0;
-#if defined(OS_LINUX)
+#if defined(FLARE_PLATFORM_LINUX)
     info.path = program_invocation_name;
-#elif defined(OS_MACOSX)
+#elif defined(FLARE_PLATFORM_OSX)
     info.path = getprogname();
 #endif
     ExtractSymbolsFromBinary(symbol_map, info);
 
-    butil::Timer tm2;
+    flare::base::stop_watcher tm2;
     tm2.start();
     size_t num_removed = 0;
     bool last_is_empty = false;
@@ -492,7 +492,7 @@ static void LoadSymbols() {
     RPC_VLOG << "Loaded all symbols in " << tm.m_elapsed() << "ms";
 }
 
-static void FindSymbols(butil::IOBuf* out, std::vector<uintptr_t>& addr_list) {
+static void FindSymbols(flare::io::IOBuf* out, std::vector<uintptr_t>& addr_list) {
     char buf[32];
     for (size_t i = 0; i < addr_list.size(); ++i) {
         int len = snprintf(buf, sizeof(buf), "0x%08lx\t", addr_list[i]);
@@ -543,7 +543,7 @@ void PProfService::symbol(
         }
         std::vector<uintptr_t> addr_list;
         addr_list.reserve(32);
-        butil::StringSplitter sp(addr_cstr, '+');
+        flare::base::StringSplitter sp(addr_cstr, '+');
         for ( ; sp != NULL; ++sp) {
             char* endptr;
             uintptr_t addr = strtoull(sp.field(), &endptr, 16);
@@ -561,7 +561,7 @@ void PProfService::cmdline(::google::protobuf::RpcController* controller_base,
     Controller* cntl = static_cast<Controller*>(controller_base);
     cntl->http_response().set_content_type("text/plain" /*FIXME*/);
     char buf[1024];  // should be enough?
-    const ssize_t nr = butil::ReadCommandLine(buf, sizeof(buf), true);
+    const ssize_t nr = flare::base::read_command_line(buf, sizeof(buf), true);
     if (nr < 0) {
         cntl->SetFailed(ENOENT, "Fail to read cmdline");
         return;

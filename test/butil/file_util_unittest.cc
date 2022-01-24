@@ -2,9 +2,9 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "flare/butil/build_config.h"
+#include "flare/base/profile.h"
 
-#if defined(OS_WIN)
+#if defined(FLARE_PLATFORM_WINDOWS)
 #include <windows.h>
 #include <shellapi.h>
 #include <shlobj.h>
@@ -12,7 +12,7 @@
 #include <winioctl.h>
 #endif
 
-#if defined(OS_POSIX)
+#if defined(FLARE_PLATFORM_POSIX)
 #include <errno.h>
 #include <fcntl.h>
 #include <unistd.h>
@@ -27,19 +27,19 @@
 #include "flare/butil/file_util.h"
 #include "flare/butil/files/file_enumerator.h"
 #include "flare/butil/files/file_path.h"
-#include "flare/butil/files/scoped_file.h"
+#include "flare/base/scoped_file.h"
 #include "flare/butil/files/scoped_temp_dir.h"
 #include "flare/butil/strings/utf_string_conversions.h"
 #include "flare/butil/threading/platform_thread.h"
 #include <gtest/gtest.h>
 #include <gtest/gtest.h>
 
-#if defined(OS_WIN)
+#if defined(FLARE_PLATFORM_WINDOWS)
 #include "flare/butil/win/scoped_handle.h"
 #include "flare/butil/win/windows_version.h"
 #endif
 
-#if defined(OS_ANDROID)
+#if defined(FLARE_PLATFORM_ANDROID)
 #include "flare/butil/android/content_uri_utils.h"
 #endif
 
@@ -52,7 +52,7 @@ namespace {
 
 // To test that file_util::Normalize FilePath() deals with NTFS reparse points
 // correctly, we need functions to create and delete reparse points.
-#if defined(OS_WIN)
+#if defined(FLARE_PLATFORM_WINDOWS)
 typedef struct _REPARSE_DATA_BUFFER {
   ULONG  ReparseTag;
   USHORT  ReparseDataLength;
@@ -155,7 +155,7 @@ class ReparsePoint {
 
 #endif
 
-#if defined(OS_POSIX)
+#if defined(FLARE_PLATFORM_POSIX)
 // Provide a simple way to change the permissions bits on |path| in tests.
 // ASSERT failures will return, but not stop the test.  Caller should wrap
 // calls to this function in ASSERT_NO_FATAL_FAILURE().
@@ -171,7 +171,7 @@ void ChangePosixFilePermissions(const FilePath& path,
   mode &= ~mode_bits_to_clear;
   ASSERT_TRUE(SetPosixFilePermissions(path, mode));
 }
-#endif  // defined(OS_POSIX)
+#endif  // defined(FLARE_PLATFORM_POSIX)
 
 const wchar_t bogus_content[] = L"I'm cannon fodder.";
 
@@ -183,7 +183,7 @@ const int FILES_AND_DIRECTORIES =
 class FileUtilTest : public testing::Test {
  protected:
   virtual void SetUp() OVERRIDE {
-#if defined(OS_POSIX)
+#if defined(FLARE_PLATFORM_POSIX)
     if (getuid() == 0) {
       is_root_ = true;
       ASSERT_EQ(0, setegid(65534));
@@ -195,7 +195,7 @@ class FileUtilTest : public testing::Test {
     testing::Test::SetUp();
     ASSERT_TRUE(temp_dir_.CreateUniqueTempDir());
   }
-#if defined(OS_POSIX)
+#if defined(FLARE_PLATFORM_POSIX)
   virtual void TearDown() OVERRIDE {
      if (is_root_) {
        ASSERT_EQ(0, seteuid(0));
@@ -207,7 +207,7 @@ class FileUtilTest : public testing::Test {
 #endif
 
   ScopedTempDir temp_dir_;
-#if defined(OS_POSIX)
+#if defined(FLARE_PLATFORM_POSIX)
   bool is_root_;
 #endif
 };
@@ -258,12 +258,12 @@ std::wstring ReadTextFile(const FilePath& filename) {
   std::wifstream file;
   file.open(filename.value().c_str());
   EXPECT_TRUE(file.is_open());
-  file.getline(contents, arraysize(contents));
+  file.getline(contents, FLARE_ARRAY_SIZE(contents));
   file.close();
   return std::wstring(contents);
 }
 
-#if defined(OS_WIN)
+#if defined(FLARE_PLATFORM_WINDOWS)
 uint64_t FileTimeAsUint64(const FILETIME& ft) {
   ULARGE_INTEGER u;
   u.LowPart = ft.dwLowDateTime;
@@ -328,7 +328,7 @@ TEST_F(FileUtilTest, NormalizeFilePathBasic) {
       .IsParent(normalized_file_b_path.DirName()));
 }
 
-#if defined(OS_WIN)
+#if defined(FLARE_PLATFORM_WINDOWS)
 
 TEST_F(FileUtilTest, NormalizeFilePathReparsePoints) {
   // Build the following directory structure:
@@ -563,9 +563,9 @@ TEST_F(FileUtilTest, CreateTemporaryFileInDirLongPathTest) {
   EXPECT_EQ(DWORD(0), path_buffer_length);
 }
 
-#endif  // defined(OS_WIN)
+#endif  // defined(FLARE_PLATFORM_WINDOWS)
 
-#if defined(OS_POSIX)
+#if defined(FLARE_PLATFORM_POSIX)
 
 TEST_F(FileUtilTest, CreateAndReadSymlinks) {
   FilePath link_from = temp_dir_.path().Append(FPL("from_file"));
@@ -640,7 +640,7 @@ TEST_F(FileUtilTest, NormalizeFilePathSymlinks) {
   // Infinite loop!
   EXPECT_FALSE(NormalizeFilePath(link_from, &normalized_path));
 }
-#endif  // defined(OS_POSIX)
+#endif  // defined(FLARE_PLATFORM_POSIX)
 
 TEST_F(FileUtilTest, DeleteNonExistent) {
   FilePath non_existent = temp_dir_.path().AppendASCII("bogus_file_dne.foobar");
@@ -683,7 +683,7 @@ TEST_F(FileUtilTest, DeleteFile) {
   EXPECT_FALSE(PathExists(file_name));
 }
 
-#if defined(OS_POSIX)
+#if defined(FLARE_PLATFORM_POSIX)
 TEST_F(FileUtilTest, DeleteSymlinkToExistentFile) {
   // Create a file.
   FilePath file_name = temp_dir_.path().Append(FPL("Test DeleteFile 2.txt"));
@@ -857,9 +857,9 @@ TEST_F(FileUtilTest, ChangeDirectoryPermissionsAndEnumerate) {
   EXPECT_FALSE(PathExists(subdir_path));
 }
 
-#endif  // defined(OS_POSIX)
+#endif  // defined(FLARE_PLATFORM_POSIX)
 
-#if defined(OS_WIN)
+#if defined(FLARE_PLATFORM_WINDOWS)
 // Tests that the Delete function works for wild cards, especially
 // with the recursion flag.  Also coincidentally tests PathExists.
 // TODO(erikkay): see if anyone's actually using this feature of the API
@@ -1383,10 +1383,10 @@ TEST_F(FileUtilTest, CopyDirectoryWithTrailingSeparators) {
       dir_name_to.Append(FILE_PATH_LITERAL("Copy_Test_File.txt"));
 
   // Create from path with trailing separators.
-#if defined(OS_WIN)
+#if defined(FLARE_PLATFORM_WINDOWS)
   FilePath from_path =
       temp_dir_.path().Append(FILE_PATH_LITERAL("Copy_From_Subdir\\\\\\"));
-#elif defined (OS_POSIX)
+#elif defined (FLARE_PLATFORM_POSIX)
   FilePath from_path =
       temp_dir_.path().Append(FILE_PATH_LITERAL("Copy_From_Subdir///"));
 #endif
@@ -1402,7 +1402,7 @@ TEST_F(FileUtilTest, CopyDirectoryWithTrailingSeparators) {
 
 // Sets the source file to read-only.
 void SetReadOnly(const FilePath& path) {
-#if defined(OS_WIN)
+#if defined(FLARE_PLATFORM_WINDOWS)
   // On Windows, it involves setting a bit.
   DWORD attrs = GetFileAttributes(path.value().c_str());
   ASSERT_NE(INVALID_FILE_ATTRIBUTES, attrs);
@@ -1423,7 +1423,7 @@ void SetReadOnly(const FilePath& path) {
 }
 
 bool IsReadOnly(const FilePath& path) {
-#if defined(OS_WIN)
+#if defined(FLARE_PLATFORM_WINDOWS)
   DWORD attrs = GetFileAttributes(path.value().c_str());
   EXPECT_NE(INVALID_FILE_ATTRIBUTES, attrs);
   return attrs & FILE_ATTRIBUTE_READONLY;
@@ -1613,7 +1613,7 @@ TEST_F(ReadOnlyFileUtilTest, TextContentsEqual) {
 #endif
 
 // We don't need equivalent functionality outside of Windows.
-#if defined(OS_WIN)
+#if defined(FLARE_PLATFORM_WINDOWS)
 TEST_F(FileUtilTest, CopyAndDeleteDirectoryTest) {
   // Create a directory
   FilePath dir_name_from =
@@ -1656,7 +1656,7 @@ TEST_F(FileUtilTest, GetTempDirTest) {
   ASSERT_EQ(0, ::_tdupenv_s(&original_tmp, &original_tmp_size, kTmpKey));
   // original_tmp may be NULL.
 
-  for (unsigned int i = 0; i < arraysize(kTmpValues); ++i) {
+  for (unsigned int i = 0; i < FLARE_ARRAY_SIZE(kTmpValues); ++i) {
     FilePath path;
     ::_tputenv_s(kTmpKey, kTmpValues[i]);
     GetTempDir(&path);
@@ -1672,7 +1672,7 @@ TEST_F(FileUtilTest, GetTempDirTest) {
     ::_tputenv_s(kTmpKey, _T(""));
   }
 }
-#endif  // OS_WIN
+#endif  // FLARE_PLATFORM_WINDOWS
 
 TEST_F(FileUtilTest, CreateTemporaryFileTest) {
   FilePath temp_files[3];
@@ -1744,7 +1744,7 @@ TEST_F(FileUtilTest, CreateNewTemporaryDirInDirTest) {
   EXPECT_TRUE(DeleteFile(new_dir, false));
 }
 
-#if defined(OS_POSIX)
+#if defined(FLARE_PLATFORM_POSIX)
 TEST_F(FileUtilTest, GetShmemTempDirTest) {
   FilePath dir;
   EXPECT_TRUE(GetShmemTempDir(false, &dir));
@@ -1753,7 +1753,7 @@ TEST_F(FileUtilTest, GetShmemTempDirTest) {
 #endif
 
 TEST_F(FileUtilTest, GetHomeDirTest) {
-#if !defined(OS_ANDROID)  // Not implemented on Android.
+#if !defined(FLARE_PLATFORM_ANDROID)  // Not implemented on Android.
   // We don't actually know what the home directory is supposed to be without
   // calling some OS functions which would just duplicate the implementation.
   // So here we just test that it returns something "reasonable".
@@ -1766,10 +1766,10 @@ TEST_F(FileUtilTest, GetHomeDirTest) {
 TEST_F(FileUtilTest, CreateDirectoryTest) {
   FilePath test_root =
       temp_dir_.path().Append(FILE_PATH_LITERAL("create_directory_test"));
-#if defined(OS_WIN)
+#if defined(FLARE_PLATFORM_WINDOWS)
   FilePath test_path =
       test_root.Append(FILE_PATH_LITERAL("dir\\tree\\likely\\doesnt\\exist\\"));
-#elif defined(OS_POSIX)
+#elif defined(FLARE_PLATFORM_POSIX)
   FilePath test_path =
       test_root.Append(FILE_PATH_LITERAL("dir/tree/likely/doesnt/exist/"));
 #endif
@@ -1807,7 +1807,7 @@ TEST_F(FileUtilTest, CreateDirectoryTest) {
       FilePath(FilePath::kCurrentDirectory)));
   EXPECT_TRUE(CreateDirectory(top_level));
 
-#if defined(OS_WIN)
+#if defined(FLARE_PLATFORM_WINDOWS)
   FilePath invalid_drive(FILE_PATH_LITERAL("o:\\"));
   FilePath invalid_path =
       invalid_drive.Append(FILE_PATH_LITERAL("some\\inaccessible\\dir"));
@@ -1936,7 +1936,7 @@ TEST_F(FileUtilTest, FileEnumeratorTest) {
   EXPECT_TRUE(c5.HasFile(dir2innerfile));
   EXPECT_EQ(5, c5.size());
 
-#if defined(OS_WIN)
+#if defined(FLARE_PLATFORM_WINDOWS)
   {
     // Make dir1 point to dir2.
     ReparsePoint reparse_point(dir1, dir2);
@@ -2163,7 +2163,7 @@ TEST_F(FileUtilTest, IsDirectoryEmpty) {
   EXPECT_FALSE(IsDirectoryEmpty(empty_dir));
 }
 
-#if defined(OS_POSIX)
+#if defined(FLARE_PLATFORM_POSIX)
 
 // Testing VerifyPathControlledByAdmin() is hard, because there is no
 // way a test can make a file owned by root, or change file paths
@@ -2219,7 +2219,7 @@ class VerifyPathControlledByUserTest : public FileUtilTest {
         ChangePosixFilePermissions(
             sub_dir_, enabled_permissions, disabled_permissions));
   }
-#if defined(OS_POSIX)
+#if defined(FLARE_PLATFORM_POSIX)
   virtual void TearDown() OVERRIDE {
     FileUtilTest::TearDown();
   }
@@ -2544,7 +2544,7 @@ TEST_F(FileUtilTest, CreateDirectoryParentsNotExist) {
   ASSERT_TRUE(butil::CreateDirectory(creating_dir, true));
 }
 
-#if defined(OS_ANDROID)
+#if defined(FLARE_PLATFORM_ANDROID)
 TEST_F(FileUtilTest, ValidContentUriTest) {
   // Get the test image path.
   FilePath data_dir;
@@ -2594,9 +2594,9 @@ TEST(ScopedFD, ScopedFDDoesClose) {
   char c = 0;
   ASSERT_EQ(0, pipe(fds));
   const int write_end = fds[1];
-  butil::ScopedFD read_end_closer(fds[0]);
+  flare::base::ScopedFD read_end_closer(fds[0]);
   {
-    butil::ScopedFD write_end_closer(fds[1]);
+    flare::base::ScopedFD write_end_closer(fds[1]);
   }
   // This is the only thread. This file descriptor should no longer be valid.
   int ret = close(write_end);
@@ -2610,14 +2610,14 @@ TEST(ScopedFD, ScopedFDDoesClose) {
 
 #if defined(GTEST_HAS_DEATH_TEST)
 void CloseWithScopedFD(int fd) {
-  butil::ScopedFD fd_closer(fd);
+  flare::base::ScopedFD fd_closer(fd);
 }
 #endif
 
 TEST(ScopedFD, ScopedFDCrashesOnCloseFailure) {
   int fds[2];
   ASSERT_EQ(0, pipe(fds));
-  butil::ScopedFD read_end_closer(fds[0]);
+  flare::base::ScopedFD read_end_closer(fds[0]);
   EXPECT_EQ(0, IGNORE_EINTR(close(fds[1])));
 #if defined(GTEST_HAS_DEATH_TEST)
   // This is the only thread. This file descriptor should no longer be valid.
@@ -2626,7 +2626,7 @@ TEST(ScopedFD, ScopedFDCrashesOnCloseFailure) {
 #endif
 }
 
-#endif  // defined(OS_POSIX)
+#endif  // defined(FLARE_PLATFORM_POSIX)
 
 }  // namespace
 

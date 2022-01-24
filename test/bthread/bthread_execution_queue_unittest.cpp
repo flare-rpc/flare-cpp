@@ -20,8 +20,8 @@
 #include <flare/bthread/execution_queue.h>
 #include <flare/bthread/sys_futex.h>
 #include <flare/bthread/countdown_event.h>
-#include "flare/butil/time.h"
-#include "flare/butil/fast_rand.h"
+#include "flare/base/time.h"
+#include "flare/base/fast_rand.h"
 #include "flare/butil/gperftools_profiler.h"
 
 namespace {
@@ -91,7 +91,7 @@ struct PushArg {
 void* push_thread(void *arg) {
     PushArg* pa = (PushArg*)arg;
     int64_t sum = 0;
-    butil::Timer timer;
+    flare::base::stop_watcher timer;
     timer.start();
     int num = 0;
     bthread::CountdownEvent e;
@@ -117,7 +117,7 @@ void* push_thread(void *arg) {
 void* push_thread_which_addresses_execq(void *arg) {
     PushArg* pa = (PushArg*)arg;
     int64_t sum = 0;
-    butil::Timer timer;
+    flare::base::stop_watcher timer;
     timer.start();
     int num = 0;
     bthread::ExecutionQueue<LongIntTask>::scoped_ptr_t ptr
@@ -149,12 +149,12 @@ TEST_F(ExecutionQueueTest, performance) {
     pa.expected_value = 0;
     pa.stopped = false;
     ProfilerStart("execq.prof");
-    for (size_t i = 0; i < ARRAY_SIZE(threads); ++i) {
+    for (size_t i = 0; i < FLARE_ARRAY_SIZE(threads); ++i) {
         pthread_create(&threads[i], NULL, &push_thread_which_addresses_execq, &pa);
     }
     usleep(500 * 1000);
     ASSERT_EQ(0, bthread::execution_queue_stop(queue_id));
-    for (size_t i = 0; i < ARRAY_SIZE(threads); ++i) {
+    for (size_t i = 0; i < FLARE_ARRAY_SIZE(threads); ++i) {
         pthread_join(threads[i], NULL);
     }
     ProfilerStop();
@@ -163,7 +163,7 @@ TEST_F(ExecutionQueueTest, performance) {
     LOG(INFO) << "With addressed execq, each execution_queue_execute takes " 
               << pa.total_time.load() / pa.total_num.load()
               << " total_num=" << pa.total_num
-              << " ns with " << ARRAY_SIZE(threads) << " threads";
+              << " ns with " << FLARE_ARRAY_SIZE(threads) << " threads";
 #define BENCHMARK_BOTH
 #ifdef BENCHMARK_BOTH
     result = 0;
@@ -175,12 +175,12 @@ TEST_F(ExecutionQueueTest, performance) {
     pa.expected_value = 0;
     pa.stopped = false;
     ProfilerStart("execq_id.prof");
-    for (size_t i = 0; i < ARRAY_SIZE(threads); ++i) {
+    for (size_t i = 0; i < FLARE_ARRAY_SIZE(threads); ++i) {
         pthread_create(&threads[i], NULL, &push_thread, &pa);
     }
     usleep(500 * 1000);
     ASSERT_EQ(0, bthread::execution_queue_stop(queue_id));
-    for (size_t i = 0; i < ARRAY_SIZE(threads); ++i) {
+    for (size_t i = 0; i < FLARE_ARRAY_SIZE(threads); ++i) {
         pthread_join(threads[i], NULL);
     }
     ProfilerStop();
@@ -189,7 +189,7 @@ TEST_F(ExecutionQueueTest, performance) {
     LOG(INFO) << "With id explicitly, execution_queue_execute takes " 
               << pa.total_time.load() / pa.total_num.load()
               << " total_num=" << pa.total_num
-              << " ns with " << ARRAY_SIZE(threads) << " threads";
+              << " ns with " << FLARE_ARRAY_SIZE(threads) << " threads";
 #endif  // BENCHMARK_BOTH
 }
 
@@ -245,7 +245,7 @@ TEST_F(ExecutionQueueTest, execute_urgent) {
     pa.expected_value = 0;
     pa.stopped = false;
     pa.wait_task_completed = true;
-    for (size_t i = 0; i < ARRAY_SIZE(threads); ++i) {
+    for (size_t i = 0; i < FLARE_ARRAY_SIZE(threads); ++i) {
         pthread_create(&threads[i], NULL, &push_thread, &pa);
     }
     g_suspending = false;
@@ -264,7 +264,7 @@ TEST_F(ExecutionQueueTest, execute_urgent) {
     usleep(500* 1000);
     pa.stopped = true;
     ASSERT_EQ(0, bthread::execution_queue_stop(queue_id));
-    for (size_t i = 0; i < ARRAY_SIZE(threads); ++i) {
+    for (size_t i = 0; i < FLARE_ARRAY_SIZE(threads); ++i) {
         pthread_join(threads[i], NULL);
     }
     LOG(INFO) << "result=" << result;
@@ -337,10 +337,10 @@ TEST_F(ExecutionQueueTest, multi_threaded_order) {
     ASSERT_EQ(0, bthread::execution_queue_start(&queue_id, &options,
                                                 check_order, &disorder_times));
     pthread_t threads[12];
-    for (size_t i = 0; i < ARRAY_SIZE(threads); ++i) {
+    for (size_t i = 0; i < FLARE_ARRAY_SIZE(threads); ++i) {
         pthread_create(&threads[i], NULL, &push_thread_with_id, (void *)queue_id.value);
     }
-    for (size_t i = 0; i < ARRAY_SIZE(threads); ++i) {
+    for (size_t i = 0; i < FLARE_ARRAY_SIZE(threads); ++i) {
         pthread_join(threads[i], NULL);
     }
     ASSERT_EQ(0, bthread::execution_queue_stop(queue_id));
@@ -452,10 +452,10 @@ TEST_F(ExecutionQueueTest, inplace_and_order) {
     ASSERT_EQ(0, bthread::execution_queue_start(&queue_id, &options,
                                                 check_order, &disorder_times));
     pthread_t threads[12];
-    for (size_t i = 0; i < ARRAY_SIZE(threads); ++i) {
+    for (size_t i = 0; i < FLARE_ARRAY_SIZE(threads); ++i) {
         pthread_create(&threads[i], NULL, &inplace_push_thread, (void *)queue_id.value);
     }
-    for (size_t i = 0; i < ARRAY_SIZE(threads); ++i) {
+    for (size_t i = 0; i < FLARE_ARRAY_SIZE(threads); ++i) {
         pthread_join(threads[i], NULL);
     }
     ASSERT_EQ(0, bthread::execution_queue_stop(queue_id));
@@ -598,7 +598,7 @@ TEST_F(ExecutionQueueTest, random_cancel) {
         t.value = i;
         t.cancel_task = false;
         ASSERT_EQ(0, bthread::execution_queue_execute(queue_id, t, NULL, &h));
-        const int r = butil::fast_rand_less_than(4);
+        const int r = flare::base::fast_rand_less_than(4);
         expected += i;
         if (r == 0) {
             if (bthread::execution_queue_cancel(h) == 0) {

@@ -7,7 +7,7 @@
 
 #include <memory>
 
-#include "flare/butil/static_atomic.h"
+#include "flare/base/static_atomic.h"
 #include "flare/butil/base_export.h"
 #include "flare/butil/basictypes.h"
 #include "flare/butil/compiler_specific.h"

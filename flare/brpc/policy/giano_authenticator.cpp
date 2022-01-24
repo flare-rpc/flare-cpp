@@ -18,7 +18,7 @@
 #ifdef BAIDU_INTERNAL
 
 
-#include "flare/butil/logging.h"
+#include "flare/base/logging.h"
 #include "flare/brpc/policy/giano_authenticator.h"
 
 namespace brpc {
@@ -60,7 +60,7 @@ int GianoAuthenticator::GenerateCredential(std::string* auth_str) const {
 
 int GianoAuthenticator::VerifyCredential(
         const std::string& auth_str,
-        const butil::EndPoint& client_addr,
+        const flare::base::end_point& client_addr,
         AuthContext* out_ctx) const {
     if (NULL == _verifier) {
         LOG(FATAL) << "CredentialVerifier is NULL";

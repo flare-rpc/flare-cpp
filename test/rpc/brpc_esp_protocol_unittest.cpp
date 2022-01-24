@@ -25,7 +25,7 @@
 #include <gtest/gtest.h>
 #include <gflags/gflags.h>
 #include <google/protobuf/descriptor.h>
-#include "flare/butil/time.h"
+#include "flare/base/time.h"
 #include "flare/butil/macros.h"
 #include "flare/brpc/socket.h"
 #include "flare/brpc/policy/most_common_message.h"
@@ -74,10 +74,10 @@ protected:
         req.head.msg_id = MSG_ID;
         req.body.append(EXP_RESPONSE);
     
-        butil::IOBuf req_buf;
+        flare::io::IOBuf req_buf;
         brpc::policy::SerializeEspRequest(&req_buf, &cntl, &req);
     
-        butil::IOBuf packet_buf;
+        flare::io::IOBuf packet_buf;
         brpc::policy::PackEspRequest(&packet_buf, NULL, cntl.call_id().value, NULL, &cntl, req_buf, NULL);
     
         packet_buf.cut_into_file_descriptor(_pipe_fds[1], packet_buf.size());
@@ -96,7 +96,7 @@ TEST_F(EspTest, complete_flow) {
     req.head.msg_id = MSG_ID;
     req.body.append(EXP_REQUEST);
 
-    butil::IOBuf req_buf;
+    flare::io::IOBuf req_buf;
     brpc::Controller cntl;
     cntl._response = &res;
     ASSERT_EQ(0, brpc::Socket::Address(_socket->id(), &cntl._current_call.sending_sock));
@@ -106,7 +106,7 @@ TEST_F(EspTest, complete_flow) {
     ASSERT_EQ(sizeof(req.head) + req.body.size(), req_buf.size());
 
     const brpc::Authenticator* auth = brpc::policy::global_esp_authenticator();
-    butil::IOBuf packet_buf;
+    flare::io::IOBuf packet_buf;
     brpc::policy::PackEspRequest(&packet_buf, NULL, cntl.call_id().value, NULL, &cntl, req_buf, auth);
 
     std::string auth_str;
@@ -117,7 +117,7 @@ TEST_F(EspTest, complete_flow) {
 
     WriteResponse(cntl, MSG);
 
-    butil::IOPortal response_buf;
+    flare::io::IOPortal response_buf;
     response_buf.append_from_file_descriptor(_pipe_fds[0], 1024);
 
     brpc::ParseResult res_pr =
@@ -141,7 +141,7 @@ TEST_F(EspTest, wrong_response_head) {
 
     WriteResponse(cntl, WRONG_MSG);
 
-    butil::IOPortal response_buf;
+    flare::io::IOPortal response_buf;
     response_buf.append_from_file_descriptor(_pipe_fds[0], 1024);
 
     brpc::ParseResult res_pr =

@@ -23,7 +23,7 @@
 #define  BTHREAD_EXECUTION_QUEUE_H
 
 #include "flare/bthread/bthread.h"
-#include "flare/butil/type_traits.h"
+#include "flare/base/type_traits.h"
 
 namespace bthread {
 
@@ -37,7 +37,7 @@ struct TaskNode;
 class ExecutionQueueBase;
 
 class TaskIteratorBase {
-DISALLOW_COPY_AND_ASSIGN(TaskIteratorBase);
+FLARE_DISALLOW_COPY_AND_ASSIGN(TaskIteratorBase);
 friend class ExecutionQueueBase;
 public:
     // Returns true when the ExecutionQueue is stopped and there will never be
@@ -181,7 +181,7 @@ int execution_queue_join(ExecutionQueueId<T> id);
 // Execute a task with defaut TaskOptions (normal task);
 template <typename T>
 int execution_queue_execute(ExecutionQueueId<T> id, 
-                            typename butil::add_const_reference<T>::type task);
+                            typename flare::base::add_const_reference<T>::type task);
 
 // Thread-safe and Wait-free.
 // Execute a task with options. e.g
@@ -190,11 +190,11 @@ int execution_queue_execute(ExecutionQueueId<T> id,
 // If |handle| is not NULL, we will assign it with the hanlder of this task.
 template <typename T>
 int execution_queue_execute(ExecutionQueueId<T> id, 
-                            typename butil::add_const_reference<T>::type task,
+                            typename flare::base::add_const_reference<T>::type task,
                             const TaskOptions* options);
 template <typename T>
 int execution_queue_execute(ExecutionQueueId<T> id, 
-                            typename butil::add_const_reference<T>::type task,
+                            typename flare::base::add_const_reference<T>::type task,
                             const TaskOptions* options,
                             TaskHandle* handle);
 

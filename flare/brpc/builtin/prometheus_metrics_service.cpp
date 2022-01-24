@@ -25,6 +25,7 @@
 #include "flare/brpc/builtin/prometheus_metrics_service.h"
 #include "flare/brpc/builtin/common.h"
 #include "flare/bvar/bvar.h"
+#include "flare/base/strings.h"
 
 namespace bvar {
 DECLARE_int32(bvar_latency_p1);
@@ -46,20 +47,20 @@ extern const char* const g_server_info_prefix;
 // calculates quantiles in the server side.
 class PrometheusMetricsDumper : public bvar::Dumper {
 public:
-    explicit PrometheusMetricsDumper(butil::IOBufBuilder* os,
+    explicit PrometheusMetricsDumper(flare::io::IOBufBuilder* os,
                                      const std::string& server_prefix)
         : _os(os)
         , _server_prefix(server_prefix) {
     }
 
-    bool dump(const std::string& name, const butil::StringPiece& desc) override;
+    bool dump(const std::string& name, const std::string_view& desc) override;
 
 private:
-    DISALLOW_COPY_AND_ASSIGN(PrometheusMetricsDumper);
+    FLARE_DISALLOW_COPY_AND_ASSIGN(PrometheusMetricsDumper);
 
     // Return true iff name ends with suffix output by LatencyRecorder.
-    bool DumpLatencyRecorderSuffix(const butil::StringPiece& name,
-                                   const butil::StringPiece& desc);
+    bool DumpLatencyRecorderSuffix(const std::string_view& name,
+                                   const std::string_view& desc);
 
     // 6 is the number of bvars in LatencyRecorder that indicating percentiles
     static const int NPERCENTILES = 6;
@@ -72,17 +73,17 @@ private:
 
         bool IsComplete() const { return !metric_name.empty(); }
     };
-    const SummaryItems* ProcessLatencyRecorderSuffix(const butil::StringPiece& name,
-                                                     const butil::StringPiece& desc);
+    const SummaryItems* ProcessLatencyRecorderSuffix(const std::string_view& name,
+                                                     const std::string_view& desc);
 
 private:
-    butil::IOBufBuilder* _os;
+    flare::io::IOBufBuilder* _os;
     const std::string _server_prefix;
     std::map<std::string, SummaryItems> _m;
 };
 
 bool PrometheusMetricsDumper::dump(const std::string& name,
-                                   const butil::StringPiece& desc) {
+                                   const std::string_view& desc) {
     if (!desc.empty() && desc[0] == '"') {
         // there is no necessary to monitor string in prometheus
         return true;
@@ -99,42 +100,42 @@ bool PrometheusMetricsDumper::dump(const std::string& name,
 }
 
 const PrometheusMetricsDumper::SummaryItems*
-PrometheusMetricsDumper::ProcessLatencyRecorderSuffix(const butil::StringPiece& name,
-                                                      const butil::StringPiece& desc) {
+PrometheusMetricsDumper::ProcessLatencyRecorderSuffix(const std::string_view& name,
+                                                      const std::string_view& desc) {
     static std::string latency_names[] = {
-        butil::string_printf("_latency_%d", (int)bvar::FLAGS_bvar_latency_p1),
-        butil::string_printf("_latency_%d", (int)bvar::FLAGS_bvar_latency_p2),
-        butil::string_printf("_latency_%d", (int)bvar::FLAGS_bvar_latency_p3),
+        flare::base::string_printf("_latency_%d", (int)bvar::FLAGS_bvar_latency_p1),
+        flare::base::string_printf("_latency_%d", (int)bvar::FLAGS_bvar_latency_p2),
+        flare::base::string_printf("_latency_%d", (int)bvar::FLAGS_bvar_latency_p3),
         "_latency_999", "_latency_9999", "_max_latency"
     };
-    CHECK(NPERCENTILES == arraysize(latency_names));
-    const std::string desc_str = desc.as_string();
-    butil::StringPiece metric_name(name);
+    CHECK(NPERCENTILES == FLARE_ARRAY_SIZE(latency_names));
+    const std::string desc_str(desc.data(), desc.size());
+    std::string_view metric_name(name);
     for (int i = 0; i < NPERCENTILES; ++i) {
-        if (!metric_name.ends_with(latency_names[i])) {
+        if (!flare::base::ends_with(metric_name, latency_names[i])) {
             continue;
         }
         metric_name.remove_suffix(latency_names[i].size());
-        SummaryItems* si = &_m[metric_name.as_string()];
+        SummaryItems* si = &_m[flare::base::as_string(metric_name)];
         si->latency_percentiles[i] = desc_str;
         if (i == NPERCENTILES - 1) {
             // '_max_latency' is the last suffix name that appear in the sorted bvar
             // list, which means all related percentiles have been gathered and we are
             // ready to output a Summary.
-            si->metric_name = metric_name.as_string();
+            si->metric_name = flare::base::as_string(metric_name);
         }
         return si;
     }
     // Get the average of latency in recent window size
-    if (metric_name.ends_with("_latency")) {
+    if (flare::base::ends_with(metric_name, "_latency")) {
         metric_name.remove_suffix(8);
-        SummaryItems* si = &_m[metric_name.as_string()];
+        SummaryItems* si = &_m[flare::base::as_string(metric_name)];
         si->latency_avg = strtoll(desc_str.data(), NULL, 10);
         return si;
     }
-    if (metric_name.ends_with("_count")) {
+    if (flare::base::ends_with(metric_name, "_count")) {
         metric_name.remove_suffix(6);
-        SummaryItems* si = &_m[metric_name.as_string()];
+        SummaryItems* si = &_m[flare::base::as_string(metric_name)];
         si->count = strtoll(desc_str.data(), NULL, 10);
         return si;
     }
@@ -142,9 +143,9 @@ PrometheusMetricsDumper::ProcessLatencyRecorderSuffix(const butil::StringPiece& 
 }
 
 bool PrometheusMetricsDumper::DumpLatencyRecorderSuffix(
-    const butil::StringPiece& name,
-    const butil::StringPiece& desc) {
-    if (!name.starts_with(_server_prefix)) {
+    const std::string_view& name,
+    const std::string_view& desc) {
+    if (!flare::base::starts_with(name, _server_prefix)) {
         return false;
     }
     const SummaryItems* si = ProcessLatencyRecorderSuffix(name, desc);
@@ -192,8 +193,8 @@ void PrometheusMetricsService::default_method(::google::protobuf::RpcController*
     }
 }
 
-int DumpPrometheusMetricsToIOBuf(butil::IOBuf* output) {
-    butil::IOBufBuilder os;
+int DumpPrometheusMetricsToIOBuf(flare::io::IOBuf* output) {
+    flare::io::IOBufBuilder os;
     PrometheusMetricsDumper dumper(&os, g_server_info_prefix);
     const int ndump = bvar::Variable::dump_exposed(&dumper, NULL);
     if (ndump < 0) {

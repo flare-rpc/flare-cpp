@@ -108,7 +108,7 @@
 
 #include "flare/butil/base_export.h"
 #include "flare/butil/compiler_specific.h"
-#include "flare/butil/containers/hash_tables.h"
+#include "flare/container/hash_tables.h"
 #include "flare/butil/strings/string16.h"
 #include "flare/butil/strings/string_piece.h"  // For implicit conversions.
 #include "flare/butil/build_config.h"
@@ -446,7 +446,7 @@ BUTIL_EXPORT extern void PrintTo(const butil::FilePath& path, std::ostream* out)
 
 // Provide a hash function so that hash_sets and maps can contain FilePath
 // objects.
-namespace BUTIL_HASH_NAMESPACE {
+namespace FLARE_HASH_NAMESPACE {
 #if defined(COMPILER_GCC)
 
 template<>
@@ -464,6 +464,6 @@ inline size_t hash_value(const butil::FilePath& f) {
 
 #endif  // COMPILER
 
-}  // namespace BUTIL_HASH_NAMESPACE
+}  // namespace FLARE_HASH_NAMESPACE
 
 #endif  // BUTIL_FILES_FILE_PATH_H_

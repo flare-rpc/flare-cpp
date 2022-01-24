@@ -3,7 +3,7 @@
 // found in the LICENSE file.
 
 #include "flare/butil/basictypes.h"
-#include "flare/butil/logging.h"
+#include "flare/base/logging.h"
 #include "flare/butil/strings/string_piece.h"
 #include "flare/butil/strings/string_util.h"
 #include "flare/butil/strings/utf_string_conversions.h"
@@ -46,7 +46,7 @@ TEST(UTFStringConversionsTest, ConvertUTF8AndWide) {
   // we round-trip all the wide strings through UTF-8 to make sure everything
   // agrees on the conversion. This uses the stream operators to test them
   // simultaneously.
-  for (size_t i = 0; i < arraysize(kConvertRoundtripCases); ++i) {
+  for (size_t i = 0; i < FLARE_ARRAY_SIZE(kConvertRoundtripCases); ++i) {
     std::ostringstream utf8;
     utf8 << WideToUTF8(kConvertRoundtripCases[i]);
     std::wostringstream wide;
@@ -139,7 +139,7 @@ TEST(UTFStringConversionsTest, ConvertUTF16ToUTF8) {
     {L"\x597d\xd800", "\xe5\xa5\xbd\xef\xbf\xbd", false},
   };
 
-  for (int i = 0; i < arraysize(convert_cases); i++) {
+  for (int i = 0; i < FLARE_ARRAY_SIZE(convert_cases); i++) {
     std::string converted;
     EXPECT_EQ(convert_cases[i].success,
               WideToUTF8(convert_cases[i].utf16,
@@ -198,13 +198,13 @@ TEST(UTFStringConversionsTest, ConvertMultiString) {
     '\0'
   };
   std::wstring wmultistring;
-  memcpy(WriteInto(&wmultistring, arraysize(wmulti)), wmulti, sizeof(wmulti));
-  EXPECT_EQ(arraysize(wmulti) - 1, wmultistring.length());
+  memcpy(WriteInto(&wmultistring, FLARE_ARRAY_SIZE(wmulti)), wmulti, sizeof(wmulti));
+  EXPECT_EQ(FLARE_ARRAY_SIZE(wmulti) - 1, wmultistring.length());
   std::string expected;
-  memcpy(WriteInto(&expected, arraysize(multi)), multi, sizeof(multi));
-  EXPECT_EQ(arraysize(multi) - 1, expected.length());
+  memcpy(WriteInto(&expected, FLARE_ARRAY_SIZE(multi)), multi, sizeof(multi));
+  EXPECT_EQ(FLARE_ARRAY_SIZE(multi) - 1, expected.length());
   const std::string& converted = WideToUTF8(wmultistring);
-  EXPECT_EQ(arraysize(multi) - 1, converted.length());
+  EXPECT_EQ(FLARE_ARRAY_SIZE(multi) - 1, converted.length());
   EXPECT_EQ(expected, converted);
 }
 

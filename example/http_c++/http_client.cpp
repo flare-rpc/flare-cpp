@@ -23,7 +23,7 @@
 //   ./http_client www.foo.com
 
 #include <gflags/gflags.h>
-#include <flare/butil/logging.h>
+#include "flare/base/logging.h"
 #include <flare/brpc/channel.h>
 
 DEFINE_string(d, "", "POST this data to the http server");

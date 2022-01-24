@@ -16,7 +16,7 @@
 // under the License.
 
 
-#include "flare/butil/logging.h"
+#include "flare/base/logging.h"
 #include "flare/brpc/log.h"
 #include "flare/brpc/redis_command.h"
 
@@ -49,7 +49,7 @@ inline void AppendHeader(std::string& buf, char fc, unsigned long value) {
     header[len + 2] = '\n';
     buf.append(header, len + 3);
 }
-inline void AppendHeader(butil::IOBuf& buf, char fc, unsigned long value) {
+inline void AppendHeader(flare::io::IOBuf& buf, char fc, unsigned long value) {
     char header[32];
     header[0] = fc;
     size_t len = AppendDecimal(header + 1, value);
@@ -72,10 +72,10 @@ static void FlushComponent(std::string* out, std::string* compbuf, int* ncomp) {
 // Some code is copied or modified from redisvFormatCommand() in
 // https://github.com/redis/hiredis/blob/master/hiredis.c to keep close
 // compatibility with hiredis.
-butil::Status
-RedisCommandFormatV(butil::IOBuf* outbuf, const char* fmt, va_list ap) {
+flare::base::flare_status
+RedisCommandFormatV(flare::io::IOBuf* outbuf, const char* fmt, va_list ap) {
     if (outbuf == NULL || fmt == NULL) {
-        return butil::Status(EINVAL, "Param[outbuf] or [fmt] is NULL");
+        return flare::base::flare_status(EINVAL, "Param[outbuf] or [fmt] is NULL");
     }
     const size_t fmt_len = strlen(fmt);
     std::string nocount_buf;
@@ -223,7 +223,7 @@ RedisCommandFormatV(butil::IOBuf* outbuf, const char* fmt, va_list ap) {
                 
             fmt_invalid:
                 va_end(_cpy);
-                return butil::Status(EINVAL, "Invalid format");
+                return flare::base::flare_status(EINVAL, "Invalid format");
 
             fmt_valid:
                 ++nargs;
@@ -252,7 +252,7 @@ RedisCommandFormatV(butil::IOBuf* outbuf, const char* fmt, va_list ap) {
             quote_pos - std::min((size_t)(quote_pos - fmt), CTX_WIDTH);
         size_t ctx_size =
             std::min((size_t)(fmt + fmt_len - ctx_begin), CTX_WIDTH * 2 + 1);
-        return butil::Status(EINVAL, "Unmatched quote: ...%.*s... (offset=%lu)",
+        return flare::base::flare_status(EINVAL, "Unmatched quote: ...%.*s... (offset=%lu)",
                              (int)ctx_size, ctx_begin, quote_pos - fmt);
     }
     
@@ -266,21 +266,21 @@ RedisCommandFormatV(butil::IOBuf* outbuf, const char* fmt, va_list ap) {
     
     AppendHeader(*outbuf, '*', ncomponent);
     outbuf->append(nocount_buf);
-    return butil::Status::OK();
+    return flare::base::flare_status::OK();
 }
 
-butil::Status RedisCommandFormat(butil::IOBuf* buf, const char* fmt, ...) {
+flare::base::flare_status RedisCommandFormat(flare::io::IOBuf* buf, const char* fmt, ...) {
     va_list ap;
     va_start(ap, fmt);
-    const butil::Status st = RedisCommandFormatV(buf, fmt, ap);
+    const flare::base::flare_status st = RedisCommandFormatV(buf, fmt, ap);
     va_end(ap);
     return st;
 }
 
-butil::Status
-RedisCommandNoFormat(butil::IOBuf* outbuf, const butil::StringPiece& cmd) {
+flare::base::flare_status
+RedisCommandNoFormat(flare::io::IOBuf* outbuf, const std::string_view& cmd) {
     if (outbuf == NULL || cmd == NULL) {
-        return butil::Status(EINVAL, "Param[outbuf] or [cmd] is NULL");
+        return flare::base::flare_status(EINVAL, "Param[outbuf] or [cmd] is NULL");
     }
     const size_t cmd_len = cmd.size();
     std::string nocount_buf;
@@ -328,7 +328,7 @@ RedisCommandNoFormat(butil::IOBuf* outbuf, const butil::StringPiece& cmd) {
             quote_pos - std::min((size_t)(quote_pos - cmd.data()), CTX_WIDTH);
         size_t ctx_size =
             std::min((size_t)(cmd.data() + cmd.size() - ctx_begin), CTX_WIDTH * 2 + 1);
-        return butil::Status(EINVAL, "Unmatched quote: ...%.*s... (offset=%lu)",
+        return flare::base::flare_status(EINVAL, "Unmatched quote: ...%.*s... (offset=%lu)",
                              (int)ctx_size, ctx_begin, quote_pos - cmd.data());
     }
     
@@ -338,14 +338,14 @@ RedisCommandNoFormat(butil::IOBuf* outbuf, const butil::StringPiece& cmd) {
 
     AppendHeader(*outbuf, '*', ncomponent);
     outbuf->append(nocount_buf);
-    return butil::Status::OK();
+    return flare::base::flare_status::OK();
 }
 
-butil::Status RedisCommandByComponents(butil::IOBuf* output,
-                                      const butil::StringPiece* components,
+flare::base::flare_status RedisCommandByComponents(flare::io::IOBuf* output,
+                                      const std::string_view* components,
                                       size_t ncomponents) {
     if (output == NULL) {
-        return butil::Status(EINVAL, "Param[output] is NULL");
+        return flare::base::flare_status(EINVAL, "Param[output] is NULL");
     }
     AppendHeader(*output, '*', ncomponents);
     for (size_t i = 0; i < ncomponents; ++i) {
@@ -353,7 +353,7 @@ butil::Status RedisCommandByComponents(butil::IOBuf* output,
         output->append(components[i].data(), components[i].size());
         output->append("\r\n", 2);
     }
-    return butil::Status::OK();
+    return flare::base::flare_status::OK();
 }
 
 RedisCommandParser::RedisCommandParser()
@@ -361,9 +361,9 @@ RedisCommandParser::RedisCommandParser()
     , _length(0)
     , _index(0) {}
 
-ParseError RedisCommandParser::Consume(butil::IOBuf& buf,
-                                       std::vector<butil::StringPiece>* args,
-                                       butil::Arena* arena) {
+ParseError RedisCommandParser::Consume(flare::io::IOBuf& buf,
+                                       std::vector<std::string_view>* args,
+                                       flare::memory::Arena* arena) {
     const char* pfc = (const char*)buf.fetch1();
     if (pfc == NULL) {
         return PARSE_ERROR_NOT_ENOUGH_DATA;
@@ -379,8 +379,8 @@ ParseError RedisCommandParser::Consume(butil::IOBuf& buf,
     char intbuf[32];  // enough for fc + 64-bit decimal + \r\n
     const size_t ncopied = buf.copy_to(intbuf, sizeof(intbuf) - 1);
     intbuf[ncopied] = '\0';
-    const size_t crlf_pos = butil::StringPiece(intbuf, ncopied).find("\r\n");
-    if (crlf_pos == butil::StringPiece::npos) {  // not enough data
+    const size_t crlf_pos = std::string_view(intbuf, ncopied).find("\r\n");
+    if (crlf_pos == std::string_view::npos) {  // not enough data
         return PARSE_ERROR_NOT_ENOUGH_DATA;
     }
     char* endptr = NULL;
@@ -420,7 +420,7 @@ ParseError RedisCommandParser::Consume(butil::IOBuf& buf,
     char* d = (char*)arena->allocate((len/8 + 1) * 8);
     buf.cutn(d, len);
     d[len] = '\0';
-    _args[_index].set(d, len);
+    _args[_index] = std::string_view(d, len);
     if (_index == 0) {
         // convert it to lowercase when it is command name
         for (int i = 0; i < len; ++i) {

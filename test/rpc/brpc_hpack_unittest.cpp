@@ -21,7 +21,7 @@
 
 #include <gtest/gtest.h>
 #include "flare/brpc/details/hpack.h"
-#include "flare/butil/logging.h"
+#include "flare/base/logging.h"
 
 class HPackTest : public testing::Test {
 };
@@ -37,15 +37,15 @@ TEST_F(HPackTest, header_with_indexing) {
     h.value = "custom-header";
     brpc::HPackOptions options;
     options.index_policy = brpc::HPACK_INDEX_HEADER;
-    butil::IOBufAppender buf;
+    flare::io::IOBufAppender buf;
     p1.Encode(&buf, h, options);
     const ssize_t nwrite = buf.buf().size();
-    LOG(INFO) << butil::ToPrintable(buf.buf());
+    LOG(INFO) << flare::io::ToPrintable(buf.buf());
     uint8_t expected[] = {
         0x40, 0x0a, 0x63, 0x75, 0x73, 0x74, 0x6f, 0x6d, 0x2d, 0x6b, 0x65, 0x79,
         0x0d, 0x63, 0x75, 0x73, 0x74, 0x6f, 0x6d, 0x2d, 0x68, 0x65, 0x61, 0x64,
         0x65, 0x72};
-    butil::StringPiece sp((char*)expected, sizeof(expected));
+    std::string_view sp((char*)expected, sizeof(expected));
     ASSERT_TRUE(buf.buf().equals(sp));
     brpc::HPacker::Header h2;
     ssize_t nread = p2.Decode(&buf.buf(), &h2);
@@ -67,15 +67,15 @@ TEST_F(HPackTest, header_without_indexing) {
     h.value = "/sample/path";
     brpc::HPackOptions options;
     options.index_policy = brpc::HPACK_NOT_INDEX_HEADER;
-    butil::IOBufAppender buf;
+    flare::io::IOBufAppender buf;
     p1.Encode(&buf, h, options);
     const ssize_t nwrite = buf.buf().size();
-    LOG(INFO) << butil::ToPrintable(buf.buf());
+    LOG(INFO) << flare::io::ToPrintable(buf.buf());
     uint8_t expected[] = {
         0x04, 0x0c, 0x2f, 0x73, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x2f, 0x70, 0x61,
         0x74, 0x68, 
     };
-    butil::StringPiece sp((char*)expected, sizeof(expected));
+    std::string_view sp((char*)expected, sizeof(expected));
     ASSERT_TRUE(buf.buf().equals(sp));
     brpc::HPacker::Header h2;
     ssize_t nread = p2.Decode(&buf.buf(), &h2);
@@ -97,15 +97,15 @@ TEST_F(HPackTest, header_never_indexed) {
     h.value = "secret";
     brpc::HPackOptions options;
     options.index_policy = brpc::HPACK_NEVER_INDEX_HEADER;
-    butil::IOBufAppender buf;
+    flare::io::IOBufAppender buf;
     p1.Encode(&buf, h, options);
     const ssize_t nwrite = buf.buf().size();
-    LOG(INFO) << butil::ToPrintable(buf.buf());
+    LOG(INFO) << flare::io::ToPrintable(buf.buf());
     uint8_t expected[] = {
         0x10, 0x08, 0x70, 0x61, 0x73, 0x73, 0x77, 0x6f, 0x72, 0x64,
         0x06, 0x73, 0x65, 0x63, 0x72, 0x65, 0x74, 
     };
-    butil::StringPiece sp((char*)expected, sizeof(expected));
+    std::string_view sp((char*)expected, sizeof(expected));
     ASSERT_TRUE(buf.buf().equals(sp));
     brpc::HPacker::Header h2;
     ssize_t nread = p2.Decode(&buf.buf(), &h2);
@@ -125,14 +125,14 @@ TEST_F(HPackTest, indexed_header) {
     h.value = "GET";
     brpc::HPackOptions options;
     options.index_policy = brpc::HPACK_INDEX_HEADER;
-    butil::IOBufAppender buf;
+    flare::io::IOBufAppender buf;
     p1.Encode(&buf, h, options);
     const ssize_t nwrite = buf.buf().size();
-    LOG(INFO) << butil::ToPrintable(buf.buf());
+    LOG(INFO) << flare::io::ToPrintable(buf.buf());
     uint8_t expected[] = {
         0x82,
     };
-    butil::StringPiece sp((char*)expected, sizeof(expected));
+    std::string_view sp((char*)expected, sizeof(expected));
     ASSERT_TRUE(buf.buf().equals(sp));
     brpc::HPacker::Header h2;
     ssize_t nread = p2.Decode(&buf.buf(), &h2);
@@ -159,8 +159,8 @@ TEST_F(HPackTest, requests_without_huffman) {
         {":path", "/"},
         {":authority", "www.example.com"},
     };
-    butil::IOBufAppender buf;
-    for (size_t i = 0; i < ARRAY_SIZE(header1); ++i) {
+    flare::io::IOBufAppender buf;
+    for (size_t i = 0; i < FLARE_ARRAY_SIZE(header1); ++i) {
         brpc::HPacker::Header h;
         h.name = header1[i].name;
         h.value = header1[i].value;
@@ -172,8 +172,8 @@ TEST_F(HPackTest, requests_without_huffman) {
         0x82, 0x86, 0x84, 0x41, 0x0f, 0x77, 0x77, 0x77, 0x2e, 0x65, 0x78,
         0x61, 0x6d, 0x70, 0x6c, 0x65, 0x2e, 0x63, 0x6f, 0x6d, 
     };
-    ASSERT_TRUE(buf.buf().equals(butil::StringPiece((char*)expected1, sizeof(expected1))));
-    for (size_t i = 0; i < ARRAY_SIZE(header1); ++i) {
+    ASSERT_TRUE(buf.buf().equals(std::string_view((char*)expected1, sizeof(expected1))));
+    for (size_t i = 0; i < FLARE_ARRAY_SIZE(header1); ++i) {
         brpc::HPacker::Header h;
         ASSERT_GT(p2.Decode(&buf.buf(), &h), 0);
         ASSERT_EQ(header1[i].name, h.name);
@@ -189,7 +189,7 @@ TEST_F(HPackTest, requests_without_huffman) {
         {"cache-control", "no-cache"},
     };
 
-    for (size_t i = 0; i < ARRAY_SIZE(header2); ++i) {
+    for (size_t i = 0; i < FLARE_ARRAY_SIZE(header2); ++i) {
         brpc::HPacker::Header h;
         h.name = header2[i].name;
         h.value = header2[i].value;
@@ -201,8 +201,8 @@ TEST_F(HPackTest, requests_without_huffman) {
         0x82, 0x86, 0x84, 0xbe, 0x58, 0x08, 0x6e, 0x6f, 0x2d,
         0x63, 0x61, 0x63, 0x68, 0x65, 
     };
-    ASSERT_TRUE(buf.buf().equals(butil::StringPiece((char*)expected2, sizeof(expected2))));
-    for (size_t i = 0; i < ARRAY_SIZE(header2); ++i) {
+    ASSERT_TRUE(buf.buf().equals(std::string_view((char*)expected2, sizeof(expected2))));
+    for (size_t i = 0; i < FLARE_ARRAY_SIZE(header2); ++i) {
         brpc::HPacker::Header h;
         ASSERT_GT(p2.Decode(&buf.buf(), &h), 0);
         ASSERT_EQ(header2[i].name, h.name);
@@ -217,7 +217,7 @@ TEST_F(HPackTest, requests_without_huffman) {
         {"custom-key", "custom-value"},
     };
 
-    for (size_t i = 0; i < ARRAY_SIZE(header3); ++i) {
+    for (size_t i = 0; i < FLARE_ARRAY_SIZE(header3); ++i) {
         brpc::HPacker::Header h;
         h.name = header3[i].name;
         h.value = header3[i].value;
@@ -230,8 +230,8 @@ TEST_F(HPackTest, requests_without_huffman) {
         0x2d, 0x6b, 0x65, 0x79, 0x0c, 0x63, 0x75, 0x73, 0x74, 0x6f, 0x6d, 0x2d,
         0x76, 0x61, 0x6c, 0x75, 0x65, 
     };
-    ASSERT_TRUE(buf.buf().equals(butil::StringPiece((char*)expected3, sizeof(expected3))));
-    for (size_t i = 0; i < ARRAY_SIZE(header3); ++i) {
+    ASSERT_TRUE(buf.buf().equals(std::string_view((char*)expected3, sizeof(expected3))));
+    for (size_t i = 0; i < FLARE_ARRAY_SIZE(header3); ++i) {
         brpc::HPacker::Header h;
         ASSERT_GT(p2.Decode(&buf.buf(), &h), 0);
         ASSERT_EQ(header3[i].name, h.name);
@@ -252,8 +252,8 @@ TEST_F(HPackTest, requests_with_huffman) {
         {":path", "/"},
         {":authority", "www.example.com"},
     };
-    butil::IOBufAppender buf;
-    for (size_t i = 0; i < ARRAY_SIZE(header1); ++i) {
+    flare::io::IOBufAppender buf;
+    for (size_t i = 0; i < FLARE_ARRAY_SIZE(header1); ++i) {
         brpc::HPacker::Header h;
         h.name = header1[i].name;
         h.value = header1[i].value;
@@ -267,9 +267,9 @@ TEST_F(HPackTest, requests_with_huffman) {
         0x82, 0x86, 0x84, 0x41, 0x8c, 0xf1, 0xe3, 0xc2, 0xe5, 0xf2, 0x3a, 0x6b,
         0xa0, 0xab, 0x90, 0xf4, 0xff
     };
-    LOG(INFO) << butil::ToPrintable(buf.buf());
-    ASSERT_TRUE(buf.buf().equals(butil::StringPiece((char*)expected1, sizeof(expected1))));
-    for (size_t i = 0; i < ARRAY_SIZE(header1); ++i) {
+    LOG(INFO) << flare::io::ToPrintable(buf.buf());
+    ASSERT_TRUE(buf.buf().equals(std::string_view((char*)expected1, sizeof(expected1))));
+    for (size_t i = 0; i < FLARE_ARRAY_SIZE(header1); ++i) {
         brpc::HPacker::Header h;
         ASSERT_GT(p2.Decode(&buf.buf(), &h), 0);
         ASSERT_EQ(header1[i].name, h.name);
@@ -285,7 +285,7 @@ TEST_F(HPackTest, requests_with_huffman) {
         {"cache-control", "no-cache"},
     };
 
-    for (size_t i = 0; i < ARRAY_SIZE(header2); ++i) {
+    for (size_t i = 0; i < FLARE_ARRAY_SIZE(header2); ++i) {
         brpc::HPacker::Header h;
         h.name = header2[i].name;
         h.value = header2[i].value;
@@ -298,8 +298,8 @@ TEST_F(HPackTest, requests_with_huffman) {
     uint8_t expected2[] = {
         0x82, 0x86, 0x84, 0xbe, 0x58, 0x86, 0xa8, 0xeb, 0x10, 0x64, 0x9c, 0xbf, 
     };
-    ASSERT_TRUE(buf.buf().equals(butil::StringPiece((char*)expected2, sizeof(expected2))));
-    for (size_t i = 0; i < ARRAY_SIZE(header2); ++i) {
+    ASSERT_TRUE(buf.buf().equals(std::string_view((char*)expected2, sizeof(expected2))));
+    for (size_t i = 0; i < FLARE_ARRAY_SIZE(header2); ++i) {
         brpc::HPacker::Header h;
         ASSERT_GT(p2.Decode(&buf.buf(), &h), 0);
         ASSERT_EQ(header2[i].name, h.name);
@@ -314,7 +314,7 @@ TEST_F(HPackTest, requests_with_huffman) {
         {"custom-key", "custom-value"},
     };
 
-    for (size_t i = 0; i < ARRAY_SIZE(header3); ++i) {
+    for (size_t i = 0; i < FLARE_ARRAY_SIZE(header3); ++i) {
         brpc::HPacker::Header h;
         h.name = header3[i].name;
         h.value = header3[i].value;
@@ -328,8 +328,8 @@ TEST_F(HPackTest, requests_with_huffman) {
         0x82, 0x87, 0x85, 0xbf, 0x40, 0x88, 0x25, 0xa8, 0x49, 0xe9, 0x5b, 0xa9,
         0x7d, 0x7f, 0x89, 0x25, 0xa8, 0x49, 0xe9, 0x5b, 0xb8, 0xe8, 0xb4, 0xbf, 
     };
-    ASSERT_TRUE(buf.buf().equals(butil::StringPiece((char*)expected3, sizeof(expected3))));
-    for (size_t i = 0; i < ARRAY_SIZE(header3); ++i) {
+    ASSERT_TRUE(buf.buf().equals(std::string_view((char*)expected3, sizeof(expected3))));
+    for (size_t i = 0; i < FLARE_ARRAY_SIZE(header3); ++i) {
         brpc::HPacker::Header h;
         ASSERT_GT(p2.Decode(&buf.buf(), &h), 0);
         ASSERT_EQ(header3[i].name, h.name);
@@ -351,8 +351,8 @@ TEST_F(HPackTest, responses_without_huffman) {
         {"date", "Mon, 21 Oct 2013 20:13:21 GMT"},
         {"location", "https://www.example.com"},
     };
-    butil::IOBufAppender buf;
-    for (size_t i = 0; i < ARRAY_SIZE(header1); ++i) {
+    flare::io::IOBufAppender buf;
+    for (size_t i = 0; i < FLARE_ARRAY_SIZE(header1); ++i) {
         brpc::HPacker::Header h;
         h.name = header1[i].name;
         h.value = header1[i].value;
@@ -368,9 +368,9 @@ TEST_F(HPackTest, responses_without_huffman) {
         0x74, 0x74, 0x70, 0x73, 0x3a, 0x2f, 0x2f, 0x77, 0x77, 0x77, 0x2e, 0x65,
         0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x2e, 0x63, 0x6f, 0x6d, 
     };
-    LOG(INFO) << butil::ToPrintable(buf.buf());
-    ASSERT_TRUE(buf.buf().equals(butil::StringPiece((char*)expected1, sizeof(expected1))));
-    for (size_t i = 0; i < ARRAY_SIZE(header1); ++i) {
+    LOG(INFO) << flare::io::ToPrintable(buf.buf());
+    ASSERT_TRUE(buf.buf().equals(std::string_view((char*)expected1, sizeof(expected1))));
+    for (size_t i = 0; i < FLARE_ARRAY_SIZE(header1); ++i) {
         brpc::HPacker::Header h;
         ASSERT_GT(p2.Decode(&buf.buf(), &h), 0);
         ASSERT_EQ(header1[i].name, h.name);
@@ -385,7 +385,7 @@ TEST_F(HPackTest, responses_without_huffman) {
         {"location", "https://www.example.com"},
     };
 
-    for (size_t i = 0; i < ARRAY_SIZE(header2); ++i) {
+    for (size_t i = 0; i < FLARE_ARRAY_SIZE(header2); ++i) {
         brpc::HPacker::Header h;
         h.name = header2[i].name;
         h.value = header2[i].value;
@@ -396,8 +396,8 @@ TEST_F(HPackTest, responses_without_huffman) {
     uint8_t expected2[] = {
         0x48, 0x03, 0x33, 0x30, 0x37, 0xc1, 0xc0, 0xbf, 
     };
-    ASSERT_TRUE(buf.buf().equals(butil::StringPiece((char*)expected2, sizeof(expected2))));
-    for (size_t i = 0; i < ARRAY_SIZE(header2); ++i) {
+    ASSERT_TRUE(buf.buf().equals(std::string_view((char*)expected2, sizeof(expected2))));
+    for (size_t i = 0; i < FLARE_ARRAY_SIZE(header2); ++i) {
         brpc::HPacker::Header h;
         ASSERT_GT(p2.Decode(&buf.buf(), &h), 0);
         ASSERT_EQ(header2[i].name, h.name);
@@ -413,7 +413,7 @@ TEST_F(HPackTest, responses_without_huffman) {
         {"set-cookie", "foo=ASDJKHQKBZXOQWEOPIUAXQWEOIU; max-age=3600; version=1"},
     };
 
-    for (size_t i = 0; i < ARRAY_SIZE(header3); ++i) {
+    for (size_t i = 0; i < FLARE_ARRAY_SIZE(header3); ++i) {
         brpc::HPacker::Header h;
         h.name = header3[i].name;
         h.value = header3[i].value;
@@ -432,8 +432,8 @@ TEST_F(HPackTest, responses_without_huffman) {
         0x36, 0x30, 0x30, 0x3b, 0x20, 0x76, 0x65, 0x72, 0x73, 0x69, 0x6f, 0x6e, 
         0x3d, 0x31, 
     };
-    ASSERT_TRUE(buf.buf().equals(butil::StringPiece((char*)expected3, sizeof(expected3))));
-    for (size_t i = 0; i < ARRAY_SIZE(header3); ++i) {
+    ASSERT_TRUE(buf.buf().equals(std::string_view((char*)expected3, sizeof(expected3))));
+    for (size_t i = 0; i < FLARE_ARRAY_SIZE(header3); ++i) {
         brpc::HPacker::Header h;
         ASSERT_GT(p2.Decode(&buf.buf(), &h), 0);
         ASSERT_EQ(header3[i].name, h.name);
@@ -455,8 +455,8 @@ TEST_F(HPackTest, responses_with_huffman) {
         {"date", "Mon, 21 Oct 2013 20:13:21 GMT"},
         {"location", "https://www.example.com"},
     };
-    butil::IOBufAppender buf;
-    for (size_t i = 0; i < ARRAY_SIZE(header1); ++i) {
+    flare::io::IOBufAppender buf;
+    for (size_t i = 0; i < FLARE_ARRAY_SIZE(header1); ++i) {
         brpc::HPacker::Header h;
         h.name = header1[i].name;
         h.value = header1[i].value;
@@ -473,9 +473,9 @@ TEST_F(HPackTest, responses_with_huffman) {
         0x91, 0x9d, 0x29, 0xad, 0x17, 0x18, 0x63, 0xc7, 0x8f, 0x0b, 0x97, 0xc8, 
         0xe9, 0xae, 0x82, 0xae, 0x43, 0xd3,             
     };
-    LOG(INFO) << butil::ToPrintable(buf.buf());
-    ASSERT_TRUE(buf.buf().equals(butil::StringPiece((char*)expected1, sizeof(expected1))));
-    for (size_t i = 0; i < ARRAY_SIZE(header1); ++i) {
+    LOG(INFO) << flare::io::ToPrintable(buf.buf());
+    ASSERT_TRUE(buf.buf().equals(std::string_view((char*)expected1, sizeof(expected1))));
+    for (size_t i = 0; i < FLARE_ARRAY_SIZE(header1); ++i) {
         brpc::HPacker::Header h;
         ASSERT_GT(p2.Decode(&buf.buf(), &h), 0);
         ASSERT_EQ(header1[i].name, h.name);
@@ -490,7 +490,7 @@ TEST_F(HPackTest, responses_with_huffman) {
         {"location", "https://www.example.com"},
     };
 
-    for (size_t i = 0; i < ARRAY_SIZE(header2); ++i) {
+    for (size_t i = 0; i < FLARE_ARRAY_SIZE(header2); ++i) {
         brpc::HPacker::Header h;
         h.name = header2[i].name;
         h.value = header2[i].value;
@@ -503,8 +503,8 @@ TEST_F(HPackTest, responses_with_huffman) {
     uint8_t expected2[] = {
         0x48, 0x83, 0x64, 0x0e, 0xff, 0xc1, 0xc0, 0xbf, 
     };
-    ASSERT_TRUE(buf.buf().equals(butil::StringPiece((char*)expected2, sizeof(expected2))));
-    for (size_t i = 0; i < ARRAY_SIZE(header2); ++i) {
+    ASSERT_TRUE(buf.buf().equals(std::string_view((char*)expected2, sizeof(expected2))));
+    for (size_t i = 0; i < FLARE_ARRAY_SIZE(header2); ++i) {
         brpc::HPacker::Header h;
         ASSERT_GT(p2.Decode(&buf.buf(), &h), 0);
         ASSERT_EQ(header2[i].name, h.name);
@@ -520,7 +520,7 @@ TEST_F(HPackTest, responses_with_huffman) {
         {"set-cookie", "foo=ASDJKHQKBZXOQWEOPIUAXQWEOIU; max-age=3600; version=1"},
     };
 
-    for (size_t i = 0; i < ARRAY_SIZE(header3); ++i) {
+    for (size_t i = 0; i < FLARE_ARRAY_SIZE(header3); ++i) {
         brpc::HPacker::Header h;
         h.name = header3[i].name;
         h.value = header3[i].value;
@@ -539,8 +539,8 @@ TEST_F(HPackTest, responses_with_huffman) {
         0x0f, 0xb5, 0x29, 0x1f, 0x95, 0x87, 0x31, 0x60, 0x65, 0xc0, 0x03, 0xed,
         0x4e, 0xe5, 0xb1, 0x06, 0x3d, 0x50, 0x07,
     };
-    ASSERT_TRUE(buf.buf().equals(butil::StringPiece((char*)expected3, sizeof(expected3))));
-    for (size_t i = 0; i < ARRAY_SIZE(header3); ++i) {
+    ASSERT_TRUE(buf.buf().equals(std::string_view((char*)expected3, sizeof(expected3))));
+    for (size_t i = 0; i < FLARE_ARRAY_SIZE(header3); ++i) {
         brpc::HPacker::Header h;
         ASSERT_GT(p2.Decode(&buf.buf(), &h), 0);
         ASSERT_EQ(header3[i].name, h.name);

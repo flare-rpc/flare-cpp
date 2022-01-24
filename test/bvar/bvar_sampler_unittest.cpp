@@ -17,28 +17,28 @@
 
 #include <limits>                           //std::numeric_limits
 #include "flare/bvar/detail/sampler.h"
-#include "flare/butil/time.h"
-#include "flare/butil/logging.h"
+#include "flare/base/time.h"
+#include "flare/base/logging.h"
 #include <gtest/gtest.h>
 
 namespace {
 
 TEST(SamplerTest, linked_list) {
-    butil::LinkNode<bvar::detail::Sampler> n1, n2;
-    n1.InsertBeforeAsList(&n2);
+    flare::container::link_node<bvar::detail::Sampler> n1, n2;
+    n1.insert_before_as_list(&n2);
     ASSERT_EQ(n1.next(), &n2);
     ASSERT_EQ(n1.previous(), &n2);
     ASSERT_EQ(n2.next(), &n1);
     ASSERT_EQ(n2.previous(), &n1);
 
-    butil::LinkNode<bvar::detail::Sampler> n3, n4;
-    n3.InsertBeforeAsList(&n4);
+    flare::container::link_node<bvar::detail::Sampler> n3, n4;
+    n3.insert_before_as_list(&n4);
     ASSERT_EQ(n3.next(), &n4);
     ASSERT_EQ(n3.previous(), &n4);
     ASSERT_EQ(n4.next(), &n3);
     ASSERT_EQ(n4.previous(), &n3);
 
-    n1.InsertBeforeAsList(&n3);
+    n1.insert_before_as_list(&n3);
     ASSERT_EQ(n1.next(), &n2);
     ASSERT_EQ(n2.next(), &n3);
     ASSERT_EQ(n3.next(), &n4);
@@ -66,10 +66,6 @@ private:
 int DebugSampler::_s_ndestroy = 0;
 
 TEST(SamplerTest, single_threaded) {
-#if !BRPC_WITH_GLOG
-    logging::StringSink log_str;
-    logging::LogSink* old_sink = logging::SetLogSink(&log_str);
-#endif
     const int N = 100;
     DebugSampler* s[N];
     for (int i = 0; i < N; ++i) {
@@ -87,13 +83,6 @@ TEST(SamplerTest, single_threaded) {
     }
     usleep(1010000);
     EXPECT_EQ(N, DebugSampler::_s_ndestroy);
-#if !BRPC_WITH_GLOG
-    ASSERT_EQ(&log_str, logging::SetLogSink(old_sink));
-    if (log_str.find("Removed ") != std::string::npos) {
-        ASSERT_NE(std::string::npos, log_str.find("Removed 0, sampled 100"));
-        ASSERT_NE(std::string::npos, log_str.find("Removed 100, sampled 0"));
-    }
-#endif
 }
 
 static void* check(void*) {
@@ -114,26 +103,15 @@ static void* check(void*) {
 }
 
 TEST(SamplerTest, multi_threaded) {
-#if !BRPC_WITH_GLOG
-    logging::StringSink log_str;
-    logging::LogSink* old_sink = logging::SetLogSink(&log_str);
-#endif
     pthread_t th[10];
     DebugSampler::_s_ndestroy = 0;
-    for (size_t i = 0; i < arraysize(th); ++i) {
+    for (size_t i = 0; i < FLARE_ARRAY_SIZE(th); ++i) {
         ASSERT_EQ(0, pthread_create(&th[i], NULL, check, NULL));
     }
-    for (size_t i = 0; i < arraysize(th); ++i) {
+    for (size_t i = 0; i < FLARE_ARRAY_SIZE(th); ++i) {
         ASSERT_EQ(0, pthread_join(th[i], NULL));
     }
     sleep(1);
-    EXPECT_EQ(100 * arraysize(th), (size_t)DebugSampler::_s_ndestroy);
-#if !BRPC_WITH_GLOG
-    ASSERT_EQ(&log_str, logging::SetLogSink(old_sink));
-    if (log_str.find("Removed ") != std::string::npos) {
-        ASSERT_NE(std::string::npos, log_str.find("Removed 0, sampled 1000"));
-        ASSERT_NE(std::string::npos, log_str.find("Removed 1000, sampled 0"));
-    }
-#endif
+    EXPECT_EQ(100 * FLARE_ARRAY_SIZE(th), (size_t)DebugSampler::_s_ndestroy);
 }
 } // namespace

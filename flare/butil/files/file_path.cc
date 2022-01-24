@@ -8,7 +8,7 @@
 #include <algorithm>
 
 #include "flare/butil/basictypes.h"
-#include "flare/butil/logging.h"
+#include "flare/base/logging.h"
 
 // These includes are just for the *Hack functions, and should be removed
 // when those functions are removed.

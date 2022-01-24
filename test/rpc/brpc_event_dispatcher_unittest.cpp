@@ -24,19 +24,22 @@
 #include <sys/socket.h>
 #include <gtest/gtest.h>
 #include "flare/butil/gperftools_profiler.h"
-#include "flare/butil/time.h"
+#include "flare/base/time.h"
 #include "flare/butil/macros.h"
-#include "flare/butil/fd_utility.h"
+#include "flare/base/fd_utility.h"
 #include "flare/brpc/event_dispatcher.h"
 #include "flare/brpc/details/has_epollrdhup.h"
 
-class EventDispatcherTest : public ::testing::Test{
+class EventDispatcherTest : public ::testing::Test {
 protected:
-    EventDispatcherTest(){
+    EventDispatcherTest() {
     };
-    virtual ~EventDispatcherTest(){};
+
+    virtual ~EventDispatcherTest() {};
+
     virtual void SetUp() {
     };
+
     virtual void TearDown() {
     };
 };
@@ -60,34 +63,34 @@ pthread_mutex_t rel_fd_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 volatile bool client_stop = false;
 
-struct BAIDU_CACHELINE_ALIGNMENT ClientMeta {
+struct FLARE_CACHELINE_ALIGNMENT ClientMeta {
     int fd;
     size_t times;
     size_t bytes;
 };
 
-struct BAIDU_CACHELINE_ALIGNMENT SocketExtra : public brpc::SocketUser {
-    char* buf;
+struct FLARE_CACHELINE_ALIGNMENT SocketExtra : public brpc::SocketUser {
+    char *buf;
     size_t buf_cap;
     size_t bytes;
     size_t times;
 
     SocketExtra() {
         buf_cap = 32768;
-        buf = (char*)malloc(buf_cap);
+        buf = (char *) malloc(buf_cap);
         bytes = 0;
         times = 0;
     }
 
-    virtual void BeforeRecycle(brpc::Socket* m) {
+    virtual void BeforeRecycle(brpc::Socket *m) {
         pthread_mutex_lock(&rel_fd_mutex);
         rel_fd.push_back(m->fd());
         pthread_mutex_unlock(&rel_fd_mutex);
         delete this;
     }
 
-    static int OnEdgeTriggeredEventOnce(brpc::Socket* m) {
-        SocketExtra* e = static_cast<SocketExtra*>(m->user());
+    static int OnEdgeTriggeredEventOnce(brpc::Socket *m) {
+        SocketExtra *e = static_cast<SocketExtra *>(m->user());
         // Read all data.
         do {
             ssize_t n = read(m->fd(), e->buf, e->buf_cap);
@@ -95,7 +98,7 @@ struct BAIDU_CACHELINE_ALIGNMENT SocketExtra : public brpc::SocketUser {
 #ifdef BRPC_SOCKET_HAS_EOF
                 || m->_eof
 #endif
-                ) {
+                    ) {
                 pthread_mutex_lock(&err_fd_mutex);
                 err_fd.push_back(m->fd());
                 pthread_mutex_unlock(&err_fd_mutex);
@@ -123,7 +126,7 @@ struct BAIDU_CACHELINE_ALIGNMENT SocketExtra : public brpc::SocketUser {
         return 0;
     }
 
-    static void OnEdgeTriggeredEvents(brpc::Socket* m) {
+    static void OnEdgeTriggeredEvents(brpc::Socket *m) {
         int progress = brpc::Socket::PROGRESS_INIT;
         do {
             if (OnEdgeTriggeredEventOnce(m) != 0) {
@@ -134,15 +137,15 @@ struct BAIDU_CACHELINE_ALIGNMENT SocketExtra : public brpc::SocketUser {
     }
 };
 
-void* client_thread(void* arg) {
-    ClientMeta* m = (ClientMeta*)arg;
+void *client_thread(void *arg) {
+    ClientMeta *m = (ClientMeta *) arg;
     size_t offset = 0;
     m->times = 0;
     m->bytes = 0;
     const size_t buf_cap = 32768;
-    char* buf = (char*)malloc(buf_cap);
-    for (size_t i = 0; i < buf_cap/8; ++i) {
-        ((uint64_t*)buf)[i] = i;
+    char *buf = (char *) malloc(buf_cap);
+    for (size_t i = 0; i < buf_cap / 8; ++i) {
+        ((uint64_t *) buf)[i] = i;
     }
     while (!client_stop) {
         ssize_t n;
@@ -174,7 +177,7 @@ void* client_thread(void* arg) {
     return NULL;
 }
 
-inline uint32_t fmix32 ( uint32_t h ) {
+inline uint32_t fmix32(uint32_t h) {
     h ^= h >> 16;
     h *= 0x85ebca6b;
     h ^= h >> 13;
@@ -185,8 +188,8 @@ inline uint32_t fmix32 ( uint32_t h ) {
 
 TEST_F(EventDispatcherTest, dispatch_tasks) {
 #ifdef BUTIL_RESOURCE_POOL_NEED_FREE_ITEM_NUM
-    const butil::ResourcePoolInfo old_info =
-        butil::describe_resources<brpc::Socket>();
+    const flare::base::ResourcePoolInfo old_info =
+        flare::memory::describe_resources<brpc::Socket>();
 #endif
 
     client_stop = false;
@@ -195,15 +198,15 @@ TEST_F(EventDispatcherTest, dispatch_tasks) {
 
     int fds[2 * NCLIENT];
     pthread_t cth[NCLIENT];
-    ClientMeta* cm[NCLIENT];
-    SocketExtra* sm[NCLIENT];
+    ClientMeta *cm[NCLIENT];
+    SocketExtra *sm[NCLIENT];
 
     for (size_t i = 0; i < NCLIENT; ++i) {
         ASSERT_EQ(0, socketpair(AF_UNIX, SOCK_STREAM, 0, fds + 2 * i));
         sm[i] = new SocketExtra;
 
         const int fd = fds[i * 2];
-        butil::make_non_blocking(fd);
+        flare::base::make_non_blocking(fd);
         brpc::SocketId socket_id;
         brpc::SocketOptions options;
         options.fd = fd;
@@ -217,26 +220,26 @@ TEST_F(EventDispatcherTest, dispatch_tasks) {
         cm[i]->bytes = 0;
         ASSERT_EQ(0, pthread_create(&cth[i], NULL, client_thread, cm[i]));
     }
-    
+
     LOG(INFO) << "Begin to profile... (5 seconds)";
     ProfilerStart("event_dispatcher.prof");
-    butil::Timer tm;
+    flare::base::stop_watcher tm;
     tm.start();
-    
+
     sleep(5);
-    
+
     tm.stop();
     ProfilerStop();
     LOG(INFO) << "End profiling";
-    
+
     size_t client_bytes = 0;
     size_t server_bytes = 0;
     for (size_t i = 0; i < NCLIENT; ++i) {
         client_bytes += cm[i]->bytes;
         server_bytes += sm[i]->bytes;
     }
-    LOG(INFO) << "client_tp=" << client_bytes / (double)tm.u_elapsed()
-              << "MB/s server_tp=" << server_bytes / (double)tm.u_elapsed() 
+    LOG(INFO) << "client_tp=" << client_bytes / (double) tm.u_elapsed()
+              << "MB/s server_tp=" << server_bytes / (double) tm.u_elapsed()
               << "MB/s";
 
     client_stop = true;
@@ -260,8 +263,8 @@ TEST_F(EventDispatcherTest, dispatch_tasks) {
         ASSERT_EQ(copy1[i], copy2[i]) << i;
     }
     ASSERT_EQ(NCLIENT, copy1.size());
-    const butil::ResourcePoolInfo info
-        = butil::describe_resources<brpc::Socket>();
+    const flare::memory::ResourcePoolInfo info
+            = flare::memory::describe_resources<brpc::Socket>();
     LOG(INFO) << info;
 #ifdef BUTIL_RESOURCE_POOL_NEED_FREE_ITEM_NUM
     ASSERT_EQ(NCLIENT, info.free_item_num - old_info.free_item_num);

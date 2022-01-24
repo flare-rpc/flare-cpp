@@ -27,7 +27,7 @@
 
 namespace brpc {
 
-class BAIDU_CACHELINE_ALIGNMENT Stream : public SocketConnection {
+class FLARE_CACHELINE_ALIGNMENT Stream : public SocketConnection {
 public:
     // |--------------------------------------------------|
     // |----------- Implement SocketConnection -----------|
@@ -35,20 +35,20 @@ public:
    
     int Connect(Socket* ptr, const timespec* due_time,
                 int (*on_connect)(int, int, void *), void *data);
-    ssize_t CutMessageIntoFileDescriptor(int, butil::IOBuf **data_list,
+    ssize_t CutMessageIntoFileDescriptor(int, flare::io::IOBuf **data_list,
                                          size_t size);
-    ssize_t CutMessageIntoSSLChannel(SSL*, butil::IOBuf**, size_t);
+    ssize_t CutMessageIntoSSLChannel(SSL*, flare::io::IOBuf**, size_t);
     void BeforeRecycle(Socket *);
 
     // --------------------- SocketConnection --------------
 
-    int AppendIfNotFull(const butil::IOBuf& msg);
+    int AppendIfNotFull(const flare::io::IOBuf& msg);
     static int Create(const StreamOptions& options,
                       const StreamSettings *remote_settings,
                       StreamId *id);
     StreamId id() { return _id; }
 
-    int OnReceived(const StreamFrameMeta& fm, butil::IOBuf *buf, Socket* sock);
+    int OnReceived(const StreamFrameMeta& fm, flare::io::IOBuf *buf, Socket* sock);
     void SetRemoteSettings(const StreamSettings& remote_settings) {
         _remote_settings.MergeFrom(remote_settings);
     }
@@ -77,10 +77,10 @@ friend class MessageBatcher;
     void SendFeedback();
     void StartIdleTimer();
     void StopIdleTimer();
-    void HandleRpcResponse(butil::IOBuf* response_buffer);
-    void WriteToHostSocket(butil::IOBuf* b);
+    void HandleRpcResponse(flare::io::IOBuf* response_buffer);
+    void WriteToHostSocket(flare::io::IOBuf* b);
 
-    static int Consume(void *meta, bthread::TaskIterator<butil::IOBuf*>& iter);
+    static int Consume(void *meta, bthread::TaskIterator<flare::io::IOBuf*>& iter);
     static int TriggerOnWritable(bthread_id_t id, void *data, int error_code);
     static void *RunOnWritable(void* arg);
     static void* RunOnConnect(void* arg);
@@ -120,8 +120,8 @@ friend class MessageBatcher;
     StreamSettings _remote_settings;   
 
     bool _parse_rpc_response;
-    bthread::ExecutionQueueId<butil::IOBuf*> _consumer_queue;
-    butil::IOBuf *_pending_buf;
+    bthread::ExecutionQueueId<flare::io::IOBuf*> _consumer_queue;
+    flare::io::IOBuf *_pending_buf;
     int64_t _start_idle_timer_us;
     bthread_timer_t _idle_timer;
 };
