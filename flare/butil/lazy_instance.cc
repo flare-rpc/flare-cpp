@@ -7,7 +7,7 @@
 #include "flare/butil/at_exit.h"
 #include "flare/butil/basictypes.h"
 #include "flare/butil/threading/platform_thread.h"
-#include "flare/butil/third_party/dynamic_annotations/dynamic_annotations.h"
+#include "flare/base/dynamic_annotations/dynamic_annotations.h"
 
 namespace butil {
     namespace internal {

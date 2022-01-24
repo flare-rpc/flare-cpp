@@ -226,7 +226,6 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/output/lib)
 set(BUTIL_SOURCES
         ${PROJECT_SOURCE_DIR}/flare/butil/third_party/dmg_fp/g_fmt.cc
         ${PROJECT_SOURCE_DIR}/flare/butil/third_party/dmg_fp/dtoa_wrapper.cc
-        ${PROJECT_SOURCE_DIR}/flare/butil/third_party/dynamic_annotations/dynamic_annotations.c
         ${PROJECT_SOURCE_DIR}/flare/butil/third_party/icu/icu_utf.cc
         ${PROJECT_SOURCE_DIR}/flare/butil/third_party/superfasthash/superfasthash.c
         ${PROJECT_SOURCE_DIR}/flare/butil/third_party/modp_b64/modp_b64.cc
@@ -328,6 +327,7 @@ file(GLOB_RECURSE FLARE_HASH_SRC "${PROJECT_SOURCE_DIR}/flare/hash/*.cc")
 file(GLOB_RECURSE FLARE_MEMORY_SRC "${PROJECT_SOURCE_DIR}/flare/memory/*.cc")
 file(GLOB_RECURSE FLARE_IO_SRC "${PROJECT_SOURCE_DIR}/flare/io/*.cc")
 set(FLARE_SRC
+       "${PROJECT_SOURCE_DIR}/flare/base/dynamic_annotations/dynamic_annotations.c"
         ${FLARE_BASE_SRC}
         ${FLARE_CONTAINER_SRC}
         ${FLARE_HASH_SRC}
