@@ -19,7 +19,7 @@
 #ifndef BRPC_RTMP_H
 #define BRPC_RTMP_H
 
-#include "flare/butil/strings/string_piece.h"   // std::string_view
+#include <string_view>   // std::string_view
 #include "flare/base/endpoint.h"               // flare::base::end_point
 #include "flare/brpc/shared_object.h"          // SharedObject, intrusive_ptr
 #include "flare/brpc/socket_id.h"              // SocketUniquePtr

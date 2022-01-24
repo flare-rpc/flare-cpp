@@ -32,7 +32,7 @@
 #include "flare/base/time.h"                           // cpuwide_time_us
 #include "flare/memory/object_pool.h"                    // get_object
 #include "flare/base/logging.h"                        // CHECK
-#include "flare/butil/macros.h"
+#include "flare/base/profile.h"
 #include "flare/base/class_name.h"                     // flare::base::class_name
 #include "flare/brpc/log.h"
 #include "flare/brpc/reloadable_flags.h"          // BRPC_VALIDATE_GFLAG
@@ -1102,7 +1102,7 @@ int Socket::WaitEpollOut(int fd, bool pollin, const timespec* abstime) {
     }
     // Ignore return value since `fd' might have been removed
     // by `RemoveConsumer' in `SetFailed'
-    butil::ignore_result(edisp.RemoveEpollOut(id(), fd, pollin));
+    flare::base::ignore_result(edisp.RemoveEpollOut(id(), fd, pollin));
     errno = saved_errno;
     // Could be writable or spurious wakeup (by former epollout)
     return rc;

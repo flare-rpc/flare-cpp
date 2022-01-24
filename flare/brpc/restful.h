@@ -20,7 +20,7 @@
 #define BRPC_RESTFUL_H
 
 #include <string>
-#include "flare/butil/strings/string_piece.h"
+#include <string_view>
 #include "flare/brpc/server.h"
 
 

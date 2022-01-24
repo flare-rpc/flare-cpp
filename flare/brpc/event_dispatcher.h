@@ -19,7 +19,7 @@
 #ifndef BRPC_EVENT_DISPATCHER_H
 #define BRPC_EVENT_DISPATCHER_H
 
-#include "flare/butil/macros.h"                     // FLARE_DISALLOW_COPY_AND_ASSIGN
+#include "flare/base/profile.h"                     // FLARE_DISALLOW_COPY_AND_ASSIGN
 #include "flare/bthread/types.h"                   // bthread_t, bthread_attr_t
 #include "flare/brpc/socket.h"                     // Socket, SocketId
 

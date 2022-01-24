@@ -20,7 +20,7 @@
 #include <google/protobuf/reflection_ops.h>
 #include <google/protobuf/wire_format.h>
 #include "flare/base/strings.h"
-#include "flare/butil/macros.h"
+#include "flare/base/profile.h"
 #include "flare/butil/sys_byteorder.h"
 #include "flare/base/logging.h"
 #include "flare/brpc/memcache.h"

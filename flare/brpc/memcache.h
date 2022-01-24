@@ -23,7 +23,7 @@
 #include <google/protobuf/message.h>
 
 #include "flare/io/iobuf.h"
-#include "flare/butil/strings/string_piece.h"
+#include <string_view>
 #include "flare/brpc/proto_base.pb.h"
 
 namespace brpc {

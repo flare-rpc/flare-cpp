@@ -16,7 +16,7 @@
 // under the License.
 
 
-#include "flare/butil/macros.h"
+#include "flare/base/profile.h"
 #include "flare/base/fast_rand.h"
 #include "flare/brpc/socket.h"
 #include "flare/brpc/policy/round_robin_load_balancer.h"
@@ -30,7 +30,7 @@ const uint32_t prime_offset[] = {
 };
 
 inline uint32_t GenRandomStride() {
-    return prime_offset[flare::base::fast_rand_less_than(ARRAY_SIZE(prime_offset))];
+    return prime_offset[flare::base::fast_rand_less_than(FLARE_ARRAY_SIZE(prime_offset))];
 }
 
 bool RoundRobinLoadBalancer::Add(Servers& bg, const ServerId& id) {

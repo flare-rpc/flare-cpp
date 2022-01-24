@@ -19,7 +19,7 @@
 #ifndef  BRPC_HTTP_HEADER_H
 #define  BRPC_HTTP_HEADER_H
 
-#include "flare/butil/strings/string_piece.h"  // StringPiece
+#include <string_view>  // StringPiece
 #include "flare/container/case_ignored_flat_map.h"
 #include "flare/brpc/uri.h"              // URI
 #include "flare/brpc/http_method.h"      // HttpMethod

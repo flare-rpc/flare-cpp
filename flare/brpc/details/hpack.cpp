@@ -505,13 +505,13 @@ static pthread_once_t s_create_once = PTHREAD_ONCE_INIT;
 
 static void CreateStaticTableOrDie() {
     s_huffman_tree = new HuffmanTree;
-    for (size_t i = 0; i < ARRAY_SIZE(s_huffman_table); ++i) {
+    for (size_t i = 0; i < FLARE_ARRAY_SIZE(s_huffman_table); ++i) {
         s_huffman_tree->AddLeafNode(i, s_huffman_table[i]);
     }
     IndexTableOptions options;
     options.max_size = UINT_MAX;
     options.static_table = s_static_headers;
-    options.static_table_size = ARRAY_SIZE(s_static_headers);
+    options.static_table_size = FLARE_ARRAY_SIZE(s_static_headers);
     options.start_index = 1;
     options.need_indexes = true;
     s_static_table = new IndexTable;

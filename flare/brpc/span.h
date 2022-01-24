@@ -25,7 +25,7 @@
 #include <string>
 #include <deque>
 #include <ostream>
-#include "flare/butil/macros.h"
+#include "flare/base/profile.h"
 #include "flare/base/endpoint.h"
 #include "flare/base/string_splitter.h"
 #include "flare/bvar/collector.h"

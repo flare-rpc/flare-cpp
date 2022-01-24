@@ -23,8 +23,8 @@
 #include <unordered_map>
 #include <memory>
 #include <list>
+#include <string_view>
 #include "flare/io/iobuf.h"
-#include "flare/butil/strings/string_piece.h"
 #include "flare/memory/arena.h"
 #include "flare/brpc/proto_base.pb.h"
 #include "flare/brpc/redis_reply.h"

@@ -333,7 +333,7 @@ private:
             std::string cmd = flare::base::string_printf("rm -rf %s %s",
                                                   id_db_name.c_str(),
                                                   time_db_name.c_str());
-            butil::ignore_result(system(cmd.c_str()));
+            flare::base::ignore_result(system(cmd.c_str()));
         }
     }
 };

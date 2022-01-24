@@ -16,7 +16,7 @@
 // under the License.
 
 
-#include "flare/butil/macros.h"
+#include "flare/base/profile.h"
 #include "flare/base/fast_rand.h"
 #include "flare/brpc/socket.h"
 #include "flare/brpc/policy/dynpart_load_balancer.h"

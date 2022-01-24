@@ -20,7 +20,7 @@
 #include "flare/bthread/unstable.h"                 // bthread_timer_add
 #include "flare/base/static_atomic.h"
 #include "flare/base/time.h"
-#include "flare/butil/macros.h"
+#include "flare/base/profile.h"
 #include "flare/brpc/details/controller_private_accessor.h"
 #include "flare/brpc/parallel_channel.h"
 
