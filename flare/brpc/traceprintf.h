@@ -19,7 +19,7 @@
 #ifndef BRPC_TRACEPRINTF_H
 #define BRPC_TRACEPRINTF_H
 
-#include "flare/butil/macros.h"
+#include "flare/base/profile.h"
 
 // To brpc developers: This is a header included by user, don't depend
 // on internal structures, use opaque pointers instead.

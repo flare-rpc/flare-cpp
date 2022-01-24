@@ -37,7 +37,7 @@
 #include <string.h>
 #include "flare/butil/compiler_specific.h"
 #include "flare/butil/basictypes.h"
-#include "flare/butil/sys_byteorder.h"
+#include "flare/base/sys_byteorder.h"
 
 #define SNAPPY_MAJOR 1
 #define SNAPPY_MINOR 1

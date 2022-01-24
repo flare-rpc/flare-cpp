@@ -25,7 +25,7 @@
 #include "flare/base/static_atomic.h"                    // std::atomic
 #include "flare/bthread/types.h"                      // bthread_id_t
 #include "flare/io/iobuf.h"                        // flare::io::IOBuf, IOPortal
-#include "flare/butil/macros.h"                       // FLARE_DISALLOW_COPY_AND_ASSIGN
+#include "flare/base/profile.h"                       // FLARE_DISALLOW_COPY_AND_ASSIGN
 #include "flare/base/endpoint.h"                     // flare::base::end_point
 #include "flare/memory/resource_pool.h"                // flare::memory::ResourceId
 #include "flare/bthread/butex.h"                      // butex_create_checked

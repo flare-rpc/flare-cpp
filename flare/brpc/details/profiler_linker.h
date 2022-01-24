@@ -20,7 +20,7 @@
 #define BRPC_PROFILER_LINKER_H
 
 #if defined(BRPC_ENABLE_CPU_PROFILER) || defined(BAIDU_RPC_ENABLE_CPU_PROFILER)
-#include "flare/butil/gperftools_profiler.h"
+#include "flare/base/gperftools_profiler.h"
 #endif
 
 namespace brpc {

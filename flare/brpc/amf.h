@@ -23,8 +23,8 @@
 #include <deque>
 #include <google/protobuf/io/zero_copy_stream.h>
 #include <google/protobuf/message.h>
-#include "flare/butil/sys_byteorder.h"
-#include "flare/butil/strings/string_piece.h"
+#include "flare/base/sys_byteorder.h"
+#include <string_view>
 
 
 namespace brpc {

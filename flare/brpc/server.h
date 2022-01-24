@@ -26,7 +26,7 @@
 #include "flare/bthread/bthread.h"      // Server may need some bthread functions,
                                   // e.g. bthread_usleep
 #include <google/protobuf/service.h>                 // google::protobuf::Service
-#include "flare/butil/macros.h"                            // FLARE_DISALLOW_COPY_AND_ASSIGN
+#include "flare/base/profile.h"                            // FLARE_DISALLOW_COPY_AND_ASSIGN
 #include "flare/container/doubly_buffered_data.h"   // DoublyBufferedData
 #include "flare/bvar/bvar.h"
 #include "flare/container/case_ignored_flat_map.h"  // [CaseIgnored]FlatMap

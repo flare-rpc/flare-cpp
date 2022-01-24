@@ -26,7 +26,7 @@
 #include <random>
 #include <gtest/gtest.h>
 #include "flare/bthread/bthread.h"
-#include "flare/butil/gperftools_profiler.h"
+#include "flare/base/gperftools_profiler.h"
 #include "flare/base/time.h"
 #include "flare/base/fast_rand.h"
 #include "flare/container/doubly_buffered_data.h"

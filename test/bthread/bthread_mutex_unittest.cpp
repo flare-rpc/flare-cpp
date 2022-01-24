@@ -25,7 +25,7 @@
 #include "flare/bthread/butex.h"
 #include "flare/bthread/task_control.h"
 #include "flare/bthread/mutex.h"
-#include "flare/butil/gperftools_profiler.h"
+#include "flare/base/gperftools_profiler.h"
 
 namespace {
 inline unsigned* get_butex(bthread_mutex_t & m) {

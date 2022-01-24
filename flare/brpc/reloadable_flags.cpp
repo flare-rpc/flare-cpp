@@ -18,7 +18,7 @@
 
 #include <unistd.h>                    // write, _exit
 #include <gflags/gflags.h>
-#include "flare/butil/macros.h"
+#include "flare/base/profile.h"
 #include "flare/brpc/reloadable_flags.h"
 
 namespace brpc {
@@ -61,7 +61,7 @@ static bool RegisterFlagValidatorOrDieImpl(
     }
     // Error printed by gflags does not have newline. Add one to it.
     char newline = '\n';
-    butil::ignore_result(write(2, &newline, 1));
+    flare::base::ignore_result(write(2, &newline, 1));
     _exit(1);
 }
 

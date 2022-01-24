@@ -22,7 +22,7 @@
 #include <condition_variable>
 #endif
 #include <gtest/gtest.h>
-#include "flare/butil/gperftools_profiler.h"
+#include "flare/base/gperftools_profiler.h"
 #include "flare/bvar/utils/lock_timer.h"
 
 namespace {

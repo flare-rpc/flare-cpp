@@ -19,7 +19,7 @@
 #ifndef  BRPC_METHOD_STATUS_H
 #define  BRPC_METHOD_STATUS_H
 
-#include "flare/butil/macros.h"                  // FLARE_DISALLOW_COPY_AND_ASSIGN
+#include "flare/base/profile.h"                  // FLARE_DISALLOW_COPY_AND_ASSIGN
 #include "flare/bvar/bvar.h"                    // vars
 #include "flare/brpc/describable.h"
 #include "flare/brpc/concurrency_limiter.h"

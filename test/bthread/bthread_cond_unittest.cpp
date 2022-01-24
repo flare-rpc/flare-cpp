@@ -21,7 +21,7 @@
 #include "flare/base/time.h"
 #include "flare/butil/macros.h"
 #include "flare/base/scoped_lock.h"
-#include "flare/butil/gperftools_profiler.h"
+#include "flare/base/gperftools_profiler.h"
 #include "flare/bthread/bthread.h"
 #include "flare/bthread/condition_variable.h"
 #include "flare/bthread/stack.h"

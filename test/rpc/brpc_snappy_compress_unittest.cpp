@@ -20,7 +20,7 @@
 // Date: 2015/01/20 19:01:06
 
 #include <gtest/gtest.h>
-#include "flare/butil/gperftools_profiler.h"
+#include "flare/base/gperftools_profiler.h"
 #include "flare/butil/third_party/snappy/snappy.h"
 #include "flare/butil/macros.h"
 #include "flare/io/iobuf.h"

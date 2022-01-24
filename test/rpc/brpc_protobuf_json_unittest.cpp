@@ -24,7 +24,7 @@
 #include "flare/io/iobuf.h"
 #include "flare/butil/third_party/rapidjson/rapidjson.h"
 #include "flare/base/time.h"
-#include "flare/butil/gperftools_profiler.h"
+#include "flare/base/gperftools_profiler.h"
 #include "json2pb/pb_to_json.h"
 #include "json2pb/json_to_pb.h"
 #include "json2pb/encode_decode.h"

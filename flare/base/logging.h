@@ -37,7 +37,7 @@
 
 
 #ifndef NOTIMPLEMENTED_POLICY
-#if defined(OS_ANDROID) && defined(OFFICIAL_BUILD)
+#if defined(FLARE_PLATFORM_ANDROID) && defined(OFFICIAL_BUILD)
 #define NOTIMPLEMENTED_POLICY 0
 #else
 // Select default policy: LOG(ERROR)

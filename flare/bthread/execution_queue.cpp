@@ -35,7 +35,7 @@ namespace bthread {
     namespace /*anonymous*/ {
         typedef flare::memory::ResourceId<ExecutionQueueBase> slot_id_t;
 
-        inline slot_id_t WARN_UNUSED_RESULT slot_of_id(uint64_t id) {
+        inline slot_id_t FLARE_WARN_UNUSED_RESULT slot_of_id(uint64_t id) {
             slot_id_t slot = {(id & 0xFFFFFFFFul)};
             return slot;
         }

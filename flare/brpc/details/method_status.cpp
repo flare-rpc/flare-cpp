@@ -17,7 +17,7 @@
 
 
 #include <limits>
-#include "flare/butil/macros.h"
+#include "flare/base/profile.h"
 #include "flare/brpc/controller.h"
 #include "flare/brpc/details/server_private_accessor.h"
 #include "flare/brpc/details/method_status.h"

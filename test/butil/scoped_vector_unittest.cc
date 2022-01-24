@@ -4,7 +4,7 @@
 
 #include "flare/butil/memory/scoped_vector.h"
 
-#include "flare/butil/memory/scoped_ptr.h"
+#include "flare/memory/scoped_ptr.h"
 #include <gtest/gtest.h>
 
 namespace {

@@ -18,7 +18,7 @@
 #include <gflags/gflags.h>
 #include "flare/base/logging.h"
 #include "flare/butil/recordio.h"
-#include "flare/butil/sys_byteorder.h"
+#include "flare/base/sys_byteorder.h"
 
 namespace butil {
 
@@ -230,7 +230,7 @@ int RecordReader::CutRecord(Record* rec) {
                    << ", offset=" << offset();
         return -1;
     }
-    uint32_t tmp = NetToHost32(*(const uint32_t*)(headbuf + 4));
+    uint32_t tmp = flare::base::NetToHost32(*(const uint32_t*)(headbuf + 4));
     const uint8_t checksum = SizeChecksum(tmp);
     bool has_meta = (tmp & 0x80000000);
     // NOTE: use size_t rather than uint32_t for sizes to avoid potential
@@ -267,7 +267,7 @@ int RecordReader::CutRecord(Record* rec) {
         std::string name;
         _cutter.cutn(&name, name_size);
         _cutter.cutn(&tmp, 4);
-        tmp = NetToHost32(tmp);
+        tmp = flare::base::NetToHost32(tmp);
         has_meta = (tmp & 0x80000000);
         const size_t meta_size = (tmp & 0x7FFFFFFF);
         _ncut += 5 + name_size;
@@ -331,7 +331,7 @@ int RecordWriter::WriteWithoutFlush(const Record& rec) {
         if (i < rec.MetaCount() - 1) {
             tmp |= 0x80000000;
         }
-        *(uint32_t*)p = HostToNet32(tmp);
+        *(uint32_t*)p = flare::base::HostToNet32(tmp);
         _buf.append(metabuf, sizeof(metabuf));
         _buf.append(*s.data.get());
     }
@@ -350,7 +350,7 @@ int RecordWriter::WriteWithoutFlush(const Record& rec) {
     if (rec.MetaCount() > 0) {
         tmp |= 0x80000000;
     }
-    *(uint32_t*)(headbuf + 4) = HostToNet32(tmp);
+    *(uint32_t*)(headbuf + 4) = flare::base::HostToNet32(tmp);
     headbuf[8] = SizeChecksum(tmp);
     _buf.unsafe_assign(headarea, headbuf);
     return 0;

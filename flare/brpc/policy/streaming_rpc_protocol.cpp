@@ -21,7 +21,7 @@
 #include <google/protobuf/descriptor.h>         // MethodDescriptor
 #include <google/protobuf/message.h>            // Message
 #include <gflags/gflags.h>
-#include "flare/butil/macros.h"
+#include "flare/base/profile.h"
 #include "flare/base/logging.h"                       // LOG()
 #include "flare/base/time.h"
 #include "flare/io/iobuf.h"                         // flare::io::IOBuf
@@ -50,7 +50,7 @@ void PackStreamMessage(flare::io::IOBuf* out,
     flare::io::RawPacker(head + 4)
         .pack32(data_length + meta_length)
         .pack32(meta_length);
-    out->append(head, ARRAY_SIZE(head));
+    out->append(head, FLARE_ARRAY_SIZE(head));
     flare::io::IOBufAsZeroCopyOutputStream wrapper(out);
     CHECK(fm.SerializeToZeroCopyStream(&wrapper));
     if (data != NULL) {

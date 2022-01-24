@@ -10,6 +10,7 @@
 #include "flare/butil/atomic_ref_count.h"
 #include "flare/butil/base_export.h"
 #include "flare/butil/compiler_specific.h"
+#include "flare/base/profile.h"
 #ifndef NDEBUG
 #include "flare/base/logging.h"
 #endif
@@ -332,7 +333,7 @@ class scoped_refptr {
   }
 
   // Release ownership of ptr_, keeping its reference counter unchanged.
-  T* release() WARN_UNUSED_RESULT {
+  T* release() FLARE_WARN_UNUSED_RESULT {
       T* saved_ptr = NULL;
       swap(&saved_ptr);
       return saved_ptr;

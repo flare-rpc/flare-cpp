@@ -20,8 +20,8 @@
 #include <google/protobuf/reflection_ops.h>
 #include <google/protobuf/wire_format.h>
 #include "flare/base/strings.h"
-#include "flare/butil/macros.h"
-#include "flare/butil/sys_byteorder.h"
+#include "flare/base/profile.h"
+#include "flare/base/sys_byteorder.h"
 #include "flare/base/logging.h"
 #include "flare/brpc/memcache.h"
 #include "flare/brpc/policy/memcache_binary_header.h"
@@ -92,7 +92,7 @@ bool MemcacheRequest::MergePartialFromCodedStream(
         if (header->magic != (uint8_t)policy::MC_MAGIC_REQUEST) {
             return false;
         }
-        uint32_t total_body_length = butil::NetToHost32(header->total_body_length);
+        uint32_t total_body_length = flare::base::NetToHost32(header->total_body_length);
         if (tmp.size() < sizeof(*header) + total_body_length) {
             return false;
         }
@@ -333,11 +333,11 @@ bool MemcacheRequest::GetOrDelete(uint8_t command, const std::string_view& key) 
     const policy::MemcacheRequestHeader header = {
         policy::MC_MAGIC_REQUEST,
         command,
-        butil::HostToNet16(key.size()),
+        flare::base::HostToNet16(key.size()),
         0,
         policy::MC_BINARY_RAW_BYTES,
         0,
-        butil::HostToNet32(key.size()),
+        flare::base::HostToNet32(key.size()),
         0,
         0
     };
@@ -385,9 +385,9 @@ bool MemcacheRequest::Flush(uint32_t timeout) {
             FLUSH_EXTRAS,
             policy::MC_BINARY_RAW_BYTES,
             0,
-            butil::HostToNet32(FLUSH_EXTRAS),
+            flare::base::HostToNet32(FLUSH_EXTRAS),
             0,
-            0 }, butil::HostToNet32(timeout) };
+            0 }, flare::base::HostToNet32(timeout) };
     if (FLUSH_EXTRAS == 0) {
         if (_buf.append(&header_with_extras.header,
                        sizeof(policy::MemcacheRequestHeader))) {
@@ -466,7 +466,7 @@ bool MemcacheResponse::PopGet(
     uint32_t raw_flags = 0;
     _buf.cutn(&raw_flags, sizeof(raw_flags));
     if (flags) {
-        *flags = butil::NetToHost32(raw_flags);
+        *flags = flare::base::NetToHost32(raw_flags);
     }
     if (value) {
         value->clear();
@@ -526,14 +526,14 @@ bool MemcacheRequest::Store(
     StoreHeaderWithExtras header_with_extras = {{
             policy::MC_MAGIC_REQUEST,
             command,
-            butil::HostToNet16(key.size()),
+            flare::base::HostToNet16(key.size()),
             STORE_EXTRAS,
             policy::MC_BINARY_RAW_BYTES,
             0,
-            butil::HostToNet32(STORE_EXTRAS + key.size() + value.size()),
+            flare::base::HostToNet32(STORE_EXTRAS + key.size() + value.size()),
             0,
-            butil::HostToNet64(cas_value)
-        }, butil::HostToNet32(flags), butil::HostToNet32(exptime)};
+            flare::base::HostToNet64(cas_value)
+        }, flare::base::HostToNet32(flags), flare::base::HostToNet32(exptime)};
     if (_buf.append(&header_with_extras, sizeof(header_with_extras))) {
         return false;
     }
@@ -676,13 +676,13 @@ bool MemcacheRequest::Counter(
     IncrHeaderWithExtras header_with_extras = {{
             policy::MC_MAGIC_REQUEST,
             command,
-            butil::HostToNet16(key.size()),
+            flare::base::HostToNet16(key.size()),
             INCR_EXTRAS,
             policy::MC_BINARY_RAW_BYTES,
             0,
-            butil::HostToNet32(INCR_EXTRAS + key.size()),
+            flare::base::HostToNet32(INCR_EXTRAS + key.size()),
             0,
-            0 }, butil::HostToNet64(delta), butil::HostToNet64(initial_value), butil::HostToNet32(exptime) };
+            0 }, flare::base::HostToNet64(delta), flare::base::HostToNet64(initial_value), flare::base::HostToNet32(exptime) };
     if (_buf.append(&header_with_extras, sizeof(header_with_extras))) {
         return false;
     }
@@ -753,7 +753,7 @@ bool MemcacheResponse::PopCounter(
     }
     uint64_t raw_value = 0;
     _buf.cutn(&raw_value, sizeof(raw_value));
-    *new_value = butil::NetToHost64(raw_value);
+    *new_value = flare::base::NetToHost64(raw_value);
     if (cas_value) {
         *cas_value = header.cas_value;
     }
@@ -793,13 +793,13 @@ bool MemcacheRequest::Touch(const std::string_view& key, uint32_t exptime) {
     TouchHeaderWithExtras header_with_extras = {{
             policy::MC_MAGIC_REQUEST,
             policy::MC_BINARY_TOUCH,
-            butil::HostToNet16(key.size()),
+            flare::base::HostToNet16(key.size()),
             TOUCH_EXTRAS,
             policy::MC_BINARY_RAW_BYTES,
             0,
-            butil::HostToNet32(TOUCH_EXTRAS + key.size()),
+            flare::base::HostToNet32(TOUCH_EXTRAS + key.size()),
             0,
-            0 }, butil::HostToNet32(exptime) };
+            0 }, flare::base::HostToNet32(exptime) };
     if (_buf.append(&header_with_extras, sizeof(header_with_extras))) {
         return false;
     }

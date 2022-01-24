@@ -20,7 +20,7 @@
 #include "flare/base/base64.h"
 #include "flare/io/iobuf.h"
 #include "flare/base/strings.h"
-#include "flare/butil/sys_byteorder.h"
+#include "flare/base/sys_byteorder.h"
 #include "flare/brpc/redis_command.h"
 
 namespace brpc {

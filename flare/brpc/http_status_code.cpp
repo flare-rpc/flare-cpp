@@ -19,7 +19,7 @@
 #include <stdio.h>                                  // snprintf
 
 #include "flare/base/logging.h"                           // BAIDU_*
-#include "flare/butil/macros.h"                            // ARRAY_SIZE
+#include "flare/base/profile.h"                            // FLARE_ARRAY_SIZE
 #include "flare/base/thread.h"                      // thread_local
 #include "flare/brpc/errno.pb.h"
 #include "flare/brpc/http_status_code.h"
@@ -87,9 +87,9 @@ static pthread_once_t init_reason_phrases_once = PTHREAD_ONCE_INIT;
 
 static void InitReasonPhrases() {
     memset(phrases, 0, sizeof(phrases));
-    for (size_t i = 0; i < ARRAY_SIZE(status_pairs); ++i) {
+    for (size_t i = 0; i < FLARE_ARRAY_SIZE(status_pairs); ++i) {
         if (status_pairs[i].status_code >= 0 &&
-            status_pairs[i].status_code < (int)ARRAY_SIZE(phrases)) {
+            status_pairs[i].status_code < (int)FLARE_ARRAY_SIZE(phrases)) {
             phrases[status_pairs[i].status_code] = status_pairs[i].reason_phrase;
         } else {
             LOG(FATAL) << "The status_pairs[" << i << "] is invalid" 
@@ -106,7 +106,7 @@ const char *HttpReasonPhrase(int status_code) {
     pthread_once(&init_reason_phrases_once, InitReasonPhrases);
     const char* desc = NULL;
     if (status_code >= 0 &&
-        status_code < (int)ARRAY_SIZE(phrases) &&
+        status_code < (int)FLARE_ARRAY_SIZE(phrases) &&
         (desc = phrases[status_code])) {
         return desc;
     }

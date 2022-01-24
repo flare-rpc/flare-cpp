@@ -99,4 +99,10 @@ namespace flare::base {
             (type *)( (char *)__mptr - offsetof(type,member) );})
 #endif
 
+namespace flare::base {
+    template<typename T>
+    inline void ignore_result(const T&) {
+    }
+} // namespace flare::base
+
 #endif  // FLARE_BASE_PROFILE_MACROS_H_

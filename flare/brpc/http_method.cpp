@@ -17,7 +17,7 @@
 
 
 #include <stdlib.h>                     // abort()
-#include "flare/butil/macros.h"
+#include "flare/base/profile.h"
 #include "flare/base/logging.h"
 #include <pthread.h>
 #include <algorithm>
@@ -71,17 +71,17 @@ struct LessThanByName {
 };
 
 static void BuildHttpMethodMaps() {
-    for (size_t i = 0; i < ARRAY_SIZE(g_method_pairs); ++i) {
+    for (size_t i = 0; i < FLARE_ARRAY_SIZE(g_method_pairs); ++i) {
         const int method = (int)g_method_pairs[i].method;
-        if (method < 0 || method > (int)ARRAY_SIZE(g_method2str_map)) {
+        if (method < 0 || method > (int)FLARE_ARRAY_SIZE(g_method2str_map)) {
             abort();
         }
         g_method2str_map[method] = g_method_pairs[i].str;
      }
-    std::sort(g_method_pairs, g_method_pairs + ARRAY_SIZE(g_method_pairs),
+    std::sort(g_method_pairs, g_method_pairs + FLARE_ARRAY_SIZE(g_method_pairs),
               LessThanByName());
     char last_fc = '\0';
-    for (size_t i = 0; i < ARRAY_SIZE(g_method_pairs); ++i) {
+    for (size_t i = 0; i < FLARE_ARRAY_SIZE(g_method_pairs); ++i) {
         char fc = g_method_pairs[i].str[0];
         if (fc < 'A' || fc > 'Z') {
             LOG(ERROR) << "Invalid method_name=" << g_method_pairs[i].str;
@@ -97,7 +97,7 @@ static void BuildHttpMethodMaps() {
 const char *HttpMethod2Str(HttpMethod method) {
     pthread_once(&g_init_maps_once, BuildHttpMethodMaps);
     if ((int)method < 0 ||
-        (int)method >= (int)ARRAY_SIZE(g_method2str_map)) {
+        (int)method >= (int)FLARE_ARRAY_SIZE(g_method2str_map)) {
         return "UNKNOWN";
     }
     const char* s = g_method2str_map[method];
@@ -129,7 +129,7 @@ bool Str2HttpMethod(const char* method_str, HttpMethod* method) {
         return false;
     }
     --index;
-    for (; index < ARRAY_SIZE(g_method_pairs); ++index) {
+    for (; index < FLARE_ARRAY_SIZE(g_method_pairs); ++index) {
         const HttpMethodPair& p = g_method_pairs[index];
         if (strcasecmp(method_str, p.str) == 0) {
             *method = p.method;

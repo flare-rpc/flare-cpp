@@ -30,17 +30,17 @@ class BUTIL_EXPORT ScopedTempDir {
 
   // Creates a unique directory in TempPath, and takes ownership of it.
   // See file_util::CreateNewTemporaryDirectory.
-  bool CreateUniqueTempDir() WARN_UNUSED_RESULT;
+  bool CreateUniqueTempDir() FLARE_WARN_UNUSED_RESULT;
 
   // Creates a unique directory under a given path, and takes ownership of it.
-  bool CreateUniqueTempDirUnderPath(const FilePath& path) WARN_UNUSED_RESULT;
+  bool CreateUniqueTempDirUnderPath(const FilePath& path) FLARE_WARN_UNUSED_RESULT;
 
   // Takes ownership of directory at |path|, creating it if necessary.
   // Don't call multiple times unless Take() has been called first.
-  bool Set(const FilePath& path) WARN_UNUSED_RESULT;
+  bool Set(const FilePath& path) FLARE_WARN_UNUSED_RESULT;
 
   // Deletes the temporary directory wrapped by this object.
-  bool Delete() WARN_UNUSED_RESULT;
+  bool Delete() FLARE_WARN_UNUSED_RESULT;
 
   // Caller takes ownership of the temporary directory so it won't be destroyed
   // when this object goes out of scope.

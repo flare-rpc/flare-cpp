@@ -16,169 +16,169 @@
 // under the License.
 
 
-#include "flare/butil/macros.h"
+#include "flare/base/profile.h"
 #include "flare/base/fast_rand.h"
 #include "flare/brpc/socket.h"
 #include "flare/brpc/policy/randomized_load_balancer.h"
-#include "flare/butil/strings/string_number_conversions.h"
+#include "flare/base/strings.h"
 
 namespace brpc {
-namespace policy {
+    namespace policy {
 
-const uint32_t prime_offset[] = {
+        const uint32_t prime_offset[] = {
 #include "flare/bthread/offset_inl.list"
-};
+        };
 
-inline uint32_t GenRandomStride() {
-    return prime_offset[flare::base::fast_rand_less_than(ARRAY_SIZE(prime_offset))];
-}
-
-bool RandomizedLoadBalancer::Add(Servers& bg, const ServerId& id) {
-    if (bg.server_list.capacity() < 128) {
-        bg.server_list.reserve(128);
-    }
-    std::map<ServerId, size_t>::iterator it = bg.server_map.find(id);
-    if (it != bg.server_map.end()) {
-        return false;
-    }
-    bg.server_map[id] = bg.server_list.size();
-    bg.server_list.push_back(id);
-    return true;
-}
-
-bool RandomizedLoadBalancer::Remove(Servers& bg, const ServerId& id) {
-    std::map<ServerId, size_t>::iterator it = bg.server_map.find(id);
-    if (it != bg.server_map.end()) {
-        size_t index = it->second;
-        bg.server_list[index] = bg.server_list.back();
-        bg.server_map[bg.server_list[index]] = index;
-        bg.server_list.pop_back();
-        bg.server_map.erase(it);
-        return true;
-    }
-    return false;
-}
-
-size_t RandomizedLoadBalancer::BatchAdd(
-    Servers& bg, const std::vector<ServerId>& servers) {
-    size_t count = 0;
-    for (size_t i = 0; i < servers.size(); ++i) {
-        count += !!Add(bg, servers[i]);
-    }
-    return count;
-}
-
-size_t RandomizedLoadBalancer::BatchRemove(
-    Servers& bg, const std::vector<ServerId>& servers) {
-    size_t count = 0;
-    for (size_t i = 0; i < servers.size(); ++i) {
-        count += !!Remove(bg, servers[i]);
-    }
-    return count;
-}
-
-bool RandomizedLoadBalancer::AddServer(const ServerId& id) {
-    return _db_servers.Modify(Add, id);
-}
-
-bool RandomizedLoadBalancer::RemoveServer(const ServerId& id) {
-    return _db_servers.Modify(Remove, id);
-}
-
-size_t RandomizedLoadBalancer::AddServersInBatch(
-    const std::vector<ServerId>& servers) {
-    const size_t n = _db_servers.Modify(BatchAdd, servers);
-    LOG_IF(ERROR, n != servers.size())
-        << "Fail to AddServersInBatch, expected " << servers.size()
-        << " actually " << n;
-    return n;
-}
-
-size_t RandomizedLoadBalancer::RemoveServersInBatch(
-    const std::vector<ServerId>& servers) {
-    const size_t n = _db_servers.Modify(BatchRemove, servers);
-    LOG_IF(ERROR, n != servers.size())
-        << "Fail to RemoveServersInBatch, expected " << servers.size()
-        << " actually " << n;
-    return n;
-}
-
-int RandomizedLoadBalancer::SelectServer(const SelectIn& in, SelectOut* out) {
-    flare::container::DoublyBufferedData<Servers>::ScopedPtr s;
-    if (_db_servers.Read(&s) != 0) {
-        return ENOMEM;
-    }
-    size_t n = s->server_list.size();
-    if (n == 0) {
-        return ENODATA;
-    }
-    if (_cluster_recover_policy && _cluster_recover_policy->StopRecoverIfNecessary()) {
-        if (_cluster_recover_policy->DoReject(s->server_list)) {
-            return EREJECT;
+        inline uint32_t GenRandomStride() {
+            return prime_offset[flare::base::fast_rand_less_than(FLARE_ARRAY_SIZE(prime_offset))];
         }
-    }
-    uint32_t stride = 0;
-    size_t offset = flare::base::fast_rand_less_than(n);
-    for (size_t i = 0; i < n; ++i) {
-        const SocketId id = s->server_list[offset].id;
-        if (((i + 1) == n  // always take last chance
-             || !ExcludedServers::IsExcluded(in.excluded, id))
-            && Socket::Address(id, out->ptr) == 0
-            && (*out->ptr)->IsAvailable()) {
-            // We found an available server
-            return 0;
+
+        bool RandomizedLoadBalancer::Add(Servers &bg, const ServerId &id) {
+            if (bg.server_list.capacity() < 128) {
+                bg.server_list.reserve(128);
+            }
+            std::map<ServerId, size_t>::iterator it = bg.server_map.find(id);
+            if (it != bg.server_map.end()) {
+                return false;
+            }
+            bg.server_map[id] = bg.server_list.size();
+            bg.server_list.push_back(id);
+            return true;
         }
-        if (stride == 0) {
-            stride = GenRandomStride();
+
+        bool RandomizedLoadBalancer::Remove(Servers &bg, const ServerId &id) {
+            std::map<ServerId, size_t>::iterator it = bg.server_map.find(id);
+            if (it != bg.server_map.end()) {
+                size_t index = it->second;
+                bg.server_list[index] = bg.server_list.back();
+                bg.server_map[bg.server_list[index]] = index;
+                bg.server_list.pop_back();
+                bg.server_map.erase(it);
+                return true;
+            }
+            return false;
         }
-        // If `Address' failed, use `offset+stride' to retry so that
-        // this failed server won't be visited again inside for
-        offset = (offset + stride) % n;
-    }
-    if (_cluster_recover_policy) {
-        _cluster_recover_policy->StartRecover();
-    }
-    // After we traversed the whole server list, there is still no
-    // available server
-    return EHOSTDOWN;
-}
 
-RandomizedLoadBalancer* RandomizedLoadBalancer::New(
-    const std::string_view& params) const {
-    RandomizedLoadBalancer* lb = new (std::nothrow) RandomizedLoadBalancer;
-    if (lb && !lb->SetParameters(params)) {
-        delete lb;
-        lb = NULL;
-    }
-    return lb;
-}
-
-void RandomizedLoadBalancer::Destroy() {
-    delete this;
-}
-
-void RandomizedLoadBalancer::Describe(
-    std::ostream &os, const DescribeOptions& options) {
-    if (!options.verbose) {
-        os << "random";
-        return;
-    }
-    os << "Randomized{";
-    flare::container::DoublyBufferedData<Servers>::ScopedPtr s;
-    if (_db_servers.Read(&s) != 0) {
-        os << "fail to read _db_servers";
-    } else {
-        os << "n=" << s->server_list.size() << ':';
-        for (size_t i = 0; i < s->server_list.size(); ++i) {
-            os << ' ' << s->server_list[i];
+        size_t RandomizedLoadBalancer::BatchAdd(
+                Servers &bg, const std::vector<ServerId> &servers) {
+            size_t count = 0;
+            for (size_t i = 0; i < servers.size(); ++i) {
+                count += !!Add(bg, servers[i]);
+            }
+            return count;
         }
-    }
-    os << '}';
-}
 
-bool RandomizedLoadBalancer::SetParameters(const std::string_view& params) {
-    return GetRecoverPolicyByParams(params, &_cluster_recover_policy);
-}
+        size_t RandomizedLoadBalancer::BatchRemove(
+                Servers &bg, const std::vector<ServerId> &servers) {
+            size_t count = 0;
+            for (size_t i = 0; i < servers.size(); ++i) {
+                count += !!Remove(bg, servers[i]);
+            }
+            return count;
+        }
 
-}  // namespace policy
+        bool RandomizedLoadBalancer::AddServer(const ServerId &id) {
+            return _db_servers.Modify(Add, id);
+        }
+
+        bool RandomizedLoadBalancer::RemoveServer(const ServerId &id) {
+            return _db_servers.Modify(Remove, id);
+        }
+
+        size_t RandomizedLoadBalancer::AddServersInBatch(
+                const std::vector<ServerId> &servers) {
+            const size_t n = _db_servers.Modify(BatchAdd, servers);
+            LOG_IF(ERROR, n != servers.size())
+                            << "Fail to AddServersInBatch, expected " << servers.size()
+                            << " actually " << n;
+            return n;
+        }
+
+        size_t RandomizedLoadBalancer::RemoveServersInBatch(
+                const std::vector<ServerId> &servers) {
+            const size_t n = _db_servers.Modify(BatchRemove, servers);
+            LOG_IF(ERROR, n != servers.size())
+                            << "Fail to RemoveServersInBatch, expected " << servers.size()
+                            << " actually " << n;
+            return n;
+        }
+
+        int RandomizedLoadBalancer::SelectServer(const SelectIn &in, SelectOut *out) {
+            flare::container::DoublyBufferedData<Servers>::ScopedPtr s;
+            if (_db_servers.Read(&s) != 0) {
+                return ENOMEM;
+            }
+            size_t n = s->server_list.size();
+            if (n == 0) {
+                return ENODATA;
+            }
+            if (_cluster_recover_policy && _cluster_recover_policy->StopRecoverIfNecessary()) {
+                if (_cluster_recover_policy->DoReject(s->server_list)) {
+                    return EREJECT;
+                }
+            }
+            uint32_t stride = 0;
+            size_t offset = flare::base::fast_rand_less_than(n);
+            for (size_t i = 0; i < n; ++i) {
+                const SocketId id = s->server_list[offset].id;
+                if (((i + 1) == n  // always take last chance
+                     || !ExcludedServers::IsExcluded(in.excluded, id))
+                    && Socket::Address(id, out->ptr) == 0
+                    && (*out->ptr)->IsAvailable()) {
+                    // We found an available server
+                    return 0;
+                }
+                if (stride == 0) {
+                    stride = GenRandomStride();
+                }
+                // If `Address' failed, use `offset+stride' to retry so that
+                // this failed server won't be visited again inside for
+                offset = (offset + stride) % n;
+            }
+            if (_cluster_recover_policy) {
+                _cluster_recover_policy->StartRecover();
+            }
+            // After we traversed the whole server list, there is still no
+            // available server
+            return EHOSTDOWN;
+        }
+
+        RandomizedLoadBalancer *RandomizedLoadBalancer::New(
+                const std::string_view &params) const {
+            RandomizedLoadBalancer *lb = new(std::nothrow) RandomizedLoadBalancer;
+            if (lb && !lb->SetParameters(params)) {
+                delete lb;
+                lb = NULL;
+            }
+            return lb;
+        }
+
+        void RandomizedLoadBalancer::Destroy() {
+            delete this;
+        }
+
+        void RandomizedLoadBalancer::Describe(
+                std::ostream &os, const DescribeOptions &options) {
+            if (!options.verbose) {
+                os << "random";
+                return;
+            }
+            os << "Randomized{";
+            flare::container::DoublyBufferedData<Servers>::ScopedPtr s;
+            if (_db_servers.Read(&s) != 0) {
+                os << "fail to read _db_servers";
+            } else {
+                os << "n=" << s->server_list.size() << ':';
+                for (size_t i = 0; i < s->server_list.size(); ++i) {
+                    os << ' ' << s->server_list[i];
+                }
+            }
+            os << '}';
+        }
+
+        bool RandomizedLoadBalancer::SetParameters(const std::string_view &params) {
+            return GetRecoverPolicyByParams(params, &_cluster_recover_policy);
+        }
+
+    }  // namespace policy
 } // namespace brpc

@@ -16,7 +16,7 @@
 // under the License.
 
 
-#include "flare/butil/macros.h"                           // ARRAY_SIZE
+#include "flare/base/profile.h"                           // FLARE_ARRAY_SIZE
 #include "flare/io/iobuf.h"                            // flare::io::IOBuf
 #include "flare/brpc/controller.h"                   // Controller
 #include "flare/brpc/builtin/get_favicon_service.h"

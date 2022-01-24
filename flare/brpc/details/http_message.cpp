@@ -21,7 +21,7 @@
 #include <string>                               // std::string
 #include <iostream>
 #include <gflags/gflags.h>
-#include "flare/butil/macros.h"
+#include "flare/base/profile.h"
 #include "flare/base/logging.h"                       // LOG
 #include "flare/base/scoped_lock.h"
 #include "flare/base/endpoint.h"

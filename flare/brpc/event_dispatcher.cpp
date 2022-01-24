@@ -284,16 +284,16 @@ namespace brpc {
             epoll_event e[32];
 #ifdef BRPC_ADDITIONAL_EPOLL
             // Performance downgrades in examples.
-            int n = epoll_wait(_epfd, e, ARRAY_SIZE(e), 0);
+            int n = epoll_wait(_epfd, e, FLARE_ARRAY_SIZE(e), 0);
             if (n == 0) {
-                n = epoll_wait(_epfd, e, ARRAY_SIZE(e), -1);
+                n = epoll_wait(_epfd, e, FLARE_ARRAY_SIZE(e), -1);
             }
 #else
-            const int n = epoll_wait(_epfd, e, ARRAY_SIZE(e), -1);
+            const int n = epoll_wait(_epfd, e, FLARE_ARRAY_SIZE(e), -1);
 #endif
 #elif defined(FLARE_PLATFORM_OSX)
             struct kevent e[32];
-            int n = kevent(_epfd, NULL, 0, e, ARRAY_SIZE(e), NULL);
+            int n = kevent(_epfd, NULL, 0, e, FLARE_ARRAY_SIZE(e), NULL);
 #endif
             if (_stop) {
                 // epoll_ctl/epoll_wait should have some sort of memory fencing

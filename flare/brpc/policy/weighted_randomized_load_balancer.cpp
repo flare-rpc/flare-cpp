@@ -21,7 +21,7 @@
 #include "flare/base/fast_rand.h"
 #include "flare/brpc/socket.h"
 #include "flare/brpc/policy/weighted_randomized_load_balancer.h"
-#include "flare/butil/strings/string_number_conversions.h"
+#include "flare/base/strings.h"
 
 namespace brpc {
 namespace policy {
@@ -35,8 +35,9 @@ bool WeightedRandomizedLoadBalancer::Add(Servers& bg, const ServerId& id) {
         bg.server_list.reserve(128);
     }
     uint32_t weight = 0;
-    if (butil::StringToUint(id.tag, &weight) &&
-        weight > 0) {
+    auto r = flare::base::try_parse<uint32_t>(id.tag);
+    if (r && *r > 0) {
+        weight = *r;
         bool insert_server =
                  bg.server_map.emplace(id.id, bg.server_list.size()).second;
         if (insert_server) {

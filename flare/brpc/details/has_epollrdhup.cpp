@@ -16,7 +16,7 @@
 // under the License.
 
 
-#include "flare/butil/build_config.h"
+#include "flare/base/profile.h"
 
 #if defined(FLARE_PLATFORM_LINUX)
 

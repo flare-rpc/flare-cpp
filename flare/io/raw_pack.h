@@ -18,7 +18,7 @@
 #ifndef BUTIL_RAW_PACK_H
 #define BUTIL_RAW_PACK_H
 
-#include "flare/butil/sys_byteorder.h"
+#include "flare/base/sys_byteorder.h"
 
 namespace flare::io {
 
@@ -49,15 +49,15 @@ public:
     // Not using operator<< because some values may be packed differently from
     // its type.
     RawPacker& pack32(uint32_t host_value) {
-        *(uint32_t*)_stream = butil::HostToNet32(host_value);
+        *(uint32_t*)_stream = flare::base::HostToNet32(host_value);
         _stream += 4;
         return *this;
     }
 
     RawPacker& pack64(uint64_t host_value) {
         uint32_t *p = (uint32_t*)_stream;
-        p[0] = butil::HostToNet32(host_value >> 32);
-        p[1] = butil::HostToNet32(host_value & 0xFFFFFFFF);
+        p[0] = flare::base::HostToNet32(host_value >> 32);
+        p[1] = flare::base::HostToNet32(host_value & 0xFFFFFFFF);
         _stream += 8;
         return *this;
     }
@@ -74,14 +74,14 @@ public:
     ~RawUnpacker() {}
 
     RawUnpacker& unpack32(uint32_t & host_value) {
-        host_value = butil::NetToHost32(*(const uint32_t*)_stream);
+        host_value = flare::base::NetToHost32(*(const uint32_t*)_stream);
         _stream += 4;
         return *this;
     }
 
     RawUnpacker& unpack64(uint64_t & host_value) {
         const uint32_t *p = (const uint32_t*)_stream;
-        host_value = (((uint64_t)butil::NetToHost32(p[0])) << 32) | butil::NetToHost32(p[1]);
+        host_value = (((uint64_t)flare::base::NetToHost32(p[0])) << 32) | flare::base::NetToHost32(p[1]);
         _stream += 8;
         return *this;
     }

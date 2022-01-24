@@ -25,7 +25,7 @@
 #include <google/protobuf/descriptor.h>             // ServiceDescriptor
 #include "flare/idl_options.pb.h"                         // option(idl_support)
 #include "flare/bthread/unstable.h"                       // bthread_keytable_pool_init
-#include "flare/butil/macros.h"                            // ARRAY_SIZE
+#include "flare/base/profile.h"                            // FLARE_ARRAY_SIZE
 #include "flare/base/fd_guard.h"                          // fd_guard
 #include "flare/base/logging.h"                           // CHECK
 #include "flare/base/time.h"

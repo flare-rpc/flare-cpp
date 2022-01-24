@@ -26,7 +26,7 @@
 #include "flare/base/string_splitter.h"                  // StringMultiSplitter
 #include "flare/base/strings.h"
 #include "flare/base/time.h"
-#include "flare/butil/sys_byteorder.h"
+#include "flare/base/sys_byteorder.h"
 #include "flare/brpc/compress.h"
 #include "flare/brpc/errno.pb.h"                     // ENOSERVICE, ENOMETHOD
 #include "flare/brpc/controller.h"                   // Controller
@@ -234,7 +234,7 @@ static void PrintMessage(const flare::io::IOBuf& inbuf,
 static void AddGrpcPrefix(flare::io::IOBuf* body, bool compressed) {
     char buf[5];
     buf[0] = (compressed ? 1 : 0);
-    *(uint32_t*)(buf + 1) = butil::HostToNet32(body->size());
+    *(uint32_t*)(buf + 1) = flare::base::HostToNet32(body->size());
     flare::io::IOBuf tmp_buf;
     tmp_buf.append(buf, sizeof(buf));
     tmp_buf.append(flare::io::IOBuf::Movable(*body));
@@ -253,7 +253,7 @@ static bool RemoveGrpcPrefix(flare::io::IOBuf* body, bool* compressed) {
     char buf[5];
     body->cutn(buf, sizeof(buf));
     *compressed = buf[0];
-    const size_t message_length = butil::NetToHost32(*(uint32_t*)(buf + 1));
+    const size_t message_length = flare::base::NetToHost32(*(uint32_t*)(buf + 1));
     return (message_length + 5 == sz);
 }
 

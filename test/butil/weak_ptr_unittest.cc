@@ -7,7 +7,7 @@
 #include <string>
 
 #include "flare/butil/debug/leak_annotations.h"
-#include "flare/butil/memory/scoped_ptr.h"
+#include "flare/memory/scoped_ptr.h"
 #include "flare/butil/synchronization/waitable_event.h"
 #include <gtest/gtest.h>
 

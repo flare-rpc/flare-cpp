@@ -170,17 +170,6 @@
 #define FINAL
 #endif
 
-// Annotate a function indicating the caller must examine the return value.
-// Use like:
-//   int foo() WARN_UNUSED_RESULT;
-// To explicitly ignore a result, see |ignore_result()| in "butil/basictypes.h".
-// FIXME(gejun): GCC 3.4 report "unused" variable incorrectly (actually used).
-#if defined(COMPILER_GCC) && __cplusplus >= 201103 && \
-      (__GNUC__ * 10000 + __GNUC_MINOR__ * 100) >= 40700
-#define WARN_UNUSED_RESULT __attribute__((warn_unused_result))
-#else
-#define WARN_UNUSED_RESULT
-#endif
 
 // Tell the compiler a function is using a printf-style format string.
 // |format_param| is the one-based index of the format string parameter;

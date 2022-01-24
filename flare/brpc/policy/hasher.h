@@ -21,7 +21,7 @@
 
 #include <stddef.h>
 #include <stdint.h>
-#include "flare/butil/strings/string_piece.h"
+#include <string_view>
 
 
 namespace brpc {

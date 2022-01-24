@@ -22,11 +22,11 @@
 #ifndef BTHREAD_PROCESSOR_H
 #define BTHREAD_PROCESSOR_H
 
-#include "flare/butil/build_config.h"
+#include "flare/base/profile.h"
 
 // Pause instruction to prevent excess processor bus usage, only works in GCC
 # ifndef cpu_relax
-#if defined(ARCH_CPU_ARM_FAMILY)
+#if defined(FLARE_PROCESSOR_ARM)
 # define cpu_relax() asm volatile("yield\n": : :"memory")
 #else
 # define cpu_relax() asm volatile("pause\n": : :"memory")

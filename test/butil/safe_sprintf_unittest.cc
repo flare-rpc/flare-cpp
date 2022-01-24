@@ -10,7 +10,7 @@
 #include <limits>
 
 #include "flare/base/logging.h"
-#include "flare/butil/memory/scoped_ptr.h"
+#include "flare/memory/scoped_ptr.h"
 #include <gtest/gtest.h>
 
 // Death tests on Android are currently very flaky. No need to add more flaky

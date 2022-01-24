@@ -9,7 +9,7 @@
 #include <vector>
 
 #include "flare/base/logging.h"
-#include "flare/butil/memory/scoped_ptr.h"
+#include "flare/memory/scoped_ptr.h"
 #include "flare/butil/synchronization/condition_variable.h"
 #include "flare/base/lock.h"
 #include "flare/butil/synchronization/spin_wait.h"

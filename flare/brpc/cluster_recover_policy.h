@@ -22,8 +22,7 @@
 #include <cstdint>
 #include <memory>
 #include "flare/base/lock.h"
-#include "flare/butil/strings/string_piece.h"
-#include "flare/butil/strings/string_number_conversions.h"
+#include <string_view>
 
 namespace brpc {
 

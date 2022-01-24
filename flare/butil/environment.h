@@ -9,7 +9,7 @@
 #include <string>
 
 #include "flare/butil/base_export.h"
-#include "flare/butil/memory/scoped_ptr.h"
+#include "flare/memory/scoped_ptr.h"
 #include "flare/butil/strings/string16.h"
 #include "flare/butil/build_config.h"
 

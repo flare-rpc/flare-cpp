@@ -17,7 +17,7 @@
 
 
 #include <google/protobuf/descriptor.h>
-#include "flare/butil/sys_byteorder.h"
+#include "flare/base/sys_byteorder.h"
 #include "flare/base/logging.h"
 #include "flare/container/find_cstr.h"
 #include "flare/brpc/log.h"

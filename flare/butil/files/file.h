@@ -19,7 +19,7 @@
 #include "flare/butil/base_export.h"
 #include "flare/butil/basictypes.h"
 #include "flare/base/scoped_file.h"
-#include "flare/butil/move.h"
+#include "flare/memory/move.h"
 #include "flare/butil/time/time.h"
 
 #if defined(OS_WIN)
