@@ -269,7 +269,7 @@ TEST(SecurityTest, TCMALLOC_TEST(RandomMemoryAllocations)) {
   // 1 MB should get us past what TCMalloc pre-allocated before initializing
   // the sophisticated allocators.
   size_t kAllocSize = 1<<20;
-  scoped_ptr<char, butil::FreeDeleter> ptr(
+  scoped_ptr<char, flare::memory::FreeDeleter> ptr(
       static_cast<char*>(malloc(kAllocSize)));
   ASSERT_TRUE(ptr != NULL);
   // If two pointers are separated by less than 512MB, they are considered
