@@ -5,7 +5,7 @@
 #include <sstream>
 #include <stdexcept>
 #include <cmath>
-#include <climit>
+#include <climits>
 #include "flare/base/strings.h"
 #include "flare/base/logging.h"
 
