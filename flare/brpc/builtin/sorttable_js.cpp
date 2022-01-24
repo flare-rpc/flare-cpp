@@ -471,7 +471,7 @@ const char* sorttable_js() {
 "  this.cancelBubble = true;\n"
 "}\n"
 "\n"
-"// Dean's forEach: http://dean.edwards.name/butil/forEach.js\n"
+"// Dean's forEach: http://dean.edwards.name/flare/forEach.js\n"
 "/*\n"
 "    forEach, version 1.0\n"
 "    Copyright 2006, Dean Edwards\n"

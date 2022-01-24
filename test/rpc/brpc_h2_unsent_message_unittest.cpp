@@ -25,7 +25,7 @@
 #include "flare/base/static_atomic.h"
 #include "flare/brpc/policy/http_rpc_protocol.h"
 #include "flare/brpc/policy/http2_rpc_protocol.h"
-#include "flare/butil/gperftools_profiler.h"
+#include "flare/base/gperftools_profiler.h"
 
 int main(int argc, char* argv[]) {
     testing::InitGoogleTest(&argc, argv);

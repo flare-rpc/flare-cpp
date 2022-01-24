@@ -19,92 +19,89 @@
 #include <strings.h>
 #include "flare/base/strings.h"
 #include "flare/base/logging.h"
-#include "flare/butil/strings/string_number_conversions.h"
 #include "flare/brpc/adaptive_max_concurrency.h"
-#include "flare/base/strings.h"
 
 namespace brpc {
 
-AdaptiveMaxConcurrency::AdaptiveMaxConcurrency()
-    : _value(UNLIMITED())
-    , _max_concurrency(0) {
-}
-
-AdaptiveMaxConcurrency::AdaptiveMaxConcurrency(int max_concurrency)
-    : _max_concurrency(0) {
-    if (max_concurrency <= 0) {
-        _value = UNLIMITED();
-        _max_concurrency = 0;
-    } else {
-        _value = flare::base::string_printf("%d", max_concurrency);
-        _max_concurrency = max_concurrency;
+    AdaptiveMaxConcurrency::AdaptiveMaxConcurrency()
+            : _value(UNLIMITED()), _max_concurrency(0) {
     }
-}
 
-inline bool CompareStringPieceWithoutCase(
-    const std::string_view& s1, const char* s2) {
-    DCHECK(s2 != NULL);
-    if (std::strlen(s2) != s1.size()) {
-        return false;
+    AdaptiveMaxConcurrency::AdaptiveMaxConcurrency(int max_concurrency)
+            : _max_concurrency(0) {
+        if (max_concurrency <= 0) {
+            _value = UNLIMITED();
+            _max_concurrency = 0;
+        } else {
+            _value = flare::base::string_printf("%d", max_concurrency);
+            _max_concurrency = max_concurrency;
+        }
     }
-    return ::strncasecmp(s1.data(), s2, s1.size()) == 0;
-}
 
-AdaptiveMaxConcurrency::AdaptiveMaxConcurrency(const std::string_view& value)
-    : _max_concurrency(0) {
-    int max_concurrency = 0;
-    if (butil::StringToInt(value, &max_concurrency)) {
-        operator=(max_concurrency);
-    } else {
-        flare::base::copy_to_string(value, &_value);
-        _max_concurrency = -1;
+    inline bool CompareStringPieceWithoutCase(
+            const std::string_view &s1, const char *s2) {
+        DCHECK(s2 != NULL);
+        if (std::strlen(s2) != s1.size()) {
+            return false;
+        }
+        return ::strncasecmp(s1.data(), s2, s1.size()) == 0;
     }
-}
 
-void AdaptiveMaxConcurrency::operator=(const std::string_view& value) {
-    int max_concurrency = 0;
-    if (butil::StringToInt(value, &max_concurrency)) {
-        return operator=(max_concurrency);
-    } else {
-        flare::base::copy_to_string(value, &_value);
-        _max_concurrency = -1;
+    AdaptiveMaxConcurrency::AdaptiveMaxConcurrency(const std::string_view &value)
+            : _max_concurrency(0) {
+        auto max_concurrency = flare::base::try_parse<int>(value);
+        if (max_concurrency) {
+            operator=(*max_concurrency);
+        } else {
+            flare::base::copy_to_string(value, &_value);
+            _max_concurrency = -1;
+        }
     }
-}
 
-void AdaptiveMaxConcurrency::operator=(int max_concurrency) {
-    if (max_concurrency <= 0) {
-        _value = UNLIMITED();
-        _max_concurrency = 0;
-    } else {
-        _value = flare::base::string_printf("%d", max_concurrency);
-        _max_concurrency = max_concurrency;
+    void AdaptiveMaxConcurrency::operator=(const std::string_view &value) {
+        auto max_concurrency = flare::base::try_parse<int>(value);
+        if (max_concurrency) {
+            return operator=(*max_concurrency);
+        } else {
+            flare::base::copy_to_string(value, &_value);
+            _max_concurrency = -1;
+        }
     }
-}
 
-const std::string& AdaptiveMaxConcurrency::type() const {
-    if (_max_concurrency > 0) {
-        return CONSTANT();
-    } else if (_max_concurrency == 0) {
-        return UNLIMITED();
-    } else {
-        return _value;
+    void AdaptiveMaxConcurrency::operator=(int max_concurrency) {
+        if (max_concurrency <= 0) {
+            _value = UNLIMITED();
+            _max_concurrency = 0;
+        } else {
+            _value = flare::base::string_printf("%d", max_concurrency);
+            _max_concurrency = max_concurrency;
+        }
     }
-}
 
-const std::string& AdaptiveMaxConcurrency::UNLIMITED() {
-    static std::string* s = new std::string("unlimited");
-    return *s;
-}
+    const std::string &AdaptiveMaxConcurrency::type() const {
+        if (_max_concurrency > 0) {
+            return CONSTANT();
+        } else if (_max_concurrency == 0) {
+            return UNLIMITED();
+        } else {
+            return _value;
+        }
+    }
 
-const std::string& AdaptiveMaxConcurrency::CONSTANT() {
-    static std::string* s = new std::string("constant");
-    return *s;
-}
+    const std::string &AdaptiveMaxConcurrency::UNLIMITED() {
+        static std::string *s = new std::string("unlimited");
+        return *s;
+    }
 
-bool operator==(const AdaptiveMaxConcurrency& adaptive_concurrency,
-                const std::string_view& concurrency) {
-    return CompareStringPieceWithoutCase(concurrency, 
-                                         adaptive_concurrency.value().c_str());
-}
+    const std::string &AdaptiveMaxConcurrency::CONSTANT() {
+        static std::string *s = new std::string("constant");
+        return *s;
+    }
+
+    bool operator==(const AdaptiveMaxConcurrency &adaptive_concurrency,
+                    const std::string_view &concurrency) {
+        return CompareStringPieceWithoutCase(concurrency,
+                                             adaptive_concurrency.value().c_str());
+    }
 
 }  // namespace brpc

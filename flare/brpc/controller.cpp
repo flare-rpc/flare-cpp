@@ -21,7 +21,6 @@
 #include <google/protobuf/descriptor.h>
 #include <gflags/gflags.h>
 #include "flare/bthread/bthread.h"
-#include "flare/butil/build_config.h"    // FLARE_PLATFORM_OSX
 #include "flare/base/strings.h"
 #include "flare/base/logging.h"
 #include "flare/base/time.h"

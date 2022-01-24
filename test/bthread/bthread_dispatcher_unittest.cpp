@@ -25,7 +25,7 @@
 #include "flare/base/scoped_lock.h"
 #include "flare/base/fd_utility.h"
 #include "flare/base/logging.h"
-#include "flare/butil/gperftools_profiler.h"
+#include "flare/base/gperftools_profiler.h"
 #include "flare/bthread/bthread.h"
 #include "flare/bthread/task_control.h"
 #include "flare/bthread/task_group.h"

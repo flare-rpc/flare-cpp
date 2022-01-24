@@ -26,6 +26,7 @@
 #include "flare/base/fast_rand.h"
 #include "flare/base/time.h"
 #include "flare/base/string_splitter.h"
+#include "flare/base/strings.h"
 
 namespace brpc {
 
@@ -119,15 +120,20 @@ bool GetRecoverPolicyByParams(const std::string_view& params,
             return false;
         }
         if (sp.key() == "min_working_instances") {
-            if (!butil::StringToInt64(sp.value(), &min_working_instances)) {
+            auto r = flare::base::try_parse<int64_t>(sp.value());
+            if (!r) {
                 return false;
             }
+
+            min_working_instances = *r;
             has_meet_params = true;
             continue;
         } else if (sp.key() == "hold_seconds") {
-            if (!butil::StringToInt64(sp.value(), &hold_seconds)) {
+            auto r = flare::base::try_parse<int64_t>(sp.value());
+            if (!r) {
                 return false;
             }
+            hold_seconds = *r;
             has_meet_params = true;
             continue;
         }

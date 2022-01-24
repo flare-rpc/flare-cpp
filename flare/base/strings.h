@@ -9,6 +9,7 @@
 #include <vector>
 #include <cstring>
 #include <algorithm>
+#include <optional>
 #include <stdarg.h>
 #include <string_view>
 #include "flare/base/profile.h"
@@ -350,6 +351,55 @@ namespace flare::base {
     inline char front_char(const std::string_view &s) { return s[0]; }
 
     inline char back_char(const std::string_view &s) { return s[s.size() - 1]; }
+
+    template<class T, class = void>
+    struct try_parse_traits;
+
+    template<class T, class... Args>
+    inline std::optional<T> try_parse(const std::string_view &s,
+                                      const Args &... args) {
+        return try_parse_traits<T>::try_parse(s, args...);
+    }
+
+
+    template<class T, class>
+    struct try_parse_traits {
+        // The default implementation delegates calls to `TryParse` found by ADL.
+        template<class... Args>
+        static std::optional<T> try_parse(const std::string_view &s,
+                                          const Args &... args) {
+            return TryParse(std::common_type<T>(), s, args...);
+        }
+    };
+
+    template<>
+    struct try_parse_traits<bool> {
+        // For numerical values, only 0 and 1 are recognized, all other numeric values
+        // lead to parse failure (i.e., `std::nullopt` is returned).
+        //
+        // If `recognizes_alphabet_symbol` is set, following symbols are recognized:
+        //
+        // - "true" / "false"
+        // - "y" / "n"
+        // - "yes" / "no"
+        //
+        // For all other symbols, we treat them as neither `true` nor `false`.
+        // `std::nullopt` is returned in those cases.
+        static std::optional<bool> try_parse(const std::string_view &s,
+                                             bool recognizes_alphabet_symbol = true,
+                                             bool ignore_case = true);
+    };
+
+    template<class T>
+    struct try_parse_traits<T, std::enable_if_t<std::is_integral_v<T>>> {
+        static std::optional<T> try_parse(const std::string_view &s, int base = 10);
+    };
+
+    template<class T>
+    struct try_parse_traits<T, std::enable_if_t<std::is_floating_point_v<T>>> {
+        static std::optional<T> try_parse(const std::string_view &s);
+    };
+
 
 }  // namespace flare::base
 #endif  // FLARE_BASE_STRINGS_H_

@@ -22,7 +22,7 @@
 #include <string>                      // std::string
 #include "flare/base/profile.h"
 #include "flare/io/iobuf.h"               // flare::io::IOBuf
-#include "flare/base/scoped_lock.h"         // butil::unique_lock
+#include "flare/base/scoped_lock.h"
 #include "flare/base/endpoint.h"
 #include "flare/brpc/details/http_parser.h"  // http_parser
 #include "flare/brpc/http_header.h"          // HttpHeader

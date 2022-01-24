@@ -23,7 +23,7 @@
 #include <sys/socket.h>
 #include <netdb.h>                   //
 #include <gtest/gtest.h>
-#include "flare/butil/gperftools_profiler.h"
+#include "flare/base/gperftools_profiler.h"
 #include "flare/base/time.h"
 #include "flare/butil/macros.h"
 #include "flare/base/fd_utility.h"

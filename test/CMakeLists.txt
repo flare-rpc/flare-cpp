@@ -76,7 +76,6 @@ file(COPY ${PROJECT_SOURCE_DIR}/test/run_tests.sh DESTINATION ${CMAKE_CURRENT_BI
 SET(TEST_BUTIL_SOURCES
         ${PROJECT_SOURCE_DIR}/test/butil/recordio_unittest.cpp
         ${PROJECT_SOURCE_DIR}/test/butil/at_exit_unittest.cc
-        ${PROJECT_SOURCE_DIR}/test/butil/big_endian_unittest.cc
         ${PROJECT_SOURCE_DIR}/test/butil/crash_logging_unittest.cc
         ${PROJECT_SOURCE_DIR}/test/butil/leak_tracker_unittest.cc
         ${PROJECT_SOURCE_DIR}/test/butil/stack_trace_unittest.cc

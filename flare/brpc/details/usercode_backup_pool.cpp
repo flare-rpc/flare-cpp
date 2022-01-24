@@ -20,9 +20,6 @@
 #include <vector>
 #include <gflags/gflags.h>
 #include "flare/base/scoped_lock.h"
-#ifdef BAIDU_INTERNAL
-#include "flare/butil/comlog_sink.h"
-#endif
 #include "flare/brpc/details/usercode_backup_pool.h"
 
 namespace bthread {

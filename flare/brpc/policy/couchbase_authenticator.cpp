@@ -20,7 +20,7 @@
 #include "flare/base/base64.h"
 #include "flare/io/iobuf.h"
 #include "flare/base/strings.h"
-#include "flare/butil/sys_byteorder.h"
+#include "flare/base/sys_byteorder.h"
 #include "flare/brpc/policy/memcache_binary_header.h"
 
 namespace brpc {
@@ -38,8 +38,8 @@ constexpr char kPadding[1] = {'\0'};
 int CouchbaseAuthenticator::GenerateCredential(std::string* auth_str) const {
     const brpc::policy::MemcacheRequestHeader header = {
         brpc::policy::MC_MAGIC_REQUEST, brpc::policy::MC_BINARY_SASL_AUTH,
-        butil::HostToNet16(sizeof(kPlainAuthCommand) - 1), 0, 0, 0,
-        butil::HostToNet32(sizeof(kPlainAuthCommand) + 1 +
+        flare::base::HostToNet16(sizeof(kPlainAuthCommand) - 1), 0, 0, 0,
+        flare::base::HostToNet32(sizeof(kPlainAuthCommand) + 1 +
                            bucket_name_.length() * 2 + bucket_password_.length()),
         0, 0};
     auth_str->clear();

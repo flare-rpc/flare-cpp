@@ -19,15 +19,12 @@
 #ifndef BRPC_RPC_DUMP_H
 #define BRPC_RPC_DUMP_H
 
+#include <filesystem>
 #include <gflags/gflags_declare.h>
 #include "flare/io/iobuf.h"                            // IOBuf
-#include "flare/butil/files/file_path.h"                  // FilePath
 #include "flare/bvar/collector.h"
 #include "flare/brpc/rpc_dump.pb.h"                       // RpcDumpMeta
 
-namespace butil {
-class FileEnumerator;
-}
 
 namespace brpc {
 
@@ -96,8 +93,8 @@ private:
     
     flare::io::IOPortal _cur_buf;
     int _cur_fd;
-    butil::FileEnumerator* _enum;
-    butil::FilePath _dir;
+    std::filesystem::directory_iterator _enum;
+    std::string _dir;
 };
 
 } // namespace brpc

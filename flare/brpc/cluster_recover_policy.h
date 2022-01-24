@@ -23,7 +23,6 @@
 #include <memory>
 #include "flare/base/lock.h"
 #include <string_view>
-#include "flare/butil/strings/string_number_conversions.h"
 
 namespace brpc {
 

@@ -22,7 +22,7 @@
 #include "flare/base/logging.h"                       // LOG()
 #include "flare/base/time.h"
 #include "flare/io/iobuf.h"                         // flare::io::IOBuf
-#include "flare/butil/sys_byteorder.h"
+#include "flare/base/sys_byteorder.h"
 #include "flare/brpc/controller.h"               // Controller
 #include "flare/brpc/details/controller_private_accessor.h"
 #include "flare/brpc/socket.h"                   // Socket
@@ -89,7 +89,7 @@ ParseResult ParseMemcacheMessage(flare::io::IOBuf* source,
             return MakeParseError(PARSE_ERROR_NOT_ENOUGH_DATA);
         }
         const MemcacheResponseHeader* header = (const MemcacheResponseHeader*)p;
-        uint32_t total_body_length = butil::NetToHost32(header->total_body_length);
+        uint32_t total_body_length = flare::base::NetToHost32(header->total_body_length);
         if (source->size() < sizeof(*header) + total_body_length) {
             return MakeParseError(PARSE_ERROR_NOT_ENOUGH_DATA);
         }
@@ -117,13 +117,13 @@ ParseResult ParseMemcacheMessage(flare::io::IOBuf* source,
         const MemcacheResponseHeader local_header = {
             header->magic,
             header->command,
-            butil::NetToHost16(header->key_length),
+            flare::base::NetToHost16(header->key_length),
             header->extras_length,
             header->data_type,
-            butil::NetToHost16(header->status),
+            flare::base::NetToHost16(header->status),
             total_body_length,
-            butil::NetToHost32(header->opaque),
-            butil::NetToHost64(header->cas_value),
+            flare::base::NetToHost32(header->opaque),
+            flare::base::NetToHost64(header->cas_value),
         };
         msg->meta.append(&local_header, sizeof(local_header));
         source->pop_front(sizeof(*header));

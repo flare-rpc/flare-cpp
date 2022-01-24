@@ -25,7 +25,7 @@
 #include <gtest/gtest.h>
 #include <gflags/gflags.h>
 #include <google/protobuf/descriptor.h>
-#include "flare/butil/gperftools_profiler.h"
+#include "flare/base/gperftools_profiler.h"
 #include "flare/base/time.h"
 #include "flare/butil/macros.h"
 #include "flare/brpc/socket.h"

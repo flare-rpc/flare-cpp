@@ -236,7 +236,6 @@ set(BUTIL_SOURCES
         ${PROJECT_SOURCE_DIR}/flare/butil/third_party/snappy/snappy-stubs-internal.cc
         ${PROJECT_SOURCE_DIR}/flare/butil/third_party/snappy/snappy.cc
         ${PROJECT_SOURCE_DIR}/flare/butil/at_exit.cc
-        ${PROJECT_SOURCE_DIR}/flare/butil/big_endian.cc
         ${PROJECT_SOURCE_DIR}/flare/butil/debug/alias.cc
         ${PROJECT_SOURCE_DIR}/flare/butil/debug/asan_invalid_access.cc
         ${PROJECT_SOURCE_DIR}/flare/butil/debug/crash_logging.cc

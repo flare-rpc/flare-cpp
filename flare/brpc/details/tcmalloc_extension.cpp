@@ -18,7 +18,6 @@
 #include <pthread.h>
 #include <dlfcn.h>                               // dlsym
 #include <stdlib.h>                              // getenv
-#include "flare/butil/compiler_specific.h"
 #include "flare/brpc/details/tcmalloc_extension.h"
 #include "flare/base/profile.h"
 

@@ -26,8 +26,7 @@
 #include <gflags/gflags.h>
 #include <fcntl.h>                               // O_RDONLY
 #include <signal.h>
-
-#include "flare/butil/build_config.h"                  // FLARE_PLATFORM_LINUX
+#include "flare/base/profile.h"
 // Naming services
 #ifdef BAIDU_INTERNAL
 #include "flare/brpc/policy/baidu_naming_service.h"

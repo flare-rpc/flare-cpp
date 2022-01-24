@@ -22,7 +22,7 @@
 #include <flare/bthread/countdown_event.h>
 #include "flare/base/time.h"
 #include "flare/base/fast_rand.h"
-#include "flare/butil/gperftools_profiler.h"
+#include "flare/base/gperftools_profiler.h"
 
 namespace {
 bool stopped = false;

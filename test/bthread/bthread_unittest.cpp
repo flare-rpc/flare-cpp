@@ -21,7 +21,7 @@
 #include "flare/butil/macros.h"
 #include "flare/base/logging.h"
 #include "flare/base/logging.h"
-#include "flare/butil/gperftools_profiler.h"
+#include "flare/base/gperftools_profiler.h"
 #include "flare/bthread/bthread.h"
 #include "flare/bthread/unstable.h"
 #include "flare/bthread/task_meta.h"

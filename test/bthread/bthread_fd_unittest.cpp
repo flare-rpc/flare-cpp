@@ -22,7 +22,7 @@
 #include <fcntl.h>
 #include <gtest/gtest.h>
 #include <pthread.h>
-#include "flare/butil/gperftools_profiler.h"
+#include "flare/base/gperftools_profiler.h"
 #include "flare/base/time.h"
 #include "flare/butil/macros.h"
 #include "flare/base/fd_utility.h"

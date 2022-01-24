@@ -21,8 +21,8 @@
 #include <gflags/gflags.h>
 #include "flare/base/time.h"                              // milliseconds_from_now
 #include "flare/base/logging.h"
+#include "flare/base/strings.h"
 #include "flare/hash/murmurhash3.h"
-#include "flare/butil/strings/string_util.h"
 #include "flare/bthread/unstable.h"                        // bthread_timer_add
 #include "flare/brpc/socket_map.h"                         // SocketMapInsert
 #include "flare/brpc/compress.h"
@@ -183,7 +183,7 @@ namespace brpc {
         // Normalize connection_group
         std::string &cg = _options.connection_group;
         if (!cg.empty() && (::isspace(cg.front()) || ::isspace(cg.back()))) {
-            butil::TrimWhitespace(cg, butil::TRIM_ALL, &cg);
+            flare::base::strip_ascii_whitespace(&cg);
         }
         return 0;
     }

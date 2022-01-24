@@ -17,7 +17,7 @@
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 #include "flare/base/logging.h"
-#include "flare/butil/ssl_compat.h"
+#include "flare/io/ssl_compat.h"
 #include "flare/brpc/log.h"
 #include "flare/brpc/policy/dh.h"
 
