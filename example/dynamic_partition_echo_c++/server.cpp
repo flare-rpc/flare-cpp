@@ -18,21 +18,22 @@
 // A server to receive EchoRequest and send back EchoResponse.
 
 #include <vector>
+#include <random>
+#include <chrono>
 #include <gflags/gflags.h>
 #include "flare/base/time.h"
 #include "flare/base/logging.h"
-#include <flare/butil/string_printf.h>
-#include <flare/butil/string_splitter.h>
-#include <flare/butil/rand_util.h>
+#include <flare/base/strings.h>
+#include <flare/base/string_splitter.h>
 #include <flare/brpc/server.h>
 #include "echo.pb.h"
 
 DEFINE_bool(echo_attachment, true, "Echo attachment as well");
 DEFINE_int32(port, 8004, "TCP Port of this server");
 DEFINE_int32(idle_timeout_s, -1, "Connection will be closed if there is no "
-             "read/write operations during the last `idle_timeout_s'");
+                                 "read/write operations during the last `idle_timeout_s'");
 DEFINE_int32(logoff_ms, 2000, "Maximum duration of server's LOGOFF state "
-             "(waiting for client to close connection before server stops)");
+                              "(waiting for client to close connection before server stops)");
 DEFINE_int32(max_concurrency, 0, "Limit of request processing in parallel");
 DEFINE_int32(server_num, 1, "Number of servers");
 DEFINE_string(sleep_us, "", "Sleep so many microseconds before responding");
@@ -45,23 +46,29 @@ DEFINE_double(max_ratio, 10, "max_sleep / sleep_us");
 class EchoServiceImpl : public example::EchoService {
 public:
     EchoServiceImpl() : _index(0) {}
+
     virtual ~EchoServiceImpl() {};
-    void set_index(size_t index, int64_t sleep_us) { 
-        _index = index; 
+
+    void set_index(size_t index, int64_t sleep_us) {
+        _index = index;
         _sleep_us = sleep_us;
     }
-    virtual void Echo(google::protobuf::RpcController* cntl_base,
-                      const example::EchoRequest* request,
-                      example::EchoResponse* response,
-                      google::protobuf::Closure* done) {
+
+    virtual void Echo(google::protobuf::RpcController *cntl_base,
+                      const example::EchoRequest *request,
+                      example::EchoResponse *response,
+                      google::protobuf::Closure *done) {
         brpc::ClosureGuard done_guard(done);
-        brpc::Controller* cntl =
-            static_cast<brpc::Controller*>(cntl_base);
+        brpc::Controller *cntl =
+                static_cast<brpc::Controller *>(cntl_base);
         if (_sleep_us > 0) {
             double delay = _sleep_us;
             const double a = FLAGS_exception_ratio * 0.5;
             if (a >= 0.0001) {
-                double x = butil::RandDouble();
+                unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
+                std::default_random_engine e(seed);
+                std::uniform_real_distribution<double> distrReal(0, 5);
+                double x = distrReal(e);
                 if (x < a) {
                     const double min_sleep_us = FLAGS_min_ratio * _sleep_us;
                     delay = min_sleep_us + (_sleep_us - min_sleep_us) * x / a;
@@ -71,10 +78,10 @@ public:
                 }
             }
             if (FLAGS_spin) {
-                int64_t end_time = flare::base::gettimeofday_us() + (int64_t)delay;
+                int64_t end_time = flare::base::gettimeofday_us() + (int64_t) delay;
                 while (flare::base::gettimeofday_us() < end_time) {}
             } else {
-                bthread_usleep((int64_t)delay);
+                bthread_usleep((int64_t) delay);
             }
         }
 
@@ -94,7 +101,7 @@ private:
     bvar::Adder<size_t> _nreq;
 };
 
-int main(int argc, char* argv[]) {
+int main(int argc, char *argv[]) {
     // Parse gflags. We recommend you to use gflags as well.
     GFLAGS_NS::ParseCommandLineFlags(&argc, &argv, true);
 
@@ -104,7 +111,7 @@ int main(int argc, char* argv[]) {
     }
 
     // We need multiple servers in this example.
-    brpc::Server* servers = new brpc::Server[FLAGS_server_num];
+    brpc::Server *servers = new brpc::Server[FLAGS_server_num];
     // For more options see `brpc/server.h'.
     brpc::ServerOptions options;
     options.idle_timeout_sec = FLAGS_idle_timeout_s;
@@ -120,17 +127,17 @@ int main(int argc, char* argv[]) {
     }
 
     // Instance of your services.
-    EchoServiceImpl* echo_service_impls = new EchoServiceImpl[FLAGS_server_num];
+    EchoServiceImpl *echo_service_impls = new EchoServiceImpl[FLAGS_server_num];
     // Add the service into servers. Notice the second parameter, because the
     // service is put on stack, we don't want server to delete it, otherwise
     // use brpc::SERVER_OWNS_SERVICE.
     for (int i = 0; i < FLAGS_server_num; ++i) {
-        int64_t sleep_us = sleep_list[(size_t)i < sleep_list.size() ? i : (sleep_list.size() - 1)];
+        int64_t sleep_us = sleep_list[(size_t) i < sleep_list.size() ? i : (sleep_list.size() - 1)];
         echo_service_impls[i].set_index(i, sleep_us);
         // will be shown on /version page
         servers[i].set_version(flare::base::string_printf(
-                    "example/dynamic_partition_echo_c++[%d]", i));
-        if (servers[i].AddService(&echo_service_impls[i], 
+                "example/dynamic_partition_echo_c++[%d]", i));
+        if (servers[i].AddService(&echo_service_impls[i],
                                   brpc::SERVER_DOESNT_OWN_SERVICE) != 0) {
             LOG(ERROR) << "Fail to add service";
             return -1;
@@ -171,7 +178,7 @@ int main(int argc, char* argv[]) {
     for (int i = 0; i < FLAGS_server_num; ++i) {
         servers[i].Join();
     }
-    delete [] servers;
-    delete [] echo_service_impls;
+    delete[] servers;
+    delete[] echo_service_impls;
     return 0;
 }

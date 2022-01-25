@@ -20,7 +20,7 @@
 #include <gflags/gflags.h>
 #include <flare/bthread/bthread.h>
 #include "flare/base/logging.h"
-#include <flare/butil/string_printf.h>
+#include <flare/base/strings.h>
 #include "flare/base/time.h"
 #include <flare/brpc/parallel_channel.h>
 #include <flare/brpc/server.h>

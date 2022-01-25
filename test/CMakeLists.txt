@@ -57,7 +57,6 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CPP_FLAGS} -g -O2 -pipe -Wall -W -fPIC -fstrict-ali
 use_cxx17()
 
 if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    #required by butil/crc32.cc to boost performance for 10x
     if (NOT (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 4.4))
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -msse4 -msse4.2")
     endif ()

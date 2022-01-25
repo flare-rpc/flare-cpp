@@ -112,7 +112,7 @@ void *client_thread(void *arg) {
     }
 #else
     flare::base::end_point point(flare::base::IP_ANY, 7878);
-    flare::base::fd_guard fd(butil::tcp_connect(point, NULL));
+    flare::base::fd_guard fd(flare::base::tcp_connect(point, NULL));
     if (fd < 0) {
         PLOG(FATAL) << "Fail to connect to " << point;
         return NULL;

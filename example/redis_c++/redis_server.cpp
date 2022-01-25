@@ -21,8 +21,8 @@
 
 #include <flare/brpc/server.h>
 #include <flare/brpc/redis.h>
-#include <flare/butil/crc32c.h>
-#include <flare/butil/strings/string_split.h>
+#include <flare/base/crc32c.h>
+#include <flare/base/strings/string_split.h>
 #include <gflags/gflags.h>
 #include <unordered_map>
 
@@ -33,7 +33,7 @@ DEFINE_int32(port, 6379, "TCP Port of this server");
 class RedisServiceImpl : public brpc::RedisService {
 public:
     bool Set(const std::string& key, const std::string& value) {
-        int slot = butil::crc32c::Value(key.c_str(), key.size()) % kHashSlotNum;
+        int slot = flare::base::crc32c::Value(key.c_str(), key.size()) % kHashSlotNum;
         _mutex[slot].lock();
         _map[slot][key] = value;
         _mutex[slot].unlock();
@@ -41,7 +41,7 @@ public:
     }
 
     bool Get(const std::string& key, std::string* value) {
-        int slot = butil::crc32c::Value(key.c_str(), key.size()) % kHashSlotNum;
+        int slot = flare::base::crc32c::Value(key.c_str(), key.size()) % kHashSlotNum;
         _mutex[slot].lock();
         auto it = _map[slot].find(key);
         if (it == _map[slot].end()) {
@@ -64,7 +64,7 @@ public:
     explicit GetCommandHandler(RedisServiceImpl* rsimpl)
         : _rsimpl(rsimpl) {}
 
-    brpc::RedisCommandHandlerResult Run(const std::vector<butil::StringPiece>& args,
+    brpc::RedisCommandHandlerResult Run(const std::vector<std::string_view>& args,
                                         brpc::RedisReply* output,
                                         bool /*flush_batched*/) override {
         if (args.size() != 2ul) {
@@ -90,7 +90,7 @@ public:
     explicit SetCommandHandler(RedisServiceImpl* rsimpl)
         : _rsimpl(rsimpl) {}
 
-    brpc::RedisCommandHandlerResult Run(const std::vector<butil::StringPiece>& args,
+    brpc::RedisCommandHandlerResult Run(const std::vector<std::string_view>& args,
                                         brpc::RedisReply* output,
                                         bool /*flush_batched*/) override {
         if (args.size() != 3ul) {
