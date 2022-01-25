@@ -53,7 +53,7 @@ if (NOT THRIFTNB_LIB)
     set(THRIFTNB_LIB "")
 endif()
 
-find_path(BRPC_INCLUDE_PATH NAMES brpc/server.h)
+find_path(BRPC_INCLUDE_PATH NAMES flare/idl_options.pb.h)
 if(LINK_SO)
     find_library(BRPC_LIB NAMES brpc)
 else()

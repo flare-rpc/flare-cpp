@@ -48,7 +48,7 @@ if (NOT THRIFTNB_LIB)
     set(THRIFTNB_LIB "")
 endif()
 
-find_path(BRPC_INCLUDE_PATH NAMES brpc/server.h)
+find_path(BRPC_INCLUDE_PATH NAMES flare/idl_options.pb.h)
 if(LINK_SO)
     find_library(BRPC_LIB NAMES brpc)
 else()
@@ -117,7 +117,15 @@ find_package(OpenSSL)
 include_directories(${OPENSSL_INCLUDE_DIR})
 
 
+find_path(GLOG_INCLUDE_PATH NAMES glog/logging.h)
+find_library(GLOG_LIB NAMES glog)
+if ((NOT GLOG_INCLUDE_PATH) OR (NOT GLOG_LIB))
+    message(FATAL_ERROR "Fail to find glog")
+endif ()
+include_directories(${GLOG_INCLUDE_PATH})
+
 set(DYNAMIC_LIB
+    ${GLOG_LIB}
     ${CMAKE_THREAD_LIBS_INIT}
     ${GFLAGS_LIBRARY}
     ${PROTOBUF_LIBRARIES}

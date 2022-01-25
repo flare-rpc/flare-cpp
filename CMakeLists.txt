@@ -141,7 +141,6 @@ find_library(GLOG_LIB NAMES glog)
 if ((NOT GLOG_INCLUDE_PATH) OR (NOT GLOG_LIB))
     message(FATAL_ERROR "Fail to find glog")
 endif ()
-message(STATUS ${GLOG_INCLUDE_PATH})
 include_directories(${GLOG_INCLUDE_PATH})
 
 if (WITH_MESALINK)
