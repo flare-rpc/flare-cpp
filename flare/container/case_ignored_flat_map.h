@@ -26,9 +26,6 @@ namespace flare::container {
     };
 
     struct CaseIgnoredEqual {
-        // NOTE: No overload for butil::StringPiece. It needs strncasecmp
-        // which is much slower than strcasecmp in micro-benchmarking. As a
-        // result, methods in HttpHeader does not accept StringPiece as well.
         bool operator()(const std::string &s1, const std::string &s2) const {
             return s1.size() == s2.size() &&
                    strcasecmp(s1.c_str(), s2.c_str()) == 0;

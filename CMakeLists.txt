@@ -231,9 +231,6 @@ set(BUTIL_SOURCES
         ${PROJECT_SOURCE_DIR}/flare/butil/third_party/modp_b64/modp_b64.cc
         ${PROJECT_SOURCE_DIR}/flare/butil/third_party/symbolize/demangle.cc
         ${PROJECT_SOURCE_DIR}/flare/butil/third_party/symbolize/symbolize.cc
-        ${PROJECT_SOURCE_DIR}/flare/butil/third_party/snappy/snappy-sinksource.cc
-        ${PROJECT_SOURCE_DIR}/flare/butil/third_party/snappy/snappy-stubs-internal.cc
-        ${PROJECT_SOURCE_DIR}/flare/butil/third_party/snappy/snappy.cc
         ${PROJECT_SOURCE_DIR}/flare/butil/at_exit.cc
         ${PROJECT_SOURCE_DIR}/flare/butil/debug/alias.cc
         ${PROJECT_SOURCE_DIR}/flare/butil/debug/asan_invalid_access.cc

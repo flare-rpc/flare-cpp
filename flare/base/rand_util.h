@@ -27,7 +27,7 @@ namespace flare::base {
     //
     // Note that this can be used as an adapter for std::random_shuffle():
     // Given a pre-populated |std::vector<int> myvector|, shuffle it as
-    //   std::random_shuffle(myvector.begin(), myvector.end(), butil::RandGenerator);
+    //   std::random_shuffle(myvector.begin(), myvector.end(), flare::base::RandGenerator);
     FLARE_EXPORT uint64_t RandGenerator(uint64_t range);
 
     // Returns a random double in range [0, 1). Thread-safe.

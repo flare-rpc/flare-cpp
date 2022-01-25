@@ -123,7 +123,7 @@ private:
 };
 
 // Get the global InputMessenger at client-side.
-BUTIL_FORCE_INLINE InputMessenger* get_client_side_messenger() {
+FLARE_FORCE_INLINE InputMessenger* get_client_side_messenger() {
     extern InputMessenger* g_messenger;
     return g_messenger;
 }

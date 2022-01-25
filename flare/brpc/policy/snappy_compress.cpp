@@ -17,7 +17,7 @@
 
 
 #include "flare/base/logging.h"
-#include "flare/butil/third_party/snappy/snappy.h"
+#include "flare/io/snappy/snappy.h"
 #include "flare/brpc/policy/snappy_compress.h"
 #include "flare/brpc/protocol.h"
 
@@ -31,7 +31,7 @@ bool SnappyCompress(const google::protobuf::Message& res, flare::io::IOBuf* buf)
     if (res.SerializeToZeroCopyStream(&wrapper)) {
         flare::io::IOBufAsSnappySource source(serialized_pb);
         flare::io::IOBufAsSnappySink sink(*buf);
-        return butil::snappy::Compress(&source, &sink);
+        return flare::snappy::Compress(&source, &sink);
     }
     LOG(WARNING) << "Fail to serialize input pb=" << &res;
     return false;
@@ -41,7 +41,7 @@ bool SnappyDecompress(const flare::io::IOBuf& data, google::protobuf::Message* r
     flare::io::IOBufAsSnappySource source(data);
     flare::io::IOBuf binary_pb;
     flare::io::IOBufAsSnappySink sink(binary_pb);
-    if (butil::snappy::Uncompress(&source, &sink)) {
+    if (flare::snappy::Uncompress(&source, &sink)) {
         return ParsePbFromIOBuf(req, binary_pb);
     }
     LOG(WARNING) << "Fail to snappy::Uncompress, size=" << data.size();
@@ -51,13 +51,13 @@ bool SnappyDecompress(const flare::io::IOBuf& data, google::protobuf::Message* r
 bool SnappyCompress(const flare::io::IOBuf& in, flare::io::IOBuf* out) {
     flare::io::IOBufAsSnappySource source(in);
     flare::io::IOBufAsSnappySink sink(*out);
-    return butil::snappy::Compress(&source, &sink);
+    return flare::snappy::Compress(&source, &sink);
 }
 
 bool SnappyDecompress(const flare::io::IOBuf& in, flare::io::IOBuf* out) {
     flare::io::IOBufAsSnappySource source(in);
     flare::io::IOBufAsSnappySink sink(*out);
-    return butil::snappy::Uncompress(&source, &sink);
+    return flare::snappy::Uncompress(&source, &sink);
 }
 
 }  // namespace policy

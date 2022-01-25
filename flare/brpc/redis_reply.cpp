@@ -23,7 +23,7 @@
 
 namespace brpc {
 
-//BAIDU_CASSERT(sizeof(RedisReply) == 24, size_match);
+//static_assert(sizeof(RedisReply) == 24, size_match);
 const int RedisReply::npos = -1;
 
 const char* RedisReplyTypeToString(RedisReplyType type) {

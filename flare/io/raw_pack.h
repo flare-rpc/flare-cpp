@@ -39,7 +39,7 @@ namespace flare::io {
 //   ... network ...
 //
 //   // positional correspondence with pack..()
-//   butil::Unpacker(buf2).unpack32(a).unpack64(b).unpack32(c);
+//   flare::io::Unpacker(buf2).unpack32(a).unpack64(b).unpack32(c);
 class RawPacker {
 public:
     // Notice: User must guarantee `stream' is as long as the packed data.

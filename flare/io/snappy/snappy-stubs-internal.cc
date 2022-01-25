@@ -29,16 +29,14 @@
 #include <algorithm>
 #include <string>
 
-#include "flare/butil/third_party/snappy/snappy-stubs-internal.h"
+#include "flare/io/snappy/snappy-stubs-internal.h"
 
-namespace butil {
-namespace snappy {
+namespace flare::snappy {
 
-void Varint::Append32(std::string* s, uint32_t value) {
-  char buf[Varint::kMax32];
-  const char* p = Varint::Encode32(buf, value);
-  s->append(buf, p - buf);
-}
+    void Varint::Append32(std::string *s, uint32_t value) {
+        char buf[Varint::kMax32];
+        const char *p = Varint::Encode32(buf, value);
+        s->append(buf, p - buf);
+    }
 
-}  // namespace snappy
-}  // namespace butil
+}  // namespace flare::snappy
