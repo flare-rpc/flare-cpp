@@ -279,7 +279,7 @@ flare::base::flare_status RedisCommandFormat(flare::io::IOBuf* buf, const char* 
 
 flare::base::flare_status
 RedisCommandNoFormat(flare::io::IOBuf* outbuf, const std::string_view& cmd) {
-    if (outbuf == NULL || cmd == NULL) {
+    if (outbuf == NULL || cmd.empty()) {
         return flare::base::flare_status(EINVAL, "Param[outbuf] or [cmd] is NULL");
     }
     const size_t cmd_len = cmd.size();
