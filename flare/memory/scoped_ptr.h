@@ -84,8 +84,8 @@
 // Note that PassAs<>() is implemented only for scoped_ptr<T>, but not for
 // scoped_ptr<T[]>. This is because casting array pointers may not be safe.
 
-#ifndef BUTIL_MEMORY_SCOPED_PTR_H_
-#define BUTIL_MEMORY_SCOPED_PTR_H_
+#ifndef FLARE_MEMORY_SCOPED_PTR_H_
+#define FLARE_MEMORY_SCOPED_PTR_H_
 
 // This is an implementation designed to match the anticipated future TR2
 // implementation of the scoped_ptr class.
@@ -455,7 +455,7 @@ private:
     template<typename U, typename V> friend
     class scoped_ptr;
 
-    flare::memory::internal::scoped_ptr_impl <element_type, deleter_type> impl_;
+    flare::memory::internal::scoped_ptr_impl<element_type, deleter_type> impl_;
 
     // Forbidden for API compatibility with std::unique_ptr.
     explicit scoped_ptr(int disallow_construction_from_null);
@@ -530,7 +530,7 @@ public:
     // Allow scoped_ptr<element_type> to be used in boolean expressions, but not
     // implicitly convertible to a real bool (which is dangerous).
 private:
-    typedef flare::memory::internal::scoped_ptr_impl <element_type, deleter_type>
+    typedef flare::memory::internal::scoped_ptr_impl<element_type, deleter_type>
             scoped_ptr::*Testable;
 
 public:
@@ -566,7 +566,7 @@ private:
     };
 
     // Actually hold the data.
-    flare::memory::internal::scoped_ptr_impl <element_type, deleter_type> impl_;
+    flare::memory::internal::scoped_ptr_impl<element_type, deleter_type> impl_;
 
     // Disable initialization from any type other than element_type*, by
     // providing a constructor that matches such an initialization, but is
@@ -620,4 +620,4 @@ scoped_ptr<T> make_scoped_ptr(T *ptr) {
     return scoped_ptr<T>(ptr);
 }
 
-#endif  // BUTIL_MEMORY_SCOPED_PTR_H_
+#endif  // FLARE_MEMORY_SCOPED_PTR_H_

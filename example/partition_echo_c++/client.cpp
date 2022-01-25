@@ -22,7 +22,6 @@
 #include "flare/base/logging.h"
 #include <flare/butil/string_printf.h>
 #include "flare/base/time.h"
-#include <flare/butil/macros.h>
 #include <flare/brpc/partition_channel.h>
 #include <deque>
 #include "echo.pb.h"

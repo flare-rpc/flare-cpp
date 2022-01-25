@@ -1,5 +1,5 @@
-#ifndef BUTIL_INTRUSIVE_PTR_HPP
-#define BUTIL_INTRUSIVE_PTR_HPP
+#ifndef FLARE_CONTAINER_INTRUSIVE_PTR_H_
+#define FLARE_CONTAINER_INTRUSIVE_PTR_H_
 
 //  Copyright (c) 2001, 2002 Peter Dimov
 //
@@ -295,4 +295,4 @@ inline size_t hash_value(const flare::container::intrusive_ptr<T>& sp) {
 
 }  // namespace FLARE_HASH_NAMESPACE
 
-#endif  // BUTIL_INTRUSIVE_PTR_HPP
+#endif  // FLARE_CONTAINER_INTRUSIVE_PTR_H_

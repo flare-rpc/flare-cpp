@@ -26,7 +26,6 @@
 #include <gflags/gflags.h>
 #include <google/protobuf/descriptor.h>
 #include "flare/base/time.h"
-#include "flare/butil/macros.h"
 #include "flare/brpc/socket.h"
 #include "flare/brpc/acceptor.h"
 #include "flare/brpc/server.h"

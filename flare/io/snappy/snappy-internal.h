@@ -28,8 +28,8 @@
 //
 // Internals shared between the Snappy implementation and its unittest.
 
-#ifndef BUTIL_THIRD_PARTY_SNAPPY_SNAPPY_INTERNAL_H_
-#define BUTIL_THIRD_PARTY_SNAPPY_SNAPPY_INTERNAL_H_
+#ifndef FLARE_IO_SNAPPY_SNAPPY_INTERNAL_H_
+#define FLARE_IO_SNAPPY_SNAPPY_INTERNAL_H_
 
 #include "flare/io/snappy/snappy-stubs-internal.h"
 
@@ -150,4 +150,4 @@ namespace flare::snappy {
     }  // end namespace internal
 }  // end namespace flare::snappy
 
-#endif  // BUTIL_THIRD_PARTY_SNAPPY_SNAPPY_INTERNAL_H_
+#endif  // FLARE_IO_SNAPPY_SNAPPY_INTERNAL_H_

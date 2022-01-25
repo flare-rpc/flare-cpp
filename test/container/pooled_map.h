@@ -17,8 +17,8 @@
 
 // Date: Sat Dec  3 13:11:32 CST 2016
 
-#ifndef BUTIL_POOLED_MAP_H
-#define BUTIL_POOLED_MAP_H
+#ifndef TEST_CONTAINER_POOLED_MAP_H_
+#define TEST_CONTAINER_POOLED_MAP_H_
 
 #include "flare/container/single_threaded_pool.h"
 #include <new>
@@ -142,4 +142,4 @@ namespace std {
     }
 }  // namespace std
 
-#endif  // BUTIL_POOLED_MAP_H
+#endif  // TEST_CONTAINER_POOLED_MAP_H_

@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef BUTIL_MOVE_H_
-#define BUTIL_MOVE_H_
+#ifndef FLARE_MEMORY_MOVE_H_
+#define FLARE_MEMORY_MOVE_H_
 
 // Macro with the boilerplate that makes a type move-only in C++03.
 //
@@ -142,7 +142,7 @@
 // to call .Pass() appropriately when it is expected to transfer the value.
 // The cryptic typedef MoveOnlyTypeForCPP03 is added to make this check
 // easy and automatic in helper templates for Callback<>/Bind().
-// See IsMoveOnlyType template and its usage in butil/callback_internal.h
+// See IsMoveOnlyType template and its usage in
 // for more details.
 //
 //
@@ -215,4 +215,4 @@
   typedef void MoveOnlyTypeForCPP03; \
  private:
 
-#endif  // BUTIL_MOVE_H_
+#endif  // FLARE_MEMORY_MOVE_H_

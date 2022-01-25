@@ -145,4 +145,4 @@ namespace flare::base {
 
 }  // namespace flare::base
 
-#endif  // BUTIL_STATUS_H
+#endif  // FLARE_BASE_STATUS_H_

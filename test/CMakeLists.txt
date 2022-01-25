@@ -73,79 +73,10 @@ file(COPY ${PROJECT_SOURCE_DIR}/test/cert2.crt DESTINATION ${CMAKE_CURRENT_BINAR
 file(COPY ${PROJECT_SOURCE_DIR}/test/jsonout DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 file(COPY ${PROJECT_SOURCE_DIR}/test/run_tests.sh DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 
-SET(TEST_BUTIL_SOURCES
-        ${PROJECT_SOURCE_DIR}/test/butil/recordio_unittest.cpp
-        ${PROJECT_SOURCE_DIR}/test/butil/at_exit_unittest.cc
-        ${PROJECT_SOURCE_DIR}/test/butil/crash_logging_unittest.cc
-        ${PROJECT_SOURCE_DIR}/test/butil/leak_tracker_unittest.cc
-        ${PROJECT_SOURCE_DIR}/test/butil/stack_trace_unittest.cc
-        ${PROJECT_SOURCE_DIR}/test/butil/environment_unittest.cc
-        ${PROJECT_SOURCE_DIR}/test/butil/file_util_unittest.cc
-        ${PROJECT_SOURCE_DIR}/test/butil/dir_reader_posix_unittest.cc
-        ${PROJECT_SOURCE_DIR}/test/butil/file_path_unittest.cc
-        ${PROJECT_SOURCE_DIR}/test/butil/file_unittest.cc
-        ${PROJECT_SOURCE_DIR}/test/butil/scoped_temp_dir_unittest.cc
-        ${PROJECT_SOURCE_DIR}/test/butil/guid_unittest.cc
-        ${PROJECT_SOURCE_DIR}/test/butil/hash_unittest.cc
-        ${PROJECT_SOURCE_DIR}/test/butil/lazy_instance_unittest.cc
-        ${PROJECT_SOURCE_DIR}/test/butil/aligned_memory_unittest.cc
-        ${PROJECT_SOURCE_DIR}/test/butil/linked_ptr_unittest.cc
-        ${PROJECT_SOURCE_DIR}/test/butil/ref_counted_memory_unittest.cc
-        ${PROJECT_SOURCE_DIR}/test/butil/ref_counted_unittest.cc
-        ${PROJECT_SOURCE_DIR}/test/butil/scoped_ptr_unittest.cc
-        ${PROJECT_SOURCE_DIR}/test/butil/scoped_vector_unittest.cc
-        ${PROJECT_SOURCE_DIR}/test/butil/singleton_unittest.cc
-        ${PROJECT_SOURCE_DIR}/test/butil/weak_ptr_unittest.cc
-        ${PROJECT_SOURCE_DIR}/test/butil/safe_numerics_unittest.cc
-        ${PROJECT_SOURCE_DIR}/test/butil/scoped_clear_errno_unittest.cc
-        ${PROJECT_SOURCE_DIR}/test/butil/scoped_generic_unittest.cc
-        ${PROJECT_SOURCE_DIR}/test/butil/security_unittest.cc
-        ${PROJECT_SOURCE_DIR}/test/butil/sha1_unittest.cc
-        ${PROJECT_SOURCE_DIR}/test/butil/stl_util_unittest.cc
-        ${PROJECT_SOURCE_DIR}/test/butil/nullable_string16_unittest.cc
-        ${PROJECT_SOURCE_DIR}/test/butil/safe_sprintf_unittest.cc
-        ${PROJECT_SOURCE_DIR}/test/butil/string16_unittest.cc
-        ${PROJECT_SOURCE_DIR}/test/butil/stringprintf_unittest.cc
-        ${PROJECT_SOURCE_DIR}/test/butil/string_number_conversions_unittest.cc
-        ${PROJECT_SOURCE_DIR}/test/butil/string_piece_unittest.cc
-        ${PROJECT_SOURCE_DIR}/test/butil/string_split_unittest.cc
-        ${PROJECT_SOURCE_DIR}/test/butil/string_tokenizer_unittest.cc
-        ${PROJECT_SOURCE_DIR}/test/butil/string_util_unittest.cc
-        ${PROJECT_SOURCE_DIR}/test/butil/stringize_macros_unittest.cc
-        ${PROJECT_SOURCE_DIR}/test/butil/sys_string_conversions_unittest.cc
-        ${PROJECT_SOURCE_DIR}/test/butil/utf_offset_string_conversions_unittest.cc
-        ${PROJECT_SOURCE_DIR}/test/butil/utf_string_conversions_unittest.cc
-        ${PROJECT_SOURCE_DIR}/test/butil/condition_variable_unittest.cc
-        ${PROJECT_SOURCE_DIR}/test/butil/lock_unittest.cc
-        ${PROJECT_SOURCE_DIR}/test/butil/waitable_event_unittest.cc
-        ${PROJECT_SOURCE_DIR}/test/butil/non_thread_safe_unittest.cc
-        ${PROJECT_SOURCE_DIR}/test/butil/platform_thread_unittest.cc
-        ${PROJECT_SOURCE_DIR}/test/butil/simple_thread_unittest.cc
-        ${PROJECT_SOURCE_DIR}/test/butil/thread_checker_unittest.cc
-        ${PROJECT_SOURCE_DIR}/test/butil/thread_collision_warner_unittest.cc
-        ${PROJECT_SOURCE_DIR}/test/butil/thread_id_name_manager_unittest.cc
-        ${PROJECT_SOURCE_DIR}/test/butil/thread_local_storage_unittest.cc
-        ${PROJECT_SOURCE_DIR}/test/butil/thread_local_unittest.cc
-        ${PROJECT_SOURCE_DIR}/test/butil/time_unittest.cc
-        ${PROJECT_SOURCE_DIR}/test/butil/version_unittest.cc
-        ${PROJECT_SOURCE_DIR}/test/butil/unique_ptr_unittest.cpp
-        ${PROJECT_SOURCE_DIR}/test/butil/scoped_lock_unittest.cpp
-        ${PROJECT_SOURCE_DIR}/test/butil/string_splitter_unittest.cpp
-        ${PROJECT_SOURCE_DIR}/test/butil/synchronous_event_unittest.cpp
-        ${PROJECT_SOURCE_DIR}/test/butil/baidu_thread_local_unittest.cpp
-        ${PROJECT_SOURCE_DIR}/test/butil/crc32c_unittest.cc
-        ${PROJECT_SOURCE_DIR}/test/butil/scoped_locale.cc
-        ${PROJECT_SOURCE_DIR}/test/butil/butil_unittest_main.cpp
-        ${PROJECT_SOURCE_DIR}/test/butil/butil_unittest_main.cpp
-        )
 set(IO_TEST_SRC
         ${PROJECT_SOURCE_DIR}/test/io/iobuf_unittest.cc
         )
-if (CMAKE_SYSTEM_NAME STREQUAL "Linux")
-    SET(TEST_BUTIL_SOURCES ${TEST_BUTIL_SOURCES}
-            ${PROJECT_SOURCE_DIR}/test/butil/proc_maps_linux_unittest.cc
-            ${PROJECT_SOURCE_DIR}/test/butil/test_file_util_linux.cc)
-endif ()
+
 
 # bthread_* functions are used in logging.cc, and they need to be marked as
 # weak symbols explicitly in Darwin system.
@@ -156,17 +87,15 @@ if (CMAKE_SYSTEM_NAME STREQUAL "Darwin")
             "-Wl,-U,_bthread_key_create")
 endif ()
 
-add_library(BUTIL_DEBUG_LIB OBJECT ${BUTIL_SOURCES})
 add_library(FLARE_BASE_DEBUG_LIB OBJECT ${FLARE_SRC})
 add_library(SOURCES_DEBUG_LIB OBJECT ${SOURCES})
 add_dependencies(SOURCES_DEBUG_LIB PROTO_LIB)
 
 # shared library needs POSITION_INDEPENDENT_CODE
-set_property(TARGET ${BUTIL_DEBUG_LIB} PROPERTY POSITION_INDEPENDENT_CODE 1)
 set_property(TARGET ${SOURCES_DEBUG_LIB} PROPERTY POSITION_INDEPENDENT_CODE 1)
 set_property(TARGET ${FLARE_BASE_DEBUG_LIB} PROPERTY POSITION_INDEPENDENT_CODE 1)
 
-add_library(brpc-shared-debug SHARED $<TARGET_OBJECTS:BUTIL_DEBUG_LIB>
+add_library(brpc-shared-debug SHARED
         $<TARGET_OBJECTS:FLARE_BASE_DEBUG_LIB>
         $<TARGET_OBJECTS:SOURCES_DEBUG_LIB>
         $<TARGET_OBJECTS:PROTO_LIB>)
@@ -176,14 +105,6 @@ set_target_properties(brpc-shared-debug PROPERTIES
 
 target_link_libraries(brpc-shared-debug ${DYNAMIC_LIB})
     target_link_libraries(brpc-shared-debug ${GLOG_LIB})
-
-# test_butil
-add_executable(test_butil ${TEST_BUTIL_SOURCES})
-target_link_libraries(test_butil brpc-shared-debug
-        gtest
-        ${GPERFTOOLS_LIBRARIES})
-
-add_test(NAME test_butil COMMAND test_butil)
 
 # test_io
 add_executable(test_io ${TEST_IO_SRC}

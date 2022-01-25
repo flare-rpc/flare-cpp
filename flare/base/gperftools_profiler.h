@@ -35,15 +35,15 @@
  * These functions are thread-safe.
  */
 
-#ifndef BUTIL_GPERFTOOLS_PROFILER_H_
-#define BUTIL_GPERFTOOLS_PROFILER_H_
+#ifndef FLARE_BASE_GPERFTOOLS_PROFILER_H_
+#define FLARE_BASE_GPERFTOOLS_PROFILER_H_
 
 /* Annoying stuff for windows; makes sure clients can import these functions */
-#ifndef BRPC_DLL_DECL
+#ifndef FLARE_DLL_DECL
 # ifdef _WIN32
-#   define BRPC_DLL_DECL  __declspec(dllimport)
+#   define FLARE_DLL_DECL  __declspec(dllimport)
 # else
-#   define BRPC_DLL_DECL
+#   define FLARE_DLL_DECL
 # endif
 #endif
 
@@ -57,27 +57,27 @@ extern "C" {
  *
  * This is equivalent to calling ProfilerStartWithOptions(fname, NULL).
  */
-BRPC_DLL_DECL int ProfilerStart(const char* fname);
+FLARE_DLL_DECL int ProfilerStart(const char* fname);
 
 /* Stop profiling. Can be started again with ProfilerStart(), but
  * the currently accumulated profiling data will be cleared.
  */
-BRPC_DLL_DECL void ProfilerStop();
+FLARE_DLL_DECL void ProfilerStop();
 
 /* Flush any currently buffered profiling state to the profile file.
  * Has no effect if the profiler has not been started.
  */
-BRPC_DLL_DECL void ProfilerFlush();
+FLARE_DLL_DECL void ProfilerFlush();
 
 /* Returns nonzero if profile is currently enabled, zero if it's not. */
-BRPC_DLL_DECL int ProfilingIsEnabledForAllThreads();
+FLARE_DLL_DECL int ProfilingIsEnabledForAllThreads();
 
 /* Routine for registering new threads with the profiler.
  */
-BRPC_DLL_DECL void ProfilerRegisterThread();
+FLARE_DLL_DECL void ProfilerRegisterThread();
 
 #ifdef __cplusplus
 }  // extern "C"
 #endif
 
-#endif  /* BUTIL_GPERFTOOLS_PROFILER_H_ */
+#endif  /* FLARE_BASE_GPERFTOOLS_PROFILER_H_ */

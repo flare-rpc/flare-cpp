@@ -21,8 +21,8 @@
 
 // Inlined implementations of some methods defined in iobuf.h
 
-#ifndef BUTIL_IOBUF_INL_H
-#define BUTIL_IOBUF_INL_H
+#ifndef FLARE_IO_IOBUF_INL_H_
+#define FLARE_IO_IOBUF_INL_H_
 
 void *fast_memcpy(void *__restrict dest, const void *__restrict src, size_t n);
 
@@ -161,7 +161,7 @@ namespace flare::io {
 
     inline const IOBuf::BlockRef *IOBuf::_pref_at(size_t i) const {
         if (_small()) {
-            return i < (size_t)(!!_sv.refs[0].block + !!_sv.refs[1].block) ? &_sv.refs[i] : NULL;
+            return i < (size_t) (!!_sv.refs[0].block + !!_sv.refs[1].block) ? &_sv.refs[i] : NULL;
         } else {
             return i < _bv.nref ? &_bv.ref_at(i) : NULL;
         }
@@ -417,4 +417,4 @@ namespace flare::io {
 
 }  // namespace flare::io
 
-#endif  // BUTIL_IOBUF_INL_H
+#endif  // FLARE_IO_IOBUF_INL_H_

@@ -2,8 +2,8 @@
 // Created by liyinbin on 2022/1/19.
 //
 
-#ifndef FLARE_BUTIL_STATIC_ATOMIC_H_
-#define FLARE_BUTIL_STATIC_ATOMIC_H_
+#ifndef FLARE_BASE_STATIC_ATOMIC_H_
+#define FLARE_BASE_STATIC_ATOMIC_H_
 
 #include <atomic>
 
@@ -61,4 +61,4 @@ namespace flare {
         }
     };
 }  // namespace flare
-#endif  // FLARE_BUTIL_STATIC_ATOMIC_H_
+#endif  // FLARE_BASE_STATIC_ATOMIC_H_

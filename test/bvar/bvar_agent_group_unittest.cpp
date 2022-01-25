@@ -22,8 +22,6 @@
 #include <iostream>
 
 #include "flare/base/time.h"
-#include "flare/butil/macros.h"
-
 #include "flare/bvar/detail/agent_group.h"
 #include "flare/base/static_atomic.h"
 

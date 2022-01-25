@@ -32,7 +32,7 @@
 #include "flare/container/doubly_buffered_data.h"
 #include "flare/brpc/describable.h"
 #include "flare/brpc/socket.h"
-#include "flare/butil/strings/string_number_conversions.h"
+#include "flare/base/strings.h"
 #include "flare/brpc/excluded_servers.h"
 #include "flare/brpc/policy/weighted_round_robin_load_balancer.h"
 #include "flare/brpc/policy/round_robin_load_balancer.h"
@@ -668,9 +668,9 @@ namespace {
                 ptr->SetLogOff();
             }
             if (i < 4) {
-                int weight_num = 0;
-                ASSERT_TRUE(butil::StringToInt(weight[i], &weight_num));
-                configed_weight[dummy] = weight_num;
+                std::optional<int> weight_num = flare::base::try_parse<int>(weight[i]);
+                ASSERT_TRUE(weight_num);
+                configed_weight[dummy] = *weight_num;
                 EXPECT_TRUE(wrrlb.AddServer(id));
             } else {
                 EXPECT_FALSE(wrrlb.AddServer(id));
@@ -775,10 +775,10 @@ namespace {
             ASSERT_EQ(0, brpc::Socket::Create(options, &id.id));
             id.tag = weight[i];
             if (i < valid_weight_num) {
-                int weight_num = 0;
-                ASSERT_TRUE(butil::StringToInt(weight[i], &weight_num));
-                configed_weight[dummy] = weight_num;
-                configed_weight_sum += weight_num;
+                auto weight_num = flare::base::try_parse<int>(weight[i]);
+                ASSERT_TRUE(weight_num);
+                configed_weight[dummy] = *weight_num;
+                configed_weight_sum += *weight_num;
                 EXPECT_TRUE(wrlb.AddServer(id));
             } else {
                 EXPECT_FALSE(wrlb.AddServer(id));

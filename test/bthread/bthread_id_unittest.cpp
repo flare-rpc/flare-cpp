@@ -18,7 +18,6 @@
 #include <iostream>
 #include <gtest/gtest.h>
 #include "flare/base/time.h"
-#include "flare/butil/macros.h"
 #include "flare/bthread/bthread.h"
 #include "flare/bthread/task_group.h"
 #include "flare/bthread/butex.h"

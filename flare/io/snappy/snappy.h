@@ -36,8 +36,8 @@
 // using BMDiff and then compressing the output of BMDiff with
 // Snappy.
 
-#ifndef BUTIL_THIRD_PARTY_SNAPPY_SNAPPY_H__
-#define BUTIL_THIRD_PARTY_SNAPPY_SNAPPY_H__
+#ifndef FLARE_IO_SNAPPY_SNAPPY_H__
+#define FLARE_IO_SNAPPY_SNAPPY_H__
 
 #include <string>
 
@@ -205,4 +205,4 @@ namespace flare::snappy {
     static const size_t kMaxHashTableSize = 1 << kMaxHashTableBits;
 }  // end namespace flare::snappy
 
-#endif  // BUTIL_THIRD_PARTY_SNAPPY_SNAPPY_H__
+#endif  // FLARE_IO_SNAPPY_SNAPPY_H__

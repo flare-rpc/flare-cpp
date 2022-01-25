@@ -19,23 +19,24 @@
 
 // Wrappers of unix domain sockets, mainly for unit-test of network stuff.
 
-#ifndef BUTIL_UNIX_SOCKET_H
-#define BUTIL_UNIX_SOCKET_H
+#ifndef FLARE_BASE_UNIX_SOCKET_H_
+#define FLARE_BASE_UNIX_SOCKET_H_
 
-namespace butil {
+namespace flare::base {
 
-// Create an unix domain socket at `sockname' and listen to it.
-// If remove_previous_file is true or absent, remove previous file before
-// creating the socket.
-// Returns the file descriptor on success, -1 otherwise and errno is set.
-int unix_socket_listen(const char* sockname, bool remove_previous_file);
-int unix_socket_listen(const char* sockname);
+    // Create an unix domain socket at `sockname' and listen to it.
+    // If remove_previous_file is true or absent, remove previous file before
+    // creating the socket.
+    // Returns the file descriptor on success, -1 otherwise and errno is set.
+    int unix_socket_listen(const char *sockname, bool remove_previous_file);
 
-// Create an unix domain socket and connect it to another listening unix domain
-// socket at `sockname'.
-// Returns the file descriptor on success, -1 otherwise and errno is set.
-int unix_socket_connect(const char* sockname);
+    int unix_socket_listen(const char *sockname);
 
-}  // namespace butil
+    // Create an unix domain socket and connect it to another listening unix domain
+    // socket at `sockname'.
+    // Returns the file descriptor on success, -1 otherwise and errno is set.
+    int unix_socket_connect(const char *sockname);
 
-#endif  // BUTIL_UNIX_SOCKET_H
+}  // namespace flare::base
+
+#endif  // FLARE_BASE_UNIX_SOCKET_H_

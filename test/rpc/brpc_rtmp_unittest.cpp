@@ -27,7 +27,6 @@
 #include <google/protobuf/descriptor.h>
 #include <google/protobuf/io/zero_copy_stream_impl_lite.h>
 #include "flare/base/time.h"
-#include "flare/butil/macros.h"
 #include "flare/brpc/socket.h"
 #include "flare/brpc/acceptor.h"
 #include "flare/brpc/server.h"

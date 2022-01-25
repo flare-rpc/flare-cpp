@@ -31,14 +31,14 @@
 #include "flare/base/thread.h"           // FLARE_THREAD_LOCAL
 #include "flare/base/profile.h"
 
-#ifdef BUTIL_OBJECT_POOL_NEED_FREE_ITEM_NUM
-#define BAIDU_OBJECT_POOL_FREE_ITEM_NUM_ADD1                    \
+#ifdef FLARE_OBJECT_POOL_NEED_FREE_ITEM_NUM
+#define FLARE_OBJECT_POOL_FREE_ITEM_NUM_ADD1                    \
     (_global_nfree.fetch_add(1, std::memory_order_relaxed))
-#define BAIDU_OBJECT_POOL_FREE_ITEM_NUM_SUB1                    \
+#define FLARE_OBJECT_POOL_FREE_ITEM_NUM_SUB1                    \
     (_global_nfree.fetch_sub(1, std::memory_order_relaxed))
 #else
-#define BAIDU_OBJECT_POOL_FREE_ITEM_NUM_ADD1
-#define BAIDU_OBJECT_POOL_FREE_ITEM_NUM_SUB1
+#define FLARE_OBJECT_POOL_FREE_ITEM_NUM_ADD1
+#define FLARE_OBJECT_POOL_FREE_ITEM_NUM_SUB1
 #endif
 
 namespace flare::memory {
@@ -63,7 +63,7 @@ namespace flare::memory {
         size_t block_item_num;
         size_t free_chunk_item_num;
         size_t total_size;
-#ifdef BUTIL_OBJECT_POOL_NEED_FREE_ITEM_NUM
+#ifdef FLARE_OBJECT_POOL_NEED_FREE_ITEM_NUM
         size_t free_item_num;
 #endif
     };
@@ -146,14 +146,14 @@ namespace flare::memory {
 #define BAIDU_OBJECT_POOL_GET(CTOR_ARGS)                                \
         /* Fetch local free ptr */                                      \
         if (_cur_free.nfree) {                                          \
-            BAIDU_OBJECT_POOL_FREE_ITEM_NUM_SUB1;                       \
+            FLARE_OBJECT_POOL_FREE_ITEM_NUM_SUB1;                       \
             return _cur_free.ptrs[--_cur_free.nfree];                   \
         }                                                               \
         /* Fetch a FreeChunk from global.                               \
            TODO: Popping from _free needs to copy a FreeChunk which is  \
            costly, but hardly impacts amortized performance. */         \
         if (_pool->pop_free_chunk(_cur_free)) {                         \
-            BAIDU_OBJECT_POOL_FREE_ITEM_NUM_SUB1;                       \
+            FLARE_OBJECT_POOL_FREE_ITEM_NUM_SUB1;                       \
             return _cur_free.ptrs[--_cur_free.nfree];                   \
         }                                                               \
         /* Fetch memory from local block */                             \
@@ -200,7 +200,7 @@ namespace flare::memory {
                 // Return to local free list
                 if (_cur_free.nfree < ObjectPool::free_chunk_nitem()) {
                     _cur_free.ptrs[_cur_free.nfree++] = ptr;
-                    BAIDU_OBJECT_POOL_FREE_ITEM_NUM_ADD1;
+                    FLARE_OBJECT_POOL_FREE_ITEM_NUM_ADD1;
                     return 0;
                 }
                 // Local free list is full, return it to global.
@@ -208,7 +208,7 @@ namespace flare::memory {
                 if (_pool->push_free_chunk(_cur_free)) {
                     _cur_free.nfree = 1;
                     _cur_free.ptrs[0] = ptr;
-                    BAIDU_OBJECT_POOL_FREE_ITEM_NUM_ADD1;
+                    FLARE_OBJECT_POOL_FREE_ITEM_NUM_ADD1;
                     return 0;
                 }
                 return -1;
@@ -278,7 +278,7 @@ namespace flare::memory {
             info.item_num = 0;
             info.free_chunk_item_num = free_chunk_nitem();
             info.block_item_num = BLOCK_NITEM;
-#ifdef BUTIL_OBJECT_POOL_NEED_FREE_ITEM_NUM
+#ifdef FLARE_OBJECT_POOL_NEED_FREE_ITEM_NUM
             info.free_item_num = _global_nfree.load(std::memory_order_relaxed);
 #endif
 
@@ -494,7 +494,7 @@ namespace flare::memory {
         std::vector<DynamicFreeChunk *> _free_chunks;
         pthread_mutex_t _free_chunks_mutex;
 
-#ifdef BUTIL_OBJECT_POOL_NEED_FREE_ITEM_NUM
+#ifdef FLARE_OBJECT_POOL_NEED_FREE_ITEM_NUM
         static flare::static_atomic<size_t> _global_nfree;
 #endif
     };
@@ -530,7 +530,7 @@ namespace flare::memory {
     flare::static_atomic<typename ObjectPool<T>::BlockGroup *>
             ObjectPool<T>::_block_groups[OP_MAX_BLOCK_NGROUP] = {};
 
-#ifdef BUTIL_OBJECT_POOL_NEED_FREE_ITEM_NUM
+#ifdef FLARE_OBJECT_POOL_NEED_FREE_ITEM_NUM
     template <typename T>
     flare::static_atomic<size_t> ObjectPool<T>::_global_nfree = FLARE_STATIC_ATOMIC_INIT(0);
 #endif
@@ -544,7 +544,7 @@ namespace flare::memory {
                   << "\nblock_item_num: " << info.block_item_num
                   << "\nfree_chunk_item_num: " << info.free_chunk_item_num
                   << "\ntotal_size: " << info.total_size
-#ifdef BUTIL_OBJECT_POOL_NEED_FREE_ITEM_NUM
+#ifdef FLARE_OBJECT_POOL_NEED_FREE_ITEM_NUM
             << "\nfree_num: " << info.free_item_num
 #endif
                 ;

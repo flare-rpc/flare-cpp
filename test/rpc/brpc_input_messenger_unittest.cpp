@@ -25,37 +25,39 @@
 #include <gtest/gtest.h>
 #include "flare/base/gperftools_profiler.h"
 #include "flare/base/time.h"
-#include "flare/butil/macros.h"
 #include "flare/base/fd_utility.h"
+#include "flare/base/unix_socket.h"
 #include "flare/base/fd_guard.h"
-#include "flare/butil/unix_socket.h"
 #include "flare/brpc/acceptor.h"
 #include "flare/brpc/policy/hulu_pbrpc_protocol.h"
 
-void EmptyProcessHuluRequest(brpc::InputMessageBase* msg_base) {
+void EmptyProcessHuluRequest(brpc::InputMessageBase *msg_base) {
     brpc::DestroyingPtr<brpc::InputMessageBase> a(msg_base);
 }
 
-int main(int argc, char* argv[]) {
+int main(int argc, char *argv[]) {
     testing::InitGoogleTest(&argc, argv);
-    brpc::Protocol dummy_protocol = 
-                             { brpc::policy::ParseHuluMessage,
-                               brpc::SerializeRequestDefault, 
-                               brpc::policy::PackHuluRequest,
-                               EmptyProcessHuluRequest, EmptyProcessHuluRequest,
-                               NULL, NULL, NULL,
-                               brpc::CONNECTION_TYPE_ALL, "dummy_hulu" };
-    EXPECT_EQ(0,  RegisterProtocol((brpc::ProtocolType)30, dummy_protocol));
+    brpc::Protocol dummy_protocol =
+            {brpc::policy::ParseHuluMessage,
+             brpc::SerializeRequestDefault,
+             brpc::policy::PackHuluRequest,
+             EmptyProcessHuluRequest, EmptyProcessHuluRequest,
+             NULL, NULL, NULL,
+             brpc::CONNECTION_TYPE_ALL, "dummy_hulu"};
+    EXPECT_EQ(0, RegisterProtocol((brpc::ProtocolType) 30, dummy_protocol));
     return RUN_ALL_TESTS();
 }
 
-class MessengerTest : public ::testing::Test{
+class MessengerTest : public ::testing::Test {
 protected:
-    MessengerTest(){
+    MessengerTest() {
     };
-    virtual ~MessengerTest(){};
+
+    virtual ~MessengerTest() {};
+
     virtual void SetUp() {
     };
+
     virtual void TearDown() {
     };
 };
@@ -67,7 +69,7 @@ const size_t NCLIENT = 6;
 const size_t NMESSAGE = 1024;
 const size_t MESSAGE_SIZE = 32;
 
-inline uint32_t fmix32 ( uint32_t h ) {
+inline uint32_t fmix32(uint32_t h) {
     h ^= h >> 16;
     h *= 0x85ebca6b;
     h ^= h >> 13;
@@ -85,25 +87,25 @@ struct FLARE_CACHELINE_ALIGNMENT ClientMeta {
 
 std::atomic<size_t> client_index(0);
 
-void* client_thread(void* arg) {
-    ClientMeta* m = (ClientMeta*)arg;
+void *client_thread(void *arg) {
+    ClientMeta *m = (ClientMeta *) arg;
     size_t offset = 0;
     m->times = 0;
     m->bytes = 0;
     const size_t buf_cap = NMESSAGE * MESSAGE_SIZE;
-    char* buf = (char*)malloc(buf_cap);
+    char *buf = (char *) malloc(buf_cap);
     for (size_t i = 0; i < NMESSAGE; ++i) {
         memcpy(buf + i * MESSAGE_SIZE, "HULU", 4);
         // HULU use host byte order directly...
-        *(uint32_t*)(buf + i * MESSAGE_SIZE + 4) = MESSAGE_SIZE - 12;
-        *(uint32_t*)(buf + i * MESSAGE_SIZE + 8) = 4;
+        *(uint32_t *) (buf + i * MESSAGE_SIZE + 4) = MESSAGE_SIZE - 12;
+        *(uint32_t *) (buf + i * MESSAGE_SIZE + 8) = 4;
     }
 #ifdef USE_UNIX_DOMAIN_SOCKET
     const size_t id = client_index.fetch_add(1);
     char socket_name[64];
     snprintf(socket_name, sizeof(socket_name), "input_messenger.socket%lu",
              (id % NEPOLL));
-    flare::base::fd_guard fd(butil::unix_socket_connect(socket_name));
+    flare::base::fd_guard fd(flare::base::unix_socket_connect(socket_name));
     if (fd < 0) {
         PLOG(FATAL) << "Fail to connect to " << socket_name;
         return NULL;
@@ -148,21 +150,21 @@ void* client_thread(void* arg) {
 
 TEST_F(MessengerTest, dispatch_tasks) {
     client_stop = false;
-    
+
     brpc::Acceptor messenger[NEPOLL];
     pthread_t cth[NCLIENT];
-    ClientMeta* cm[NCLIENT];
+    ClientMeta *cm[NCLIENT];
 
     const brpc::InputMessageHandler pairs[] = {
-        { brpc::policy::ParseHuluMessage, 
-          EmptyProcessHuluRequest, NULL, NULL, "dummy_hulu" }
+            {brpc::policy::ParseHuluMessage,
+                    EmptyProcessHuluRequest, NULL, NULL, "dummy_hulu"}
     };
 
-    for (size_t i = 0; i < NEPOLL; ++i) {        
+    for (size_t i = 0; i < NEPOLL; ++i) {
 #ifdef USE_UNIX_DOMAIN_SOCKET
         char buf[64];
         snprintf(buf, sizeof(buf), "input_messenger.socket%lu", i);
-        int listening_fd = butil::unix_socket_listen(buf);
+        int listening_fd = flare::base::unix_socket_listen(buf);
 #else
         int listening_fd = tcp_listen(flare::base::end_point(flare::base::IP_ANY, 7878));
 #endif
@@ -171,7 +173,7 @@ TEST_F(MessengerTest, dispatch_tasks) {
         ASSERT_EQ(0, messenger[i].AddHandler(pairs[0]));
         ASSERT_EQ(0, messenger[i].StartAccept(listening_fd, -1, NULL));
     }
-    
+
     for (size_t i = 0; i < NCLIENT; ++i) {
         cm[i] = new ClientMeta;
         cm[i]->times = 0;
@@ -180,7 +182,7 @@ TEST_F(MessengerTest, dispatch_tasks) {
     }
 
     sleep(1);
-    
+
     LOG(INFO) << "Begin to profile... (5 seconds)";
     ProfilerStart("input_messenger.prof");
 
@@ -190,9 +192,9 @@ TEST_F(MessengerTest, dispatch_tasks) {
     }
     flare::base::stop_watcher tm;
     tm.start();
-    
+
     sleep(5);
-    
+
     tm.stop();
     ProfilerStop();
     LOG(INFO) << "End profiling";
@@ -203,7 +205,7 @@ TEST_F(MessengerTest, dispatch_tasks) {
     for (size_t i = 0; i < NCLIENT; ++i) {
         client_bytes += cm[i]->bytes;
     }
-    LOG(INFO) << "client_tp=" << (client_bytes - start_client_bytes) / (double)tm.u_elapsed()
+    LOG(INFO) << "client_tp=" << (client_bytes - start_client_bytes) / (double) tm.u_elapsed()
               << "MB/s client_msg="
               << (client_bytes - start_client_bytes) * 1000000L / (MESSAGE_SIZE * tm.u_elapsed())
               << "/s";

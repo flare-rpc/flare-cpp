@@ -25,7 +25,6 @@
 #include <google/protobuf/compiler/code_generator.h>
 #include <google/protobuf/compiler/plugin.h>
 #include "flare/base/strings.h"
-#include "flare/butil/file_util.h"
 #include "flare/mcpack2pb/mcpack2pb.h"
 #include "idl_options.pb.h"
 

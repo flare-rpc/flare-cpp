@@ -22,7 +22,6 @@
 #include <fcntl.h>                     // O_RDONLY
 #include <flare/base/temp_file.h>      // temp_file
 #include <flare/container/flat_map.h>
-#include <flare/butil/macros.h>
 #include "flare/base/time.h"                 // Timer
 #include "flare/base/fd_utility.h"           // make_non_blocking
 #include <flare/io/iobuf.h>
@@ -81,7 +80,7 @@ namespace {
         printf("tls_block of flare::io::IOBuf was deleted\n");
     }
 
-    const int ALLOW_UNUSED check_dummy = flare::base::thread_atexit(check_tls_block);
+    const int FLARE_ALLOW_UNUSED check_dummy = flare::base::thread_atexit(check_tls_block);
 
     static flare::container::FlatSet<void *> s_set;
 
