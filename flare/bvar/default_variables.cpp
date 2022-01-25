@@ -24,8 +24,10 @@
 #include <iomanip>                         // setw
 
 #if defined(__APPLE__)
+
 #include <libproc.h>
 #include <sys/resource.h>
+
 #else
 #endif
 
@@ -105,15 +107,15 @@ namespace bvar {
         std::ostringstream oss;
         char cmdbuf[128];
         snprintf(cmdbuf, sizeof(cmdbuf),
-                "ps -p %ld -o pid,ppid,pgid,sess"
-                ",tpgid,flags,pri,nice | tail -n1", (long)pid);
+                 "ps -p %ld -o pid,ppid,pgid,sess"
+                 ",tpgid,flags,pri,nice | tail -n1", (long) pid);
         if (flare::base::read_command_output(oss, cmdbuf) != 0) {
             LOG(ERROR) << "Fail to read stat";
             return -1;
         }
-        const std::string& result = oss.str();
+        const std::string &result = oss.str();
         if (sscanf(result.c_str(), "%d %d %d %d"
-                                  "%d %u %ld %ld",
+                                   "%d %u %ld %ld",
                    &stat.pid, &stat.ppid, &stat.pgrp, &stat.session,
                    &stat.tpgid, &stat.flags, &stat.priority, &stat.nice) != 8) {
             PLOG(WARNING) << "Fail to sscanf";
@@ -231,12 +233,12 @@ namespace bvar {
         static int64_t pagesize = getpagesize();
         std::ostringstream oss;
         char cmdbuf[128];
-        snprintf(cmdbuf, sizeof(cmdbuf), "ps -p %ld -o rss=,vsz=", (long)pid);
+        snprintf(cmdbuf, sizeof(cmdbuf), "ps -p %ld -o rss=,vsz=", (long) pid);
         if (flare::base::read_command_output(oss, cmdbuf) != 0) {
             LOG(ERROR) << "Fail to read memory state";
             return -1;
         }
-        const std::string& result = oss.str();
+        const std::string &result = oss.str();
         if (sscanf(result.c_str(), "%ld %ld", &m.resident, &m.size) != 2) {
             PLOG(WARNING) << "Fail to sscanf";
             return false;
@@ -299,7 +301,7 @@ namespace bvar {
             LOG(ERROR) << "Fail to read loadavg";
             return -1;
         }
-        const std::string& result = oss.str();
+        const std::string &result = oss.str();
         if (sscanf(result.c_str(), "{ %lf %lf %lf }",
                    &m.loadavg_1m, &m.loadavg_5m, &m.loadavg_15m) != 3) {
             PLOG(WARNING) << "Fail to sscanf";
@@ -335,18 +337,19 @@ namespace bvar {
 
     static int get_fd_count(int limit) {
 #if defined(FLARE_PLATFORM_LINUX)
-        try {
-            std::filesystem::directory_iterator di("/proc/self/fd");
-            // Have to limit the scaning which consumes a lot of CPU when #fd
-            // are huge (100k+)
-            int count = 0;
-            std::filesystem::directory_iterator endDi;
-            for (; di != endDi && count <= limit + 3; ++count, ++di) {}
-            return count - 3; /* skipped ., .. and the fd in di*/
-        } catch(...) {
+        std::error_code ec;
+        std::filesystem::directory_iterator di("/proc/self/fd", ec);
+        if (ec) {
             PLOG(WARNING) << "Fail to open /proc/self/fd";
             return -1;
         }
+
+        // Have to limit the scaning which consumes a lot of CPU when #fd
+        // are huge (100k+)
+        int count = 0;
+        std::filesystem::directory_iterator endDi;
+        for (; di != endDi && count <= limit + 3; ++count, ++di) {}
+        return count - 3; /* skipped ., .. and the fd in di*/
 
 #elif defined(FLARE_PLATFORM_OSX)
         // TODO(zhujiashun): following code will cause core dump with some
@@ -458,7 +461,7 @@ namespace bvar {
         memset(s, 0, sizeof(ProcIO));
         static pid_t pid = getpid();
         rusage_info_current rusage;
-        if (proc_pid_rusage(pid, RUSAGE_INFO_CURRENT, (void**)&rusage) != 0) {
+        if (proc_pid_rusage(pid, RUSAGE_INFO_CURRENT, (void **) &rusage) != 0) {
             PLOG(WARNING) << "Fail to proc_pid_rusage";
             return false;
         }
@@ -691,11 +694,11 @@ namespace bvar {
         }
     }
 
-    PassiveStatus <std::string> g_username(
+    PassiveStatus<std::string> g_username(
             "process_username", get_username, NULL);
 
     BVAR_DEFINE_PROC_STAT_FIELD(minflt);
-    PerSecond <PassiveStatus<unsigned long>> g_minflt_second(
+    PerSecond<PassiveStatus<unsigned long>> g_minflt_second(
             "process_faults_minor_second", &g_minflt);
     BVAR_DEFINE_PROC_STAT_FIELD2(majflt, "process_faults_major");
 
@@ -717,28 +720,28 @@ namespace bvar {
 
     BVAR_DEFINE_PROC_IO_FIELD(rchar);
     BVAR_DEFINE_PROC_IO_FIELD(wchar);
-    PerSecond <PassiveStatus<size_t>> g_io_read_second(
+    PerSecond<PassiveStatus<size_t>> g_io_read_second(
             "process_io_read_bytes_second", &g_rchar);
-    PerSecond <PassiveStatus<size_t>> g_io_write_second(
+    PerSecond<PassiveStatus<size_t>> g_io_write_second(
             "process_io_write_bytes_second", &g_wchar);
 
     BVAR_DEFINE_PROC_IO_FIELD(syscr);
     BVAR_DEFINE_PROC_IO_FIELD(syscw);
-    PerSecond <PassiveStatus<size_t>> g_io_num_reads_second(
+    PerSecond<PassiveStatus<size_t>> g_io_num_reads_second(
             "process_io_read_second", &g_syscr);
-    PerSecond <PassiveStatus<size_t>> g_io_num_writes_second(
+    PerSecond<PassiveStatus<size_t>> g_io_num_writes_second(
             "process_io_write_second", &g_syscw);
 
     BVAR_DEFINE_PROC_IO_FIELD(read_bytes);
     BVAR_DEFINE_PROC_IO_FIELD(write_bytes);
-    PerSecond <PassiveStatus<size_t>> g_disk_read_second(
+    PerSecond<PassiveStatus<size_t>> g_disk_read_second(
             "process_disk_read_bytes_second", &g_read_bytes);
-    PerSecond <PassiveStatus<size_t>> g_disk_write_second(
+    PerSecond<PassiveStatus<size_t>> g_disk_write_second(
             "process_disk_write_bytes_second", &g_write_bytes);
 
     BVAR_DEFINE_RUSAGE_FIELD(ru_utime);
     BVAR_DEFINE_RUSAGE_FIELD(ru_stime);
-    PassiveStatus <timeval> g_uptime("process_uptime", get_uptime, NULL);
+    PassiveStatus<timeval> g_uptime("process_uptime", get_uptime, NULL);
 
     static int get_core_num(void *) {
         return sysconf(_SC_NPROCESSORS_ONLN);
@@ -777,8 +780,8 @@ namespace bvar {
         return tp;
     }
 
-    PassiveStatus <TimePercent> g_cputime_percent(get_cputime_percent, NULL);
-    Window <PassiveStatus<TimePercent>, SERIES_IN_SECOND> g_cputime_percent_second(
+    PassiveStatus<TimePercent> g_cputime_percent(get_cputime_percent, NULL);
+    Window<PassiveStatus<TimePercent>, SERIES_IN_SECOND> g_cputime_percent_second(
             "process_cpu_usage", &g_cputime_percent, FLAGS_bvar_dump_interval);
 
     static TimePercent get_stime_percent(void *) {
@@ -787,8 +790,8 @@ namespace bvar {
         return tp;
     }
 
-    PassiveStatus <TimePercent> g_stime_percent(get_stime_percent, NULL);
-    Window <PassiveStatus<TimePercent>, SERIES_IN_SECOND> g_stime_percent_second(
+    PassiveStatus<TimePercent> g_stime_percent(get_stime_percent, NULL);
+    Window<PassiveStatus<TimePercent>, SERIES_IN_SECOND> g_stime_percent_second(
             "process_cpu_usage_system", &g_stime_percent, FLAGS_bvar_dump_interval);
 
     static TimePercent get_utime_percent(void *) {
@@ -797,8 +800,8 @@ namespace bvar {
         return tp;
     }
 
-    PassiveStatus <TimePercent> g_utime_percent(get_utime_percent, NULL);
-    Window <PassiveStatus<TimePercent>, SERIES_IN_SECOND> g_utime_percent_second(
+    PassiveStatus<TimePercent> g_utime_percent(get_utime_percent, NULL);
+    Window<PassiveStatus<TimePercent>, SERIES_IN_SECOND> g_utime_percent_second(
             "process_cpu_usage_user", &g_utime_percent, FLAGS_bvar_dump_interval);
 
 // According to http://man7.org/linux/man-pages/man2/getrusage.2.html
@@ -812,17 +815,17 @@ namespace bvar {
     BVAR_DEFINE_RUSAGE_FIELD(ru_oublock);
     BVAR_DEFINE_RUSAGE_FIELD(ru_nvcsw);
     BVAR_DEFINE_RUSAGE_FIELD(ru_nivcsw);
-    PerSecond <PassiveStatus<long>> g_ru_inblock_second(
+    PerSecond<PassiveStatus<long>> g_ru_inblock_second(
             "process_inblocks_second", &g_ru_inblock);
-    PerSecond <PassiveStatus<long>> g_ru_oublock_second(
+    PerSecond<PassiveStatus<long>> g_ru_oublock_second(
             "process_outblocks_second", &g_ru_oublock);
-    PerSecond <PassiveStatus<long>> cs_vol_second(
+    PerSecond<PassiveStatus<long>> cs_vol_second(
             "process_context_switches_voluntary_second", &g_ru_nvcsw);
-    PerSecond <PassiveStatus<long>> cs_invol_second(
+    PerSecond<PassiveStatus<long>> cs_invol_second(
             "process_context_switches_involuntary_second", &g_ru_nivcsw);
 
-    PassiveStatus <std::string> g_cmdline("process_cmdline", get_cmdline, NULL);
-    PassiveStatus <std::string> g_kernel_version(
+    PassiveStatus<std::string> g_cmdline("process_cmdline", get_cmdline, NULL);
+    PassiveStatus<std::string> g_kernel_version(
             "kernel_version", get_kernel_version, NULL);
 
     static std::string *s_gcc_version = NULL;
@@ -876,7 +879,7 @@ namespace bvar {
     }
 
 // =============================================
-    PassiveStatus <std::string> g_gcc_version("gcc_version", get_gcc_version, NULL);
+    PassiveStatus<std::string> g_gcc_version("gcc_version", get_gcc_version, NULL);
 
     void get_work_dir(std::ostream &os, void *) {
         std::error_code ec;
@@ -885,7 +888,7 @@ namespace bvar {
         os << curr.c_str();
     }
 
-    PassiveStatus <std::string> g_work_dir("process_work_dir", get_work_dir, NULL);
+    PassiveStatus<std::string> g_work_dir("process_work_dir", get_work_dir, NULL);
 
 #undef BVAR_MEMBER_TYPE
 #undef BVAR_DEFINE_PROC_STAT_FIELD
