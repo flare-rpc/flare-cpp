@@ -94,21 +94,21 @@ add_dependencies(SOURCES_DEBUG_LIB PROTO_LIB)
 set_property(TARGET ${SOURCES_DEBUG_LIB} PROPERTY POSITION_INDEPENDENT_CODE 1)
 set_property(TARGET ${FLARE_BASE_DEBUG_LIB} PROPERTY POSITION_INDEPENDENT_CODE 1)
 
-add_library(brpc-shared-debug SHARED
+add_library(flare-shared-debug SHARED
         $<TARGET_OBJECTS:FLARE_BASE_DEBUG_LIB>
         $<TARGET_OBJECTS:SOURCES_DEBUG_LIB>
         $<TARGET_OBJECTS:PROTO_LIB>)
 # change the debug lib output dir to be different from the release output
-set_target_properties(brpc-shared-debug PROPERTIES
+set_target_properties(flare-shared-debug PROPERTIES
         LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/test)
 
-target_link_libraries(brpc-shared-debug ${DYNAMIC_LIB})
-    target_link_libraries(brpc-shared-debug ${GLOG_LIB})
+target_link_libraries(flare-shared-debug ${DYNAMIC_LIB})
+    target_link_libraries(flare-shared-debug ${GLOG_LIB})
 
 # test_io
 add_executable(test_io ${TEST_IO_SRC}
         ${CMAKE_CURRENT_BINARY_DIR}/iobuf.pb.cc)
-target_link_libraries(test_io brpc-shared-debug
+target_link_libraries(test_io flare-shared-debug
         gtest
         gtest_main
         ${GPERFTOOLS_LIBRARIES})
