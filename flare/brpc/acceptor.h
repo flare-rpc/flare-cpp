@@ -19,6 +19,7 @@
 #define BRPC_ACCEPTOR_H
 
 #include <mutex>
+#include <condition_variable>
 #include "flare/bthread/bthread.h"                       // bthread_t
 #include "flare/container/flat_map.h"
 #include "flare/brpc/input_messenger.h"
