@@ -31,7 +31,6 @@
 #include <errno.h>                         // errno
 #include <limits.h>                        // CHAR_BIT
 #include <stdexcept>                       // std::invalid_argument
-#include "flare/butil/build_config.h"             // ARCH_CPU_X86_64
 #include "flare/base/static_atomic.h"                // std::atomic
 #include "flare/base/thread.h"             // thread_atexit
 #include "flare/base/logging.h"                  // CHECK, LOG
@@ -80,7 +79,7 @@ namespace flare::io {
             return total_write;
         }
 
-#if ARCH_CPU_X86_64
+#if defined(FLARE_PROCESSOR_X86_64)
 
 #ifndef SYS_preadv
 #define SYS_preadv 295
@@ -107,7 +106,7 @@ namespace flare::io {
                 PLOG(WARNING) << "Fail to open /dev/zero";
                 return user_preadv;
             }
-#if defined(OS_MACOSX)
+#if defined(FLARE_PLATFORM_OSX)
             return user_preadv;
 #endif
             char dummy[1];
@@ -127,7 +126,7 @@ namespace flare::io {
                 PLOG(ERROR) << "Fail to open /dev/null";
                 return user_pwritev;
             }
-#if defined(OS_MACOSX)
+#if defined(FLARE_PLATFORM_OSX)
             return user_pwritev;
 #endif
             char dummy[1];
@@ -141,7 +140,7 @@ namespace flare::io {
             return sys_pwritev;
         }
 
-#else   // ARCH_CPU_X86_64
+#else   // FLARE_PROCESSOR_X86_64
 
 #warning "We don't check whether the kernel supports SYS_preadv or SYS_pwritev " \
          "when the arch is not X86_64, use user space preadv/pwritev directly"
@@ -154,19 +153,19 @@ namespace flare::io {
             return user_pwritev;
         }
 
-#endif  // ARCH_CPU_X86_64
+#endif  // FLARE_PROCESSOR_X86_64
 
         inline void *cp(void *__restrict dest, const void *__restrict src, size_t n) {
             // memcpy in gcc 4.8 seems to be faster enough.
             return memcpy(dest, src, n);
         }
 
-// Function pointers to allocate or deallocate memory for a IOBuf::Block
+        // Function pointers to allocate or deallocate memory for a IOBuf::Block
         void *(*blockmem_allocate)(size_t) = ::malloc;
 
         void (*blockmem_deallocate)(void *) = ::free;
 
-// Use default function pointers
+        // Use default function pointers
         void reset_blockmem_allocate_and_deallocate() {
             blockmem_allocate = ::malloc;
             blockmem_deallocate = ::free;
@@ -272,7 +271,7 @@ namespace flare::io {
 
     namespace iobuf {
 
-// for unit test
+        // for unit test
         int block_shared_count(IOBuf::Block const *b) { return b->ref_count(); }
 
         IOBuf::Block *get_portal_next(IOBuf::Block const *b) {
@@ -304,9 +303,9 @@ namespace flare::io {
             return create_block(IOBuf::DEFAULT_BLOCK_SIZE);
         }
 
-// === Share TLS blocks between appending operations ===
-// Max number of blocks in each TLS. This is a soft limit namely
-// release_tls_block_chain() may exceed this limit sometimes.
+        // === Share TLS blocks between appending operations ===
+        // Max number of blocks in each TLS. This is a soft limit namely
+        // release_tls_block_chain() may exceed this limit sometimes.
         const int MAX_BLOCKS_PER_THREAD = 8;
 
         struct TLSData {
@@ -322,17 +321,17 @@ namespace flare::io {
 
         static __thread TLSData g_tls_data = {NULL, 0, false};
 
-// Used in UT
+        // Used in UT
         IOBuf::Block *get_tls_block_head() { return g_tls_data.block_head; }
 
         int get_tls_block_count() { return g_tls_data.num_blocks; }
 
-// Number of blocks that can't be returned to TLS which has too many block
-// already. This counter should be 0 in most scenarios, otherwise performance
-// of appending functions in IOPortal may be lowered.
+        // Number of blocks that can't be returned to TLS which has too many block
+        // already. This counter should be 0 in most scenarios, otherwise performance
+        // of appending functions in IOPortal may be lowered.
         static flare::static_atomic<size_t> g_num_hit_tls_threshold = FLARE_STATIC_ATOMIC_INIT(0);
 
-// Called in UT.
+        // Called in UT.
         void remove_tls_block_chain() {
             TLSData &tls_data = g_tls_data;
             IOBuf::Block *b = tls_data.block_head;
@@ -383,7 +382,7 @@ namespace flare::io {
             return new_block;
         }
 
-// Return one block to TLS.
+        // Return one block to TLS.
         inline void release_tls_block(IOBuf::Block *b) {
             if (!b) {
                 return;

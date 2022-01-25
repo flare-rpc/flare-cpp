@@ -20,8 +20,7 @@
 
 #ifdef __clang__
 RAPIDJSON_DIAG_PUSH
-RAPIDJSON_DIAG_OFF(switch-
-                           enum)
+RAPIDJSON_DIAG_OFF(switch-enum)
 #endif
 
 #ifdef _MSC_VER

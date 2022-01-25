@@ -22,9 +22,8 @@
 #ifdef __clang__
 RAPIDJSON_DIAG_PUSH
 RAPIDJSON_DIAG_OFF(padded)
-RAPIDJSON_DIAG_OFF(switch-
-                           enum)
-RAPIDJSON_DIAG_OFF(implicit - fallthrough)
+RAPIDJSON_DIAG_OFF(switch-enum)
+RAPIDJSON_DIAG_OFF(implicit-fallthrough)
 #endif
 
 #ifdef __GNUC__

@@ -28,7 +28,7 @@
 #include <ostream>                               // std::ostream
 #include <string_view>
 #include <google/protobuf/io/zero_copy_stream.h> // ZeroCopyInputStream
-#include "flare/butil/third_party/snappy/snappy-sinksource.h"
+#include "flare/io/snappy/snappy-sinksource.h"
 #include "flare/io/zero_copy_stream_as_streambuf.h"
 #include "flare/io/reader_writer.h"
 #include "flare/io/binary_printer.h"
@@ -625,7 +625,7 @@ namespace flare::io {
     };
 
     // Wrap IOBuf into input of snappy compresson.
-    class IOBufAsSnappySource : public butil::snappy::Source {
+    class IOBufAsSnappySource : public flare::snappy::Source {
     public:
         explicit IOBufAsSnappySource(const flare::io::IOBuf &buf)
                 : _buf(&buf), _stream(buf) {}
@@ -648,7 +648,7 @@ namespace flare::io {
     };
 
 // Wrap IOBuf into output of snappy compression.
-    class IOBufAsSnappySink : public butil::snappy::Sink {
+    class IOBufAsSnappySink : public flare::snappy::Sink {
     public:
         explicit IOBufAsSnappySink(flare::io::IOBuf &buf);
 

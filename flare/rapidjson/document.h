@@ -33,10 +33,8 @@ RAPIDJSON_DIAG_OFF(4244) // conversion from kXxxFlags to 'uint16_t', possible lo
 
 #ifdef __clang__
 RAPIDJSON_DIAG_OFF(padded)
-RAPIDJSON_DIAG_OFF(switch-
-                           enum)
-RAPIDJSON_DIAG_OFF(c++
-                           98 - compat)
+RAPIDJSON_DIAG_OFF(switch-enum)
+RAPIDJSON_DIAG_OFF(c++98-compat)
 #endif
 
 #ifdef __GNUC__

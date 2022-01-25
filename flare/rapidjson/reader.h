@@ -43,10 +43,9 @@ RAPIDJSON_DIAG_OFF(4702)  // unreachable code
 
 #ifdef __clang__
 RAPIDJSON_DIAG_PUSH
-RAPIDJSON_DIAG_OFF(old - style - cast)
+RAPIDJSON_DIAG_OFF(old-style-cast)
 RAPIDJSON_DIAG_OFF(padded)
-RAPIDJSON_DIAG_OFF(switch-
-                           enum)
+RAPIDJSON_DIAG_OFF(switch-enum)
 #endif
 
 #ifdef __GNUC__

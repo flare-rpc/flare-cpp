@@ -17,55 +17,54 @@
 
 // Date: Thu Nov 22 13:57:56 CST 2012
 
-#include "flare/butil/macros.h"
 #include "flare/io/zero_copy_stream_as_streambuf.h"
 
 namespace flare::io {
 
-BAIDU_CASSERT(sizeof(std::streambuf::char_type) == sizeof(char),
-              only_support_char);
+    static_assert(sizeof(std::streambuf::char_type) == sizeof(char),
+                  "only_support_char");
 
-int ZeroCopyStreamAsStreamBuf::overflow(int ch) {
-    if (ch == std::streambuf::traits_type::eof()) {
-        return ch;
+    int ZeroCopyStreamAsStreamBuf::overflow(int ch) {
+        if (ch == std::streambuf::traits_type::eof()) {
+            return ch;
+        }
+        void *block = NULL;
+        int size = 0;
+        if (_zero_copy_stream->Next(&block, &size)) {
+            setp((char *) block, (char *) block + size);
+            // if size == 0, this function will call overflow again.
+            return sputc(ch);
+        } else {
+            setp(NULL, NULL);
+            return std::streambuf::traits_type::eof();
+        }
     }
-    void* block = NULL;
-    int size = 0;
-    if (_zero_copy_stream->Next(&block, &size)) {
-        setp((char*)block, (char*)block + size);
-        // if size == 0, this function will call overflow again.
-        return sputc(ch);
-    } else {
-        setp(NULL, NULL);
-        return std::streambuf::traits_type::eof();
+
+    int ZeroCopyStreamAsStreamBuf::sync() {
+        // data are already in IOBuf.
+        return 0;
     }
-}
 
-int ZeroCopyStreamAsStreamBuf::sync() {
-    // data are already in IOBuf.
-    return 0;
-}
-
-ZeroCopyStreamAsStreamBuf::~ZeroCopyStreamAsStreamBuf() {
-    shrink();
-}
-
-void ZeroCopyStreamAsStreamBuf::shrink() {
-    if (pbase() != NULL) {
-        _zero_copy_stream->BackUp(epptr() - pptr());
-        setp(NULL, NULL);
+    ZeroCopyStreamAsStreamBuf::~ZeroCopyStreamAsStreamBuf() {
+        shrink();
     }
-}
 
-std::streampos ZeroCopyStreamAsStreamBuf::seekoff(
-    std::streamoff off,
-    std::ios_base::seekdir way,
-    std::ios_base::openmode which) {
-    if (off == 0 && way == std::ios_base::cur) {
-        return _zero_copy_stream->ByteCount() - (epptr() - pptr());
+    void ZeroCopyStreamAsStreamBuf::shrink() {
+        if (pbase() != NULL) {
+            _zero_copy_stream->BackUp(epptr() - pptr());
+            setp(NULL, NULL);
+        }
     }
-    return (std::streampos)(std::streamoff)-1;
-}
+
+    std::streampos ZeroCopyStreamAsStreamBuf::seekoff(
+            std::streamoff off,
+            std::ios_base::seekdir way,
+            std::ios_base::openmode which) {
+        if (off == 0 && way == std::ios_base::cur) {
+            return _zero_copy_stream->ByteCount() - (epptr() - pptr());
+        }
+        return (std::streampos) (std::streamoff) -1;
+    }
 
 
 }  // namespace flare::io

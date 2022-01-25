@@ -23,7 +23,6 @@
 #include "flare/rapidjson/document.h"
 #include "flare/rapidjson/stringbuffer.h"
 #include "flare/rapidjson/prettywriter.h"
-#include "flare/butil/time/time.h"
 #include "flare/bthread/bthread.h"
 #include "flare/brpc/log.h"
 #include "flare/brpc/channel.h"
@@ -80,7 +79,7 @@ int ConsulNamingService::GetServers(const char* service_name,
         ChannelOptions opt;
         opt.protocol = PROTOCOL_HTTP;
         opt.connect_timeout_ms = FLAGS_consul_connect_timeout_ms;
-        opt.timeout_ms = (FLAGS_consul_blocking_query_wait_secs + 10) * butil::Time::kMillisecondsPerSecond;
+        opt.timeout_ms = (FLAGS_consul_blocking_query_wait_secs + 10) * 1000;
         if (_channel.Init(FLAGS_consul_agent_addr.c_str(), "rr", &opt) != 0) {
             LOG(ERROR) << "Fail to init channel to consul at " << FLAGS_consul_agent_addr;
             return DegradeToOtherServiceIfNeeded(service_name, servers);
@@ -231,7 +230,7 @@ int ConsulNamingService::RunNamingService(const char* service_name,
                 servers.clear();
                 actions->ResetServers(servers);
             }
-            if (bthread_usleep(std::max(FLAGS_consul_retry_interval_ms, 1) * butil::Time::kMicrosecondsPerMillisecond) < 0) {
+            if (bthread_usleep(std::max(FLAGS_consul_retry_interval_ms, 1) * 1000) < 0) {
                 if (errno == ESTOP) {
                     RPC_VLOG << "Quit NamingServiceThread=" << bthread_self();
                     return 0;
