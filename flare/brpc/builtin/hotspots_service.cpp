@@ -1029,14 +1029,17 @@ namespace brpc {
         std::vector<std::string> past_profs;
         std::filesystem::path prof_dir(FLAGS_rpc_profiling_dir);
         prof_dir /= GetProgramChecksum();
-        std::filesystem::directory_iterator prof_enum(prof_dir);
-        for (auto & entry : prof_enum) {
-            // NOTE: name already includes dir.
-            if (past_profs.empty()) {
-                past_profs.reserve(16);
-            }
-            if(!entry.is_directory() && flare::base::ends_with(entry.path().c_str(),type_str)) {
-                past_profs.push_back(entry.path().generic_string());
+        std::error_code pec;
+        std::filesystem::directory_iterator prof_enum(prof_dir, pec);
+        if (!pec) {
+            for (auto &entry : prof_enum) {
+                // NOTE: name already includes dir.
+                if (past_profs.empty()) {
+                    past_profs.reserve(16);
+                }
+                if (!entry.is_directory() && flare::base::ends_with(entry.path().c_str(), type_str)) {
+                    past_profs.push_back(entry.path().generic_string());
+                }
             }
         }
         if (!past_profs.empty()) {

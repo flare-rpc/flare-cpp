@@ -401,6 +401,16 @@ namespace flare::base {
         static std::optional<T> try_parse(const std::string_view &s);
     };
 
+    inline std::string_view sub_string_view(const std::string_view &sv, size_t pos = 0, size_t n = std::string_view::npos) noexcept {
+        if (pos > sv.size()) {
+            pos = sv.size();
+        }
+        if (n > (sv.size() - pos)) {
+            n = sv.size() - pos;
+        }
+        return std::string_view(sv.data() + pos, n);
+    }
+
 
 }  // namespace flare::base
 #endif  // FLARE_BASE_STRINGS_H_

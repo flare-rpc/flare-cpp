@@ -6,7 +6,7 @@ Summary:	An industrial-grade RPC framework used throughout Baidu, with 1,000,000
 Group:		Development
 License:	Apache2
 URL:		https://github.com/apache/incubator-brpc
-Source0:	incubator-brpc-%{version}.tar.gz
+Source0:	incubator-flare-%{version}.tar.gz
 
 # https://access.redhat.com/solutions/519993
 %global  _filter_GLIBC_PRIVATE 1
@@ -40,7 +40,7 @@ Headers and shared object symbolic links for the %{name} library.
 
 %package static
 Summary: The %{name} static development libraries
-Requires: brpc-devel = %{version}-%{release}
+Requires: flare-devel = %{version}-%{release}
 %description static
 Static %{name} libraries.
 

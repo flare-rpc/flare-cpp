@@ -23,6 +23,7 @@
 
 #include <string_view>
 #include "flare/brpc/options.pb.h"
+#include "flare/base/strings.h"
 
 namespace brpc {
 
@@ -31,61 +32,64 @@ namespace brpc {
 // Convert a case-insensitive string to corresponding ProtocolType which is
 // defined in src/brpc/options.proto
 // Returns: PROTOCOL_UNKNOWN on error.
-ProtocolType StringToProtocolType(const std::string_view& type,
-                                  bool print_log_on_unknown);
-inline ProtocolType StringToProtocolType(const std::string_view& type)
-{ return StringToProtocolType(type, true); }
+    ProtocolType StringToProtocolType(const std::string_view &type,
+                                      bool print_log_on_unknown);
+
+    inline ProtocolType StringToProtocolType(const std::string_view &type) { return StringToProtocolType(type, true); }
 
 // Convert a ProtocolType to a c-style string.
-const char* ProtocolTypeToString(ProtocolType);
+    const char *ProtocolTypeToString(ProtocolType);
 
 // Assignable by both ProtocolType and names.
-class AdaptiveProtocolType {
-public:
-    explicit AdaptiveProtocolType() : _type(PROTOCOL_UNKNOWN) {}
-    explicit AdaptiveProtocolType(ProtocolType type) : _type(type) {}
-    ~AdaptiveProtocolType() {}
+    class AdaptiveProtocolType {
+    public:
+        explicit AdaptiveProtocolType() : _type(PROTOCOL_UNKNOWN) {}
 
-    void operator=(ProtocolType type) {
-        _type = type;
-        _name.clear();
-        _param.clear();
-    }
+        explicit AdaptiveProtocolType(ProtocolType type) : _type(type) {}
 
-    void operator=(std::string_view name) {
-        std::string_view param;
-        const size_t pos = name.find(':');
-        if (pos != std::string_view::npos) {
-            param = name.substr(pos + 1);
-            name.remove_suffix(name.size() - pos);
-        }
-        _type = StringToProtocolType(name);
-        if (_type == PROTOCOL_UNKNOWN) {
-            _name.assign(name.data(), name.size());
-        } else {
+        ~AdaptiveProtocolType() {}
+
+        void operator=(ProtocolType type) {
+            _type = type;
             _name.clear();
-        }
-        if (!param.empty()) {
-            _param.assign(param.data(), param.size());
-        } else {
             _param.clear();
         }
+
+        void operator=(std::string_view name) {
+            std::string_view param;
+            const size_t pos = name.find(':');
+            if (pos != std::string_view::npos) {
+                param = flare::base::sub_string_view(name, pos + 1);
+                name.remove_suffix(name.size() - pos);
+            }
+            _type = StringToProtocolType(name);
+            if (_type == PROTOCOL_UNKNOWN) {
+                _name.assign(name.data(), name.size());
+            } else {
+                _name.clear();
+            }
+            if (!param.empty()) {
+                _param.assign(param.data(), param.size());
+            } else {
+                _param.clear();
+            }
+        };
+
+        operator ProtocolType() const { return _type; }
+
+        const char *name() const {
+            return _name.empty() ? ProtocolTypeToString(_type) : _name.c_str();
+        }
+
+        bool has_param() const { return !_param.empty(); }
+
+        const std::string &param() const { return _param; }
+
+    private:
+        ProtocolType _type;
+        std::string _name;
+        std::string _param;
     };
-
-    operator ProtocolType() const { return _type; }
-
-    const char* name() const {
-        return _name.empty() ? ProtocolTypeToString(_type) : _name.c_str();
-    }
-
-    bool has_param() const { return !_param.empty(); }
-    const std::string& param() const { return _param; }
-
-private:
-    ProtocolType _type;
-    std::string _name;
-    std::string _param;
-};
 
 } // namespace brpc
 

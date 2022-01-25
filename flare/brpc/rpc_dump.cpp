@@ -297,7 +297,8 @@ namespace brpc {
             }
 
             if (_enum == std::filesystem::directory_iterator()) {
-                _enum = std::filesystem::directory_iterator(_dir);
+                std::error_code ec;
+                _enum = std::filesystem::directory_iterator(_dir, ec);
             }
             while (_enum != std::filesystem::directory_iterator() &&
                    _enum->is_directory()) {
