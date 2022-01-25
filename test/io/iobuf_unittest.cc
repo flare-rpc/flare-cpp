@@ -22,7 +22,6 @@
 #include <fcntl.h>                     // O_RDONLY
 #include <flare/base/temp_file.h>      // temp_file
 #include <flare/container/flat_map.h>
-#include <flare/butil/macros.h>
 #include "flare/base/time.h"                 // Timer
 #include "flare/base/fd_utility.h"           // make_non_blocking
 #include <flare/io/iobuf.h>
@@ -77,11 +76,11 @@ namespace {
     const size_t DEFAULT_PAYLOAD = flare::io::IOBuf::DEFAULT_BLOCK_SIZE - BLOCK_OVERHEAD;
 
     void check_tls_block() {
-        ASSERT_EQ((flare::io::IOBuf::Block *) NULL, butil::iobuf::get_tls_block_head());
+        ASSERT_EQ((flare::io::IOBuf::Block *) NULL, flare::io::iobuf::get_tls_block_head());
         printf("tls_block of flare::io::IOBuf was deleted\n");
     }
 
-    const int ALLOW_UNUSED check_dummy = flare::base::thread_atexit(check_tls_block);
+    const int FLARE_ALLOW_UNUSED check_dummy = flare::base::thread_atexit(check_tls_block);
 
     static flare::container::FlatSet<void *> s_set;
 
@@ -100,15 +99,15 @@ namespace {
     }
 
     inline bool is_debug_allocator_enabled() {
-        return (butil::iobuf::blockmem_allocate == debug_block_allocate);
+        return (flare::io::iobuf::blockmem_allocate == debug_block_allocate);
     }
 
     void install_debug_allocator() {
         if (!is_debug_allocator_enabled()) {
-            butil::iobuf::remove_tls_block_chain();
+            flare::io::iobuf::remove_tls_block_chain();
             s_set.init(1024);
-            butil::iobuf::blockmem_allocate = debug_block_allocate;
-            butil::iobuf::blockmem_deallocate = debug_block_deallocate;
+            flare::io::iobuf::blockmem_allocate = debug_block_allocate;
+            flare::io::iobuf::blockmem_deallocate = debug_block_deallocate;
             LOG(INFO) << "<Installed debug create/destroy>";
         }
     }
@@ -129,15 +128,15 @@ namespace {
 
     static void check_memory_leak() {
         if (is_debug_allocator_enabled()) {
-            flare::io::IOBuf::Block *p = butil::iobuf::get_tls_block_head();
+            flare::io::IOBuf::Block *p = flare::io::iobuf::get_tls_block_head();
             size_t n = 0;
             while (p) {
                 ASSERT_TRUE(s_set.seek(p)) << "Memory leak: " << p;
-                p = butil::iobuf::get_portal_next(p);
+                p = flare::io::iobuf::get_portal_next(p);
                 ++n;
             }
             ASSERT_EQ(n, s_set.size());
-            ASSERT_EQ(n, (size_t) butil::iobuf::get_tls_block_count());
+            ASSERT_EQ(n, (size_t) flare::io::iobuf::get_tls_block_count());
         }
     }
 
@@ -414,7 +413,7 @@ namespace {
         ASSERT_EQ(r[0], p._front_ref());
         ASSERT_EQ(r[0], p._back_ref());
         ASSERT_EQ(r[0], p._ref_at(0));
-        ASSERT_EQ(2, butil::iobuf::block_shared_count(r[0].block));
+        ASSERT_EQ(2, flare::io::iobuf::block_shared_count(r[0].block));
 
         // Add second ref
         p._push_back_ref(r[1]);
@@ -424,7 +423,7 @@ namespace {
         ASSERT_EQ(r[1], p._back_ref());
         ASSERT_EQ(r[0], p._ref_at(0));
         ASSERT_EQ(r[1], p._ref_at(1));
-        ASSERT_EQ(2, butil::iobuf::block_shared_count(r[1].block));
+        ASSERT_EQ(2, flare::io::iobuf::block_shared_count(r[1].block));
 
         // Pop a ref
         ASSERT_EQ(0, p._pop_front_ref());
@@ -434,7 +433,7 @@ namespace {
         ASSERT_EQ(r[1], p._front_ref());
         ASSERT_EQ(r[1], p._back_ref());
         ASSERT_EQ(r[1], p._ref_at(0));
-        //ASSERT_EQ(1, butil::iobuf::block_shared_count(r[0].block));
+        //ASSERT_EQ(1, flare::io::iobuf::block_shared_count(r[0].block));
 
         // Pop second
         ASSERT_EQ(0, p._pop_front_ref());
@@ -452,7 +451,7 @@ namespace {
             for (size_t j = 0; j <= i; j += std::max(1UL, i / 20) /*not check all*/) {
                 ASSERT_EQ(r[j + 2], p._ref_at(j));
             }
-            ASSERT_EQ(2, butil::iobuf::block_shared_count(r[i + 2].block));
+            ASSERT_EQ(2, flare::io::iobuf::block_shared_count(r[i + 2].block));
         }
 
         // Pop them all
@@ -876,7 +875,7 @@ namespace {
     }
 
     TEST_F(IOBufTest, cut_by_delim_perf) {
-        butil::iobuf::reset_blockmem_allocate_and_deallocate();
+        flare::io::iobuf::reset_blockmem_allocate_and_deallocate();
 
         flare::io::IOBuf b;
         flare::io::IOBuf p;
@@ -903,7 +902,7 @@ namespace {
 
 
     TEST_F(IOBufTest, cut_perf) {
-        butil::iobuf::reset_blockmem_allocate_and_deallocate();
+        flare::io::iobuf::reset_blockmem_allocate_and_deallocate();
 
         flare::io::IOBuf b;
         flare::io::IOBuf p;
@@ -980,7 +979,7 @@ namespace {
     }
 
     TEST_F(IOBufTest, append_store_append_cut) {
-        butil::iobuf::reset_blockmem_allocate_and_deallocate();
+        flare::io::iobuf::reset_blockmem_allocate_and_deallocate();
 
         std::string ref;
         ref.resize(rand() % 376813 + 19777777);
@@ -1137,7 +1136,7 @@ namespace {
         for (int i = 0; i < 2; ++i) {
             std::cout << "i=" << i << std::endl;
             // Consume the left TLS block so that cases are easier to check.
-            butil::iobuf::remove_tls_block_chain();
+            flare::io::iobuf::remove_tls_block_chain();
             flare::io::IOBuf src;
             const int BLKSIZE = (i == 0 ? 1024 : flare::io::IOBuf::DEFAULT_BLOCK_SIZE);
             const int PLDSIZE = BLKSIZE - BLOCK_OVERHEAD;
@@ -1269,7 +1268,7 @@ namespace {
     TEST_F(IOBufTest, own_block) {
         flare::io::IOBuf buf;
         const ssize_t BLOCK_SIZE = 1024;
-        flare::io::IOBuf::Block *saved_tls_block = butil::iobuf::get_tls_block_head();
+        flare::io::IOBuf::Block *saved_tls_block = flare::io::iobuf::get_tls_block_head();
         flare::io::IOBufAsZeroCopyOutputStream wrapper(&buf, BLOCK_SIZE);
         int alloc_size = 0;
         for (int i = 0; i < 100; ++i) {
@@ -1283,8 +1282,8 @@ namespace {
             }
         }
         ASSERT_EQ(static_cast<size_t>(alloc_size), buf.length());
-        ASSERT_EQ(saved_tls_block, butil::iobuf::get_tls_block_head());
-        ASSERT_EQ(butil::iobuf::block_cap(buf._front_ref().block), BLOCK_SIZE - BLOCK_OVERHEAD);
+        ASSERT_EQ(saved_tls_block, flare::io::iobuf::get_tls_block_head());
+        ASSERT_EQ(flare::io::iobuf::block_cap(buf._front_ref().block), BLOCK_SIZE - BLOCK_OVERHEAD);
     }
 
     struct Foo1 {
@@ -1309,7 +1308,7 @@ namespace {
     }
 
     TEST_F(IOBufTest, as_ostream) {
-        butil::iobuf::reset_blockmem_allocate_and_deallocate();
+        flare::io::iobuf::reset_blockmem_allocate_and_deallocate();
 
         flare::io::IOBufBuilder builder;
         LOG(INFO) << "sizeof(IOBufBuilder)=" << sizeof(builder) << std::endl
@@ -1317,7 +1316,7 @@ namespace {
                   << "sizeof(IOBufAsZeroCopyOutputStream)="
                   << sizeof(flare::io::IOBufAsZeroCopyOutputStream) << std::endl
                   << "sizeof(ZeroCopyStreamAsStreamBuf)="
-                  << sizeof(butil::ZeroCopyStreamAsStreamBuf) << std::endl
+                  << sizeof(flare::io::ZeroCopyStreamAsStreamBuf) << std::endl
                   << "sizeof(ostream)=" << sizeof(std::ostream);
         int x = -1;
         builder << 2 << " " << x << " " << 1.1 << " hello ";
@@ -1422,7 +1421,7 @@ namespace {
         std::string actual;
         actual.reserve(expected.size());
         for (size_t i = 0; i < block_count; ++i) {
-            butil::StringPiece p = buf.backing_block(i);
+            std::string_view p = buf.backing_block(i);
             ASSERT_FALSE(p.empty());
             actual.append(p.data(), p.size());
         }
@@ -1631,7 +1630,7 @@ namespace {
         ASSERT_EQ(0, b0.append_user_data(data, len, my_free));
         ASSERT_EQ(1UL, b0._ref_num());
         flare::io::IOBuf::BlockRef r = b0._front_ref();
-        ASSERT_EQ(1, butil::iobuf::block_shared_count(r.block));
+        ASSERT_EQ(1, flare::io::iobuf::block_shared_count(r.block));
         ASSERT_EQ(len, b0.size());
         std::string out;
         ASSERT_EQ(len, b0.cutn(&out, len));
@@ -1661,7 +1660,7 @@ namespace {
         ASSERT_EQ(0, b0.append_user_data(data, len, my_free));
         ASSERT_EQ(1UL, b0._ref_num());
         flare::io::IOBuf::BlockRef r = b0._front_ref();
-        ASSERT_EQ(1, butil::iobuf::block_shared_count(r.block));
+        ASSERT_EQ(1, flare::io::iobuf::block_shared_count(r.block));
         ASSERT_EQ(len, b0.size());
 
         {
@@ -1672,7 +1671,7 @@ namespace {
                 if (i != 255) {
                     ASSERT_EQ(1UL, b0._ref_num());
                     flare::io::IOBuf::BlockRef r = b0._front_ref();
-                    ASSERT_EQ(i + 2, butil::iobuf::block_shared_count(r.block));
+                    ASSERT_EQ(i + 2, flare::io::iobuf::block_shared_count(r.block));
                 } else {
                     ASSERT_EQ(0UL, b0._ref_num());
                     ASSERT_TRUE(b0.empty());
@@ -1691,52 +1690,52 @@ namespace {
     }
 
     TEST_F(IOBufTest, share_tls_block) {
-        butil::iobuf::remove_tls_block_chain();
-        flare::io::IOBuf::Block *b = butil::iobuf::acquire_tls_block();
-        ASSERT_EQ(0u, butil::iobuf::block_size(b));
+        flare::io::iobuf::remove_tls_block_chain();
+        flare::io::IOBuf::Block *b = flare::io::iobuf::acquire_tls_block();
+        ASSERT_EQ(0u, flare::io::iobuf::block_size(b));
 
-        flare::io::IOBuf::Block *b2 = butil::iobuf::share_tls_block();
+        flare::io::IOBuf::Block *b2 = flare::io::iobuf::share_tls_block();
         flare::io::IOBuf buf;
-        for (size_t i = 0; i < butil::iobuf::block_cap(b2); i++) {
+        for (size_t i = 0; i < flare::io::iobuf::block_cap(b2); i++) {
             buf.push_back('x');
         }
         // after pushing to b2, b2 is full but it is still head of tls block.
         ASSERT_NE(b, b2);
-        butil::iobuf::release_tls_block_chain(b);
-        ASSERT_EQ(b, butil::iobuf::share_tls_block());
+        flare::io::iobuf::release_tls_block_chain(b);
+        ASSERT_EQ(b, flare::io::iobuf::share_tls_block());
         // After releasing b, now tls block is b(not full) -> b2(full) -> NULL
-        for (size_t i = 0; i < butil::iobuf::block_cap(b); i++) {
+        for (size_t i = 0; i < flare::io::iobuf::block_cap(b); i++) {
             buf.push_back('x');
         }
         // now tls block is b(full) -> b2(full) -> NULL
-        flare::io::IOBuf::Block *head_block = butil::iobuf::share_tls_block();
-        ASSERT_EQ(0u, butil::iobuf::block_size(head_block));
+        flare::io::IOBuf::Block *head_block = flare::io::iobuf::share_tls_block();
+        ASSERT_EQ(0u, flare::io::iobuf::block_size(head_block));
         ASSERT_NE(b, head_block);
         ASSERT_NE(b2, head_block);
     }
 
     TEST_F(IOBufTest, acquire_tls_block) {
-        butil::iobuf::remove_tls_block_chain();
-        flare::io::IOBuf::Block *b = butil::iobuf::acquire_tls_block();
-        const size_t block_cap = butil::iobuf::block_cap(b);
+        flare::io::iobuf::remove_tls_block_chain();
+        flare::io::IOBuf::Block *b = flare::io::iobuf::acquire_tls_block();
+        const size_t block_cap = flare::io::iobuf::block_cap(b);
         flare::io::IOBuf buf;
         for (size_t i = 0; i < block_cap; i++) {
             buf.append("x");
         }
-        ASSERT_EQ(1, butil::iobuf::get_tls_block_count());
-        flare::io::IOBuf::Block *head = butil::iobuf::get_tls_block_head();
-        ASSERT_EQ(butil::iobuf::block_cap(head), butil::iobuf::block_size(head));
-        butil::iobuf::release_tls_block_chain(b);
-        ASSERT_EQ(2, butil::iobuf::get_tls_block_count());
+        ASSERT_EQ(1, flare::io::iobuf::get_tls_block_count());
+        flare::io::IOBuf::Block *head = flare::io::iobuf::get_tls_block_head();
+        ASSERT_EQ(flare::io::iobuf::block_cap(head), flare::io::iobuf::block_size(head));
+        flare::io::iobuf::release_tls_block_chain(b);
+        ASSERT_EQ(2, flare::io::iobuf::get_tls_block_count());
         for (size_t i = 0; i < block_cap; i++) {
             buf.append("x");
         }
-        ASSERT_EQ(2, butil::iobuf::get_tls_block_count());
-        head = butil::iobuf::get_tls_block_head();
-        ASSERT_EQ(butil::iobuf::block_cap(head), butil::iobuf::block_size(head));
-        b = butil::iobuf::acquire_tls_block();
-        ASSERT_EQ(0, butil::iobuf::get_tls_block_count());
-        ASSERT_NE(butil::iobuf::block_cap(b), butil::iobuf::block_size(b));
+        ASSERT_EQ(2, flare::io::iobuf::get_tls_block_count());
+        head = flare::io::iobuf::get_tls_block_head();
+        ASSERT_EQ(flare::io::iobuf::block_cap(head), flare::io::iobuf::block_size(head));
+        b = flare::io::iobuf::acquire_tls_block();
+        ASSERT_EQ(0, flare::io::iobuf::get_tls_block_count());
+        ASSERT_NE(flare::io::iobuf::block_cap(b), flare::io::iobuf::block_size(b));
     }
 
 } // namespace

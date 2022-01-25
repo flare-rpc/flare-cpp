@@ -15,8 +15,8 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef BUTIL_SSL_COMPAT_H
-#define BUTIL_SSL_COMPAT_H
+#ifndef FLARE_IO_SSL_COMPAT_H_
+#define FLARE_IO_SSL_COMPAT_H_
 
 #include <openssl/ssl.h>
 #include <openssl/opensslv.h>
@@ -518,4 +518,4 @@ BRPC_INLINE int EVP_PKEY_base_id(const EVP_PKEY *pkey) {
 
 #endif /* OPENSSL_VERSION_NUMBER < 0x0090801fL */
 
-#endif /* BUTIL_SSL_COMPAT_H */
+#endif  // FLARE_IO_SSL_COMPAT_H_

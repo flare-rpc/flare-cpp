@@ -564,7 +564,7 @@ namespace flare::snappy {
         return len | (copy_offset << 8) | (extra << 11);
     }
 
-    static void ALLOW_UNUSED ComputeTable() {
+    static void FLARE_ALLOW_UNUSED ComputeTable() {
         uint16_t dst[256];
 
         // Place invalid entries in all places to detect missing initialization

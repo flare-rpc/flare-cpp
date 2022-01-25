@@ -18,8 +18,9 @@
 #ifndef BRPC_ACCEPTOR_H
 #define BRPC_ACCEPTOR_H
 
+#include <mutex>
+#include <condition_variable>
 #include "flare/bthread/bthread.h"                       // bthread_t
-#include "flare/butil/synchronization/condition_variable.h"
 #include "flare/container/flat_map.h"
 #include "flare/brpc/input_messenger.h"
 
@@ -99,8 +100,8 @@ private:
     // The Socket tso accept connections.
     SocketId _acception_id;
 
-    flare::base::Mutex _map_mutex;
-    flare::base::ConditionVariable _empty_cond;
+    std::mutex _map_mutex;
+    std::condition_variable _empty_cond;
     
     // The map containing all the accepted sockets
     SocketMap _socket_map;

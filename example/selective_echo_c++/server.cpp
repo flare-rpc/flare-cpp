@@ -18,11 +18,12 @@
 // A server to receive EchoRequest and send back EchoResponse.
 
 #include <vector>
+#include <random>
+#include <chrono>
 #include <gflags/gflags.h>
 #include "flare/base/time.h"
 #include "flare/base/logging.h"
-#include <flare/butil/string_splitter.h>
-#include <flare/butil/rand_util.h>
+#include <flare/base/string_splitter.h>
 #include <flare/brpc/server.h>
 #include "echo.pb.h"
 
@@ -60,7 +61,10 @@ public:
             double delay = _sleep_us;
             const double a = FLAGS_exception_ratio * 0.5;
             if (a >= 0.0001) {
-                double x = butil::RandDouble();
+                unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
+                std::default_random_engine e(seed);
+                std::uniform_real_distribution<double> distrReal(0,5);
+                double x = distrReal(e);
                 if (x < a) {
                     const double min_sleep_us = FLAGS_min_ratio * _sleep_us;
                     delay = min_sleep_us + (_sleep_us - min_sleep_us) * x / a;

@@ -19,7 +19,6 @@
 #include <gflags/gflags.h>
 #include "flare/base/static_atomic.h"
 #include "flare/base/time.h"
-#include "flare/butil/macros.h"
 #include "flare/base/logging.h"
 #include "flare/base/thread.h"
 #include <flare/bthread/butex.h>

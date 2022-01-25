@@ -22,7 +22,6 @@
 #include <pthread.h>
 #include <gtest/gtest.h>
 #include <gflags/gflags.h>
-#include "flare/butil/macros.h"
 #include "flare/bthread/bthread.h"
 #include "flare/brpc/circuit_breaker.h"
 #include "flare/brpc/socket.h"

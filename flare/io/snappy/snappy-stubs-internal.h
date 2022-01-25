@@ -28,8 +28,8 @@
 //
 // Various stubs for the open-source version of Snappy.
 
-#ifndef BUTIL_THIRD_PARTY_SNAPPY_OPENSOURCE_SNAPPY_STUBS_INTERNAL_H_
-#define BUTIL_THIRD_PARTY_SNAPPY_OPENSOURCE_SNAPPY_STUBS_INTERNAL_H_
+#ifndef FLARE_IO_SNAPPY_OPENSOURCE_SNAPPY_STUBS_INTERNAL_H_
+#define FLARE_IO_SNAPPY_OPENSOURCE_SNAPPY_STUBS_INTERNAL_H_
 
 #include <string>
 #include <assert.h>
@@ -410,4 +410,4 @@ namespace flare::snappy {
 
 }  // namespace flare::snappy
 
-#endif  // BUTIL_THIRD_PARTY_SNAPPY_OPENSOURCE_SNAPPY_STUBS_INTERNAL_H_
+#endif  // FLARE_IO_SNAPPY_OPENSOURCE_SNAPPY_STUBS_INTERNAL_H_

@@ -18,7 +18,7 @@
 test_num=0
 failed_test=""
 rc=0
-test_bins="test_butil test_bvar bthread*unittest brpc*unittest"
+test_bins="test_bvar bthread*unittest brpc*unittest"
 ulimit -c unlimited # turn on coredumps
 for test_bin in $test_bins; do
     test_num=$((test_num + 1))

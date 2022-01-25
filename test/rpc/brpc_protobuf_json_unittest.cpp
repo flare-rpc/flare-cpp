@@ -597,7 +597,7 @@ TEST_F(ProtobufJsonTest, json_to_pb_complex_perf_case) {
         res = json2pb::JsonToProtoMessage(&stream, &data, options, &error);
         timer.stop();
         avg_time1 += timer.u_elapsed();
-        ASSERT_TRUE(res);
+        ASSERT_TRUE(res)<<error;
     }
     ProfilerStop();
     avg_time1 /= times;

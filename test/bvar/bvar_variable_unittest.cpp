@@ -24,7 +24,6 @@
 #include <iostream>
 #include <sstream>
 #include "flare/base/time.h"
-#include "flare/butil/macros.h"
 #include "flare/base/strings.h"
 #include "flare/bvar/bvar.h"
 

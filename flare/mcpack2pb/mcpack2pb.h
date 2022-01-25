@@ -35,7 +35,7 @@ typedef bool (*SetFieldFn)(::google::protobuf::Message* msg,
                            UnparsedValue& value);
 
 // Mapping from filed name to its parsing&setting function.
-typedef flare::container::FlatMap<butil::StringPiece, SetFieldFn> FieldMap;
+typedef flare::container::FlatMap<std::string_view, SetFieldFn> FieldMap;
 
 enum SerializationFormat {
     FORMAT_COMPACK,

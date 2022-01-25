@@ -26,7 +26,7 @@
 #include <flare/brpc/server.h>
 #include "echo.pb.h"
 #include <flare/bvar/bvar.h>
-#include <flare/butil/fast_rand.h>
+#include <flare/base/fast_rand.h>
 
 DEFINE_int32(thread_num, 2, "Number of threads to send requests");
 DEFINE_bool(use_bthread, false, "Use bthread to send requests");
@@ -64,7 +64,7 @@ void* sender(void* arg) {
         }
 
         // Set request_id to be a random string
-        cntl.set_request_id(butil::fast_rand_printable(9));
+        cntl.set_request_id(flare::base::fast_rand_printable(9));
 
         // Set attachment which is wired to network directly instead of 
         // being serialized into protobuf messages.

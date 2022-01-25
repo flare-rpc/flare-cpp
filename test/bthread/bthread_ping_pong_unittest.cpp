@@ -23,7 +23,6 @@
 #include <gtest/gtest.h>
 #include "flare/base/compat.h"
 #include "flare/base/time.h"
-#include "flare/butil/macros.h"
 #include "flare/base/errno.h"
 #include <flare/bthread/sys_futex.h>
 #include <flare/bthread/butex.h>
@@ -36,7 +35,7 @@ DEFINE_bool(loop, false, "run until ctrl-C is pressed");
 DEFINE_bool(use_futex, false, "use futex instead of pipe");
 DEFINE_bool(use_butex, false, "use butex instead of pipe");
 
-void ALLOW_UNUSED (*ignore_sigpipe)(int) = signal(SIGPIPE, SIG_IGN);
+void FLARE_ALLOW_UNUSED (*ignore_sigpipe)(int) = signal(SIGPIPE, SIG_IGN);
 
 volatile bool stop = false;
 void quit_handler(int) {

@@ -17,54 +17,56 @@
 
 // Date: Thu Nov 22 13:57:56 CST 2012
 
-#ifndef BUTIL_BINARY_PRINTER_H
-#define BUTIL_BINARY_PRINTER_H
+#ifndef FLARE_IO_BINARY_PRINTER_H_
+#define FLARE_IO_BINARY_PRINTER_H_
 
 #include <string_view>
 
 namespace flare::io {
-class IOBuf;
+    class IOBuf;
 
 // Print binary content within max length.
 // The printing format is optimized for humans and may change in future.
 
-class ToPrintable {
-public:
-    static const size_t DEFAULT_MAX_LENGTH = 64;
-    
-    ToPrintable(const IOBuf& b, size_t max_length = DEFAULT_MAX_LENGTH)
-        : _iobuf(&b), _max_length(max_length) {}
+    class ToPrintable {
+    public:
+        static const size_t DEFAULT_MAX_LENGTH = 64;
 
-    ToPrintable(const std::string_view& str, size_t max_length = DEFAULT_MAX_LENGTH)
-        : _iobuf(NULL), _str(str), _max_length(max_length) {}
+        ToPrintable(const IOBuf &b, size_t max_length = DEFAULT_MAX_LENGTH)
+                : _iobuf(&b), _max_length(max_length) {}
 
-    ToPrintable(const void* data, size_t n, size_t max_length = DEFAULT_MAX_LENGTH)
-        : _iobuf(NULL), _str((const char*)data, n), _max_length(max_length) {}
-    
-    void Print(std::ostream& os) const;
+        ToPrintable(const std::string_view &str, size_t max_length = DEFAULT_MAX_LENGTH)
+                : _iobuf(NULL), _str(str), _max_length(max_length) {}
 
-private:
-    const IOBuf* _iobuf;
-    std::string_view _str;
-    size_t _max_length;
-};
+        ToPrintable(const void *data, size_t n, size_t max_length = DEFAULT_MAX_LENGTH)
+                : _iobuf(NULL), _str((const char *) data, n), _max_length(max_length) {}
+
+        void Print(std::ostream &os) const;
+
+    private:
+        const IOBuf *_iobuf;
+        std::string_view _str;
+        size_t _max_length;
+    };
 
 // Keep old name for compatibility.
-typedef ToPrintable PrintedAsBinary;
+    typedef ToPrintable PrintedAsBinary;
 
-inline std::ostream& operator<<(std::ostream& os, const ToPrintable& p) {
-    p.Print(os);
-    return os;
-}
+    inline std::ostream &operator<<(std::ostream &os, const ToPrintable &p) {
+        p.Print(os);
+        return os;
+    }
 
 // Convert binary data to a printable string.
-std::string ToPrintableString(const IOBuf& data,
-                              size_t max_length = ToPrintable::DEFAULT_MAX_LENGTH);
-std::string ToPrintableString(const std::string_view& data,
-                              size_t max_length = ToPrintable::DEFAULT_MAX_LENGTH);
-std::string ToPrintableString(const void* data, size_t n,
-                              size_t max_length = ToPrintable::DEFAULT_MAX_LENGTH);
+    std::string ToPrintableString(const IOBuf &data,
+                                  size_t max_length = ToPrintable::DEFAULT_MAX_LENGTH);
+
+    std::string ToPrintableString(const std::string_view &data,
+                                  size_t max_length = ToPrintable::DEFAULT_MAX_LENGTH);
+
+    std::string ToPrintableString(const void *data, size_t n,
+                                  size_t max_length = ToPrintable::DEFAULT_MAX_LENGTH);
 
 } // namespace flare::io
 
-#endif  // BUTIL_BINARY_PRINTER_H
+#endif  // FLARE_IO_BINARY_PRINTER_H_

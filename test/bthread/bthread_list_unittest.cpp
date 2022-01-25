@@ -17,7 +17,6 @@
 
 #include <gtest/gtest.h>
 #include "flare/base/time.h"
-#include "flare/butil/macros.h"
 #include "flare/base/logging.h"
 #include "flare/bthread/task_group.h"
 #include "flare/bthread/bthread.h"

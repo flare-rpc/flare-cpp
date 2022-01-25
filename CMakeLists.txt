@@ -116,7 +116,6 @@ endmacro(use_cxx17)
 use_cxx17()
 
 if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    #required by butil/crc32.cc to boost performance for 10x
     if ((CMAKE_SYSTEM_PROCESSOR MATCHES "(x86)|(X86)|(amd64)|(AMD64)") AND NOT (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 4.4))
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -msse4 -msse4.2")
     elseif ((CMAKE_SYSTEM_PROCESSOR MATCHES "aarch64"))
@@ -142,7 +141,6 @@ find_library(GLOG_LIB NAMES glog)
 if ((NOT GLOG_INCLUDE_PATH) OR (NOT GLOG_LIB))
     message(FATAL_ERROR "Fail to find glog")
 endif ()
-message(STATUS ${GLOG_INCLUDE_PATH})
 include_directories(${GLOG_INCLUDE_PATH})
 
 if (WITH_MESALINK)
@@ -223,100 +221,6 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/output/lib)
 
 # the reason why not using file(GLOB_RECURSE...) is that we want to
 # include different files on different platforms.
-set(BUTIL_SOURCES
-        ${PROJECT_SOURCE_DIR}/flare/butil/third_party/dmg_fp/g_fmt.cc
-        ${PROJECT_SOURCE_DIR}/flare/butil/third_party/dmg_fp/dtoa_wrapper.cc
-        ${PROJECT_SOURCE_DIR}/flare/butil/third_party/icu/icu_utf.cc
-        ${PROJECT_SOURCE_DIR}/flare/butil/third_party/superfasthash/superfasthash.c
-        ${PROJECT_SOURCE_DIR}/flare/butil/third_party/modp_b64/modp_b64.cc
-        ${PROJECT_SOURCE_DIR}/flare/butil/third_party/symbolize/demangle.cc
-        ${PROJECT_SOURCE_DIR}/flare/butil/third_party/symbolize/symbolize.cc
-        ${PROJECT_SOURCE_DIR}/flare/butil/at_exit.cc
-        ${PROJECT_SOURCE_DIR}/flare/butil/debug/alias.cc
-        ${PROJECT_SOURCE_DIR}/flare/butil/debug/asan_invalid_access.cc
-        ${PROJECT_SOURCE_DIR}/flare/butil/debug/crash_logging.cc
-        ${PROJECT_SOURCE_DIR}/flare/butil/debug/debugger.cc
-        ${PROJECT_SOURCE_DIR}/flare/butil/debug/debugger_posix.cc
-        ${PROJECT_SOURCE_DIR}/flare/butil/debug/dump_without_crashing.cc
-        ${PROJECT_SOURCE_DIR}/flare/butil/debug/proc_maps_linux.cc
-        ${PROJECT_SOURCE_DIR}/flare/butil/debug/stack_trace.cc
-        ${PROJECT_SOURCE_DIR}/flare/butil/debug/stack_trace_posix.cc
-        ${PROJECT_SOURCE_DIR}/flare/butil/environment.cc
-        ${PROJECT_SOURCE_DIR}/flare/butil/files/file.cc
-        ${PROJECT_SOURCE_DIR}/flare/butil/files/file_posix.cc
-        ${PROJECT_SOURCE_DIR}/flare/butil/files/file_enumerator.cc
-        ${PROJECT_SOURCE_DIR}/flare/butil/files/file_enumerator_posix.cc
-        ${PROJECT_SOURCE_DIR}/flare/butil/files/file_path.cc
-        ${PROJECT_SOURCE_DIR}/flare/butil/files/file_path_constants.cc
-        ${PROJECT_SOURCE_DIR}/flare/butil/files/memory_mapped_file.cc
-        ${PROJECT_SOURCE_DIR}/flare/butil/files/memory_mapped_file_posix.cc
-        ${PROJECT_SOURCE_DIR}/flare/butil/files/scoped_temp_dir.cc
-        ${PROJECT_SOURCE_DIR}/flare/butil/file_util.cc
-        ${PROJECT_SOURCE_DIR}/flare/butil/file_util_posix.cc
-        ${PROJECT_SOURCE_DIR}/flare/butil/guid.cc
-        ${PROJECT_SOURCE_DIR}/flare/butil/guid_posix.cc
-        ${PROJECT_SOURCE_DIR}/flare/butil/hash.cc
-        ${PROJECT_SOURCE_DIR}/flare/butil/lazy_instance.cc
-        ${PROJECT_SOURCE_DIR}/flare/butil/memory/aligned_memory.cc
-        ${PROJECT_SOURCE_DIR}/flare/butil/memory/ref_counted.cc
-        ${PROJECT_SOURCE_DIR}/flare/butil/memory/ref_counted_memory.cc
-        ${PROJECT_SOURCE_DIR}/flare/butil/memory/singleton.cc
-        ${PROJECT_SOURCE_DIR}/flare/butil/memory/weak_ptr.cc
-        ${PROJECT_SOURCE_DIR}/flare/butil/safe_strerror_posix.cc
-        ${PROJECT_SOURCE_DIR}/flare/butil/sha1_portable.cc
-        ${PROJECT_SOURCE_DIR}/flare/butil/strings/latin1_string_conversions.cc
-        ${PROJECT_SOURCE_DIR}/flare/butil/strings/nullable_string16.cc
-        ${PROJECT_SOURCE_DIR}/flare/butil/strings/safe_sprintf.cc
-        ${PROJECT_SOURCE_DIR}/flare/butil/strings/string16.cc
-        ${PROJECT_SOURCE_DIR}/flare/butil/strings/string_number_conversions.cc
-        ${PROJECT_SOURCE_DIR}/flare/butil/strings/string_split.cc
-        ${PROJECT_SOURCE_DIR}/flare/butil/strings/string_piece.cc
-        ${PROJECT_SOURCE_DIR}/flare/butil/strings/string_util.cc
-        ${PROJECT_SOURCE_DIR}/flare/butil/strings/string_util_constants.cc
-        ${PROJECT_SOURCE_DIR}/flare/butil/strings/stringprintf.cc
-        ${PROJECT_SOURCE_DIR}/flare/butil/strings/utf_offset_string_conversions.cc
-        ${PROJECT_SOURCE_DIR}/flare/butil/strings/utf_string_conversion_utils.cc
-        ${PROJECT_SOURCE_DIR}/flare/butil/strings/utf_string_conversions.cc
-        ${PROJECT_SOURCE_DIR}/flare/butil/synchronization/condition_variable_posix.cc
-        ${PROJECT_SOURCE_DIR}/flare/butil/synchronization/waitable_event_posix.cc
-        ${PROJECT_SOURCE_DIR}/flare/butil/threading/non_thread_safe_impl.cc
-        ${PROJECT_SOURCE_DIR}/flare/butil/threading/platform_thread_posix.cc
-        ${PROJECT_SOURCE_DIR}/flare/butil/threading/simple_thread.cc
-        ${PROJECT_SOURCE_DIR}/flare/butil/threading/thread_checker_impl.cc
-        ${PROJECT_SOURCE_DIR}/flare/butil/threading/thread_collision_warner.cc
-        ${PROJECT_SOURCE_DIR}/flare/butil/threading/thread_id_name_manager.cc
-        ${PROJECT_SOURCE_DIR}/flare/butil/threading/thread_local_posix.cc
-        ${PROJECT_SOURCE_DIR}/flare/butil/threading/thread_local_storage.cc
-        ${PROJECT_SOURCE_DIR}/flare/butil/threading/thread_local_storage_posix.cc
-        ${PROJECT_SOURCE_DIR}/flare/butil/threading/thread_restrictions.cc
-        ${PROJECT_SOURCE_DIR}/flare/butil/time/clock.cc
-        ${PROJECT_SOURCE_DIR}/flare/butil/time/default_clock.cc
-        ${PROJECT_SOURCE_DIR}/flare/butil/time/default_tick_clock.cc
-        ${PROJECT_SOURCE_DIR}/flare/butil/time/tick_clock.cc
-        ${PROJECT_SOURCE_DIR}/flare/butil/time/time.cc
-        ${PROJECT_SOURCE_DIR}/flare/butil/time/time_posix.cc
-        ${PROJECT_SOURCE_DIR}/flare/butil/version.cc
-        ${PROJECT_SOURCE_DIR}/flare/butil/unix_socket.cpp
-        ${PROJECT_SOURCE_DIR}/flare/butil/crc32c.cc
-        ${PROJECT_SOURCE_DIR}/flare/butil/recordio.cc
-        )
-
-if (CMAKE_SYSTEM_NAME STREQUAL "Linux")
-    set(BUTIL_SOURCES ${BUTIL_SOURCES}
-            ${PROJECT_SOURCE_DIR}/flare/butil/file_util_linux.cc
-            ${PROJECT_SOURCE_DIR}/flare/butil/threading/platform_thread_linux.cc
-            ${PROJECT_SOURCE_DIR}/flare/butil/strings/sys_string_conversions_posix.cc)
-elseif (CMAKE_SYSTEM_NAME STREQUAL "Darwin")
-    set(BUTIL_SOURCES ${BUTIL_SOURCES}
-            ${PROJECT_SOURCE_DIR}/flare/butil/mac/bundle_locations.mm
-            ${PROJECT_SOURCE_DIR}/flare/butil/mac/foundation_util.mm
-            ${PROJECT_SOURCE_DIR}/flare/butil/file_util_mac.mm
-            ${PROJECT_SOURCE_DIR}/flare/butil/threading/platform_thread_mac.mm
-            ${PROJECT_SOURCE_DIR}/flare/butil/strings/sys_string_conversions_mac.mm
-            ${PROJECT_SOURCE_DIR}/flare/butil/time/time_mac.cc
-            ${PROJECT_SOURCE_DIR}/flare/butil/mac/scoped_mach_port.cc)
-endif ()
-
 
 file(GLOB_RECURSE FLARE_BASE_SRC "${PROJECT_SOURCE_DIR}/flare/base/*.cc")
 file(GLOB_RECURSE FLARE_CONTAINER_SRC "${PROJECT_SOURCE_DIR}/flare/container/*.cc")

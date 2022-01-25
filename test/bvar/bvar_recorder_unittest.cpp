@@ -23,7 +23,6 @@
 #include <memory>
 #include <iostream>
 #include "flare/base/time.h"
-#include "flare/butil/macros.h"
 #include "flare/bvar/recorder.h"
 #include "flare/bvar/latency_recorder.h"
 #include <gtest/gtest.h>

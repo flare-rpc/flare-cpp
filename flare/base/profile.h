@@ -10,4 +10,9 @@
 #include "flare/base/profile/macros.h"
 #include "flare/base/profile/eintr_wrapper.h"
 
+namespace flare::base {
+    enum LinkerInitialized {
+        LINKER_INITIALIZED
+    };
+}
 #endif  // FLARE_BASE_PROFILE_H_

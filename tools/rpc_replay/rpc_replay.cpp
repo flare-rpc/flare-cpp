@@ -19,8 +19,7 @@
 #include <gflags/gflags.h>
 #include "flare/base/logging.h"
 #include "flare/base/time.h"
-#include <flare/butil/macros.h>
-#include <flare/butil/file_util.h>
+#include <filesystem>
 #include <flare/bvar/bvar.h>
 #include <flare/bthread/bthread.h>
 #include <flare/brpc/channel.h>
@@ -205,7 +204,7 @@ int main(int argc, char* argv[]) {
     GFLAGS_NS::ParseCommandLineFlags(&argc, &argv, true);
 
     if (FLAGS_dir.empty() ||
-        !butil::DirectoryExists(butil::FilePath(FLAGS_dir))) {
+        !std::filesystem::exists(FLAGS_dir)) {
         LOG(ERROR) << "--dir=<dir-of-dumped-files> is required";
         return -1;
     }

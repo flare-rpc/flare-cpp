@@ -19,7 +19,7 @@
 
 #include <gflags/gflags.h>
 #include "flare/base/logging.h"
-#include <flare/butil/string_printf.h>
+#include <flare/base/strings.h>
 #include <flare/brpc/server.h>
 #include "echo.pb.h"
 

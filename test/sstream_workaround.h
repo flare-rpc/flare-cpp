@@ -15,8 +15,8 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef BUTIL_TEST_SSTREAM_WORKAROUND
-#define BUTIL_TEST_SSTREAM_WORKAROUND
+#ifndef TEST_SSTREAM_WORKAROUND_H_
+#define TEST_SSTREAM_WORKAROUND_H_
 
 // defining private as public makes it fail to compile sstream with gcc5.x like this:
 // "error: ‘struct std::__cxx11::basic_stringbuf<_CharT, _Traits, _Alloc>::
@@ -27,7 +27,9 @@
 # include <sstream>
 # define private public
 #else
+
 # include <sstream>
+
 #endif
 
-#endif  //  BUTIL_TEST_SSTREAM_WORKAROUND
+#endif  //  TEST_SSTREAM_WORKAROUND_H_

@@ -20,8 +20,6 @@ namespace {
 
     TEST_F(ClassNameTest, demangle) {
         ASSERT_EQ("add_something", flare::base::demangle("add_something"));
-        ASSERT_EQ("guard variable for flare::base::my_ip()::ip",
-                  flare::base::demangle("_ZGVZN5butil5my_ipEvE2ip"));
         ASSERT_EQ("dp::FiberPBCommand<proto::PbRouteTable, proto::PbRouteAck>::marshal(dp::ParamWriter*)::__FUNCTION__",
                   flare::base::demangle(
                           "_ZZN2dp14FiberPBCommandIN5proto12PbRouteTableENS1_10PbRouteAckEE7marshalEPNS_11ParamWriterEE12__FUNCTION__"));

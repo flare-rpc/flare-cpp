@@ -20,9 +20,8 @@
 #include <gflags/gflags.h>
 #include <flare/bthread/bthread.h>
 #include "flare/base/logging.h"
-#include <flare/butil/string_printf.h>
+#include <flare/base/strings.h>
 #include "flare/base/time.h"
-#include <flare/butil/macros.h>
 #include <flare/brpc/partition_channel.h>
 #include <deque>
 #include "echo.pb.h"
@@ -107,7 +106,7 @@ public:
         char* endptr = NULL;
         out->index = strtol(tag.c_str(), &endptr, 10);
         if (endptr != tag.data() + pos) {
-            LOG(ERROR) << "Invalid index=" << butil::StringPiece(tag.data(), pos);
+            LOG(ERROR) << "Invalid index=" << std::string_view(tag.data(), pos);
             return false;
         }
         out->num_partition_kinds = strtol(tag.c_str() + pos + 1, &endptr, 10);

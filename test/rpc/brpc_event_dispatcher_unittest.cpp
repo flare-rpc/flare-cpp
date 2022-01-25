@@ -25,7 +25,6 @@
 #include <gtest/gtest.h>
 #include "flare/base/gperftools_profiler.h"
 #include "flare/base/time.h"
-#include "flare/butil/macros.h"
 #include "flare/base/fd_utility.h"
 #include "flare/brpc/event_dispatcher.h"
 #include "flare/brpc/details/has_epollrdhup.h"
@@ -187,7 +186,7 @@ inline uint32_t fmix32(uint32_t h) {
 }
 
 TEST_F(EventDispatcherTest, dispatch_tasks) {
-#ifdef BUTIL_RESOURCE_POOL_NEED_FREE_ITEM_NUM
+#ifdef FLARE_RESOURCE_POOL_NEED_FREE_ITEM_NUM
     const flare::base::ResourcePoolInfo old_info =
         flare::memory::describe_resources<brpc::Socket>();
 #endif
@@ -266,7 +265,7 @@ TEST_F(EventDispatcherTest, dispatch_tasks) {
     const flare::memory::ResourcePoolInfo info
             = flare::memory::describe_resources<brpc::Socket>();
     LOG(INFO) << info;
-#ifdef BUTIL_RESOURCE_POOL_NEED_FREE_ITEM_NUM
+#ifdef FLARE_RESOURCE_POOL_NEED_FREE_ITEM_NUM
     ASSERT_EQ(NCLIENT, info.free_item_num - old_info.free_item_num);
 #endif
 }

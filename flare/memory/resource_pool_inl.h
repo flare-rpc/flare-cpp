@@ -11,7 +11,7 @@
 #include "flare/base/thread.h"           // thread_atexit
 #include "flare/base/profile.h"
 
-#ifdef BUTIL_RESOURCE_POOL_NEED_FREE_ITEM_NUM
+#ifdef FLARE_RESOURCE_POOL_NEED_FREE_ITEM_NUM
 #define BAIDU_RESOURCE_POOL_FREE_ITEM_NUM_ADD1                \
     (_global_nfree.fetch_add(1, std::memory_order_relaxed))
 #define BAIDU_RESOURCE_POOL_FREE_ITEM_NUM_SUB1                \
@@ -58,7 +58,7 @@ struct ResourcePoolInfo {
     size_t block_item_num;
     size_t free_chunk_item_num;
     size_t total_size;
-#ifdef BUTIL_RESOURCE_POOL_NEED_FREE_ITEM_NUM
+#ifdef FLARE_RESOURCE_POOL_NEED_FREE_ITEM_NUM
     size_t free_item_num;
 #endif
 };
@@ -314,7 +314,7 @@ public:
         info.item_num = 0;
         info.free_chunk_item_num = free_chunk_nitem();
         info.block_item_num = BLOCK_NITEM;
-#ifdef BUTIL_RESOURCE_POOL_NEED_FREE_ITEM_NUM
+#ifdef FLARE_RESOURCE_POOL_NEED_FREE_ITEM_NUM
         info.free_item_num = _global_nfree.load(std::memory_order_relaxed);
 #endif
 
@@ -531,7 +531,7 @@ private:
     std::vector<DynamicFreeChunk*> _free_chunks;
     pthread_mutex_t _free_chunks_mutex;
 
-#ifdef BUTIL_RESOURCE_POOL_NEED_FREE_ITEM_NUM
+#ifdef FLARE_RESOURCE_POOL_NEED_FREE_ITEM_NUM
     static flare::static_atomic<size_t> _global_nfree;
 #endif
 };
@@ -569,7 +569,7 @@ template <typename T>
 flare::static_atomic<typename ResourcePool<T>::BlockGroup*>
 ResourcePool<T>::_block_groups[RP_MAX_BLOCK_NGROUP] = {};
 
-#ifdef BUTIL_RESOURCE_POOL_NEED_FREE_ITEM_NUM
+#ifdef FLARE_RESOURCE_POOL_NEED_FREE_ITEM_NUM
 template <typename T>
 flare::static_atomic<size_t> ResourcePool<T>::_global_nfree = FLARE_STATIC_ATOMIC_INIT(0);
 #endif
@@ -600,7 +600,7 @@ inline std::ostream& operator<<(std::ostream& os,
               << "\nblock_item_num: " << info.block_item_num
               << "\nfree_chunk_item_num: " << info.free_chunk_item_num
               << "\ntotal_size: " << info.total_size;
-#ifdef BUTIL_RESOURCE_POOL_NEED_FREE_ITEM_NUM
+#ifdef FLARE_RESOURCE_POOL_NEED_FREE_ITEM_NUM
               << "\nfree_num: " << info.free_item_num
 #endif
            ;

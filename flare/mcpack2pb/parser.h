@@ -25,7 +25,7 @@
 #include <limits>  // std::numeric_limits
 #include <google/protobuf/io/zero_copy_stream.h>
 #include "flare/base/logging.h"
-#include "flare/butil/strings/string_piece.h"
+#include <string_view>
 #include "flare/mcpack2pb/field_type.h"
 
 // CAUTION: Methods in this header is not intended to be public to users of
@@ -61,7 +61,7 @@ public:
     // continuous memory, return the reference directly, otherwise copy
     // the data into `aux' and return reference of `aux'.
     // Returns a StringPiece referencing the cut-off data.
-    butil::StringPiece ref_cut(std::string* aux, size_t n);
+    std::string_view ref_cut(std::string* aux, size_t n);
 
     // Peek at the first character. If the stream is empty, 0 is returned.
     uint8_t peek1();
@@ -147,7 +147,7 @@ size_t unbox(InputStream* stream);
 class ObjectIterator {
 public:
     struct Field {
-        butil::StringPiece name;
+        std::string_view name;
         UnparsedValue value;
     };
 

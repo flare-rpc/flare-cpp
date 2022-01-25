@@ -23,7 +23,6 @@
 #include <google/protobuf/stubs/common.h>
 #include "flare/base/logging.h"
 #include "flare/base/time.h"
-#include "flare/butil/macros.h"
 #include "flare/brpc/socket.h"
 #include "flare/brpc/server.h"
 #include "flare/brpc/channel.h"

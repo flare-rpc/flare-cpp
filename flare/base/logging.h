@@ -1,12 +1,12 @@
 
-#ifndef BUTIL_LOGGING_H_
-#define BUTIL_LOGGING_H_
+#ifndef FLARE_BASE_LOGGING_H_
+#define FLARE_BASE_LOGGING_H_
 
 #include <inttypes.h>
 #include <string>
 #include <cstring>
 #include <sstream>
-#include "flare/base/profile.h"   
+#include "flare/base/profile.h"
 #include "flare/base/static_atomic.h" // Used by LOG_EVERY_N, LOG_FIRST_N etc
 #include "flare/base/time.h"      // gettimeofday_us()
 
@@ -20,12 +20,12 @@
 #    define DCHECK_IS_ON() 1
 #  endif  // NDEBUG
 # endif // DCHECK_IS_ON
-# if DCHECK_IS_ON() 
+# if DCHECK_IS_ON()
 #  define DPLOG(...) PLOG(__VA_ARGS__)
 #  define DPLOG_IF(...) PLOG_IF(__VA_ARGS__)
 #  define DPCHECK(...) PCHECK(__VA_ARGS__)
 #  define DVPLOG(...) VLOG(__VA_ARGS__)
-# else 
+# else
 #  define DPLOG(...) DLOG(__VA_ARGS__)
 #  define DPLOG_IF(...) DLOG_IF(__VA_ARGS__)
 #  define DPCHECK(...) DCHECK(__VA_ARGS__)
@@ -45,7 +45,7 @@
 #endif
 #endif
 
-#if defined(COMPILER_GCC)
+#if defined(FLARE_COMPILER_GNUC) || defined(FLARE_COMPILER_CLANG)
 // On Linux, with GCC, we can use __PRETTY_FUNCTION__ to get the demangled name
 // of the current function in the NOTIMPLEMENTED message.
 #define NOTIMPLEMENTED_MSG "Not implemented reached in " << __PRETTY_FUNCTION__
@@ -173,7 +173,9 @@
 //   #endif
 //
 // We tie its state to ENABLE_DLOG.
-enum { DEBUG_MODE = DCHECK_IS_ON() };
+enum {
+    DEBUG_MODE = DCHECK_IS_ON()
+};
 
 
-#endif  // BUTIL_LOGGING_H_
+#endif  // FLARE_BASE_LOGGING_H_

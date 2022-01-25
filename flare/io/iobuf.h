@@ -19,8 +19,8 @@
 
 // Date: Thu Nov 22 13:57:56 CST 2012
 
-#ifndef BUTIL_IOBUF_H
-#define BUTIL_IOBUF_H
+#ifndef FLARE_IO_IOBUF_H_
+#define FLARE_IO_IOBUF_H_
 
 #include <sys/uio.h>                             // iovec
 #include <stdint.h>                              // uint32_t
@@ -807,4 +807,4 @@ namespace std {
 
 #include "flare/io/iobuf_inl.h"
 
-#endif  // BUTIL_IOBUF_H
+#endif  // FLARE_IO_IOBUF_H_

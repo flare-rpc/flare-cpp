@@ -17,8 +17,8 @@
 
 // Date: Wed Aug  8 05:51:33 PDT 2018
 
-#ifndef BUTIL_READER_WRITER_H
-#define BUTIL_READER_WRITER_H
+#ifndef FLARE_IO_READER_WRITER_H_
+#define FLARE_IO_READER_WRITER_H_
 
 #include <sys/uio.h>                             // iovec
 
@@ -50,4 +50,4 @@ namespace flare::io {
 
 }  // namespace flare::io
 
-#endif  // BUTIL_READER_WRITER_H
+#endif  // FLARE_IO_READER_WRITER_H_
