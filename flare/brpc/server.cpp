@@ -90,8 +90,8 @@ void* bthread_get_assigned_data();
 
 namespace brpc {
 
-BAIDU_CASSERT(sizeof(int32_t) == sizeof(std::atomic<int32_t>),
-              Atomic32_must_be_int32);
+static_assert(sizeof(int32_t) == sizeof(std::atomic<int32_t>),
+              "Atomic32_must_be_int32");
 
 extern const char* const g_server_info_prefix = "rpc_server";
 
@@ -393,8 +393,8 @@ Server::Server(ProfilerLinker)
     , _derivative_thread(INVALID_BTHREAD)
     , _keytable_pool(NULL)
     , _concurrency(0) {
-    BAIDU_CASSERT(offsetof(Server, _concurrency) % 64 == 0,
-                  Server_concurrency_must_be_aligned_by_cacheline);
+    static_assert(offsetof(Server, _concurrency) % 64 == 0,
+                  "Server_concurrency_must_be_aligned_by_cacheline");
 }
 
 Server::~Server() {

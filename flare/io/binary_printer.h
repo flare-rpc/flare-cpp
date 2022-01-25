@@ -20,7 +20,7 @@
 #ifndef BUTIL_BINARY_PRINTER_H
 #define BUTIL_BINARY_PRINTER_H
 
-#include "flare/butil/strings/string_piece.h"
+#include <string_view>
 
 namespace flare::io {
 class IOBuf;

@@ -24,30 +24,30 @@
 namespace brpc {
 
 // Utility functions to combine and extract SocketId.
-BUTIL_FORCE_INLINE SocketId
+FLARE_FORCE_INLINE SocketId
 MakeSocketId(uint32_t version, flare::memory::ResourceId<Socket> slot) {
     return SocketId((((uint64_t)version) << 32) | slot.value);
 }
 
-BUTIL_FORCE_INLINE flare::memory::ResourceId<Socket> SlotOfSocketId(SocketId sid) {
+FLARE_FORCE_INLINE flare::memory::ResourceId<Socket> SlotOfSocketId(SocketId sid) {
     flare::memory::ResourceId<Socket> id = { (sid & 0xFFFFFFFFul) };
     return id;
 }
 
-BUTIL_FORCE_INLINE uint32_t VersionOfSocketId(SocketId sid) {
+FLARE_FORCE_INLINE uint32_t VersionOfSocketId(SocketId sid) {
     return (uint32_t)(sid >> 32);
 }
 
 // Utility functions to combine and extract Socket::_versioned_ref
-BUTIL_FORCE_INLINE uint32_t VersionOfVRef(uint64_t vref) {
+FLARE_FORCE_INLINE uint32_t VersionOfVRef(uint64_t vref) {
     return (uint32_t)(vref >> 32);
 }
 
-BUTIL_FORCE_INLINE int32_t NRefOfVRef(uint64_t vref) {
+FLARE_FORCE_INLINE int32_t NRefOfVRef(uint64_t vref) {
     return (int32_t)(vref & 0xFFFFFFFFul);
 }
 
-BUTIL_FORCE_INLINE uint64_t MakeVRef(uint32_t version, int32_t nref) {
+FLARE_FORCE_INLINE uint64_t MakeVRef(uint32_t version, int32_t nref) {
     // 1: Intended conversion to uint32_t, nref=-1 is 00000000FFFFFFFF
     return (((uint64_t)version) << 32) | (uint32_t/*1*/)nref;
 }

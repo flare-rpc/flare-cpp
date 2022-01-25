@@ -57,7 +57,7 @@ public:
 
     // Remove meta with the name. The impl. may scan all fields.
     // Returns true on erased, false on absent.
-    bool RemoveMeta(const butil::StringPiece& name);
+    bool RemoveMeta(const std::string_view& name);
 
     // Get the payload. Empty by default.
     const flare::io::IOBuf& Payload() const { return _payload; }

@@ -28,6 +28,7 @@
 #include "snappy_message.pb.h"
 #include "flare/brpc/policy/snappy_compress.h"
 #include "flare/brpc/policy/gzip_compress.h"
+#include "flare/base/profile.h"
 
 typedef bool (*Compress)(const google::protobuf::Message&, flare::io::IOBuf*);
 typedef bool (*Decompress)(const flare::io::IOBuf&, google::protobuf::Message*);

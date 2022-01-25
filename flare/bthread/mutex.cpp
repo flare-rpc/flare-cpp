@@ -354,12 +354,12 @@ namespace bthread {
         LOG(ERROR) << "Contention profiler is not started!";
     }
 
-    BUTIL_FORCE_INLINE bool
+    FLARE_FORCE_INLINE bool
     is_contention_site_valid(const bthread_contention_site_t &cs) {
         return cs.sampling_range;
     }
 
-    BUTIL_FORCE_INLINE void
+    FLARE_FORCE_INLINE void
     make_contention_site_invalid(bthread_contention_site_t *cs) {
         cs->sampling_range = 0;
     }
@@ -492,7 +492,7 @@ namespace bthread {
         tls_inside_lock = false;
     }
 
-    BUTIL_FORCE_INLINE int pthread_mutex_lock_impl(pthread_mutex_t *mutex) {
+    FLARE_FORCE_INLINE int pthread_mutex_lock_impl(pthread_mutex_t *mutex) {
         // Don't change behavior of lock when profiler is off.
         if (!g_cp ||
             // collecting code including backtrace() and submit() may call
@@ -544,7 +544,7 @@ namespace bthread {
         return rc;
     }
 
-    BUTIL_FORCE_INLINE int pthread_mutex_unlock_impl(pthread_mutex_t *mutex) {
+    FLARE_FORCE_INLINE int pthread_mutex_unlock_impl(pthread_mutex_t *mutex) {
         // Don't change behavior of unlock when profiler is off.
         if (!g_cp || tls_inside_lock) {
             // This branch brings an issue that an entry created by

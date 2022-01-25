@@ -195,7 +195,7 @@ const char* ProtocolTypeToString(ProtocolType type) {
     return "unknown";
 }
 
-BUTIL_FORCE_INLINE bool ParsePbFromZeroCopyStreamInlined(
+FLARE_FORCE_INLINE bool ParsePbFromZeroCopyStreamInlined(
     google::protobuf::Message* msg,
     google::protobuf::io::ZeroCopyInputStream* input) {
     google::protobuf::io::CodedInputStream decoder(input);

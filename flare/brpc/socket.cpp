@@ -2563,8 +2563,8 @@ int Socket::PeekAgentSocket(SocketUniquePtr* out) const {
 }
 
 void Socket::GetStat(SocketStat* s) const {
-    BAIDU_CASSERT(offsetof(Socket, _preferred_index) >= 64, different_cacheline);
-    BAIDU_CASSERT(sizeof(WriteRequest) == 64, sizeof_write_request_is_64);
+    static_assert(offsetof(Socket, _preferred_index) >= 64, "different_cacheline");
+    static_assert(sizeof(WriteRequest) == 64, "sizeof_write_request_is_64");
 
     SharedPart* sp = GetSharedPart();
     if (sp != NULL && sp->extended_stat != NULL) {

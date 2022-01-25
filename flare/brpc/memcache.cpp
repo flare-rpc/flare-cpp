@@ -363,7 +363,7 @@ struct FlushHeaderWithExtras {
     policy::MemcacheRequestHeader header;
     uint32_t exptime;
 } __attribute__((packed));
-BAIDU_CASSERT(sizeof(FlushHeaderWithExtras) == 28, must_match);
+static_assert(sizeof(FlushHeaderWithExtras) == 28, "must_match");
 
 // MAY have extras.
 // MUST NOT have key.
@@ -504,7 +504,7 @@ struct StoreHeaderWithExtras {
     uint32_t flags;
     uint32_t exptime;
 } __attribute__((packed));
-BAIDU_CASSERT(sizeof(StoreHeaderWithExtras) == 32, must_match);
+static_assert(sizeof(StoreHeaderWithExtras) == 32, "must_match");
 const size_t STORE_EXTRAS = sizeof(StoreHeaderWithExtras) -
                                                     sizeof(policy::MemcacheRequestHeader);
 // MUST have extras.
@@ -648,7 +648,7 @@ struct IncrHeaderWithExtras {
     uint64_t initial_value;
     uint32_t exptime;
 } __attribute__((packed));
-BAIDU_CASSERT(sizeof(IncrHeaderWithExtras) == 44, must_match);
+static_assert(sizeof(IncrHeaderWithExtras) == 44, "must_match");
 
 const size_t INCR_EXTRAS = sizeof(IncrHeaderWithExtras) -
     sizeof(policy::MemcacheRequestHeader);
@@ -775,7 +775,7 @@ struct TouchHeaderWithExtras {
     policy::MemcacheRequestHeader header;
     uint32_t exptime;
 } __attribute__((packed));
-BAIDU_CASSERT(sizeof(TouchHeaderWithExtras) == 28, must_match);
+static_assert(sizeof(TouchHeaderWithExtras) == 28, "must_match");
 const size_t TOUCH_EXTRAS = sizeof(TouchHeaderWithExtras) - sizeof(policy::MemcacheRequestHeader);
 
 // MAY have extras.

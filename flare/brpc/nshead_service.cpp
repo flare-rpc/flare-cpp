@@ -23,7 +23,7 @@
 
 namespace brpc {
 
-BAIDU_CASSERT(sizeof(nshead_t) == 36, sizeof_nshead_must_be_36);
+static_assert(sizeof(nshead_t) == 36, "sizeof_nshead_must_be_36");
 
 NsheadService::NsheadService() : _additional_space(0) {
     _status = new (std::nothrow) MethodStatus;
