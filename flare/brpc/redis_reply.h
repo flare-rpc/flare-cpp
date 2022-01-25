@@ -19,6 +19,7 @@
 #ifndef BRPC_REDIS_REPLY_H
 #define BRPC_REDIS_REPLY_H
 
+#include <stdarg.h>
 #include "flare/io/iobuf.h"                  // flare::io::IOBuf
 #include <string_view>   // std::string_view
 #include "flare/memory/arena.h"                  // flare::memory::Arena
