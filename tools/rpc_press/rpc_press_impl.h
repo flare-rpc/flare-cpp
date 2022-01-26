@@ -22,8 +22,8 @@
 #include <deque>
 #include <google/protobuf/compiler/importer.h>
 #include <google/protobuf/dynamic_message.h>
-#include <flare/bvar/bvar.h>
-#include <flare/brpc/channel.h>
+#include <flare/variable/all.h>
+#include <flare/rpc/channel.h>
 #include "info_thread.h"
 #include "pb_util.h"
 
@@ -89,13 +89,13 @@ namespace pbrpcframework {
 
         int init();
 
-        void call_method(brpc::Controller *cntl,
+        void call_method(flare::rpc::Controller *cntl,
                          google::protobuf::Message *request,
                          google::protobuf::Message *response,
                          google::protobuf::Closure *done);
 
     public:
-        brpc::Channel _rpc_client;
+        flare::rpc::Channel _rpc_client;
         std::string _attachment;
         const PressOptions *_options;
         const google::protobuf::MethodDescriptor *_method_descriptor;
@@ -125,16 +125,16 @@ namespace pbrpcframework {
 
         void sync_client();
 
-        void handle_response(brpc::Controller *cntl,
+        void handle_response(flare::rpc::Controller *cntl,
                              google::protobuf::Message *request,
                              google::protobuf::Message *response,
                              int64_t start_time_ns);
 
         static void *sync_call_thread(void *arg);
 
-        bvar::LatencyRecorder _latency_recorder;
-        bvar::Adder<int64_t> _error_count;
-        bvar::Adder<int64_t> _sent_count;
+        flare::variable::LatencyRecorder _latency_recorder;
+        flare::variable::Adder<int64_t> _error_count;
+        flare::variable::Adder<int64_t> _sent_count;
         std::deque<google::protobuf::Message *> _msgs;
         PressClient *_pbrpc_client;
         PressOptions _options;
@@ -144,7 +144,7 @@ namespace pbrpcframework {
         google::protobuf::compiler::Importer *_importer;
         google::protobuf::DynamicMessageFactory _factory;
         std::vector<pthread_t> _ttid;
-        brpc::InfoThread _info_thr;
+        flare::rpc::InfoThread _info_thr;
     };
 }
 #endif // PBRPCPRESS_PBRPC_PRESS_H

@@ -61,10 +61,10 @@
 namespace bthread {
 
 #ifdef SHOW_BTHREAD_BUTEX_WAITER_COUNT_IN_VARS
-    struct ButexWaiterCount : public bvar::Adder<int64_t> {
-        ButexWaiterCount() : bvar::Adder<int64_t>("bthread_butex_waiter_count") {}
+    struct ButexWaiterCount : public flare::variable::Adder<int64_t> {
+        ButexWaiterCount() : flare::variable::Adder<int64_t>("bthread_butex_waiter_count") {}
     };
-    inline bvar::Adder<int64_t>& butex_waiter_count() {
+    inline flare::variable::Adder<int64_t>& butex_waiter_count() {
         return *flare::base::get_leaky_singleton<ButexWaiterCount>();
     }
 #endif
@@ -587,7 +587,7 @@ namespace bthread {
             b->waiter_lock.unlock();
 
 #ifdef SHOW_BTHREAD_BUTEX_WAITER_COUNT_IN_VARS
-            bvar::Adder<int64_t>& num_waiters = butex_waiter_count();
+            flare::variable::Adder<int64_t>& num_waiters = butex_waiter_count();
             num_waiters << 1;
 #endif
             rc = wait_pthread(pw, ptimeout);
@@ -653,7 +653,7 @@ namespace bthread {
             }
         }
 #ifdef SHOW_BTHREAD_BUTEX_WAITER_COUNT_IN_VARS
-        bvar::Adder<int64_t>& num_waiters = butex_waiter_count();
+        flare::variable::Adder<int64_t>& num_waiters = butex_waiter_count();
         num_waiters << 1;
 #endif
 

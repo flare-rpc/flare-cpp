@@ -20,12 +20,12 @@
 #include "flare/base/logging.h"
 #include "flare/base/time.h"
 #include <filesystem>
-#include <flare/bvar/bvar.h>
+#include <flare/variable/all.h>
 #include <flare/bthread/bthread.h>
-#include <flare/brpc/channel.h>
-#include <flare/brpc/server.h>
-#include <flare/brpc/rpc_dump.h>
-#include <flare/brpc/serialized_request.h>
+#include <flare/rpc/channel.h>
+#include <flare/rpc/server.h>
+#include <flare/rpc/rpc_dump.h>
+#include <flare/rpc/serialized_request.h>
 #include "info_thread.h"
 
 DEFINE_string(dir, "", "The directory of dumped requests");
@@ -41,9 +41,9 @@ DEFINE_int32(timeout_ms, 100, "RPC timeout in milliseconds");
 DEFINE_int32(max_retry, 3, "Maximum retry times");
 DEFINE_int32(dummy_port, 8899, "Port of dummy server(to monitor replaying)");
 
-bvar::LatencyRecorder g_latency_recorder("rpc_replay");
-bvar::Adder<int64_t> g_error_count("rpc_replay_error_count");
-bvar::Adder<int64_t> g_sent_count;
+flare::variable::LatencyRecorder g_latency_recorder("rpc_replay");
+flare::variable::Adder<int64_t> g_error_count("rpc_replay_error_count");
+flare::variable::Adder<int64_t> g_sent_count;
 
 // Include channels for all protocols that support both client and server.
 class ChannelGroup {
@@ -53,7 +53,7 @@ public:
     ~ChannelGroup();
 
     // Get channel by protocol type.
-    brpc::Channel* channel(brpc::ProtocolType type) {
+    flare::rpc::Channel* channel(flare::rpc::ProtocolType type) {
         if ((size_t)type < _chans.size()) {
             return _chans[(size_t)type];
         }
@@ -61,16 +61,16 @@ public:
     }
     
 private:
-    std::vector<brpc::Channel*> _chans;
+    std::vector<flare::rpc::Channel*> _chans;
 };
 
 int ChannelGroup::Init() {
     {
         // force global initialization of rpc.
-        brpc::Channel dummy_channel;
+        flare::rpc::Channel dummy_channel;
     }
-    std::vector<std::pair<brpc::ProtocolType, brpc::Protocol> > protocols;
-    brpc::ListProtocols(&protocols);
+    std::vector<std::pair<flare::rpc::ProtocolType, flare::rpc::Protocol> > protocols;
+    flare::rpc::ListProtocols(&protocols);
     size_t max_protocol_size = 0;
     for (size_t i = 0; i < protocols.size(); ++i) {
         max_protocol_size = std::max(max_protocol_size,
@@ -80,9 +80,9 @@ int ChannelGroup::Init() {
     for (size_t i = 0; i < protocols.size(); ++i) {
         if (protocols[i].second.support_client() &&
             protocols[i].second.support_server()) {
-            const brpc::ProtocolType prot = protocols[i].first;
-            brpc::Channel* chan = new brpc::Channel;
-            brpc::ChannelOptions options;
+            const flare::rpc::ProtocolType prot = protocols[i].first;
+            flare::rpc::Channel* chan = new flare::rpc::Channel;
+            flare::rpc::ChannelOptions options;
             options.protocol = prot;
             options.connection_type = FLAGS_connection_type;
             options.timeout_ms = FLAGS_timeout_ms/*milliseconds*/;
@@ -105,7 +105,7 @@ ChannelGroup::~ChannelGroup() {
     _chans.clear();
 }
 
-static void handle_response(brpc::Controller* cntl, int64_t start_time,
+static void handle_response(flare::rpc::Controller* cntl, int64_t start_time,
                             bool sleep_on_error/*note*/) {
     // TODO(gejun): some bthreads are starved when new bthreads are created 
     // continuously, which happens when server is down and RPC keeps failing.
@@ -129,7 +129,7 @@ static void* replay_thread(void* arg) {
     ChannelGroup* chan_group = static_cast<ChannelGroup*>(arg);
     const int thread_offset = g_thread_offset.fetch_add(1, std::memory_order_relaxed);
     double req_rate = FLAGS_qps / (double)FLAGS_thread_num;
-    brpc::SerializedRequest req;
+    flare::rpc::SerializedRequest req;
     std::deque<int64_t> timeq;
     size_t MAX_QUEUE_SIZE = (size_t)req_rate;
     if (MAX_QUEUE_SIZE < 100) {
@@ -138,16 +138,16 @@ static void* replay_thread(void* arg) {
         MAX_QUEUE_SIZE = 2000;
     }
     timeq.push_back(flare::base::gettimeofday_us());
-    for (int i = 0; !brpc::IsAskedToQuit() && i < FLAGS_times; ++i) {
-        brpc::SampleIterator it(FLAGS_dir);
+    for (int i = 0; !flare::rpc::IsAskedToQuit() && i < FLAGS_times; ++i) {
+        flare::rpc::SampleIterator it(FLAGS_dir);
         int j = 0;
-        for (brpc::SampledRequest* sample = it.Next();
-             !brpc::IsAskedToQuit() && sample != NULL; sample = it.Next(), ++j) {
-            std::unique_ptr<brpc::SampledRequest> sample_guard(sample);
+        for (flare::rpc::SampledRequest* sample = it.Next();
+             !flare::rpc::IsAskedToQuit() && sample != NULL; sample = it.Next(), ++j) {
+            std::unique_ptr<flare::rpc::SampledRequest> sample_guard(sample);
             if ((j % FLAGS_thread_num) != thread_offset) {
                 continue;
             }
-            brpc::Channel* chan =
+            flare::rpc::Channel* chan =
                 chan_group->channel(sample->meta.protocol_type());
             if (chan == NULL) {
                 LOG(ERROR) << "No channel on protocol="
@@ -155,7 +155,7 @@ static void* replay_thread(void* arg) {
                 continue;
             }
             
-            brpc::Controller* cntl = new brpc::Controller;
+            flare::rpc::Controller* cntl = new flare::rpc::Controller;
             req.Clear();
             
             cntl->reset_sampled_request(sample_guard.release());
@@ -175,7 +175,7 @@ static void* replay_thread(void* arg) {
                 handle_response(cntl, start_time, true);
             } else {
                 google::protobuf::Closure* done =
-                    brpc::NewCallback(handle_response, cntl, start_time, false);
+                    flare::rpc::NewCallback(handle_response, cntl, start_time, false);
                 chan->CallMethod(NULL/*use rpc_dump_context in cntl instead*/,
                         cntl, &req, NULL/*ignore response*/, done);
                 const int64_t end_time = flare::base::gettimeofday_us();
@@ -210,7 +210,7 @@ int main(int argc, char* argv[]) {
     }
 
     if (FLAGS_dummy_port >= 0) {
-        brpc::StartDummyServerAt(FLAGS_dummy_port);
+        flare::rpc::StartDummyServerAt(FLAGS_dummy_port);
     }
     
     ChannelGroup chan_group;
@@ -253,8 +253,8 @@ int main(int argc, char* argv[]) {
             }
         }
     }
-    brpc::InfoThread info_thr;
-    brpc::InfoThreadOptions info_thr_opt;
+    flare::rpc::InfoThread info_thr;
+    flare::rpc::InfoThreadOptions info_thr_opt;
     info_thr_opt.latency_recorder = &g_latency_recorder;
     info_thr_opt.error_count = &g_error_count;
     info_thr_opt.sent_count = &g_sent_count;

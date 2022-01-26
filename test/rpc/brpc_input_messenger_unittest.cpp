@@ -15,7 +15,7 @@
 // specific language governing permissions and limitations
 // under the License.
 
-// brpc - A framework to host and access services throughout Baidu.
+
 
 // Date: Sun Jul 13 15:04:18 CST 2014
 
@@ -28,23 +28,23 @@
 #include "flare/base/fd_utility.h"
 #include "flare/base/unix_socket.h"
 #include "flare/base/fd_guard.h"
-#include "flare/brpc/acceptor.h"
-#include "flare/brpc/policy/hulu_pbrpc_protocol.h"
+#include "flare/rpc/acceptor.h"
+#include "flare/rpc/policy/hulu_pbrpc_protocol.h"
 
-void EmptyProcessHuluRequest(brpc::InputMessageBase *msg_base) {
-    brpc::DestroyingPtr<brpc::InputMessageBase> a(msg_base);
+void EmptyProcessHuluRequest(flare::rpc::InputMessageBase *msg_base) {
+    flare::rpc::DestroyingPtr<flare::rpc::InputMessageBase> a(msg_base);
 }
 
 int main(int argc, char *argv[]) {
     testing::InitGoogleTest(&argc, argv);
-    brpc::Protocol dummy_protocol =
-            {brpc::policy::ParseHuluMessage,
-             brpc::SerializeRequestDefault,
-             brpc::policy::PackHuluRequest,
+    flare::rpc::Protocol dummy_protocol =
+            {flare::rpc::policy::ParseHuluMessage,
+             flare::rpc::SerializeRequestDefault,
+             flare::rpc::policy::PackHuluRequest,
              EmptyProcessHuluRequest, EmptyProcessHuluRequest,
              NULL, NULL, NULL,
-             brpc::CONNECTION_TYPE_ALL, "dummy_hulu"};
-    EXPECT_EQ(0, RegisterProtocol((brpc::ProtocolType) 30, dummy_protocol));
+             flare::rpc::CONNECTION_TYPE_ALL, "dummy_hulu"};
+    EXPECT_EQ(0, RegisterProtocol((flare::rpc::ProtocolType) 30, dummy_protocol));
     return RUN_ALL_TESTS();
 }
 
@@ -151,12 +151,12 @@ void *client_thread(void *arg) {
 TEST_F(MessengerTest, dispatch_tasks) {
     client_stop = false;
 
-    brpc::Acceptor messenger[NEPOLL];
+    flare::rpc::Acceptor messenger[NEPOLL];
     pthread_t cth[NCLIENT];
     ClientMeta *cm[NCLIENT];
 
-    const brpc::InputMessageHandler pairs[] = {
-            {brpc::policy::ParseHuluMessage,
+    const flare::rpc::InputMessageHandler pairs[] = {
+            {flare::rpc::policy::ParseHuluMessage,
                     EmptyProcessHuluRequest, NULL, NULL, "dummy_hulu"}
     };
 

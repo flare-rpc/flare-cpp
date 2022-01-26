@@ -15,30 +15,30 @@
 // specific language governing permissions and limitations
 // under the License.
 
-// brpc - A framework to host and access services throughout Baidu.
+
 
 // Date: 2015/10/22 16:28:44
 
 #include <gtest/gtest.h>
 
-#include "flare/brpc/server.h"
-#include "flare/brpc/controller.h"
-#include "flare/brpc/channel.h"
-#include "flare/brpc/stream_impl.h"
+#include "flare/rpc/server.h"
+#include "flare/rpc/controller.h"
+#include "flare/rpc/channel.h"
+#include "flare/rpc/stream_impl.h"
 #include "echo.pb.h"
 
 class AfterAcceptStream {
 public:
-    virtual void action(brpc::StreamId) = 0;
+    virtual void action(flare::rpc::StreamId) = 0;
 };
 
 class MyServiceWithStream : public test::EchoService {
 public:
-    MyServiceWithStream(const brpc::StreamOptions& options) 
+    MyServiceWithStream(const flare::rpc::StreamOptions& options)
         : _options(options)
         , _after_accept_stream(NULL)
     {}
-    MyServiceWithStream(const brpc::StreamOptions& options,
+    MyServiceWithStream(const flare::rpc::StreamOptions& options,
                         AfterAcceptStream* after_accept_stream) 
         : _options(options)
         , _after_accept_stream(after_accept_stream)
@@ -52,10 +52,10 @@ public:
                        const ::test::EchoRequest* request,
                        ::test::EchoResponse* response,
                        ::google::protobuf::Closure* done) {
-        brpc::ClosureGuard done_gurad(done);
+        flare::rpc::ClosureGuard done_gurad(done);
         response->set_message(request->message());
-        brpc::Controller* cntl = (brpc::Controller*)controller;
-        brpc::StreamId response_stream;
+        flare::rpc::Controller* cntl = (flare::rpc::Controller*)controller;
+        flare::rpc::StreamId response_stream;
         ASSERT_EQ(0, StreamAccept(&response_stream, *cntl, &_options));
         LOG(INFO) << "Created response_stream=" << response_stream;
         if (_after_accept_stream) {
@@ -63,7 +63,7 @@ public:
         }
     }
 private:
-    brpc::StreamOptions _options;
+    flare::rpc::StreamOptions _options;
     AfterAcceptStream* _after_accept_stream;
 };
 
@@ -76,21 +76,21 @@ protected:
 };
 
 TEST_F(StreamingRpcTest, sanity) {
-    brpc::Server server;
+    flare::rpc::Server server;
     MyServiceWithStream service;
-    ASSERT_EQ(0, server.AddService(&service, brpc::SERVER_DOESNT_OWN_SERVICE));
+    ASSERT_EQ(0, server.AddService(&service, flare::rpc::SERVER_DOESNT_OWN_SERVICE));
     ASSERT_EQ(0, server.Start(9007, NULL));
-    brpc::Channel channel;
+    flare::rpc::Channel channel;
     ASSERT_EQ(0, channel.Init("127.0.0.1:9007", NULL));
-    brpc::Controller cntl;
-    brpc::StreamId request_stream;
+    flare::rpc::Controller cntl;
+    flare::rpc::StreamId request_stream;
     ASSERT_EQ(0, StreamCreate(&request_stream, cntl, NULL));
-    brpc::ScopedStream stream_guard(request_stream);
+    flare::rpc::ScopedStream stream_guard(request_stream);
     test::EchoService_Stub stub(&channel);
     stub.Echo(&cntl, &request, &response, NULL);
     ASSERT_FALSE(cntl.Failed()) << cntl.ErrorText() << " request_stream=" << request_stream;
     usleep(10);
-    brpc::StreamClose(request_stream);
+    flare::rpc::StreamClose(request_stream);
     server.Stop(0);
     server.Join();
 }
@@ -102,7 +102,7 @@ struct HandlerControl {
     bool block;
 };
 
-class OrderedInputHandler : public brpc::StreamInputHandler {
+class OrderedInputHandler : public flare::rpc::StreamInputHandler {
 public:
     explicit OrderedInputHandler(HandlerControl *cntl = NULL)
         : _expected_next_value(0)
@@ -112,7 +112,7 @@ public:
         , _cntl(cntl)
     {
     }
-    int on_received_messages(brpc::StreamId /*id*/,
+    int on_received_messages(flare::rpc::StreamId /*id*/,
                              flare::io::IOBuf *const messages[],
                              size_t size) {
         if (_cntl && _cntl->block) {
@@ -129,11 +129,11 @@ public:
         return 0;
     }
 
-    void on_idle_timeout(brpc::StreamId /*id*/) {
+    void on_idle_timeout(flare::rpc::StreamId /*id*/) {
         ++_idle_times;
     }
 
-    void on_closed(brpc::StreamId /*id*/) {
+    void on_closed(flare::rpc::StreamId /*id*/) {
         ASSERT_FALSE(_stopped);
         _stopped = true;
     }
@@ -151,21 +151,21 @@ private:
 
 TEST_F(StreamingRpcTest, received_in_order) {
     OrderedInputHandler handler;
-    brpc::StreamOptions opt;
+    flare::rpc::StreamOptions opt;
     opt.handler = &handler;
     opt.messages_in_batch = 100;
-    brpc::Server server;
+    flare::rpc::Server server;
     MyServiceWithStream service(opt);
-    ASSERT_EQ(0, server.AddService(&service, brpc::SERVER_DOESNT_OWN_SERVICE));
+    ASSERT_EQ(0, server.AddService(&service, flare::rpc::SERVER_DOESNT_OWN_SERVICE));
     ASSERT_EQ(0, server.Start(9007, NULL));
-    brpc::Channel channel;
+    flare::rpc::Channel channel;
     ASSERT_EQ(0, channel.Init("127.0.0.1:9007", NULL));
-    brpc::Controller cntl;
-    brpc::StreamId request_stream;
-    brpc::StreamOptions request_stream_options;
+    flare::rpc::Controller cntl;
+    flare::rpc::StreamId request_stream;
+    flare::rpc::StreamOptions request_stream_options;
     request_stream_options.max_buf_size = 0;
     ASSERT_EQ(0, StreamCreate(&request_stream, cntl, &request_stream_options));
-    brpc::ScopedStream stream_guard(request_stream);
+    flare::rpc::ScopedStream stream_guard(request_stream);
     test::EchoService_Stub stub(&channel);
     stub.Echo(&cntl, &request, &response, NULL);
     ASSERT_FALSE(cntl.Failed()) << cntl.ErrorText() << " request_stream=" << request_stream;
@@ -174,9 +174,9 @@ TEST_F(StreamingRpcTest, received_in_order) {
         int network = htonl(i);
         flare::io::IOBuf out;
         out.append(&network, sizeof(network));
-        ASSERT_EQ(0, brpc::StreamWrite(request_stream, out)) << "i=" << i;
+        ASSERT_EQ(0, flare::rpc::StreamWrite(request_stream, out)) << "i=" << i;
     }
-    ASSERT_EQ(0, brpc::StreamClose(request_stream));
+    ASSERT_EQ(0, flare::rpc::StreamClose(request_stream));
     server.Stop(0);
     server.Join();
     while (!handler.stopped()) {
@@ -187,7 +187,7 @@ TEST_F(StreamingRpcTest, received_in_order) {
     ASSERT_EQ(N, handler._expected_next_value);
 }
 
-void on_writable(brpc::StreamId, void* arg, int error_code) {
+void on_writable(flare::rpc::StreamId, void* arg, int error_code) {
     std::pair<bool, int>* p = (std::pair<bool, int>*)arg;
     p->first = true;
     p->second = error_code;
@@ -198,20 +198,20 @@ TEST_F(StreamingRpcTest, block) {
     HandlerControl hc;
     OrderedInputHandler handler(&hc);
     hc.block = true;
-    brpc::StreamOptions opt;
+    flare::rpc::StreamOptions opt;
     opt.handler = &handler;
     const int N = 10000;
     opt.max_buf_size = sizeof(uint32_t) *  N;
-    brpc::Server server;
+    flare::rpc::Server server;
     MyServiceWithStream service(opt);
-    ASSERT_EQ(0, server.AddService(&service, brpc::SERVER_DOESNT_OWN_SERVICE));
+    ASSERT_EQ(0, server.AddService(&service, flare::rpc::SERVER_DOESNT_OWN_SERVICE));
     ASSERT_EQ(0, server.Start(9007, NULL));
-    brpc::Channel channel;
+    flare::rpc::Channel channel;
     ASSERT_EQ(0, channel.Init("127.0.0.1:9007", NULL));
-    brpc::Controller cntl;
-    brpc::StreamId request_stream;
-    brpc::ScopedStream stream_guard(request_stream);
-    brpc::StreamOptions request_stream_options;
+    flare::rpc::Controller cntl;
+    flare::rpc::StreamId request_stream;
+    flare::rpc::ScopedStream stream_guard(request_stream);
+    flare::rpc::StreamOptions request_stream_options;
     request_stream_options.max_buf_size = sizeof(uint32_t) * N;
     ASSERT_EQ(0, StreamCreate(&request_stream, cntl, &request_stream_options));
     test::EchoService_Stub stub(&channel);
@@ -222,15 +222,15 @@ TEST_F(StreamingRpcTest, block) {
         int network = htonl(i);
         flare::io::IOBuf out;
         out.append(&network, sizeof(network));
-        ASSERT_EQ(0, brpc::StreamWrite(request_stream, out)) << "i=" << i;
+        ASSERT_EQ(0, flare::rpc::StreamWrite(request_stream, out)) << "i=" << i;
     }
     // sync wait
     int dummy = 102030123;
     flare::io::IOBuf out;
     out.append(&dummy, sizeof(dummy));
-    ASSERT_EQ(EAGAIN, brpc::StreamWrite(request_stream, out));
+    ASSERT_EQ(EAGAIN, flare::rpc::StreamWrite(request_stream, out));
     hc.block = false;
-    ASSERT_EQ(0, brpc::StreamWait(request_stream, NULL));
+    ASSERT_EQ(0, flare::rpc::StreamWait(request_stream, NULL));
     // wait flushing all the pending messages
     while (handler._expected_next_value != N) {
         usleep(100);
@@ -242,15 +242,15 @@ TEST_F(StreamingRpcTest, block) {
         int network = htonl(i);
         flare::io::IOBuf out;
         out.append(&network, sizeof(network));
-        ASSERT_EQ(0, brpc::StreamWrite(request_stream, out)) << "i=" << i;
+        ASSERT_EQ(0, flare::rpc::StreamWrite(request_stream, out)) << "i=" << i;
     }
     out.clear();
     out.append(&dummy, sizeof(dummy));
-    ASSERT_EQ(EAGAIN, brpc::StreamWrite(request_stream, out));
+    ASSERT_EQ(EAGAIN, flare::rpc::StreamWrite(request_stream, out));
     hc.block = false;
     std::pair<bool, int> p = std::make_pair(false, 0);
     usleep(10);
-    brpc::StreamWait(request_stream, NULL, on_writable, &p);
+    flare::rpc::StreamWait(request_stream, NULL, on_writable, &p);
     while (!p.first) {
         usleep(100);
     }
@@ -268,22 +268,22 @@ TEST_F(StreamingRpcTest, block) {
         int network = htonl(i);
         flare::io::IOBuf out;
         out.append(&network, sizeof(network));
-        ASSERT_EQ(0, brpc::StreamWrite(request_stream, out)) << "i=" << i - N - N;
+        ASSERT_EQ(0, flare::rpc::StreamWrite(request_stream, out)) << "i=" << i - N - N;
     }
     out.clear();
     out.append(&dummy, sizeof(dummy));
-    ASSERT_EQ(EAGAIN, brpc::StreamWrite(request_stream, out));
+    ASSERT_EQ(EAGAIN, flare::rpc::StreamWrite(request_stream, out));
     timespec duetime = flare::base::microseconds_from_now(1);
     p.first = false;
     LOG(INFO) << "Start wait";
-    brpc::StreamWait(request_stream, &duetime, on_writable, &p);
+    flare::rpc::StreamWait(request_stream, &duetime, on_writable, &p);
     while (!p.first) {
         usleep(100);
     }
     ASSERT_TRUE(p.first);
     EXPECT_EQ(ETIMEDOUT, p.second);
     hc.block = false;
-    ASSERT_EQ(0, brpc::StreamClose(request_stream));
+    ASSERT_EQ(0, flare::rpc::StreamClose(request_stream));
     while (!handler.stopped()) {
         usleep(100);
     }
@@ -297,30 +297,30 @@ TEST_F(StreamingRpcTest, auto_close_if_host_socket_closed) {
     HandlerControl hc;
     OrderedInputHandler handler(&hc);
     hc.block = true;
-    brpc::StreamOptions opt;
+    flare::rpc::StreamOptions opt;
     opt.handler = &handler;
     const int N = 10000;
     opt.max_buf_size = sizeof(uint32_t) *  N;
-    brpc::Server server;
+    flare::rpc::Server server;
     MyServiceWithStream service(opt);
-    ASSERT_EQ(0, server.AddService(&service, brpc::SERVER_DOESNT_OWN_SERVICE));
+    ASSERT_EQ(0, server.AddService(&service, flare::rpc::SERVER_DOESNT_OWN_SERVICE));
     ASSERT_EQ(0, server.Start(9007, NULL));
-    brpc::Channel channel;
+    flare::rpc::Channel channel;
     ASSERT_EQ(0, channel.Init("127.0.0.1:9007", NULL));
-    brpc::Controller cntl;
-    brpc::StreamId request_stream;
-    brpc::StreamOptions request_stream_options;
+    flare::rpc::Controller cntl;
+    flare::rpc::StreamId request_stream;
+    flare::rpc::StreamOptions request_stream_options;
     request_stream_options.max_buf_size = sizeof(uint32_t) * N;
     ASSERT_EQ(0, StreamCreate(&request_stream, cntl, &request_stream_options));
-    brpc::ScopedStream stream_guard(request_stream);
+    flare::rpc::ScopedStream stream_guard(request_stream);
     test::EchoService_Stub stub(&channel);
     stub.Echo(&cntl, &request, &response, NULL);
     ASSERT_FALSE(cntl.Failed()) << cntl.ErrorText() << " request_stream=" << request_stream;
 
     {
-        brpc::SocketUniquePtr ptr;
-        ASSERT_EQ(0, brpc::Socket::Address(request_stream, &ptr));
-        brpc::Stream* s = (brpc::Stream*)ptr->conn();
+        flare::rpc::SocketUniquePtr ptr;
+        ASSERT_EQ(0, flare::rpc::Socket::Address(request_stream, &ptr));
+        flare::rpc::Stream* s = (flare::rpc::Stream*)ptr->conn();
         ASSERT_TRUE(s->_host_socket != NULL);
         s->_host_socket->SetFailed();
     }
@@ -328,7 +328,7 @@ TEST_F(StreamingRpcTest, auto_close_if_host_socket_closed) {
     usleep(100);
     flare::io::IOBuf out;
     out.append("test");
-    ASSERT_EQ(EINVAL, brpc::StreamWrite(request_stream, out));
+    ASSERT_EQ(EINVAL, flare::rpc::StreamWrite(request_stream, out));
     while (!handler.stopped()) {
         usleep(100);
     }
@@ -341,28 +341,28 @@ TEST_F(StreamingRpcTest, idle_timeout) {
     HandlerControl hc;
     OrderedInputHandler handler(&hc);
     hc.block = true;
-    brpc::StreamOptions opt;
+    flare::rpc::StreamOptions opt;
     opt.handler = &handler;
     opt.idle_timeout_ms = 2;
     const int N = 10000;
     opt.max_buf_size = sizeof(uint32_t) *  N;
-    brpc::Server server;
+    flare::rpc::Server server;
     MyServiceWithStream service(opt);
-    ASSERT_EQ(0, server.AddService(&service, brpc::SERVER_DOESNT_OWN_SERVICE));
+    ASSERT_EQ(0, server.AddService(&service, flare::rpc::SERVER_DOESNT_OWN_SERVICE));
     ASSERT_EQ(0, server.Start(9007, NULL));
-    brpc::Channel channel;
+    flare::rpc::Channel channel;
     ASSERT_EQ(0, channel.Init("127.0.0.1:9007", NULL));
-    brpc::Controller cntl;
-    brpc::StreamId request_stream;
-    brpc::StreamOptions request_stream_options;
+    flare::rpc::Controller cntl;
+    flare::rpc::StreamId request_stream;
+    flare::rpc::StreamOptions request_stream_options;
     request_stream_options.max_buf_size = sizeof(uint32_t) * N;
     ASSERT_EQ(0, StreamCreate(&request_stream, cntl, &request_stream_options));
-    brpc::ScopedStream stream_guard(request_stream);
+    flare::rpc::ScopedStream stream_guard(request_stream);
     test::EchoService_Stub stub(&channel);
     stub.Echo(&cntl, &request, &response, NULL);
     ASSERT_FALSE(cntl.Failed()) << cntl.ErrorText() << " request_stream=" << request_stream;
     usleep(10 * 1000 + 800);
-    ASSERT_EQ(0, brpc::StreamClose(request_stream));
+    ASSERT_EQ(0, flare::rpc::StreamClose(request_stream));
     while (!handler.stopped()) {
         usleep(100);
     }
@@ -372,7 +372,7 @@ TEST_F(StreamingRpcTest, idle_timeout) {
     ASSERT_EQ(0, handler._expected_next_value);
 }
 
-class PingPongHandler : public brpc::StreamInputHandler {
+class PingPongHandler : public flare::rpc::StreamInputHandler {
 public:
     explicit PingPongHandler()
         : _expected_next_value(0)
@@ -381,7 +381,7 @@ public:
         , _idle_times(0)
     {
     }
-    int on_received_messages(brpc::StreamId id,
+    int on_received_messages(flare::rpc::StreamId id,
                              flare::io::IOBuf *const messages[],
                              size_t size) {
         if (size != 1) {
@@ -401,16 +401,16 @@ public:
             network = htonl(send_back);
             out.append(&network, sizeof(network));
             // don't care the return value
-            brpc::StreamWrite(id, out);
+            flare::rpc::StreamWrite(id, out);
         }
         return 0;
     }
 
-    void on_idle_timeout(brpc::StreamId /*id*/) {
+    void on_idle_timeout(flare::rpc::StreamId /*id*/) {
         ++_idle_times;
     }
 
-    void on_closed(brpc::StreamId /*id*/) {
+    void on_closed(flare::rpc::StreamId /*id*/) {
         ASSERT_FALSE(_stopped);
         _stopped = true;
     }
@@ -427,34 +427,34 @@ private:
 
 TEST_F(StreamingRpcTest, ping_pong) {
     PingPongHandler resh;
-    brpc::StreamOptions opt;
+    flare::rpc::StreamOptions opt;
     opt.handler = &resh;
     const int N = 10000;
     opt.max_buf_size = sizeof(uint32_t) *  N;
-    brpc::Server server;
+    flare::rpc::Server server;
     MyServiceWithStream service(opt);
-    ASSERT_EQ(0, server.AddService(&service, brpc::SERVER_DOESNT_OWN_SERVICE));
+    ASSERT_EQ(0, server.AddService(&service, flare::rpc::SERVER_DOESNT_OWN_SERVICE));
     ASSERT_EQ(0, server.Start(9007, NULL));
-    brpc::Channel channel;
+    flare::rpc::Channel channel;
     ASSERT_EQ(0, channel.Init("127.0.0.1:9007", NULL));
-    brpc::Controller cntl;
-    brpc::StreamId request_stream;
-    brpc::StreamOptions request_stream_options;
+    flare::rpc::Controller cntl;
+    flare::rpc::StreamId request_stream;
+    flare::rpc::StreamOptions request_stream_options;
     PingPongHandler reqh;
     reqh._expected_next_value = 1;
     request_stream_options.handler = &reqh;
     request_stream_options.max_buf_size = sizeof(uint32_t) * N;
     ASSERT_EQ(0, StreamCreate(&request_stream, cntl, &request_stream_options));
-    brpc::ScopedStream stream_guard(request_stream);
+    flare::rpc::ScopedStream stream_guard(request_stream);
     test::EchoService_Stub stub(&channel);
     stub.Echo(&cntl, &request, &response, NULL);
     ASSERT_FALSE(cntl.Failed()) << cntl.ErrorText() << " request_stream=" << request_stream;
     int send = 0;
     flare::io::IOBuf out;
     out.append(&send, sizeof(send));
-    ASSERT_EQ(0, brpc::StreamWrite(request_stream, out));
+    ASSERT_EQ(0, flare::rpc::StreamWrite(request_stream, out));
     usleep(10 * 1000);
-    ASSERT_EQ(0, brpc::StreamClose(request_stream));
+    ASSERT_EQ(0, flare::rpc::StreamClose(request_stream));
     while (!resh.stopped() || !reqh.stopped()) {
         usleep(100);
     }
@@ -468,12 +468,12 @@ class SendNAfterAcceptStream : public AfterAcceptStream {
 public:
     explicit SendNAfterAcceptStream(int n)
         : _n(n) {}
-    void action(brpc::StreamId s) {
+    void action(flare::rpc::StreamId s) {
         for (int i = 0; i < _n; ++i) {
             int network = htonl(i);
             flare::io::IOBuf out;
             out.append(&network, sizeof(network));
-            ASSERT_EQ(0, brpc::StreamWrite(s, out)) << "i=" << i;
+            ASSERT_EQ(0, flare::rpc::StreamWrite(s, out)) << "i=" << i;
         }
     }
 private:
@@ -483,21 +483,21 @@ private:
 TEST_F(StreamingRpcTest, server_send_data_before_run_done) {
     const int N = 10000;
     SendNAfterAcceptStream after_accept(N);
-    brpc::StreamOptions opt;
+    flare::rpc::StreamOptions opt;
     opt.max_buf_size = -1;
-    brpc::Server server;
+    flare::rpc::Server server;
     MyServiceWithStream service(opt, &after_accept);
-    ASSERT_EQ(0, server.AddService(&service, brpc::SERVER_DOESNT_OWN_SERVICE));
+    ASSERT_EQ(0, server.AddService(&service, flare::rpc::SERVER_DOESNT_OWN_SERVICE));
     ASSERT_EQ(0, server.Start(9007, NULL));
-    brpc::Channel channel;
+    flare::rpc::Channel channel;
     ASSERT_EQ(0, channel.Init("127.0.0.1:9007", NULL));
     OrderedInputHandler handler;
-    brpc::StreamOptions request_stream_options;
-    brpc::StreamId request_stream;
-    brpc::Controller cntl;
+    flare::rpc::StreamOptions request_stream_options;
+    flare::rpc::StreamId request_stream;
+    flare::rpc::Controller cntl;
     request_stream_options.handler = &handler;
     ASSERT_EQ(0, StreamCreate(&request_stream, cntl, &request_stream_options));
-    brpc::ScopedStream stream_guard(request_stream);
+    flare::rpc::ScopedStream stream_guard(request_stream);
     test::EchoService_Stub stub(&channel);
     stub.Echo(&cntl, &request, &response, NULL);
     ASSERT_FALSE(cntl.Failed()) << cntl.ErrorText() << " request_stream=" << request_stream;
@@ -505,7 +505,7 @@ TEST_F(StreamingRpcTest, server_send_data_before_run_done) {
     while (handler._expected_next_value != N) {
         usleep(100);
     }
-    ASSERT_EQ(0, brpc::StreamClose(request_stream));
+    ASSERT_EQ(0, flare::rpc::StreamClose(request_stream));
     while (!handler.stopped()) {
         usleep(100);
     }

@@ -22,12 +22,12 @@
 #include <google/protobuf/descriptor.h>
 #include <google/protobuf/descriptor.pb.h>
 #include <google/protobuf/dynamic_message.h>
-#include "flare/brpc/policy/baidu_rpc_meta.pb.h"
+#include "flare/rpc/policy/baidu_rpc_meta.pb.h"
 #include "echo.pb.h"
 
 namespace {
 using namespace google::protobuf;
-using namespace brpc;
+using namespace flare::rpc;
 
 void BuildDependency(const FileDescriptor *file_desc, DescriptorPool *pool) {
     for (int i = 0; i < file_desc->dependency_count(); ++i) {

@@ -3,7 +3,7 @@ Note:
 
 summary:
     echo_client/echo_server:
-        brpc + thrift protocol version
+        flare + thrift protocol version
     native_client/native_server:
         native thrift cpp version
 

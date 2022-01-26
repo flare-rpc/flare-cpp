@@ -15,7 +15,7 @@
 // specific language governing permissions and limitations
 // under the License.
 
-// brpc - A framework to host and access services throughout Baidu.
+
 
 // Date: Sun Jul 13 15:04:18 CST 2014
 
@@ -30,24 +30,24 @@
 #include "flare/base/time.h"
 #include "flare/base/fast_rand.h"
 #include "flare/container/doubly_buffered_data.h"
-#include "flare/brpc/describable.h"
-#include "flare/brpc/socket.h"
+#include "flare/rpc/describable.h"
+#include "flare/rpc/socket.h"
 #include "flare/base/strings.h"
-#include "flare/brpc/excluded_servers.h"
-#include "flare/brpc/policy/weighted_round_robin_load_balancer.h"
-#include "flare/brpc/policy/round_robin_load_balancer.h"
-#include "flare/brpc/policy/weighted_randomized_load_balancer.h"
-#include "flare/brpc/policy/randomized_load_balancer.h"
-#include "flare/brpc/policy/locality_aware_load_balancer.h"
-#include "flare/brpc/policy/consistent_hashing_load_balancer.h"
-#include "flare/brpc/policy/hasher.h"
-#include "flare/brpc/errno.pb.h"
+#include "flare/rpc/excluded_servers.h"
+#include "flare/rpc/policy/weighted_round_robin_load_balancer.h"
+#include "flare/rpc/policy/round_robin_load_balancer.h"
+#include "flare/rpc/policy/weighted_randomized_load_balancer.h"
+#include "flare/rpc/policy/randomized_load_balancer.h"
+#include "flare/rpc/policy/locality_aware_load_balancer.h"
+#include "flare/rpc/policy/consistent_hashing_load_balancer.h"
+#include "flare/rpc/policy/hasher.h"
+#include "flare/rpc/errno.pb.h"
 #include "echo.pb.h"
-#include "flare/brpc/channel.h"
-#include "flare/brpc/controller.h"
-#include "flare/brpc/server.h"
+#include "flare/rpc/channel.h"
+#include "flare/rpc/controller.h"
+#include "flare/rpc/server.h"
 
-namespace brpc {
+namespace flare::rpc {
     DECLARE_int32(health_check_interval);
     DECLARE_int64(detect_available_server_interval_ms);
     namespace policy {
@@ -136,7 +136,7 @@ namespace {
         }
     }
 
-    typedef brpc::policy::LocalityAwareLoadBalancer LALB;
+    typedef flare::rpc::policy::LocalityAwareLoadBalancer LALB;
 
     static void ValidateWeightTree(
             std::vector<LALB::ServerInfo> &weight_tree) {
@@ -189,7 +189,7 @@ namespace {
     TEST_F(LoadBalancerTest, la_sanity) {
         LALB lalb;
         ASSERT_EQ(0, lalb._total.load());
-        std::vector<brpc::ServerId> ids;
+        std::vector<flare::rpc::ServerId> ids;
         const size_t N = 256;
         size_t cur_count = 0;
 
@@ -202,10 +202,10 @@ namespace {
                 snprintf(addr, sizeof(addr), "192.168.1.%d:8080", (int) cur_count);
                 flare::base::end_point dummy;
                 ASSERT_EQ(0, str2endpoint(addr, &dummy));
-                brpc::ServerId id(8888);
-                brpc::SocketOptions options;
+                flare::rpc::ServerId id(8888);
+                flare::rpc::SocketOptions options;
                 options.remote_side = dummy;
-                ASSERT_EQ(0, brpc::Socket::Create(options, &id.id));
+                ASSERT_EQ(0, flare::rpc::Socket::Create(options, &id.id));
                 ids.push_back(id);
                 ASSERT_TRUE(lalb.AddServer(id));
             }
@@ -216,37 +216,37 @@ namespace {
 
             std::shuffle(ids.begin(), ids.end(), g);
             for (size_t i = 0; i < N / 2; ++i) {
-                const brpc::ServerId id = ids.back();
+                const flare::rpc::ServerId id = ids.back();
                 ids.pop_back();
                 --cur_count;
                 ASSERT_TRUE(lalb.RemoveServer(id)) << "i=" << i;
-                ASSERT_EQ(0, brpc::Socket::SetFailed(id.id));
+                ASSERT_EQ(0, flare::rpc::Socket::SetFailed(id.id));
             }
             std::cout << "Removed " << before_removal - cur_count << std::endl;
             ValidateLALB(lalb, cur_count);
         }
 
         for (size_t i = 0; i < ids.size(); ++i) {
-            ASSERT_EQ(0, brpc::Socket::SetFailed(ids[i].id));
+            ASSERT_EQ(0, flare::rpc::Socket::SetFailed(ids[i].id));
         }
     }
 
-    typedef std::map<brpc::SocketId, int> CountMap;
+    typedef std::map<flare::rpc::SocketId, int> CountMap;
     volatile bool global_stop = false;
 
     struct SelectArg {
-        brpc::LoadBalancer *lb;
+        flare::rpc::LoadBalancer *lb;
 
         uint32_t (*hash)(const void *, size_t);
     };
 
     void *select_server(void *arg) {
         SelectArg *sa = (SelectArg *) arg;
-        brpc::LoadBalancer *c = sa->lb;
-        brpc::SocketUniquePtr ptr;
+        flare::rpc::LoadBalancer *c = sa->lb;
+        flare::rpc::SocketUniquePtr ptr;
         CountMap *selected_count = new CountMap;
-        brpc::LoadBalancer::SelectIn in = {0, false, false, 0u, NULL};
-        brpc::LoadBalancer::SelectOut out(&ptr);
+        flare::rpc::LoadBalancer::SelectIn in = {0, false, false, 0u, NULL};
+        flare::rpc::LoadBalancer::SelectOut out(&ptr);
         uint32_t rand_seed = rand();
         if (sa->hash) {
             uint32_t rd = ++rand_seed;
@@ -267,11 +267,11 @@ namespace {
         return selected_count;
     }
 
-    brpc::SocketId recycled_sockets[1024];
+    flare::rpc::SocketId recycled_sockets[1024];
     std::atomic<size_t> nrecycle(0);
 
-    class SaveRecycle : public brpc::SocketUser {
-        void BeforeRecycle(brpc::Socket *s) {
+    class SaveRecycle : public flare::rpc::SocketUser {
+        void BeforeRecycle(flare::rpc::Socket *s) {
             recycled_sockets[nrecycle.fetch_add(1, std::memory_order_relaxed)] = s->id();
             delete this;
         }
@@ -279,41 +279,41 @@ namespace {
 
     TEST_F(LoadBalancerTest, update_while_selection) {
         for (size_t round = 0; round < 5; ++round) {
-            brpc::LoadBalancer *lb = NULL;
+            flare::rpc::LoadBalancer *lb = NULL;
             SelectArg sa = {NULL, NULL};
             bool is_lalb = false;
             if (round == 0) {
-                lb = new brpc::policy::RoundRobinLoadBalancer;
+                lb = new flare::rpc::policy::RoundRobinLoadBalancer;
             } else if (round == 1) {
-                lb = new brpc::policy::RandomizedLoadBalancer;
+                lb = new flare::rpc::policy::RandomizedLoadBalancer;
             } else if (round == 2) {
                 lb = new LALB;
                 is_lalb = true;
             } else if (round == 3) {
-                lb = new brpc::policy::WeightedRoundRobinLoadBalancer;
+                lb = new flare::rpc::policy::WeightedRoundRobinLoadBalancer;
             } else {
-                lb = new brpc::policy::ConsistentHashingLoadBalancer(brpc::policy::CONS_HASH_LB_MURMUR3);
-                sa.hash = ::brpc::policy::MurmurHash32;
+                lb = new flare::rpc::policy::ConsistentHashingLoadBalancer(flare::rpc::policy::CONS_HASH_LB_MURMUR3);
+                sa.hash = ::flare::rpc::policy::MurmurHash32;
             }
             sa.lb = lb;
 
             // Accessing empty lb should result in error.
-            brpc::SocketUniquePtr ptr;
-            brpc::LoadBalancer::SelectIn in = {0, false, true, 0, NULL};
-            brpc::LoadBalancer::SelectOut out(&ptr);
+            flare::rpc::SocketUniquePtr ptr;
+            flare::rpc::LoadBalancer::SelectIn in = {0, false, true, 0, NULL};
+            flare::rpc::LoadBalancer::SelectOut out(&ptr);
             ASSERT_EQ(ENODATA, lb->SelectServer(in, &out));
 
             nrecycle = 0;
             global_stop = false;
             pthread_t th[8];
-            std::vector<brpc::ServerId> ids;
-            brpc::SocketId wrr_sid_logoff = -1;
+            std::vector<flare::rpc::ServerId> ids;
+            flare::rpc::SocketId wrr_sid_logoff = -1;
             for (int i = 0; i < 256; ++i) {
                 char addr[32];
                 snprintf(addr, sizeof(addr), "192.%d.1.%d:8080", i, i);
                 flare::base::end_point dummy;
                 ASSERT_EQ(0, str2endpoint(addr, &dummy));
-                brpc::ServerId id(8888);
+                flare::rpc::ServerId id(8888);
                 if (3 == round) {
                     if (i < 255) {
                         id.tag = "1";
@@ -321,17 +321,17 @@ namespace {
                         id.tag = "200000000";
                     }
                 }
-                brpc::SocketOptions options;
+                flare::rpc::SocketOptions options;
                 options.remote_side = dummy;
                 options.user = new SaveRecycle;
-                ASSERT_EQ(0, brpc::Socket::Create(options, &id.id));
+                ASSERT_EQ(0, flare::rpc::Socket::Create(options, &id.id));
                 ids.push_back(id);
                 ASSERT_TRUE(lb->AddServer(id));
                 if (round == 3 && i == 255) {
                     wrr_sid_logoff = id.id;
                     // In case of wrr, set 255th socket with huge weight logoff.
-                    brpc::SocketUniquePtr ptr;
-                    ASSERT_EQ(0, brpc::Socket::Address(id.id, &ptr));
+                    flare::rpc::SocketUniquePtr ptr;
+                    ASSERT_EQ(0, flare::rpc::Socket::Address(id.id, &ptr));
                     ptr->SetLogOff();
                 }
             }
@@ -341,7 +341,7 @@ namespace {
             for (size_t i = 0; i < FLARE_ARRAY_SIZE(th); ++i) {
                 ASSERT_EQ(0, pthread_create(&th[i], NULL, select_server, &sa));
             }
-            std::vector<brpc::ServerId> removed;
+            std::vector<flare::rpc::ServerId> removed;
             const size_t REP = 200;
             std::random_device rd;
             std::mt19937 g(rd());
@@ -406,10 +406,10 @@ namespace {
             std::cout << std::endl;
 
             for (size_t i = 0; i < id_num; ++i) {
-                ASSERT_EQ(0, brpc::Socket::SetFailed(ids[i].id));
+                ASSERT_EQ(0, flare::rpc::Socket::SetFailed(ids[i].id));
             }
             ASSERT_EQ(ids.size(), nrecycle);
-            brpc::SocketId id = -1;
+            flare::rpc::SocketId id = -1;
             for (size_t i = 0; i < ids.size(); ++i) {
                 id = recycled_sockets[i];
                 if (id != wrr_sid_logoff) {
@@ -424,19 +424,19 @@ namespace {
 
     TEST_F(LoadBalancerTest, fairness) {
         for (size_t round = 0; round < 6; ++round) {
-            brpc::LoadBalancer *lb = NULL;
+            flare::rpc::LoadBalancer *lb = NULL;
             SelectArg sa = {NULL, NULL};
             if (round == 0) {
-                lb = new brpc::policy::RoundRobinLoadBalancer;
+                lb = new flare::rpc::policy::RoundRobinLoadBalancer;
             } else if (round == 1) {
-                lb = new brpc::policy::RandomizedLoadBalancer;
+                lb = new flare::rpc::policy::RandomizedLoadBalancer;
             } else if (round == 2) {
                 lb = new LALB;
             } else if (3 == round || 4 == round) {
-                lb = new brpc::policy::WeightedRoundRobinLoadBalancer;
+                lb = new flare::rpc::policy::WeightedRoundRobinLoadBalancer;
             } else {
-                lb = new brpc::policy::ConsistentHashingLoadBalancer(brpc::policy::CONS_HASH_LB_MURMUR3);
-                sa.hash = brpc::policy::MurmurHash32;
+                lb = new flare::rpc::policy::ConsistentHashingLoadBalancer(flare::rpc::policy::CONS_HASH_LB_MURMUR3);
+                sa.hash = flare::rpc::policy::MurmurHash32;
             }
             sa.lb = lb;
 
@@ -450,13 +450,13 @@ namespace {
             nrecycle = 0;
             global_stop = false;
             pthread_t th[8];
-            std::vector<brpc::ServerId> ids;
+            std::vector<flare::rpc::ServerId> ids;
             for (int i = 0; i < 256; ++i) {
                 char addr[32];
                 snprintf(addr, sizeof(addr), "192.168.1.%d:8080", i);
                 flare::base::end_point dummy;
                 ASSERT_EQ(0, str2endpoint(addr, &dummy));
-                brpc::ServerId id(8888);
+                flare::rpc::ServerId id(8888);
                 if (3 == round) {
                     id.tag = "100";
                 } else if (4 == round) {
@@ -466,10 +466,10 @@ namespace {
                         id.tag = std::to_string(flare::base::fast_rand_less_than(40) + 80);
                     }
                 }
-                brpc::SocketOptions options;
+                flare::rpc::SocketOptions options;
                 options.remote_side = dummy;
                 options.user = new SaveRecycle;
-                ASSERT_EQ(0, brpc::Socket::Create(options, &id.id));
+                ASSERT_EQ(0, flare::rpc::Socket::Create(options, &id.id));
                 ids.push_back(id);
                 lb->AddServer(id);
             }
@@ -526,7 +526,7 @@ namespace {
             } else { // for weighted round robin load balancer
                 std::cout << "configured weight: " << std::endl;
                 std::ostringstream os;
-                brpc::DescribeOptions opt;
+                flare::rpc::DescribeOptions opt;
                 lb->Describe(os, opt);
                 std::cout << os.str() << std::endl;
                 double scaling_count_sum = 0.0;
@@ -546,7 +546,7 @@ namespace {
                           << std::endl;
             }
             for (size_t i = 0; i < ids.size(); ++i) {
-                ASSERT_EQ(0, brpc::Socket::SetFailed(ids[i].id));
+                ASSERT_EQ(0, flare::rpc::Socket::SetFailed(ids[i].id));
             }
             ASSERT_EQ(ids.size(), nrecycle);
             for (size_t i = 0; i < ids.size(); ++i) {
@@ -557,17 +557,17 @@ namespace {
     }
 
     TEST_F(LoadBalancerTest, consistent_hashing) {
-        ::brpc::policy::HashFunc hashs[::brpc::policy::CONS_HASH_LB_LAST] = {
-                ::brpc::policy::MurmurHash32,
-                ::brpc::policy::MD5Hash32,
-                ::brpc::policy::MD5Hash32
-                // ::brpc::policy::CRCHash32 crc is a bad hash function in test
+        ::flare::rpc::policy::HashFunc hashs[::flare::rpc::policy::CONS_HASH_LB_LAST] = {
+                ::flare::rpc::policy::MurmurHash32,
+                ::flare::rpc::policy::MD5Hash32,
+                ::flare::rpc::policy::MD5Hash32
+                // ::flare::rpc::policy::CRCHash32 crc is a bad hash function in test
         };
 
-        ::brpc::policy::ConsistentHashingLoadBalancerType hash_type[::brpc::policy::CONS_HASH_LB_LAST] = {
-                ::brpc::policy::CONS_HASH_LB_MURMUR3,
-                ::brpc::policy::CONS_HASH_LB_MD5,
-                ::brpc::policy::CONS_HASH_LB_KETAMA
+        ::flare::rpc::policy::ConsistentHashingLoadBalancerType hash_type[::flare::rpc::policy::CONS_HASH_LB_LAST] = {
+                ::flare::rpc::policy::CONS_HASH_LB_MURMUR3,
+                ::flare::rpc::policy::CONS_HASH_LB_MD5,
+                ::flare::rpc::policy::CONS_HASH_LB_KETAMA
         };
 
         const char *servers[] = {
@@ -578,8 +578,8 @@ namespace {
                 "10.42.122.201:8833",
         };
         for (size_t round = 0; round < FLARE_ARRAY_SIZE(hashs); ++round) {
-            brpc::policy::ConsistentHashingLoadBalancer chlb(hash_type[round]);
-            std::vector<brpc::ServerId> ids;
+            flare::rpc::policy::ConsistentHashingLoadBalancer chlb(hash_type[round]);
+            std::vector<flare::rpc::ServerId> ids;
             std::vector<flare::base::end_point> addrs;
             for (int j = 0; j < 5; ++j)
                 for (int i = 0; i < 5; ++i) {
@@ -587,27 +587,27 @@ namespace {
                     //snprintf(addr, sizeof(addr), "192.168.1.%d:8080", i);
                     flare::base::end_point dummy;
                     ASSERT_EQ(0, str2endpoint(addr, &dummy));
-                    brpc::ServerId id(8888);
-                    brpc::SocketOptions options;
+                    flare::rpc::ServerId id(8888);
+                    flare::rpc::SocketOptions options;
                     options.remote_side = dummy;
                     options.user = new SaveRecycle;
-                    ASSERT_EQ(0, brpc::Socket::Create(options, &id.id));
+                    ASSERT_EQ(0, flare::rpc::Socket::Create(options, &id.id));
                     ids.push_back(id);
                     addrs.push_back(dummy);
                     chlb.AddServer(id);
                 }
             std::cout << chlb;
             for (int i = 0; i < 5; ++i) {
-                std::vector<brpc::ServerId> empty;
+                std::vector<flare::rpc::ServerId> empty;
                 chlb.AddServersInBatch(empty);
                 chlb.RemoveServersInBatch(empty);
                 std::cout << chlb;
             }
             const size_t SELECT_TIMES = 1000000;
             std::map < flare::base::end_point, size_t > times;
-            brpc::SocketUniquePtr ptr;
-            brpc::LoadBalancer::SelectIn in = {0, false, false, 0u, NULL};
-            ::brpc::LoadBalancer::SelectOut out(&ptr);
+            flare::rpc::SocketUniquePtr ptr;
+            flare::rpc::LoadBalancer::SelectIn in = {0, false, false, 0u, NULL};
+            ::flare::rpc::LoadBalancer::SelectOut out(&ptr);
             for (size_t i = 0; i < SELECT_TIMES; ++i) {
                 in.has_request_code = true;
                 in.request_code = hashs[round]((const char *) &i, sizeof(i));
@@ -632,7 +632,7 @@ namespace {
                       << sqrt(load_sqr_sum * addrs.size() - load_sum * load_sum) / addrs.size()
                       << '\n';
             for (size_t i = 0; i < ids.size(); ++i) {
-                ASSERT_EQ(0, brpc::Socket::SetFailed(ids[i].id));
+                ASSERT_EQ(0, flare::rpc::Socket::SetFailed(ids[i].id));
             }
         }
     }
@@ -649,22 +649,22 @@ namespace {
         };
         std::string weight[] = {"3", "2", "7", "200000000", "1ab", "-1", "0"};
         std::map<flare::base::end_point, int> configed_weight;
-        brpc::policy::WeightedRoundRobinLoadBalancer wrrlb;
+        flare::rpc::policy::WeightedRoundRobinLoadBalancer wrrlb;
 
         // Add server to selected list. The server with invalid weight will be skipped.
         for (size_t i = 0; i < FLARE_ARRAY_SIZE(servers); ++i) {
             const char *addr = servers[i];
             flare::base::end_point dummy;
             ASSERT_EQ(0, str2endpoint(addr, &dummy));
-            brpc::ServerId id(8888);
-            brpc::SocketOptions options;
+            flare::rpc::ServerId id(8888);
+            flare::rpc::SocketOptions options;
             options.remote_side = dummy;
             options.user = new SaveRecycle;
-            ASSERT_EQ(0, brpc::Socket::Create(options, &id.id));
+            ASSERT_EQ(0, flare::rpc::Socket::Create(options, &id.id));
             id.tag = weight[i];
             if (i == 3) {
-                brpc::SocketUniquePtr ptr;
-                ASSERT_EQ(0, brpc::Socket::Address(id.id, &ptr));
+                flare::rpc::SocketUniquePtr ptr;
+                ASSERT_EQ(0, flare::rpc::Socket::Address(id.id, &ptr));
                 ptr->SetLogOff();
             }
             if (i < 4) {
@@ -682,9 +682,9 @@ namespace {
         // We run SelectServer for 12 times. The result number of each server seleted should be
         // consistent with weight configured.
         std::map < flare::base::end_point, size_t > select_result;
-        brpc::SocketUniquePtr ptr;
-        brpc::LoadBalancer::SelectIn in = {0, false, false, 0u, NULL};
-        brpc::LoadBalancer::SelectOut out(&ptr);
+        flare::rpc::SocketUniquePtr ptr;
+        flare::rpc::LoadBalancer::SelectIn in = {0, false, false, 0u, NULL};
+        flare::rpc::LoadBalancer::SelectOut out(&ptr);
         int total_weight = 12;
         std::vector<flare::base::end_point> select_servers;
         for (int i = 0; i != total_weight; ++i) {
@@ -714,37 +714,37 @@ namespace {
         };
         std::string weight[] = {"200000000", "2", "600000"};
         std::map<flare::base::end_point, int> configed_weight;
-        brpc::policy::WeightedRoundRobinLoadBalancer wrrlb;
-        brpc::ExcludedServers *exclude = brpc::ExcludedServers::Create(3);
+        flare::rpc::policy::WeightedRoundRobinLoadBalancer wrrlb;
+        flare::rpc::ExcludedServers *exclude = flare::rpc::ExcludedServers::Create(3);
         for (size_t i = 0; i < FLARE_ARRAY_SIZE(servers); ++i) {
             const char *addr = servers[i];
             flare::base::end_point dummy;
             ASSERT_EQ(0, str2endpoint(addr, &dummy));
-            brpc::ServerId id(8888);
-            brpc::SocketOptions options;
+            flare::rpc::ServerId id(8888);
+            flare::rpc::SocketOptions options;
             options.remote_side = dummy;
             options.user = new SaveRecycle;
             id.tag = weight[i];
             if (i < 2) {
-                ASSERT_EQ(0, brpc::Socket::Create(options, &id.id));
+                ASSERT_EQ(0, flare::rpc::Socket::Create(options, &id.id));
             }
             EXPECT_TRUE(wrrlb.AddServer(id));
             if (i == 0) {
                 exclude->Add(id.id);
             }
             if (i == 1) {
-                brpc::SocketUniquePtr ptr;
-                ASSERT_EQ(0, brpc::Socket::Address(id.id, &ptr));
+                flare::rpc::SocketUniquePtr ptr;
+                ASSERT_EQ(0, flare::rpc::Socket::Address(id.id, &ptr));
                 ptr->SetLogOff();
             }
         }
         // The first socket is excluded. The second socket is logfoff.
         // The third socket is invalid.
-        brpc::SocketUniquePtr ptr;
-        brpc::LoadBalancer::SelectIn in = {0, false, false, 0u, exclude};
-        brpc::LoadBalancer::SelectOut out(&ptr);
+        flare::rpc::SocketUniquePtr ptr;
+        flare::rpc::LoadBalancer::SelectIn in = {0, false, false, 0u, exclude};
+        flare::rpc::LoadBalancer::SelectOut out(&ptr);
         EXPECT_EQ(EHOSTDOWN, wrrlb.SelectServer(in, &out));
-        brpc::ExcludedServers::Destroy(exclude);
+        flare::rpc::ExcludedServers::Destroy(exclude);
     }
 
     TEST_F(LoadBalancerTest, weighted_randomized) {
@@ -760,7 +760,7 @@ namespace {
         std::string weight[] = {"3", "2", "5", "10", "1ab", "-1", "0"};
         std::map<flare::base::end_point, int> configed_weight;
         uint64_t configed_weight_sum = 0;
-        brpc::policy::WeightedRandomizedLoadBalancer wrlb;
+        flare::rpc::policy::WeightedRandomizedLoadBalancer wrlb;
         size_t valid_weight_num = 4;
 
         // Add server to selected list. The server with invalid weight will be skipped.
@@ -768,11 +768,11 @@ namespace {
             const char *addr = servers[i];
             flare::base::end_point dummy;
             ASSERT_EQ(0, str2endpoint(addr, &dummy));
-            brpc::ServerId id(8888);
-            brpc::SocketOptions options;
+            flare::rpc::ServerId id(8888);
+            flare::rpc::SocketOptions options;
             options.remote_side = dummy;
             options.user = new SaveRecycle;
-            ASSERT_EQ(0, brpc::Socket::Create(options, &id.id));
+            ASSERT_EQ(0, flare::rpc::Socket::Create(options, &id.id));
             id.tag = weight[i];
             if (i < valid_weight_num) {
                 auto weight_num = flare::base::try_parse<int>(weight[i]);
@@ -790,9 +790,9 @@ namespace {
         // We run SelectServer for multiple times. The result number of each server seleted should be
         // weight randomized with weight configured.
         std::map < flare::base::end_point, size_t > select_result;
-        brpc::SocketUniquePtr ptr;
-        brpc::LoadBalancer::SelectIn in = {0, false, false, 0u, NULL};
-        brpc::LoadBalancer::SelectOut out(&ptr);
+        flare::rpc::SocketUniquePtr ptr;
+        flare::rpc::LoadBalancer::SelectIn in = {0, false, false, 0u, NULL};
+        flare::rpc::LoadBalancer::SelectOut out(&ptr);
         int run_times = configed_weight_sum * 10;
         std::vector<flare::base::end_point> select_servers;
         for (int i = 0; i < run_times; ++i) {
@@ -829,21 +829,21 @@ namespace {
                 "10.92.115.19:8832",
                 "10.42.122.201:8833",
         };
-        std::vector<brpc::LoadBalancer *> lbs;
-        lbs.push_back(new brpc::policy::RoundRobinLoadBalancer);
-        lbs.push_back(new brpc::policy::RandomizedLoadBalancer);
-        lbs.push_back(new brpc::policy::WeightedRoundRobinLoadBalancer);
+        std::vector<flare::rpc::LoadBalancer *> lbs;
+        lbs.push_back(new flare::rpc::policy::RoundRobinLoadBalancer);
+        lbs.push_back(new flare::rpc::policy::RandomizedLoadBalancer);
+        lbs.push_back(new flare::rpc::policy::WeightedRoundRobinLoadBalancer);
 
         for (int i = 0; i < (int) lbs.size(); ++i) {
-            brpc::LoadBalancer *lb = lbs[i];
-            std::vector<brpc::ServerId> ids;
+            flare::rpc::LoadBalancer *lb = lbs[i];
+            std::vector<flare::rpc::ServerId> ids;
             for (size_t i = 0; i < FLARE_ARRAY_SIZE(servers); ++i) {
                 flare::base::end_point dummy;
                 ASSERT_EQ(0, str2endpoint(servers[i], &dummy));
-                brpc::ServerId id(8888);
-                brpc::SocketOptions options;
+                flare::rpc::ServerId id(8888);
+                flare::rpc::SocketOptions options;
                 options.remote_side = dummy;
-                ASSERT_EQ(0, brpc::Socket::Create(options, &id.id));
+                ASSERT_EQ(0, flare::rpc::Socket::Create(options, &id.id));
                 id.tag = "50";
                 ids.push_back(id);
                 lb->AddServer(id);
@@ -851,45 +851,45 @@ namespace {
 
             // Without setting anything, the lb should work fine
             for (int i = 0; i < 4; ++i) {
-                brpc::SocketUniquePtr ptr;
-                brpc::LoadBalancer::SelectIn in = {0, false, false, 0u, NULL};
-                brpc::LoadBalancer::SelectOut out(&ptr);
+                flare::rpc::SocketUniquePtr ptr;
+                flare::rpc::LoadBalancer::SelectIn in = {0, false, false, 0u, NULL};
+                flare::rpc::LoadBalancer::SelectOut out(&ptr);
                 ASSERT_EQ(0, lb->SelectServer(in, &out));
             }
 
-            brpc::SocketUniquePtr ptr;
-            ASSERT_EQ(0, brpc::Socket::Address(ids[0].id, &ptr));
+            flare::rpc::SocketUniquePtr ptr;
+            ASSERT_EQ(0, flare::rpc::Socket::Address(ids[0].id, &ptr));
             ptr->_ninflight_app_health_check.store(1, std::memory_order_relaxed);
             for (int i = 0; i < 4; ++i) {
-                brpc::SocketUniquePtr ptr;
-                brpc::LoadBalancer::SelectIn in = {0, false, false, 0u, NULL};
-                brpc::LoadBalancer::SelectOut out(&ptr);
+                flare::rpc::SocketUniquePtr ptr;
+                flare::rpc::LoadBalancer::SelectIn in = {0, false, false, 0u, NULL};
+                flare::rpc::LoadBalancer::SelectOut out(&ptr);
                 ASSERT_EQ(0, lb->SelectServer(in, &out));
                 // After putting server[0] into health check state, the only choice is servers[1]
                 ASSERT_EQ(ptr->remote_side().port, 8833);
             }
 
-            ASSERT_EQ(0, brpc::Socket::Address(ids[1].id, &ptr));
+            ASSERT_EQ(0, flare::rpc::Socket::Address(ids[1].id, &ptr));
             ptr->_ninflight_app_health_check.store(1, std::memory_order_relaxed);
             for (int i = 0; i < 4; ++i) {
-                brpc::SocketUniquePtr ptr;
-                brpc::LoadBalancer::SelectIn in = {0, false, false, 0u, NULL};
-                brpc::LoadBalancer::SelectOut out(&ptr);
+                flare::rpc::SocketUniquePtr ptr;
+                flare::rpc::LoadBalancer::SelectIn in = {0, false, false, 0u, NULL};
+                flare::rpc::LoadBalancer::SelectOut out(&ptr);
                 // There is no server available
                 ASSERT_EQ(EHOSTDOWN, lb->SelectServer(in, &out));
             }
 
-            ASSERT_EQ(0, brpc::Socket::Address(ids[0].id, &ptr));
+            ASSERT_EQ(0, flare::rpc::Socket::Address(ids[0].id, &ptr));
             ptr->_ninflight_app_health_check.store(0, std::memory_order_relaxed);
-            ASSERT_EQ(0, brpc::Socket::Address(ids[1].id, &ptr));
+            ASSERT_EQ(0, flare::rpc::Socket::Address(ids[1].id, &ptr));
             ptr->_ninflight_app_health_check.store(0, std::memory_order_relaxed);
             // After reset health check state, the lb should work fine
             bool get_server1 = false;
             bool get_server2 = false;
             for (int i = 0; i < 20; ++i) {
-                brpc::SocketUniquePtr ptr;
-                brpc::LoadBalancer::SelectIn in = {0, false, false, 0u, NULL};
-                brpc::LoadBalancer::SelectOut out(&ptr);
+                flare::rpc::SocketUniquePtr ptr;
+                flare::rpc::LoadBalancer::SelectIn in = {0, false, false, 0u, NULL};
+                flare::rpc::LoadBalancer::SelectOut out(&ptr);
                 ASSERT_EQ(0, lb->SelectServer(in, &out));
                 if (ptr->remote_side().port == 8832) {
                     get_server1 = true;
@@ -907,30 +907,30 @@ namespace {
                 "10.92.115.19:8832",
                 "10.42.122.201:8833",
         };
-        brpc::LoadBalancer *lb = NULL;
+        flare::rpc::LoadBalancer *lb = NULL;
         int rand = flare::base::fast_rand_less_than(2);
         if (rand == 0) {
-            brpc::policy::RandomizedLoadBalancer rlb;
+            flare::rpc::policy::RandomizedLoadBalancer rlb;
             lb = rlb.New("min_working_instances=2 hold_seconds=2");
         } else if (rand == 1) {
-            brpc::policy::RoundRobinLoadBalancer rrlb;
+            flare::rpc::policy::RoundRobinLoadBalancer rrlb;
             lb = rrlb.New("min_working_instances=2 hold_seconds=2");
         }
-        brpc::SocketUniquePtr ptr[2];
+        flare::rpc::SocketUniquePtr ptr[2];
         for (size_t i = 0; i < FLARE_ARRAY_SIZE(servers); ++i) {
             flare::base::end_point dummy;
             ASSERT_EQ(0, str2endpoint(servers[i], &dummy));
-            brpc::SocketOptions options;
+            flare::rpc::SocketOptions options;
             options.remote_side = dummy;
-            brpc::ServerId id(8888);
+            flare::rpc::ServerId id(8888);
             id.tag = "50";
-            ASSERT_EQ(0, brpc::Socket::Create(options, &id.id));
-            ASSERT_EQ(0, brpc::Socket::Address(id.id, &ptr[i]));
+            ASSERT_EQ(0, flare::rpc::Socket::Create(options, &id.id));
+            ASSERT_EQ(0, flare::rpc::Socket::Address(id.id, &ptr[i]));
             lb->AddServer(id);
         }
-        brpc::SocketUniquePtr sptr;
-        brpc::LoadBalancer::SelectIn in = {0, false, true, 0u, NULL};
-        brpc::LoadBalancer::SelectOut out(&sptr);
+        flare::rpc::SocketUniquePtr sptr;
+        flare::rpc::LoadBalancer::SelectIn in = {0, false, true, 0u, NULL};
+        flare::rpc::LoadBalancer::SelectOut out(&sptr);
         ASSERT_EQ(0, lb->SelectServer(in, &out));
 
         ptr[0]->SetFailed();
@@ -938,20 +938,20 @@ namespace {
         ASSERT_EQ(EHOSTDOWN, lb->SelectServer(in, &out));
         // should reject all request since there is no available server
         for (int i = 0; i < 10; ++i) {
-            ASSERT_EQ(brpc::EREJECT, lb->SelectServer(in, &out));
+            ASSERT_EQ(flare::rpc::EREJECT, lb->SelectServer(in, &out));
         }
         {
-            brpc::SocketUniquePtr dummy_ptr;
-            ASSERT_EQ(1, brpc::Socket::AddressFailedAsWell(ptr[0]->id(), &dummy_ptr));
+            flare::rpc::SocketUniquePtr dummy_ptr;
+            ASSERT_EQ(1, flare::rpc::Socket::AddressFailedAsWell(ptr[0]->id(), &dummy_ptr));
             dummy_ptr->Revive();
         }
-        bthread_usleep(brpc::FLAGS_detect_available_server_interval_ms * 1000);
+        bthread_usleep(flare::rpc::FLAGS_detect_available_server_interval_ms * 1000);
         // After one server is revived, the reject rate should be 50%
         int num_ereject = 0;
         int num_ok = 0;
         for (int i = 0; i < 100; ++i) {
             int rc = lb->SelectServer(in, &out);
-            if (rc == brpc::EREJECT) {
+            if (rc == flare::rpc::EREJECT) {
                 num_ereject++;
             } else if (rc == 0) {
                 num_ok++;
@@ -979,9 +979,9 @@ namespace {
                           const test::EchoRequest *req,
                           test::EchoResponse *res,
                           google::protobuf::Closure *done) {
-            //brpc::Controller* cntl =
-            //        static_cast<brpc::Controller*>(cntl_base);
-            brpc::ClosureGuard done_guard(done);
+            //flare::rpc::Controller* cntl =
+            //        static_cast<flare::rpc::Controller*>(cntl_base);
+            flare::rpc::ClosureGuard done_guard(done);
             int p = _num_request.fetch_add(1, std::memory_order_relaxed);
             // concurrency in normal case is 50
             if (p < 70) {
@@ -1006,14 +1006,14 @@ namespace {
         void Run() {
             if (cntl.Failed()) {
                 num_failed.fetch_add(1, std::memory_order_relaxed);
-                if (cntl.ErrorCode() == brpc::EREJECT) {
+                if (cntl.ErrorCode() == flare::rpc::EREJECT) {
                     num_reject.fetch_add(1, std::memory_order_relaxed);
                 }
             }
             delete this;
         }
 
-        brpc::Controller cntl;
+        flare::rpc::Controller cntl;
         test::EchoRequest req;
         test::EchoResponse res;
     };
@@ -1021,8 +1021,8 @@ namespace {
     TEST_F(LoadBalancerTest, invalid_lb_params) {
         const char *lb_algo[] = {"random:mi_working_instances=2 hold_seconds=2",
                                  "rr:min_working_instances=2 hold_secon=2"};
-        brpc::Channel channel;
-        brpc::ChannelOptions options;
+        flare::rpc::Channel channel;
+        flare::rpc::ChannelOptions options;
         options.protocol = "http";
         ASSERT_EQ(channel.Init("list://127.0.0.1:7777 50, 127.0.0.1:7778 50",
                                lb_algo[flare::base::fast_rand_less_than(FLARE_ARRAY_SIZE(lb_algo))],
@@ -1038,8 +1038,8 @@ namespace {
 
         const char *lb_algo[] = {"random:min_working_instances=2 hold_seconds=2",
                                  "rr:min_working_instances=2 hold_seconds=2"};
-        brpc::Channel channel;
-        brpc::ChannelOptions options;
+        flare::rpc::Channel channel;
+        flare::rpc::ChannelOptions options;
         options.protocol = "http";
         options.timeout_ms = 300;
         options.enable_circuit_breaker = true;
@@ -1054,7 +1054,7 @@ namespace {
         test::EchoService_Stub stub(&channel);
         {
             // trigger one server to health check
-            brpc::Controller cntl;
+            flare::rpc::Controller cntl;
             stub.Echo(&cntl, &req, &res, NULL);
         }
         // This sleep make one server revived 700ms earlier than the other server, which
@@ -1062,20 +1062,20 @@ namespace {
         bthread_usleep(700000);
         {
             // trigger the other server to health check
-            brpc::Controller cntl;
+            flare::rpc::Controller cntl;
             stub.Echo(&cntl, &req, &res, NULL);
         }
 
         flare::base::end_point point(flare::base::IP_ANY, 7777);
-        brpc::Server server;
+        flare::rpc::Server server;
         EchoServiceImpl service;
-        ASSERT_EQ(0, server.AddService(&service, brpc::SERVER_DOESNT_OWN_SERVICE));
+        ASSERT_EQ(0, server.AddService(&service, flare::rpc::SERVER_DOESNT_OWN_SERVICE));
         ASSERT_EQ(0, server.Start(point, NULL));
 
         flare::base::end_point point2(flare::base::IP_ANY, 7778);
-        brpc::Server server2;
+        flare::rpc::Server server2;
         EchoServiceImpl service2;
-        ASSERT_EQ(0, server2.AddService(&service2, brpc::SERVER_DOESNT_OWN_SERVICE));
+        ASSERT_EQ(0, server2.AddService(&service2, flare::rpc::SERVER_DOESNT_OWN_SERVICE));
         ASSERT_EQ(0, server2.Start(point2, NULL));
 
         int64_t start_ms = flare::base::gettimeofday_ms();

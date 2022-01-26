@@ -46,9 +46,9 @@ namespace bthread {
     }  // namespace anonymous
 
     struct ExecutionQueueVars {
-        bvar::Adder<int64_t> running_task_count;
-        bvar::Adder<int64_t> execq_count;
-        bvar::Adder<int64_t> execq_active_count;
+        flare::variable::Adder<int64_t> running_task_count;
+        flare::variable::Adder<int64_t> execq_count;
+        flare::variable::Adder<int64_t> execq_active_count;
 
         ExecutionQueueVars();
     };

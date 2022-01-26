@@ -15,7 +15,7 @@
 // specific language governing permissions and limitations
 // under the License.
 
-// brpc - A framework to host and access services throughout Baidu.
+
 
 // Date: Sun Jul 13 15:04:18 CST 2014
 
@@ -26,13 +26,13 @@
 #include <gflags/gflags.h>
 #include <google/protobuf/descriptor.h>
 #include "flare/base/time.h"
-#include "flare/brpc/socket.h"
-#include "flare/brpc/policy/most_common_message.h"
-#include "flare/brpc/controller.h"
+#include "flare/rpc/socket.h"
+#include "flare/rpc/policy/most_common_message.h"
+#include "flare/rpc/controller.h"
 
-#include "flare/brpc/esp_message.h"
-#include "flare/brpc/policy/esp_protocol.h"
-#include "flare/brpc/policy/esp_authenticator.h"
+#include "flare/rpc/esp_message.h"
+#include "flare/rpc/policy/esp_protocol.h"
+#include "flare/rpc/policy/esp_authenticator.h"
 
 int main(int argc, char* argv[]) {
     testing::InitGoogleTest(&argc, argv);
@@ -54,19 +54,19 @@ class EspTest : public ::testing::Test{
 protected:
     EspTest() {
         EXPECT_EQ(0, pipe(_pipe_fds));
-        brpc::SocketId id;
-        brpc::SocketOptions options;
+        flare::rpc::SocketId id;
+        flare::rpc::SocketOptions options;
         options.fd = _pipe_fds[1];
-        EXPECT_EQ(0, brpc::Socket::Create(options, &id));
-        EXPECT_EQ(0, brpc::Socket::Address(id, &_socket));
+        EXPECT_EQ(0, flare::rpc::Socket::Create(options, &id));
+        EXPECT_EQ(0, flare::rpc::Socket::Address(id, &_socket));
     };
 
     virtual ~EspTest() {};
     virtual void SetUp() {};
     virtual void TearDown() {};
 
-    void WriteResponse(brpc::Controller& cntl, int msg) {
-        brpc::EspMessage req;
+    void WriteResponse(flare::rpc::Controller& cntl, int msg) {
+        flare::rpc::EspMessage req;
     
         req.head.to.stub = STUB;
         req.head.msg = msg;
@@ -74,21 +74,21 @@ protected:
         req.body.append(EXP_RESPONSE);
     
         flare::io::IOBuf req_buf;
-        brpc::policy::SerializeEspRequest(&req_buf, &cntl, &req);
+        flare::rpc::policy::SerializeEspRequest(&req_buf, &cntl, &req);
     
         flare::io::IOBuf packet_buf;
-        brpc::policy::PackEspRequest(&packet_buf, NULL, cntl.call_id().value, NULL, &cntl, req_buf, NULL);
+        flare::rpc::policy::PackEspRequest(&packet_buf, NULL, cntl.call_id().value, NULL, &cntl, req_buf, NULL);
     
         packet_buf.cut_into_file_descriptor(_pipe_fds[1], packet_buf.size());
     }
 
     int _pipe_fds[2];
-    brpc::SocketUniquePtr _socket;
+    flare::rpc::SocketUniquePtr _socket;
 };
 
 TEST_F(EspTest, complete_flow) {
-    brpc::EspMessage req;
-    brpc::EspMessage res;
+    flare::rpc::EspMessage req;
+    flare::rpc::EspMessage res;
 
     req.head.to.stub = STUB;
     req.head.msg = MSG;
@@ -96,17 +96,17 @@ TEST_F(EspTest, complete_flow) {
     req.body.append(EXP_REQUEST);
 
     flare::io::IOBuf req_buf;
-    brpc::Controller cntl;
+    flare::rpc::Controller cntl;
     cntl._response = &res;
-    ASSERT_EQ(0, brpc::Socket::Address(_socket->id(), &cntl._current_call.sending_sock));
+    ASSERT_EQ(0, flare::rpc::Socket::Address(_socket->id(), &cntl._current_call.sending_sock));
 
-    brpc::policy::SerializeEspRequest(&req_buf, &cntl, &req);
+    flare::rpc::policy::SerializeEspRequest(&req_buf, &cntl, &req);
     ASSERT_FALSE(cntl.Failed());
     ASSERT_EQ(sizeof(req.head) + req.body.size(), req_buf.size());
 
-    const brpc::Authenticator* auth = brpc::policy::global_esp_authenticator();
+    const flare::rpc::Authenticator* auth = flare::rpc::policy::global_esp_authenticator();
     flare::io::IOBuf packet_buf;
-    brpc::policy::PackEspRequest(&packet_buf, NULL, cntl.call_id().value, NULL, &cntl, req_buf, auth);
+    flare::rpc::policy::PackEspRequest(&packet_buf, NULL, cntl.call_id().value, NULL, &cntl, req_buf, auth);
 
     std::string auth_str;
     auth->GenerateCredential(&auth_str);
@@ -119,38 +119,38 @@ TEST_F(EspTest, complete_flow) {
     flare::io::IOPortal response_buf;
     response_buf.append_from_file_descriptor(_pipe_fds[0], 1024);
 
-    brpc::ParseResult res_pr =
-            brpc::policy::ParseEspMessage(&response_buf, NULL, false, NULL);
-    ASSERT_EQ(brpc::PARSE_OK, res_pr.error());
+    flare::rpc::ParseResult res_pr =
+            flare::rpc::policy::ParseEspMessage(&response_buf, NULL, false, NULL);
+    ASSERT_EQ(flare::rpc::PARSE_OK, res_pr.error());
 
-    brpc::InputMessageBase* res_msg = res_pr.message();
+    flare::rpc::InputMessageBase* res_msg = res_pr.message();
     _socket->ReAddress(&res_msg->_socket);
 
-    brpc::policy::ProcessEspResponse(res_msg);
+    flare::rpc::policy::ProcessEspResponse(res_msg);
 
     ASSERT_FALSE(cntl.Failed());
     ASSERT_EQ(EXP_RESPONSE, res.body.to_string());
 }
 
 TEST_F(EspTest, wrong_response_head) {
-    brpc::EspMessage res;
-    brpc::Controller cntl;
+    flare::rpc::EspMessage res;
+    flare::rpc::Controller cntl;
     cntl._response = &res;
-    ASSERT_EQ(0, brpc::Socket::Address(_socket->id(), &cntl._current_call.sending_sock));
+    ASSERT_EQ(0, flare::rpc::Socket::Address(_socket->id(), &cntl._current_call.sending_sock));
 
     WriteResponse(cntl, WRONG_MSG);
 
     flare::io::IOPortal response_buf;
     response_buf.append_from_file_descriptor(_pipe_fds[0], 1024);
 
-    brpc::ParseResult res_pr =
-            brpc::policy::ParseEspMessage(&response_buf, NULL, false, NULL);
-    ASSERT_EQ(brpc::PARSE_OK, res_pr.error());
+    flare::rpc::ParseResult res_pr =
+            flare::rpc::policy::ParseEspMessage(&response_buf, NULL, false, NULL);
+    ASSERT_EQ(flare::rpc::PARSE_OK, res_pr.error());
 
-    brpc::InputMessageBase* res_msg = res_pr.message();
+    flare::rpc::InputMessageBase* res_msg = res_pr.message();
     _socket->ReAddress(&res_msg->_socket);
 
-    brpc::policy::ProcessEspResponse(res_msg);
+    flare::rpc::policy::ProcessEspResponse(res_msg);
 
     ASSERT_TRUE(cntl.Failed());
 }

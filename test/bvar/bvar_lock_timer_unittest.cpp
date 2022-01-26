@@ -23,7 +23,7 @@
 #endif
 #include <gtest/gtest.h>
 #include "flare/base/gperftools_profiler.h"
-#include "flare/bvar/utils/lock_timer.h"
+#include "flare/variable/utils/lock_timer.h"
 
 namespace {
 struct DummyMutex {};
@@ -50,10 +50,10 @@ public:
 } // namespace std
 
 namespace {
-using bvar::IntRecorder;
-using bvar::LatencyRecorder;
-using bvar::utils::MutexWithRecorder;
-using bvar::utils::MutexWithLatencyRecorder;
+using flare::variable::IntRecorder;
+using flare::variable::LatencyRecorder;
+using flare::variable::utils::MutexWithRecorder;
+using flare::variable::utils::MutexWithLatencyRecorder;
 
 class LockTimerTest : public testing::Test {
 };

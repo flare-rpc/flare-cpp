@@ -19,8 +19,8 @@
 
 #include <gflags/gflags.h>
 #include "flare/base/logging.h"
-#include <flare/brpc/server.h>
-#include <flare/brpc/restful.h>
+#include <flare/rpc/server.h>
+#include <flare/rpc/restful.h>
 #include "http.pb.h"
 
 DEFINE_int32(port, 8010, "TCP Port of this server");
@@ -46,15 +46,15 @@ public:
               google::protobuf::Closure* done) {
         // This object helps you to call done->Run() in RAII style. If you need
         // to process the request asynchronously, pass done_guard.release().
-        brpc::ClosureGuard done_guard(done);
+        flare::rpc::ClosureGuard done_guard(done);
         
-        brpc::Controller* cntl =
-            static_cast<brpc::Controller*>(cntl_base);
+        flare::rpc::Controller* cntl =
+            static_cast<flare::rpc::Controller*>(cntl_base);
         // Fill response.
         cntl->http_response().set_content_type("text/plain");
         flare::io::IOBufBuilder os;
         os << "queries:";
-        for (brpc::URI::QueryIterator it = cntl->http_request().uri().QueryBegin();
+        for (flare::rpc::URI::QueryIterator it = cntl->http_request().uri().QueryBegin();
                 it != cntl->http_request().uri().QueryEnd(); ++it) {
             os << ' ' << it->first << '=' << it->second;
         }
@@ -70,7 +70,7 @@ public:
     virtual ~FileServiceImpl() {};
 
     struct Args {
-        flare::container::intrusive_ptr<brpc::ProgressiveAttachment> pa;
+        flare::container::intrusive_ptr<flare::rpc::ProgressiveAttachment> pa;
     };
 
     static void* SendLargeFile(void* raw_args) {
@@ -94,9 +94,9 @@ public:
                         const HttpRequest*,
                         HttpResponse*,
                         google::protobuf::Closure* done) {
-        brpc::ClosureGuard done_guard(done);
-        brpc::Controller* cntl =
-            static_cast<brpc::Controller*>(cntl_base);
+        flare::rpc::ClosureGuard done_guard(done);
+        flare::rpc::Controller* cntl =
+            static_cast<flare::rpc::Controller*>(cntl_base);
         const std::string& filename = cntl->http_request().unresolved_path();
         if (filename == "largefile") {
             // Send the "largefile" with ProgressiveAttachment.
@@ -122,27 +122,27 @@ public:
                const HttpRequest*,
                HttpResponse*,
                google::protobuf::Closure* done) {
-        brpc::ClosureGuard done_guard(done);
-        brpc::Controller* cntl =
-            static_cast<brpc::Controller*>(cntl_base);
+        flare::rpc::ClosureGuard done_guard(done);
+        flare::rpc::Controller* cntl =
+            static_cast<flare::rpc::Controller*>(cntl_base);
         cntl->response_attachment().append("queue started");
     }
     void stop(google::protobuf::RpcController* cntl_base,
               const HttpRequest*,
               HttpResponse*,
               google::protobuf::Closure* done) {
-        brpc::ClosureGuard done_guard(done);
-        brpc::Controller* cntl =
-            static_cast<brpc::Controller*>(cntl_base);
+        flare::rpc::ClosureGuard done_guard(done);
+        flare::rpc::Controller* cntl =
+            static_cast<flare::rpc::Controller*>(cntl_base);
         cntl->response_attachment().append("queue stopped");
     }
     void getstats(google::protobuf::RpcController* cntl_base,
                   const HttpRequest*,
                   HttpResponse*,
                   google::protobuf::Closure* done) {
-        brpc::ClosureGuard done_guard(done);
-        brpc::Controller* cntl =
-            static_cast<brpc::Controller*>(cntl_base);
+        flare::rpc::ClosureGuard done_guard(done);
+        flare::rpc::Controller* cntl =
+            static_cast<flare::rpc::Controller*>(cntl_base);
         const std::string& unresolved_path = cntl->http_request().unresolved_path();
         if (unresolved_path.empty()) {
             cntl->response_attachment().append("Require a name after /stats");
@@ -160,7 +160,7 @@ int main(int argc, char* argv[]) {
     GFLAGS_NS::ParseCommandLineFlags(&argc, &argv, true);
 
     // Generally you only need one Server.
-    brpc::Server server;
+    flare::rpc::Server server;
 
     example::HttpServiceImpl http_svc;
     example::FileServiceImpl file_svc;
@@ -168,19 +168,19 @@ int main(int argc, char* argv[]) {
     
     // Add services into server. Notice the second parameter, because the
     // service is put on stack, we don't want server to delete it, otherwise
-    // use brpc::SERVER_OWNS_SERVICE.
+    // use flare::rpc::SERVER_OWNS_SERVICE.
     if (server.AddService(&http_svc,
-                          brpc::SERVER_DOESNT_OWN_SERVICE) != 0) {
+                          flare::rpc::SERVER_DOESNT_OWN_SERVICE) != 0) {
         LOG(ERROR) << "Fail to add http_svc";
         return -1;
     }
     if (server.AddService(&file_svc,
-                          brpc::SERVER_DOESNT_OWN_SERVICE) != 0) {
+                          flare::rpc::SERVER_DOESNT_OWN_SERVICE) != 0) {
         LOG(ERROR) << "Fail to add file_svc";
         return -1;
     }
     if (server.AddService(&queue_svc,
-                          brpc::SERVER_DOESNT_OWN_SERVICE,
+                          flare::rpc::SERVER_DOESNT_OWN_SERVICE,
                           "/v1/queue/start   => start,"
                           "/v1/queue/stop    => stop,"
                           "/v1/queue/stats/* => getstats") != 0) {
@@ -189,7 +189,7 @@ int main(int argc, char* argv[]) {
     }
 
     // Start the server.
-    brpc::ServerOptions options;
+    flare::rpc::ServerOptions options;
     options.idle_timeout_sec = FLAGS_idle_timeout_s;
     options.mutable_ssl_options()->default_cert.certificate = FLAGS_certificate;
     options.mutable_ssl_options()->default_cert.private_key = FLAGS_private_key;

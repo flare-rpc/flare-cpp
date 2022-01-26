@@ -24,7 +24,7 @@
 #include "flare/base/logging.h"
 #include "flare/base/strings.h"
 #include <flare/base/scoped_file.h>
-#include <flare/brpc/channel.h>
+#include <flare/rpc/channel.h>
 
 DEFINE_string(url_file, "", "The file containing urls to fetch. If this flag is"
                             " empty, read urls from stdin");
@@ -48,7 +48,7 @@ public:
     void Run();
 
 public:
-    brpc::Controller cntl;
+    flare::rpc::Controller cntl;
     AccessThreadArgs *args;
     std::string url;
 };
@@ -69,8 +69,8 @@ void OnHttpCallEnd::Run() {
 
 void *access_thread(void *void_args) {
     AccessThreadArgs *args = (AccessThreadArgs *) void_args;
-    brpc::ChannelOptions options;
-    options.protocol = brpc::PROTOCOL_HTTP;
+    flare::rpc::ChannelOptions options;
+    options.protocol = flare::rpc::PROTOCOL_HTTP;
     options.connect_timeout_ms = FLAGS_timeout_ms / 2;
     options.timeout_ms = FLAGS_timeout_ms/*milliseconds*/;
     options.max_retry = FLAGS_max_retry;
@@ -78,7 +78,7 @@ void *access_thread(void *void_args) {
 
     for (size_t i = args->offset; i < args->url_list->size(); i += FLAGS_thread_num) {
         std::string const &url = (*args->url_list)[i];
-        brpc::Channel channel;
+        flare::rpc::Channel channel;
         if (channel.Init(url.c_str(), &options) != 0) {
             LOG(ERROR) << "Fail to create channel to url=" << url;
             FLARE_SCOPED_LOCK(args->output_queue_mutex);

@@ -70,7 +70,6 @@ file(COPY ${PROJECT_SOURCE_DIR}/test/cert2.key DESTINATION ${CMAKE_CURRENT_BINAR
 file(COPY ${PROJECT_SOURCE_DIR}/test/cert1.crt DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 file(COPY ${PROJECT_SOURCE_DIR}/test/cert2.crt DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 file(COPY ${PROJECT_SOURCE_DIR}/test/jsonout DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
-file(COPY ${PROJECT_SOURCE_DIR}/test/run_tests.sh DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 
 set(IO_TEST_SRC
         ${PROJECT_SOURCE_DIR}/test/io/iobuf_unittest.cc
@@ -125,7 +124,7 @@ add_subdirectory(bvar)
 # bthread tests
 add_subdirectory(bthread)
 
-# brpc tests
+# rpc tests
 add_subdirectory(rpc)
 
 #

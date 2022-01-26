@@ -24,7 +24,7 @@
 #include <iostream>
 #include <sstream>
 #include "flare/base/time.h"
-#include "flare/bvar/bvar.h"
+#include "flare/variable/all.h"
 #include <gtest/gtest.h>
 
 namespace {
@@ -33,12 +33,12 @@ protected:
     void SetUp() {
     }
     void TearDown() {
-        ASSERT_EQ(0UL, bvar::Variable::count_exposed());
+        ASSERT_EQ(0UL, flare::variable::Variable::count_exposed());
     }
 };
 
 TEST_F(StatusTest, status) {
-    bvar::Status<std::string> st1;
+    flare::variable::Status<std::string> st1;
     st1.set_value("hello %d", 9);
 #ifdef BAIDU_INTERNAL
     boost::any v1;
@@ -46,82 +46,82 @@ TEST_F(StatusTest, status) {
     ASSERT_EQ("hello 9", boost::any_cast<std::string>(v1));
 #endif
     ASSERT_EQ(0, st1.expose("var1"));
-    ASSERT_EQ("hello 9", bvar::Variable::describe_exposed("var1"));
-    ASSERT_EQ("\"hello 9\"", bvar::Variable::describe_exposed("var1", true));
+    ASSERT_EQ("hello 9", flare::variable::Variable::describe_exposed("var1"));
+    ASSERT_EQ("\"hello 9\"", flare::variable::Variable::describe_exposed("var1", true));
     std::vector<std::string> vars;
-    bvar::Variable::list_exposed(&vars);
+    flare::variable::Variable::list_exposed(&vars);
     ASSERT_EQ(1UL, vars.size());
     ASSERT_EQ("var1", vars[0]);
-    ASSERT_EQ(1UL, bvar::Variable::count_exposed());
+    ASSERT_EQ(1UL, flare::variable::Variable::count_exposed());
 
-    bvar::Status<std::string> st2;
+    flare::variable::Status<std::string> st2;
     st2.set_value("world %d", 10);
     ASSERT_EQ(-1, st2.expose("var1"));
-    ASSERT_EQ(1UL, bvar::Variable::count_exposed());
+    ASSERT_EQ(1UL, flare::variable::Variable::count_exposed());
     ASSERT_EQ("world 10", st2.get_description());
-    ASSERT_EQ("hello 9", bvar::Variable::describe_exposed("var1"));
-    ASSERT_EQ(1UL, bvar::Variable::count_exposed());
+    ASSERT_EQ("hello 9", flare::variable::Variable::describe_exposed("var1"));
+    ASSERT_EQ(1UL, flare::variable::Variable::count_exposed());
 
     ASSERT_TRUE(st1.hide());
-    ASSERT_EQ(0UL, bvar::Variable::count_exposed());
-    ASSERT_EQ("", bvar::Variable::describe_exposed("var1"));
+    ASSERT_EQ(0UL, flare::variable::Variable::count_exposed());
+    ASSERT_EQ("", flare::variable::Variable::describe_exposed("var1"));
     ASSERT_EQ(0, st1.expose("var1"));
-    ASSERT_EQ(1UL, bvar::Variable::count_exposed());
+    ASSERT_EQ(1UL, flare::variable::Variable::count_exposed());
     ASSERT_EQ("hello 9",
-              bvar::Variable::describe_exposed("var1"));
+              flare::variable::Variable::describe_exposed("var1"));
     
     ASSERT_EQ(0, st2.expose("var2"));
-    ASSERT_EQ(2UL, bvar::Variable::count_exposed());
-    ASSERT_EQ("hello 9", bvar::Variable::describe_exposed("var1"));
-    ASSERT_EQ("world 10", bvar::Variable::describe_exposed("var2"));
-    bvar::Variable::list_exposed(&vars);
+    ASSERT_EQ(2UL, flare::variable::Variable::count_exposed());
+    ASSERT_EQ("hello 9", flare::variable::Variable::describe_exposed("var1"));
+    ASSERT_EQ("world 10", flare::variable::Variable::describe_exposed("var2"));
+    flare::variable::Variable::list_exposed(&vars);
     ASSERT_EQ(2UL, vars.size());
     ASSERT_EQ("var1", vars[0]);
     ASSERT_EQ("var2", vars[1]);
 
     ASSERT_TRUE(st2.hide());
-    ASSERT_EQ(1UL, bvar::Variable::count_exposed());
-    ASSERT_EQ("", bvar::Variable::describe_exposed("var2"));
-    bvar::Variable::list_exposed(&vars);
+    ASSERT_EQ(1UL, flare::variable::Variable::count_exposed());
+    ASSERT_EQ("", flare::variable::Variable::describe_exposed("var2"));
+    flare::variable::Variable::list_exposed(&vars);
     ASSERT_EQ(1UL, vars.size());
     ASSERT_EQ("var1", vars[0]);
 
     st2.expose("var2 again");
-    ASSERT_EQ("world 10", bvar::Variable::describe_exposed("var2_again"));
-    bvar::Variable::list_exposed(&vars);
+    ASSERT_EQ("world 10", flare::variable::Variable::describe_exposed("var2_again"));
+    flare::variable::Variable::list_exposed(&vars);
     ASSERT_EQ(2UL, vars.size());
     ASSERT_EQ("var1", vars[0]);
     ASSERT_EQ("var2_again", vars[1]);
-    ASSERT_EQ(2UL, bvar::Variable::count_exposed());        
+    ASSERT_EQ(2UL, flare::variable::Variable::count_exposed());
 
-    bvar::Status<std::string> st3("var3", "foobar");
+    flare::variable::Status<std::string> st3("var3", "foobar");
     ASSERT_EQ("var3", st3.name());
-    ASSERT_EQ(3UL, bvar::Variable::count_exposed());
-    ASSERT_EQ("foobar", bvar::Variable::describe_exposed("var3"));
-    bvar::Variable::list_exposed(&vars);
+    ASSERT_EQ(3UL, flare::variable::Variable::count_exposed());
+    ASSERT_EQ("foobar", flare::variable::Variable::describe_exposed("var3"));
+    flare::variable::Variable::list_exposed(&vars);
     ASSERT_EQ(3UL, vars.size());
     ASSERT_EQ("var1", vars[0]);
     ASSERT_EQ("var3", vars[1]);
     ASSERT_EQ("var2_again", vars[2]);
-    ASSERT_EQ(3UL, bvar::Variable::count_exposed());
+    ASSERT_EQ(3UL, flare::variable::Variable::count_exposed());
 
-    bvar::Status<int> st4("var4", 9);
+    flare::variable::Status<int> st4("var4", 9);
     ASSERT_EQ("var4", st4.name());
-    ASSERT_EQ(4UL, bvar::Variable::count_exposed());
+    ASSERT_EQ(4UL, flare::variable::Variable::count_exposed());
 #ifdef BAIDU_INTERNAL
     boost::any v4;
     st4.get_value(&v4);
     ASSERT_EQ(9, boost::any_cast<int>(v4));
 #endif
-    ASSERT_EQ("9", bvar::Variable::describe_exposed("var4"));
-    bvar::Variable::list_exposed(&vars);
+    ASSERT_EQ("9", flare::variable::Variable::describe_exposed("var4"));
+    flare::variable::Variable::list_exposed(&vars);
     ASSERT_EQ(4UL, vars.size());
     ASSERT_EQ("var1", vars[0]);
     ASSERT_EQ("var3", vars[1]);
     ASSERT_EQ("var4", vars[2]);
     ASSERT_EQ("var2_again", vars[3]);
 
-    bvar::Status<void*> st5((void*)19UL);
+    flare::variable::Status<void*> st5((void*)19UL);
     LOG(INFO) << st5;
 #ifdef BAIDU_INTERNAL
     boost::any v5;
@@ -140,7 +140,7 @@ int64_t print2(void* arg) {
 }
 
 TEST_F(StatusTest, passive_status) {
-    bvar::BasicPassiveStatus<std::string> st1("var11", print1, (void*)9UL);
+    flare::variable::BasicPassiveStatus<std::string> st1("var11", print1, (void*)9UL);
     LOG(INFO) << st1;
 #ifdef BAIDU_INTERNAL
     boost::any v1;
@@ -148,16 +148,16 @@ TEST_F(StatusTest, passive_status) {
     ASSERT_EQ("0x9", boost::any_cast<std::string>(v1));
 #endif
     std::ostringstream ss;
-    ASSERT_EQ(0, bvar::Variable::describe_exposed("var11", ss));
+    ASSERT_EQ(0, flare::variable::Variable::describe_exposed("var11", ss));
     ASSERT_EQ("0x9", ss.str());
     std::vector<std::string> vars;
-    bvar::Variable::list_exposed(&vars);
+    flare::variable::Variable::list_exposed(&vars);
     ASSERT_EQ(1UL, vars.size());
     ASSERT_EQ("var11", vars[0]);
-    ASSERT_EQ(1UL, bvar::Variable::count_exposed());
+    ASSERT_EQ(1UL, flare::variable::Variable::count_exposed());
 
     int64_t tmp2 = 9;
-    bvar::BasicPassiveStatus<int64_t> st2("var12", print2, &tmp2);
+    flare::variable::BasicPassiveStatus<int64_t> st2("var12", print2, &tmp2);
 #ifdef BAIDU_INTERNAL
     boost::any v2;
     st2.get_value(&v2);
@@ -170,13 +170,13 @@ TEST_F(StatusTest, passive_status) {
     ASSERT_EQ(9, boost::any_cast<int64_t>(v2));
 #endif
     ss.str("");
-    ASSERT_EQ(0, bvar::Variable::describe_exposed("var12", ss));
+    ASSERT_EQ(0, flare::variable::Variable::describe_exposed("var12", ss));
     ASSERT_EQ("9", ss.str());
-    bvar::Variable::list_exposed(&vars);
+    flare::variable::Variable::list_exposed(&vars);
     ASSERT_EQ(2UL, vars.size());
     ASSERT_EQ("var11", vars[0]);
     ASSERT_EQ("var12", vars[1]);
-    ASSERT_EQ(2UL, bvar::Variable::count_exposed());
+    ASSERT_EQ(2UL, flare::variable::Variable::count_exposed());
 }
 
 struct Foo {
@@ -193,7 +193,7 @@ std::ostream& operator<<(std::ostream& os, const Foo& f) {
 }
 
 TEST_F(StatusTest, non_primitive) {
-    bvar::Status<Foo> st;
+    flare::variable::Status<Foo> st;
     ASSERT_EQ(0, st.get_value().x);
     st.set_value(Foo(1));
     ASSERT_EQ(1, st.get_value().x);

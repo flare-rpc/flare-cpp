@@ -17,7 +17,7 @@
 
 #include <limits>                           //std::numeric_limits
 
-#include "flare/bvar/reducer.h"
+#include "flare/variable/reducer.h"
 #include "flare/base/time.h"
 #include "flare/base/strings.h"
 #include "flare/base/string_splitter.h"
@@ -32,14 +32,14 @@ protected:
 };
 
 TEST_F(ReducerTest, atomicity) {
-    ASSERT_EQ(sizeof(int32_t), sizeof(bvar::detail::ElementContainer<int32_t>));
-    ASSERT_EQ(sizeof(int64_t), sizeof(bvar::detail::ElementContainer<int64_t>));
-    ASSERT_EQ(sizeof(float), sizeof(bvar::detail::ElementContainer<float>));
-    ASSERT_EQ(sizeof(double), sizeof(bvar::detail::ElementContainer<double>));
+    ASSERT_EQ(sizeof(int32_t), sizeof(flare::variable::detail::ElementContainer<int32_t>));
+    ASSERT_EQ(sizeof(int64_t), sizeof(flare::variable::detail::ElementContainer<int64_t>));
+    ASSERT_EQ(sizeof(float), sizeof(flare::variable::detail::ElementContainer<float>));
+    ASSERT_EQ(sizeof(double), sizeof(flare::variable::detail::ElementContainer<double>));
 }
 
 TEST_F(ReducerTest, adder) {    
-    bvar::Adder<uint32_t> reducer1;
+    flare::variable::Adder<uint32_t> reducer1;
     ASSERT_TRUE(reducer1.valid());
     reducer1 << 2 << 4;
     ASSERT_EQ(6ul, reducer1.get_value());
@@ -49,12 +49,12 @@ TEST_F(ReducerTest, adder) {
     ASSERT_EQ(6u, boost::any_cast<unsigned int>(v1));
 #endif
 
-    bvar::Adder<double> reducer2;
+    flare::variable::Adder<double> reducer2;
     ASSERT_TRUE(reducer2.valid());
     reducer2 << 2.0 << 4.0;
     ASSERT_DOUBLE_EQ(6.0, reducer2.get_value());
 
-    bvar::Adder<int> reducer3;
+    flare::variable::Adder<int> reducer3;
     ASSERT_TRUE(reducer3.valid());
     reducer3 << -9 << 1 << 0 << 3;
     ASSERT_EQ(-5, reducer3.get_value());
@@ -63,7 +63,7 @@ TEST_F(ReducerTest, adder) {
 const size_t OPS_PER_THREAD = 500000;
 
 static void *thread_counter(void *arg) {
-    bvar::Adder<uint64_t> *reducer = (bvar::Adder<uint64_t> *)arg;
+    flare::variable::Adder<uint64_t> *reducer = (flare::variable::Adder<uint64_t> *)arg;
     flare::base::stop_watcher timer;
     timer.start();
     for (size_t i = 0; i < OPS_PER_THREAD; ++i) {
@@ -102,7 +102,7 @@ static long start_perf_test_with_atomic(size_t num_thread) {
 }
 
 static long start_perf_test_with_adder(size_t num_thread) {
-    bvar::Adder<uint64_t> reducer;
+    flare::variable::Adder<uint64_t> reducer;
     EXPECT_TRUE(reducer.valid());
     pthread_t threads[num_thread];
     for (size_t i = 0; i < num_thread; ++i) {
@@ -133,7 +133,7 @@ TEST_F(ReducerTest, perf) {
 }
 
 TEST_F(ReducerTest, Min) {
-    bvar::Miner<uint64_t> reducer;
+    flare::variable::Miner<uint64_t> reducer;
     ASSERT_EQ(std::numeric_limits<uint64_t>::max(), reducer.get_value());
     reducer << 10 << 20;
     ASSERT_EQ(10ul, reducer.get_value());
@@ -144,7 +144,7 @@ TEST_F(ReducerTest, Min) {
     reducer << 0;
     ASSERT_EQ(0ul, reducer.get_value());
 
-    bvar::Miner<int> reducer2;
+    flare::variable::Miner<int> reducer2;
     ASSERT_EQ(std::numeric_limits<int>::max(), reducer2.get_value());
     reducer2 << 10 << 20;
     ASSERT_EQ(10, reducer2.get_value());
@@ -159,7 +159,7 @@ TEST_F(ReducerTest, Min) {
 }
 
 TEST_F(ReducerTest, max) {
-    bvar::Maxer<uint64_t> reducer;
+    flare::variable::Maxer<uint64_t> reducer;
     ASSERT_EQ(std::numeric_limits<uint64_t>::min(), reducer.get_value());
     ASSERT_TRUE(reducer.valid());
     reducer << 20 << 10;
@@ -169,7 +169,7 @@ TEST_F(ReducerTest, max) {
     reducer << 0;
     ASSERT_EQ(30ul, reducer.get_value());
 
-    bvar::Maxer<int> reducer2;
+    flare::variable::Maxer<int> reducer2;
     ASSERT_EQ(std::numeric_limits<int>::min(), reducer2.get_value());
     ASSERT_TRUE(reducer2.valid());
     reducer2 << 20 << 10;
@@ -182,7 +182,7 @@ TEST_F(ReducerTest, max) {
     ASSERT_EQ(std::numeric_limits<int>::max(), reducer2.get_value());
 }
 
-bvar::Adder<long> g_a;
+flare::variable::Adder<long> g_a;
 
 TEST_F(ReducerTest, global) {
     ASSERT_TRUE(g_a.valid());
@@ -190,18 +190,18 @@ TEST_F(ReducerTest, global) {
 }
 
 void ReducerTest_window() {
-    bvar::Adder<int> c1;
-    bvar::Maxer<int> c2;
-    bvar::Miner<int> c3;
-    bvar::Window<bvar::Adder<int> > w1(&c1, 1);
-    bvar::Window<bvar::Adder<int> > w2(&c1, 2);
-    bvar::Window<bvar::Adder<int> > w3(&c1, 3);
-    bvar::Window<bvar::Maxer<int> > w4(&c2, 1);
-    bvar::Window<bvar::Maxer<int> > w5(&c2, 2);
-    bvar::Window<bvar::Maxer<int> > w6(&c2, 3);
-    bvar::Window<bvar::Miner<int> > w7(&c3, 1);
-    bvar::Window<bvar::Miner<int> > w8(&c3, 2);
-    bvar::Window<bvar::Miner<int> > w9(&c3, 3);
+    flare::variable::Adder<int> c1;
+    flare::variable::Maxer<int> c2;
+    flare::variable::Miner<int> c3;
+    flare::variable::Window<flare::variable::Adder<int> > w1(&c1, 1);
+    flare::variable::Window<flare::variable::Adder<int> > w2(&c1, 2);
+    flare::variable::Window<flare::variable::Adder<int> > w3(&c1, 3);
+    flare::variable::Window<flare::variable::Maxer<int> > w4(&c2, 1);
+    flare::variable::Window<flare::variable::Maxer<int> > w5(&c2, 2);
+    flare::variable::Window<flare::variable::Maxer<int> > w6(&c2, 3);
+    flare::variable::Window<flare::variable::Miner<int> > w7(&c3, 1);
+    flare::variable::Window<flare::variable::Miner<int> > w8(&c3, 2);
+    flare::variable::Window<flare::variable::Miner<int> > w9(&c3, 3);
 
     const int N = 6000;
     int count = 0;
@@ -250,7 +250,7 @@ std::ostream& operator<<(std::ostream& os, const Foo& f) {
 }
 
 TEST_F(ReducerTest, non_primitive) {
-    bvar::Adder<Foo> adder;
+    flare::variable::Adder<Foo> adder;
     adder << Foo(2) << Foo(3) << Foo(4);
     ASSERT_EQ(9, adder.get_value().x);
 }
@@ -261,7 +261,7 @@ struct StringAppenderResult {
 };
 
 static void* string_appender(void* arg) {
-    bvar::Adder<std::string>* cater = (bvar::Adder<std::string>*)arg;
+    flare::variable::Adder<std::string>* cater = (flare::variable::Adder<std::string>*)arg;
     int count = 0;
     std::string id = flare::base::string_printf("%lld", (long long)pthread_self());
     std::string tmp = "a";
@@ -280,7 +280,7 @@ static void* string_appender(void* arg) {
 }
 
 TEST_F(ReducerTest, non_primitive_mt) {
-    bvar::Adder<std::string> cater;
+    flare::variable::Adder<std::string> cater;
     pthread_t th[8];
     g_stop = false;
     for (size_t i = 0; i < FLARE_ARRAY_SIZE(th); ++i) {
@@ -311,8 +311,8 @@ TEST_F(ReducerTest, non_primitive_mt) {
 }
 
 TEST_F(ReducerTest, simple_window) {
-    bvar::Adder<int64_t> a;
-    bvar::Window<bvar::Adder<int64_t> > w(&a, 10);
+    flare::variable::Adder<int64_t> a;
+    flare::variable::Window<flare::variable::Adder<int64_t> > w(&a, 10);
     a << 100;
     sleep(3);
     const int64_t v = w.get_value();

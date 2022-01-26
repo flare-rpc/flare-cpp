@@ -15,7 +15,7 @@
 // specific language governing permissions and limitations
 // under the License.
 
-// brpc - A framework to host and access services throughout Baidu.
+
 
 // Date: Sun Jul 13 15:04:18 CST 2014
 
@@ -24,7 +24,7 @@
 #include <map>
 #include <gtest/gtest.h>
 #include "flare/base/time.h"
-#include "flare/brpc/extension.h"
+#include "flare/rpc/extension.h"
 
 class ExtensionTest : public ::testing::Test{
 protected:
@@ -37,12 +37,12 @@ protected:
     };
 };
 
-inline brpc::Extension<const int>* ConstIntExtension() {
-    return brpc::Extension<const int>::instance();
+inline flare::rpc::Extension<const int>* ConstIntExtension() {
+    return flare::rpc::Extension<const int>::instance();
 }
 
-inline brpc::Extension<int>* IntExtension() {
-    return brpc::Extension<int>::instance();
+inline flare::rpc::Extension<int>* IntExtension() {
+    return flare::rpc::Extension<int>::instance();
 }
 
 

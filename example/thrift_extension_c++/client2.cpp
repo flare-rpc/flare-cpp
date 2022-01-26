@@ -22,10 +22,10 @@
 #include <gflags/gflags.h>
 #include <flare/bthread/bthread.h>
 #include "flare/base/logging.h"
-#include <flare/brpc/server.h>
-#include <flare/brpc/channel.h>
-#include <flare/brpc/thrift_message.h>
-#include <flare/bvar/bvar.h>
+#include <flare/rpc/server.h>
+#include <flare/rpc/channel.h>
+#include <flare/rpc/thrift_message.h>
+#include <flare/variable/all.h>
 
 DEFINE_int32(thread_num, 50, "Number of threads to send requests");
 DEFINE_bool(use_bthread, false, "Use bthread to send requests");
@@ -40,20 +40,20 @@ DEFINE_int32(dummy_port, -1, "Launch dummy server at this port");
 
 std::string g_request;
 
-bvar::LatencyRecorder g_latency_recorder("client");
-bvar::Adder<int> g_error_count("client_error_count");
+flare::variable::LatencyRecorder g_latency_recorder("client");
+flare::variable::Adder<int> g_error_count("client_error_count");
 
 static void* sender(void* arg) {
     // Normally, you should not call a Channel directly, but instead construct
     // a stub Service wrapping it. stub can be shared by all threads as well.
-    brpc::ThriftStub stub(static_cast<brpc::Channel*>(arg));
+    flare::rpc::ThriftStub stub(static_cast<flare::rpc::Channel*>(arg));
 
-    while (!brpc::IsAskedToQuit()) {
+    while (!flare::rpc::IsAskedToQuit()) {
         // We will receive response synchronously, safe to put variables
         // on stack.
         example::EchoRequest req;
         example::EchoResponse res;
-        brpc::Controller cntl;
+        flare::rpc::Controller cntl;
         
         req.__set_data(g_request);
         req.__set_need_by_proxy(10);
@@ -65,7 +65,7 @@ static void* sender(void* arg) {
             g_latency_recorder << cntl.latency_us();
         } else {
             g_error_count << 1; 
-            CHECK(brpc::IsAskedToQuit() || !FLAGS_dont_fail)
+            CHECK(flare::rpc::IsAskedToQuit() || !FLAGS_dont_fail)
                 << "error=" << cntl.ErrorText() << " latency=" << cntl.latency_us();
             // We can't connect to the server, sleep a while. Notice that this
             // is a specific sleeping to prevent this thread from spinning too
@@ -83,11 +83,11 @@ int main(int argc, char* argv[]) {
 
     // A Channel represents a communication line to a Server. Notice that 
     // Channel is thread-safe and can be shared by all threads in your program.
-    brpc::Channel channel;
+    flare::rpc::Channel channel;
     
     // Initialize the channel, NULL means using default options.
-    brpc::ChannelOptions options;
-    options.protocol = brpc::PROTOCOL_THRIFT;
+    flare::rpc::ChannelOptions options;
+    options.protocol = flare::rpc::PROTOCOL_THRIFT;
     options.connection_type = FLAGS_connection_type;
     options.connect_timeout_ms = std::min(FLAGS_timeout_ms / 2, 100);
     options.timeout_ms = FLAGS_timeout_ms;
@@ -104,7 +104,7 @@ int main(int argc, char* argv[]) {
     g_request.resize(FLAGS_request_size, 'r');
 
     if (FLAGS_dummy_port >= 0) {
-        brpc::StartDummyServerAt(FLAGS_dummy_port);
+        flare::rpc::StartDummyServerAt(FLAGS_dummy_port);
     }
 
     std::vector<bthread_t> bids;
@@ -128,7 +128,7 @@ int main(int argc, char* argv[]) {
         }
     }
 
-    while (!brpc::IsAskedToQuit()) {
+    while (!flare::rpc::IsAskedToQuit()) {
         sleep(1);
         LOG(INFO) << "Sending EchoRequest at qps=" << g_latency_recorder.qps(1)
                   << " latency=" << g_latency_recorder.latency(1);

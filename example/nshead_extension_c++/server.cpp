@@ -19,25 +19,25 @@
 
 #include <gflags/gflags.h>
 #include "flare/base/logging.h"
-#include <flare/brpc/server.h>
-#include <flare/brpc/nshead_service.h>
+#include <flare/rpc/server.h>
+#include <flare/rpc/nshead_service.h>
 
 DEFINE_int32(port, 8010, "TCP Port of this server");
 DEFINE_int32(idle_timeout_s, -1, "Connection will be closed if there is no "
              "read/write operations during the last `idle_timeout_s'");
 DEFINE_int32(max_concurrency, 0, "Limit of request processing in parallel");
 
-// Adapt your own nshead-based protocol to use brpc 
-class MyNsheadProtocol : public brpc::NsheadService {
+// Adapt your own nshead-based protocol to use flare
+class MyNsheadProtocol : public flare::rpc::NsheadService {
 public:
-    void ProcessNsheadRequest(const brpc::Server&,
-                              brpc::Controller* cntl,
-                              const brpc::NsheadMessage& request,
-                              brpc::NsheadMessage* response, 
-                              brpc::NsheadClosure* done) {
+    void ProcessNsheadRequest(const flare::rpc::Server&,
+                              flare::rpc::Controller* cntl,
+                              const flare::rpc::NsheadMessage& request,
+                              flare::rpc::NsheadMessage* response,
+                              flare::rpc::NsheadClosure* done) {
         // This object helps you to call done->Run() in RAII style. If you need
         // to process the request asynchronously, pass done_guard.release().
-        brpc::ClosureGuard done_guard(done);
+        flare::rpc::ClosureGuard done_guard(done);
 
         if (cntl->Failed()) {
             // NOTE: You can send back a response containing error information
@@ -53,8 +53,8 @@ int main(int argc, char* argv[]) {
     // Parse gflags. We recommend you to use gflags as well.
     GFLAGS_NS::ParseCommandLineFlags(&argc, &argv, true);
 
-    brpc::Server server;
-    brpc::ServerOptions options;
+    flare::rpc::Server server;
+    flare::rpc::ServerOptions options;
     options.nshead_service = new MyNsheadProtocol;
     options.idle_timeout_sec = FLAGS_idle_timeout_s;
     options.max_concurrency = FLAGS_max_concurrency;

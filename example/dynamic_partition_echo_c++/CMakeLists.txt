@@ -37,7 +37,7 @@ find_path(GPERFTOOLS_INCLUDE_DIR NAMES gperftools/heap-profiler.h)
 find_library(GPERFTOOLS_LIBRARIES NAMES tcmalloc_and_profiler)
 include_directories(${GPERFTOOLS_INCLUDE_DIR})
 
-# Search for libthrift* by best effort. If it is not found and brpc is
+# Search for libthrift* by best effort. If it is not found and flare is
 # compiled with thrift protocol enabled, a link error would be reported.
 find_library(THRIFT_LIB NAMES thrift)
 if (NOT THRIFT_LIB)

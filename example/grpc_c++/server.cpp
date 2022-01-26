@@ -19,8 +19,8 @@
 
 #include <gflags/gflags.h>
 #include "flare/base/logging.h"
-#include <flare/brpc/server.h>
-#include <flare/brpc/restful.h>
+#include <flare/rpc/server.h>
+#include <flare/rpc/restful.h>
 #include "helloworld.pb.h"
 
 DEFINE_int32(port, 50051, "TCP Port of this server");
@@ -38,10 +38,10 @@ public:
                  const helloworld::HelloRequest* req,
                  helloworld::HelloReply* res,
                  google::protobuf::Closure* done) {
-        brpc::ClosureGuard done_guard(done);
-        brpc::Controller* cntl = static_cast<brpc::Controller*>(cntl_base);
+        flare::rpc::ClosureGuard done_guard(done);
+        flare::rpc::Controller* cntl = static_cast<flare::rpc::Controller*>(cntl_base);
         if (FLAGS_gzip) {
-            cntl->set_response_compress_type(brpc::COMPRESS_TYPE_GZIP);
+            cntl->set_response_compress_type(flare::rpc::COMPRESS_TYPE_GZIP);
         }
         res->set_message("Hello " + req->name());
     }
@@ -52,21 +52,21 @@ int main(int argc, char* argv[]) {
     GFLAGS_NS::ParseCommandLineFlags(&argc, &argv, true);
 
     // Generally you only need one Server.
-    brpc::Server server;
+    flare::rpc::Server server;
 
     GreeterImpl http_svc;
 
     // Add services into server. Notice the second parameter, because the
     // service is put on stack, we don't want server to delete it, otherwise
-    // use brpc::SERVER_OWNS_SERVICE.
+    // use flare::rpc::SERVER_OWNS_SERVICE.
     if (server.AddService(&http_svc,
-                          brpc::SERVER_DOESNT_OWN_SERVICE) != 0) {
+                          flare::rpc::SERVER_DOESNT_OWN_SERVICE) != 0) {
         LOG(ERROR) << "Fail to add http_svc";
         return -1;
     }
 
     // Start the server.
-    brpc::ServerOptions options;
+    flare::rpc::ServerOptions options;
     options.idle_timeout_sec = FLAGS_idle_timeout_s;
     if (server.Start(FLAGS_port, &options) != 0) {
         LOG(ERROR) << "Fail to start HttpServer";

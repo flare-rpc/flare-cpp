@@ -20,9 +20,9 @@
 #include <gflags/gflags.h>
 #include <flare/bthread/bthread.h>
 #include "flare/base/logging.h"
-#include <flare/brpc/channel.h>
-#include <flare/brpc/server.h>
-#include <flare/bvar/bvar.h>
+#include <flare/rpc/channel.h>
+#include <flare/rpc/server.h>
+#include <flare/variable/all.h>
 
 DEFINE_string(data, "", "POST this data to the http server");
 DEFINE_int32(thread_num, 50, "Number of threads to send requests");
@@ -36,21 +36,21 @@ DEFINE_bool(dont_fail, false, "Print fatal when some call failed");
 DEFINE_int32(dummy_port, -1, "Launch dummy server at this port");
 DEFINE_string(protocol, "http", "Client-side protocol");
 
-bvar::LatencyRecorder g_latency_recorder("client");
+flare::variable::LatencyRecorder g_latency_recorder("client");
 
 static void* sender(void* arg) {
-    brpc::Channel* channel = static_cast<brpc::Channel*>(arg);
+    flare::rpc::Channel* channel = static_cast<flare::rpc::Channel*>(arg);
 
-    while (!brpc::IsAskedToQuit()) {
+    while (!flare::rpc::IsAskedToQuit()) {
         // We will receive response synchronously, safe to put variables
         // on stack.
-        brpc::Controller cntl;
+        flare::rpc::Controller cntl;
 
         cntl.set_timeout_ms(FLAGS_timeout_ms/*milliseconds*/);
         cntl.set_max_retry(FLAGS_max_retry);
         cntl.http_request().uri() = FLAGS_url;
         if (!FLAGS_data.empty()) {
-            cntl.http_request().set_method(brpc::HTTP_METHOD_POST);
+            cntl.http_request().set_method(flare::rpc::HTTP_METHOD_POST);
             cntl.request_attachment().append(FLAGS_data);
         }
 
@@ -60,7 +60,7 @@ static void* sender(void* arg) {
         if (!cntl.Failed()) {
             g_latency_recorder << cntl.latency_us();
         } else {
-            CHECK(brpc::IsAskedToQuit() || !FLAGS_dont_fail)
+            CHECK(flare::rpc::IsAskedToQuit() || !FLAGS_dont_fail)
                 << "error=" << cntl.ErrorText() << " latency=" << cntl.latency_us();
             // We can't connect to the server, sleep a while. Notice that this
             // is a specific sleeping to prevent this thread from spinning too
@@ -78,13 +78,13 @@ int main(int argc, char* argv[]) {
 
     // A Channel represents a communication line to a Server. Notice that 
     // Channel is thread-safe and can be shared by all threads in your program.
-    brpc::Channel channel;
-    brpc::ChannelOptions options;
+    flare::rpc::Channel channel;
+    flare::rpc::ChannelOptions options;
     options.protocol = FLAGS_protocol;
     options.connection_type = FLAGS_connection_type;
     
     // Initialize the channel, NULL means using default options. 
-    // options, see `brpc/channel.h'.
+    // options, see `flare/rpc/channel.h'.
     if (channel.Init(FLAGS_url.c_str(), FLAGS_load_balancer.c_str(), &options) != 0) {
         LOG(ERROR) << "Fail to initialize channel";
         return -1;
@@ -112,10 +112,10 @@ int main(int argc, char* argv[]) {
     }
 
     if (FLAGS_dummy_port >= 0) {
-        brpc::StartDummyServerAt(FLAGS_dummy_port);
+        flare::rpc::StartDummyServerAt(FLAGS_dummy_port);
     }
 
-    while (!brpc::IsAskedToQuit()) {
+    while (!flare::rpc::IsAskedToQuit()) {
         sleep(1);
         LOG(INFO) << "Sending " << FLAGS_protocol << " requests at qps=" 
                   << g_latency_recorder.qps(1)

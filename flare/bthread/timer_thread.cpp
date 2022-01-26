@@ -23,7 +23,7 @@
 #include "flare/base/logging.h"
 #include "flare/hash/murmurhash3.h"   // fmix64
 #include "flare/memory/resource_pool.h"
-#include "flare/bvar/bvar.h"
+#include "flare/variable/all.h"
 #include "flare/bthread/sys_futex.h"
 #include "flare/bthread/timer_thread.h"
 #include "flare/bthread/log.h"
@@ -325,14 +325,14 @@ void TimerThread::run() {
 
     // vars
     size_t nscheduled = 0;
-    bvar::PassiveStatus<size_t> nscheduled_var(deref_value<size_t>, &nscheduled);
-    bvar::PerSecond<bvar::PassiveStatus<size_t> > nscheduled_second(&nscheduled_var);
+    flare::variable::PassiveStatus<size_t> nscheduled_var(deref_value<size_t>, &nscheduled);
+    flare::variable::PerSecond<flare::variable::PassiveStatus<size_t> > nscheduled_second(&nscheduled_var);
     size_t ntriggered = 0;
-    bvar::PassiveStatus<size_t> ntriggered_var(deref_value<size_t>, &ntriggered);
-    bvar::PerSecond<bvar::PassiveStatus<size_t> > ntriggered_second(&ntriggered_var);
+    flare::variable::PassiveStatus<size_t> ntriggered_var(deref_value<size_t>, &ntriggered);
+    flare::variable::PerSecond<flare::variable::PassiveStatus<size_t> > ntriggered_second(&ntriggered_var);
     double busy_seconds = 0;
-    bvar::PassiveStatus<double> busy_seconds_var(deref_value<double>, &busy_seconds);
-    bvar::PerSecond<bvar::PassiveStatus<double> > busy_seconds_second(&busy_seconds_var);
+    flare::variable::PassiveStatus<double> busy_seconds_var(deref_value<double>, &busy_seconds);
+    flare::variable::PerSecond<flare::variable::PassiveStatus<double> > busy_seconds_second(&busy_seconds_var);
     if (!_options.bvar_prefix.empty()) {
         nscheduled_second.expose_as(_options.bvar_prefix, "scheduled_second");
         ntriggered_second.expose_as(_options.bvar_prefix, "triggered_second");

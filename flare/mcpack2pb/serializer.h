@@ -30,7 +30,7 @@
 #include "flare/mcpack2pb/field_type.h"
 
 // CAUTION: Methods in this header is not intended to be public to users of
-// brpc, and subject to change at any future time.
+// flare, and subject to change at any future time.
 
 namespace mcpack2pb {
 

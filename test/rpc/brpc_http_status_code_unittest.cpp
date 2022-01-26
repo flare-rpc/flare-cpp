@@ -15,13 +15,13 @@
 // specific language governing permissions and limitations
 // under the License.
 
-// brpc - A framework to host and access services throughout Baidu.
+
 
 // File: test_http_status_code.cpp
 // Date: 2014/11/04 18:33:39
 
 #include <gtest/gtest.h>
-#include "flare/brpc/http_status_code.h"
+#include "flare/rpc/http_status_code.h"
 
 class HttpStatusTest : public testing::Test {
     void SetUp() {}
@@ -29,11 +29,11 @@ class HttpStatusTest : public testing::Test {
 };
 
 TEST_F(HttpStatusTest, sanity) {
-    ASSERT_STREQ("OK", brpc::HttpReasonPhrase(
-                     brpc::HTTP_STATUS_OK));
-    ASSERT_STREQ("Continue", brpc::HttpReasonPhrase(
-                     brpc::HTTP_STATUS_CONTINUE));
-    ASSERT_STREQ("HTTP Version Not Supported", brpc::HttpReasonPhrase(
-                     brpc::HTTP_STATUS_VERSION_NOT_SUPPORTED));
-    ASSERT_STREQ("Unknown status code (-2)", brpc::HttpReasonPhrase(-2));
+    ASSERT_STREQ("OK", flare::rpc::HttpReasonPhrase(
+                     flare::rpc::HTTP_STATUS_OK));
+    ASSERT_STREQ("Continue", flare::rpc::HttpReasonPhrase(
+                     flare::rpc::HTTP_STATUS_CONTINUE));
+    ASSERT_STREQ("HTTP Version Not Supported", flare::rpc::HttpReasonPhrase(
+                     flare::rpc::HTTP_STATUS_VERSION_NOT_SUPPORTED));
+    ASSERT_STREQ("Unknown status code (-2)", flare::rpc::HttpReasonPhrase(-2));
 }

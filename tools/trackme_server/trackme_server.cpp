@@ -21,10 +21,10 @@
 #include <gflags/gflags.h>
 #include <memory>
 #include "flare/base/logging.h"
-#include <flare/brpc/server.h>
+#include <flare/rpc/server.h>
 #include <flare/base/file_watcher.h>
 #include <flare/base/scoped_file.h>
-#include <flare/brpc/trackme.pb.h>
+#include <flare/rpc/trackme.pb.h>
 
 DEFINE_string(bug_file, "./bugs", "A file containing revision and information of bugs");
 DEFINE_int32(port, 8877, "TCP Port of this server");
@@ -33,7 +33,7 @@ DEFINE_int32(reporting_interval, 300, "Reporting interval of clients");
 struct RevisionInfo {
     int64_t min_rev;
     int64_t max_rev;
-    brpc::TrackMeSeverity severity;
+    flare::rpc::TrackMeSeverity severity;
     std::string error_text;
 };
 
@@ -46,7 +46,7 @@ public:
 
     void stop();
 
-    bool find(int64_t revision, brpc::TrackMeResponse *response);
+    bool find(int64_t revision, flare::rpc::TrackMeResponse *response);
 
 private:
     void load_bugs();
@@ -63,7 +63,7 @@ private:
     std::shared_ptr<BugList> _bug_list;
 };
 
-class TrackMeServiceImpl : public brpc::TrackMeService {
+class TrackMeServiceImpl : public flare::rpc::TrackMeService {
 public:
     explicit TrackMeServiceImpl(BugsLoader *bugs) : _bugs(bugs) {
     }
@@ -71,13 +71,13 @@ public:
     ~TrackMeServiceImpl() {};
 
     void TrackMe(google::protobuf::RpcController *cntl_base,
-                 const brpc::TrackMeRequest *request,
-                 brpc::TrackMeResponse *response,
+                 const flare::rpc::TrackMeRequest *request,
+                 flare::rpc::TrackMeResponse *response,
                  google::protobuf::Closure *done) {
-        brpc::ClosureGuard done_guard(done);
-        brpc::Controller *cntl = (brpc::Controller *) cntl_base;
+        flare::rpc::ClosureGuard done_guard(done);
+        flare::rpc::Controller *cntl = (flare::rpc::Controller *) cntl_base;
         // Set to OK by default.
-        response->set_severity(brpc::TrackMeOK);
+        response->set_severity(flare::rpc::TrackMeOK);
         // Check if the version is affected by bugs if client set it.
         if (request->has_rpc_version()) {
             _bugs->find(request->rpc_version(), response);
@@ -99,7 +99,7 @@ private:
 int main(int argc, char *argv[]) {
     GFLAGS_NS::ParseCommandLineFlags(&argc, &argv, true);
 
-    brpc::Server server;
+    flare::rpc::Server server;
     server.set_version("trackme_server");
     BugsLoader bugs;
     if (!bugs.start(FLAGS_bug_file)) {
@@ -108,11 +108,11 @@ int main(int argc, char *argv[]) {
     }
     TrackMeServiceImpl echo_service_impl(&bugs);
     if (server.AddService(&echo_service_impl,
-                          brpc::SERVER_DOESNT_OWN_SERVICE) != 0) {
+                          flare::rpc::SERVER_DOESNT_OWN_SERVICE) != 0) {
         LOG(ERROR) << "Fail to add service";
         return -1;
     }
-    brpc::ServerOptions options;
+    flare::rpc::ServerOptions options;
     // I've noticed that many connections do not report. Don't know the
     // root cause yet. Set the idle_time to keep connections clean.
     options.idle_timeout_sec = FLAGS_reporting_interval * 2;
@@ -218,13 +218,13 @@ void BugsLoader::load_bugs() {
             LOG(WARNING) << "[line" << nline << "] Fail to parse column3 as severity";
             continue;
         }
-        brpc::TrackMeSeverity severity = brpc::TrackMeOK;
+        flare::rpc::TrackMeSeverity severity = flare::rpc::TrackMeOK;
         std::string_view severity_str(sp.field(), sp.length());
         if (severity_str == "f" || severity_str == "F") {
-            severity = brpc::TrackMeFatal;
+            severity = flare::rpc::TrackMeFatal;
         } else if (severity_str == "w" || severity_str == "W") {
             \
-            severity = brpc::TrackMeWarning;
+            severity = flare::rpc::TrackMeWarning;
         } else {
             LOG(WARNING) << "[line" << nline << "] Invalid severity=" << severity_str;
             continue;
@@ -251,7 +251,7 @@ void BugsLoader::load_bugs() {
     _bug_list.reset(m.release());
 }
 
-bool BugsLoader::find(int64_t revision, brpc::TrackMeResponse *response) {
+bool BugsLoader::find(int64_t revision, flare::rpc::TrackMeResponse *response) {
     // Add reference to make sure the bug list is not deleted.
     std::shared_ptr<BugList> local_list = _bug_list;
     if (local_list.get() == NULL) {
@@ -267,7 +267,7 @@ bool BugsLoader::find(int64_t revision, brpc::TrackMeResponse *response) {
             if (info.severity > response->severity()) {
                 response->set_severity(info.severity);
             }
-            if (info.severity != brpc::TrackMeOK) {
+            if (info.severity != flare::rpc::TrackMeOK) {
                 std::string *error = response->mutable_error_text();
                 char prefix[64];
                 if (info.min_rev != info.max_rev) {

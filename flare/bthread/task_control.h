@@ -27,7 +27,7 @@
 #endif
 #include <stddef.h>                             // size_t
 #include "flare/base/static_atomic.h"                     // std::atomic
-#include "flare/bvar/bvar.h"                          // bvar::PassiveStatus
+#include "flare/variable/all.h"                          // flare::variable::PassiveStatus
 #include "flare/bthread/task_meta.h"                  // TaskMeta
 #include "flare/memory/resource_pool.h"                 // ResourcePool
 #include "flare/bthread/work_stealing_queue.h"        // WorkStealingQueue
@@ -88,8 +88,8 @@ private:
 
     static void* worker_thread(void* task_control);
 
-    bvar::LatencyRecorder& exposed_pending_time();
-    bvar::LatencyRecorder* create_exposed_pending_time();
+    flare::variable::LatencyRecorder& exposed_pending_time();
+    flare::variable::LatencyRecorder* create_exposed_pending_time();
 
     std::atomic<size_t> _ngroup;
     TaskGroup** _groups;
@@ -99,24 +99,24 @@ private:
     std::atomic<int> _concurrency;
     std::vector<pthread_t> _workers;
 
-    bvar::Adder<int64_t> _nworkers;
+    flare::variable::Adder<int64_t> _nworkers;
     flare::base::Mutex _pending_time_mutex;
-    std::atomic<bvar::LatencyRecorder*> _pending_time;
-    bvar::PassiveStatus<double> _cumulated_worker_time;
-    bvar::PerSecond<bvar::PassiveStatus<double> > _worker_usage_second;
-    bvar::PassiveStatus<int64_t> _cumulated_switch_count;
-    bvar::PerSecond<bvar::PassiveStatus<int64_t> > _switch_per_second;
-    bvar::PassiveStatus<int64_t> _cumulated_signal_count;
-    bvar::PerSecond<bvar::PassiveStatus<int64_t> > _signal_per_second;
-    bvar::PassiveStatus<std::string> _status;
-    bvar::Adder<int64_t> _nbthreads;
+    std::atomic<flare::variable::LatencyRecorder*> _pending_time;
+    flare::variable::PassiveStatus<double> _cumulated_worker_time;
+    flare::variable::PerSecond<flare::variable::PassiveStatus<double> > _worker_usage_second;
+    flare::variable::PassiveStatus<int64_t> _cumulated_switch_count;
+    flare::variable::PerSecond<flare::variable::PassiveStatus<int64_t> > _switch_per_second;
+    flare::variable::PassiveStatus<int64_t> _cumulated_signal_count;
+    flare::variable::PerSecond<flare::variable::PassiveStatus<int64_t> > _signal_per_second;
+    flare::variable::PassiveStatus<std::string> _status;
+    flare::variable::Adder<int64_t> _nbthreads;
 
     static const int PARKING_LOT_NUM = 4;
     ParkingLot _pl[PARKING_LOT_NUM];
 };
 
-inline bvar::LatencyRecorder& TaskControl::exposed_pending_time() {
-    bvar::LatencyRecorder* pt = _pending_time.load(std::memory_order_consume);
+inline flare::variable::LatencyRecorder& TaskControl::exposed_pending_time() {
+    flare::variable::LatencyRecorder* pt = _pending_time.load(std::memory_order_consume);
     if (!pt) {
         pt = create_exposed_pending_time();
     }

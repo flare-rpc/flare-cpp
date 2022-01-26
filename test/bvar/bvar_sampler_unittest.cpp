@@ -16,7 +16,7 @@
 // under the License.
 
 #include <limits>                           //std::numeric_limits
-#include "flare/bvar/detail/sampler.h"
+#include "flare/variable/detail/sampler.h"
 #include "flare/base/time.h"
 #include "flare/base/logging.h"
 #include <gtest/gtest.h>
@@ -24,14 +24,14 @@
 namespace {
 
 TEST(SamplerTest, linked_list) {
-    flare::container::link_node<bvar::detail::Sampler> n1, n2;
+    flare::container::link_node<flare::variable::detail::Sampler> n1, n2;
     n1.insert_before_as_list(&n2);
     ASSERT_EQ(n1.next(), &n2);
     ASSERT_EQ(n1.previous(), &n2);
     ASSERT_EQ(n2.next(), &n1);
     ASSERT_EQ(n2.previous(), &n1);
 
-    flare::container::link_node<bvar::detail::Sampler> n3, n4;
+    flare::container::link_node<flare::variable::detail::Sampler> n3, n4;
     n3.insert_before_as_list(&n4);
     ASSERT_EQ(n3.next(), &n4);
     ASSERT_EQ(n3.previous(), &n4);
@@ -49,7 +49,7 @@ TEST(SamplerTest, linked_list) {
     ASSERT_EQ(&n4, n1.previous());
 }
 
-class DebugSampler : public bvar::detail::Sampler {
+class DebugSampler : public flare::variable::detail::Sampler {
 public:
     DebugSampler() : _ncalled(0) {}
     ~DebugSampler() {

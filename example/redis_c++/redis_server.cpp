@@ -15,12 +15,12 @@
 // specific language governing permissions and limitations
 // under the License.
 //
-// A brpc based redis-server. Currently just implement set and
+// A flare based redis-server. Currently just implement set and
 // get, but it's sufficient that you can get the idea how to
-// implement brpc::RedisCommandHandler.
+// implement flare::rpc::RedisCommandHandler.
 
-#include <flare/brpc/server.h>
-#include <flare/brpc/redis.h>
+#include <flare/rpc/server.h>
+#include <flare/rpc/redis.h>
 #include <flare/base/crc32c.h>
 #include <flare/base/strings/string_split.h>
 #include <gflags/gflags.h>
@@ -30,7 +30,7 @@
 
 DEFINE_int32(port, 6379, "TCP Port of this server");
 
-class RedisServiceImpl : public brpc::RedisService {
+class RedisServiceImpl : public flare::rpc::RedisService {
 public:
     bool Set(const std::string& key, const std::string& value) {
         int slot = flare::base::crc32c::Value(key.c_str(), key.size()) % kHashSlotNum;
@@ -59,17 +59,17 @@ private:
     flare::base::Mutex _mutex[kHashSlotNum];
 };
 
-class GetCommandHandler : public brpc::RedisCommandHandler {
+class GetCommandHandler : public flare::rpc::RedisCommandHandler {
 public:
     explicit GetCommandHandler(RedisServiceImpl* rsimpl)
         : _rsimpl(rsimpl) {}
 
-    brpc::RedisCommandHandlerResult Run(const std::vector<std::string_view>& args,
-                                        brpc::RedisReply* output,
+    flare::rpc::RedisCommandHandlerResult Run(const std::vector<std::string_view>& args,
+                                        flare::rpc::RedisReply* output,
                                         bool /*flush_batched*/) override {
         if (args.size() != 2ul) {
             output->FormatError("Expect 1 arg for 'get', actually %lu", args.size()-1);
-            return brpc::REDIS_CMD_HANDLED;
+            return flare::rpc::REDIS_CMD_HANDLED;
         }
         const std::string key(args[1].data(), args[1].size());
         std::string value;
@@ -78,30 +78,30 @@ public:
         } else {
             output->SetNullString();
         }
-        return brpc::REDIS_CMD_HANDLED;
+        return flare::rpc::REDIS_CMD_HANDLED;
 	}
 
 private:
    	RedisServiceImpl* _rsimpl;
 };
 
-class SetCommandHandler : public brpc::RedisCommandHandler {
+class SetCommandHandler : public flare::rpc::RedisCommandHandler {
 public:
     explicit SetCommandHandler(RedisServiceImpl* rsimpl)
         : _rsimpl(rsimpl) {}
 
-    brpc::RedisCommandHandlerResult Run(const std::vector<std::string_view>& args,
-                                        brpc::RedisReply* output,
+    flare::rpc::RedisCommandHandlerResult Run(const std::vector<std::string_view>& args,
+                                        flare::rpc::RedisReply* output,
                                         bool /*flush_batched*/) override {
         if (args.size() != 3ul) {
             output->FormatError("Expect 2 args for 'set', actually %lu", args.size()-1);
-            return brpc::REDIS_CMD_HANDLED;
+            return flare::rpc::REDIS_CMD_HANDLED;
         }
         const std::string key(args[1].data(), args[1].size());
         const std::string value(args[2].data(), args[2].size());
         _rsimpl->Set(key, value);
         output->SetStatus("OK");
-        return brpc::REDIS_CMD_HANDLED;
+        return flare::rpc::REDIS_CMD_HANDLED;
 	}
 
 private:
@@ -114,8 +114,8 @@ int main(int argc, char* argv[]) {
     rsimpl->AddCommandHandler("get", new GetCommandHandler(rsimpl));
     rsimpl->AddCommandHandler("set", new SetCommandHandler(rsimpl));
 
-    brpc::Server server;
-    brpc::ServerOptions server_options;
+    flare::rpc::Server server;
+    flare::rpc::ServerOptions server_options;
     server_options.redis_service = rsimpl;
     if (server.Start(FLAGS_port, &server_options) != 0) {
         LOG(ERROR) << "Fail to start server";

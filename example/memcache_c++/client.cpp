@@ -21,9 +21,9 @@
 #include <flare/bthread/bthread.h>
 #include "flare/base/logging.h"
 #include <flare/base/strings.h>
-#include <flare/brpc/channel.h>
-#include <flare/brpc/memcache.h>
-#include <flare/brpc/policy/couchbase_authenticator.h>
+#include <flare/rpc/channel.h>
+#include <flare/rpc/memcache.h>
+#include <flare/rpc/policy/couchbase_authenticator.h>
 
 DEFINE_int32(thread_num, 10, "Number of threads to send requests");
 DEFINE_bool(use_bthread, false, "Use bthread to send requests");
@@ -41,8 +41,8 @@ DEFINE_string(key, "hello", "The key to be get");
 DEFINE_string(value, "world", "The value associated with the key");
 DEFINE_int32(batch, 1, "Pipelined Operations");
 
-bvar::LatencyRecorder g_latency_recorder("client");
-bvar::Adder<int> g_error_count("client_error_count");
+flare::variable::LatencyRecorder g_latency_recorder("client");
+flare::variable::Adder<int> g_error_count("client_error_count");
 flare::static_atomic<int> g_sender_count = FLARE_STATIC_ATOMIC_INIT(0);
 
 static void* sender(void* arg) {
@@ -57,15 +57,15 @@ static void* sender(void* arg) {
         kvs[i].first = flare::base::string_printf("%s%d", FLAGS_key.c_str(), base_index + i);
         kvs[i].second = flare::base::string_printf("%s%d", FLAGS_value.c_str(), base_index + i);
     }
-    brpc::MemcacheRequest request;
+    flare::rpc::MemcacheRequest request;
     for (int i = 0; i < FLAGS_batch; ++i) {
         CHECK(request.Get(kvs[i].first));
     }
-    while (!brpc::IsAskedToQuit()) {
+    while (!flare::rpc::IsAskedToQuit()) {
         // We will receive response synchronously, safe to put variables
         // on stack.
-        brpc::MemcacheResponse response;
-        brpc::Controller cntl;
+        flare::rpc::MemcacheResponse response;
+        flare::rpc::Controller cntl;
 
         // Because `done'(last parameter) is NULL, this function waits until
         // the response comes back or error occurs(including timedout).
@@ -77,7 +77,7 @@ static void* sender(void* arg) {
                 uint32_t flags;
                 if (!response.PopGet(&value, &flags, NULL)) {
                     LOG(INFO) << "Fail to GET the key, " << response.LastError();
-                    brpc::AskToQuit();
+                    flare::rpc::AskToQuit();
                     return NULL;
                 }
                 CHECK(flags == 0xdeadbeef + base_index + i)
@@ -87,7 +87,7 @@ static void* sender(void* arg) {
             }
         } else {
             g_error_count << 1; 
-            CHECK(brpc::IsAskedToQuit() || !FLAGS_dont_fail)
+            CHECK(flare::rpc::IsAskedToQuit() || !FLAGS_dont_fail)
                 << "error=" << cntl.ErrorText() << " latency=" << elp;
             // We can't connect to the server, sleep a while. Notice that this
             // is a specific sleeping to prevent this thread from spinning too
@@ -108,17 +108,17 @@ int main(int argc, char* argv[]) {
 
     // A Channel represents a communication line to a Server. Notice that 
     // Channel is thread-safe and can be shared by all threads in your program.
-    brpc::Channel channel;
+    flare::rpc::Channel channel;
     
     // Initialize the channel, NULL means using default options. 
-    brpc::ChannelOptions options;
-    options.protocol = brpc::PROTOCOL_MEMCACHE;
+    flare::rpc::ChannelOptions options;
+    options.protocol = flare::rpc::PROTOCOL_MEMCACHE;
     options.connection_type = FLAGS_connection_type;
     options.timeout_ms = FLAGS_timeout_ms/*milliseconds*/;
     options.max_retry = FLAGS_max_retry;
     if (FLAGS_use_couchbase && !FLAGS_bucket_name.empty()) {
-        brpc::policy::CouchbaseAuthenticator* auth =
-            new brpc::policy::CouchbaseAuthenticator(FLAGS_bucket_name,
+        flare::rpc::policy::CouchbaseAuthenticator* auth =
+            new flare::rpc::policy::CouchbaseAuthenticator(FLAGS_bucket_name,
                                                      FLAGS_bucket_password);
         options.auth = auth;
     }
@@ -130,9 +130,9 @@ int main(int argc, char* argv[]) {
 
     // Pipeline #batch * #thread_num SET requests into memcache so that we
     // have keys to get.
-    brpc::MemcacheRequest request;
-    brpc::MemcacheResponse response;
-    brpc::Controller cntl;
+    flare::rpc::MemcacheRequest request;
+    flare::rpc::MemcacheResponse response;
+    flare::rpc::Controller cntl;
     for (int i = 0; i < FLAGS_batch * FLAGS_thread_num; ++i) {
         if (!request.Set(flare::base::string_printf("%s%d", FLAGS_key.c_str(), i),
                          flare::base::string_printf("%s%d", FLAGS_value.c_str(), i),
@@ -182,7 +182,7 @@ int main(int argc, char* argv[]) {
         }
     }
 
-    while (!brpc::IsAskedToQuit()) {
+    while (!flare::rpc::IsAskedToQuit()) {
         sleep(1);
         LOG(INFO) << "Accessing memcache server at qps=" << g_latency_recorder.qps(1)
                   << " latency=" << g_latency_recorder.latency(1);

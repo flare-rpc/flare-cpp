@@ -18,8 +18,8 @@
 
 #include <gflags/gflags.h>
 #include "flare/base/logging.h"
-#include <flare/brpc/server.h>
-#include <flare/brpc/channel.h>
+#include <flare/rpc/server.h>
+#include <flare/rpc/channel.h>
 #include "view.pb.h"
 
 DEFINE_int32(port, 8888, "TCP Port of this server");
@@ -27,9 +27,9 @@ DEFINE_string(target, "", "The server to view");
 DEFINE_int32(timeout_ms, 5000, "Timeout for calling the server to view");
 
 // handle HTTP response of accessing builtin services of the target server.
-static void handle_response(brpc::Controller* client_cntl,
+static void handle_response(flare::rpc::Controller* client_cntl,
                             std::string target,
-                            brpc::Controller* server_cntl,
+                            flare::rpc::Controller* server_cntl,
                             google::protobuf::Closure* server_done) {
     // Copy all headers. The "Content-Length" will be overwriteen.
     server_cntl->http_response() = client_cntl->http_response();
@@ -55,7 +55,7 @@ static void handle_response(brpc::Controller* client_cntl,
     // want to pass unchanged content to the users otherwise RPC replaces
     // the content with ErrorText.
     if (client_cntl->Failed() &&
-        client_cntl->ErrorCode() != brpc::EHTTP) {
+        client_cntl->ErrorCode() != flare::rpc::EHTTP) {
         server_cntl->SetFailed(client_cntl->ErrorCode(),
                                "%s", client_cntl->ErrorText().c_str());
     }
@@ -72,9 +72,9 @@ public:
                                 const HttpRequest*,
                                 HttpResponse*,
                                 google::protobuf::Closure* done) {
-        brpc::ClosureGuard done_guard(done);
-        brpc::Controller* server_cntl =
-            static_cast<brpc::Controller*>(cntl_base);
+        flare::rpc::ClosureGuard done_guard(done);
+        flare::rpc::Controller* server_cntl =
+            static_cast<flare::rpc::Controller*>(cntl_base);
 
         // Get or set target. Notice that we don't access FLAGS_target directly
         // which is thread-unsafe (for string flags).
@@ -98,11 +98,11 @@ public:
         // `defer_close_second' in main() so that dtor of channels do not
         // close connections immediately and ad-hoc creation of channels 
         // often reuses the not-yet-closed connections.
-        brpc::Channel http_chan;
-        brpc::ChannelOptions http_chan_opt;
-        http_chan_opt.protocol = brpc::PROTOCOL_HTTP;
+        flare::rpc::Channel http_chan;
+        flare::rpc::ChannelOptions http_chan_opt;
+        http_chan_opt.protocol = flare::rpc::PROTOCOL_HTTP;
         if (http_chan.Init(target.c_str(), &http_chan_opt) != 0) {
-            server_cntl->SetFailed(brpc::EINTERNAL,
+            server_cntl->SetFailed(flare::rpc::EINTERNAL,
                                    "Fail to connect to %s", target.c_str());
             return;
         }
@@ -113,14 +113,14 @@ public:
         // be an issue for infrequent checking out of builtin services pages.
         server_cntl->http_request().RemoveHeader("Accept-Encoding");
 
-        brpc::Controller* client_cntl = new brpc::Controller;
+        flare::rpc::Controller* client_cntl = new flare::rpc::Controller;
         client_cntl->http_request() = server_cntl->http_request();
         // Remove "Host" so that RPC will laterly serialize the (correct)
         // target server in.
         client_cntl->http_request().RemoveHeader("host");
 
         // Setup the URI.
-        const brpc::URI& server_uri = server_cntl->http_request().uri();
+        const flare::rpc::URI& server_uri = server_cntl->http_request().uri();
         std::string uri = server_uri.path();
         if (!server_uri.query().empty()) {
             uri.push_back('?');
@@ -146,7 +146,7 @@ public:
         client_cntl->request_attachment() = server_cntl->request_attachment();
         
         http_chan.CallMethod(NULL, client_cntl, NULL, NULL,
-                             brpc::NewCallback(
+                             flare::rpc::NewCallback(
                                  handle_response, client_cntl, target,
                                  server_cntl, done_guard.release()));
     }
@@ -163,9 +163,9 @@ int main(int argc, char* argv[]) {
     // This keeps ad-hoc creation of channels reuse previous connections.
     GFLAGS_NS::SetCommandLineOption("defer_close_seconds", "10");
 
-    brpc::Server server;
+    flare::rpc::Server server;
     server.set_version("rpc_view_server");
-    brpc::ServerOptions server_opt;
+    flare::rpc::ServerOptions server_opt;
     server_opt.http_master_service = new ViewServiceImpl;
     if (server.Start(FLAGS_port, &server_opt) != 0) {
         LOG(ERROR) << "Fail to start ViewServer";
