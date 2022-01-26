@@ -20,7 +20,7 @@
 #define BRPC_POLICY_SNAPPY_COMPRESS_H
 
 #include <google/protobuf/message.h>          // Message
-#include "flare/io/iobuf.h"                       // cord_buf
+#include "flare/io/cord_buf.h"                       // cord_buf
 
 
 namespace flare::rpc {

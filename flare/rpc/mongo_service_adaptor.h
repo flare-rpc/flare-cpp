@@ -18,7 +18,7 @@
 #ifndef BRPC_MONGO_SERVICE_ADAPTOR_H
 #define BRPC_MONGO_SERVICE_ADAPTOR_H
 
-#include "flare/io/iobuf.h"
+#include "flare/io/cord_buf.h"
 #include "flare/rpc/input_message_base.h"
 #include "flare/rpc/shared_object.h"
 

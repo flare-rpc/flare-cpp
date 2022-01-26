@@ -21,7 +21,7 @@
 
 #include <string>                      // std::string
 #include "flare/base/profile.h"
-#include "flare/io/iobuf.h"               // flare::io::cord_buf
+#include "flare/io/cord_buf.h"               // flare::io::cord_buf
 #include "flare/base/scoped_lock.h"
 #include "flare/base/endpoint.h"
 #include "flare/rpc/details/http_parser.h"  // http_parser

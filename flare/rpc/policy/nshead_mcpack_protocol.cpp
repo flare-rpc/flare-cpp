@@ -21,7 +21,7 @@
 #include <gflags/gflags.h>
 
 #include "flare/base/time.h"
-#include "flare/io/iobuf.h"                        // flare::io::cord_buf
+#include "flare/io/cord_buf.h"                        // flare::io::cord_buf
 
 #include "flare/rpc/controller.h"               // Controller
 #include "flare/rpc/socket.h"                   // Socket

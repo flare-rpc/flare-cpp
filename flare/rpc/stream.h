@@ -19,7 +19,7 @@
 #ifndef  BRPC_STREAM_H
 #define  BRPC_STREAM_H
 
-#include "flare/io/iobuf.h"
+#include "flare/io/cord_buf.h"
 #include "flare/base/scoped_generic.h"
 #include "flare/rpc/socket_id.h"
 

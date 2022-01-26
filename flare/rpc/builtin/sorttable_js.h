@@ -19,7 +19,7 @@
 #ifndef BRPC_BUILTIN_SORTTABLE_JS_H
 #define BRPC_BUILTIN_SORTTABLE_JS_H
 
-#include "flare/io/iobuf.h"
+#include "flare/io/cord_buf.h"
 
 
 namespace flare::rpc {

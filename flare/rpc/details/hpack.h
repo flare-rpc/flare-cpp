@@ -19,7 +19,7 @@
 #ifndef  BRPC_HPACK_H
 #define  BRPC_HPACK_H
 
-#include "flare/io/iobuf.h"                             // flare::io::cord_buf
+#include "flare/io/cord_buf.h"                             // flare::io::cord_buf
 #include <string_view>              // std::string_view
 #include "flare/rpc/http2.h"
 #include "flare/rpc/describable.h"

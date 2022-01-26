@@ -22,7 +22,7 @@
 #include <gtest/gtest.h>
 #include "flare/base/gperftools_profiler.h"
 #include "flare/io/snappy/snappy.h"
-#include "flare/io/iobuf.h"
+#include "flare/io/cord_buf.h"
 #include "flare/base/time.h"
 #include "snappy_message.pb.h"
 #include "flare/rpc/policy/snappy_compress.h"

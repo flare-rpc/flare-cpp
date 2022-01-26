@@ -27,7 +27,7 @@
 #include "flare/container/intrusive_ptr.h"             // flare::container::intrusive_ptr
 #include "flare/bthread/errno.h"                     // Redefine errno
 #include "flare/base/endpoint.h"                    // flare::base::end_point
-#include "flare/io/iobuf.h"                       // flare::io::cord_buf
+#include "flare/io/cord_buf.h"                       // flare::io::cord_buf
 #include "flare/bthread/types.h"                     // bthread_id_t
 #include "flare/rpc/options.pb.h"                   // CompressType
 #include "flare/rpc/errno.pb.h"                     // error code

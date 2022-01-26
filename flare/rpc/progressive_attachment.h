@@ -21,7 +21,7 @@
 
 #include "flare/rpc/callback.h"
 #include "flare/base/static_atomic.h"
-#include "flare/io/iobuf.h"
+#include "flare/io/cord_buf.h"
 #include "flare/base/endpoint.h"       // flare::base::end_point
 #include "flare/bthread/types.h"        // bthread_id_t
 #include "flare/rpc/socket_id.h"       // SocketUniquePtr

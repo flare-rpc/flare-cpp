@@ -28,7 +28,7 @@
 #include "flare/variable/all.h"
 #include "flare/variable/collector.h"
 #include "flare/container/flat_map.h"
-#include "flare/io/iobuf.h"
+#include "flare/io/cord_buf.h"
 #include "flare/base/fd_guard.h"
 #include <memory>
 #include "flare/hash/murmurhash3.h"

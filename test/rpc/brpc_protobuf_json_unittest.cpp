@@ -21,7 +21,7 @@
 #include <fstream>
 #include <string>
 #include <google/protobuf/text_format.h>
-#include "flare/io/iobuf.h"
+#include "flare/io/cord_buf.h"
 #include "flare/rapidjson/rapidjson.h"
 #include "flare/base/time.h"
 #include "flare/base/gperftools_profiler.h"

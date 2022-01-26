@@ -18,7 +18,7 @@
 // Date: Thu Nov 22 13:57:56 CST 2012
 
 #include <inttypes.h>
-#include "flare/io/iobuf.h"
+#include "flare/io/cord_buf.h"
 #include "flare/io/binary_printer.h"
 
 namespace flare::io {

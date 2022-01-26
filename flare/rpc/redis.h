@@ -24,7 +24,7 @@
 #include <memory>
 #include <list>
 #include <string_view>
-#include "flare/io/iobuf.h"
+#include "flare/io/cord_buf.h"
 #include "flare/memory/arena.h"
 #include "flare/rpc/proto_base.pb.h"
 #include "flare/rpc/redis_reply.h"

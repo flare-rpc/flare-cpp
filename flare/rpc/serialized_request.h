@@ -20,7 +20,7 @@
 #define BRPC_SERIALIZED_REQUEST_H
 
 #include <google/protobuf/message.h>
-#include "flare/io/iobuf.h"
+#include "flare/io/cord_buf.h"
 #include "flare/rpc/proto_base.pb.h"
 
 namespace flare::rpc {

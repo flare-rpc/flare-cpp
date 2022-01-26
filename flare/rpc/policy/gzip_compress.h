@@ -21,7 +21,7 @@
 
 #include <google/protobuf/message.h>              // Message
 #include <google/protobuf/io/gzip_stream.h>
-#include "flare/io/iobuf.h"                           // flare::io::cord_buf
+#include "flare/io/cord_buf.h"                           // flare::io::cord_buf
 
 
 namespace flare::rpc {

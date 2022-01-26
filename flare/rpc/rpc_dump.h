@@ -21,7 +21,7 @@
 
 #include <filesystem>
 #include <gflags/gflags_declare.h>
-#include "flare/io/iobuf.h"                            // cord_buf
+#include "flare/io/cord_buf.h"                            // cord_buf
 #include "flare/variable/collector.h"
 #include "flare/rpc/rpc_dump.pb.h"                       // RpcDumpMeta
 

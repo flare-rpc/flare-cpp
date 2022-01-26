@@ -801,6 +801,6 @@ namespace std {
     }
 } // namespace std
 
-#include "flare/io/iobuf_inl.h"
+#include "flare/io/cord_buf_inl.h"
 
 #endif  // FLARE_IO_IOBUF_H_

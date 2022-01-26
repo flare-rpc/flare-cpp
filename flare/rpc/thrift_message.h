@@ -20,7 +20,7 @@
 #define BRPC_THRIFT_MESSAGE_H
 
 #include <google/protobuf/message.h>
-#include "flare/io/iobuf.h"
+#include "flare/io/cord_buf.h"
 #include "flare/base/class_name.h"
 #include "flare/rpc/channel_base.h"
 #include "flare/rpc/controller.h"

@@ -19,7 +19,7 @@
 #ifndef BRPC_INPUT_MESSENGER_H
 #define BRPC_INPUT_MESSENGER_H
 
-#include "flare/io/iobuf.h"                    // flare::io::cord_buf
+#include "flare/io/cord_buf.h"                    // flare::io::cord_buf
 #include "flare/rpc/socket.h"              // SocketId, SocketUser
 #include "flare/rpc/parse_result.h"        // ParseResult
 #include "flare/rpc/input_message_base.h"  // InputMessageBase

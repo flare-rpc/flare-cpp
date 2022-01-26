@@ -24,7 +24,7 @@
 #include <set>                                 // std::set
 #include "flare/base/static_atomic.h"                    // std::atomic
 #include "flare/bthread/types.h"                      // bthread_id_t
-#include "flare/io/iobuf.h"                        // flare::io::cord_buf, IOPortal
+#include "flare/io/cord_buf.h"                        // flare::io::cord_buf, IOPortal
 #include "flare/base/profile.h"                       // FLARE_DISALLOW_COPY_AND_ASSIGN
 #include "flare/base/endpoint.h"                     // flare::base::end_point
 #include "flare/memory/resource_pool.h"                // flare::memory::ResourceId

@@ -29,7 +29,7 @@
 #include "flare/base/thread.h"             // thread_atexit
 #include "flare/base/logging.h"                  // CHECK, LOG
 #include "flare/base/fd_guard.h"                 // flare::base::fd_guard
-#include "flare/io/iobuf.h"
+#include "flare/io/cord_buf.h"
 #include "flare/base/profile.h"
 
 namespace flare::io {

@@ -20,7 +20,7 @@
 #define BRPC_REDIS_REPLY_H
 
 #include <stdarg.h>
-#include "flare/io/iobuf.h"                  // flare::io::cord_buf
+#include "flare/io/cord_buf.h"                  // flare::io::cord_buf
 #include <string_view>   // std::string_view
 #include "flare/memory/arena.h"                  // flare::memory::Arena
 #include "flare/base/logging.h"                // CHECK
@@ -122,7 +122,7 @@ public:
     // Returns PARSE_ERROR_ABSOLUTELY_WRONG if the parsing failed.
     ParseError ConsumePartialCordBuf(flare::io::cord_buf& buf);
 
-    // Serialize to iobuf appender using redis protocol
+    // Serialize to cord_buf appender using redis protocol
     bool SerializeTo(flare::io::cord_buf_appender* appender);
 
     // Swap internal fields with another reply.

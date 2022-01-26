@@ -24,7 +24,7 @@
 #include "flare/base/profile.h"
 #include "flare/base/logging.h"                       // LOG()
 #include "flare/base/time.h"
-#include "flare/io/iobuf.h"                         // flare::io::cord_buf
+#include "flare/io/cord_buf.h"                         // flare::io::cord_buf
 #include "flare/io/raw_pack.h"                      // raw_packer raw_unpacker
 #include "flare/rpc/log.h"
 #include "flare/rpc/socket.h"                        // Socket

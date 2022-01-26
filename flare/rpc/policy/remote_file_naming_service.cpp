@@ -21,7 +21,7 @@
 #include <string>                                       // std::string
 #include <set>                                          // std::set
 #include "flare/bthread/bthread.h"                            // bthread_usleep
-#include "flare/io/iobuf.h"
+#include "flare/io/cord_buf.h"
 #include "flare/rpc/log.h"
 #include "flare/rpc/channel.h"
 #include "flare/rpc/policy/remote_file_naming_service.h"

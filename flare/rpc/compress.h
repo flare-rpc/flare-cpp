@@ -20,7 +20,7 @@
 #define BRPC_COMPRESS_H
 
 #include <google/protobuf/message.h>              // Message
-#include "flare/io/iobuf.h"                           // flare::io::cord_buf
+#include "flare/io/cord_buf.h"                           // flare::io::cord_buf
 #include "flare/rpc/options.pb.h"                     // CompressType
 
 namespace flare::rpc {

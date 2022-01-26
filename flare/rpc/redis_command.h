@@ -21,7 +21,7 @@
 
 #include <memory>           // std::unique_ptr
 #include <vector>
-#include "flare/io/iobuf.h"
+#include "flare/io/cord_buf.h"
 #include "flare/base/status.h"
 #include "flare/memory/arena.h"
 #include "flare/rpc/parse_result.h"

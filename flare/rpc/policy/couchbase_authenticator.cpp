@@ -18,7 +18,7 @@
 #include "flare/rpc/policy/couchbase_authenticator.h"
 
 #include "flare/base/base64.h"
-#include "flare/io/iobuf.h"
+#include "flare/io/cord_buf.h"
 #include "flare/base/strings.h"
 #include "flare/base/sys_byteorder.h"
 #include "flare/rpc/policy/memcache_binary_header.h"

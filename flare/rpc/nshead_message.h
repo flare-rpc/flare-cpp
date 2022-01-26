@@ -21,7 +21,7 @@
 
 #include <google/protobuf/message.h>
 #include "flare/rpc/nshead.h"                     // nshead_t
-#include "flare/io/iobuf.h"                     // cord_buf
+#include "flare/io/cord_buf.h"                     // cord_buf
 #include "flare/rpc/proto_base.pb.h"
 
 namespace flare::rpc {

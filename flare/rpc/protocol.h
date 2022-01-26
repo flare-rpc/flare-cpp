@@ -26,7 +26,7 @@
 #include <stdint.h>                                // uint64_t
 #include <gflags/gflags_declare.h>                 // DECLARE_xxx
 #include "flare/base/endpoint.h"                         // flare::base::end_point
-#include "flare/io/iobuf.h"
+#include "flare/io/cord_buf.h"
 #include "flare/base/logging.h"
 #include "flare/rpc/options.pb.h"                  // ProtocolType
 #include "flare/rpc/socket_id.h"                   // SocketId

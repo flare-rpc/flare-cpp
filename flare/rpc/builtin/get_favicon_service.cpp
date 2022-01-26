@@ -17,7 +17,7 @@
 
 
 #include "flare/base/profile.h"                           // FLARE_ARRAY_SIZE
-#include "flare/io/iobuf.h"                            // flare::io::cord_buf
+#include "flare/io/cord_buf.h"                            // flare::io::cord_buf
 #include "flare/rpc/controller.h"                   // Controller
 #include "flare/rpc/builtin/get_favicon_service.h"
 
