@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <string_view>
+#include "flare/base/strings.h"
 
 // It's common to encode data into strings separated by special characters
 // and decode them back, but functions such as `split_string' has to modify
@@ -210,11 +211,11 @@ namespace flare::base {
                                         pair_delimiter, key_value_delimiter) {}
 
         inline std::string_view key() {
-            return key_and_value().substr(0, _delim_pos);
+            return flare::base::sub_string_view(key_and_value(),0, _delim_pos);
         }
 
         inline std::string_view value() {
-            return key_and_value().substr(_delim_pos + 1);
+            return flare::base::sub_string_view(key_and_value(), _delim_pos + 1);
         }
 
         // Get the current value of key and value

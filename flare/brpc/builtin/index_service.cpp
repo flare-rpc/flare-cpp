@@ -89,9 +89,9 @@ void IndexService::default_method(::google::protobuf::RpcController* controller,
     }
     os << '\n';
     if (use_html) {
-        os << "<a href=\"https://github.com/brpc/brpc\">github</a>";
+        os << "<a href=\"https://github.com/flare-rpc/flare-cpp\">github</a>";
     } else {
-        os << "github : https://github.com/brpc/brpc";
+        os << "github : https://github.com/flare-rpc/flare-cpp";
     }
     os << NL << NL;
     if (!as_more) {

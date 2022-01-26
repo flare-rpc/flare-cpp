@@ -25,8 +25,8 @@
 namespace flare::io {
     class IOBuf;
 
-// Print binary content within max length.
-// The printing format is optimized for humans and may change in future.
+    // Print binary content within max length.
+    // The printing format is optimized for humans and may change in future.
 
     class ToPrintable {
     public:
@@ -49,7 +49,7 @@ namespace flare::io {
         size_t _max_length;
     };
 
-// Keep old name for compatibility.
+    // Keep old name for compatibility.
     typedef ToPrintable PrintedAsBinary;
 
     inline std::ostream &operator<<(std::ostream &os, const ToPrintable &p) {
@@ -57,7 +57,7 @@ namespace flare::io {
         return os;
     }
 
-// Convert binary data to a printable string.
+    // Convert binary data to a printable string.
     std::string ToPrintableString(const IOBuf &data,
                                   size_t max_length = ToPrintable::DEFAULT_MAX_LENGTH);
 
