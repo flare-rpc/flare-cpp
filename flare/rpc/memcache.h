@@ -85,8 +85,8 @@ public:
 
     int pipelined_count() const { return _pipelined_count; }
 
-    flare::io::IOBuf& raw_buffer() { return _buf; }
-    const flare::io::IOBuf& raw_buffer() const { return _buf; }
+    flare::io::cord_buf& raw_buffer() { return _buf; }
+    const flare::io::cord_buf& raw_buffer() const { return _buf; }
 
     // Protobuf methods.
     MemcacheRequest* New() const;
@@ -124,7 +124,7 @@ private:
     void SetCachedSize(int size) const;
 
     int _pipelined_count;
-    flare::io::IOBuf _buf;
+    flare::io::cord_buf _buf;
     mutable int _cached_size_;
 };
 
@@ -180,7 +180,7 @@ public:
 
     const std::string& LastError() const { return _err; }
    
-    bool PopGet(flare::io::IOBuf* value, uint32_t* flags, uint64_t* cas_value);
+    bool PopGet(flare::io::cord_buf* value, uint32_t* flags, uint64_t* cas_value);
     bool PopGet(std::string* value, uint32_t* flags, uint64_t* cas_value);
     bool PopSet(uint64_t* cas_value);
     bool PopAdd(uint64_t* cas_value);
@@ -193,8 +193,8 @@ public:
     bool PopDecrement(uint64_t* new_value, uint64_t* cas_value);
     bool PopTouch();
     bool PopVersion(std::string* version);
-    flare::io::IOBuf& raw_buffer() { return _buf; }
-    const flare::io::IOBuf& raw_buffer() const { return _buf; }
+    flare::io::cord_buf& raw_buffer() { return _buf; }
+    const flare::io::cord_buf& raw_buffer() const { return _buf; }
     static const char* status_str(Status);
       
     // implements Message ----------------------------------------------
@@ -229,7 +229,7 @@ private:
     void SetCachedSize(int size) const;
 
     std::string _err;
-    flare::io::IOBuf _buf;
+    flare::io::cord_buf _buf;
     mutable int _cached_size_;
 };
 

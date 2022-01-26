@@ -108,7 +108,7 @@ namespace flare::rpc {
         bool has_error() const { return _has_error; }
 
         // Serialize the request into `buf'. Return true on success.
-        bool SerializeTo(flare::io::IOBuf *buf) const;
+        bool SerializeTo(flare::io::cord_buf *buf) const;
 
         // Protobuf methods.
         RedisRequest *New() const override;
@@ -155,7 +155,7 @@ namespace flare::rpc {
 
         int _ncommand;    // # of valid commands
         bool _has_error;  // previous AddCommand had error
-        flare::io::IOBuf _buf;  // the serialized request.
+        flare::io::cord_buf _buf;  // the serialized request.
         mutable int _cached_size_;  // ByteSize
     };
 
@@ -194,7 +194,7 @@ namespace flare::rpc {
         // Returns PARSE_OK on success.
         // Returns PARSE_ERROR_NOT_ENOUGH_DATA if data in `buf' is not enough to parse.
         // Returns PARSE_ERROR_ABSOLUTELY_WRONG if the parsing failed.
-        ParseError ConsumePartialIOBuf(flare::io::IOBuf &buf, int reply_count);
+        ParseError ConsumePartialCordBuf(flare::io::cord_buf &buf, int reply_count);
 
         // implements Message ----------------------------------------------
 

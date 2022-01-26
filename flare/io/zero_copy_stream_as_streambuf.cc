@@ -24,7 +24,7 @@ namespace flare::io {
     static_assert(sizeof(std::streambuf::char_type) == sizeof(char),
                   "only_support_char");
 
-    int ZeroCopyStreamAsStreamBuf::overflow(int ch) {
+    int zero_copy_stream_as_stream_buf::overflow(int ch) {
         if (ch == std::streambuf::traits_type::eof()) {
             return ch;
         }
@@ -40,23 +40,23 @@ namespace flare::io {
         }
     }
 
-    int ZeroCopyStreamAsStreamBuf::sync() {
-        // data are already in IOBuf.
+    int zero_copy_stream_as_stream_buf::sync() {
+        // data are already in cord_buf.
         return 0;
     }
 
-    ZeroCopyStreamAsStreamBuf::~ZeroCopyStreamAsStreamBuf() {
+    zero_copy_stream_as_stream_buf::~zero_copy_stream_as_stream_buf() {
         shrink();
     }
 
-    void ZeroCopyStreamAsStreamBuf::shrink() {
+    void zero_copy_stream_as_stream_buf::shrink() {
         if (pbase() != NULL) {
             _zero_copy_stream->BackUp(epptr() - pptr());
             setp(NULL, NULL);
         }
     }
 
-    std::streampos ZeroCopyStreamAsStreamBuf::seekoff(
+    std::streampos zero_copy_stream_as_stream_buf::seekoff(
             std::streamoff off,
             std::ios_base::seekdir way,
             std::ios_base::openmode which) {

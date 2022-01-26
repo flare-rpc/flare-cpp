@@ -124,7 +124,7 @@ namespace bthread {
         bool _init;  // false before first dump_and_destroy is called
         bool _first_write;      // true if buffer was not written to file yet.
         std::string _filename;  // the file storing profiling result.
-        flare::io::IOBuf _disk_buf;  // temp buf before saving the file.
+        flare::io::cord_buf _disk_buf;  // temp buf before saving the file.
         ContentionMap _dedup_map; // combining same samples to make result smaller.
     };
 
@@ -175,7 +175,7 @@ namespace bthread {
         // Serialize contentions in _dedup_map into _disk_buf.
         if (!_dedup_map.empty()) {
             BT_VLOG << "dedup_map=" << _dedup_map.size();
-            flare::io::IOBufBuilder os;
+            flare::io::cord_buf_builder os;
             for (ContentionMap::const_iterator
                          it = _dedup_map.begin(); it != _dedup_map.end(); ++it) {
                 SampledContention *c = it->second;

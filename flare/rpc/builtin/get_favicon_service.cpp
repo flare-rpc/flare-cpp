@@ -17,7 +17,7 @@
 
 
 #include "flare/base/profile.h"                           // FLARE_ARRAY_SIZE
-#include "flare/io/iobuf.h"                            // flare::io::IOBuf
+#include "flare/io/iobuf.h"                            // flare::io::cord_buf
 #include "flare/rpc/controller.h"                   // Controller
 #include "flare/rpc/builtin/get_favicon_service.h"
 
@@ -51,13 +51,13 @@ static unsigned char s_favicon_array[] = {
 };
 
 static pthread_once_t s_favicon_buf_once = PTHREAD_ONCE_INIT; 
-static flare::io::IOBuf* s_favicon_buf = NULL;
+static flare::io::cord_buf* s_favicon_buf = NULL;
 static void InitFavIcon() {
-    s_favicon_buf = new flare::io::IOBuf;
+    s_favicon_buf = new flare::io::cord_buf;
     s_favicon_buf->append((const void *)s_favicon_array, 
                           FLARE_ARRAY_SIZE(s_favicon_array));
 }
-static const flare::io::IOBuf& GetFavIcon() {
+static const flare::io::cord_buf& GetFavIcon() {
     pthread_once(&s_favicon_buf_once, InitFavIcon);
     return *s_favicon_buf;
 }

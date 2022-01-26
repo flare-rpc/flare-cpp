@@ -29,16 +29,16 @@ namespace policy {
 // Actions to a (server) response in nova_pbrpc format.
 void ProcessNovaResponse(InputMessageBase* msg);
 
-void SerializeNovaRequest(flare::io::IOBuf* buf, Controller* cntl,
+void SerializeNovaRequest(flare::io::cord_buf* buf, Controller* cntl,
                                  const google::protobuf::Message* request);
 
 // Pack `request' to `method' into `buf'.
-void PackNovaRequest(flare::io::IOBuf* buf,
+void PackNovaRequest(flare::io::cord_buf* buf,
                      SocketMessage** user_message_out,
                      uint64_t correlation_id,
                      const google::protobuf::MethodDescriptor* method,
                      Controller* controller,
-                     const flare::io::IOBuf& request,
+                     const flare::io::cord_buf& request,
                      const Authenticator* auth);
 
 class NovaServiceAdaptor : public NsheadPbServiceAdaptor {
@@ -48,11 +48,11 @@ public:
                         Controller*,
                         NsheadMeta* out_meta) const;
 
-    void ParseRequestFromIOBuf(
+    void ParseRequestFromCordBuf(
         const NsheadMeta& meta, const NsheadMessage& ns_req,
         Controller* controller, google::protobuf::Message* pb_req) const;
 
-    void SerializeResponseToIOBuf(
+    void SerializeResponseToCordBuf(
         const NsheadMeta& meta,
         Controller* controller,
         const google::protobuf::Message* pb_res,

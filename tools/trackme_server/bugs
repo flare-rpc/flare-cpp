@@ -1,4 +1,4 @@
-34123 34140 f base::IOBuf::append(Movable) may leak memory
+34123 34140 f base::cord_buf::append(Movable) may leak memory
 33864 33877 f Copying baidu::rpc::HttpHeader or baidu::rpc::URI may crash
 33143 33143 f max_concurrency on restful methods may not work because of an uninitialized variable in RestfulMap.MethodInfo
 32141 32203 f pooled connections may be open and closed frequently, causing many TIME_WAIT ports

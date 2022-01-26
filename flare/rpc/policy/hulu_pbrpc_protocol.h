@@ -26,7 +26,7 @@ namespace flare::rpc {
 namespace policy {
 
 // Parse binary format of hulu-pbrpc.
-ParseResult ParseHuluMessage(flare::io::IOBuf* source, Socket *socket, bool read_eof, const void *arg);
+ParseResult ParseHuluMessage(flare::io::cord_buf* source, Socket *socket, bool read_eof, const void *arg);
 
 // Actions to a (client) request in hulu-pbrpc format.
 void ProcessHuluRequest(InputMessageBase* msg);
@@ -38,12 +38,12 @@ void ProcessHuluResponse(InputMessageBase* msg);
 bool VerifyHuluRequest(const InputMessageBase* msg);
 
 // Pack `request' to `method' into `buf'.
-void PackHuluRequest(flare::io::IOBuf* buf,
+void PackHuluRequest(flare::io::cord_buf* buf,
                      SocketMessage**,
                      uint64_t correlation_id,
                      const google::protobuf::MethodDescriptor* method,
                      Controller* controller,
-                     const flare::io::IOBuf& request,
+                     const flare::io::cord_buf& request,
                      const Authenticator* auth);
 
 }  // namespace policy

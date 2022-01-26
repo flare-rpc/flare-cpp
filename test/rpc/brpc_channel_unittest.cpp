@@ -117,7 +117,7 @@ static bool VerifyMyRequest(const flare::rpc::InputMessageBase* msg_base) {
     flare::rpc::Socket* ptr = msg->socket();
     
     flare::rpc::policy::RpcMeta meta;
-    flare::io::IOBufAsZeroCopyInputStream wrapper(msg->meta);
+    flare::io::cord_buf_as_zero_copy_input_stream wrapper(msg->meta);
     EXPECT_TRUE(meta.ParseFromZeroCopyStream(&wrapper));
 
     if (meta.has_authentication_data()) {
@@ -217,7 +217,7 @@ protected:
         }
         
         flare::rpc::policy::RpcMeta meta;
-        flare::io::IOBufAsZeroCopyInputStream wrapper(msg->meta);
+        flare::io::cord_buf_as_zero_copy_input_stream wrapper(msg->meta);
         EXPECT_TRUE(meta.ParseFromZeroCopyStream(&wrapper));
         const flare::rpc::policy::RpcRequestMeta& req_meta = meta.request();
         ASSERT_EQ(ts->_svc.descriptor()->full_name(), req_meta.service_name());
@@ -226,12 +226,12 @@ protected:
         google::protobuf::Message* req =
               ts->_svc.GetRequestPrototype(method).New();
         if (meta.attachment_size() != 0) {
-            flare::io::IOBuf req_buf;
+            flare::io::cord_buf req_buf;
             msg->payload.cutn(&req_buf, msg->payload.size() - meta.attachment_size());
-            flare::io::IOBufAsZeroCopyInputStream wrapper2(req_buf);
+            flare::io::cord_buf_as_zero_copy_input_stream wrapper2(req_buf);
             EXPECT_TRUE(req->ParseFromZeroCopyStream(&wrapper2));
         } else {
-            flare::io::IOBufAsZeroCopyInputStream wrapper2(msg->payload);
+            flare::io::cord_buf_as_zero_copy_input_stream wrapper2(msg->payload);
             EXPECT_TRUE(req->ParseFromZeroCopyStream(&wrapper2));
         }
         flare::rpc::Controller* cntl = new flare::rpc::Controller();

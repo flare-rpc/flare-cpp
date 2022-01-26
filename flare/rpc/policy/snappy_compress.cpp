@@ -25,38 +25,38 @@
 namespace flare::rpc {
 namespace policy {
 
-bool SnappyCompress(const google::protobuf::Message& res, flare::io::IOBuf* buf) {
-    flare::io::IOBuf serialized_pb;
-    flare::io::IOBufAsZeroCopyOutputStream wrapper(&serialized_pb);
+bool SnappyCompress(const google::protobuf::Message& res, flare::io::cord_buf* buf) {
+    flare::io::cord_buf serialized_pb;
+    flare::io::cord_buf_as_zero_copy_output_stream wrapper(&serialized_pb);
     if (res.SerializeToZeroCopyStream(&wrapper)) {
-        flare::io::IOBufAsSnappySource source(serialized_pb);
-        flare::io::IOBufAsSnappySink sink(*buf);
+        flare::io::cord_buf_as_snappy_source source(serialized_pb);
+        flare::io::cord_buf_as_snappy_sink sink(*buf);
         return flare::snappy::Compress(&source, &sink);
     }
     LOG(WARNING) << "Fail to serialize input pb=" << &res;
     return false;
 }
 
-bool SnappyDecompress(const flare::io::IOBuf& data, google::protobuf::Message* req) {
-    flare::io::IOBufAsSnappySource source(data);
-    flare::io::IOBuf binary_pb;
-    flare::io::IOBufAsSnappySink sink(binary_pb);
+bool SnappyDecompress(const flare::io::cord_buf& data, google::protobuf::Message* req) {
+    flare::io::cord_buf_as_snappy_source source(data);
+    flare::io::cord_buf binary_pb;
+    flare::io::cord_buf_as_snappy_sink sink(binary_pb);
     if (flare::snappy::Uncompress(&source, &sink)) {
-        return ParsePbFromIOBuf(req, binary_pb);
+        return ParsePbFromCordBuf(req, binary_pb);
     }
     LOG(WARNING) << "Fail to snappy::Uncompress, size=" << data.size();
     return false;
 }
 
-bool SnappyCompress(const flare::io::IOBuf& in, flare::io::IOBuf* out) {
-    flare::io::IOBufAsSnappySource source(in);
-    flare::io::IOBufAsSnappySink sink(*out);
+bool SnappyCompress(const flare::io::cord_buf& in, flare::io::cord_buf* out) {
+    flare::io::cord_buf_as_snappy_source source(in);
+    flare::io::cord_buf_as_snappy_sink sink(*out);
     return flare::snappy::Compress(&source, &sink);
 }
 
-bool SnappyDecompress(const flare::io::IOBuf& in, flare::io::IOBuf* out) {
-    flare::io::IOBufAsSnappySource source(in);
-    flare::io::IOBufAsSnappySink sink(*out);
+bool SnappyDecompress(const flare::io::cord_buf& in, flare::io::cord_buf* out) {
+    flare::io::cord_buf_as_snappy_source source(in);
+    flare::io::cord_buf_as_snappy_sink sink(*out);
     return flare::snappy::Uncompress(&source, &sink);
 }
 

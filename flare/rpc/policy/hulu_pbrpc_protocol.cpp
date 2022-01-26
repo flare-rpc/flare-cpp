@@ -97,7 +97,7 @@ HuluCompressType CompressType2Hulu(CompressType type) {
     }
 }
 
-// Can't use RawPacker/RawUnpacker because HULU does not use network byte order!
+// Can't use raw_packer/raw_unpacker because HULU does not use network byte order!
 class HuluRawPacker {
 public:
     explicit HuluRawPacker(void* stream) : _stream((char*)stream) {}
@@ -151,7 +151,7 @@ inline void PackHuluHeader(char* hulu_header, int meta_size, int body_size) {
 
 template <typename Meta>
 static void SerializeHuluHeaderAndMeta(
-    flare::io::IOBuf* out, const Meta& meta, int payload_size) {
+    flare::io::cord_buf* out, const Meta& meta, int payload_size) {
     const int meta_size = meta.ByteSize();
     if (meta_size <= 244) { // most common cases
         char header_and_meta[12 + meta_size];
@@ -165,14 +165,14 @@ static void SerializeHuluHeaderAndMeta(
         char header[12];
         PackHuluHeader(header, meta_size, payload_size);
         out->append(header, sizeof(header));
-        flare::io::IOBufAsZeroCopyOutputStream buf_stream(out);
+        flare::io::cord_buf_as_zero_copy_output_stream buf_stream(out);
         ::google::protobuf::io::CodedOutputStream coded_out(&buf_stream);
         meta.SerializeWithCachedSizes(&coded_out);
         CHECK(!coded_out.HadError());
     }
 }
 
-ParseResult ParseHuluMessage(flare::io::IOBuf* source, Socket* socket,
+ParseResult ParseHuluMessage(flare::io::cord_buf* source, Socket* socket,
                              bool /*read_eof*/, const void* /*arg*/) {
     char header_buf[12];
     const size_t n = source->copy_to(header_buf, sizeof(header_buf));
@@ -243,7 +243,7 @@ static void SendHuluResponse(int64_t correlation_id,
     }
     
     bool append_body = false;
-    flare::io::IOBuf res_body_buf;
+    flare::io::cord_buf res_body_buf;
     // `res' can be NULL here, in which case we don't serialize it
     // If user calls `SetFailed' on Controller, we don't serialize
     // response either
@@ -290,7 +290,7 @@ static void SendHuluResponse(int64_t correlation_id,
         meta.set_user_data(cntl->response_user_data());
     }
 
-    flare::io::IOBuf res_buf;
+    flare::io::cord_buf res_buf;
     SerializeHuluHeaderAndMeta(&res_buf, meta, res_size + attached_size);
     if (append_body) {
         res_buf.append(res_body_buf.movable());
@@ -337,7 +337,7 @@ void ProcessHuluRequest(InputMessageBase* msg_base) {
     ScopedNonServiceError non_service_error(server);
 
     HuluRpcRequestMeta meta;
-    if (!ParsePbFromIOBuf(&meta, msg->meta)) {
+    if (!ParsePbFromCordBuf(&meta, msg->meta)) {
         LOG(WARNING) << "Fail to parse HuluRpcRequestMeta, close the connection";
         socket->SetFailed();
         return;
@@ -473,8 +473,8 @@ void ProcessHuluRequest(InputMessageBase* msg_base) {
             span->ResetServerSpanName(method->full_name());
         }
         const int reqsize = msg->payload.length();
-        flare::io::IOBuf req_buf;
-        flare::io::IOBuf* req_buf_ptr = &msg->payload;
+        flare::io::cord_buf req_buf;
+        flare::io::cord_buf* req_buf_ptr = &msg->payload;
         if (meta.has_user_message_size()) {
             msg->payload.cutn(&req_buf, meta.user_message_size());
             req_buf_ptr = &req_buf;
@@ -536,7 +536,7 @@ bool VerifyHuluRequest(const InputMessageBase* msg_base) {
     const Server* server = static_cast<const Server*>(msg->arg());
 
     HuluRpcRequestMeta meta;
-    if (!ParsePbFromIOBuf(&meta, msg->meta)) {
+    if (!ParsePbFromCordBuf(&meta, msg->meta)) {
         LOG(WARNING) << "Fail to parse HuluRpcRequestMeta";
         return false;
     }
@@ -557,7 +557,7 @@ void ProcessHuluResponse(InputMessageBase* msg_base) {
     const int64_t start_parse_us = flare::base::cpuwide_time_us();
     DestroyingPtr<MostCommonMessage> msg(static_cast<MostCommonMessage*>(msg_base));
     HuluRpcResponseMeta meta;
-    if (!ParsePbFromIOBuf(&meta, msg->meta)) {
+    if (!ParsePbFromCordBuf(&meta, msg->meta)) {
         LOG(WARNING) << "Fail to parse from response meta";
         return;
     }
@@ -586,8 +586,8 @@ void ProcessHuluResponse(InputMessageBase* msg_base) {
                               "%s", meta.error_text().c_str());
     } else {
         // Parse response message iff error code from meta is 0
-        flare::io::IOBuf res_buf;
-        flare::io::IOBuf* res_buf_ptr = &msg->payload;
+        flare::io::cord_buf res_buf;
+        flare::io::cord_buf* res_buf_ptr = &msg->payload;
         if (meta.has_user_message_size()) {
             msg->payload.cutn(&res_buf, meta.user_message_size());
             res_buf_ptr = &res_buf;
@@ -623,12 +623,12 @@ void ProcessHuluResponse(InputMessageBase* msg_base) {
     accessor.OnResponse(cid, saved_error);
 }
 
-void PackHuluRequest(flare::io::IOBuf* req_buf,
+void PackHuluRequest(flare::io::cord_buf* req_buf,
                      SocketMessage**,
                      uint64_t correlation_id,
                      const google::protobuf::MethodDescriptor* method,
                      Controller* cntl,
-                     const flare::io::IOBuf& req_body,
+                     const flare::io::cord_buf& req_body,
                      const Authenticator* auth) {
     HuluRpcRequestMeta meta;
     if (auth != NULL && auth->GenerateCredential(

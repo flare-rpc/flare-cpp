@@ -173,18 +173,18 @@ static long ReadPortOfDummyServer(const char* filename) {
     return port;
 }
 
-// Expose counters of flare::io::IOBuf
-static int64_t GetIOBufBlockCount(void*) {
-    return flare::io::IOBuf::block_count();
+// Expose counters of flare::io::cord_buf
+static size_t GetCordBufBlockCount(void*) {
+    return flare::io::cord_buf::block_count();
 }
-static int64_t GetIOBufBlockCountHitTLSThreshold(void*) {
-    return flare::io::IOBuf::block_count_hit_tls_threshold();
+static size_t GetCordBufBlockCountHitTLSThreshold(void*) {
+    return flare::io::cord_buf::block_count_hit_tls_threshold();
 }
-static int64_t GetIOBufNewBigViewCount(void*) {
-    return flare::io::IOBuf::new_bigview_count();
+static size_t GetCordBufNewBigViewCount(void*) {
+    return flare::io::cord_buf::new_bigview_count();
 }
-static int64_t GetIOBufBlockMemory(void*) {
-    return flare::io::IOBuf::block_memory();
+static size_t GetCordBufBlockMemory(void*) {
+    return flare::io::cord_buf::block_memory();
 }
 
 // Defined in server.cpp
@@ -196,17 +196,17 @@ static int GetRunningServerCount(void*) {
 // Update global stuff periodically.
 static void* GlobalUpdate(void*) {
     // Expose variables.
-    flare::variable::PassiveStatus<int64_t> var_iobuf_block_count(
-        "iobuf_block_count", GetIOBufBlockCount, NULL);
-    flare::variable::PassiveStatus<int64_t> var_iobuf_block_count_hit_tls_threshold(
+    flare::variable::PassiveStatus<size_t> var_iobuf_block_count(
+        "iobuf_block_count", GetCordBufBlockCount, NULL);
+    flare::variable::PassiveStatus<size_t> var_iobuf_block_count_hit_tls_threshold(
         "iobuf_block_count_hit_tls_threshold",
-        GetIOBufBlockCountHitTLSThreshold, NULL);
-    flare::variable::PassiveStatus<int64_t> var_iobuf_new_bigview_count(
-        GetIOBufNewBigViewCount, NULL);
-    flare::variable::PerSecond<flare::variable::PassiveStatus<int64_t> > var_iobuf_new_bigview_second(
+        GetCordBufBlockCountHitTLSThreshold, NULL);
+    flare::variable::PassiveStatus<size_t> var_iobuf_new_bigview_count(
+        GetCordBufNewBigViewCount, NULL);
+    flare::variable::PerSecond<flare::variable::PassiveStatus<size_t> > var_iobuf_new_bigview_second(
         "iobuf_newbigview_second", &var_iobuf_new_bigview_count);
-    flare::variable::PassiveStatus<int64_t> var_iobuf_block_memory(
-        "iobuf_block_memory", GetIOBufBlockMemory, NULL);
+    flare::variable::PassiveStatus<size_t> var_iobuf_block_memory(
+        "iobuf_block_memory", GetCordBufBlockMemory, NULL);
     flare::variable::PassiveStatus<int> var_running_server_count(
         "rpc_server_count", GetRunningServerCount, NULL);
 

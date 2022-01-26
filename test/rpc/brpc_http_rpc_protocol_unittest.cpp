@@ -158,7 +158,7 @@ protected:
 
         test::EchoRequest req;
         req.set_message(EXP_REQUEST);
-        flare::io::IOBufAsZeroCopyOutputStream req_stream(&msg->body());
+        flare::io::cord_buf_as_zero_copy_output_stream req_stream(&msg->body());
         EXPECT_TRUE(json2pb::ProtoMessageToJson(req, &req_stream, NULL));
         return msg;
     }
@@ -178,7 +178,7 @@ protected:
         
         test::EchoResponse res;
         res.set_message(EXP_RESPONSE);
-        flare::io::IOBufAsZeroCopyOutputStream res_stream(&msg->body());
+        flare::io::cord_buf_as_zero_copy_output_stream res_stream(&msg->body());
         EXPECT_TRUE(json2pb::ProtoMessageToJson(res, &res_stream, NULL));
         return msg;
     }
@@ -205,8 +205,8 @@ protected:
         msg->Destroy();
     }
 
-    void MakeH2EchoRequestBuf(flare::io::IOBuf* out, flare::rpc::Controller* cntl, int* h2_stream_id) {
-        flare::io::IOBuf request_buf;
+    void MakeH2EchoRequestBuf(flare::io::cord_buf* out, flare::rpc::Controller* cntl, int* h2_stream_id) {
+        flare::io::cord_buf request_buf;
         test::EchoRequest req;
         req.set_message(EXP_REQUEST);
         cntl->http_request().set_method(flare::rpc::HTTP_METHOD_POST);
@@ -222,13 +222,13 @@ protected:
         *h2_stream_id = h2_req->_stream_id;
     }
 
-    void MakeH2EchoResponseBuf(flare::io::IOBuf* out, int h2_stream_id) {
+    void MakeH2EchoResponseBuf(flare::io::cord_buf* out, int h2_stream_id) {
         flare::rpc::Controller cntl;
         test::EchoResponse res;
         res.set_message(EXP_RESPONSE);
         cntl.http_request().set_content_type("application/proto");
         {
-            flare::io::IOBufAsZeroCopyOutputStream wrapper(&cntl.response_attachment());
+            flare::io::cord_buf_as_zero_copy_output_stream wrapper(&cntl.response_attachment());
             EXPECT_TRUE(res.SerializeToZeroCopyStream(&wrapper));
         }
         flare::rpc::policy::H2UnsentResponse* h2_res = flare::rpc::policy::H2UnsentResponse::New(&cntl, h2_stream_id, false /*is grpc*/);
@@ -401,8 +401,8 @@ TEST_F(HttpTest, process_response_error_code) {
 }
 
 TEST_F(HttpTest, complete_flow) {
-    flare::io::IOBuf request_buf;
-    flare::io::IOBuf total_buf;
+    flare::io::cord_buf request_buf;
+    flare::io::cord_buf total_buf;
     flare::rpc::Controller cntl;
     test::EchoRequest req;
     test::EchoResponse res;
@@ -1037,11 +1037,11 @@ TEST_F(HttpTest, http2_ping) {
     flare::rpc::Controller cntl;
 
     // Prepare request
-    flare::io::IOBuf req_out;
+    flare::io::cord_buf req_out;
     int h2_stream_id = 0;
     MakeH2EchoRequestBuf(&req_out, &cntl, &h2_stream_id);
     // Prepare response
-    flare::io::IOBuf res_out;
+    flare::io::cord_buf res_out;
     char pingbuf[9 /*FRAME_HEAD_SIZE*/ + 8 /*Opaque Data*/];
     flare::rpc::policy::SerializeFrameHead(pingbuf, 8, flare::rpc::policy::H2_FRAME_PING, 0, 0);
     // insert ping before header and data
@@ -1069,11 +1069,11 @@ inline void SaveUint32(void* out, uint32_t v) {
 TEST_F(HttpTest, http2_rst_before_header) {
     flare::rpc::Controller cntl;
     // Prepare request
-    flare::io::IOBuf req_out;
+    flare::io::cord_buf req_out;
     int h2_stream_id = 0;
     MakeH2EchoRequestBuf(&req_out, &cntl, &h2_stream_id);
     // Prepare response
-    flare::io::IOBuf res_out;
+    flare::io::cord_buf res_out;
     char rstbuf[9 /*FRAME_HEAD_SIZE*/ + 4];
     flare::rpc::policy::SerializeFrameHead(rstbuf, 4, flare::rpc::policy::H2_FRAME_RST_STREAM, 0, h2_stream_id);
     SaveUint32(rstbuf + 9, flare::rpc::H2_INTERNAL_ERROR);
@@ -1093,11 +1093,11 @@ TEST_F(HttpTest, http2_rst_before_header) {
 TEST_F(HttpTest, http2_rst_after_header_and_data) {
     flare::rpc::Controller cntl;
     // Prepare request
-    flare::io::IOBuf req_out;
+    flare::io::cord_buf req_out;
     int h2_stream_id = 0;
     MakeH2EchoRequestBuf(&req_out, &cntl, &h2_stream_id);
     // Prepare response
-    flare::io::IOBuf res_out;
+    flare::io::cord_buf res_out;
     MakeH2EchoResponseBuf(&res_out, h2_stream_id);
     char rstbuf[9 /*FRAME_HEAD_SIZE*/ + 4];
     flare::rpc::policy::SerializeFrameHead(rstbuf, 4, flare::rpc::policy::H2_FRAME_RST_STREAM, 0, h2_stream_id);
@@ -1115,7 +1115,7 @@ TEST_F(HttpTest, http2_rst_after_header_and_data) {
 
 TEST_F(HttpTest, http2_window_used_up) {
     flare::rpc::Controller cntl;
-    flare::io::IOBuf request_buf;
+    flare::io::cord_buf request_buf;
     test::EchoRequest req;
     // longer message to trigger using up window size sooner
     req.set_message("FLOW_CONTROL_FLOW_CONTROL");
@@ -1127,7 +1127,7 @@ TEST_F(HttpTest, http2_window_used_up) {
     flare::rpc::H2Settings h2_settings;
     const size_t nb = flare::rpc::policy::SerializeH2Settings(h2_settings, settingsbuf + flare::rpc::policy::FRAME_HEAD_SIZE);
     flare::rpc::policy::SerializeFrameHead(settingsbuf, nb, flare::rpc::policy::H2_FRAME_SETTINGS, 0, 0);
-    flare::io::IOBuf buf;
+    flare::io::cord_buf buf;
     buf.append(settingsbuf, flare::rpc::policy::FRAME_HEAD_SIZE + nb);
     flare::rpc::policy::ParseH2Message(&buf, _h2_client_sock.get(), false, NULL);
 
@@ -1138,7 +1138,7 @@ TEST_F(HttpTest, http2_window_used_up) {
         flare::rpc::SocketMessage* socket_message = NULL;
         flare::rpc::policy::PackH2Request(NULL, &socket_message, cntl.call_id().value,
                                     NULL, &cntl, request_buf, NULL);
-        flare::io::IOBuf dummy;
+        flare::io::cord_buf dummy;
         flare::base::flare_status st = socket_message->AppendAndDestroySelf(&dummy, _h2_client_sock.get());
         if (i == nsuc) {
             // the last message should fail according to flow control policy.
@@ -1160,7 +1160,7 @@ TEST_F(HttpTest, http2_settings) {
     h2_settings.stream_window_size= (1u << 29) - 1;
     const size_t nb = flare::rpc::policy::SerializeH2Settings(h2_settings, settingsbuf + flare::rpc::policy::FRAME_HEAD_SIZE);
     flare::rpc::policy::SerializeFrameHead(settingsbuf, nb, flare::rpc::policy::H2_FRAME_SETTINGS, 0, 0);
-    flare::io::IOBuf buf;
+    flare::io::cord_buf buf;
     buf.append(settingsbuf, flare::rpc::policy::FRAME_HEAD_SIZE + nb);
 
     flare::rpc::policy::H2Context* ctx = new flare::rpc::policy::H2Context(_socket.get(), NULL);
@@ -1174,7 +1174,7 @@ TEST_F(HttpTest, http2_settings) {
     CHECK_EQ(response_buf.append_from_file_descriptor(_pipe_fds[0], 1024),
              (ssize_t)flare::rpc::policy::FRAME_HEAD_SIZE);
     flare::rpc::policy::H2FrameHead frame_head;
-    flare::io::IOBufBytesIterator it(response_buf);
+    flare::io::cord_buf_bytes_iterator it(response_buf);
     ctx->ConsumeFrameHead(it, &frame_head);
     CHECK_EQ(frame_head.type, flare::rpc::policy::H2_FRAME_SETTINGS);
     CHECK_EQ(frame_head.flags, 0x01 /* H2_FLAGS_ACK */);
@@ -1265,24 +1265,24 @@ TEST_F(HttpTest, http2_header_after_data) {
     flare::rpc::Controller cntl;
 
     // Prepare request
-    flare::io::IOBuf req_out;
+    flare::io::cord_buf req_out;
     int h2_stream_id = 0;
     MakeH2EchoRequestBuf(&req_out, &cntl, &h2_stream_id);
 
     // Prepare response to res_out
-    flare::io::IOBuf res_out;
+    flare::io::cord_buf res_out;
     {
-        flare::io::IOBuf data_buf;
+        flare::io::cord_buf data_buf;
         test::EchoResponse res;
         res.set_message(EXP_RESPONSE);
         {
-            flare::io::IOBufAsZeroCopyOutputStream wrapper(&data_buf);
+            flare::io::cord_buf_as_zero_copy_output_stream wrapper(&data_buf);
             EXPECT_TRUE(res.SerializeToZeroCopyStream(&wrapper));
         }
         flare::rpc::policy::H2Context* ctx =
             static_cast<flare::rpc::policy::H2Context*>(_h2_client_sock->parsing_context());
         flare::rpc::HPacker& hpacker = ctx->hpacker();
-        flare::io::IOBufAppender header1_appender;
+        flare::io::cord_buf_appender header1_appender;
         flare::rpc::HPackOptions options;
         options.encode_name = false;    /* disable huffman encoding */
         options.encode_value = false;
@@ -1307,7 +1307,7 @@ TEST_F(HttpTest, http2_header_after_data) {
             flare::rpc::HPacker::Header header("user-defined1", "a");
             hpacker.Encode(&header1_appender, header, options);
         }
-        flare::io::IOBuf header1;
+        flare::io::cord_buf header1;
         header1_appender.move_to(header1);
 
         char headbuf[flare::rpc::policy::FRAME_HEAD_SIZE];
@@ -1315,15 +1315,15 @@ TEST_F(HttpTest, http2_header_after_data) {
                 flare::rpc::policy::H2_FRAME_HEADERS, 0, h2_stream_id);
         // append header1
         res_out.append(headbuf, sizeof(headbuf));
-        res_out.append(flare::io::IOBuf::Movable(header1));
+        res_out.append(flare::io::cord_buf::Movable(header1));
 
         flare::rpc::policy::SerializeFrameHead(headbuf, data_buf.size(),
             flare::rpc::policy::H2_FRAME_DATA, 0, h2_stream_id);
         // append data
         res_out.append(headbuf, sizeof(headbuf));
-        res_out.append(flare::io::IOBuf::Movable(data_buf));
+        res_out.append(flare::io::cord_buf::Movable(data_buf));
 
-        flare::io::IOBufAppender header2_appender;
+        flare::io::cord_buf_appender header2_appender;
         {
             flare::rpc::HPacker::Header header("user-defined1", "overwrite-a");
             hpacker.Encode(&header2_appender, header, options);
@@ -1332,7 +1332,7 @@ TEST_F(HttpTest, http2_header_after_data) {
             flare::rpc::HPacker::Header header("user-defined2", "b");
             hpacker.Encode(&header2_appender, header, options);
         }
-        flare::io::IOBuf header2;
+        flare::io::cord_buf header2;
         header2_appender.move_to(header2);
 
         flare::rpc::policy::SerializeFrameHead(headbuf, header2.size(),
@@ -1340,7 +1340,7 @@ TEST_F(HttpTest, http2_header_after_data) {
                 h2_stream_id);
         // append header2
         res_out.append(headbuf, sizeof(headbuf));
-        res_out.append(flare::io::IOBuf::Movable(header2));
+        res_out.append(flare::io::cord_buf::Movable(header2));
     }
     // parse response
     flare::rpc::ParseResult res_pr =
@@ -1362,11 +1362,11 @@ TEST_F(HttpTest, http2_header_after_data) {
 TEST_F(HttpTest, http2_goaway_sanity) {
     flare::rpc::Controller cntl;
     // Prepare request
-    flare::io::IOBuf req_out;
+    flare::io::cord_buf req_out;
     int h2_stream_id = 0;
     MakeH2EchoRequestBuf(&req_out, &cntl, &h2_stream_id);
     // Prepare response
-    flare::io::IOBuf res_out;
+    flare::io::cord_buf res_out;
     MakeH2EchoResponseBuf(&res_out, h2_stream_id);
     // append goaway
     char goawaybuf[9 /*FRAME_HEAD_SIZE*/ + 8];
@@ -1391,8 +1391,8 @@ TEST_F(HttpTest, http2_goaway_sanity) {
     cntl._current_call.stream_user_data = h2_req;
     flare::rpc::SocketMessage* socket_message = NULL;
     flare::rpc::policy::PackH2Request(NULL, &socket_message, cntl.call_id().value,
-                                NULL, &cntl, flare::io::IOBuf(), NULL);
-    flare::io::IOBuf dummy;
+                                NULL, &cntl, flare::io::cord_buf(), NULL);
+    flare::io::cord_buf dummy;
     flare::base::flare_status st = socket_message->AppendAndDestroySelf(&dummy, _h2_client_sock.get());
     ASSERT_EQ(st.error_code(), flare::rpc::ELOGOFF);
     ASSERT_TRUE(flare::base::ends_with(st.error_data(), "the connection just issued GOAWAY"));

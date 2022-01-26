@@ -569,7 +569,7 @@ std::string GetCompleteCommand(const std::vector<std::string_view>& commands) {
 
 TEST_F(RedisTest, command_parser) {
     flare::rpc::RedisCommandParser parser;
-    flare::io::IOBuf buf;
+    flare::io::cord_buf buf;
     std::vector<std::string_view> command_out;
     flare::memory::Arena arena;
     {
@@ -641,8 +641,8 @@ TEST_F(RedisTest, redis_reply_codec) {
     // status
     {
         flare::rpc::RedisReply r(&arena);
-        flare::io::IOBuf buf;
-        flare::io::IOBufAppender appender;
+        flare::io::cord_buf buf;
+        flare::io::cord_buf_appender appender;
         r.SetStatus("OK");
         ASSERT_TRUE(r.SerializeTo(&appender));
         appender.move_to(buf);
@@ -650,7 +650,7 @@ TEST_F(RedisTest, redis_reply_codec) {
         ASSERT_STREQ(r.c_str(), "OK");
 
         flare::rpc::RedisReply r2(&arena);
-        flare::rpc::ParseError err = r2.ConsumePartialIOBuf(buf);
+        flare::rpc::ParseError err = r2.ConsumePartialCordBuf(buf);
         ASSERT_EQ(err, flare::rpc::PARSE_OK);
         ASSERT_TRUE(r2.is_string());
         ASSERT_STREQ("OK", r2.c_str());
@@ -658,15 +658,15 @@ TEST_F(RedisTest, redis_reply_codec) {
     // error
     {
         flare::rpc::RedisReply r(&arena);
-        flare::io::IOBuf buf;
-        flare::io::IOBufAppender appender;
+        flare::io::cord_buf buf;
+        flare::io::cord_buf_appender appender;
         r.SetError("not exist \'key\'");
         ASSERT_TRUE(r.SerializeTo(&appender));
         appender.move_to(buf);
         ASSERT_STREQ(buf.to_string().c_str(), "-not exist \'key\'\r\n");
 
         flare::rpc::RedisReply r2(&arena);
-        flare::rpc::ParseError err = r2.ConsumePartialIOBuf(buf);
+        flare::rpc::ParseError err = r2.ConsumePartialCordBuf(buf);
         ASSERT_EQ(err, flare::rpc::PARSE_OK);
         ASSERT_TRUE(r2.is_error());
         ASSERT_STREQ("not exist \'key\'", r2.error_message());
@@ -674,15 +674,15 @@ TEST_F(RedisTest, redis_reply_codec) {
     // string
     {
         flare::rpc::RedisReply r(&arena);
-        flare::io::IOBuf buf;
-        flare::io::IOBufAppender appender;
+        flare::io::cord_buf buf;
+        flare::io::cord_buf_appender appender;
         r.SetNullString();
         ASSERT_TRUE(r.SerializeTo(&appender));
         appender.move_to(buf);
         ASSERT_STREQ(buf.to_string().c_str(), "$-1\r\n");
         
         flare::rpc::RedisReply r2(&arena);
-        flare::rpc::ParseError err = r2.ConsumePartialIOBuf(buf);
+        flare::rpc::ParseError err = r2.ConsumePartialCordBuf(buf);
         ASSERT_EQ(err, flare::rpc::PARSE_OK);
         ASSERT_TRUE(r2.is_nil());
 
@@ -705,7 +705,7 @@ TEST_F(RedisTest, redis_reply_codec) {
         ASSERT_STREQ("verylongstring verylongstring verylongstring verylongstring int:123 str:foobar fp:3.21", r.c_str());
         
         flare::rpc::RedisReply r3(&arena);
-        err = r3.ConsumePartialIOBuf(buf);
+        err = r3.ConsumePartialCordBuf(buf);
         ASSERT_EQ(err, flare::rpc::PARSE_OK);
         ASSERT_TRUE(r3.is_string());
         ASSERT_STREQ(r.c_str(), r3.c_str());
@@ -713,8 +713,8 @@ TEST_F(RedisTest, redis_reply_codec) {
     // integer
     {
         flare::rpc::RedisReply r(&arena);
-        flare::io::IOBuf buf;
-        flare::io::IOBufAppender appender;
+        flare::io::cord_buf buf;
+        flare::io::cord_buf_appender appender;
         int t = 2;
         int input[] = { -1, 1234567 };
         const char* output[] = { ":-1\r\n", ":1234567\r\n" };
@@ -725,7 +725,7 @@ TEST_F(RedisTest, redis_reply_codec) {
             ASSERT_STREQ(buf.to_string().c_str(), output[i]);
 
             flare::rpc::RedisReply r2(&arena);
-            flare::rpc::ParseError err = r2.ConsumePartialIOBuf(buf);
+            flare::rpc::ParseError err = r2.ConsumePartialCordBuf(buf);
             ASSERT_EQ(err, flare::rpc::PARSE_OK);
             ASSERT_TRUE(r2.is_integer());
             ASSERT_EQ(r2.integer(), input[i]);
@@ -734,8 +734,8 @@ TEST_F(RedisTest, redis_reply_codec) {
     // array
     {
         flare::rpc::RedisReply r(&arena);
-        flare::io::IOBuf buf;
-        flare::io::IOBufAppender appender;
+        flare::io::cord_buf buf;
+        flare::io::cord_buf_appender appender;
         r.SetArray(3);
         flare::rpc::RedisReply& sub_reply = r[0];
         sub_reply.SetArray(2);
@@ -751,7 +751,7 @@ TEST_F(RedisTest, redis_reply_codec) {
                 "To go over everything\r\n:1\r\n");
 
         flare::rpc::RedisReply r2(&arena);
-        ASSERT_EQ(r2.ConsumePartialIOBuf(buf), flare::rpc::PARSE_OK);
+        ASSERT_EQ(r2.ConsumePartialCordBuf(buf), flare::rpc::PARSE_OK);
         ASSERT_TRUE(r2.is_array());
         ASSERT_EQ(3ul, r2.size());
         ASSERT_TRUE(r2[0].is_array());
@@ -770,7 +770,7 @@ TEST_F(RedisTest, redis_reply_codec) {
         ASSERT_TRUE(r.SerializeTo(&appender));
         appender.move_to(buf);
         ASSERT_STREQ(buf.to_string().c_str(), "*-1\r\n");
-        ASSERT_EQ(r.ConsumePartialIOBuf(buf), flare::rpc::PARSE_OK);
+        ASSERT_EQ(r.ConsumePartialCordBuf(buf), flare::rpc::PARSE_OK);
         ASSERT_TRUE(r.is_nil());
     }
 

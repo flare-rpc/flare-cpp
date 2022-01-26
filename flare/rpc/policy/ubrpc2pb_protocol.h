@@ -29,17 +29,17 @@ namespace policy {
 
 void ProcessUbrpcResponse(InputMessageBase* msg);
 
-void SerializeUbrpcCompackRequest(flare::io::IOBuf* buf, Controller* cntl,
+void SerializeUbrpcCompackRequest(flare::io::cord_buf* buf, Controller* cntl,
                                   const google::protobuf::Message* request);
-void SerializeUbrpcMcpack2Request(flare::io::IOBuf* buf, Controller* cntl,
+void SerializeUbrpcMcpack2Request(flare::io::cord_buf* buf, Controller* cntl,
                                   const google::protobuf::Message* request);
 
-void PackUbrpcRequest(flare::io::IOBuf* buf,
+void PackUbrpcRequest(flare::io::cord_buf* buf,
                       SocketMessage**,
                       uint64_t correlation_id,
                       const google::protobuf::MethodDescriptor* method,
                       Controller* controller,
-                      const flare::io::IOBuf& request,
+                      const flare::io::cord_buf& request,
                       const Authenticator* auth);
 
 class UbrpcAdaptor : public NsheadPbServiceAdaptor {
@@ -52,11 +52,11 @@ public:
                         Controller*,
                         NsheadMeta* out_meta) const;
 
-    void ParseRequestFromIOBuf(
+    void ParseRequestFromCordBuf(
         const NsheadMeta& meta, const NsheadMessage& ns_req,
         Controller* controller, google::protobuf::Message* pb_req) const;
 
-    void SerializeResponseToIOBuf(
+    void SerializeResponseToCordBuf(
         const NsheadMeta& meta,
         Controller* controller,
         const google::protobuf::Message* pb_res,

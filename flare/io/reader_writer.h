@@ -26,26 +26,26 @@ namespace flare::io {
 
 // Abstraction for reading data.
 // The simplest implementation is to embed a file descriptor and read from it.
-    class IReader {
+    class base_reader {
     public:
-        virtual ~IReader() {}
+        virtual ~base_reader() {}
 
         // Semantics of parameters and return value are same as readv(2) except that
         // there's no `fd'.
-        virtual ssize_t ReadV(const iovec *iov, int iovcnt) = 0;
+        virtual ssize_t readv(const iovec *iov, int iovcnt) = 0;
     };
 
 // Abstraction for writing data.
 // The simplest implementation is to embed a file descriptor and writev into it.
-    class IWriter {
+    class base_writer {
     public:
-        virtual ~IWriter() {}
+        virtual ~base_writer() {}
 
         // Semantics of parameters and return value are same as writev(2) except that
         // there's no `fd'.
-        // WriteV is required to submit data gathered by multiple appends in one
+        // writev is required to submit data gathered by multiple appends in one
         // run and enable the possibility of atomic writes.
-        virtual ssize_t WriteV(const iovec *iov, int iovcnt) = 0;
+        virtual ssize_t writev(const iovec *iov, int iovcnt) = 0;
     };
 
 }  // namespace flare::io

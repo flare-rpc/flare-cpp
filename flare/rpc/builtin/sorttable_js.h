@@ -24,11 +24,11 @@
 
 namespace flare::rpc {
 
-// Get the sorttable.js as string or IOBuf.
+// Get the sorttable.js as string or cord_buf.
 // We need to pack all js inside C++ code so that builtin services can be
 // accessed without external resources and network connection.
 const char* sorttable_js();
-const flare::io::IOBuf& sorttable_js_iobuf();
+const flare::io::cord_buf& sorttable_js_iobuf();
 
 } // namespace flare::rpc
 

@@ -107,9 +107,9 @@ int HttpMessage::on_header_value(http_parser *parser,
         http_message->_cur_value->append(at, length);
     }
     if (FLAGS_http_verbose) {
-        flare::io::IOBufBuilder* vs = http_message->_vmsgbuilder;
+        flare::io::cord_buf_builder* vs = http_message->_vmsgbuilder;
         if (vs == NULL) {
-            vs = new flare::io::IOBufBuilder;
+            vs = new flare::io::cord_buf_builder;
             http_message->_vmsgbuilder = vs;
             if (parser->type == HTTP_REQUEST) {
                 *vs << "[ HTTP REQUEST @" << flare::base::my_ip() << " ]\n< "
@@ -185,7 +185,7 @@ int HttpMessage::UnlockAndFlushToBodyReader(std::unique_lock<flare::base::Mutex>
         mu.unlock();
         return 0;
     }
-    flare::io::IOBuf body_seen = _body.movable();
+    flare::io::cord_buf body_seen = _body.movable();
     ProgressiveReader* r = _body_reader;
     mu.unlock();
     for (size_t i = 0; i < body_seen.backing_block_num(); ++i) {
@@ -229,7 +229,7 @@ int HttpMessage::OnBody(const char *at, const size_t length) {
             if (_vbodylen < (size_t)FLAGS_http_verbose_max_body_length) {
                 int plen = std::min(length, (size_t)FLAGS_http_verbose_max_body_length
                                     - _vbodylen);
-                std::string str = flare::io::ToPrintableString(
+                std::string str = flare::io::to_printable_string(
                     at, plen, std::numeric_limits<size_t>::max());
                 _vmsgbuilder->write(str.data(), str.size());
             }
@@ -241,7 +241,7 @@ int HttpMessage::OnBody(const char *at, const size_t length) {
     }
     if (!_read_body_progressively) {
         // Normal read.
-        // TODO: The input data is from IOBuf as well, possible to append
+        // TODO: The input data is from cord_buf as well, possible to append
         // data w/o copying.
         _body.append(at, length);
         return 0;
@@ -362,7 +362,7 @@ void HttpMessage::SetBodyReader(ProgressiveReader* r) {
             _body_reader = r;
             return;
         }
-        flare::io::IOBuf body_seen = _body.movable();
+        flare::io::cord_buf body_seen = _body.movable();
         mu.unlock();
         for (size_t i = 0; i < body_seen.backing_block_num(); ++i) {
             std::string_view blk = body_seen.backing_block(i);
@@ -438,7 +438,7 @@ ssize_t HttpMessage::ParseFromArray(const char *data, const size_t length) {
     return nprocessed;
 }
 
-ssize_t HttpMessage::ParseFromIOBuf(const flare::io::IOBuf &buf) {
+ssize_t HttpMessage::ParseFromCordBuf(const flare::io::cord_buf &buf) {
     if (Completed()) {
         if (buf.empty()) {
             return 0;
@@ -459,7 +459,7 @@ ssize_t HttpMessage::ParseFromIOBuf(const flare::io::IOBuf &buf) {
         if (_parser.http_errno != 0) {
             // May try HTTP on other formats, failure is norm.
             RPC_VLOG << "Fail to parse http message, parser=" << _parser
-                     << ", buf=" << flare::io::ToPrintable(buf);
+                     << ", buf=" << flare::io::to_printable(buf);
             return -1;
         }
         if (Completed()) {
@@ -536,11 +536,11 @@ std::ostream& operator<<(std::ostream& os, const http_parser& parser) {
 //                | "CONNECT"                ; Section 9.9
 //                | extension-method
 // extension-method = token
-void MakeRawHttpRequest(flare::io::IOBuf* request,
+void MakeRawHttpRequest(flare::io::cord_buf* request,
                         HttpHeader* h,
                         const flare::base::end_point& remote_side,
-                        const flare::io::IOBuf* content) {
-    flare::io::IOBufBuilder os;
+                        const flare::io::cord_buf* content) {
+    flare::io::cord_buf_builder os;
     os << HttpMethod2Str(h->method()) << ' ';
     const URI& uri = h->uri();
     uri.PrintWithoutHost(os); // host is sent by "Host" header.
@@ -613,10 +613,10 @@ void MakeRawHttpRequest(flare::io::IOBuf* request,
 //                CRLF
 //                [ message-body ]          ; Section 7.2
 // Status-Line = HTTP-Version SP Status-Code SP Reason-Phrase CRLF
-void MakeRawHttpResponse(flare::io::IOBuf* response,
+void MakeRawHttpResponse(flare::io::cord_buf* response,
                          HttpHeader* h,
-                         flare::io::IOBuf* content) {
-    flare::io::IOBufBuilder os;
+                         flare::io::cord_buf* content) {
+    flare::io::cord_buf_builder os;
     os << "HTTP/" << h->major_version() << '.'
        << h->minor_version() << ' ' << h->status_code()
        << ' ' << h->reason_phrase() << BRPC_CRLF;
@@ -638,7 +638,7 @@ void MakeRawHttpResponse(flare::io::IOBuf* response,
     os << BRPC_CRLF;  // CRLF before content
     os.move_to(*response);
     if (content) {
-        response->append(flare::io::IOBuf::Movable(*content));
+        response->append(flare::io::cord_buf::Movable(*content));
     }
 }
 #undef BRPC_CRLF

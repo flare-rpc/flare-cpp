@@ -22,7 +22,7 @@
 #include <gflags/gflags.h>
 #include "flare/base/logging.h"                       // LOG()
 #include "flare/base/time.h"
-#include "flare/io/iobuf.h"                         // flare::io::IOBuf
+#include "flare/io/iobuf.h"                         // flare::io::cord_buf
 #include "flare/rpc/controller.h"               // Controller
 #include "flare/rpc/details/controller_private_accessor.h"
 #include "flare/rpc/socket.h"                   // Socket
@@ -79,7 +79,7 @@ public:
 int ConsumeCommand(RedisConnContext* ctx,
                    const std::vector<std::string_view>& args,
                    bool flush_batched,
-                   flare::io::IOBufAppender* appender) {
+                   flare::io::cord_buf_appender* appender) {
     RedisReply output(&ctx->arena);
     RedisCommandHandlerResult result = REDIS_CMD_HANDLED;
     if (ctx->transaction_handler) {
@@ -144,7 +144,7 @@ void RedisConnContext::Destroy() {
 
 // ========== impl of RedisConnContext ==========
 
-ParseResult ParseRedisMessage(flare::io::IOBuf* source, Socket* socket,
+ParseResult ParseRedisMessage(flare::io::cord_buf* source, Socket* socket,
                               bool read_eof, const void* arg) {
     if (read_eof || source->empty()) {
         return MakeParseError(PARSE_ERROR_NOT_ENOUGH_DATA);
@@ -161,7 +161,7 @@ ParseResult ParseRedisMessage(flare::io::IOBuf* source, Socket* socket,
             socket->reset_parsing_context(ctx);
         }
         std::vector<std::string_view> current_args;
-        flare::io::IOBufAppender appender;
+        flare::io::cord_buf_appender appender;
         ParseError err = PARSE_OK;
 
         err = ctx->parser.Consume(*source, &current_args, &ctx->arena);
@@ -183,7 +183,7 @@ ParseResult ParseRedisMessage(flare::io::IOBuf* source, Socket* socket,
                     true /*must be the last message*/, &appender) != 0) {
             return MakeParseError(PARSE_ERROR_ABSOLUTELY_WRONG);
         }
-        flare::io::IOBuf sendbuf;
+        flare::io::cord_buf sendbuf;
         appender.move_to(sendbuf);
         CHECK(!sendbuf.empty());
         Socket::WriteOptions wopt;
@@ -217,7 +217,7 @@ ParseResult ParseRedisMessage(flare::io::IOBuf* source, Socket* socket,
 
             const int consume_count = (pi.with_auth ? 1 : pi.count);
 
-            ParseError err = msg->response.ConsumePartialIOBuf(*source, consume_count);
+            ParseError err = msg->response.ConsumePartialCordBuf(*source, consume_count);
             if (err != PARSE_OK) {
                 socket->GivebackPipelinedInfo(pi);
                 return MakeParseError(err);
@@ -296,7 +296,7 @@ void ProcessRedisResponse(InputMessageBase* msg_base) {
 
 void ProcessRedisRequest(InputMessageBase* msg_base) { }
 
-void SerializeRedisRequest(flare::io::IOBuf* buf,
+void SerializeRedisRequest(flare::io::cord_buf* buf,
                            Controller* cntl,
                            const google::protobuf::Message* request) {
     if (request == NULL) {
@@ -316,12 +316,12 @@ void SerializeRedisRequest(flare::io::IOBuf* buf,
     }
 }
 
-void PackRedisRequest(flare::io::IOBuf* buf,
+void PackRedisRequest(flare::io::cord_buf* buf,
                       SocketMessage**,
                       uint64_t /*correlation_id*/,
                       const google::protobuf::MethodDescriptor*,
                       Controller* cntl,
-                      const flare::io::IOBuf& request,
+                      const flare::io::cord_buf& request,
                       const Authenticator* auth) {
     if (auth) {
         std::string auth_str;

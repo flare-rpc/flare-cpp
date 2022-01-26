@@ -208,7 +208,7 @@ public:
     
     uint8_t continuity_counter;
     
-    flare::io::IOBuf payload;
+    flare::io::cord_buf payload;
 };
 
 // whether the sid indicates the elementary stream audio.
@@ -1065,7 +1065,7 @@ AACProfile AACObjectType2Profile(AACObjectType object_type) {
     return AAC_PROFILE_UNKNOWN;
 }
 
-TsWriter::TsWriter(flare::io::IOBuf* outbuf)
+TsWriter::TsWriter(flare::io::cord_buf* outbuf)
     : _outbuf(outbuf)
     , _nalu_format(AVC_NALU_FORMAT_UNKNOWN)
     , _has_avc_seq_header(false)
@@ -1278,7 +1278,7 @@ flare::base::flare_status TsWriter::Write(const RtmpVideoMessage& msg) {
     // always append a aud nalu for each frame.
     tsmsg.payload.append(fresh_nalu_header_and_aud_nalu_7,
                          FLARE_ARRAY_SIZE(fresh_nalu_header_and_aud_nalu_7));
-    flare::io::IOBuf nalus;
+    flare::io::cord_buf nalus;
     bool has_idr = false;
     for (AVCNaluIterator it(&avc_msg.data, _avc_seq_header.length_size_minus1,
                             &_nalu_format); it != NULL; ++it) {

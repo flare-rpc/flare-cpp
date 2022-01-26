@@ -26,24 +26,24 @@ namespace flare::rpc {
 namespace policy {
 
 // Parse memcache messags.
-ParseResult ParseMemcacheMessage(flare::io::IOBuf* source, Socket *socket, bool read_eof,
+ParseResult ParseMemcacheMessage(flare::io::cord_buf* source, Socket *socket, bool read_eof,
         const void *arg);
 
 // Actions to a memcache response.
 void ProcessMemcacheResponse(InputMessageBase* msg);
 
 // Serialize a memcache request.
-void SerializeMemcacheRequest(flare::io::IOBuf* buf,
+void SerializeMemcacheRequest(flare::io::cord_buf* buf,
                               Controller* cntl,
                               const google::protobuf::Message* request);
 
 // Pack `request' to `method' into `buf'.
-void PackMemcacheRequest(flare::io::IOBuf* buf,
+void PackMemcacheRequest(flare::io::cord_buf* buf,
                          SocketMessage**,
                          uint64_t correlation_id,
                          const google::protobuf::MethodDescriptor* method,
                          Controller* controller,
-                         const flare::io::IOBuf& request,
+                         const flare::io::cord_buf& request,
                          const Authenticator* auth);
 
 const std::string& GetMemcacheMethodName(

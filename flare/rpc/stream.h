@@ -42,7 +42,7 @@ namespace flare::rpc {
         virtual ~StreamInputHandler() = default;
 
         virtual int on_received_messages(StreamId id,
-                                         flare::io::IOBuf *const messages[],
+                                         flare::io::cord_buf *const messages[],
                                          size_t size) = 0;
 
         virtual void on_idle_timeout(StreamId id) = 0;
@@ -97,7 +97,7 @@ namespace flare::rpc {
     //  - EAGAIN: |stream_id| is created with positive |max_buf_size| and buf size
     //            which the remote side hasn't consumed yet excceeds the number.
     //  - EINVAL: |stream_id| is invalied or has been closed
-    int StreamWrite(StreamId stream_id, const flare::io::IOBuf &message);
+    int StreamWrite(StreamId stream_id, const flare::io::cord_buf &message);
 
     // Write util the pending buffer size is less than |max_buf_size| or orrur
     // occurs

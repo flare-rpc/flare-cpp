@@ -72,7 +72,7 @@ namespace flare::rpc {
 
         void Dump(size_t round, SampledRequest *);
 
-        static bool Serialize(flare::io::IOBuf &buf, SampledRequest *sample);
+        static bool Serialize(flare::io::cord_buf &buf, SampledRequest *sample);
 
         RpcDumpContext()
                 : _cur_req_count(0), _cur_fd(-1), _last_round(0), _max_requests_in_one_file(0), _max_files(0),
@@ -106,7 +106,7 @@ namespace flare::rpc {
         // current filename, being here just to reuse memory.
         std::string _cur_filename;
         // buffering output to file so they can be written in batch.
-        flare::io::IOBuf _unwritten_buf;
+        flare::io::cord_buf _unwritten_buf;
     };
 
     flare::variable::CollectorSpeedLimit g_rpc_dump_sl = BVAR_COLLECTOR_SPEED_LIMIT_INITIALIZER;
@@ -227,13 +227,13 @@ namespace flare::rpc {
         }
     }
 
-    bool RpcDumpContext::Serialize(flare::io::IOBuf &buf, SampledRequest *sample) {
+    bool RpcDumpContext::Serialize(flare::io::cord_buf &buf, SampledRequest *sample) {
         // Use the header of baidu_std.
         char rpc_header[12];
-        flare::io::IOBuf::Area header_area = buf.reserve(sizeof(rpc_header));
+        flare::io::cord_buf::Area header_area = buf.reserve(sizeof(rpc_header));
 
         const size_t starting_size = buf.size();
-        flare::io::IOBufAsZeroCopyOutputStream buf_stream(&buf);
+        flare::io::cord_buf_as_zero_copy_output_stream buf_stream(&buf);
         if (!sample->meta.SerializeToZeroCopyStream(&buf_stream)) {
             LOG(ERROR) << "Fail to serialize";
             return false;
@@ -243,7 +243,7 @@ namespace flare::rpc {
 
         uint32_t *dummy = (uint32_t *) rpc_header;  // suppress strict-alias warning
         *dummy = *(uint32_t *) "PRPC";
-        flare::io::RawPacker(rpc_header + 4)
+        flare::io::raw_packer(rpc_header + 4)
                 .pack32(meta_size + sample->request.size())
                 .pack32(meta_size);
         CHECK_EQ(0, buf.unsafe_assign(header_area, rpc_header));
@@ -316,7 +316,7 @@ namespace flare::rpc {
         }
     }
 
-    SampledRequest *SampleIterator::Pop(flare::io::IOBuf &buf, bool *format_error) {
+    SampledRequest *SampleIterator::Pop(flare::io::cord_buf &buf, bool *format_error) {
         char backing_buf[12];
         const char *p = (const char *) buf.fetch(backing_buf, sizeof(backing_buf));
         if (NULL == p) {  // buf.length() < sizeof(backing_buf)
@@ -329,7 +329,7 @@ namespace flare::rpc {
         }
         uint32_t body_size;
         uint32_t meta_size;
-        flare::io::RawUnpacker(p + 4).unpack32(body_size).unpack32(meta_size);
+        flare::io::raw_unpacker(p + 4).unpack32(body_size).unpack32(meta_size);
         if (body_size > FLAGS_max_body_size) {
             LOG(ERROR) << "Too big body=" << body_size;
             *format_error = true;
@@ -344,10 +344,10 @@ namespace flare::rpc {
             return NULL;
         }
         buf.pop_front(sizeof(backing_buf));
-        flare::io::IOBuf meta_buf;
+        flare::io::cord_buf meta_buf;
         buf.cutn(&meta_buf, meta_size);
         std::unique_ptr<SampledRequest> req(new SampledRequest);
-        if (!ParsePbFromIOBuf(&req->meta, meta_buf)) {
+        if (!ParsePbFromCordBuf(&req->meta, meta_buf)) {
             LOG(ERROR) << "Fail to parse RpcDumpMeta";
             *format_error = true;
             return NULL;

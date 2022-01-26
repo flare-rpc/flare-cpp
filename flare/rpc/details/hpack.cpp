@@ -348,7 +348,7 @@ private:
 class HuffmanEncoder {
 FLARE_DISALLOW_COPY_AND_ASSIGN(HuffmanEncoder);
 public:
-    HuffmanEncoder(flare::io::IOBufAppender* out, const HuffmanCode* table)
+    HuffmanEncoder(flare::io::cord_buf_appender* out, const HuffmanCode* table)
         : _out(out)
         , _table(table)
         , _partial_byte(0)
@@ -395,7 +395,7 @@ public:
     uint32_t out_bytes() const { return _out_bytes; }
 
 private:
-    flare::io::IOBufAppender* _out;
+    flare::io::cord_buf_appender* _out;
     const HuffmanCode* _table;
     uint8_t  _partial_byte;
     uint16_t _remain_bit;
@@ -478,7 +478,7 @@ private:
 // Primitive Type Representations
 
 // Encode variant intger and return the size
-inline void EncodeInteger(flare::io::IOBufAppender* out, uint8_t msb,
+inline void EncodeInteger(flare::io::cord_buf_appender* out, uint8_t msb,
                           uint8_t prefix_size, uint32_t value) {
     uint8_t max_prefix_value = (1 << prefix_size) - 1;
     if (value < max_prefix_value) {
@@ -531,7 +531,7 @@ static void CreateStaticTableOnceOrDie() {
 // Assume that no header would be larger than 10MB
 static const size_t MAX_HPACK_INTEGER = 10 * 1024 * 1024ul;
 
-inline ssize_t DecodeInteger(flare::io::IOBufBytesIterator& iter,
+inline ssize_t DecodeInteger(flare::io::cord_buf_bytes_iterator& iter,
                              uint8_t prefix_size, uint32_t* value) {
     if (iter == NULL) {
         return 0; // No enough data
@@ -568,7 +568,7 @@ inline ssize_t DecodeInteger(flare::io::IOBufBytesIterator& iter,
 }
 
 template <bool LOWERCASE> // use template to remove dead branches.
-inline void EncodeString(flare::io::IOBufAppender* out, const std::string& s,
+inline void EncodeString(flare::io::cord_buf_appender* out, const std::string& s,
                          bool huffman_encoding) {
     if (!huffman_encoding) {
         EncodeInteger(out, 0x00, 7, s.size());
@@ -606,7 +606,7 @@ inline void EncodeString(flare::io::IOBufAppender* out, const std::string& s,
     e.EndStream();
 }
 
-inline ssize_t DecodeString(flare::io::IOBufBytesIterator& iter, std::string* out) {
+inline ssize_t DecodeString(flare::io::cord_buf_bytes_iterator& iter, std::string* out) {
     if (iter == NULL) {
         return 0;
     }
@@ -696,7 +696,7 @@ inline int HPacker::FindNameFromIndexTable(const std::string& name) const {
     return _encode_table->GetIndexOfName(name);
 }
 
-void HPacker::Encode(flare::io::IOBufAppender* out, const Header& header,
+void HPacker::Encode(flare::io::cord_buf_appender* out, const Header& header,
                      const HPackOptions& options) {
     if (options.index_policy != HPACK_NEVER_INDEX_HEADER) {
         const int index = FindHeaderFromIndexTable(header);
@@ -734,7 +734,7 @@ inline const HPacker::Header* HPacker::HeaderAt(int index) const {
 }
 
 inline ssize_t HPacker::DecodeWithKnownPrefix(
-    flare::io::IOBufBytesIterator& iter, Header* h, uint8_t prefix_size) const {
+    flare::io::cord_buf_bytes_iterator& iter, Header* h, uint8_t prefix_size) const {
     int index = 0;
     ssize_t index_bytes = DecodeInteger(iter, prefix_size, (uint32_t*)&index);
     ssize_t name_bytes = 0;
@@ -765,7 +765,7 @@ inline ssize_t HPacker::DecodeWithKnownPrefix(
     return index_bytes + name_bytes + value_bytes;
 }
 
-ssize_t HPacker::Decode(flare::io::IOBufBytesIterator& iter, Header* h) {
+ssize_t HPacker::Decode(flare::io::cord_buf_bytes_iterator& iter, Header* h) {
     if (iter == NULL) {
         return 0;
     }

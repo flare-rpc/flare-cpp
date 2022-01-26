@@ -140,12 +140,12 @@ protected:
         const flare::rpc::policy::HuluRpcRequestMeta& meta) {
         flare::rpc::policy::MostCommonMessage* msg =
                 flare::rpc::policy::MostCommonMessage::Get();
-        flare::io::IOBufAsZeroCopyOutputStream meta_stream(&msg->meta);
+        flare::io::cord_buf_as_zero_copy_output_stream meta_stream(&msg->meta);
         EXPECT_TRUE(meta.SerializeToZeroCopyStream(&meta_stream));
 
         test::EchoRequest req;
         req.set_message(EXP_REQUEST);
-        flare::io::IOBufAsZeroCopyOutputStream req_stream(&msg->payload);
+        flare::io::cord_buf_as_zero_copy_output_stream req_stream(&msg->payload);
         EXPECT_TRUE(req.SerializeToZeroCopyStream(&req_stream));
         return msg;
     }
@@ -154,12 +154,12 @@ protected:
         const flare::rpc::policy::HuluRpcResponseMeta& meta) {
         flare::rpc::policy::MostCommonMessage* msg =
                 flare::rpc::policy::MostCommonMessage::Get();
-        flare::io::IOBufAsZeroCopyOutputStream meta_stream(&msg->meta);
+        flare::io::cord_buf_as_zero_copy_output_stream meta_stream(&msg->meta);
         EXPECT_TRUE(meta.SerializeToZeroCopyStream(&meta_stream));
 
         test::EchoResponse res;
         res.set_message(EXP_RESPONSE);
-        flare::io::IOBufAsZeroCopyOutputStream res_stream(&msg->payload);
+        flare::io::cord_buf_as_zero_copy_output_stream res_stream(&msg->payload);
         EXPECT_TRUE(res.SerializeToZeroCopyStream(&res_stream));
         return msg;
     }
@@ -182,14 +182,14 @@ protected:
             static_cast<flare::rpc::policy::MostCommonMessage*>(pr.message());
 
         flare::rpc::policy::HuluRpcResponseMeta meta;
-        flare::io::IOBufAsZeroCopyInputStream meta_stream(msg->meta);
+        flare::io::cord_buf_as_zero_copy_input_stream meta_stream(msg->meta);
         EXPECT_TRUE(meta.ParseFromZeroCopyStream(&meta_stream));
         EXPECT_EQ(expect_code, meta.error_code());
     }
 
     void TestHuluCompress(flare::rpc::CompressType type) {
-        flare::io::IOBuf request_buf;
-        flare::io::IOBuf total_buf;
+        flare::io::cord_buf request_buf;
+        flare::io::cord_buf total_buf;
         flare::rpc::Controller cntl;
         test::EchoRequest req;
         test::EchoResponse res;
@@ -277,8 +277,8 @@ TEST_F(HuluTest, process_response_error_code) {
 }
 
 TEST_F(HuluTest, complete_flow) {
-    flare::io::IOBuf request_buf;
-    flare::io::IOBuf total_buf;
+    flare::io::cord_buf request_buf;
+    flare::io::cord_buf total_buf;
     flare::rpc::Controller cntl;
     test::EchoRequest req;
     test::EchoResponse res;
@@ -316,8 +316,8 @@ TEST_F(HuluTest, complete_flow) {
 }
 
 TEST_F(HuluTest, close_in_callback) {
-    flare::io::IOBuf request_buf;
-    flare::io::IOBuf total_buf;
+    flare::io::cord_buf request_buf;
+    flare::io::cord_buf total_buf;
     flare::rpc::Controller cntl;
     test::EchoRequest req;
 

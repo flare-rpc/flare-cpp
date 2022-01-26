@@ -50,8 +50,8 @@ public:
     bool IsInitialized() const;
     int ByteSize() const;
     int GetCachedSize() const { return (int)_serialized.size(); }
-    flare::io::IOBuf& serialized_data() { return _serialized; }
-    const flare::io::IOBuf& serialized_data() const { return _serialized; }
+    flare::io::cord_buf& serialized_data() { return _serialized; }
+    const flare::io::cord_buf& serialized_data() const { return _serialized; }
 
 protected:
     ::google::protobuf::Metadata GetMetadata() const;
@@ -70,7 +70,7 @@ private:
     void SetCachedSize(int size) const;
   
 private:
-    flare::io::IOBuf _serialized;
+    flare::io::cord_buf _serialized;
 };
 
 } // namespace flare::rpc

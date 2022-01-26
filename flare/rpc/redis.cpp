@@ -194,7 +194,7 @@ namespace flare::rpc {
         }
     }
 
-    bool RedisRequest::SerializeTo(flare::io::IOBuf *buf) const {
+    bool RedisRequest::SerializeTo(flare::io::cord_buf *buf) const {
         if (_has_error) {
             LOG(ERROR) << "Reject serialization due to error in AddCommand[V]";
             return false;
@@ -215,8 +215,8 @@ namespace flare::rpc {
     }
 
     void RedisRequest::Print(std::ostream &os) const {
-        flare::io::IOBuf cp = _buf;
-        flare::io::IOBuf seg;
+        flare::io::cord_buf cp = _buf;
+        flare::io::cord_buf seg;
         while (cp.cut_until(&seg, "\r\n") == 0) {
             os << seg;
             if (FLAGS_redis_verbose_crlf2space) {
@@ -380,10 +380,10 @@ namespace flare::rpc {
 
 // ===================================================================
 
-    ParseError RedisResponse::ConsumePartialIOBuf(flare::io::IOBuf &buf, int reply_count) {
+    ParseError RedisResponse::ConsumePartialCordBuf(flare::io::cord_buf &buf, int reply_count) {
         size_t oldsize = buf.size();
         if (reply_size() == 0) {
-            ParseError err = _first_reply.ConsumePartialIOBuf(buf);
+            ParseError err = _first_reply.ConsumePartialCordBuf(buf);
             if (err != PARSE_OK) {
                 return err;
             }
@@ -405,7 +405,7 @@ namespace flare::rpc {
                 }
             }
             for (int i = reply_size(); i < reply_count; ++i) {
-                ParseError err = _other_replies[i - 1].ConsumePartialIOBuf(buf);
+                ParseError err = _other_replies[i - 1].ConsumePartialCordBuf(buf);
                 if (err != PARSE_OK) {
                     return err;
                 }

@@ -29,16 +29,16 @@ namespace policy {
 // Actions to a (server) response in public-pbrpc format.
 void ProcessPublicPbrpcResponse(InputMessageBase* msg);
 
-void SerializePublicPbrpcRequest(flare::io::IOBuf* buf, Controller* cntl,
+void SerializePublicPbrpcRequest(flare::io::cord_buf* buf, Controller* cntl,
                                  const google::protobuf::Message* request);
 
 // Pack `request' to `method' into `buf'.
-void PackPublicPbrpcRequest(flare::io::IOBuf* buf,
+void PackPublicPbrpcRequest(flare::io::cord_buf* buf,
                             SocketMessage**,
                             uint64_t correlation_id,
                             const google::protobuf::MethodDescriptor* method,
                             Controller* controller,
-                            const flare::io::IOBuf& request,
+                            const flare::io::cord_buf& request,
                             const Authenticator* auth);
 
 class PublicPbrpcServiceAdaptor : public NsheadPbServiceAdaptor {
@@ -47,11 +47,11 @@ public:
         const Server& svr, const NsheadMessage& request, Controller*,
         NsheadMeta* out_meta) const;
 
-    void ParseRequestFromIOBuf(
+    void ParseRequestFromCordBuf(
         const NsheadMeta& meta, const NsheadMessage& raw_req,
         Controller* controller, google::protobuf::Message* pb_req) const;
 
-    void SerializeResponseToIOBuf(
+    void SerializeResponseToCordBuf(
         const NsheadMeta& meta, Controller* controller,
         const google::protobuf::Message* pb_res,
         NsheadMessage* raw_res) const;

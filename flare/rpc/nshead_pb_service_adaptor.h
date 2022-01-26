@@ -31,9 +31,9 @@ extern const size_t SendNsheadPbResponseSize;
 // What RPC does:
 //  * Call ParseNsheadMeta() to understand the nshead header, user must
 //    tell RPC which pb method to call in the callback.
-//  * Call ParseRequestFromIOBuf() to convert the body after nshead header
+//  * Call ParseRequestFromCordBuf() to convert the body after nshead header
 //    to pb request, then call the pb method.
-//  * When user calls server's done to end the RPC, SerializeResponseToIOBuf()
+//  * When user calls server's done to end the RPC, SerializeResponseToCordBuf()
 //    is called to convert pb response to binary data that will be appended
 //    after nshead header and sent back to client.
 
@@ -63,7 +63,7 @@ public:
     //   controller: you can set attachment into the controller. If something
     //               goes wrong, call controller->SetFailed()
     //   pb_req: the pb request should be set by your implementation.
-    virtual void ParseRequestFromIOBuf(const NsheadMeta& meta,
+    virtual void ParseRequestFromCordBuf(const NsheadMeta& meta,
                                        const NsheadMessage& nshead_req,
                                        Controller* controller,
                                        google::protobuf::Message* pb_req) const = 0;
@@ -77,7 +77,7 @@ public:
     //           Controller::Failed()), in which case you may put error
     //           information into `nshead_res'.
     //   nshead_res: the nshead response that will be sent back to client.
-    virtual void SerializeResponseToIOBuf(const NsheadMeta& meta,
+    virtual void SerializeResponseToCordBuf(const NsheadMeta& meta,
                                           Controller* controller, 
                                           const google::protobuf::Message* pb_res,
                                           NsheadMessage* nshead_res) const = 0;

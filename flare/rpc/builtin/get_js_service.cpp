@@ -16,7 +16,7 @@
 // under the License.
 
 #include "flare/base/profile.h"                           // FLARE_ARRAY_SIZE
-#include "flare/io/iobuf.h"                            // flare::io::IOBuf
+#include "flare/io/iobuf.h"                            // flare::io::cord_buf
 #include "flare/rpc/controller.h"                  // Controller
 #include "flare/rpc/builtin/sorttable_js.h"
 #include "flare/rpc/builtin/jquery_min_js.h"

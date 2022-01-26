@@ -33,7 +33,7 @@ namespace flare::rpc {
 class EspMessage : public ::google::protobuf::Message {
 public:
     EspHead head;
-    flare::io::IOBuf body;
+    flare::io::cord_buf body;
 
 public:
     EspMessage();

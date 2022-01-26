@@ -148,7 +148,7 @@ DiscoveryClient::~DiscoveryClient() {
     }
 }
 
-static int ParseCommonResult(const flare::io::IOBuf& buf, std::string* error_text) {
+static int ParseCommonResult(const flare::io::cord_buf& buf, std::string* error_text) {
     const std::string s = buf.to_string();
     RAPIDJSON_NAMESPACE::Document d;
     d.Parse(s.c_str());
@@ -186,7 +186,7 @@ int DiscoveryClient::DoRenew() const {
     cntl.http_request().set_method(HTTP_METHOD_POST);
     cntl.http_request().uri() = "/discovery/renew";
     cntl.http_request().set_content_type("application/x-www-form-urlencoded");
-    flare::io::IOBufBuilder os;
+    flare::io::cord_buf_builder os;
     os << "appid=" << _params.appid
         << "&hostname=" << _params.hostname
         << "&env=" << _params.env
@@ -270,7 +270,7 @@ int DiscoveryClient::DoRegister() {
     cntl.http_request().set_method(HTTP_METHOD_POST);
     cntl.http_request().uri() = "/discovery/register";
     cntl.http_request().set_content_type("application/x-www-form-urlencoded");
-    flare::io::IOBufBuilder os;
+    flare::io::cord_buf_builder os;
     os << "appid=" << _params.appid
         << "&hostname=" << _params.hostname;
 
@@ -319,7 +319,7 @@ int DiscoveryClient::DoCancel() const {
     cntl.http_request().set_method(HTTP_METHOD_POST);
     cntl.http_request().uri() = "/discovery/cancel";
     cntl.http_request().set_content_type("application/x-www-form-urlencoded");
-    flare::io::IOBufBuilder os;
+    flare::io::cord_buf_builder os;
     os << "appid=" << _params.appid
         << "&hostname=" << _params.hostname
         << "&env=" << _params.env

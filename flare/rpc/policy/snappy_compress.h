@@ -20,23 +20,23 @@
 #define BRPC_POLICY_SNAPPY_COMPRESS_H
 
 #include <google/protobuf/message.h>          // Message
-#include "flare/io/iobuf.h"                       // IOBuf
+#include "flare/io/iobuf.h"                       // cord_buf
 
 
 namespace flare::rpc {
 namespace policy {
 
 // Compress serialized `msg' into `buf'.
-bool SnappyCompress(const google::protobuf::Message& msg, flare::io::IOBuf* buf);
+bool SnappyCompress(const google::protobuf::Message& msg, flare::io::cord_buf* buf);
 
 // Parse `msg' from decompressed `buf'
-bool SnappyDecompress(const flare::io::IOBuf& data, google::protobuf::Message* msg);
+bool SnappyDecompress(const flare::io::cord_buf& data, google::protobuf::Message* msg);
 
 // Put compressed `in' into `out'.
-bool SnappyCompress(const flare::io::IOBuf& in, flare::io::IOBuf* out);
+bool SnappyCompress(const flare::io::cord_buf& in, flare::io::cord_buf* out);
 
 // Put decompressed `in' into `out'.
-bool SnappyDecompress(const flare::io::IOBuf& in, flare::io::IOBuf* out);
+bool SnappyDecompress(const flare::io::cord_buf& in, flare::io::cord_buf* out);
 
 }  // namespace policy
 } // namespace flare::rpc

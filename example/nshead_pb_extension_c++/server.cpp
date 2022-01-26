@@ -61,7 +61,7 @@ public:
         out_meta->set_full_method_name(svc->method(0)->full_name());
     }
 
-    void ParseRequestFromIOBuf(const flare::rpc::NsheadMeta&,
+    void ParseRequestFromCordBuf(const flare::rpc::NsheadMeta&,
                                const flare::rpc::NsheadMessage& raw_req,
                                flare::rpc::Controller* cntl,
                                google::protobuf::Message* pb_req) const {
@@ -75,7 +75,7 @@ public:
         echo_req->set_message(raw_req.body.to_string());
     }
 
-    void SerializeResponseToIOBuf(
+    void SerializeResponseToCordBuf(
         const flare::rpc::NsheadMeta&, flare::rpc::Controller* cntl,
         const google::protobuf::Message* pb_res,
         flare::rpc::NsheadMessage* raw_res) const {

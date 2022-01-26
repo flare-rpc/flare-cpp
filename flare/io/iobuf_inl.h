@@ -28,12 +28,12 @@ void *fast_memcpy(void *__restrict dest, const void *__restrict src, size_t n);
 
 namespace flare::io {
 
-    inline ssize_t IOBuf::cut_into_file_descriptor(int fd, size_t size_hint) {
+    inline ssize_t cord_buf::cut_into_file_descriptor(int fd, size_t size_hint) {
         return pcut_into_file_descriptor(fd, -1, size_hint);
     }
 
-    inline ssize_t IOBuf::cut_multiple_into_file_descriptor(
-            int fd, IOBuf *const *pieces, size_t count) {
+    inline ssize_t cord_buf::cut_multiple_into_file_descriptor(
+            int fd, cord_buf *const *pieces, size_t count) {
         return pcut_multiple_into_file_descriptor(fd, -1, pieces, count);
     }
 
@@ -48,45 +48,45 @@ namespace flare::io {
         }
     }
 
-    inline void reset_block_ref(IOBuf::BlockRef &ref) {
+    inline void reset_block_ref(cord_buf::BlockRef &ref) {
         ref.offset = 0;
         ref.length = 0;
         ref.block = NULL;
     }
 
-    inline IOBuf::IOBuf() {
+    inline cord_buf::cord_buf() {
         reset_block_ref(_sv.refs[0]);
         reset_block_ref(_sv.refs[1]);
     }
 
-    inline IOBuf::IOBuf(const Movable &rhs) {
+    inline cord_buf::cord_buf(const Movable &rhs) {
         _sv = rhs.value()._sv;
-        new(&rhs.value()) IOBuf;
+        new(&rhs.value()) cord_buf;
     }
 
-    inline void IOBuf::operator=(const Movable &rhs) {
+    inline void cord_buf::operator=(const Movable &rhs) {
         clear();
         _sv = rhs.value()._sv;
-        new(&rhs.value()) IOBuf;
+        new(&rhs.value()) cord_buf;
     }
 
-    inline void IOBuf::operator=(const char *s) {
+    inline void cord_buf::operator=(const char *s) {
         clear();
         append(s);
     }
 
-    inline void IOBuf::operator=(const std::string &s) {
+    inline void cord_buf::operator=(const std::string &s) {
         clear();
         append(s);
     }
 
-    inline void IOBuf::swap(IOBuf &other) {
+    inline void cord_buf::swap(cord_buf &other) {
         const SmallView tmp = other._sv;
         other._sv = _sv;
         _sv = tmp;
     }
 
-    inline int IOBuf::cut_until(IOBuf *out, char const *delim) {
+    inline int cord_buf::cut_until(cord_buf *out, char const *delim) {
         if (*delim) {
             if (!*(delim + 1)) {
                 return _cut_by_char(out, *delim);
@@ -97,7 +97,7 @@ namespace flare::io {
         return -1;
     }
 
-    inline int IOBuf::cut_until(IOBuf *out, const std::string &delim) {
+    inline int cord_buf::cut_until(cord_buf *out, const std::string &delim) {
         if (delim.length() == 1UL) {
             return _cut_by_char(out, delim[0]);
         } else if (delim.length() > 1UL) {
@@ -107,59 +107,59 @@ namespace flare::io {
         }
     }
 
-    inline int IOBuf::append(const std::string &s) {
+    inline int cord_buf::append(const std::string &s) {
         return append(s.data(), s.length());
     }
 
-    inline std::string IOBuf::to_string() const {
+    inline std::string cord_buf::to_string() const {
         std::string s;
         copy_to(&s);
         return s;
     }
 
-    inline bool IOBuf::empty() const {
+    inline bool cord_buf::empty() const {
         return _small() ? !_sv.refs[0].block : !_bv.nbytes;
     }
 
-    inline size_t IOBuf::length() const {
+    inline size_t cord_buf::length() const {
         return _small() ?
                (_sv.refs[0].length + _sv.refs[1].length) : _bv.nbytes;
     }
 
-    inline bool IOBuf::_small() const {
+    inline bool cord_buf::_small() const {
         return _bv.magic >= 0;
     }
 
-    inline size_t IOBuf::_ref_num() const {
+    inline size_t cord_buf::_ref_num() const {
         return _small()
                ? (!!_sv.refs[0].block + !!_sv.refs[1].block) : _bv.nref;
     }
 
-    inline IOBuf::BlockRef &IOBuf::_front_ref() {
+    inline cord_buf::BlockRef &cord_buf::_front_ref() {
         return _small() ? _sv.refs[0] : _bv.refs[_bv.start];
     }
 
-    inline const IOBuf::BlockRef &IOBuf::_front_ref() const {
+    inline const cord_buf::BlockRef &cord_buf::_front_ref() const {
         return _small() ? _sv.refs[0] : _bv.refs[_bv.start];
     }
 
-    inline IOBuf::BlockRef &IOBuf::_back_ref() {
+    inline cord_buf::BlockRef &cord_buf::_back_ref() {
         return _small() ? _sv.refs[!!_sv.refs[1].block] : _bv.ref_at(_bv.nref - 1);
     }
 
-    inline const IOBuf::BlockRef &IOBuf::_back_ref() const {
+    inline const cord_buf::BlockRef &cord_buf::_back_ref() const {
         return _small() ? _sv.refs[!!_sv.refs[1].block] : _bv.ref_at(_bv.nref - 1);
     }
 
-    inline IOBuf::BlockRef &IOBuf::_ref_at(size_t i) {
+    inline cord_buf::BlockRef &cord_buf::_ref_at(size_t i) {
         return _small() ? _sv.refs[i] : _bv.ref_at(i);
     }
 
-    inline const IOBuf::BlockRef &IOBuf::_ref_at(size_t i) const {
+    inline const cord_buf::BlockRef &cord_buf::_ref_at(size_t i) const {
         return _small() ? _sv.refs[i] : _bv.ref_at(i);
     }
 
-    inline const IOBuf::BlockRef *IOBuf::_pref_at(size_t i) const {
+    inline const cord_buf::BlockRef *cord_buf::_pref_at(size_t i) const {
         if (_small()) {
             return i < (size_t) (!!_sv.refs[0].block + !!_sv.refs[1].block) ? &_sv.refs[i] : NULL;
         } else {
@@ -167,16 +167,16 @@ namespace flare::io {
         }
     }
 
-    inline bool operator==(const IOBuf::BlockRef &r1, const IOBuf::BlockRef &r2) {
+    inline bool operator==(const cord_buf::BlockRef &r1, const cord_buf::BlockRef &r2) {
         return r1.offset == r2.offset && r1.length == r2.length &&
                r1.block == r2.block;
     }
 
-    inline bool operator!=(const IOBuf::BlockRef &r1, const IOBuf::BlockRef &r2) {
+    inline bool operator!=(const cord_buf::BlockRef &r1, const cord_buf::BlockRef &r2) {
         return !(r1 == r2);
     }
 
-    inline void IOBuf::_push_back_ref(const BlockRef &r) {
+    inline void cord_buf::_push_back_ref(const BlockRef &r) {
         if (_small()) {
             return _push_or_move_back_ref_to_smallview<false>(r);
         } else {
@@ -184,7 +184,7 @@ namespace flare::io {
         }
     }
 
-    inline void IOBuf::_move_back_ref(const BlockRef &r) {
+    inline void cord_buf::_move_back_ref(const BlockRef &r) {
         if (_small()) {
             return _push_or_move_back_ref_to_smallview<true>(r);
         } else {
@@ -192,8 +192,8 @@ namespace flare::io {
         }
     }
 
-////////////////  IOBufCutter ////////////////
-    inline size_t IOBufCutter::remaining_bytes() const {
+////////////////  cord_buf_cutter ////////////////
+    inline size_t cord_buf_cutter::remaining_bytes() const {
         if (_block) {
             return (char *) _data_end - (char *) _data + _buf->size() - _buf->_front_ref().length;
         } else {
@@ -201,7 +201,7 @@ namespace flare::io {
         }
     }
 
-    inline bool IOBufCutter::cut1(void *c) {
+    inline bool cord_buf_cutter::cut1(void *c) {
         if (_data == _data_end) {
             if (!load_next_ref()) {
                 return false;
@@ -212,7 +212,7 @@ namespace flare::io {
         return true;
     }
 
-    inline const void *IOBufCutter::fetch1() {
+    inline const void *cord_buf_cutter::fetch1() {
         if (_data == _data_end) {
             if (!load_next_ref()) {
                 return NULL;
@@ -221,7 +221,7 @@ namespace flare::io {
         return _data;
     }
 
-    inline size_t IOBufCutter::copy_to(void *out, size_t n) {
+    inline size_t cord_buf_cutter::copy_to(void *out, size_t n) {
         size_t size = (char *) _data_end - (char *) _data;
         if (n <= size) {
             memcpy(out, _data, n);
@@ -230,7 +230,7 @@ namespace flare::io {
         return slower_copy_to(out, n);
     }
 
-    inline size_t IOBufCutter::pop_front(size_t n) {
+    inline size_t cord_buf_cutter::pop_front(size_t n) {
         const size_t saved_n = n;
         do {
             const size_t size = (char *) _data_end - (char *) _data;
@@ -245,7 +245,7 @@ namespace flare::io {
         } while (true);
     }
 
-    inline size_t IOBufCutter::cutn(std::string *out, size_t n) {
+    inline size_t cord_buf_cutter::cutn(std::string *out, size_t n) {
         if (n == 0) {
             return 0;
         }
@@ -258,8 +258,8 @@ namespace flare::io {
         return cutn(&(*out)[old_size], n);
     }
 
-/////////////// IOBufAppender /////////////////
-    inline int IOBufAppender::append(const void *src, size_t n) {
+/////////////// cord_buf_appender /////////////////
+    inline int cord_buf_appender::append(const void *src, size_t n) {
         do {
             const size_t size = (char *) _data_end - (char *) _data;
             if (n <= size) {
@@ -278,11 +278,11 @@ namespace flare::io {
         } while (true);
     }
 
-    inline int IOBufAppender::append(const std::string_view &str) {
+    inline int cord_buf_appender::append(const std::string_view &str) {
         return append(str.data(), str.size());
     }
 
-    inline int IOBufAppender::append_decimal(long d) {
+    inline int cord_buf_appender::append_decimal(long d) {
         char buf[24];  // enough for decimal 64-bit integers
         size_t n = sizeof(buf);
         bool negative = false;
@@ -301,7 +301,7 @@ namespace flare::io {
         return append(buf + n, sizeof(buf) - n);
     }
 
-    inline int IOBufAppender::push_back(char c) {
+    inline int cord_buf_appender::push_back(char c) {
         if (_data == _data_end) {
             if (add_block() != 0) {
                 return -1;
@@ -313,7 +313,7 @@ namespace flare::io {
         return 0;
     }
 
-    inline int IOBufAppender::add_block() {
+    inline int cord_buf_appender::add_block() {
         int size = 0;
         if (_zc_stream.Next(&_data, &size)) {
             _data_end = (char *) _data + size;
@@ -324,7 +324,7 @@ namespace flare::io {
         return -1;
     }
 
-    inline void IOBufAppender::shrink() {
+    inline void cord_buf_appender::shrink() {
         const size_t size = (char *) _data_end - (char *) _data;
         if (size != 0) {
             _zc_stream.BackUp(size);
@@ -333,19 +333,19 @@ namespace flare::io {
         }
     }
 
-    inline IOBufBytesIterator::IOBufBytesIterator(const flare::io::IOBuf &buf)
+    inline cord_buf_bytes_iterator::cord_buf_bytes_iterator(const flare::io::cord_buf &buf)
             : _block_begin(NULL), _block_end(NULL), _block_count(0),
               _bytes_left(buf.length()), _buf(&buf) {
         try_next_block();
     }
 
-    inline IOBufBytesIterator::IOBufBytesIterator(const IOBufBytesIterator &it)
+    inline cord_buf_bytes_iterator::cord_buf_bytes_iterator(const cord_buf_bytes_iterator &it)
             : _block_begin(it._block_begin), _block_end(it._block_end), _block_count(it._block_count),
               _bytes_left(it._bytes_left), _buf(it._buf) {
     }
 
-    inline IOBufBytesIterator::IOBufBytesIterator(
-            const IOBufBytesIterator &it, size_t bytes_left)
+    inline cord_buf_bytes_iterator::cord_buf_bytes_iterator(
+            const cord_buf_bytes_iterator &it, size_t bytes_left)
             : _block_begin(it._block_begin), _block_end(it._block_end), _block_count(it._block_count),
               _bytes_left(bytes_left), _buf(it._buf) {
         //CHECK_LE(_bytes_left, it._bytes_left);
@@ -354,7 +354,7 @@ namespace flare::io {
         }
     }
 
-    inline void IOBufBytesIterator::try_next_block() {
+    inline void cord_buf_bytes_iterator::try_next_block() {
         if (_bytes_left == 0) {
             return;
         }
@@ -363,7 +363,7 @@ namespace flare::io {
         _block_end = s.data() + std::min(s.size(), (size_t) _bytes_left);
     }
 
-    inline void IOBufBytesIterator::operator++() {
+    inline void cord_buf_bytes_iterator::operator++() {
         ++_block_begin;
         --_bytes_left;
         if (_block_begin == _block_end) {
@@ -371,7 +371,7 @@ namespace flare::io {
         }
     }
 
-    inline size_t IOBufBytesIterator::copy_and_forward(void *buf, size_t n) {
+    inline size_t cord_buf_bytes_iterator::copy_and_forward(void *buf, size_t n) {
         size_t nc = 0;
         while (nc < n && _bytes_left != 0) {
             const size_t block_size = _block_end - _block_begin;
@@ -387,7 +387,7 @@ namespace flare::io {
         return nc;
     }
 
-    inline size_t IOBufBytesIterator::copy_and_forward(std::string *s, size_t n) {
+    inline size_t cord_buf_bytes_iterator::copy_and_forward(std::string *s, size_t n) {
         bool resized = false;
         if (s->size() < n) {
             resized = true;
@@ -400,7 +400,7 @@ namespace flare::io {
         return nc;
     }
 
-    inline size_t IOBufBytesIterator::forward(size_t n) {
+    inline size_t cord_buf_bytes_iterator::forward(size_t n) {
         size_t nc = 0;
         while (nc < n && _bytes_left != 0) {
             const size_t block_size = _block_end - _block_begin;

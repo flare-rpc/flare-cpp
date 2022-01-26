@@ -20,7 +20,7 @@
 #include <google/protobuf/message.h>            // Message
 
 #include "flare/base/time.h"
-#include "flare/io/iobuf.h"                         // flare::io::IOBuf
+#include "flare/io/iobuf.h"                         // flare::io::cord_buf
 
 #include "flare/rpc/controller.h"               // Controller
 #include "flare/rpc/socket.h"                   // Socket
@@ -71,7 +71,7 @@ void SendNsheadPbResponse::Run() {
     MethodStatus* saved_status = status;
     const int64_t received_us = done->received_us();
     if (!cntl->IsCloseConnection()) {
-        adaptor->SerializeResponseToIOBuf(meta, cntl, pbres.get(), ns_res);
+        adaptor->SerializeResponseToCordBuf(meta, cntl, pbres.get(), ns_res);
     }
 
     const bool saved_failed = cntl->Failed();
@@ -130,7 +130,7 @@ void NsheadPbServiceAdaptor::ProcessNsheadRequest(
         pbdone->pbreq.reset(svc->GetRequestPrototype(method).New());
         pbdone->pbres.reset(svc->GetResponsePrototype(method).New());
 
-        ParseRequestFromIOBuf(*meta, request, controller, pbdone->pbreq.get());
+        ParseRequestFromCordBuf(*meta, request, controller, pbdone->pbreq.get());
         if (controller->Failed()) {
             break;
         }

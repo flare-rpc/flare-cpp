@@ -260,7 +260,7 @@ static const std::string VAR_SEP = " : ";
 
 class VarsDumper : public flare::variable::Dumper {
 public:
-    explicit VarsDumper(flare::io::IOBufBuilder& os, bool use_html)
+    explicit VarsDumper(flare::io::cord_buf_builder& os, bool use_html)
         : _os(os), _use_html(use_html) {}
     
     bool dump(const std::string& name, const std::string_view& desc) {
@@ -294,14 +294,14 @@ public:
         return true;
     }
 
-    void move_to(flare::io::IOBuf& buf) {
+    void move_to(flare::io::cord_buf& buf) {
         _os.move_to(buf);
     }
     
 private:
     FLARE_DISALLOW_COPY_AND_ASSIGN(VarsDumper);
     
-    flare::io::IOBufBuilder & _os;
+    flare::io::cord_buf_builder & _os;
     bool _use_html;
 };
 
@@ -312,7 +312,7 @@ void VarsService::default_method(::google::protobuf::RpcController* cntl_base,
     ClosureGuard done_guard(done);
     Controller *cntl = static_cast<Controller*>(cntl_base);    
     if (cntl->http_request().uri().GetQuery("series") != NULL) {
-        flare::io::IOBufBuilder os;
+        flare::io::cord_buf_builder os;
         flare::variable::SeriesOptions series_options;
         const int rc = flare::variable::Variable::describe_series_exposed(
             cntl->http_request().unresolved_path(), os, series_options);
@@ -336,7 +336,7 @@ void VarsService::default_method(::google::protobuf::RpcController* cntl_base,
     cntl->http_response().set_content_type(
         use_html ? "text/html" : "text/plain");
 
-    flare::io::IOBufBuilder os;
+    flare::io::cord_buf_builder os;
     if (with_tabs) {
         os << "<!DOCTYPE html><html><head>\n"
             "<meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\" />\n";

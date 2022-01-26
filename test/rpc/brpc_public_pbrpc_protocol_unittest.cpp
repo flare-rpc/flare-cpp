@@ -141,7 +141,7 @@ protected:
             EXPECT_TRUE(req.SerializeToString(
                 meta->mutable_requestbody(0)->mutable_serialized_request()));
         }
-        flare::io::IOBufAsZeroCopyOutputStream meta_stream(&msg->payload);
+        flare::io::cord_buf_as_zero_copy_output_stream meta_stream(&msg->payload);
         EXPECT_TRUE(meta->SerializeToZeroCopyStream(&meta_stream));
         return msg;
     }
@@ -159,7 +159,7 @@ protected:
             EXPECT_TRUE(res.SerializeToString(
                 meta->mutable_responsebody(0)->mutable_serialized_response()));
         }
-        flare::io::IOBufAsZeroCopyOutputStream meta_stream(&msg->payload);
+        flare::io::cord_buf_as_zero_copy_output_stream meta_stream(&msg->payload);
         EXPECT_TRUE(meta->SerializeToZeroCopyStream(&meta_stream));
         return msg;
     }
@@ -182,7 +182,7 @@ protected:
             static_cast<flare::rpc::policy::MostCommonMessage*>(pr.message());
 
         flare::rpc::policy::PublicPbrpcResponse meta;
-        flare::io::IOBufAsZeroCopyInputStream meta_stream(msg->payload);
+        flare::io::cord_buf_as_zero_copy_input_stream meta_stream(msg->payload);
         EXPECT_TRUE(meta.ParseFromZeroCopyStream(&meta_stream));
         EXPECT_EQ(expect_code, meta.responsehead().code());
     }
@@ -260,8 +260,8 @@ TEST_F(PublicPbrpcTest, process_response_error_code) {
 }
 
 TEST_F(PublicPbrpcTest, complete_flow) {
-    flare::io::IOBuf request_buf;
-    flare::io::IOBuf total_buf;
+    flare::io::cord_buf request_buf;
+    flare::io::cord_buf total_buf;
     flare::rpc::Controller cntl;
     test::EchoRequest req;
     test::EchoResponse res;
@@ -299,8 +299,8 @@ TEST_F(PublicPbrpcTest, complete_flow) {
 }
 
 TEST_F(PublicPbrpcTest, close_in_callback) {
-    flare::io::IOBuf request_buf;
-    flare::io::IOBuf total_buf;
+    flare::io::cord_buf request_buf;
+    flare::io::cord_buf total_buf;
     flare::rpc::Controller cntl;
     test::EchoRequest req;
 

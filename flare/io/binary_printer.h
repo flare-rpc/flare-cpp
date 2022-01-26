@@ -23,49 +23,49 @@
 #include <string_view>
 
 namespace flare::io {
-    class IOBuf;
+    class cord_buf;
 
     // Print binary content within max length.
     // The printing format is optimized for humans and may change in future.
 
-    class ToPrintable {
+    class to_printable {
     public:
         static const size_t DEFAULT_MAX_LENGTH = 64;
 
-        ToPrintable(const IOBuf &b, size_t max_length = DEFAULT_MAX_LENGTH)
+        to_printable(const cord_buf &b, size_t max_length = DEFAULT_MAX_LENGTH)
                 : _iobuf(&b), _max_length(max_length) {}
 
-        ToPrintable(const std::string_view &str, size_t max_length = DEFAULT_MAX_LENGTH)
+        to_printable(const std::string_view &str, size_t max_length = DEFAULT_MAX_LENGTH)
                 : _iobuf(NULL), _str(str), _max_length(max_length) {}
 
-        ToPrintable(const void *data, size_t n, size_t max_length = DEFAULT_MAX_LENGTH)
+        to_printable(const void *data, size_t n, size_t max_length = DEFAULT_MAX_LENGTH)
                 : _iobuf(NULL), _str((const char *) data, n), _max_length(max_length) {}
 
-        void Print(std::ostream &os) const;
+        void print(std::ostream &os) const;
 
     private:
-        const IOBuf *_iobuf;
+        const cord_buf *_iobuf;
         std::string_view _str;
         size_t _max_length;
     };
 
     // Keep old name for compatibility.
-    typedef ToPrintable PrintedAsBinary;
+    typedef to_printable PrintedAsBinary;
 
-    inline std::ostream &operator<<(std::ostream &os, const ToPrintable &p) {
-        p.Print(os);
+    inline std::ostream &operator<<(std::ostream &os, const to_printable &p) {
+        p.print(os);
         return os;
     }
 
     // Convert binary data to a printable string.
-    std::string ToPrintableString(const IOBuf &data,
-                                  size_t max_length = ToPrintable::DEFAULT_MAX_LENGTH);
+    std::string to_printable_string(const cord_buf &data,
+                                  size_t max_length = to_printable::DEFAULT_MAX_LENGTH);
 
-    std::string ToPrintableString(const std::string_view &data,
-                                  size_t max_length = ToPrintable::DEFAULT_MAX_LENGTH);
+    std::string to_printable_string(const std::string_view &data,
+                                  size_t max_length = to_printable::DEFAULT_MAX_LENGTH);
 
-    std::string ToPrintableString(const void *data, size_t n,
-                                  size_t max_length = ToPrintable::DEFAULT_MAX_LENGTH);
+    std::string to_printable_string(const void *data, size_t n,
+                                  size_t max_length = to_printable::DEFAULT_MAX_LENGTH);
 
 } // namespace flare::io
 

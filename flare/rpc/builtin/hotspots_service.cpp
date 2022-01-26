@@ -144,7 +144,7 @@ namespace flare::rpc {
 
         int64_t id;
         int status_code;
-        flare::io::IOBuf result;
+        flare::io::cord_buf result;
     };
 
     static bool g_written_pprof_perl = false;
@@ -191,7 +191,7 @@ namespace flare::rpc {
     }
 
     static bool WriteSmallFile(const char *filepath_in,
-                               const flare::io::IOBuf &content) {
+                               const flare::io::cord_buf &content) {
         std::error_code ec;
         std::filesystem::path dir = std::filesystem::path(filepath_in).parent_path();
         if (!std::filesystem::create_directories(dir, ec)) {
@@ -204,7 +204,7 @@ namespace flare::rpc {
             LOG(ERROR) << "Fail to open `" << filepath_in << '\'';
             return false;
         }
-        flare::io::IOBufAsZeroCopyInputStream iter(content);
+        flare::io::cord_buf_as_zero_copy_input_stream iter(content);
         const void *data = NULL;
         int size = 0;
         while (iter.Next(&data, &size)) {
@@ -403,15 +403,15 @@ namespace flare::rpc {
     static void DisplayResult(Controller *cntl,
                               google::protobuf::Closure *done,
                               const char *prof_name,
-                              const flare::io::IOBuf &result_prefix) {
+                              const flare::io::cord_buf &result_prefix) {
         ClosureGuard done_guard(done);
-        flare::io::IOBuf prof_result;
+        flare::io::cord_buf prof_result;
         if (cntl->IsCanceled()) {
             // If the page is refreshed, older connections are likely to be
             // already closed by browser.
             return;
         }
-        flare::io::IOBuf &resp = cntl->response_attachment();
+        flare::io::cord_buf &resp = cntl->response_attachment();
         const bool use_html = UseHTML(cntl->http_request());
         const bool show_ccount = cntl->http_request().uri().GetQuery("ccount");
         const std::string *base_name = cntl->http_request().uri().GetQuery("base");
@@ -440,7 +440,7 @@ namespace flare::rpc {
                         EINVAL, "The profile denoted by `base' does not exist");
             }
         }
-        flare::io::IOBufBuilder os;
+        flare::io::cord_buf_builder os;
         os << result_prefix;
         char expected_result_name[256];
         MakeCacheName(expected_result_name, sizeof(expected_result_name),
@@ -528,7 +528,7 @@ namespace flare::rpc {
             }
             errno = 0; // read_command_output may not set errno, clear it to make sure if
             // we see non-zero errno, it's real error.
-            flare::io::IOBufBuilder pprof_output;
+            flare::io::cord_buf_builder pprof_output;
             RPC_VLOG << "Running cmd=" << cmd;
             const int rc = flare::base::read_command_output(pprof_output, cmd.c_str());
             if (rc != 0) {
@@ -557,8 +557,8 @@ namespace flare::rpc {
 
             // Append the profile name as the visual reminder for what
             // current profile is.
-            flare::io::IOBuf before_label;
-            flare::io::IOBuf tmp;
+            flare::io::cord_buf before_label;
+            flare::io::cord_buf tmp;
             if (cntl->http_request().uri().GetQuery("view") == NULL) {
                 tmp.append(prof_name);
                 tmp.append("[addToProfEnd]");
@@ -610,11 +610,11 @@ namespace flare::rpc {
                             ::google::protobuf::Closure *done) {
         ClosureGuard done_guard(done);
         Controller *cntl = static_cast<Controller *>(cntl_base);
-        flare::io::IOBuf &resp = cntl->response_attachment();
+        flare::io::cord_buf &resp = cntl->response_attachment();
         const bool use_html = UseHTML(cntl->http_request());
         cntl->http_response().set_content_type(use_html ? "text/html" : "text/plain");
 
-        flare::io::IOBufBuilder os;
+        flare::io::cord_buf_builder os;
         if (use_html) {
             os << "<!DOCTYPE html><html><head>\n"
                   "<meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\" />\n"
@@ -841,9 +841,9 @@ namespace flare::rpc {
                                ::google::protobuf::Closure *done) {
         ClosureGuard done_guard(done);
         Controller *cntl = static_cast<Controller *>(cntl_base);
-        flare::io::IOBuf &resp = cntl->response_attachment();
+        flare::io::cord_buf &resp = cntl->response_attachment();
         const bool use_html = UseHTML(cntl->http_request());
-        flare::io::IOBufBuilder os;
+        flare::io::cord_buf_builder os;
         bool enabled = false;
         const char *extra_desc = "";
         if (type == PROFILING_CPU) {

@@ -62,7 +62,7 @@ void PublicPbrpcServiceAdaptor::ParseNsheadMeta(
     const Server& svr, const NsheadMessage& request, Controller* cntl,
     NsheadMeta* out_meta) const {
     PublicPbrpcRequest pbreq;
-    if (!ParsePbFromIOBuf(&pbreq, request.body)) {
+    if (!ParsePbFromCordBuf(&pbreq, request.body)) {
         cntl->CloseConnection("Fail to parse from PublicPbrpcRequest");
         return;
     }
@@ -91,14 +91,14 @@ void PublicPbrpcServiceAdaptor::ParseNsheadMeta(
     out_meta->set_user_string(body.version());
 
     // HACK! Clear `request.body' and append only protobuf request data into it,
-    // which will be passed into `ParseRequestFromIOBuf'. As a result, we can
+    // which will be passed into `ParseRequestFromCordBuf'. As a result, we can
     // avoid parsing `PublicPbrpcRequest' twice
     NsheadMessage& mutable_req = const_cast<NsheadMessage&>(request);
     mutable_req.body.clear();
     mutable_req.body.append(body.serialized_request());
 }
 
-void PublicPbrpcServiceAdaptor::ParseRequestFromIOBuf(
+void PublicPbrpcServiceAdaptor::ParseRequestFromCordBuf(
     const NsheadMeta& meta, const NsheadMessage& raw_req,
     Controller* cntl, google::protobuf::Message* pb_req) const {
     CompressType type = meta.compress_type();
@@ -112,7 +112,7 @@ void PublicPbrpcServiceAdaptor::ParseRequestFromIOBuf(
     }
 }
 
-void PublicPbrpcServiceAdaptor::SerializeResponseToIOBuf(
+void PublicPbrpcServiceAdaptor::SerializeResponseToCordBuf(
     const NsheadMeta& meta, Controller* cntl,
     const google::protobuf::Message* pb_res, NsheadMessage* raw_res) const {
     PublicPbrpcResponse whole_res;
@@ -141,7 +141,7 @@ void PublicPbrpcServiceAdaptor::SerializeResponseToIOBuf(
             head->set_compress_type(COMPRESS_TYPE);
         }
     }
-    flare::io::IOBufAsZeroCopyOutputStream wrapper(&raw_res->body);
+    flare::io::cord_buf_as_zero_copy_output_stream wrapper(&raw_res->body);
     if (!whole_res.SerializeToZeroCopyStream(&wrapper)) {
         cntl->CloseConnection("Close connection due to failure of "
                                  "serializing the whole response");
@@ -154,7 +154,7 @@ void ProcessPublicPbrpcResponse(InputMessageBase* msg_base) {
     DestroyingPtr<MostCommonMessage> msg(static_cast<MostCommonMessage*>(msg_base));
     
     PublicPbrpcResponse pbres;
-    if (!ParsePbFromIOBuf(&pbres, msg->payload)) {
+    if (!ParsePbFromCordBuf(&pbres, msg->payload)) {
         LOG(WARNING) << "Fail to parse from PublicPbrpcResponse";
         return;
     }
@@ -192,7 +192,7 @@ void ProcessPublicPbrpcResponse(InputMessageBase* msg_base) {
                              COMPRESS_TYPE_SNAPPY : COMPRESS_TYPE_NONE);
         bool parse_result = false;
         if (type == COMPRESS_TYPE_SNAPPY) {
-            flare::io::IOBuf tmp;
+            flare::io::cord_buf tmp;
             tmp.append(res_data);
             parse_result = ParseFromCompressedData(tmp, cntl->response(), type);
         } else {
@@ -213,7 +213,7 @@ void ProcessPublicPbrpcResponse(InputMessageBase* msg_base) {
     accessor.OnResponse(cid, saved_error);
 }
 
-void SerializePublicPbrpcRequest(flare::io::IOBuf* buf, Controller* cntl,
+void SerializePublicPbrpcRequest(flare::io::cord_buf* buf, Controller* cntl,
                                  const google::protobuf::Message* request) {
     CompressType type = cntl->request_compress_type();
     if (type != COMPRESS_TYPE_NONE && type != COMPRESS_TYPE_SNAPPY) {
@@ -224,17 +224,17 @@ void SerializePublicPbrpcRequest(flare::io::IOBuf* buf, Controller* cntl,
     return SerializeRequestDefault(buf, cntl, request);
 }
        
-void PackPublicPbrpcRequest(flare::io::IOBuf* buf,
+void PackPublicPbrpcRequest(flare::io::cord_buf* buf,
                             SocketMessage**,
                             uint64_t correlation_id,
                             const google::protobuf::MethodDescriptor* method,
                             Controller* controller,
-                            const flare::io::IOBuf& request,
+                            const flare::io::cord_buf& request,
                             const Authenticator* /*not supported*/) {
     PublicPbrpcRequest pbreq;
     RequestHead* head = pbreq.mutable_requesthead();
     RequestBody* body = pbreq.add_requestbody();
-    flare::io::IOBufAsZeroCopyOutputStream request_stream(buf);
+    flare::io::cord_buf_as_zero_copy_output_stream request_stream(buf);
 
     head->set_from_host(flare::base::ip2str(flare::base::my_ip()).c_str());
     head->set_content_type(CONTENT_TYPE);

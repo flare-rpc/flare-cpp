@@ -22,8 +22,8 @@
 #include <google/protobuf/io/coded_stream.h>
 #include "flare/base/logging.h"                       // LOG()
 #include "flare/base/time.h"
-#include "flare/io/iobuf.h"                         // flare::io::IOBuf
-#include "flare/io/raw_pack.h"                      // RawPacker RawUnpacker
+#include "flare/io/iobuf.h"                         // flare::io::cord_buf
+#include "flare/io/raw_pack.h"                      // raw_packer raw_unpacker
 #include "flare/rpc/controller.h"                    // Controller
 #include "flare/rpc/socket.h"                        // Socket
 #include "flare/rpc/server.h"                        // Server
@@ -62,13 +62,13 @@ DEFINE_bool(baidu_protocol_use_fullname, true,
 inline void PackRpcHeader(char* rpc_header, int meta_size, int payload_size) {
     uint32_t* dummy = (uint32_t*)rpc_header;  // suppress strict-alias warning
     *dummy = *(uint32_t*)"PRPC";
-    flare::io::RawPacker(rpc_header + 4)
+    flare::io::raw_packer(rpc_header + 4)
         .pack32(meta_size + payload_size)
         .pack32(meta_size);
 }
 
 static void SerializeRpcHeaderAndMeta(
-    flare::io::IOBuf* out, const RpcMeta& meta, int payload_size) {
+    flare::io::cord_buf* out, const RpcMeta& meta, int payload_size) {
     const int meta_size = meta.ByteSize();
     if (meta_size <= 244) { // most common cases
         char header_and_meta[12 + meta_size];
@@ -82,14 +82,14 @@ static void SerializeRpcHeaderAndMeta(
         char header[12];
         PackRpcHeader(header, meta_size, payload_size);
         out->append(header, sizeof(header));
-        flare::io::IOBufAsZeroCopyOutputStream buf_stream(out);
+        flare::io::cord_buf_as_zero_copy_output_stream buf_stream(out);
         ::google::protobuf::io::CodedOutputStream coded_out(&buf_stream);
         meta.SerializeWithCachedSizes(&coded_out);
         CHECK(!coded_out.HadError());
     }
 }
 
-ParseResult ParseRpcMessage(flare::io::IOBuf* source, Socket* socket,
+ParseResult ParseRpcMessage(flare::io::cord_buf* source, Socket* socket,
                             bool /*read_eof*/, const void*) {
     char header_buf[12];
     const size_t n = source->copy_to(header_buf, sizeof(header_buf));
@@ -108,7 +108,7 @@ ParseResult ParseRpcMessage(flare::io::IOBuf* source, Socket* socket,
     }
     uint32_t body_size;
     uint32_t meta_size;
-    flare::io::RawUnpacker(header_buf + 4).unpack32(body_size).unpack32(meta_size);
+    flare::io::raw_unpacker(header_buf + 4).unpack32(body_size).unpack32(meta_size);
     if (body_size > FLAGS_max_body_size) {
         // We need this log to report the body_size to give users some clues
         // which is not printed in InputMessenger.
@@ -159,7 +159,7 @@ void SendRpcResponse(int64_t correlation_id,
         return;
     }
     bool append_body = false;
-    flare::io::IOBuf res_body;
+    flare::io::cord_buf res_body;
     // `res' can be NULL here, in which case we don't serialize it
     // If user calls `SetFailed' on Controller, we don't serialize
     // response either
@@ -216,7 +216,7 @@ void SendRpcResponse(int64_t correlation_id,
         }
     }
 
-    flare::io::IOBuf res_buf;
+    flare::io::cord_buf res_buf;
     SerializeRpcHeaderAndMeta(&res_buf, meta, res_size + attached_size);
     if (append_body) {
         res_buf.append(res_body.movable());
@@ -308,7 +308,7 @@ void ProcessRpcRequest(InputMessageBase* msg_base) {
     ScopedNonServiceError non_service_error(server);
 
     RpcMeta meta;
-    if (!ParsePbFromIOBuf(&meta, msg->meta)) {
+    if (!ParsePbFromCordBuf(&meta, msg->meta)) {
         LOG(WARNING) << "Fail to parse RpcMeta from " << *socket;
         socket->SetFailed(EREQUEST, "Fail to parse RpcMeta from %s",
                           socket->description().c_str());
@@ -453,8 +453,8 @@ void ProcessRpcRequest(InputMessageBase* msg_base) {
             span->ResetServerSpanName(method->full_name());
         }
         const int req_size = static_cast<int>(msg->payload.size());
-        flare::io::IOBuf req_buf;
-        flare::io::IOBuf* req_buf_ptr = &msg->payload;
+        flare::io::cord_buf req_buf;
+        flare::io::cord_buf* req_buf_ptr = &msg->payload;
         if (meta.has_attachment_size()) {
             if (req_size < meta.attachment_size()) {
                 cntl->SetFailed(EREQUEST,
@@ -524,7 +524,7 @@ bool VerifyRpcRequest(const InputMessageBase* msg_base) {
     Socket* socket = msg->socket();
     
     RpcMeta meta;
-    if (!ParsePbFromIOBuf(&meta, msg->meta)) {
+    if (!ParsePbFromCordBuf(&meta, msg->meta)) {
         LOG(WARNING) << "Fail to parse RpcRequestMeta";
         return false;
     }
@@ -545,7 +545,7 @@ void ProcessRpcResponse(InputMessageBase* msg_base) {
     const int64_t start_parse_us = flare::base::cpuwide_time_us();
     DestroyingPtr<MostCommonMessage> msg(static_cast<MostCommonMessage*>(msg_base));
     RpcMeta meta;
-    if (!ParsePbFromIOBuf(&meta, msg->meta)) {
+    if (!ParsePbFromCordBuf(&meta, msg->meta)) {
         LOG(WARNING) << "Fail to parse from response meta";
         return;
     }
@@ -584,9 +584,9 @@ void ProcessRpcResponse(InputMessageBase* msg_base) {
             break;
         } 
         // Parse response message iff error code from meta is 0
-        flare::io::IOBuf res_buf;
+        flare::io::cord_buf res_buf;
         const int res_size = msg->payload.length();
-        flare::io::IOBuf* res_buf_ptr = &msg->payload;
+        flare::io::cord_buf* res_buf_ptr = &msg->payload;
         if (meta.has_attachment_size()) {
             if (meta.attachment_size() > res_size) {
                 cntl->SetFailed(
@@ -619,12 +619,12 @@ void ProcessRpcResponse(InputMessageBase* msg_base) {
     accessor.OnResponse(cid, saved_error);
 }
 
-void PackRpcRequest(flare::io::IOBuf* req_buf,
+void PackRpcRequest(flare::io::cord_buf* req_buf,
                     SocketMessage**,
                     uint64_t correlation_id,
                     const google::protobuf::MethodDescriptor* method,
                     Controller* cntl,
-                    const flare::io::IOBuf& request_body,
+                    const flare::io::cord_buf& request_body,
                     const Authenticator* auth) {
     RpcMeta meta;
     if (auth && auth->GenerateCredential(

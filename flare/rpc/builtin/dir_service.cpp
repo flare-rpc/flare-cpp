@@ -71,7 +71,7 @@ void DirService::default_method(::google::protobuf::RpcController* cntl_base,
             }
             total_read += nr;
         } while (total_read < MAX_READ);
-        flare::io::IOBuf& resp = cntl->response_attachment();
+        flare::io::cord_buf& resp = cntl->response_attachment();
         resp.swap(read_portal);
         if (total_read >= MAX_READ) {
             std::ostringstream oss;
@@ -100,7 +100,7 @@ void DirService::default_method(::google::protobuf::RpcController* cntl_base,
         CHECK_EQ(0, closedir(dir));
         
         std::sort(files.begin(), files.end());
-        flare::io::IOBufBuilder os;
+        flare::io::cord_buf_builder os;
         if (use_html) {
             os << "<!DOCTYPE html><html><body><pre>";
         }

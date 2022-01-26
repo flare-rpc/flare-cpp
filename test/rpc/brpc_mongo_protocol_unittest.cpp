@@ -68,7 +68,7 @@ class MyContext : public ::flare::rpc::MongoContext {
 
 class MyMongoAdaptor : public flare::rpc::MongoServiceAdaptor {
 public:
-    virtual void SerializeError(int /*response_to*/, flare::io::IOBuf* out_buf) const {
+    virtual void SerializeError(int /*response_to*/, flare::io::cord_buf* out_buf) const {
         flare::rpc::mongo_head_t header = {
             (int32_t)(sizeof(flare::rpc::mongo_head_t) + sizeof(int32_t) * 3 +
                 sizeof(int64_t) + EXP_REQUEST.length()),
@@ -154,7 +154,7 @@ TEST_F(MongoTest, process_request_logoff) {
     flare::rpc::mongo_head_t header = { 0, 0, 0, 0 };
     header.op_code = flare::rpc::MONGO_OPCODE_REPLY;
     header.message_length = sizeof(header) + EXP_REQUEST.length();
-    flare::io::IOBuf total_buf;
+    flare::io::cord_buf total_buf;
     total_buf.append(static_cast<const void*>(&header), sizeof(header));
     total_buf.append(EXP_REQUEST);
     flare::rpc::ParseResult req_pr = flare::rpc::policy::ParseMongoMessage(
@@ -169,7 +169,7 @@ TEST_F(MongoTest, process_request_failed_socket) {
     flare::rpc::mongo_head_t header = { 0, 0, 0, 0 };
     header.op_code = flare::rpc::MONGO_OPCODE_REPLY;
     header.message_length = sizeof(header) + EXP_REQUEST.length();
-    flare::io::IOBuf total_buf;
+    flare::io::cord_buf total_buf;
     total_buf.append(static_cast<const void*>(&header), sizeof(header));
     total_buf.append(EXP_REQUEST);
     flare::rpc::ParseResult req_pr = flare::rpc::policy::ParseMongoMessage(
@@ -181,8 +181,8 @@ TEST_F(MongoTest, process_request_failed_socket) {
 }
 
 TEST_F(MongoTest, complete_flow) {
-    flare::io::IOBuf request_buf;
-    flare::io::IOBuf total_buf;
+    flare::io::cord_buf request_buf;
+    flare::io::cord_buf total_buf;
     flare::rpc::Controller cntl;
     flare::rpc::policy::MongoRequest req;
     flare::rpc::policy::MongoResponse res;

@@ -34,12 +34,12 @@ void ThreadsService::default_method(::google::protobuf::RpcController* cntl_base
     ClosureGuard done_guard(done);
     Controller *cntl = static_cast<Controller*>(cntl_base);
     cntl->http_response().set_content_type("text/plain");
-    flare::io::IOBuf& resp = cntl->response_attachment();
+    flare::io::cord_buf& resp = cntl->response_attachment();
 
     std::string cmd = flare::base::string_printf("pstack %lld", (long long)getpid());
     flare::base::stop_watcher tm;
     tm.start();
-    flare::io::IOBufBuilder pstack_output;
+    flare::io::cord_buf_builder pstack_output;
     const int rc = flare::base::read_command_output(pstack_output, cmd.c_str());
     if (rc < 0) {
         LOG(ERROR) << "Fail to popen `" << cmd << "'";

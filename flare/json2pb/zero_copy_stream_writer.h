@@ -21,10 +21,10 @@
 #include <google/protobuf/io/zero_copy_stream.h> // ZeroCopyOutputStream
 #include <iostream>
 
-//class IOBufAsZeroCopyOutputStream
+//class cord_buf_as_zero_copy_output_stream
 //    : public google::protobuf::io::ZeroCopyOutputStream {
 //public:
-//    explicit IOBufAsZeroCopyOutputStream(IOBuf*);
+//    explicit cord_buf_as_zero_copy_output_stream(cord_buf*);
 //
 //    // Interfaces of ZeroCopyOutputStream
 //    bool Next(void** data, int* size);
@@ -32,7 +32,7 @@
 //    google::protobuf::int64 ByteCount() const;
 //
 //private:
-//    IOBuf* _buf;
+//    cord_buf* _buf;
 //    size_t _initial_length;
 //};
 

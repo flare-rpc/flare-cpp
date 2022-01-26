@@ -21,7 +21,7 @@
 #include <gflags/gflags.h>
 
 #include "flare/base/time.h"
-#include "flare/io/iobuf.h"                        // flare::io::IOBuf
+#include "flare/io/iobuf.h"                        // flare::io::cord_buf
 #include "flare/rpc/log.h"
 #include "flare/rpc/controller.h"                    // Controller
 #include "flare/rpc/socket.h"                        // Socket
@@ -67,7 +67,7 @@ struct thrift_head_t {
 // A faster implementation of TProtocol::readMessageBegin without depending
 // on thrift stuff.
 static flare::base::flare_status
-ReadThriftMessageBegin(flare::io::IOBuf* body,
+ReadThriftMessageBegin(flare::io::cord_buf* body,
                        std::string* method_name,
                        ::apache::thrift::protocol::TMessageType* mtype,
                        uint32_t* seq_id) {
@@ -120,7 +120,7 @@ WriteThriftMessageBegin(char* buf,
     *p = htonl(seq_id);
 }
 
-bool ReadThriftStruct(const flare::io::IOBuf& body,
+bool ReadThriftStruct(const flare::io::cord_buf& body,
                       ThriftMessageBase* raw_msg,
                       int16_t expected_fid) {
     const size_t body_len  = body.size();
@@ -164,7 +164,7 @@ bool ReadThriftStruct(const flare::io::IOBuf& body,
     return success;
 }
 
-void ReadThriftException(const flare::io::IOBuf& body,
+void ReadThriftException(const flare::io::cord_buf& body,
                          ::apache::thrift::TApplicationException* x) {
     size_t body_len  = body.size();
     uint8_t* thrift_buffer = (uint8_t*)malloc(body_len);
@@ -276,7 +276,7 @@ void ThriftClosure::DoRun() {
     }
     const uint32_t seq_id = (uint32_t)_controller.log_id();
 
-    flare::io::IOBuf write_buf;
+    flare::io::cord_buf write_buf;
 
     // The following code was taken and modified from thrift auto generated code
     if (_controller.Failed()) {
@@ -357,7 +357,7 @@ void ThriftClosure::DoRun() {
     }
 }
 
-ParseResult ParseThriftMessage(flare::io::IOBuf* source,
+ParseResult ParseThriftMessage(flare::io::cord_buf* source,
                                Socket*, bool /*read_eof*/, const void* /*arg*/) {
     char header_buf[sizeof(thrift_head_t) + 4];
     const size_t n = source->copy_to(header_buf, sizeof(header_buf));
@@ -641,7 +641,7 @@ bool VerifyThriftRequest(const InputMessageBase* msg_base) {
     return true;
 }
 
-void SerializeThriftRequest(flare::io::IOBuf* request_buf, Controller* cntl,
+void SerializeThriftRequest(flare::io::cord_buf* request_buf, Controller* cntl,
                             const google::protobuf::Message* req_base) {
     if (req_base == NULL) {
         return cntl->SetFailed(EREQUEST, "request is NULL");
@@ -721,12 +721,12 @@ void SerializeThriftRequest(flare::io::IOBuf* request_buf, Controller* cntl,
 }
 
 void PackThriftRequest(
-    flare::io::IOBuf* packet_buf,
+    flare::io::cord_buf* packet_buf,
     SocketMessage**,
     uint64_t correlation_id,
     const google::protobuf::MethodDescriptor*,
     Controller* cntl,
-    const flare::io::IOBuf& request,
+    const flare::io::cord_buf& request,
     const Authenticator*) {
     ControllerPrivateAccessor accessor(cntl);
     if (cntl->connection_type() == CONNECTION_TYPE_SINGLE) {

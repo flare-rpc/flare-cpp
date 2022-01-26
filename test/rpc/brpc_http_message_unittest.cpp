@@ -91,10 +91,10 @@ TEST(HttpMessageTest, eof) {
         "X_BD_LOGID64: 16815814797661447369\r\n"
         "X_BD_PRODUCT: map\r\n"
         "X_BD_SUBSYS: apimap\r\n";
-    flare::io::IOBuf buf;
+    flare::io::cord_buf buf;
     buf.append(http_request);
     flare::rpc::HttpMessage http_message;
-    ASSERT_EQ((ssize_t)buf.size(), http_message.ParseFromIOBuf(buf));
+    ASSERT_EQ((ssize_t)buf.size(), http_message.ParseFromCordBuf(buf));
     ASSERT_EQ(2, http_message.ParseFromArray("\r\n", 2));
     ASSERT_TRUE(http_message.Completed());
 }
@@ -215,12 +215,12 @@ TEST(HttpMessageTest, parse_from_iobuf) {
             content_length);
     std::string content;
     for (size_t i = 0; i < content_length; ++i) content.push_back('2');
-    flare::io::IOBuf request;
+    flare::io::cord_buf request;
     request.append(header);
     request.append(content);
 
     flare::rpc::HttpMessage http_message;
-    ASSERT_TRUE(http_message.ParseFromIOBuf(request) >= 0);
+    ASSERT_TRUE(http_message.ParseFromCordBuf(request) >= 0);
     ASSERT_TRUE(http_message.Completed());
     ASSERT_EQ(content, http_message.body().to_string());
     ASSERT_EQ("text/plain", http_message.header().content_type());
@@ -344,8 +344,8 @@ TEST(HttpMessageTest, serialize_http_request) {
     header.set_method(flare::rpc::HTTP_METHOD_POST);
     flare::base::end_point ep;
     ASSERT_EQ(0, flare::base::str2endpoint("127.0.0.1:1234", &ep));
-    flare::io::IOBuf request;
-    flare::io::IOBuf content;
+    flare::io::cord_buf request;
+    flare::io::cord_buf content;
     content.append("data");
     MakeRawHttpRequest(&request, &header, ep, &content);
     ASSERT_EQ("POST / HTTP/1.1\r\nContent-Length: 4\r\nHost: 127.0.0.1:1234\r\nFoo: Bar\r\nAccept: */*\r\nUser-Agent: flare/1.0 curl/7.0\r\n\r\ndata", request);
@@ -385,8 +385,8 @@ TEST(HttpMessageTest, serialize_http_response) {
     flare::rpc::HttpHeader header;
     header.SetHeader("Foo", "Bar");
     header.set_method(flare::rpc::HTTP_METHOD_POST);
-    flare::io::IOBuf response;
-    flare::io::IOBuf content;
+    flare::io::cord_buf response;
+    flare::io::cord_buf content;
     content.append("data");
     MakeRawHttpResponse(&response, &header, &content);
     ASSERT_EQ("HTTP/1.1 200 OK\r\nContent-Length: 4\r\nFoo: Bar\r\n\r\ndata", response);

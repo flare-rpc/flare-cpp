@@ -21,7 +21,7 @@
 
 #include <filesystem>
 #include <gflags/gflags_declare.h>
-#include "flare/io/iobuf.h"                            // IOBuf
+#include "flare/io/iobuf.h"                            // cord_buf
 #include "flare/variable/collector.h"
 #include "flare/rpc/rpc_dump.pb.h"                       // RpcDumpMeta
 
@@ -46,7 +46,7 @@ DECLARE_bool(rpc_dump);
 
 class SampledRequest : public flare::variable::Collected {
 public:
-    flare::io::IOBuf request;
+    flare::io::cord_buf request;
     RpcDumpMeta meta;
 
     // Implement methods of Sampled.
@@ -89,7 +89,7 @@ public:
 private:
     // Parse on request from the buf. Set `format_error' to true when
     // the buf does not match the format.
-    static SampledRequest* Pop(flare::io::IOBuf& buf, bool* format_error);
+    static SampledRequest* Pop(flare::io::cord_buf& buf, bool* format_error);
     
     flare::io::IOPortal _cur_buf;
     int _cur_fd;

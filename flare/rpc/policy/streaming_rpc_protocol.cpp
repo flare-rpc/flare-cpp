@@ -24,8 +24,8 @@
 #include "flare/base/profile.h"
 #include "flare/base/logging.h"                       // LOG()
 #include "flare/base/time.h"
-#include "flare/io/iobuf.h"                         // flare::io::IOBuf
-#include "flare/io/raw_pack.h"                      // RawPacker RawUnpacker
+#include "flare/io/iobuf.h"                         // flare::io::cord_buf
+#include "flare/io/raw_pack.h"                      // raw_packer raw_unpacker
 #include "flare/rpc/log.h"
 #include "flare/rpc/socket.h"                        // Socket
 #include "flare/rpc/streaming_rpc_meta.pb.h"         // StreamFrameMeta
@@ -39,26 +39,26 @@ namespace policy {
 // Notes on Streaming RPC Protocol:
 // 1 - Header format is [STRM][body_size][meta_size], 12 bytes in total
 // 2 - body_size and meta_size are in network byte order
-void PackStreamMessage(flare::io::IOBuf* out,
+void PackStreamMessage(flare::io::cord_buf* out,
                        const StreamFrameMeta &fm,
-                       const flare::io::IOBuf *data) {
+                       const flare::io::cord_buf *data) {
     const uint32_t data_length = data ? data->length() : 0;
     const uint32_t meta_length = fm.ByteSize();
     char head[12];
     uint32_t* dummy = (uint32_t*)head;  // suppresses strict-alias warning
     *(uint32_t*)dummy = *(const uint32_t*)"STRM";
-    flare::io::RawPacker(head + 4)
+    flare::io::raw_packer(head + 4)
         .pack32(data_length + meta_length)
         .pack32(meta_length);
     out->append(head, FLARE_ARRAY_SIZE(head));
-    flare::io::IOBufAsZeroCopyOutputStream wrapper(out);
+    flare::io::cord_buf_as_zero_copy_output_stream wrapper(out);
     CHECK(fm.SerializeToZeroCopyStream(&wrapper));
     if (data != NULL) {
         out->append(*data);
     }
 }
 
-ParseResult ParseStreamingMessage(flare::io::IOBuf* source,
+ParseResult ParseStreamingMessage(flare::io::cord_buf* source,
                             Socket* socket, bool /*read_eof*/, const void* /*arg*/) {
     char header_buf[12];
     const size_t n = source->copy_to(header_buf, sizeof(header_buf));
@@ -77,7 +77,7 @@ ParseResult ParseStreamingMessage(flare::io::IOBuf* source,
     }
     uint32_t body_size;
     uint32_t meta_size;
-    flare::io::RawUnpacker(header_buf + 4).unpack32(body_size).unpack32(meta_size);
+    flare::io::raw_unpacker(header_buf + 4).unpack32(body_size).unpack32(meta_size);
     if (body_size > FLAGS_max_body_size) {
         return MakeParseError(PARSE_ERROR_TOO_BIG_DATA);
     } else if (source->length() < sizeof(header_buf) + body_size) {
@@ -91,14 +91,14 @@ ParseResult ParseStreamingMessage(flare::io::IOBuf* source,
         return MakeParseError(PARSE_ERROR_TRY_OTHERS);
     }
     source->pop_front(sizeof(header_buf));
-    flare::io::IOBuf meta_buf;
+    flare::io::cord_buf meta_buf;
     source->cutn(&meta_buf, meta_size);
-    flare::io::IOBuf payload;
+    flare::io::cord_buf payload;
     source->cutn(&payload, body_size - meta_size);
 
     do {
         StreamFrameMeta fm;
-        if (!ParsePbFromIOBuf(&fm, meta_buf)) {
+        if (!ParsePbFromCordBuf(&fm, meta_buf)) {
             LOG(WARNING) << "Fail to Parse StreamFrameMeta from " << *socket;
             break;
         }
@@ -130,7 +130,7 @@ void SendStreamRst(Socket *sock, int64_t remote_stream_id) {
     StreamFrameMeta fm;
     fm.set_stream_id(remote_stream_id);
     fm.set_frame_type(FRAME_TYPE_RST);
-    flare::io::IOBuf out;
+    flare::io::cord_buf out;
     PackStreamMessage(&out, fm, NULL);
     sock->Write(&out);
 }
@@ -142,19 +142,19 @@ void SendStreamClose(Socket *sock, int64_t remote_stream_id,
     fm.set_stream_id(remote_stream_id);
     fm.set_source_stream_id(source_stream_id);
     fm.set_frame_type(FRAME_TYPE_CLOSE);
-    flare::io::IOBuf out;
+    flare::io::cord_buf out;
     PackStreamMessage(&out, fm, NULL);
     sock->Write(&out);
 }
 
-int SendStreamData(Socket* sock, const flare::io::IOBuf* data,
+int SendStreamData(Socket* sock, const flare::io::cord_buf* data,
                    int64_t remote_stream_id, int64_t source_stream_id) {
     StreamFrameMeta fm;
     fm.set_stream_id(remote_stream_id);
     fm.set_source_stream_id(source_stream_id);
     fm.set_frame_type(FRAME_TYPE_DATA);
     fm.set_has_continuation(false);
-    flare::io::IOBuf out;
+    flare::io::cord_buf out;
     PackStreamMessage(&out, fm, data);
     return sock->Write(&out);
 }

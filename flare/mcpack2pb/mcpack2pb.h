@@ -72,23 +72,23 @@ struct MessageHandler {
     //  Helper functions
     // -------------------
 
-    // Parse `msg' from IOBuf or array which may contain more data than just
+    // Parse `msg' from cord_buf or array which may contain more data than just
     // the message.
     // Returns bytes parsed, 0 on error.
     size_t parse_from_iobuf_prefix(::google::protobuf::Message* msg,
-                                   const ::flare::io::IOBuf& buf);
+                                   const ::flare::io::cord_buf& buf);
     size_t parse_from_array_prefix(::google::protobuf::Message* msg,
                                    const void* data, int size);
-    // Parse `msg' from IOBuf or array which may just contain the message.
+    // Parse `msg' from cord_buf or array which may just contain the message.
     // Returns true on success.
     bool parse_from_iobuf(::google::protobuf::Message* msg,
-                          const ::flare::io::IOBuf& buf);
+                          const ::flare::io::cord_buf& buf);
     bool parse_from_array(::google::protobuf::Message* msg,
                           const void* data, int size);
-    // Serialize `msg' to IOBuf or string.
+    // Serialize `msg' to cord_buf or string.
     // Returns true on success.
     bool serialize_to_iobuf(const ::google::protobuf::Message& msg,
-                            ::flare::io::IOBuf* buf, SerializationFormat format);
+                            ::flare::io::cord_buf* buf, SerializationFormat format);
 
     // TODO(gejun): serialize_to_string is not supported because OutputStream
     // requires the embedded zero-copy stream to return permanent memory blocks
@@ -110,22 +110,22 @@ MessageHandler find_message_handler(const std::string& full_name);
 
 // inline impl.
 inline size_t MessageHandler::parse_from_iobuf_prefix(
-    ::google::protobuf::Message* msg, const ::flare::io::IOBuf& buf) {
+    ::google::protobuf::Message* msg, const ::flare::io::cord_buf& buf) {
     if (parse == NULL) {
         LOG(ERROR) << "`parse' is NULL";
         return 0;
     }
-    ::flare::io::IOBufAsZeroCopyInputStream zc_stream(buf);
+    ::flare::io::cord_buf_as_zero_copy_input_stream zc_stream(buf);
     return parse(msg, &zc_stream);
 }
 
 inline bool MessageHandler::parse_from_iobuf(
-    ::google::protobuf::Message* msg, const ::flare::io::IOBuf& buf) {
+    ::google::protobuf::Message* msg, const ::flare::io::cord_buf& buf) {
     if (parse == NULL) {
         LOG(ERROR) << "`parse' is NULL";
         return 0;
     }
-    ::flare::io::IOBufAsZeroCopyInputStream zc_stream(buf);
+    ::flare::io::cord_buf_as_zero_copy_input_stream zc_stream(buf);
     return parse(msg, &zc_stream) == buf.size();
 }
 
@@ -151,12 +151,12 @@ inline bool MessageHandler::parse_from_array(
 
 inline bool MessageHandler::serialize_to_iobuf(
     const ::google::protobuf::Message& msg,
-    ::flare::io::IOBuf* buf, SerializationFormat format) {
+    ::flare::io::cord_buf* buf, SerializationFormat format) {
     if (serialize == NULL) {
         LOG(ERROR) << "`serialize' is NULL";
         return false;
     }
-    ::flare::io::IOBufAsZeroCopyOutputStream zc_stream(buf);
+    ::flare::io::cord_buf_as_zero_copy_output_stream zc_stream(buf);
     return serialize(msg, &zc_stream, format);
 }
 

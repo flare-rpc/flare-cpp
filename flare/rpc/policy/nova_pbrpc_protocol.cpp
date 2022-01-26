@@ -21,7 +21,7 @@
 #include <gflags/gflags.h>
 
 #include "flare/base/time.h"
-#include "flare/io/iobuf.h"                        // flare::io::IOBuf
+#include "flare/io/iobuf.h"                        // flare::io::cord_buf
 
 #include "flare/rpc/controller.h"               // Controller
 #include "flare/rpc/socket.h"                   // Socket
@@ -70,7 +70,7 @@ void NovaServiceAdaptor::ParseNsheadMeta(
     }
 }
 
-void NovaServiceAdaptor::ParseRequestFromIOBuf(
+void NovaServiceAdaptor::ParseRequestFromCordBuf(
     const NsheadMeta& meta, const NsheadMessage& raw_req,
     Controller* cntl, google::protobuf::Message* pb_req) const {
     CompressType type = meta.compress_type();
@@ -84,7 +84,7 @@ void NovaServiceAdaptor::ParseRequestFromIOBuf(
     }
 }
 
-void NovaServiceAdaptor::SerializeResponseToIOBuf(
+void NovaServiceAdaptor::SerializeResponseToCordBuf(
     const NsheadMeta&, Controller* cntl,
     const google::protobuf::Message* pb_res, NsheadMessage* raw_res) const {
     if (cntl->Failed()) {
@@ -151,7 +151,7 @@ void ProcessNovaResponse(InputMessageBase* msg_base) {
     accessor.OnResponse(cid, saved_error);
 } 
 
-void SerializeNovaRequest(flare::io::IOBuf* buf, Controller* cntl,
+void SerializeNovaRequest(flare::io::cord_buf* buf, Controller* cntl,
                           const google::protobuf::Message* request) {
     CompressType type = cntl->request_compress_type();
     if (type != COMPRESS_TYPE_NONE && type != COMPRESS_TYPE_SNAPPY) {
@@ -162,12 +162,12 @@ void SerializeNovaRequest(flare::io::IOBuf* buf, Controller* cntl,
     return SerializeRequestDefault(buf, cntl, request);
 }
 
-void PackNovaRequest(flare::io::IOBuf* buf,
+void PackNovaRequest(flare::io::cord_buf* buf,
                      SocketMessage**,
                      uint64_t correlation_id,
                      const google::protobuf::MethodDescriptor* method,
                      Controller* controller,
-                     const flare::io::IOBuf& request,
+                     const flare::io::cord_buf& request,
                      const Authenticator* /*not supported*/) {
     ControllerPrivateAccessor accessor(controller);
     if (controller->connection_type() == CONNECTION_TYPE_SINGLE) {

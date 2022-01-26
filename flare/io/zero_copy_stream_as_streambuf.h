@@ -27,14 +27,14 @@ namespace flare::io {
 
 // Wrap a ZeroCopyOutputStream into std::streambuf. Notice that before 
 // destruction or shrink(), BackUp() of the stream are not called. In another
-// word, if the stream is wrapped from IOBuf, the IOBuf may be larger than 
+// word, if the stream is wrapped from cord_buf, the cord_buf may be larger than
 // appended data.
-    class ZeroCopyStreamAsStreamBuf : public std::streambuf {
+    class zero_copy_stream_as_stream_buf : public std::streambuf {
     public:
-        ZeroCopyStreamAsStreamBuf(google::protobuf::io::ZeroCopyOutputStream *stream)
+        zero_copy_stream_as_stream_buf(google::protobuf::io::ZeroCopyOutputStream *stream)
                 : _zero_copy_stream(stream) {}
 
-        virtual ~ZeroCopyStreamAsStreamBuf();
+        virtual ~zero_copy_stream_as_stream_buf();
 
         // BackUp() unused bytes. Automatically called in destructor.
         void shrink();

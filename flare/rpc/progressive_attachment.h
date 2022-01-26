@@ -36,7 +36,7 @@ public:
     // Write `data' as one HTTP chunk to peer ASAP.
     // Returns 0 on success, -1 otherwise and errno is set.
     // Errnos are same as what Socket.Write may set.
-    int Write(const flare::io::IOBuf& data);
+    int Write(const flare::io::cord_buf& data);
     int Write(const void* data, size_t n);
 
     // Get ip/port of peer/self.
@@ -68,7 +68,7 @@ protected:
     std::atomic<int> _rpc_state;
     flare::base::Mutex _mutex;
     SocketUniquePtr _httpsock;
-    flare::io::IOBuf _saved_buf;
+    flare::io::cord_buf _saved_buf;
     bthread_id_t _notify_id;
 
 private:

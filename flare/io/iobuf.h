@@ -33,7 +33,7 @@
 #include "flare/io/reader_writer.h"
 #include "flare/io/binary_printer.h"
 
-// For IOBuf::appendv(const const_iovec*, size_t). The only difference of this
+// For cord_buf::appendv(const const_iovec*, size_t). The only difference of this
 // struct from iovec (defined in sys/uio.h) is that iov_base is `const void*'
 // which is assignable by const pointers w/o any error.
 extern "C" {
@@ -46,21 +46,21 @@ struct ssl_st;
 
 namespace flare::io {
 
-// IOBuf is a non-continuous buffer that can be cut and combined w/o copying
+// cord_buf is a non-continuous buffer that can be cut and combined w/o copying
 // payload. It can be read from or flushed into file descriptors as well.
-// IOBuf is [thread-compatible]. Namely using different IOBuf in different
-// threads simultaneously is safe, and reading a static IOBuf from different
+// cord_buf is [thread-compatible]. Namely using different cord_buf in different
+// threads simultaneously is safe, and reading a static cord_buf from different
 // threads is safe as well.
-// IOBuf is [NOT thread-safe]. Modifying a same IOBuf from different threads
+// cord_buf is [NOT thread-safe]. Modifying a same cord_buf from different threads
 // simultaneously is unsafe and likely to crash.
-    class IOBuf {
-        friend class IOBufAsZeroCopyInputStream;
+    class cord_buf {
+        friend class cord_buf_as_zero_copy_input_stream;
 
-        friend class IOBufAsZeroCopyOutputStream;
+        friend class cord_buf_as_zero_copy_output_stream;
 
-        friend class IOBufBytesIterator;
+        friend class cord_buf_bytes_iterator;
 
-        friend class IOBufCutter;
+        friend class cord_buf_cutter;
 
     public:
         static const size_t DEFAULT_BLOCK_SIZE = 8192;
@@ -77,7 +77,7 @@ namespace flare::io {
             Block *block;
         };
 
-        // IOBuf is essentially a tiny queue of BlockRefs.
+        // cord_buf is essentially a tiny queue of BlockRefs.
         struct SmallView {
             BlockRef refs[2];
         };
@@ -98,26 +98,26 @@ namespace flare::io {
         };
 
         struct Movable {
-            explicit Movable(IOBuf &v) : _v(&v) {}
+            explicit Movable(cord_buf &v) : _v(&v) {}
 
-            IOBuf &value() const { return *_v; }
+            cord_buf &value() const { return *_v; }
 
         private:
-            IOBuf *_v;
+            cord_buf *_v;
         };
 
         typedef uint64_t Area;
         static const Area INVALID_AREA = 0;
 
-        IOBuf();
+        cord_buf();
 
-        IOBuf(const IOBuf &);
+        cord_buf(const cord_buf &);
 
-        IOBuf(const Movable &);
+        cord_buf(const Movable &);
 
-        ~IOBuf() { clear(); }
+        ~cord_buf() { clear(); }
 
-        void operator=(const IOBuf &);
+        void operator=(const cord_buf &);
 
         void operator=(const Movable &);
 
@@ -125,8 +125,8 @@ namespace flare::io {
 
         void operator=(const std::string &);
 
-        // Exchange internal fields with another IOBuf.
-        void swap(IOBuf &);
+        // Exchange internal fields with another cord_buf.
+        void swap(cord_buf &);
 
         // Pop n bytes from front side
         // If n == 0, nothing popped; if n >= length(), all bytes are popped
@@ -141,7 +141,7 @@ namespace flare::io {
         // Cut off n bytes from front side and APPEND to `out'
         // If n == 0, nothing cut; if n >= length(), all bytes are cut
         // Returns bytes cut.
-        size_t cutn(IOBuf *out, size_t n);
+        size_t cutn(cord_buf *out, size_t n);
 
         size_t cutn(void *out, size_t n);
 
@@ -155,14 +155,14 @@ namespace flare::io {
         // data before the matched characters to `out'.
         // Returns 0 on success, -1 when there's no match (including empty `delim')
         // or other errors.
-        int cut_until(IOBuf *out, char const *delim);
+        int cut_until(cord_buf *out, char const *delim);
 
         // std::string version, `delim' could be binary
-        int cut_until(IOBuf *out, const std::string &delim);
+        int cut_until(cord_buf *out, const std::string &delim);
 
         // Cut at most `size_hint' bytes(approximately) into the writer
         // Returns bytes cut on success, -1 otherwise and errno is set.
-        ssize_t cut_into_writer(IWriter *writer, size_t size_hint = 1024 * 1024);
+        ssize_t cut_into_writer(base_writer *writer, size_t size_hint = 1024 * 1024);
 
         // Cut at most `size_hint' bytes(approximately) into the file descriptor
         // Returns bytes cut on success, -1 otherwise and errno is set.
@@ -187,12 +187,12 @@ namespace flare::io {
         // Cut `count' number of `pieces' into the writer.
         // Returns bytes cut on success, -1 otherwise and errno is set.
         static ssize_t cut_multiple_into_writer(
-                IWriter *writer, IOBuf *const *pieces, size_t count);
+                base_writer *writer, cord_buf *const *pieces, size_t count);
 
         // Cut `count' number of `pieces' into the file descriptor.
         // Returns bytes cut on success, -1 otherwise and errno is set.
         static ssize_t cut_multiple_into_file_descriptor(
-                int fd, IOBuf *const *pieces, size_t count);
+                int fd, cord_buf *const *pieces, size_t count);
 
         // Cut `count' number of `pieces' into file descriptor `fd' at a given
         // offset. The file offset is not changed.
@@ -201,16 +201,16 @@ namespace flare::io {
         // Read NOTE of pcut_into_file_descriptor.
         // Returns bytes cut on success, -1 otherwise and errno is set.
         static ssize_t pcut_multiple_into_file_descriptor(
-                int fd, off_t offset, IOBuf *const *pieces, size_t count);
+                int fd, off_t offset, cord_buf *const *pieces, size_t count);
 
         // Cut `count' number of `pieces' into SSL channel `ssl'.
         // Returns bytes cut on success, -1 otherwise and errno is set.
         static ssize_t cut_multiple_into_SSL_channel(
-                struct ssl_st *ssl, IOBuf *const *pieces, size_t count, int *ssl_error);
+                struct ssl_st *ssl, cord_buf *const *pieces, size_t count, int *ssl_error);
 
-        // Append another IOBuf to back side, payload of the IOBuf is shared
+        // Append another cord_buf to back side, payload of the cord_buf is shared
         // rather than copied.
-        void append(const IOBuf &other);
+        void append(const cord_buf &other);
 
         // Append content of `other' to self and clear `other'.
         void append(const Movable &other);
@@ -219,8 +219,8 @@ namespace flare::io {
         // Following push_back()/append() are just implemented for convenience
         // and occasional usages, they're relatively slow because of the overhead
         // of frequent BlockRef-management and reference-countings. If you get
-        // a lot of push_back/append to do, you should use IOBufAppender or
-        // IOBufBuilder instead, which reduce overhead by owning IOBuf::Block.
+        // a lot of push_back/append to do, you should use cord_buf_appender or
+        // cord_buf_builder instead, which reduce overhead by owning cord_buf::Block.
         // ===================================================================
 
         // Append a character to back side. (with copying)
@@ -254,8 +254,8 @@ namespace flare::io {
         int append(const std::string &s);
 
         // Append the user-data to back side WITHOUT copying.
-        // The user-data can be split and shared by smaller IOBufs and will be
-        // deleted using the deleter func when no IOBuf references it anymore.
+        // The user-data can be split and shared by smaller cord_bufs and will be
+        // deleted using the deleter func when no cord_buf references it anymore.
         int append_user_data(void *data, size_t size, void (*deleter)(void *));
 
         // Resizes the buf to a length of n characters.
@@ -279,27 +279,27 @@ namespace flare::io {
         // reserved size.
         // Returns 0 on success, -1 otherwise.
         // [Rules]
-        // 1. Make sure the IOBuf to be assigned was NOT cut/pop from front side
+        // 1. Make sure the cord_buf to be assigned was NOT cut/pop from front side
         //    after reserving, otherwise behavior of this function is undefined,
         //    even if it returns 0.
-        // 2. Make sure the IOBuf to be assigned was NOT copied to/from another
-        //    IOBuf after reserving to prevent underlying blocks from being shared,
-        //    otherwise the assignment affects all IOBuf sharing the blocks, which
+        // 2. Make sure the cord_buf to be assigned was NOT copied to/from another
+        //    cord_buf after reserving to prevent underlying blocks from being shared,
+        //    otherwise the assignment affects all cord_buf sharing the blocks, which
         //    is probably not what we want.
         int unsafe_assign(Area area, const void *data);
 
         // Append min(n, length()) bytes starting from `pos' at front side to `buf'.
         // The real payload is shared rather than copied.
         // Returns bytes copied.
-        size_t append_to(IOBuf *buf, size_t n = (size_t) -1L, size_t pos = 0) const;
+        size_t append_to(cord_buf *buf, size_t n = (size_t) -1L, size_t pos = 0) const;
 
-        // Explicitly declare this overload as error to avoid copy_to(flare::io::IOBuf*)
+        // Explicitly declare this overload as error to avoid copy_to(flare::io::cord_buf*)
         // from being interpreted as copy_to(void*) by the compiler (which causes
         // undefined behavior).
-        size_t copy_to(IOBuf *buf, size_t n = (size_t) -1L, size_t pos = 0) const
+        size_t copy_to(cord_buf *buf, size_t n = (size_t) -1L, size_t pos = 0) const
         // the error attribute in not available in gcc 3.4
 #if defined(__GNUC__) && (__GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 8))
-        __attribute__ (( error("Call append_to(IOBuf*) instead") ))
+        __attribute__ (( error("Call append_to(cord_buf*) instead") ))
 #endif
         ;
 
@@ -331,7 +331,7 @@ namespace flare::io {
         //   internal buffer -  the bytes are stored continuously in the internal
         //                      buffer, no copying is needed. This function does not
         //                      add additional reference to the underlying block,
-        //                      so user should not change this IOBuf during using
+        //                      so user should not change this cord_buf during using
         //                      the internal buffer.
         // If n == 0 and buffer is empty, return value is undefined.
         const void *fetch(void *aux_buffer, size_t n) const;
@@ -360,10 +360,10 @@ namespace flare::io {
 
         static size_t block_count_hit_tls_threshold();
 
-        // Equal with a string/IOBuf or not.
+        // Equal with a string/cord_buf or not.
         bool equals(const std::string_view &) const;
 
-        bool equals(const IOBuf &other) const;
+        bool equals(const cord_buf &other) const;
 
         // Get the number of backing blocks
         size_t backing_block_num() const { return _ref_num(); }
@@ -375,9 +375,9 @@ namespace flare::io {
         Movable movable() { return Movable(*this); }
 
     protected:
-        int _cut_by_char(IOBuf *out, char);
+        int _cut_by_char(cord_buf *out, char);
 
-        int _cut_by_delim(IOBuf *out, char const *dbegin, size_t ndelim);
+        int _cut_by_delim(cord_buf *out, char const *dbegin, size_t ndelim);
 
         // Returns: true iff this should be viewed as SmallView
         bool _small() const;
@@ -443,34 +443,34 @@ namespace flare::io {
         };
     };
 
-    std::ostream &operator<<(std::ostream &, const IOBuf &buf);
+    std::ostream &operator<<(std::ostream &, const cord_buf &buf);
 
-    inline bool operator==(const flare::io::IOBuf &b, const std::string_view &s) { return b.equals(s); }
+    inline bool operator==(const flare::io::cord_buf &b, const std::string_view &s) { return b.equals(s); }
 
-    inline bool operator==(const std::string_view &s, const flare::io::IOBuf &b) { return b.equals(s); }
+    inline bool operator==(const std::string_view &s, const flare::io::cord_buf &b) { return b.equals(s); }
 
-    inline bool operator!=(const flare::io::IOBuf &b, const std::string_view &s) { return !b.equals(s); }
+    inline bool operator!=(const flare::io::cord_buf &b, const std::string_view &s) { return !b.equals(s); }
 
-    inline bool operator!=(const std::string_view &s, const flare::io::IOBuf &b) { return !b.equals(s); }
+    inline bool operator!=(const std::string_view &s, const flare::io::cord_buf &b) { return !b.equals(s); }
 
-    inline bool operator==(const flare::io::IOBuf &b1, const flare::io::IOBuf &b2) { return b1.equals(b2); }
+    inline bool operator==(const flare::io::cord_buf &b1, const flare::io::cord_buf &b2) { return b1.equals(b2); }
 
-    inline bool operator!=(const flare::io::IOBuf &b1, const flare::io::IOBuf &b2) { return !b1.equals(b2); }
+    inline bool operator!=(const flare::io::cord_buf &b1, const flare::io::cord_buf &b2) { return !b1.equals(b2); }
 
-    // IOPortal is a subclass of IOBuf that can read from file descriptors.
+    // IOPortal is a subclass of cord_buf that can read from file descriptors.
     // Typically used as the buffer to store bytes from sockets.
-    class IOPortal : public IOBuf {
+    class IOPortal : public cord_buf {
     public:
         IOPortal() : _block(NULL) {}
 
-        IOPortal(const IOPortal &rhs) : IOBuf(rhs), _block(NULL) {}
+        IOPortal(const IOPortal &rhs) : cord_buf(rhs), _block(NULL) {}
 
         ~IOPortal();
 
         IOPortal &operator=(const IOPortal &rhs);
 
         // Read at most `max_count' bytes from the reader and append to self.
-        ssize_t append_from_reader(IReader *reader, size_t max_count);
+        ssize_t append_from_reader(base_reader *reader, size_t max_count);
 
         // Read at most `max_count' bytes from file descriptor `fd' and
         // append to self.
@@ -491,7 +491,7 @@ namespace flare::io {
 
         // Return cached blocks to TLS. This function should be called by users
         // when this IOPortal are cut into intact messages and becomes empty, to
-        // let continuing code on IOBuf to reuse the blocks. Calling this function
+        // let continuing code on cord_buf to reuse the blocks. Calling this function
         // after each call to append_xxx does not make sense and may hurt
         // performance. Read comments on field `_block' below.
         void return_cached_blocks();
@@ -506,19 +506,19 @@ namespace flare::io {
         Block *_block;
     };
 
-// Specialized utility to cut from IOBuf faster than using corresponding
-// methods in IOBuf.
-// Designed for efficiently parsing data from IOBuf.
-// The cut IOBuf can be appended during cutting.
-    class IOBufCutter {
+    // Specialized utility to cut from cord_buf faster than using corresponding
+    // methods in cord_buf.
+    // Designed for efficiently parsing data from cord_buf.
+    // The cut cord_buf can be appended during cutting.
+    class cord_buf_cutter {
     public:
-        explicit IOBufCutter(flare::io::IOBuf *buf);
+        explicit cord_buf_cutter(flare::io::cord_buf *buf);
 
-        ~IOBufCutter();
+        ~cord_buf_cutter();
 
         // Cut off n bytes and APPEND to `out'
         // Returns bytes cut.
-        size_t cutn(flare::io::IOBuf *out, size_t n);
+        size_t cutn(flare::io::cord_buf *out, size_t n);
 
         size_t cutn(std::string *out, size_t n);
 
@@ -551,23 +551,23 @@ namespace flare::io {
     private:
         void *_data;
         void *_data_end;
-        IOBuf::Block *_block;
-        IOBuf *_buf;
+        cord_buf::Block *_block;
+        cord_buf *_buf;
     };
 
-// Parse protobuf message from IOBuf. Notice that this wrapper does not change
-// source IOBuf, which also should not change during lifetime of the wrapper.
-// Even if a IOBufAsZeroCopyInputStream is created but parsed, the source
-// IOBuf should not be changed as well becuase constructor of the stream
-// saves internal information of the source IOBuf which is assumed to be
-// unchanged.
-// Example:
-//     IOBufAsZeroCopyInputStream wrapper(the_iobuf_with_protobuf_format_data);
-//     some_pb_message.ParseFromZeroCopyStream(&wrapper);
-    class IOBufAsZeroCopyInputStream
+    // Parse protobuf message from cord_buf. Notice that this wrapper does not change
+    // source cord_buf, which also should not change during lifetime of the wrapper.
+    // Even if a cord_buf_as_zero_copy_input_stream is created but parsed, the source
+    // cord_buf should not be changed as well becuase constructor of the stream
+    // saves internal information of the source cord_buf which is assumed to be
+    // unchanged.
+    // Example:
+    //     cord_buf_as_zero_copy_input_stream wrapper(the_iobuf_with_protobuf_format_data);
+    //     some_pb_message.ParseFromZeroCopyStream(&wrapper);
+    class cord_buf_as_zero_copy_input_stream
             : public google::protobuf::io::ZeroCopyInputStream {
     public:
-        explicit IOBufAsZeroCopyInputStream(const IOBuf &);
+        explicit cord_buf_as_zero_copy_input_stream(const cord_buf &);
 
         bool Next(const void **data, int *size) override;
 
@@ -581,30 +581,30 @@ namespace flare::io {
         int _ref_index;
         int _add_offset;
         google::protobuf::int64 _byte_count;
-        const IOBuf *_buf;
+        const cord_buf *_buf;
     };
 
-// Serialize protobuf message into IOBuf. This wrapper does not clear source
-// IOBuf before appending. You can change the source IOBuf when stream is 
-// not used(append sth. to the IOBuf, serialize a protobuf message, append 
-// sth. again, serialize messages again...). This is different from 
-// IOBufAsZeroCopyInputStream which needs the source IOBuf to be unchanged.
-// Example:
-//     IOBufAsZeroCopyOutputStream wrapper(&the_iobuf_to_put_data_in);
-//     some_pb_message.SerializeToZeroCopyStream(&wrapper);
-//
-// NOTE: Blocks are by default shared among all the ZeroCopyOutputStream in one
-// thread. If there are many manuplated streams at one time, there may be many
-// fragments. You can create a ZeroCopyOutputStream which has its own block by 
-// passing a positive `block_size' argument to avoid this problem.
-    class IOBufAsZeroCopyOutputStream
+    // Serialize protobuf message into cord_buf. This wrapper does not clear source
+    // cord_buf before appending. You can change the source cord_buf when stream is
+    // not used(append sth. to the cord_buf, serialize a protobuf message, append
+    // sth. again, serialize messages again...). This is different from
+    // cord_buf_as_zero_copy_input_stream which needs the source cord_buf to be unchanged.
+    // Example:
+    //     cord_buf_as_zero_copy_output_stream wrapper(&the_iobuf_to_put_data_in);
+    //     some_pb_message.SerializeToZeroCopyStream(&wrapper);
+    //
+    // NOTE: Blocks are by default shared among all the ZeroCopyOutputStream in one
+    // thread. If there are many manuplated streams at one time, there may be many
+    // fragments. You can create a ZeroCopyOutputStream which has its own block by
+    // passing a positive `block_size' argument to avoid this problem.
+    class cord_buf_as_zero_copy_output_stream
             : public google::protobuf::io::ZeroCopyOutputStream {
     public:
-        explicit IOBufAsZeroCopyOutputStream(IOBuf *);
+        explicit cord_buf_as_zero_copy_output_stream(cord_buf *);
 
-        IOBufAsZeroCopyOutputStream(IOBuf *, uint32_t block_size);
+        cord_buf_as_zero_copy_output_stream(cord_buf *, uint32_t block_size);
 
-        ~IOBufAsZeroCopyOutputStream();
+        ~cord_buf_as_zero_copy_output_stream();
 
         bool Next(void **data, int *size) override;
 
@@ -614,19 +614,19 @@ namespace flare::io {
     private:
         void _release_block();
 
-        IOBuf *_buf;
+        cord_buf *_buf;
         uint32_t _block_size;
-        IOBuf::Block *_cur_block;
+        cord_buf::Block *_cur_block;
         google::protobuf::int64 _byte_count;
     };
 
-    // Wrap IOBuf into input of snappy compresson.
-    class IOBufAsSnappySource : public flare::snappy::Source {
+    // Wrap cord_buf into input of snappy compresson.
+    class cord_buf_as_snappy_source : public flare::snappy::Source {
     public:
-        explicit IOBufAsSnappySource(const flare::io::IOBuf &buf)
+        explicit cord_buf_as_snappy_source(const flare::io::cord_buf &buf)
                 : _buf(&buf), _stream(buf) {}
 
-        virtual ~IOBufAsSnappySource() {}
+        virtual ~cord_buf_as_snappy_source() {}
 
         // Return the number of bytes left to read from the source
         size_t Available() const override;
@@ -639,16 +639,16 @@ namespace flare::io {
         void Skip(size_t n) override;
 
     private:
-        const flare::io::IOBuf *_buf;
-        flare::io::IOBufAsZeroCopyInputStream _stream;
+        const flare::io::cord_buf *_buf;
+        flare::io::cord_buf_as_zero_copy_input_stream _stream;
     };
 
-// Wrap IOBuf into output of snappy compression.
-    class IOBufAsSnappySink : public flare::snappy::Sink {
+// Wrap cord_buf into output of snappy compression.
+    class cord_buf_as_snappy_sink : public flare::snappy::Sink {
     public:
-        explicit IOBufAsSnappySink(flare::io::IOBuf &buf);
+        explicit cord_buf_as_snappy_sink(flare::io::cord_buf &buf);
 
-        virtual ~IOBufAsSnappySink() {}
+        virtual ~cord_buf_as_snappy_sink() {}
 
         // Append "bytes[0,n-1]" to this.
         void Append(const char *bytes, size_t n) override;
@@ -659,49 +659,49 @@ namespace flare::io {
     private:
         char *_cur_buf;
         int _cur_len;
-        flare::io::IOBuf *_buf;
-        flare::io::IOBufAsZeroCopyOutputStream _buf_stream;
+        flare::io::cord_buf *_buf;
+        flare::io::cord_buf_as_zero_copy_output_stream _buf_stream;
     };
 
-// A std::ostream to build IOBuf.
-// Example:
-//   IOBufBuilder builder;
-//   builder << "Anything that can be sent to std::ostream";
-//   // You have several methods to fetch the IOBuf.
-//   target_iobuf.append(builder.buf()); // builder.buf() was not changed
-//   OR
-//   builder.move_to(target_iobuf);      // builder.buf() was clear()-ed.
-    class IOBufBuilder :
+    // A std::ostream to build cord_buf.
+    // Example:
+    //   cord_buf_builder builder;
+    //   builder << "Anything that can be sent to std::ostream";
+    //   // You have several methods to fetch the cord_buf.
+    //   target_iobuf.append(builder.buf()); // builder.buf() was not changed
+    //   OR
+    //   builder.move_to(target_iobuf);      // builder.buf() was clear()-ed.
+    class cord_buf_builder :
             // Have to use private inheritance to arrange initialization order.
-            virtual private IOBuf,
-            virtual private IOBufAsZeroCopyOutputStream,
-            virtual private ZeroCopyStreamAsStreamBuf,
+            virtual private cord_buf,
+            virtual private cord_buf_as_zero_copy_output_stream,
+            virtual private zero_copy_stream_as_stream_buf,
             public std::ostream {
     public:
-        explicit IOBufBuilder()
-                : IOBufAsZeroCopyOutputStream(this), ZeroCopyStreamAsStreamBuf(this), std::ostream(this) {}
+        explicit cord_buf_builder()
+                : cord_buf_as_zero_copy_output_stream(this), zero_copy_stream_as_stream_buf(this), std::ostream(this) {}
 
-        IOBuf &buf() {
+        cord_buf &buf() {
             this->shrink();
             return *this;
         }
 
-        void buf(const IOBuf &buf) {
-            *static_cast<IOBuf *>(this) = buf;
+        void buf(const cord_buf &buf) {
+            *static_cast<cord_buf *>(this) = buf;
         }
 
-        void move_to(IOBuf &target) {
+        void move_to(cord_buf &target) {
             target = Movable(buf());
         }
     };
 
-// Create IOBuf by appending data *faster*
-    class IOBufAppender {
+    // Create cord_buf by appending data *faster*
+    class cord_buf_appender {
     public:
-        IOBufAppender();
+        cord_buf_appender();
 
         // Append `n' bytes starting from `data' to back side of the internal buffer
-        // Costs 2/3 time of IOBuf.append for short data/strings on Intel(R) Xeon(R)
+        // Costs 2/3 time of cord_buf.append for short data/strings on Intel(R) Xeon(R)
         // CPU E5-2620 @ 2.00GHz. Longer data/strings make differences smaller.
         // Returns 0 on success, -1 otherwise.
         int append(const void *data, size_t n);
@@ -714,18 +714,18 @@ namespace flare::io {
         int append_decimal(long d);
 
         // Push the character to back side of the internal buffer.
-        // Costs ~3ns while IOBuf.push_back costs ~13ns on Intel(R) Xeon(R) CPU
+        // Costs ~3ns while cord_buf.push_back costs ~13ns on Intel(R) Xeon(R) CPU
         // E5-2620 @ 2.00GHz
         // Returns 0 on success, -1 otherwise.
         int push_back(char c);
 
-        IOBuf &buf() {
+        cord_buf &buf() {
             shrink();
             return _buf;
         }
 
-        void move_to(IOBuf &target) {
-            target = IOBuf::Movable(buf());
+        void move_to(cord_buf &target) {
+            target = cord_buf::Movable(buf());
         }
 
     private:
@@ -737,20 +737,20 @@ namespace flare::io {
         // Saving _data_end instead of _size avoid modifying _data and _size
         // in each push_back() which is probably a hotspot.
         void *_data_end;
-        IOBuf _buf;
-        IOBufAsZeroCopyOutputStream _zc_stream;
+        cord_buf _buf;
+        cord_buf_as_zero_copy_output_stream _zc_stream;
     };
 
-// Iterate bytes of a IOBuf.
+// Iterate bytes of a cord_buf.
 // During iteration, the iobuf should NOT be changed.
-    class IOBufBytesIterator {
+    class cord_buf_bytes_iterator {
     public:
-        explicit IOBufBytesIterator(const flare::io::IOBuf &buf);
+        explicit cord_buf_bytes_iterator(const flare::io::cord_buf &buf);
 
         // Construct from another iterator.
-        IOBufBytesIterator(const IOBufBytesIterator &it);
+        cord_buf_bytes_iterator(const cord_buf_bytes_iterator &it);
 
-        IOBufBytesIterator(const IOBufBytesIterator &it, size_t bytes_left);
+        cord_buf_bytes_iterator(const cord_buf_bytes_iterator &it, size_t bytes_left);
 
         // Returning unsigned is safer than char which would be more error prone
         // to bitwise operations. For example: in "uint32_t value = *it", value
@@ -774,7 +774,7 @@ namespace flare::io {
 
         // Append at most n bytes into buf, forwarding this iterator. Data are
         // referenced rather than copied.
-        size_t append_and_forward(flare::io::IOBuf *buf, size_t n);
+        size_t append_and_forward(flare::io::cord_buf *buf, size_t n);
 
         bool forward_one_block(const void **data, size_t *size);
 
@@ -787,7 +787,7 @@ namespace flare::io {
         const char *_block_end;
         uint32_t _block_count;
         uint32_t _bytes_left;
-        const flare::io::IOBuf *_buf;
+        const flare::io::cord_buf *_buf;
     };
 
 }  // namespace flare::io
@@ -796,7 +796,7 @@ namespace flare::io {
 
 namespace std {
     template<>
-    inline void swap(flare::io::IOBuf &a, flare::io::IOBuf &b) {
+    inline void swap(flare::io::cord_buf &a, flare::io::cord_buf &b) {
         return a.swap(b);
     }
 } // namespace std

@@ -24,12 +24,12 @@
 
 namespace flare::rpc {
 
-// Get the flot.min.js as string or IOBuf.
+// Get the flot.min.js as string or cord_buf.
 // We need to pack all js inside C++ code so that builtin services can be
 // accessed without external resources and network connection.
 const char* flot_min_js();
-const flare::io::IOBuf& flot_min_js_iobuf();
-const flare::io::IOBuf& flot_min_js_iobuf_gzip();
+const flare::io::cord_buf& flot_min_js_iobuf();
+const flare::io::cord_buf& flot_min_js_iobuf_gzip();
 
 } // namespace flare::rpc
 

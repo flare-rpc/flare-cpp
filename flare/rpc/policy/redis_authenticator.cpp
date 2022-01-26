@@ -27,7 +27,7 @@ namespace flare::rpc {
 namespace policy {
 
 int RedisAuthenticator::GenerateCredential(std::string* auth_str) const {
-    flare::io::IOBuf buf;
+    flare::io::cord_buf buf;
     flare::rpc::RedisCommandFormat(&buf, "AUTH %s", passwd_.c_str());
     *auth_str = buf.to_string();
     return 0;
