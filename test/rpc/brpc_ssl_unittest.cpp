@@ -345,7 +345,7 @@ TEST_F(SSLTest, ssl_perf) {
             flare::rpc::CreateServerSSLContext("cert1.crt", "cert1.key",
                                          flare::rpc::SSLOptions(), NULL);
     SSL *cli_ssl = flare::rpc::CreateSSLSession(cli_ctx, 0, clifd, false);
-#if defined(SSL_CTRL_SET_TLSEXT_HOSTNAME) || defined(USE_MESALINK)
+#if defined(SSL_CTRL_SET_TLSEXT_HOSTNAME)
     SSL_set_tlsext_host_name(cli_ssl, "localhost");
 #endif
     SSL *serv_ssl = flare::rpc::CreateSSLSession(serv_ctx, 0, servfd, true);

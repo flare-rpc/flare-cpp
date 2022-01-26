@@ -19,11 +19,6 @@
 #include "flare/base/compat.h"                        // FLARE_PLATFORM_OSX
 #include <openssl/ssl.h>
 #include <openssl/err.h>
-#ifdef USE_MESALINK
-#include <mesalink/openssl/ssl.h>
-#include <mesalink/openssl/err.h>
-#include <mesalink/openssl/x509.h>
-#endif
 #include <netinet/tcp.h>                         // getsockopt
 #include <gflags/gflags.h>
 #include "flare/bthread/unstable.h"                    // bthread_timer_del
@@ -1745,7 +1740,7 @@ int Socket::SSLHandshake(int fd, bool server_mode) {
         LOG(ERROR) << "Fail to CreateSSLSession";
         return -1;
     }
-#if defined(SSL_CTRL_SET_TLSEXT_HOSTNAME) || defined(USE_MESALINK)
+#if defined(SSL_CTRL_SET_TLSEXT_HOSTNAME)
     if (!_ssl_ctx->sni_name.empty()) {
         SSL_set_tlsext_host_name(_ssl_session, _ssl_ctx->sni_name.c_str());
     }

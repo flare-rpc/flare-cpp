@@ -15,10 +15,6 @@
 // specific language governing permissions and limitations
 // under the License.
 
-
-
-#ifndef USE_MESALINK
-
 #include <sys/socket.h>                // recv
 #include <openssl/ssl.h>
 #include <openssl/err.h>
@@ -836,4 +832,3 @@ void Print(std::ostream& os, X509* cert, const char* sep) {
 
 } // namespace flare::rpc
 
-#endif // USE_MESALINK

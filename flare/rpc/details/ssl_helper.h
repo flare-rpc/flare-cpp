@@ -20,15 +20,9 @@
 #define BRPC_SSL_HELPER_H
 
 #include <string.h>
-#ifndef USE_MESALINK
 #include <openssl/ssl.h>
 // For some versions of openssl, SSL_* are defined inside this header
 #include <openssl/ossl_typ.h>
-#else
-#include <mesalink/openssl/ssl.h>
-#include <mesalink/openssl/err.h>
-#include <mesalink/openssl/x509.h>
-#endif
 #include "flare/rpc/socket_id.h"            // SocketId
 #include "flare/rpc/ssl_options.h"          // ServerSSLOptions
 

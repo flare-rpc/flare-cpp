@@ -41,11 +41,7 @@ struct const_iovec {
     const void *iov_base;
     size_t iov_len;
 };
-#ifndef USE_MESALINK
 struct ssl_st;
-#else
-#define ssl_st MESALINK_SSL
-#endif
 }
 
 namespace flare::io {
