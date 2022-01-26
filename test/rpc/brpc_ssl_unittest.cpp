@@ -343,7 +343,7 @@ TEST_F(SSLTest, ssl_perf) {
     SSL_CTX *cli_ctx = flare::rpc::CreateClientSSLContext(opt);
     SSL_CTX *serv_ctx =
             flare::rpc::CreateServerSSLContext("cert1.crt", "cert1.key",
-                                         flare::rpc::SSLOptions(), NULL);
+                                               flare::rpc::SSLOptions(), NULL);
     SSL *cli_ssl = flare::rpc::CreateSSLSession(cli_ctx, 0, clifd, false);
 #if defined(SSL_CTRL_SET_TLSEXT_HOSTNAME)
     SSL_set_tlsext_host_name(cli_ssl, "localhost");
