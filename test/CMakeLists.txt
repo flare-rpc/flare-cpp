@@ -25,7 +25,7 @@ set(TEST_PROTO_FILES addressbook1.proto
         addressbook_map.proto
         addressbook.proto
         echo.proto
-        iobuf.proto
+        cord_buf.proto
         message.proto
         repeated.proto
         snappy_message.proto
@@ -72,7 +72,7 @@ file(COPY ${PROJECT_SOURCE_DIR}/test/cert2.crt DESTINATION ${CMAKE_CURRENT_BINAR
 file(COPY ${PROJECT_SOURCE_DIR}/test/jsonout DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 
 set(IO_TEST_SRC
-        ${PROJECT_SOURCE_DIR}/test/io/iobuf_unittest.cc
+        ${PROJECT_SOURCE_DIR}/test/io/cord_buf_test.cc
         )
 
 
@@ -106,7 +106,7 @@ target_link_libraries(flare-shared-debug ${DYNAMIC_LIB})
 
 # test_io
 add_executable(test_io ${TEST_IO_SRC}
-        ${CMAKE_CURRENT_BINARY_DIR}/iobuf.pb.cc)
+        ${CMAKE_CURRENT_BINARY_DIR}/cord_buf.pb.cc)
 target_link_libraries(test_io flare-shared-debug
         gtest
         gtest_main
