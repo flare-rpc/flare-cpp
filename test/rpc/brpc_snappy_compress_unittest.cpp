@@ -15,23 +15,23 @@
 // specific language governing permissions and limitations
 // under the License.
 
-// brpc - A framework to host and access services throughout Baidu.
+
 
 // Date: 2015/01/20 19:01:06
 
 #include <gtest/gtest.h>
 #include "flare/base/gperftools_profiler.h"
 #include "flare/io/snappy/snappy.h"
-#include "flare/io/iobuf.h"
+#include "flare/io/cord_buf.h"
 #include "flare/base/time.h"
 #include "snappy_message.pb.h"
-#include "flare/brpc/policy/snappy_compress.h"
-#include "flare/brpc/policy/gzip_compress.h"
+#include "flare/rpc/policy/snappy_compress.h"
+#include "flare/rpc/policy/gzip_compress.h"
 #include "flare/base/profile.h"
 
-typedef bool (*Compress)(const google::protobuf::Message &, flare::io::IOBuf *);
+typedef bool (*Compress)(const google::protobuf::Message &, flare::io::cord_buf *);
 
-typedef bool (*Decompress)(const flare::io::IOBuf &, google::protobuf::Message *);
+typedef bool (*Decompress)(const flare::io::cord_buf &, google::protobuf::Message *);
 
 inline void CompressMessage(const char *method_name,
                             int num, snappy_message::SnappyMessageProto &msg,
@@ -42,7 +42,7 @@ inline void CompressMessage(const char *method_name,
     int64_t total_decompress_time = 0;
     snappy_message::SnappyMessageProto new_msg;
     for (int index = 0; index < num; index++) {
-        flare::io::IOBuf buf;
+        flare::io::cord_buf buf;
         timer.start();
         ASSERT_TRUE(compress(msg, &buf));
         timer.stop();
@@ -61,7 +61,7 @@ inline void CompressMessage(const char *method_name,
            compression_ratio * 100.0);
 }
 
-static bool SnappyDecompressIOBuf(char *input, size_t len, flare::io::IOBuf *buf) {
+static bool SnappyDecompressCordBuf(char *input, size_t len, flare::io::cord_buf *buf) {
     size_t decompress_length;
     if (!flare::snappy::GetUncompressedLength(input, len, &decompress_length)) {
         return false;
@@ -85,10 +85,10 @@ TEST_F(test_compress_method, snappy) {
     old_msg.add_numbers(2);
     old_msg.add_numbers(7);
     old_msg.add_numbers(45);
-    flare::io::IOBuf buf;
-    ASSERT_TRUE(brpc::policy::SnappyCompress(old_msg, &buf));
+    flare::io::cord_buf buf;
+    ASSERT_TRUE(flare::rpc::policy::SnappyCompress(old_msg, &buf));
     snappy_message::SnappyMessageProto new_msg;
-    ASSERT_TRUE(brpc::policy::SnappyDecompress(buf, &new_msg));
+    ASSERT_TRUE(flare::rpc::policy::SnappyDecompress(buf, &new_msg));
     ASSERT_TRUE(strcmp(new_msg.text().c_str(), "Hello World!") == 0);
     ASSERT_TRUE(new_msg.numbers_size() == 3);
     ASSERT_EQ(new_msg.numbers(0), 2);
@@ -97,11 +97,11 @@ TEST_F(test_compress_method, snappy) {
 }
 
 TEST_F(test_compress_method, snappy_iobuf) {
-    flare::io::IOBuf buf, output_buf, check_buf;
+    flare::io::cord_buf buf, output_buf, check_buf;
     const char *test = "this is a test";
     buf.append(test, strlen(test));
-    ASSERT_TRUE(brpc::policy::SnappyCompress(buf, &output_buf));
-    ASSERT_TRUE(brpc::policy::SnappyDecompress(output_buf, &check_buf));
+    ASSERT_TRUE(flare::rpc::policy::SnappyCompress(buf, &output_buf));
+    ASSERT_TRUE(flare::rpc::policy::SnappyDecompress(output_buf, &check_buf));
     ASSERT_STREQ(check_buf.to_string().c_str(), test);
 }
 
@@ -122,11 +122,11 @@ TEST_F(test_compress_method, mass_snappy) {
     old_msg.add_numbers(2);
     old_msg.add_numbers(7);
     old_msg.add_numbers(45);
-    flare::io::IOBuf buf;
+    flare::io::cord_buf buf;
     ProfilerStart("./snappy_compress.prof");
-    ASSERT_TRUE(brpc::policy::SnappyCompress(old_msg, &buf));
+    ASSERT_TRUE(flare::rpc::policy::SnappyCompress(old_msg, &buf));
     snappy_message::SnappyMessageProto new_msg;
-    ASSERT_TRUE(brpc::policy::SnappyDecompress(buf, &new_msg));
+    ASSERT_TRUE(flare::rpc::policy::SnappyDecompress(buf, &new_msg));
     ProfilerStop();
     ASSERT_TRUE(strcmp(new_msg.text().c_str(), text) == 0);
     ASSERT_TRUE(new_msg.numbers_size() == 3);
@@ -148,7 +148,7 @@ TEST_F(test_compress_method, snappy_test) {
         }
     }
     text[len] = '\0';
-    flare::io::IOBuf buf;
+    flare::io::cord_buf buf;
     std::string output;
     std::string append_string;
     ASSERT_TRUE(flare::snappy::Compress(text, len, &output));
@@ -188,14 +188,14 @@ TEST_F(test_compress_method, throughput_compare) {
         old_msg.set_text(text);
         int k = std::min(32 * 1024 * 1024 / len, 5000);
         CompressMessage("Snappy", k, old_msg, len,
-                        brpc::policy::SnappyCompress,
-                        brpc::policy::SnappyDecompress);
+                        flare::rpc::policy::SnappyCompress,
+                        flare::rpc::policy::SnappyDecompress);
         CompressMessage("Gzip", k, old_msg, len,
-                        brpc::policy::GzipCompress,
-                        brpc::policy::GzipDecompress);
+                        flare::rpc::policy::GzipCompress,
+                        flare::rpc::policy::GzipDecompress);
         CompressMessage("Zlib", k, old_msg, len,
-                        brpc::policy::ZlibCompress,
-                        brpc::policy::ZlibDecompress);
+                        flare::rpc::policy::ZlibCompress,
+                        flare::rpc::policy::ZlibDecompress);
         printf("\n");
         delete[] text;
     }
@@ -222,21 +222,21 @@ TEST_F(test_compress_method, throughput_compare_complete_random) {
         old_msg.set_text(text);
         int k = std::min(32 * 1024 * 1024 / len, 5000);
         CompressMessage("Snappy", k, old_msg, len,
-                        brpc::policy::SnappyCompress,
-                        brpc::policy::SnappyDecompress);
+                        flare::rpc::policy::SnappyCompress,
+                        flare::rpc::policy::SnappyDecompress);
         CompressMessage("Gzip", k, old_msg, len,
-                        brpc::policy::GzipCompress,
-                        brpc::policy::GzipDecompress);
+                        flare::rpc::policy::GzipCompress,
+                        flare::rpc::policy::GzipDecompress);
         CompressMessage("Zlib", k, old_msg, len,
-                        brpc::policy::ZlibCompress,
-                        brpc::policy::ZlibDecompress);
+                        flare::rpc::policy::ZlibCompress,
+                        flare::rpc::policy::ZlibDecompress);
         printf("\n");
         delete[] text;
     }
 }
 
 TEST_F(test_compress_method, mass_snappy_iobuf) {
-    flare::io::IOBuf buf;
+    flare::io::cord_buf buf;
     int len = 782;
     char *text = new char[len + 1];
     for (int j = 0; j < len;) {
@@ -246,11 +246,11 @@ TEST_F(test_compress_method, mass_snappy_iobuf) {
     }
     text[len] = '\0';
     buf.append(text, strlen(text));
-    flare::io::IOBuf output_buf, check_buf;
-    ASSERT_TRUE(brpc::policy::SnappyCompress(buf, &output_buf));
+    flare::io::cord_buf output_buf, check_buf;
+    ASSERT_TRUE(flare::rpc::policy::SnappyCompress(buf, &output_buf));
     const std::string output_str = output_buf.to_string();
     len = output_str.size();
-    ASSERT_TRUE(SnappyDecompressIOBuf(const_cast<char *>(output_str.data()), len, &check_buf));
+    ASSERT_TRUE(SnappyDecompressCordBuf(const_cast<char *>(output_str.data()), len, &check_buf));
     std::string check_str = check_buf.to_string();
     ASSERT_TRUE(strcmp(check_str.c_str(), text) == 0);
     delete[] text;

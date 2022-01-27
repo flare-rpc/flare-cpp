@@ -20,7 +20,7 @@
 #include <gflags/gflags.h>
 #include "flare/base/logging.h"
 #include <flare/base/strings.h>
-#include <flare/brpc/server.h>
+#include <flare/rpc/server.h>
 #include "echo.pb.h"
 
 DEFINE_bool(echo_attachment, true, "Echo attachment as well");
@@ -40,9 +40,9 @@ public:
               const example::EchoRequest* request,
               example::EchoResponse* response,
               google::protobuf::Closure* done) {
-        brpc::ClosureGuard done_guard(done);
-        brpc::Controller* cntl =
-            static_cast<brpc::Controller*>(cntl_base);
+        flare::rpc::ClosureGuard done_guard(done);
+        flare::rpc::Controller* cntl =
+            static_cast<flare::rpc::Controller*>(cntl_base);
 
         // Echo request and its attachment
         response->set_value(request->value());
@@ -57,22 +57,22 @@ int main(int argc, char* argv[]) {
     GFLAGS_NS::ParseCommandLineFlags(&argc, &argv, true);
 
     // Generally you only need one Server.
-    brpc::Server server;
+    flare::rpc::Server server;
 
     // Instance of your service.
     EchoServiceImpl echo_service_impl;
 
     // Add the service into server. Notice the second parameter, because the
     // service is put on stack, we don't want server to delete it, otherwise
-    // use brpc::SERVER_OWNS_SERVICE.
+    // use flare::rpc::SERVER_OWNS_SERVICE.
     if (server.AddService(&echo_service_impl, 
-                          brpc::SERVER_DOESNT_OWN_SERVICE) != 0) {
+                          flare::rpc::SERVER_DOESNT_OWN_SERVICE) != 0) {
         LOG(ERROR) << "Fail to add service";
         return -1;
     }
 
     // Start the server. 
-    brpc::ServerOptions options;
+    flare::rpc::ServerOptions options;
     options.idle_timeout_sec = FLAGS_idle_timeout_s;
     options.max_concurrency = FLAGS_max_concurrency;
     if (server.Start(FLAGS_port, &options) != 0) {

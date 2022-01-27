@@ -25,7 +25,7 @@
 #include "flare/base/logging.h"
 #include <flare/base/strings.h>
 #include <flare/base/string_splitter.h>
-#include <flare/brpc/server.h>
+#include <flare/rpc/server.h>
 #include "echo.pb.h"
 
 DEFINE_bool(echo_attachment, true, "Echo attachment as well");
@@ -58,9 +58,9 @@ public:
                       const example::EchoRequest *request,
                       example::EchoResponse *response,
                       google::protobuf::Closure *done) {
-        brpc::ClosureGuard done_guard(done);
-        brpc::Controller *cntl =
-                static_cast<brpc::Controller *>(cntl_base);
+        flare::rpc::ClosureGuard done_guard(done);
+        flare::rpc::Controller *cntl =
+                static_cast<flare::rpc::Controller *>(cntl_base);
         if (_sleep_us > 0) {
             double delay = _sleep_us;
             const double a = FLAGS_exception_ratio * 0.5;
@@ -98,7 +98,7 @@ public:
 private:
     size_t _index;
     int64_t _sleep_us;
-    bvar::Adder<size_t> _nreq;
+    flare::variable::Adder<size_t> _nreq;
 };
 
 int main(int argc, char *argv[]) {
@@ -111,9 +111,9 @@ int main(int argc, char *argv[]) {
     }
 
     // We need multiple servers in this example.
-    brpc::Server *servers = new brpc::Server[FLAGS_server_num];
-    // For more options see `brpc/server.h'.
-    brpc::ServerOptions options;
+    flare::rpc::Server *servers = new flare::rpc::Server[FLAGS_server_num];
+    // For more options see `flare/rpc/server.h'.
+    flare::rpc::ServerOptions options;
     options.idle_timeout_sec = FLAGS_idle_timeout_s;
     options.max_concurrency = FLAGS_max_concurrency;
 
@@ -130,7 +130,7 @@ int main(int argc, char *argv[]) {
     EchoServiceImpl *echo_service_impls = new EchoServiceImpl[FLAGS_server_num];
     // Add the service into servers. Notice the second parameter, because the
     // service is put on stack, we don't want server to delete it, otherwise
-    // use brpc::SERVER_OWNS_SERVICE.
+    // use flare::rpc::SERVER_OWNS_SERVICE.
     for (int i = 0; i < FLAGS_server_num; ++i) {
         int64_t sleep_us = sleep_list[(size_t) i < sleep_list.size() ? i : (sleep_list.size() - 1)];
         echo_service_impls[i].set_index(i, sleep_us);
@@ -138,7 +138,7 @@ int main(int argc, char *argv[]) {
         servers[i].set_version(flare::base::string_printf(
                 "example/dynamic_partition_echo_c++[%d]", i));
         if (servers[i].AddService(&echo_service_impls[i],
-                                  brpc::SERVER_DOESNT_OWN_SERVICE) != 0) {
+                                  flare::rpc::SERVER_DOESNT_OWN_SERVICE) != 0) {
             LOG(ERROR) << "Fail to add service";
             return -1;
         }
@@ -153,7 +153,7 @@ int main(int argc, char *argv[]) {
     // Service logic are running in separate worker threads, for main thread,
     // we don't have much to do, just spinning.
     std::vector<size_t> last_num_requests(FLAGS_server_num);
-    while (!brpc::IsAskedToQuit()) {
+    while (!flare::rpc::IsAskedToQuit()) {
         sleep(1);
 
         size_t cur_total = 0;

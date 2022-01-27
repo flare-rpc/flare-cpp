@@ -22,7 +22,7 @@
 #include "flare/base/logging.h"
 #include <flare/base/strings.h>
 #include "flare/base/time.h"
-#include <flare/brpc/partition_channel.h>
+#include <flare/rpc/partition_channel.h>
 #include <deque>
 #include "echo.pb.h"
 
@@ -32,7 +32,7 @@ DEFINE_bool(use_bthread, false, "Use bthread to send requests");
 DEFINE_int32(attachment_size, 0, "Carry so many byte attachment along with requests");
 DEFINE_int32(request_size, 16, "Bytes of each request");
 DEFINE_string(connection_type, "", "Connection type. Available values: single, pooled, short");
-DEFINE_string(protocol, "baidu_std", "Protocol type. Defined in src/brpc/options.proto");
+DEFINE_string(protocol, "baidu_std", "Protocol type. Defined in flare/rpc/options.proto");
 DEFINE_string(server, "file://server_list", "Mapping to servers");
 DEFINE_string(load_balancer, "rr", "Name of load balancer");
 DEFINE_int32(timeout_ms, 100, "RPC timeout in milliseconds");
@@ -61,12 +61,12 @@ static void* sender(void* arg) {
     }
 
     int log_id = 0;
-    while (!brpc::IsAskedToQuit()) {
+    while (!flare::rpc::IsAskedToQuit()) {
         // We will receive response synchronously, safe to put variables
         // on stack.
         example::EchoRequest request;
         example::EchoResponse response;
-        brpc::Controller cntl;
+        flare::rpc::Controller cntl;
 
         request.set_message(g_request);
         cntl.set_log_id(log_id++);  // set by user
@@ -83,7 +83,7 @@ static void* sender(void* arg) {
             info->latency_sum += cntl.latency_us();
             ++info->nsuccess;
         } else {
-            CHECK(brpc::IsAskedToQuit() || !FLAGS_dont_fail)
+            CHECK(flare::rpc::IsAskedToQuit() || !FLAGS_dont_fail)
                 << "error=" << cntl.ErrorText() << " latency=" << cntl.latency_us();
             // We can't connect to the server, sleep a while. Notice that this
             // is a specific sleeping to prevent this thread from spinning too
@@ -95,9 +95,9 @@ static void* sender(void* arg) {
     return NULL;
 }
 
-class MyPartitionParser : public brpc::PartitionParser {
+class MyPartitionParser : public flare::rpc::PartitionParser {
 public:
-    bool ParseFromTag(const std::string& tag, brpc::Partition* out) {
+    bool ParseFromTag(const std::string& tag, flare::rpc::Partition* out) {
         // "N/M" : #N partition of M partitions.
         size_t pos = tag.find_first_of('/');
         if (pos == std::string::npos) {
@@ -126,9 +126,9 @@ int main(int argc, char* argv[]) {
 
     // A Channel represents a communication line to a Server. Notice that 
     // Channel is thread-safe and can be shared by all threads in your program.
-    brpc::PartitionChannel channel;
+    flare::rpc::PartitionChannel channel;
 
-    brpc::PartitionChannelOptions options;
+    flare::rpc::PartitionChannelOptions options;
     options.protocol = FLAGS_protocol;
     options.connection_type = FLAGS_connection_type;
     options.succeed_without_server = true;
@@ -176,7 +176,7 @@ int main(int argc, char* argv[]) {
     int64_t last_counter = 0;
     int64_t last_latency_sum = 0;
     std::vector<size_t> last_nsuccess(FLAGS_thread_num);
-    while (!brpc::IsAskedToQuit()) {
+    while (!flare::rpc::IsAskedToQuit()) {
         sleep(1);
         int64_t latency_sum = 0;
         int64_t nsuccess = 0;

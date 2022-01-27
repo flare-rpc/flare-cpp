@@ -33,7 +33,7 @@ protobuf_generate_cpp(PROTO_SRC PROTO_HEADER http.proto)
 # include PROTO_HEADER
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
-# Search for libthrift* by best effort. If it is not found and brpc is
+# Search for libthrift* by best effort. If it is not found and flare is
 # compiled with thrift protocol enabled, a link error would be reported.
 find_library(THRIFT_LIB NAMES thrift)
 if (NOT THRIFT_LIB)

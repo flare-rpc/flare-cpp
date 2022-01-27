@@ -22,13 +22,13 @@
 #include <iostream>
 
 #include "flare/base/time.h"
-#include "flare/bvar/detail/agent_group.h"
+#include "flare/variable/detail/agent_group.h"
 #include "flare/base/static_atomic.h"
 
 #include <gtest/gtest.h>
 
 namespace {
-using namespace bvar::detail;
+using namespace flare::variable::detail;
 
 struct Add {
     uint64_t operator()(const uint64_t lhs, const uint64_t rhs) const {

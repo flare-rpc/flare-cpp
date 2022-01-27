@@ -15,7 +15,7 @@
 // specific language governing permissions and limitations
 // under the License.
 
-// A brpc based command-line interface to talk with redis-server
+// A flare based command-line interface to talk with redis-server
 
 #include <signal.h>
 #include <stdio.h>
@@ -23,27 +23,27 @@
 #include <readline/history.h>
 #include <gflags/gflags.h>
 #include "flare/base/logging.h"
-#include <flare/brpc/channel.h>
-#include <flare/brpc/redis.h>
+#include <flare/rpc/channel.h>
+#include <flare/rpc/redis.h>
 
 DEFINE_string(connection_type, "", "Connection type. Available values: single, pooled, short");
 DEFINE_string(server, "127.0.0.1:6379", "IP Address of server");
 DEFINE_int32(timeout_ms, 1000, "RPC timeout in milliseconds");
 DEFINE_int32(max_retry, 3, "Max retries(not including the first RPC)"); 
 
-namespace brpc {
+namespace flare::rpc {
 const char* logo();
 }
 
 // Send `command' to redis-server via `channel'
-static bool access_redis(brpc::Channel& channel, const char* command) {
-    brpc::RedisRequest request;
+static bool access_redis(flare::rpc::Channel& channel, const char* command) {
+    flare::rpc::RedisRequest request;
     if (!request.AddCommand(command)) {
         LOG(ERROR) << "Fail to add command";
         return false;
     }
-    brpc::RedisResponse response;
-    brpc::Controller cntl;
+    flare::rpc::RedisResponse response;
+    flare::rpc::Controller cntl;
     channel.CallMethod(NULL, &cntl, &request, &response, NULL);
     if (cntl.Failed()) {
         LOG(ERROR) << "Fail to access redis, " << cntl.ErrorText();
@@ -81,11 +81,11 @@ int main(int argc, char* argv[]) {
 
     // A Channel represents a communication line to a Server. Notice that 
     // Channel is thread-safe and can be shared by all threads in your program.
-    brpc::Channel channel;
+    flare::rpc::Channel channel;
     
     // Initialize the channel, NULL means using default options.
-    brpc::ChannelOptions options;
-    options.protocol = brpc::PROTOCOL_REDIS;
+    flare::rpc::ChannelOptions options;
+    options.protocol = flare::rpc::PROTOCOL_REDIS;
     options.connection_type = FLAGS_connection_type;
     options.timeout_ms = FLAGS_timeout_ms/*milliseconds*/;
     options.max_retry = FLAGS_max_retry;
@@ -103,9 +103,9 @@ int main(int argc, char* argv[]) {
         rl_getc_function = cli_getc;
 
         // Print welcome information.
-        printf("%s\n", brpc::logo());
+        printf("%s\n", flare::rpc::logo());
         printf("This command-line tool mimics the look-n-feel of official "
-               "redis-cli, as a demostration of brpc's capability of"
+               "redis-cli, as a demostration of flare's capability of"
                " talking to redis-server. The output and behavior is "
                "not exactly same with the official one.\n\n");
 
@@ -132,7 +132,7 @@ int main(int argc, char* argv[]) {
             add_history(command.get());
 
             if (!strcmp(command.get(), "help")) {
-                printf("This is a redis CLI written in brpc.\n");
+                printf("This is a redis CLI written in flare.\n");
                 continue;
             }
             if (!strcmp(command.get(), "quit")) {

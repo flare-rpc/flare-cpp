@@ -20,10 +20,10 @@
 #include <vector>
 #include "flare/base/strings.h"
 #include "flare/base/temp_file.h"
-#include "flare/brpc/socket.h"
-#include "flare/brpc/channel.h"
-#include "flare/brpc/load_balancer.h"
-#include "flare/brpc/policy/file_naming_service.h"
+#include "flare/rpc/socket.h"
+#include "flare/rpc/channel.h"
+#include "flare/rpc/load_balancer.h"
+#include "flare/rpc/policy/file_naming_service.h"
 
 class NamingServiceFilterTest : public testing::Test {
 protected:
@@ -31,15 +31,15 @@ protected:
     void TearDown() {}
 }; 
 
-class MyNSFilter: public brpc::NamingServiceFilter {
+class MyNSFilter: public flare::rpc::NamingServiceFilter {
 public:
-    bool Accept(const brpc::ServerNode& node) const {
+    bool Accept(const flare::rpc::ServerNode& node) const {
         return node.tag == "enable";
     }
 };
 
 TEST_F(NamingServiceFilterTest, sanity) {
-    std::vector<brpc::ServerNode> servers;
+    std::vector<flare::rpc::ServerNode> servers;
     const char *address_list[] =  {
         "10.127.0.1:1234",
         "10.128.0.1:1234 enable",
@@ -56,8 +56,8 @@ TEST_F(NamingServiceFilterTest, sanity) {
         fclose(fp);
     }
     MyNSFilter ns_filter;
-    brpc::Channel channel;
-    brpc::ChannelOptions opt;
+    flare::rpc::Channel channel;
+    flare::rpc::ChannelOptions opt;
     opt.ns_filter = &ns_filter;
     std::string ns = std::string("file://") + tmp_file.fname();
     ASSERT_EQ(0, channel.Init(ns.c_str(), "rr", &opt));
@@ -65,9 +65,9 @@ TEST_F(NamingServiceFilterTest, sanity) {
     flare::base::end_point ep;
     ASSERT_EQ(0, flare::base::hostname2endpoint("10.128.0.1:1234", &ep));
     for (int i = 0; i < 10; ++i) {
-        brpc::SocketUniquePtr tmp_sock;
-        brpc::LoadBalancer::SelectIn sel_in = { 0, false, false, 0, NULL };
-        brpc::LoadBalancer::SelectOut sel_out(&tmp_sock);
+        flare::rpc::SocketUniquePtr tmp_sock;
+        flare::rpc::LoadBalancer::SelectIn sel_in = { 0, false, false, 0, NULL };
+        flare::rpc::LoadBalancer::SelectOut sel_out(&tmp_sock);
         ASSERT_EQ(0, channel._lb->SelectServer(sel_in, &sel_out));
         ASSERT_EQ(ep, tmp_sock->remote_side());
     }

@@ -22,20 +22,20 @@
 #include "flare/base/temp_file.h"
 #include "flare/bthread/bthread.h"
 #ifdef BAIDU_INTERNAL
-#include "flare/brpc/policy/baidu_naming_service.h"
+#include "flare/rpc/policy/baidu_naming_service.h"
 #endif
-#include "flare/brpc/policy/consul_naming_service.h"
-#include "flare/brpc/policy/domain_naming_service.h"
-#include "flare/brpc/policy/file_naming_service.h"
-#include "flare/brpc/policy/list_naming_service.h"
-#include "flare/brpc/policy/remote_file_naming_service.h"
-#include "flare/brpc/policy/discovery_naming_service.h"
+#include "flare/rpc/policy/consul_naming_service.h"
+#include "flare/rpc/policy/domain_naming_service.h"
+#include "flare/rpc/policy/file_naming_service.h"
+#include "flare/rpc/policy/list_naming_service.h"
+#include "flare/rpc/policy/remote_file_naming_service.h"
+#include "flare/rpc/policy/discovery_naming_service.h"
 #include "echo.pb.h"
-#include "flare/brpc/server.h"
+#include "flare/rpc/server.h"
 #include "flare/base/strings.h"
 
 
-namespace brpc {
+namespace flare::rpc {
 DECLARE_int32(health_check_interval);
 
 namespace policy {
@@ -48,7 +48,7 @@ DECLARE_string(discovery_env);
 DECLARE_int32(discovery_renew_interval_s);
 
 } // policy
-} // brpc
+} // flare::rpc
 
 namespace {
 
@@ -65,14 +65,14 @@ bool IsIPListEqual(const std::set<flare::base::ip_t>& s1, const std::set<flare::
 }
 
 TEST(NamingServiceTest, sanity) {
-    std::vector<brpc::ServerNode> servers;
+    std::vector<flare::rpc::ServerNode> servers;
 
 #ifdef BAIDU_INTERNAL
-    brpc::policy::BaiduNamingService bns;
+    flare::rpc::policy::BaiduNamingService bns;
     ASSERT_EQ(0, bns.GetServers("qa-pbrpc.SAT.tjyx", &servers));
 #endif
 
-    brpc::policy::DomainNamingService dns;
+    flare::rpc::policy::DomainNamingService dns;
     ASSERT_EQ(0, dns.GetServers("baidu.com:1234", &servers));
     ASSERT_EQ(2u, servers.size());
     ASSERT_EQ(1234, servers[0].addr.port);
@@ -115,7 +115,7 @@ TEST(NamingServiceTest, sanity) {
         }
         fclose(fp);
     }
-    brpc::policy::FileNamingService fns;
+    flare::rpc::policy::FileNamingService fns;
     ASSERT_EQ(0, fns.GetServers(tmp_file.fname(), &servers));
     ASSERT_EQ(FLARE_ARRAY_SIZE(address_list), servers.size());
     for (size_t i = 0; i < FLARE_ARRAY_SIZE(address_list) - 2; ++i) {
@@ -128,7 +128,7 @@ TEST(NamingServiceTest, sanity) {
     for (size_t i = 0; i < FLARE_ARRAY_SIZE(address_list); ++i) {
         ASSERT_EQ(0, flare::base::string_appendf(&s, "%s,", address_list[i]));
     }
-    brpc::policy::ListNamingService lns;
+    flare::rpc::policy::ListNamingService lns;
     ASSERT_EQ(0, lns.GetServers(s.c_str(), &servers));
     ASSERT_EQ(FLARE_ARRAY_SIZE(address_list), servers.size());
     for (size_t i = 0; i < FLARE_ARRAY_SIZE(address_list) - 2; ++i) {
@@ -139,24 +139,24 @@ TEST(NamingServiceTest, sanity) {
 }
 
 TEST(NamingServiceTest, invalid_port) {
-    std::vector<brpc::ServerNode> servers;
+    std::vector<flare::rpc::ServerNode> servers;
 
 #ifdef BAIDU_INTERNAL
-    brpc::policy::BaiduNamingService bns;
+    flare::rpc::policy::BaiduNamingService bns;
     ASSERT_EQ(0, bns.GetServers("qa-pbrpc.SAT.tjyx:main", &servers));
 #endif
 
-    brpc::policy::DomainNamingService dns;
+    flare::rpc::policy::DomainNamingService dns;
     ASSERT_EQ(-1, dns.GetServers("baidu.com:", &servers));
     ASSERT_EQ(-1, dns.GetServers("baidu.com:123a", &servers));
     ASSERT_EQ(-1, dns.GetServers("baidu.com:99999", &servers));
 }
 
 TEST(NamingServiceTest, wrong_name) {
-    std::vector<brpc::ServerNode> servers;
+    std::vector<flare::rpc::ServerNode> servers;
 
 #ifdef BAIDU_INTERNAL
-    brpc::policy::BaiduNamingService bns;
+    flare::rpc::policy::BaiduNamingService bns;
     ASSERT_EQ(-1, bns.GetServers("Wrong", &servers));
 #endif
 
@@ -178,7 +178,7 @@ TEST(NamingServiceTest, wrong_name) {
         }
         fclose(fp);
     }
-    brpc::policy::FileNamingService fns;
+    flare::rpc::policy::FileNamingService fns;
     ASSERT_EQ(0, fns.GetServers(tmp_file.fname(), &servers));
     ASSERT_EQ(FLARE_ARRAY_SIZE(address_list) - 4, servers.size());
 
@@ -186,7 +186,7 @@ TEST(NamingServiceTest, wrong_name) {
     for (size_t i = 0; i < FLARE_ARRAY_SIZE(address_list); ++i) {
         ASSERT_EQ(0, flare::base::string_appendf(&s, ", %s", address_list[i]));
     }
-    brpc::policy::ListNamingService lns;
+    flare::rpc::policy::ListNamingService lns;
     ASSERT_EQ(0, lns.GetServers(s.c_str(), &servers));
     ASSERT_EQ(FLARE_ARRAY_SIZE(address_list) - 4, servers.size());
 }
@@ -199,8 +199,8 @@ public:
                    const test::HttpRequest*,
                    test::HttpResponse*,
                    google::protobuf::Closure* done) {
-        brpc::ClosureGuard done_guard(done);
-        brpc::Controller* cntl = (brpc::Controller*)cntl_base;
+        flare::rpc::ClosureGuard done_guard(done);
+        flare::rpc::Controller* cntl = (flare::rpc::Controller*)cntl_base;
         cntl->http_response().set_content_type("text/plain");
         cntl->response_attachment().append(
             "0.0.0.0:8635 tag1\r\n0.0.0.0:8636 tag2\n"
@@ -211,7 +211,7 @@ public:
                const test::HttpRequest*,
                test::HttpResponse*,
                google::protobuf::Closure* done) {
-        brpc::ClosureGuard done_guard(done);
+        flare::rpc::ClosureGuard done_guard(done);
         touch_count.fetch_add(1);
     }
 
@@ -220,28 +220,28 @@ public:
 };
 
 TEST(NamingServiceTest, remotefile) {
-    brpc::Server server1;
+    flare::rpc::Server server1;
     UserNamingServiceImpl svc1;
-    ASSERT_EQ(0, server1.AddService(&svc1, brpc::SERVER_DOESNT_OWN_SERVICE));
+    ASSERT_EQ(0, server1.AddService(&svc1, flare::rpc::SERVER_DOESNT_OWN_SERVICE));
     ASSERT_EQ(0, server1.Start("localhost:8635", NULL));
-    brpc::Server server2;
+    flare::rpc::Server server2;
     UserNamingServiceImpl svc2;
-    ASSERT_EQ(0, server2.AddService(&svc2, brpc::SERVER_DOESNT_OWN_SERVICE));
+    ASSERT_EQ(0, server2.AddService(&svc2, flare::rpc::SERVER_DOESNT_OWN_SERVICE));
     ASSERT_EQ(0, server2.Start("localhost:8636", NULL));
 
     flare::base::end_point n1;
     ASSERT_EQ(0, flare::base::str2endpoint("0.0.0.0:8635", &n1));
     flare::base::end_point n2;
     ASSERT_EQ(0, flare::base::str2endpoint("0.0.0.0:8636", &n2));
-    std::vector<brpc::ServerNode> expected_servers;
-    expected_servers.push_back(brpc::ServerNode(n1, "tag1"));
-    expected_servers.push_back(brpc::ServerNode(n2, "tag2"));
-    expected_servers.push_back(brpc::ServerNode(n1, "tag3"));
-    expected_servers.push_back(brpc::ServerNode(n2));
+    std::vector<flare::rpc::ServerNode> expected_servers;
+    expected_servers.push_back(flare::rpc::ServerNode(n1, "tag1"));
+    expected_servers.push_back(flare::rpc::ServerNode(n2, "tag2"));
+    expected_servers.push_back(flare::rpc::ServerNode(n1, "tag3"));
+    expected_servers.push_back(flare::rpc::ServerNode(n2));
     std::sort(expected_servers.begin(), expected_servers.end());
 
-    std::vector<brpc::ServerNode> servers;
-    brpc::policy::RemoteFileNamingService rfns;
+    std::vector<flare::rpc::ServerNode> servers;
+    flare::rpc::policy::RemoteFileNamingService rfns;
     ASSERT_EQ(0, rfns.GetServers("0.0.0.0:8635/UserNamingService/ListNames", &servers));
     ASSERT_EQ(expected_servers.size(), servers.size());
     std::sort(servers.begin(), servers.end());
@@ -266,8 +266,8 @@ public:
                    const test::HttpRequest*,
                    test::HttpResponse*,
                    google::protobuf::Closure* done) {
-        brpc::ClosureGuard done_guard(done);
-        brpc::Controller* cntl = (brpc::Controller*)cntl_base;
+        flare::rpc::ClosureGuard done_guard(done);
+        flare::rpc::Controller* cntl = (flare::rpc::Controller*)cntl_base;
         cntl->http_response().SetHeader("X-Consul-Index", "1");
         cntl->response_attachment().append(
             R"([
@@ -388,7 +388,7 @@ public:
                const test::HttpRequest*,
                test::HttpResponse*,
                google::protobuf::Closure* done) {
-        brpc::ClosureGuard done_guard(done);
+        flare::rpc::ClosureGuard done_guard(done);
         touch_count.fetch_add(1);
     }
 
@@ -397,9 +397,9 @@ public:
 };
 
 TEST(NamingServiceTest, consul_with_backup_file) {
-    brpc::policy::FLAGS_consul_enable_degrade_to_file_naming_service = true;
-    const int saved_hc_interval = brpc::FLAGS_health_check_interval;
-    brpc::FLAGS_health_check_interval = 1;
+    flare::rpc::policy::FLAGS_consul_enable_degrade_to_file_naming_service = true;
+    const int saved_hc_interval = flare::rpc::FLAGS_health_check_interval;
+    flare::rpc::FLAGS_health_check_interval = 1;
     const char *address_list[] =  {
         "10.127.0.1:1234",
         "10.128.0.1:1234",
@@ -416,8 +416,8 @@ TEST(NamingServiceTest, consul_with_backup_file) {
     }
     std::cout << tmp_file.fname() << std::endl;
 
-    std::vector<brpc::ServerNode> servers;
-    brpc::policy::ConsulNamingService cns;
+    std::vector<flare::rpc::ServerNode> servers;
+    flare::rpc::policy::ConsulNamingService cns;
     ASSERT_EQ(0, cns.GetServers(service_name, &servers));
     ASSERT_EQ(FLARE_ARRAY_SIZE(address_list), servers.size());
     for (size_t i = 0; i < FLARE_ARRAY_SIZE(address_list); ++i) {
@@ -426,14 +426,14 @@ TEST(NamingServiceTest, consul_with_backup_file) {
         ASSERT_EQ(address_list[i], oss.str()) << "i=" << i;
     }
 
-    brpc::Server server;
+    flare::rpc::Server server;
     ConsulNamingServiceImpl svc;
-    std::string restful_map(brpc::policy::FLAGS_consul_service_discovery_url);
+    std::string restful_map(flare::rpc::policy::FLAGS_consul_service_discovery_url);
     restful_map.append("/");
     restful_map.append(service_name);
     restful_map.append("   => ListNames");
     ASSERT_EQ(0, server.AddService(&svc,
-                                   brpc::SERVER_DOESNT_OWN_SERVICE,
+                                   flare::rpc::SERVER_DOESNT_OWN_SERVICE,
                                    restful_map.c_str()));
     ASSERT_EQ(0, server.Start("localhost:8500", NULL));
 
@@ -443,9 +443,9 @@ TEST(NamingServiceTest, consul_with_backup_file) {
     ASSERT_EQ(0, flare::base::str2endpoint("10.121.36.189:8003", &n1));
     flare::base::end_point n2;
     ASSERT_EQ(0, flare::base::str2endpoint("10.121.36.190:8003", &n2));
-    std::vector<brpc::ServerNode> expected_servers;
-    expected_servers.push_back(brpc::ServerNode(n1, "1"));
-    expected_servers.push_back(brpc::ServerNode(n2, "2"));
+    std::vector<flare::rpc::ServerNode> expected_servers;
+    expected_servers.push_back(flare::rpc::ServerNode(n1, "1"));
+    expected_servers.push_back(flare::rpc::ServerNode(n2, "2"));
     std::sort(expected_servers.begin(), expected_servers.end());
 
     servers.clear();
@@ -455,7 +455,7 @@ TEST(NamingServiceTest, consul_with_backup_file) {
     for (size_t i = 0; i < expected_servers.size(); ++i) {
         ASSERT_EQ(expected_servers[i], servers[i]);
     }
-    brpc::FLAGS_health_check_interval = saved_hc_interval;
+    flare::rpc::FLAGS_health_check_interval = saved_hc_interval;
 }
 
 
@@ -560,8 +560,8 @@ public:
                const test::HttpRequest*,
                test::HttpResponse*,
                google::protobuf::Closure* done) {
-        brpc::ClosureGuard done_guard(done);
-        brpc::Controller* cntl = static_cast<brpc::Controller*>(cntl_base);
+        flare::rpc::ClosureGuard done_guard(done);
+        flare::rpc::Controller* cntl = static_cast<flare::rpc::Controller*>(cntl_base);
         cntl->response_attachment().append(s_nodes_result);
     }
 
@@ -569,8 +569,8 @@ public:
                 const test::HttpRequest*,
                 test::HttpResponse*,
                 google::protobuf::Closure* done) {
-        brpc::ClosureGuard done_guard(done);
-        brpc::Controller* cntl = static_cast<brpc::Controller*>(cntl_base);
+        flare::rpc::ClosureGuard done_guard(done);
+        flare::rpc::Controller* cntl = static_cast<flare::rpc::Controller*>(cntl_base);
         cntl->response_attachment().append(s_fetchs_result);
     }
 
@@ -578,10 +578,10 @@ public:
                  const test::HttpRequest*,
                  test::HttpResponse*,
                  google::protobuf::Closure* done) {
-        brpc::ClosureGuard done_guard(done);
-        brpc::Controller* cntl = static_cast<brpc::Controller*>(cntl_base);
+        flare::rpc::ClosureGuard done_guard(done);
+        flare::rpc::Controller* cntl = static_cast<flare::rpc::Controller*>(cntl_base);
         auto body = cntl->request_attachment().to_string();
-        for (brpc::QuerySplitter sp(body); sp; ++sp) {
+        for (flare::rpc::QuerySplitter sp(body); sp; ++sp) {
             if (sp.key() == "addrs") {
                 _addrs.insert(flare::base::as_string(sp.value()));
             }
@@ -597,8 +597,8 @@ public:
                const test::HttpRequest*,
                test::HttpResponse*,
                google::protobuf::Closure* done) {
-        brpc::ClosureGuard done_guard(done);
-        brpc::Controller* cntl = static_cast<brpc::Controller*>(cntl_base);
+        flare::rpc::ClosureGuard done_guard(done);
+        flare::rpc::Controller* cntl = static_cast<flare::rpc::Controller*>(cntl_base);
         cntl->response_attachment().append(R"({
             "code": 0,
             "message": "0"
@@ -611,8 +611,8 @@ public:
                 const test::HttpRequest*,
                 test::HttpResponse*,
                 google::protobuf::Closure* done) {
-        brpc::ClosureGuard done_guard(done);
-        brpc::Controller* cntl = static_cast<brpc::Controller*>(cntl_base);
+        flare::rpc::ClosureGuard done_guard(done);
+        flare::rpc::Controller* cntl = static_cast<flare::rpc::Controller*>(cntl_base);
         cntl->response_attachment().append(R"({
             "code": 0,
             "message": "0"
@@ -638,9 +638,9 @@ private:
 };
 
 TEST(NamingServiceTest, discovery_sanity) {
-    brpc::policy::FLAGS_discovery_api_addr = "http://127.0.0.1:8635/discovery/nodes";
-    brpc::policy::FLAGS_discovery_renew_interval_s = 1;
-    brpc::Server server;
+    flare::rpc::policy::FLAGS_discovery_api_addr = "http://127.0.0.1:8635/discovery/nodes";
+    flare::rpc::policy::FLAGS_discovery_renew_interval_s = 1;
+    flare::rpc::Server server;
     DiscoveryNamingServiceImpl svc;
     std::string rest_mapping =
         "/discovery/nodes => Nodes, "
@@ -648,16 +648,16 @@ TEST(NamingServiceTest, discovery_sanity) {
         "/discovery/register => Register, "
         "/discovery/renew => Renew, "
         "/discovery/cancel => Cancel";
-    ASSERT_EQ(0, server.AddService(&svc, brpc::SERVER_DOESNT_OWN_SERVICE,
+    ASSERT_EQ(0, server.AddService(&svc, flare::rpc::SERVER_DOESNT_OWN_SERVICE,
                 rest_mapping.c_str()));
     ASSERT_EQ(0, server.Start("localhost:8635", NULL));
 
-    brpc::policy::DiscoveryNamingService dcns;
-    std::vector<brpc::ServerNode> servers;
+    flare::rpc::policy::DiscoveryNamingService dcns;
+    std::vector<flare::rpc::ServerNode> servers;
     ASSERT_EQ(0, dcns.GetServers("admin.test", &servers));
     ASSERT_EQ((size_t)1, servers.size());
 
-    brpc::policy::DiscoveryRegisterParam dparam;
+    flare::rpc::policy::DiscoveryRegisterParam dparam;
     dparam.appid = "main.test";
     dparam.hostname = "hostname";
     dparam.addrs = "grpc://10.0.0.1:8000";
@@ -666,12 +666,12 @@ TEST(NamingServiceTest, discovery_sanity) {
     dparam.status = 1;
     dparam.version = "v1";
     {
-        brpc::policy::DiscoveryClient dc;
+        flare::rpc::policy::DiscoveryClient dc;
     }
     // Cancel is called iff Register is called
     ASSERT_EQ(svc.CancelCount(), 0);
     {
-        brpc::policy::DiscoveryClient dc;
+        flare::rpc::policy::DiscoveryClient dc;
         // Two Register should start one Renew task , and make
         // svc.RenewCount() be one.
         ASSERT_EQ(0, dc.Register(dparam));
@@ -689,7 +689,7 @@ TEST(NamingServiceTest, discovery_sanity) {
     // addrs splitted by `,'
     dparam.addrs = ",grpc://10.0.0.1:8000,,http://10.0.0.1:8000,";
     {
-        brpc::policy::DiscoveryClient dc;
+        flare::rpc::policy::DiscoveryClient dc;
         ASSERT_EQ(0, dc.Register(dparam));
         ASSERT_TRUE(svc.HasAddr("grpc://10.0.0.1:8000"));
         ASSERT_TRUE(svc.HasAddr("http://10.0.0.1:8000"));

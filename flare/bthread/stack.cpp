@@ -26,7 +26,7 @@
 #include "flare/base/singleton_on_pthread_once.h"
 #include "flare/base/dynamic_annotations/dynamic_annotations.h" // RunningOnValgrind
 #include "flare/base/valgrind/valgrind.h"   // VALGRIND_STACK_REGISTER
-#include "flare/bvar/passive_status.h"
+#include "flare/variable/passive_status.h"
 #include "flare/bthread/types.h"                        // BTHREAD_STACKTYPE_*
 #include "flare/bthread/stack.h"
 
@@ -51,7 +51,7 @@ namespace bthread {
         return s_stack_count.load(std::memory_order_relaxed);
     }
 
-    static bvar::PassiveStatus<int64_t> bvar_stack_count(
+    static flare::variable::PassiveStatus<int64_t> bvar_stack_count(
             "bthread_stack_count", get_stack_count, NULL);
 
     int allocate_stack_storage(StackStorage *s, int stacksize_in, int guardsize_in) {

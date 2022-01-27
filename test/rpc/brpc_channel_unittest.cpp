@@ -15,7 +15,7 @@
 // specific language governing permissions and limitations
 // under the License.
 
-// brpc - A framework to host and access services throughout Baidu.
+
 
 // Date: Sun Jul 13 15:04:18 CST 2014
 
@@ -27,23 +27,23 @@
 #include "flare/base/time.h"
 #include "flare/base/logging.h"
 #include "flare/base/temp_file.h"
-#include "flare/brpc/socket.h"
-#include "flare/brpc/acceptor.h"
-#include "flare/brpc/server.h"
-#include "flare/brpc/policy/baidu_rpc_protocol.h"
-#include "flare/brpc/policy/baidu_rpc_meta.pb.h"
-#include "flare/brpc/policy/most_common_message.h"
-#include "flare/brpc/channel.h"
-#include "flare/brpc/details/load_balancer_with_naming.h"
-#include "flare/brpc/parallel_channel.h"
-#include "flare/brpc/selective_channel.h"
-#include "flare/brpc/socket_map.h"
-#include "flare/brpc/controller.h"
+#include "flare/rpc/socket.h"
+#include "flare/rpc/acceptor.h"
+#include "flare/rpc/server.h"
+#include "flare/rpc/policy/baidu_rpc_protocol.h"
+#include "flare/rpc/policy/baidu_rpc_meta.pb.h"
+#include "flare/rpc/policy/most_common_message.h"
+#include "flare/rpc/channel.h"
+#include "flare/rpc/details/load_balancer_with_naming.h"
+#include "flare/rpc/parallel_channel.h"
+#include "flare/rpc/selective_channel.h"
+#include "flare/rpc/socket_map.h"
+#include "flare/rpc/controller.h"
 #include "echo.pb.h"
-#include "flare/brpc/options.pb.h"
+#include "flare/rpc/options.pb.h"
 #include "flare/base/strings.h"
 
-namespace brpc {
+namespace flare::rpc {
 DECLARE_int32(idle_timeout_second);
 DECLARE_int32(max_connection_pool_size);
 class Server;
@@ -54,11 +54,11 @@ void SendRpcResponse(int64_t correlation_id, Controller* cntl,
                      const google::protobuf::Message* res,
                      const Server* server_raw, MethodStatus *, int64_t);
 } // policy
-} // brpc
+} // flare
 
 int main(int argc, char* argv[]) {
-    brpc::FLAGS_idle_timeout_second = 0;
-    brpc::FLAGS_max_connection_pool_size = 0;
+    flare::rpc::FLAGS_idle_timeout_second = 0;
+    flare::rpc::FLAGS_max_connection_pool_size = 0;
     testing::InitGoogleTest(&argc, argv);
     GFLAGS_NS::ParseCommandLineFlags(&argc, &argv, true);
     return RUN_ALL_TESTS();
@@ -71,7 +71,7 @@ void* RunClosure(void* arg) {
     return NULL;
 }
 
-class DeleteOnlyOnceChannel : public brpc::Channel {
+class DeleteOnlyOnceChannel : public flare::rpc::Channel {
 public:
     DeleteOnlyOnceChannel() : _c(1) {
     }
@@ -88,7 +88,7 @@ private:
 static std::string MOCK_CREDENTIAL = "mock credential";
 static std::string MOCK_CONTEXT = "mock context";
 
-class MyAuthenticator : public brpc::Authenticator {
+class MyAuthenticator : public flare::rpc::Authenticator {
 public:
     MyAuthenticator() : count(0) {}
 
@@ -100,7 +100,7 @@ public:
 
     int VerifyCredential(const std::string&,
                          const flare::base::end_point&,
-                         brpc::AuthContext* ctx) const {
+                         flare::rpc::AuthContext* ctx) const {
         ctx->set_user(MOCK_CONTEXT);
         ctx->set_group(MOCK_CONTEXT);
         ctx->set_roles(MOCK_CONTEXT);
@@ -111,13 +111,13 @@ public:
     mutable std::atomic<int32_t> count;
 };
 
-static bool VerifyMyRequest(const brpc::InputMessageBase* msg_base) {
-    const brpc::policy::MostCommonMessage* msg = 
-        static_cast<const brpc::policy::MostCommonMessage*>(msg_base);
-    brpc::Socket* ptr = msg->socket();
+static bool VerifyMyRequest(const flare::rpc::InputMessageBase* msg_base) {
+    const flare::rpc::policy::MostCommonMessage* msg =
+        static_cast<const flare::rpc::policy::MostCommonMessage*>(msg_base);
+    flare::rpc::Socket* ptr = msg->socket();
     
-    brpc::policy::RpcMeta meta;
-    flare::io::IOBufAsZeroCopyInputStream wrapper(msg->meta);
+    flare::rpc::policy::RpcMeta meta;
+    flare::io::cord_buf_as_zero_copy_input_stream wrapper(msg->meta);
     EXPECT_TRUE(meta.ParseFromZeroCopyStream(&wrapper));
 
     if (meta.has_authentication_data()) {
@@ -136,9 +136,9 @@ class MyEchoService : public ::test::EchoService {
               const ::test::EchoRequest* req,
               ::test::EchoResponse* res,
               google::protobuf::Closure* done) {
-        brpc::Controller* cntl =
-            static_cast<brpc::Controller*>(cntl_base);
-        brpc::ClosureGuard done_guard(done);
+        flare::rpc::Controller* cntl =
+            static_cast<flare::rpc::Controller*>(cntl_base);
+        flare::rpc::ClosureGuard done_guard(done);
         if (req->server_fail()) {
             cntl->SetFailed(req->server_fail(), "Server fail1");
             cntl->SetFailed(req->server_fail(), "Server fail2");
@@ -169,8 +169,8 @@ protected:
         : _ep(flare::base::IP_ANY, 8787)
         , _close_fd_once(false) {
         pthread_once(&register_mock_protocol, register_protocol);
-        const brpc::InputMessageHandler pairs[] = {
-            { brpc::policy::ParseRpcMessage, 
+        const flare::rpc::InputMessageHandler pairs[] = {
+            { flare::rpc::policy::ParseRpcMessage,
               ProcessRpcRequest, VerifyMyRequest, this, "baidu_std" }
         };
         EXPECT_EQ(0, _messenger.AddHandler(pairs[0]));
@@ -187,21 +187,21 @@ protected:
     };
 
     static void register_protocol() {
-        brpc::Protocol dummy_protocol = 
-                                 { brpc::policy::ParseRpcMessage,
-                                   brpc::SerializeRequestDefault, 
-                                   brpc::policy::PackRpcRequest,
+        flare::rpc::Protocol dummy_protocol =
+                                 { flare::rpc::policy::ParseRpcMessage,
+                                   flare::rpc::SerializeRequestDefault,
+                                   flare::rpc::policy::PackRpcRequest,
                                    NULL, ProcessRpcRequest,
                                    VerifyMyRequest, NULL, NULL,
-                                   brpc::CONNECTION_TYPE_ALL, "baidu_std" };
-        ASSERT_EQ(0,  RegisterProtocol((brpc::ProtocolType)30, dummy_protocol));
+                                   flare::rpc::CONNECTION_TYPE_ALL, "baidu_std" };
+        ASSERT_EQ(0,  RegisterProtocol((flare::rpc::ProtocolType)30, dummy_protocol));
     }
 
-    static void ProcessRpcRequest(brpc::InputMessageBase* msg_base) {
-        brpc::DestroyingPtr<brpc::policy::MostCommonMessage> msg(
-            static_cast<brpc::policy::MostCommonMessage*>(msg_base));
-        brpc::SocketUniquePtr ptr(msg->ReleaseSocket());
-        const brpc::AuthContext* auth = ptr->auth_context();
+    static void ProcessRpcRequest(flare::rpc::InputMessageBase* msg_base) {
+        flare::rpc::DestroyingPtr<flare::rpc::policy::MostCommonMessage> msg(
+            static_cast<flare::rpc::policy::MostCommonMessage*>(msg_base));
+        flare::rpc::SocketUniquePtr ptr(msg->ReleaseSocket());
+        const flare::rpc::AuthContext* auth = ptr->auth_context();
         if (auth) {
             EXPECT_EQ(MOCK_CONTEXT, auth->user());
             EXPECT_EQ(MOCK_CONTEXT, auth->group());
@@ -216,25 +216,25 @@ protected:
             return;
         }
         
-        brpc::policy::RpcMeta meta;
-        flare::io::IOBufAsZeroCopyInputStream wrapper(msg->meta);
+        flare::rpc::policy::RpcMeta meta;
+        flare::io::cord_buf_as_zero_copy_input_stream wrapper(msg->meta);
         EXPECT_TRUE(meta.ParseFromZeroCopyStream(&wrapper));
-        const brpc::policy::RpcRequestMeta& req_meta = meta.request();
+        const flare::rpc::policy::RpcRequestMeta& req_meta = meta.request();
         ASSERT_EQ(ts->_svc.descriptor()->full_name(), req_meta.service_name());
         const google::protobuf::MethodDescriptor* method =
             ts->_svc.descriptor()->FindMethodByName(req_meta.method_name());
         google::protobuf::Message* req =
               ts->_svc.GetRequestPrototype(method).New();
         if (meta.attachment_size() != 0) {
-            flare::io::IOBuf req_buf;
+            flare::io::cord_buf req_buf;
             msg->payload.cutn(&req_buf, msg->payload.size() - meta.attachment_size());
-            flare::io::IOBufAsZeroCopyInputStream wrapper2(req_buf);
+            flare::io::cord_buf_as_zero_copy_input_stream wrapper2(req_buf);
             EXPECT_TRUE(req->ParseFromZeroCopyStream(&wrapper2));
         } else {
-            flare::io::IOBufAsZeroCopyInputStream wrapper2(msg->payload);
+            flare::io::cord_buf_as_zero_copy_input_stream wrapper2(msg->payload);
             EXPECT_TRUE(req->ParseFromZeroCopyStream(&wrapper2));
         }
-        brpc::Controller* cntl = new brpc::Controller();
+        flare::rpc::Controller* cntl = new flare::rpc::Controller();
         cntl->_current_call.peer_id = ptr->id();
         cntl->_current_call.sending_sock.reset(ptr.release());
         cntl->_server = &ts->_dummy;
@@ -242,13 +242,13 @@ protected:
         google::protobuf::Message* res =
               ts->_svc.GetResponsePrototype(method).New();
         google::protobuf::Closure* done =
-              brpc::NewCallback<
-            int64_t, brpc::Controller*,
+              flare::rpc::NewCallback<
+            int64_t, flare::rpc::Controller*,
             const google::protobuf::Message*,
             const google::protobuf::Message*,
-            const brpc::Server*,
-            brpc::MethodStatus*, int64_t>(
-                &brpc::policy::SendRpcResponse,
+            const flare::rpc::Server*,
+            flare::rpc::MethodStatus*, int64_t>(
+                &flare::rpc::policy::SendRpcResponse,
                 meta.correlation_id(), cntl, NULL, res,
                 &ts->_dummy, NULL, -1);
         ts->_svc.CallMethod(method, cntl, req, res, done);
@@ -274,14 +274,14 @@ protected:
         _messenger.Join();
     }
 
-    void SetUpChannel(brpc::Channel* channel, 
+    void SetUpChannel(flare::rpc::Channel* channel,
                       bool single_server,
                       bool short_connection,
-                      const brpc::Authenticator* auth = NULL,
+                      const flare::rpc::Authenticator* auth = NULL,
                       std::string connection_group = std::string()) {
-        brpc::ChannelOptions opt;
+        flare::rpc::ChannelOptions opt;
         if (short_connection) {
-            opt.connection_type = brpc::CONNECTION_TYPE_SHORT;
+            opt.connection_type = flare::rpc::CONNECTION_TYPE_SHORT;
         }
         opt.auth = auth;
         opt.max_retry = 0;
@@ -293,15 +293,15 @@ protected:
         }                                         
     }
     
-    void CallMethod(brpc::ChannelBase* channel, 
-                    brpc::Controller* cntl,
+    void CallMethod(flare::rpc::ChannelBase* channel,
+                    flare::rpc::Controller* cntl,
                     test::EchoRequest* req, test::EchoResponse* res,
                     bool async, bool destroy = false) {
         google::protobuf::Closure* done = NULL;                     
-        brpc::CallId sync_id = { 0 };
+        flare::rpc::CallId sync_id = { 0 };
         if (async) {
             sync_id = cntl->call_id();
-            done = brpc::DoNothing();
+            done = flare::rpc::DoNothing();
         }
         ::test::EchoService::Stub(channel).Echo(cntl, req, res, done);
         if (async) {
@@ -313,15 +313,15 @@ protected:
         }
     }
 
-    void CallMethod(brpc::ChannelBase* channel, 
-                    brpc::Controller* cntl,
+    void CallMethod(flare::rpc::ChannelBase* channel,
+                    flare::rpc::Controller* cntl,
                     test::ComboRequest* req, test::ComboResponse* res,
                     bool async, bool destroy = false) {
         google::protobuf::Closure* done = NULL;
-        brpc::CallId sync_id = { 0 };
+        flare::rpc::CallId sync_id = { 0 };
         if (async) {
             sync_id = cntl->call_id();
-            done = brpc::DoNothing();
+            done = flare::rpc::DoNothing();
         }
         ::test::EchoService::Stub(channel).ComboEcho(cntl, req, res, done);
         if (async) {
@@ -339,10 +339,10 @@ protected:
                   << " async=" << async
                   << " short=" << short_connection << std::endl;
 
-        brpc::Channel channel;
+        flare::rpc::Channel channel;
         SetUpChannel(&channel, single_server, short_connection);
 
-        brpc::Controller cntl;
+        flare::rpc::Controller cntl;
         test::EchoRequest req;
         test::EchoResponse res;
         req.set_message(__FUNCTION__);
@@ -358,22 +358,22 @@ protected:
                   << " short=" << short_connection << std::endl;
 
         const size_t NCHANS = 8;
-        brpc::Channel subchans[NCHANS];
-        brpc::ParallelChannel channel;
+        flare::rpc::Channel subchans[NCHANS];
+        flare::rpc::ParallelChannel channel;
         for (size_t i = 0; i < NCHANS; ++i) {
             SetUpChannel(&subchans[i], single_server, short_connection);
             ASSERT_EQ(0, channel.AddChannel(
-                          &subchans[i], brpc::DOESNT_OWN_CHANNEL,
+                          &subchans[i], flare::rpc::DOESNT_OWN_CHANNEL,
                           NULL, NULL));
         }
 
-        brpc::Controller cntl;
+        flare::rpc::Controller cntl;
         test::EchoRequest req;
         test::EchoResponse res;
         req.set_message(__FUNCTION__);
         CallMethod(&channel, &cntl, &req, &res, async);
         
-        EXPECT_TRUE(brpc::ETOOMANYFAILS == cntl.ErrorCode() ||
+        EXPECT_TRUE(flare::rpc::ETOOMANYFAILS == cntl.ErrorCode() ||
                     ECONNREFUSED == cntl.ErrorCode()) << cntl.ErrorText();
         LOG(INFO) << cntl.ErrorText();
     }
@@ -385,17 +385,17 @@ protected:
                   << " short=" << short_connection << std::endl;
 
         const size_t NCHANS = 8;
-        brpc::SelectiveChannel channel;
-        brpc::ChannelOptions options;
+        flare::rpc::SelectiveChannel channel;
+        flare::rpc::ChannelOptions options;
         options.max_retry = 0;
         ASSERT_EQ(0, channel.Init("rr", &options));
         for (size_t i = 0; i < NCHANS; ++i) {
-            brpc::Channel* subchan = new brpc::Channel;
+            flare::rpc::Channel* subchan = new flare::rpc::Channel;
             SetUpChannel(subchan, single_server, short_connection);
             ASSERT_EQ(0, channel.AddChannel(subchan, NULL)) << "i=" << i;
         }
 
-        brpc::Controller cntl;
+        flare::rpc::Controller cntl;
         test::EchoRequest req;
         test::EchoResponse res;
         req.set_message(__FUNCTION__);
@@ -414,10 +414,10 @@ protected:
                   << " short=" << short_connection << std::endl;
 
         ASSERT_EQ(0, StartAccept(_ep));
-        brpc::Channel channel;
+        flare::rpc::Channel channel;
         SetUpChannel(&channel, single_server, short_connection);
                 
-        brpc::Controller cntl;
+        flare::rpc::Controller cntl;
         test::EchoRequest req;
         test::EchoResponse res;
         req.set_message(__FUNCTION__);
@@ -443,7 +443,7 @@ protected:
         }
         if (single_server && !short_connection) {
             // Reuse the connection
-            brpc::Channel channel2;
+            flare::rpc::Channel channel2;
             SetUpChannel(&channel2, single_server, short_connection);
             cntl.Reset();
             req.Clear();
@@ -455,7 +455,7 @@ protected:
             EXPECT_EQ(receiving_socket_id, res.receiving_socket_id());
 
             // A different connection_group does not reuse the connection
-            brpc::Channel channel3;
+            flare::rpc::Channel channel3;
             SetUpChannel(&channel3, single_server, short_connection,
                          NULL, "another_group");
             cntl.Reset();
@@ -470,7 +470,7 @@ protected:
 
             // Channel in the same connection_group reuses the connection
             // note that the leading/trailing spaces should be trimed.
-            brpc::Channel channel4;
+            flare::rpc::Channel channel4;
             SetUpChannel(&channel4, single_server, short_connection,
                          NULL, " another_group ");
             cntl.Reset();
@@ -485,37 +485,37 @@ protected:
         StopAndJoin();
     }
 
-    class SetCode : public brpc::CallMapper {
+    class SetCode : public flare::rpc::CallMapper {
     public:
-        brpc::SubCall Map(
+        flare::rpc::SubCall Map(
             int channel_index,
             const google::protobuf::MethodDescriptor* method,
             const google::protobuf::Message* req_base,
             google::protobuf::Message* response) {
-            test::EchoRequest* req = brpc::Clone<test::EchoRequest>(req_base);
+            test::EchoRequest* req = flare::rpc::Clone<test::EchoRequest>(req_base);
             req->set_code(channel_index + 1/*non-zero*/);
-            return brpc::SubCall(method, req, response->New(),
-                                brpc::DELETE_REQUEST | brpc::DELETE_RESPONSE);
+            return flare::rpc::SubCall(method, req, response->New(),
+                                flare::rpc::DELETE_REQUEST | flare::rpc::DELETE_RESPONSE);
         }
     };
 
     class SetCodeOnEven : public SetCode {
     public:
-        brpc::SubCall Map(
+        flare::rpc::SubCall Map(
             int channel_index,
             const google::protobuf::MethodDescriptor* method,
             const google::protobuf::Message* req_base,
             google::protobuf::Message* response) {
             if (channel_index % 2) {
-                return brpc::SubCall::Skip();
+                return flare::rpc::SubCall::Skip();
             }
             return SetCode::Map(channel_index, method, req_base, response);
         }
     };
 
 
-    class GetReqAndAddRes : public brpc::CallMapper {
-        brpc::SubCall Map(
+    class GetReqAndAddRes : public flare::rpc::CallMapper {
+        flare::rpc::SubCall Map(
             int channel_index,
             const google::protobuf::MethodDescriptor* method,
             const google::protobuf::Message* req_base,
@@ -526,18 +526,18 @@ protected:
             if (method->name() != "ComboEcho" ||
                 res == NULL || req == NULL ||
                 req->requests_size() <= channel_index) {
-                return brpc::SubCall::Bad();
+                return flare::rpc::SubCall::Bad();
             }
-            return brpc::SubCall(::test::EchoService::descriptor()->method(0),
+            return flare::rpc::SubCall(::test::EchoService::descriptor()->method(0),
                                 &req->requests(channel_index),
                                 res->add_responses(), 0);
         }
     };
 
-    class MergeNothing : public brpc::ResponseMerger {
+    class MergeNothing : public flare::rpc::ResponseMerger {
         Result Merge(google::protobuf::Message* /*response*/,
                      const google::protobuf::Message* /*sub_response*/) {
-            return brpc::ResponseMerger::MERGED;
+            return flare::rpc::ResponseMerger::MERGED;
         }
     };
 
@@ -548,15 +548,15 @@ protected:
 
         ASSERT_EQ(0, StartAccept(_ep));
         const size_t NCHANS = 8;
-        brpc::Channel subchans[NCHANS];
-        brpc::ParallelChannel channel;
+        flare::rpc::Channel subchans[NCHANS];
+        flare::rpc::ParallelChannel channel;
         for (size_t i = 0; i < NCHANS; ++i) {
             SetUpChannel(&subchans[i], single_server, short_connection);
             ASSERT_EQ(0, channel.AddChannel(
-                          &subchans[i], brpc::DOESNT_OWN_CHANNEL,
+                          &subchans[i], flare::rpc::DOESNT_OWN_CHANNEL,
                           new SetCode, NULL));
         }
-        brpc::Controller cntl;
+        flare::rpc::Controller cntl;
         test::EchoRequest req;
         test::EchoResponse res;
         req.set_message(__FUNCTION__);
@@ -594,9 +594,9 @@ protected:
 
         ASSERT_EQ(0, StartAccept(_ep));
         const size_t NCHANS = 8;
-        brpc::Channel* subchan = new DeleteOnlyOnceChannel;
+        flare::rpc::Channel* subchan = new DeleteOnlyOnceChannel;
         SetUpChannel(subchan, single_server, short_connection);
-        brpc::ParallelChannel channel;
+        flare::rpc::ParallelChannel channel;
         // Share the CallMapper and ResponseMerger should be fine because
         // they're intrusively shared.
         SetCode* set_code = new SetCode;
@@ -604,11 +604,11 @@ protected:
             ASSERT_EQ(0, channel.AddChannel(
                           subchan,
                           // subchan should be deleted (for only once)
-                          ((i % 2) ? brpc::DOESNT_OWN_CHANNEL : brpc::OWNS_CHANNEL),
+                          ((i % 2) ? flare::rpc::DOESNT_OWN_CHANNEL : flare::rpc::OWNS_CHANNEL),
                           set_code, NULL));
         }
         ASSERT_EQ((int)NCHANS, set_code->ref_count());
-        brpc::Controller cntl;
+        flare::rpc::Controller cntl;
         test::EchoRequest req;
         test::EchoResponse res;
         req.set_message(__FUNCTION__);
@@ -645,16 +645,16 @@ protected:
 
         const size_t NCHANS = 8;
         ASSERT_EQ(0, StartAccept(_ep));
-        brpc::SelectiveChannel channel;
-        brpc::ChannelOptions options;
+        flare::rpc::SelectiveChannel channel;
+        flare::rpc::ChannelOptions options;
         options.max_retry = 0;
         ASSERT_EQ(0, channel.Init("rr", &options));
         for (size_t i = 0; i < NCHANS; ++i) {
-            brpc::Channel* subchan = new brpc::Channel;
+            flare::rpc::Channel* subchan = new flare::rpc::Channel;
             SetUpChannel(subchan, single_server, short_connection);
             ASSERT_EQ(0, channel.AddChannel(subchan, NULL)) << "i=" << i;
         }
-        brpc::Controller cntl;
+        flare::rpc::Controller cntl;
         test::EchoRequest req;
         test::EchoResponse res;
         req.set_message(__FUNCTION__);
@@ -689,15 +689,15 @@ protected:
 
         ASSERT_EQ(0, StartAccept(_ep));
         const size_t NCHANS = 8;
-        brpc::Channel subchans[NCHANS];
-        brpc::ParallelChannel channel;
+        flare::rpc::Channel subchans[NCHANS];
+        flare::rpc::ParallelChannel channel;
         for (size_t i = 0; i < NCHANS; ++i) {
             SetUpChannel(&subchans[i], single_server, short_connection);
             ASSERT_EQ(0, channel.AddChannel(
-                          &subchans[i], brpc::DOESNT_OWN_CHANNEL,
+                          &subchans[i], flare::rpc::DOESNT_OWN_CHANNEL,
                           new SetCodeOnEven, NULL));
         }
-        brpc::Controller cntl;
+        flare::rpc::Controller cntl;
         test::EchoRequest req;
         test::EchoResponse res;
         req.set_message(__FUNCTION__);
@@ -738,20 +738,20 @@ protected:
 
         ASSERT_EQ(0, StartAccept(_ep));
         const size_t NCHANS = 8;
-        brpc::Channel subchans[NCHANS];
-        brpc::ParallelChannel channel;
+        flare::rpc::Channel subchans[NCHANS];
+        flare::rpc::ParallelChannel channel;
         for (size_t i = 0; i < NCHANS; ++i) {
             SetUpChannel(&subchans[i], single_server, short_connection);
             ASSERT_EQ(0, channel.AddChannel(
-                          &subchans[i], brpc::DOESNT_OWN_CHANNEL,
+                          &subchans[i], flare::rpc::DOESNT_OWN_CHANNEL,
                           new GetReqAndAddRes, new MergeNothing));
         }
-        brpc::Controller cntl;
+        flare::rpc::Controller cntl;
         test::ComboRequest req;
         test::ComboResponse res;
         CallMethod(&channel, &cntl, &req, &res, false);
         ASSERT_TRUE(cntl.Failed()); // req does not have .requests
-        ASSERT_EQ(brpc::EREQUEST, cntl.ErrorCode());
+        ASSERT_EQ(flare::rpc::EREQUEST, cntl.ErrorCode());
 
         for (size_t i = 0; i < NCHANS; ++i) {
             ::test::EchoRequest* sub_req = req.add_requests();
@@ -763,7 +763,7 @@ protected:
         cntl.Reset();
         CallMethod(&subchans[0], &cntl, &req, &res, false);
         ASSERT_TRUE(cntl.Failed());
-        ASSERT_EQ(brpc::EINTERNAL, cntl.ErrorCode()) << cntl.ErrorText();
+        ASSERT_EQ(flare::rpc::EINTERNAL, cntl.ErrorCode()) << cntl.ErrorText();
         ASSERT_TRUE(flare::base::ends_with(cntl.ErrorText(), "Method ComboEcho() not implemented."));
 
         // do the rpc call.
@@ -794,7 +794,7 @@ protected:
     
     struct CancelerArg {
         int64_t sleep_before_cancel_us;
-        brpc::CallId cid;
+        flare::rpc::CallId cid;
     };
 
     static void* Canceler(void* void_arg) {
@@ -803,7 +803,7 @@ protected:
             bthread_usleep(arg->sleep_before_cancel_us);
         }
         LOG(INFO) << "Start to cancel cid=" << arg->cid.value;
-        brpc::StartCancel(arg->cid);
+        flare::rpc::StartCancel(arg->cid);
         return NULL;
     }
 
@@ -815,16 +815,16 @@ protected:
                   << " short=" << short_connection << std::endl;
 
         ASSERT_EQ(0, StartAccept(_ep));
-        brpc::Channel channel;
+        flare::rpc::Channel channel;
         SetUpChannel(&channel, single_server, short_connection);
                 
-        brpc::Controller cntl;
+        flare::rpc::Controller cntl;
         test::EchoRequest req;
         test::EchoResponse res;
         req.set_message(__FUNCTION__);
-        const brpc::CallId cid = cntl.call_id();
+        const flare::rpc::CallId cid = cntl.call_id();
         ASSERT_TRUE(cid.value != 0);
-        brpc::StartCancel(cid);
+        flare::rpc::StartCancel(cid);
         CallMethod(&channel, &cntl, &req, &res, async);
         EXPECT_EQ(ECANCELED, cntl.ErrorCode()) << cntl.ErrorText();
         StopAndJoin();
@@ -839,22 +839,22 @@ protected:
         ASSERT_EQ(0, StartAccept(_ep));
 
         const size_t NCHANS = 8;
-        brpc::Channel subchans[NCHANS];
-        brpc::ParallelChannel channel;
+        flare::rpc::Channel subchans[NCHANS];
+        flare::rpc::ParallelChannel channel;
         for (size_t i = 0; i < NCHANS; ++i) {
             SetUpChannel(&subchans[i], single_server, short_connection);
             ASSERT_EQ(0, channel.AddChannel(
-                          &subchans[i], brpc::DOESNT_OWN_CHANNEL,
+                          &subchans[i], flare::rpc::DOESNT_OWN_CHANNEL,
                           NULL, NULL));
         }
                 
-        brpc::Controller cntl;
+        flare::rpc::Controller cntl;
         test::EchoRequest req;
         test::EchoResponse res;
         req.set_message(__FUNCTION__);
-        const brpc::CallId cid = cntl.call_id();
+        const flare::rpc::CallId cid = cntl.call_id();
         ASSERT_TRUE(cid.value != 0);
-        brpc::StartCancel(cid);
+        flare::rpc::StartCancel(cid);
         CallMethod(&channel, &cntl, &req, &res, async);
         EXPECT_EQ(ECANCELED, cntl.ErrorCode()) << cntl.ErrorText();
         EXPECT_EQ(NCHANS, (size_t)cntl.sub_count());
@@ -872,21 +872,21 @@ protected:
         ASSERT_EQ(0, StartAccept(_ep));
 
         const size_t NCHANS = 8;
-        brpc::SelectiveChannel channel;
+        flare::rpc::SelectiveChannel channel;
         ASSERT_EQ(0, channel.Init("rr", NULL));
         for (size_t i = 0; i < NCHANS; ++i) {
-            brpc::Channel* subchan = new brpc::Channel;
+            flare::rpc::Channel* subchan = new flare::rpc::Channel;
             SetUpChannel(subchan, single_server, short_connection);
             ASSERT_EQ(0, channel.AddChannel(subchan, NULL)) << "i=" << i;
         }
                 
-        brpc::Controller cntl;
+        flare::rpc::Controller cntl;
         test::EchoRequest req;
         test::EchoResponse res;
         req.set_message(__FUNCTION__);
-        const brpc::CallId cid = cntl.call_id();
+        const flare::rpc::CallId cid = cntl.call_id();
         ASSERT_TRUE(cid.value != 0);
-        brpc::StartCancel(cid);
+        flare::rpc::StartCancel(cid);
         CallMethod(&channel, &cntl, &req, &res, async);
         EXPECT_EQ(ECANCELED, cntl.ErrorCode()) << cntl.ErrorText();
         StopAndJoin();
@@ -899,14 +899,14 @@ protected:
                   << " short=" << short_connection << std::endl;
 
         ASSERT_EQ(0, StartAccept(_ep));
-        brpc::Channel channel;
+        flare::rpc::Channel channel;
         SetUpChannel(&channel, single_server, short_connection);
                 
-        brpc::Controller cntl;
+        flare::rpc::Controller cntl;
         test::EchoRequest req;
         test::EchoResponse res;
         req.set_message(__FUNCTION__);
-        const brpc::CallId cid = cntl.call_id();
+        const flare::rpc::CallId cid = cntl.call_id();
         ASSERT_TRUE(cid.value != 0);
         pthread_t th;
         CancelerArg carg = { 10000, cid };
@@ -934,20 +934,20 @@ protected:
         ASSERT_EQ(0, StartAccept(_ep));
 
         const size_t NCHANS = 8;
-        brpc::Channel subchans[NCHANS];
-        brpc::ParallelChannel channel;
+        flare::rpc::Channel subchans[NCHANS];
+        flare::rpc::ParallelChannel channel;
         for (size_t i = 0; i < NCHANS; ++i) {
             SetUpChannel(&subchans[i], single_server, short_connection);
             ASSERT_EQ(0, channel.AddChannel(
-                          &subchans[i], brpc::DOESNT_OWN_CHANNEL,
+                          &subchans[i], flare::rpc::DOESNT_OWN_CHANNEL,
                           NULL, NULL));
         }
                 
-        brpc::Controller cntl;
+        flare::rpc::Controller cntl;
         test::EchoRequest req;
         test::EchoResponse res;
         req.set_message(__FUNCTION__);
-        const brpc::CallId cid = cntl.call_id();
+        const flare::rpc::CallId cid = cntl.call_id();
         ASSERT_TRUE(cid.value != 0);
         pthread_t th;
         CancelerArg carg = { 10000, cid };
@@ -977,19 +977,19 @@ protected:
         ASSERT_EQ(0, StartAccept(_ep));
 
         const size_t NCHANS = 8;
-        brpc::SelectiveChannel channel;
+        flare::rpc::SelectiveChannel channel;
         ASSERT_EQ(0, channel.Init("rr", NULL));
         for (size_t i = 0; i < NCHANS; ++i) {
-            brpc::Channel* subchan = new brpc::Channel;
+            flare::rpc::Channel* subchan = new flare::rpc::Channel;
             SetUpChannel(subchan, single_server, short_connection);
             ASSERT_EQ(0, channel.AddChannel(subchan, NULL)) << "i=" << i;
         }
                 
-        brpc::Controller cntl;
+        flare::rpc::Controller cntl;
         test::EchoRequest req;
         test::EchoResponse res;
         req.set_message(__FUNCTION__);
-        const brpc::CallId cid = cntl.call_id();
+        const flare::rpc::CallId cid = cntl.call_id();
         ASSERT_TRUE(cid.value != 0);
         pthread_t th;
         CancelerArg carg = { 10000, cid };
@@ -1014,14 +1014,14 @@ protected:
                   << " short=" << short_connection << std::endl;
 
         ASSERT_EQ(0, StartAccept(_ep));
-        brpc::Channel channel;
+        flare::rpc::Channel channel;
         SetUpChannel(&channel, single_server, short_connection);
                 
-        brpc::Controller cntl;
+        flare::rpc::Controller cntl;
         test::EchoRequest req;
         test::EchoResponse res;
         req.set_message(__FUNCTION__);
-        const brpc::CallId cid = cntl.call_id();
+        const flare::rpc::CallId cid = cntl.call_id();
         ASSERT_TRUE(cid.value != 0);
         CallMethod(&channel, &cntl, &req, &res, async);
         EXPECT_EQ(0, cntl.ErrorCode());
@@ -1039,20 +1039,20 @@ protected:
         ASSERT_EQ(0, StartAccept(_ep));
 
         const size_t NCHANS = 8;
-        brpc::Channel subchans[NCHANS];
-        brpc::ParallelChannel channel;
+        flare::rpc::Channel subchans[NCHANS];
+        flare::rpc::ParallelChannel channel;
         for (size_t i = 0; i < NCHANS; ++i) {
             SetUpChannel(&subchans[i], single_server, short_connection);
             ASSERT_EQ(0, channel.AddChannel(
-                          &subchans[i], brpc::DOESNT_OWN_CHANNEL,
+                          &subchans[i], flare::rpc::DOESNT_OWN_CHANNEL,
                           NULL, NULL));
         }
                 
-        brpc::Controller cntl;
+        flare::rpc::Controller cntl;
         test::EchoRequest req;
         test::EchoResponse res;
         req.set_message(__FUNCTION__);
-        const brpc::CallId cid = cntl.call_id();
+        const flare::rpc::CallId cid = cntl.call_id();
         ASSERT_TRUE(cid.value != 0);
         CallMethod(&channel, &cntl, &req, &res, async);
         EXPECT_EQ(0, cntl.ErrorCode());
@@ -1066,10 +1066,10 @@ protected:
 
     void TestAttachment(bool async, bool short_connection) {
         ASSERT_EQ(0, StartAccept(_ep));
-        brpc::Channel channel;
+        flare::rpc::Channel channel;
         SetUpChannel(&channel, true, short_connection);
                 
-        brpc::Controller cntl;
+        flare::rpc::Controller cntl;
         cntl.request_attachment().append("attachment");
         test::EchoRequest req;
         test::EchoResponse res;
@@ -1099,14 +1099,14 @@ protected:
                   << " async=" << async
                   << " short=" << short_connection << std::endl;
         ASSERT_EQ(0, StartAccept(_ep));
-        brpc::Channel channel;
+        flare::rpc::Channel channel;
         SetUpChannel(&channel, single_server, short_connection);
                 
-        brpc::Controller cntl;
+        flare::rpc::Controller cntl;
         test::EchoRequest req;
         test::EchoResponse res;
         CallMethod(&channel, &cntl, &req, &res, async);
-        EXPECT_EQ(brpc::EREQUEST, cntl.ErrorCode()) << cntl.ErrorText();
+        EXPECT_EQ(flare::rpc::EREQUEST, cntl.ErrorCode()) << cntl.ErrorText();
         StopAndJoin();
     }
 
@@ -1118,20 +1118,20 @@ protected:
         ASSERT_EQ(0, StartAccept(_ep));
 
         const size_t NCHANS = 8;
-        brpc::Channel subchans[NCHANS];
-        brpc::ParallelChannel channel;
+        flare::rpc::Channel subchans[NCHANS];
+        flare::rpc::ParallelChannel channel;
         for (size_t i = 0; i < NCHANS; ++i) {
             SetUpChannel(&subchans[i], single_server, short_connection);
             ASSERT_EQ(0, channel.AddChannel(
-                          &subchans[i], brpc::DOESNT_OWN_CHANNEL,
+                          &subchans[i], flare::rpc::DOESNT_OWN_CHANNEL,
                           NULL, NULL));
         }
         
-        brpc::Controller cntl;
+        flare::rpc::Controller cntl;
         test::EchoRequest req;
         test::EchoResponse res;
         CallMethod(&channel, &cntl, &req, &res, async);
-        EXPECT_EQ(brpc::EREQUEST, cntl.ErrorCode()) << cntl.ErrorText();
+        EXPECT_EQ(flare::rpc::EREQUEST, cntl.ErrorCode()) << cntl.ErrorText();
         LOG(WARNING) << cntl.ErrorText();
         StopAndJoin();
     }
@@ -1144,22 +1144,22 @@ protected:
         ASSERT_EQ(0, StartAccept(_ep));
 
         const size_t NCHANS = 8;
-        brpc::SelectiveChannel channel;
+        flare::rpc::SelectiveChannel channel;
         ASSERT_EQ(0, channel.Init("rr", NULL));
         for (size_t i = 0; i < NCHANS; ++i) {
-            brpc::Channel* subchan = new brpc::Channel;
+            flare::rpc::Channel* subchan = new flare::rpc::Channel;
             SetUpChannel(subchan, single_server, short_connection);
             ASSERT_EQ(0, channel.AddChannel(subchan, NULL)) << "i=" << i;
         }
         
-        brpc::Controller cntl;
+        flare::rpc::Controller cntl;
         test::EchoRequest req;
         test::EchoResponse res;
         CallMethod(&channel, &cntl, &req, &res, async);
-        EXPECT_EQ(brpc::EREQUEST, cntl.ErrorCode()) << cntl.ErrorText();
+        EXPECT_EQ(flare::rpc::EREQUEST, cntl.ErrorCode()) << cntl.ErrorText();
         LOG(WARNING) << cntl.ErrorText();
         ASSERT_EQ(1, cntl.sub_count());
-        ASSERT_EQ(brpc::EREQUEST, cntl.sub(0)->ErrorCode());
+        ASSERT_EQ(flare::rpc::EREQUEST, cntl.sub(0)->ErrorCode());
         StopAndJoin();
     }
     
@@ -1168,10 +1168,10 @@ protected:
                   << " async=" << async
                   << " short=" << short_connection << std::endl;
         ASSERT_EQ(0, StartAccept(_ep));
-        brpc::Channel channel;
+        flare::rpc::Channel channel;
         SetUpChannel(&channel, single_server, short_connection);
                 
-        brpc::Controller cntl;
+        flare::rpc::Controller cntl;
         test::EchoRequest req;
         test::EchoResponse res;
         req.set_message(__FUNCTION__);
@@ -1181,7 +1181,7 @@ protected:
         tm.start();
         CallMethod(&channel, &cntl, &req, &res, async);
         tm.stop();
-        EXPECT_EQ(brpc::ERPCTIMEDOUT, cntl.ErrorCode()) << cntl.ErrorText();
+        EXPECT_EQ(flare::rpc::ERPCTIMEDOUT, cntl.ErrorCode()) << cntl.ErrorText();
         EXPECT_LT(labs(tm.m_elapsed() - cntl.timeout_ms()), 15);
         StopAndJoin();
     }
@@ -1194,16 +1194,16 @@ protected:
         ASSERT_EQ(0, StartAccept(_ep));
         
         const size_t NCHANS = 8;
-        brpc::Channel subchans[NCHANS];
-        brpc::ParallelChannel channel;
+        flare::rpc::Channel subchans[NCHANS];
+        flare::rpc::ParallelChannel channel;
         for (size_t i = 0; i < NCHANS; ++i) {
             SetUpChannel(&subchans[i], single_server, short_connection);
             ASSERT_EQ(0, channel.AddChannel(
-                          &subchans[i], brpc::DOESNT_OWN_CHANNEL,
+                          &subchans[i], flare::rpc::DOESNT_OWN_CHANNEL,
                           NULL, NULL));
         }
                 
-        brpc::Controller cntl;
+        flare::rpc::Controller cntl;
         test::EchoRequest req;
         test::EchoResponse res;
         req.set_message(__FUNCTION__);
@@ -1213,7 +1213,7 @@ protected:
         tm.start();
         CallMethod(&channel, &cntl, &req, &res, async);
         tm.stop();
-        EXPECT_EQ(brpc::ERPCTIMEDOUT, cntl.ErrorCode()) << cntl.ErrorText();
+        EXPECT_EQ(flare::rpc::ERPCTIMEDOUT, cntl.ErrorCode()) << cntl.ErrorText();
         EXPECT_EQ(NCHANS, (size_t)cntl.sub_count());
         for (int i = 0; i < cntl.sub_count(); ++i) {
             EXPECT_EQ(ECANCELED, cntl.sub(i)->ErrorCode()) << "i=" << i;
@@ -1222,17 +1222,17 @@ protected:
         StopAndJoin();
     }
 
-    class MakeTheRequestTimeout : public brpc::CallMapper {
+    class MakeTheRequestTimeout : public flare::rpc::CallMapper {
     public:
-        brpc::SubCall Map(
+        flare::rpc::SubCall Map(
             int /*channel_index*/,
             const google::protobuf::MethodDescriptor* method,
             const google::protobuf::Message* req_base,
             google::protobuf::Message* response) {
-            test::EchoRequest* req = brpc::Clone<test::EchoRequest>(req_base);
+            test::EchoRequest* req = flare::rpc::Clone<test::EchoRequest>(req_base);
             req->set_sleep_us(70000); // 70ms
-            return brpc::SubCall(method, req, response->New(),
-                                brpc::DELETE_REQUEST | brpc::DELETE_RESPONSE);
+            return flare::rpc::SubCall(method, req, response->New(),
+                                flare::rpc::DELETE_REQUEST | flare::rpc::DELETE_RESPONSE);
         }
     };
 
@@ -1244,16 +1244,16 @@ protected:
         ASSERT_EQ(0, StartAccept(_ep));
         
         const size_t NCHANS = 8;
-        brpc::Channel subchans[NCHANS];
-        brpc::ParallelChannel channel;
+        flare::rpc::Channel subchans[NCHANS];
+        flare::rpc::ParallelChannel channel;
         for (size_t i = 0; i < NCHANS; ++i) {
             SetUpChannel(&subchans[i], single_server, short_connection);
             ASSERT_EQ(0, channel.AddChannel(
-                          &subchans[i], brpc::DOESNT_OWN_CHANNEL,
+                          &subchans[i], flare::rpc::DOESNT_OWN_CHANNEL,
                           ((i % 2) ? new MakeTheRequestTimeout : NULL), NULL));
         }
                 
-        brpc::Controller cntl;
+        flare::rpc::Controller cntl;
         test::EchoRequest req;
         test::EchoResponse res;
         req.set_message(__FUNCTION__);
@@ -1283,15 +1283,15 @@ protected:
         ASSERT_EQ(0, StartAccept(_ep));
 
         const size_t NCHANS = 8;
-        brpc::SelectiveChannel channel;
+        flare::rpc::SelectiveChannel channel;
         ASSERT_EQ(0, channel.Init("rr", NULL));
         for (size_t i = 0; i < NCHANS; ++i) {
-            brpc::Channel* subchan = new brpc::Channel;
+            flare::rpc::Channel* subchan = new flare::rpc::Channel;
             SetUpChannel(subchan, single_server, short_connection);
             ASSERT_EQ(0, channel.AddChannel(subchan, NULL)) << "i=" << i;
         }
                 
-        brpc::Controller cntl;
+        flare::rpc::Controller cntl;
         test::EchoRequest req;
         test::EchoResponse res;
         req.set_message(__FUNCTION__);
@@ -1301,9 +1301,9 @@ protected:
         tm.start();
         CallMethod(&channel, &cntl, &req, &res, async);
         tm.stop();
-        EXPECT_EQ(brpc::ERPCTIMEDOUT, cntl.ErrorCode()) << cntl.ErrorText();
+        EXPECT_EQ(flare::rpc::ERPCTIMEDOUT, cntl.ErrorCode()) << cntl.ErrorText();
         EXPECT_EQ(1, cntl.sub_count());
-        EXPECT_EQ(brpc::ERPCTIMEDOUT, cntl.sub(0)->ErrorCode());
+        EXPECT_EQ(flare::rpc::ERPCTIMEDOUT, cntl.sub(0)->ErrorCode());
         EXPECT_LT(labs(tm.m_elapsed() - cntl.timeout_ms()), 15);
         StopAndJoin();
     }
@@ -1314,17 +1314,17 @@ protected:
                   << " short=" << short_connection << std::endl;
 
         ASSERT_EQ(0, StartAccept(_ep));
-        brpc::Channel channel;
+        flare::rpc::Channel channel;
         SetUpChannel(&channel, single_server, short_connection);
                 
-        brpc::Controller cntl;
+        flare::rpc::Controller cntl;
         test::EchoRequest req;
         test::EchoResponse res;
         req.set_message(__FUNCTION__);
         req.set_close_fd(true);
         CallMethod(&channel, &cntl, &req, &res, async);
         
-        EXPECT_EQ(brpc::EEOF, cntl.ErrorCode()) << cntl.ErrorText();
+        EXPECT_EQ(flare::rpc::EEOF, cntl.ErrorCode()) << cntl.ErrorText();
         StopAndJoin();
     }
 
@@ -1336,24 +1336,24 @@ protected:
         ASSERT_EQ(0, StartAccept(_ep));
 
         const size_t NCHANS = 8;
-        brpc::Channel subchans[NCHANS];
-        brpc::ParallelChannel channel;
+        flare::rpc::Channel subchans[NCHANS];
+        flare::rpc::ParallelChannel channel;
         for (size_t i = 0; i < NCHANS; ++i) {
             SetUpChannel(&subchans[i], single_server, short_connection);
             ASSERT_EQ(0, channel.AddChannel(
-                          &subchans[i], brpc::DOESNT_OWN_CHANNEL,
+                          &subchans[i], flare::rpc::DOESNT_OWN_CHANNEL,
                           NULL, NULL));
         }
 
-        brpc::Controller cntl;
+        flare::rpc::Controller cntl;
         test::EchoRequest req;
         test::EchoResponse res;
         req.set_message(__FUNCTION__);
         req.set_close_fd(true);
         CallMethod(&channel, &cntl, &req, &res, async);
         
-        EXPECT_TRUE(brpc::EEOF == cntl.ErrorCode() ||
-                    brpc::ETOOMANYFAILS == cntl.ErrorCode() ||
+        EXPECT_TRUE(flare::rpc::EEOF == cntl.ErrorCode() ||
+                    flare::rpc::ETOOMANYFAILS == cntl.ErrorCode() ||
                     ECONNRESET == cntl.ErrorCode()) << cntl.ErrorText();
         StopAndJoin();
     }
@@ -1366,26 +1366,26 @@ protected:
         ASSERT_EQ(0, StartAccept(_ep));
 
         const size_t NCHANS = 8;
-        brpc::SelectiveChannel channel;
-        brpc::ChannelOptions options;
+        flare::rpc::SelectiveChannel channel;
+        flare::rpc::ChannelOptions options;
         options.max_retry = 0;
         ASSERT_EQ(0, channel.Init("rr", &options));
         for (size_t i = 0; i < NCHANS; ++i) {
-            brpc::Channel* subchan = new brpc::Channel;
+            flare::rpc::Channel* subchan = new flare::rpc::Channel;
             SetUpChannel(subchan, single_server, short_connection);
             ASSERT_EQ(0, channel.AddChannel(subchan, NULL)) << "i=" << i;
         }
 
-        brpc::Controller cntl;
+        flare::rpc::Controller cntl;
         test::EchoRequest req;
         test::EchoResponse res;
         req.set_message(__FUNCTION__);
         req.set_close_fd(true);
         CallMethod(&channel, &cntl, &req, &res, async);
         
-        EXPECT_EQ(brpc::EEOF, cntl.ErrorCode()) << cntl.ErrorText();
+        EXPECT_EQ(flare::rpc::EEOF, cntl.ErrorCode()) << cntl.ErrorText();
         ASSERT_EQ(1, cntl.sub_count());
-        ASSERT_EQ(brpc::EEOF, cntl.sub(0)->ErrorCode());
+        ASSERT_EQ(flare::rpc::EEOF, cntl.sub(0)->ErrorCode());
 
         StopAndJoin();
     }
@@ -1396,17 +1396,17 @@ protected:
                   << " short=" << short_connection << std::endl;
 
         ASSERT_EQ(0, StartAccept(_ep));
-        brpc::Channel channel;
+        flare::rpc::Channel channel;
         SetUpChannel(&channel, single_server, short_connection);
                 
-        brpc::Controller cntl;
+        flare::rpc::Controller cntl;
         test::EchoRequest req;
         test::EchoResponse res;
         req.set_message(__FUNCTION__);
-        req.set_server_fail(brpc::EINTERNAL);
+        req.set_server_fail(flare::rpc::EINTERNAL);
         CallMethod(&channel, &cntl, &req, &res, async);
         
-        EXPECT_EQ(brpc::EINTERNAL, cntl.ErrorCode()) << cntl.ErrorText();
+        EXPECT_EQ(flare::rpc::EINTERNAL, cntl.ErrorCode()) << cntl.ErrorText();
         StopAndJoin();
     }
 
@@ -1418,23 +1418,23 @@ protected:
         ASSERT_EQ(0, StartAccept(_ep));
 
         const size_t NCHANS = 8;
-        brpc::Channel subchans[NCHANS];
-        brpc::ParallelChannel channel;
+        flare::rpc::Channel subchans[NCHANS];
+        flare::rpc::ParallelChannel channel;
         for (size_t i = 0; i < NCHANS; ++i) {
             SetUpChannel(&subchans[i], single_server, short_connection);
             ASSERT_EQ(0, channel.AddChannel(
-                          &subchans[i], brpc::DOESNT_OWN_CHANNEL,
+                          &subchans[i], flare::rpc::DOESNT_OWN_CHANNEL,
                           NULL, NULL));
         }
 
-        brpc::Controller cntl;
+        flare::rpc::Controller cntl;
         test::EchoRequest req;
         test::EchoResponse res;
         req.set_message(__FUNCTION__);
-        req.set_server_fail(brpc::EINTERNAL);
+        req.set_server_fail(flare::rpc::EINTERNAL);
         CallMethod(&channel, &cntl, &req, &res, async);
         
-        EXPECT_EQ(brpc::EINTERNAL, cntl.ErrorCode()) << cntl.ErrorText();
+        EXPECT_EQ(flare::rpc::EINTERNAL, cntl.ErrorCode()) << cntl.ErrorText();
         LOG(INFO) << cntl.ErrorText();
         StopAndJoin();
     }
@@ -1447,24 +1447,24 @@ protected:
         ASSERT_EQ(0, StartAccept(_ep));
 
         const size_t NCHANS = 5;
-        brpc::SelectiveChannel channel;
+        flare::rpc::SelectiveChannel channel;
         ASSERT_EQ(0, channel.Init("rr", NULL));
         for (size_t i = 0; i < NCHANS; ++i) {
-            brpc::Channel* subchan = new brpc::Channel;
+            flare::rpc::Channel* subchan = new flare::rpc::Channel;
             SetUpChannel(subchan, single_server, short_connection);
             ASSERT_EQ(0, channel.AddChannel(subchan, NULL)) << "i=" << i;
         }
 
-        brpc::Controller cntl;
+        flare::rpc::Controller cntl;
         test::EchoRequest req;
         test::EchoResponse res;
         req.set_message(__FUNCTION__);
-        req.set_server_fail(brpc::EINTERNAL);
+        req.set_server_fail(flare::rpc::EINTERNAL);
         CallMethod(&channel, &cntl, &req, &res, async);
         
-        EXPECT_EQ(brpc::EINTERNAL, cntl.ErrorCode()) << cntl.ErrorText();
+        EXPECT_EQ(flare::rpc::EINTERNAL, cntl.ErrorCode()) << cntl.ErrorText();
         ASSERT_EQ(1, cntl.sub_count());
-        ASSERT_EQ(brpc::EINTERNAL, cntl.sub(0)->ErrorCode());
+        ASSERT_EQ(flare::rpc::EINTERNAL, cntl.sub(0)->ErrorCode());
 
         LOG(INFO) << cntl.ErrorText();
         StopAndJoin();
@@ -1475,10 +1475,10 @@ protected:
                   << ", short=" << short_connection << std::endl;
 
         ASSERT_EQ(0, StartAccept(_ep));
-        brpc::Channel* channel = new brpc::Channel();
+        flare::rpc::Channel* channel = new flare::rpc::Channel();
         SetUpChannel(channel, single_server, short_connection);
                 
-        brpc::Controller cntl;
+        flare::rpc::Controller cntl;
         test::EchoRequest req;
         test::EchoResponse res;
         req.set_message(__FUNCTION__);
@@ -1503,15 +1503,15 @@ protected:
 
         const size_t NCHANS = 5;
         ASSERT_EQ(0, StartAccept(_ep));
-        brpc::ParallelChannel* channel = new brpc::ParallelChannel;
+        flare::rpc::ParallelChannel* channel = new flare::rpc::ParallelChannel;
         for (size_t i = 0; i < NCHANS; ++i) {
-            brpc::Channel* subchan = new brpc::Channel();
+            flare::rpc::Channel* subchan = new flare::rpc::Channel();
             SetUpChannel(subchan, single_server, short_connection);
             ASSERT_EQ(0, channel->AddChannel(
-                          subchan, brpc::OWNS_CHANNEL, NULL, NULL));
+                          subchan, flare::rpc::OWNS_CHANNEL, NULL, NULL));
         }
                 
-        brpc::Controller cntl;
+        flare::rpc::Controller cntl;
         test::EchoRequest req;
         test::EchoResponse res;
         req.set_sleep_us(10000);
@@ -1535,15 +1535,15 @@ protected:
 
         const size_t NCHANS = 5;
         ASSERT_EQ(0, StartAccept(_ep));
-        brpc::SelectiveChannel* channel = new brpc::SelectiveChannel;
+        flare::rpc::SelectiveChannel* channel = new flare::rpc::SelectiveChannel;
         ASSERT_EQ(0, channel->Init("rr", NULL));
         for (size_t i = 0; i < NCHANS; ++i) {
-            brpc::Channel* subchan = new brpc::Channel();
+            flare::rpc::Channel* subchan = new flare::rpc::Channel();
             SetUpChannel(subchan, single_server, short_connection);
             ASSERT_EQ(0, channel->AddChannel(subchan, NULL));
         }
                 
-        brpc::Controller cntl;
+        flare::rpc::Controller cntl;
         test::EchoRequest req;
         test::EchoResponse res;
         req.set_sleep_us(10000);
@@ -1565,8 +1565,8 @@ protected:
         StopAndJoin();
     }
     
-    void RPCThread(brpc::ChannelBase* channel, bool async) {
-        brpc::Controller cntl;
+    void RPCThread(flare::rpc::ChannelBase* channel, bool async) {
+        flare::rpc::Controller cntl;
         test::EchoRequest req;
         test::EchoResponse res;
         req.set_message(__FUNCTION__);
@@ -1576,8 +1576,8 @@ protected:
         EXPECT_EQ("received " + std::string(__FUNCTION__), res.message());
     }
 
-    void RPCThread(brpc::ChannelBase* channel, bool async, int count) {
-        brpc::Controller cntl;
+    void RPCThread(flare::rpc::ChannelBase* channel, bool async, int count) {
+        flare::rpc::Controller cntl;
         for (int i = 0; i < count; ++i) {
             test::EchoRequest req;
             test::EchoResponse res;
@@ -1591,10 +1591,10 @@ protected:
     }
 
     void RPCThread(bool single_server, bool async, bool short_connection,
-                   const brpc::Authenticator* auth, int count) {
-        brpc::Channel channel;
+                   const flare::rpc::Authenticator* auth, int count) {
+        flare::rpc::Channel channel;
         SetUpChannel(&channel, single_server, short_connection, auth);
-        brpc::Controller cntl;
+        flare::rpc::Controller cntl;
         for (int i = 0; i < count; ++i) {
             test::EchoRequest req;
             test::EchoResponse res;
@@ -1615,15 +1615,15 @@ protected:
 
         ASSERT_EQ(0, StartAccept(_ep));
         MyAuthenticator auth;
-        brpc::Channel channel;
+        flare::rpc::Channel channel;
         SetUpChannel(&channel, single_server, short_connection, &auth);
 
         const int NUM = 10;
         pthread_t tids[NUM];
         for (int i = 0; i < NUM; ++i) {
             google::protobuf::Closure* thrd_func = 
-                brpc::NewCallback(
-                    this, &ChannelTest::RPCThread, (brpc::ChannelBase*)&channel, async);
+                flare::rpc::NewCallback(
+                    this, &ChannelTest::RPCThread, (flare::rpc::ChannelBase*)&channel, async);
             EXPECT_EQ(0, pthread_create(&tids[i], NULL,
                                         RunClosure, thrd_func));
         }
@@ -1649,12 +1649,12 @@ protected:
         MyAuthenticator auth;
 
         const int NCHANS = 5;
-        brpc::Channel subchans[NCHANS];
-        brpc::ParallelChannel channel;
+        flare::rpc::Channel subchans[NCHANS];
+        flare::rpc::ParallelChannel channel;
         for (int i = 0; i < NCHANS; ++i) {
             SetUpChannel(&subchans[i], single_server, short_connection, &auth);
             ASSERT_EQ(0, channel.AddChannel(
-                          &subchans[i], brpc::DOESNT_OWN_CHANNEL,
+                          &subchans[i], flare::rpc::DOESNT_OWN_CHANNEL,
                           NULL, NULL));
         }
         
@@ -1662,8 +1662,8 @@ protected:
         pthread_t tids[NUM];
         for (int i = 0; i < NUM; ++i) {
             google::protobuf::Closure* thrd_func = 
-                brpc::NewCallback(
-                    this, &ChannelTest::RPCThread, (brpc::ChannelBase*)&channel, async);
+                flare::rpc::NewCallback(
+                    this, &ChannelTest::RPCThread, (flare::rpc::ChannelBase*)&channel, async);
             EXPECT_EQ(0, pthread_create(&tids[i], NULL,
                                         RunClosure, thrd_func));
         }
@@ -1689,10 +1689,10 @@ protected:
         MyAuthenticator auth;
 
         const size_t NCHANS = 5;
-        brpc::SelectiveChannel channel;
+        flare::rpc::SelectiveChannel channel;
         ASSERT_EQ(0, channel.Init("rr", NULL));
         for (size_t i = 0; i < NCHANS; ++i) {
-            brpc::Channel* subchan = new brpc::Channel;
+            flare::rpc::Channel* subchan = new flare::rpc::Channel;
             SetUpChannel(subchan, single_server, short_connection, &auth);
             ASSERT_EQ(0, channel.AddChannel(subchan, NULL)) << "i=" << i;
         }
@@ -1701,8 +1701,8 @@ protected:
         pthread_t tids[NUM];
         for (int i = 0; i < NUM; ++i) {
             google::protobuf::Closure* thrd_func = 
-                brpc::NewCallback(
-                    this, &ChannelTest::RPCThread, (brpc::ChannelBase*)&channel, async);
+                flare::rpc::NewCallback(
+                    this, &ChannelTest::RPCThread, (flare::rpc::ChannelBase*)&channel, async);
             EXPECT_EQ(0, pthread_create(&tids[i], NULL,
                                         RunClosure, thrd_func));
         }
@@ -1724,13 +1724,13 @@ protected:
                   << " short=" << short_connection << std::endl;
 
         ASSERT_EQ(0, StartAccept(_ep));
-        brpc::Channel channel;
+        flare::rpc::Channel channel;
         SetUpChannel(&channel, single_server, short_connection);
 
         const int RETRY_NUM = 3;
         test::EchoRequest req;
         test::EchoResponse res;
-        brpc::Controller cntl;
+        flare::rpc::Controller cntl;
         req.set_message(__FUNCTION__);
 
         // No retry when timeout
@@ -1738,7 +1738,7 @@ protected:
         cntl.set_timeout_ms(10);  // 10ms
         req.set_sleep_us(70000); // 70ms
         CallMethod(&channel, &cntl, &req, &res, async);
-        EXPECT_EQ(brpc::ERPCTIMEDOUT, cntl.ErrorCode()) << cntl.ErrorText();
+        EXPECT_EQ(flare::rpc::ERPCTIMEDOUT, cntl.ErrorCode()) << cntl.ErrorText();
         EXPECT_EQ(0, cntl.retried_count());
         bthread_usleep(100000);  // wait for the sleep task to finish
 
@@ -1782,10 +1782,10 @@ protected:
     void TestRetryOtherServer(bool async, bool short_connection) {
         ASSERT_EQ(0, StartAccept(_ep));
 
-        brpc::Channel channel;
-        brpc::ChannelOptions opt;
+        flare::rpc::Channel channel;
+        flare::rpc::ChannelOptions opt;
         if (short_connection) {
-            opt.connection_type = brpc::CONNECTION_TYPE_SHORT;
+            opt.connection_type = flare::rpc::CONNECTION_TYPE_SHORT;
         }
         flare::base::temp_file server_list;
         EXPECT_EQ(0, server_list.save_format(
@@ -1799,7 +1799,7 @@ protected:
         const int RETRY_NUM = 3;
         test::EchoRequest req;
         test::EchoResponse res;
-        brpc::Controller cntl;
+        flare::rpc::Controller cntl;
         req.set_message(__FUNCTION__);
         cntl.set_max_retry(RETRY_NUM);
         CallMethod(&channel, &cntl, &req, &res, async);
@@ -1812,9 +1812,9 @@ protected:
     flare::base::temp_file _server_list;
     std::string _naming_url;
     
-    brpc::Acceptor _messenger;
+    flare::rpc::Acceptor _messenger;
     // Dummy server for `Server::AddError'
-    brpc::Server _dummy;
+    flare::rpc::Server _dummy;
     std::string _mock_fail_str;
 
     bool _close_fd_once;
@@ -1822,10 +1822,10 @@ protected:
     MyEchoService _svc;
 };
 
-class MyShared : public brpc::SharedObject {
+class MyShared : public flare::rpc::SharedObject {
 public:
     MyShared() { ++ nctor; }
-    MyShared(const MyShared&) : brpc::SharedObject() { ++ nctor; }
+    MyShared(const MyShared&) : flare::rpc::SharedObject() { ++ nctor; }
     ~MyShared() { ++ ndtor; }
 
     static int nctor;
@@ -1855,31 +1855,31 @@ TEST_F(ChannelTest, intrusive_ptr_sanity) {
 
 TEST_F(ChannelTest, init_as_single_server) {
     {
-        brpc::Channel channel;
+        flare::rpc::Channel channel;
         ASSERT_EQ(-1, channel.Init("127.0.0.1:12345:asdf", NULL));
         ASSERT_EQ(-1, channel.Init("127.0.0.1:99999", NULL)); 
         ASSERT_EQ(0, channel.Init("127.0.0.1:8888", NULL));
     }
     {
-        brpc::Channel channel;
+        flare::rpc::Channel channel;
         ASSERT_EQ(-1, channel.Init("127.0.0.1asdf", 12345, NULL));
         ASSERT_EQ(-1, channel.Init("127.0.0.1", 99999, NULL));
         ASSERT_EQ(0, channel.Init("127.0.0.1", 8888, NULL));
     }
 
     flare::base::end_point ep;
-    brpc::Channel channel;
+    flare::rpc::Channel channel;
     ASSERT_EQ(0, str2endpoint("127.0.0.1:8888", &ep));
     ASSERT_EQ(0, channel.Init(ep, NULL));
     ASSERT_TRUE(channel.SingleServer());
     ASSERT_EQ(ep, channel._server_address);
 
-    brpc::SocketId id;
-    ASSERT_EQ(0, brpc::SocketMapFind(brpc::SocketMapKey(ep), &id));
+    flare::rpc::SocketId id;
+    ASSERT_EQ(0, flare::rpc::SocketMapFind(flare::rpc::SocketMapKey(ep), &id));
     ASSERT_EQ(id, channel._server_id);
 
     const int NUM = 10;
-    brpc::Channel channels[NUM];
+    flare::rpc::Channel channels[NUM];
     for (int i = 0; i < 10; ++i) {
         ASSERT_EQ(0, channels[i].Init(ep, NULL));
         // Share the same server socket
@@ -1888,19 +1888,19 @@ TEST_F(ChannelTest, init_as_single_server) {
 }
 
 TEST_F(ChannelTest, init_using_unknown_naming_service) {
-    brpc::Channel channel;
+    flare::rpc::Channel channel;
     ASSERT_EQ(-1, channel.Init("unknown://unknown", "unknown", NULL));
 }
 
 TEST_F(ChannelTest, init_using_unexist_fns) {
-    brpc::Channel channel;
+    flare::rpc::Channel channel;
     ASSERT_EQ(-1, channel.Init("fiLe://no_such_file", "rr", NULL));
 }
 
 TEST_F(ChannelTest, init_using_empty_fns) {
-    brpc::ChannelOptions opt;
+    flare::rpc::ChannelOptions opt;
     opt.succeed_without_server = false;
-    brpc::Channel channel;
+    flare::rpc::Channel channel;
     flare::base::temp_file server_list;
     ASSERT_EQ(0, server_list.save(""));
     std::string naming_url = std::string("file://") + server_list.fname();
@@ -1913,16 +1913,16 @@ TEST_F(ChannelTest, init_using_empty_fns) {
 }
 
 TEST_F(ChannelTest, init_using_empty_lns) {
-    brpc::ChannelOptions opt;
+    flare::rpc::ChannelOptions opt;
     opt.succeed_without_server = false;
-    brpc::Channel channel;
+    flare::rpc::Channel channel;
     ASSERT_EQ(-1, channel.Init("list:// ", "rr", &opt));
     ASSERT_EQ(-1, channel.Init("list://", "rr", &opt));
     ASSERT_EQ(-1, channel.Init("list://blahblah", "rr", &opt)); 
 }
 
 TEST_F(ChannelTest, init_using_naming_service) {
-    brpc::Channel* channel = new brpc::Channel();
+    flare::rpc::Channel* channel = new flare::rpc::Channel();
     flare::base::temp_file server_list;
     ASSERT_EQ(0, server_list.save("127.0.0.1:8888"));
     std::string naming_url = std::string("filE://") + server_list.fname();
@@ -1930,19 +1930,19 @@ TEST_F(ChannelTest, init_using_naming_service) {
     ASSERT_EQ(0, channel->Init(naming_url.c_str(), "Rr", NULL));
     ASSERT_FALSE(channel->SingleServer());
 
-    brpc::LoadBalancerWithNaming* lb =
-        dynamic_cast<brpc::LoadBalancerWithNaming*>(channel->_lb.get());
+    flare::rpc::LoadBalancerWithNaming* lb =
+        dynamic_cast<flare::rpc::LoadBalancerWithNaming*>(channel->_lb.get());
     ASSERT_TRUE(lb != NULL);
-    brpc::NamingServiceThread* ns = lb->_nsthread_ptr.get();
+    flare::rpc::NamingServiceThread* ns = lb->_nsthread_ptr.get();
 
     {
         const int NUM = 10;
-        brpc::Channel channels[NUM];
+        flare::rpc::Channel channels[NUM];
         for (int i = 0; i < NUM; ++i) {
             // Share the same naming thread
             ASSERT_EQ(0, channels[i].Init(naming_url.c_str(), "rr", NULL));
-            brpc::LoadBalancerWithNaming* lb2 =
-                dynamic_cast<brpc::LoadBalancerWithNaming*>(channels[i]._lb.get());
+            flare::rpc::LoadBalancerWithNaming* lb2 =
+                dynamic_cast<flare::rpc::LoadBalancerWithNaming*>(channels[i]._lb.get());
             ASSERT_TRUE(lb2 != NULL);
             ASSERT_EQ(ns, lb2->_nsthread_ptr.get());
         }
@@ -1950,7 +1950,7 @@ TEST_F(ChannelTest, init_using_naming_service) {
 
     // `lb' should be valid even if `channel' has destroyed
     // since we hold another reference to it
-    flare::container::intrusive_ptr<brpc::SharedLoadBalancer>
+    flare::container::intrusive_ptr<flare::rpc::SharedLoadBalancer>
         another_ctx = channel->_lb;
     delete channel;
     ASSERT_EQ(lb, another_ctx.get());
@@ -1959,10 +1959,10 @@ TEST_F(ChannelTest, init_using_naming_service) {
 }
 
 TEST_F(ChannelTest, parse_hostname) {
-    brpc::ChannelOptions opt;
+    flare::rpc::ChannelOptions opt;
     opt.succeed_without_server = false;
-    opt.protocol = brpc::PROTOCOL_HTTP;
-    brpc::Channel channel;
+    opt.protocol = flare::rpc::PROTOCOL_HTTP;
+    flare::rpc::Channel channel;
 
     ASSERT_EQ(-1, channel.Init("", 8888, &opt));
     ASSERT_EQ("", channel._service_name);
@@ -2028,7 +2028,7 @@ TEST_F(ChannelTest, parse_hostname) {
         }
         fclose(fp);
     }
-    brpc::Channel ns_channel;
+    flare::rpc::Channel ns_channel;
     std::string ns = std::string("file://") + tmp_file.fname();
     ASSERT_EQ(0, ns_channel.Init(ns.c_str(), "rr", &opt));
     ASSERT_EQ(tmp_file.fname(), ns_channel._service_name);
@@ -2045,9 +2045,9 @@ TEST_F(ChannelTest, connection_failed) {
 }
 
 TEST_F(ChannelTest, empty_parallel_channel) {
-    brpc::ParallelChannel channel;
+    flare::rpc::ParallelChannel channel;
 
-    brpc::Controller cntl;
+    flare::rpc::Controller cntl;
     test::EchoRequest req;
     test::EchoResponse res;
     req.set_message(__FUNCTION__);
@@ -2056,10 +2056,10 @@ TEST_F(ChannelTest, empty_parallel_channel) {
 }
 
 TEST_F(ChannelTest, empty_selective_channel) {
-    brpc::SelectiveChannel channel;
+    flare::rpc::SelectiveChannel channel;
     ASSERT_EQ(0, channel.Init("rr", NULL));
 
-    brpc::Controller cntl;
+    flare::rpc::Controller cntl;
     test::EchoRequest req;
     test::EchoResponse res;
     req.set_message(__FUNCTION__);
@@ -2067,53 +2067,53 @@ TEST_F(ChannelTest, empty_selective_channel) {
     EXPECT_EQ(ENODATA, cntl.ErrorCode()) << cntl.ErrorText();
 }
 
-class BadCall : public brpc::CallMapper {
-    brpc::SubCall Map(int,
+class BadCall : public flare::rpc::CallMapper {
+    flare::rpc::SubCall Map(int,
                      const google::protobuf::MethodDescriptor*,
                      const google::protobuf::Message*,
                      google::protobuf::Message*) {
-        return brpc::SubCall::Bad();
+        return flare::rpc::SubCall::Bad();
     }
 };
 
 TEST_F(ChannelTest, returns_bad_parallel) {
     const size_t NCHANS = 5;
-    brpc::ParallelChannel channel;
+    flare::rpc::ParallelChannel channel;
     for (size_t i = 0; i < NCHANS; ++i) {
-        brpc::Channel* subchan = new brpc::Channel();
+        flare::rpc::Channel* subchan = new flare::rpc::Channel();
         SetUpChannel(subchan, true, false);
         ASSERT_EQ(0, channel.AddChannel(
-                      subchan, brpc::OWNS_CHANNEL, new BadCall, NULL));
+                      subchan, flare::rpc::OWNS_CHANNEL, new BadCall, NULL));
     }
                 
-    brpc::Controller cntl;
+    flare::rpc::Controller cntl;
     test::EchoRequest req;
     test::EchoResponse res;
     req.set_message(__FUNCTION__);
     CallMethod(&channel, &cntl, &req, &res, false);
-    EXPECT_EQ(brpc::EREQUEST, cntl.ErrorCode()) << cntl.ErrorText();
+    EXPECT_EQ(flare::rpc::EREQUEST, cntl.ErrorCode()) << cntl.ErrorText();
 }
 
-class SkipCall : public brpc::CallMapper {
-    brpc::SubCall Map(int,
+class SkipCall : public flare::rpc::CallMapper {
+    flare::rpc::SubCall Map(int,
                      const google::protobuf::MethodDescriptor*,
                      const google::protobuf::Message*,
                      google::protobuf::Message*) {
-        return brpc::SubCall::Skip();
+        return flare::rpc::SubCall::Skip();
     }
 };
 
 TEST_F(ChannelTest, skip_all_channels) {
     const size_t NCHANS = 5;
-    brpc::ParallelChannel channel;
+    flare::rpc::ParallelChannel channel;
     for (size_t i = 0; i < NCHANS; ++i) {
-        brpc::Channel* subchan = new brpc::Channel();
+        flare::rpc::Channel* subchan = new flare::rpc::Channel();
         SetUpChannel(subchan, true, false);
         ASSERT_EQ(0, channel.AddChannel(
-                      subchan, brpc::OWNS_CHANNEL, new SkipCall, NULL));
+                      subchan, flare::rpc::OWNS_CHANNEL, new SkipCall, NULL));
     }
                 
-    brpc::Controller cntl;
+    flare::rpc::Controller cntl;
     test::EchoRequest req;
     test::EchoResponse res;
     req.set_message(__FUNCTION__);
@@ -2481,14 +2481,14 @@ TEST_F(ChannelTest, multiple_threads_single_channel) {
                           << " single=" << single_server
                           << " auth=" << need_auth
                           << " async=" << async << std::endl;
-                brpc::Channel channel;
+                flare::rpc::Channel channel;
                 SetUpChannel(&channel, single_server, 
                              short_connection, (need_auth ? &auth : NULL));
                 for (int i = 0; i < NUM; ++i) {
                     google::protobuf::Closure* thrd_func = 
-                        brpc::NewCallback(
+                        flare::rpc::NewCallback(
                             this, &ChannelTest::RPCThread, 
-                            (brpc::ChannelBase*)&channel,
+                            (flare::rpc::ChannelBase*)&channel,
                             (bool)async, COUNT);
                     EXPECT_EQ(0, pthread_create(&tids[i], NULL,
                                                 RunClosure, thrd_func));
@@ -2521,9 +2521,9 @@ TEST_F(ChannelTest, multiple_threads_multiple_channels) {
                           << " async=" << async << std::endl;
                 for (int i = 0; i < NUM; ++i) {
                     google::protobuf::Closure* thrd_func = 
-                        brpc::NewCallback<
+                        flare::rpc::NewCallback<
                         ChannelTest, ChannelTest*,
-                        bool, bool, bool, const brpc::Authenticator*, int>
+                        bool, bool, bool, const flare::rpc::Authenticator*, int>
                         (this, &ChannelTest::RPCThread, single_server,
                          async, short_connection, (need_auth ? &auth : NULL), COUNT);
                     EXPECT_EQ(0, pthread_create(&tids[i], NULL,
@@ -2570,13 +2570,13 @@ TEST_F(ChannelTest, destroy_channel_selective) {
 }
 
 TEST_F(ChannelTest, sizeof) {
-    LOG(INFO) << "Size of Channel is " << sizeof(brpc::Channel)
-               << ", Size of ParallelChannel is " << sizeof(brpc::ParallelChannel)
-               << ", Size of Controller is " << sizeof(brpc::Controller)
-               << ", Size of vector is " << sizeof(std::vector<brpc::Controller>);
+    LOG(INFO) << "Size of Channel is " << sizeof(flare::rpc::Channel)
+               << ", Size of ParallelChannel is " << sizeof(flare::rpc::ParallelChannel)
+               << ", Size of Controller is " << sizeof(flare::rpc::Controller)
+               << ", Size of vector is " << sizeof(std::vector<flare::rpc::Controller>);
 }
 
-brpc::Channel g_chan;
+flare::rpc::Channel g_chan;
 
 TEST_F(ChannelTest, global_channel_should_quit_successfully) {
     g_chan.Init("bns://qa-pbrpc.SAT.tjyx", "rr", NULL);
@@ -2584,22 +2584,22 @@ TEST_F(ChannelTest, global_channel_should_quit_successfully) {
 
 TEST_F(ChannelTest, unused_call_id) {
     {
-        brpc::Controller cntl;
+        flare::rpc::Controller cntl;
     }
     {
-        brpc::Controller cntl;
+        flare::rpc::Controller cntl;
         cntl.Reset();
     }
-    brpc::CallId cid1 = { 0 };
+    flare::rpc::CallId cid1 = { 0 };
     {
-        brpc::Controller cntl;
+        flare::rpc::Controller cntl;
         cid1 = cntl.call_id();
     }
     ASSERT_EQ(EINVAL, bthread_id_error(cid1, ECANCELED));
 
     {
-        brpc::CallId cid2 = { 0 };
-        brpc::Controller cntl;
+        flare::rpc::CallId cid2 = { 0 };
+        flare::rpc::Controller cntl;
         cid2 = cntl.call_id();
         cntl.Reset();
         ASSERT_EQ(EINVAL, bthread_id_error(cid2, ECANCELED));
@@ -2607,72 +2607,72 @@ TEST_F(ChannelTest, unused_call_id) {
 }
 
 TEST_F(ChannelTest, adaptive_connection_type) {
-    brpc::AdaptiveConnectionType ctype;
-    ASSERT_EQ(brpc::CONNECTION_TYPE_UNKNOWN, ctype);
+    flare::rpc::AdaptiveConnectionType ctype;
+    ASSERT_EQ(flare::rpc::CONNECTION_TYPE_UNKNOWN, ctype);
     ASSERT_FALSE(ctype.has_error());
     ASSERT_STREQ("unknown", ctype.name());
 
-    ctype = brpc::CONNECTION_TYPE_SINGLE;
-    ASSERT_EQ(brpc::CONNECTION_TYPE_SINGLE, ctype);
+    ctype = flare::rpc::CONNECTION_TYPE_SINGLE;
+    ASSERT_EQ(flare::rpc::CONNECTION_TYPE_SINGLE, ctype);
     ASSERT_STREQ("single", ctype.name());
 
     ctype = "shorT";
-    ASSERT_EQ(brpc::CONNECTION_TYPE_SHORT, ctype);
+    ASSERT_EQ(flare::rpc::CONNECTION_TYPE_SHORT, ctype);
     ASSERT_STREQ("short", ctype.name());
     
     ctype = "PooLed";
-    ASSERT_EQ(brpc::CONNECTION_TYPE_POOLED, ctype);
+    ASSERT_EQ(flare::rpc::CONNECTION_TYPE_POOLED, ctype);
     ASSERT_STREQ("pooled", ctype.name());
 
     ctype = "SINGLE";
-    ASSERT_EQ(brpc::CONNECTION_TYPE_SINGLE, ctype);
+    ASSERT_EQ(flare::rpc::CONNECTION_TYPE_SINGLE, ctype);
     ASSERT_FALSE(ctype.has_error());
     ASSERT_STREQ("single", ctype.name());
 
     ctype = "blah";
-    ASSERT_EQ(brpc::CONNECTION_TYPE_UNKNOWN, ctype);
+    ASSERT_EQ(flare::rpc::CONNECTION_TYPE_UNKNOWN, ctype);
     ASSERT_TRUE(ctype.has_error());
     ASSERT_STREQ("unknown", ctype.name());
 
     ctype = "single";
-    ASSERT_EQ(brpc::CONNECTION_TYPE_SINGLE, ctype);
+    ASSERT_EQ(flare::rpc::CONNECTION_TYPE_SINGLE, ctype);
     ASSERT_FALSE(ctype.has_error());
     ASSERT_STREQ("single", ctype.name());
 }
 
 TEST_F(ChannelTest, adaptive_protocol_type) {
-    brpc::AdaptiveProtocolType ptype;
-    ASSERT_EQ(brpc::PROTOCOL_UNKNOWN, ptype);
+    flare::rpc::AdaptiveProtocolType ptype;
+    ASSERT_EQ(flare::rpc::PROTOCOL_UNKNOWN, ptype);
     ASSERT_STREQ("unknown", ptype.name());
     ASSERT_FALSE(ptype.has_param());
     ASSERT_EQ("", ptype.param());
 
-    ptype = brpc::PROTOCOL_HTTP;
-    ASSERT_EQ(brpc::PROTOCOL_HTTP, ptype);
+    ptype = flare::rpc::PROTOCOL_HTTP;
+    ASSERT_EQ(flare::rpc::PROTOCOL_HTTP, ptype);
     ASSERT_STREQ("http", ptype.name());
     ASSERT_FALSE(ptype.has_param());
     ASSERT_EQ("", ptype.param());
 
     ptype = "http:xyz ";
-    ASSERT_EQ(brpc::PROTOCOL_HTTP, ptype);
+    ASSERT_EQ(flare::rpc::PROTOCOL_HTTP, ptype);
     ASSERT_STREQ("http", ptype.name());
     ASSERT_TRUE(ptype.has_param());
     ASSERT_EQ("xyz ", ptype.param());
 
     ptype = "HuLu_pbRPC";
-    ASSERT_EQ(brpc::PROTOCOL_HULU_PBRPC, ptype);
+    ASSERT_EQ(flare::rpc::PROTOCOL_HULU_PBRPC, ptype);
     ASSERT_STREQ("hulu_pbrpc", ptype.name());
     ASSERT_FALSE(ptype.has_param());
     ASSERT_EQ("", ptype.param());
     
     ptype = "blah";
-    ASSERT_EQ(brpc::PROTOCOL_UNKNOWN, ptype);
+    ASSERT_EQ(flare::rpc::PROTOCOL_UNKNOWN, ptype);
     ASSERT_STREQ("blah", ptype.name());
     ASSERT_FALSE(ptype.has_param());
     ASSERT_EQ("", ptype.param());
 
     ptype = "Baidu_STD";
-    ASSERT_EQ(brpc::PROTOCOL_BAIDU_STD, ptype);
+    ASSERT_EQ(flare::rpc::PROTOCOL_BAIDU_STD, ptype);
     ASSERT_STREQ("baidu_std", ptype.name());
     ASSERT_FALSE(ptype.has_param());
     ASSERT_EQ("", ptype.param());

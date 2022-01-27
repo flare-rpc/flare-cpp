@@ -22,8 +22,8 @@
 #include "flare/base/logging.h"
 #include <flare/base/strings.h>
 #include "flare/base/time.h"
-#include <flare/brpc/parallel_channel.h>
-#include <flare/brpc/server.h>
+#include <flare/rpc/parallel_channel.h>
+#include <flare/rpc/server.h>
 #include "echo.pb.h"
 
 DEFINE_int32(thread_num, 50, "Number of threads to send requests");
@@ -33,7 +33,7 @@ DEFINE_bool(use_bthread, false, "Use bthread to send requests");
 DEFINE_int32(attachment_size, 0, "Carry so many byte attachment along with requests");
 DEFINE_int32(request_size, 16, "Bytes of each request");
 DEFINE_string(connection_type, "", "Connection type. Available values: single, pooled, short");
-DEFINE_string(protocol, "baidu_std", "Protocol type. Defined in src/brpc/options.proto");
+DEFINE_string(protocol, "baidu_std", "Protocol type. Defined in flare/rpc/options.proto");
 DEFINE_string(server, "0.0.0.0:8002", "IP Address of server");
 DEFINE_string(load_balancer, "", "The algorithm for load balancing");
 DEFINE_int32(timeout_ms, 100, "RPC timeout in milliseconds");
@@ -43,9 +43,9 @@ DEFINE_int32(dummy_port, -1, "Launch dummy server at this port");
 
 std::string g_request;
 std::string g_attachment;
-bvar::LatencyRecorder g_latency_recorder("client");
-bvar::Adder<int> g_error_count("client_error_count");
-bvar::LatencyRecorder* g_sub_channel_latency = NULL;
+flare::variable::LatencyRecorder g_latency_recorder("client");
+flare::variable::Adder<int> g_error_count("client_error_count");
+flare::variable::LatencyRecorder* g_sub_channel_latency = NULL;
 
 static void* sender(void* arg) {
     // Normally, you should not call a Channel directly, but instead construct
@@ -53,12 +53,12 @@ static void* sender(void* arg) {
     example::EchoService_Stub stub(static_cast<google::protobuf::RpcChannel*>(arg));
 
     int log_id = 0;
-    while (!brpc::IsAskedToQuit()) {
+    while (!flare::rpc::IsAskedToQuit()) {
         // We will receive response synchronously, safe to put variables
         // on stack.
         example::EchoRequest request;
         example::EchoResponse response;
-        brpc::Controller cntl;
+        flare::rpc::Controller cntl;
 
         request.set_value(log_id++);
         if (!g_attachment.empty()) {
@@ -79,7 +79,7 @@ static void* sender(void* arg) {
             }
         } else {
             g_error_count << 1;
-            CHECK(brpc::IsAskedToQuit() || !FLAGS_dont_fail)
+            CHECK(flare::rpc::IsAskedToQuit() || !FLAGS_dont_fail)
                 << "error=" << cntl.ErrorText() << " latency=" << cntl.latency_us();
             // We can't connect to the server, sleep a while. Notice that this
             // is a specific sleeping to prevent this thread from spinning too
@@ -97,15 +97,15 @@ int main(int argc, char* argv[]) {
 
     // A Channel represents a communication line to a Server. Notice that 
     // Channel is thread-safe and can be shared by all threads in your program.
-    brpc::ParallelChannel channel;
-    brpc::ParallelChannelOptions pchan_options;
+    flare::rpc::ParallelChannel channel;
+    flare::rpc::ParallelChannelOptions pchan_options;
     pchan_options.timeout_ms = FLAGS_timeout_ms;
     if (channel.Init(&pchan_options) != 0) {
         LOG(ERROR) << "Fail to init ParallelChannel";
         return -1;
     }
 
-    brpc::ChannelOptions sub_options;
+    flare::rpc::ChannelOptions sub_options;
     sub_options.protocol = FLAGS_protocol;
     sub_options.connection_type = FLAGS_connection_type;
     sub_options.max_retry = FLAGS_max_retry;
@@ -113,17 +113,15 @@ int main(int argc, char* argv[]) {
     // channels are disabled in ParallelChannel.
 
     if (FLAGS_same_channel) {
-        // For brpc >= 1.0.155.31351, a sub channel can be added into
-        // a ParallelChannel more than once.
-        brpc::Channel* sub_channel = new brpc::Channel;
+        flare::rpc::Channel* sub_channel = new flare::rpc::Channel;
         // Initialize the channel, NULL means using default options. 
-        // options, see `brpc/channel.h'.
+        // options, see `flare/rpc/channel.h'.
         if (sub_channel->Init(FLAGS_server.c_str(), FLAGS_load_balancer.c_str(), &sub_options) != 0) {
             LOG(ERROR) << "Fail to initialize sub_channel";
             return -1;
         }
         for (int i = 0; i < FLAGS_channel_num; ++i) {
-            if (channel.AddChannel(sub_channel, brpc::OWNS_CHANNEL,
+            if (channel.AddChannel(sub_channel, flare::rpc::OWNS_CHANNEL,
                                    NULL, NULL) != 0) {
                 LOG(ERROR) << "Fail to AddChannel, i=" << i;
                 return -1;
@@ -131,14 +129,14 @@ int main(int argc, char* argv[]) {
         }
     } else {
         for (int i = 0; i < FLAGS_channel_num; ++i) {
-            brpc::Channel* sub_channel = new brpc::Channel;
+            flare::rpc::Channel* sub_channel = new flare::rpc::Channel;
             // Initialize the channel, NULL means using default options. 
-            // options, see `brpc/channel.h'.
+            // options, see `flare/rpc/channel.h'.
             if (sub_channel->Init(FLAGS_server.c_str(), FLAGS_load_balancer.c_str(), &sub_options) != 0) {
                 LOG(ERROR) << "Fail to initialize sub_channel[" << i << "]";
                 return -1;
             }
-            if (channel.AddChannel(sub_channel, brpc::OWNS_CHANNEL,
+            if (channel.AddChannel(sub_channel, flare::rpc::OWNS_CHANNEL,
                                    NULL, NULL) != 0) {
                 LOG(ERROR) << "Fail to AddChannel, i=" << i;
                 return -1;
@@ -147,7 +145,7 @@ int main(int argc, char* argv[]) {
     }
 
     // Initialize bvar for sub channel
-    g_sub_channel_latency = new bvar::LatencyRecorder[FLAGS_channel_num];
+    g_sub_channel_latency = new flare::variable::LatencyRecorder[FLAGS_channel_num];
     for (int i = 0; i < FLAGS_channel_num; ++i) {
         std::string name;
         flare::base::string_printf(&name, "client_sub_%d", i);
@@ -164,7 +162,7 @@ int main(int argc, char* argv[]) {
     g_request.resize(FLAGS_request_size, 'r');
 
     if (FLAGS_dummy_port >= 0) {
-        brpc::StartDummyServerAt(FLAGS_dummy_port);
+        flare::rpc::StartDummyServerAt(FLAGS_dummy_port);
     }
 
     std::vector<bthread_t> bids;
@@ -188,7 +186,7 @@ int main(int argc, char* argv[]) {
         }
     }
 
-    while (!brpc::IsAskedToQuit()) {
+    while (!flare::rpc::IsAskedToQuit()) {
         sleep(1);
         LOG(INFO) << "Sending EchoRequest at qps=" << g_latency_recorder.qps(1)
                   << " latency=" << g_latency_recorder.latency(1) << noflush;

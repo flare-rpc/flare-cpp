@@ -15,8 +15,6 @@
 // specific language governing permissions and limitations
 // under the License.
 
-// brpc - A framework to host and access services throughout Baidu.
-
 // Date: Sun Jul 13 15:04:18 CST 2014
 
 #include <sys/ioctl.h>
@@ -26,13 +24,13 @@
 #include <gflags/gflags.h>
 #include <google/protobuf/descriptor.h>
 #include "flare/base/time.h"
-#include "flare/brpc/socket.h"
-#include "flare/brpc/acceptor.h"
-#include "flare/brpc/server.h"
-#include "flare/brpc/policy/public_pbrpc_meta.pb.h"
-#include "flare/brpc/policy/public_pbrpc_protocol.h"
-#include "flare/brpc/policy/most_common_message.h"
-#include "flare/brpc/controller.h"
+#include "flare/rpc/socket.h"
+#include "flare/rpc/acceptor.h"
+#include "flare/rpc/server.h"
+#include "flare/rpc/policy/public_pbrpc_meta.pb.h"
+#include "flare/rpc/policy/public_pbrpc_protocol.h"
+#include "flare/rpc/policy/most_common_message.h"
+#include "flare/rpc/controller.h"
 #include "echo.pb.h"
 
 int main(int argc, char* argv[]) {
@@ -49,7 +47,7 @@ static const std::string EXP_RESPONSE = "world";
 static const std::string MOCK_CREDENTIAL = "mock credential";
 static const std::string MOCK_USER = "mock user";
 
-class MyAuthenticator : public brpc::Authenticator {
+class MyAuthenticator : public flare::rpc::Authenticator {
 public:
     MyAuthenticator() {}
 
@@ -60,7 +58,7 @@ public:
 
     int VerifyCredential(const std::string& auth_str,
                          const flare::base::end_point&,
-                         brpc::AuthContext* ctx) const {
+                         flare::rpc::AuthContext* ctx) const {
         EXPECT_EQ(MOCK_CREDENTIAL, auth_str);
         ctx->set_user(MOCK_USER);
         return 0;
@@ -72,8 +70,8 @@ class MyEchoService : public ::test::EchoService {
               const ::test::EchoRequest* req,
               ::test::EchoResponse* res,
               ::google::protobuf::Closure* done) {
-        brpc::Controller* cntl = static_cast<brpc::Controller*>(cntl_base);
-        brpc::ClosureGuard done_guard(done);
+        flare::rpc::Controller* cntl = static_cast<flare::rpc::Controller*>(cntl_base);
+        flare::rpc::ClosureGuard done_guard(done);
 
         if (req->close_fd()) {
             cntl->CloseConnection("Close connection according to request");
@@ -88,37 +86,37 @@ class PublicPbrpcTest : public ::testing::Test{
 protected:
     PublicPbrpcTest() {
         EXPECT_EQ(0, _server.AddService(
-            &_svc, brpc::SERVER_DOESNT_OWN_SERVICE));
+            &_svc, flare::rpc::SERVER_DOESNT_OWN_SERVICE));
         // Hack: Regard `_server' as running 
-        _server._status = brpc::Server::RUNNING;
+        _server._status = flare::rpc::Server::RUNNING;
         _server._options.nshead_service =
-            new brpc::policy::PublicPbrpcServiceAdaptor;
+            new flare::rpc::policy::PublicPbrpcServiceAdaptor;
         // public_pbrpc doesn't support authentication
         // _server._options.auth = &_auth;
         
         EXPECT_EQ(0, pipe(_pipe_fds));
 
-        brpc::SocketId id;
-        brpc::SocketOptions options;
+        flare::rpc::SocketId id;
+        flare::rpc::SocketOptions options;
         options.fd = _pipe_fds[1];
-        EXPECT_EQ(0, brpc::Socket::Create(options, &id));
-        EXPECT_EQ(0, brpc::Socket::Address(id, &_socket));
+        EXPECT_EQ(0, flare::rpc::Socket::Create(options, &id));
+        EXPECT_EQ(0, flare::rpc::Socket::Address(id, &_socket));
     };
 
     virtual ~PublicPbrpcTest() {};
     virtual void SetUp() {};
     virtual void TearDown() {};
 
-    void VerifyMessage(brpc::InputMessageBase* msg) {
+    void VerifyMessage(flare::rpc::InputMessageBase* msg) {
         if (msg->_socket == NULL) {
             _socket->ReAddress(&msg->_socket);
         }
         msg->_arg = &_server;
-        EXPECT_TRUE(brpc::policy::VerifyNsheadRequest(msg));
+        EXPECT_TRUE(flare::rpc::policy::VerifyNsheadRequest(msg));
     }
 
-    void ProcessMessage(void (*process)(brpc::InputMessageBase*),
-                        brpc::InputMessageBase* msg, bool set_eof) {
+    void ProcessMessage(void (*process)(flare::rpc::InputMessageBase*),
+                        flare::rpc::InputMessageBase* msg, bool set_eof) {
         if (msg->_socket == NULL) {
             _socket->ReAddress(&msg->_socket);
         }
@@ -130,11 +128,11 @@ protected:
         (*process)(msg);
     }
     
-    brpc::policy::MostCommonMessage* MakeRequestMessage(
-        brpc::policy::PublicPbrpcRequest* meta) {
-        brpc::policy::MostCommonMessage* msg =
-                brpc::policy::MostCommonMessage::Get();
-        brpc::nshead_t head;
+    flare::rpc::policy::MostCommonMessage* MakeRequestMessage(
+        flare::rpc::policy::PublicPbrpcRequest* meta) {
+        flare::rpc::policy::MostCommonMessage* msg =
+                flare::rpc::policy::MostCommonMessage::Get();
+        flare::rpc::nshead_t head;
         msg->meta.append(&head, sizeof(head));
 
         if (meta->requestbody_size() > 0) {
@@ -143,16 +141,16 @@ protected:
             EXPECT_TRUE(req.SerializeToString(
                 meta->mutable_requestbody(0)->mutable_serialized_request()));
         }
-        flare::io::IOBufAsZeroCopyOutputStream meta_stream(&msg->payload);
+        flare::io::cord_buf_as_zero_copy_output_stream meta_stream(&msg->payload);
         EXPECT_TRUE(meta->SerializeToZeroCopyStream(&meta_stream));
         return msg;
     }
 
-    brpc::policy::MostCommonMessage* MakeResponseMessage(
-        brpc::policy::PublicPbrpcResponse* meta) {
-        brpc::policy::MostCommonMessage* msg =
-                brpc::policy::MostCommonMessage::Get();
-        brpc::nshead_t head;
+    flare::rpc::policy::MostCommonMessage* MakeResponseMessage(
+        flare::rpc::policy::PublicPbrpcResponse* meta) {
+        flare::rpc::policy::MostCommonMessage* msg =
+                flare::rpc::policy::MostCommonMessage::Get();
+        flare::rpc::nshead_t head;
         msg->meta.append(&head, sizeof(head));
 
         if (meta->responsebody_size() > 0) {
@@ -161,7 +159,7 @@ protected:
             EXPECT_TRUE(res.SerializeToString(
                 meta->mutable_responsebody(0)->mutable_serialized_response()));
         }
-        flare::io::IOBufAsZeroCopyOutputStream meta_stream(&msg->payload);
+        flare::io::cord_buf_as_zero_copy_output_stream meta_stream(&msg->payload);
         EXPECT_TRUE(meta->SerializeToZeroCopyStream(&meta_stream));
         return msg;
     }
@@ -178,150 +176,150 @@ protected:
         flare::io::IOPortal buf;
         EXPECT_EQ((ssize_t)bytes_in_pipe,
                   buf.append_from_file_descriptor(_pipe_fds[0], 1024));
-        brpc::ParseResult pr = brpc::policy::ParseNsheadMessage(&buf, NULL, false, NULL);
-        EXPECT_EQ(brpc::PARSE_OK, pr.error());
-        brpc::policy::MostCommonMessage* msg =
-            static_cast<brpc::policy::MostCommonMessage*>(pr.message());
+        flare::rpc::ParseResult pr = flare::rpc::policy::ParseNsheadMessage(&buf, NULL, false, NULL);
+        EXPECT_EQ(flare::rpc::PARSE_OK, pr.error());
+        flare::rpc::policy::MostCommonMessage* msg =
+            static_cast<flare::rpc::policy::MostCommonMessage*>(pr.message());
 
-        brpc::policy::PublicPbrpcResponse meta;
-        flare::io::IOBufAsZeroCopyInputStream meta_stream(msg->payload);
+        flare::rpc::policy::PublicPbrpcResponse meta;
+        flare::io::cord_buf_as_zero_copy_input_stream meta_stream(msg->payload);
         EXPECT_TRUE(meta.ParseFromZeroCopyStream(&meta_stream));
         EXPECT_EQ(expect_code, meta.responsehead().code());
     }
 
     int _pipe_fds[2];
-    brpc::SocketUniquePtr _socket;
-    brpc::Server _server;
+    flare::rpc::SocketUniquePtr _socket;
+    flare::rpc::Server _server;
 
     MyEchoService _svc;
     MyAuthenticator _auth;
 };
 
 TEST_F(PublicPbrpcTest, process_request_failed_socket) {
-    brpc::policy::PublicPbrpcRequest meta;
-    brpc::policy::RequestBody* body = meta.add_requestbody();
+    flare::rpc::policy::PublicPbrpcRequest meta;
+    flare::rpc::policy::RequestBody* body = meta.add_requestbody();
     body->set_service("EchoService");
     body->set_method_id(0);
     body->set_id(0);
-    brpc::policy::MostCommonMessage* msg = MakeRequestMessage(&meta);
+    flare::rpc::policy::MostCommonMessage* msg = MakeRequestMessage(&meta);
     _socket->SetFailed();
-    ProcessMessage(brpc::policy::ProcessNsheadRequest, msg, false);
+    ProcessMessage(flare::rpc::policy::ProcessNsheadRequest, msg, false);
     ASSERT_EQ(0ll, _server._nerror_bvar.get_value());
     CheckResponseCode(true, 0);
 }
 
 TEST_F(PublicPbrpcTest, process_request_logoff) {
-    brpc::policy::PublicPbrpcRequest meta;
-    brpc::policy::RequestBody* body = meta.add_requestbody();
+    flare::rpc::policy::PublicPbrpcRequest meta;
+    flare::rpc::policy::RequestBody* body = meta.add_requestbody();
     body->set_service("EchoService");
     body->set_method_id(0);
     body->set_id(0);
-    brpc::policy::MostCommonMessage* msg = MakeRequestMessage(&meta);
-    _server._status = brpc::Server::READY;
-    ProcessMessage(brpc::policy::ProcessNsheadRequest, msg, false);
+    flare::rpc::policy::MostCommonMessage* msg = MakeRequestMessage(&meta);
+    _server._status = flare::rpc::Server::READY;
+    ProcessMessage(flare::rpc::policy::ProcessNsheadRequest, msg, false);
     ASSERT_EQ(1ll, _server._nerror_bvar.get_value());
-    CheckResponseCode(false, brpc::ELOGOFF);
+    CheckResponseCode(false, flare::rpc::ELOGOFF);
 }
 
 TEST_F(PublicPbrpcTest, process_request_wrong_method) {
-    brpc::policy::PublicPbrpcRequest meta;
-    brpc::policy::RequestBody* body = meta.add_requestbody();
+    flare::rpc::policy::PublicPbrpcRequest meta;
+    flare::rpc::policy::RequestBody* body = meta.add_requestbody();
     body->set_service("EchoService");
     body->set_method_id(10);
     body->set_id(0);
-    brpc::policy::MostCommonMessage* msg = MakeRequestMessage(&meta);
-    ProcessMessage(brpc::policy::ProcessNsheadRequest, msg, false);
+    flare::rpc::policy::MostCommonMessage* msg = MakeRequestMessage(&meta);
+    ProcessMessage(flare::rpc::policy::ProcessNsheadRequest, msg, false);
     ASSERT_EQ(1ll, _server._nerror_bvar.get_value());
     ASSERT_FALSE(_socket->Failed());
 }
 
 TEST_F(PublicPbrpcTest, process_response_after_eof) {
-    brpc::policy::PublicPbrpcResponse meta;
+    flare::rpc::policy::PublicPbrpcResponse meta;
     test::EchoResponse res;
-    brpc::Controller cntl;
-    brpc::policy::ResponseBody* body = meta.add_responsebody();
+    flare::rpc::Controller cntl;
+    flare::rpc::policy::ResponseBody* body = meta.add_responsebody();
     body->set_id(cntl.call_id().value);
     meta.mutable_responsehead()->set_code(0);
     cntl._response = &res;
-    brpc::policy::MostCommonMessage* msg = MakeResponseMessage(&meta);
-    ProcessMessage(brpc::policy::ProcessPublicPbrpcResponse, msg, true);
+    flare::rpc::policy::MostCommonMessage* msg = MakeResponseMessage(&meta);
+    ProcessMessage(flare::rpc::policy::ProcessPublicPbrpcResponse, msg, true);
     ASSERT_EQ(EXP_RESPONSE, res.message());
     ASSERT_TRUE(_socket->Failed());
 }
 
 TEST_F(PublicPbrpcTest, process_response_error_code) {
     const int ERROR_CODE = 12345;
-    brpc::policy::PublicPbrpcResponse meta;
-    brpc::Controller cntl;
-    brpc::policy::ResponseBody* body = meta.add_responsebody();
+    flare::rpc::policy::PublicPbrpcResponse meta;
+    flare::rpc::Controller cntl;
+    flare::rpc::policy::ResponseBody* body = meta.add_responsebody();
     body->set_id(cntl.call_id().value);
     meta.mutable_responsehead()->set_code(ERROR_CODE);
-    brpc::policy::MostCommonMessage* msg = MakeResponseMessage(&meta);
-    ProcessMessage(brpc::policy::ProcessPublicPbrpcResponse, msg, false);
+    flare::rpc::policy::MostCommonMessage* msg = MakeResponseMessage(&meta);
+    ProcessMessage(flare::rpc::policy::ProcessPublicPbrpcResponse, msg, false);
     ASSERT_EQ(ERROR_CODE, cntl.ErrorCode());
 }
 
 TEST_F(PublicPbrpcTest, complete_flow) {
-    flare::io::IOBuf request_buf;
-    flare::io::IOBuf total_buf;
-    brpc::Controller cntl;
+    flare::io::cord_buf request_buf;
+    flare::io::cord_buf total_buf;
+    flare::rpc::Controller cntl;
     test::EchoRequest req;
     test::EchoResponse res;
     cntl._response = &res;
 
     // Send request
     req.set_message(EXP_REQUEST);
-    cntl.set_request_compress_type(brpc::COMPRESS_TYPE_SNAPPY);
-    brpc::policy::SerializePublicPbrpcRequest(&request_buf, &cntl, &req);
+    cntl.set_request_compress_type(flare::rpc::COMPRESS_TYPE_SNAPPY);
+    flare::rpc::policy::SerializePublicPbrpcRequest(&request_buf, &cntl, &req);
     ASSERT_FALSE(cntl.Failed());
-    brpc::policy::PackPublicPbrpcRequest(
+    flare::rpc::policy::PackPublicPbrpcRequest(
         &total_buf, NULL, cntl.call_id().value,
         test::EchoService::descriptor()->method(0), &cntl, request_buf, &_auth);
     ASSERT_FALSE(cntl.Failed());
 
     // Verify and handle request
-    brpc::ParseResult req_pr =
-            brpc::policy::ParseNsheadMessage(&total_buf, NULL, false, NULL);
-    ASSERT_EQ(brpc::PARSE_OK, req_pr.error());
-    brpc::InputMessageBase* req_msg = req_pr.message();
+    flare::rpc::ParseResult req_pr =
+            flare::rpc::policy::ParseNsheadMessage(&total_buf, NULL, false, NULL);
+    ASSERT_EQ(flare::rpc::PARSE_OK, req_pr.error());
+    flare::rpc::InputMessageBase* req_msg = req_pr.message();
     VerifyMessage(req_msg);
-    ProcessMessage(brpc::policy::ProcessNsheadRequest, req_msg, false);
+    ProcessMessage(flare::rpc::policy::ProcessNsheadRequest, req_msg, false);
 
     // Read response from pipe
     flare::io::IOPortal response_buf;
     response_buf.append_from_file_descriptor(_pipe_fds[0], 1024);
-    brpc::ParseResult res_pr =
-            brpc::policy::ParseNsheadMessage(&response_buf, NULL, false, NULL);
-    ASSERT_EQ(brpc::PARSE_OK, res_pr.error());
-    brpc::InputMessageBase* res_msg = res_pr.message();
-    ProcessMessage(brpc::policy::ProcessPublicPbrpcResponse, res_msg, false);
+    flare::rpc::ParseResult res_pr =
+            flare::rpc::policy::ParseNsheadMessage(&response_buf, NULL, false, NULL);
+    ASSERT_EQ(flare::rpc::PARSE_OK, res_pr.error());
+    flare::rpc::InputMessageBase* res_msg = res_pr.message();
+    ProcessMessage(flare::rpc::policy::ProcessPublicPbrpcResponse, res_msg, false);
 
     ASSERT_FALSE(cntl.Failed());
     ASSERT_EQ(EXP_RESPONSE, res.message());
 }
 
 TEST_F(PublicPbrpcTest, close_in_callback) {
-    flare::io::IOBuf request_buf;
-    flare::io::IOBuf total_buf;
-    brpc::Controller cntl;
+    flare::io::cord_buf request_buf;
+    flare::io::cord_buf total_buf;
+    flare::rpc::Controller cntl;
     test::EchoRequest req;
 
     // Send request
     req.set_message(EXP_REQUEST);
     req.set_close_fd(true);
-    brpc::policy::SerializePublicPbrpcRequest(&request_buf, &cntl, &req);
+    flare::rpc::policy::SerializePublicPbrpcRequest(&request_buf, &cntl, &req);
     ASSERT_FALSE(cntl.Failed());
-    brpc::policy::PackPublicPbrpcRequest(
+    flare::rpc::policy::PackPublicPbrpcRequest(
         &total_buf, NULL, cntl.call_id().value,
         test::EchoService::descriptor()->method(0), &cntl, request_buf, &_auth);
     ASSERT_FALSE(cntl.Failed());
 
     // Handle request
-    brpc::ParseResult req_pr =
-            brpc::policy::ParseNsheadMessage(&total_buf, NULL, false, NULL);
-    ASSERT_EQ(brpc::PARSE_OK, req_pr.error());
-    brpc::InputMessageBase* req_msg = req_pr.message();
-    ProcessMessage(brpc::policy::ProcessNsheadRequest, req_msg, false);
+    flare::rpc::ParseResult req_pr =
+            flare::rpc::policy::ParseNsheadMessage(&total_buf, NULL, false, NULL);
+    ASSERT_EQ(flare::rpc::PARSE_OK, req_pr.error());
+    flare::rpc::InputMessageBase* req_msg = req_pr.message();
+    ProcessMessage(flare::rpc::policy::ProcessNsheadRequest, req_msg, false);
 
     // Socket should be closed
     ASSERT_TRUE(_socket->Failed());

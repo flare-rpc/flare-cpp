@@ -24,7 +24,7 @@
 #include "flare/base/logging.h"
 #include "flare/base/strings.h"
 #include <flare/base/scoped_file.h>
-#include <flare/brpc/channel.h>
+#include <flare/rpc/channel.h>
 
 DEFINE_string(url_file, "", "The file containing urls to fetch. If this flag is"
                             " empty, read urls from stdin");
@@ -38,7 +38,7 @@ DEFINE_bool(only_show_host, false, "Print host name only");
 struct AccessThreadArgs {
     const std::deque<std::string> *url_list;
     size_t offset;
-    std::deque<std::pair<std::string, flare::io::IOBuf> > output_queue;
+    std::deque<std::pair<std::string, flare::io::cord_buf> > output_queue;
     flare::base::Mutex output_queue_mutex;
     std::atomic<int> current_concurrency;
 };
@@ -48,7 +48,7 @@ public:
     void Run();
 
 public:
-    brpc::Controller cntl;
+    flare::rpc::Controller cntl;
     AccessThreadArgs *args;
     std::string url;
 };
@@ -58,7 +58,7 @@ void OnHttpCallEnd::Run() {
     {
         FLARE_SCOPED_LOCK(args->output_queue_mutex);
         if (cntl.Failed()) {
-            args->output_queue.push_back(std::make_pair(url, flare::io::IOBuf()));
+            args->output_queue.push_back(std::make_pair(url, flare::io::cord_buf()));
         } else {
             args->output_queue.push_back(
                     std::make_pair(url, cntl.response_attachment()));
@@ -69,8 +69,8 @@ void OnHttpCallEnd::Run() {
 
 void *access_thread(void *void_args) {
     AccessThreadArgs *args = (AccessThreadArgs *) void_args;
-    brpc::ChannelOptions options;
-    options.protocol = brpc::PROTOCOL_HTTP;
+    flare::rpc::ChannelOptions options;
+    options.protocol = flare::rpc::PROTOCOL_HTTP;
     options.connect_timeout_ms = FLAGS_timeout_ms / 2;
     options.timeout_ms = FLAGS_timeout_ms/*milliseconds*/;
     options.max_retry = FLAGS_max_retry;
@@ -78,11 +78,11 @@ void *access_thread(void *void_args) {
 
     for (size_t i = args->offset; i < args->url_list->size(); i += FLAGS_thread_num) {
         std::string const &url = (*args->url_list)[i];
-        brpc::Channel channel;
+        flare::rpc::Channel channel;
         if (channel.Init(url.c_str(), &options) != 0) {
             LOG(ERROR) << "Fail to create channel to url=" << url;
             FLARE_SCOPED_LOCK(args->output_queue_mutex);
-            args->output_queue.push_back(std::make_pair(url, flare::io::IOBuf()));
+            args->output_queue.push_back(std::make_pair(url, flare::io::cord_buf()));
             continue;
         }
         while (args->current_concurrency.fetch_add(1, std::memory_order_relaxed)
@@ -148,7 +148,7 @@ int main(int argc, char **argv) {
     for (int i = 0; i < FLAGS_thread_num; ++i) {
         CHECK_EQ(0, bthread_start_background(&tids[i], NULL, access_thread, &args[i]));
     }
-    std::deque<std::pair<std::string, flare::io::IOBuf> > output_queue;
+    std::deque<std::pair<std::string, flare::io::cord_buf> > output_queue;
     size_t nprinted = 0;
     while (nprinted != url_list.size()) {
         for (int i = 0; i < FLAGS_thread_num; ++i) {

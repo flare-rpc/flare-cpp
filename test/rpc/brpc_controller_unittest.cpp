@@ -15,7 +15,7 @@
 // specific language governing permissions and limitations
 // under the License.
 
-// brpc - A framework to host and access services throughout Baidu.
+
 
 // Date: Sun Jul 13 15:04:18 CST 2014
 
@@ -23,10 +23,10 @@
 #include <google/protobuf/stubs/common.h>
 #include "flare/base/logging.h"
 #include "flare/base/time.h"
-#include "flare/brpc/socket.h"
-#include "flare/brpc/server.h"
-#include "flare/brpc/channel.h"
-#include "flare/brpc/controller.h"
+#include "flare/rpc/socket.h"
+#include "flare/rpc/server.h"
+#include "flare/rpc/channel.h"
+#include "flare/rpc/controller.h"
 
 class ControllerTest : public ::testing::Test{
 protected:
@@ -41,17 +41,17 @@ void MyCancelCallback(bool* cancel_flag) {
 }
 
 TEST_F(ControllerTest, notify_on_failed) {
-    brpc::SocketId id = 0;
-    ASSERT_EQ(0, brpc::Socket::Create(brpc::SocketOptions(), &id));
+    flare::rpc::SocketId id = 0;
+    ASSERT_EQ(0, flare::rpc::Socket::Create(flare::rpc::SocketOptions(), &id));
 
-    brpc::Controller cntl;
+    flare::rpc::Controller cntl;
     cntl._current_call.peer_id = id;
     ASSERT_FALSE(cntl.IsCanceled());
 
     bool cancel = false;
-    cntl.NotifyOnCancel(brpc::NewCallback(&MyCancelCallback, &cancel));
+    cntl.NotifyOnCancel(flare::rpc::NewCallback(&MyCancelCallback, &cancel));
     // Trigger callback
-    brpc::Socket::SetFailed(id);
+    flare::rpc::Socket::SetFailed(id);
     usleep(20000); // sleep a while to wait for the canceling which will be
                    // happening in another thread.
     ASSERT_TRUE(cancel);
@@ -59,15 +59,15 @@ TEST_F(ControllerTest, notify_on_failed) {
 }
 
 TEST_F(ControllerTest, notify_on_destruction) {
-    brpc::SocketId id = 0;
-    ASSERT_EQ(0, brpc::Socket::Create(brpc::SocketOptions(), &id));
+    flare::rpc::SocketId id = 0;
+    ASSERT_EQ(0, flare::rpc::Socket::Create(flare::rpc::SocketOptions(), &id));
 
-    brpc::Controller* cntl = new brpc::Controller;
+    flare::rpc::Controller* cntl = new flare::rpc::Controller;
     cntl->_current_call.peer_id = id;
     ASSERT_FALSE(cntl->IsCanceled());
 
     bool cancel = false;
-    cntl->NotifyOnCancel(brpc::NewCallback(&MyCancelCallback, &cancel));
+    cntl->NotifyOnCancel(flare::rpc::NewCallback(&MyCancelCallback, &cancel));
     // Trigger callback
     delete cntl;
     ASSERT_TRUE(cancel);

@@ -20,12 +20,12 @@
 #include <gtest/gtest.h>
 #include <google/protobuf/descriptor.h>
 
-#include "flare/brpc/server.h"
-#include "flare/brpc/details/http_message.h"
-#include "flare/brpc/policy/http_rpc_protocol.h"
+#include "flare/rpc/server.h"
+#include "flare/rpc/details/http_message.h"
+#include "flare/rpc/policy/http_rpc_protocol.h"
 #include "echo.pb.h"
 
-namespace brpc {
+namespace flare::rpc {
 namespace policy {
 Server::MethodProperty*
 FindMethodPropertyByURI(const std::string& uri_path, const Server* server,
@@ -34,35 +34,35 @@ bool ParseHttpServerAddress(flare::base::end_point *point, const char *server_ad
 }}
 
 namespace {
-using brpc::policy::FindMethodPropertyByURI;
-using brpc::policy::ParseHttpServerAddress;
+using flare::rpc::policy::FindMethodPropertyByURI;
+using flare::rpc::policy::ParseHttpServerAddress;
 
 TEST(HttpMessageTest, http_method) {
-    ASSERT_STREQ("DELETE", brpc::HttpMethod2Str(brpc::HTTP_METHOD_DELETE));
-    ASSERT_STREQ("GET", brpc::HttpMethod2Str(brpc::HTTP_METHOD_GET));
-    ASSERT_STREQ("POST", brpc::HttpMethod2Str(brpc::HTTP_METHOD_POST));
-    ASSERT_STREQ("PUT", brpc::HttpMethod2Str(brpc::HTTP_METHOD_PUT));
+    ASSERT_STREQ("DELETE", flare::rpc::HttpMethod2Str(flare::rpc::HTTP_METHOD_DELETE));
+    ASSERT_STREQ("GET", flare::rpc::HttpMethod2Str(flare::rpc::HTTP_METHOD_GET));
+    ASSERT_STREQ("POST", flare::rpc::HttpMethod2Str(flare::rpc::HTTP_METHOD_POST));
+    ASSERT_STREQ("PUT", flare::rpc::HttpMethod2Str(flare::rpc::HTTP_METHOD_PUT));
 
-    brpc::HttpMethod m;
-    ASSERT_TRUE(brpc::Str2HttpMethod("DELETE", &m));
-    ASSERT_EQ(brpc::HTTP_METHOD_DELETE, m);
-    ASSERT_TRUE(brpc::Str2HttpMethod("GET", &m));
-    ASSERT_EQ(brpc::HTTP_METHOD_GET, m);
-    ASSERT_TRUE(brpc::Str2HttpMethod("POST", &m));
-    ASSERT_EQ(brpc::HTTP_METHOD_POST, m);
-    ASSERT_TRUE(brpc::Str2HttpMethod("PUT", &m));
-    ASSERT_EQ(brpc::HTTP_METHOD_PUT, m);
+    flare::rpc::HttpMethod m;
+    ASSERT_TRUE(flare::rpc::Str2HttpMethod("DELETE", &m));
+    ASSERT_EQ(flare::rpc::HTTP_METHOD_DELETE, m);
+    ASSERT_TRUE(flare::rpc::Str2HttpMethod("GET", &m));
+    ASSERT_EQ(flare::rpc::HTTP_METHOD_GET, m);
+    ASSERT_TRUE(flare::rpc::Str2HttpMethod("POST", &m));
+    ASSERT_EQ(flare::rpc::HTTP_METHOD_POST, m);
+    ASSERT_TRUE(flare::rpc::Str2HttpMethod("PUT", &m));
+    ASSERT_EQ(flare::rpc::HTTP_METHOD_PUT, m);
 
     // case-insensitive
-    ASSERT_TRUE(brpc::Str2HttpMethod("DeLeTe", &m));
-    ASSERT_EQ(brpc::HTTP_METHOD_DELETE, m);
-    ASSERT_TRUE(brpc::Str2HttpMethod("get", &m));
-    ASSERT_EQ(brpc::HTTP_METHOD_GET, m);
+    ASSERT_TRUE(flare::rpc::Str2HttpMethod("DeLeTe", &m));
+    ASSERT_EQ(flare::rpc::HTTP_METHOD_DELETE, m);
+    ASSERT_TRUE(flare::rpc::Str2HttpMethod("get", &m));
+    ASSERT_EQ(flare::rpc::HTTP_METHOD_GET, m);
 
     // non-existed
-    ASSERT_FALSE(brpc::Str2HttpMethod("DEL", &m));
-    ASSERT_FALSE(brpc::Str2HttpMethod("DELETE ", &m));
-    ASSERT_FALSE(brpc::Str2HttpMethod("GOT", &m));
+    ASSERT_FALSE(flare::rpc::Str2HttpMethod("DEL", &m));
+    ASSERT_FALSE(flare::rpc::Str2HttpMethod("DELETE ", &m));
+    ASSERT_FALSE(flare::rpc::Str2HttpMethod("GOT", &m));
 }
 
 TEST(HttpMessageTest, eof) {
@@ -91,10 +91,10 @@ TEST(HttpMessageTest, eof) {
         "X_BD_LOGID64: 16815814797661447369\r\n"
         "X_BD_PRODUCT: map\r\n"
         "X_BD_SUBSYS: apimap\r\n";
-    flare::io::IOBuf buf;
+    flare::io::cord_buf buf;
     buf.append(http_request);
-    brpc::HttpMessage http_message;
-    ASSERT_EQ((ssize_t)buf.size(), http_message.ParseFromIOBuf(buf));
+    flare::rpc::HttpMessage http_message;
+    ASSERT_EQ((ssize_t)buf.size(), http_message.ParseFromCordBuf(buf));
     ASSERT_EQ(2, http_message.ParseFromArray("\r\n", 2));
     ASSERT_TRUE(http_message.Completed());
 }
@@ -115,10 +115,10 @@ TEST(HttpMessageTest, request_sanity) {
         "\r\n"
         "Message Body sdfsdf\r\n"
     ;
-    brpc::HttpMessage http_message;
+    flare::rpc::HttpMessage http_message;
     ASSERT_EQ((ssize_t)strlen(http_request), 
               http_message.ParseFromArray(http_request, strlen(http_request)));
-    const brpc::HttpHeader& header = http_message.header();
+    const flare::rpc::HttpHeader& header = http_message.header();
     // Check all keys
     ASSERT_EQ("json", header.content_type());
     ASSERT_TRUE(header.GetHeader("HOST"));
@@ -134,8 +134,8 @@ TEST(HttpMessageTest, request_sanity) {
     
     ASSERT_EQ(1, header.major_version());
     ASSERT_EQ(34, header.minor_version());
-    ASSERT_EQ(brpc::HTTP_METHOD_POST, header.method());
-    ASSERT_EQ(brpc::HTTP_STATUS_OK, header.status_code());
+    ASSERT_EQ(flare::rpc::HTTP_METHOD_POST, header.method());
+    ASSERT_EQ(flare::rpc::HTTP_STATUS_OK, header.status_code());
     ASSERT_STREQ("OK", header.reason_phrase());
 
     ASSERT_TRUE(header.GetHeader("log-id"));
@@ -159,11 +159,11 @@ TEST(HttpMessageTest, response_sanity) {
         "\r\n"
         "Message Body sdfsdf\r\n"
     ;
-    brpc::HttpMessage http_message;
+    flare::rpc::HttpMessage http_message;
     ASSERT_EQ((ssize_t)strlen(http_response), 
               http_message.ParseFromArray(http_response, strlen(http_response)));
     // Check all keys
-    const brpc::HttpHeader& header = http_message.header();
+    const flare::rpc::HttpHeader& header = http_message.header();
     ASSERT_EQ("json2", header.content_type());
     ASSERT_TRUE(header.GetHeader("HOST"));
     ASSERT_EQ("myhost", *header.GetHeader("host"));
@@ -179,9 +179,9 @@ TEST(HttpMessageTest, response_sanity) {
     ASSERT_EQ(1, header.major_version());
     ASSERT_EQ(34, header.minor_version());
     // method is undefined for response, in our case, it's set to 0.
-    ASSERT_EQ(brpc::HTTP_METHOD_DELETE, header.method());
-    ASSERT_EQ(brpc::HTTP_STATUS_GONE, header.status_code());
-    ASSERT_STREQ(brpc::HttpReasonPhrase(header.status_code()), /*not GoneBlah*/
+    ASSERT_EQ(flare::rpc::HTTP_METHOD_DELETE, header.method());
+    ASSERT_EQ(flare::rpc::HTTP_STATUS_GONE, header.status_code());
+    ASSERT_STREQ(flare::rpc::HttpReasonPhrase(header.status_code()), /*not GoneBlah*/
                  header.reason_phrase());
     
     ASSERT_TRUE(header.GetHeader("log-id"));
@@ -193,13 +193,13 @@ TEST(HttpMessageTest, response_sanity) {
 TEST(HttpMessageTest, bad_format) {
     const char *http_request =
         "slkdjflksdf skldjf\r\n";
-    brpc::HttpMessage http_message;
+    flare::rpc::HttpMessage http_message;
     ASSERT_EQ(-1, http_message.ParseFromArray(http_request, strlen(http_request)));
 }
 
 TEST(HttpMessageTest, incompleted_request_line) {
     const char *http_request = "GE" ;
-    brpc::HttpMessage http_message;
+    flare::rpc::HttpMessage http_message;
     ASSERT_TRUE(http_message.ParseFromArray(http_request, strlen(http_request)) >= 0);
     ASSERT_FALSE(http_message.Completed());
 }
@@ -215,24 +215,24 @@ TEST(HttpMessageTest, parse_from_iobuf) {
             content_length);
     std::string content;
     for (size_t i = 0; i < content_length; ++i) content.push_back('2');
-    flare::io::IOBuf request;
+    flare::io::cord_buf request;
     request.append(header);
     request.append(content);
 
-    brpc::HttpMessage http_message;
-    ASSERT_TRUE(http_message.ParseFromIOBuf(request) >= 0);
+    flare::rpc::HttpMessage http_message;
+    ASSERT_TRUE(http_message.ParseFromCordBuf(request) >= 0);
     ASSERT_TRUE(http_message.Completed());
     ASSERT_EQ(content, http_message.body().to_string());
     ASSERT_EQ("text/plain", http_message.header().content_type());
 }
 
 TEST(HttpMessageTest, find_method_property_by_uri) {
-    brpc::Server server;
+    flare::rpc::Server server;
     ASSERT_EQ(0, server.AddService(new test::EchoService(),
-                                   brpc::SERVER_OWNS_SERVICE));
+                                   flare::rpc::SERVER_OWNS_SERVICE));
     ASSERT_EQ(0, server.Start(9237, NULL));
     std::string unknown_method;
-    brpc::Server::MethodProperty* mp = NULL;
+    flare::rpc::Server::MethodProperty* mp = NULL;
               
     mp = FindMethodPropertyByURI("", &server, NULL);
     ASSERT_TRUE(mp);
@@ -260,7 +260,7 @@ TEST(HttpMessageTest, find_method_property_by_uri) {
     ASSERT_EQ("flags", mp->method->service()->name());
     ASSERT_EQ("foo/bar", unknown_method);
     
-    mp = FindMethodPropertyByURI("/brpc.flags/$*",
+    mp = FindMethodPropertyByURI("/flare.flags/$*",
                                  &server, &unknown_method);
     ASSERT_TRUE(mp);
     ASSERT_EQ("flags", mp->method->service()->name());
@@ -286,7 +286,7 @@ TEST(HttpMessageTest, find_method_property_by_uri) {
 }
 
 TEST(HttpMessageTest, http_header) {
-    brpc::HttpHeader header;
+    flare::rpc::HttpHeader header;
     
     header.set_version(10, 100);
     ASSERT_EQ(10, header.major_version());
@@ -313,21 +313,21 @@ TEST(HttpMessageTest, http_header) {
     header.RemoveHeader("key1");
     ASSERT_FALSE(header.GetHeader("key1"));
 
-    ASSERT_EQ(brpc::HTTP_METHOD_GET, header.method());
-    header.set_method(brpc::HTTP_METHOD_POST);
-    ASSERT_EQ(brpc::HTTP_METHOD_POST, header.method());
+    ASSERT_EQ(flare::rpc::HTTP_METHOD_GET, header.method());
+    header.set_method(flare::rpc::HTTP_METHOD_POST);
+    ASSERT_EQ(flare::rpc::HTTP_METHOD_POST, header.method());
 
-    ASSERT_EQ(brpc::HTTP_STATUS_OK, header.status_code());
-    ASSERT_STREQ(brpc::HttpReasonPhrase(header.status_code()),
+    ASSERT_EQ(flare::rpc::HTTP_STATUS_OK, header.status_code());
+    ASSERT_STREQ(flare::rpc::HttpReasonPhrase(header.status_code()),
                  header.reason_phrase());
-    header.set_status_code(brpc::HTTP_STATUS_CONTINUE);
-    ASSERT_EQ(brpc::HTTP_STATUS_CONTINUE, header.status_code());
-    ASSERT_STREQ(brpc::HttpReasonPhrase(header.status_code()),
+    header.set_status_code(flare::rpc::HTTP_STATUS_CONTINUE);
+    ASSERT_EQ(flare::rpc::HTTP_STATUS_CONTINUE, header.status_code());
+    ASSERT_STREQ(flare::rpc::HttpReasonPhrase(header.status_code()),
                  header.reason_phrase());
     
-    header.set_status_code(brpc::HTTP_STATUS_GONE);
-    ASSERT_EQ(brpc::HTTP_STATUS_GONE, header.status_code());
-    ASSERT_STREQ(brpc::HttpReasonPhrase(header.status_code()),
+    header.set_status_code(flare::rpc::HTTP_STATUS_GONE);
+    ASSERT_EQ(flare::rpc::HTTP_STATUS_GONE, header.status_code());
+    ASSERT_STREQ(flare::rpc::HttpReasonPhrase(header.status_code()),
                  header.reason_phrase());
 }
 
@@ -337,33 +337,33 @@ TEST(HttpMessageTest, empty_url) {
 }
 
 TEST(HttpMessageTest, serialize_http_request) {
-    brpc::HttpHeader header;
+    flare::rpc::HttpHeader header;
     ASSERT_EQ(0u, header.HeaderCount());
     header.SetHeader("Foo", "Bar");
     ASSERT_EQ(1u, header.HeaderCount());
-    header.set_method(brpc::HTTP_METHOD_POST);
+    header.set_method(flare::rpc::HTTP_METHOD_POST);
     flare::base::end_point ep;
     ASSERT_EQ(0, flare::base::str2endpoint("127.0.0.1:1234", &ep));
-    flare::io::IOBuf request;
-    flare::io::IOBuf content;
+    flare::io::cord_buf request;
+    flare::io::cord_buf content;
     content.append("data");
     MakeRawHttpRequest(&request, &header, ep, &content);
-    ASSERT_EQ("POST / HTTP/1.1\r\nContent-Length: 4\r\nHost: 127.0.0.1:1234\r\nFoo: Bar\r\nAccept: */*\r\nUser-Agent: brpc/1.0 curl/7.0\r\n\r\ndata", request);
+    ASSERT_EQ("POST / HTTP/1.1\r\nContent-Length: 4\r\nHost: 127.0.0.1:1234\r\nFoo: Bar\r\nAccept: */*\r\nUser-Agent: flare/1.0 curl/7.0\r\n\r\ndata", request);
 
     // user-set content-length is ignored.
     header.SetHeader("Content-Length", "100");
     MakeRawHttpRequest(&request, &header, ep, &content);
-    ASSERT_EQ("POST / HTTP/1.1\r\nContent-Length: 4\r\nHost: 127.0.0.1:1234\r\nFoo: Bar\r\nAccept: */*\r\nUser-Agent: brpc/1.0 curl/7.0\r\n\r\ndata", request);
+    ASSERT_EQ("POST / HTTP/1.1\r\nContent-Length: 4\r\nHost: 127.0.0.1:1234\r\nFoo: Bar\r\nAccept: */*\r\nUser-Agent: flare/1.0 curl/7.0\r\n\r\ndata", request);
 
     // user-host overwrites passed-in remote_side
     header.SetHeader("Host", "MyHost: 4321");
     MakeRawHttpRequest(&request, &header, ep, &content);
-    ASSERT_EQ("POST / HTTP/1.1\r\nContent-Length: 4\r\nFoo: Bar\r\nHost: MyHost: 4321\r\nAccept: */*\r\nUser-Agent: brpc/1.0 curl/7.0\r\n\r\ndata", request);
+    ASSERT_EQ("POST / HTTP/1.1\r\nContent-Length: 4\r\nFoo: Bar\r\nHost: MyHost: 4321\r\nAccept: */*\r\nUser-Agent: flare/1.0 curl/7.0\r\n\r\ndata", request);
 
     // user-set accept
     header.SetHeader("accePT"/*intended uppercase*/, "blahblah");
     MakeRawHttpRequest(&request, &header, ep, &content);
-    ASSERT_EQ("POST / HTTP/1.1\r\nContent-Length: 4\r\naccePT: blahblah\r\nFoo: Bar\r\nHost: MyHost: 4321\r\nUser-Agent: brpc/1.0 curl/7.0\r\n\r\ndata", request);
+    ASSERT_EQ("POST / HTTP/1.1\r\nContent-Length: 4\r\naccePT: blahblah\r\nFoo: Bar\r\nHost: MyHost: 4321\r\nUser-Agent: flare/1.0 curl/7.0\r\n\r\ndata", request);
 
     // user-set UA
     header.SetHeader("user-AGENT", "myUA");
@@ -376,17 +376,17 @@ TEST(HttpMessageTest, serialize_http_request) {
     ASSERT_EQ("POST / HTTP/1.1\r\nContent-Length: 4\r\naccePT: blahblah\r\nuser-AGENT: myUA\r\nauthorization: myAuthString\r\nFoo: Bar\r\nHost: MyHost: 4321\r\n\r\ndata", request);
 
     // GET does not serialize content
-    header.set_method(brpc::HTTP_METHOD_GET);
+    header.set_method(flare::rpc::HTTP_METHOD_GET);
     MakeRawHttpRequest(&request, &header, ep, &content);
     ASSERT_EQ("GET / HTTP/1.1\r\naccePT: blahblah\r\nuser-AGENT: myUA\r\nauthorization: myAuthString\r\nFoo: Bar\r\nHost: MyHost: 4321\r\n\r\n", request);
 }
 
 TEST(HttpMessageTest, serialize_http_response) {
-    brpc::HttpHeader header;
+    flare::rpc::HttpHeader header;
     header.SetHeader("Foo", "Bar");
-    header.set_method(brpc::HTTP_METHOD_POST);
-    flare::io::IOBuf response;
-    flare::io::IOBuf content;
+    header.set_method(flare::rpc::HTTP_METHOD_POST);
+    flare::io::cord_buf response;
+    flare::io::cord_buf content;
     content.append("data");
     MakeRawHttpResponse(&response, &header, &content);
     ASSERT_EQ("HTTP/1.1 200 OK\r\nContent-Length: 4\r\nFoo: Bar\r\n\r\ndata", response);

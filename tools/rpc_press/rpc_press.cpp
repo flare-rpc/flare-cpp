@@ -18,7 +18,7 @@
 #include <gflags/gflags.h>
 #include <google/protobuf/dynamic_message.h>
 #include <google/protobuf/compiler/importer.h>
-#include <flare/brpc/server.h>
+#include <flare/rpc/server.h>
 #include "flare/base/logging.h"
 #include <flare/base/string_splitter.h>
 #include <string.h>
@@ -93,7 +93,7 @@ int main(int argc, char* argv[]) {
     // set global log option
 
     if (FLAGS_dummy_port >= 0) {
-        brpc::StartDummyServerAt(FLAGS_dummy_port);
+        flare::rpc::StartDummyServerAt(FLAGS_dummy_port);
     }
 
     pbrpcframework::PressOptions options;
@@ -108,7 +108,7 @@ int main(int argc, char* argv[]) {
 
     rpc_press->start();
     if (FLAGS_duration <= 0) {
-        while (!brpc::IsAskedToQuit()) {
+        while (!flare::rpc::IsAskedToQuit()) {
             sleep(1);
         }
     } else {

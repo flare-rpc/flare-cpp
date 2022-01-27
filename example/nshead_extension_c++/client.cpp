@@ -21,11 +21,11 @@
 
 #include "flare/base/logging.h"
 #include "flare/base/time.h"
-#include <flare/brpc/channel.h>
-#include <flare/brpc/nshead_message.h>
-#include <flare/bvar/bvar.h>
+#include <flare/rpc/channel.h>
+#include <flare/rpc/nshead_message.h>
+#include <flare/variable/all.h>
 
-bvar::LatencyRecorder g_latency_recorder("client");
+flare::variable::LatencyRecorder g_latency_recorder("client");
 
 DEFINE_string(server, "0.0.0.0:8010", "IP Address of server");
 DEFINE_string(load_balancer, "", "The algorithm for load balancing");
@@ -38,11 +38,11 @@ int main(int argc, char* argv[]) {
     
     // A Channel represents a communication line to a Server. Notice that 
     // Channel is thread-safe and can be shared by all threads in your program.
-    brpc::Channel channel;
+    flare::rpc::Channel channel;
     
     // Initialize the channel, NULL means using default options. 
-    brpc::ChannelOptions options;
-    options.protocol = brpc::PROTOCOL_NSHEAD;
+    flare::rpc::ChannelOptions options;
+    options.protocol = flare::rpc::PROTOCOL_NSHEAD;
     options.timeout_ms = FLAGS_timeout_ms/*milliseconds*/;
     options.max_retry = FLAGS_max_retry;
     if (channel.Init(FLAGS_server.c_str(), FLAGS_load_balancer.c_str(), &options) != 0) {
@@ -52,10 +52,10 @@ int main(int argc, char* argv[]) {
 
     // Send a request and wait for the response every 1 second.
     int log_id = 0;
-    while (!brpc::IsAskedToQuit()) {
-        brpc::NsheadMessage request;
-        brpc::NsheadMessage response;
-        brpc::Controller cntl;
+    while (!flare::rpc::IsAskedToQuit()) {
+        flare::rpc::NsheadMessage request;
+        flare::rpc::NsheadMessage response;
+        flare::rpc::Controller cntl;
 
         // Append message to `request'
         request.body.append("hello world");

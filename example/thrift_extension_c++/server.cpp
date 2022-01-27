@@ -19,8 +19,8 @@
 
 #include <gflags/gflags.h>
 #include "flare/base/logging.h"
-#include <flare/brpc/server.h>
-#include <flare/brpc/thrift_service.h>
+#include <flare/rpc/server.h>
+#include <flare/rpc/thrift_service.h>
 #include "gen-cpp/echo_types.h"
 
 DEFINE_int32(port, 8019, "TCP Port of this server");
@@ -28,31 +28,31 @@ DEFINE_int32(idle_timeout_s, -1, "Connection will be closed if there is no "
              "read/write operations during the last `idle_timeout_s'");
 DEFINE_int32(max_concurrency, 0, "Limit of request processing in parallel");
 
-// Adapt your own thrift-based protocol to use brpc 
-class EchoServiceImpl : public brpc::ThriftService {
+// Adapt your own thrift-based protocol to use flare
+class EchoServiceImpl : public flare::rpc::ThriftService {
 public:
-    void ProcessThriftFramedRequest(brpc::Controller* cntl,
-                                    brpc::ThriftFramedMessage* req,
-                                    brpc::ThriftFramedMessage* res,
+    void ProcessThriftFramedRequest(flare::rpc::Controller* cntl,
+                                    flare::rpc::ThriftFramedMessage* req,
+                                    flare::rpc::ThriftFramedMessage* res,
                                     google::protobuf::Closure* done) override {
         // Dispatch calls to different methods
         if (cntl->thrift_method_name() == "Echo") {
             return Echo(cntl, req->Cast<example::EchoRequest>(),
                         res->Cast<example::EchoResponse>(), done);
         } else {
-            cntl->SetFailed(brpc::ENOMETHOD, "Fail to find method=%s",
+            cntl->SetFailed(flare::rpc::ENOMETHOD, "Fail to find method=%s",
                             cntl->thrift_method_name().c_str());
             done->Run();
         }
     }
 
-    void Echo(brpc::Controller* cntl,
+    void Echo(flare::rpc::Controller* cntl,
               const example::EchoRequest* req,
               example::EchoResponse* res,
               google::protobuf::Closure* done) {
         // This object helps you to call done->Run() in RAII style. If you need
         // to process the request asynchronously, pass done_guard.release().
-        brpc::ClosureGuard done_guard(done);
+        flare::rpc::ClosureGuard done_guard(done);
 
         res->data = req->data + " (Echo)";
     }
@@ -62,8 +62,8 @@ int main(int argc, char* argv[]) {
     // Parse gflags. We recommend you to use gflags as well.
     google::ParseCommandLineFlags(&argc, &argv, true);
 
-    brpc::Server server;
-    brpc::ServerOptions options;
+    flare::rpc::Server server;
+    flare::rpc::ServerOptions options;
 
     options.thrift_service = new EchoServiceImpl;
     options.idle_timeout_sec = FLAGS_idle_timeout_s;

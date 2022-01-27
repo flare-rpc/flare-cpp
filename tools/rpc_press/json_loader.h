@@ -23,9 +23,9 @@
 #include <google/protobuf/message.h>
 #include <google/protobuf/compiler/importer.h>
 #include <google/protobuf/dynamic_message.h>
-#include <flare/io/iobuf.h>
+#include <flare/io/cord_buf.h>
 
-namespace brpc {
+namespace flare::rpc {
 
 // This utility loads pb messages in json format from a file or string.
 class JsonLoader {
@@ -58,6 +58,6 @@ private:
     const google::protobuf::Message* _request_prototype;
 };
 
-} // namespace brpc
+} // namespace flare::rpc
 
 #endif // BRPC_JSON_LOADER_H

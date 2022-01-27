@@ -19,7 +19,7 @@
 
 #include <gflags/gflags.h>
 #include "flare/base/logging.h"
-#include <flare/brpc/server.h>
+#include <flare/rpc/server.h>
 #include "echo.pb.h"
 
 DEFINE_bool(echo_attachment, true, "Echo attachment as well");
@@ -42,7 +42,7 @@ struct MySessionLocalData {
     int x;
 };
 
-class MySessionLocalDataFactory : public brpc::DataFactory {
+class MySessionLocalDataFactory : public flare::rpc::DataFactory {
 public:
     void* CreateData() const {
         return new MySessionLocalData;
@@ -68,7 +68,7 @@ struct MyThreadLocalData {
     int y;
 };
 
-class MyThreadLocalDataFactory : public brpc::DataFactory {
+class MyThreadLocalDataFactory : public flare::rpc::DataFactory {
 public:
     void* CreateData() const {
         return new MyThreadLocalData;
@@ -82,7 +82,7 @@ public:
 struct AsyncJob {
     MySessionLocalData* expected_session_local_data;
     int expected_session_value;
-    brpc::Controller* cntl;
+    flare::rpc::Controller* cntl;
     const example::EchoRequest* request;
     example::EchoResponse* response;
     google::protobuf::Closure* done;
@@ -114,9 +114,9 @@ public:
               const example::EchoRequest* request,
               example::EchoResponse* response,
               google::protobuf::Closure* done) {
-        brpc::ClosureGuard done_guard(done);
-        brpc::Controller* cntl =
-            static_cast<brpc::Controller*>(cntl_base);
+        flare::rpc::ClosureGuard done_guard(done);
+        flare::rpc::Controller* cntl =
+            static_cast<flare::rpc::Controller*>(cntl_base);
 
         // Get the session-local data which is created by ServerOptions.session_local_data_factory
         // and reused between different RPC. All session-local data are
@@ -136,7 +136,7 @@ public:
         // destroyed upon server destruction.
         // "tls" is short for "thread local storage".
         MyThreadLocalData* tls =
-            static_cast<MyThreadLocalData*>(brpc::thread_local_data());
+            static_cast<MyThreadLocalData*>(flare::rpc::thread_local_data());
         if (tls == NULL) {
             cntl->SetFailed("Require ServerOptions.thread_local_data_factory "
                             "to be set with a correctly implemented instance");
@@ -163,7 +163,7 @@ public:
         bthread_usleep(10000);
 
         // tls is unchanged after context switching.
-        CHECK_EQ(tls, brpc::thread_local_data());
+        CHECK_EQ(tls, flare::rpc::thread_local_data());
         CHECK_EQ(expected_value, tls->y);
 
         CHECK_EQ(tls2, bthread_getspecific(_tls2_key));
@@ -192,7 +192,7 @@ private:
 };
 
 void AsyncJob::run() {
-    brpc::ClosureGuard done_guard(done);
+    flare::rpc::ClosureGuard done_guard(done);
 
     // Sleep some time to make sure that Echo() exits.
     bthread_usleep(10000);    
@@ -221,9 +221,9 @@ int main(int argc, char* argv[]) {
     MyThreadLocalDataFactory thread_local_data_factory;
 
     // Generally you only need one Server.
-    brpc::Server server;
-    // For more options see `brpc/server.h'.
-    brpc::ServerOptions options;
+    flare::rpc::Server server;
+    // For more options see `flare/rpc/server.h'.
+    flare::rpc::ServerOptions options;
     options.idle_timeout_sec = FLAGS_idle_timeout_s;
     options.max_concurrency = FLAGS_max_concurrency;
     options.session_local_data_factory = &session_local_data_factory;
@@ -234,9 +234,9 @@ int main(int argc, char* argv[]) {
 
     // Add the service into server. Notice the second parameter, because the
     // service is put on stack, we don't want server to delete it, otherwise
-    // use brpc::SERVER_OWNS_SERVICE.
+    // use flare::rpc::SERVER_OWNS_SERVICE.
     if (server.AddService(&echo_service_impl, 
-                          brpc::SERVER_DOESNT_OWN_SERVICE) != 0) {
+                          flare::rpc::SERVER_DOESNT_OWN_SERVICE) != 0) {
         LOG(ERROR) << "Fail to add service";
         return -1;
     }

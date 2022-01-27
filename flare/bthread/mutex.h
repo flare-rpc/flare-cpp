@@ -24,7 +24,7 @@
 
 #include "flare/bthread/types.h"
 #include "flare/base/scoped_lock.h"
-#include "flare/bvar/utils/lock_timer.h"
+#include "flare/variable/utils/lock_timer.h"
 
 __BEGIN_DECLS
 extern int bthread_mutex_init(bthread_mutex_t* __restrict mutex,
@@ -206,7 +206,7 @@ private:
 
 }  // namespace std
 
-namespace bvar {
+namespace flare::variable {
 
 template <>
 struct MutexConstructor<bthread_mutex_t> {
@@ -222,6 +222,6 @@ struct MutexDestructor<bthread_mutex_t> {
     }
 };
 
-}  // namespace bvar
+}  // namespace flare::variable
 
 #endif  //BTHREAD_MUTEX_H

@@ -27,7 +27,7 @@
 #include "flare/memory/scoped_ptr.h"     // flare::memory::scoped_ptr
 #include "flare/base/logging.h"               // LOG
 #include "flare/base/time.h"                  // flare::base::cpuwide_time_ns
-#include "flare/bvar/bvar.h"                  // bvar::Adder
+#include "flare/variable/all.h"                  // flare::variable::Adder
 #include "flare/bthread/butex.h"              // butex_construct
 
 namespace bthread {

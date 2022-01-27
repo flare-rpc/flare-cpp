@@ -18,16 +18,16 @@
 #include <iostream>
 #include "flare/base/time.h"
 #include "flare/base/logging.h"
-#include <flare/brpc/memcache.h>
-#include <flare/brpc/channel.h>
+#include <flare/rpc/memcache.h>
+#include <flare/rpc/channel.h>
 #include <gtest/gtest.h>
 
-namespace brpc {
+namespace flare::rpc {
 DECLARE_int32(idle_timeout_second);
 } 
 
 int main(int argc, char* argv[]) {
-    brpc::FLAGS_idle_timeout_second = 0;
+    flare::rpc::FLAGS_idle_timeout_second = 0;
     testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();
 }
@@ -102,13 +102,13 @@ TEST_F(MemcacheTest, sanity) {
         puts("Skipped due to absence of memcached");
         return;
     }
-    brpc::ChannelOptions options;
-    options.protocol = brpc::PROTOCOL_MEMCACHE;
-    brpc::Channel channel;
+    flare::rpc::ChannelOptions options;
+    options.protocol = flare::rpc::PROTOCOL_MEMCACHE;
+    flare::rpc::Channel channel;
     ASSERT_EQ(0, channel.Init("0.0.0.0:" MEMCACHED_PORT, &options));
-    brpc::MemcacheRequest request;
-    brpc::MemcacheResponse response;
-    brpc::Controller cntl;
+    flare::rpc::MemcacheRequest request;
+    flare::rpc::MemcacheResponse response;
+    flare::rpc::Controller cntl;
 
     // Clear all contents in MC which is still holding older data after
     // restarting in Ubuntu 18.04 (mc=1.5.6)
@@ -173,13 +173,13 @@ TEST_F(MemcacheTest, incr_and_decr) {
         puts("Skipped due to absence of memcached");
         return;
     }
-    brpc::ChannelOptions options;
-    options.protocol = brpc::PROTOCOL_MEMCACHE;
-    brpc::Channel channel;
+    flare::rpc::ChannelOptions options;
+    options.protocol = flare::rpc::PROTOCOL_MEMCACHE;
+    flare::rpc::Channel channel;
     ASSERT_EQ(0, channel.Init("0.0.0.0:" MEMCACHED_PORT, &options));
-    brpc::MemcacheRequest request;
-    brpc::MemcacheResponse response;
-    brpc::Controller cntl;
+    flare::rpc::MemcacheRequest request;
+    flare::rpc::MemcacheResponse response;
+    flare::rpc::Controller cntl;
     request.Increment("counter1", 2, 10, 10);
     request.Decrement("counter1", 1, 10, 10);
     request.Increment("counter1", 3, 10, 10);
@@ -208,13 +208,13 @@ TEST_F(MemcacheTest, version) {
         puts("Skipped due to absence of memcached");
         return;
     }
-    brpc::ChannelOptions options;
-    options.protocol = brpc::PROTOCOL_MEMCACHE;
-    brpc::Channel channel;
+    flare::rpc::ChannelOptions options;
+    options.protocol = flare::rpc::PROTOCOL_MEMCACHE;
+    flare::rpc::Channel channel;
     ASSERT_EQ(0, channel.Init("0.0.0.0:" MEMCACHED_PORT, &options));
-    brpc::MemcacheRequest request;
-    brpc::MemcacheResponse response;
-    brpc::Controller cntl;
+    flare::rpc::MemcacheRequest request;
+    flare::rpc::MemcacheResponse response;
+    flare::rpc::Controller cntl;
     request.Version();
     channel.CallMethod(NULL, &cntl, &request, &response, NULL);
     ASSERT_FALSE(cntl.Failed()) << cntl.ErrorText();

@@ -25,8 +25,8 @@
 #include <fcntl.h>
 #include <flare/bthread/bthread.h>
 #include "flare/base/time.h"
-#include <flare/brpc/channel.h>
-#include <flare/brpc/controller.h>
+#include <flare/rpc/channel.h>
+#include <flare/rpc/controller.h>
 #include "flare/base/logging.h"
 #include <json2pb/pb_to_json.h>
 #include "json_loader.h"
@@ -49,7 +49,7 @@ namespace pbrpcframework {
     };
 
     int PressClient::init() {
-        brpc::ChannelOptions rpc_options;
+        flare::rpc::ChannelOptions rpc_options;
         rpc_options.connect_timeout_ms = _options->connect_timeout_ms;
         rpc_options.timeout_ms = _options->timeout_ms;
         rpc_options.max_retry = _options->max_retry;
@@ -76,7 +76,7 @@ namespace pbrpcframework {
         return 0;
     }
 
-    void PressClient::call_method(brpc::Controller *cntl, Message *request,
+    void PressClient::call_method(flare::rpc::Controller *cntl, Message *request,
                                   Message *response, Closure *done) {
         if (!_attachment.empty()) {
             cntl->request_attachment().append(_attachment);
@@ -154,7 +154,7 @@ namespace pbrpcframework {
             LOG(ERROR) << "-input is empty";
             return -1;
         }
-        brpc::JsonLoader json_util(_importer, &_factory,
+        flare::rpc::JsonLoader json_util(_importer, &_factory,
                                    _options.service, _options.method);
         if (std::filesystem::exists(_options.input)) {
             int fd = open(_options.input.c_str(), O_RDONLY);
@@ -181,7 +181,7 @@ namespace pbrpcframework {
         return NULL;
     }
 
-    void RpcPress::handle_response(brpc::Controller *cntl,
+    void RpcPress::handle_response(flare::rpc::Controller *cntl,
                                    Message *request,
                                    Message *response,
                                    int64_t start_time) {
@@ -226,24 +226,24 @@ namespace pbrpcframework {
         }
         timeq.push_back(flare::base::gettimeofday_us());
         while (!_stop) {
-            brpc::Controller *cntl = new brpc::Controller;
+            flare::rpc::Controller *cntl = new flare::rpc::Controller;
             msg_index = (msg_index + _options.test_thread_num) % _msgs.size();
             Message *request = _msgs[msg_index];
             Message *response = _pbrpc_client->get_output_message();
             const int64_t start_time = flare::base::gettimeofday_us();
-            google::protobuf::Closure *done = brpc::NewCallback<
+            google::protobuf::Closure *done = flare::rpc::NewCallback<
                     RpcPress,
                     RpcPress *,
-                    brpc::Controller *,
+                    flare::rpc::Controller *,
                     Message *,
                     Message *, int64_t>
                     (this, &RpcPress::handle_response, cntl, request, response, start_time);
-            const brpc::CallId cid1 = cntl->call_id();
+            const flare::rpc::CallId cid1 = cntl->call_id();
             _pbrpc_client->call_method(cntl, request, response, done);
             _sent_count << 1;
 
             if (_options.test_req_rate <= 0) {
-                brpc::Join(cid1);
+                flare::rpc::Join(cid1);
             } else {
                 int64_t end_time = flare::base::gettimeofday_us();
                 int64_t expected_elp = 0;
@@ -273,7 +273,7 @@ namespace pbrpcframework {
                 return -1;
             }
         }
-        brpc::InfoThreadOptions info_thr_opt;
+        flare::rpc::InfoThreadOptions info_thr_opt;
         info_thr_opt.latency_recorder = &_latency_recorder;
         info_thr_opt.error_count = &_error_count;
         info_thr_opt.sent_count = &_sent_count;

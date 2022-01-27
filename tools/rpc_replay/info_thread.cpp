@@ -17,7 +17,7 @@
 
 #include "info_thread.h"
 
-namespace brpc {
+namespace flare::rpc {
 
 InfoThread::InfoThread()
     : _stop(false)
@@ -127,4 +127,4 @@ void InfoThread::stop() {
     pthread_join(_tid, NULL);
 }
 
-} // brpc
+} // flare::rpc

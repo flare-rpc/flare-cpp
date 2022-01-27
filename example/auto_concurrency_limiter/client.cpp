@@ -20,15 +20,15 @@
 #include <gflags/gflags.h>
 #include "flare/base/logging.h"
 #include "flare/base/time.h"
-#include <flare/brpc/channel.h>
-#include <flare/bvar/bvar.h>
+#include <flare/rpc/channel.h>
+#include <flare/variable/all.h>
 #include <flare/bthread/timer_thread.h>
 #include <json2pb/json_to_pb.h>
 
 #include <fstream>
 #include "cl_test.pb.h"
 
-DEFINE_string(protocol, "baidu_std", "Protocol type. Defined in src/brpc/options.proto");
+DEFINE_string(protocol, "baidu_std", "Protocol type. Defined in flare/rpc/options.proto");
 DEFINE_string(connection_type, "", "Connection type. Available values: single, pooled, short");
 DEFINE_string(cntl_server, "0.0.0.0:9000", "IP Address of server");
 DEFINE_string(echo_server, "0.0.0.0:9001", "IP Address of server");
@@ -66,10 +66,10 @@ uint32_t cast_func(void* arg) {
 std::atomic<uint32_t> g_timeout(0);
 std::atomic<uint32_t> g_error(0);
 std::atomic<uint32_t> g_succ(0);
-bvar::PassiveStatus<uint32_t> g_timeout_bvar(cast_func, &g_timeout);
-bvar::PassiveStatus<uint32_t> g_error_bvar(cast_func, &g_error);
-bvar::PassiveStatus<uint32_t> g_succ_bvar(cast_func, &g_succ);
-bvar::LatencyRecorder g_latency_rec;
+flare::variable::PassiveStatus<uint32_t> g_timeout_bvar(cast_func, &g_timeout);
+flare::variable::PassiveStatus<uint32_t> g_error_bvar(cast_func, &g_error);
+flare::variable::PassiveStatus<uint32_t> g_succ_bvar(cast_func, &g_succ);
+flare::variable::LatencyRecorder g_latency_rec;
 
 void LoadCaseSet(test::TestCaseSet* case_set, const std::string& file_path) {
     std::ifstream ifs(file_path.c_str(), std::ios::in);  
@@ -87,13 +87,13 @@ void LoadCaseSet(test::TestCaseSet* case_set, const std::string& file_path) {
 }
 
 void HandleEchoResponse(
-        brpc::Controller* cntl,
+        flare::rpc::Controller* cntl,
         test::NotifyResponse* response) {
     // std::unique_ptr makes sure cntl/response will be deleted before returning.
-    std::unique_ptr<brpc::Controller> cntl_guard(cntl);
+    std::unique_ptr<flare::rpc::Controller> cntl_guard(cntl);
     std::unique_ptr<test::NotifyResponse> response_guard(response);
 
-    if (cntl->Failed() && cntl->ErrorCode() == brpc::ERPCTIMEDOUT) {
+    if (cntl->Failed() && cntl->ErrorCode() == flare::rpc::ERPCTIMEDOUT) {
         g_timeout.fetch_add(1, std::memory_order_relaxed);
         LOG_EVERY_N(INFO, 1000) << cntl->ErrorText();
     } else if (cntl->Failed()) {
@@ -171,8 +171,8 @@ void RunUpdateTask(void* data) {
 void RunCase(test::ControlService_Stub &cntl_stub, 
              const test::TestCase& test_case) {
     LOG(INFO) << "Running case:`" << test_case.case_name() << '\'';
-    brpc::Channel channel;
-    brpc::ChannelOptions options;
+    flare::rpc::Channel channel;
+    flare::rpc::ChannelOptions options;
     options.protocol = FLAGS_protocol;
     options.connection_type = FLAGS_connection_type;
     options.timeout_ms = FLAGS_timeout_ms;
@@ -184,7 +184,7 @@ void RunCase(test::ControlService_Stub &cntl_stub,
 
     test::NotifyRequest cntl_req;
     test::NotifyResponse cntl_rsp;
-    brpc::Controller cntl;
+    flare::rpc::Controller cntl;
     cntl_req.set_message("StartCase");
     cntl_stub.Notify(&cntl, &cntl_req, &cntl_rsp, NULL);
     CHECK(!cntl.Failed()) << "control failed";
@@ -196,9 +196,9 @@ void RunCase(test::ControlService_Stub &cntl_stub,
     while (context.running.load(std::memory_order_acquire)) {
         test::NotifyRequest echo_req;
         echo_req.set_message("hello");
-        brpc::Controller* echo_cntl = new brpc::Controller;
+        flare::rpc::Controller* echo_cntl = new flare::rpc::Controller;
         test::NotifyResponse* echo_rsp = new test::NotifyResponse;
-        google::protobuf::Closure* done = brpc::NewCallback(
+        google::protobuf::Closure* done = flare::rpc::NewCallback(
             &HandleEchoResponse, echo_cntl, echo_rsp);
         echo_stub.Echo(echo_cntl, &echo_req, echo_rsp, done);
         ::usleep(context.interval_us.load(std::memory_order_relaxed));
@@ -218,8 +218,8 @@ int main(int argc, char* argv[]) {
     GFLAGS_NS::ParseCommandLineFlags(&argc, &argv, true);
     Expose();
 
-    brpc::Channel channel;
-    brpc::ChannelOptions options;
+    flare::rpc::Channel channel;
+    flare::rpc::ChannelOptions options;
     options.protocol = FLAGS_protocol;
     options.connection_type = FLAGS_connection_type;
     options.timeout_ms = FLAGS_timeout_ms;
@@ -233,7 +233,7 @@ int main(int argc, char* argv[]) {
     test::TestCaseSet case_set;
     LoadCaseSet(&case_set, FLAGS_case_file);
 
-    brpc::Controller cntl;
+    flare::rpc::Controller cntl;
     test::NotifyRequest cntl_req;
     test::NotifyResponse cntl_rsp;
     cntl_req.set_message("ResetCaseSet");

@@ -20,12 +20,12 @@
 
 #include "flare/base/time.h"
 #include "flare/base/logging.h"
-#include "flare/brpc/details/http_parser.h"
-#include "flare/brpc/builtin/common.h"  // AppendFileName
+#include "flare/rpc/details/http_parser.h"
+#include "flare/rpc/builtin/common.h"  // AppendFileName
 
-using brpc::http_parser;
-using brpc::http_parser_init;
-using brpc::http_parser_settings;
+using flare::rpc::http_parser;
+using flare::rpc::http_parser_init;
+using flare::rpc::http_parser_settings;
 
 class HttpParserTest : public testing::Test {
 protected:
@@ -39,7 +39,7 @@ TEST_F(HttpParserTest, init_perf) {
     timer.start();
     for (size_t i = 0; i < loops; ++i) {
         http_parser parser;
-        http_parser_init(&parser, brpc::HTTP_REQUEST);
+        http_parser_init(&parser, flare::rpc::HTTP_REQUEST);
     }
     timer.stop();
     std::cout << "It takes " << timer.n_elapsed() / loops
@@ -97,7 +97,7 @@ TEST_F(HttpParserTest, http_example) {
     std::cout << http_request << std::endl;
 
     http_parser parser;
-    http_parser_init(&parser, brpc::HTTP_REQUEST);
+    http_parser_init(&parser, flare::rpc::HTTP_REQUEST);
     http_parser_settings settings;
     memset(&settings, 0, sizeof(settings));
     settings.on_message_begin = on_message_begin;
@@ -114,58 +114,58 @@ TEST_F(HttpParserTest, append_filename) {
     std::string dir;
 
     dir = "/home/someone/.bsvn/..";
-    brpc::AppendFileName(&dir, "..");
+    flare::rpc::AppendFileName(&dir, "..");
     ASSERT_EQ("/home", dir);
 
     dir = "/home/someone/.bsvn/../";
-    brpc::AppendFileName(&dir, "..");
+    flare::rpc::AppendFileName(&dir, "..");
     ASSERT_EQ("/home", dir);
 
     dir = "/home/someone/./..";
-    brpc::AppendFileName(&dir, "..");
+    flare::rpc::AppendFileName(&dir, "..");
     ASSERT_EQ("/", dir);
     
     dir = "/home/someone/./../";
-    brpc::AppendFileName(&dir, "..");
+    flare::rpc::AppendFileName(&dir, "..");
     ASSERT_EQ("/", dir);
 
     dir = "/foo/bar";
-    brpc::AppendFileName(&dir, "..");
+    flare::rpc::AppendFileName(&dir, "..");
     ASSERT_EQ("/foo", dir);
 
     dir = "/foo/bar/";
-    brpc::AppendFileName(&dir, "..");
+    flare::rpc::AppendFileName(&dir, "..");
     ASSERT_EQ("/foo", dir);
 
     dir = "/foo";
-    brpc::AppendFileName(&dir, ".");
+    flare::rpc::AppendFileName(&dir, ".");
     ASSERT_EQ("/foo", dir);
 
     dir = "/foo/";
-    brpc::AppendFileName(&dir, ".");
+    flare::rpc::AppendFileName(&dir, ".");
     ASSERT_EQ("/foo/", dir);
 
     dir = "foo";
-    brpc::AppendFileName(&dir, "..");
+    flare::rpc::AppendFileName(&dir, "..");
     ASSERT_EQ("", dir);
 
     dir = "foo/";
-    brpc::AppendFileName(&dir, "..");
+    flare::rpc::AppendFileName(&dir, "..");
     ASSERT_EQ("", dir);
 
     dir = "foo/..";
-    brpc::AppendFileName(&dir, "..");
+    flare::rpc::AppendFileName(&dir, "..");
     ASSERT_EQ("..", dir);
 
     dir = "foo/../";
-    brpc::AppendFileName(&dir, "..");
+    flare::rpc::AppendFileName(&dir, "..");
     ASSERT_EQ("..", dir);
     
     dir = "/foo";
-    brpc::AppendFileName(&dir, "..");
+    flare::rpc::AppendFileName(&dir, "..");
     ASSERT_EQ("/", dir);
 
     dir = "/foo/";
-    brpc::AppendFileName(&dir, "..");
+    flare::rpc::AppendFileName(&dir, "..");
     ASSERT_EQ("/", dir);
 }

@@ -25,23 +25,23 @@
 #include "flare/base/time.h"
 #include "flare/base/fd_guard.h"
 #include <flare/base/scoped_file.h>
-#include "flare/brpc/global.h"
-#include "flare/brpc/socket.h"
-#include "flare/brpc/server.h"
-#include "flare/brpc/channel.h"
-#include "flare/brpc/socket_map.h"
-#include "flare/brpc/controller.h"
+#include "flare/rpc/global.h"
+#include "flare/rpc/socket.h"
+#include "flare/rpc/server.h"
+#include "flare/rpc/channel.h"
+#include "flare/rpc/socket_map.h"
+#include "flare/rpc/controller.h"
 #include "echo.pb.h"
 
-namespace brpc {
+namespace flare::rpc {
     void ExtractHostnames(X509 *x, std::vector<std::string> *hostnames);
-} // namespace brpc
+} // namespace flare::rpc
 
 
 int main(int argc, char *argv[]) {
     testing::InitGoogleTest(&argc, argv);
     GFLAGS_NS::ParseCommandLineFlags(&argc, &argv, true);
-    brpc::GlobalInitializeOrDie();
+    flare::rpc::GlobalInitializeOrDie();
     return RUN_ALL_TESTS();
 }
 
@@ -59,8 +59,8 @@ public:
                       const test::EchoRequest *request,
                       test::EchoResponse *response,
                       google::protobuf::Closure *done) {
-        brpc::ClosureGuard done_guard(done);
-        brpc::Controller *cntl = (brpc::Controller *) cntl_base;
+        flare::rpc::ClosureGuard done_guard(done);
+        flare::rpc::Controller *cntl = (flare::rpc::Controller *) cntl_base;
         count.fetch_add(1, std::memory_order_relaxed);
         EXPECT_EQ(EXP_REQUEST, request->message());
         EXPECT_TRUE(cntl->is_ssl());
@@ -93,9 +93,9 @@ void *RunClosure(void *arg) {
     return NULL;
 }
 
-void SendMultipleRPC(brpc::Channel *channel, int count) {
+void SendMultipleRPC(flare::rpc::Channel *channel, int count) {
     for (int i = 0; i < count; ++i) {
-        brpc::Controller cntl;
+        flare::rpc::Controller cntl;
         test::EchoRequest req;
         test::EchoResponse res;
         req.set_message(EXP_REQUEST);
@@ -107,32 +107,32 @@ void SendMultipleRPC(brpc::Channel *channel, int count) {
 }
 
 TEST_F(SSLTest, sanity) {
-    // Test RPC based on SSL + brpc protocol
+    // Test RPC based on SSL + flare protocol
     const int port = 8613;
-    brpc::Server server;
-    brpc::ServerOptions options;
+    flare::rpc::Server server;
+    flare::rpc::ServerOptions options;
 
-    brpc::CertInfo cert;
+    flare::rpc::CertInfo cert;
     cert.certificate = "cert1.crt";
     cert.private_key = "cert1.key";
     options.mutable_ssl_options()->default_cert = cert;
 
     EchoServiceImpl echo_svc;
     ASSERT_EQ(0, server.AddService(
-            &echo_svc, brpc::SERVER_DOESNT_OWN_SERVICE));
+            &echo_svc, flare::rpc::SERVER_DOESNT_OWN_SERVICE));
     ASSERT_EQ(0, server.Start(port, &options));
 
     test::EchoRequest req;
     test::EchoResponse res;
     req.set_message(EXP_REQUEST);
     {
-        brpc::Channel channel;
-        brpc::ChannelOptions coptions;
+        flare::rpc::Channel channel;
+        flare::rpc::ChannelOptions coptions;
         coptions.mutable_ssl_options();
         coptions.mutable_ssl_options()->sni_name = "localhost";
         ASSERT_EQ(0, channel.Init("localhost", port, &coptions));
 
-        brpc::Controller cntl;
+        flare::rpc::Controller cntl;
         test::EchoService_Stub stub(&channel);
         stub.Echo(&cntl, &req, &res, NULL);
         EXPECT_EQ(EXP_RESPONSE, res.message()) << cntl.ErrorText();
@@ -143,14 +143,14 @@ TEST_F(SSLTest, sanity) {
     const int COUNT = 3000;
     pthread_t tids[NUM];
     {
-        brpc::Channel channel;
-        brpc::ChannelOptions coptions;
+        flare::rpc::Channel channel;
+        flare::rpc::ChannelOptions coptions;
         coptions.mutable_ssl_options();
         coptions.mutable_ssl_options()->sni_name = "localhost";
         ASSERT_EQ(0, channel.Init("127.0.0.1", port, &coptions));
         for (int i = 0; i < NUM; ++i) {
             google::protobuf::Closure *thrd_func =
-                    brpc::NewCallback(SendMultipleRPC, &channel, COUNT);
+                    flare::rpc::NewCallback(SendMultipleRPC, &channel, COUNT);
             EXPECT_EQ(0, pthread_create(&tids[i], NULL, RunClosure, thrd_func));
         }
         for (int i = 0; i < NUM; ++i) {
@@ -159,15 +159,15 @@ TEST_F(SSLTest, sanity) {
     }
     {
         // Use HTTP
-        brpc::Channel channel;
-        brpc::ChannelOptions coptions;
+        flare::rpc::Channel channel;
+        flare::rpc::ChannelOptions coptions;
         coptions.protocol = "http";
         coptions.mutable_ssl_options();
         coptions.mutable_ssl_options()->sni_name = "localhost";
         ASSERT_EQ(0, channel.Init("127.0.0.1", port, &coptions));
         for (int i = 0; i < NUM; ++i) {
             google::protobuf::Closure *thrd_func =
-                    brpc::NewCallback(SendMultipleRPC, &channel, COUNT);
+                    flare::rpc::NewCallback(SendMultipleRPC, &channel, COUNT);
             EXPECT_EQ(0, pthread_create(&tids[i], NULL, RunClosure, thrd_func));
         }
         for (int i = 0; i < NUM; ++i) {
@@ -181,23 +181,23 @@ TEST_F(SSLTest, sanity) {
 
 void CheckCert(const char *cname, const char *cert) {
     const int port = 8613;
-    brpc::Channel channel;
-    brpc::ChannelOptions coptions;
+    flare::rpc::Channel channel;
+    flare::rpc::ChannelOptions coptions;
     coptions.mutable_ssl_options()->sni_name = cname;
     ASSERT_EQ(0, channel.Init("127.0.0.1", port, &coptions));
 
     SendMultipleRPC(&channel, 1);
     // client has no access to the sending socket
-    std::vector<brpc::SocketId> ids;
-    brpc::SocketMapList(&ids);
+    std::vector<flare::rpc::SocketId> ids;
+    flare::rpc::SocketMapList(&ids);
     ASSERT_EQ(1u, ids.size());
-    brpc::SocketUniquePtr sock;
-    ASSERT_EQ(0, brpc::Socket::Address(ids[0], &sock));
+    flare::rpc::SocketUniquePtr sock;
+    ASSERT_EQ(0, flare::rpc::Socket::Address(ids[0], &sock));
 
     X509 *x509 = sock->GetPeerCertificate();
     ASSERT_TRUE(x509 != NULL);
     std::vector<std::string> cnames;
-    brpc::ExtractHostnames(x509, &cnames);
+    flare::rpc::ExtractHostnames(x509, &cnames);
     ASSERT_EQ(cert, cnames[0]) << x509;
 }
 
@@ -214,17 +214,17 @@ std::string GetRawPemString(const char *fname) {
 
 TEST_F(SSLTest, ssl_sni) {
     const int port = 8613;
-    brpc::Server server;
-    brpc::ServerOptions options;
+    flare::rpc::Server server;
+    flare::rpc::ServerOptions options;
     {
-        brpc::CertInfo cert;
+        flare::rpc::CertInfo cert;
         cert.certificate = "cert1.crt";
         cert.private_key = "cert1.key";
         cert.sni_filters.push_back("cert1.com");
         options.mutable_ssl_options()->default_cert = cert;
     }
     {
-        brpc::CertInfo cert;
+        flare::rpc::CertInfo cert;
         cert.certificate = GetRawPemString("cert2.crt");
         cert.private_key = GetRawPemString("cert2.key");
         cert.sni_filters.push_back("*.cert2.com");
@@ -232,7 +232,7 @@ TEST_F(SSLTest, ssl_sni) {
     }
     EchoServiceImpl echo_svc;
     ASSERT_EQ(0, server.AddService(
-            &echo_svc, brpc::SERVER_DOESNT_OWN_SERVICE));
+            &echo_svc, flare::rpc::SERVER_DOESNT_OWN_SERVICE));
     ASSERT_EQ(0, server.Start(port, &options));
 
     CheckCert("cert1.com", "cert1");
@@ -245,10 +245,10 @@ TEST_F(SSLTest, ssl_sni) {
 
 TEST_F(SSLTest, ssl_reload) {
     const int port = 8613;
-    brpc::Server server;
-    brpc::ServerOptions options;
+    flare::rpc::Server server;
+    flare::rpc::ServerOptions options;
     {
-        brpc::CertInfo cert;
+        flare::rpc::CertInfo cert;
         cert.certificate = "cert1.crt";
         cert.private_key = "cert1.key";
         cert.sni_filters.push_back("cert1.com");
@@ -256,12 +256,12 @@ TEST_F(SSLTest, ssl_reload) {
     }
     EchoServiceImpl echo_svc;
     ASSERT_EQ(0, server.AddService(
-            &echo_svc, brpc::SERVER_DOESNT_OWN_SERVICE));
+            &echo_svc, flare::rpc::SERVER_DOESNT_OWN_SERVICE));
     ASSERT_EQ(0, server.Start(port, &options));
 
     CheckCert("cert2.com", "cert1");    // default cert
     {
-        brpc::CertInfo cert;
+        flare::rpc::CertInfo cert;
         cert.certificate = GetRawPemString("cert2.crt");
         cert.private_key = GetRawPemString("cert2.key");
         cert.sni_filters.push_back("cert2.com");
@@ -270,7 +270,7 @@ TEST_F(SSLTest, ssl_reload) {
     CheckCert("cert2.com", "cert2");
 
     {
-        brpc::CertInfo cert;
+        flare::rpc::CertInfo cert;
         cert.certificate = GetRawPemString("cert2.crt");
         cert.private_key = GetRawPemString("cert2.key");
         ASSERT_EQ(0, server.RemoveCertificate(cert));
@@ -278,11 +278,11 @@ TEST_F(SSLTest, ssl_reload) {
     CheckCert("cert2.com", "cert1");    // default cert after remove cert2
 
     {
-        brpc::CertInfo cert;
+        flare::rpc::CertInfo cert;
         cert.certificate = GetRawPemString("cert2.crt");
         cert.private_key = GetRawPemString("cert2.key");
         cert.sni_filters.push_back("cert2.com");
-        std::vector<brpc::CertInfo> certs;
+        std::vector<flare::rpc::CertInfo> certs;
         certs.push_back(cert);
         ASSERT_EQ(0, server.ResetCertificates(certs));
     }
@@ -339,16 +339,16 @@ TEST_F(SSLTest, ssl_perf) {
     int servfd = accept(listenfd, NULL, NULL);
     ASSERT_GT(servfd, 0);
 
-    brpc::ChannelSSLOptions opt;
-    SSL_CTX *cli_ctx = brpc::CreateClientSSLContext(opt);
+    flare::rpc::ChannelSSLOptions opt;
+    SSL_CTX *cli_ctx = flare::rpc::CreateClientSSLContext(opt);
     SSL_CTX *serv_ctx =
-            brpc::CreateServerSSLContext("cert1.crt", "cert1.key",
-                                         brpc::SSLOptions(), NULL);
-    SSL *cli_ssl = brpc::CreateSSLSession(cli_ctx, 0, clifd, false);
-#if defined(SSL_CTRL_SET_TLSEXT_HOSTNAME) || defined(USE_MESALINK)
+            flare::rpc::CreateServerSSLContext("cert1.crt", "cert1.key",
+                                               flare::rpc::SSLOptions(), NULL);
+    SSL *cli_ssl = flare::rpc::CreateSSLSession(cli_ctx, 0, clifd, false);
+#if defined(SSL_CTRL_SET_TLSEXT_HOSTNAME)
     SSL_set_tlsext_host_name(cli_ssl, "localhost");
 #endif
-    SSL *serv_ssl = brpc::CreateSSLSession(serv_ctx, 0, servfd, true);
+    SSL *serv_ssl = flare::rpc::CreateSSLSession(serv_ctx, 0, servfd, true);
     pthread_t cpid;
     pthread_t spid;
     ASSERT_EQ(0, pthread_create(&cpid, NULL, ssl_perf_client, cli_ssl));

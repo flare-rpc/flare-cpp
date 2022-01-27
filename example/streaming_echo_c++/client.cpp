@@ -19,8 +19,8 @@
 
 #include <gflags/gflags.h>
 #include "flare/base/logging.h"
-#include <flare/brpc/channel.h>
-#include <flare/brpc/stream.h>
+#include <flare/rpc/channel.h>
+#include <flare/rpc/stream.h>
 #include "echo.pb.h"
 
 DEFINE_bool(send_attachment, true, "Carry attachment along with requests");
@@ -35,11 +35,11 @@ int main(int argc, char* argv[]) {
 
     // A Channel represents a communication line to a Server. Notice that 
     // Channel is thread-safe and can be shared by all threads in your program.
-    brpc::Channel channel;
+    flare::rpc::Channel channel;
         
     // Initialize the channel, NULL means using default options. 
-    brpc::ChannelOptions options;
-    options.protocol = brpc::PROTOCOL_BAIDU_STD;
+    flare::rpc::ChannelOptions options;
+    options.protocol = flare::rpc::PROTOCOL_BAIDU_STD;
     options.connection_type = FLAGS_connection_type;
     options.timeout_ms = FLAGS_timeout_ms/*milliseconds*/;
     options.max_retry = FLAGS_max_retry;
@@ -51,9 +51,9 @@ int main(int argc, char* argv[]) {
     // Normally, you should not call a Channel directly, but instead construct
     // a stub Service wrapping it. stub can be shared by all threads as well.
     example::EchoService_Stub stub(&channel);
-    brpc::Controller cntl;
-    brpc::StreamId stream;
-    if (brpc::StreamCreate(&stream, cntl, NULL) != 0) {
+    flare::rpc::Controller cntl;
+    flare::rpc::StreamId stream;
+    if (flare::rpc::StreamCreate(&stream, cntl, NULL) != 0) {
         LOG(ERROR) << "Fail to create stream";
         return -1;
     }
@@ -67,17 +67,17 @@ int main(int argc, char* argv[]) {
         return -1;
     }
     
-    while (!brpc::IsAskedToQuit()) {
-        flare::io::IOBuf msg1;
+    while (!flare::rpc::IsAskedToQuit()) {
+        flare::io::cord_buf msg1;
         msg1.append("abcdefghijklmnopqrstuvwxyz");
-        CHECK_EQ(0, brpc::StreamWrite(stream, msg1));
-        flare::io::IOBuf msg2;
+        CHECK_EQ(0, flare::rpc::StreamWrite(stream, msg1));
+        flare::io::cord_buf msg2;
         msg2.append("0123456789");
-        CHECK_EQ(0, brpc::StreamWrite(stream, msg2));
+        CHECK_EQ(0, flare::rpc::StreamWrite(stream, msg2));
         sleep(1);
     }
 
-    CHECK_EQ(0, brpc::StreamClose(stream));
+    CHECK_EQ(0, flare::rpc::StreamClose(stream));
     LOG(INFO) << "EchoClient is going to quit";
     return 0;
 }

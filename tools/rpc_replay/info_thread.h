@@ -19,14 +19,14 @@
 #define BRPC_RPC_REPLAY_INFO_THREAD_H
 
 #include <pthread.h>
-#include <flare/bvar/bvar.h>
+#include <flare/variable/all.h>
 
-namespace brpc {
+namespace flare::rpc {
 
 struct InfoThreadOptions {
-    bvar::LatencyRecorder* latency_recorder;
-    bvar::Adder<int64_t>* sent_count;
-    bvar::Adder<int64_t>* error_count;
+    flare::variable::LatencyRecorder* latency_recorder;
+    flare::variable::Adder<int64_t>* sent_count;
+    flare::variable::Adder<int64_t>* error_count;
 
     InfoThreadOptions()
         : latency_recorder(NULL)
@@ -50,6 +50,6 @@ private:
     pthread_t _tid;
 };
 
-} // brpc
+} // flare::rpc
 
 #endif //BRPC_RPC_REPLAY_INFO_THREAD_H

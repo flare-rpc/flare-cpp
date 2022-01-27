@@ -313,11 +313,11 @@ extern int bthread_key_delete(bthread_key_t key);
 // bthread_setspecific() is callable from within destructor. If the application
 // does so, destructors will be repeatedly called for at most
 // PTHREAD_DESTRUCTOR_ITERATIONS times to clear the slots.
-// NOTE: If the thread is not created by brpc server and lifetime is
+// NOTE: If the thread is not created by flare server and lifetime is
 // very short(doing a little thing and exit), avoid using bthread-local. The
 // reason is that bthread-local always allocate keytable on first call to 
 // bthread_setspecific, the overhead is negligible in long-lived threads,
-// but noticeable in shortly-lived threads. Threads in brpc server
+// but noticeable in shortly-lived threads. Threads in flare server
 // are special since they reuse keytables from a bthread_keytable_pool_t
 // in the server.
 // Returns 0 on success, error code otherwise.

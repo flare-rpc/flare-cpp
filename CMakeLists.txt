@@ -34,7 +34,7 @@ endif ()
 set(BRPC_VERSION 0.9.0)
 
 SET(CPACK_GENERATOR "DEB")
-SET(CPACK_DEBIAN_PACKAGE_MAINTAINER "brpc authors")
+SET(CPACK_DEBIAN_PACKAGE_MAINTAINER "flare authors")
 INCLUDE(CPack)
 
 if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
@@ -86,7 +86,7 @@ include_directories(
 )
 
 execute_process(
-        COMMAND bash -c "${PROJECT_SOURCE_DIR}/tools/get_brpc_revision.sh ${PROJECT_SOURCE_DIR} | tr -d '\n'"
+        COMMAND bash -c "${PROJECT_SOURCE_DIR}/tools/get_flare_revision.sh ${PROJECT_SOURCE_DIR} | tr -d '\n'"
         OUTPUT_VARIABLE BRPC_REVISION
 )
 
@@ -236,14 +236,14 @@ set(FLARE_SRC
         ${FLARE_IO_SRC}
         )
 
-file(GLOB_RECURSE BVAR_SOURCES "${PROJECT_SOURCE_DIR}/flare/bvar/*.cpp")
+file(GLOB_RECURSE BVAR_SOURCES "${PROJECT_SOURCE_DIR}/flare/variable/*.cpp")
 file(GLOB_RECURSE BTHREAD_SOURCES "${PROJECT_SOURCE_DIR}/flare/bthread/*.cpp")
 file(GLOB_RECURSE JSON2PB_SOURCES "${PROJECT_SOURCE_DIR}/flare/json2pb/*.cpp")
-file(GLOB_RECURSE BRPC_SOURCES "${PROJECT_SOURCE_DIR}/flare/brpc/*.cpp")
-file(GLOB_RECURSE THRIFT_SOURCES "${PROJECT_SOURCE_DIR}/flare/brpc/thrift*.cpp")
+file(GLOB_RECURSE BRPC_SOURCES "${PROJECT_SOURCE_DIR}/flare/rpc/*.cpp")
+file(GLOB_RECURSE THRIFT_SOURCES "${PROJECT_SOURCE_DIR}/flare/rpc/thrift*.cpp")
 
 if (WITH_THRIFT)
-    message("brpc compile with thrift protocol")
+    message("flare compile with thrift protocol")
 else ()
     # Remove thrift sources
     foreach (v ${THRIFT_SOURCES})
@@ -260,23 +260,23 @@ set(MCPACK2PB_SOURCES
 
 include(CompileProto)
 set(PROTO_FILES flare/idl_options.proto
-        flare/brpc/rtmp.proto
-        flare/brpc/rpc_dump.proto
-        flare/brpc/get_favicon.proto
-        flare/brpc/span.proto
-        flare/brpc/builtin_service.proto
-        flare/brpc/get_js.proto
-        flare/brpc/errno.proto
-        flare/brpc/nshead_meta.proto
-        flare/brpc/options.proto
-        flare/brpc/policy/baidu_rpc_meta.proto
-        flare/brpc/policy/hulu_pbrpc_meta.proto
-        flare/brpc/policy/public_pbrpc_meta.proto
-        flare/brpc/policy/sofa_pbrpc_meta.proto
-        flare/brpc/policy/mongo.proto
-        flare/brpc/trackme.proto
-        flare/brpc/streaming_rpc_meta.proto
-        flare/brpc/proto_base.proto)
+        flare/rpc/rtmp.proto
+        flare/rpc/rpc_dump.proto
+        flare/rpc/get_favicon.proto
+        flare/rpc/span.proto
+        flare/rpc/builtin_service.proto
+        flare/rpc/get_js.proto
+        flare/rpc/errno.proto
+        flare/rpc/nshead_meta.proto
+        flare/rpc/options.proto
+        flare/rpc/policy/baidu_rpc_meta.proto
+        flare/rpc/policy/hulu_pbrpc_meta.proto
+        flare/rpc/policy/public_pbrpc_meta.proto
+        flare/rpc/policy/sofa_pbrpc_meta.proto
+        flare/rpc/policy/mongo.proto
+        flare/rpc/trackme.proto
+        flare/rpc/streaming_rpc_meta.proto
+        flare/rpc/proto_base.proto)
 
 file(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/output/include/flare)
 set(PROTOC_FLAGS ${PROTOC_FLAGS} -I${PROTOBUF_INCLUDE_DIR})
@@ -325,5 +325,5 @@ install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/output/include/
         )
 
 # Install pkgconfig
-configure_file(cmake/brpc.pc.in ${PROJECT_BINARY_DIR}/brpc.pc @ONLY)
-install(FILES ${PROJECT_BINARY_DIR}/brpc.pc DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig)
+configure_file(cmake/flare.pc.in ${PROJECT_BINARY_DIR}/flare.pc @ONLY)
+install(FILES ${PROJECT_BINARY_DIR}/flare.pc DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig)

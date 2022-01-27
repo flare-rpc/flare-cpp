@@ -15,12 +15,12 @@
 // specific language governing permissions and limitations
 // under the License.
 
-// brpc - A framework to host and access services throughout Baidu.
+
 
 // Date: 2017/04/25 00:23:12
 
 #include <gtest/gtest.h>
-#include "flare/brpc/details/hpack.h"
+#include "flare/rpc/details/hpack.h"
 #include "flare/base/logging.h"
 
 class HPackTest : public testing::Test {
@@ -28,86 +28,86 @@ class HPackTest : public testing::Test {
 
 // Copied test cases from example of rfc7541
 TEST_F(HPackTest, header_with_indexing) {
-    brpc::HPacker p1;
+    flare::rpc::HPacker p1;
     ASSERT_EQ(0, p1.Init(4096));
-    brpc::HPacker p2;
+    flare::rpc::HPacker p2;
     ASSERT_EQ(0, p2.Init(4096));
-    brpc::HPacker::Header h;
+    flare::rpc::HPacker::Header h;
     h.name = "Custom-Key";
     h.value = "custom-header";
-    brpc::HPackOptions options;
-    options.index_policy = brpc::HPACK_INDEX_HEADER;
-    flare::io::IOBufAppender buf;
+    flare::rpc::HPackOptions options;
+    options.index_policy = flare::rpc::HPACK_INDEX_HEADER;
+    flare::io::cord_buf_appender buf;
     p1.Encode(&buf, h, options);
     const ssize_t nwrite = buf.buf().size();
-    LOG(INFO) << flare::io::ToPrintable(buf.buf());
+    LOG(INFO) << flare::io::to_printable(buf.buf());
     uint8_t expected[] = {
         0x40, 0x0a, 0x63, 0x75, 0x73, 0x74, 0x6f, 0x6d, 0x2d, 0x6b, 0x65, 0x79,
         0x0d, 0x63, 0x75, 0x73, 0x74, 0x6f, 0x6d, 0x2d, 0x68, 0x65, 0x61, 0x64,
         0x65, 0x72};
     std::string_view sp((char*)expected, sizeof(expected));
     ASSERT_TRUE(buf.buf().equals(sp));
-    brpc::HPacker::Header h2;
+    flare::rpc::HPacker::Header h2;
     ssize_t nread = p2.Decode(&buf.buf(), &h2);
     ASSERT_EQ(nread, nwrite);
     ASSERT_TRUE(buf.buf().empty());
     std::string lowercase_name = h.name;
-    brpc::tolower(&lowercase_name);
+    flare::rpc::tolower(&lowercase_name);
     ASSERT_EQ(lowercase_name, h2.name);
     ASSERT_EQ(h.value, h2.value);
 }
 
 TEST_F(HPackTest, header_without_indexing) {
-    brpc::HPacker p1;
+    flare::rpc::HPacker p1;
     ASSERT_EQ(0, p1.Init(4096));
-    brpc::HPacker p2;
+    flare::rpc::HPacker p2;
     ASSERT_EQ(0, p2.Init(4096));
-    brpc::HPacker::Header h;
+    flare::rpc::HPacker::Header h;
     h.name = ":path";
     h.value = "/sample/path";
-    brpc::HPackOptions options;
-    options.index_policy = brpc::HPACK_NOT_INDEX_HEADER;
-    flare::io::IOBufAppender buf;
+    flare::rpc::HPackOptions options;
+    options.index_policy = flare::rpc::HPACK_NOT_INDEX_HEADER;
+    flare::io::cord_buf_appender buf;
     p1.Encode(&buf, h, options);
     const ssize_t nwrite = buf.buf().size();
-    LOG(INFO) << flare::io::ToPrintable(buf.buf());
+    LOG(INFO) << flare::io::to_printable(buf.buf());
     uint8_t expected[] = {
         0x04, 0x0c, 0x2f, 0x73, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x2f, 0x70, 0x61,
         0x74, 0x68, 
     };
     std::string_view sp((char*)expected, sizeof(expected));
     ASSERT_TRUE(buf.buf().equals(sp));
-    brpc::HPacker::Header h2;
+    flare::rpc::HPacker::Header h2;
     ssize_t nread = p2.Decode(&buf.buf(), &h2);
     ASSERT_EQ(nread, nwrite);
     ASSERT_TRUE(buf.buf().empty());
     std::string lowercase_name = h.name;
-    brpc::tolower(&lowercase_name);
+    flare::rpc::tolower(&lowercase_name);
     ASSERT_EQ(lowercase_name, h2.name);
     ASSERT_EQ(h.value, h2.value);
 }
 
 TEST_F(HPackTest, header_never_indexed) {
-    brpc::HPacker p1;
+    flare::rpc::HPacker p1;
     ASSERT_EQ(0, p1.Init(4096));
-    brpc::HPacker p2;
+    flare::rpc::HPacker p2;
     ASSERT_EQ(0, p2.Init(4096));
-    brpc::HPacker::Header h;
+    flare::rpc::HPacker::Header h;
     h.name = "password";
     h.value = "secret";
-    brpc::HPackOptions options;
-    options.index_policy = brpc::HPACK_NEVER_INDEX_HEADER;
-    flare::io::IOBufAppender buf;
+    flare::rpc::HPackOptions options;
+    options.index_policy = flare::rpc::HPACK_NEVER_INDEX_HEADER;
+    flare::io::cord_buf_appender buf;
     p1.Encode(&buf, h, options);
     const ssize_t nwrite = buf.buf().size();
-    LOG(INFO) << flare::io::ToPrintable(buf.buf());
+    LOG(INFO) << flare::io::to_printable(buf.buf());
     uint8_t expected[] = {
         0x10, 0x08, 0x70, 0x61, 0x73, 0x73, 0x77, 0x6f, 0x72, 0x64,
         0x06, 0x73, 0x65, 0x63, 0x72, 0x65, 0x74, 
     };
     std::string_view sp((char*)expected, sizeof(expected));
     ASSERT_TRUE(buf.buf().equals(sp));
-    brpc::HPacker::Header h2;
+    flare::rpc::HPacker::Header h2;
     ssize_t nread = p2.Decode(&buf.buf(), &h2);
     ASSERT_EQ(nread, nwrite);
     ASSERT_TRUE(buf.buf().empty());
@@ -116,25 +116,25 @@ TEST_F(HPackTest, header_never_indexed) {
 }
 
 TEST_F(HPackTest, indexed_header) {
-    brpc::HPacker p1;
+    flare::rpc::HPacker p1;
     ASSERT_EQ(0, p1.Init(4096));
-    brpc::HPacker p2;
+    flare::rpc::HPacker p2;
     ASSERT_EQ(0, p2.Init(4096));
-    brpc::HPacker::Header h;
+    flare::rpc::HPacker::Header h;
     h.name = ":method";
     h.value = "GET";
-    brpc::HPackOptions options;
-    options.index_policy = brpc::HPACK_INDEX_HEADER;
-    flare::io::IOBufAppender buf;
+    flare::rpc::HPackOptions options;
+    options.index_policy = flare::rpc::HPACK_INDEX_HEADER;
+    flare::io::cord_buf_appender buf;
     p1.Encode(&buf, h, options);
     const ssize_t nwrite = buf.buf().size();
-    LOG(INFO) << flare::io::ToPrintable(buf.buf());
+    LOG(INFO) << flare::io::to_printable(buf.buf());
     uint8_t expected[] = {
         0x82,
     };
     std::string_view sp((char*)expected, sizeof(expected));
     ASSERT_TRUE(buf.buf().equals(sp));
-    brpc::HPacker::Header h2;
+    flare::rpc::HPacker::Header h2;
     ssize_t nread = p2.Decode(&buf.buf(), &h2);
     ASSERT_EQ(nread, nwrite);
     ASSERT_TRUE(buf.buf().empty());
@@ -148,9 +148,9 @@ struct ConstHeader {
 };
 
 TEST_F(HPackTest, requests_without_huffman) {
-    brpc::HPacker p1;
+    flare::rpc::HPacker p1;
     ASSERT_EQ(0, p1.Init(4096));
-    brpc::HPacker p2;
+    flare::rpc::HPacker p2;
     ASSERT_EQ(0, p2.Init(4096));
 
     ConstHeader header1[] = { 
@@ -159,13 +159,13 @@ TEST_F(HPackTest, requests_without_huffman) {
         {":path", "/"},
         {":authority", "www.example.com"},
     };
-    flare::io::IOBufAppender buf;
+    flare::io::cord_buf_appender buf;
     for (size_t i = 0; i < FLARE_ARRAY_SIZE(header1); ++i) {
-        brpc::HPacker::Header h;
+        flare::rpc::HPacker::Header h;
         h.name = header1[i].name;
         h.value = header1[i].value;
-        brpc::HPackOptions options;
-        options.index_policy = brpc::HPACK_INDEX_HEADER;
+        flare::rpc::HPackOptions options;
+        options.index_policy = flare::rpc::HPACK_INDEX_HEADER;
         p1.Encode(&buf, h, options);
     }
     uint8_t expected1[] = {
@@ -174,7 +174,7 @@ TEST_F(HPackTest, requests_without_huffman) {
     };
     ASSERT_TRUE(buf.buf().equals(std::string_view((char*)expected1, sizeof(expected1))));
     for (size_t i = 0; i < FLARE_ARRAY_SIZE(header1); ++i) {
-        brpc::HPacker::Header h;
+        flare::rpc::HPacker::Header h;
         ASSERT_GT(p2.Decode(&buf.buf(), &h), 0);
         ASSERT_EQ(header1[i].name, h.name);
         ASSERT_EQ(header1[i].value, h.value);
@@ -190,11 +190,11 @@ TEST_F(HPackTest, requests_without_huffman) {
     };
 
     for (size_t i = 0; i < FLARE_ARRAY_SIZE(header2); ++i) {
-        brpc::HPacker::Header h;
+        flare::rpc::HPacker::Header h;
         h.name = header2[i].name;
         h.value = header2[i].value;
-        brpc::HPackOptions options;
-        options.index_policy = brpc::HPACK_INDEX_HEADER;
+        flare::rpc::HPackOptions options;
+        options.index_policy = flare::rpc::HPACK_INDEX_HEADER;
         p1.Encode(&buf, h, options);
     }
     uint8_t expected2[] = {
@@ -203,7 +203,7 @@ TEST_F(HPackTest, requests_without_huffman) {
     };
     ASSERT_TRUE(buf.buf().equals(std::string_view((char*)expected2, sizeof(expected2))));
     for (size_t i = 0; i < FLARE_ARRAY_SIZE(header2); ++i) {
-        brpc::HPacker::Header h;
+        flare::rpc::HPacker::Header h;
         ASSERT_GT(p2.Decode(&buf.buf(), &h), 0);
         ASSERT_EQ(header2[i].name, h.name);
         ASSERT_EQ(header2[i].value, h.value);
@@ -218,11 +218,11 @@ TEST_F(HPackTest, requests_without_huffman) {
     };
 
     for (size_t i = 0; i < FLARE_ARRAY_SIZE(header3); ++i) {
-        brpc::HPacker::Header h;
+        flare::rpc::HPacker::Header h;
         h.name = header3[i].name;
         h.value = header3[i].value;
-        brpc::HPackOptions options;
-        options.index_policy = brpc::HPACK_INDEX_HEADER;
+        flare::rpc::HPackOptions options;
+        options.index_policy = flare::rpc::HPACK_INDEX_HEADER;
         p1.Encode(&buf, h, options);
     }
     uint8_t expected3[] = {
@@ -232,7 +232,7 @@ TEST_F(HPackTest, requests_without_huffman) {
     };
     ASSERT_TRUE(buf.buf().equals(std::string_view((char*)expected3, sizeof(expected3))));
     for (size_t i = 0; i < FLARE_ARRAY_SIZE(header3); ++i) {
-        brpc::HPacker::Header h;
+        flare::rpc::HPacker::Header h;
         ASSERT_GT(p2.Decode(&buf.buf(), &h), 0);
         ASSERT_EQ(header3[i].name, h.name);
         ASSERT_EQ(header3[i].value, h.value);
@@ -241,9 +241,9 @@ TEST_F(HPackTest, requests_without_huffman) {
 }
 
 TEST_F(HPackTest, requests_with_huffman) {
-    brpc::HPacker p1;
+    flare::rpc::HPacker p1;
     ASSERT_EQ(0, p1.Init(4096));
-    brpc::HPacker p2;
+    flare::rpc::HPacker p2;
     ASSERT_EQ(0, p2.Init(4096));
 
     ConstHeader header1[] = { 
@@ -252,13 +252,13 @@ TEST_F(HPackTest, requests_with_huffman) {
         {":path", "/"},
         {":authority", "www.example.com"},
     };
-    flare::io::IOBufAppender buf;
+    flare::io::cord_buf_appender buf;
     for (size_t i = 0; i < FLARE_ARRAY_SIZE(header1); ++i) {
-        brpc::HPacker::Header h;
+        flare::rpc::HPacker::Header h;
         h.name = header1[i].name;
         h.value = header1[i].value;
-        brpc::HPackOptions options;
-        options.index_policy = brpc::HPACK_INDEX_HEADER;
+        flare::rpc::HPackOptions options;
+        options.index_policy = flare::rpc::HPACK_INDEX_HEADER;
         options.encode_name = true;
         options.encode_value = true;
         p1.Encode(&buf, h, options);
@@ -267,10 +267,10 @@ TEST_F(HPackTest, requests_with_huffman) {
         0x82, 0x86, 0x84, 0x41, 0x8c, 0xf1, 0xe3, 0xc2, 0xe5, 0xf2, 0x3a, 0x6b,
         0xa0, 0xab, 0x90, 0xf4, 0xff
     };
-    LOG(INFO) << flare::io::ToPrintable(buf.buf());
+    LOG(INFO) << flare::io::to_printable(buf.buf());
     ASSERT_TRUE(buf.buf().equals(std::string_view((char*)expected1, sizeof(expected1))));
     for (size_t i = 0; i < FLARE_ARRAY_SIZE(header1); ++i) {
-        brpc::HPacker::Header h;
+        flare::rpc::HPacker::Header h;
         ASSERT_GT(p2.Decode(&buf.buf(), &h), 0);
         ASSERT_EQ(header1[i].name, h.name);
         ASSERT_EQ(header1[i].value, h.value);
@@ -286,13 +286,13 @@ TEST_F(HPackTest, requests_with_huffman) {
     };
 
     for (size_t i = 0; i < FLARE_ARRAY_SIZE(header2); ++i) {
-        brpc::HPacker::Header h;
+        flare::rpc::HPacker::Header h;
         h.name = header2[i].name;
         h.value = header2[i].value;
-        brpc::HPackOptions options;
+        flare::rpc::HPackOptions options;
         options.encode_name = true;
         options.encode_value = true;
-        options.index_policy = brpc::HPACK_INDEX_HEADER;
+        options.index_policy = flare::rpc::HPACK_INDEX_HEADER;
         p1.Encode(&buf, h, options);
     }
     uint8_t expected2[] = {
@@ -300,7 +300,7 @@ TEST_F(HPackTest, requests_with_huffman) {
     };
     ASSERT_TRUE(buf.buf().equals(std::string_view((char*)expected2, sizeof(expected2))));
     for (size_t i = 0; i < FLARE_ARRAY_SIZE(header2); ++i) {
-        brpc::HPacker::Header h;
+        flare::rpc::HPacker::Header h;
         ASSERT_GT(p2.Decode(&buf.buf(), &h), 0);
         ASSERT_EQ(header2[i].name, h.name);
         ASSERT_EQ(header2[i].value, h.value);
@@ -315,13 +315,13 @@ TEST_F(HPackTest, requests_with_huffman) {
     };
 
     for (size_t i = 0; i < FLARE_ARRAY_SIZE(header3); ++i) {
-        brpc::HPacker::Header h;
+        flare::rpc::HPacker::Header h;
         h.name = header3[i].name;
         h.value = header3[i].value;
-        brpc::HPackOptions options;
+        flare::rpc::HPackOptions options;
         options.encode_name = true;
         options.encode_value = true;
-        options.index_policy = brpc::HPACK_INDEX_HEADER;
+        options.index_policy = flare::rpc::HPACK_INDEX_HEADER;
         p1.Encode(&buf, h, options);
     }
     uint8_t expected3[] = {
@@ -330,7 +330,7 @@ TEST_F(HPackTest, requests_with_huffman) {
     };
     ASSERT_TRUE(buf.buf().equals(std::string_view((char*)expected3, sizeof(expected3))));
     for (size_t i = 0; i < FLARE_ARRAY_SIZE(header3); ++i) {
-        brpc::HPacker::Header h;
+        flare::rpc::HPacker::Header h;
         ASSERT_GT(p2.Decode(&buf.buf(), &h), 0);
         ASSERT_EQ(header3[i].name, h.name);
         ASSERT_EQ(header3[i].value, h.value);
@@ -340,9 +340,9 @@ TEST_F(HPackTest, requests_with_huffman) {
 
 TEST_F(HPackTest, responses_without_huffman) {
     // https://tools.ietf.org/html/rfc7541#appendix-C.5
-    brpc::HPacker p1;
+    flare::rpc::HPacker p1;
     ASSERT_EQ(0, p1.Init(256));
-    brpc::HPacker p2;
+    flare::rpc::HPacker p2;
     ASSERT_EQ(0, p2.Init(256));
 
     ConstHeader header1[] = { 
@@ -351,13 +351,13 @@ TEST_F(HPackTest, responses_without_huffman) {
         {"date", "Mon, 21 Oct 2013 20:13:21 GMT"},
         {"location", "https://www.example.com"},
     };
-    flare::io::IOBufAppender buf;
+    flare::io::cord_buf_appender buf;
     for (size_t i = 0; i < FLARE_ARRAY_SIZE(header1); ++i) {
-        brpc::HPacker::Header h;
+        flare::rpc::HPacker::Header h;
         h.name = header1[i].name;
         h.value = header1[i].value;
-        brpc::HPackOptions options;
-        options.index_policy = brpc::HPACK_INDEX_HEADER;
+        flare::rpc::HPackOptions options;
+        options.index_policy = flare::rpc::HPACK_INDEX_HEADER;
         p1.Encode(&buf, h, options);
     }
     uint8_t expected1[] = {
@@ -368,10 +368,10 @@ TEST_F(HPackTest, responses_without_huffman) {
         0x74, 0x74, 0x70, 0x73, 0x3a, 0x2f, 0x2f, 0x77, 0x77, 0x77, 0x2e, 0x65,
         0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x2e, 0x63, 0x6f, 0x6d, 
     };
-    LOG(INFO) << flare::io::ToPrintable(buf.buf());
+    LOG(INFO) << flare::io::to_printable(buf.buf());
     ASSERT_TRUE(buf.buf().equals(std::string_view((char*)expected1, sizeof(expected1))));
     for (size_t i = 0; i < FLARE_ARRAY_SIZE(header1); ++i) {
-        brpc::HPacker::Header h;
+        flare::rpc::HPacker::Header h;
         ASSERT_GT(p2.Decode(&buf.buf(), &h), 0);
         ASSERT_EQ(header1[i].name, h.name);
         ASSERT_EQ(header1[i].value, h.value);
@@ -386,11 +386,11 @@ TEST_F(HPackTest, responses_without_huffman) {
     };
 
     for (size_t i = 0; i < FLARE_ARRAY_SIZE(header2); ++i) {
-        brpc::HPacker::Header h;
+        flare::rpc::HPacker::Header h;
         h.name = header2[i].name;
         h.value = header2[i].value;
-        brpc::HPackOptions options;
-        options.index_policy = brpc::HPACK_INDEX_HEADER;
+        flare::rpc::HPackOptions options;
+        options.index_policy = flare::rpc::HPACK_INDEX_HEADER;
         p1.Encode(&buf, h, options);
     }
     uint8_t expected2[] = {
@@ -398,7 +398,7 @@ TEST_F(HPackTest, responses_without_huffman) {
     };
     ASSERT_TRUE(buf.buf().equals(std::string_view((char*)expected2, sizeof(expected2))));
     for (size_t i = 0; i < FLARE_ARRAY_SIZE(header2); ++i) {
-        brpc::HPacker::Header h;
+        flare::rpc::HPacker::Header h;
         ASSERT_GT(p2.Decode(&buf.buf(), &h), 0);
         ASSERT_EQ(header2[i].name, h.name);
         ASSERT_EQ(header2[i].value, h.value);
@@ -414,11 +414,11 @@ TEST_F(HPackTest, responses_without_huffman) {
     };
 
     for (size_t i = 0; i < FLARE_ARRAY_SIZE(header3); ++i) {
-        brpc::HPacker::Header h;
+        flare::rpc::HPacker::Header h;
         h.name = header3[i].name;
         h.value = header3[i].value;
-        brpc::HPackOptions options;
-        options.index_policy = brpc::HPACK_INDEX_HEADER;
+        flare::rpc::HPackOptions options;
+        options.index_policy = flare::rpc::HPACK_INDEX_HEADER;
         p1.Encode(&buf, h, options);
     }
     uint8_t expected3[] = {
@@ -434,7 +434,7 @@ TEST_F(HPackTest, responses_without_huffman) {
     };
     ASSERT_TRUE(buf.buf().equals(std::string_view((char*)expected3, sizeof(expected3))));
     for (size_t i = 0; i < FLARE_ARRAY_SIZE(header3); ++i) {
-        brpc::HPacker::Header h;
+        flare::rpc::HPacker::Header h;
         ASSERT_GT(p2.Decode(&buf.buf(), &h), 0);
         ASSERT_EQ(header3[i].name, h.name);
         ASSERT_EQ(header3[i].value, h.value);
@@ -444,9 +444,9 @@ TEST_F(HPackTest, responses_without_huffman) {
 
 TEST_F(HPackTest, responses_with_huffman) {
     // https://tools.ietf.org/html/rfc7541#appendix-C.5
-    brpc::HPacker p1;
+    flare::rpc::HPacker p1;
     ASSERT_EQ(0, p1.Init(256));
-    brpc::HPacker p2;
+    flare::rpc::HPacker p2;
     ASSERT_EQ(0, p2.Init(256));
 
     ConstHeader header1[] = { 
@@ -455,15 +455,15 @@ TEST_F(HPackTest, responses_with_huffman) {
         {"date", "Mon, 21 Oct 2013 20:13:21 GMT"},
         {"location", "https://www.example.com"},
     };
-    flare::io::IOBufAppender buf;
+    flare::io::cord_buf_appender buf;
     for (size_t i = 0; i < FLARE_ARRAY_SIZE(header1); ++i) {
-        brpc::HPacker::Header h;
+        flare::rpc::HPacker::Header h;
         h.name = header1[i].name;
         h.value = header1[i].value;
-        brpc::HPackOptions options;
+        flare::rpc::HPackOptions options;
         options.encode_name = true;
         options.encode_value = true;
-        options.index_policy = brpc::HPACK_INDEX_HEADER;
+        options.index_policy = flare::rpc::HPACK_INDEX_HEADER;
         p1.Encode(&buf, h, options);
     }
     uint8_t expected1[] = {
@@ -473,10 +473,10 @@ TEST_F(HPackTest, responses_with_huffman) {
         0x91, 0x9d, 0x29, 0xad, 0x17, 0x18, 0x63, 0xc7, 0x8f, 0x0b, 0x97, 0xc8, 
         0xe9, 0xae, 0x82, 0xae, 0x43, 0xd3,             
     };
-    LOG(INFO) << flare::io::ToPrintable(buf.buf());
+    LOG(INFO) << flare::io::to_printable(buf.buf());
     ASSERT_TRUE(buf.buf().equals(std::string_view((char*)expected1, sizeof(expected1))));
     for (size_t i = 0; i < FLARE_ARRAY_SIZE(header1); ++i) {
-        brpc::HPacker::Header h;
+        flare::rpc::HPacker::Header h;
         ASSERT_GT(p2.Decode(&buf.buf(), &h), 0);
         ASSERT_EQ(header1[i].name, h.name);
         ASSERT_EQ(header1[i].value, h.value);
@@ -491,13 +491,13 @@ TEST_F(HPackTest, responses_with_huffman) {
     };
 
     for (size_t i = 0; i < FLARE_ARRAY_SIZE(header2); ++i) {
-        brpc::HPacker::Header h;
+        flare::rpc::HPacker::Header h;
         h.name = header2[i].name;
         h.value = header2[i].value;
-        brpc::HPackOptions options;
+        flare::rpc::HPackOptions options;
         options.encode_name = true;
         options.encode_value = true;
-        options.index_policy = brpc::HPACK_INDEX_HEADER;
+        options.index_policy = flare::rpc::HPACK_INDEX_HEADER;
         p1.Encode(&buf, h, options);
     }
     uint8_t expected2[] = {
@@ -505,7 +505,7 @@ TEST_F(HPackTest, responses_with_huffman) {
     };
     ASSERT_TRUE(buf.buf().equals(std::string_view((char*)expected2, sizeof(expected2))));
     for (size_t i = 0; i < FLARE_ARRAY_SIZE(header2); ++i) {
-        brpc::HPacker::Header h;
+        flare::rpc::HPacker::Header h;
         ASSERT_GT(p2.Decode(&buf.buf(), &h), 0);
         ASSERT_EQ(header2[i].name, h.name);
         ASSERT_EQ(header2[i].value, h.value);
@@ -521,13 +521,13 @@ TEST_F(HPackTest, responses_with_huffman) {
     };
 
     for (size_t i = 0; i < FLARE_ARRAY_SIZE(header3); ++i) {
-        brpc::HPacker::Header h;
+        flare::rpc::HPacker::Header h;
         h.name = header3[i].name;
         h.value = header3[i].value;
-        brpc::HPackOptions options;
+        flare::rpc::HPackOptions options;
         options.encode_name = true;
         options.encode_value = true;
-        options.index_policy = brpc::HPACK_INDEX_HEADER;
+        options.index_policy = flare::rpc::HPACK_INDEX_HEADER;
         p1.Encode(&buf, h, options);
     }
     uint8_t expected3[] = {
@@ -541,7 +541,7 @@ TEST_F(HPackTest, responses_with_huffman) {
     };
     ASSERT_TRUE(buf.buf().equals(std::string_view((char*)expected3, sizeof(expected3))));
     for (size_t i = 0; i < FLARE_ARRAY_SIZE(header3); ++i) {
-        brpc::HPacker::Header h;
+        flare::rpc::HPacker::Header h;
         ASSERT_GT(p2.Decode(&buf.buf(), &h), 0);
         ASSERT_EQ(header3[i].name, h.name);
         ASSERT_EQ(header3[i].value, h.value);
