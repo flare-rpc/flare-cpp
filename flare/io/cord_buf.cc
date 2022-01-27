@@ -183,7 +183,7 @@ namespace flare::io {
         return iobuf::g_newbigview.load(std::memory_order_relaxed);
     }
 
-    const uint16_t IOBUF_BLOCK_FLAGS_USER_DATA = 0x1;
+    const uint16_t CORD_BUF_BLOCK_FLAGS_USER_DATA = 0x1;
 
     typedef void (*UserDataDeleter)(void *);
 
@@ -199,7 +199,7 @@ namespace flare::io {
         uint32_t cap;
         Block *portal_next;
         // When flag is 0, data points to `size` bytes starting at `(char*)this+sizeof(Block)'
-        // When flag & IOBUF_BLOCK_FLAGS_USER_DATA is non-0, data points to the user data and
+        // When flag & CORD_BUF_BLOCK_FLAGS_USER_DATA is non-0, data points to the user data and
         // the deleter is put in UserDataExtension at `(char*)this+sizeof(Block)'
         char *data;
 
@@ -211,12 +211,12 @@ namespace flare::io {
         }
 
         Block(char *data_in, uint32_t data_size, UserDataDeleter deleter)
-                : nshared(1), flags(IOBUF_BLOCK_FLAGS_USER_DATA), abi_check(0), size(data_size), cap(data_size),
+                : nshared(1), flags(CORD_BUF_BLOCK_FLAGS_USER_DATA), abi_check(0), size(data_size), cap(data_size),
                   portal_next(NULL), data(data_in) {
             get_user_data_extension()->deleter = deleter;
         }
 
-        // Undefined behavior when (flags & IOBUF_BLOCK_FLAGS_USER_DATA) is 0.
+        // Undefined behavior when (flags & CORD_BUF_BLOCK_FLAGS_USER_DATA) is 0.
         UserDataExtension *get_user_data_extension() {
             char *p = (char *) this;
             return (UserDataExtension *) (p + sizeof(Block));
@@ -246,7 +246,7 @@ namespace flare::io {
                                                 std::memory_order_relaxed);
                     this->~Block();
                     iobuf::blockmem_deallocate(this);
-                } else if (flags & IOBUF_BLOCK_FLAGS_USER_DATA) {
+                } else if (flags & CORD_BUF_BLOCK_FLAGS_USER_DATA) {
                     get_user_data_extension()->deleter(data);
                     this->~Block();
                     free(this);

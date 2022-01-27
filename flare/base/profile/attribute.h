@@ -115,4 +115,26 @@ namespace flare::base::base_internal {
 #  define FLARE_UNLIKELY(expr) (expr)
 #endif
 
+
+// Specify memory alignment for structs, classes, etc.
+// Use like:
+//   class FLARE_ALIGN_AS(16) MyClass { ... }
+//   FLARE_ALIGN_AS(16) int array[4];
+#if defined(FLARE_COMPILER_MSVC)
+#define FLARE_ALIGN_AS(byte_alignment) __declspec(align(byte_alignment))
+#elif defined(FLARE_COMPILER_GNUC) || defined(FLARE_COMPILER_CLANG)
+#define FLARE_ALIGN_AS(byte_alignment) __attribute__((aligned(byte_alignment)))
+#endif
+
+// Return the byte alignment of the given type (available at compile time).  Use
+// sizeof(type) prior to checking __alignof to workaround Visual C++ bug:
+// http://goo.gl/isH0C
+// Use like:
+//   FLARE_ALIGN_OF(int32_t)  // this would be 4
+#if defined(FLARE_COMPILER_MSVC)
+#define FLARE_ALIGN_OF(type) (sizeof(type) - sizeof(type) + __alignof(type))
+#elif defined(FLARE_COMPILER_GNUC) || defined(FLARE_COMPILER_CLANG)
+#define FLARE_ALIGN_OF(type) __alignof__(type)
+#endif
+
 #endif // FLARE_BASE_PROFILE_ATTRIBUTE_H_
