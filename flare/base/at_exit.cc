@@ -12,9 +12,9 @@ namespace flare::base {
     // version of the constructor, and if we are building a dynamic library we may
     // end up with multiple AtExitManagers on the same process.  We don't protect
     // this for thread-safe access, since it will only be modified in testing.
-    static AtExitManager *g_top_manager = NULL;
+    static at_exit_manager *g_top_manager = NULL;
 
-    AtExitManager::AtExitManager() : next_manager_(g_top_manager) {
+    at_exit_manager::at_exit_manager() : next_manager_(g_top_manager) {
         // If multiple modules instantiate AtExitManagers they'll end up living in this
         // module... they have to coexist.
 #if !defined(COMPONENT_BUILD)
@@ -23,22 +23,22 @@ namespace flare::base {
         g_top_manager = this;
     }
 
-    AtExitManager::~AtExitManager() {
+    at_exit_manager::~at_exit_manager() {
         if (!g_top_manager) {
-            NOTREACHED() << "Tried to ~AtExitManager without an AtExitManager";
+            NOTREACHED() << "Tried to ~at_exit_manager without an at_exit_manager";
             return;
         }
         DCHECK_EQ(this, g_top_manager);
 
-        ProcessCallbacksNow();
+        process_callbacks_now();
         g_top_manager = next_manager_;
     }
 
     // static
-    void AtExitManager::RegisterCallback(AtExitCallbackType func, void *param) {
+    void at_exit_manager::register_callback(AtExitCallbackType func, void *param) {
         DCHECK(func);
         if (!g_top_manager) {
-            NOTREACHED() << "Tried to RegisterCallback without an AtExitManager";
+            NOTREACHED() << "Tried to register_callback without an at_exit_manager";
             return;
         }
 
@@ -47,9 +47,9 @@ namespace flare::base {
     }
 
     // static
-    void AtExitManager::ProcessCallbacksNow() {
+    void at_exit_manager::process_callbacks_now() {
         if (!g_top_manager) {
-            NOTREACHED() << "Tried to ProcessCallbacksNow without an AtExitManager";
+            NOTREACHED() << "Tried to process_callbacks_now without an at_exit_manager";
             return;
         }
 
@@ -62,7 +62,7 @@ namespace flare::base {
         }
     }
 
-    AtExitManager::AtExitManager(bool shadow) : next_manager_(g_top_manager) {
+    at_exit_manager::at_exit_manager(bool shadow) : next_manager_(g_top_manager) {
         DCHECK(shadow || !g_top_manager);
         g_top_manager = this;
     }

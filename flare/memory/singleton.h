@@ -201,8 +201,8 @@ namespace flare::memory {
     //   RAE = kRegisterAtExit
     //
     // On every platform, if Traits::RAE is true, the singleton will be destroyed at
-    // process exit. More precisely it uses flare::base::AtExitManager which requires an
-    // object of this type to be instantiated. AtExitManager mimics the semantics
+    // process exit. More precisely it uses flare::base::at_exit_manager which requires an
+    // object of this type to be instantiated. at_exit_manager mimics the semantics
     // of atexit() such as LIFO order but under Windows is safer to call. For more
     // information see at_exit.h.
     //
@@ -264,7 +264,7 @@ namespace flare::memory {
                 instance_.store(reinterpret_cast<intptr_t>(newval), std::memory_order_relaxed);
 
                 if (newval != nullptr && Traits::kRegisterAtExit)
-                    flare::base::AtExitManager::RegisterCallback(OnExit, nullptr);
+                    flare::base::at_exit_manager::register_callback(OnExit, nullptr);
 
                 return newval;
             }

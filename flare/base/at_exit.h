@@ -17,38 +17,38 @@ namespace flare::base {
     // mostly used by flare::memory::Singleton.
     //
     // The usage is simple. Early in the main() or WinMain() scope create an
-    // AtExitManager object on the stack:
+    // at_exit_manager object on the stack:
     // int main(...) {
-    //    flare::base::AtExitManager exit_manager;
+    //    flare::base::at_exit_manager exit_manager;
     //
     // }
     // When the exit_manager object goes out of scope, all the registered
     // callbacks and singleton destructors will be called.
 
-    class FLARE_EXPORT AtExitManager {
+    class FLARE_EXPORT at_exit_manager {
     public:
         typedef void (*AtExitCallbackType)(void *);
 
-        AtExitManager();
+        at_exit_manager();
 
         // The dtor calls all the registered callbacks. Do not try to register more
         // callbacks after this point.
-        ~AtExitManager();
+        ~at_exit_manager();
 
         // Registers the specified function to be called at exit. The prototype of
         // the callback function is void func(void*).
-        static void RegisterCallback(AtExitCallbackType func, void *param);
+        static void register_callback(AtExitCallbackType func, void *param);
 
-        // Calls the functions registered with RegisterCallback in LIFO order. It
+        // Calls the functions registered with register_callback in LIFO order. It
         // is possible to register new callbacks after calling this function.
-        static void ProcessCallbacksNow();
+        static void process_callbacks_now();
 
     protected:
-        // This constructor will allow this instance of AtExitManager to be created
+        // This constructor will allow this instance of at_exit_manager to be created
         // even if one already exists.  This should only be used for testing!
         // AtExitManagers are kept on a global stack, and it will be removed during
-        // destruction.  This allows you to shadow another AtExitManager.
-        explicit AtExitManager(bool shadow);
+        // destruction.  This allows you to shadow another at_exit_manager.
+        explicit at_exit_manager(bool shadow);
 
     private:
         struct Callback {
@@ -57,15 +57,15 @@ namespace flare::base {
         };
         std::mutex lock_;
         std::stack<Callback> stack_;
-        AtExitManager *next_manager_;  // Stack of managers to allow shadowing.
+        at_exit_manager *next_manager_;  // Stack of managers to allow shadowing.
 
-        FLARE_DISALLOW_COPY_AND_ASSIGN(AtExitManager);
+        FLARE_DISALLOW_COPY_AND_ASSIGN(at_exit_manager);
     };
 
 #if defined(UNIT_TEST)
-    class ShadowingAtExitManager : public AtExitManager {
+    class ShadowingAtExitManager : public at_exit_manager {
      public:
-      ShadowingAtExitManager() : AtExitManager(true) {}
+      ShadowingAtExitManager() : at_exit_manager(true) {}
     };
 #endif  // defined(UNIT_TEST)
 
