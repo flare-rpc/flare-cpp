@@ -9,96 +9,92 @@
 
 #include "flare/base/profile.h"
 #include <atomic>
-
-#ifndef NDEBUG
-#include "flare/logging.h"
-#endif
+#include "flare/base/logging.h"
 
 namespace flare::memory {
 
     namespace subtle {
 
-        class FLARE_EXPORT RefCountedBase{
-                public:
-                bool HasOneRef() const { return ref_count_ == 1; }
+        class FLARE_EXPORT RefCountedBase {
+        public:
+            bool HasOneRef() const { return ref_count_ == 1; }
 
-                protected:
-                RefCountedBase()
-                : ref_count_(0)
-                , in_dtor_(false)
-                {
-                }
+        protected:
+            RefCountedBase()
+                    : ref_count_(0), in_dtor_(false) {
+            }
 
-                ~RefCountedBase() {
+            ~RefCountedBase() {
 #ifndef NDEBUG
-                    DCHECK(in_dtor_) << "RefCounted object deleted without calling Release()";
+                DCHECK(in_dtor_) << "RefCounted object deleted without calling Release()";
 #endif
-                }
+            }
 
 
-                void AddRef() const {
-                    // TODO(maruel): Add back once it doesn't assert 500 times/sec.
-                    // Current thread books the critical section "AddRelease"
-                    // without release it.
-                    // DFAKE_SCOPED_LOCK_THREAD_LOCKED(add_release_);
+            void AddRef() const {
+                // TODO(maruel): Add back once it doesn't assert 500 times/sec.
+                // Current thread books the critical section "AddRelease"
+                // without release it.
+                // DFAKE_SCOPED_LOCK_THREAD_LOCKED(add_release_);
 #ifndef NDEBUG
-                    DCHECK(!in_dtor_);
+                DCHECK(!in_dtor_);
 #endif
-                    ++ref_count_;
-                }
+                ++ref_count_;
+            }
 
-                // Returns true if the object should self-delete.
-                bool Release() const {
-                    // TODO(maruel): Add back once it doesn't assert 500 times/sec.
-                    // Current thread books the critical section "AddRelease"
-                    // without release it.
-                    // DFAKE_SCOPED_LOCK_THREAD_LOCKED(add_release_);
+            // Returns true if the object should self-delete.
+            bool Release() const {
+                // TODO(maruel): Add back once it doesn't assert 500 times/sec.
+                // Current thread books the critical section "AddRelease"
+                // without release it.
+                // DFAKE_SCOPED_LOCK_THREAD_LOCKED(add_release_);
 #ifndef NDEBUG
-                    DCHECK(!in_dtor_);
+                DCHECK(!in_dtor_);
 #endif
-                    if (--ref_count_ == 0) {
+                if (--ref_count_ == 0) {
 #ifndef NDEBUG
-                        in_dtor_ = true;
+                    in_dtor_ = true;
 #endif
-                        return true;
-                    }
-                    return false;
+                    return true;
                 }
+                return false;
+            }
 
-                private:
-                mutable int ref_count_;
+        private:
+            mutable int ref_count_;
 #if defined(__clang__)
-                mutable bool FLARE_ALLOW_UNUSED  in_dtor_;
+            mutable bool FLARE_ALLOW_UNUSED in_dtor_;
 #else
-                mutable bool in_dtor_;
+            mutable bool in_dtor_;
 #endif
 //                DFAKE_MUTEX(add_release_);
 
-                FLARE_DISALLOW_COPY_AND_ASSIGN(RefCountedBase);
+            FLARE_DISALLOW_COPY_AND_ASSIGN(RefCountedBase);
         };
 
-        class FLARE_EXPORT RefCountedThreadSafeBase{
-                public:
-                bool HasOneRef() const;
+        class FLARE_EXPORT RefCountedThreadSafeBase {
+        public:
+            bool HasOneRef() const;
 
-                protected:
-                RefCountedThreadSafeBase();
-                ~RefCountedThreadSafeBase();
+        protected:
+            RefCountedThreadSafeBase();
 
-                void AddRef() const;
+            ~RefCountedThreadSafeBase();
 
-                // Returns true if the object should self-delete.
-                bool Release() const;
+            void AddRef() const;
 
-                private:
-                mutable std::atomic<int32_t> ref_count_;
+            // Returns true if the object should self-delete.
+            bool Release() const;
+
+        private:
+            mutable std::atomic<int32_t> ref_count_;
 #if defined(__clang__)
-                mutable bool FLARE_ALLOW_UNUSED  in_dtor_;
+            mutable bool FLARE_ALLOW_UNUSED in_dtor_;
 #else
-                mutable bool in_dtor_;
+            mutable bool in_dtor_;
 #endif
 
-                FLARE_DISALLOW_COPY_AND_ASSIGN(RefCountedThreadSafeBase);
+            FLARE_DISALLOW_COPY_AND_ASSIGN(RefCountedThreadSafeBase);
         };
 
     }  // namespace subtle
@@ -200,26 +196,27 @@ namespace flare::memory {
 //
     template<typename T>
     class RefCountedData
-            : public flare::memory::RefCountedThreadSafe<flare::memory::RefCountedData < T>
+            : public flare::memory::RefCountedThreadSafe<flare::memory::RefCountedData<T>
 
-    > {
+            > {
     public:
 
-    RefCountedData() : data() {}
+        RefCountedData() : data() {}
 
-    RefCountedData(const T &in_value) : data(in_value) {}
+        RefCountedData(const T &in_value) : data(in_value) {}
 
-    T data;
+        T data;
 
     private:
 
-    friend class flare::memory::RefCountedThreadSafe<flare::memory::RefCountedData < T>
+        friend class flare::memory::RefCountedThreadSafe<flare::memory::RefCountedData<T>
 
-    >;
-    ~
+        >;
 
-    RefCountedData() {}
-};
+        ~
+
+        RefCountedData() {}
+    };
 
 }  // namespace flare::memory
 
