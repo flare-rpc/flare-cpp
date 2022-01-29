@@ -176,7 +176,7 @@ namespace flare::memory {
     //   };
     //
     // In your source file:
-    //  #include "butil/memory/singleton.h"
+    //  #include "flare/memory/singleton.h"
     //  FooClass* FooClass::GetInstance() {
     //    return Singleton<FooClass>::get();
     //  }
@@ -201,7 +201,7 @@ namespace flare::memory {
     //   RAE = kRegisterAtExit
     //
     // On every platform, if Traits::RAE is true, the singleton will be destroyed at
-    // process exit. More precisely it uses butil::AtExitManager which requires an
+    // process exit. More precisely it uses flare::base::AtExitManager which requires an
     // object of this type to be instantiated. AtExitManager mimics the semantics
     // of atexit() such as LIFO order but under Windows is safer to call. For more
     // information see at_exit.h.
