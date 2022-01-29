@@ -35,6 +35,7 @@
 #define FLARE_MEMORY_ALIGNED_MEMORY_H_
 
 #include "flare/base/profile.h"
+#include <cstdint>
 
 #if defined(FLARE_COMPILER_MSVC)
 #include <malloc.h>
