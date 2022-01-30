@@ -1003,7 +1003,7 @@ namespace flare::rpc {
             return NULL;
         }
 
-// Used in UT, don't be static
+        // Used in UT, don't be static
         const Server::MethodProperty *
         FindMethodPropertyByURI(const std::string &uri_path, const Server *server,
                                 std::string *unresolved_path) {
