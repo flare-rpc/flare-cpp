@@ -123,7 +123,7 @@ add_test(NAME test_io COMMAND test_io)
 
 # test_bvar
 # -DBVAR_NOT_LINK_DEFAULT_VARIABLES not work for gcc >= 5.0, just remove the file to prevent linking into unit tests
-list(REMOVE_ITEM BVAR_SOURCES ${PROJECT_SOURCE_DIR}/flare/bvar/default_variables.cpp)
+list(REMOVE_ITEM BVAR_SOURCES ${PROJECT_SOURCE_DIR}/flare/variable/default_variables.cpp)
 
 add_library(BVAR_DEBUG_LIB OBJECT ${BVAR_SOURCES})
 add_subdirectory(bvar)
