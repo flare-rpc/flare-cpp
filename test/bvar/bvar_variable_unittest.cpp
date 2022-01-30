@@ -90,7 +90,7 @@ TEST_F(VariableTest, status) {
     ASSERT_EQ(0, st1.expose("var1"));
     ASSERT_EQ(1UL, flare::variable::Variable::count_exposed());
     ASSERT_EQ("9", flare::variable::Variable::describe_exposed("var1"));
-    
+
     ASSERT_EQ(0, st2.expose("var2"));
     ASSERT_EQ(2UL, flare::variable::Variable::count_exposed());
     ASSERT_EQ("9", flare::variable::Variable::describe_exposed("var1"));
@@ -184,7 +184,7 @@ TEST_F(VariableTest, expose) {
     ASSERT_EQ(0, c1.expose_as("foo-bar-HELLO", "c1"));
     ASSERT_EQ("foo_bar_hello_c1", c1.name());
     ASSERT_EQ(1UL, flare::variable::Variable::count_exposed());
-    
+
     ASSERT_EQ(0, c1.expose("c1"));
     ASSERT_EQ("c1", c1.name());
     ASSERT_EQ(1UL, flare::variable::Variable::count_exposed());
@@ -222,7 +222,7 @@ TEST_F(VariableTest, dump) {
     v4 << 4;
     flare::variable::BasicPassiveStatus<int> v5(
         "foo::bar::Car_Rot", "var5", print_int, NULL);
-    
+
     ASSERT_EQ(5, flare::variable::Variable::dump_exposed(&d, NULL));
     ASSERT_EQ(5UL, d._list.size());
     int i = 0;
@@ -318,7 +318,7 @@ TEST_F(VariableTest, latency_recorder) {
     ASSERT_EQ(-1, rec.expose("latency"));
     ASSERT_EQ(-1, rec.expose("Latency"));
 
-    
+
     ASSERT_EQ(0, rec.expose("FooBar__latency"));
     std::vector<std::string> names;
     flare::variable::Variable::list_exposed(&names);
