@@ -23,7 +23,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>                          // O_RDONLY
 #include "flare/base/strings.h"             // string_printf
-#include "flare/base/string_splitter.h"           // StringSplitter
+#include "flare/strings/string_splitter.h"           // StringSplitter
 #include "flare/base/scoped_file.h"         // scoped_file
 #include "flare/base/time.h"
 #include "flare/base/popen.h"                    // flare::base::read_command_output
@@ -291,165 +291,102 @@ namespace flare::rpc {
                 name[index + ext.size()] == '.');
     }
 
-    static int ExtractSymbolsFromBinary(
-            std::map < uintptr_t, std::string > &addr_map,
-    const LibInfo &lib_info
-    ) {
-    flare::base::stop_watcher tm;
-    tm.
-
-    start();
-
-    std::string cmd = "nm -C -p ";
-    cmd.
-    append(lib_info
-    .path);
-    std::stringstream ss;
-    const int rc = flare::base::read_command_output(ss, cmd.c_str());
+    static int ExtractSymbolsFromBinary(std::map < uintptr_t, std::string > &addr_map, const LibInfo &lib_info) {
+        flare::base::stop_watcher tm;
+        tm.start();
+        std::string cmd = "nm -C -p ";
+        cmd.append(lib_info.path);
+        std::stringstream ss;
+        const int rc = flare::base::read_command_output(ss, cmd.c_str());
     if (rc < 0) {
-    LOG(ERROR)
+        LOG(ERROR)<< "Fail to popen `" << cmd << "'";
+        return -1;
+    }
+    std::string line;
+    while (std::getline(ss, line)) {
+        flare::strings::StringSplitter sp(line.c_str(), ' ');
+        if (sp == NULL) {
+            continue;
+        }
+        char *endptr = NULL;
+        uintptr_t addr = strtoull(sp.field(), &endptr, 16);
+        if (*endptr != ' ') {
+            continue;
+        }
+        if (addr<lib_info.start_addr) {
+            addr = addr + lib_info.start_addr - lib_info.offset;
+        }
+        if (addr >= lib_info.end_addr) {
+            continue;
+        }
+        ++sp;
+        if (sp == NULL) {
+            continue;
+        }
+        if (sp.length() != 1UL) {
+            continue;
+        }
+    //const char c = *sp.field();
 
-    << "Fail to popen `" << cmd << "'";
-    return -1;
-}
-std::string line;
-while (
-std::getline(ss, line
-)) {
-flare::base::StringSplitter sp(line.c_str(), ' ');
-if (sp == NULL) {
-continue;
-}
-char *endptr = NULL;
-uintptr_t addr = strtoull(sp.field(), &endptr, 16);
-if (*endptr != ' ') {
-continue;
-}
-if (addr<lib_info.start_addr) {
-addr = addr + lib_info.start_addr - lib_info.offset;
-}
-if (addr >= lib_info.end_addr) {
-continue;
-}
-++
-sp;
-if (sp == NULL) {
-continue;
-}
-if (sp.
+        ++sp;
+        if (sp == NULL) {
+            continue;
+        }
+        const char *name_begin = sp.field();
+        if (strncmp(name_begin,"typeinfo ", 9) == 0 || strncmp(name_begin,"VTT ", 4) == 0 || strncmp(name_begin,"vtable ", 7) == 0 ||
+            strncmp(name_begin,"global ", 7) == 0 || strncmp(name_begin, "guard ", 6) == 0) {
+            addr_map[addr] = std::string();
+            continue;
+        }
 
-length()
+        const char *name_end = sp.field();
+        bool stop = false;
+        char last_char = '\0';
+        while (1) {
+            switch (*name_end) {
+                case 0:
+                case '\r':
+                case '\n':
+                    stop = true;
+                    break;
+                case '(':
+                case '<':
+                // \(.*\w\)[(<]...    -> \1
+                // foo(..)            -> foo
+                // foo<...>(...)      -> foo
+                // a::b::foo(...)     -> a::b::foo
+                // a::(b)::foo(...)   -> a::(b)::foo
+                    if (isalpha(last_char)|| isdigit(last_char) || last_char == '_') {
+                        stop = true;
+                    }
+                default:
+                    break;
+            }
+            if (stop) {
+                break;
+            }
+            last_char = *name_end++;
+        }
+        // If address conflicts, choose a shorter name (not necessarily to be
+        // T type in nm). This works fine because aliases often have more
+        // prefixes.
+        const size_t name_len = name_end - name_begin;
+        SymbolMap::iterator it = addr_map.find(addr);
+        if (it != addr_map.end()) {
+            if (name_len<it->second.size()) {
+                it->second.assign(name_begin, name_len);
+            }
+        } else {
+            addr_map[addr] =std::string(name_begin, name_len);
+        }
+    }
+    if (addr_map.find(lib_info.end_addr) == addr_map.end()) {
+        addr_map[lib_info.end_addr] =std::string();
 
-!= 1UL) {
-continue;
-}
-//const char c = *sp.field();
-
-++
-sp;
-if (sp == NULL) {
-continue;
-}
-const char *name_begin = sp.field();
-if (
-strncmp(name_begin,
-"typeinfo ", 9) == 0 ||
-strncmp(name_begin,
-"VTT ", 4) == 0 ||
-strncmp(name_begin,
-"vtable ", 7) == 0 ||
-strncmp(name_begin,
-"global ", 7) == 0 ||
-strncmp(name_begin,
-"guard ", 6) == 0) {
-addr_map[addr] =
-
-std::string();
-
-continue;
-}
-
-const char *name_end = sp.field();
-bool stop = false;
-char last_char = '\0';
-while (1) {
-switch (*name_end) {
-case 0:
-case '\r':
-case '\n':
-stop = true;
-break;
-case '(':
-case '<':
-// \(.*\w\)[(<]...    -> \1
-// foo(..)            -> foo
-// foo<...>(...)      -> foo
-// a::b::foo(...)     -> a::b::foo
-// a::(b)::foo(...)   -> a::(b)::foo
-if (
-isalpha(last_char)
-||
-isdigit(last_char)
-||
-last_char == '_') {
-stop = true;
-}
-default:
-break;
-}
-if (stop) {
-break;
-}
-last_char = *name_end++;
-}
-// If address conflicts, choose a shorter name (not necessarily to be
-// T type in nm). This works fine because aliases often have more
-// prefixes.
-const size_t name_len = name_end - name_begin;
-SymbolMap::iterator it = addr_map.find(addr);
-if (it != addr_map.
-
-end()
-
-) {
-if (name_len<it->second.
-
-size()
-
-) {
-it->second.
-assign(name_begin, name_len
-);
-}
-} else {
-addr_map[addr] =
-std::string(name_begin, name_len
-);
-}
-}
-if (addr_map.
-find(lib_info
-.end_addr) == addr_map.
-
-end()
-
-) {
-addr_map[lib_info.end_addr] =
-
-std::string();
-
-}
-tm.
-
-stop();
-RPC_VLOG
-
-<< "Loaded " << lib_info.path << " in " << tm.
-
-m_elapsed()
-
-<< "ms";
-return 0;
+    }
+    tm.stop();
+    RPC_VLOG<< "Loaded " << lib_info.path << " in " << tm.m_elapsed()<< "ms";
+    return 0;
 }
 
 static void LoadSymbols() {
@@ -463,7 +400,7 @@ static void LoadSymbols() {
     size_t line_len = 0;
     ssize_t nr = 0;
     while ((nr = getline(&line, &line_len, fp.get())) != -1) {
-        flare::base::StringSplitter sp(line, line + nr, ' ');
+        flare::strings::StringSplitter sp(line, line + nr, ' ');
         if (sp == NULL) {
             continue;
         }
@@ -603,7 +540,7 @@ void PProfService::symbol(
         }
         std::vector<uintptr_t> addr_list;
         addr_list.reserve(32);
-        flare::base::StringSplitter sp(addr_cstr, '+');
+        flare::strings::StringSplitter sp(addr_cstr, '+');
         for (; sp != NULL; ++sp) {
             char *endptr;
             uintptr_t addr = strtoull(sp.field(), &endptr, 16);

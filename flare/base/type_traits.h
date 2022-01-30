@@ -71,7 +71,7 @@ namespace flare::base {
         };
 
 // For implementing is_empty
-#if defined(COMPILER_MSVC)
+#if defined(FLARE_COMPILER_MSVC)
 #pragma warning(push)
 #pragma warning(disable:4624) // destructor could not be generated
 #endif
@@ -87,7 +87,7 @@ namespace flare::base {
             EmptyHelper1 &operator=(const EmptyHelper1 &);
         };
 
-#if defined(COMPILER_MSVC)
+#if defined(FLARE_COMPILER_MSVC)
 #pragma warning(pop)
 #endif
 

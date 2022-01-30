@@ -2799,7 +2799,7 @@ static void SplitVHostFromApp(const std::string_view& app_and_vhost,
     }
     if (vhost) {
         std::string_view qstr = app_and_vhost.substr(q_pos + 1);
-        flare::base::StringSplitter sp(qstr.data(), qstr.data() + qstr.size(), '&');
+        flare::strings::StringSplitter sp(qstr.data(), qstr.data() + qstr.size(), '&');
         for (; sp; ++sp) {
             std::string_view field(sp.field(), sp.length());
             if (flare::base::starts_with(field, "vhost=")) {

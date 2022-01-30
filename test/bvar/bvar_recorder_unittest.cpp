@@ -25,6 +25,7 @@
 #include "flare/base/time.h"
 #include "flare/variable/recorder.h"
 #include "flare/variable/latency_recorder.h"
+#include "flare/strings/str_join.h"
 #include <gtest/gtest.h>
 
 namespace {
@@ -73,7 +74,7 @@ TEST(RecorderTest, sanity) {
         ASSERT_EQ("2", flare::variable::Variable::describe_exposed("var1"));
         std::vector<std::string> vars;
         flare::variable::Variable::list_exposed(&vars);
-        ASSERT_EQ(1UL, vars.size());
+        ASSERT_EQ(1UL, vars.size())<<flare::strings::string_join(vars, ",");
         ASSERT_EQ("var1", vars[0]);
         ASSERT_EQ(1UL, flare::variable::Variable::count_exposed());
     }

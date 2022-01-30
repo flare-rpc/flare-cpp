@@ -26,7 +26,7 @@
 #include "flare/base/type_traits.h"
 #include "flare/variable/vector.h"
 #include "flare/variable/detail/call_op_returning_void.h"
-#include "flare/base/string_splitter.h"
+#include "flare/strings/string_splitter.h"
 
 namespace flare::variable {
 namespace detail {
@@ -282,7 +282,7 @@ void Series<Vector<T,N>, Op>::describe(std::ostream& os,
     // to exactly accurate.
     pthread_mutex_unlock(&this->_mutex);
 
-    flare::base::StringSplitter sp(vector_names ? vector_names->c_str() : "", ',');
+    flare::strings::StringSplitter sp(vector_names ? vector_names->c_str() : "", ',');
     os << '[';
     for (size_t j = 0; j < N; ++j) {
         if (j) {

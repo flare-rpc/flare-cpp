@@ -1,12 +1,11 @@
 
-#ifndef FLARE_BASE_STRING_SPLITTER_H_
-#define FLARE_BASE_STRING_SPLITTER_H_
+#ifndef FLARE_STRINGS_STRING_SPLITTER_H_
+#define FLARE_STRINGS_STRING_SPLITTER_H_
 
 #include <stdlib.h>
 #include <stdint.h>
 #include <string_view>
-#include "flare/base/strings.h"
-
+#include "flare/strings/safe_substr.h"
 // It's common to encode data into strings separated by special characters
 // and decode them back, but functions such as `split_string' has to modify
 // the input string, which is bad. If we parse the string from scratch, the
@@ -31,7 +30,7 @@
 // we don't modify input. You can copy the field to a dedicated buffer
 // or apply a function supporting length.
 
-namespace flare::base {
+namespace flare::strings {
 
     enum EmptyFieldAction {
         SKIP_EMPTY_FIELD,
@@ -211,11 +210,11 @@ namespace flare::base {
                                         pair_delimiter, key_value_delimiter) {}
 
         inline std::string_view key() {
-            return flare::base::sub_string_view(key_and_value(),0, _delim_pos);
+            return flare::strings::safe_substr(key_and_value(), 0, _delim_pos);
         }
 
         inline std::string_view value() {
-            return flare::base::sub_string_view(key_and_value(), _delim_pos + 1);
+            return flare::strings::safe_substr(key_and_value(), _delim_pos + 1);
         }
 
         // Get the current value of key and value
@@ -248,8 +247,8 @@ namespace flare::base {
         const char _key_value_delim;
     };
 
-}  // namespace flare::base
+}  // namespace flare::strings
 
-#include "flare/base/string_splitter_inl.h"
+#include "flare/strings/string_splitter_inl.h"
 
-#endif  // FLARE_BASE_STRING_SPLITTER_H_
+#endif  // FLARE_STRINGS_STRING_SPLITTER_H_

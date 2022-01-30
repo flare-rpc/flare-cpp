@@ -18,7 +18,7 @@
 #ifndef BRPC_MONGO_HEAD_H
 #define BRPC_MONGO_HEAD_H
 
-#include "flare/base/sys_byteorder.h"
+#include "flare/base/endian.h"
 
 
 namespace flare::rpc {
@@ -71,12 +71,11 @@ namespace flare::rpc {
         int32_t op_code;         // request type, see MongoOpCode.
 
         void make_host_endian() {
-            if (!FLARE_SYSTEM_LITTLE_ENDIAN) {
-                message_length = flare::base::ByteSwap((uint32_t) message_length);
-                request_id = flare::base::ByteSwap((uint32_t) request_id);
-                response_to = flare::base::ByteSwap((uint32_t) response_to);
-                op_code = flare::base::ByteSwap((uint32_t) op_code);
-            }
+            message_length = flare::base::little_endian::to_host32(static_cast<uint32_t>(message_length));
+            request_id = flare::base::little_endian::to_host32((uint32_t) request_id);
+            response_to = flare::base::little_endian::to_host32((uint32_t) response_to);
+            op_code = flare::base::little_endian::to_host32((uint32_t) op_code);
+
         }
     };
 

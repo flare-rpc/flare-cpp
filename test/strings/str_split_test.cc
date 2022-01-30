@@ -2,7 +2,7 @@
 // All rights reserved.
 // Created by liyinbin lijippy@163.com
 
-#include "flare/base/str_split.h"
+#include "flare/strings/str_split.h"
 
 #include <deque>
 #include <initializer_list>
@@ -17,8 +17,9 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "flare/base/dynamic_annotations/dynamic_annotations.h"  // for RunningOnValgrind
 #include "flare/base/profile.h"
-
+#include "flare/strings/numbers.h"
 
 namespace {
 
@@ -27,92 +28,92 @@ namespace {
     using ::testing::UnorderedElementsAre;
 
     TEST(Split, TraitsTest) {
-        static_assert(!flare::base::string_internal::splitter_is_convertible_to<int>::value,
+        static_assert(!flare::strings::strings_internal::splitterIs_convertible_to<int>::value,
                       "");
         static_assert(
-                !flare::base::string_internal::splitter_is_convertible_to<std::string>::value, "");
-        static_assert(flare::base::string_internal::splitter_is_convertible_to<
+                !flare::strings::strings_internal::splitterIs_convertible_to<std::string>::value, "");
+        static_assert(flare::strings::strings_internal::splitterIs_convertible_to<
                               std::vector<std::string>>::value,
                       "");
         static_assert(
-                !flare::base::string_internal::splitter_is_convertible_to<std::vector<int>>::value,
+                !flare::strings::strings_internal::splitterIs_convertible_to<std::vector<int>>::value,
                 "");
-        static_assert(flare::base::string_internal::splitter_is_convertible_to<
+        static_assert(flare::strings::strings_internal::splitterIs_convertible_to<
                               std::vector<std::string_view>>::value,
                       "");
-        static_assert(flare::base::string_internal::splitter_is_convertible_to<
+        static_assert(flare::strings::strings_internal::splitterIs_convertible_to<
                               std::map<std::string, std::string>>::value,
                       "");
-        static_assert(flare::base::string_internal::splitter_is_convertible_to<
+        static_assert(flare::strings::strings_internal::splitterIs_convertible_to<
                               std::map<std::string_view, std::string_view>>::value,
                       "");
-        static_assert(!flare::base::string_internal::splitter_is_convertible_to<
+        static_assert(!flare::strings::strings_internal::splitterIs_convertible_to<
                               std::map<int, std::string>>::value,
                       "");
-        static_assert(!flare::base::string_internal::splitter_is_convertible_to<
+        static_assert(!flare::strings::strings_internal::splitterIs_convertible_to<
                               std::map<std::string, int>>::value,
                       "");
     }
 
-    // This tests the overall split API, which is made up of the flare::base:: string_split()
-    // function and the Delimiter objects in the flare::base:: namespace.
-    // This TEST macro is outside of any namespace to require full specification of
-    // namespaces just like callers will need to use.
+// This tests the overall split API, which is made up of the flare::strings:: string_split()
+// function and the Delimiter objects in the flare::strings:: namespace.
+// This TEST macro is outside of any namespace to require full specification of
+// namespaces just like callers will need to use.
     TEST(Split, APIExamples) {
         {
             // Passes std::string delimiter. Assumes the default of by_string.
-            std::vector<std::string> v = flare::base::string_split("a,b,c", ",");  // NOLINT
+            std::vector<std::string> v = flare::strings::string_split("a,b,c", ",");  // NOLINT
             EXPECT_THAT(v, ElementsAre("a", "b", "c"));
 
             // Equivalent to...
-            using flare::base::by_string;
-            v = flare::base::string_split("a,b,c", by_string(","));
+            using flare::strings::by_string;
+            v = flare::strings::string_split("a,b,c", by_string(","));
             EXPECT_THAT(v, ElementsAre("a", "b", "c"));
 
             // Equivalent to...
-            EXPECT_THAT(flare::base::string_split("a,b,c", by_string(",")),
+            EXPECT_THAT(flare::strings::string_split("a,b,c", by_string(",")),
                         ElementsAre("a", "b", "c"));
         }
 
         {
             // Same as above, but using a single character as the delimiter.
-            std::vector<std::string> v = flare::base::string_split("a,b,c", ',');
+            std::vector<std::string> v = flare::strings::string_split("a,b,c", ',');
             EXPECT_THAT(v, ElementsAre("a", "b", "c"));
 
             // Equivalent to...
-            using flare::base::by_char;
-            v = flare::base::string_split("a,b,c", by_char(','));
+            using flare::strings::by_char;
+            v = flare::strings::string_split("a,b,c", by_char(','));
             EXPECT_THAT(v, ElementsAre("a", "b", "c"));
         }
 
         {
             // Uses the Literal std::string "=>" as the delimiter.
-            const std::vector<std::string> v = flare::base::string_split("a=>b=>c", "=>");
+            const std::vector<std::string> v = flare::strings::string_split("a=>b=>c", "=>");
             EXPECT_THAT(v, ElementsAre("a", "b", "c"));
         }
 
         {
             // The substrings are returned as string_views, eliminating copying.
-            std::vector<std::string_view> v = flare::base::string_split("a,b,c", ',');
+            std::vector<std::string_view> v = flare::strings::string_split("a,b,c", ',');
             EXPECT_THAT(v, ElementsAre("a", "b", "c"));
         }
 
         {
             // Leading and trailing empty substrings.
-            std::vector<std::string> v = flare::base::string_split(",a,b,c,", ',');
+            std::vector<std::string> v = flare::strings::string_split(",a,b,c,", ',');
             EXPECT_THAT(v, ElementsAre("", "a", "b", "c", ""));
         }
 
         {
             // Splits on a delimiter that is not found.
-            std::vector<std::string> v = flare::base::string_split("abc", ',');
+            std::vector<std::string> v = flare::strings::string_split("abc", ',');
             EXPECT_THAT(v, ElementsAre("abc"));
         }
 
         {
             // Splits the input std::string into individual characters by using an empty
             // std::string as the delimiter.
-            std::vector<std::string> v = flare::base::string_split("abc", "");
+            std::vector<std::string> v = flare::strings::string_split("abc", "");
             EXPECT_THAT(v, ElementsAre("a", "b", "c"));
         }
 
@@ -124,13 +125,13 @@ namespace {
             // delimiter.
             std::string embedded_nulls("a\0b\0c", 5);
             std::string null_delim("\0", 1);
-            std::vector<std::string> v = flare::base::string_split(embedded_nulls, null_delim);
+            std::vector<std::string> v = flare::strings::string_split(embedded_nulls, null_delim);
             EXPECT_THAT(v, ElementsAre("a", "b", "c"));
         }
 
         {
             // Stores first two split strings as the members in a std::pair.
-            std::pair<std::string, std::string> p = flare::base::string_split("a,b,c", ',');
+            std::pair<std::string, std::string> p = flare::strings::string_split("a,b,c", ',');
             EXPECT_EQ("a", p.first);
             EXPECT_EQ("b", p.second);
             // "c" is omitted because std::pair can hold only two elements.
@@ -138,7 +139,7 @@ namespace {
 
         {
             // Results stored in std::set<std::string>
-            std::set<std::string> v = flare::base::string_split("a,b,c,a,b,c,a,b,c", ',');
+            std::set<std::string> v = flare::strings::string_split("a,b,c,a,b,c,a,b,c", ',');
             EXPECT_THAT(v, ElementsAre("a", "b", "c"));
         }
 
@@ -146,47 +147,47 @@ namespace {
             // Uses a non-const char* delimiter.
             char a[] = ",";
             char *d = a + 0;
-            std::vector<std::string> v = flare::base::string_split("a,b,c", d);
+            std::vector<std::string> v = flare::strings::string_split("a,b,c", d);
             EXPECT_THAT(v, ElementsAre("a", "b", "c"));
         }
 
         {
             // Results split using either of , or ;
-            using flare::base::by_any_char;
-            std::vector<std::string> v = flare::base::string_split("a,b;c", by_any_char(",;"));
+            using flare::strings::by_any_char;
+            std::vector<std::string> v = flare::strings::string_split("a,b;c", by_any_char(",;"));
             EXPECT_THAT(v, ElementsAre("a", "b", "c"));
         }
 
         {
             // Uses the  skip_whitespace predicate.
-            using flare::base::skip_whitespace;
+            using flare::strings::skip_whitespace;
             std::vector<std::string> v =
-                    flare::base::string_split(" a , ,,b,", ',', skip_whitespace());
+                    flare::strings::string_split(" a , ,,b,", ',', skip_whitespace());
             EXPECT_THAT(v, ElementsAre(" a ", "b"));
         }
 
         {
             // Uses the  by_length delimiter.
-            using flare::base::by_length;
-            std::vector<std::string> v = flare::base::string_split("abcdefg", by_length(3));
+            using flare::strings::by_length;
+            std::vector<std::string> v = flare::strings::string_split("abcdefg", by_length(3));
             EXPECT_THAT(v, ElementsAre("abc", "def", "g"));
         }
 
         {
             // Different forms of initialization / conversion.
-            std::vector<std::string> v1 = flare::base::string_split("a,b,c", ',');
+            std::vector<std::string> v1 = flare::strings::string_split("a,b,c", ',');
             EXPECT_THAT(v1, ElementsAre("a", "b", "c"));
-            std::vector<std::string> v2(flare::base::string_split("a,b,c", ','));
+            std::vector<std::string> v2(flare::strings::string_split("a,b,c", ','));
             EXPECT_THAT(v2, ElementsAre("a", "b", "c"));
-            auto v3 = std::vector<std::string>(flare::base::string_split("a,b,c", ','));
+            auto v3 = std::vector<std::string>(flare::strings::string_split("a,b,c", ','));
             EXPECT_THAT(v3, ElementsAre("a", "b", "c"));
-            v3 = flare::base::string_split("a,b,c", ',');
+            v3 = flare::strings::string_split("a,b,c", ',');
             EXPECT_THAT(v3, ElementsAre("a", "b", "c"));
         }
 
         {
             // Results stored in a std::map.
-            std::map<std::string, std::string> m = flare::base::string_split("a,1,b,2,a,3", ',');
+            std::map<std::string, std::string> m = flare::strings::string_split("a,1,b,2,a,3", ',');
             EXPECT_EQ(2, m.size());
             EXPECT_EQ("3", m["a"]);
             EXPECT_EQ("2", m["b"]);
@@ -195,7 +196,7 @@ namespace {
         {
             // Results stored in a std::multimap.
             std::multimap<std::string, std::string> m =
-                    flare::base::string_split("a,1,b,2,a,3", ',');
+                    flare::strings::string_split("a,1,b,2,a,3", ',');
             EXPECT_EQ(3, m.size());
             auto it = m.find("a");
             EXPECT_EQ("1", it->second);
@@ -208,28 +209,28 @@ namespace {
         {
             // Demonstrates use in a range-based for loop in C++11.
             std::string s = "x,x,x,x,x,x,x";
-            for (std::string_view sp : flare::base::string_split(s, ',')) {
+            for (std::string_view sp : flare::strings::string_split(s, ',')) {
                 EXPECT_EQ("x", sp);
             }
         }
 
         {
             // Demonstrates use with a Predicate in a range-based for loop.
-            using flare::base::skip_whitespace;
+            using flare::strings::skip_whitespace;
             std::string s = " ,x,,x,,x,x,x,,";
-            for (std::string_view sp : flare::base::string_split(s, ',', skip_whitespace())) {
+            for (std::string_view sp : flare::strings::string_split(s, ',', skip_whitespace())) {
                 EXPECT_EQ("x", sp);
             }
         }
 
         {
             // Demonstrates a "smart" split to std::map using two separate calls to
-            // flare::base:: string_split. One call to split the records, and another call to split
+            // flare::strings:: string_split. One call to split the records, and another call to split
             // the keys and values. This also uses the Limit delimiter so that the
             // std::string "a=b=c" will split to "a" -> "b=c".
             std::map<std::string, std::string> m;
-            for (std::string_view sp : flare::base::string_split("a=b=c,d=e,f=,g", ',')) {
-                m.insert(flare::base::string_split(sp, flare::base::max_splits('=', 1)));
+            for (std::string_view sp : flare::strings::string_split("a=b=c,d=e,f=,g", ',')) {
+                m.insert(flare::strings::string_split(sp, flare::strings::max_splits('=', 1)));
             }
             EXPECT_EQ("b=c", m.find("a")->second);
             EXPECT_EQ("e", m.find("d")->second);
@@ -243,7 +244,7 @@ namespace {
 //
 
     TEST(split_iterator, Basics) {
-        auto splitter = flare::base::string_split("a,b", ',');
+        auto splitter = flare::strings::string_split("a,b", ',');
         auto it = splitter.begin();
         auto end = splitter.end();
 
@@ -269,7 +270,7 @@ namespace {
     };
 
     TEST(split_iterator, Predicate) {
-        auto splitter = flare::base::string_split("a,b,c", ',', Skip("b"));
+        auto splitter = flare::strings::string_split("a,b,c", ',', Skip("b"));
         auto it = splitter.begin();
         auto end = splitter.end();
 
@@ -300,7 +301,7 @@ namespace {
 
         for (const auto &spec : specs) {
             SCOPED_TRACE(spec.in);
-            auto splitter = flare::base::string_split(spec.in, ',');
+            auto splitter = flare::strings::string_split(spec.in, ',');
             auto it = splitter.begin();
             auto end = splitter.end();
             for (const auto &expected : spec.expect) {
@@ -312,7 +313,7 @@ namespace {
     }
 
     TEST(Splitter, Const) {
-        const auto splitter = flare::base::string_split("a,b,c", ',');
+        const auto splitter = flare::strings::string_split("a,b,c", ',');
         EXPECT_THAT(splitter, ElementsAre("a", "b", "c"));
     }
 
@@ -323,12 +324,12 @@ namespace {
         // maintain backward compatibility, there is a small "hack" in
         // str_split_internal.h that preserves this behavior. If that behavior is ever
         // changed/fixed, this test will need to be updated.
-        EXPECT_THAT(flare::base::string_split(std::string_view(""), '-'), ElementsAre(""));
-        EXPECT_THAT(flare::base::string_split(std::string_view(), '-'), ElementsAre());
+        EXPECT_THAT(flare::strings::string_split(std::string_view(""), '-'), ElementsAre(""));
+        EXPECT_THAT(flare::strings::string_split(std::string_view(), '-'), ElementsAre());
     }
 
     TEST(split_iterator, EqualityAsEndCondition) {
-        auto splitter = flare::base::string_split("a,b,c", ',');
+        auto splitter = flare::strings::string_split("a,b,c", ',');
         auto it = splitter.begin();
         auto it2 = it;
 
@@ -353,7 +354,7 @@ namespace {
 //
 
     TEST(Splitter, RangeIterators) {
-        auto splitter = flare::base::string_split("a,b,c", ',');
+        auto splitter = flare::strings::string_split("a,b,c", ',');
         std::vector<std::string_view> output;
         for (const std::string_view & p : splitter) {
             output.push_back(p);
@@ -381,7 +382,7 @@ namespace {
     }
 
     TEST(Splitter, ConversionOperator) {
-        auto splitter = flare::base::string_split("a,b,c,d", ',');
+        auto splitter = flare::strings::string_split("a,b,c,d", ',');
 
         TestConversionOperator<std::vector<std::string_view>>(splitter);
         TestConversionOperator<std::vector<std::string>>(splitter);
@@ -427,35 +428,35 @@ namespace {
     TEST(Splitter, ToPair) {
         {
             // Empty std::string
-            std::pair<std::string, std::string> p = flare::base::string_split("", ',');
+            std::pair<std::string, std::string> p = flare::strings::string_split("", ',');
             EXPECT_EQ("", p.first);
             EXPECT_EQ("", p.second);
         }
 
         {
             // Only first
-            std::pair<std::string, std::string> p = flare::base::string_split("a", ',');
+            std::pair<std::string, std::string> p = flare::strings::string_split("a", ',');
             EXPECT_EQ("a", p.first);
             EXPECT_EQ("", p.second);
         }
 
         {
             // Only second
-            std::pair<std::string, std::string> p = flare::base::string_split(",b", ',');
+            std::pair<std::string, std::string> p = flare::strings::string_split(",b", ',');
             EXPECT_EQ("", p.first);
             EXPECT_EQ("b", p.second);
         }
 
         {
             // First and second.
-            std::pair<std::string, std::string> p = flare::base::string_split("a,b", ',');
+            std::pair<std::string, std::string> p = flare::strings::string_split("a,b", ',');
             EXPECT_EQ("a", p.first);
             EXPECT_EQ("b", p.second);
         }
 
         {
             // First and second and then more stuff that will be ignored.
-            std::pair<std::string, std::string> p = flare::base::string_split("a,b,c", ',');
+            std::pair<std::string, std::string> p = flare::strings::string_split("a,b,c", ',');
             EXPECT_EQ("a", p.first);
             EXPECT_EQ("b", p.second);
             // "c" is omitted.
@@ -464,39 +465,39 @@ namespace {
 
     TEST(Splitter, Predicates) {
         static const char kTestChars[] = ",a, ,b,";
-        using flare::base::allow_empty;
-        using flare::base::skip_empty;
-        using flare::base::skip_whitespace;
+        using flare::strings::allow_empty;
+        using flare::strings::skip_empty;
+        using flare::strings::skip_whitespace;
 
         {
             // No predicate. Does not skip empties.
-            auto splitter = flare::base::string_split(kTestChars, ',');
+            auto splitter = flare::strings::string_split(kTestChars, ',');
             std::vector<std::string> v = splitter;
             EXPECT_THAT(v, ElementsAre("", "a", " ", "b", ""));
         }
 
         {
             // Allows empty strings. Same behavior as no predicate at all.
-            auto splitter = flare::base::string_split(kTestChars, ',', allow_empty());
+            auto splitter = flare::strings::string_split(kTestChars, ',', allow_empty());
             std::vector<std::string> v_allowempty = splitter;
             EXPECT_THAT(v_allowempty, ElementsAre("", "a", " ", "b", ""));
 
             // Ensures  allow_empty equals the behavior with no predicate.
-            auto splitter_nopredicate = flare::base::string_split(kTestChars, ',');
+            auto splitter_nopredicate = flare::strings::string_split(kTestChars, ',');
             std::vector<std::string> v_nopredicate = splitter_nopredicate;
             EXPECT_EQ(v_allowempty, v_nopredicate);
         }
 
         {
             // Skips empty strings.
-            auto splitter = flare::base::string_split(kTestChars, ',', skip_empty());
+            auto splitter = flare::strings::string_split(kTestChars, ',', skip_empty());
             std::vector<std::string> v = splitter;
             EXPECT_THAT(v, ElementsAre("a", " ", "b"));
         }
 
         {
             // Skips empty and all-whitespace strings.
-            auto splitter = flare::base::string_split(kTestChars, ',', skip_whitespace());
+            auto splitter = flare::strings::string_split(kTestChars, ',', skip_whitespace());
             std::vector<std::string> v = splitter;
             EXPECT_THAT(v, ElementsAre("a", "b"));
         }
@@ -510,16 +511,16 @@ namespace {
         {
             // Doesn't really do anything useful because the return value is ignored,
             // but it should work.
-            flare::base::string_split("a,b,c", ',');
+            flare::strings::string_split("a,b,c", ',');
         }
 
         {
-            std::vector<std::string_view> v = flare::base::string_split("a,b,c", ',');
+            std::vector<std::string_view> v = flare::strings::string_split("a,b,c", ',');
             EXPECT_THAT(v, ElementsAre("a", "b", "c"));
         }
 
         {
-            std::vector<std::string> v = flare::base::string_split("a,b,c", ',');
+            std::vector<std::string> v = flare::strings::string_split("a,b,c", ',');
             EXPECT_THAT(v, ElementsAre("a", "b", "c"));
         }
 
@@ -527,14 +528,14 @@ namespace {
             // Ensures that assignment works. This requires a little extra work with
             // C++11 because of overloads with initializer_list.
             std::vector<std::string> v;
-            v = flare::base::string_split("a,b,c", ',');
+            v = flare::strings::string_split("a,b,c", ',');
 
             EXPECT_THAT(v, ElementsAre("a", "b", "c"));
             std::map<std::string, std::string> m;
-            m = flare::base::string_split("a,b,c", ',');
+            m = flare::strings::string_split("a,b,c", ',');
             EXPECT_EQ(2, m.size());
             std::unordered_map<std::string, std::string> hm;
-            hm = flare::base::string_split("a,b,c", ',');
+            hm = flare::strings::string_split("a,b,c", ',');
             EXPECT_EQ(2, hm.size());
         }
     }
@@ -547,11 +548,11 @@ namespace {
 
     TEST(Split, AcceptsCertainTemporaries) {
         std::vector<std::string> v;
-        v = flare::base::string_split(ReturnStringView(), ' ');
+        v = flare::strings::string_split(ReturnStringView(), ' ');
         EXPECT_THAT(v, ElementsAre("Hello", "World"));
-        v = flare::base::string_split(ReturnConstCharP(), ' ');
+        v = flare::strings::string_split(ReturnConstCharP(), ' ');
         EXPECT_THAT(v, ElementsAre("Hello", "World"));
-        v = flare::base::string_split(ReturnCharP(), ' ');
+        v = flare::strings::string_split(ReturnCharP(), ' ');
         EXPECT_THAT(v, ElementsAre("Hello", "World"));
     }
 
@@ -564,7 +565,7 @@ namespace {
                             << "Input should be larger than fits on the stack.";
 
         // This happens more often in C++11 as part of a range-based for loop.
-        auto splitter = flare::base::string_split(std::string(input), ',');
+        auto splitter = flare::strings::string_split(std::string(input), ',');
         std::string expected = "a";
         for (std::string_view letter : splitter) {
             EXPECT_EQ(expected, letter);
@@ -573,7 +574,7 @@ namespace {
         EXPECT_EQ("v", expected);
 
         // This happens more often in C++11 as part of a range-based for loop.
-        auto std_splitter = flare::base::string_split(std::string(input), ',');
+        auto std_splitter = flare::strings::string_split(std::string(input), ',');
         expected = "a";
         for (std::string_view letter : std_splitter) {
             EXPECT_EQ(expected, letter);
@@ -589,7 +590,7 @@ namespace {
 
     TEST(Split, LvalueCaptureIsCopyable) {
         std::string input = "a,b";
-        auto heap_splitter = CopyToHeap(flare::base::string_split(input, ','));
+        auto heap_splitter = CopyToHeap(flare::strings::string_split(input, ','));
         auto stack_splitter = *heap_splitter;
         heap_splitter.reset();
         std::vector<std::string> result = stack_splitter;
@@ -597,7 +598,7 @@ namespace {
     }
 
     TEST(Split, TemporaryCaptureIsCopyable) {
-        auto heap_splitter = CopyToHeap(flare::base::string_split(std::string("a,b"), ','));
+        auto heap_splitter = CopyToHeap(flare::strings::string_split(std::string("a,b"), ','));
         auto stack_splitter = *heap_splitter;
         heap_splitter.reset();
         std::vector<std::string> result = stack_splitter;
@@ -605,7 +606,7 @@ namespace {
     }
 
     TEST(Split, SplitterIsCopyableAndMoveable) {
-        auto a = flare::base::string_split("foo", '-');
+        auto a = flare::strings::string_split("foo", '-');
 
         // Ensures that the following expressions compile.
         auto b = a;             // Copy construct
@@ -618,18 +619,18 @@ namespace {
 
     TEST(Split, StringDelimiter) {
         {
-            std::vector<std::string_view> v = flare::base::string_split("a,b", ',');
+            std::vector<std::string_view> v = flare::strings::string_split("a,b", ',');
             EXPECT_THAT(v, ElementsAre("a", "b"));
         }
 
         {
-            std::vector<std::string_view> v = flare::base::string_split("a,b", std::string(","));
+            std::vector<std::string_view> v = flare::strings::string_split("a,b", std::string(","));
             EXPECT_THAT(v, ElementsAre("a", "b"));
         }
 
         {
             std::vector<std::string_view> v =
-                    flare::base::string_split("a,b", std::string_view(","));
+                    flare::strings::string_split("a,b", std::string_view(","));
             EXPECT_THAT(v, ElementsAre("a", "b"));
         }
     }
@@ -645,7 +646,7 @@ namespace {
         {
             // A utf8 input std::string with an ascii delimiter.
             std::string to_split = "a," + utf8_string;
-            std::vector<std::string_view> v = flare::base::string_split(to_split, ',');
+            std::vector<std::string_view> v = flare::strings::string_split(to_split, ',');
             EXPECT_THAT(v, ElementsAre("a", utf8_string));
         }
 
@@ -654,14 +655,14 @@ namespace {
             std::string to_split = "a," + utf8_string + ",b";
             std::string unicode_delimiter = "," + utf8_string + ",";
             std::vector<std::string_view> v =
-                    flare::base::string_split(to_split, unicode_delimiter);
+                    flare::strings::string_split(to_split, unicode_delimiter);
             EXPECT_THAT(v, ElementsAre("a", "b"));
         }
 
         {
             // A utf8 input std::string and by_any_char with ascii chars.
             std::vector<std::string_view> v =
-                    flare::base::string_split(u8"Foo h\u00E4llo th\u4E1Ere", flare::base::by_any_char(" \t"));
+                    flare::strings::string_split(u8"Foo h\u00E4llo th\u4E1Ere", flare::strings::by_any_char(" \t"));
             EXPECT_THAT(v, ElementsAre("Foo", u8"h\u00E4llo", u8"th\u4E1Ere"));
         }
     }
@@ -673,22 +674,22 @@ namespace {
 
     TEST(Split, EmptyStringDelimiter) {
         {
-            std::vector<std::string> v = flare::base::string_split("", "");
+            std::vector<std::string> v = flare::strings::string_split("", "");
             EXPECT_THAT(v, ElementsAre(""));
         }
 
         {
-            std::vector<std::string> v = flare::base::string_split("a", "");
+            std::vector<std::string> v = flare::strings::string_split("a", "");
             EXPECT_THAT(v, ElementsAre("a"));
         }
 
         {
-            std::vector<std::string> v = flare::base::string_split("ab", "");
+            std::vector<std::string> v = flare::strings::string_split("ab", "");
             EXPECT_THAT(v, ElementsAre("a", "b"));
         }
 
         {
-            std::vector<std::string> v = flare::base::string_split("a b", "");
+            std::vector<std::string> v = flare::strings::string_split("a b", "");
             EXPECT_THAT(v, ElementsAre("a", " ", "b"));
         }
     }
@@ -697,62 +698,62 @@ namespace {
         std::vector<std::string_view> results;
         std::string_view delim("//");
 
-        results = flare::base::string_split("", delim);
+        results = flare::strings::string_split("", delim);
         EXPECT_THAT(results, ElementsAre(""));
 
-        results = flare::base::string_split("//", delim);
+        results = flare::strings::string_split("//", delim);
         EXPECT_THAT(results, ElementsAre("", ""));
 
-        results = flare::base::string_split("ab", delim);
+        results = flare::strings::string_split("ab", delim);
         EXPECT_THAT(results, ElementsAre("ab"));
 
-        results = flare::base::string_split("ab//", delim);
+        results = flare::strings::string_split("ab//", delim);
         EXPECT_THAT(results, ElementsAre("ab", ""));
 
-        results = flare::base::string_split("ab/", delim);
+        results = flare::strings::string_split("ab/", delim);
         EXPECT_THAT(results, ElementsAre("ab/"));
 
-        results = flare::base::string_split("a/b", delim);
+        results = flare::strings::string_split("a/b", delim);
         EXPECT_THAT(results, ElementsAre("a/b"));
 
-        results = flare::base::string_split("a//b", delim);
+        results = flare::strings::string_split("a//b", delim);
         EXPECT_THAT(results, ElementsAre("a", "b"));
 
-        results = flare::base::string_split("a///b", delim);
+        results = flare::strings::string_split("a///b", delim);
         EXPECT_THAT(results, ElementsAre("a", "/b"));
 
-        results = flare::base::string_split("a////b", delim);
+        results = flare::strings::string_split("a////b", delim);
         EXPECT_THAT(results, ElementsAre("a", "", "b"));
     }
 
     TEST(Split, EmptyResults) {
         std::vector<std::string_view> results;
 
-        results = flare::base::string_split("", '#');
+        results = flare::strings::string_split("", '#');
         EXPECT_THAT(results, ElementsAre(""));
 
-        results = flare::base::string_split("#", '#');
+        results = flare::strings::string_split("#", '#');
         EXPECT_THAT(results, ElementsAre("", ""));
 
-        results = flare::base::string_split("#cd", '#');
+        results = flare::strings::string_split("#cd", '#');
         EXPECT_THAT(results, ElementsAre("", "cd"));
 
-        results = flare::base::string_split("ab#cd#", '#');
+        results = flare::strings::string_split("ab#cd#", '#');
         EXPECT_THAT(results, ElementsAre("ab", "cd", ""));
 
-        results = flare::base::string_split("ab##cd", '#');
+        results = flare::strings::string_split("ab##cd", '#');
         EXPECT_THAT(results, ElementsAre("ab", "", "cd"));
 
-        results = flare::base::string_split("ab##", '#');
+        results = flare::strings::string_split("ab##", '#');
         EXPECT_THAT(results, ElementsAre("ab", "", ""));
 
-        results = flare::base::string_split("ab#ab#", '#');
+        results = flare::strings::string_split("ab#ab#", '#');
         EXPECT_THAT(results, ElementsAre("ab", "ab", ""));
 
-        results = flare::base::string_split("aaaa", 'a');
+        results = flare::strings::string_split("aaaa", 'a');
         EXPECT_THAT(results, ElementsAre("", "", "", "", ""));
 
-        results = flare::base::string_split("", '#', flare::base::skip_empty());
+        results = flare::strings::string_split("", '#', flare::strings::skip_empty());
         EXPECT_THAT(results, ElementsAre());
     }
 
@@ -800,7 +801,7 @@ namespace {
     }
 
     TEST(Delimiter, by_string) {
-        using flare::base::by_string;
+        using flare::strings::by_string;
         TestComma(by_string(","));
 
         // Works as named variable.
@@ -822,7 +823,7 @@ namespace {
     }
 
     TEST(Split, by_char) {
-        using flare::base::by_char;
+        using flare::strings::by_char;
         TestComma(by_char(','));
 
         // Works as named variable.
@@ -835,7 +836,7 @@ namespace {
 //
 
     TEST(Delimiter, by_any_char) {
-        using flare::base::by_any_char;
+        using flare::strings::by_any_char;
         by_any_char one_delim(",");
         // Found
         EXPECT_TRUE(IsFoundAt(",", one_delim, 0));
@@ -883,7 +884,7 @@ namespace {
 //
 
     TEST(Delimiter, by_length) {
-        using flare::base::by_length;
+        using flare::strings::by_length;
 
         by_length four_char_delim(4);
 
@@ -903,7 +904,7 @@ namespace {
         if (sizeof(size_t) > 4) {
             std::string s((uint32_t{1} << 31) + 1, 'x');  // 2G + 1 byte
             s.back() = '-';
-            std::vector<std::string_view> v = flare::base::string_split(s, '-');
+            std::vector<std::string_view> v = flare::strings::string_split(s, '-');
             EXPECT_EQ(2, v.size());
             // The first element will contain 2G of 'x's.
             // testing::starts_with is too slow with a 2G std::string.
@@ -915,17 +916,17 @@ namespace {
     }
 
     TEST(SplitInternalTest, TypeTraits) {
-        EXPECT_FALSE(flare::base::string_internal::has_mapped_type<int>::value);
+        EXPECT_FALSE(flare::strings::strings_internal::has_mapped_type<int>::value);
         EXPECT_TRUE(
-                (flare::base::string_internal::has_mapped_type<std::map<int, int>>::value));
-        EXPECT_FALSE(flare::base::string_internal::has_value_type<int>::value);
+                (flare::strings::strings_internal::has_mapped_type<std::map<int, int>>::value));
+        EXPECT_FALSE(flare::strings::strings_internal::has_value_type<int>::value);
         EXPECT_TRUE(
-                (flare::base::string_internal::has_value_type<std::map<int, int>>::value));
-        EXPECT_FALSE(flare::base::string_internal::has_const_iterator<int>::value);
+                (flare::strings::strings_internal::has_value_type<std::map<int, int>>::value));
+        EXPECT_FALSE(flare::strings::strings_internal::has_const_iterator<int>::value);
         EXPECT_TRUE(
-                (flare::base::string_internal::has_const_iterator<std::map<int, int>>::value));
-        EXPECT_FALSE(flare::base::string_internal::is_initializer_list<int>::value);
-        EXPECT_TRUE((flare::base::string_internal::is_initializer_list<
+                (flare::strings::strings_internal::has_const_iterator<std::map<int, int>>::value));
+        EXPECT_FALSE(flare::strings::strings_internal::is_initializer_list<int>::value);
+        EXPECT_TRUE((flare::strings::strings_internal::is_initializer_list<
                 std::initializer_list<int>>::value));
     }
 

@@ -18,6 +18,7 @@
 find_package(Gperftools)
 include_directories(${GPERFTOOLS_INCLUDE_DIR})
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
+include_directories(${PROJECT_SOURCE_DIR}/test)
 
 include(CompileProto)
 set(TEST_PROTO_FILES addressbook1.proto
@@ -65,11 +66,11 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     endif ()
 endif ()
 
-file(COPY ${PROJECT_SOURCE_DIR}/test/cert1.key DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
-file(COPY ${PROJECT_SOURCE_DIR}/test/cert2.key DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
-file(COPY ${PROJECT_SOURCE_DIR}/test/cert1.crt DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
-file(COPY ${PROJECT_SOURCE_DIR}/test/cert2.crt DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
-file(COPY ${PROJECT_SOURCE_DIR}/test/jsonout DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+file(COPY ${PROJECT_SOURCE_DIR}/test/cert1.key DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/rpc)
+file(COPY ${PROJECT_SOURCE_DIR}/test/cert2.key DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/rpc)
+file(COPY ${PROJECT_SOURCE_DIR}/test/cert1.crt DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/rpc)
+file(COPY ${PROJECT_SOURCE_DIR}/test/cert2.crt DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/rpc)
+file(COPY ${PROJECT_SOURCE_DIR}/test/jsonout DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/rpc)
 
 set(IO_TEST_SRC
         ${PROJECT_SOURCE_DIR}/test/io/cord_buf_test.cc
@@ -85,6 +86,10 @@ if (CMAKE_SYSTEM_NAME STREQUAL "Darwin")
             "-Wl,-U,_bthread_key_create")
 endif ()
 
+file(GLOB_RECURSE TESTING_SOURCES "${PROJECT_SOURCE_DIR}/test/testing/*.cc")
+
+add_library(TESTING_DEBUG_LIB OBJECT ${TESTING_SOURCES})
+
 add_library(FLARE_BASE_DEBUG_LIB OBJECT ${FLARE_SRC})
 add_library(SOURCES_DEBUG_LIB OBJECT ${SOURCES})
 add_dependencies(SOURCES_DEBUG_LIB PROTO_LIB)
@@ -92,8 +97,10 @@ add_dependencies(SOURCES_DEBUG_LIB PROTO_LIB)
 # shared library needs POSITION_INDEPENDENT_CODE
 set_property(TARGET ${SOURCES_DEBUG_LIB} PROPERTY POSITION_INDEPENDENT_CODE 1)
 set_property(TARGET ${FLARE_BASE_DEBUG_LIB} PROPERTY POSITION_INDEPENDENT_CODE 1)
+set_property(TARGET ${TESTING_DEBUG_LIB} PROPERTY POSITION_INDEPENDENT_CODE 1)
 
 add_library(flare-shared-debug SHARED
+        $<TARGET_OBJECTS:TESTING_DEBUG_LIB>
         $<TARGET_OBJECTS:FLARE_BASE_DEBUG_LIB>
         $<TARGET_OBJECTS:SOURCES_DEBUG_LIB>
         $<TARGET_OBJECTS:PROTO_LIB>)
@@ -116,7 +123,7 @@ add_test(NAME test_io COMMAND test_io)
 
 # test_bvar
 # -DBVAR_NOT_LINK_DEFAULT_VARIABLES not work for gcc >= 5.0, just remove the file to prevent linking into unit tests
-list(REMOVE_ITEM BVAR_SOURCES ${PROJECT_SOURCE_DIR}/flare/bvar/default_variables.cpp)
+list(REMOVE_ITEM BVAR_SOURCES ${PROJECT_SOURCE_DIR}/flare/variable/default_variables.cpp)
 
 add_library(BVAR_DEBUG_LIB OBJECT ${BVAR_SOURCES})
 add_subdirectory(bvar)
@@ -131,3 +138,4 @@ add_subdirectory(rpc)
 add_subdirectory(base)
 add_subdirectory(container)
 add_subdirectory(memory)
+add_subdirectory(strings)

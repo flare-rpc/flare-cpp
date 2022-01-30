@@ -20,7 +20,7 @@
 #include <google/protobuf/compiler/importer.h>
 #include <flare/rpc/server.h>
 #include "flare/base/logging.h"
-#include <flare/base/string_splitter.h>
+#include <flare/strings/string_splitter.h>
 #include <string.h>
 #include "rpc_press_impl.h"
 

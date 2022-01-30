@@ -15,6 +15,8 @@
 // specific language governing permissions and limitations
 // under the License.
 
+#define DCHECK_IS_ON() 0
+
 #include <algorithm>                         // std::sort
 #include "flare/base/static_atomic.h"
 #include <gtest/gtest.h>

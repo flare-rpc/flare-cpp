@@ -20,7 +20,7 @@
 #include <iomanip>
 #include <gflags/gflags.h>
 #include "flare/base/strings.h"
-#include "flare/base/string_splitter.h"
+#include "flare/strings/string_splitter.h"
 #include "flare/base/profile.h"
 #include "flare/base/time.h"
 #include "flare/rpc/closure_guard.h"        // ClosureGuard

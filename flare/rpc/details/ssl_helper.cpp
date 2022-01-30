@@ -23,7 +23,7 @@
 #include <memory>
 #include "flare/base/logging.h"
 #include "flare/io/ssl_compat.h"
-#include "flare/base/string_splitter.h"
+#include "flare/strings/string_splitter.h"
 #include "flare/rpc/socket.h"
 #include "flare/rpc/details/ssl_helper.h"
 #include "flare/base/strings.h"
@@ -64,7 +64,7 @@ const char* SSLStateToString(SSLState s) {
 
 static int ParseSSLProtocols(const std::string& str_protocol) {
     int protocol_flag = 0;
-    flare::base::StringSplitter sp(str_protocol.data(),
+    flare::strings::StringSplitter sp(str_protocol.data(),
                              str_protocol.data() + str_protocol.size(), ',');
     for (; sp; ++sp) {
         std::string_view protocol(sp.field(), sp.length());

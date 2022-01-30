@@ -135,7 +135,7 @@ TEST_F(GrpcTest, percent_encode) {
 
     char s2_buf[] = "\0\0%\33\35 flare";
     std::string s2(s2_buf, sizeof(s2_buf) - 1);
-    std::string s2_expected_out("%00%00%25%1b%1d%20brpc");
+    std::string s2_expected_out("%00%00%25%1b%1d%20flare");
     flare::rpc::PercentEncode(s2, &out);
     EXPECT_TRUE(out == s2_expected_out) << s2_expected_out << " vs " << out;
 }
@@ -147,7 +147,7 @@ TEST_F(GrpcTest, percent_decode) {
     flare::rpc::PercentDecode(s1, &out);
     EXPECT_TRUE(out == s1_out) << s1_out << " vs " << out;
 
-    std::string s2("%00%00%1b%1d%20brpc");
+    std::string s2("%00%00%1b%1d%20flare");
     char s2_expected_out_buf[] = "\0\0\33\35 flare";
     std::string s2_expected_out(s2_expected_out_buf, sizeof(s2_expected_out_buf) - 1);
     flare::rpc::PercentDecode(s2, &out);

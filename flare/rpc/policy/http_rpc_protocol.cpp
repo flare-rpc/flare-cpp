@@ -23,10 +23,10 @@
 
 #include "flare/rpc/policy/http_rpc_protocol.h"
 #include <memory>                       // std::unique_ptr
-#include "flare/base/string_splitter.h"                  // StringMultiSplitter
+#include "flare/strings/string_splitter.h"                  // StringMultiSplitter
 #include "flare/base/strings.h"
 #include "flare/base/time.h"
-#include "flare/base/sys_byteorder.h"
+#include "flare/base/endian.h"
 #include "flare/rpc/compress.h"
 #include "flare/rpc/errno.pb.h"                     // ENOSERVICE, ENOMETHOD
 #include "flare/rpc/controller.h"                   // Controller
@@ -215,7 +215,7 @@ namespace flare::rpc {
         static void AddGrpcPrefix(flare::io::cord_buf *body, bool compressed) {
             char buf[5];
             buf[0] = (compressed ? 1 : 0);
-            *(uint32_t *) (buf + 1) = flare::base::HostToNet32(body->size());
+            *(uint32_t *) (buf + 1) = flare::base::flare_hton32(body->size());
             flare::io::cord_buf tmp_buf;
             tmp_buf.append(buf, sizeof(buf));
             tmp_buf.append(flare::io::cord_buf::Movable(*body));
@@ -234,7 +234,7 @@ namespace flare::rpc {
             char buf[5];
             body->cutn(buf, sizeof(buf));
             *compressed = buf[0];
-            const size_t message_length = flare::base::NetToHost32(*(uint32_t *) (buf + 1));
+            const size_t message_length = flare::base::flare_ntoh32(*(uint32_t *) (buf + 1));
             return (message_length + 5 == sz);
         }
 
@@ -911,7 +911,7 @@ namespace flare::rpc {
 // put it into `unresolved_path'
         static void FillUnresolvedPath(std::string *unresolved_path,
                                        const std::string &uri_path,
-                                       flare::base::StringSplitter &splitter) {
+                                       flare::strings::StringSplitter &splitter) {
             if (unresolved_path == NULL) {
                 return;
             }
@@ -924,7 +924,7 @@ namespace flare::rpc {
                     uri_path.c_str() + uri_path.size() - splitter.field();
             unresolved_path->reserve(path_len);
             unresolved_path->clear();
-            for (flare::base::StringSplitter slash_sp(
+            for (flare::strings::StringSplitter slash_sp(
                     splitter.field(), splitter.field() + path_len, '/');
                  slash_sp != NULL; ++slash_sp) {
                 if (!unresolved_path->empty()) {
@@ -938,7 +938,7 @@ namespace flare::rpc {
         FindMethodPropertyByURIImpl(const std::string &uri_path, const Server *server,
                                     std::string *unresolved_path) {
             ServerPrivateAccessor wrapper(server);
-            flare::base::StringSplitter splitter(uri_path.c_str(), '/');
+            flare::strings::StringSplitter splitter(uri_path.c_str(), '/');
             // Show index page for empty URI
             if (NULL == splitter) {
                 return wrapper.FindMethodPropertyByFullName(
@@ -1003,7 +1003,7 @@ namespace flare::rpc {
             return NULL;
         }
 
-// Used in UT, don't be static
+        // Used in UT, don't be static
         const Server::MethodProperty *
         FindMethodPropertyByURI(const std::string &uri_path, const Server *server,
                                 std::string *unresolved_path) {
@@ -1339,7 +1339,7 @@ namespace flare::rpc {
             } else if (sp->service->GetDescriptor() == BadMethodService::descriptor()) {
                 BadMethodRequest breq;
                 BadMethodResponse bres;
-                flare::base::StringSplitter split(path.c_str(), '/');
+                flare::strings::StringSplitter split(path.c_str(), '/');
                 breq.set_service_name(std::string(split.field(), split.length()));
                 sp->service->CallMethod(sp->method, cntl, &breq, &bres, NULL);
                 return;

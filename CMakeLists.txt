@@ -18,12 +18,10 @@
 cmake_minimum_required(VERSION 3.1.3)
 project(flare C CXX)
 
-option(WITH_GLOG "With glog" ON)
-option(WITH_MESALINK "With MesaLink" OFF)
 option(DEBUG "Print debug logs" OFF)
 option(WITH_DEBUG_SYMBOLS "With debug symbols" ON)
 option(WITH_THRIFT "With thrift framed protocol supported" OFF)
-option(BUILD_UNIT_TESTS "Whether to build unit tests" OFF)
+option(BUILD_UNIT_TESTS "Whether to build unit tests" ON)
 option(DOWNLOAD_GTEST "Download and build a fresh copy of googletest. Requires Internet access." ON)
 
 # Enable MACOSX_RPATH. Run "cmake --help-policy CMP0042" for policy details.
@@ -100,9 +98,6 @@ if (CMAKE_SYSTEM_NAME STREQUAL "Darwin")
 endif ()
 
 set(CMAKE_CPP_FLAGS "${CMAKE_CPP_FLAGS} ${DEFINE_CLOCK_GETTIME}  -DGFLAGS_NS=${GFLAGS_NS}")
-if (WITH_MESALINK)
-    set(CMAKE_CPP_FLAGS "${CMAKE_CPP_FLAGS} -DUSE_MESALINK")
-endif ()
 set(CMAKE_CPP_FLAGS "${CMAKE_CPP_FLAGS} -DBTHREAD_USE_FAST_PTHREAD_MUTEX -D__const__= -D_GNU_SOURCE -DUSE_SYMBOLIZE -DNO_TCMALLOC -D__STDC_FORMAT_MACROS -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -DBRPC_REVISION=\\\"${BRPC_REVISION}\\\" -D__STRICT_ANSI__")
 set(CMAKE_CPP_FLAGS "${CMAKE_CPP_FLAGS} ${DEBUG_SYMBOL} ${THRIFT_CPP_FLAG}")
 set(CMAKE_CXX_FLAGS "${CMAKE_CPP_FLAGS} -O2 -pipe -Wall -W -fPIC -fstrict-aliasing -Wno-invalid-offsetof -Wno-unused-parameter -fno-omit-frame-pointer")
@@ -143,17 +138,6 @@ if ((NOT GLOG_INCLUDE_PATH) OR (NOT GLOG_LIB))
 endif ()
 include_directories(${GLOG_INCLUDE_PATH})
 
-if (WITH_MESALINK)
-    find_path(MESALINK_INCLUDE_PATH NAMES mesalink/openssl/ssl.h)
-    find_library(MESALINK_LIB NAMES mesalink)
-    if ((NOT MESALINK_INCLUDE_PATH) OR (NOT MESALINK_LIB))
-        message(FATAL_ERROR "Fail to find MesaLink")
-    else ()
-        message(STATUS "Found MesaLink: ${MESALINK_LIB}")
-    endif ()
-    include_directories(${MESALINK_INCLUDE_PATH})
-endif ()
-
 find_library(PROTOC_LIB NAMES protoc)
 if (NOT PROTOC_LIB)
     message(FATAL_ERROR "Fail to find protoc lib")
@@ -182,15 +166,11 @@ set(DYNAMIC_LIB
         ${CMAKE_THREAD_LIBS_INIT}
         ${THRIFT_LIB}
         ${THRIFTNB_LIB}
+        ${OPENSSL_SSL_LIBRARY}
         ${OPENSSL_CRYPTO_LIBRARY}
         dl
         z)
 
-if (WITH_MESALINK)
-    list(APPEND DYNAMIC_LIB ${MESALINK_LIB})
-else ()
-    list(APPEND DYNAMIC_LIB ${OPENSSL_SSL_LIBRARY})
-endif ()
 
 set(BRPC_PRIVATE_LIBS "-lgflags -lprotobuf -lleveldb -lprotoc -lssl -lcrypto -ldl -lz")
 
@@ -227,6 +207,8 @@ file(GLOB_RECURSE FLARE_CONTAINER_SRC "${PROJECT_SOURCE_DIR}/flare/container/*.c
 file(GLOB_RECURSE FLARE_HASH_SRC "${PROJECT_SOURCE_DIR}/flare/hash/*.cc")
 file(GLOB_RECURSE FLARE_MEMORY_SRC "${PROJECT_SOURCE_DIR}/flare/memory/*.cc")
 file(GLOB_RECURSE FLARE_IO_SRC "${PROJECT_SOURCE_DIR}/flare/io/*.cc")
+file(GLOB_RECURSE FLARE_MEMORY_SRC "${PROJECT_SOURCE_DIR}/flare/memory/*.cc")
+file(GLOB_RECURSE FLARE_STRINGS_SRC "${PROJECT_SOURCE_DIR}/flare/strings/*.cc")
 set(FLARE_SRC
        "${PROJECT_SOURCE_DIR}/flare/base/dynamic_annotations/dynamic_annotations.c"
         ${FLARE_BASE_SRC}
@@ -234,6 +216,7 @@ set(FLARE_SRC
         ${FLARE_HASH_SRC}
         ${FLARE_MEMORY_SRC}
         ${FLARE_IO_SRC}
+        ${FLARE_STRINGS_SRC}
         )
 
 file(GLOB_RECURSE BVAR_SOURCES "${PROJECT_SOURCE_DIR}/flare/variable/*.cpp")

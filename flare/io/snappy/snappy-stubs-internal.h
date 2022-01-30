@@ -36,7 +36,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "flare/base/profile.h"
-#include "flare/base/sys_byteorder.h"
+#include "flare/base/endian.h"
 
 #define SNAPPY_MAJOR 1
 #define SNAPPY_MINOR 1
@@ -198,11 +198,11 @@ namespace flare::snappy {
         static bool IsLittleEndian() { return true; }
 
 #else  // !defined(FLARE_SYSTEM_LITTLE_ENDIAN)
-        static uint16_t FromHost16(uint16_t x) { return flare::base::ByteSwap(x); }
-        static uint16_t ToHost16(uint16_t x) { return flare::base::ByteSwap(x); }
+        static uint16_t FromHost16(uint16_t x) { return  flare::base::bit_swap16(x); }
+        static uint16_t ToHost16(uint16_t x) { return flare::base::bit_swap16(x); }
 
-        static uint32_t FromHost32(uint32_t x) { return flare::base::ByteSwap(x); }
-        static uint32_t ToHost32(uint32_t x) { return flare::base::ByteSwap(x); }
+        static uint32_t FromHost32(uint32_t x) { return flare::base::bit_swap32(x); }
+        static uint32_t ToHost32(uint32_t x) { return flare::base::bit_swap32(x); }
 
         static bool IsLittleEndian() { return false; }
 #endif  // !defined(FLARE_SYSTEM_LITTLE_ENDIAN)

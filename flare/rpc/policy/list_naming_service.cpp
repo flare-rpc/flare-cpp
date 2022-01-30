@@ -19,7 +19,7 @@
 #include <stdlib.h>                                   // strtol
 #include <string>                                     // std::string
 #include <set>                                        // std::set
-#include "flare/base/string_splitter.h"                     // StringSplitter
+#include "flare/strings/string_splitter.h"                     // StringSplitter
 #include "flare/rpc/log.h"
 #include "flare/rpc/policy/list_naming_service.h"
 #include "flare/base/strings.h"
@@ -46,7 +46,7 @@ int ParseServerList(const char* service_name,
         LOG(FATAL) << "Param[service_name] is NULL";
         return -1;
     }
-    for (flare::base::StringSplitter sp(service_name, ','); sp != NULL; ++sp) {
+    for (flare::strings::StringSplitter sp(service_name, ','); sp != NULL; ++sp) {
         line.assign(sp.field(), sp.length());
         std::string_view addr;
         std::string_view tag;

@@ -22,7 +22,7 @@
 #include "flare/base/logging.h"                       // LOG()
 #include "flare/base/time.h"
 #include "flare/io/cord_buf.h"                         // flare::io::cord_buf
-#include "flare/base/sys_byteorder.h"
+#include "flare/base/endian.h"
 #include "flare/rpc/controller.h"               // Controller
 #include "flare/rpc/details/controller_private_accessor.h"
 #include "flare/rpc/socket.h"                   // Socket
@@ -89,7 +89,7 @@ namespace flare::rpc {
                     return MakeParseError(PARSE_ERROR_NOT_ENOUGH_DATA);
                 }
                 const MemcacheResponseHeader *header = (const MemcacheResponseHeader *) p;
-                uint32_t total_body_length = flare::base::NetToHost32(header->total_body_length);
+                uint32_t total_body_length = flare::base::flare_ntoh32(header->total_body_length);
                 if (source->size() < sizeof(*header) + total_body_length) {
                     return MakeParseError(PARSE_ERROR_NOT_ENOUGH_DATA);
                 }
@@ -117,13 +117,13 @@ namespace flare::rpc {
                 const MemcacheResponseHeader local_header = {
                         header->magic,
                         header->command,
-                        flare::base::NetToHost16(header->key_length),
+                        flare::base::flare_ntoh16(header->key_length),
                         header->extras_length,
                         header->data_type,
-                        flare::base::NetToHost16(header->status),
+                        flare::base::flare_ntoh16(header->status),
                         total_body_length,
-                        flare::base::NetToHost32(header->opaque),
-                        flare::base::NetToHost64(header->cas_value),
+                        flare::base::flare_ntoh32(header->opaque),
+                        flare::base::flare_ntoh64(header->cas_value),
                 };
                 msg->meta.append(&local_header, sizeof(local_header));
                 source->pop_front(sizeof(*header));

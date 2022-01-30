@@ -24,6 +24,7 @@
 #include <string_view>
 #include "flare/rpc/options.pb.h"
 #include "flare/base/strings.h"
+#include "flare/strings/safe_substr.h"
 
 namespace flare::rpc {
 
@@ -59,7 +60,7 @@ namespace flare::rpc {
             std::string_view param;
             const size_t pos = name.find(':');
             if (pos != std::string_view::npos) {
-                param = flare::base::sub_string_view(name, pos + 1);
+                param = flare::strings::safe_substr(name, pos + 1);
                 name.remove_suffix(name.size() - pos);
             }
             _type = StringToProtocolType(name);

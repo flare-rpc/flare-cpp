@@ -260,7 +260,7 @@ TEST(HttpMessageTest, find_method_property_by_uri) {
     ASSERT_EQ("flags", mp->method->service()->name());
     ASSERT_EQ("foo/bar", unknown_method);
     
-    mp = FindMethodPropertyByURI("/flare.flags/$*",
+    mp = FindMethodPropertyByURI("/flare.rpc.flags/$*",
                                  &server, &unknown_method);
     ASSERT_TRUE(mp);
     ASSERT_EQ("flags", mp->method->service()->name());

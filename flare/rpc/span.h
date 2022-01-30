@@ -27,7 +27,7 @@
 #include <ostream>
 #include "flare/base/profile.h"
 #include "flare/base/endpoint.h"
-#include "flare/base/string_splitter.h"
+#include "flare/strings/string_splitter.h"
 #include "flare/variable/collector.h"
 #include "flare/bthread/task_meta.h"
 #include "flare/rpc/options.pb.h"                 // ProtocolType
@@ -189,7 +189,7 @@ public:
     bool PopAnnotation(int64_t before_this_time,
                        int64_t* time, std::string* annotation);
 private:
-    flare::base::StringSplitter _sp;
+    flare::strings::StringSplitter _sp;
 };
 
 // These two functions can be used for composing TRACEPRINT as well as hiding
