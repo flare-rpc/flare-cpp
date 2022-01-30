@@ -12,12 +12,15 @@
 
 # include <glog/logging.h>
 # include <glog/raw_logging.h>
+#include <gflags/gflags_declare.h>
+
+DECLARE_bool(crash_on_fatal_log);
 // define macros that not implemented in glog
 # ifndef DCHECK_IS_ON   // glog didn't define DCHECK_IS_ON in older version
 #  if defined(NDEBUG)
-#    define DCHECK_IS_ON() 0
+#    define DCHECK_IS_ON()  FLAGS_crash_on_fatal_log
 #  else
-#    define DCHECK_IS_ON() 1
+#    define DCHECK_IS_ON() FLAGS_crash_on_fatal_log
 #  endif  // NDEBUG
 # endif // DCHECK_IS_ON
 # if DCHECK_IS_ON()
