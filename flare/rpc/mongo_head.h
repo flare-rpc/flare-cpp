@@ -71,10 +71,10 @@ namespace flare::rpc {
         int32_t op_code;         // request type, see MongoOpCode.
 
         void make_host_endian() {
-            message_length = flare::base::big_endian::to_host32(static_cast<uint32_t>(message_length));
-            request_id = flare::base::big_endian::to_host32((uint32_t) request_id);
-            response_to = flare::base::big_endian::to_host32((uint32_t) response_to);
-            op_code = flare::base::big_endian::to_host32((uint32_t) op_code);
+            message_length = flare::base::little_endian::to_host32(static_cast<uint32_t>(message_length));
+            request_id = flare::base::little_endian::to_host32((uint32_t) request_id);
+            response_to = flare::base::little_endian::to_host32((uint32_t) response_to);
+            op_code = flare::base::little_endian::to_host32((uint32_t) op_code);
 
         }
     };
