@@ -872,7 +872,7 @@ namespace flare::strings {
                 "e0e1e2e3e4e5e6e7e8e9eaebecedeeef"
                 "f0f1f2f3f4f5f6f7f8f9fafbfcfdfeff";
 
-       // FLARE_CONST_INIT
+        // FLARE_CONST_INIT
         const char two_ASCII_digits[100][2] = {
                 {'0', '0'},
                 {'0', '1'},

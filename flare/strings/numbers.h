@@ -32,7 +32,7 @@
 // we claim to support.  Also, add tests for the compiler
 // that doesn't support the Intel _bswap64 intrinsic but
 // does support all the SSE 4.2 intrinsics
-#include "flare/system/endian.h"
+#include "flare/base/endian.h"
 #endif
 
 #include "flare/base/profile.h"
