@@ -225,8 +225,8 @@ TEST_F(SSLTest, ssl_sni) {
     }
     {
         flare::rpc::CertInfo cert;
-        cert.certificate = GetRawPemString("../cert2.crt");
-        cert.private_key = GetRawPemString("../cert2.key");
+        cert.certificate = GetRawPemString("cert2.crt");
+        cert.private_key = GetRawPemString("cert2.key");
         cert.sni_filters.push_back("*.cert2.com");
         options.mutable_ssl_options()->certs.push_back(cert);
     }
@@ -262,8 +262,8 @@ TEST_F(SSLTest, ssl_reload) {
     CheckCert("cert2.com", "cert1");    // default cert
     {
         flare::rpc::CertInfo cert;
-        cert.certificate = GetRawPemString("../cert2.crt");
-        cert.private_key = GetRawPemString("../cert2.key");
+        cert.certificate = GetRawPemString("cert2.crt");
+        cert.private_key = GetRawPemString("cert2.key");
         cert.sni_filters.push_back("cert2.com");
         ASSERT_EQ(0, server.AddCertificate(cert));
     }
@@ -271,16 +271,16 @@ TEST_F(SSLTest, ssl_reload) {
 
     {
         flare::rpc::CertInfo cert;
-        cert.certificate = GetRawPemString("../cert2.crt");
-        cert.private_key = GetRawPemString("../cert2.key");
+        cert.certificate = GetRawPemString("cert2.crt");
+        cert.private_key = GetRawPemString("cert2.key");
         ASSERT_EQ(0, server.RemoveCertificate(cert));
     }
     CheckCert("cert2.com", "cert1");    // default cert after remove cert2
 
     {
         flare::rpc::CertInfo cert;
-        cert.certificate = GetRawPemString("../cert2.crt");
-        cert.private_key = GetRawPemString("../cert2.key");
+        cert.certificate = GetRawPemString("cert2.crt");
+        cert.private_key = GetRawPemString("cert2.key");
         cert.sni_filters.push_back("cert2.com");
         std::vector<flare::rpc::CertInfo> certs;
         certs.push_back(cert);
