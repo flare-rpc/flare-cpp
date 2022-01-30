@@ -571,7 +571,7 @@ TEST_F(ProtobufJsonTest, json_to_pb_encode_decode_perf_case) {
 }
 
 TEST_F(ProtobufJsonTest, json_to_pb_complex_perf_case) {
-    std::ifstream in("test/jsonout", std::ios::in);
+    std::ifstream in("../jsonout", std::ios::in);
     std::ostringstream tmp;
     tmp << in.rdbuf();
     flare::io::cord_buf buf;
@@ -605,7 +605,7 @@ TEST_F(ProtobufJsonTest, json_to_pb_complex_perf_case) {
 }
 
 TEST_F(ProtobufJsonTest, json_to_pb_to_string_complex_perf_case) {
-    std::ifstream in("test/jsonout", std::ios::in);
+    std::ifstream in("../jsonout", std::ios::in);
     std::ostringstream tmp;
     tmp << in.rdbuf();
     std::string info3 = tmp.str();
@@ -1309,7 +1309,7 @@ TEST_F(ProtobufJsonTest, pb_to_json_encode_decode_perf_case) {
 
 TEST_F(ProtobufJsonTest, pb_to_json_complex_perf_case) {
 
-    std::ifstream in("test/jsonout", std::ios::in);
+    std::ifstream in("../jsonout", std::ios::in);
     std::ostringstream tmp;
     tmp << in.rdbuf();
     std::string info3 = tmp.str();
@@ -1349,7 +1349,7 @@ TEST_F(ProtobufJsonTest, pb_to_json_complex_perf_case) {
 }
 
 TEST_F(ProtobufJsonTest, pb_to_json_to_string_complex_perf_case) {
-    std::ifstream in("test/jsonout", std::ios::in);
+    std::ifstream in("../jsonout", std::ios::in);
     std::ostringstream tmp;
     tmp << in.rdbuf();
     std::string info3 = tmp.str();

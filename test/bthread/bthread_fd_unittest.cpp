@@ -15,6 +15,7 @@
 // specific language governing permissions and limitations
 // under the License.
 
+#define DCHECK_IS_ON 0
 #include "flare/base/compat.h"
 #include <sys/types.h>
 #include <sys/socket.h>
