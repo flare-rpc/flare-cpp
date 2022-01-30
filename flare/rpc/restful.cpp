@@ -111,8 +111,8 @@ bool ParseRestfulPath(std::string_view path,
     if (star_index < 0) {
         first_part = path;
     } else {
-        first_part = flare::base::sub_string_view(path, 0, star_index);
-        second_part = flare::base::sub_string_view(path, star_index + 1);
+        first_part =flare::strings::safe_substr(path, 0, star_index);
+        second_part =flare::strings::safe_substr(path, star_index + 1);
     }
 
     // Extract service_name and prefix from first_part
@@ -131,7 +131,7 @@ bool ParseRestfulPath(std::string_view path,
     const size_t slash_pos = first_part.find('/');
     if (slash_pos != std::string_view::npos) {
         path_out->service_name.assign(first_part.data(), slash_pos);
-        std::string_view prefix_raw = flare::base::sub_string_view(first_part, slash_pos + 1);
+        std::string_view prefix_raw =flare::strings::safe_substr(first_part, slash_pos + 1);
         flare::strings::StringSplitter sp(prefix_raw.data(),
                                 prefix_raw.data() + prefix_raw.size(), '/');
         for (; sp; ++sp) {

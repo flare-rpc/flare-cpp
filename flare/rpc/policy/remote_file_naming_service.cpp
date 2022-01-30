@@ -26,7 +26,7 @@
 #include "flare/rpc/channel.h"
 #include "flare/rpc/policy/remote_file_naming_service.h"
 #include "flare/base/strings.h"
-
+#include "flare/strings/safe_substr.h"
 
 namespace flare::rpc {
     namespace policy {
@@ -67,7 +67,7 @@ namespace flare::rpc {
                 size_t pos = tmpname.find("://");
                 std::string_view proto;
                 if (pos != std::string_view::npos) {
-                    proto = flare::base::sub_string_view(tmpname, 0, pos);
+                    proto =flare::strings::safe_substr(tmpname, 0, pos);
                     for (pos += 3; tmpname[pos] == '/'; ++pos) {}
                     tmpname.remove_prefix(pos);
                 } else {
@@ -84,8 +84,8 @@ namespace flare::rpc {
                     server_addr_piece = tmpname;
                     _path = "/";
                 } else {
-                    server_addr_piece = flare::base::sub_string_view(tmpname, 0, slash_pos);
-                    _path = flare::base::as_string(flare::base::sub_string_view(tmpname, slash_pos));
+                    server_addr_piece =flare::strings::safe_substr(tmpname, 0, slash_pos);
+                    _path = flare::base::as_string(flare::strings::safe_substr(tmpname, slash_pos));
                 }
                 _server_addr.reserve(proto.size() + 3 + server_addr_piece.size());
                 _server_addr.append(proto.data(), proto.size());
