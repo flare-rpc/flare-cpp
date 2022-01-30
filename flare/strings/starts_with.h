@@ -8,7 +8,7 @@
 
 #include <string_view>
 #include <string>
-#include <cstirng>
+#include <cstring>
 #include "flare/base/profile.h"
 
 namespace flare::strings {
