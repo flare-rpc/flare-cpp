@@ -25,7 +25,7 @@
 #include <filesystem>
 #include "flare/container/flat_map.h"           // flare::container::FlatMap
 #include "flare/base/scoped_lock.h"                   // BAIDU_SCOPE_LOCK
-#include "flare/base/string_splitter.h"               // flare::base::StringSplitter
+#include "flare/strings/string_splitter.h"               // flare::strings::StringSplitter
 #include "flare/base/errno.h"                          // flare_error
 #include "flare/base/time.h"                          // milliseconds_from_now
 #include "flare/variable/gflag.h"
@@ -417,7 +417,7 @@ namespace flare::variable {
             }
             std::string name;
             const char wc_pattern[3] = {'*', question_mark, '\0'};
-            for (flare::base::StringMultiSplitter sp(wildcards.c_str(), ",;");
+            for (flare::strings::StringMultiSplitter sp(wildcards.c_str(), ",;");
                  sp != NULL; ++sp) {
                 name.assign(sp.field(), sp.length());
                 if (name.find_first_of(wc_pattern) != std::string::npos) {
@@ -635,7 +635,7 @@ namespace flare::variable {
                 flare::base::consume_suffix(&path_str, ".data");
             }
 
-            for (flare::base::KeyValuePairsSplitter sp(tabs, ';', '='); sp; ++sp) {
+            for (flare::strings::KeyValuePairsSplitter sp(tabs, ';', '='); sp; ++sp) {
                 std::string key = flare::base::as_string(sp.key());
                 std::string value = flare::base::as_string(sp.value());
                 std::string pathString(path_str.data(), path_str.size());

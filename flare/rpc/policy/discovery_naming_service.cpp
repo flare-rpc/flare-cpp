@@ -21,7 +21,7 @@
 #include "flare/rapidjson/memorybuffer.h"
 #include "flare/rapidjson/writer.h"
 #include "flare/base/strings.h"
-#include "flare/base/str_split.h"
+#include "flare/strings/str_split.h"
 #include "flare/base/fast_rand.h"
 #include "flare/bthread/bthread.h"
 #include "flare/rpc/channel.h"
@@ -274,7 +274,7 @@ int DiscoveryClient::DoRegister() {
     os << "appid=" << _params.appid
         << "&hostname=" << _params.hostname;
 
-    std::vector<std::string_view> addrs = flare::base::string_split(_params.addrs, ',');
+    std::vector<std::string_view> addrs = flare::strings::string_split(_params.addrs, ',');
     for (size_t i = 0; i < addrs.size(); ++i) {
         if (!addrs[i].empty()) {
             os << "&addrs=" << addrs[i];

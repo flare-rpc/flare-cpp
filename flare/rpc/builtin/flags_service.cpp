@@ -22,7 +22,7 @@
 #include <gflags/gflags.h>                  // GetAllFlags
                                             // CommandLineFlagInfo
 #include "flare/base/strings.h"
-#include "flare/base/string_splitter.h"
+#include "flare/strings/string_splitter.h"
 
 #include "flare/rpc/closure_guard.h"        // ClosureGuard
 #include "flare/rpc/controller.h"           // Controller
@@ -189,7 +189,7 @@ void FlagsService::default_method(::google::protobuf::RpcController* cntl_base,
     std::vector<std::string> wildcards;
     std::set<std::string> exact;
     if (!constraint.empty()) {
-        for (flare::base::StringMultiSplitter sp(constraint.c_str(), ",;"); sp != NULL; ++sp) {
+        for (flare::strings::StringMultiSplitter sp(constraint.c_str(), ",;"); sp != NULL; ++sp) {
             std::string name(sp.field(), sp.length());
             if (name.find_first_of("$*") != std::string::npos) {
                 wildcards.push_back(name);

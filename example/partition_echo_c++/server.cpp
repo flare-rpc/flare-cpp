@@ -114,7 +114,7 @@ int main(int argc, char* argv[]) {
     options.idle_timeout_sec = FLAGS_idle_timeout_s;
     options.max_concurrency = FLAGS_max_concurrency;
 
-    flare::base::StringSplitter sp(FLAGS_sleep_us.c_str(), ',');
+    flare::strings::StringSplitter sp(FLAGS_sleep_us.c_str(), ',');
     std::vector<int64_t> sleep_list;
     for (; sp; ++sp) {
         sleep_list.push_back(strtoll(sp.field(), NULL, 10));

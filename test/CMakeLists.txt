@@ -18,6 +18,7 @@
 find_package(Gperftools)
 include_directories(${GPERFTOOLS_INCLUDE_DIR})
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
+include_directories(${PROJECT_SOURCE_DIR}/test)
 
 include(CompileProto)
 set(TEST_PROTO_FILES addressbook1.proto
@@ -85,6 +86,10 @@ if (CMAKE_SYSTEM_NAME STREQUAL "Darwin")
             "-Wl,-U,_bthread_key_create")
 endif ()
 
+file(GLOB_RECURSE TESTING_SOURCES "${PROJECT_SOURCE_DIR}/test/testing/*.cc")
+
+add_library(TESTING_DEBUG_LIB OBJECT ${TESTING_SOURCES})
+
 add_library(FLARE_BASE_DEBUG_LIB OBJECT ${FLARE_SRC})
 add_library(SOURCES_DEBUG_LIB OBJECT ${SOURCES})
 add_dependencies(SOURCES_DEBUG_LIB PROTO_LIB)
@@ -92,8 +97,10 @@ add_dependencies(SOURCES_DEBUG_LIB PROTO_LIB)
 # shared library needs POSITION_INDEPENDENT_CODE
 set_property(TARGET ${SOURCES_DEBUG_LIB} PROPERTY POSITION_INDEPENDENT_CODE 1)
 set_property(TARGET ${FLARE_BASE_DEBUG_LIB} PROPERTY POSITION_INDEPENDENT_CODE 1)
+set_property(TARGET ${TESTING_DEBUG_LIB} PROPERTY POSITION_INDEPENDENT_CODE 1)
 
 add_library(flare-shared-debug SHARED
+        $<TARGET_OBJECTS:TESTING_DEBUG_LIB>
         $<TARGET_OBJECTS:FLARE_BASE_DEBUG_LIB>
         $<TARGET_OBJECTS:SOURCES_DEBUG_LIB>
         $<TARGET_OBJECTS:PROTO_LIB>)
@@ -131,3 +138,4 @@ add_subdirectory(rpc)
 add_subdirectory(base)
 add_subdirectory(container)
 add_subdirectory(memory)
+add_subdirectory(strings)

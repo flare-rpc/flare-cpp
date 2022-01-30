@@ -20,7 +20,7 @@
 #include "flare/variable/reducer.h"
 #include "flare/base/time.h"
 #include "flare/base/strings.h"
-#include "flare/base/string_splitter.h"
+#include "flare/strings/string_splitter.h"
 #include "flare/container/hash_tables.h"
 #include <gtest/gtest.h>
 
@@ -297,7 +297,7 @@ TEST_F(ReducerTest, non_primitive_mt) {
     }
     flare::container::hash_map<pthread_t, int> got_count;
     std::string res = cater.get_value();
-    for (flare::base::StringSplitter sp(res.c_str(), '.'); sp; ++sp) {
+    for (flare::strings::StringSplitter sp(res.c_str(), '.'); sp; ++sp) {
         char* endptr = NULL;
         ++got_count[(pthread_t)strtoll(sp.field(), &endptr, 10)];
         ASSERT_EQ(27LL, sp.field() + sp.length() - endptr)

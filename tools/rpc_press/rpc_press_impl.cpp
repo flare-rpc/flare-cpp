@@ -116,7 +116,7 @@ namespace pbrpcframework {
         sourceTree.MapPath("", proto_path.c_str());
         // Add paths in -inc
         if (!_options.proto_includes.empty()) {
-            flare::base::StringSplitter sp(_options.proto_includes.c_str(), ';');
+            flare::strings::StringSplitter sp(_options.proto_includes.c_str(), ';');
             for (; sp; ++sp) {
                 sourceTree.MapPath("", std::string(sp.field(), sp.length()));
             }

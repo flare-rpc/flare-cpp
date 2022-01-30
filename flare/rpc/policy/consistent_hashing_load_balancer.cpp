@@ -382,7 +382,7 @@ namespace flare::rpc {
         }
 
         bool ConsistentHashingLoadBalancer::SetParameters(const std::string_view &params) {
-            for (flare::base::KeyValuePairsSplitter sp(params.begin(), params.end(), ' ', '=');
+            for (flare::strings::KeyValuePairsSplitter sp(params.begin(), params.end(), ' ', '=');
                  sp; ++sp) {
                 if (sp.value().empty()) {
                     LOG(ERROR) << "Empty value for " << sp.key() << " in lb parameter";

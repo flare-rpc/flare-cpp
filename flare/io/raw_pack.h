@@ -18,7 +18,7 @@
 #ifndef FLARE_IO_RAW_PACK_H_
 #define FLARE_IO_RAW_PACK_H_
 
-#include "flare/base/sys_byteorder.h"
+#include "flare/base/endian.h"
 
 namespace flare::io {
 
@@ -50,15 +50,15 @@ namespace flare::io {
         // Not using operator<< because some values may be packed differently from
         // its type.
         raw_packer &pack32(uint32_t host_value) {
-            *(uint32_t *) _stream = flare::base::HostToNet32(host_value);
+            *(uint32_t *) _stream = flare::base::flare_hton32(host_value);
             _stream += 4;
             return *this;
         }
 
         raw_packer &pack64(uint64_t host_value) {
             uint32_t *p = (uint32_t *) _stream;
-            p[0] = flare::base::HostToNet32(host_value >> 32);
-            p[1] = flare::base::HostToNet32(host_value & 0xFFFFFFFF);
+            p[0] = flare::base::flare_hton32(host_value >> 32);
+            p[1] = flare::base::flare_hton32(host_value & 0xFFFFFFFF);
             _stream += 8;
             return *this;
         }
@@ -76,14 +76,14 @@ namespace flare::io {
         ~raw_unpacker() {}
 
         raw_unpacker &unpack32(uint32_t &host_value) {
-            host_value = flare::base::NetToHost32(*(const uint32_t *) _stream);
+            host_value = flare::base::flare_ntoh32(*(const uint32_t *) _stream);
             _stream += 4;
             return *this;
         }
 
         raw_unpacker &unpack64(uint64_t &host_value) {
             const uint32_t *p = (const uint32_t *) _stream;
-            host_value = (((uint64_t) flare::base::NetToHost32(p[0])) << 32) | flare::base::NetToHost32(p[1]);
+            host_value = (((uint64_t) flare::base::flare_ntoh32(p[0])) << 32) | flare::base::flare_ntoh32(p[1]);
             _stream += 8;
             return *this;
         }

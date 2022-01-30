@@ -18,7 +18,7 @@
 
 #include <ostream>
 #include <vector>                           // std::vector
-#include "flare/base/string_splitter.h"
+#include "flare/strings/string_splitter.h"
 #include "flare/variable/all.h"
 
 #include "flare/rpc/closure_guard.h"        // ClosureGuard

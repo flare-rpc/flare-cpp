@@ -36,7 +36,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "flare/base/profile.h"
-#include "flare/base/sys_byteorder.h"
+#include "flare/base/endian.h"
 
 #define SNAPPY_MAJOR 1
 #define SNAPPY_MINOR 1

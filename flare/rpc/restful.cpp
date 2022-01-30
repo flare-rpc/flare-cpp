@@ -132,7 +132,7 @@ bool ParseRestfulPath(std::string_view path,
     if (slash_pos != std::string_view::npos) {
         path_out->service_name.assign(first_part.data(), slash_pos);
         std::string_view prefix_raw = flare::base::sub_string_view(first_part, slash_pos + 1);
-        flare::base::StringSplitter sp(prefix_raw.data(),
+        flare::strings::StringSplitter sp(prefix_raw.data(),
                                 prefix_raw.data() + prefix_raw.size(), '/');
         for (; sp; ++sp) {
             // Put first component into service_name and others into prefix.
@@ -174,7 +174,7 @@ bool ParseRestfulPath(std::string_view path,
         if (second_part.empty() || second_part[0] == '/') {
             path_out->postfix.push_back('/');
         }
-        flare::base::StringSplitter sp2(second_part.data(),
+        flare::strings::StringSplitter sp2(second_part.data(),
                                  second_part.data() + second_part.size(), '/');
         for (; sp2; ++sp2) {
             if (path_out->postfix.empty()) {
@@ -201,7 +201,7 @@ bool ParseRestfulMappings(const std::string_view& mappings,
     }
     list->clear();
     list->reserve(8);
-    flare::base::StringSplitter sp(
+    flare::strings::StringSplitter sp(
         mappings.data(), mappings.data() + mappings.size(), ',');
     int nmappings = 0;
     for (; sp; ++sp) {
@@ -382,7 +382,7 @@ static bool RemoveLastComponent(std::string_view* path) {
 static std::string NormalizeSlashes(const std::string_view& path) {
     std::string out_path;
     out_path.reserve(path.size() + 2);
-    flare::base::StringSplitter sp(path.data(), path.data() + path.size(), '/');
+    flare::strings::StringSplitter sp(path.data(), path.data() + path.size(), '/');
     for (; sp; ++sp) {
         out_path.push_back('/');
         out_path.append(sp.field(), sp.length());

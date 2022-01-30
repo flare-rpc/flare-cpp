@@ -1,10 +1,10 @@
 
 #include <limits.h>
 
-#ifndef FLARE_BASE_STRING_SPLITTER_INL_H_
-#define FLARE_BASE_STRING_SPLITTER_INL_H_
+#ifndef FLARE_STRINGS_STRING_SPLITTER_INL_H_
+#define FLARE_STRINGS_STRING_SPLITTER_INL_H_
 
-namespace flare::base {
+namespace flare::strings {
 
     StringSplitter::StringSplitter(const char *str_begin,
                                    const char *str_end,
@@ -299,6 +299,6 @@ namespace flare::base {
         }
     }
 
-}  // namespace flare::base
+}  // namespace flare::strings
 
-#endif  // FLARE_BASE_STRING_SPLITTER_INL_H_
+#endif  // FLARE_STRINGS_STRING_SPLITTER_INL_H_

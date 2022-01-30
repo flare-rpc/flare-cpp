@@ -23,7 +23,7 @@
 #include <deque>
 #include <google/protobuf/io/zero_copy_stream.h>
 #include <google/protobuf/message.h>
-#include "flare/base/sys_byteorder.h"
+#include "flare/base/endian.h"
 #include <string_view>
 
 

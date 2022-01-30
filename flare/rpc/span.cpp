@@ -268,7 +268,7 @@ namespace flare::rpc {
     bool SpanInfoExtractor::PopAnnotation(
             int64_t before_this_time, int64_t *time, std::string *annotation) {
         for (; _sp != NULL; ++_sp) {
-            flare::base::StringSplitter sp_time(_sp.field(), _sp.field() + _sp.length(), ' ');
+            flare::strings::StringSplitter sp_time(_sp.field(), _sp.field() + _sp.length(), ' ');
             if (sp_time) {
                 char *endptr;
                 const int64_t anno_time = strtoll(sp_time.field(), &endptr, 10);

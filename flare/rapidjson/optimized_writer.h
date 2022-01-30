@@ -2,8 +2,8 @@
 // Created by liyinbin on 2020/3/29.
 //
 
-#ifndef ABEL_OPTIMIZED_WRITER_H
-#define ABEL_OPTIMIZED_WRITER_H
+#ifndef FLARE_OPTIMIZED_WRITER_H
+#define FLARE_OPTIMIZED_WRITER_H
 
 
 #include <flare/rapidjson/writer.h>
@@ -102,4 +102,4 @@ RAPIDJSON_NAMESPACE_BEGIN
 
 RAPIDJSON_NAMESPACE_END
 
-#endif //ABEL_OPTIMIZED_WRITER_H
+#endif //FLARE_OPTIMIZED_WRITER_H

@@ -22,7 +22,7 @@
 #include <string>                   // std::string
 #include "flare/container/flat_map.h"
 #include "flare/base/status.h"
-#include "flare/base/string_splitter.h"
+#include "flare/strings/string_splitter.h"
 
 // To flare developers: This is a class exposed to end-user. DON'T put impl.
 // details in this header, use opaque pointers instead.
@@ -219,7 +219,7 @@ namespace flare::rpc {
     }
 
 // Split query in the format of "key1=value1&key2&key3=value3"
-    class QuerySplitter : public flare::base::KeyValuePairsSplitter {
+    class QuerySplitter : public flare::strings::KeyValuePairsSplitter {
     public:
         inline QuerySplitter(const char *str_begin, const char *str_end)
                 : KeyValuePairsSplitter(str_begin, str_end, '&', '=') {}

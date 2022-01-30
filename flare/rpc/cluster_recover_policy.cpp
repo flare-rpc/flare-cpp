@@ -25,7 +25,7 @@
 #include "flare/rpc/socket.h"
 #include "flare/base/fast_rand.h"
 #include "flare/base/time.h"
-#include "flare/base/string_splitter.h"
+#include "flare/strings/string_splitter.h"
 #include "flare/base/strings.h"
 
 namespace flare::rpc {
@@ -113,7 +113,7 @@ bool GetRecoverPolicyByParams(const std::string_view& params,
     int64_t min_working_instances = -1;
     int64_t hold_seconds = -1;
     bool has_meet_params = false;
-    for (flare::base::KeyValuePairsSplitter sp(params.begin(), params.end(), ' ', '=');
+    for (flare::strings::KeyValuePairsSplitter sp(params.begin(), params.end(), ' ', '=');
             sp; ++sp) {
         if (sp.value().empty()) {
             LOG(ERROR) << "Empty value for " << sp.key() << " in lb parameter";

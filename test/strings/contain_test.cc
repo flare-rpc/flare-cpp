@@ -1,0 +1,40 @@
+// Copyright (c) 2021, gottingen group.
+// All rights reserved.
+// Created by liyinbin lijippy@163.com
+
+#include "flare/strings/contain.h"
+#include "flare/strings/starts_with.h"
+#include "flare/strings/ends_with.h"
+#include "gtest/gtest.h"
+
+namespace {
+
+
+    TEST(MatchTest, Contains) {
+        std::string_view a("abcdefg");
+        std::string_view b("abcd");
+        std::string_view c("efg");
+        std::string_view d("gh");
+        EXPECT_TRUE(flare::strings::string_contains(a, a));
+        EXPECT_TRUE(flare::strings::string_contains(a, b));
+        EXPECT_TRUE(flare::strings::string_contains(a, c));
+        EXPECT_FALSE(flare::strings::string_contains(a, d));
+        EXPECT_TRUE(flare::strings::string_contains("", ""));
+        EXPECT_TRUE(flare::strings::string_contains("abc", ""));
+        EXPECT_FALSE(flare::strings::string_contains("", "a"));
+    }
+
+    TEST(MatchTest, ContainsNull) {
+        const std::string s = "foo";
+        const char *cs = "foo";
+        const std::string_view sv("foo");
+        const std::string_view sv2("foo\0bar", 4);
+        EXPECT_EQ(s, "foo");
+        EXPECT_EQ(sv, "foo");
+        EXPECT_NE(sv2, "foo");
+        EXPECT_TRUE(flare::strings::ends_with(s, sv));
+        EXPECT_TRUE(flare::strings::starts_with(cs, sv));
+        EXPECT_TRUE(flare::strings::string_contains(cs, sv));
+        EXPECT_FALSE(flare::strings::string_contains(cs, sv2));
+    }
+}

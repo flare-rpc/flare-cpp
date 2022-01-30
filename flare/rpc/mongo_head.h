@@ -18,7 +18,7 @@
 #ifndef BRPC_MONGO_HEAD_H
 #define BRPC_MONGO_HEAD_H
 
-#include "flare/base/sys_byteorder.h"
+#include "flare/base/endian.h"
 
 
 namespace flare::rpc {

@@ -166,6 +166,7 @@ set(DYNAMIC_LIB
         ${CMAKE_THREAD_LIBS_INIT}
         ${THRIFT_LIB}
         ${THRIFTNB_LIB}
+        ${OPENSSL_SSL_LIBRARY}
         ${OPENSSL_CRYPTO_LIBRARY}
         dl
         z)
@@ -206,6 +207,8 @@ file(GLOB_RECURSE FLARE_CONTAINER_SRC "${PROJECT_SOURCE_DIR}/flare/container/*.c
 file(GLOB_RECURSE FLARE_HASH_SRC "${PROJECT_SOURCE_DIR}/flare/hash/*.cc")
 file(GLOB_RECURSE FLARE_MEMORY_SRC "${PROJECT_SOURCE_DIR}/flare/memory/*.cc")
 file(GLOB_RECURSE FLARE_IO_SRC "${PROJECT_SOURCE_DIR}/flare/io/*.cc")
+file(GLOB_RECURSE FLARE_MEMORY_SRC "${PROJECT_SOURCE_DIR}/flare/memory/*.cc")
+file(GLOB_RECURSE FLARE_STRINGS_SRC "${PROJECT_SOURCE_DIR}/flare/strings/*.cc")
 set(FLARE_SRC
        "${PROJECT_SOURCE_DIR}/flare/base/dynamic_annotations/dynamic_annotations.c"
         ${FLARE_BASE_SRC}
@@ -213,6 +216,7 @@ set(FLARE_SRC
         ${FLARE_HASH_SRC}
         ${FLARE_MEMORY_SRC}
         ${FLARE_IO_SRC}
+        ${FLARE_STRINGS_SRC}
         )
 
 file(GLOB_RECURSE BVAR_SOURCES "${PROJECT_SOURCE_DIR}/flare/variable/*.cpp")

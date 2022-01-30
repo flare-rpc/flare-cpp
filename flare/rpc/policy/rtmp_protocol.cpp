@@ -20,7 +20,7 @@
 #include <google/protobuf/io/zero_copy_stream_impl_lite.h>
 #include "flare/base/scoped_lock.h"
 #include "flare/base/fast_rand.h"
-#include "flare/base/sys_byteorder.h"
+#include "flare/base/endian.h"
 #include "flare/rpc/log.h"
 #include "flare/rpc/server.h"
 #include "flare/rpc/details/controller_private_accessor.h"
@@ -1362,7 +1362,7 @@ ParseResult RtmpContext::OnChunks(flare::io::cord_buf* source, Socket* socket) {
 }
 
 static int SendAck(Socket* socket, uint64_t received_bytes) {
-    const uint32_t data = flare::base::HostToNet32(received_bytes);
+    const uint32_t data = flare::base::flare_hton32(received_bytes);
     SocketMessagePtr<RtmpUnsentMessage> msg(
         MakeUnsentControlMessage(RTMP_MESSAGE_ACK, &data, sizeof(data)));
     return WriteWithoutOvercrowded(socket, msg);

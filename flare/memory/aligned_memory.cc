@@ -11,7 +11,7 @@
 
 namespace flare::memory {
 
-    void *AlignedAlloc(size_t size, size_t alignment) {
+    void *aligned_alloc(size_t size, size_t alignment) {
         DCHECK_GT(size, 0U);
         DCHECK_EQ(alignment & (alignment - 1), 0U);
         DCHECK_EQ(alignment % sizeof(void *), 0U);

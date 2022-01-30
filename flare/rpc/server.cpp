@@ -517,7 +517,7 @@ namespace flare::rpc {
 
     Acceptor *Server::BuildAcceptor() {
         std::set < std::string > whitelist;
-        for (flare::base::StringSplitter sp(_options.enabled_protocols.c_str(), ' ');
+        for (flare::strings::StringSplitter sp(_options.enabled_protocols.c_str(), ' ');
              sp; ++sp) {
             std::string protocol(sp.field(), sp.length());
             whitelist.insert(protocol);
@@ -1414,11 +1414,11 @@ namespace flare::rpc {
                 continue;
             }
             if (mp->http_url) {
-                flare::base::StringSplitter at_sp(mp->http_url->c_str(), '@');
+                flare::strings::StringSplitter at_sp(mp->http_url->c_str(), '@');
                 for (; at_sp; ++at_sp) {
                     std::string_view path(at_sp.field(), at_sp.length());
                     path = flare::base::strip_ascii_whitespace(path);
-                    flare::base::StringSplitter slash_sp(
+                    flare::strings::StringSplitter slash_sp(
                             path.data(), path.data() + path.size(), '/');
                     if (slash_sp == NULL) {
                         LOG(ERROR) << "Invalid http_url=" << *mp->http_url;

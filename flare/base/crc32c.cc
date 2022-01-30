@@ -284,7 +284,7 @@ namespace flare::base {
     // without any bounds checking.
 
     static inline uint32_t DecodeFixed32(const char *ptr) {
-    #if defined(ABEL_SYSTEM_LITTLE_ENDIAN) && ABEL_SYSTEM_LITTLE_ENDIAN
+    #if defined(FLARE_SYSTEM_LITTLE_ENDIAN) && FLARE_SYSTEM_LITTLE_ENDIAN
         // Load the raw bytes
         uint32_t result;
         memcpy(&result, ptr, sizeof(result));  // gcc optimizes this to a plain load
@@ -298,7 +298,7 @@ namespace flare::base {
     }
 
     inline uint64_t DecodeFixed64(const char *ptr) {
-    #if defined(ABEL_SYSTEM_LITTLE_ENDIAN) && ABEL_SYSTEM_LITTLE_ENDIAN
+    #if defined(FLARE_SYSTEM_LITTLE_ENDIAN) && FLARE_SYSTEM_LITTLE_ENDIAN
         // Load the raw bytes
         uint64_t result;
         memcpy(&result, ptr, sizeof(result));  // gcc optimizes this to a plain load
