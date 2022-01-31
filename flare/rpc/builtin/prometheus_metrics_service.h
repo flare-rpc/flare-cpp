@@ -23,7 +23,7 @@
 
 namespace flare::rpc {
 
-class PrometheusMetricsService : public brpc_metrics {
+class PrometheusMetricsService : public flare_metrics {
 public:
     void default_method(::google::protobuf::RpcController* cntl_base,
                         const ::flare::rpc::MetricsRequest* request,

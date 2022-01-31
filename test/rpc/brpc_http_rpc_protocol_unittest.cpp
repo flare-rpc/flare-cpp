@@ -37,8 +37,8 @@
 #include "echo.pb.h"
 #include "flare/rpc/policy/http_rpc_protocol.h"
 #include "flare/rpc/policy/http2_rpc_protocol.h"
-#include "json2pb/pb_to_json.h"
-#include "json2pb/json_to_pb.h"
+#include "flare/json2pb/pb_to_json.h"
+#include "flare/json2pb/json_to_pb.h"
 #include "flare/rpc/details/method_status.h"
 #include "flare/base/strings.h"
 

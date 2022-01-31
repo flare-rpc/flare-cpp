@@ -23,7 +23,7 @@
 #include <flare/base/static_atomic.h>
 #include "flare/base/time.h"
 #include "flare/base/logging.h"
-#include <json2pb/json_to_pb.h>
+#include <flare/json2pb/json_to_pb.h>
 #include <flare/bthread/timer_thread.h>
 #include <flare/bthread/bthread.h>
 

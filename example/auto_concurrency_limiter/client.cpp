@@ -23,7 +23,7 @@
 #include <flare/rpc/channel.h>
 #include <flare/variable/all.h>
 #include <flare/bthread/timer_thread.h>
-#include <json2pb/json_to_pb.h>
+#include <flare/json2pb/json_to_pb.h>
 
 #include <fstream>
 #include "cl_test.pb.h"

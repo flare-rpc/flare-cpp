@@ -17,7 +17,7 @@
 
 #include "repeated.pb.h"
 #include <gtest/gtest.h>
-#include <json2pb/pb_to_json.h>
+#include <flare/json2pb/pb_to_json.h>
 
 class RepeatedFieldTest : public testing::Test {
 protected:

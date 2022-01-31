@@ -17,8 +17,8 @@
 
 #include <algorithm>
 #include "flare/base/logging.h"
-#include <json2pb/pb_to_json.h>
-#include <json2pb/json_to_pb.h>
+#include <flare/json2pb/pb_to_json.h>
+#include <flare/json2pb/json_to_pb.h>
 #include "pb_util.h"
 #include "json_loader.h"
 #include <errno.h>

@@ -114,7 +114,7 @@ service sockets {
     rpc default_method(SocketsRequest) returns (SocketsResponse);
 }
 
-service brpc_metrics {
+service flare_metrics {
     rpc default_method(MetricsRequest) returns (MetricsResponse);
 }
 
