@@ -17,8 +17,8 @@
 
 // Date: 2014/09/22 11:57:43
 
-#ifndef  BVAR_LATENCY_RECORDER_H
-#define  BVAR_LATENCY_RECORDER_H
+#ifndef  FLARE_VARIABLE_LATENCY_RECORDER_H_
+#define  FLARE_VARIABLE_LATENCY_RECORDER_H_
 
 #include "flare/variable/recorder.h"
 #include "flare/variable/reducer.h"
@@ -71,7 +71,7 @@ protected:
 } // namespace detail
 
 // Specialized structure to record latency.
-// It's not a Variable, but it contains multiple bvar inside.
+// It's not a Variable, but it contains multiple variable inside.
 class LatencyRecorder : public detail::LatencyRecorderBase {
     typedef detail::LatencyRecorderBase Base;
 public:
@@ -146,7 +146,7 @@ public:
     // E.g. 0.99 means 99%-ile
     int64_t latency_percentile(double ratio) const;
 
-    // Get name of a sub-bvar.
+    // Get name of a sub-variable.
     const std::string& latency_name() const { return _latency_window.name(); }
     const std::string& latency_percentiles_name() const
     { return _latency_percentiles.name(); }
@@ -161,4 +161,4 @@ std::ostream& operator<<(std::ostream& os, const LatencyRecorder&);
 
 }  // namespace flare::variable
 
-#endif  //BVAR_LATENCY_RECORDER_H
+#endif  // FLARE_VARIABLE_LATENCY_RECORDER_H_

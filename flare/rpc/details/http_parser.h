@@ -19,8 +19,8 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef BRPC_HTTP_PARSER_H
-#define BRPC_HTTP_PARSER_H
+#ifndef FLARE_RPC_HTTP_PARSER_H_
+#define FLARE_RPC_HTTP_PARSER_H_
 
 /* Also update SONAME in the Makefile whenever you change these. */
 #define HTTP_PARSER_VERSION_MAJOR 2
@@ -43,22 +43,22 @@ typedef unsigned __int64 uint64_t;
 #include <stdint.h>
 #endif
 
-/* Compile with -DBRPC_HTTP_PARSER_STRICT=0 to make less checks, but run
+/* Compile with -DFLARE_RPC_HTTP_PARSER_STRICT=0 to make less checks, but run
  * faster
  */
-#ifndef BRPC_HTTP_PARSER_STRICT
-# define BRPC_HTTP_PARSER_STRICT 1
+#ifndef FLARE_RPC_HTTP_PARSER_STRICT
+# define FLARE_RPC_HTTP_PARSER_STRICT 1
 #endif
 
 /* Maximium header size allowed. If the macro is not defined
  * before including this header then the default is used. To
  * change the maximum header size, define the macro in the build
- * environment (e.g. -DBRPC_HTTP_MAX_HEADER_SIZE=<value>). To remove
+ * environment (e.g. -DFLARE_RPC_HTTP_MAX_HEADER_SIZE=<value>). To remove
  * the effective limit on the size of the header, define the macro
- * to a very large number (e.g. -DBRPC_HTTP_MAX_HEADER_SIZE=0x7fffffff)
+ * to a very large number (e.g. -DFLARE_RPC_HTTP_MAX_HEADER_SIZE=0x7fffffff)
  */
-#ifndef BRPC_HTTP_MAX_HEADER_SIZE
-# define BRPC_HTTP_MAX_HEADER_SIZE (80*1024)
+#ifndef FLARE_RPC_HTTP_MAX_HEADER_SIZE
+# define FLARE_RPC_HTTP_MAX_HEADER_SIZE (80*1024)
 #endif
 
 
@@ -326,4 +326,4 @@ const char* http_parser_header_state_name(unsigned int header_state);
 } // namespace flare::rpc
 
 
-#endif // BRPC_HTTP_PARSER_H
+#endif // FLARE_RPC_HTTP_PARSER_H_

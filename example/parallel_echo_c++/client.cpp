@@ -144,7 +144,7 @@ int main(int argc, char* argv[]) {
         }
     }
 
-    // Initialize bvar for sub channel
+    // Initialize variable for sub channel
     g_sub_channel_latency = new flare::variable::LatencyRecorder[FLAGS_channel_num];
     for (int i = 0; i < FLAGS_channel_num; ++i) {
         std::string name;

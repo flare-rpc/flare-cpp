@@ -16,8 +16,8 @@
 // under the License.
 
 
-#ifndef BRPC_COMPRESS_H
-#define BRPC_COMPRESS_H
+#ifndef FLARE_RPC_COMPRESS_H_
+#define FLARE_RPC_COMPRESS_H_
 
 #include <google/protobuf/message.h>              // Message
 #include "flare/io/cord_buf.h"                           // flare::io::cord_buf
@@ -63,4 +63,4 @@ bool SerializeAsCompressedData(const google::protobuf::Message& msg,
 } // namespace flare::rpc
 
 
-#endif // BRPC_COMPRESS_H
+#endif // FLARE_RPC_COMPRESS_H_

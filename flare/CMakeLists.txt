@@ -42,7 +42,7 @@ target_link_libraries(flare-shared ${DYNAMIC_LIB})
 
 target_link_libraries(flare-shared ${GLOG_LIB})
 
-if (BRPC_WITH_THRIFT)
+if (FLARE_WITH_THRIFT)
     target_link_libraries(flare-shared thrift)
     target_link_libraries(flare-static thrift)
 endif ()

@@ -158,7 +158,7 @@ ssize_t Stream::CutMessageIntoFileDescriptor(int /*fd*/,
 }
 
 void Stream::WriteToHostSocket(flare::io::cord_buf* b) {
-    BRPC_HANDLE_EOVERCROWDED(_host_socket->Write(b));
+    FLARE_RPC_HANDLE_EOVERCROWDED(_host_socket->Write(b));
 }
 
 ssize_t Stream::CutMessageIntoSSLChannel(SSL*, flare::io::cord_buf**, size_t) {

@@ -16,8 +16,8 @@
 // under the License.
 
 
-#ifndef BRPC_REDIS_COMMAND_H
-#define BRPC_REDIS_COMMAND_H
+#ifndef FLARE_RPC_REDIS_COMMAND_H_
+#define FLARE_RPC_REDIS_COMMAND_H_
 
 #include <memory>           // std::unique_ptr
 #include <vector>
@@ -66,4 +66,4 @@ private:
 } // namespace flare::rpc
 
 
-#endif  // BRPC_REDIS_COMMAND_H
+#endif  // FLARE_RPC_REDIS_COMMAND_H_

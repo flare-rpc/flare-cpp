@@ -105,11 +105,11 @@ void IndexService::default_method(::google::protobuf::RpcController* controller,
            << "/flags/NAME?setvalue=VALUE : Change a gflag, validator will be called."
             " User is responsible for thread-safety and consistency issues." << NL
             
-           << Path("/vars", html_addr) << " : List all exposed bvars" << NL
+           << Path("/vars", html_addr) << " : List all exposed variables" << NL
            << SP << Path("/vars/rpc_num_sockets", html_addr)
-           << " : List the bvar" << NL
+           << " : List the variable" << NL
            << SP << Path("/vars/rpc_server*_count;iobuf_blo$k_*", html_addr)
-           <<  " : List multiple bvars with glob patterns"
+           <<  " : List multiple variables with glob patterns"
             " (Use $ instead of ? to match single character)" << NL
             
            << Path("/rpcz", html_addr) << " : Recent RPC calls"

@@ -17,8 +17,8 @@
 
 // Date 2014/09/22 11:57:43
 
-#ifndef  BVAR_DETAIL_CALL_OP_RETURNING_VOID_H
-#define  BVAR_DETAIL_CALL_OP_RETURNING_VOID_H
+#ifndef  FLARE_VARIABLE_DETAIL_CALL_OP_RETURNING_VOID_H_
+#define  FLARE_VARIABLE_DETAIL_CALL_OP_RETURNING_VOID_H_
 
 namespace flare::variable {
 namespace detail {
@@ -32,4 +32,4 @@ inline void call_op_returning_void(
 }  // namespace detail
 }  // namespace flare::variable
 
-#endif  //BVAR_DETAIL_CALL_OP_RETURNING_VOID_H
+#endif  // FLARE_VARIABLE_DETAIL_CALL_OP_RETURNING_VOID_H_

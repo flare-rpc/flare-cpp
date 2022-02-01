@@ -15,8 +15,8 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef BRPC_JSON2PB_JSON_PROTOBUF_MAP_H
-#define BRPC_JSON2PB_JSON_PROTOBUF_MAP_H
+#ifndef FLARE_RPC_JSON2PB_JSON_PROTOBUF_MAP_H_
+#define FLARE_RPC_JSON2PB_JSON_PROTOBUF_MAP_H_
 
 #include <google/protobuf/descriptor.h>
 
@@ -49,4 +49,4 @@ bool IsProtobufMap(const google::protobuf::FieldDescriptor* field);
 
 } // namespace json2pb
 
-#endif // BRPC_JSON2PB_JSON_PROTOBUF_MAP_H
+#endif // FLARE_RPC_JSON2PB_JSON_PROTOBUF_MAP_H_

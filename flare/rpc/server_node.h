@@ -15,8 +15,8 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef BRPC_SERVER_NODE_H
-#define BRPC_SERVER_NODE_H
+#ifndef FLARE_RPC_SERVER_NODE_H_
+#define FLARE_RPC_SERVER_NODE_H_
 
 #include <string>
 #include "flare/base/endpoint.h"
@@ -60,4 +60,4 @@ inline std::ostream& operator<<(std::ostream& os, const ServerNode& n) {
 
 } // namespace flare::rpc
 
-#endif  // BRPC_SERVER_NODE_H
+#endif  // FLARE_RPC_SERVER_NODE_H_

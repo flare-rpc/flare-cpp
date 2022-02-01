@@ -221,7 +221,7 @@ TEST_F(SofaTest, process_request_failed_socket) {
     flare::rpc::policy::MostCommonMessage* msg = MakeRequestMessage(meta);
     _socket->SetFailed();
     ProcessMessage(flare::rpc::policy::ProcessSofaRequest, msg, false);
-    ASSERT_EQ(0ll, _server._nerror_bvar.get_value());
+    ASSERT_EQ(0ll, _server._nerror_var.get_value());
     CheckResponseCode(true, 0);
 }
 
@@ -233,7 +233,7 @@ TEST_F(SofaTest, process_request_logoff) {
     flare::rpc::policy::MostCommonMessage* msg = MakeRequestMessage(meta);
     _server._status = flare::rpc::Server::READY;
     ProcessMessage(flare::rpc::policy::ProcessSofaRequest, msg, false);
-    ASSERT_EQ(1ll, _server._nerror_bvar.get_value());
+    ASSERT_EQ(1ll, _server._nerror_var.get_value());
     CheckResponseCode(false, flare::rpc::ELOGOFF);
 }
 
@@ -244,7 +244,7 @@ TEST_F(SofaTest, process_request_wrong_method) {
     meta.set_method("EchoService.NO_SUCH_METHOD");
     flare::rpc::policy::MostCommonMessage* msg = MakeRequestMessage(meta);
     ProcessMessage(flare::rpc::policy::ProcessSofaRequest, msg, false);
-    ASSERT_EQ(1ll, _server._nerror_bvar.get_value());
+    ASSERT_EQ(1ll, _server._nerror_var.get_value());
     CheckResponseCode(false, flare::rpc::ENOMETHOD);
 }
 

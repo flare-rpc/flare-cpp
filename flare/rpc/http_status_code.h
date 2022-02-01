@@ -16,8 +16,8 @@
 // under the License.
 
 
-#ifndef  BRPC_HTTP_STATUS_CODE_H
-#define  BRPC_HTTP_STATUS_CODE_H
+#ifndef  FLARE_RPC_HTTP_STATUS_CODE_H_
+#define  FLARE_RPC_HTTP_STATUS_CODE_H_
 
 
 namespace flare::rpc {
@@ -680,4 +680,4 @@ static const int HTTP_STATUS_VERSION_NOT_SUPPORTED           = 505;
 } // namespace flare::rpc
 
 
-#endif  //BRPC_HTTP_STATUS_CODE_H
+#endif  // FLARE_RPC_HTTP_STATUS_CODE_H_

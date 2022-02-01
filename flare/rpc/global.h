@@ -16,8 +16,8 @@
 // under the License.
 
 
-#ifndef BRPC_GLOBAL_H
-#define BRPC_GLOBAL_H
+#ifndef FLARE_RPC_GLOBAL_H_
+#define FLARE_RPC_GLOBAL_H_
 
 
 namespace flare::rpc {
@@ -27,4 +27,4 @@ void GlobalInitializeOrDie();
 } // namespace flare::rpc
 
 
-#endif // BRPC_GLOBAL_H
+#endif // FLARE_RPC_GLOBAL_H_

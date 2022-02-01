@@ -15,8 +15,8 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef BRPC_ACCEPTOR_H
-#define BRPC_ACCEPTOR_H
+#ifndef FLARE_RPC_ACCEPTOR_H_
+#define FLARE_RPC_ACCEPTOR_H_
 
 #include <mutex>
 #include <condition_variable>
@@ -112,4 +112,4 @@ private:
 } // namespace flare::rpc
 
 
-#endif // BRPC_ACCEPTOR_H
+#endif // FLARE_RPC_ACCEPTOR_H_

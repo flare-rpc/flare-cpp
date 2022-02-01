@@ -16,8 +16,8 @@
 // under the License.
 
 
-#ifndef BRPC_SERIALIZED_REQUEST_H
-#define BRPC_SERIALIZED_REQUEST_H
+#ifndef FLARE_RPC_SERIALIZED_REQUEST_H_
+#define FLARE_RPC_SERIALIZED_REQUEST_H_
 
 #include <google/protobuf/message.h>
 #include "flare/io/cord_buf.h"
@@ -76,4 +76,4 @@ private:
 } // namespace flare::rpc
 
 
-#endif  // BRPC_SERIALIZED_REQUEST_H
+#endif  // FLARE_RPC_SERIALIZED_REQUEST_H_

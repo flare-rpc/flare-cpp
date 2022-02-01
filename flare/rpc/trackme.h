@@ -16,8 +16,8 @@
 // under the License.
 
 
-#ifndef BRPC_TRACKME_H
-#define BRPC_TRACKME_H
+#ifndef FLARE_RPC_TRACKME_H_
+#define FLARE_RPC_TRACKME_H_
 
 // [Internal] RPC users are not supposed to call functions below. 
 
@@ -37,4 +37,4 @@ void TrackMe();
 } // namespace flare::rpc
 
 
-#endif // BRPC_TRACKME_H
+#endif // FLARE_RPC_TRACKME_H_

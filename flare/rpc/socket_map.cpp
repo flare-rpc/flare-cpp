@@ -33,22 +33,22 @@ namespace flare::rpc {
 DEFINE_int32(health_check_interval, 3, 
              "seconds between consecutive health-checkings");
 // NOTE: Must be limited to positive to guarantee correctness of SocketMapRemove.
-BRPC_VALIDATE_GFLAG(health_check_interval, PositiveInteger);
+FLARE_RPC_VALIDATE_GFLAG(health_check_interval, PositiveInteger);
 
 DEFINE_int32(idle_timeout_second, 10, 
              "Pooled connections without data transmission for so many "
              "seconds will be closed. No effect for non-positive values");
-BRPC_VALIDATE_GFLAG(idle_timeout_second, PassValidate);
+FLARE_RPC_VALIDATE_GFLAG(idle_timeout_second, PassValidate);
 
 DEFINE_int32(defer_close_second, 0,
              "Defer close of connections for so many seconds even if the"
              " connection is not used by anyone. Close immediately for "
              "non-positive values.");
-BRPC_VALIDATE_GFLAG(defer_close_second, PassValidate);
+FLARE_RPC_VALIDATE_GFLAG(defer_close_second, PassValidate);
 
 DEFINE_bool(show_socketmap_in_vars, false,
             "[DEBUG] Describe SocketMaps in /vars");
-BRPC_VALIDATE_GFLAG(show_socketmap_in_vars, PassValidate);
+FLARE_RPC_VALIDATE_GFLAG(show_socketmap_in_vars, PassValidate);
 
 static pthread_once_t g_socket_map_init = PTHREAD_ONCE_INIT;
 static flare::static_atomic<SocketMap*> g_socket_map = FLARE_STATIC_ATOMIC_INIT(NULL);
@@ -131,8 +131,8 @@ SocketMapOptions::SocketMapOptions()
 }
 
 SocketMap::SocketMap()
-    : _exposed_in_bvar(false)
-    , _this_map_bvar(NULL)
+    : _exposed_in_variable(false)
+    , _this_map_var(NULL)
     , _has_close_idle_thread(false) {
 }
 
@@ -162,8 +162,8 @@ SocketMap::~SocketMap() {
         }
     }
 
-    delete _this_map_bvar;
-    _this_map_bvar = NULL;
+    delete _this_map_var;
+    _this_map_var = NULL;
 
     delete _options.socket_creator;
     _options.socket_creator = NULL;
@@ -247,16 +247,16 @@ int SocketMap::Insert(const SocketMapKey& key, SocketId* id,
     SingleConnection new_sc = { 1, ptr.release(), 0 };
     _map[key] = new_sc;
     *id = tmp_id;
-    bool need_to_create_bvar = false;
-    if (FLAGS_show_socketmap_in_vars && !_exposed_in_bvar) {
-        _exposed_in_bvar = true;
-        need_to_create_bvar = true;
+    bool need_to_create_variable = false;
+    if (FLAGS_show_socketmap_in_vars && !_exposed_in_variable) {
+        _exposed_in_variable = true;
+        need_to_create_variable = true;
     }
     mu.unlock();
-    if (need_to_create_bvar) {
+    if (need_to_create_variable) {
         char namebuf[32];
         int len = snprintf(namebuf, sizeof(namebuf), "rpc_socketmap_%p", this);
-        _this_map_bvar = new flare::variable::PassiveStatus<std::string>(
+        _this_map_var = new flare::variable::PassiveStatus<std::string>(
             std::string_view(namebuf, len), PrintSocketMap, this);
     }
     return 0;
@@ -289,16 +289,16 @@ void SocketMap::RemoveInternal(const SocketMapKey& key,
         } else {
             Socket* const s = sc->socket;
             _map.erase(key);
-            bool need_to_create_bvar = false;
-            if (FLAGS_show_socketmap_in_vars && !_exposed_in_bvar) {
-                _exposed_in_bvar = true;
-                need_to_create_bvar = true;
+            bool need_to_create_variable = false;
+            if (FLAGS_show_socketmap_in_vars && !_exposed_in_variable) {
+                _exposed_in_variable = true;
+                need_to_create_variable = true;
             }
             mu.unlock();
-            if (need_to_create_bvar) {
+            if (need_to_create_variable) {
                 char namebuf[32];
                 int len = snprintf(namebuf, sizeof(namebuf), "rpc_socketmap_%p", this);
-                _this_map_bvar = new flare::variable::PassiveStatus<std::string>(
+                _this_map_var = new flare::variable::PassiveStatus<std::string>(
                     std::string_view(namebuf, len), PrintSocketMap, this);
             }
             s->ReleaseAdditionalReference(); // release extra ref

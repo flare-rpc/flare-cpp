@@ -36,7 +36,7 @@ int64_t GetChannelConnectionCount();
 
 DEFINE_bool(show_hostname_instead_of_ip, false,
             "/connections shows hostname instead of ip");
-BRPC_VALIDATE_GFLAG(show_hostname_instead_of_ip, PassValidate);
+FLARE_RPC_VALIDATE_GFLAG(show_hostname_instead_of_ip, PassValidate);
 
 DEFINE_int32(max_shown_connections, 1024,
              "Print stats of at most so many connections (soft limit)");

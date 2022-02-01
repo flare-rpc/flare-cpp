@@ -15,8 +15,8 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef BRPC_ESP_HEAD_H
-#define BRPC_ESP_HEAD_H
+#ifndef FLARE_RPC_ESP_HEAD_H_
+#define FLARE_RPC_ESP_HEAD_H_
 
 namespace flare::rpc {
 
@@ -41,4 +41,4 @@ struct EspHead {
 
 } // namespace flare::rpc
 
-#endif // BRPC_ESP_HEAD_H
+#endif // FLARE_RPC_ESP_HEAD_H_

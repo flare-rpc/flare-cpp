@@ -15,8 +15,8 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef BRPC_ADAPTIVE_MAX_CONCURRENCY_H
-#define BRPC_ADAPTIVE_MAX_CONCURRENCY_H
+#ifndef FLARE_RPC_ADAPTIVE_MAX_CONCURRENCY_H_
+#define FLARE_RPC_ADAPTIVE_MAX_CONCURRENCY_H_
 
 // To flare developers: This is a header included by user, don't depend
 // on internal structures, use opaque pointers instead.
@@ -88,4 +88,4 @@ inline bool operator!=(const std::string_view& concurrency,
 }  // namespace flare::rpc
 
 
-#endif // BRPC_ADAPTIVE_MAX_CONCURRENCY_H
+#endif // FLARE_RPC_ADAPTIVE_MAX_CONCURRENCY_H_

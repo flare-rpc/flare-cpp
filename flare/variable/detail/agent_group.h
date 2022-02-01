@@ -17,8 +17,8 @@
 
 // Date 2014/09/24 19:34:24
 
-#ifndef  BVAR_DETAIL__AGENT_GROUP_H
-#define  BVAR_DETAIL__AGENT_GROUP_H
+#ifndef  FLARE_VARIABLE_DETAIL__AGENT_GROUP_H_
+#define  FLARE_VARIABLE_DETAIL__AGENT_GROUP_H_
 
 #include <pthread.h>                        // pthread_mutex_*
 #include <stdlib.h>                         // abort
@@ -51,8 +51,8 @@ namespace flare::variable {
             typedef Agent agent_type;
 
             // TODO: We should remove the template parameter and unify AgentGroup
-            // of all bvar with a same one, to reuse the memory between different
-            // type of bvar. The unified AgentGroup allocates small structs in-place
+            // of all variable with a same one, to reuse the memory between different
+            // type of variable. The unified AgentGroup allocates small structs in-place
             // and large structs on heap, thus keeping batch efficiencies on small
             // structs and improving memory usage on large structs.
             const static size_t RAW_BLOCK_SIZE = 4096;
@@ -200,4 +200,4 @@ namespace flare::variable {
     }  // namespace detail
 }  // namespace flare::variable
 
-#endif  //BVAR_DETAIL__AGENT_GROUP_H
+#endif  // FLARE_VARIABLE_DETAIL__AGENT_GROUP_H_

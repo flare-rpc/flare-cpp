@@ -16,8 +16,8 @@
 // under the License.
 
 
-#ifndef BRPC_PARSE_RESULT_H
-#define BRPC_PARSE_RESULT_H
+#ifndef FLARE_RPC_PARSE_RESULT_H_
+#define FLARE_RPC_PARSE_RESULT_H_
 
 
 namespace flare::rpc {
@@ -89,4 +89,4 @@ inline ParseResult MakeMessage(InputMessageBase* msg) {
 } // namespace flare::rpc
 
 
-#endif  // BRPC_PARSE_RESULT_H
+#endif  // FLARE_RPC_PARSE_RESULT_H_

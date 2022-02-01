@@ -16,10 +16,10 @@
 // under the License.
 
 
-#ifndef BRPC_PROFILER_LINKER_H
-#define BRPC_PROFILER_LINKER_H
+#ifndef FLARE_RPC_PROFILER_LINKER_H_
+#define FLARE_RPC_PROFILER_LINKER_H_
 
-#if defined(BRPC_ENABLE_CPU_PROFILER) || defined(BAIDU_RPC_ENABLE_CPU_PROFILER)
+#if defined(FLARE_ENABLE_CPU_PROFILER)
 #include "flare/base/gperftools_profiler.h"
 #endif
 
@@ -38,7 +38,7 @@ struct ProfilerLinker {
     // etc when corresponding macros are defined.
     inline ProfilerLinker() {
         
-#if defined(BRPC_ENABLE_CPU_PROFILER) || defined(BAIDU_RPC_ENABLE_CPU_PROFILER)
+#if defined(FLARE_ENABLE_CPU_PROFILER)
         cpu_profiler_enabled = true;
         // compiler has no way to tell if PROFILER_LINKER_DUMMY is 0 or not,
         // so it has to link the function inside the branch.
@@ -52,4 +52,4 @@ struct ProfilerLinker {
 } // namespace flare::rpc
 
 
-#endif  // BRPC_PROFILER_LINKER_H
+#endif  // FLARE_RPC_PROFILER_LINKER_H_

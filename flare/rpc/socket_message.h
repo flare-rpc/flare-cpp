@@ -16,8 +16,8 @@
 // under the License.
 
 
-#ifndef BRPC_SOCKET_MESSAGE_H
-#define BRPC_SOCKET_MESSAGE_H
+#ifndef FLARE_RPC_SOCKET_MESSAGE_H_
+#define FLARE_RPC_SOCKET_MESSAGE_H_
 
 #include "flare/base/status.h"                          // flare::base::flare_status
 
@@ -85,4 +85,4 @@ struct SocketMessagePtr : public SocketMessagePtr<> {
 } // namespace flare::rpc
 
 
-#endif  // BRPC_SOCKET_MESSAGE_H
+#endif  // FLARE_RPC_SOCKET_MESSAGE_H_

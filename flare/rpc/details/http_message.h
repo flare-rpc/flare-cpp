@@ -16,8 +16,8 @@
 // under the License.
 
 
-#ifndef BRPC_HTTP_MESSAGE_H
-#define BRPC_HTTP_MESSAGE_H
+#ifndef FLARE_RPC_HTTP_MESSAGE_H_
+#define FLARE_RPC_HTTP_MESSAGE_H_
 
 #include <string>                      // std::string
 #include "flare/base/profile.h"
@@ -137,4 +137,4 @@ void MakeRawHttpResponse(flare::io::cord_buf* response,
 
 } // namespace flare::rpc
 
-#endif  // BRPC_HTTP_MESSAGE_H
+#endif  // FLARE_RPC_HTTP_MESSAGE_H_

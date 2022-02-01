@@ -16,8 +16,8 @@
 // under the License.
 
 
-#ifndef BRPC_POLICY_ROUND_ROBIN_LOAD_BALANCER_H
-#define BRPC_POLICY_ROUND_ROBIN_LOAD_BALANCER_H
+#ifndef FLARE_RPC_POLICY_ROUND_ROBIN_LOAD_BALANCER_H_
+#define FLARE_RPC_POLICY_ROUND_ROBIN_LOAD_BALANCER_H_
 
 #include <vector>                                      // std::vector
 #include <map>                                         // std::map
@@ -65,4 +65,4 @@ private:
 } // namespace flare::rpc
 
 
-#endif  // BRPC_POLICY_ROUND_ROBIN_LOAD_BALANCER_H
+#endif  // FLARE_RPC_POLICY_ROUND_ROBIN_LOAD_BALANCER_H_

@@ -16,8 +16,8 @@
 // under the License.
 
 
-#ifndef BRPC_REDIS_REPLY_H
-#define BRPC_REDIS_REPLY_H
+#ifndef FLARE_RPC_REDIS_REPLY_H_
+#define FLARE_RPC_REDIS_REPLY_H_
 
 #include <stdarg.h>
 #include "flare/io/cord_buf.h"                  // flare::io::cord_buf
@@ -332,4 +332,4 @@ inline void RedisReply::CopyFromSameArena(const RedisReply& other) {
 
 } // namespace flare::rpc
 
-#endif  // BRPC_REDIS_H
+#endif  // FLARE_RPC_REDIS_H_

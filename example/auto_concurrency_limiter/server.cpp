@@ -78,7 +78,7 @@ void DisplayStage(const test::Stage &stage) {
 
 std::atomic<int> cnt(0);
 std::atomic<int> atomic_sleep_time(0);
-flare::variable::PassiveStatus<int> atomic_sleep_time_bvar(cast_func, &atomic_sleep_time);
+flare::variable::PassiveStatus<int> atomic_sleep_time_variable(cast_func, &atomic_sleep_time);
 
 namespace bthread {
     DECLARE_int32(bthread_concurrency);

@@ -17,8 +17,8 @@
 
 // Date: Tue Jul 28 18:15:57 CST 2015
 
-#ifndef  BVAR_DETAIL_SAMPLER_H
-#define  BVAR_DETAIL_SAMPLER_H
+#ifndef  FLARE_VARIABLE_DETAIL_SAMPLER_H_
+#define  FLARE_VARIABLE_DETAIL_SAMPLER_H_
 
 #include <vector>
 #include "flare/container/linked_list.h"
@@ -220,4 +220,4 @@ private:
 }  // namespace detail
 }  // namespace flare::variable
 
-#endif  // BVAR_DETAIL_SAMPLER_H
+#endif  // FLARE_VARIABLE_DETAIL_SAMPLER_H_

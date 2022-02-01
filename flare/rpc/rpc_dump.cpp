@@ -57,9 +57,9 @@ namespace flare::rpc {
     DEFINE_int32(rpc_dump_max_requests_in_one_file, 1000,
                  "Max number of requests in one dumped file");
 
-    BRPC_VALIDATE_GFLAG(rpc_dump, PassValidate);
-    BRPC_VALIDATE_GFLAG(rpc_dump_max_requests_in_one_file, PositiveInteger);
-    BRPC_VALIDATE_GFLAG(rpc_dump_max_files, PositiveInteger);
+    FLARE_RPC_VALIDATE_GFLAG(rpc_dump, PassValidate);
+    FLARE_RPC_VALIDATE_GFLAG(rpc_dump_max_requests_in_one_file, PositiveInteger);
+    FLARE_RPC_VALIDATE_GFLAG(rpc_dump_max_files, PositiveInteger);
 
     static const size_t UNWRITTEN_BUFSIZE = 1024 * 1024;
     static const int64_t FLUSH_TIMEOUT = 2000000L; // 2s
@@ -109,7 +109,7 @@ namespace flare::rpc {
         flare::io::cord_buf _unwritten_buf;
     };
 
-    flare::variable::CollectorSpeedLimit g_rpc_dump_sl = BVAR_COLLECTOR_SPEED_LIMIT_INITIALIZER;
+    flare::variable::CollectorSpeedLimit g_rpc_dump_sl = VARIABLE_COLLECTOR_SPEED_LIMIT_INITIALIZER;
     static RpcDumpContext *g_rpc_dump_ctx = NULL;
 
     void SampledRequest::dump_and_destroy(size_t round) {

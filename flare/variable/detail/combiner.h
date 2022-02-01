@@ -17,8 +17,8 @@
 
 // Date 2014/09/22 11:57:43
 
-#ifndef  BVAR_COMBINER_H
-#define  BVAR_COMBINER_H
+#ifndef  FLARE_VARIABLE_COMBINER_H_
+#define  FLARE_VARIABLE_COMBINER_H_
 
 #include <string>                       // std::string
 #include <vector>                       // std::vector
@@ -345,4 +345,4 @@ namespace flare::variable {
     }  // namespace detail
 }  // namespace flare::variable
 
-#endif  // BVAR_COMBINER_H
+#endif  // FLARE_VARIABLE_COMBINER_H_

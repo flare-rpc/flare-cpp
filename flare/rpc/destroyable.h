@@ -16,8 +16,8 @@
 // under the License.
 
 
-#ifndef BRPC_DESTROYABLE_H
-#define BRPC_DESTROYABLE_H
+#ifndef FLARE_RPC_DESTROYABLE_H_
+#define FLARE_RPC_DESTROYABLE_H_
 
 #include <memory>           // std::unique_ptr
 
@@ -46,4 +46,4 @@ struct DestroyingPtr : public std::unique_ptr<T, detail::Destroyer<T> > {
 } // namespace flare::rpc
 
 
-#endif  // BRPC_DESTROYABLE_H
+#endif  // FLARE_RPC_DESTROYABLE_H_

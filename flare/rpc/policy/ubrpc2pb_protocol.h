@@ -16,8 +16,8 @@
 // under the License.
 
 
-#ifndef BRPC_POLICY_UBRPC2PB_PROTOCOL_H
-#define BRPC_POLICY_UBRPC2PB_PROTOCOL_H
+#ifndef FLARE_RPC_POLICY_UBRPC2PB_PROTOCOL_H_
+#define FLARE_RPC_POLICY_UBRPC2PB_PROTOCOL_H_
 
 #include "flare/mcpack2pb/mcpack2pb.h"
 #include "flare/rpc/nshead_pb_service_adaptor.h"
@@ -80,4 +80,4 @@ public:
 } // namespace flare::rpc
 
 
-#endif // BRPC_POLICY_UBRPC2PB_PROTOCOL_H
+#endif // FLARE_RPC_POLICY_UBRPC2PB_PROTOCOL_H_

@@ -17,8 +17,8 @@
 
 // Date 2014/09/22 11:57:43
 
-#ifndef  BVAR_PASSIVE_STATUS_H
-#define  BVAR_PASSIVE_STATUS_H
+#ifndef  FLARE_VARIABLE_PASSIVE_STATUS_H_
+#define  FLARE_VARIABLE_PASSIVE_STATUS_H_
 
 #include "flare/variable/variable.h"
 #include "flare/variable/reducer.h"
@@ -277,4 +277,4 @@ public:
 
 }  // namespace flare::variable
 
-#endif  //BVAR_PASSIVE_STATUS_H
+#endif  // FLARE_VARIABLE_PASSIVE_STATUS_H_

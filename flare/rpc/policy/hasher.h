@@ -16,8 +16,8 @@
 // under the License.
 
 
-#ifndef  BRPC_HASHER_H
-#define  BRPC_HASHER_H
+#ifndef  FLARE_RPC_HASHER_H_
+#define  FLARE_RPC_HASHER_H_
 
 #include <stddef.h>
 #include <stdint.h>
@@ -40,4 +40,4 @@ uint32_t MurmurHash32V(const std::string_view* keys, size_t num_keys);
 } // namespace flare::rpc
 
 
-#endif  //BRPC_HASHER_H
+#endif  // FLARE_RPC_HASHER_H_

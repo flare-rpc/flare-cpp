@@ -97,7 +97,7 @@ DECLARE_bool(usercode_in_pthread);
 DEFINE_int32(free_memory_to_system_interval, 0,
              "Try to return free memory to system every so many seconds, "
              "values <= 0 disables this feature");
-BRPC_VALIDATE_GFLAG(free_memory_to_system_interval, PassValidate);
+FLARE_RPC_VALIDATE_GFLAG(free_memory_to_system_interval, PassValidate);
 
 namespace policy {
 // Defined in http_rpc_protocol.cpp

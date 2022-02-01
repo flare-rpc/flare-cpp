@@ -16,8 +16,8 @@
 // under the License.
 
 
-#ifndef BRPC_STREAM_CREATOR_H
-#define BRPC_STREAM_CREATOR_H
+#ifndef FLARE_RPC_STREAM_CREATOR_H_
+#define FLARE_RPC_STREAM_CREATOR_H_
 
 #include "flare/rpc/socket_id.h"
 
@@ -80,4 +80,4 @@ public:
 } // namespace flare::rpc
 
 
-#endif  // BRPC_STREAM_CREATOR_H
+#endif  // FLARE_RPC_STREAM_CREATOR_H_

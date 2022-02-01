@@ -16,8 +16,8 @@
 // under the License.
 
 
-#ifndef BRPC_POLICY_BRPC_PROTOCOL_H
-#define BRPC_POLICY_BRPC_PROTOCOL_H
+#ifndef FLARE_RPC_POLICY_BRPC_PROTOCOL_H_
+#define FLARE_RPC_POLICY_BRPC_PROTOCOL_H_
 
 #include "flare/rpc/protocol.h"
 
@@ -49,4 +49,4 @@ void PackRpcRequest(flare::io::cord_buf* buf,
 }  // namespace policy
 } // namespace flare::rpc
 
-#endif  // BRPC_POLICY_BRPC_PROTOCOL_H
+#endif  // FLARE_RPC_POLICY_BRPC_PROTOCOL_H_

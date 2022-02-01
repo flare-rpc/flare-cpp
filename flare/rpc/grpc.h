@@ -16,8 +16,8 @@
 // under the License.
 
 
-#ifndef BRPC_GRPC_H
-#define BRPC_GRPC_H
+#ifndef FLARE_RPC_GRPC_H_
+#define FLARE_RPC_GRPC_H_
 
 #include <map>
 #include <flare/rpc/http2.h>
@@ -158,4 +158,4 @@ void PercentDecode(const std::string& str, std::string* str_out);
 
 } // namespace flare::rpc
 
-#endif // BRPC_GRPC_H
+#endif // FLARE_RPC_GRPC_H_

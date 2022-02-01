@@ -15,8 +15,8 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef BRPC_MONGO_HEAD_H
-#define BRPC_MONGO_HEAD_H
+#ifndef FLARE_RPC_MONGO_HEAD_H_
+#define FLARE_RPC_MONGO_HEAD_H_
 
 #include "flare/base/endian.h"
 
@@ -84,4 +84,4 @@ namespace flare::rpc {
 } // namespace flare::rpc
 
 
-#endif // BRPC_MONGO_HEAD_H
+#endif // FLARE_RPC_MONGO_HEAD_H_

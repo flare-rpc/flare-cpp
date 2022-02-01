@@ -16,8 +16,8 @@
 // under the License.
 
 
-#ifndef BRPC_NSHEAD_PB_SERVICE_ADAPTOR_H
-#define BRPC_NSHEAD_PB_SERVICE_ADAPTOR_H
+#ifndef FLARE_RPC_NSHEAD_PB_SERVICE_ADAPTOR_H_
+#define FLARE_RPC_NSHEAD_PB_SERVICE_ADAPTOR_H_
 
 #include "flare/rpc/nshead_service.h"             // NsheadService
 #include "flare/rpc/nshead_meta.pb.h"            // NsheadMeta
@@ -92,4 +92,4 @@ private:
 } // namespace flare::rpc
 
 
-#endif // BRPC_NSHEAD_PB_SERVICE_ADAPTOR_H
+#endif // FLARE_RPC_NSHEAD_PB_SERVICE_ADAPTOR_H_

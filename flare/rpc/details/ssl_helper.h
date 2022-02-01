@@ -16,8 +16,8 @@
 // under the License.
 
 
-#ifndef BRPC_SSL_HELPER_H
-#define BRPC_SSL_HELPER_H
+#ifndef FLARE_RPC_SSL_HELPER_H_
+#define FLARE_RPC_SSL_HELPER_H_
 
 #include <string.h>
 #include <openssl/ssl.h>
@@ -98,4 +98,4 @@ void Print(std::ostream& os, X509* cert, const char* sep);
 
 } // namespace flare::rpc
 
-#endif // BRPC_SSL_HELPER_H
+#endif // FLARE_RPC_SSL_HELPER_H_

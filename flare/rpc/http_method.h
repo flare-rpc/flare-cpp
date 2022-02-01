@@ -16,8 +16,8 @@
 // under the License.
 
 
-#ifndef  BRPC_HTTP_METHOD_H
-#define  BRPC_HTTP_METHOD_H
+#ifndef  FLARE_RPC_HTTP_METHOD_H_
+#define  FLARE_RPC_HTTP_METHOD_H_
 
 namespace flare::rpc {
 
@@ -60,4 +60,4 @@ bool Str2HttpMethod(const char* method_str, HttpMethod* method);
 
 } // namespace flare::rpc
 
-#endif  //BRPC_HTTP_METHOD_H
+#endif  // FLARE_RPC_HTTP_METHOD_H_

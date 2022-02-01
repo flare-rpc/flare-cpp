@@ -38,10 +38,10 @@ namespace flare::rpc {
     bool has_span_db();
 
     DEFINE_bool(enable_rpcz, false, "Turn on rpcz");
-    BRPC_VALIDATE_GFLAG(enable_rpcz, PassValidate);
+    FLARE_RPC_VALIDATE_GFLAG(enable_rpcz, PassValidate);
 
     DEFINE_bool(rpcz_hex_log_id, false, "Show log_id in hexadecimal");
-    BRPC_VALIDATE_GFLAG(rpcz_hex_log_id, PassValidate);
+    FLARE_RPC_VALIDATE_GFLAG(rpcz_hex_log_id, PassValidate);
 
     struct Hex {
         explicit Hex(uint64_t val) : _val(val) {}

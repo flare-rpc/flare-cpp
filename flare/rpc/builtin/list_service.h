@@ -16,8 +16,8 @@
 // under the License.
 
 
-#ifndef  BRPC_LIST_SERVICE_H
-#define  BRPC_LIST_SERVICE_H
+#ifndef  FLARE_RPC_LIST_SERVICE_H_
+#define  FLARE_RPC_LIST_SERVICE_H_
 
 #include <ostream>
 #include "flare/rpc/builtin_service.pb.h"
@@ -41,4 +41,4 @@ private:
 } // namespace flare::rpc
 
 
-#endif  //BRPC_LIST_SERVICE_H
+#endif  // FLARE_RPC_LIST_SERVICE_H_

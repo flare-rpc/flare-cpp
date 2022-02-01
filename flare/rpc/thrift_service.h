@@ -16,8 +16,8 @@
 // under the License.
 
 
-#ifndef BRPC_THRIFT_SERVICE_H
-#define BRPC_THRIFT_SERVICE_H
+#ifndef FLARE_RPC_THRIFT_SERVICE_H_
+#define FLARE_RPC_THRIFT_SERVICE_H_
 
 #include "flare/rpc/controller.h"                        // Controller
 #include "flare/rpc/thrift_message.h"                    // ThriftFramedMessage
@@ -70,4 +70,4 @@ private:
 
 } // namespace flare::rpc
 
-#endif // BRPC_THRIFT_SERVICE_H
+#endif // FLARE_RPC_THRIFT_SERVICE_H_

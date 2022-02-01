@@ -16,8 +16,8 @@
 // under the License.
 
 
-#ifndef BRPC_POLICY_WEIGHTED_ROUND_ROBIN_LOAD_BALANCER_H
-#define BRPC_POLICY_WEIGHTED_ROUND_ROBIN_LOAD_BALANCER_H
+#ifndef FLARE_RPC_POLICY_WEIGHTED_ROUND_ROBIN_LOAD_BALANCER_H_
+#define FLARE_RPC_POLICY_WEIGHTED_ROUND_ROBIN_LOAD_BALANCER_H_
 
 #include <map>                              
 #include <vector>
@@ -87,4 +87,4 @@ private:
 }  // namespace policy
 } // namespace flare::rpc
 
-#endif  // BRPC_POLICY_WEIGHTED_ROUND_ROBIN_LOAD_BALANCER_H
+#endif  // FLARE_RPC_POLICY_WEIGHTED_ROUND_ROBIN_LOAD_BALANCER_H_

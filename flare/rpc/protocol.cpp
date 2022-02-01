@@ -46,7 +46,7 @@ DEFINE_uint64(max_body_size, 64 * 1024 * 1024,
 DEFINE_bool(log_error_text, false,
             "Print Controller.ErrorText() when server is about to"
             " respond a failed RPC");
-BRPC_VALIDATE_GFLAG(log_error_text, PassValidate);
+FLARE_RPC_VALIDATE_GFLAG(log_error_text, PassValidate);
 
 // Not using ProtocolType_MAX as the boundary because others may define new
 // protocols outside flare.

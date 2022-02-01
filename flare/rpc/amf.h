@@ -16,8 +16,8 @@
 // under the License.
 
 
-#ifndef BRPC_AMF_H
-#define BRPC_AMF_H
+#ifndef FLARE_RPC_AMF_H_
+#define FLARE_RPC_AMF_H_
 
 #include <map>
 #include <deque>
@@ -301,4 +301,4 @@ void WriteAMFArray(const AMFArray& arr, AMFOutputStream* stream);
 
 #include "flare/rpc/amf_inl.h"
 
-#endif  // BRPC_AMF_H
+#endif  // FLARE_RPC_AMF_H_

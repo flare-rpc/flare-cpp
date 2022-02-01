@@ -17,8 +17,8 @@
 
 // protobuf-json: Conversions between protobuf and json.
 
-#ifndef BRPC_JSON2PB_JSON_TO_PB_H
-#define BRPC_JSON2PB_JSON_TO_PB_H
+#ifndef FLARE_RPC_JSON2PB_JSON_TO_PB_H_
+#define FLARE_RPC_JSON2PB_JSON_TO_PB_H_
 
 #include <google/protobuf/message.h>
 #include <google/protobuf/io/zero_copy_stream.h>    // ZeroCopyInputStream
@@ -58,4 +58,4 @@ bool JsonToProtoMessage(google::protobuf::io::ZeroCopyInputStream* stream,
                         std::string* error = NULL);
 } // namespace json2pb
 
-#endif // BRPC_JSON2PB_JSON_TO_PB_H
+#endif // FLARE_RPC_JSON2PB_JSON_TO_PB_H_

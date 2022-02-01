@@ -16,8 +16,8 @@
 // under the License.
 
 
-#ifndef BRPC_HEALTH_CHECK_MANAGER_H
-#define BRPC_HEALTH_CHECK_MANAGER_H
+#ifndef FLARE_RPC_HEALTH_CHECK_MANAGER_H_
+#define FLARE_RPC_HEALTH_CHECK_MANAGER_H_
 
 namespace flare::rpc {
 
@@ -45,4 +45,4 @@ public:
 
 } // namespace flare::rpc
 
-#endif  // BRPC_HEALTH_CHECK_MANAGER_H
+#endif  // FLARE_RPC_HEALTH_CHECK_MANAGER_H_

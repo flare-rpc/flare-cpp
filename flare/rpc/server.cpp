@@ -265,7 +265,7 @@ namespace flare::rpc {
         std::vector<SocketId> conns;
         std::vector<SocketId> internal_conns;
 
-        server->_nerror_bvar.expose_as(prefix, "error");
+        server->_nerror_var.expose_as(prefix, "error");
 
         flare::variable::PassiveStatus<timeval> uptime_st(
                 prefix, "uptime", GetUptime, (void *) (intptr_t) start_us);
@@ -1092,7 +1092,7 @@ namespace flare::rpc {
         }
 
         if (_session_local_data_pool) {
-            // We can't delete the pool right here because there's a bvar watching
+            // We can't delete the pool right here because there's a variable watching
             // this pool in _derivative_thread which does not quit yet.
             _session_local_data_pool->Reset(NULL);
         }

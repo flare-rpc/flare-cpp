@@ -162,7 +162,7 @@ TEST_F(MongoTest, process_request_logoff) {
     ASSERT_EQ(flare::rpc::PARSE_OK, req_pr.error());
     _server._status = flare::rpc::Server::READY;
     ProcessMessage(flare::rpc::policy::ProcessMongoRequest, req_pr.message(), false);
-    ASSERT_EQ(1ll, _server._nerror_bvar.get_value());
+    ASSERT_EQ(1ll, _server._nerror_var.get_value());
 }
 
 TEST_F(MongoTest, process_request_failed_socket) {
@@ -177,7 +177,7 @@ TEST_F(MongoTest, process_request_failed_socket) {
     ASSERT_EQ(flare::rpc::PARSE_OK, req_pr.error());
     _socket->SetFailed();
     ProcessMessage(flare::rpc::policy::ProcessMongoRequest, req_pr.message(), false);
-    ASSERT_EQ(0ll, _server._nerror_bvar.get_value());
+    ASSERT_EQ(0ll, _server._nerror_var.get_value());
 }
 
 TEST_F(MongoTest, complete_flow) {

@@ -17,8 +17,8 @@
 
 // Date 2014/09/25 17:50:21
 
-#ifndef  BVAR_RECORDER_H
-#define  BVAR_RECORDER_H
+#ifndef  FLARE_VARIABLE_RECORDER_H_
+#define  FLARE_VARIABLE_RECORDER_H_
 
 #include <stdint.h>                              // int64_t uint64_t
 #include "flare/base/logging.h"                        // LOG
@@ -287,4 +287,4 @@ inline IntRecorder& IntRecorder::operator<<(int64_t sample) {
 
 }  // namespace flare::variable
 
-#endif  //BVAR_RECORDER_H
+#endif  // FLARE_VARIABLE_RECORDER_H_

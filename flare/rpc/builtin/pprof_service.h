@@ -15,8 +15,8 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef  BRPC_PPROF_SERVICE_H
-#define  BRPC_PPROF_SERVICE_H
+#ifndef  FLARE_RPC_PPROF_SERVICE_H_
+#define  FLARE_RPC_PPROF_SERVICE_H_
 
 #include "flare/rpc/builtin_service.pb.h"
 
@@ -59,4 +59,4 @@ public:
 } // namespace flare::rpc
 
 
-#endif  //BRPC_PPROF_SERVICE_H
+#endif  // FLARE_RPC_PPROF_SERVICE_H_

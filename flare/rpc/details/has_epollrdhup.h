@@ -16,8 +16,8 @@
 // under the License.
 
 
-#ifndef BRPC_HAS_EPOLLRDHUP_H
-#define BRPC_HAS_EPOLLRDHUP_H
+#ifndef FLARE_RPC_HAS_EPOLLRDHUP_H_
+#define FLARE_RPC_HAS_EPOLLRDHUP_H_
 
 
 namespace flare::rpc {
@@ -31,4 +31,4 @@ extern const unsigned int has_epollrdhup;
 } // namespace flare::rpc
 
 
-#endif  // BRPC_HAS_EPOLLRDHUP_H
+#endif  // FLARE_RPC_HAS_EPOLLRDHUP_H_

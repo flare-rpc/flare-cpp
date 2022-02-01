@@ -16,33 +16,34 @@
 // under the License.
 
 
-#ifndef  BRPC_POLICY_FILE_NAMING_SERVICE
-#define  BRPC_POLICY_FILE_NAMING_SERVICE
+#ifndef  FLARE_RPC_POLICY_FILE_NAMING_SERVICE_H_
+#define  FLARE_RPC_POLICY_FILE_NAMING_SERVICE_H_
 
 #include "flare/rpc/naming_service.h"
 
 
 namespace flare::rpc {
-namespace policy {
+    namespace policy {
 
-class FileNamingService : public NamingService {
-friend class ConsulNamingService;
-private:
-    int RunNamingService(const char* service_name,
-                         NamingServiceActions* actions) override;
+        class FileNamingService : public NamingService {
+            friend class ConsulNamingService;
 
-    int GetServers(const char *service_name,
-                   std::vector<ServerNode>* servers);
+        private:
+            int RunNamingService(const char *service_name,
+                                 NamingServiceActions *actions) override;
 
-    void Describe(std::ostream& os, const DescribeOptions&) const override;
+            int GetServers(const char *service_name,
+                           std::vector<ServerNode> *servers);
 
-    NamingService* New() const override;
+            void Describe(std::ostream &os, const DescribeOptions &) const override;
 
-    void Destroy() override;
-};
+            NamingService *New() const override;
 
-}  // namespace policy
+            void Destroy() override;
+        };
+
+    }  // namespace policy
 } // namespace flare::rpc
 
 
-#endif  //BRPC_POLICY_FILE_NAMING_SERVICE
+#endif  // FLARE_RPC_POLICY_FILE_NAMING_SERVICE_H_

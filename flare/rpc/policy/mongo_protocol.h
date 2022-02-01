@@ -15,8 +15,8 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef BRPC_POLICY_MONGO_PROTOCOL_H
-#define BRPC_POLICY_MONGO_PROTOCOL_H
+#ifndef FLARE_RPC_POLICY_MONGO_PROTOCOL_H_
+#define FLARE_RPC_POLICY_MONGO_PROTOCOL_H_
 
 #include "flare/rpc/protocol.h"
 #include "flare/rpc/input_messenger.h"
@@ -35,4 +35,4 @@ void ProcessMongoRequest(InputMessageBase* msg);
 } // namespace flare::rpc
 
 
-#endif // BRPC_POLICY_MONGO_PROTOCOL_H
+#endif // FLARE_RPC_POLICY_MONGO_PROTOCOL_H_

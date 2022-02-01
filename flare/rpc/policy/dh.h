@@ -16,8 +16,8 @@
 // IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-#ifndef BRPC_POLICY_DH_H
-#define BRPC_POLICY_DH_H
+#ifndef FLARE_RPC_POLICY_DH_H_
+#define FLARE_RPC_POLICY_DH_H_
 
 #include <openssl/dh.h>
 
@@ -64,4 +64,4 @@ private:
 } // namespace flare::rpc
 
 
-#endif  // BRPC_POLICY_DH_H
+#endif  // FLARE_RPC_POLICY_DH_H_

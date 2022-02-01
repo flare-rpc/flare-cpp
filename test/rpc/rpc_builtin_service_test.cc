@@ -53,15 +53,15 @@
 #include "echo.pb.h"
 
 DEFINE_bool(foo, false, "Flags for UT");
-BRPC_VALIDATE_GFLAG(foo, flare::rpc::PassValidate);
+FLARE_RPC_VALIDATE_GFLAG(foo, flare::rpc::PassValidate);
 
 namespace flare::rpc {
-DECLARE_bool(enable_rpcz);
-DECLARE_bool(rpcz_hex_log_id);
-DECLARE_int32(idle_timeout_second);
+    DECLARE_bool(enable_rpcz);
+    DECLARE_bool(rpcz_hex_log_id);
+    DECLARE_int32(idle_timeout_second);
 } // namespace rpc
 
-int main(int argc, char* argv[]) {
+int main(int argc, char *argv[]) {
     flare::rpc::FLAGS_idle_timeout_second = 0;
     testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();
@@ -70,13 +70,15 @@ int main(int argc, char* argv[]) {
 class EchoServiceImpl : public test::EchoService {
 public:
     EchoServiceImpl() {}
+
     virtual ~EchoServiceImpl() {}
-    virtual void Echo(google::protobuf::RpcController* cntl_base,
-                      const test::EchoRequest* req,
-                      test::EchoResponse* res,
-                      google::protobuf::Closure* done) {
-        flare::rpc::Controller* cntl =
-                static_cast<flare::rpc::Controller*>(cntl_base);
+
+    virtual void Echo(google::protobuf::RpcController *cntl_base,
+                      const test::EchoRequest *req,
+                      test::EchoResponse *res,
+                      google::protobuf::Closure *done) {
+        flare::rpc::Controller *cntl =
+                static_cast<flare::rpc::Controller *>(cntl_base);
         flare::rpc::ClosureGuard done_guard(done);
         TRACEPRINTF("MyAnnotation: %ld", cntl->log_id());
         if (req->sleep_us() > 0) {
@@ -91,12 +93,13 @@ public:
 class ClosureChecker : public google::protobuf::Closure {
 public:
     ClosureChecker() : _count(1) {}
+
     ~ClosureChecker() { EXPECT_EQ(0, _count); }
-    
+
     void Run() {
         --_count;
     }
-    
+
 private:
     int _count;
 };
@@ -105,20 +108,20 @@ void MyVLogSite() {
     VLOG(3) << "This is a VLOG!";
 }
 
-void CheckContent(const flare::rpc::Controller& cntl, const char* name) {
-    const std::string& content = cntl.response_attachment().to_string();
+void CheckContent(const flare::rpc::Controller &cntl, const char *name) {
+    const std::string &content = cntl.response_attachment().to_string();
     std::size_t pos = content.find(name);
     ASSERT_TRUE(pos != std::string::npos) << "name=" << name;
 }
 
-void CheckErrorText(const flare::rpc::Controller& cntl, const char* error) {
+void CheckErrorText(const flare::rpc::Controller &cntl, const char *error) {
     std::size_t pos = cntl.ErrorText().find(error);
     ASSERT_TRUE(pos != std::string::npos) << "error=" << error;
 }
 
-void CheckFieldInContent(const flare::rpc::Controller& cntl,
-                         const char* name, int32_t expect) {
-    const std::string& content = cntl.response_attachment().to_string();
+void CheckFieldInContent(const flare::rpc::Controller &cntl,
+                         const char *name, int32_t expect) {
+    const std::string &content = cntl.response_attachment().to_string();
     std::size_t pos = content.find(name);
     ASSERT_TRUE(pos != std::string::npos);
 
@@ -127,27 +130,31 @@ void CheckFieldInContent(const flare::rpc::Controller& cntl,
     ASSERT_EQ(expect, val) << "name=" << name;
 }
 
-void CheckAnnotation(const flare::rpc::Controller& cntl, int64_t expect) {
-    const std::string& content = cntl.response_attachment().to_string();
+void CheckAnnotation(const flare::rpc::Controller &cntl, int64_t expect) {
+    const std::string &content = cntl.response_attachment().to_string();
     std::string expect_str;
     flare::base::string_printf(&expect_str, "MyAnnotation: %" PRId64, expect);
     std::size_t pos = content.find(expect_str);
     ASSERT_TRUE(pos != std::string::npos) << expect;
 }
 
-void CheckTraceId(const flare::rpc::Controller& cntl,
-                  const std::string& expect_id_str) {
-    const std::string& content = cntl.response_attachment().to_string();
+void CheckTraceId(const flare::rpc::Controller &cntl,
+                  const std::string &expect_id_str) {
+    const std::string &content = cntl.response_attachment().to_string();
     std::string expect_str = std::string(flare::rpc::TRACE_ID_STR) + "=" + expect_id_str;
     std::size_t pos = content.find(expect_str);
     ASSERT_TRUE(pos != std::string::npos) << expect_str;
 }
 
-class BuiltinServiceTest : public ::testing::Test{
+class BuiltinServiceTest : public ::testing::Test {
 protected:
-    BuiltinServiceTest(){};
-    virtual ~BuiltinServiceTest(){};
+
+    BuiltinServiceTest() {};
+
+    virtual ~BuiltinServiceTest() {};
+
     virtual void SetUp() { EXPECT_EQ(0, _server.AddBuiltinServices()); }
+
     virtual void TearDown() { StopAndJoin(); }
 
     void StopAndJoin() {
@@ -156,11 +163,11 @@ protected:
         _server.ClearServices();
     }
 
-    void SetUpController(flare::rpc::Controller* cntl, bool use_html) const {
+    void SetUpController(flare::rpc::Controller *cntl, bool use_html) const {
         cntl->_server = &_server;
         if (use_html) {
             cntl->http_request().SetHeader(
-                flare::rpc::USER_AGENT_STR, "just keep user agent non-empty");
+                    flare::rpc::USER_AGENT_STR, "just keep user agent non-empty");
         }
     }
 
@@ -187,14 +194,14 @@ protected:
         SetUpController(&cntl, use_html);
         EchoServiceImpl echo_svc;
         ASSERT_EQ(0, _server.AddService(
-            &echo_svc, flare::rpc::SERVER_DOESNT_OWN_SERVICE));
+                &echo_svc, flare::rpc::SERVER_DOESNT_OWN_SERVICE));
         service.default_method(&cntl, &req, &res, &done);
         EXPECT_FALSE(cntl.Failed());
         EXPECT_EQ(expect_type, cntl.http_response().content_type());
         ASSERT_EQ(0, _server.RemoveService(&echo_svc));
     }
 
-    
+
     void TestConnections(bool use_html) {
         std::string expect_type = (use_html ? "text/html" : "text/plain");
         flare::rpc::ConnectionsService service;
@@ -212,7 +219,7 @@ protected:
         char buf[64];
         snprintf(buf, sizeof(buf), "127.0.0.1:%d", self_port);
         usleep(100000);
-        
+
         service.default_method(&cntl, &req, &res, &done);
         EXPECT_FALSE(cntl.Failed());
         EXPECT_EQ(expect_type, cntl.http_response().content_type());
@@ -222,7 +229,7 @@ protected:
         close(cfd);
         StopAndJoin();
     }
-    
+
     void TestBadMethod(bool use_html) {
         std::string expect_type = (use_html ? "text/html" : "text/plain");
         flare::rpc::BadMethodService service;
@@ -233,7 +240,7 @@ protected:
             SetUpController(&cntl, use_html);
             flare::rpc::BadMethodRequest req;
             req.set_service_name(
-                flare::rpc::PProfService::descriptor()->full_name());
+                    flare::rpc::PProfService::descriptor()->full_name());
             service.no_method(&cntl, &req, &res, &done);
             EXPECT_EQ(flare::rpc::ENOMETHOD, cntl.ErrorCode());
             EXPECT_EQ(expect_type, cntl.http_response().content_type());
@@ -352,7 +359,7 @@ protected:
             EXPECT_FALSE(cntl.Failed());
             EXPECT_FALSE(flare::rpc::FLAGS_rpcz_hex_log_id);
         }
-        
+
         ASSERT_EQ(0, _server.AddService(new EchoServiceImpl(),
                                         flare::rpc::SERVER_OWNS_SERVICE));
         flare::base::end_point ep;
@@ -468,10 +475,10 @@ protected:
             // CheckContent(cntl, "rpcz.id_db");
             // CheckContent(cntl, "rpcz.time_db");
         }
-        
+
         StopAndJoin();
     }
-    
+
 private:
     flare::rpc::Server _server;
 };
@@ -509,8 +516,8 @@ TEST_F(BuiltinServiceTest, health) {
 
 class MyHealthReporter : public flare::rpc::HealthReporter {
 public:
-    void GenerateReport(flare::rpc::Controller* cntl,
-                        google::protobuf::Closure* done) {
+    void GenerateReport(flare::rpc::Controller *cntl,
+                        google::protobuf::Closure *done) {
         cntl->response_attachment().append("i'm ok");
         done->Run();
     }
@@ -553,7 +560,7 @@ TEST_F(BuiltinServiceTest, list) {
     EXPECT_EQ(test::EchoService::descriptor()->name(), res.service(0).name());
 }
 
-void* sleep_thread(void*) {
+void *sleep_thread(void *) {
     sleep(1);
     return NULL;
 }
@@ -590,7 +597,7 @@ TEST_F(BuiltinServiceTest, bad_method) {
 }
 
 TEST_F(BuiltinServiceTest, vars) {
-    // Start server to show bvars inside 
+    // Start server to show variables inside
     ASSERT_EQ(0, _server.Start("127.0.0.1:9798", NULL));
     flare::rpc::VarsService service;
     flare::rpc::VarsRequest req;
@@ -706,7 +713,7 @@ TEST_F(BuiltinServiceTest, dir) {
         CheckErrorText(cntl, "Cannot open");
     }
 }
-    
+
 TEST_F(BuiltinServiceTest, ids) {
     flare::rpc::IdsService service;
     flare::rpc::IdsRequest req;
@@ -717,7 +724,7 @@ TEST_F(BuiltinServiceTest, ids) {
         service.default_method(&cntl, &req, &res, &done);
         EXPECT_FALSE(cntl.Failed());
         CheckContent(cntl, "Use /ids/<call_id>");
-    }    
+    }
     {
         ClosureChecker done;
         flare::rpc::Controller cntl;
@@ -725,22 +732,22 @@ TEST_F(BuiltinServiceTest, ids) {
         service.default_method(&cntl, &req, &res, &done);
         EXPECT_TRUE(cntl.Failed());
         CheckErrorText(cntl, "is not a bthread_id");
-    }    
+    }
     {
         bthread_id_t id;
         EXPECT_EQ(0, bthread_id_create(&id, NULL, NULL));
         ClosureChecker done;
         flare::rpc::Controller cntl;
         std::string id_string;
-        flare::base::string_printf(&id_string, "%llu", (unsigned long long)id.value);
+        flare::base::string_printf(&id_string, "%llu", (unsigned long long) id.value);
         cntl.http_request()._unresolved_path = id_string;
         service.default_method(&cntl, &req, &res, &done);
         EXPECT_FALSE(cntl.Failed());
         CheckContent(cntl, "Status: UNLOCKED");
-    }    
+    }
 }
 
-void* dummy_bthread(void*) {
+void *dummy_bthread(void *) {
     bthread_usleep(1000000);
     return NULL;
 }
@@ -755,7 +762,7 @@ TEST_F(BuiltinServiceTest, bthreads) {
         service.default_method(&cntl, &req, &res, &done);
         EXPECT_FALSE(cntl.Failed());
         CheckContent(cntl, "Use /bthreads/<bthread_id>");
-    }    
+    }
     {
         ClosureChecker done;
         flare::rpc::Controller cntl;
@@ -763,19 +770,19 @@ TEST_F(BuiltinServiceTest, bthreads) {
         service.default_method(&cntl, &req, &res, &done);
         EXPECT_TRUE(cntl.Failed());
         CheckErrorText(cntl, "is not a bthread id");
-    }    
+    }
     {
         bthread_t th;
         EXPECT_EQ(0, bthread_start_background(&th, NULL, dummy_bthread, NULL));
         ClosureChecker done;
         flare::rpc::Controller cntl;
         std::string id_string;
-        flare::base::string_printf(&id_string, "%llu", (unsigned long long)th);
+        flare::base::string_printf(&id_string, "%llu", (unsigned long long) th);
         cntl.http_request()._unresolved_path = id_string;
         service.default_method(&cntl, &req, &res, &done);
         EXPECT_FALSE(cntl.Failed());
         CheckContent(cntl, "stop=0");
-    }    
+    }
 }
 
 TEST_F(BuiltinServiceTest, sockets) {
@@ -788,7 +795,7 @@ TEST_F(BuiltinServiceTest, sockets) {
         service.default_method(&cntl, &req, &res, &done);
         EXPECT_FALSE(cntl.Failed());
         CheckContent(cntl, "Use /sockets/<SocketId>");
-    }    
+    }
     {
         ClosureChecker done;
         flare::rpc::Controller cntl;
@@ -796,7 +803,7 @@ TEST_F(BuiltinServiceTest, sockets) {
         service.default_method(&cntl, &req, &res, &done);
         EXPECT_TRUE(cntl.Failed());
         CheckErrorText(cntl, "is not a SocketId");
-    }    
+    }
     {
         flare::rpc::SocketId id;
         flare::rpc::SocketOptions options;
@@ -804,10 +811,10 @@ TEST_F(BuiltinServiceTest, sockets) {
         ClosureChecker done;
         flare::rpc::Controller cntl;
         std::string id_string;
-        flare::base::string_printf(&id_string, "%llu", (unsigned long long)id);
+        flare::base::string_printf(&id_string, "%llu", (unsigned long long) id);
         cntl.http_request()._unresolved_path = id_string;
         service.default_method(&cntl, &req, &res, &done);
         EXPECT_FALSE(cntl.Failed());
         CheckContent(cntl, "fd=-1");
-    }    
+    }
 }

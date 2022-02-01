@@ -18,8 +18,8 @@
 
 // NOTE: RPC users are not supposed to include this file.
 
-#ifndef BRPC_SPAN_H
-#define BRPC_SPAN_H
+#ifndef FLARE_RPC_SPAN_H_
+#define FLARE_RPC_SPAN_H_
 
 #include <stdint.h>
 #include <string>
@@ -236,4 +236,4 @@ inline bool IsTraceable(bool is_upstream_traced) {
 } // namespace flare::rpc
 
 
-#endif // BRPC_SPAN_H
+#endif // FLARE_RPC_SPAN_H_

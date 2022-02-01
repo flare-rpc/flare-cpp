@@ -36,19 +36,19 @@ DECLARE_bool(quote_vector);
 namespace flare::rpc {
 
 // TODO(gejun): parameterize.
-// This function returns the script to make bvar plot-able.
-// The idea: flot graphs were attached to plot-able bvar as the next <div>
-// when the html was generated. When user clicks a bvar, send a request to
-// server to get the value series of the bvar. When the response comes back,
+// This function returns the script to make variable plot-able.
+// The idea: flot graphs were attached to plot-able variable as the next <div>
+// when the html was generated. When user clicks a variable, send a request to
+// server to get the value series of the variable. When the response comes back,
 // plot and show the graph. Requests will be sent to server every 1 second
-// until user clicks the bvar and hide the graph.
+// until user clicks the variable and hide the graph.
 void PutVarsHeading(std::ostream& os, bool expand_all) {
     os << "<script language=\"javascript\" type=\"text/javascript\" src=\"/js/jquery_min\"></script>\n"
         "<script language=\"javascript\" type=\"text/javascript\" src=\"/js/flot_min\"></script>\n"
        << TabsHead()
        << "<style type=\"text/css\">\n"
         "#layer1 { margin:0; padding:0; width:1111px; }\n"
-        // style of plot-able bvar
+        // style of plot-able variable
         ".variable {\n"
         "  margin:0px;\n"
         "  color:#000000;\n"
@@ -56,7 +56,7 @@ void PutVarsHeading(std::ostream& os, bool expand_all) {
         "  position:relative;\n"
         "  background-color:#ffffff;\n"
         "}\n"
-        // style of non-plot-able bvar, the difference with .variable is only
+        // style of non-plot-able variable, the difference with .variable is only
         // the cursor .
         ".nonplot-variable {\n"
         "  margin:0px;\n"
@@ -80,15 +80,15 @@ void PutVarsHeading(std::ostream& os, bool expand_all) {
         "</style>\n"
         
         "<script type=\"text/javascript\">\n"
-        // Mark if a bvar was ever clicked.
+        // Mark if a variable was ever clicked.
         "var everEnabled = {}\n"
-        // Mark if a bvar was enabled ploting
+        // Mark if a variable was enabled ploting
         "var enabled = {}\n"
-        // the bvar under cursor
+        // the variable under cursor
         "var hovering_var = \"\"\n"
         // timeout id of last server call.
         "var timeoutId = {}\n"
-        // last plot of the bvar.
+        // last plot of the variable.
         "var lastPlot = {}\n"
 
         "function prepareGraphs() {\n"
@@ -212,7 +212,7 @@ void PutVarsHeading(std::ostream& os, bool expand_all) {
         "    return x;\n"
         "  }\n"
         "}\n"
-        // Get value series of bvar from server.
+        // Get value series of variable from server.
         "function fetchData(var_name) {\n"
         "  function onDataReceived(series) {\n"
         "    if (hovering_var != var_name) {\n"
@@ -320,7 +320,7 @@ void VarsService::default_method(::google::protobuf::RpcController* cntl_base,
             cntl->http_response().set_content_type("application/json");
             os.move_to(cntl->response_attachment());
         } else if (rc < 0) {
-            cntl->SetFailed(ENOMETHOD, "Fail to find any bvar by `%s'",
+            cntl->SetFailed(ENOMETHOD, "Fail to find any variable by `%s'",
                             cntl->http_request().unresolved_path().c_str());
         } else {
             cntl->SetFailed(ENODATA, "`%s' does not have value series",
@@ -419,7 +419,7 @@ void VarsService::default_method(::google::protobuf::RpcController* cntl_base,
         return;
     }
     if (!options.white_wildcards.empty() && ndump == 0) {
-        cntl->SetFailed(ENOMETHOD, "Fail to find any bvar by `%s'",
+        cntl->SetFailed(ENOMETHOD, "Fail to find any variable by `%s'",
                         options.white_wildcards.c_str());
     }
     if (with_tabs) {

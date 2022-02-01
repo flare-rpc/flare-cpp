@@ -16,8 +16,8 @@
 // under the License.
 
 
-#ifndef BRPC_SSL_OPTION_H
-#define BRPC_SSL_OPTION_H
+#ifndef FLARE_RPC_SSL_OPTION_H_
+#define FLARE_RPC_SSL_OPTION_H_
 
 #include <string>
 #include <vector>
@@ -157,4 +157,4 @@ typedef ServerSSLOptions SSLOptions;
 
 } // namespace flare::rpc
 
-#endif // BRPC_SSL_OPTION_H
+#endif // FLARE_RPC_SSL_OPTION_H_

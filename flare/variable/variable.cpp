@@ -41,26 +41,26 @@ namespace flare::variable {
     DEFINE_bool(quote_vector, true,
                 "Quote description of Vector<> to make it valid to noah");
 
-    DEFINE_bool(bvar_abort_on_same_name, false,
-                "Abort when names of bvar are same");
-// Remember abort request before bvar_abort_on_same_name is initialized.
-    static bool s_bvar_may_abort = false;
+    DEFINE_bool(variable_abort_on_same_name, false,
+                "Abort when names of variable are same");
+// Remember abort request before variable_abort_on_same_name is initialized.
+    static bool s_var_may_abort = false;
 
-    static bool validate_bvar_abort_on_same_name(const char *, bool v) {
-        if (v && s_bvar_may_abort) {
+    static bool validate_variable_abort_on_same_name(const char *, bool v) {
+        if (v && s_var_may_abort) {
             // Name conflict happens before handling args of main(), this is
-            // generally caused by global bvar.
+            // generally caused by global variable.
             LOG(FATAL) << "Abort due to name conflict";
             abort();
         }
         return true;
     }
 
-    const bool FLARE_ALLOW_UNUSED dummy_bvar_abort_on_same_name = ::GFLAGS_NS::RegisterFlagValidator(
-            &FLAGS_bvar_abort_on_same_name, validate_bvar_abort_on_same_name);
+    const bool FLARE_ALLOW_UNUSED dummy_variable_abort_on_same_name = ::GFLAGS_NS::RegisterFlagValidator(
+            &FLAGS_variable_abort_on_same_name, validate_variable_abort_on_same_name);
 
 
-    DEFINE_bool(bvar_log_dumpped, false,
+    DEFINE_bool(variable_log_dumpped, false,
                 "[For debugging] print dumpped info"
                 " into logstream before call Dumpper");
 
@@ -90,7 +90,7 @@ namespace flare::variable {
         }
     };
 
-// We have to initialize global map on need because bvar is possibly used
+// We have to initialize global map on need because variable is possibly used
 // before main().
     static pthread_once_t s_var_maps_once = PTHREAD_ONCE_INIT;
     static VarMapWithLock *s_var_maps = NULL;
@@ -167,14 +167,14 @@ namespace flare::variable {
                 return 0;
             }
         }
-        if (FLAGS_bvar_abort_on_same_name) {
+        if (FLAGS_variable_abort_on_same_name) {
             LOG(FATAL) << "Abort due to name conflict";
             abort();
-        } else if (!s_bvar_may_abort) {
+        } else if (!s_var_may_abort) {
             // Mark name conflict occurs, If this conflict happens before
-            // initialization of bvar_abort_on_same_name, the validator will
+            // initialization of variable_abort_on_same_name, the validator will
             // abort the program if needed.
-            s_bvar_may_abort = true;
+            s_var_may_abort = true;
         }
 
         LOG(ERROR) << "Already exposed `" << _name << "' whose value is `"
@@ -481,7 +481,7 @@ namespace flare::variable {
                                       true);
 
         std::ostringstream dumpped_info;
-        const bool log_dummped = FLAGS_bvar_log_dumpped;
+        const bool log_dummped = FLAGS_variable_log_dumpped;
 
         if (white_matcher.wildcards().empty() &&
             !white_matcher.exact_names().empty()) {
@@ -678,30 +678,30 @@ namespace flare::variable {
     static pthread_mutex_t dump_mutex = PTHREAD_MUTEX_INITIALIZER;
     static pthread_cond_t dump_cond = PTHREAD_COND_INITIALIZER;
 
-    DEFINE_bool(bvar_dump, false,
-                "Create a background thread dumping all bvar periodically, "
-                "all bvar_dump_* flags are not effective when this flag is off");
-    DEFINE_int32(bvar_dump_interval, 10, "Seconds between consecutive dump");
-    DEFINE_string(bvar_dump_file, "monitor/bvar.<app>.data", "Dump bvar into this file");
-    DEFINE_string(bvar_dump_include, "", "Dump bvar matching these wildcards, "
+    DEFINE_bool(variable_dump, false,
+                "Create a background thread dumping all variable periodically, "
+                "all variable_dump_* flags are not effective when this flag is off");
+    DEFINE_int32(variable_dump_interval, 10, "Seconds between consecutive dump");
+    DEFINE_string(variable_dump_file, "monitor/variable.<app>.data", "Dump variable into this file");
+    DEFINE_string(variable_dump_include, "", "Dump variable matching these wildcards, "
                                          "separated by semicolon(;), empty means including all");
-    DEFINE_string(bvar_dump_exclude, "", "Dump bvar excluded from these wildcards, "
+    DEFINE_string(variable_dump_exclude, "", "Dump variable excluded from these wildcards, "
                                          "separated by semicolon(;), empty means no exclusion");
-    DEFINE_string(bvar_dump_prefix, "<app>", "Every dumped name starts with this prefix");
-    DEFINE_string(bvar_dump_tabs, "latency=*_latency*"
+    DEFINE_string(variable_dump_prefix, "<app>", "Every dumped name starts with this prefix");
+    DEFINE_string(variable_dump_tabs, "latency=*_latency*"
                                   "; qps=*_qps*"
                                   "; error=*_error*"
                                   "; system=*process_*,*malloc_*,*kernel_*",
-                  "Dump bvar into different tabs according to the filters (seperated by semicolon), "
+                  "Dump variable into different tabs according to the filters (seperated by semicolon), "
                   "format: *(tab_name=wildcards;)");
 
-#if !defined(BVAR_NOT_LINK_DEFAULT_VARIABLES)
-// Expose bvar-releated gflags so that they're collected by noah.
+#if !defined(VARIABLE_NOT_LINK_DEFAULT_VARIABLES)
+// Expose variable-releated gflags so that they're collected by noah.
 // Maybe useful when debugging process of monitoring.
-    static GFlag s_gflag_bvar_dump_interval("bvar_dump_interval");
+    static GFlag s_gflag_variable_dump_interval("variable_dump_interval");
 #endif
 
-// The background thread to export all bvar periodically.
+// The background thread to export all variable periodically.
     static void *dumping_thread(void *) {
         // NOTE: this variable was declared as static <= r34381, which was
         // destructed when program exits and caused coredumps.
@@ -713,30 +713,30 @@ namespace flare::variable {
             DumpOptions options;
             std::string prefix;
             std::string tabs;
-            if (!GFLAGS_NS::GetCommandLineOption("bvar_dump_file", &filename)) {
-                LOG(ERROR) << "Fail to get gflag bvar_dump_file";
+            if (!GFLAGS_NS::GetCommandLineOption("variable_dump_file", &filename)) {
+                LOG(ERROR) << "Fail to get gflag variable_dump_file";
                 return NULL;
             }
-            if (!GFLAGS_NS::GetCommandLineOption("bvar_dump_include",
+            if (!GFLAGS_NS::GetCommandLineOption("variable_dump_include",
                                                  &options.white_wildcards)) {
-                LOG(ERROR) << "Fail to get gflag bvar_dump_include";
+                LOG(ERROR) << "Fail to get gflag variable_dump_include";
                 return NULL;
             }
-            if (!GFLAGS_NS::GetCommandLineOption("bvar_dump_exclude",
+            if (!GFLAGS_NS::GetCommandLineOption("variable_dump_exclude",
                                                  &options.black_wildcards)) {
-                LOG(ERROR) << "Fail to get gflag bvar_dump_exclude";
+                LOG(ERROR) << "Fail to get gflag variable_dump_exclude";
                 return NULL;
             }
-            if (!GFLAGS_NS::GetCommandLineOption("bvar_dump_prefix", &prefix)) {
-                LOG(ERROR) << "Fail to get gflag bvar_dump_prefix";
+            if (!GFLAGS_NS::GetCommandLineOption("variable_dump_prefix", &prefix)) {
+                LOG(ERROR) << "Fail to get gflag variable_dump_prefix";
                 return NULL;
             }
-            if (!GFLAGS_NS::GetCommandLineOption("bvar_dump_tabs", &tabs)) {
-                LOG(ERROR) << "Fail to get gflags bvar_dump_tabs";
+            if (!GFLAGS_NS::GetCommandLineOption("variable_dump_tabs", &tabs)) {
+                LOG(ERROR) << "Fail to get gflags variable_dump_tabs";
                 return NULL;
             }
 
-            if (FLAGS_bvar_dump && !filename.empty()) {
+            if (FLAGS_variable_dump && !filename.empty()) {
                 // Replace first <app> in filename with program name. We can't use
                 // pid because a same binary should write the data to the same
                 // place, otherwise restarting of app may confuse noah with a lot
@@ -748,8 +748,8 @@ namespace flare::variable {
                 }
                 if (last_filename != filename) {
                     last_filename = filename;
-                    LOG(INFO) << "Write all bvar to " << filename << " every "
-                              << FLAGS_bvar_dump_interval << " seconds.";
+                    LOG(INFO) << "Write all variable to " << filename << " every "
+                              << FLAGS_variable_dump_interval << " seconds.";
                 }
                 const size_t pos2 = prefix.find("<app>");
                 if (pos2 != std::string::npos) {
@@ -767,7 +767,7 @@ namespace flare::variable {
             // this thread in gflag validators. If this thread dumps just after
             // waking up from the condition, the gflags may not even be updated.
             const int post_sleep_ms = 50;
-            int cond_sleep_ms = FLAGS_bvar_dump_interval * 1000 - post_sleep_ms;
+            int cond_sleep_ms = FLAGS_variable_dump_interval * 1000 - post_sleep_ms;
             if (cond_sleep_ms < 0) {
                 LOG(ERROR) << "Bad cond_sleep_ms=" << cond_sleep_ms;
                 cond_sleep_ms = 10000;
@@ -798,36 +798,36 @@ namespace flare::variable {
         return created_dumping_thread;
     }
 
-    static bool validate_bvar_dump(const char *, bool enabled) {
+    static bool validate_variable_dump(const char *, bool enabled) {
         if (enabled) {
             return enable_dumping_thread();
         }
         return true;
     }
 
-    const bool FLARE_ALLOW_UNUSED dummy_bvar_dump = ::GFLAGS_NS::RegisterFlagValidator(
-            &FLAGS_bvar_dump, validate_bvar_dump);
+    const bool FLARE_ALLOW_UNUSED dummy_variable_dump = ::GFLAGS_NS::RegisterFlagValidator(
+            &FLAGS_variable_dump, validate_variable_dump);
 
 // validators (to make these gflags reloadable in flare)
-    static bool validate_bvar_dump_interval(const char *, int32_t v) {
-        // FIXME: -bvar_dump_interval is actually unreloadable but we need to
+    static bool validate_variable_dump_interval(const char *, int32_t v) {
+        // FIXME: -variable_dump_interval is actually unreloadable but we need to
         // check validity of it, so we still add this validator. In practice
         // this is just fine since people rarely have the intention of modifying
         // this flag at runtime.
         if (v < 1) {
-            LOG(ERROR) << "Invalid bvar_dump_interval=" << v;
+            LOG(ERROR) << "Invalid variable_dump_interval=" << v;
             return false;
         }
         return true;
     }
 
-    const bool FLARE_ALLOW_UNUSED dummy_bvar_dump_interval = ::GFLAGS_NS::RegisterFlagValidator(
-            &FLAGS_bvar_dump_interval, validate_bvar_dump_interval);
+    const bool FLARE_ALLOW_UNUSED dummy_variable_dump_interval = ::GFLAGS_NS::RegisterFlagValidator(
+            &FLAGS_variable_dump_interval, validate_variable_dump_interval);
 
-    static bool validate_bvar_log_dumpped(const char *, bool) { return true; }
+    static bool validate_variable_log_dumpped(const char *, bool) { return true; }
 
-    const bool FLARE_ALLOW_UNUSED dummy_bvar_log_dumpped = ::GFLAGS_NS::RegisterFlagValidator(
-            &FLAGS_bvar_log_dumpped, validate_bvar_log_dumpped);
+    const bool FLARE_ALLOW_UNUSED dummy_variable_log_dumpped = ::GFLAGS_NS::RegisterFlagValidator(
+            &FLAGS_variable_log_dumpped, validate_variable_log_dumpped);
 
     static bool wakeup_dumping_thread(const char *, const std::string &) {
         // We're modifying a flag, wake up dumping_thread to generate
@@ -836,16 +836,16 @@ namespace flare::variable {
         return true;
     }
 
-    const bool FLARE_ALLOW_UNUSED dummy_bvar_dump_file = ::GFLAGS_NS::RegisterFlagValidator(
-            &FLAGS_bvar_dump_file, wakeup_dumping_thread);
-    const bool FLARE_ALLOW_UNUSED dummy_bvar_dump_filter = ::GFLAGS_NS::RegisterFlagValidator(
-            &FLAGS_bvar_dump_include, wakeup_dumping_thread);
-    const bool FLARE_ALLOW_UNUSED dummy_bvar_dump_exclude = ::GFLAGS_NS::RegisterFlagValidator(
-            &FLAGS_bvar_dump_exclude, wakeup_dumping_thread);
-    const bool FLARE_ALLOW_UNUSED dummy_bvar_dump_prefix = ::GFLAGS_NS::RegisterFlagValidator(
-            &FLAGS_bvar_dump_prefix, wakeup_dumping_thread);
-    const bool FLARE_ALLOW_UNUSED dummy_bvar_dump_tabs = ::GFLAGS_NS::RegisterFlagValidator(
-            &FLAGS_bvar_dump_tabs, wakeup_dumping_thread);
+    const bool FLARE_ALLOW_UNUSED dummy_variable_dump_file = ::GFLAGS_NS::RegisterFlagValidator(
+            &FLAGS_variable_dump_file, wakeup_dumping_thread);
+    const bool FLARE_ALLOW_UNUSED dummy_variable_dump_filter = ::GFLAGS_NS::RegisterFlagValidator(
+            &FLAGS_variable_dump_include, wakeup_dumping_thread);
+    const bool FLARE_ALLOW_UNUSED dummy_variable_dump_exclude = ::GFLAGS_NS::RegisterFlagValidator(
+            &FLAGS_variable_dump_exclude, wakeup_dumping_thread);
+    const bool FLARE_ALLOW_UNUSED dummy_variable_dump_prefix = ::GFLAGS_NS::RegisterFlagValidator(
+            &FLAGS_variable_dump_prefix, wakeup_dumping_thread);
+    const bool FLARE_ALLOW_UNUSED dummy_variable_dump_tabs = ::GFLAGS_NS::RegisterFlagValidator(
+            &FLAGS_variable_dump_tabs, wakeup_dumping_thread);
 
     void to_underscored_name(std::string *name, const std::string_view &src) {
         name->reserve(name->size() + src.size() + 8/*just guess*/);
@@ -869,7 +869,7 @@ namespace flare::variable {
     }
 
 // UT don't need default variables.
-#if !defined(BVAR_NOT_LINK_DEFAULT_VARIABLES)
+#if !defined(VARIABLE_NOT_LINK_DEFAULT_VARIABLES)
 // Without these, default_variables.o are stripped.
 // At least working in gcc 4.8
     extern int do_link_default_variables;

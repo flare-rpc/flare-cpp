@@ -15,8 +15,8 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef BRPC_JSON_LOADER_H
-#define BRPC_JSON_LOADER_H
+#ifndef FLARE_RPC_JSON_LOADER_H_
+#define FLARE_RPC_JSON_LOADER_H_
 
 #include <string>
 #include <deque>
@@ -60,4 +60,4 @@ private:
 
 } // namespace flare::rpc
 
-#endif // BRPC_JSON_LOADER_H
+#endif // FLARE_RPC_JSON_LOADER_H_

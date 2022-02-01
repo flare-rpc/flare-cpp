@@ -46,7 +46,7 @@ namespace flare::variable {
     template<class T, class M>
     M get_member_type(M T::*);
 
-#define BVAR_MEMBER_TYPE(member) decltype(flare::variable::get_member_type(member))
+#define VARIABLE_MEMBER_TYPE(member) decltype(flare::variable::get_member_type(member))
 
     int do_link_default_variables = 0;
     const int64_t CACHED_INTERVAL_US = 100000L; // 100ms
@@ -187,15 +187,15 @@ namespace flare::variable {
         }
     };
 
-#define BVAR_DEFINE_PROC_STAT_FIELD(field)                              \
-    PassiveStatus<BVAR_MEMBER_TYPE(&ProcStat::field)> g_##field(        \
-        ProcStatReader::get_field<BVAR_MEMBER_TYPE(&ProcStat::field),   \
+#define VARIABLE_DEFINE_PROC_STAT_FIELD(field)                              \
+    PassiveStatus<VARIABLE_MEMBER_TYPE(&ProcStat::field)> g_##field(        \
+        ProcStatReader::get_field<VARIABLE_MEMBER_TYPE(&ProcStat::field),   \
         offsetof(ProcStat, field)>, NULL);
 
-#define BVAR_DEFINE_PROC_STAT_FIELD2(field, name)                       \
-    PassiveStatus<BVAR_MEMBER_TYPE(&ProcStat::field)> g_##field(        \
+#define VARIABLE_DEFINE_PROC_STAT_FIELD2(field, name)                       \
+    PassiveStatus<VARIABLE_MEMBER_TYPE(&ProcStat::field)> g_##field(        \
         name,                                                           \
-        ProcStatReader::get_field<BVAR_MEMBER_TYPE(&ProcStat::field),   \
+        ProcStatReader::get_field<VARIABLE_MEMBER_TYPE(&ProcStat::field),   \
         offsetof(ProcStat, field)>, NULL);
 
 // ==================================================
@@ -266,10 +266,10 @@ namespace flare::variable {
         }
     };
 
-#define BVAR_DEFINE_PROC_MEMORY_FIELD(field, name)                      \
-    PassiveStatus<BVAR_MEMBER_TYPE(&ProcMemory::field)> g_##field(      \
+#define VARIABLE_DEFINE_PROC_MEMORY_FIELD(field, name)                      \
+    PassiveStatus<VARIABLE_MEMBER_TYPE(&ProcMemory::field)> g_##field(      \
         name,                                                           \
-        ProcMemoryReader::get_field<BVAR_MEMBER_TYPE(&ProcMemory::field), \
+        ProcMemoryReader::get_field<VARIABLE_MEMBER_TYPE(&ProcMemory::field), \
         offsetof(ProcMemory, field)>, NULL);
 
 // ==================================================
@@ -327,10 +327,10 @@ namespace flare::variable {
         }
     };
 
-#define BVAR_DEFINE_LOAD_AVERAGE_FIELD(field, name)                     \
-    PassiveStatus<BVAR_MEMBER_TYPE(&LoadAverage::field)> g_##field(     \
+#define VARIABLE_DEFINE_LOAD_AVERAGE_FIELD(field, name)                     \
+    PassiveStatus<VARIABLE_MEMBER_TYPE(&LoadAverage::field)> g_##field(     \
         name,                                                           \
-        LoadAverageReader::get_field<BVAR_MEMBER_TYPE(&LoadAverage::field), \
+        LoadAverageReader::get_field<VARIABLE_MEMBER_TYPE(&LoadAverage::field), \
         offsetof(LoadAverage, field)>, NULL);
 
 // ==================================================
@@ -399,7 +399,7 @@ namespace flare::variable {
             if (count == MAX_FD_SCAN_COUNT - 2
                 && s_ever_reached_fd_scan_limit.exchange(
                     true, std::memory_order_relaxed) == false) {
-                // Rename the bvar to notify user.
+                // Rename the variable to notify user.
                 g_fd_num.hide();
                 g_fd_num.expose("process_fd_num_too_many");
             }
@@ -486,9 +486,9 @@ namespace flare::variable {
         }
     };
 
-#define BVAR_DEFINE_PROC_IO_FIELD(field)                                \
-    PassiveStatus<BVAR_MEMBER_TYPE(&ProcIO::field)> g_##field(          \
-        ProcIOReader::get_field<BVAR_MEMBER_TYPE(&ProcIO::field),       \
+#define VARIABLE_DEFINE_PROC_IO_FIELD(field)                                \
+    PassiveStatus<VARIABLE_MEMBER_TYPE(&ProcIO::field)> g_##field(          \
+        ProcIOReader::get_field<VARIABLE_MEMBER_TYPE(&ProcIO::field),       \
         offsetof(ProcIO, field)>, NULL);
 
 // ==================================================
@@ -597,9 +597,9 @@ namespace flare::variable {
         }
     };
 
-#define BVAR_DEFINE_DISK_STAT_FIELD(field)                              \
-    PassiveStatus<BVAR_MEMBER_TYPE(&DiskStat::field)> g_##field(        \
-        DiskStatReader::get_field<BVAR_MEMBER_TYPE(&DiskStat::field),   \
+#define VARIABLE_DEFINE_DISK_STAT_FIELD(field)                              \
+    PassiveStatus<VARIABLE_MEMBER_TYPE(&DiskStat::field)> g_##field(        \
+        DiskStatReader::get_field<VARIABLE_MEMBER_TYPE(&DiskStat::field),   \
         offsetof(DiskStat, field)>, NULL);
 
 // =====================================
@@ -667,22 +667,22 @@ namespace flare::variable {
         }
     };
 
-#define BVAR_DEFINE_RUSAGE_FIELD(field)                                 \
-    PassiveStatus<BVAR_MEMBER_TYPE(&rusage::field)> g_##field(          \
-        RUsageReader::get_field<BVAR_MEMBER_TYPE(&rusage::field),       \
+#define VARIABLE_DEFINE_RUSAGE_FIELD(field)                                 \
+    PassiveStatus<VARIABLE_MEMBER_TYPE(&rusage::field)> g_##field(          \
+        RUsageReader::get_field<VARIABLE_MEMBER_TYPE(&rusage::field),       \
         offsetof(rusage, field)>, NULL);                                \
 
-#define BVAR_DEFINE_RUSAGE_FIELD2(field, name)                          \
-    PassiveStatus<BVAR_MEMBER_TYPE(&rusage::field)> g_##field(          \
+#define VARIABLE_DEFINE_RUSAGE_FIELD2(field, name)                          \
+    PassiveStatus<VARIABLE_MEMBER_TYPE(&rusage::field)> g_##field(          \
         name,                                                           \
-        RUsageReader::get_field<BVAR_MEMBER_TYPE(&rusage::field),       \
+        RUsageReader::get_field<VARIABLE_MEMBER_TYPE(&rusage::field),       \
         offsetof(rusage, field)>, NULL);                                \
 
 // ======================================
 
-    BVAR_DEFINE_PROC_STAT_FIELD2(pid, "pid");
-    BVAR_DEFINE_PROC_STAT_FIELD2(ppid, "ppid");
-    BVAR_DEFINE_PROC_STAT_FIELD2(pgrp, "pgrp");
+    VARIABLE_DEFINE_PROC_STAT_FIELD2(pid, "pid");
+    VARIABLE_DEFINE_PROC_STAT_FIELD2(ppid, "ppid");
+    VARIABLE_DEFINE_PROC_STAT_FIELD2(pgrp, "pgrp");
 
     static void get_username(std::ostream &os, void *) {
         char buf[32];
@@ -697,50 +697,50 @@ namespace flare::variable {
     PassiveStatus<std::string> g_username(
             "process_username", get_username, NULL);
 
-    BVAR_DEFINE_PROC_STAT_FIELD(minflt);
+    VARIABLE_DEFINE_PROC_STAT_FIELD(minflt);
     PerSecond<PassiveStatus<unsigned long>> g_minflt_second(
             "process_faults_minor_second", &g_minflt);
-    BVAR_DEFINE_PROC_STAT_FIELD2(majflt, "process_faults_major");
+    VARIABLE_DEFINE_PROC_STAT_FIELD2(majflt, "process_faults_major");
 
-    BVAR_DEFINE_PROC_STAT_FIELD2(priority, "process_priority");
-    BVAR_DEFINE_PROC_STAT_FIELD2(nice, "process_nice");
+    VARIABLE_DEFINE_PROC_STAT_FIELD2(priority, "process_priority");
+    VARIABLE_DEFINE_PROC_STAT_FIELD2(nice, "process_nice");
 
-    BVAR_DEFINE_PROC_STAT_FIELD2(num_threads, "process_thread_count");
+    VARIABLE_DEFINE_PROC_STAT_FIELD2(num_threads, "process_thread_count");
     PassiveStatus<int> g_fd_num("process_fd_count", print_fd_count, NULL);
 
-    BVAR_DEFINE_PROC_MEMORY_FIELD(size, "process_memory_virtual");
-    BVAR_DEFINE_PROC_MEMORY_FIELD(resident, "process_memory_resident");
-    BVAR_DEFINE_PROC_MEMORY_FIELD(share, "process_memory_shared");
-    BVAR_DEFINE_PROC_MEMORY_FIELD(trs, "process_memory_text");
-    BVAR_DEFINE_PROC_MEMORY_FIELD(drs, "process_memory_data_and_stack");
+    VARIABLE_DEFINE_PROC_MEMORY_FIELD(size, "process_memory_virtual");
+    VARIABLE_DEFINE_PROC_MEMORY_FIELD(resident, "process_memory_resident");
+    VARIABLE_DEFINE_PROC_MEMORY_FIELD(share, "process_memory_shared");
+    VARIABLE_DEFINE_PROC_MEMORY_FIELD(trs, "process_memory_text");
+    VARIABLE_DEFINE_PROC_MEMORY_FIELD(drs, "process_memory_data_and_stack");
 
-    BVAR_DEFINE_LOAD_AVERAGE_FIELD(loadavg_1m, "system_loadavg_1m");
-    BVAR_DEFINE_LOAD_AVERAGE_FIELD(loadavg_5m, "system_loadavg_5m");
-    BVAR_DEFINE_LOAD_AVERAGE_FIELD(loadavg_15m, "system_loadavg_15m");
+    VARIABLE_DEFINE_LOAD_AVERAGE_FIELD(loadavg_1m, "system_loadavg_1m");
+    VARIABLE_DEFINE_LOAD_AVERAGE_FIELD(loadavg_5m, "system_loadavg_5m");
+    VARIABLE_DEFINE_LOAD_AVERAGE_FIELD(loadavg_15m, "system_loadavg_15m");
 
-    BVAR_DEFINE_PROC_IO_FIELD(rchar);
-    BVAR_DEFINE_PROC_IO_FIELD(wchar);
+    VARIABLE_DEFINE_PROC_IO_FIELD(rchar);
+    VARIABLE_DEFINE_PROC_IO_FIELD(wchar);
     PerSecond<PassiveStatus<size_t>> g_io_read_second(
             "process_io_read_bytes_second", &g_rchar);
     PerSecond<PassiveStatus<size_t>> g_io_write_second(
             "process_io_write_bytes_second", &g_wchar);
 
-    BVAR_DEFINE_PROC_IO_FIELD(syscr);
-    BVAR_DEFINE_PROC_IO_FIELD(syscw);
+    VARIABLE_DEFINE_PROC_IO_FIELD(syscr);
+    VARIABLE_DEFINE_PROC_IO_FIELD(syscw);
     PerSecond<PassiveStatus<size_t>> g_io_num_reads_second(
             "process_io_read_second", &g_syscr);
     PerSecond<PassiveStatus<size_t>> g_io_num_writes_second(
             "process_io_write_second", &g_syscw);
 
-    BVAR_DEFINE_PROC_IO_FIELD(read_bytes);
-    BVAR_DEFINE_PROC_IO_FIELD(write_bytes);
+    VARIABLE_DEFINE_PROC_IO_FIELD(read_bytes);
+    VARIABLE_DEFINE_PROC_IO_FIELD(write_bytes);
     PerSecond<PassiveStatus<size_t>> g_disk_read_second(
             "process_disk_read_bytes_second", &g_read_bytes);
     PerSecond<PassiveStatus<size_t>> g_disk_write_second(
             "process_disk_write_bytes_second", &g_write_bytes);
 
-    BVAR_DEFINE_RUSAGE_FIELD(ru_utime);
-    BVAR_DEFINE_RUSAGE_FIELD(ru_stime);
+    VARIABLE_DEFINE_RUSAGE_FIELD(ru_utime);
+    VARIABLE_DEFINE_RUSAGE_FIELD(ru_stime);
     PassiveStatus<timeval> g_uptime("process_uptime", get_uptime, NULL);
 
     static int get_core_num(void *) {
@@ -782,7 +782,7 @@ namespace flare::variable {
 
     PassiveStatus<TimePercent> g_cputime_percent(get_cputime_percent, NULL);
     Window<PassiveStatus<TimePercent>, SERIES_IN_SECOND> g_cputime_percent_second(
-            "process_cpu_usage", &g_cputime_percent, FLAGS_bvar_dump_interval);
+            "process_cpu_usage", &g_cputime_percent, FLAGS_variable_dump_interval);
 
     static TimePercent get_stime_percent(void *) {
         TimePercent tp = {flare::base::timeval_to_microseconds(g_ru_stime.get_value()),
@@ -792,7 +792,7 @@ namespace flare::variable {
 
     PassiveStatus<TimePercent> g_stime_percent(get_stime_percent, NULL);
     Window<PassiveStatus<TimePercent>, SERIES_IN_SECOND> g_stime_percent_second(
-            "process_cpu_usage_system", &g_stime_percent, FLAGS_bvar_dump_interval);
+            "process_cpu_usage_system", &g_stime_percent, FLAGS_variable_dump_interval);
 
     static TimePercent get_utime_percent(void *) {
         TimePercent tp = {flare::base::timeval_to_microseconds(g_ru_utime.get_value()),
@@ -802,7 +802,7 @@ namespace flare::variable {
 
     PassiveStatus<TimePercent> g_utime_percent(get_utime_percent, NULL);
     Window<PassiveStatus<TimePercent>, SERIES_IN_SECOND> g_utime_percent_second(
-            "process_cpu_usage_user", &g_utime_percent, FLAGS_bvar_dump_interval);
+            "process_cpu_usage_user", &g_utime_percent, FLAGS_variable_dump_interval);
 
 // According to http://man7.org/linux/man-pages/man2/getrusage.2.html
 // Unsupported fields in linux:
@@ -811,10 +811,10 @@ namespace flare::variable {
 //   ru_isrss 
 //   ru_nswap 
 //   ru_nsignals 
-    BVAR_DEFINE_RUSAGE_FIELD(ru_inblock);
-    BVAR_DEFINE_RUSAGE_FIELD(ru_oublock);
-    BVAR_DEFINE_RUSAGE_FIELD(ru_nvcsw);
-    BVAR_DEFINE_RUSAGE_FIELD(ru_nivcsw);
+    VARIABLE_DEFINE_RUSAGE_FIELD(ru_inblock);
+    VARIABLE_DEFINE_RUSAGE_FIELD(ru_oublock);
+    VARIABLE_DEFINE_RUSAGE_FIELD(ru_nvcsw);
+    VARIABLE_DEFINE_RUSAGE_FIELD(ru_nivcsw);
     PerSecond<PassiveStatus<long>> g_ru_inblock_second(
             "process_inblocks_second", &g_ru_inblock);
     PerSecond<PassiveStatus<long>> g_ru_oublock_second(
@@ -890,12 +890,12 @@ namespace flare::variable {
 
     PassiveStatus<std::string> g_work_dir("process_work_dir", get_work_dir, NULL);
 
-#undef BVAR_MEMBER_TYPE
-#undef BVAR_DEFINE_PROC_STAT_FIELD
-#undef BVAR_DEFINE_PROC_STAT_FIELD2
-#undef BVAR_DEFINE_PROC_MEMORY_FIELD
-#undef BVAR_DEFINE_RUSAGE_FIELD
-#undef BVAR_DEFINE_RUSAGE_FIELD2
+#undef VARIABLE_MEMBER_TYPE
+#undef VARIABLE_DEFINE_PROC_STAT_FIELD
+#undef VARIABLE_DEFINE_PROC_STAT_FIELD2
+#undef VARIABLE_DEFINE_PROC_MEMORY_FIELD
+#undef VARIABLE_DEFINE_RUSAGE_FIELD
+#undef VARIABLE_DEFINE_RUSAGE_FIELD2
 
 }  // namespace flare::variable
 

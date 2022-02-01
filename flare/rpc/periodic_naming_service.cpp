@@ -27,7 +27,7 @@ namespace flare::rpc {
 
 DEFINE_int32(ns_access_interval, 5,
              "Wait so many seconds before next access to naming service");
-BRPC_VALIDATE_GFLAG(ns_access_interval, PositiveInteger);
+FLARE_RPC_VALIDATE_GFLAG(ns_access_interval, PositiveInteger);
 
 int PeriodicNamingService::RunNamingService(
     const char* service_name, NamingServiceActions* actions) {

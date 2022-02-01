@@ -16,8 +16,8 @@
 // under the License.
 
 
-#ifndef BRPC_SHARED_OBJECT_H
-#define BRPC_SHARED_OBJECT_H
+#ifndef FLARE_RPC_SHARED_OBJECT_H_
+#define FLARE_RPC_SHARED_OBJECT_H_
 
 #include "flare/container/intrusive_ptr.h"                   // flare::container::intrusive_ptr
 #include "flare/base/static_atomic.h"
@@ -70,4 +70,4 @@ inline void intrusive_ptr_release(SharedObject* obj) {
 } // namespace flare::rpc
 
 
-#endif // BRPC_SHARED_OBJECT_H
+#endif // FLARE_RPC_SHARED_OBJECT_H_

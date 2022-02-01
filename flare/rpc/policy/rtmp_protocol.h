@@ -16,8 +16,8 @@
 // under the License.
 
 
-#ifndef BRPC_POLICY_RTMP_PROTOCOL_H
-#define BRPC_POLICY_RTMP_PROTOCOL_H
+#ifndef FLARE_RPC_POLICY_RTMP_PROTOCOL_H_
+#define FLARE_RPC_POLICY_RTMP_PROTOCOL_H_
 
 #include "flare/container/flat_map.h"
 #include "flare/rpc/protocol.h"
@@ -638,4 +638,4 @@ inline void WriteLittleEndian4Bytes(char** buf, uint32_t val) {
 } // namespace flare::rpc
 
 
-#endif  // BRPC_POLICY_RTMP_PROTOCOL_H
+#endif  // FLARE_RPC_POLICY_RTMP_PROTOCOL_H_

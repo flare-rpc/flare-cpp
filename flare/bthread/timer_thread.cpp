@@ -333,10 +333,10 @@ void TimerThread::run() {
     double busy_seconds = 0;
     flare::variable::PassiveStatus<double> busy_seconds_var(deref_value<double>, &busy_seconds);
     flare::variable::PerSecond<flare::variable::PassiveStatus<double> > busy_seconds_second(&busy_seconds_var);
-    if (!_options.bvar_prefix.empty()) {
-        nscheduled_second.expose_as(_options.bvar_prefix, "scheduled_second");
-        ntriggered_second.expose_as(_options.bvar_prefix, "triggered_second");
-        busy_seconds_second.expose_as(_options.bvar_prefix, "usage");
+    if (!_options.variable_prefix.empty()) {
+        nscheduled_second.expose_as(_options.variable_prefix, "scheduled_second");
+        ntriggered_second.expose_as(_options.variable_prefix, "triggered_second");
+        busy_seconds_second.expose_as(_options.variable_prefix, "usage");
     }
     
     while (!_stop.load(std::memory_order_relaxed)) {
@@ -461,7 +461,7 @@ static void init_global_timer_thread() {
         return;
     }
     TimerThreadOptions options;
-    options.bvar_prefix = "bthread_timer";
+    options.variable_prefix = "bthread_timer";
     const int rc = g_timer_thread->start(&options);
     if (rc != 0) {
         LOG(FATAL) << "Fail to start timer_thread, " << flare_error(rc);

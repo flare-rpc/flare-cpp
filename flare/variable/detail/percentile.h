@@ -17,8 +17,8 @@
 
 // Date: 2015/09/15 10:44:17
 
-#ifndef  BVAR_DETAIL_PERCENTILE_H
-#define  BVAR_DETAIL_PERCENTILE_H
+#ifndef  FLARE_VARIABLE_DETAIL_PERCENTILE_H_
+#define  FLARE_VARIABLE_DETAIL_PERCENTILE_H_
 
 #include <string.h>                     // memset memcmp
 #include <stdint.h>                     // uint32_t
@@ -506,4 +506,4 @@ namespace flare::variable {
     }  // namespace detail
 }  // namespace flare::variable
 
-#endif  //BVAR_DETAIL_PERCENTILE_H
+#endif  // FLARE_VARIABLE_DETAIL_PERCENTILE_H_

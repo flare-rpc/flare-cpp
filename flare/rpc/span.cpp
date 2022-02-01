@@ -33,7 +33,7 @@
 #include "flare/rpc/reloadable_flags.h"
 #include "flare/rpc/span.h"
 
-#define BRPC_SPAN_INFO_SEP "\1"
+#define FLARE_RPC_SPAN_INFO_SEP "\1"
 
 
 namespace flare::rpc {
@@ -50,12 +50,12 @@ namespace flare::rpc {
 // static bool validate_rpcz_max_span_per_second(const char*, int32_t val) {
 //     return (val >= 1 && val <= MAX_RPCZ_MAX_SPAN_PER_SECOND);
 // }
-// BRPC_VALIDATE_GFLAG(rpcz_max_span_per_second,
+// FLARE_RPC_VALIDATE_GFLAG(rpcz_max_span_per_second,
 //                          validate_rpcz_max_span_per_second);
 
     DEFINE_int32(rpcz_keep_span_seconds, 3600,
                  "Keep spans for at most so many seconds");
-    BRPC_VALIDATE_GFLAG(rpcz_keep_span_seconds, PositiveInteger);
+    FLARE_RPC_VALIDATE_GFLAG(rpcz_keep_span_seconds, PositiveInteger);
 
     DEFINE_bool(rpcz_keep_span_db, false, "Don't remove DB of rpcz at program's exit");
 
@@ -208,7 +208,7 @@ namespace flare::rpc {
 
     void Span::Annotate(const char *fmt, ...) {
         const int64_t anno_time = flare::base::cpuwide_time_us() + _base_real_us;
-        flare::base::string_appendf(&_info, BRPC_SPAN_INFO_SEP "%lld ",
+        flare::base::string_appendf(&_info, FLARE_RPC_SPAN_INFO_SEP "%lld ",
                                     (long long) anno_time);
         va_list ap;
         va_start(ap, fmt);
@@ -218,21 +218,21 @@ namespace flare::rpc {
 
     void Span::Annotate(const char *fmt, va_list args) {
         const int64_t anno_time = flare::base::cpuwide_time_us() + _base_real_us;
-        flare::base::string_appendf(&_info, BRPC_SPAN_INFO_SEP "%lld ",
+        flare::base::string_appendf(&_info, FLARE_RPC_SPAN_INFO_SEP "%lld ",
                                     (long long) anno_time);
         flare::base::string_vappendf(&_info, fmt, args);
     }
 
     void Span::Annotate(const std::string &info) {
         const int64_t anno_time = flare::base::cpuwide_time_us() + _base_real_us;
-        flare::base::string_appendf(&_info, BRPC_SPAN_INFO_SEP "%lld ",
+        flare::base::string_appendf(&_info, FLARE_RPC_SPAN_INFO_SEP "%lld ",
                                     (long long) anno_time);
         _info.append(info);
     }
 
     void Span::AnnotateCStr(const char *info, size_t length) {
         const int64_t anno_time = flare::base::cpuwide_time_us() + _base_real_us;
-        flare::base::string_appendf(&_info, BRPC_SPAN_INFO_SEP "%lld ",
+        flare::base::string_appendf(&_info, FLARE_RPC_SPAN_INFO_SEP "%lld ",
                                     (long long) anno_time);
         if (length <= 0) {
             _info.append(info);
@@ -262,7 +262,7 @@ namespace flare::rpc {
     }
 
     SpanInfoExtractor::SpanInfoExtractor(const char *info)
-            : _sp(info, *BRPC_SPAN_INFO_SEP) {
+            : _sp(info, *FLARE_RPC_SPAN_INFO_SEP) {
     }
 
     bool SpanInfoExtractor::PopAnnotation(
@@ -354,7 +354,7 @@ namespace flare::rpc {
 
     bool has_span_db() { return !!g_span_db; }
 
-    flare::variable::CollectorSpeedLimit g_span_sl = BVAR_COLLECTOR_SPEED_LIMIT_INITIALIZER;
+    flare::variable::CollectorSpeedLimit g_span_sl = VARIABLE_COLLECTOR_SPEED_LIMIT_INITIALIZER;
     static flare::variable::DisplaySamplingRatio s_display_sampling_ratio(
             "rpcz_sampling_ratio", &g_span_sl);
 

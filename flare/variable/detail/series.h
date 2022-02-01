@@ -17,8 +17,8 @@
 
 // Date: Tue Jul 28 18:15:57 CST 2015
 
-#ifndef  BVAR_DETAIL_SERIES_H
-#define  BVAR_DETAIL_SERIES_H
+#ifndef  FLARE_VARIABLE_DETAIL_SERIES_H_
+#define  FLARE_VARIABLE_DETAIL_SERIES_H_
 
 #include <math.h>                       // round
 #include <ostream>
@@ -329,4 +329,4 @@ void Series<Vector<T,N>, Op>::describe(std::ostream& os,
 }  // namespace detail
 }  // namespace flare::variable
 
-#endif  // BVAR_DETAIL_SERIES_H
+#endif  // FLARE_VARIABLE_DETAIL_SERIES_H_

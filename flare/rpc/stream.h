@@ -16,8 +16,8 @@
 // under the License.
 
 
-#ifndef  BRPC_STREAM_H
-#define  BRPC_STREAM_H
+#ifndef  FLARE_RPC_STREAM_H_
+#define  FLARE_RPC_STREAM_H_
 
 #include "flare/io/cord_buf.h"
 #include "flare/base/scoped_generic.h"
@@ -140,4 +140,4 @@ namespace flare::rpc {
 } // namespace flare::rpc
 
 
-#endif  //BRPC_STREAM_H
+#endif  // FLARE_RPC_STREAM_H_

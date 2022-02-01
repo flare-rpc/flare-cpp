@@ -16,8 +16,8 @@
 // under the License.
 
 
-#ifndef BRPC_THRIFT_MESSAGE_H
-#define BRPC_THRIFT_MESSAGE_H
+#ifndef FLARE_RPC_THRIFT_MESSAGE_H_
+#define FLARE_RPC_THRIFT_MESSAGE_H_
 
 #include <google/protobuf/message.h>
 #include "flare/io/cord_buf.h"
@@ -236,4 +236,4 @@ void ThriftStub::CallMethod(const char* method_name,
 
 } // namespace flare::rpc
 
-#endif // BRPC_THRIFT_MESSAGE_H
+#endif // FLARE_RPC_THRIFT_MESSAGE_H_

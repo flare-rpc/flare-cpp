@@ -16,8 +16,8 @@
 // under the License.
 
 
-#ifndef BRPC_REDIS_H
-#define BRPC_REDIS_H
+#ifndef FLARE_RPC_REDIS_H_
+#define FLARE_RPC_REDIS_H_
 
 #include <google/protobuf/message.h>
 #include <unordered_map>
@@ -318,4 +318,4 @@ namespace flare::rpc {
 
 } // namespace flare::rpc
 
-#endif  // BRPC_REDIS_H
+#endif  // FLARE_RPC_REDIS_H_

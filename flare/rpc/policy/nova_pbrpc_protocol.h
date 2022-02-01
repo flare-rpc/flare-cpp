@@ -16,8 +16,8 @@
 // under the License.
 
 
-#ifndef BRPC_POLICY_NOVA_PBRPC_PROTOCOL_H
-#define BRPC_POLICY_NOVA_PBRPC_PROTOCOL_H
+#ifndef FLARE_RPC_POLICY_NOVA_PBRPC_PROTOCOL_H_
+#define FLARE_RPC_POLICY_NOVA_PBRPC_PROTOCOL_H_
 
 #include "flare/rpc/nshead_pb_service_adaptor.h"
 #include "flare/rpc/policy/nshead_protocol.h"
@@ -63,4 +63,4 @@ public:
 } // namespace flare::rpc
 
 
-#endif // BRPC_POLICY_NOVA_PBRPC_PROTOCOL_H
+#endif // FLARE_RPC_POLICY_NOVA_PBRPC_PROTOCOL_H_

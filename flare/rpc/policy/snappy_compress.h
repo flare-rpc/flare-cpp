@@ -16,8 +16,8 @@
 // under the License.
 
 
-#ifndef BRPC_POLICY_SNAPPY_COMPRESS_H
-#define BRPC_POLICY_SNAPPY_COMPRESS_H
+#ifndef FLARE_RPC_POLICY_SNAPPY_COMPRESS_H_
+#define FLARE_RPC_POLICY_SNAPPY_COMPRESS_H_
 
 #include <google/protobuf/message.h>          // Message
 #include "flare/io/cord_buf.h"                       // cord_buf
@@ -42,4 +42,4 @@ bool SnappyDecompress(const flare::io::cord_buf& in, flare::io::cord_buf* out);
 } // namespace flare::rpc
 
 
-#endif // BRPC_POLICY_SNAPPY_COMPRESS_H
+#endif // FLARE_RPC_POLICY_SNAPPY_COMPRESS_H_

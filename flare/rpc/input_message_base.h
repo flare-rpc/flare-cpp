@@ -16,8 +16,8 @@
 // under the License.
 
 
-#ifndef BRPC_INPUT_MESSAGE_BASE_H
-#define BRPC_INPUT_MESSAGE_BASE_H
+#ifndef FLARE_RPC_INPUT_MESSAGE_BASE_H_
+#define FLARE_RPC_INPUT_MESSAGE_BASE_H_
 
 #include "flare/rpc/socket_id.h"           // SocketId
 #include "flare/rpc/destroyable.h"         // DestroyingPtr
@@ -65,4 +65,4 @@ friend class Stream;
 } // namespace flare::rpc
 
 
-#endif  // BRPC_INPUT_MESSAGE_BASE_H
+#endif  // FLARE_RPC_INPUT_MESSAGE_BASE_H_

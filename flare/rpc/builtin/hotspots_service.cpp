@@ -114,11 +114,11 @@ namespace flare::rpc {
     extern bool cpu_profiler_enabled;
 
     DEFINE_int32(max_profiling_seconds, 300, "upper limit of running time of profilers");
-    BRPC_VALIDATE_GFLAG(max_profiling_seconds, NonNegativeInteger);
+    FLARE_RPC_VALIDATE_GFLAG(max_profiling_seconds, NonNegativeInteger);
 
     DEFINE_int32(max_profiles_kept, 32,
                  "max profiles kept for cpu/heap/growth/contention respectively");
-    BRPC_VALIDATE_GFLAG(max_profiles_kept, PassValidate);
+    FLARE_RPC_VALIDATE_GFLAG(max_profiles_kept, PassValidate);
 
     static const char *const PPROF_FILENAME = "pprof.pl";
     static int DEFAULT_PROFILING_SECONDS = 10;
@@ -1105,7 +1105,7 @@ namespace flare::rpc {
         if (!enabled && view == NULL) {
             os << "<p><span style='color:red'>Error:</span> "
                << type_str << " profiler is not enabled." << extra_desc << "</p>"
-                                                                           "<p>To enable all profilers, link tcmalloc and define macros BRPC_ENABLE_CPU_PROFILER"
+                                                                           "<p>To enable all profilers, link tcmalloc and define macros FLARE_ENABLE_CPU_PROFILER"
                                                                            "</p><p>Or read docs: <a href='https://github.com/brpc/brpc/blob/master/docs/cn/cpu_profiler.md'>cpu_profiler</a>"
                                                                            " and <a href='https://github.com/brpc/brpc/blob/master/docs/cn/heap_profiler.md'>heap_profiler</a>"
                                                                            "</p></body></html>";

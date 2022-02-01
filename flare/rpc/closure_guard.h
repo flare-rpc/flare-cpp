@@ -16,8 +16,8 @@
 // under the License.
 
 
-#ifndef BRPC_CLOSURE_GUARD_H
-#define BRPC_CLOSURE_GUARD_H
+#ifndef FLARE_RPC_CLOSURE_GUARD_H_
+#define FLARE_RPC_CLOSURE_GUARD_H_
 
 #include <google/protobuf/service.h>
 #include "flare/base/profile.h"
@@ -71,4 +71,4 @@ private:
 } // namespace flare::rpc
 
 
-#endif  // BRPC_CLOSURE_GUARD_H
+#endif  // FLARE_RPC_CLOSURE_GUARD_H_

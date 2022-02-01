@@ -16,8 +16,8 @@
 // under the License.
 
 
-#ifndef  BRPC_METHOD_STATUS_H
-#define  BRPC_METHOD_STATUS_H
+#ifndef  FLARE_RPC_METHOD_STATUS_H_
+#define  FLARE_RPC_METHOD_STATUS_H_
 
 #include "flare/base/profile.h"                  // FLARE_DISALLOW_COPY_AND_ASSIGN
 #include "flare/variable/all.h"                    // vars
@@ -68,11 +68,11 @@ friend class Server;
 
     std::unique_ptr<ConcurrencyLimiter> _cl;
     std::atomic<int> _nconcurrency;
-    flare::variable::Adder<int64_t>  _nerror_bvar;
+    flare::variable::Adder<int64_t>  _nerror_var;
     flare::variable::LatencyRecorder _latency_rec;
-    flare::variable::PassiveStatus<int>  _nconcurrency_bvar;
-    flare::variable::PerSecond<flare::variable::Adder<int64_t>> _eps_bvar;
-    flare::variable::PassiveStatus<int32_t> _max_concurrency_bvar;
+    flare::variable::PassiveStatus<int>  _nconcurrency_var;
+    flare::variable::PerSecond<flare::variable::Adder<int64_t>> _eps_var;
+    flare::variable::PassiveStatus<int32_t> _max_concurrency_var;
 };
 
 class ConcurrencyRemover {
@@ -105,7 +105,7 @@ inline void MethodStatus::OnResponded(int error_code, int64_t latency) {
     if (0 == error_code) {
         _latency_rec << latency;
     } else {
-        _nerror_bvar << 1;
+        _nerror_var << 1;
     }
     if (NULL != _cl) {
         _cl->OnResponded(error_code, latency);
@@ -114,4 +114,4 @@ inline void MethodStatus::OnResponded(int error_code, int64_t latency) {
 
 } // namespace flare::rpc
 
-#endif  //BRPC_METHOD_STATUS_H
+#endif  // FLARE_RPC_METHOD_STATUS_H_

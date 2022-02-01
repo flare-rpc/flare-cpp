@@ -16,8 +16,8 @@
 // under the License.
 
 
-#ifndef BRPC_EXTENSION_H
-#define BRPC_EXTENSION_H
+#ifndef FLARE_RPC_EXTENSION_H_
+#define FLARE_RPC_EXTENSION_H_
 
 #include <string>
 #include "flare/base/scoped_lock.h"
@@ -60,4 +60,4 @@ friend class flare::base::GetLeakySingleton<Extension<T> >;
 
 #include "flare/rpc/extension_inl.h"
 
-#endif  // BRPC_EXTENSION_H
+#endif  // FLARE_RPC_EXTENSION_H_

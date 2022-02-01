@@ -16,8 +16,8 @@
 // under the License.
 
 
-#ifndef BRPC_FLAGS_SERVICE_H
-#define BRPC_FLAGS_SERVICE_H
+#ifndef FLARE_RPC_FLAGS_SERVICE_H_
+#define FLARE_RPC_FLAGS_SERVICE_H_
 
 #include "flare/rpc/builtin_service.pb.h"
 #include "flare/rpc/builtin/tabbed.h"
@@ -43,4 +43,4 @@ private:
 
 
 
-#endif // BRPC_FLAGS_SERVICE_H
+#endif // FLARE_RPC_FLAGS_SERVICE_H_

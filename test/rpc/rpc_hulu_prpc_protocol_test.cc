@@ -26,13 +26,21 @@
 #include <gflags/gflags.h>
 #include <google/protobuf/descriptor.h>
 #include "flare/base/time.h"
+#include "flare/base/gperftools_profiler.h"
 #include "flare/rpc/socket.h"
 #include "flare/rpc/acceptor.h"
 #include "flare/rpc/server.h"
-#include "flare/rpc/policy/nova_pbrpc_protocol.h"
+#include "flare/rpc/policy/hulu_pbrpc_meta.pb.h"
+#include "flare/rpc/policy/hulu_pbrpc_protocol.h"
 #include "flare/rpc/policy/most_common_message.h"
 #include "flare/rpc/controller.h"
 #include "echo.pb.h"
+
+int main(int argc, char* argv[]) {
+    testing::InitGoogleTest(&argc, argv);
+    GFLAGS_NS::ParseCommandLineFlags(&argc, &argv, true);
+    return RUN_ALL_TESTS();
+}
 
 namespace {
 
@@ -73,21 +81,26 @@ class MyEchoService : public ::test::EchoService {
             cntl->CloseConnection("Close connection according to request");
             return;
         }
+        if (cntl->auth_context()) {
+            EXPECT_EQ(MOCK_USER, cntl->auth_context()->user());
+        }
         EXPECT_EQ(EXP_REQUEST, req->message());
+        if (!cntl->request_attachment().empty()) {
+            EXPECT_EQ(EXP_REQUEST, cntl->request_attachment().to_string());
+            cntl->response_attachment().append(EXP_RESPONSE);
+        }
         res->set_message(EXP_RESPONSE);
     }
 };
     
-class NovaTest : public ::testing::Test{
+class HuluTest : public ::testing::Test{
 protected:
-    NovaTest() {
+    HuluTest() {
         EXPECT_EQ(0, _server.AddService(
             &_svc, flare::rpc::SERVER_DOESNT_OWN_SERVICE));
         // Hack: Regard `_server' as running 
         _server._status = flare::rpc::Server::RUNNING;
-        _server._options.nshead_service = new flare::rpc::policy::NovaServiceAdaptor;
-        // Nova doesn't support authentication
-        // _server._options.auth = &_auth;
+        _server._options.auth = &_auth;
         
         EXPECT_EQ(0, pipe(_pipe_fds));
 
@@ -98,7 +111,7 @@ protected:
         EXPECT_EQ(0, flare::rpc::Socket::Address(id, &_socket));
     };
 
-    virtual ~NovaTest() {};
+    virtual ~HuluTest() {};
     virtual void SetUp() {};
     virtual void TearDown() {};
 
@@ -107,13 +120,13 @@ protected:
             _socket->ReAddress(&msg->_socket);
         }
         msg->_arg = &_server;
-        EXPECT_TRUE(flare::rpc::policy::VerifyNsheadRequest(msg));
+        EXPECT_TRUE(flare::rpc::policy::VerifyHuluRequest(msg));
     }
 
     void ProcessMessage(void (*process)(flare::rpc::InputMessageBase*),
                         flare::rpc::InputMessageBase* msg, bool set_eof) {
         if (msg->_socket == NULL) {
-            _socket->ReAddress(&msg->_socket);
+            _socket.get()->ReAddress(&msg->_socket);
         }
         msg->_arg = &_server;
         _socket->PostponeEOF();
@@ -124,10 +137,11 @@ protected:
     }
 
     flare::rpc::policy::MostCommonMessage* MakeRequestMessage(
-        const flare::rpc::nshead_t& head) {
+        const flare::rpc::policy::HuluRpcRequestMeta& meta) {
         flare::rpc::policy::MostCommonMessage* msg =
                 flare::rpc::policy::MostCommonMessage::Get();
-        msg->meta.append(&head, sizeof(head));
+        flare::io::cord_buf_as_zero_copy_output_stream meta_stream(&msg->meta);
+        EXPECT_TRUE(meta.SerializeToZeroCopyStream(&meta_stream));
 
         test::EchoRequest req;
         req.set_message(EXP_REQUEST);
@@ -136,13 +150,13 @@ protected:
         return msg;
     }
 
-    flare::rpc::policy::MostCommonMessage* MakeResponseMessage() {
+    flare::rpc::policy::MostCommonMessage* MakeResponseMessage(
+        const flare::rpc::policy::HuluRpcResponseMeta& meta) {
         flare::rpc::policy::MostCommonMessage* msg =
                 flare::rpc::policy::MostCommonMessage::Get();
-        flare::rpc::nshead_t head;
-        memset(&head, 0, sizeof(head));
-        msg->meta.append(&head, sizeof(head));
-        
+        flare::io::cord_buf_as_zero_copy_output_stream meta_stream(&msg->meta);
+        EXPECT_TRUE(meta.SerializeToZeroCopyStream(&meta_stream));
+
         test::EchoResponse res;
         res.set_message(EXP_RESPONSE);
         flare::io::cord_buf_as_zero_copy_output_stream res_stream(&msg->payload);
@@ -150,10 +164,53 @@ protected:
         return msg;
     }
 
-    void CheckEmptyResponse() {
+    void CheckResponseCode(bool expect_empty, int expect_code) {
         int bytes_in_pipe = 0;
         ioctl(_pipe_fds[0], FIONREAD, &bytes_in_pipe);
-        EXPECT_EQ(0, bytes_in_pipe);
+        if (expect_empty) {
+            EXPECT_EQ(0, bytes_in_pipe);
+            return;
+        }
+
+        EXPECT_GT(bytes_in_pipe, 0);
+        flare::io::IOPortal buf;
+        EXPECT_EQ((ssize_t)bytes_in_pipe,
+                  buf.append_from_file_descriptor(_pipe_fds[0], 1024));
+        flare::rpc::ParseResult pr = flare::rpc::policy::ParseHuluMessage(&buf, NULL, false, NULL);
+        EXPECT_EQ(flare::rpc::PARSE_OK, pr.error());
+        flare::rpc::policy::MostCommonMessage* msg =
+            static_cast<flare::rpc::policy::MostCommonMessage*>(pr.message());
+
+        flare::rpc::policy::HuluRpcResponseMeta meta;
+        flare::io::cord_buf_as_zero_copy_input_stream meta_stream(msg->meta);
+        EXPECT_TRUE(meta.ParseFromZeroCopyStream(&meta_stream));
+        EXPECT_EQ(expect_code, meta.error_code());
+    }
+
+    void TestHuluCompress(flare::rpc::CompressType type) {
+        flare::io::cord_buf request_buf;
+        flare::io::cord_buf total_buf;
+        flare::rpc::Controller cntl;
+        test::EchoRequest req;
+        test::EchoResponse res;
+        cntl._response = &res;
+
+        req.set_message(EXP_REQUEST);
+        cntl.set_request_compress_type(type);
+        flare::rpc::SerializeRequestDefault(&request_buf, &cntl, &req);
+        ASSERT_FALSE(cntl.Failed());
+        flare::rpc::policy::PackHuluRequest(
+            &total_buf, NULL, cntl.call_id().value,
+            test::EchoService::descriptor()->method(0),
+            &cntl, request_buf, &_auth);
+        ASSERT_FALSE(cntl.Failed());
+
+        flare::rpc::ParseResult req_pr =
+                flare::rpc::policy::ParseHuluMessage(&total_buf, NULL, false, NULL);
+        ASSERT_EQ(flare::rpc::PARSE_OK, req_pr.error());
+        flare::rpc::InputMessageBase* req_msg = req_pr.message();
+        ProcessMessage(flare::rpc::policy::ProcessHuluRequest, req_msg, false);
+        CheckResponseCode(false, 0);
     }
 
     int _pipe_fds[2];
@@ -164,114 +221,130 @@ protected:
     MyAuthenticator _auth;
 };
 
-TEST_F(NovaTest, process_request_failed_socket) {
-    flare::rpc::nshead_t head;
-    memset(&head, 0, sizeof(head));
-    flare::rpc::policy::MostCommonMessage* msg = MakeRequestMessage(head);
+TEST_F(HuluTest, process_request_failed_socket) {
+    flare::rpc::policy::HuluRpcRequestMeta meta;
+    meta.set_service_name("EchoService");
+    meta.set_method_index(0);
+    flare::rpc::policy::MostCommonMessage* msg = MakeRequestMessage(meta);
     _socket->SetFailed();
-    ProcessMessage(flare::rpc::policy::ProcessNsheadRequest, msg, false);
-    ASSERT_EQ(0ll, _server._nerror_bvar.get_value());
-    CheckEmptyResponse();
+    ProcessMessage(flare::rpc::policy::ProcessHuluRequest, msg, false);
+    ASSERT_EQ(0ll, _server._nerror_var.get_value());
+    CheckResponseCode(true, 0);
 }
 
-TEST_F(NovaTest, process_request_logoff) {
-    flare::rpc::nshead_t head;
-    head.reserved = 0;
-    flare::rpc::policy::MostCommonMessage* msg = MakeRequestMessage(head);
+TEST_F(HuluTest, process_request_logoff) {
+    flare::rpc::policy::HuluRpcRequestMeta meta;
+    meta.set_service_name("EchoService");
+    meta.set_method_index(0);
+    flare::rpc::policy::MostCommonMessage* msg = MakeRequestMessage(meta);
     _server._status = flare::rpc::Server::READY;
-    ProcessMessage(flare::rpc::policy::ProcessNsheadRequest, msg, false);
-    ASSERT_EQ(1ll, _server._nerror_bvar.get_value());
-    ASSERT_TRUE(_socket->Failed());
-    CheckEmptyResponse();
+    ProcessMessage(flare::rpc::policy::ProcessHuluRequest, msg, false);
+    ASSERT_EQ(1ll, _server._nerror_var.get_value());
+    CheckResponseCode(false, flare::rpc::ELOGOFF);
 }
 
-TEST_F(NovaTest, process_request_wrong_method) {
-    flare::rpc::nshead_t head;
-    head.reserved = 10;
-    flare::rpc::policy::MostCommonMessage* msg = MakeRequestMessage(head);
-    ProcessMessage(flare::rpc::policy::ProcessNsheadRequest, msg, false);
-    ASSERT_EQ(1ll, _server._nerror_bvar.get_value());
-    ASSERT_TRUE(_socket->Failed());
-    CheckEmptyResponse();
+TEST_F(HuluTest, process_request_wrong_method) {
+    flare::rpc::policy::HuluRpcRequestMeta meta;
+    meta.set_service_name("EchoService");
+    meta.set_method_index(10);
+    flare::rpc::policy::MostCommonMessage* msg = MakeRequestMessage(meta);
+    ProcessMessage(flare::rpc::policy::ProcessHuluRequest, msg, false);
+    ASSERT_EQ(1ll, _server._nerror_var.get_value());
+    CheckResponseCode(false, flare::rpc::ENOMETHOD);
 }
 
-TEST_F(NovaTest, process_response_after_eof) {
+TEST_F(HuluTest, process_response_after_eof) {
+    flare::rpc::policy::HuluRpcResponseMeta meta;
     test::EchoResponse res;
     flare::rpc::Controller cntl;
+    meta.set_correlation_id(cntl.call_id().value);
     cntl._response = &res;
-    flare::rpc::policy::MostCommonMessage* msg = MakeResponseMessage();
-    _socket->set_correlation_id(cntl.call_id().value);
-    ProcessMessage(flare::rpc::policy::ProcessNovaResponse, msg, true);
+    flare::rpc::policy::MostCommonMessage* msg = MakeResponseMessage(meta);
+    ProcessMessage(flare::rpc::policy::ProcessHuluResponse, msg, true);
     ASSERT_EQ(EXP_RESPONSE, res.message());
     ASSERT_TRUE(_socket->Failed());
 }
 
-TEST_F(NovaTest, complete_flow) {
+TEST_F(HuluTest, process_response_error_code) {
+    const int ERROR_CODE = 12345;
+    flare::rpc::policy::HuluRpcResponseMeta meta;
+    flare::rpc::Controller cntl;
+    meta.set_correlation_id(cntl.call_id().value);
+    meta.set_error_code(ERROR_CODE);
+    flare::rpc::policy::MostCommonMessage* msg = MakeResponseMessage(meta);
+    ProcessMessage(flare::rpc::policy::ProcessHuluResponse, msg, false);
+    ASSERT_EQ(ERROR_CODE, cntl.ErrorCode());
+}
+
+TEST_F(HuluTest, complete_flow) {
     flare::io::cord_buf request_buf;
     flare::io::cord_buf total_buf;
     flare::rpc::Controller cntl;
     test::EchoRequest req;
     test::EchoResponse res;
     cntl._response = &res;
-    cntl._connection_type = flare::rpc::CONNECTION_TYPE_SHORT;
-    ASSERT_EQ(0, flare::rpc::Socket::Address(_socket->id(), &cntl._current_call.sending_sock));
 
     // Send request
     req.set_message(EXP_REQUEST);
     flare::rpc::SerializeRequestDefault(&request_buf, &cntl, &req);
     ASSERT_FALSE(cntl.Failed());
-    flare::rpc::policy::PackNovaRequest(
+    cntl.request_attachment().append(EXP_REQUEST);
+    flare::rpc::policy::PackHuluRequest(
         &total_buf, NULL, cntl.call_id().value,
         test::EchoService::descriptor()->method(0), &cntl, request_buf, &_auth);
     ASSERT_FALSE(cntl.Failed());
 
     // Verify and handle request
     flare::rpc::ParseResult req_pr =
-            flare::rpc::policy::ParseNsheadMessage(&total_buf, NULL, false, NULL);
+            flare::rpc::policy::ParseHuluMessage(&total_buf, NULL, false, NULL);
     ASSERT_EQ(flare::rpc::PARSE_OK, req_pr.error());
     flare::rpc::InputMessageBase* req_msg = req_pr.message();
     VerifyMessage(req_msg);
-    ProcessMessage(flare::rpc::policy::ProcessNsheadRequest, req_msg, false);
+    ProcessMessage(flare::rpc::policy::ProcessHuluRequest, req_msg, false);
 
     // Read response from pipe
     flare::io::IOPortal response_buf;
     response_buf.append_from_file_descriptor(_pipe_fds[0], 1024);
     flare::rpc::ParseResult res_pr =
-            flare::rpc::policy::ParseNsheadMessage(&response_buf, NULL, false, NULL);
+            flare::rpc::policy::ParseHuluMessage(&response_buf, NULL, false, NULL);
     ASSERT_EQ(flare::rpc::PARSE_OK, res_pr.error());
     flare::rpc::InputMessageBase* res_msg = res_pr.message();
-    ProcessMessage(flare::rpc::policy::ProcessNovaResponse, res_msg, false);
+    ProcessMessage(flare::rpc::policy::ProcessHuluResponse, res_msg, false);
 
-    ASSERT_FALSE(cntl.Failed()) << cntl.ErrorText();
+    ASSERT_FALSE(cntl.Failed());
     ASSERT_EQ(EXP_RESPONSE, res.message());
 }
 
-TEST_F(NovaTest, close_in_callback) {
+TEST_F(HuluTest, close_in_callback) {
     flare::io::cord_buf request_buf;
     flare::io::cord_buf total_buf;
     flare::rpc::Controller cntl;
     test::EchoRequest req;
-    cntl._connection_type = flare::rpc::CONNECTION_TYPE_SHORT;
-    ASSERT_EQ(0, flare::rpc::Socket::Address(_socket->id(), &cntl._current_call.sending_sock));
 
     // Send request
     req.set_message(EXP_REQUEST);
     req.set_close_fd(true);
     flare::rpc::SerializeRequestDefault(&request_buf, &cntl, &req);
     ASSERT_FALSE(cntl.Failed());
-    flare::rpc::policy::PackNovaRequest(
+    flare::rpc::policy::PackHuluRequest(
         &total_buf, NULL, cntl.call_id().value,
         test::EchoService::descriptor()->method(0), &cntl, request_buf, &_auth);
     ASSERT_FALSE(cntl.Failed());
 
     // Handle request
     flare::rpc::ParseResult req_pr =
-            flare::rpc::policy::ParseNsheadMessage(&total_buf, NULL, false, NULL);
+            flare::rpc::policy::ParseHuluMessage(&total_buf, NULL, false, NULL);
     ASSERT_EQ(flare::rpc::PARSE_OK, req_pr.error());
     flare::rpc::InputMessageBase* req_msg = req_pr.message();
-    ProcessMessage(flare::rpc::policy::ProcessNsheadRequest, req_msg, false);
+    ProcessMessage(flare::rpc::policy::ProcessHuluRequest, req_msg, false);
 
     // Socket should be closed
     ASSERT_TRUE(_socket->Failed());
+}
+
+TEST_F(HuluTest, hulu_compress) {
+    TestHuluCompress(flare::rpc::COMPRESS_TYPE_SNAPPY);
+    TestHuluCompress(flare::rpc::COMPRESS_TYPE_GZIP);
+    TestHuluCompress(flare::rpc::COMPRESS_TYPE_ZLIB);
 }
 } //namespace

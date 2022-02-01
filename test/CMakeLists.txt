@@ -53,7 +53,7 @@ else ()
 endif ()
 
 set(CMAKE_CPP_FLAGS "${DEFINE_CLOCK_GETTIME}  -DGFLAGS_NS=${GFLAGS_NS}")
-set(CMAKE_CPP_FLAGS "${CMAKE_CPP_FLAGS} -DBTHREAD_USE_FAST_PTHREAD_MUTEX -D__const__= -D_GNU_SOURCE -DUSE_SYMBOLIZE -DNO_TCMALLOC -D__STDC_FORMAT_MACROS -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -DUNIT_TEST -Dprivate=public -Dprotected=public -DBVAR_NOT_LINK_DEFAULT_VARIABLES -D__STRICT_ANSI__ -include ${PROJECT_SOURCE_DIR}/test/sstream_workaround.h")
+set(CMAKE_CPP_FLAGS "${CMAKE_CPP_FLAGS} -DBTHREAD_USE_FAST_PTHREAD_MUTEX -D__const__= -D_GNU_SOURCE -DUSE_SYMBOLIZE -DNO_TCMALLOC -D__STDC_FORMAT_MACROS -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -DUNIT_TEST -Dprivate=public -Dprotected=public -DVARIABLE_NOT_LINK_DEFAULT_VARIABLES -D__STRICT_ANSI__ -include ${PROJECT_SOURCE_DIR}/test/sstream_workaround.h")
 set(CMAKE_CXX_FLAGS "${CMAKE_CPP_FLAGS} -g -O2 -pipe -Wall -W -fPIC -fstrict-aliasing -Wno-invalid-offsetof -Wno-unused-parameter -fno-omit-frame-pointer")
 use_cxx17()
 
@@ -121,12 +121,12 @@ target_link_libraries(test_io flare-shared-debug
 
 add_test(NAME test_io COMMAND test_io)
 
-# test_bvar
-# -DBVAR_NOT_LINK_DEFAULT_VARIABLES not work for gcc >= 5.0, just remove the file to prevent linking into unit tests
-list(REMOVE_ITEM BVAR_SOURCES ${PROJECT_SOURCE_DIR}/flare/variable/default_variables.cpp)
+# test_variable
+# -DVARIABLE_NOT_LINK_DEFAULT_VARIABLES not work for gcc >= 5.0, just remove the file to prevent linking into unit tests
+list(REMOVE_ITEM VARIABLE_SOURCES ${PROJECT_SOURCE_DIR}/flare/variable/default_variables.cpp)
 
-add_library(BVAR_DEBUG_LIB OBJECT ${BVAR_SOURCES})
-add_subdirectory(bvar)
+add_library(VARIABLE_DEBUG_LIB OBJECT ${VARIABLE_SOURCES})
+add_subdirectory(var)
 
 # bthread tests
 add_subdirectory(bthread)

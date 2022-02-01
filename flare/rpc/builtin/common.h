@@ -16,8 +16,8 @@
 // under the License.
 
 
-#ifndef BRPC_BUILTIN_COMMON_H
-#define BRPC_BUILTIN_COMMON_H
+#ifndef FLARE_RPC_BUILTIN_COMMON_H_
+#define FLARE_RPC_BUILTIN_COMMON_H_
 
 #include <vector>                           // std::vector
 #include <gflags/gflags_declare.h>
@@ -143,4 +143,4 @@ inline std::ostream& operator<<(std::ostream& os, const MinWidth<T>& fw) {
 } // namespace flare::rpc
 
 
-#endif // BRPC_BUILTIN_COMMON_H
+#endif // FLARE_RPC_BUILTIN_COMMON_H_

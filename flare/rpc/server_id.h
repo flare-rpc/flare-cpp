@@ -16,8 +16,8 @@
 // under the License.
 
 
-#ifndef BRPC_SERVER_ID_H
-#define BRPC_SERVER_ID_H
+#ifndef FLARE_RPC_SERVER_ID_H_
+#define FLARE_RPC_SERVER_ID_H_
 
 // To flare developers: This is a header included by user, don't depend
 // on internal structures, use opaque pointers instead.
@@ -106,4 +106,4 @@ namespace FLARE_HASH_NAMESPACE {
 #endif  // COMPILER
 }
 
-#endif  // BRPC_SERVER_ID_H
+#endif  // FLARE_RPC_SERVER_ID_H_

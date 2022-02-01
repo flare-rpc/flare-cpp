@@ -16,8 +16,8 @@
 // under the License.
 
 
-#ifndef BRPC_SIMPLE_DATA_POOL_H
-#define BRPC_SIMPLE_DATA_POOL_H
+#ifndef FLARE_RPC_SIMPLE_DATA_POOL_H_
+#define FLARE_RPC_SIMPLE_DATA_POOL_H_
 
 #include "flare/base/scoped_lock.h"
 #include "flare/rpc/data_factory.h"
@@ -57,4 +57,4 @@ private:
 
 } // namespace flare::rpc
 
-#endif  // BRPC_SIMPLE_DATA_POOL_H
+#endif  // FLARE_RPC_SIMPLE_DATA_POOL_H_

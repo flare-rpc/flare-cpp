@@ -16,8 +16,8 @@
 // under the License.
 
 
-#ifndef BRPC_NAMING_SERVICE_H
-#define BRPC_NAMING_SERVICE_H
+#ifndef FLARE_RPC_NAMING_SERVICE_H_
+#define FLARE_RPC_NAMING_SERVICE_H_
 
 #include <vector>                                   // std::vector
 #include <string>                                   // std::string
@@ -74,4 +74,4 @@ inline Extension<const NamingService>* NamingServiceExtension() {
 
 } // namespace flare::rpc
 
-#endif  // BRPC_NAMING_SERVICE_H
+#endif  // FLARE_RPC_NAMING_SERVICE_H_

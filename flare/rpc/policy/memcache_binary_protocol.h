@@ -16,8 +16,8 @@
 // under the License.
 
 
-#ifndef BRPC_POLICY_MEMCACHE_BINARY_PROTOCOL_H
-#define BRPC_POLICY_MEMCACHE_BINARY_PROTOCOL_H
+#ifndef FLARE_RPC_POLICY_MEMCACHE_BINARY_PROTOCOL_H_
+#define FLARE_RPC_POLICY_MEMCACHE_BINARY_PROTOCOL_H_
 
 #include "flare/rpc/protocol.h"
 
@@ -54,4 +54,4 @@ const std::string& GetMemcacheMethodName(
 } // namespace flare::rpc
 
 
-#endif  // BRPC_POLICY_MEMCACHE_BINARY_PROTOCOL_H
+#endif  // FLARE_RPC_POLICY_MEMCACHE_BINARY_PROTOCOL_H_

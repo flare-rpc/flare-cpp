@@ -15,8 +15,8 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef PBRPCPRESS_PBRPC_PRESS_H
-#define PBRPCPRESS_PBRPC_PRESS_H
+#ifndef PBRPCPRESS_PFLARE_RPC_PRESS_H_
+#define PBRPCPRESS_PFLARE_RPC_PRESS_H_
 
 #include <stdio.h>
 #include <deque>
@@ -147,4 +147,4 @@ namespace pbrpcframework {
         flare::rpc::InfoThread _info_thr;
     };
 }
-#endif // PBRPCPRESS_PBRPC_PRESS_H
+#endif // PBRPCPRESS_PFLARE_RPC_PRESS_H_

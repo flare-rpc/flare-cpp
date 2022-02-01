@@ -16,8 +16,8 @@
 // under the License.
 
 
-#ifndef  BRPC_POLICY_DOMAIN_NAMING_SERVICE_H
-#define  BRPC_POLICY_DOMAIN_NAMING_SERVICE_H
+#ifndef  FLARE_RPC_POLICY_DOMAIN_NAMING_SERVICE_H_
+#define  FLARE_RPC_POLICY_DOMAIN_NAMING_SERVICE_H_
 
 #include "flare/rpc/periodic_naming_service.h"
 #include <memory>
@@ -51,4 +51,4 @@ private:
 } // namespace flare::rpc
 
 
-#endif  //BRPC_POLICY_DOMAIN_NAMING_SERVICE_H
+#endif  // FLARE_RPC_POLICY_DOMAIN_NAMING_SERVICE_H_

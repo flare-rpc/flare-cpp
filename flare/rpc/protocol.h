@@ -16,8 +16,8 @@
 // under the License.
 
 
-#ifndef BRPC_PROTOCOL_H
-#define BRPC_PROTOCOL_H
+#ifndef FLARE_RPC_PROTOCOL_H_
+#define FLARE_RPC_PROTOCOL_H_
 
 // To flare developers: This is a header included by user, don't depend
 // on internal structures, use opaque pointers instead.
@@ -262,4 +262,4 @@ namespace flare::rpc {
 } // namespace flare::rpc
 
 
-#endif // BRPC_PROTOCOL_H
+#endif // FLARE_RPC_PROTOCOL_H_

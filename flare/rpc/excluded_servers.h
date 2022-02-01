@@ -16,8 +16,8 @@
 // under the License.
 
 
-#ifndef BRPC_EXCLUDED_SERVERS_H
-#define BRPC_EXCLUDED_SERVERS_H
+#ifndef FLARE_RPC_EXCLUDED_SERVERS_H_
+#define FLARE_RPC_EXCLUDED_SERVERS_H_
 
 #include "flare/base/scoped_lock.h"
 #include "flare/container/bounded_queue.h"
@@ -99,4 +99,4 @@ inline bool ExcludedServers::IsExcluded(SocketId id) const {
 } // namespace flare::rpc
 
 
-#endif  // BRPC_EXCLUDED_SERVERS_H
+#endif  // FLARE_RPC_EXCLUDED_SERVERS_H_

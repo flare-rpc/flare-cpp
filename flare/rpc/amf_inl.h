@@ -16,8 +16,8 @@
 // under the License.
 
 
-#ifndef BRPC_AMF_INL_H
-#define BRPC_AMF_INL_H
+#ifndef FLARE_RPC_AMF_INL_H_
+#define FLARE_RPC_AMF_INL_H_
 
 void* fast_memcpy(void *__restrict dest, const void *__restrict src, size_t n);
 
@@ -168,4 +168,4 @@ inline void AMFOutputStream::put_u64(uint64_t val) {
 } // namespace flare::rpc
 
 
-#endif  // BRPC_AMF_INL_H
+#endif  // FLARE_RPC_AMF_INL_H_

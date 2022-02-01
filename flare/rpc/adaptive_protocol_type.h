@@ -15,8 +15,8 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef BRPC_ADAPTIVE_PROTOCOL_TYPE_H
-#define BRPC_ADAPTIVE_PROTOCOL_TYPE_H
+#ifndef FLARE_RPC_ADAPTIVE_PROTOCOL_TYPE_H_
+#define FLARE_RPC_ADAPTIVE_PROTOCOL_TYPE_H_
 
 // To flare developers: This is a header included by user, don't depend
 // on internal structures, use opaque pointers instead.
@@ -94,4 +94,4 @@ namespace flare::rpc {
 
 } // namespace flare::rpc
 
-#endif  // BRPC_ADAPTIVE_PROTOCOL_TYPE_H
+#endif  // FLARE_RPC_ADAPTIVE_PROTOCOL_TYPE_H_

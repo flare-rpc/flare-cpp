@@ -15,8 +15,8 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef BRPC_CONTROLLER_PRIVATE_ACCESSOR_H
-#define BRPC_CONTROLLER_PRIVATE_ACCESSOR_H
+#ifndef FLARE_RPC_CONTROLLER_PRIVATE_ACCESSOR_H_
+#define FLARE_RPC_CONTROLLER_PRIVATE_ACCESSOR_H_
 
 // This is an rpc-internal file.
 
@@ -165,4 +165,4 @@ public:
 } // namespace flare::rpc
 
 
-#endif // BRPC_CONTROLLER_PRIVATE_ACCESSOR_H
+#endif // FLARE_RPC_CONTROLLER_PRIVATE_ACCESSOR_H_
