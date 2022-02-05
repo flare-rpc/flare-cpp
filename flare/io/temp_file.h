@@ -57,10 +57,6 @@ namespace flare::io {
         char _fname[24];        // name of the file
     };
 
-    bool create_new_temp_directory(const std::filesystem::path &prefix, std::filesystem::path *newPath);
-
-    bool create_temporary_dir_in_dir(const std::filesystem::path &base, const std::string &prefix,
-                                     std::filesystem::path *newPath);
 } // namespace flare::io
 
 #endif  // FLARE_IO_TEMP_FILE_H_

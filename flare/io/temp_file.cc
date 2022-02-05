@@ -12,34 +12,8 @@
 
 // Initializing array. Needs to be macro.
 #define BASE_FILES_TEMP_FILE_PATTERN "temp_file_XXXXXX"
-#define BASE_FILES_TEMP_DIR_PATTERN "temp_dir_XXXXXX"
 
 namespace flare::io {
-
-    static bool create_temporary_dir_in_dir_impl(const std::filesystem::path &base_dir,
-                                                 const std::string &name_tmpl,
-                                                 std::filesystem::path *new_dir);
-
-    bool create_temporary_dir_in_dir_impl(const std::filesystem::path &base_dir,
-                                          const std::string &name_tmpl,
-                                          std::filesystem::path *new_dir) {
-        DCHECK(name_tmpl.find("XXXXXX") != std::string::npos)
-                            << "Directory name template must contain \"XXXXXX\".";
-
-        std::filesystem::path sub_dir = base_dir;
-        sub_dir /= name_tmpl;
-        std::string sub_dir_string = sub_dir.generic_string();
-
-        // this should be OK since mkdtemp just replaces characters in place
-        char *buffer = const_cast<char *>(sub_dir_string.c_str());
-        char *dtemp = mkdtemp(buffer);
-        if (!dtemp) {
-            DPLOG(ERROR) << "mkdtemp";
-            return false;
-        }
-        *new_dir = std::filesystem::path(dtemp);
-        return true;
-    }
 
     temp_file::temp_file() : _ever_opened(0) {
         char temp_name[] = BASE_FILES_TEMP_FILE_PATTERN;
@@ -123,10 +97,10 @@ namespace flare::io {
         return (rc < 0 ? -1 : 0);
     }
 
-// Write until all buffer was written or an error except EINTR.
-// Returns:
-//    -1   error happened, errno is set
-// count   all written
+    // Write until all buffer was written or an error except EINTR.
+    // Returns:
+    //    -1   error happened, errno is set
+    // count   all written
     static ssize_t temp_file_write_all(int fd, const void *buf, size_t count) {
         size_t off = 0;
         for (;;) {
@@ -160,28 +134,5 @@ namespace flare::io {
         return 0;
     }
 
-    bool create_new_temp_directory(const std::filesystem::path &prefix, std::filesystem::path *newPath) {
-        std::filesystem::path tmp_dir;
-        if (prefix.empty()) {
-            return false;
-        }
-        if (prefix.is_absolute()) {
-            tmp_dir = prefix;
-        } else {
-            std::error_code ec;
-            tmp_dir = std::filesystem::temp_directory_path(ec);
-            if (ec) {
-                return false;
-            }
-            tmp_dir /= prefix;
-        }
-        return create_temporary_dir_in_dir_impl(tmp_dir, BASE_FILES_TEMP_DIR_PATTERN, newPath);
-    }
-
-    bool create_temporary_dir_in_dir(const std::filesystem::path &base, const std::string &prefix,
-                                     std::filesystem::path *newPath) {
-        std::string mkdtemp_template = prefix + "XXXXXX";
-        return create_temporary_dir_in_dir_impl(base, mkdtemp_template, newPath);
-    }
 
 } // namespace flare::io

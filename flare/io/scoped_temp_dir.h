@@ -17,6 +17,11 @@
 
 namespace flare::io {
 
+    bool create_new_temp_directory(const std::filesystem::path &prefix, std::filesystem::path *newPath);
+
+    bool create_temporary_dir_in_dir(const std::filesystem::path &base, const std::string &prefix,
+                                     std::filesystem::path *newPath);
+
     class FLARE_EXPORT scoped_temp_dir {
     public:
         // No directory is owned/created initially.
