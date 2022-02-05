@@ -999,7 +999,7 @@ namespace {
         bool write_to_dev_null = true;
         size_t nappend, ncut;
 
-        flare::base::temp_file f;
+        flare::io::temp_file f;
         ASSERT_EQ(0, f.save_bin(ref.data(), ref.length()));
 
         for (size_t i = 0; i < FLARE_ARRAY_SIZE(w); ++i) {
@@ -1350,7 +1350,7 @@ namespace {
     }
 
     TEST_F(CordBufTest, append_from_fd_with_offset) {
-        flare::base::temp_file file;
+        flare::io::temp_file file;
         file.save("dummy");
         flare::base::fd_guard fd(open(file.fname(), O_RDWR | O_TRUNC));
         ASSERT_TRUE(fd >= 0) << file.fname() << ' ' << flare_error();

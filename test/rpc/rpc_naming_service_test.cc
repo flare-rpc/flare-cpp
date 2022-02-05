@@ -107,7 +107,7 @@ TEST(NamingServiceTest, sanity) {
         "localhost:1234",
         "baidu.com:1234"
     };
-    flare::base::temp_file tmp_file;
+    flare::io::temp_file tmp_file;
     {
         FILE* fp = fopen(tmp_file.fname(), "w");
         for (size_t i = 0; i < FLARE_ARRAY_SIZE(address_list); ++i) {
@@ -170,7 +170,7 @@ TEST(NamingServiceTest, wrong_name) {
         "baidu.com:1234",
         "LOCAL:1234"
     };
-    flare::base::temp_file tmp_file;
+    flare::io::temp_file tmp_file;
     {
         FILE *fp = fopen(tmp_file.fname(), "w");
         for (size_t i = 0; i < FLARE_ARRAY_SIZE(address_list); ++i) {
@@ -405,7 +405,7 @@ TEST(NamingServiceTest, consul_with_backup_file) {
         "10.128.0.1:1234",
         "10.129.0.1:1234",
     };
-    flare::base::temp_file tmp_file;
+    flare::io::temp_file tmp_file;
     const char * service_name = tmp_file.fname();
     {
         FILE* fp = fopen(tmp_file.fname(), "w");
