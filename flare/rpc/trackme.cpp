@@ -63,12 +63,12 @@ static BugInfo* g_bug_info = NULL;
 static int64_t s_trackme_last_time = 0;
 
 // version of RPC.
-// Since the code for getting BRPC_REVISION often fails,
-// BRPC_REVISION must be defined to string and be converted to number
+// Since the code for getting FLARE_RPC_REVISION often fails,
+// FLARE_RPC_REVISION must be defined to string and be converted to number
 // within our code.
 // The code running before main() may see g_rpc_version=0, should be OK.
-#if defined(BRPC_REVISION)
-const int64_t g_rpc_version = atoll(BRPC_REVISION);
+#if defined(FLARE_RPC_REVISION)
+const int64_t g_rpc_version = atoll(FLARE_RPC_REVISION);
 #else
 const int64_t g_rpc_version = 0;
 #endif

@@ -16,8 +16,8 @@
 // under the License.
 
 
-#ifndef BRPC_LOAD_BALANCER_WITH_NAMING_H
-#define BRPC_LOAD_BALANCER_WITH_NAMING_H
+#ifndef FLARE_RPC_LOAD_BALANCER_WITH_NAMING_H_
+#define FLARE_RPC_LOAD_BALANCER_WITH_NAMING_H_
 
 #include "flare/container/intrusive_ptr.h"
 #include "flare/rpc/load_balancer.h"
@@ -48,4 +48,4 @@ private:
 } // namespace flare::rpc
 
 
-#endif // BRPC_LOAD_BALANCER_WITH_NAMING_H
+#endif // FLARE_RPC_LOAD_BALANCER_WITH_NAMING_H_

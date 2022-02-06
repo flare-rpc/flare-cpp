@@ -17,8 +17,8 @@
 
 // Date: 2014/12/29 14:54:11
 
-#ifndef  BVAR_BVAR_H
-#define  BVAR_BVAR_H
+#ifndef  FLARE_VARIABLE_ALL_H_
+#define  FLARE_VARIABLE_ALL_H_
 
 #include "flare/variable/reducer.h"
 #include "flare/variable/recorder.h"
@@ -28,4 +28,4 @@
 #include "flare/variable/gflag.h"
 #include "flare/variable/scoped_timer.h"
 
-#endif  //BVAR_BVAR_H
+#endif  // FLARE_VARIABLE_ALL_H_

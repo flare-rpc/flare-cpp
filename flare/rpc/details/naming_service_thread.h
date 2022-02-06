@@ -16,8 +16,8 @@
 // under the License.
 
 
-#ifndef BRPC_NAMING_SERVICE_THREAD_H
-#define BRPC_NAMING_SERVICE_THREAD_H
+#ifndef FLARE_RPC_NAMING_SERVICE_THREAD_H_
+#define FLARE_RPC_NAMING_SERVICE_THREAD_H_
 
 #include <string>
 #include "flare/container/intrusive_ptr.h"               // flare::container::intrusive_ptr
@@ -137,4 +137,4 @@ int GetNamingServiceThread(flare::container::intrusive_ptr<NamingServiceThread>*
 } // namespace flare::rpc
 
 
-#endif  // BRPC_NAMING_SERVICE_THREAD_H
+#endif  // FLARE_RPC_NAMING_SERVICE_THREAD_H_

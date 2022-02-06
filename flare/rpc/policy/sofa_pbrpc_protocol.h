@@ -16,8 +16,8 @@
 // under the License.
 
 
-#ifndef BRPC_POLICY_SOFA_PBRPC_PROTOCOL_H
-#define BRPC_POLICY_SOFA_PBRPC_PROTOCOL_H
+#ifndef FLARE_RPC_POLICY_SOFA_PBRPC_PROTOCOL_H_
+#define FLARE_RPC_POLICY_SOFA_PBRPC_PROTOCOL_H_
 
 #include "flare/rpc/policy/sofa_pbrpc_meta.pb.h"
 #include "flare/rpc/protocol.h"
@@ -51,4 +51,4 @@ void PackSofaRequest(flare::io::cord_buf* buf,
 } // namespace flare::rpc
 
 
-#endif  // BRPC_POLICY_SOFA_PBRPC_PROTOCOL_H
+#endif  // FLARE_RPC_POLICY_SOFA_PBRPC_PROTOCOL_H_

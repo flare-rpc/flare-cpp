@@ -17,7 +17,8 @@
 
 
 #include "flare/rpc/details/hpack.h"
-
+#include <cstdint>
+#include <limits.h>
 #include <limits>                                       // std::numeric_limits
 #include <vector>
 #include "flare/container/bounded_queue.h"              // flare::container::bounded_queue

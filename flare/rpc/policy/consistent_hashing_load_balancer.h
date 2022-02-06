@@ -16,8 +16,8 @@
 // under the License.
 
 
-#ifndef  BRPC_CONSISTENT_HASHING_LOAD_BALANCER_H
-#define  BRPC_CONSISTENT_HASHING_LOAD_BALANCER_H
+#ifndef  FLARE_RPC_CONSISTENT_HASHING_LOAD_BALANCER_H_
+#define  FLARE_RPC_CONSISTENT_HASHING_LOAD_BALANCER_H_
 
 #include <stdint.h>                                     // uint32_t
 #include <functional>
@@ -84,4 +84,4 @@ private:
 } // namespace flare::rpc
 
 
-#endif  //BRPC_CONSISTENT_HASHING_LOAD_BALANCER_H
+#endif  // FLARE_RPC_CONSISTENT_HASHING_LOAD_BALANCER_H_

@@ -17,12 +17,12 @@
 
 // Date: Fri Jul 14 11:29:21 CST 2017
 
-#ifndef  BVAR_SCOPED_TIMER_H
-#define  BVAR_SCOPED_TIMER_H
+#ifndef  FLARE_VARIABLE_SCOPED_TIMER_H_
+#define  FLARE_VARIABLE_SCOPED_TIMER_H_
 
 #include "flare/base/time.h"
 
-// Accumulate microseconds spent by scopes into bvar, useful for debugging.
+// Accumulate microseconds spent by scopes into variable, useful for debugging.
 // Example:
 //   flare::variable::Adder<int64_t> g_function1_spent;
 //   ...
@@ -33,27 +33,28 @@
 //     ...
 //   }
 // To check how many microseconds the function spend in last second, you
-// can wrap the bvar within PerSecond and make it viewable from /vars
+// can wrap the variable within PerSecond and make it viewable from /vars
 //   flare::variable::PerSecond<flare::variable::Adder<int64_t> > g_function1_spent_second(
 //     "function1_spent_second", &g_function1_spent);
-namespace flare::variable{
-template <typename T>
-class ScopedTimer {
-public:
-    explicit ScopedTimer(T& bvar)
-        : _start_time(flare::base::cpuwide_time_us()), _bvar(&bvar) {}
+namespace flare::variable {
+    template<typename T>
+    class ScopedTimer {
+    public:
+        explicit ScopedTimer(T &variable)
+                : _start_time(flare::base::cpuwide_time_us()), _var(&variable) {}
 
-    ~ScopedTimer() {
-        *_bvar << (flare::base::cpuwide_time_us() - _start_time);
-    }
+        ~ScopedTimer() {
+            *_var << (flare::base::cpuwide_time_us() - _start_time);
+        }
 
-    void reset() { _start_time = flare::base::cpuwide_time_us(); }
+        void reset() { _start_time = flare::base::cpuwide_time_us(); }
 
-private:
-    FLARE_DISALLOW_COPY_AND_ASSIGN(ScopedTimer);
-    int64_t _start_time;
-    T* _bvar;
-};
+    private:
+        FLARE_DISALLOW_COPY_AND_ASSIGN(ScopedTimer);
+
+        int64_t _start_time;
+        T *_var;
+    };
 } // namespace flare::variable
 
-#endif  //BVAR_SCOPED_TIMER_H
+#endif  // FLARE_VARIABLE_SCOPED_TIMER_H_

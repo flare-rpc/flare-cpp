@@ -16,8 +16,8 @@
 // under the License.
 
 
-#ifndef  BRPC_USERCODE_BACKUP_POOL_H
-#define  BRPC_USERCODE_BACKUP_POOL_H
+#ifndef  FLARE_RPC_USERCODE_BACKUP_POOL_H_
+#define  FLARE_RPC_USERCODE_BACKUP_POOL_H_
 
 #include "flare/base/static_atomic.h"
 #include "flare/bthread/bthread.h"
@@ -85,4 +85,4 @@ void InitUserCodeBackupPoolOnceOrDie();
 } // namespace flare::rpc
 
 
-#endif  //BRPC_USERCODE_BACKUP_POOL_H
+#endif  // FLARE_RPC_USERCODE_BACKUP_POOL_H_

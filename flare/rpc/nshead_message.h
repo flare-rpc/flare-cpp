@@ -16,8 +16,8 @@
 // under the License.
 
 
-#ifndef BRPC_NSHEAD_MESSAGE_H
-#define BRPC_NSHEAD_MESSAGE_H
+#ifndef FLARE_RPC_NSHEAD_MESSAGE_H_
+#define FLARE_RPC_NSHEAD_MESSAGE_H_
 
 #include <google/protobuf/message.h>
 #include "flare/rpc/nshead.h"                     // nshead_t
@@ -76,4 +76,4 @@ private:
 } // namespace flare::rpc
 
 
-#endif  // BRPC_NSHEAD_MESSAGE_H
+#endif  // FLARE_RPC_NSHEAD_MESSAGE_H_

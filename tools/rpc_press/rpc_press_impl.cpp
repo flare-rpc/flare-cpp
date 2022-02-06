@@ -28,7 +28,7 @@
 #include <flare/rpc/channel.h>
 #include <flare/rpc/controller.h>
 #include "flare/base/logging.h"
-#include <json2pb/pb_to_json.h>
+#include <flare/json2pb/pb_to_json.h>
 #include "json_loader.h"
 #include "rpc_press_impl.h"
 

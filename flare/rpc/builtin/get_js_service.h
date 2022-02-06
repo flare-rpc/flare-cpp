@@ -15,8 +15,8 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef  BRPC_GET_JAVASCRIPT_SERVICE_H
-#define  BRPC_GET_JAVASCRIPT_SERVICE_H
+#ifndef  FLARE_RPC_GET_JAVASCRIPT_SERVICE_H_
+#define  FLARE_RPC_GET_JAVASCRIPT_SERVICE_H_
 
 #include "flare/rpc/get_js.pb.h"
 
@@ -53,4 +53,4 @@ public:
 } // namespace flare::rpc
 
 
-#endif  // BRPC_GET_JAVASCRIPT_SERVICE_H
+#endif  // FLARE_RPC_GET_JAVASCRIPT_SERVICE_H_

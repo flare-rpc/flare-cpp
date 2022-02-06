@@ -94,7 +94,7 @@ struct FLARE_CACHELINE_ALIGNMENT SocketExtra : public flare::rpc::SocketUser {
         do {
             ssize_t n = read(m->fd(), e->buf, e->buf_cap);
             if (n == 0
-#ifdef BRPC_SOCKET_HAS_EOF
+#ifdef FLARE_RPC_SOCKET_HAS_EOF
                 || m->_eof
 #endif
                     ) {
@@ -106,7 +106,7 @@ struct FLARE_CACHELINE_ALIGNMENT SocketExtra : public flare::rpc::SocketUser {
             } else if (n > 0) {
                 e->bytes += n;
                 ++e->times;
-#ifdef BRPC_SOCKET_HAS_EOF
+#ifdef FLARE_RPC_SOCKET_HAS_EOF
                 if ((size_t)n < e->buf_cap && flare::rpc::has_epollrdhup) {
                     break;
                 }

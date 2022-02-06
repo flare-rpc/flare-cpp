@@ -18,8 +18,8 @@
 
 #include <google/protobuf/descriptor.h>             // MethodDescriptor
 #include <gflags/gflags.h>
-#include <json2pb/pb_to_json.h>                    // ProtoMessageToJson
-#include <json2pb/json_to_pb.h>                    // JsonToProtoMessage
+#include <flare/json2pb/pb_to_json.h>                    // ProtoMessageToJson
+#include <flare/json2pb/json_to_pb.h>                    // JsonToProtoMessage
 
 #include "flare/rpc/policy/http_rpc_protocol.h"
 #include <memory>                       // std::unique_ptr

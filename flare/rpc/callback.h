@@ -40,8 +40,8 @@
 // code breaks in protobuf 3.0, they can simply replace
 // google::protobuf::NewCallback with flare::rpc::NewCallback.
 
-#ifndef BRPC_CALLBACK_H
-#define BRPC_CALLBACK_H
+#ifndef FLARE_RPC_CALLBACK_H_
+#define FLARE_RPC_CALLBACK_H_
 
 #include <google/protobuf/stubs/common.h>  // Closure
 #if GOOGLE_PROTOBUF_VERSION >= 3007000
@@ -1094,4 +1094,4 @@ inline ::google::protobuf::Closure* NewPermanentCallback(
 } // namespace flare::rpc
 
 
-#endif  // BRPC_CALLBACK_H
+#endif  // FLARE_RPC_CALLBACK_H_

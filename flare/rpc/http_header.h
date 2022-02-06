@@ -16,8 +16,8 @@
 // under the License.
 
 
-#ifndef  BRPC_HTTP_HEADER_H
-#define  BRPC_HTTP_HEADER_H
+#ifndef  FLARE_RPC_HTTP_HEADER_H_
+#define  FLARE_RPC_HTTP_HEADER_H_
 
 #include <string_view>  // StringPiece
 #include "flare/container/case_ignored_flat_map.h"
@@ -163,4 +163,4 @@ const HttpHeader& DefaultHttpHeader();
 } // namespace flare::rpc
 
 
-#endif  //BRPC_HTTP_HEADER_H
+#endif  // FLARE_RPC_HTTP_HEADER_H_

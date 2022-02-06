@@ -34,8 +34,8 @@
 // IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-#ifndef BRPC_TS_H
-#define BRPC_TS_H
+#ifndef FLARE_RPC_TS_H_
+#define FLARE_RPC_TS_H_
 
 #include <string>
 #include <map>
@@ -1259,4 +1259,4 @@ private:
 } // namespace flare::rpc
 
 
-#endif // BRPC_TS_H
+#endif // FLARE_RPC_TS_H_

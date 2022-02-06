@@ -17,15 +17,15 @@
 
 // Date: Sun Aug  9 12:26:03 CST 2015
 
-#ifndef  BVAR_GFLAG_H
-#define  BVAR_GFLAG_H
+#ifndef  FLARE_VARIABLE_GFLAG_H_
+#define  FLARE_VARIABLE_GFLAG_H_
 
 #include <string>                       // std::string
 #include "flare/variable/variable.h"
 
 namespace flare::variable {
 
-// Expose important gflags as bvar so that they're monitored.
+// Expose important gflags as variable so that they're monitored.
 class GFlag : public Variable {
 public:
     GFlag(const std::string_view& gflag_name);
@@ -62,4 +62,4 @@ private:
 
 }  // namespace flare::variable
 
-#endif  //BVAR_GFLAG_H
+#endif  // FLARE_VARIABLE_GFLAG_H_

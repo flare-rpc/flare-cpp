@@ -16,8 +16,8 @@
 // under the License.
 
 
-#ifndef BRPC_SOCKET_ID_H
-#define BRPC_SOCKET_ID_H
+#ifndef FLARE_RPC_SOCKET_ID_H_
+#define FLARE_RPC_SOCKET_ID_H_
 
 // To flare developers: This is a header included by user, don't depend
 // on internal structures, use opaque pointers instead.
@@ -51,4 +51,4 @@ typedef std::unique_ptr<Socket, SocketDeleter> SocketUniquePtr;
 } // namespace flare::rpc
 
 
-#endif  // BRPC_SOCKET_ID_H
+#endif  // FLARE_RPC_SOCKET_ID_H_

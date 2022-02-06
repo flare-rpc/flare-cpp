@@ -15,8 +15,8 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef  BRPC_JSON2PB_ZERO_COPY_STREAM_READER_H
-#define  BRPC_JSON2PB_ZERO_COPY_STREAM_READER_H
+#ifndef  FLARE_RPC_JSON2PB_ZERO_COPY_STREAM_READER_H_
+#define  FLARE_RPC_JSON2PB_ZERO_COPY_STREAM_READER_H_
 
 #include <google/protobuf/io/zero_copy_stream.h> // ZeroCopyInputStream
 
@@ -82,4 +82,4 @@ private:
 
 } // namespace json2pb
 
-#endif  //BRPC_JSON2PB_ZERO_COPY_STREAM_READER_H
+#endif  // FLARE_RPC_JSON2PB_ZERO_COPY_STREAM_READER_H_

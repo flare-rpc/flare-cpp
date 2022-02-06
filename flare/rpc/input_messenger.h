@@ -16,8 +16,8 @@
 // under the License.
 
 
-#ifndef BRPC_INPUT_MESSENGER_H
-#define BRPC_INPUT_MESSENGER_H
+#ifndef FLARE_RPC_INPUT_MESSENGER_H_
+#define FLARE_RPC_INPUT_MESSENGER_H_
 
 #include "flare/io/cord_buf.h"                    // flare::io::cord_buf
 #include "flare/rpc/socket.h"              // SocketId, SocketUser
@@ -133,4 +133,4 @@ InputMessenger* get_or_new_client_side_messenger();
 } // namespace flare::rpc
 
 
-#endif  // BRPC_INPUT_MESSENGER_H
+#endif  // FLARE_RPC_INPUT_MESSENGER_H_

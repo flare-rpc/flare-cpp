@@ -16,8 +16,8 @@
 // under the License.
 
 
-#ifndef BRPC_EVENT_DISPATCHER_H
-#define BRPC_EVENT_DISPATCHER_H
+#ifndef FLARE_RPC_EVENT_DISPATCHER_H_
+#define FLARE_RPC_EVENT_DISPATCHER_H_
 
 #include "flare/base/profile.h"                     // FLARE_DISALLOW_COPY_AND_ASSIGN
 #include "flare/bthread/types.h"                   // bthread_t, bthread_attr_t
@@ -106,4 +106,4 @@ EventDispatcher& GetGlobalEventDispatcher(int fd);
 } // namespace flare::rpc
 
 
-#endif  // BRPC_EVENT_DISPATCHER_H
+#endif  // FLARE_RPC_EVENT_DISPATCHER_H_

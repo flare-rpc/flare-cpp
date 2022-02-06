@@ -16,8 +16,8 @@
 // under the License.
 
 
-#ifndef BRPC_NAMING_SERVICE_FILTER_H
-#define BRPC_NAMING_SERVICE_FILTER_H
+#ifndef FLARE_RPC_NAMING_SERVICE_FILTER_H_
+#define FLARE_RPC_NAMING_SERVICE_FILTER_H_
 
 #include "flare/rpc/naming_service.h"      // ServerNode
 
@@ -37,4 +37,4 @@ public:
 
 
 
-#endif // BRPC_NAMING_SERVICE_FILTER_H
+#endif // FLARE_RPC_NAMING_SERVICE_FILTER_H_

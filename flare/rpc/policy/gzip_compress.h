@@ -16,8 +16,8 @@
 // under the License.
 
 
-#ifndef BRPC_POLICY_GZIP_COMPRESS_H
-#define BRPC_POLICY_GZIP_COMPRESS_H
+#ifndef FLARE_RPC_POLICY_GZIP_COMPRESS_H_
+#define FLARE_RPC_POLICY_GZIP_COMPRESS_H_
 
 #include <google/protobuf/message.h>              // Message
 #include <google/protobuf/io/gzip_stream.h>
@@ -49,4 +49,4 @@ bool ZlibDecompress(const flare::io::cord_buf& in, flare::io::cord_buf* out);
 } // namespace flare::rpc
 
 
-#endif // BRPC_POLICY_GZIP_COMPRESS_H
+#endif // FLARE_RPC_POLICY_GZIP_COMPRESS_H_

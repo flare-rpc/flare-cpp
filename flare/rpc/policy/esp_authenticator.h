@@ -15,8 +15,8 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef BRPC_POLICY_ESP_AUTHENTICATOR_H
-#define BRPC_POLICY_ESP_AUTHENTICATOR_H
+#ifndef FLARE_RPC_POLICY_ESP_AUTHENTICATOR_H_
+#define FLARE_RPC_POLICY_ESP_AUTHENTICATOR_H_
 
 #include "flare/rpc/authenticator.h"
 
@@ -39,4 +39,4 @@ const Authenticator* global_esp_authenticator();
 } // namespace flare::rpc
 
 
-#endif // BRPC_POLICY_GIANO_AUTHENTICATOR_H
+#endif // FLARE_RPC_POLICY_GIANO_AUTHENTICATOR_H_

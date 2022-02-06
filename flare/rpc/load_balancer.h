@@ -16,8 +16,8 @@
 // under the License.
 
 
-#ifndef BRPC_LOAD_BALANCER_H
-#define BRPC_LOAD_BALANCER_H
+#ifndef FLARE_RPC_LOAD_BALANCER_H_
+#define FLARE_RPC_LOAD_BALANCER_H_
 
 #include "flare/variable/passive_status.h"
 #include "flare/rpc/describable.h"
@@ -186,4 +186,4 @@ inline Extension<const LoadBalancer>* LoadBalancerExtension() {
 } // namespace flare::rpc
 
 
-#endif  // BRPC_LOAD_BALANCER_H
+#endif  // FLARE_RPC_LOAD_BALANCER_H_

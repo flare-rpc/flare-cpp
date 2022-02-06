@@ -16,8 +16,8 @@
 // under the License.
 
 
-#ifndef  BRPC_STREAM_IMPL_H
-#define  BRPC_STREAM_IMPL_H
+#ifndef  FLARE_RPC_STREAM_IMPL_H_
+#define  FLARE_RPC_STREAM_IMPL_H_
 
 #include "flare/bthread/bthread.h"
 #include "flare/bthread/execution_queue.h"
@@ -130,4 +130,4 @@ friend class MessageBatcher;
 
 
 
-#endif  //BRPC_STREAM_IMPL_H
+#endif  // FLARE_RPC_STREAM_IMPL_H_

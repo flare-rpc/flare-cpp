@@ -15,8 +15,8 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef BVAR_DETAIL_IS_ATOMICAL_H
-#define BVAR_DETAIL_IS_ATOMICAL_H
+#ifndef FLARE_VARIABLE_DETAIL_IS_ATOMICAL_H_
+#define FLARE_VARIABLE_DETAIL_IS_ATOMICAL_H_
 
 #include "flare/base/type_traits.h"
 

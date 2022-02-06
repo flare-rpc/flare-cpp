@@ -17,8 +17,8 @@
 
 // Date: Mon Dec 14 19:12:30 CST 2015
 
-#ifndef BVAR_COLLECTOR_H
-#define BVAR_COLLECTOR_H
+#ifndef FLARE_VARIABLE_COLLECTOR_H_
+#define FLARE_VARIABLE_COLLECTOR_H_
 
 #include "flare/container/linked_list.h"
 #include "flare/base/fast_rand.h"
@@ -29,109 +29,111 @@
 namespace flare::variable {
 
 // Containing the context for limiting sampling speed.
-struct CollectorSpeedLimit {
-    // [Managed by Collector, don't change!]
-    size_t sampling_range;
-    bool ever_grabbed;
-    flare::static_atomic<int> count_before_grabbed;
-    int64_t first_sample_real_us;
-};
+    struct CollectorSpeedLimit {
+        // [Managed by Collector, don't change!]
+        size_t sampling_range;
+        bool ever_grabbed;
+        flare::static_atomic<int> count_before_grabbed;
+        int64_t first_sample_real_us;
+    };
 
-static const size_t COLLECTOR_SAMPLING_BASE = 16384;
+    static const size_t COLLECTOR_SAMPLING_BASE = 16384;
 
-#define BVAR_COLLECTOR_SPEED_LIMIT_INITIALIZER                          \
+#define VARIABLE_COLLECTOR_SPEED_LIMIT_INITIALIZER                          \
     { ::flare::variable::COLLECTOR_SAMPLING_BASE, false, FLARE_STATIC_ATOMIC_INIT(0), 0 }
 
-class Collected;
+    class Collected;
 
 // For processing samples in batch before dumping.
-class CollectorPreprocessor {
-public:
-    virtual void process(std::vector<Collected*>& samples) = 0;
-};
+    class CollectorPreprocessor {
+    public:
+        virtual void process(std::vector<Collected *> &samples) = 0;
+    };
 
-// Steps for sampling and dumping sth:
-//  1. Implement Collected
-//  2. Create an instance and fill in data.
-//  3. submit() the instance.
-class Collected : public flare::container::link_node<Collected> {
-public:
-    virtual ~Collected() {}
-    
-    // Sumbit the sample for later dumping, a sample can only be submitted once.
-    // submit() is implemented as writing a value to flare::variable::Reducer which does
-    // not compete globally. This function generally does not alter the
-    // interleaving status of threads even in highly contended situations.
-    // You should also create the sample using a malloc() impl. that are
-    // unlikely to contend, keeping interruptions minimal.
-    // `cpuwide_us' should be got from flare::base::cpuwide_time_us(). If it's far
-    // from the timestamp updated by collecting thread(which basically means
-    // the thread is not scheduled by OS in time), this sample is directly
-    // destroy()-ed to avoid memory explosion.
-    void submit(int64_t cpuwide_us);
-    void submit() { submit(flare::base::cpuwide_time_us()); }
+    // Steps for sampling and dumping sth:
+    //  1. Implement Collected
+    //  2. Create an instance and fill in data.
+    //  3. submit() the instance.
+    class Collected : public flare::container::link_node<Collected> {
+    public:
+        virtual ~Collected() {}
 
-    // Implement this method to dump the sample into files and destroy it.
-    // This method is called in a separate thread and can be blocked
-    // indefinitely long(not recommended). If too many samples wait for
-    // this funcion due to previous sample's blocking, they'll be destroy()-ed.
-    // If you need to run destruction code upon thread's exit, use
-    // flare::base::thread_atexit. Dumping thread run this function in batch, each
-    // batch is counted as one "round", `round_index' is the round that
-    // dumping thread is currently at, counting from 1.
-    virtual void dump_and_destroy(size_t round_index) = 0;
+        // Sumbit the sample for later dumping, a sample can only be submitted once.
+        // submit() is implemented as writing a value to flare::variable::Reducer which does
+        // not compete globally. This function generally does not alter the
+        // interleaving status of threads even in highly contended situations.
+        // You should also create the sample using a malloc() impl. that are
+        // unlikely to contend, keeping interruptions minimal.
+        // `cpuwide_us' should be got from flare::base::cpuwide_time_us(). If it's far
+        // from the timestamp updated by collecting thread(which basically means
+        // the thread is not scheduled by OS in time), this sample is directly
+        // destroy()-ed to avoid memory explosion.
+        void submit(int64_t cpuwide_us);
 
-    // Destroy the sample. Will be called for at most once. Since dumping
-    // thread generally quits upon the termination of program, some samples
-    // are directly recycled along with program w/o calling destroy().
-    virtual void destroy() = 0;
+        void submit() { submit(flare::base::cpuwide_time_us()); }
 
-    // Returns an object to control #samples collected per second.
-    // If NULL is returned, samples collected per second is limited by a
-    // global speed limit shared with other samples also returning NULL.
-    // All instances of a subclass of Collected should return a same instance
-    // of CollectorSpeedLimit. The instance should remain valid during lifetime
-    // of program.
-    virtual CollectorSpeedLimit* speed_limit() = 0;
+        // Implement this method to dump the sample into files and destroy it.
+        // This method is called in a separate thread and can be blocked
+        // indefinitely long(not recommended). If too many samples wait for
+        // this funcion due to previous sample's blocking, they'll be destroy()-ed.
+        // If you need to run destruction code upon thread's exit, use
+        // flare::base::thread_atexit. Dumping thread run this function in batch, each
+        // batch is counted as one "round", `round_index' is the round that
+        // dumping thread is currently at, counting from 1.
+        virtual void dump_and_destroy(size_t round_index) = 0;
 
-    // If this method returns a non-NULL instance, it will be applied to
-    // samples in batch before dumping. You can sort or shuffle the samples
-    // in the impl.
-    // All instances of a subclass of Collected should return a same instance
-    // of CollectorPreprocessor. The instance should remain valid during
-    // lifetime of program.
-    virtual CollectorPreprocessor* preprocessor() { return NULL; }
-};
+        // Destroy the sample. Will be called for at most once. Since dumping
+        // thread generally quits upon the termination of program, some samples
+        // are directly recycled along with program w/o calling destroy().
+        virtual void destroy() = 0;
 
-// To know if an instance should be sampled.
-// Returns a positive number when the object should be sampled, 0 otherwise.
-// The number is approximately the current probability of sampling times
-// COLLECTOR_SAMPLING_BASE, it varies from seconds to seconds being adjusted
-// by collecting thread to control the samples collected per second.
-// This function should cost less than 10ns in most cases.
-inline size_t is_collectable(CollectorSpeedLimit* speed_limit) {
-    if (speed_limit->ever_grabbed) { // most common case
-        const size_t sampling_range = speed_limit->sampling_range;
-        // fast_rand is faster than fast_rand_in
-        if ((flare::base::fast_rand() & (COLLECTOR_SAMPLING_BASE - 1)) >= sampling_range) {
-            return 0;
+        // Returns an object to control #samples collected per second.
+        // If NULL is returned, samples collected per second is limited by a
+        // global speed limit shared with other samples also returning NULL.
+        // All instances of a subclass of Collected should return a same instance
+        // of CollectorSpeedLimit. The instance should remain valid during lifetime
+        // of program.
+        virtual CollectorSpeedLimit *speed_limit() = 0;
+
+        // If this method returns a non-NULL instance, it will be applied to
+        // samples in batch before dumping. You can sort or shuffle the samples
+        // in the impl.
+        // All instances of a subclass of Collected should return a same instance
+        // of CollectorPreprocessor. The instance should remain valid during
+        // lifetime of program.
+        virtual CollectorPreprocessor *preprocessor() { return NULL; }
+    };
+
+    // To know if an instance should be sampled.
+    // Returns a positive number when the object should be sampled, 0 otherwise.
+    // The number is approximately the current probability of sampling times
+    // COLLECTOR_SAMPLING_BASE, it varies from seconds to seconds being adjusted
+    // by collecting thread to control the samples collected per second.
+    // This function should cost less than 10ns in most cases.
+    inline size_t is_collectable(CollectorSpeedLimit *speed_limit) {
+        if (speed_limit->ever_grabbed) { // most common case
+            const size_t sampling_range = speed_limit->sampling_range;
+            // fast_rand is faster than fast_rand_in
+            if ((flare::base::fast_rand() & (COLLECTOR_SAMPLING_BASE - 1)) >= sampling_range) {
+                return 0;
+            }
+            return sampling_range;
         }
-        return sampling_range;
+        // Slower, only runs before -variable_collector_expected_per_second samples are
+        // collected to calculate a more reasonable sampling_range for the type.
+        extern size_t is_collectable_before_first_time_grabbed(CollectorSpeedLimit *);
+        return is_collectable_before_first_time_grabbed(speed_limit);
     }
-    // Slower, only runs before -bvar_collector_expected_per_second samples are
-    // collected to calculate a more reasonable sampling_range for the type.
-    extern size_t is_collectable_before_first_time_grabbed(CollectorSpeedLimit*);
-    return is_collectable_before_first_time_grabbed(speed_limit);
-}
 
 // An utility for displaying current sampling ratio according to speed limit.
-class DisplaySamplingRatio {
-public:
-    DisplaySamplingRatio(const char* name, const CollectorSpeedLimit*);
-private:
-    flare::variable::PassiveStatus<double> _var;
-};
+    class DisplaySamplingRatio {
+    public:
+        DisplaySamplingRatio(const char *name, const CollectorSpeedLimit *);
+
+    private:
+        flare::variable::PassiveStatus<double> _var;
+    };
 
 }  // namespace flare::variable
 
-#endif  // BVAR_COLLECTOR_H
+#endif  // FLARE_VARIABLE_COLLECTOR_H_

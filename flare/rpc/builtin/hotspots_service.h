@@ -16,8 +16,8 @@
 // under the License.
 
 
-#ifndef BRPC_HOTSPOTS_SERVICE_H
-#define BRPC_HOTSPOTS_SERVICE_H
+#ifndef FLARE_RPC_HOTSPOTS_SERVICE_H_
+#define FLARE_RPC_HOTSPOTS_SERVICE_H_
 
 #include "flare/rpc/builtin/common.h"
 #include "flare/rpc/builtin_service.pb.h"
@@ -77,4 +77,4 @@ public:
 
 
 
-#endif // BRPC_HOTSPOTS_SERVICE_H
+#endif // FLARE_RPC_HOTSPOTS_SERVICE_H_

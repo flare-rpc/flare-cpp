@@ -500,7 +500,7 @@ bool is_url_char(char c) { return IS_URL_CHAR(c); }
 #define start_state (parser->type == HTTP_REQUEST ? s_start_req : s_start_res)
 
 
-#if BRPC_HTTP_PARSER_STRICT
+#if FLARE_RPC_HTTP_PARSER_STRICT
 # define STRICT_CHECK(cond)                                          \
 do {                                                                 \
   if (cond) {                                                        \
@@ -545,7 +545,7 @@ parse_url_char(enum state s, const char ch)
     return s_dead;
   }
 
-#if BRPC_HTTP_PARSER_STRICT
+#if FLARE_RPC_HTTP_PARSER_STRICT
   if (ch == '\t' || ch == '\f') {
     return s_dead;
   }
@@ -758,7 +758,7 @@ size_t http_parser_execute (http_parser *parser,
        * than any reasonable request or response so this should never affect
        * day-to-day operation.
        */
-      if (parser->nread > (BRPC_HTTP_MAX_HEADER_SIZE)) {
+      if (parser->nread > (FLARE_RPC_HTTP_MAX_HEADER_SIZE)) {
         SET_ERRNO(HPE_HEADER_OVERFLOW);
         goto error;
       }

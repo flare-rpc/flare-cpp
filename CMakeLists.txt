@@ -21,7 +21,7 @@ project(flare C CXX)
 option(DEBUG "Print debug logs" OFF)
 option(WITH_DEBUG_SYMBOLS "With debug symbols" ON)
 option(WITH_THRIFT "With thrift framed protocol supported" OFF)
-option(BUILD_UNIT_TESTS "Whether to build unit tests" ON)
+option(BUILD_UNIT_TESTS "Whether to build unit tests" OFF)
 option(DOWNLOAD_GTEST "Download and build a fresh copy of googletest. Requires Internet access." ON)
 
 # Enable MACOSX_RPATH. Run "cmake --help-policy CMP0042" for policy details.
@@ -29,7 +29,7 @@ if (POLICY CMP0042)
     cmake_policy(SET CMP0042 NEW)
 endif ()
 
-set(BRPC_VERSION 0.9.0)
+set(FLARE_VERSION 0.9.0)
 
 SET(CPACK_GENERATOR "DEB")
 SET(CPACK_DEBIAN_PACKAGE_MAINTAINER "flare authors")
@@ -85,7 +85,7 @@ include_directories(
 
 execute_process(
         COMMAND bash -c "${PROJECT_SOURCE_DIR}/tools/get_flare_revision.sh ${PROJECT_SOURCE_DIR} | tr -d '\n'"
-        OUTPUT_VARIABLE BRPC_REVISION
+        OUTPUT_VARIABLE FLARE_RPC_REVISION
 )
 
 if (CMAKE_SYSTEM_NAME STREQUAL "Darwin")
@@ -98,7 +98,7 @@ if (CMAKE_SYSTEM_NAME STREQUAL "Darwin")
 endif ()
 
 set(CMAKE_CPP_FLAGS "${CMAKE_CPP_FLAGS} ${DEFINE_CLOCK_GETTIME}  -DGFLAGS_NS=${GFLAGS_NS}")
-set(CMAKE_CPP_FLAGS "${CMAKE_CPP_FLAGS} -DBTHREAD_USE_FAST_PTHREAD_MUTEX -D__const__= -D_GNU_SOURCE -DUSE_SYMBOLIZE -DNO_TCMALLOC -D__STDC_FORMAT_MACROS -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -DBRPC_REVISION=\\\"${BRPC_REVISION}\\\" -D__STRICT_ANSI__")
+set(CMAKE_CPP_FLAGS "${CMAKE_CPP_FLAGS} -DBTHREAD_USE_FAST_PTHREAD_MUTEX -D__const__= -D_GNU_SOURCE -DUSE_SYMBOLIZE -DNO_TCMALLOC -D__STDC_FORMAT_MACROS -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -DFLARE_RPC_REVISION=\\\"${FLARE_RPC_REVISION}\\\" -D__STRICT_ANSI__")
 set(CMAKE_CPP_FLAGS "${CMAKE_CPP_FLAGS} ${DEBUG_SYMBOL} ${THRIFT_CPP_FLAG}")
 set(CMAKE_CXX_FLAGS "${CMAKE_CPP_FLAGS} -O2 -pipe -Wall -W -fPIC -fstrict-aliasing -Wno-invalid-offsetof -Wno-unused-parameter -fno-omit-frame-pointer")
 set(CMAKE_C_FLAGS "${CMAKE_CPP_FLAGS} -O2 -pipe -Wall -W -fPIC -fstrict-aliasing -Wno-unused-parameter -fno-omit-frame-pointer")
@@ -172,14 +172,14 @@ set(DYNAMIC_LIB
         z)
 
 
-set(BRPC_PRIVATE_LIBS "-lgflags -lprotobuf -lleveldb -lprotoc -lssl -lcrypto -ldl -lz")
+set(FLARE_PRIVATE_LIBS "-lgflags -lprotobuf -lleveldb -lprotoc -lssl -lcrypto -ldl -lz")
 
 set(DYNAMIC_LIB ${DYNAMIC_LIB} ${GLOG_LIB})
-set(BRPC_PRIVATE_LIBS "${BRPC_PRIVATE_LIBS} -lglog")
+set(FLARE_PRIVATE_LIBS "${FLARE_PRIVATE_LIBS} -lglog")
 
 if (CMAKE_SYSTEM_NAME STREQUAL "Linux")
     set(DYNAMIC_LIB ${DYNAMIC_LIB} rt)
-    set(BRPC_PRIVATE_LIBS "${BRPC_PRIVATE_LIBS} -lrt")
+    set(FLARE_PRIVATE_LIBS "${FLARE_PRIVATE_LIBS} -lrt")
 elseif (CMAKE_SYSTEM_NAME STREQUAL "Darwin")
     set(DYNAMIC_LIB ${DYNAMIC_LIB}
             pthread
@@ -210,7 +210,7 @@ file(GLOB_RECURSE FLARE_IO_SRC "${PROJECT_SOURCE_DIR}/flare/io/*.cc")
 file(GLOB_RECURSE FLARE_MEMORY_SRC "${PROJECT_SOURCE_DIR}/flare/memory/*.cc")
 file(GLOB_RECURSE FLARE_STRINGS_SRC "${PROJECT_SOURCE_DIR}/flare/strings/*.cc")
 set(FLARE_SRC
-       "${PROJECT_SOURCE_DIR}/flare/base/dynamic_annotations/dynamic_annotations.c"
+        "${PROJECT_SOURCE_DIR}/flare/base/dynamic_annotations/dynamic_annotations.c"
         ${FLARE_BASE_SRC}
         ${FLARE_CONTAINER_SRC}
         ${FLARE_HASH_SRC}
@@ -219,10 +219,10 @@ set(FLARE_SRC
         ${FLARE_STRINGS_SRC}
         )
 
-file(GLOB_RECURSE BVAR_SOURCES "${PROJECT_SOURCE_DIR}/flare/variable/*.cpp")
+file(GLOB_RECURSE VARIABLE_SOURCES "${PROJECT_SOURCE_DIR}/flare/variable/*.cpp")
 file(GLOB_RECURSE BTHREAD_SOURCES "${PROJECT_SOURCE_DIR}/flare/bthread/*.cpp")
 file(GLOB_RECURSE JSON2PB_SOURCES "${PROJECT_SOURCE_DIR}/flare/json2pb/*.cpp")
-file(GLOB_RECURSE BRPC_SOURCES "${PROJECT_SOURCE_DIR}/flare/rpc/*.cpp")
+file(GLOB_RECURSE RPC_SOURCES "${PROJECT_SOURCE_DIR}/flare/rpc/*.cpp")
 file(GLOB_RECURSE THRIFT_SOURCES "${PROJECT_SOURCE_DIR}/flare/rpc/thrift*.cpp")
 
 if (WITH_THRIFT)
@@ -230,7 +230,7 @@ if (WITH_THRIFT)
 else ()
     # Remove thrift sources
     foreach (v ${THRIFT_SOURCES})
-        list(REMOVE_ITEM BRPC_SOURCES ${v})
+        list(REMOVE_ITEM RPC_SOURCES ${v})
     endforeach ()
     set(THRIFT_SOURCES "")
 endif ()
@@ -270,11 +270,11 @@ compile_proto(PROTO_HDRS PROTO_SRCS ${PROJECT_BINARY_DIR}
 add_library(PROTO_LIB OBJECT ${PROTO_SRCS} ${PROTO_HDRS})
 
 set(SOURCES
-        ${BVAR_SOURCES}
+        ${VARIABLE_SOURCES}
         ${BTHREAD_SOURCES}
         ${JSON2PB_SOURCES}
         ${MCPACK2PB_SOURCES}
-        ${BRPC_SOURCES}
+        ${RPC_SOURCES}
         ${THRIFT_SOURCES}
         )
 

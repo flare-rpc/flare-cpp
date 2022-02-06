@@ -16,8 +16,8 @@
 // under the License.
 
 
-#ifndef BRPC_POLICY_DISCOVERY_NAMING_SERVICE_H
-#define BRPC_POLICY_DISCOVERY_NAMING_SERVICE_H
+#ifndef FLARE_RPC_POLICY_DISCOVERY_NAMING_SERVICE_H_
+#define FLARE_RPC_POLICY_DISCOVERY_NAMING_SERVICE_H_
 
 #include "flare/rpc/periodic_naming_service.h"
 #include "flare/rpc/channel.h"
@@ -86,4 +86,4 @@ private:
 } // namespace policy
 } // namespace flare::rpc
 
-#endif // BRPC_POLICY_DISCOVERY_NAMING_SERVICE_H
+#endif // FLARE_RPC_POLICY_DISCOVERY_NAMING_SERVICE_H_

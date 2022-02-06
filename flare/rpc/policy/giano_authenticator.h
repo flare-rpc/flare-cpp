@@ -18,8 +18,8 @@
 #ifdef BAIDU_INTERNAL
 
 
-#ifndef BRPC_POLICY_GIANO_AUTHENTICATOR_H
-#define BRPC_POLICY_GIANO_AUTHENTICATOR_H
+#ifndef FLARE_RPC_POLICY_GIANO_AUTHENTICATOR_H_
+#define FLARE_RPC_POLICY_GIANO_AUTHENTICATOR_H_
 
 #include <baas-lib-c/baas.h>                   // Giano stuff
 #include "flare/rpc/authenticator.h"
@@ -52,5 +52,5 @@ private:
 } // namespace flare::rpc
 
 
-#endif // BRPC_POLICY_GIANO_AUTHENTICATOR_H
+#endif // FLARE_RPC_POLICY_GIANO_AUTHENTICATOR_H_
 #endif // BAIDU_INTERNAL

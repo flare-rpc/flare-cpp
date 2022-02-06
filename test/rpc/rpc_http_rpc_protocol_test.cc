@@ -37,8 +37,8 @@
 #include "echo.pb.h"
 #include "flare/rpc/policy/http_rpc_protocol.h"
 #include "flare/rpc/policy/http2_rpc_protocol.h"
-#include "json2pb/pb_to_json.h"
-#include "json2pb/json_to_pb.h"
+#include "flare/json2pb/pb_to_json.h"
+#include "flare/json2pb/json_to_pb.h"
 #include "flare/rpc/details/method_status.h"
 #include "flare/base/strings.h"
 
@@ -316,7 +316,7 @@ TEST_F(HttpTest, process_request_failed_socket) {
     flare::rpc::policy::HttpContext* msg = MakePostRequestMessage("/EchoService/Echo");
     _socket->SetFailed();
     ProcessMessage(flare::rpc::policy::ProcessHttpRequest, msg, false);
-    ASSERT_EQ(0ll, _server._nerror_bvar.get_value());
+    ASSERT_EQ(0ll, _server._nerror_var.get_value());
     CheckResponseCode(true, 0);
 }
 
@@ -324,12 +324,12 @@ TEST_F(HttpTest, reject_get_to_pb_services_with_required_fields) {
     flare::rpc::policy::HttpContext* msg = MakeGetRequestMessage("/EchoService/Echo");
     _server._status = flare::rpc::Server::RUNNING;
     ProcessMessage(flare::rpc::policy::ProcessHttpRequest, msg, false);
-    ASSERT_EQ(0ll, _server._nerror_bvar.get_value());
+    ASSERT_EQ(0ll, _server._nerror_var.get_value());
     const flare::rpc::Server::MethodProperty* mp =
         _server.FindMethodPropertyByFullName("test.EchoService.Echo");
     ASSERT_TRUE(mp);
     ASSERT_TRUE(mp->status);
-    ASSERT_EQ(1ll, mp->status->_nerror_bvar.get_value());
+    ASSERT_EQ(1ll, mp->status->_nerror_var.get_value());
     CheckResponseCode(false, flare::rpc::HTTP_STATUS_BAD_REQUEST);
 }
 
@@ -337,14 +337,14 @@ TEST_F(HttpTest, process_request_logoff) {
     flare::rpc::policy::HttpContext* msg = MakePostRequestMessage("/EchoService/Echo");
     _server._status = flare::rpc::Server::READY;
     ProcessMessage(flare::rpc::policy::ProcessHttpRequest, msg, false);
-    ASSERT_EQ(1ll, _server._nerror_bvar.get_value());
+    ASSERT_EQ(1ll, _server._nerror_var.get_value());
     CheckResponseCode(false, flare::rpc::HTTP_STATUS_SERVICE_UNAVAILABLE);
 }
 
 TEST_F(HttpTest, process_request_wrong_method) {
     flare::rpc::policy::HttpContext* msg = MakePostRequestMessage("/NO_SUCH_METHOD");
     ProcessMessage(flare::rpc::policy::ProcessHttpRequest, msg, false);
-    ASSERT_EQ(1ll, _server._nerror_bvar.get_value());
+    ASSERT_EQ(1ll, _server._nerror_var.get_value());
     CheckResponseCode(false, flare::rpc::HTTP_STATUS_NOT_FOUND);
 }
 

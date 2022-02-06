@@ -16,8 +16,8 @@
 // under the License.
 
 
-#ifndef BRPC_PERIODIC_NAMING_SERVICE_H
-#define BRPC_PERIODIC_NAMING_SERVICE_H
+#ifndef FLARE_RPC_PERIODIC_NAMING_SERVICE_H_
+#define FLARE_RPC_PERIODIC_NAMING_SERVICE_H_
 
 #include "flare/rpc/naming_service.h"
 
@@ -36,4 +36,4 @@ protected:
 } // namespace flare::rpc
 
 
-#endif  // BRPC_PERIODIC_NAMING_SERVICE_H
+#endif  // FLARE_RPC_PERIODIC_NAMING_SERVICE_H_

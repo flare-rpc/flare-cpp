@@ -16,8 +16,8 @@
 // under the License.
 
 
-#ifndef BRPC_RTMP_H
-#define BRPC_RTMP_H
+#ifndef FLARE_RPC_RTMP_H_
+#define FLARE_RPC_RTMP_H_
 
 #include <string_view>   // std::string_view
 #include "flare/base/endpoint.h"               // flare::base::end_point
@@ -1127,4 +1127,4 @@ friend class policy::RtmpChunkStream;
 } // namespace flare::rpc
 
 
-#endif  // BRPC_RTMP_H
+#endif  // FLARE_RPC_RTMP_H_

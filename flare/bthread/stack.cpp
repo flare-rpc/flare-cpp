@@ -51,7 +51,7 @@ namespace bthread {
         return s_stack_count.load(std::memory_order_relaxed);
     }
 
-    static flare::variable::PassiveStatus<int64_t> bvar_stack_count(
+    static flare::variable::PassiveStatus<int64_t> variable_stack_count(
             "bthread_stack_count", get_stack_count, NULL);
 
     int allocate_stack_storage(StackStorage *s, int stacksize_in, int guardsize_in) {

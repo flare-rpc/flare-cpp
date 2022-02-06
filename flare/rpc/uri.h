@@ -16,8 +16,8 @@
 // under the License.
 
 
-#ifndef  BRPC_URI_H
-#define  BRPC_URI_H
+#ifndef  FLARE_RPC_URI_H_
+#define  FLARE_RPC_URI_H_
 
 #include <string>                   // std::string
 #include "flare/container/flat_map.h"
@@ -291,4 +291,4 @@ namespace std {
     }
 }  // namespace std
 
-#endif  //BRPC_URI_H
+#endif  // FLARE_RPC_URI_H_

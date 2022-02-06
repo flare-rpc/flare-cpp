@@ -16,8 +16,8 @@
 // under the License.
 
 
-#ifndef BRPC_SERVER_H
-#define BRPC_SERVER_H
+#ifndef FLARE_RPC_SERVER_H_
+#define FLARE_RPC_SERVER_H_
 
 // To flare developers: This is a header included by user, don't depend
 // on internal structures, use opaque pointers instead.
@@ -248,7 +248,7 @@ private:
 };
 
 // This struct is originally designed to contain basic statistics of the
-// server. But bvar contains more stats and is more convenient.
+// server. But variable contains more stats and is more convenient.
 struct ServerStatistics {
     size_t connection_count;
     int user_service_count;
@@ -677,8 +677,8 @@ friend class Controller;
     
     bthread_keytable_pool_t* _keytable_pool;
 
-    // mutable is required for `ServerPrivateAccessor' to change this bvar
-    mutable flare::variable::Adder<int64_t> _nerror_bvar;
+    // mutable is required for `ServerPrivateAccessor' to change this variable
+    mutable flare::variable::Adder<int64_t> _nerror_var;
     mutable std::atomic<int32_t> FLARE_CACHELINE_ALIGNMENT _concurrency;
 
 };
@@ -701,4 +701,4 @@ int StartDummyServerAt(int port, ProfilerLinker = ProfilerLinker());
 
 } // namespace flare::rpc
 
-#endif  // BRPC_SERVER_H
+#endif  // FLARE_RPC_SERVER_H_

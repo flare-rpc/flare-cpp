@@ -16,8 +16,8 @@
 // under the License.
 
 
-#ifndef BRPC_SOCKET_H
-#define BRPC_SOCKET_H
+#ifndef FLARE_RPC_SOCKET_H_
+#define FLARE_RPC_SOCKET_H_
 
 #include <iostream>                            // std::ostream
 #include <deque>                               // std::deque
@@ -826,7 +826,7 @@ private:
 // Sleep a while when `write_expr' returns negative with errno=EOVERCROWDED
 // Implemented as a macro rather than a field of Socket.WriteOptions because
 // the macro works for other functions besides Socket.Write as well.
-#define BRPC_HANDLE_EOVERCROWDED(write_expr)                       \
+#define FLARE_RPC_HANDLE_EOVERCROWDED(write_expr)                       \
     ({                                                                  \
         int64_t __ret_code__;                                           \
         int sleep_time = 250;                                           \
@@ -844,7 +844,7 @@ private:
 
 // Sleep a while when `write_expr' returns negative with errno=EOVERCROWDED.
 // The sleep is done for at most `nretry' times.
-#define BRPC_HANDLE_EOVERCROWDED_N(write_expr, nretry)                  \
+#define FLARE_RPC_HANDLE_EOVERCROWDED_N(write_expr, nretry)                  \
     ({                                                                  \
         int64_t __ret_code__ = 0;                                       \
         int sleep_time = 250;                                           \
@@ -866,4 +866,4 @@ ostream& operator<<(ostream& os, const flare::rpc::Socket& sock);
 
 #include "flare/rpc/socket_inl.h"
 
-#endif  // BRPC_SOCKET_H
+#endif  // FLARE_RPC_SOCKET_H_

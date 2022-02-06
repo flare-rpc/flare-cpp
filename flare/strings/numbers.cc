@@ -850,10 +850,10 @@ namespace flare::strings {
     namespace numbers_internal {
 
 // Digit conversion.
-//FLARE_CONST_INIT
+// FLARE_CONST_INIT
         const char kHexChar[] = "0123456789abcdef";
 
-//FLARE_CONST_INIT
+// FLARE_CONST_INIT
         const char kHexTable[513] =
                 "000102030405060708090a0b0c0d0e0f"
                 "101112131415161718191a1b1c1d1e1f"

@@ -16,8 +16,8 @@
 // under the License.
 
 
-#ifndef BRPC_MEMCACHE_H
-#define BRPC_MEMCACHE_H
+#ifndef FLARE_RPC_MEMCACHE_H_
+#define FLARE_RPC_MEMCACHE_H_
 
 #include <string>
 #include <google/protobuf/message.h>
@@ -236,4 +236,4 @@ private:
 } // namespace flare::rpc
 
 
-#endif  // BRPC_MEMCACHE_H
+#endif  // FLARE_RPC_MEMCACHE_H_

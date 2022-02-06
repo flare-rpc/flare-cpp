@@ -144,7 +144,7 @@ static double get_cumulated_cputime_from_this(void* arg) {
 void TaskGroup::run_main_task() {
     flare::variable::PassiveStatus<double> cumulated_cputime(
         get_cumulated_cputime_from_this, this);
-    std::unique_ptr<flare::variable::PerSecond<flare::variable::PassiveStatus<double> > > usage_bvar;
+    std::unique_ptr<flare::variable::PerSecond<flare::variable::PassiveStatus<double> > > usage_variable;
 
     TaskGroup* dummy = this;
     bthread_t tid;
@@ -155,7 +155,7 @@ void TaskGroup::run_main_task() {
         if (_cur_meta->tid != _main_tid) {
             TaskGroup::task_runner(1/*skip remained*/);
         }
-        if (FLAGS_show_per_worker_usage_in_vars && !usage_bvar) {
+        if (FLAGS_show_per_worker_usage_in_vars && !usage_variable) {
             char name[32];
 #if defined(FLARE_PLATFORM_OSX)
             snprintf(name, sizeof(name), "bthread_worker_usage_%" PRIu64,
@@ -164,7 +164,7 @@ void TaskGroup::run_main_task() {
             snprintf(name, sizeof(name), "bthread_worker_usage_%ld",
                      (long)syscall(SYS_gettid));
 #endif
-            usage_bvar.reset(new flare::variable::PerSecond<flare::variable::PassiveStatus<double> >
+            usage_variable.reset(new flare::variable::PerSecond<flare::variable::PassiveStatus<double> >
                              (name, &cumulated_cputime, 1));
         }
     }
@@ -280,7 +280,7 @@ void TaskGroup::task_runner(intptr_t skip_remained) {
         if (FLAGS_show_bthread_creation_in_vars) {
             // NOTE: the thread triggering exposure of pending time may spend
             // considerable time because a single flare::variable::LatencyRecorder
-            // contains many bvar.
+            // contains many variable.
             g->_control->exposed_pending_time() <<
                 (flare::base::cpuwide_time_ns() - m->cpuwide_start_ns) / 1000L;
         }

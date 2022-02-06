@@ -16,14 +16,14 @@
 // under the License.
 
 
-#ifndef BRPC_PROMETHEUS_METRICS_SERVICE_H
-#define BRPC_PROMETHEUS_METRICS_SERVICE_H
+#ifndef FLARE_RPC_PROMETHEUS_METRICS_SERVICE_H_
+#define FLARE_RPC_PROMETHEUS_METRICS_SERVICE_H_
 
 #include "flare/rpc/builtin_service.pb.h"
 
 namespace flare::rpc {
 
-class PrometheusMetricsService : public brpc_metrics {
+class PrometheusMetricsService : public flare_metrics {
 public:
     void default_method(::google::protobuf::RpcController* cntl_base,
                         const ::flare::rpc::MetricsRequest* request,
@@ -35,4 +35,4 @@ int DumpPrometheusMetricsToCordBuf(flare::io::cord_buf* output);
 
 } // namepace flare::rpc
 
-#endif  // BRPC_PROMETHEUS_METRICS_SERVICE_H
+#endif  // FLARE_RPC_PROMETHEUS_METRICS_SERVICE_H_

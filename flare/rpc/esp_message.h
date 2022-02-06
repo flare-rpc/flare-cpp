@@ -15,8 +15,8 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef BRPC_ESP_MESSAGE_H
-#define BRPC_ESP_MESSAGE_H
+#ifndef FLARE_RPC_ESP_MESSAGE_H_
+#define FLARE_RPC_ESP_MESSAGE_H_
 
 #include <string>
 
@@ -80,4 +80,4 @@ private:
 
 } // namespace flare::rpc
 
-#endif  // BRPC_ESP_MESSAGE_H
+#endif  // FLARE_RPC_ESP_MESSAGE_H_

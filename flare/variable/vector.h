@@ -17,8 +17,8 @@
 
 // Date: Sun Sep 20 12:25:11 CST 2015
 
-#ifndef  BVAR_VECTOR_H
-#define  BVAR_VECTOR_H
+#ifndef  FLARE_VARIABLE_VECTOR_H_
+#define  FLARE_VARIABLE_VECTOR_H_
 
 #include <ostream>
 #include <gflags/gflags_declare.h>
@@ -119,4 +119,4 @@ struct is_vector<Vector<T,N> > : public std::true_type {};
 
 }  // namespace flare::variable
 
-#endif  //BVAR_VECTOR_H
+#endif  // FLARE_VARIABLE_VECTOR_H_

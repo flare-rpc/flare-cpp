@@ -28,9 +28,9 @@
 #include "flare/base/strings.h"
 
 namespace flare::variable {
-DECLARE_int32(bvar_latency_p1);
-DECLARE_int32(bvar_latency_p2);
-DECLARE_int32(bvar_latency_p3);
+DECLARE_int32(variable_latency_p1);
+DECLARE_int32(variable_latency_p2);
+DECLARE_int32(variable_latency_p3);
 }
 
 namespace flare::rpc {
@@ -38,7 +38,7 @@ namespace flare::rpc {
 // Defined in server.cpp
 extern const char* const g_server_info_prefix;
 
-// This is a class that convert bvar result to prometheus output.
+// This is a class that convert variable result to prometheus output.
 // Currently the output only includes gauge and summary for two
 // reasons:
 // 1) We cannot tell gauge and counter just from name and what's
@@ -62,7 +62,7 @@ private:
     bool DumpLatencyRecorderSuffix(const std::string_view& name,
                                    const std::string_view& desc);
 
-    // 6 is the number of bvars in LatencyRecorder that indicating percentiles
+    // 6 is the number of variables in LatencyRecorder that indicating percentiles
     static const int NPERCENTILES = 6;
 
     struct SummaryItems {
@@ -103,9 +103,9 @@ const PrometheusMetricsDumper::SummaryItems*
 PrometheusMetricsDumper::ProcessLatencyRecorderSuffix(const std::string_view& name,
                                                       const std::string_view& desc) {
     static std::string latency_names[] = {
-        flare::base::string_printf("_latency_%d", (int)flare::variable::FLAGS_bvar_latency_p1),
-        flare::base::string_printf("_latency_%d", (int)flare::variable::FLAGS_bvar_latency_p2),
-        flare::base::string_printf("_latency_%d", (int)flare::variable::FLAGS_bvar_latency_p3),
+        flare::base::string_printf("_latency_%d", (int)flare::variable::FLAGS_variable_latency_p1),
+        flare::base::string_printf("_latency_%d", (int)flare::variable::FLAGS_variable_latency_p2),
+        flare::base::string_printf("_latency_%d", (int)flare::variable::FLAGS_variable_latency_p3),
         "_latency_999", "_latency_9999", "_max_latency"
     };
     CHECK(NPERCENTILES == FLARE_ARRAY_SIZE(latency_names));
@@ -119,7 +119,7 @@ PrometheusMetricsDumper::ProcessLatencyRecorderSuffix(const std::string_view& na
         SummaryItems* si = &_m[flare::base::as_string(metric_name)];
         si->latency_percentiles[i] = desc_str;
         if (i == NPERCENTILES - 1) {
-            // '_max_latency' is the last suffix name that appear in the sorted bvar
+            // '_max_latency' is the last suffix name that appear in the sorted variable
             // list, which means all related percentiles have been gathered and we are
             // ready to output a Summary.
             si->metric_name = flare::base::as_string(metric_name);
@@ -158,13 +158,13 @@ bool PrometheusMetricsDumper::DumpLatencyRecorderSuffix(
     *_os << "# HELP " << si->metric_name << '\n'
          << "# TYPE " << si->metric_name << " summary\n"
          << si->metric_name << "{quantile=\""
-         << (double)(flare::variable::FLAGS_bvar_latency_p1) / 100 << "\"} "
+         << (double)(flare::variable::FLAGS_variable_latency_p1) / 100 << "\"} "
          << si->latency_percentiles[0] << '\n'
          << si->metric_name << "{quantile=\""
-         << (double)(flare::variable::FLAGS_bvar_latency_p2) / 100 << "\"} "
+         << (double)(flare::variable::FLAGS_variable_latency_p2) / 100 << "\"} "
          << si->latency_percentiles[1] << '\n'
          << si->metric_name << "{quantile=\""
-         << (double)(flare::variable::FLAGS_bvar_latency_p3) / 100 << "\"} "
+         << (double)(flare::variable::FLAGS_variable_latency_p3) / 100 << "\"} "
          << si->latency_percentiles[2] << '\n'
          << si->metric_name << "{quantile=\"0.999\"} "
          << si->latency_percentiles[3] << '\n'
@@ -173,7 +173,7 @@ bool PrometheusMetricsDumper::DumpLatencyRecorderSuffix(
          << si->metric_name << "{quantile=\"1\"} "
          << si->latency_percentiles[5] << '\n'
          << si->metric_name << "_sum "
-         // There is no sum of latency in bvar output, just use
+         // There is no sum of latency in variable output, just use
          // average * count as approximation
          << si->latency_avg * si->count << '\n'
          << si->metric_name << "_count " << si->count << '\n';

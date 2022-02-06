@@ -30,7 +30,7 @@
 #include "flare/base/profile.h"
 #include "flare/base/class_name.h"                     // flare::base::class_name
 #include "flare/rpc/log.h"
-#include "flare/rpc/reloadable_flags.h"          // BRPC_VALIDATE_GFLAG
+#include "flare/rpc/reloadable_flags.h"          // FLARE_RPC_VALIDATE_GFLAG
 #include "flare/rpc/errno.pb.h"
 #include "flare/rpc/event_dispatcher.h"          // RemoveConsumer
 #include "flare/rpc/socket.h"
@@ -59,11 +59,11 @@ namespace flare::rpc {
 // is not an important event now, we can check the connection in /connections
 // if we're in doubt.
 DEFINE_bool(log_connected, false, "Print log when a connection is established");
-BRPC_VALIDATE_GFLAG(log_connected, PassValidate);
+FLARE_RPC_VALIDATE_GFLAG(log_connected, PassValidate);
 
 DEFINE_bool(log_idle_connection_close, false,
             "Print log when an idle connection is closed");
-BRPC_VALIDATE_GFLAG(log_idle_connection_close, PassValidate);
+FLARE_RPC_VALIDATE_GFLAG(log_idle_connection_close, PassValidate);
 
 DEFINE_int32(socket_recv_buffer_size, -1, 
             "Set the recv buffer size of socket if this value is positive");
@@ -80,7 +80,7 @@ DEFINE_int64(socket_max_unwritten_bytes, 64 * 1024 * 1024,
 
 DEFINE_int32(max_connection_pool_size, 100,
              "Max number of pooled connections to a single endpoint");
-BRPC_VALIDATE_GFLAG(max_connection_pool_size, PassValidate);
+FLARE_RPC_VALIDATE_GFLAG(max_connection_pool_size, PassValidate);
 
 DEFINE_int32(connect_timeout_as_unreachable, 3,
              "If the socket failed to connect due to ETIMEDOUT for so many "
@@ -92,7 +92,7 @@ DECLARE_int32(health_check_timeout_ms);
 static bool validate_connect_timeout_as_unreachable(const char*, int32_t v) {
     return v >= 2 && v < 1000/*large enough*/;
 }
-BRPC_VALIDATE_GFLAG(connect_timeout_as_unreachable,
+FLARE_RPC_VALIDATE_GFLAG(connect_timeout_as_unreachable,
                          validate_connect_timeout_as_unreachable);
 
 const int WAIT_EPOLLOUT_TIMEOUT_MS = 50;

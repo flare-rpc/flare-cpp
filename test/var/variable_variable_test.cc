@@ -31,7 +31,7 @@
 #include <gtest/gtest.h>
 
 namespace flare::variable {
-DECLARE_bool(bvar_log_dumpped);
+DECLARE_bool(variable_log_dumpped);
 }
 
 namespace {
@@ -209,7 +209,7 @@ TEST_F(VariableTest, dump) {
     MyDumper d;
 
     // Nothing to dump yet.
-    flare::variable::FLAGS_bvar_log_dumpped = true;
+    flare::variable::FLAGS_variable_log_dumpped = true;
     ASSERT_EQ(0, flare::variable::Variable::dump_exposed(&d, NULL));
     ASSERT_TRUE(d._list.empty());
 

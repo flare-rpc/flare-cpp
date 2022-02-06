@@ -16,8 +16,8 @@
 // under the License.
 
 
-#ifndef BRPC_CHANNEL_BASE_H
-#define BRPC_CHANNEL_BASE_H
+#ifndef FLARE_RPC_CHANNEL_BASE_H_
+#define FLARE_RPC_CHANNEL_BASE_H_
 
 #include <stdlib.h>
 #include <ostream>
@@ -46,4 +46,4 @@ public:
 } // namespace flare::rpc
 
 
-#endif  // BRPC_CHANNEL_BASE_H
+#endif  // FLARE_RPC_CHANNEL_BASE_H_

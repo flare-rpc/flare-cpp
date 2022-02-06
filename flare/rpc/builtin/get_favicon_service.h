@@ -16,8 +16,8 @@
 // under the License.
 
 
-#ifndef  BRPC_GET_FAVICON_SERVICE_H
-#define  BRPC_GET_FAVICON_SERVICE_H
+#ifndef  FLARE_RPC_GET_FAVICON_SERVICE_H_
+#define  FLARE_RPC_GET_FAVICON_SERVICE_H_
 
 #include "flare/rpc/get_favicon.pb.h"
 
@@ -34,4 +34,4 @@ public:
 } // namespace flare::rpc
 
 
-#endif  // BRPC_GET_FAVICON_SERVICE_H
+#endif  // FLARE_RPC_GET_FAVICON_SERVICE_H_

@@ -16,8 +16,8 @@
 // under the License.
 
 
-#ifndef BRPC_SOCKET_MAP_H
-#define BRPC_SOCKET_MAP_H
+#ifndef FLARE_RPC_SOCKET_MAP_H_
+#define FLARE_RPC_SOCKET_MAP_H_
 
 #include <vector>                             // std::vector
 #include "flare/variable/all.h"                        // flare::variable::PassiveStatus
@@ -179,12 +179,12 @@ private:
     SocketMapOptions _options;
     flare::base::Mutex _mutex;
     Map _map;
-    bool _exposed_in_bvar;
-    flare::variable::PassiveStatus<std::string>* _this_map_bvar;
+    bool _exposed_in_variable;
+    flare::variable::PassiveStatus<std::string>* _this_map_var;
     bool _has_close_idle_thread;
     bthread_t _close_idle_thread;
 };
 
 } // namespace flare::rpc
 
-#endif  // BRPC_SOCKET_MAP_H
+#endif  // FLARE_RPC_SOCKET_MAP_H_

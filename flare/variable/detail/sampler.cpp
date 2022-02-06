@@ -123,8 +123,8 @@ private:
 };
 
 #ifndef UNIT_TEST
-static PassiveStatus<double>* s_cumulated_time_bvar = NULL;
-static flare::variable::PerSecond<flare::variable::PassiveStatus<double> >* s_sampling_thread_usage_bvar = NULL;
+static PassiveStatus<double>* s_cumulated_time_var = NULL;
+static flare::variable::PerSecond<flare::variable::PassiveStatus<double> >* s_sampling_thread_usage_variable = NULL;
 #endif
 
 void SamplerCollector::run() {
@@ -134,14 +134,14 @@ void SamplerCollector::run() {
     //   may be abandoned at any time after forking.
     // * They can't created inside the constructor of SamplerCollector as well,
     //   which results in deadlock.
-    if (s_cumulated_time_bvar == NULL) {
-        s_cumulated_time_bvar =
+    if (s_cumulated_time_var == NULL) {
+        s_cumulated_time_var =
             new PassiveStatus<double>(get_cumulated_time, this);
     }
-    if (s_sampling_thread_usage_bvar == NULL) {
-        s_sampling_thread_usage_bvar =
+    if (s_sampling_thread_usage_variable == NULL) {
+        s_sampling_thread_usage_variable =
             new flare::variable::PerSecond<flare::variable::PassiveStatus<double> >(
-                    "bvar_sampler_collector_usage", s_cumulated_time_bvar, 10);
+                    "variable_sampler_collector_usage", s_cumulated_time_var, 10);
     }
 #endif
 
@@ -186,7 +186,7 @@ void SamplerCollector::run() {
         } else {            
             if (++consecutive_nosleep >= WARN_NOSLEEP_THRESHOLD) {
                 consecutive_nosleep = 0;
-                LOG(WARNING) << "bvar is busy at sampling for "
+                LOG(WARNING) << "variable is busy at sampling for "
                              << WARN_NOSLEEP_THRESHOLD << " seconds!";
             }
         }

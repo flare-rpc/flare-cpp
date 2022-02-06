@@ -17,8 +17,8 @@
 
 // This file contains inlined implementation of socket.h
 
-#ifndef BRPC_SOCKET_INL_H
-#define BRPC_SOCKET_INL_H
+#ifndef FLARE_RPC_SOCKET_INL_H_
+#define FLARE_RPC_SOCKET_INL_H_
 
 
 namespace flare::rpc {
@@ -351,4 +351,4 @@ inline Socket::SharedPart* Socket::GetOrNewSharedPart() {
 } // namespace flare::rpc
 
 
-#endif  // BRPC_SOCKET_INL_H
+#endif  // FLARE_RPC_SOCKET_INL_H_

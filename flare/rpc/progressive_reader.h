@@ -16,8 +16,8 @@
 // under the License.
 
 
-#ifndef BRPC_PROGRESSIVE_READER_H
-#define BRPC_PROGRESSIVE_READER_H
+#ifndef FLARE_RPC_PROGRESSIVE_READER_H_
+#define FLARE_RPC_PROGRESSIVE_READER_H_
 
 #include "flare/rpc/shared_object.h"
 
@@ -89,4 +89,4 @@ public:
 } // namespace flare::rpc
 
 
-#endif  // BRPC_PROGRESSIVE_READER_H
+#endif  // FLARE_RPC_PROGRESSIVE_READER_H_

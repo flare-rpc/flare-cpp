@@ -15,8 +15,8 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef BRPC_SERVER_PRIVATE_ACCESSOR_H
-#define BRPC_SERVER_PRIVATE_ACCESSOR_H
+#ifndef FLARE_RPC_SERVER_PRIVATE_ACCESSOR_H_
+#define FLARE_RPC_SERVER_PRIVATE_ACCESSOR_H_
 
 #include <google/protobuf/descriptor.h>
 #include "flare/rpc/server.h"
@@ -37,7 +37,7 @@ public:
     }
 
     void AddError() {
-        _server->_nerror_bvar << 1;
+        _server->_nerror_var << 1;
     }
 
     // Returns true if the `max_concurrency' limit is not reached.
@@ -127,4 +127,4 @@ private:
 } // namespace flare::rpc
 
 
-#endif // BRPC_SERVER_PRIVATE_ACCESSOR_H
+#endif // FLARE_RPC_SERVER_PRIVATE_ACCESSOR_H_

@@ -16,8 +16,8 @@
 // under the License.
 
 
-#ifndef BRPC_IDS_SERVICE_H
-#define BRPC_IDS_SERVICE_H
+#ifndef FLARE_RPC_IDS_SERVICE_H_
+#define FLARE_RPC_IDS_SERVICE_H_
 
 #include "flare/rpc/builtin_service.pb.h"
 
@@ -35,4 +35,4 @@ public:
 } // namespace flare::rpc
 
 
-#endif // BRPC_IDS_SERVICE_H
+#endif // FLARE_RPC_IDS_SERVICE_H_

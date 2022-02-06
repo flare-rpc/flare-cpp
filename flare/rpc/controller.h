@@ -16,8 +16,8 @@
 // under the License.
 
 
-#ifndef BRPC_CONTROLLER_H
-#define BRPC_CONTROLLER_H
+#ifndef FLARE_RPC_CONTROLLER_H_
+#define FLARE_RPC_CONTROLLER_H_
 
 // To flare developers: This is a header included by user, don't depend
 // on internal structures, use opaque pointers instead.
@@ -847,4 +847,4 @@ std::ostream& operator<<(std::ostream& os, const Controller::LogPrefixDummy& p);
 #define CLOGF(cntl) LOG(FATAL) << (cntl)->LogPrefix()
 #define CVLOG(v, cntl) VLOG(v) << (cntl)->LogPrefix()
 
-#endif  // BRPC_CONTROLLER_H
+#endif  // FLARE_RPC_CONTROLLER_H_

@@ -16,8 +16,8 @@
 // under the License.
 
 
-#ifndef BRPC_DETAILS_RTMP_UTILS_H
-#define BRPC_DETAILS_RTMP_UTILS_H
+#ifndef FLARE_RPC_DETAILS_RTMP_UTILS_H_
+#define FLARE_RPC_DETAILS_RTMP_UTILS_H_
 
 #include <stdint.h>  // int32_t
 #include <stddef.h>  // size_t
@@ -60,4 +60,4 @@ int avc_nalu_read_bit(BitStream* stream, int8_t* v);
 } // namespace flare::rpc
 
 
-#endif  // BRPC_DETAILS_RTMP_UTILS_H
+#endif  // FLARE_RPC_DETAILS_RTMP_UTILS_H_

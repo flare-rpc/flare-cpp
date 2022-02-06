@@ -16,8 +16,8 @@
 // under the License.
 
 
-#ifndef BRPC_BUILTIN_VIZ_MIN_JS_H
-#define BRPC_BUILTIN_VIZ_MIN_JS_H
+#ifndef FLARE_RPC_BUILTIN_VIZ_MIN_JS_H_
+#define FLARE_RPC_BUILTIN_VIZ_MIN_JS_H_
 
 #include "flare/io/cord_buf.h"
 
@@ -34,4 +34,4 @@ const flare::io::cord_buf& viz_min_js_iobuf_gzip();
 } // namespace flare::rpc
 
 
-#endif // BRPC_BUILTIN_VIZ_MIN_JS_H
+#endif // FLARE_RPC_BUILTIN_VIZ_MIN_JS_H_

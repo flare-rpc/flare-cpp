@@ -15,8 +15,8 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef BRPC_CIRCUIT_BREAKER_H
-#define BRPC_CIRCUIT_BREAKER_H
+#ifndef FLARE_RPC_CIRCUIT_BREAKER_H_
+#define FLARE_RPC_CIRCUIT_BREAKER_H_
 
 #include "flare/base/static_atomic.h"
 

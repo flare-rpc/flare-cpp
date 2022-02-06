@@ -16,8 +16,8 @@
 // under the License.
 
 
-#ifndef BRPC_POLICY_MOST_COMMON_MESSAGE_H
-#define BRPC_POLICY_MOST_COMMON_MESSAGE_H
+#ifndef FLARE_RPC_POLICY_MOST_COMMON_MESSAGE_H_
+#define FLARE_RPC_POLICY_MOST_COMMON_MESSAGE_H_
 
 #include "flare/memory/object_pool.h"
 #include "flare/rpc/input_messenger.h"
@@ -52,4 +52,4 @@ struct FLARE_CACHELINE_ALIGNMENT MostCommonMessage : public InputMessageBase {
 } // namespace flare::rpc
 
 
-#endif  // BRPC_POLICY_MOST_COMMON_MESSAGE_H
+#endif  // FLARE_RPC_POLICY_MOST_COMMON_MESSAGE_H_

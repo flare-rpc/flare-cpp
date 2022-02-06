@@ -24,7 +24,7 @@
 #include "flare/bthread/bthread.h"                          // bthread_start_background
 #include "flare/rpc/event_dispatcher.h"
 
-#ifdef BRPC_SOCKET_HAS_EOF
+#ifdef FLARE_RPC_SOCKET_HAS_EOF
 #include "flare/rpc/details/has_epollrdhup.h"
 #endif
 
@@ -161,7 +161,7 @@ namespace flare::rpc {
         epoll_event evt;
         evt.data.u64 = socket_id;
         evt.events = EPOLLOUT | EPOLLET;
-#ifdef BRPC_SOCKET_HAS_EOF
+#ifdef FLARE_RPC_SOCKET_HAS_EOF
         evt.events |= has_epollrdhup;
 #endif
         if (pollin) {
@@ -202,7 +202,7 @@ namespace flare::rpc {
             epoll_event evt;
             evt.data.u64 = socket_id;
             evt.events = EPOLLIN | EPOLLET;
-#ifdef BRPC_SOCKET_HAS_EOF
+#ifdef FLARE_RPC_SOCKET_HAS_EOF
             evt.events |= has_epollrdhup;
 #endif
             return epoll_ctl(_epfd, EPOLL_CTL_MOD, fd, &evt);
@@ -234,7 +234,7 @@ namespace flare::rpc {
         epoll_event evt;
         evt.events = EPOLLIN | EPOLLET;
         evt.data.u64 = socket_id;
-#ifdef BRPC_SOCKET_HAS_EOF
+#ifdef FLARE_RPC_SOCKET_HAS_EOF
         evt.events |= has_epollrdhup;
 #endif
         return epoll_ctl(_epfd, EPOLL_CTL_ADD, fd, &evt);
@@ -282,7 +282,7 @@ namespace flare::rpc {
         while (!_stop) {
 #if defined(FLARE_PLATFORM_LINUX)
             epoll_event e[32];
-#ifdef BRPC_ADDITIONAL_EPOLL
+#ifdef FLARE_RPC_ADDITIONAL_EPOLL
             // Performance downgrades in examples.
             int n = epoll_wait(_epfd, e, FLARE_ARRAY_SIZE(e), 0);
             if (n == 0) {
@@ -316,7 +316,7 @@ namespace flare::rpc {
             for (int i = 0; i < n; ++i) {
 #if defined(FLARE_PLATFORM_LINUX)
                 if (e[i].events & (EPOLLIN | EPOLLERR | EPOLLHUP)
-#ifdef BRPC_SOCKET_HAS_EOF
+#ifdef FLARE_RPC_SOCKET_HAS_EOF
                     || (e[i].events & has_epollrdhup)
 #endif
                     ) {

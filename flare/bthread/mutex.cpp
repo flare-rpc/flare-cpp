@@ -50,7 +50,7 @@ namespace bthread {
     const int FLARE_ALLOW_UNUSED dummy_bt = backtrace(dummy_buf, FLARE_ARRAY_SIZE(dummy_buf));
 
 // For controlling contentions collected per second.
-    static flare::variable::CollectorSpeedLimit g_cp_sl = BVAR_COLLECTOR_SPEED_LIMIT_INITIALIZER;
+    static flare::variable::CollectorSpeedLimit g_cp_sl = VARIABLE_COLLECTOR_SPEED_LIMIT_INITIALIZER;
 
     const size_t MAX_CACHED_CONTENTIONS = 512;
 // Skip frames which are always same: the unlock function and submit_contention()
@@ -314,7 +314,7 @@ namespace bthread {
             return false;
         }
 
-        // Create related global bvar lazily.
+        // Create related global variable lazily.
         static flare::variable::PassiveStatus<int64_t> g_nconflicthash_var
                 ("contention_profiler_conflict_hash", get_nconflicthash, NULL);
         static flare::variable::DisplaySamplingRatio g_sampling_ratio_var(

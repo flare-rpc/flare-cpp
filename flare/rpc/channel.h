@@ -16,8 +16,8 @@
 // under the License.
 
 
-#ifndef BRPC_CHANNEL_H
-#define BRPC_CHANNEL_H
+#ifndef FLARE_RPC_CHANNEL_H_
+#define FLARE_RPC_CHANNEL_H_
 
 // To flare developers: This is a header included by user, don't depend
 // on internal structures, use opaque pointers instead.
@@ -238,4 +238,4 @@ enum ChannelOwnership {
 
 } // namespace flare::rpc
 
-#endif  // BRPC_CHANNEL_H
+#endif  // FLARE_RPC_CHANNEL_H_

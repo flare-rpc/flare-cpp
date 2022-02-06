@@ -16,8 +16,8 @@
 // under the License.
 
 
-#ifndef BRPC_RPC_DUMP_H
-#define BRPC_RPC_DUMP_H
+#ifndef FLARE_RPC_RPC_DUMP_H_
+#define FLARE_RPC_RPC_DUMP_H_
 
 #include <filesystem>
 #include <gflags/gflags_declare.h>
@@ -100,4 +100,4 @@ private:
 } // namespace flare::rpc
 
 
-#endif  // BRPC_RPC_DUMP_H
+#endif  // FLARE_RPC_RPC_DUMP_H_

@@ -17,8 +17,8 @@
 
 // Date 2014/09/24 16:01:08
 
-#ifndef  BVAR_REDUCER_H
-#define  BVAR_REDUCER_H
+#ifndef  FLARE_VARIABLE_REDUCER_H_
+#define  FLARE_VARIABLE_REDUCER_H_
 
 #include <limits>                                 // std::numeric_limits
 #include "flare/base/logging.h"                         // LOG()
@@ -325,4 +325,4 @@ public:
 
 }  // namespace flare::variable
 
-#endif  //BVAR_REDUCER_H
+#endif  // FLARE_VARIABLE_REDUCER_H_

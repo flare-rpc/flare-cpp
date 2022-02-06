@@ -16,8 +16,8 @@
 // under the License.
 
 
-#ifndef BRPC_BUILTIN_PPROF_PERL_H
-#define BRPC_BUILTIN_PPROF_PERL_H
+#ifndef FLARE_RPC_BUILTIN_PPROF_PERL_H_
+#define FLARE_RPC_BUILTIN_PPROF_PERL_H_
 
 
 namespace flare::rpc {
@@ -27,4 +27,4 @@ const char* pprof_perl();
 } // namespace flare::rpc
 
 
-#endif // BRPC_BUILTIN_PPROF_PERL_H
+#endif // FLARE_RPC_BUILTIN_PPROF_PERL_H_

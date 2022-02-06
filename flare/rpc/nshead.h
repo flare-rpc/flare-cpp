@@ -15,8 +15,8 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef BRPC_NSHEAD_H
-#define BRPC_NSHEAD_H
+#ifndef FLARE_RPC_NSHEAD_H_
+#define FLARE_RPC_NSHEAD_H_
 
 
 namespace flare::rpc {
@@ -38,4 +38,4 @@ struct nshead_t {
 } // namespace flare::rpc
 
 
-#endif // BRPC_NSHEAD_H
+#endif // FLARE_RPC_NSHEAD_H_

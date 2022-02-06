@@ -16,8 +16,8 @@
 // under the License.
 
 
-#ifndef BRPC_EXTENSION_INL_H
-#define BRPC_EXTENSION_INL_H
+#ifndef FLARE_RPC_EXTENSION_INL_H_
+#define FLARE_RPC_EXTENSION_INL_H_
 
 
 namespace flare::rpc {
@@ -93,4 +93,4 @@ void Extension<T>::List(std::ostream& os, char separator) {
 } // namespace flare::rpc
 
 
-#endif  // BRPC_EXTENSION_INL_H
+#endif  // FLARE_RPC_EXTENSION_INL_H_

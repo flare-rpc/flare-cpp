@@ -16,8 +16,8 @@
 // under the License.
 
 
-#ifndef BRPC_BUILTIN_TABBED_H
-#define BRPC_BUILTIN_TABBED_H
+#ifndef FLARE_RPC_BUILTIN_TABBED_H_
+#define FLARE_RPC_BUILTIN_TABBED_H_
 
 #include <string>
 #include <vector>
@@ -85,4 +85,4 @@ public:
 } // namespace flare::rpc
 
 
-#endif // BRPC_BUILTIN_TABBED_H
+#endif // FLARE_RPC_BUILTIN_TABBED_H_

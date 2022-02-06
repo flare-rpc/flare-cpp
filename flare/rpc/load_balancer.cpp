@@ -24,7 +24,7 @@
 namespace flare::rpc {
 
     DEFINE_bool(show_lb_in_vars, false, "Describe LoadBalancers in vars");
-    BRPC_VALIDATE_GFLAG(show_lb_in_vars, PassValidate);
+    FLARE_RPC_VALIDATE_GFLAG(show_lb_in_vars, PassValidate);
 
 // For assigning unique names for lb.
     static flare::static_atomic<int> g_lb_counter = FLARE_STATIC_ATOMIC_INIT(0);

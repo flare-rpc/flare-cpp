@@ -15,8 +15,8 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef BRPC_POLICY_CONSTANT_CONCURRENCY_LIMITER_H
-#define BRPC_POLICY_CONSTANT_CONCURRENCY_LIMITER_H
+#ifndef FLARE_RPC_POLICY_CONSTANT_CONCURRENCY_LIMITER_H_
+#define FLARE_RPC_POLICY_CONSTANT_CONCURRENCY_LIMITER_H_
 
 #include "flare/rpc/concurrency_limiter.h"
 
@@ -43,4 +43,4 @@ private:
 }  // namespace flare::rpc
 
 
-#endif // BRPC_POLICY_CONSTANT_CONCURRENCY_LIMITER_H
+#endif // FLARE_RPC_POLICY_CONSTANT_CONCURRENCY_LIMITER_H_

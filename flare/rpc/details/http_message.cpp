@@ -516,7 +516,7 @@ std::ostream& operator<<(std::ostream& os, const http_parser& parser) {
     return os;
 }
 
-#define BRPC_CRLF "\r\n"
+#define FLARE_RPC_CRLF "\r\n"
 
 // Request format
 // Request       = Request-Line              ; Section 5.1
@@ -545,12 +545,12 @@ void MakeRawHttpRequest(flare::io::cord_buf* request,
     const URI& uri = h->uri();
     uri.PrintWithoutHost(os); // host is sent by "Host" header.
     os << " HTTP/" << h->major_version() << '.'
-       << h->minor_version() << BRPC_CRLF;
+       << h->minor_version() << FLARE_RPC_CRLF;
     if (h->method() != HTTP_METHOD_GET) {
         h->RemoveHeader("Content-Length");
         // Never use "Content-Length" set by user.
         os << "Content-Length: " << (content ? content->length() : 0)
-           << BRPC_CRLF;
+           << FLARE_RPC_CRLF;
     }
     //rfc 7230#section-5.4:
     //A client MUST send a Host header field in all HTTP/1.1 request
@@ -571,22 +571,22 @@ void MakeRawHttpRequest(flare::io::cord_buf* request,
         } else if (remote_side.port != 0) {
             os << remote_side;
         }
-        os << BRPC_CRLF;
+        os << FLARE_RPC_CRLF;
     }
     if (!h->content_type().empty()) {
         os << "Content-Type: " << h->content_type()
-           << BRPC_CRLF;
+           << FLARE_RPC_CRLF;
     }
     for (HttpHeader::HeaderIterator it = h->HeaderBegin();
          it != h->HeaderEnd(); ++it) {
-        os << it->first << ": " << it->second << BRPC_CRLF;
+        os << it->first << ": " << it->second << FLARE_RPC_CRLF;
     }
     if (h->GetHeader("Accept") == NULL) {
-        os << "Accept: */*" BRPC_CRLF;
+        os << "Accept: */*" FLARE_RPC_CRLF;
     }
     // The fake "curl" user-agent may let servers return plain-text results.
     if (h->GetHeader("User-Agent") == NULL) {
-        os << "User-Agent: flare/1.0 curl/7.0" BRPC_CRLF;
+        os << "User-Agent: flare/1.0 curl/7.0" FLARE_RPC_CRLF;
     }
     const std::string& user_info = h->uri().user_info();
     if (!user_info.empty() && h->GetHeader("Authorization") == NULL) {
@@ -596,9 +596,9 @@ void MakeRawHttpRequest(flare::io::cord_buf* request,
         // invalid and rejected by http_parser_parse_url().
         std::string encoded_user_info;
         flare::base::base64_encode(user_info, &encoded_user_info);
-        os << "Authorization: Basic " << encoded_user_info << BRPC_CRLF;
+        os << "Authorization: Basic " << encoded_user_info << FLARE_RPC_CRLF;
     }
-    os << BRPC_CRLF;  // CRLF before content
+    os << FLARE_RPC_CRLF;  // CRLF before content
     os.move_to(*request);
     if (h->method() != HTTP_METHOD_GET && content) {
         request->append(*content);
@@ -619,28 +619,28 @@ void MakeRawHttpResponse(flare::io::cord_buf* response,
     flare::io::cord_buf_builder os;
     os << "HTTP/" << h->major_version() << '.'
        << h->minor_version() << ' ' << h->status_code()
-       << ' ' << h->reason_phrase() << BRPC_CRLF;
+       << ' ' << h->reason_phrase() << FLARE_RPC_CRLF;
     if (content) {
         h->RemoveHeader("Content-Length");
         // Never use "Content-Length" set by user.
         // Always set Content-Length since lighttpd requires the header to be
         // set to 0 for empty content.
-        os << "Content-Length: " << content->length() << BRPC_CRLF;
+        os << "Content-Length: " << content->length() << FLARE_RPC_CRLF;
     }
     if (!h->content_type().empty()) {
         os << "Content-Type: " << h->content_type()
-           << BRPC_CRLF;
+           << FLARE_RPC_CRLF;
     }
     for (HttpHeader::HeaderIterator it = h->HeaderBegin();
          it != h->HeaderEnd(); ++it) {
-        os << it->first << ": " << it->second << BRPC_CRLF;
+        os << it->first << ": " << it->second << FLARE_RPC_CRLF;
     }
-    os << BRPC_CRLF;  // CRLF before content
+    os << FLARE_RPC_CRLF;  // CRLF before content
     os.move_to(*response);
     if (content) {
         response->append(flare::io::cord_buf::Movable(*content));
     }
 }
-#undef BRPC_CRLF
+#undef FLARE_RPC_CRLF
 
 } // namespace flare::rpc

@@ -17,8 +17,8 @@
 
 #ifdef BAIDU_INTERNAL
 
-#ifndef  BRPC_POLICY_BAIDU_NAMING_SERVICE_H
-#define  BRPC_POLICY_BAIDU_NAMING_SERVICE_H
+#ifndef  FLARE_RPC_POLICY_BAIDU_NAMING_SERVICE_H_
+#define  FLARE_RPC_POLICY_BAIDU_NAMING_SERVICE_H_
 
 #include "flare/rpc/periodic_naming_service.h"
 
@@ -44,5 +44,5 @@ public:
 }  // namespace policy
 } // namespace flare::rpc
 
-#endif //BRPC_POLICY_BAIDU_NAMING_SERVICE_H
+#endif // FLARE_RPC_POLICY_BAIDU_NAMING_SERVICE_H_
 #endif // BAIDU_INTERNAL

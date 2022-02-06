@@ -15,8 +15,8 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef BRPC_POLICY_ESP_PROTOCOL_H
-#define BRPC_POLICY_ESP_PROTOCOL_H
+#ifndef FLARE_RPC_POLICY_ESP_PROTOCOL_H_
+#define FLARE_RPC_POLICY_ESP_PROTOCOL_H_
 
 #include <unistd.h>
 #include <sys/types.h>
@@ -52,4 +52,4 @@ void ProcessEspResponse(InputMessageBase* msg);
 } // namespace flare::rpc
 
 
-#endif // BRPC_POLICY_ESP_PROTOCOL_H
+#endif // FLARE_RPC_POLICY_ESP_PROTOCOL_H_

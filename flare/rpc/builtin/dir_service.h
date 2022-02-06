@@ -16,8 +16,8 @@
 // under the License.
 
 
-#ifndef BRPC_DIR_SERVICE_H
-#define BRPC_DIR_SERVICE_H
+#ifndef FLARE_RPC_DIR_SERVICE_H_
+#define FLARE_RPC_DIR_SERVICE_H_
 
 #include "flare/rpc/builtin_service.pb.h"
 
@@ -36,4 +36,4 @@ public:
 
 
 
-#endif // BRPC_DIR_SERVICE_H
+#endif // FLARE_RPC_DIR_SERVICE_H_

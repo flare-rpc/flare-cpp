@@ -16,8 +16,8 @@
 // under the License.
 
 
-#ifndef BRPC_AUTHENTICATOR_H
-#define BRPC_AUTHENTICATOR_H
+#ifndef FLARE_RPC_AUTHENTICATOR_H_
+#define FLARE_RPC_AUTHENTICATOR_H_
 
 #include <ostream>
 #include "flare/base/endpoint.h"                    // flare::base::end_point
@@ -88,4 +88,4 @@ inline std::ostream& operator<<(std::ostream& os, const AuthContext& ctx) {
 
 
 
-#endif // BRPC_AUTHENTICATOR_H
+#endif // FLARE_RPC_AUTHENTICATOR_H_

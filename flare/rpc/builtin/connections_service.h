@@ -16,8 +16,8 @@
 // under the License.
 
 
-#ifndef BRPC_CONNECTIONS_SERVICE_H
-#define BRPC_CONNECTIONS_SERVICE_H
+#ifndef FLARE_RPC_CONNECTIONS_SERVICE_H_
+#define FLARE_RPC_CONNECTIONS_SERVICE_H_
 
 #include "flare/rpc/socket_id.h"
 #include "flare/rpc/builtin_service.pb.h"
@@ -44,4 +44,4 @@ private:
 } // namespace flare::rpc
 
 
-#endif // BRPC_CONNECTIONS_SERVICE_H
+#endif // FLARE_RPC_CONNECTIONS_SERVICE_H_

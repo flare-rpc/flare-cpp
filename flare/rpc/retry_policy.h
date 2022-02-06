@@ -16,8 +16,8 @@
 // under the License.
 
 
-#ifndef BRPC_RETRY_POLICY_H
-#define BRPC_RETRY_POLICY_H
+#ifndef FLARE_RPC_RETRY_POLICY_H_
+#define FLARE_RPC_RETRY_POLICY_H_
 
 #include "flare/rpc/controller.h"
 
@@ -76,4 +76,4 @@ const RetryPolicy* DefaultRetryPolicy();
 } // namespace flare::rpc
 
 
-#endif  // BRPC_RETRY_POLICY_H
+#endif  // FLARE_RPC_RETRY_POLICY_H_

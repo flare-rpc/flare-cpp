@@ -16,8 +16,8 @@
 // under the License.
 
 
-#ifndef BRPC_PROGRESSIVE_ATTACHMENT_H
-#define BRPC_PROGRESSIVE_ATTACHMENT_H
+#ifndef FLARE_RPC_PROGRESSIVE_ATTACHMENT_H_
+#define FLARE_RPC_PROGRESSIVE_ATTACHMENT_H_
 
 #include "flare/rpc/callback.h"
 #include "flare/base/static_atomic.h"
@@ -80,4 +80,4 @@ private:
 } // namespace flare::rpc
 
 
-#endif  // BRPC_PROGRESSIVE_ATTACHMENT_H
+#endif  // FLARE_RPC_PROGRESSIVE_ATTACHMENT_H_

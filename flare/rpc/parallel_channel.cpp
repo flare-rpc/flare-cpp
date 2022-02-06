@@ -35,7 +35,7 @@ ParallelChannelOptions::ParallelChannelOptions()
 DECLARE_bool(usercode_in_pthread);
 
 // Not see difference when memory is cached.
-#ifdef BRPC_CACHE_PCHAN_MEM
+#ifdef FLARE_RPC_CACHE_PCHAN_MEM
 struct Memory {
     int size;
     void* ptr;
@@ -108,7 +108,7 @@ public:
         }
         void* mem = NULL;
         int memsize = 0;
-#ifdef BRPC_CACHE_PCHAN_MEM
+#ifdef FLARE_RPC_CACHE_PCHAN_MEM
         Memory pchan_mem = tls_cached_pchan_mem;
         if (pchan_mem.size >= req_size) {  // use tls if it's big enough
             mem = pchan_mem.ptr;
@@ -164,7 +164,7 @@ public:
             for (int i = 0; i < d->_ndone; ++i) {
                 d->sub_done(i)->~SubDone();
             }
-#ifdef BRPC_CACHE_PCHAN_MEM
+#ifdef FLARE_RPC_CACHE_PCHAN_MEM
             Memory pchan_mem = tls_cached_pchan_mem;
             if (pchan_mem.size != 0) {
                 // free the memory if tls already has sth.

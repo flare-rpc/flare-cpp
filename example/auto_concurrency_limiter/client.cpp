@@ -23,7 +23,7 @@
 #include <flare/rpc/channel.h>
 #include <flare/variable/all.h>
 #include <flare/bthread/timer_thread.h>
-#include <json2pb/json_to_pb.h>
+#include <flare/json2pb/json_to_pb.h>
 
 #include <fstream>
 #include "cl_test.pb.h"
@@ -66,9 +66,9 @@ uint32_t cast_func(void* arg) {
 std::atomic<uint32_t> g_timeout(0);
 std::atomic<uint32_t> g_error(0);
 std::atomic<uint32_t> g_succ(0);
-flare::variable::PassiveStatus<uint32_t> g_timeout_bvar(cast_func, &g_timeout);
-flare::variable::PassiveStatus<uint32_t> g_error_bvar(cast_func, &g_error);
-flare::variable::PassiveStatus<uint32_t> g_succ_bvar(cast_func, &g_succ);
+flare::variable::PassiveStatus<uint32_t> g_timeout_var(cast_func, &g_timeout);
+flare::variable::PassiveStatus<uint32_t> g_error_var(cast_func, &g_error);
+flare::variable::PassiveStatus<uint32_t> g_succ_var(cast_func, &g_succ);
 flare::variable::LatencyRecorder g_latency_rec;
 
 void LoadCaseSet(test::TestCaseSet* case_set, const std::string& file_path) {
@@ -107,9 +107,9 @@ void HandleEchoResponse(
 }
 
 void Expose() {
-    g_timeout_bvar.expose_as("cl", "timeout");
-    g_error_bvar.expose_as("cl", "failed");
-    g_succ_bvar.expose_as("cl", "succ");
+    g_timeout_var.expose_as("cl", "timeout");
+    g_error_var.expose_as("cl", "failed");
+    g_succ_var.expose_as("cl", "succ");
     g_latency_rec.expose("cl");
 }
 

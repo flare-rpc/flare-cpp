@@ -15,8 +15,8 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef BRPC_MONGO_SERVICE_ADAPTOR_H
-#define BRPC_MONGO_SERVICE_ADAPTOR_H
+#ifndef FLARE_RPC_MONGO_SERVICE_ADAPTOR_H_
+#define FLARE_RPC_MONGO_SERVICE_ADAPTOR_H_
 
 #include "flare/io/cord_buf.h"
 #include "flare/rpc/input_message_base.h"

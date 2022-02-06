@@ -16,8 +16,8 @@
 // under the License.
 
 
-#ifndef BRPC_TRACEPRINTF_H
-#define BRPC_TRACEPRINTF_H
+#ifndef FLARE_RPC_TRACEPRINTF_H_
+#define FLARE_RPC_TRACEPRINTF_H_
 
 #include "flare/base/profile.h"
 
@@ -43,4 +43,4 @@ void AnnotateSpan(const char* fmt, ...);
         }                                                               \
     } while (0)
 
-#endif  // BRPC_TRACEPRINTF_H
+#endif  // FLARE_RPC_TRACEPRINTF_H_

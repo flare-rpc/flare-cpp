@@ -16,8 +16,8 @@
 // under the License.
 
 
-#ifndef BRPC_DATA_FACTORY_H
-#define BRPC_DATA_FACTORY_H
+#ifndef FLARE_RPC_DATA_FACTORY_H_
+#define FLARE_RPC_DATA_FACTORY_H_
 
 // To flare developers: This is a header included by user, don't depend
 // on internal structures, use opaque pointers instead.
@@ -47,4 +47,4 @@ public:
 
 } // namespace flare::rpc
 
-#endif  // BRPC_DATA_FACTORY_H
+#endif  // FLARE_RPC_DATA_FACTORY_H_

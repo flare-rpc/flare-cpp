@@ -16,8 +16,8 @@
 // under the License.
 
 
-#ifndef BRPC_SPARSE_MINUTE_COUNTER_H
-#define BRPC_SPARSE_MINUTE_COUNTER_H
+#ifndef FLARE_RPC_SPARSE_MINUTE_COUNTER_H_
+#define FLARE_RPC_SPARSE_MINUTE_COUNTER_H_
 
 
 #include "flare/container/bounded_queue.h"
@@ -165,4 +165,4 @@ bool SparseMinuteCounter<T>::TryPop(int64_t now_ms, T* popped) {
 } // namespace flare::rpc
 
 
-#endif  // BRPC_SPARSE_MINUTE_COUNTER_H
+#endif  // FLARE_RPC_SPARSE_MINUTE_COUNTER_H_

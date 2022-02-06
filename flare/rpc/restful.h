@@ -16,8 +16,8 @@
 // under the License.
 
 
-#ifndef BRPC_RESTFUL_H
-#define BRPC_RESTFUL_H
+#ifndef FLARE_RPC_RESTFUL_H_
+#define FLARE_RPC_RESTFUL_H_
 
 #include <string>
 #include <string_view>
@@ -111,4 +111,4 @@ std::ostream& operator<<(std::ostream& os, const RestfulMethodPath&);
 } // namespace flare::rpc
 
 
-#endif  // BRPC_RESTFUL_H
+#endif  // FLARE_RPC_RESTFUL_H_

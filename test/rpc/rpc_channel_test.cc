@@ -26,7 +26,7 @@
 #include <google/protobuf/descriptor.h>
 #include "flare/base/time.h"
 #include "flare/base/logging.h"
-#include "flare/base/temp_file.h"
+#include "flare/io/temp_file.h"
 #include "flare/rpc/socket.h"
 #include "flare/rpc/acceptor.h"
 #include "flare/rpc/server.h"
@@ -1794,7 +1794,7 @@ namespace {
             if (short_connection) {
                 opt.connection_type = flare::rpc::CONNECTION_TYPE_SHORT;
             }
-            flare::base::temp_file server_list;
+            flare::io::temp_file server_list;
             EXPECT_EQ(0, server_list.save_format(
                     "127.0.0.1:100\n"
                     "127.0.0.1:200\n"
@@ -1816,7 +1816,7 @@ namespace {
         }
 
         flare::base::end_point _ep;
-        flare::base::temp_file _server_list;
+        flare::io::temp_file _server_list;
         std::string _naming_url;
 
         flare::rpc::Acceptor _messenger;
@@ -1911,7 +1911,7 @@ namespace {
         flare::rpc::ChannelOptions opt;
         opt.succeed_without_server = false;
         flare::rpc::Channel channel;
-        flare::base::temp_file server_list;
+        flare::io::temp_file server_list;
         ASSERT_EQ(0, server_list.save(""));
         std::string naming_url = std::string("file://") + server_list.fname();
         // empty file list results in error.
@@ -1933,7 +1933,7 @@ namespace {
 
     TEST_F(ChannelTest, init_using_naming_service) {
         flare::rpc::Channel *channel = new flare::rpc::Channel();
-        flare::base::temp_file server_list;
+        flare::io::temp_file server_list;
         ASSERT_EQ(0, server_list.save("127.0.0.1:8888"));
         std::string naming_url = std::string("filE://") + server_list.fname();
         // Rr are intended to test case-insensitivity.
@@ -2030,7 +2030,7 @@ namespace {
                 "localhost:1234",
                 "baidu.com:1234"
         };
-        flare::base::temp_file tmp_file;
+        flare::io::temp_file tmp_file;
         {
             FILE *fp = fopen(tmp_file.fname(), "w");
             for (size_t i = 0; i < FLARE_ARRAY_SIZE(address_list); ++i) {

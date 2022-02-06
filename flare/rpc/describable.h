@@ -16,8 +16,8 @@
 // under the License.
 
 
-#ifndef BRPC_DESCRIBABLE_H
-#define BRPC_DESCRIBABLE_H
+#ifndef FLARE_RPC_DESCRIBABLE_H_
+#define FLARE_RPC_DESCRIBABLE_H_
 
 #include <ostream>
 #include "flare/base/profile.h"
@@ -111,4 +111,4 @@ private:
 
 } // namespace flare::rpc
 
-#endif  // BRPC_DESCRIBABLE_H
+#endif  // FLARE_RPC_DESCRIBABLE_H_

@@ -16,8 +16,8 @@
 // under the License.
 
 
-#ifndef BRPC_MEMCACHE_BINARY_HEADER_H
-#define BRPC_MEMCACHE_BINARY_HEADER_H
+#ifndef FLARE_RPC_MEMCACHE_BINARY_HEADER_H_
+#define FLARE_RPC_MEMCACHE_BINARY_HEADER_H_
 
 
 namespace flare::rpc {
@@ -159,4 +159,4 @@ struct MemcacheResponseHeader {
 } // namespace flare::rpc
 
 
-#endif  // BRPC_MEMCACHE_BINARY_HEADER_H
+#endif  // FLARE_RPC_MEMCACHE_BINARY_HEADER_H_

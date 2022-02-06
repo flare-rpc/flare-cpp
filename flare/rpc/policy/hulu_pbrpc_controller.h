@@ -16,8 +16,8 @@
 // under the License.
 
 
-#ifndef  BRPC_HULU_PBRPC_CONTROLLER_H
-#define  BRPC_HULU_PBRPC_CONTROLLER_H
+#ifndef  FLARE_RPC_HULU_PBRPC_CONTROLLER_H_
+#define  FLARE_RPC_HULU_PBRPC_CONTROLLER_H_
 
 #include <stdint.h>                             // int64_t
 #include <string>                               // std::string
@@ -89,4 +89,4 @@ private:
 }  // namespace policy
 } // namespace flare::rpc
 
-#endif  //BRPC_HULU_PBRPC_CONTROLLER_H
+#endif  // FLARE_RPC_HULU_PBRPC_CONTROLLER_H_

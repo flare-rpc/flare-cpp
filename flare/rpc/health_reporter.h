@@ -16,8 +16,8 @@
 // under the License.
 
 
-#ifndef BRPC_HEALTH_REPORTER_H
-#define BRPC_HEALTH_REPORTER_H
+#ifndef FLARE_RPC_HEALTH_REPORTER_H_
+#define FLARE_RPC_HEALTH_REPORTER_H_
 
 #include "flare/rpc/controller.h"
 
@@ -39,4 +39,4 @@ public:
 } // namespace flare::rpc
 
 
-#endif  // BRPC_HEALTH_REPORTER_H
+#endif  // FLARE_RPC_HEALTH_REPORTER_H_

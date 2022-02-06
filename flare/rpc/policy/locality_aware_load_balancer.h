@@ -16,8 +16,8 @@
 // under the License.
 
 
-#ifndef BRPC_POLICY_LOCALITY_AWARE_LOAD_BALANCER_H
-#define BRPC_POLICY_LOCALITY_AWARE_LOAD_BALANCER_H
+#ifndef FLARE_RPC_POLICY_LOCALITY_AWARE_LOAD_BALANCER_H_
+#define FLARE_RPC_POLICY_LOCALITY_AWARE_LOAD_BALANCER_H_
 
 #include <vector>                                      // std::vector
 #include <deque>                                       // std::deque
@@ -220,4 +220,4 @@ inline int64_t LocalityAwareLoadBalancer::Weight::MarkFailed(
 } // namespace flare::rpc
 
 
-#endif  // BRPC_POLICY_LOCALITY_AWARE_LOAD_BALANCER_H
+#endif  // FLARE_RPC_POLICY_LOCALITY_AWARE_LOAD_BALANCER_H_

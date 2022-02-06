@@ -25,7 +25,7 @@
 #include "flare/bthread/unstable.h"                   // bthread_flush
 #include "flare/variable/all.h"                          // flare::variable::Adder
 #include "flare/rpc/options.pb.h"               // ProtocolType
-#include "flare/rpc/reloadable_flags.h"         // BRPC_VALIDATE_GFLAG
+#include "flare/rpc/reloadable_flags.h"         // FLARE_RPC_VALIDATE_GFLAG
 #include "flare/rpc/protocol.h"                 // ListProtocols
 #include "flare/rpc/input_messenger.h"
 
@@ -50,7 +50,7 @@ static ProtocolType FindProtocolOfHandler(const InputMessageHandler& h);
 // with an EOF.
 DEFINE_bool(log_connection_close, false,
             "Print log when remote side closes the connection");
-BRPC_VALIDATE_GFLAG(log_connection_close, PassValidate);
+FLARE_RPC_VALIDATE_GFLAG(log_connection_close, PassValidate);
 
 DECLARE_bool(usercode_in_pthread);
 DECLARE_uint64(max_body_size);

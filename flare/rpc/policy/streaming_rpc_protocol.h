@@ -16,8 +16,8 @@
 // under the License.
 
 
-#ifndef  BRPC_STREAMING_RPC_PROTOCOL_H
-#define  BRPC_STREAMING_RPC_PROTOCOL_H
+#ifndef  FLARE_RPC_STREAMING_RPC_PROTOCOL_H_
+#define  FLARE_RPC_STREAMING_RPC_PROTOCOL_H_
 
 #include "flare/rpc/protocol.h"
 #include "flare/rpc/streaming_rpc_meta.pb.h"
@@ -47,4 +47,4 @@ int SendStreamData(Socket* sock, const flare::io::cord_buf* data,
 } // namespace flare::rpc
 
 
-#endif  //BRPC_STREAMING_RPC_PROTOCOL_H
+#endif  // FLARE_RPC_STREAMING_RPC_PROTOCOL_H_

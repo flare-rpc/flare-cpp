@@ -24,9 +24,9 @@
 /* Provide functions added in newer openssl but missing in older versions */
 
 #if defined(__cplusplus) || __STDC_VERSION__ >= 199901L/*C99*/
-#define BRPC_INLINE inline
+#define FLARE_RPC_INLINE inline
 #else
-#define BRPC_INLINE static
+#define FLARE_RPC_INLINE static
 #endif
 
 #if OPENSSL_VERSION_NUMBER < 0x10100000L
@@ -34,7 +34,7 @@
 #include <string.h>
 #include <openssl/engine.h>
 
-BRPC_INLINE void *OPENSSL_zalloc(size_t num) {
+FLARE_RPC_INLINE void *OPENSSL_zalloc(size_t num) {
     void *ret = OPENSSL_malloc(num);
 
     if (ret != NULL)
@@ -42,7 +42,7 @@ BRPC_INLINE void *OPENSSL_zalloc(size_t num) {
     return ret;
 }
 
-BRPC_INLINE int RSA_set0_key(RSA *r, BIGNUM *n, BIGNUM *e, BIGNUM *d) {
+FLARE_RPC_INLINE int RSA_set0_key(RSA *r, BIGNUM *n, BIGNUM *e, BIGNUM *d) {
     /* If the fields n and e in r are NULL, the corresponding input
      * parameters MUST be non-NULL for n and e.  d may be
      * left NULL (in case only the public key is used).
@@ -67,7 +67,7 @@ BRPC_INLINE int RSA_set0_key(RSA *r, BIGNUM *n, BIGNUM *e, BIGNUM *d) {
     return 1;
 }
 
-BRPC_INLINE int RSA_set0_factors(RSA *r, BIGNUM *p, BIGNUM *q) {
+FLARE_RPC_INLINE int RSA_set0_factors(RSA *r, BIGNUM *p, BIGNUM *q) {
     /* If the fields p and q in r are NULL, the corresponding input
      * parameters MUST be non-NULL.
      */
@@ -87,7 +87,7 @@ BRPC_INLINE int RSA_set0_factors(RSA *r, BIGNUM *p, BIGNUM *q) {
     return 1;
 }
 
-BRPC_INLINE int RSA_set0_crt_params(RSA *r, BIGNUM *dmp1, BIGNUM *dmq1, BIGNUM *iqmp) {
+FLARE_RPC_INLINE int RSA_set0_crt_params(RSA *r, BIGNUM *dmp1, BIGNUM *dmq1, BIGNUM *iqmp) {
     /* If the fields dmp1, dmq1 and iqmp in r are NULL, the corresponding input
      * parameters MUST be non-NULL.
      */
@@ -112,7 +112,7 @@ BRPC_INLINE int RSA_set0_crt_params(RSA *r, BIGNUM *dmp1, BIGNUM *dmq1, BIGNUM *
     return 1;
 }
 
-BRPC_INLINE void RSA_get0_key(const RSA *r, 
+FLARE_RPC_INLINE void RSA_get0_key(const RSA *r,
         const BIGNUM **n, const BIGNUM **e, const BIGNUM **d) {
     if (n != NULL)
         *n = r->n;
@@ -122,14 +122,14 @@ BRPC_INLINE void RSA_get0_key(const RSA *r,
         *d = r->d;
 }
 
-BRPC_INLINE void RSA_get0_factors(const RSA *r, const BIGNUM **p, const BIGNUM **q) {
+FLARE_RPC_INLINE void RSA_get0_factors(const RSA *r, const BIGNUM **p, const BIGNUM **q) {
     if (p != NULL)
         *p = r->p;
     if (q != NULL)
         *q = r->q;
 }
 
-BRPC_INLINE void RSA_get0_crt_params(const RSA *r,
+FLARE_RPC_INLINE void RSA_get0_crt_params(const RSA *r,
         const BIGNUM **dmp1, const BIGNUM **dmq1,
         const BIGNUM **iqmp) {
     if (dmp1 != NULL)
@@ -140,7 +140,7 @@ BRPC_INLINE void RSA_get0_crt_params(const RSA *r,
         *iqmp = r->iqmp;
 }
 
-BRPC_INLINE void DSA_get0_pqg(const DSA *d,
+FLARE_RPC_INLINE void DSA_get0_pqg(const DSA *d,
         const BIGNUM **p, const BIGNUM **q, const BIGNUM **g) {
     if (p != NULL)
         *p = d->p;
@@ -150,7 +150,7 @@ BRPC_INLINE void DSA_get0_pqg(const DSA *d,
         *g = d->g;
 }
 
-BRPC_INLINE int DSA_set0_pqg(DSA *d, BIGNUM *p, BIGNUM *q, BIGNUM *g) {
+FLARE_RPC_INLINE int DSA_set0_pqg(DSA *d, BIGNUM *p, BIGNUM *q, BIGNUM *g) {
     /* If the fields p, q and g in d are NULL, the corresponding input
      * parameters MUST be non-NULL.
      */
@@ -175,7 +175,7 @@ BRPC_INLINE int DSA_set0_pqg(DSA *d, BIGNUM *p, BIGNUM *q, BIGNUM *g) {
     return 1;
 }
 
-BRPC_INLINE void DSA_get0_key(const DSA *d,
+FLARE_RPC_INLINE void DSA_get0_key(const DSA *d,
         const BIGNUM **pub_key, const BIGNUM **priv_key) {
     if (pub_key != NULL)
         *pub_key = d->pub_key;
@@ -183,7 +183,7 @@ BRPC_INLINE void DSA_get0_key(const DSA *d,
         *priv_key = d->priv_key;
 }
 
-BRPC_INLINE int DSA_set0_key(DSA *d, BIGNUM *pub_key, BIGNUM *priv_key) {
+FLARE_RPC_INLINE int DSA_set0_key(DSA *d, BIGNUM *pub_key, BIGNUM *priv_key) {
     /* If the field pub_key in d is NULL, the corresponding input
      * parameters MUST be non-NULL.  The priv_key field may
      * be left NULL.
@@ -203,14 +203,14 @@ BRPC_INLINE int DSA_set0_key(DSA *d, BIGNUM *pub_key, BIGNUM *priv_key) {
     return 1;
 }
 
-BRPC_INLINE void DSA_SIG_get0(const DSA_SIG *sig, const BIGNUM **pr, const BIGNUM **ps) {
+FLARE_RPC_INLINE void DSA_SIG_get0(const DSA_SIG *sig, const BIGNUM **pr, const BIGNUM **ps) {
     if (pr != NULL)
         *pr = sig->r;
     if (ps != NULL)
         *ps = sig->s;
 }
 
-BRPC_INLINE int DSA_SIG_set0(DSA_SIG *sig, BIGNUM *r, BIGNUM *s) {
+FLARE_RPC_INLINE int DSA_SIG_set0(DSA_SIG *sig, BIGNUM *r, BIGNUM *s) {
     if (r == NULL || s == NULL)
         return 0;
     BN_clear_free(sig->r);
@@ -220,7 +220,7 @@ BRPC_INLINE int DSA_SIG_set0(DSA_SIG *sig, BIGNUM *r, BIGNUM *s) {
     return 1;
 }
 
-BRPC_INLINE void DH_get0_pqg(const DH *dh,
+FLARE_RPC_INLINE void DH_get0_pqg(const DH *dh,
         const BIGNUM **p, const BIGNUM **q, const BIGNUM **g) {
     if (p != NULL)
         *p = dh->p;
@@ -230,7 +230,7 @@ BRPC_INLINE void DH_get0_pqg(const DH *dh,
         *g = dh->g;
 }
 
-BRPC_INLINE int DH_set0_pqg(DH *dh, BIGNUM *p, BIGNUM *q, BIGNUM *g) {
+FLARE_RPC_INLINE int DH_set0_pqg(DH *dh, BIGNUM *p, BIGNUM *q, BIGNUM *g) {
     /* If the fields p and g in d are NULL, the corresponding input
      * parameters MUST be non-NULL.  q may remain NULL.
      */
@@ -258,14 +258,14 @@ BRPC_INLINE int DH_set0_pqg(DH *dh, BIGNUM *p, BIGNUM *q, BIGNUM *g) {
     return 1;
 }
 
-BRPC_INLINE void DH_get0_key(const DH *dh, const BIGNUM **pub_key, const BIGNUM **priv_key) {
+FLARE_RPC_INLINE void DH_get0_key(const DH *dh, const BIGNUM **pub_key, const BIGNUM **priv_key) {
     if (pub_key != NULL)
         *pub_key = dh->pub_key;
     if (priv_key != NULL)
         *priv_key = dh->priv_key;
 }
 
-BRPC_INLINE int DH_set0_key(DH *dh, BIGNUM *pub_key, BIGNUM *priv_key) {
+FLARE_RPC_INLINE int DH_set0_key(DH *dh, BIGNUM *pub_key, BIGNUM *priv_key) {
     /* If the field pub_key in dh is NULL, the corresponding input
      * parameters MUST be non-NULL.  The priv_key field may
      * be left NULL.
@@ -285,12 +285,12 @@ BRPC_INLINE int DH_set0_key(DH *dh, BIGNUM *pub_key, BIGNUM *priv_key) {
     return 1;
 }
 
-BRPC_INLINE int DH_set_length(DH *dh, long length) {
+FLARE_RPC_INLINE int DH_set_length(DH *dh, long length) {
     dh->length = length;
     return 1;
 }
 
-BRPC_INLINE int RSA_meth_set_priv_enc(RSA_METHOD *meth,
+FLARE_RPC_INLINE int RSA_meth_set_priv_enc(RSA_METHOD *meth,
         int (*priv_enc) (int flen, const unsigned char *from,
             unsigned char *to, RSA *rsa,
             int padding)) {
@@ -298,7 +298,7 @@ BRPC_INLINE int RSA_meth_set_priv_enc(RSA_METHOD *meth,
     return 1;
 }
 
-BRPC_INLINE int RSA_meth_set_priv_dec(RSA_METHOD *meth,
+FLARE_RPC_INLINE int RSA_meth_set_priv_dec(RSA_METHOD *meth,
         int (*priv_dec) (int flen, const unsigned char *from,
             unsigned char *to, RSA *rsa,
             int padding)) {
@@ -306,26 +306,26 @@ BRPC_INLINE int RSA_meth_set_priv_dec(RSA_METHOD *meth,
     return 1;
 }
 
-BRPC_INLINE int RSA_meth_set_finish(RSA_METHOD *meth, int (*finish) (RSA *rsa)) {
+FLARE_RPC_INLINE int RSA_meth_set_finish(RSA_METHOD *meth, int (*finish) (RSA *rsa)) {
     meth->finish = finish;
     return 1;
 }
 
-BRPC_INLINE void RSA_meth_free(RSA_METHOD *meth) {
+FLARE_RPC_INLINE void RSA_meth_free(RSA_METHOD *meth) {
     if (meth != NULL) {
         OPENSSL_free((char *)meth->name);
         OPENSSL_free(meth);
     }
 }
 
-BRPC_INLINE int RSA_bits(const RSA *r) {
+FLARE_RPC_INLINE int RSA_bits(const RSA *r) {
     return (BN_num_bits(r->n));
 }
 
 #endif /* OPENSSL_VERSION_NUMBER < 0x10100000L */
 
 #if OPENSSL_VERSION_NUMBER < 0x0090801fL
-BRPC_INLINE BIGNUM* get_rfc2409_prime_1024(BIGNUM* bn) {
+FLARE_RPC_INLINE BIGNUM* get_rfc2409_prime_1024(BIGNUM* bn) {
     static const unsigned char RFC2409_PRIME_1024[] = {
         0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xC9,0x0F,0xDA,0xA2,
         0x21,0x68,0xC2,0x34,0xC4,0xC6,0x62,0x8B,0x80,0xDC,0x1C,0xD1,
@@ -342,7 +342,7 @@ BRPC_INLINE BIGNUM* get_rfc2409_prime_1024(BIGNUM* bn) {
     return BN_bin2bn(RFC2409_PRIME_1024, sizeof(RFC2409_PRIME_1024), bn);
 }
 
-BRPC_INLINE BIGNUM* get_rfc3526_prime_2048(BIGNUM* bn) {
+FLARE_RPC_INLINE BIGNUM* get_rfc3526_prime_2048(BIGNUM* bn) {
     static const unsigned char RFC3526_PRIME_2048[] = {
         0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xC9,0x0F,0xDA,0xA2,
         0x21,0x68,0xC2,0x34,0xC4,0xC6,0x62,0x8B,0x80,0xDC,0x1C,0xD1,
@@ -370,7 +370,7 @@ BRPC_INLINE BIGNUM* get_rfc3526_prime_2048(BIGNUM* bn) {
     return BN_bin2bn(RFC3526_PRIME_2048, sizeof(RFC3526_PRIME_2048), bn);
 }
 
-BRPC_INLINE BIGNUM* get_rfc3526_prime_4096(BIGNUM* bn) {
+FLARE_RPC_INLINE BIGNUM* get_rfc3526_prime_4096(BIGNUM* bn) {
     static const unsigned char RFC3526_PRIME_4096[] = {
         0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xC9,0x0F,0xDA,0xA2,
         0x21,0x68,0xC2,0x34,0xC4,0xC6,0x62,0x8B,0x80,0xDC,0x1C,0xD1,
@@ -420,7 +420,7 @@ BRPC_INLINE BIGNUM* get_rfc3526_prime_4096(BIGNUM* bn) {
 }
 
 
-BRPC_INLINE BIGNUM* get_rfc3526_prime_8192(BIGNUM* bn) {
+FLARE_RPC_INLINE BIGNUM* get_rfc3526_prime_8192(BIGNUM* bn) {
     static const unsigned char RFC3526_PRIME_8192[] = {
         0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xC9,0x0F,0xDA,0xA2,
         0x21,0x68,0xC2,0x34,0xC4,0xC6,0x62,0x8B,0x80,0xDC,0x1C,0xD1,
@@ -512,7 +512,7 @@ BRPC_INLINE BIGNUM* get_rfc3526_prime_8192(BIGNUM* bn) {
     return BN_bin2bn(RFC3526_PRIME_8192, sizeof(RFC3526_PRIME_8192), bn);
 }
 
-BRPC_INLINE int EVP_PKEY_base_id(const EVP_PKEY *pkey) {
+FLARE_RPC_INLINE int EVP_PKEY_base_id(const EVP_PKEY *pkey) {
     return EVP_PKEY_type(pkey->type);
 }
 

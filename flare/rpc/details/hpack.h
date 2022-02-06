@@ -16,8 +16,8 @@
 // under the License.
 
 
-#ifndef  BRPC_HPACK_H
-#define  BRPC_HPACK_H
+#ifndef  FLARE_RPC_HPACK_H_
+#define  FLARE_RPC_HPACK_H_
 
 #include "flare/io/cord_buf.h"                             // flare::io::cord_buf
 #include <string_view>              // std::string_view
@@ -149,4 +149,4 @@ inline ssize_t HPacker::Decode(flare::io::cord_buf* source, Header* h) {
 } // namespace flare::rpc
 
 
-#endif  //BRPC_HPACK_H
+#endif  // FLARE_RPC_HPACK_H_

@@ -16,8 +16,8 @@
 // under the License.
 
 
-#ifndef BRPC_RELOADABLE_FLAGS_H
-#define BRPC_RELOADABLE_FLAGS_H
+#ifndef FLARE_RPC_RELOADABLE_FLAGS_H_
+#define FLARE_RPC_RELOADABLE_FLAGS_H_
 
 // To flare developers: This is a header included by user, don't depend
 // on internal structures, use opaque pointers instead.
@@ -29,12 +29,12 @@
 // You should call this macro within global scope. for example:
 //
 //   DEFINE_int32(foo, 0, "blah blah");
-//   BRPC_VALIDATE_GFLAG(foo, flare::rpc::PassValidate);
+//   FLARE_RPC_VALIDATE_GFLAG(foo, flare::rpc::PassValidate);
 //
 // This macro does not work for string-flags because they're thread-unsafe to
 // modify directly. To emphasize this, you have to write the validator by
 // yourself and use GFLAGS_NS::GetCommandLineOption() to acess the flag.
-#define BRPC_VALIDATE_GFLAG(flag, validate_fn)                     \
+#define FLARE_RPC_VALIDATE_GFLAG(flag, validate_fn)                     \
     const int register_FLAGS_ ## flag ## _dummy                         \
                  __attribute__((__unused__)) =                          \
         ::flare::rpc::RegisterFlagValidatorOrDie(                       \
@@ -43,29 +43,39 @@
 
 namespace flare::rpc {
 
-extern bool PassValidate(const char*, bool);
-extern bool PassValidate(const char*, int32_t);
-extern bool PassValidate(const char*, int64_t);
-extern bool PassValidate(const char*, uint64_t);
-extern bool PassValidate(const char*, double);
+    extern bool PassValidate(const char *, bool);
 
-extern bool PositiveInteger(const char*, int32_t);
-extern bool PositiveInteger(const char*, int64_t);
+    extern bool PassValidate(const char *, int32_t);
 
-extern bool NonNegativeInteger(const char*, int32_t);
-extern bool NonNegativeInteger(const char*, int64_t);
+    extern bool PassValidate(const char *, int64_t);
 
-extern bool RegisterFlagValidatorOrDie(const bool* flag,
-                                  bool (*validate_fn)(const char*, bool));
-extern bool RegisterFlagValidatorOrDie(const int32_t* flag,
-                                  bool (*validate_fn)(const char*, int32_t));
-extern bool RegisterFlagValidatorOrDie(const int64_t* flag,
-                                  bool (*validate_fn)(const char*, int64_t));
-extern bool RegisterFlagValidatorOrDie(const uint64_t* flag,
-                                  bool (*validate_fn)(const char*, uint64_t));
-extern bool RegisterFlagValidatorOrDie(const double* flag,
-                                  bool (*validate_fn)(const char*, double));
+    extern bool PassValidate(const char *, uint64_t);
+
+    extern bool PassValidate(const char *, double);
+
+    extern bool PositiveInteger(const char *, int32_t);
+
+    extern bool PositiveInteger(const char *, int64_t);
+
+    extern bool NonNegativeInteger(const char *, int32_t);
+
+    extern bool NonNegativeInteger(const char *, int64_t);
+
+    extern bool RegisterFlagValidatorOrDie(const bool *flag,
+                                           bool (*validate_fn)(const char *, bool));
+
+    extern bool RegisterFlagValidatorOrDie(const int32_t *flag,
+                                           bool (*validate_fn)(const char *, int32_t));
+
+    extern bool RegisterFlagValidatorOrDie(const int64_t *flag,
+                                           bool (*validate_fn)(const char *, int64_t));
+
+    extern bool RegisterFlagValidatorOrDie(const uint64_t *flag,
+                                           bool (*validate_fn)(const char *, uint64_t));
+
+    extern bool RegisterFlagValidatorOrDie(const double *flag,
+                                           bool (*validate_fn)(const char *, double));
 } // namespace flare::rpc
 
 
-#endif  // BRPC_RELOADABLE_FLAGS_H
+#endif  // FLARE_RPC_RELOADABLE_FLAGS_H_

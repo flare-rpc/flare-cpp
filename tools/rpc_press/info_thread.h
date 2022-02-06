@@ -15,8 +15,8 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef BRPC_RPC_REPLAY_INFO_THREAD_H
-#define BRPC_RPC_REPLAY_INFO_THREAD_H
+#ifndef FLARE_RPC_RPC_REPLAY_INFO_THREAD_H_
+#define FLARE_RPC_RPC_REPLAY_INFO_THREAD_H_
 
 #include <pthread.h>
 #include <flare/variable/all.h>
@@ -52,4 +52,4 @@ private:
 
 } // namespace flare::rpc
 
-#endif //BRPC_RPC_REPLAY_INFO_THREAD_H
+#endif // FLARE_RPC_RPC_REPLAY_INFO_THREAD_H_

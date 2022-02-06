@@ -17,8 +17,8 @@
 
 // Date: 2014/09/22 11:57:43
 
-#ifndef  BVAR_VARIABLE_H
-#define  BVAR_VARIABLE_H
+#ifndef  FLARE_VARIABLE_VARIABLE_H_
+#define  FLARE_VARIABLE_VARIABLE_H_
 
 #include <ostream>                     // std::ostream
 #include <string>                      // std::string
@@ -85,14 +85,14 @@ namespace flare::variable {
         bool test_only;
     };
 
-    // Base class of all bvar.
+    // Base class of all variable.
     //
     // About thread-safety:
-    //   bvar is thread-compatible:
+    //   variable is thread-compatible:
     //     Namely you can create/destroy/expose/hide or do whatever you want to
-    //     different bvar simultaneously in different threads.
-    //   bvar is NOT thread-safe:
-    //     You should not operate one bvar from different threads simultaneously.
+    //     different variable simultaneously in different threads.
+    //   variable is NOT thread-safe:
+    //     You should not operate one variable from different threads simultaneously.
     //     If you need to, protect the ops with locks. Similarly with ordinary
     //     variables, const methods are thread-safe, namely you can call
     //     describe()/get_description()/get_value() etc from diferent threads
@@ -215,7 +215,7 @@ namespace flare::variable {
     private:
         std::string _name;
 
-        // bvar uses TLS, thus copying/assignment need to copy TLS stuff as well,
+        // variable uses TLS, thus copying/assignment need to copy TLS stuff as well,
         // which is heavy. We disable copying/assignment now.
         FLARE_DISALLOW_COPY_AND_ASSIGN(Variable);
     };
@@ -243,4 +243,4 @@ namespace std {
 
 }  // namespace std
 
-#endif  // BVAR_VARIABLE_H
+#endif  // FLARE_VARIABLE_VARIABLE_H_

@@ -17,8 +17,8 @@
 
 // Date 2014/09/22 11:57:43
 
-#ifndef  BVAR_STATUS_H
-#define  BVAR_STATUS_H
+#ifndef  FLARE_VARIABLE_STATUS_H_
+#define  FLARE_VARIABLE_STATUS_H_
 
 #include <string>                       // std::string
 #include "flare/base/static_atomic.h"
@@ -252,4 +252,4 @@ namespace flare::variable {
 
 }  // namespace flare::variable
 
-#endif  //BVAR_STATUS_H
+#endif  // FLARE_VARIABLE_STATUS_H_

@@ -15,8 +15,8 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef BRPC_LOG_H
-#define BRPC_LOG_H
+#ifndef FLARE_RPC_LOG_H_
+#define FLARE_RPC_LOG_H_
 
 #include <inttypes.h>  // PRId64 PRIu64
 #include "flare/bthread/errno.h"
@@ -28,4 +28,4 @@
 #define RPC_VLOG_IF(cond)  VLOG_IF(RPC_VLOG_LEVEL, (cond))
 #define RPC_VPLOG_IF(cond) VPLOG_IF(RPC_VLOG_LEVEL, (cond))
 
-#endif  // BRPC_LOG_H
+#endif  // FLARE_RPC_LOG_H_
