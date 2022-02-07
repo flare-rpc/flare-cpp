@@ -24,8 +24,8 @@
 
 namespace flare::io {
 
-// Abstraction for reading data.
-// The simplest implementation is to embed a file descriptor and read from it.
+    // Abstraction for reading data.
+    // The simplest implementation is to embed a file descriptor and read from it.
     class base_reader {
     public:
         virtual ~base_reader() {}
@@ -35,8 +35,8 @@ namespace flare::io {
         virtual ssize_t readv(const iovec *iov, int iovcnt) = 0;
     };
 
-// Abstraction for writing data.
-// The simplest implementation is to embed a file descriptor and writev into it.
+    // Abstraction for writing data.
+    // The simplest implementation is to embed a file descriptor and writev into it.
     class base_writer {
     public:
         virtual ~base_writer() {}
