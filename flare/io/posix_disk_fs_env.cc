@@ -1,6 +1,9 @@
 //
 // Created by liyinbin on 2022/2/6.
 //
+#include "flare/base/profile.h"
+
+#if defined(FLARE_PLATFORM_POSIX)
 
 #include <fcntl.h>
 #include <fcntl.h>
@@ -252,6 +255,22 @@ namespace flare::io {
         CHECK(_fd == -1);
     }
 
+    flare_status posix_writeable_file::open() {
+        CHECK(_fd == -1) << "do not open file once more";
+        _fd = ::open(_file_name.c_str(), O_TRUNC | O_WRONLY | O_CREAT | kOpenBaseFlags, 0644);
+        if (FLARE_UNLIKELY(_fd < 0)) {
+            return posix_file_error(_file_name, errno);
+        }
+        return flare::base::flare_status();
+    }
+
+    void posix_writeable_file::close() {
+        if (_fd != -1) {
+            ::close(_fd);
+            _fd = -1;
+        }
+    }
+
     flare_status posix_writeable_file::pos_write(uint64_t offset, flare::io::cord_buf *content) {
         size_t size = content->size();
         flare::io::cord_buf piece_data(*content);
@@ -277,14 +296,14 @@ namespace flare::io {
     flare_status posix_writeable_file::pos_write(uint64_t offset, const std::string_view &content) {
         size_t left = content.size();
         off_t orig_offset = offset;
-        const char *ptr = reinterpret_cast<const char*>(content.data());
-        while(left > 0) {
+        const char *ptr = reinterpret_cast<const char *>(content.data());
+        while (left > 0) {
             ssize_t nw = ::pwrite(_fd, ptr, left, offset);
-            if(nw > 0) {
+            if (nw > 0) {
                 left -= nw;
                 offset += nw;
                 ptr += static_cast<ptrdiff_t>(nw);
-            } else if (errno == EINTR){
+            } else if (errno == EINTR) {
                 continue;
             } else {
                 LOG(WARNING) << "write falied, err: " << flare_error()
@@ -305,9 +324,13 @@ namespace flare::io {
 
     class posix_append_file : public append_file {
     public:
-        posix_append_file() = default;
+        posix_append_file(const std::string &fname);
 
-        ~posix_append_file() override = default;
+        ~posix_append_file() override;
+
+        flare_status open() override;
+
+        void close() override;
 
         flare_status append(flare::io::cord_buf *content) override;
 
@@ -318,8 +341,113 @@ namespace flare::io {
         flare_status sync() override;
 
     private:
-
+        int _fd;
+        std::string _file_name;
     };
 
+    posix_append_file::posix_append_file(const std::string &fname) : _fd(-1), _file_name(fname) {}
 
+
+    posix_append_file::~posix_append_file() {
+        CHECK(_fd == -1);
+    }
+
+    flare_status posix_append_file::open() {
+        CHECK(_fd == -1) << "do not open file once more";
+        _fd = ::open(_file_name.c_str(), O_TRUNC | O_WRONLY | O_CREAT | kOpenBaseFlags, 0644);
+        if (FLARE_UNLIKELY(_fd < 0)) {
+            return posix_file_error(_file_name, errno);
+        }
+        return flare::base::flare_status();
+    }
+
+    void posix_append_file::close() {
+        if (_fd != -1) {
+            ::close(_fd);
+            _fd = -1;
+        }
+    }
+
+    flare_status posix_append_file::append(flare::io::cord_buf *content) {
+        size_t size = content->size();
+        flare::io::cord_buf piece_data(*content);
+        ssize_t left = size;
+        while (left > 0) {
+            ssize_t written = piece_data.cut_into_file_descriptor(_fd, left);
+            if (written >= 0) {
+                left -= written;
+            } else if (errno == EINTR) {
+                continue;
+            } else {
+                LOG(WARNING) << "write falied, err: " << flare_error()
+                             << " fd: " << _fd << " size: " << size;
+                return posix_file_error(_file_name, errno);
+            }
+        }
+
+        return flare_status();
+    }
+
+    flare_status posix_append_file::append(const std::string_view &content) {
+        size_t left = content.size();
+        const char *ptr = reinterpret_cast<const char *>(content.data());
+        while (left > 0) {
+            ssize_t nw = ::write(_fd, ptr, left);
+            if (nw > 0) {
+                left -= nw;
+                ptr += static_cast<ptrdiff_t>(nw);
+            } else if (errno == EINTR) {
+                continue;
+            } else {
+                LOG(WARNING) << "write falied, err: " << flare_error()
+                             << " fd: " << _fd << " size: " << content.size();
+                return posix_file_error(_file_name, errno);
+            }
+        }
+        return flare_status();
+    }
+
+    flare_status posix_append_file::flush() {
+        return flare_status();
+    }
+
+    flare_status posix_append_file::sync() {
+        return flare_status();
+    }
+
+    class posix_fs_env {
+    public:
+        flare_status
+        get_random_access_file(const std::string &path, auto_close_ptr<random_access_file> &file) {
+            file.reset(new posix_random_access_file(path));
+            return flare_status();
+        }
+
+        flare_status
+        get_sequential_access_file(const std::string &path, auto_close_ptr<sequential_access_file> &file) {
+            file.reset(new posix_sequential_access_file(path));
+            return flare_status();
+        }
+
+        flare_status
+        get_writeable_file(const std::string &path, auto_close_ptr<writeable_file> &file) {
+            file.reset(new posix_writeable_file(path));
+            return flare_status();
+        }
+
+        flare_status
+        get_append_file(const std::string &path, auto_close_ptr<append_file> &file) {
+            file.reset(new posix_append_file(path));
+            return flare_status();
+        }
+    };
+
+    static posix_fs_env g_fs_env;
+    fs_env *fs_ptr = reinterpret_cast<fs_env *>(&g_fs_env);
+
+    fs_env *fs_env::default_disk_env() {
+        return fs_ptr;
+    }
 }  // namespace flare::io
+
+#endif  // defined(FLARE_PLATFORM_POSIX)
