@@ -8,7 +8,7 @@
 #include <string>
 
 #include "gtest/gtest.h"
-#include "flare/log/logging.h"
+#include "flare/base/logging.h"
 #include "flare/debugging/internal/stack_consumption.h"
 
 namespace flare::debugging {
@@ -94,7 +94,7 @@ static const char *DemangleIt(const char * const mangled) {
                                                         int *stack_consumed) {
               g_mangled = mangled;
               *stack_consumed = GetSignalHandlerStackConsumption(DemangleSignalHandler);
-              DLOG_INFO("Stack consumption of Demangle: {}", *stack_consumed);
+              LOG(INFO)<<"Stack consumption of Demangle: "<< *stack_consumed;
               return g_demangle_result;
             }
 

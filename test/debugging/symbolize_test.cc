@@ -298,8 +298,8 @@ static int FilterElfHeader(struct dl_phdr_info *info, size_t size, void *data) {
 TEST(symbolize, SymbolizeWithMultipleMaps) {
   // Force kPadding0 and kPadding1 to be linked in.
   if (volatile_bool) {
-    DLOG_INFO("{}", kPadding0);
-    DLOG_INFO("{}", kPadding1);
+    LOG(INFO)<<kPadding0;
+    LOG(INFO)<< kPadding1;
   }
 
   // Verify we can symbolize everything.
@@ -528,7 +528,7 @@ int main(int argc, char **argv) {
 #if !defined(__EMSCRIPTEN__)
     // Make sure kHpageTextPadding is linked into the binary.
     if (volatile_bool) {
-        DLOG_INFO("{}", kHpageTextPadding);
+        LOG(INFO) << kHpageTextPadding;
     }
 #endif  // !defined(__EMSCRIPTEN__)
 

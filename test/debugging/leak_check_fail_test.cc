@@ -15,7 +15,7 @@ namespace {
         // failed exit code.
 
         char *foo = strdup("lsan should complain about this leaked string");
-        DLOG_INFO("Should detect leaked std::string {}", foo);
+        LOG(INFO) << "Should detect leaked std::string " << foo;
     }
 
     TEST(LeakCheckTest, LeakMemoryAfterDisablerScope) {
@@ -24,8 +24,7 @@ namespace {
         // failed exit code.
         { flare::debugging::leak_check_disabler disabler; }
         char *foo = strdup("lsan should also complain about this leaked string");
-        DLOG_INFO("Re-enabled leak detection.Should detect leaked std::string {}",
-                     foo);
+        LOG(INFO) << "Re-enabled leak detection.Should detect leaked std::string " << foo;
     }
 
 }  // namespace
