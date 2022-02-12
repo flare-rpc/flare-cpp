@@ -32,7 +32,6 @@ namespace flare::debugging {
 
 namespace debugging_internal {
 
-FLARE_CONST_INIT
 std::atomic<const void *> VDSOSupport::vdso_base_(
     debugging_internal::ElfMemImage::kInvalidBase);
 
