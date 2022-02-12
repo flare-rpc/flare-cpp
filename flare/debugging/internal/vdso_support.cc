@@ -20,7 +20,7 @@
 #include <sys/auxv.h>
 #endif
 
-#include "flare/thread/dynamic_annotations.h"
+#include "flare/base/dynamic_annotations/dynamic_annotations.h"
 #include "flare/base/logging.h"
 #include "flare/base/profile.h"
 
