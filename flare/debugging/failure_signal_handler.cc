@@ -210,7 +210,7 @@ namespace flare::debugging {
     static void InstallOneFailureHandler(FailureSignalData* data,
                                          void (*handler)(int)) {
       data->previous_handler = signal(data->signo, handler);
-      DCHECK_MSG(data->previous_handler != SIG_ERR, "signal() failed");
+      CHECK(data->previous_handler != SIG_ERR)<< "signal() failed";
     }
 
 #endif

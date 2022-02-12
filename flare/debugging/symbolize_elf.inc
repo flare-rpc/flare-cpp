@@ -286,7 +286,7 @@ class Symbolizer {
         int len = strlen(s);
         char *dst = static_cast<char *>(
                 memory_internal::low_level_alloc::alloc_with_arena(len + 1, SigSafeArena()));
-        DCHECK_MSG(dst != nullptr, "out of memory");
+        CHECK(dst != nullptr)<< "out of memory";
         memcpy(dst, s, len + 1);
         return dst;
     }
@@ -413,7 +413,7 @@ static ssize_t ReadPersistent(int fd, void *buf, size_t count) {
         ssize_t len;
         NO_INTR(len = read(fd, buf0 + num_bytes, count - num_bytes));
         if (len < 0) {  // There was an error other than EINTR.
-            DLOG_WARN("read failed: errno={}", errno);
+            LOG(WARNING)<<"read failed: errno="<< errno;
             return -1;
         }
         if (len == 0) {  // Reached EOF.
@@ -432,8 +432,7 @@ static ssize_t ReadFromOffset(const int fd, void *buf, const size_t count,
                               const off_t offset) {
     off_t off = lseek(fd, offset, SEEK_SET);
     if (off == (off_t) -1) {
-        DLOG_WARN("lseek({}, {}, SEEK_SET) failed: errno={}", fd,
-                  static_cast<uintmax_t>(offset), errno);
+        LOG(WARNING)<<"lseek("<<fd<<"), "<<static_cast<uintmax_t>(offset)<<", SEEK_SET) failed: errno="<<errno;
         return -1;
     }
     return ReadPersistent(fd, buf, count);
@@ -491,8 +490,8 @@ const ssize_t num_bytes_to_read =
 const off_t offset = sh_offset + i * sizeof(buf[0]);
 const ssize_t len = ReadFromOffset(fd, buf, num_bytes_to_read, offset);
 if (len % sizeof(buf[0]) != 0) {
-DLOG_WARN("Reading {} bytes from offset {} returned %zd which is not a "
-          "multiple of {}.", num_bytes_to_read, static_cast<uintmax_t>(offset), len, sizeof(buf[0]));
+LOG(WARNING)<<"Reading "<<num_bytes_to_read<<" bytes from offset "<<static_cast<uintmax_t>(offset)<<" returned "<<len<<" which is not a "
+          "multiple of "<<sizeof(buf[0])<<".";
 return false;
 }
 const ssize_t num_headers_in_buf = len / sizeof(buf[0]);
@@ -581,10 +580,9 @@ bool GetSectionHeaderByName(int fd, const char *name, size_t name_len,
 * out) {
 char header_name[kMaxSectionNameLen];
 if (sizeof(header_name) < name_len) {
-DLOG_WARN(
-        "Section name '{}' is too long ({}); "
-        "section will not be found (even if present).",
-        name, name_len);
+    LOG(WARNING)<<
+        "Section name "<<name<<" is too long ("<<name_len<<"); "
+        "section will not be found (even if present).";
 // No point in even trying.
 return false;
 }
@@ -818,13 +816,12 @@ const size_t off = strtab->sh_offset + best_match.st_name;
 const ssize_t n_read = ReadFromOffset(fd, out, out_size, off);
 if (n_read <= 0) {
 // This should never happen.
-DLOG_WARN(
-        "Unable to read from fd %d at offset {}: n_read = {}", fd,
-        off, n_read);
+LOG(WARNING)<<
+        "Unable to read from fd %d at offset "<<off<<": n_read = "<< n_read;
 return
 SYMBOL_NOT_FOUND;
 }
-DCHECK_MSG(n_read <= out_size, "ReadFromOffset read too much data.");
+CHECK(n_read <= out_size)<< "ReadFromOffset read too much data.";
 
 // strtab->sh_offset points into .strtab-like section that contains
 // NUL-terminated strings: '\0foo\0barbaz\0...".
@@ -1059,7 +1056,7 @@ static FLARE_NO_INLINE bool ReadAddrMap(
     NO_INTR(maps_fd = open(maps_path, O_RDONLY));
     FileDescriptor wrapped_maps_fd(maps_fd);
     if (wrapped_maps_fd.get() < 0) {
-        DLOG_WARN("{}: errno={}", maps_path, errno);
+        LOG(WARNING)<< maps_path<<"error: "<<errno;
         return false;
     }
 
@@ -1086,7 +1083,7 @@ static FLARE_NO_INLINE bool ReadAddrMap(
         // Read start address.
         cursor = GetHex(cursor, eol, &start_address);
         if (cursor == eol || *cursor != '-') {
-            DLOG_WARN("Corrupt /proc/self/maps line: {}", line);
+            LOG(WARNING)<<"Corrupt /proc/self/maps line: "<< line;
             return false;
         }
         ++cursor;  // Skip '-'.
@@ -1095,7 +1092,7 @@ static FLARE_NO_INLINE bool ReadAddrMap(
         const void *end_address;
         cursor = GetHex(cursor, eol, &end_address);
         if (cursor == eol || *cursor != ' ') {
-            DLOG_WARN("Corrupt /proc/self/maps line: {}", line);
+            LOG(WARNING)<<"Corrupt /proc/self/maps line: "<< line;
             return false;
         }
         ++cursor;  // Skip ' '.
@@ -1107,7 +1104,7 @@ static FLARE_NO_INLINE bool ReadAddrMap(
         }
         // We expect at least four letters for flags (ex. "r-xp").
         if (cursor == eol || cursor < flags_start + 4) {
-            DLOG_WARN("Corrupt /proc/self/maps: {}", line);
+            LOG(WARNING)<<"Corrupt /proc/self/maps: "<< line;
             return false;
         }
 
@@ -1310,7 +1307,7 @@ const char *Symbolizer::InsertSymbolInCache(const void *const pc,
     }
 
     AgeSymbols(line);
-    DCHECK_MSG(oldest_index >= 0, "Corrupt cache");
+    CHECK(oldest_index >= 0)<< "Corrupt cache";
     memory_internal::low_level_alloc::free(line->name[oldest_index]);
     line->pc[oldest_index] = pc;
     line->name[oldest_index] = CopyString(name);
@@ -1362,19 +1359,18 @@ static bool MaybeInitializeObjFile(ObjFile *obj) {
         }
 
         if (obj->fd < 0) {
-            DLOG_WARN("{}: open failed: errno={}", obj->filename, errno);
+            LOG(WARNING)<<obj->filename<<"open failed: errno="<<errno;
             return false;
         }
         obj->elf_type = FileGetElfType(obj->fd);
         if (obj->elf_type < 0) {
-            DLOG_WARN("{}: wrong elf type: {}", obj->filename,
-                      obj->elf_type);
+            LOG(WARNING)<<obj->filename<<": wrong elf type: "<<obj->elf_type;
             return false;
         }
 
         if (!ReadFromOffsetExact(obj->fd, &obj->elf_header, sizeof(obj->elf_header),
                                  0)) {
-            DLOG_WARN("{}: failed to read elf header", obj->filename);
+            LOG(WARNING)<<obj->filename<<": failed to read elf header";
             return false;
         }
     }
@@ -1426,8 +1422,8 @@ const char *Symbolizer::GetSymbol(const void *const pc) {
           if (vdso.LookupSymbolByAddress(pc, &symbol_info)) {
             // All VDSO symbols are known to be short.
             size_t len = strlen(symbol_info.name);
-            DCHECK_MSG(len + 1 < sizeof(symbol_buf_),
-                           "VDSO symbol unexpectedly long");
+            CHECK(len + 1 < sizeof(symbol_buf_))<<
+                           "VDSO symbol unexpectedly long";
             memcpy(symbol_buf_, symbol_info.name, len + 1);
           }
         }
@@ -1519,7 +1515,7 @@ bool RegisterFileMappingHint(const void *start, const void *end, uint64_t offset
         int len = strlen(filename);
         char *dst = static_cast<char *>(
                 memory_internal::low_level_alloc::alloc_with_arena(len + 1, SigSafeArena()));
-        DCHECK_MSG(dst != nullptr, "out of memory");
+        CHECK(dst != nullptr)<< "out of memory";
         memcpy(dst, filename, len + 1);
 
         auto &hint = g_file_mapping_hints[g_num_file_mapping_hints++];

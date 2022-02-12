@@ -112,8 +112,7 @@ const void *VDSOSupport::Init() {
 }
 
 const void *VDSOSupport::SetBase(const void *base) {
-  DCHECK_MSG(base != debugging_internal::ElfMemImage::kInvalidBase,
-                 "internal error");
+  CHECK(base != debugging_internal::ElfMemImage::kInvalidBase)<<"internal error";
   const void *old_base = vdso_base_.load(std::memory_order_relaxed);
   vdso_base_.store(base, std::memory_order_relaxed);
   image_.Init(base);
@@ -152,7 +151,7 @@ long VDSOSupport::InitAndGetCPU(unsigned *cpu,  // NOLINT(runtime/int)
                                 void *x, void *y) {
   Init();
   GetCpuFn fn = getcpu_fn_.load(std::memory_order_relaxed);
-  DCHECK_MSG(fn != &InitAndGetCPU, "Init() did not set getcpu_fn_");
+  CHECK(fn != &InitAndGetCPU)<< "Init() did not set getcpu_fn_";
   return (*fn)(cpu, x, y);
 }
 
