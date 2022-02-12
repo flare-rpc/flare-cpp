@@ -12,7 +12,7 @@ foreach(BASE_UT ${BASE_UNITTESTS})
 endforeach()
 
 add_executable(symbolize_test symbolize_test.cc)
-target_link_libraries(${BASE_UT_WE} flare-shared-debug
+target_link_libraries(symbolize_test flare-shared-debug
         gtest
         gmock
         ${GPERFTOOLS_LIBRARIES})

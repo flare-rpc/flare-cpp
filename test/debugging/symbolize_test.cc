@@ -5,10 +5,8 @@
 #include "flare/debugging/symbolize.h"
 
 #ifndef _WIN32
-
 #include <fcntl.h>
 #include <sys/mman.h>
-
 #endif
 
 #include <cstring>
