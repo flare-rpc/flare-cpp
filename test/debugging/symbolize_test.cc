@@ -14,8 +14,6 @@
 #include <cstring>
 #include <iostream>
 #include <memory>
-
-#include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "flare/base/profile.h"
 #include "flare/base/math/bit_cast.h"
@@ -78,16 +76,13 @@ hot_func() {
     return 0;
 }
 
-int FLARE_ATTRIBUTE_SECTION_VARIABLE(
-.text.startup)
+int FLARE_ATTRIBUTE_SECTION_VARIABLE(.text.startup)
 
 startup_func() {
     return 0;
 }
 
-int FLARE_ATTRIBUTE_SECTION_VARIABLE(
-.text.exit)
-
+int FLARE_ATTRIBUTE_SECTION_VARIABLE(.text.exit)
 exit_func() {
     return 0;
 }
