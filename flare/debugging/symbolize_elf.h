@@ -1523,7 +1523,7 @@ bool symbolize(const void *pc, char *out, int out_size) {
             // trailing ellipsis.
             static constexpr char kEllipsis[] = "...";
             int ellipsis_size =
-                    std::min(implicit_cast<int>(strlen(kEllipsis)), out_size - 1);
+                    std::min(strlen(kEllipsis), static_cast<size_t>(out_size - 1));
             memcpy(out + out_size - ellipsis_size - 1, kEllipsis, ellipsis_size);
             out[out_size - 1] = '\0';
         }
