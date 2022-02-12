@@ -5,6 +5,7 @@
 
 #include <new>                      // std::nothrow
 #include <cstddef>                  // NULL
+#include <cstdint>
 #include "flare/base/profile.h"
 
 #ifdef _MSC_VER
