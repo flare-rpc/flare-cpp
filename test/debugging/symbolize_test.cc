@@ -19,6 +19,16 @@
 #include "flare/base/logging.h"
 #include "flare/debugging/internal/stack_consumption.h"
 
+
+// FLARE_ATTRIBUTE_SECTION_VARIABLE
+//
+// Tells the compiler/linker to put a given variable into a section and define
+// `__start_ ## name` and `__stop_ ## name` symbols to bracket the section.
+// This functionality is supported by GNU linker.
+#ifndef FLARE_ATTRIBUTE_SECTION_VARIABLE
+#define FLARE_ATTRIBUTE_SECTION_VARIABLE(name) __attribute__((section(#name)))
+#endif
+
 using testing::Contains;
 
 #ifdef _WIN32
