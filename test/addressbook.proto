@@ -36,7 +36,7 @@ message Person {
 
     repeated PhoneNumber phone = 4;
 
-    optional int64_t data = 5;
+    optional int64 data = 5;
   
     optional sint32 data32 = 6;
   
