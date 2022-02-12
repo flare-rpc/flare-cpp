@@ -61,15 +61,12 @@ FLARE_NO_INLINE void Foo::func(int) {
 
 // Create functions that will remain in different text sections in the
 // final binary when linker option "-z,keep-text-section-prefix" is used.
-int FLARE_ATTRIBUTE_SECTION_VARIABLE(
-.text.unlikely)
-
+int FLARE_ATTRIBUTE_SECTION_VARIABLE(.text.unlikely)
 unlikely_func() {
     return 0;
 }
 
-int FLARE_ATTRIBUTE_SECTION_VARIABLE(
-.text.hot)
+int FLARE_ATTRIBUTE_SECTION_VARIABLE(.text.hot)
 
 hot_func() {
     return 0;
@@ -107,8 +104,7 @@ static volatile bool volatile_bool = false;
 // Force the binary to be large enough that a THP .text remap will succeed.
 static constexpr size_t kHpageSize = 1 << 21;
 const char kHpageTextPadding[kHpageSize * 4]
-FLARE_ATTRIBUTE_SECTION_VARIABLE(
-.text) = "";
+FLARE_ATTRIBUTE_SECTION_VARIABLE(.text) = "";
 #endif  // !defined(__EMSCRIPTEN__)
 
 static char try_symbolize_buffer[4096];
@@ -119,15 +115,15 @@ static char try_symbolize_buffer[4096];
 // the result of flare::debugging::symbolize().
 
 static const char *TrySymbolizeWithLimit(void *pc, int limit) {
-    DCHECK_MSG(static_cast<size_t>(limit) <= sizeof(try_symbolize_buffer),
-               "try_symbolize_buffer is too small");
+    CHECK(static_cast<size_t>(limit) <= sizeof(try_symbolize_buffer))<<
+               "try_symbolize_buffer is too small";
 
     // Use the heap to facilitate heap and buffer sanitizer tools.
     auto heap_buffer = std::make_unique<char[]>(sizeof(try_symbolize_buffer));
     bool found = flare::debugging::symbolize(pc, heap_buffer.get(), limit);
     if (found) {
-        DCHECK_MSG(strnlen(heap_buffer.get(), static_cast<size_t>(limit)) < static_cast<size_t>(limit),
-                   "flare::debugging::symbolize() did not properly terminate the string");
+        CHECK(strnlen(heap_buffer.get(), static_cast<size_t>(limit)) < static_cast<size_t>(limit))<<
+                   "flare::debugging::symbolize() did not properly terminate the string";
         strncpy(try_symbolize_buffer, heap_buffer.get(),
                 sizeof(try_symbolize_buffer) - 1);
         try_symbolize_buffer[sizeof(try_symbolize_buffer) - 1] = '\0';
@@ -437,9 +433,9 @@ void FLARE_NO_INLINE TestWithPCInsideNonInlineFunction() {
     (defined(__i386__) || defined(__x86_64__))
   void *pc = non_inline_func();
   const char *symbol = TrySymbolize(pc);
-  DCHECK_MSG(symbol != nullptr, "TestWithPCInsideNonInlineFunction failed");
-  DCHECK_MSG(strcmp(symbol, "non_inline_func") == 0,
-                 "TestWithPCInsideNonInlineFunction failed");
+  CHECK(symbol != nullptr)"TestWithPCInsideNonInlineFunction failed";
+  CHECK(strcmp(symbol, "non_inline_func") == 0)<<
+                 "TestWithPCInsideNonInlineFunction failed";
   std::cout << "TestWithPCInsideNonInlineFunction passed" << std::endl;
 #endif
 }
@@ -449,9 +445,9 @@ void FLARE_NO_INLINE TestWithPCInsideInlineFunction() {
     (defined(__i386__) || defined(__x86_64__))
   void *pc = inline_func();  // Must be inlined.
   const char *symbol = TrySymbolize(pc);
-  DCHECK_MSG(symbol != nullptr, "TestWithPCInsideInlineFunction failed");
-  DCHECK_MSG(strcmp(symbol, __FUNCTION__) == 0,
-                 "TestWithPCInsideInlineFunction failed");
+  CHECK(symbol != nullptr)<<"TestWithPCInsideInlineFunction failed";
+  CHECK(strcmp(symbol, __FUNCTION__) == 0)<<
+                 "TestWithPCInsideInlineFunction failed";
   std::cout << "TestWithPCInsideInlineFunction passed" << std::endl;
 #endif
 }
@@ -462,8 +458,8 @@ void FLARE_NO_INLINE TestWithReturnAddress() {
 #if defined(FLARE_COMPILER_CLANG) || defined(FLARE_COMPILER_GNUC)
   void *return_address = __builtin_return_address(0);
   const char *symbol = TrySymbolize(return_address);
-  DCHECK_MSG(symbol != nullptr, "TestWithReturnAddress failed");
-  DCHECK_MSG(strcmp(symbol, "main") == 0, "TestWithReturnAddress failed");
+  CHECK(symbol != nullptr)"TestWithReturnAddress failed";
+  CHECK(strcmp(symbol, "main") == 0)<<"TestWithReturnAddress failed";
   std::cout << "TestWithReturnAddress passed" << std::endl;
 #endif
 }
