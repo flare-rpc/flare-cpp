@@ -258,7 +258,7 @@ namespace flare::debugging {
             private:
                 char *CopyString(const char *s) {
                     int len = strlen(s);
-                    char *dst = static_cast<char *>( new char[len+1];
+                    char *dst = static_cast<char *>( new char[len+1]);
                     CHECK(dst != nullptr) << "out of memory";
                     memcpy(dst, s, len + 1);
                     return dst;
@@ -1167,19 +1167,15 @@ bool Symbolizer::RegisterObjFile(const char *filename,
     if (addr_map_size != 0) {
         ObjFile *old = impl->addr_map_.At(addr_map_size - 1);
         if (old->end_addr > end_addr) {
-            DLOG_ERROR(
-                    "Unsorted addr map entry: 0x{:p}: {} <-> 0x{:p}: {}",
-                    reinterpret_cast<uintptr_t>(end_addr), filename,
-                    reinterpret_cast<uintptr_t>(old->end_addr), old->filename);
+            LOG(ERROR)<<"Unsorted addr map entry: 0x"<<reinterpret_cast<uintptr_t>(end_addr)<<": "<<filename
+                    <<" <-> 0x"<< reinterpret_cast<uintptr_t>(old->end_addr)<<": "<<old->filename;
             return true;
         } else if (old->end_addr == end_addr) {
             // The same entry appears twice. This sometimes happens for [vdso].
             if (old->start_addr != start_addr ||
                 strcmp(old->filename, filename) != 0) {
-                DLOG_ERROR(
-                        "Duplicate addr 0x{:p} : {} <-> 0x{:p}: {}",
-                        reinterpret_cast<uintptr_t>(end_addr), filename,
-                        reinterpret_cast<uintptr_t>(old->end_addr), old->filename);
+                LOG(ERROR)<<"Duplicate addr 0x"<<reinterpret_cast<uintptr_t>(end_addr)<<": "<<filename
+                          <<" <-> 0x"<< reinterpret_cast<uintptr_t>(old->end_addr)<<": "<<old->filename;
             }
             return true;
         }
