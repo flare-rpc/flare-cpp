@@ -273,15 +273,15 @@ bool JsonValueToProtoMessage(const RAPIDJSON_NAMESPACE::Value& json_value,
 
 //Json value to protobuf convert rules for type:
 //Json value type                 Protobuf type                convert rules
-//int                             int uint int64 uint64        valid convert is available
-//uint                            int uint int64 uint64        valid convert is available
-//int64                           int uint int64 uint64        valid convert is available
-//uint64                          int uint int64 uint64        valid convert is available
-//int uint int64 uint64           float double                 available
+//int                             int uint int64_t uint64        valid convert is available
+//uint                            int uint int64_t uint64        valid convert is available
+//int64_t                           int uint int64_t uint64        valid convert is available
+//uint64                          int uint int64_t uint64        valid convert is available
+//int uint int64_t uint64           float double                 available
 //"NaN" "Infinity" "-Infinity"    float double                 only "NaN" "Infinity" "-Infinity" is available
 //int                             enum                         valid enum number value is available
 //string                          enum                         valid enum name value is available
-//string                          int64 uint64                 valid convert is available
+//string                          int64_t uint64                 valid convert is available
 //other mismatch type convertion will be regarded as error.
 #define J2PCHECKTYPE(value, cpptype, jsontype) ({                   \
             MatchType match_type = TYPE_MATCH;                      \

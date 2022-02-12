@@ -355,7 +355,7 @@ uint64_t UnparsedValue::as_uint64(const char* var) {
         if (value >= 0) {
             return (uint64_t)value;
         }
-        CHECK(false) << "Can't set int64=" << value << " to " << var;
+        CHECK(false) << "Can't set int64_t=" << value << " to " << var;
         _stream->set_bad();
         return 0;
     }
@@ -396,11 +396,11 @@ int32_t UnparsedValue::as_int32(const char* var) {
     case PRIMITIVE_FIELD_INT64: {
         const int64_t value = _stream->cut_packed_pod<int64_t>();
         if (value > std::numeric_limits<int32_t>::max()) {
-            CHECK(false) << "int64=" << value << " to " << var << " overflows";
+            CHECK(false) << "int64_t=" << value << " to " << var << " overflows";
             _stream->set_bad();
             return std::numeric_limits<int32_t>::max();
         } else if (value < std::numeric_limits<int32_t>::min()) {
-            CHECK(false) << "int64=" << value << " to " << var << " underflows";
+            CHECK(false) << "int64_t=" << value << " to " << var << " underflows";
             _stream->set_bad();
             return std::numeric_limits<int32_t>::min();
         }
@@ -481,7 +481,7 @@ uint32_t UnparsedValue::as_uint32(const char* var) {
             value <= (int64_t)std::numeric_limits<uint32_t>::max()) {
             return (uint32_t)value;
         }
-        CHECK(false) << "Can't set int64=" << value << " to " << var;
+        CHECK(false) << "Can't set int64_t=" << value << " to " << var;
         _stream->set_bad();
         return 0;
     }

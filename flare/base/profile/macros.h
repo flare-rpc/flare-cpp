@@ -28,12 +28,16 @@
 #if defined(__cplusplus)
 namespace flare::base {
     namespace internal {
-        template <typename T> struct ArrayDeleter {
+        template<typename T>
+        struct ArrayDeleter {
             ArrayDeleter() : arr(0) {}
+
             ~ArrayDeleter() { delete[] arr; }
-            T* arr;
+
+            T *arr;
         };
-    }}
+    }
+}
 
 // Many versions of clang does not support variable-length array with non-pod
 // types, have to implement the macro differently.
@@ -55,18 +59,22 @@ namespace flare::base {
 // for ArrayCtorDtor.
 namespace flare::base {
     namespace internal {
-        template <typename T> struct ArrayCtorDtor {
-            ArrayCtorDtor(void* arr, unsigned size) : _arr((T*)arr), _size(size) {
-                for (unsigned i = 0; i < size; ++i) { new (_arr + i) T; }
+        template<typename T>
+        struct ArrayCtorDtor {
+            ArrayCtorDtor(void *arr, unsigned size) : _arr((T *) arr), _size(size) {
+                for (unsigned i = 0; i < size; ++i) { new(_arr + i) T; }
             }
+
             ~ArrayCtorDtor() {
                 for (unsigned i = 0; i < _size; ++i) { _arr[i].~T(); }
             }
+
         private:
-            T* _arr;
+            T *_arr;
             unsigned _size;
         };
-    }}
+    }
+}
 # define DEFINE_SMALL_ARRAY(Tp, name, size, maxsize)                    \
     Tp* name = 0;                                                       \
     const unsigned name##_size = (size);                                \
@@ -101,7 +109,7 @@ namespace flare::base {
 
 namespace flare::base {
     template<typename T>
-    inline void ignore_result(const T&) {
+    inline void ignore_result(const T &) {
     }
 } // namespace flare::base
 
@@ -191,6 +199,36 @@ namespace flare::base {
   } while (0)
 #endif
 
+
+
+// FLARE_BLOCK_TAIL_CALL_OPTIMIZATION
+//
+// Instructs the compiler to avoid optimizing tail-call recursion. Use of this
+// macro is useful when you wish to preserve the existing function order within
+// a stack trace for logging, debugging, or profiling purposes.
+//
+// Example:
+//
+//   int f() {
+//     int result = g();
+//     FLARE_BLOCK_TAIL_CALL_OPTIMIZATION();
+//     return result;
+//   }
+#if defined(__pnacl__)
+#define FLARE_BLOCK_TAIL_CALL_OPTIMIZATION() if (volatile int x = 0) { (void)x; }
+#elif defined(__clang__)
+// Clang will not tail call given inline volatile assembly.
+#define FLARE_BLOCK_TAIL_CALL_OPTIMIZATION() __asm__ __volatile__("")
+#elif defined(__GNUC__)
+// GCC will not tail call given inline volatile assembly.
+#define FLARE_BLOCK_TAIL_CALL_OPTIMIZATION() __asm__ __volatile__("")
+#elif defined(_MSC_VER)
+#include <intrin.h>
+// The __nop() intrinsic blocks the optimisation.
+#define FLARE_BLOCK_TAIL_CALL_OPTIMIZATION() __nop()
+#else
+#define FLARE_BLOCK_TAIL_CALL_OPTIMIZATION() if (volatile int x = 0) { (void)x; }
+#endif
 
 
 #endif  // FLARE_BASE_PROFILE_MACROS_H_

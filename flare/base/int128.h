@@ -51,7 +51,7 @@ namespace flare::base {
 //   * Explicit conversion to integral types
 //
 // Additionally, if your compiler supports `__int128`, `uint128` is
-// interoperable with that type. (abel checks for this compatibility through
+// interoperable with that type. (flare checks for this compatibility through
 // the `FLARE_HAVE_INTRINSIC_INT128` macro.)
 //
 // However, a `uint128` differs from intrinsic integral types in the following
@@ -254,7 +254,7 @@ namespace flare::base {
 
 // Prefer to use the constexpr `Uint128Max()`.
 //
-// TODO(abel-team) deprecate kuint128max once migration tool is released.
+// TODO(flare-team) deprecate kuint128max once migration tool is released.
     extern const uint128 kuint128max;
 
 // allow uint128 to be logged
@@ -267,7 +267,7 @@ namespace flare::base {
                        (std::numeric_limits<uint64_t>::max)());
     }
 
-}  // namespace abel
+}  // namespace flare::debugging
 
 // Specialized numeric_limits for uint128.
 namespace std {
@@ -344,7 +344,7 @@ namespace flare::base {
 //     types.
 
 // Additionally, if your compiler supports `__int128`, `int128` is
-// interoperable with that type. (abel checks for this compatibility through
+// interoperable with that type. (flare checks for this compatibility through
 // the `FLARE_HAVE_INTRINSIC_INT128` macro.)
 //
 // The design goal for `int128` is that it will be compatible with a future
@@ -536,7 +536,7 @@ namespace flare::base {
 
     std::ostream &operator<<(std::ostream &os, int128 v);
 
-// TODO(abel-team) add operator>>(std::istream&, int128)
+// TODO(flare-team) add operator>>(std::istream&, int128)
 
     constexpr int128 int128_max() {
         return int128((std::numeric_limits<int64_t>::max)(),

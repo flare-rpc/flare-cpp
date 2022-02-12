@@ -14,7 +14,7 @@
 //   - JoinTuple()
 //
 // DO NOT INCLUDE THIS FILE DIRECTLY. Use this file by including
-// abel/strings/str_join.h
+// flare/strings/str_join.h
 //
 
 #ifndef FLARE_STRINGS_INTERNAL_STR_JOIN_INTERNAL_H_

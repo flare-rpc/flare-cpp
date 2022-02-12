@@ -170,7 +170,7 @@ namespace flare::strings {
         }
 
 // Implementation of simple_atoi, generalized to support arbitrary base (used
-// with base different from 10 elsewhere in abel implementation).
+// with base different from 10 elsewhere in flare implementation).
         template<typename int_type>
         FLARE_MUST_USE_RESULT bool safe_strtoi_base(std::string_view s, int_type *out,
                                                    int base) {

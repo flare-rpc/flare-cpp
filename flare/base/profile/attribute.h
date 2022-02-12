@@ -137,4 +137,46 @@ namespace flare::base::base_internal {
 #define FLARE_ALIGN_OF(type) __alignof__(type)
 #endif
 
+
+// FLARE_NO_SANITIZE_MEMORY
+//
+// Tells the  MemorySanitizer to relax the handling of a given function. All
+// "Use of uninitialized value" warnings from such functions will be suppressed,
+// and all values loaded from memory will be considered fully initialized.
+// This attribute is similar to the ADDRESS_SANITIZER attribute above, but deals
+// with initialized-ness rather than addressability issues.
+// NOTE: MemorySanitizer(msan) is supported by Clang but not GCC.
+#if defined(__clang__)
+#define FLARE_NO_SANITIZE_MEMORY __attribute__((no_sanitize_memory))
+#else
+#define FLARE_NO_SANITIZE_MEMORY
+#endif
+
+
+// FLARE_NO_SANITIZE_THREAD
+//
+// Tells the ThreadSanitizer to not instrument a given function.
+// NOTE: GCC supports ThreadSanitizer(tsan) since 4.8.
+// https://gcc.gnu.org/gcc-4.8/changes.html
+#if defined(__GNUC__)
+#define FLARE_NO_SANITIZE_THREAD __attribute__((no_sanitize_thread))
+#else
+#define FLARE_NO_SANITIZE_THREAD
+#endif
+
+
+// FLARE_NO_SANITIZE_ADDRESS
+//
+// Tells the AddressSanitizer (or other memory testing tools) to ignore a given
+// function. Useful for cases when a function reads random locations on stack,
+// calls _exit from a cloned subprocess, deliberately accesses buffer
+// out of bounds or does other scary things with memory.
+// NOTE: GCC supports AddressSanitizer(asan) since 4.8.
+// https://gcc.gnu.org/gcc-4.8/changes.html
+#if defined(__GNUC__)
+#define FLARE_NO_SANITIZE_ADDRESS __attribute__((no_sanitize_address))
+#else
+#define FLARE_NO_SANITIZE_ADDRESS
+#endif
+
 #endif // FLARE_BASE_PROFILE_ATTRIBUTE_H_

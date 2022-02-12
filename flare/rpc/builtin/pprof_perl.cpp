@@ -3621,7 +3621,7 @@ const char* pprof_perl() {
         "    } else {\n"
         "      # If we're a 64-bit profile, check if we're a 64-bit-capable\n"
         "      # perl.  Otherwise, each slot will be represented as a float\n"
-        "      # instead of an int64, losing precision and making all the\n"
+        "      # instead of an int64_t, losing precision and making all the\n"
         "      # 64-bit addresses wrong.  We won't complain yet, but will\n"
         "      # later if we ever see a value that doesn't fit in 32 bits.\n"
         "      my $has_q = 0;\n"

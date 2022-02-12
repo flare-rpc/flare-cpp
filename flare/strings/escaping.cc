@@ -667,7 +667,7 @@ bool Base64UnescapeInternal(const char *src_param, size_t szsrc, char *dest,
 
     // The remainder of the std::string should be all whitespace, mixed with
     // exactly 0 equals signs, or exactly 'expected_equals' equals
-    // signs.  (Always accepting 0 equals signs is an abel extension
+    // signs.  (Always accepting 0 equals signs is an flare extension
     // not covered in the RFC, as is accepting dot as the pad character.)
 
     int equals = 0;

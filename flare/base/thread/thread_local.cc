@@ -6,6 +6,7 @@
 #include <algorithm>                     // std::find
 #include <vector>                        // std::vector
 #include <stdlib.h>                      // abort, atexit
+#include <atomic>
 #include "flare/base/thread/thread_local.h"
 
 namespace flare::base {
@@ -142,4 +143,12 @@ namespace flare::base {
         }
     }
 
+    std::atomic<int32_t> g_thread_id{0};
+    __thread int32_t local_thread_id = -1;
+    int32_t flare_tid() {
+        if(FLARE_UNLIKELY(local_thread_id == -1)) {
+            local_thread_id = g_thread_id.fetch_add(1, std::memory_order_relaxed);
+        }
+        return local_thread_id;
+    }
 }  // namespace flare::base
