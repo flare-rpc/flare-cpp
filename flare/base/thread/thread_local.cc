@@ -6,6 +6,7 @@
 #include <algorithm>                     // std::find
 #include <vector>                        // std::vector
 #include <stdlib.h>                      // abort, atexit
+#include <atomic>
 #include "flare/base/thread/thread_local.h"
 
 namespace flare::base {
