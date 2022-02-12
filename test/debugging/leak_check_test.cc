@@ -4,7 +4,7 @@
 
 #include <string>
 
-#include "gtest/gtest.h"
+#include <gtest/gtest.h>
 #include "flare/base/logging.h"
 #include "flare/debugging/leak_check.h"
 

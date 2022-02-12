@@ -3,7 +3,7 @@
 // Created by liyinbin lijippy@163.com
 
 #include <memory>
-#include "gtest/gtest.h"
+#include <gtest/gtest.h>
 #include "flare/base/logging.h"
 #include "flare/debugging/leak_check.h"
 
