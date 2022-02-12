@@ -162,7 +162,7 @@ static const char *DemangleIt(const char * const mangled) {
 
             static void TestOnInput(const char *input) {
                 static const int kOutSize = 1048576;
-                auto out = abel::make_unique<char[]>(kOutSize);
+                auto out = std::make_unique<char[]>(kOutSize);
                 Demangle(input, out.get(), kOutSize);
             }
 
