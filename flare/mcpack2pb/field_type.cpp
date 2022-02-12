@@ -39,7 +39,7 @@ const char* type2str(FieldType type) {
     case FIELD_INT8:          return "int8";
     case FIELD_INT16:         return "int16";
     case FIELD_INT32:         return "int32";
-    case FIELD_INT64:         return "int64";
+    case FIELD_INT64:         return "int64_t";
     case FIELD_UINT8:         return "uint8";
     case FIELD_UINT16:        return "uint16";
     case FIELD_UINT32:        return "uint32";

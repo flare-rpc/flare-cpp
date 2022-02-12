@@ -35,7 +35,7 @@ message Content {
 }
 
 message JsonContextBody {
-  optional int64 type = 1;
+  optional int64_t type = 1;
   repeated int32 data = 5;
   repeated string info = 6;
   required bool  judge = 2;

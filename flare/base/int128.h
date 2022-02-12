@@ -267,7 +267,7 @@ namespace flare::base {
                        (std::numeric_limits<uint64_t>::max)());
     }
 
-}  // namespace abel
+}  // namespace flare::debugging
 
 // Specialized numeric_limits for uint128.
 namespace std {

@@ -55,7 +55,7 @@ const char* field_to_string(const google::protobuf::FieldDescriptor* f) {
     switch (f->type()) {
     case google::protobuf::FieldDescriptor::TYPE_DOUBLE:   return "double";
     case google::protobuf::FieldDescriptor::TYPE_FLOAT:    return "float";
-    case google::protobuf::FieldDescriptor::TYPE_INT64:    return "int64";
+    case google::protobuf::FieldDescriptor::TYPE_INT64:    return "int64_t";
     case google::protobuf::FieldDescriptor::TYPE_UINT64:   return "uint64";
     case google::protobuf::FieldDescriptor::TYPE_INT32:    return "int32";
     case google::protobuf::FieldDescriptor::TYPE_FIXED64:  return "fixed64";
@@ -81,7 +81,7 @@ const char* to_mcpack_typestr(const google::protobuf::FieldDescriptor* f) {
     switch (f->type()) {
     case google::protobuf::FieldDescriptor::TYPE_DOUBLE:   return "double";
     case google::protobuf::FieldDescriptor::TYPE_FLOAT:    return "float";
-    case google::protobuf::FieldDescriptor::TYPE_INT64:    return "int64";
+    case google::protobuf::FieldDescriptor::TYPE_INT64:    return "int64_t";
     case google::protobuf::FieldDescriptor::TYPE_UINT64:   return "uint64";
     case google::protobuf::FieldDescriptor::TYPE_INT32:    return "int32";
     case google::protobuf::FieldDescriptor::TYPE_FIXED64:  return "uint64";
@@ -94,9 +94,9 @@ const char* to_mcpack_typestr(const google::protobuf::FieldDescriptor* f) {
     case google::protobuf::FieldDescriptor::TYPE_UINT32:   return "uint32";
     case google::protobuf::FieldDescriptor::TYPE_ENUM:     return "int32";
     case google::protobuf::FieldDescriptor::TYPE_SFIXED32: return "int32";
-    case google::protobuf::FieldDescriptor::TYPE_SFIXED64: return "int64";
+    case google::protobuf::FieldDescriptor::TYPE_SFIXED64: return "int64_t";
     case google::protobuf::FieldDescriptor::TYPE_SINT32:   return "int32";
-    case google::protobuf::FieldDescriptor::TYPE_SINT64:   return "int64";
+    case google::protobuf::FieldDescriptor::TYPE_SINT64:   return "int64_t";
     }
     return "unknown_protobuf_type";
 }
@@ -108,7 +108,7 @@ const char* to_mcpack_typestr(ConvertibleIdlType type,
     case IDL_INT8:   return "int8";
     case IDL_INT16:  return "int16";
     case IDL_INT32:  return "int32";
-    case IDL_INT64:  return "int64";
+    case IDL_INT64:  return "int64_t";
     case IDL_UINT8:  return "uint8";
     case IDL_UINT16: return "uint16";
     case IDL_UINT32: return "uint32";
@@ -291,7 +291,7 @@ static bool generate_parsing(const google::protobuf::Descriptor* d,
                            , "lcfield", f->lowercase_name());
                 break;
             case google::protobuf::FieldDescriptor::CPPTYPE_INT64:
-                impl.Print(TEMPLATE_OF_ADD_FUNC_BODY(int64, int64)
+                impl.Print(TEMPLATE_OF_ADD_FUNC_BODY(int64_t, int64_t)
                            , "msg", cpp_name
                            , "field", f->full_name()
                            , "lcfield", f->lowercase_name());
@@ -501,7 +501,7 @@ static bool generate_parsing(const google::protobuf::Descriptor* d,
                            , "lcfield", f->lowercase_name());
                 break;
             case google::protobuf::FieldDescriptor::CPPTYPE_INT64:
-                impl.Print(TEMPLATE_OF_SET_FUNC_BODY(int64)
+                impl.Print(TEMPLATE_OF_SET_FUNC_BODY(int64_t)
                            , "msg", cpp_name
                            , "field", f->full_name()
                            , "lcfield", f->lowercase_name());

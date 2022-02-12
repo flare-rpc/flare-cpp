@@ -43,7 +43,7 @@ void __sanitizer_unaligned_store32(void *p, uint32_t v);
 void __sanitizer_unaligned_store64(void *p, uint64_t v);
 }  // extern "C"
 
-namespace abel {
+namespace flare::debugging {
 
 FLARE_FORCE_INLINE uint16_t unaligned_load16(const void *p) {
   return __sanitizer_unaligned_load16(p);
@@ -70,7 +70,7 @@ FLARE_FORCE_INLINE void unaligned_store64(void *p, uint64_t v) {
 }
 
 
-}  // namespace abel
+}  // namespace flare::debugging
 
 #define FLARE_INTERNAL_UNALIGNED_LOAD16(_p) \
   (abel::unaligned_load16(_p))

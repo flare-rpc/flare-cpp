@@ -172,8 +172,8 @@ message us_gss_req_t {
     optional int32 NeedHilightStr = 38 [default = 0];   	/**< 是否回传飘红词 */
     repeated gss_src_req_t SrcArr = 39;                 	/**< table请求信息 */
     //国际化新增参数
-    optional int64 resultLang = 40;                     	/**< 用户需要的结果语言设置 */
-    optional int64 resultLocale = 41;                   	/**< 用户需要的结果地域 */
+    optional int64_t resultLang = 40;                     	/**< 用户需要的结果语言设置 */
+    optional int64_t resultLocale = 41;                   	/**< 用户需要的结果地域 */
     //终端app 信息
     repeated app_info_t AppInfoArr = 42;                	/**< 用户安装的app信息*/
     //终端ua 信息

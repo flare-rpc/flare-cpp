@@ -61,7 +61,7 @@ void GFlag::get_value(boost::any* value) const {
         *value = info.current_value;
     } else if (info.type == "int32") {
         *value = static_cast<int>(atoi(info.current_value.c_str()));
-    } else if (info.type == "int64") {
+    } else if (info.type == "int64_t") {
         *value = static_cast<int64_t>(atoll(info.current_value.c_str()));
     } else if (info.type == "uint64") {
         *value = static_cast<uint64_t>(

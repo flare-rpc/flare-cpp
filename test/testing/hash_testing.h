@@ -18,7 +18,7 @@
 #include "abel/strings/str_cat.h"
 
 
-namespace abel {
+namespace flare::debugging {
 
 // Run the abel::hash algorithm over all the elements passed in and verify that
 // their hash expansion is congruent with their `==` operator.
@@ -131,19 +131,19 @@ namespace abel {
 // }
 //
 template<int &... ExplicitBarrier, typename Container>
-ABEL_MUST_USE_RESULT testing::AssertionResult
+FLARE_MUST_USE_RESULT testing::AssertionResult
 VerifyTypeImplementsAbelHashCorrectly(const Container &values);
 
 template<int &... ExplicitBarrier, typename Container, typename Eq>
-ABEL_MUST_USE_RESULT testing::AssertionResult
+FLARE_MUST_USE_RESULT testing::AssertionResult
 VerifyTypeImplementsAbelHashCorrectly(const Container &values, Eq equals);
 
 template<int &..., typename T>
-ABEL_MUST_USE_RESULT testing::AssertionResult
+FLARE_MUST_USE_RESULT testing::AssertionResult
 VerifyTypeImplementsAbelHashCorrectly(std::initializer_list<T> values);
 
 template<int &..., typename T, typename Eq>
-ABEL_MUST_USE_RESULT testing::AssertionResult
+FLARE_MUST_USE_RESULT testing::AssertionResult
 VerifyTypeImplementsAbelHashCorrectly(std::initializer_list<T> values,
                                       Eq equals);
 
@@ -176,7 +176,7 @@ struct ExpandVisitor {
 };
 
 template<typename Container, typename Eq>
-ABEL_MUST_USE_RESULT testing::AssertionResult
+FLARE_MUST_USE_RESULT testing::AssertionResult
 VerifyTypeImplementsAbelHashCorrectly(const Container &values, Eq equals) {
     using V = typename Container::value_type;
 
@@ -339,7 +339,7 @@ struct DefaultEquals {
 }  // namespace hash_internal
 
 template<int &..., typename Container>
-ABEL_MUST_USE_RESULT testing::AssertionResult
+FLARE_MUST_USE_RESULT testing::AssertionResult
 VerifyTypeImplementsAbelHashCorrectly(const Container &values) {
     return hash_internal::VerifyTypeImplementsAbelHashCorrectly(
             hash_internal::ContainerAsVector<Container>::Do(values),
@@ -347,14 +347,14 @@ VerifyTypeImplementsAbelHashCorrectly(const Container &values) {
 }
 
 template<int &..., typename Container, typename Eq>
-ABEL_MUST_USE_RESULT testing::AssertionResult
+FLARE_MUST_USE_RESULT testing::AssertionResult
 VerifyTypeImplementsAbelHashCorrectly(const Container &values, Eq equals) {
     return hash_internal::VerifyTypeImplementsAbelHashCorrectly(
             hash_internal::ContainerAsVector<Container>::Do(values), equals);
 }
 
 template<int &..., typename T>
-ABEL_MUST_USE_RESULT testing::AssertionResult
+FLARE_MUST_USE_RESULT testing::AssertionResult
 VerifyTypeImplementsAbelHashCorrectly(std::initializer_list<T> values) {
     return hash_internal::VerifyTypeImplementsAbelHashCorrectly(
             hash_internal::ContainerAsVector<std::initializer_list<T>>::Do(values),
@@ -362,7 +362,7 @@ VerifyTypeImplementsAbelHashCorrectly(std::initializer_list<T> values) {
 }
 
 template<int &..., typename T, typename Eq>
-ABEL_MUST_USE_RESULT testing::AssertionResult
+FLARE_MUST_USE_RESULT testing::AssertionResult
 VerifyTypeImplementsAbelHashCorrectly(std::initializer_list<T> values,
                                       Eq equals) {
     return hash_internal::VerifyTypeImplementsAbelHashCorrectly(
@@ -370,6 +370,6 @@ VerifyTypeImplementsAbelHashCorrectly(std::initializer_list<T> values,
             equals);
 }
 
-}  // namespace abel
+}  // namespace flare::debugging
 
 #endif  // TEST_TESTING_HASH_TESTING_H_
