@@ -80,7 +80,7 @@ bool address_is_readable(const void *addr) {
       int p[2];
       // new pipe
       if (pipe(p) != 0) {
-        DLOG_CRITICAL("Failed to create pipe, errno={}", errno);
+        LOG(FATAL)<<"Failed to create pipe, errno={}")<<errno;
       }
       fcntl(p[0], F_SETFD, FD_CLOEXEC);
       fcntl(p[1], F_SETFD, FD_CLOEXEC);

@@ -43,7 +43,7 @@ void initialize_symbolizer(const char *) {
         // unsigned long long to simplify the DLOG case below.  The uniform
         // initialization guarantees this is not a narrowing conversion.
         const unsigned long long error{GetLastError()};  // NOLINT(runtime/int)
-        DLOG_CRITICAL("SymInitialize() failed: {}", error);
+        DLOG(FATAL)<<"SymInitialize() failed: "<< error;
     }
 }
 

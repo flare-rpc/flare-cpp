@@ -45,11 +45,11 @@ int ElfType(const ElfW(Sym) *symbol) { return ELF64_ST_TYPE(symbol->st_info); }
 #else
 const int kElfClass = -1;
 int ElfBind(const ElfW(Sym) *) {
-  DLOG_CRITICAL("Unexpected word size");
+  LOG(FATAL)<<"Unexpected word size";
   return 0;
 }
 int ElfType(const ElfW(Sym) *) {
-  DLOG_CRITICAL("Unexpected word size");
+  LOG(FATAL)<<"Unexpected word size";
   return 0;
 }
 #endif

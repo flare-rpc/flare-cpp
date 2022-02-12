@@ -88,7 +88,7 @@ int GetStackConsumption(const void* const altstack) {
     begin += increment;
   }
 
-  DLOG_CRITICAL("Unreachable code");
+  LOG(FATAL)<<"Unreachable code";
   return -1;
 }
 
