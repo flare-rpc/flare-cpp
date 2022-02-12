@@ -10,7 +10,6 @@
 //
 // Unless required by applicable law or agreed to in writing,
 // software distributed under the License is distributed on an
-// "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
@@ -35,7 +34,7 @@ message Content {
 }
 
 message JsonContextBody {
-  optional int64_t type = 1;
+  optional int64 type = 1;
   repeated int32 data = 5;
   repeated string info = 6;
   required bool  judge = 2;

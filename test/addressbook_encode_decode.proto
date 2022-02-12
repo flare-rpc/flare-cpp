@@ -36,7 +36,7 @@ message ContentEncDec {
 
 message JsonContextBodyEncDec {
   repeated string info = 6;
-  optional int64_t type = 1;
+  optional int64 type = 1;
   repeated int32 data_Z058_array = 5;
   required bool  judge = 2;
   optional double spur = 3;
