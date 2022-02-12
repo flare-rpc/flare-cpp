@@ -20,8 +20,8 @@
 #include <sys/auxv.h>
 #endif
 
-#include "abel/thread/dynamic_annotations.h"
-#include "abel/log/logging.h"
+#include "flare/thread/dynamic_annotations.h"
+#include "flare/base/logging.h"
 #include "flare/base/profile.h"
 
 #ifndef AT_SYSINFO_EHDR
