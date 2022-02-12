@@ -14,7 +14,7 @@
 // this functionality generally only works on platforms/builds that have been
 // specifically configured to support it.)
 //
-// Note: stack traces in abel that do not utilize a symbolizer will result in
+// Note: stack traces in flare that do not utilize a symbolizer will result in
 // frames consisting of function addresses rather than human-readable function
 // names. (See symbolize.h for information on symbolizing these values.)
 
@@ -31,7 +31,7 @@ namespace flare::debugging {
     // Records program counter values for up to `max_depth` frames, skipping the
     // most recent `skip_count` stack frames, stores their corresponding values
     // and sizes in `results` and `sizes` buffers, and returns the number of frames
-    // stored. (Note that the frame generated for the `abel::get_stack_frames()`
+    // stored. (Note that the frame generated for the `flare::debugging::get_stack_frames()`
     // routine itself is also skipped.)
     //
     // Example:
@@ -41,7 +41,7 @@ namespace flare::debugging {
     //      bar() {
     //        void* result[10];
     //        int sizes[10];
-    //        int depth = abel::get_stack_frames(result, sizes, 10, 1);
+    //        int depth = flare::debugging::get_stack_frames(result, sizes, 10, 1);
     //      }
     //
     // The current stack frame would consist of three function calls: `bar()`,
@@ -77,7 +77,7 @@ namespace flare::debugging {
     // program counter values for up to `max_depth` frames, skipping the most recent
     // `skip_count` stack frames, stores their corresponding values and sizes in
     // `results` and `sizes` buffers, and returns the number of frames stored. (Note
-    // that the frame generated for the `abel::get_stack_frames_with_context()` routine
+    // that the frame generated for the `flare::debugging::get_stack_frames_with_context()` routine
     // itself is also skipped.)
     //
     // The `uc` parameter, if non-null, should be a pointer to a `ucontext_t` value
@@ -101,7 +101,7 @@ namespace flare::debugging {
     // Records program counter values for up to `max_depth` frames, skipping the
     // most recent `skip_count` stack frames, stores their corresponding values
     // in `results`, and returns the number of frames
-    // stored. Note that this function is similar to `abel::get_stack_frames()`
+    // stored. Note that this function is similar to `flare::debugging::get_stack_frames()`
     // except that it returns the stack trace only, and not stack frame sizes.
     //
     // Example:
@@ -110,7 +110,7 @@ namespace flare::debugging {
     //      foo() { bar(); }
     //      bar() {
     //        void* result[10];
-    //        int depth = abel::get_stack_trace(result, 10, 1);
+    //        int depth = flare::debugging::get_stack_trace(result, 10, 1);
     //      }
     //
     // This produces:
@@ -128,7 +128,7 @@ namespace flare::debugging {
     // program counter values for up to `max_depth` frames, skipping the most recent
     // `skip_count` stack frames, stores their corresponding values in `results`,
     // and returns the number of frames stored. (Note that the frame generated for
-    // the `abel::get_stack_frames_with_context()` routine itself is also skipped.)
+    // the `flare::debugging::get_stack_frames_with_context()` routine itself is also skipped.)
     //
     // The `uc` parameter, if non-null, should be a pointer to a `ucontext_t` value
     // passed to a signal handler registered via the `sa_sigaction` field of a
@@ -153,7 +153,7 @@ namespace flare::debugging {
     // GetStack{Frames,Trace}{,WithContext}() functions above.
     //
     // The arguments passed to the unwinder function will match the
-    // arguments passed to `abel::get_stack_frames_with_context()` except that sizes
+    // arguments passed to `flare::debugging::get_stack_frames_with_context()` except that sizes
     // will be non-null iff the caller is interested in frame sizes.
     //
     // If unwinder is set to null, we revert to the default stack-tracing behavior.
@@ -162,9 +162,9 @@ namespace flare::debugging {
     // WARNING
     // *****************************************************************************
     //
-    // abel::set_stack_unwinder is not suitable for general purpose use.  It is
+    // flare::debugging::set_stack_unwinder is not suitable for general purpose use.  It is
     // provided for custom runtimes.
-    // Some things to watch out for when calling `abel::set_stack_unwinder()`:
+    // Some things to watch out for when calling `flare::debugging::set_stack_unwinder()`:
     //
     // (a) The unwinder may be called from within signal handlers and
     // therefore must be async-signal-safe.
@@ -197,7 +197,7 @@ namespace flare::debugging {
     // be null when called.
     //
     // The semantics are the same as the corresponding `GetStack*()` function in the
-    // case where `abel::set_stack_unwinder()` was never called. Equivalents are:
+    // case where `flare::debugging::set_stack_unwinder()` was never called. Equivalents are:
     //
     //                       null sizes         |        non-nullptr sizes
     //             |==========================================================|

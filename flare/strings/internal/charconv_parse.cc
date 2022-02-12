@@ -35,7 +35,7 @@ static_assert(std::numeric_limits<uint64_t>::digits10 ==
               kDecimalMantissaDigitsMax,
               "(a) above");
 
-// IEEE doubles, which we assume in abel, have 53 binary bits of mantissa.
+// IEEE doubles, which we assume in flare, have 53 binary bits of mantissa.
 static_assert(std::numeric_limits<double>::is_iec559, "IEEE double assumed");
 static_assert(std::numeric_limits<double>::radix == 2, "IEEE double fact");
 static_assert(std::numeric_limits<double>::digits == 53, "IEEE double fact");

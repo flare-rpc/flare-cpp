@@ -12,7 +12,7 @@
 //   - Splitter<>
 //
 // DO NOT INCLUDE THIS FILE DIRECTLY. Use this file by including
-// abel/strings/str_split.h.
+// flare/strings/str_split.h.
 //
 
 #ifndef FLARE_STRINGS_INTERNAL_STR_SPLIT_INTERNAL_H_

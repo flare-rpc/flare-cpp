@@ -43,7 +43,7 @@ void __sanitizer_unaligned_store32(void *p, uint32_t v);
 void __sanitizer_unaligned_store64(void *p, uint64_t v);
 }  // extern "C"
 
-namespace flare::debugging {
+namespace flare::base {
 
 FLARE_FORCE_INLINE uint16_t unaligned_load16(const void *p) {
   return __sanitizer_unaligned_load16(p);
@@ -70,21 +70,21 @@ FLARE_FORCE_INLINE void unaligned_store64(void *p, uint64_t v) {
 }
 
 
-}  // namespace flare::debugging
+}  // namespace flare::base
 
 #define FLARE_INTERNAL_UNALIGNED_LOAD16(_p) \
-  (abel::unaligned_load16(_p))
+  (flare::base::unaligned_load16(_p))
 #define FLARE_INTERNAL_UNALIGNED_LOAD32(_p) \
-  (abel::unaligned_load32(_p))
+  (flare::base::unaligned_load32(_p))
 #define FLARE_INTERNAL_UNALIGNED_LOAD64(_p) \
-  (abel::unaligned_load64(_p))
+  (flare::base::unaligned_load64(_p))
 
 #define FLARE_INTERNAL_UNALIGNED_STORE16(_p, _val) \
-  (abel::unaligned_store16(_p, _val))
+  (flare::base::unaligned_store16(_p, _val))
 #define FLARE_INTERNAL_UNALIGNED_STORE32(_p, _val) \
-  (abel::unaligned_store32(_p, _val))
+  (flare::base::unaligned_store32(_p, _val))
 #define FLARE_INTERNAL_UNALIGNED_STORE64(_p, _val) \
-  (abel::unaligned_store64(_p, _val))
+  (flare::base::unaligned_store64(_p, _val))
 
 #else
 

@@ -46,7 +46,7 @@ static void **NextStackFrame(void **old_sp) {
     return new_sp;
 }
 
-// This ensures that abel::get_stack_trace sets up the Link Register properly.
+// This ensures that flare::debugging::get_stack_trace sets up the Link Register properly.
 #ifdef __GNUC__
 
 void StacktraceArmDummyFunction() __attribute__((noinline));
@@ -75,7 +75,7 @@ static int UnwindImpl(void **result, int *sizes, int max_depth, int skip_count,
 
     int n = 0;
     while (sp && n < max_depth) {
-        // The abel::get_stack_frames routine is called when we are in some
+        // The flare::debugging::get_stack_frames routine is called when we are in some
         // informational context (the failure signal handler for example).
         // Use the non-strict unwinding rules to produce a stack trace
         // that is as complete as possible (even if it contains a few bogus

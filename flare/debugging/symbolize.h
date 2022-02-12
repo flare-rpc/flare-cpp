@@ -6,16 +6,16 @@
 // File: symbolize.h
 // -----------------------------------------------------------------------------
 //
-// This file configures the abel symbolizer for use in converting instruction
+// This file configures the flare symbolizer for use in converting instruction
 // pointer addresses (program counters) into human-readable names (function
-// calls, etc.) within abel code.
+// calls, etc.) within flare code.
 //
 // The symbolizer may be invoked from several sources:
 //
-//   * Implicitly, through the installation of an abel failure signal handler.
+//   * Implicitly, through the installation of an flare failure signal handler.
 //     (See failure_signal_handler.h for more information.)
 //   * By calling `symbolize()` directly on a program counter you obtain through
-//     `abel::get_stack_trace()` or `abel::get_stack_frames()`. (See stacktrace.h
+//     `flare::debugging::get_stack_trace()` or `flare::debugging::get_stack_frames()`. (See stacktrace.h
 //     for more information.
 //   * By calling `symbolize()` directly on a program counter you obtain through
 //     other means (which would be platform-dependent).
@@ -28,11 +28,11 @@
 //
 //   int main(int argc, char** argv) {
 //     // Initialize the Symbolizer before installing the failure signal handler
-//     abel::initialize_symbolizer(argv[0]);
+//     flare::debugging::initialize_symbolizer(argv[0]);
 //
 //     // Now you may install the failure signal handler
-//     abel::failure_signal_handler_options options;
-//     abel::install_failure_signal_handler(options);
+//     flare::debugging::failure_signal_handler_options options;
+//     flare::debugging::install_failure_signal_handler(options);
 //
 //     // Start running your main program
 //     ...
@@ -50,14 +50,14 @@ namespace flare::debugging {
 // initialize_symbolizer()
 //
 // Initializes the program counter symbolizer, given the path of the program
-// (typically obtained through `main()`s `argv[0]`). The abel symbolizer
+// (typically obtained through `main()`s `argv[0]`). The flare symbolizer
 // allows you to read program counters (instruction pointer values) using their
 // human-readable names within output such as stack traces.
 //
 // Example:
 //
 // int main(int argc, char *argv[]) {
-//   abel::initialize_symbolizer(argv[0]);
+//   flare::debugging::initialize_symbolizer(argv[0]);
 //   // Now you can use the symbolizer
 // }
     void initialize_symbolizer(const char *argv0);
@@ -76,10 +76,10 @@ namespace flare::debugging {
 //   static void DumpPCAndSymbol(void *pc) {
 //     char tmp[1024];
 //     const char *symbol = "(unknown)";
-//     if (abel::symbolize(pc, tmp, sizeof(tmp))) {
+//     if (flare::debugging::symbolize(pc, tmp, sizeof(tmp))) {
 //       symbol = tmp;
 //     }
-//     abel::printf("%*p  %s\n", pc, symbol);
+//     flare::debugging::printf("%*p  %s\n", pc, symbol);
 //  }
     bool symbolize(const void *pc, char *out, int out_size);
 

@@ -8,7 +8,7 @@
 // wrappers of STL containers.
 //
 // DO NOT INCLUDE THIS FILE DIRECTLY. Use this file by including
-// abel/strings/str_split.h.
+// flare/strings/str_split.h.
 //
 
 #ifndef FLARE_STRINGS_INTERNAL_STL_TYPE_TRAITS_H_

@@ -38,9 +38,9 @@ static const unsigned char* GetKernelRtSigreturnAddress() {
   address = reinterpret_cast<uintptr_t>(nullptr);
 
 #ifdef FLARE_HAVE_VDSO_SUPPORT
-  abel::debugging_internal::VDSOSupport vdso;
+  flare::debugging::debugging_internal::VDSOSupport vdso;
   if (vdso.IsPresent()) {
-    abel::debugging_internal::VDSOSupport::SymbolInfo symbol_info;
+    flare::debugging::debugging_internal::VDSOSupport::SymbolInfo symbol_info;
     if (!vdso.LookupSymbol("__kernel_rt_sigreturn", "LINUX_2.6.39", STT_FUNC,
                            &symbol_info) ||
         symbol_info.address == nullptr) {
@@ -95,7 +95,7 @@ static void **NextStackFrame(void **old_frame_pointer, const void *uc) {
         // Check that alleged frame pointer is actually readable. This is to
         // prevent "double fault" in case we hit the first fault due to e.g.
         // stack corruption.
-        if (!abel::debugging_internal::address_is_readable(
+        if (!flare::debugging::debugging_internal::address_is_readable(
                 pre_signal_frame_pointer))
           return nullptr;
 
@@ -149,7 +149,7 @@ static int UnwindImpl(void **result, int *sizes, int max_depth, int skip_count,
     void *prev_return_address = nullptr;
 
     while (frame_pointer && n < max_depth) {
-        // The abel::get_stack_frames routine is called when we are in some
+        // The flare::debugging::get_stack_frames routine is called when we are in some
         // informational context (the failure signal handler for example).
         // Use the non-strict unwinding rules to produce a stack trace
         // that is as complete as possible (even if it contains a few bogus

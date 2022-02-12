@@ -6,18 +6,18 @@
 // File: failure_signal_handler.h
 // -----------------------------------------------------------------------------
 //
-// This file configures the abel *failure signal handler* to capture and dump
+// This file configures the flare *failure signal handler* to capture and dump
 // useful debugging information (such as a stacktrace) upon program failure.
 //
-// To use the failure signal handler, call `abel::install_failure_signal_handler()`
+// To use the failure signal handler, call `flare::debugging::install_failure_signal_handler()`
 // very early in your program, usually in the first few lines of main():
 //
 // int main(int argc, char** argv) {
 //   // Initialize the symbolizer to get a human-readable stack trace
-//   abel::initialize_symbolizer(argv[0]);
+//   flare::debugging::::initialize_symbolizer(argv[0]);
 //
-//   abel::failure_signal_handler_options options;
-//   abel::install_failure_signal_handler(options);
+//   flare::debugging::::failure_signal_handler_options options;
+//   flare::debugging::::install_failure_signal_handler(options);
 //   DoSomethingInteresting();
 //   return 0;
 // }
@@ -26,9 +26,9 @@
 // `SIGFPE`, `SIGABRT`, `SIGTERM`, `SIGBUG`, and `SIGTRAP`) will call the
 // installed failure signal handler and provide debugging information to stderr.
 //
-// Note that you should *not* install the abel failure signal handler more
-// than once. You may, of course, have another (non-abel) failure signal
-// handler installed (which would be triggered if abel's failure signal
+// Note that you should *not* install the flare failure signal handler more
+// than once. You may, of course, have another (non-flare) failure signal
+// handler installed (which would be triggered if flare's failure signal
 // handler sets `call_previous_handler` to `true`).
 
 #ifndef FLARE_DEBUGGING_FAILURE_SIGNAL_HANDLER_H_
@@ -41,7 +41,7 @@ namespace flare::debugging {
 
     // failure_signal_handler_options
     //
-    // Struct for holding `abel::install_failure_signal_handler()` configuration
+    // Struct for holding `flare::debugging::install_failure_signal_handler()` configuration
     // options.
     struct failure_signal_handler_options {
         // If true, try to symbolize the stacktrace emitted on failure, provided that
@@ -74,7 +74,7 @@ namespace flare::debugging {
         // recover from the fatal signal. Instead, they should terminate the program
         // via some mechanism, like raising the default handler for the signal, or by
         // calling `_exit()`. Note that the failure signal handler may put parts of
-        // the abel library into a state from which they cannot recover.
+        // the flare library into a state from which they cannot recover.
         bool call_previous_handler = false;
 
         // If non-null, indicates a pointer to a callback function that will be called

@@ -6,7 +6,7 @@
 #include "flare/debugging/symbolize.h"
 
 #if defined(FLARE_INTERNAL_HAVE_ELF_SYMBOLIZE)
-#include "flare/debugging/symbolize_elf.inc"
+#include "flare/debugging/symbolize_elf.h"
 #elif defined(_WIN32)
 // The Windows Symbolizer only works if PDB files containing the debug info
 // are available to the program at runtime.

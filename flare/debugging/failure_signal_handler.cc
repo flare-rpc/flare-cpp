@@ -255,17 +255,17 @@ namespace flare::debugging {
         void (*writerfn)(const char *);
     };
 
-// Many of the abel::debugging_internal::Dump* functions in
-// examine_stack.h take a writer function pointer that has a void* arg
-// for historical reasons. failure_signal_handler_writer only takes a
-// data pointer. This function converts between these types.
+    // Many of the flare::debugging::::debugging_internal::Dump* functions in
+    // examine_stack.h take a writer function pointer that has a void* arg
+    // for historical reasons. failure_signal_handler_writer only takes a
+    // data pointer. This function converts between these types.
     static void WriterFnWrapper(const char *data, void *arg) {
         static_cast<WriterFnStruct *>(arg)->writerfn(data);
     }
 
-// Convenient wrapper around DumpPCAndFrameSizesAndStackTrace() for signal
-// handlers. "noinline" so that get_stack_frames() skips the top-most stack
-// frame for this function.
+    // Convenient wrapper around DumpPCAndFrameSizesAndStackTrace() for signal
+    // handlers. "noinline" so that get_stack_frames() skips the top-most stack
+    // frame for this function.
     FLARE_NO_INLINE static void WriteStackTrace(
             void *ucontext, bool symbolize_stacktrace,
             void (*writerfn)(const char *, void *), void *writerfn_arg) {
@@ -293,9 +293,6 @@ namespace flare::debugging {
                         &writerfn_struct);
     }
 
-// abel::sleep_for() can't be used here since abel_internal_sleep_for()
-// may be overridden to do something that isn't async-signal-safe on
-// some platforms.
     static void PortableSleepForSeconds(int seconds) {
 #ifdef _WIN32
         Sleep(seconds * 1000);
@@ -320,8 +317,8 @@ namespace flare::debugging {
 
 #endif
 
-// abel::get_tid() returns pid_t on most platforms, but
-// returns abel::base_internal::pid_t on Windows.
+// flare::debugging::get_tid() returns pid_t on most platforms, but
+// returns flare::debugging::base_internal::pid_t on Windows.
     using GetTidType = decltype(flare::base::flare_tid());
 
     static std::atomic<GetTidType> failed_tid(0);

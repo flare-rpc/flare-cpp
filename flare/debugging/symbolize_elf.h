@@ -56,33 +56,32 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <mutex>
 
 #include "flare/base/math/bit_cast.h"
 #include "flare/base/dynamic_annotations/dynamic_annotations.h"
-#include "flare/memory/internal/low_level_alloc.h"
 #include "flare/base/logging.h"
-#include "flare/thread/spin_lock.h"
 #include "flare/base/profile.h"
 #include "flare/debugging/internal/demangle.h"
 #include "flare/debugging/internal/vdso_support.h"
 
 namespace flare::debugging {
 
-// Value of argv[0]. Used by MaybeInitializeObjFile().
-static char *argv0_value = nullptr;
+    // Value of argv[0]. Used by MaybeInitializeObjFile().
+    static char *argv0_value = nullptr;
 
-void initialize_symbolizer(const char *argv0) {
-    if (argv0_value != nullptr) {
-        free(argv0_value);
-        argv0_value = nullptr;
+    void initialize_symbolizer(const char *argv0) {
+        if (argv0_value != nullptr) {
+            free(argv0_value);
+            argv0_value = nullptr;
+        }
+        if (argv0 != nullptr && argv0[0] != '\0') {
+            argv0_value = strdup(argv0);
+        }
     }
-    if (argv0 != nullptr && argv0[0] != '\0') {
-        argv0_value = strdup(argv0);
-    }
-}
 
-namespace debugging_internal {
-namespace {
+    namespace debugging_internal {
+        namespace {
 
 // Re-runs fn until it doesn't cause EINTR.
 #define NO_INTR(fn) \
@@ -100,39 +99,39 @@ namespace {
 #endif
 
 // Some platforms use a special .opd section to store function pointers.
-const char kOpdSectionName[] = ".opd";
+            const char kOpdSectionName[] = ".opd";
 
 #if (defined(__powerpc__) && !(_CALL_ELF > 1)) || defined(__ia64)
-// Use opd section for function descriptors on these platforms, the function
-// address is the first word of the descriptor.
-enum { kPlatformUsesOPDSections = 1 };
+            // Use opd section for function descriptors on these platforms, the function
+            // address is the first word of the descriptor.
+            enum { kPlatformUsesOPDSections = 1 };
 #else  // not PPC or IA64
-enum {
-    kPlatformUsesOPDSections = 0
-};
+            enum {
+                kPlatformUsesOPDSections = 0
+            };
 #endif
 
 // This works for PowerPC & IA64 only.  A function descriptor consist of two
 // pointers and the first one is the function's entry.
-const size_t kFunctionDescriptorSize = sizeof(void *) * 2;
+            const size_t kFunctionDescriptorSize = sizeof(void *) * 2;
 
-const int kMaxDecorators = 10;  // Seems like a reasonable upper limit.
+            const int kMaxDecorators = 10;  // Seems like a reasonable upper limit.
 
-struct InstalledSymbolDecorator {
-    SymbolDecorator fn;
-    void *arg;
-    int ticket;
-};
+            struct InstalledSymbolDecorator {
+                SymbolDecorator fn;
+                void *arg;
+                int ticket;
+            };
 
-int g_num_decorators;
-InstalledSymbolDecorator g_decorators[kMaxDecorators];
+            int g_num_decorators;
+            InstalledSymbolDecorator g_decorators[kMaxDecorators];
 
-struct FileMappingHint {
-    const void *start;
-    const void *end;
-    uint64_t offset;
-    const char *filename;
-};
+            struct FileMappingHint {
+                const void *start;
+                const void *end;
+                uint64_t offset;
+                const char *filename;
+            };
 
 // Protects g_decorators.
 // We are using spin_lock and not a Mutex here, because we may be called
@@ -141,260 +140,231 @@ struct FileMappingHint {
 // Moreover, we are using only try_lock(), if the decorator list
 // is being modified (is busy), we skip all decorators, and possibly
 // loose some info. Sorry, that's the best we could do.
-abel::spin_lock g_decorators_mu(base_internal::kLinkerInitialized);
+            std::mutex g_decorators_mu;
 
-const int kMaxFileMappingHints = 8;
-int g_num_file_mapping_hints;
-FileMappingHint g_file_mapping_hints[kMaxFileMappingHints];
+            const int kMaxFileMappingHints = 8;
+            int g_num_file_mapping_hints;
+            FileMappingHint g_file_mapping_hints[kMaxFileMappingHints];
 // Protects g_file_mapping_hints.
-abel::spin_lock g_file_mapping_mu(base_internal::kLinkerInitialized);
+            std::mutex g_file_mapping_mu;
 
 // Async-signal-safe function to zero a buffer.
 // memset() is not guaranteed to be async-signal-safe.
-static void SafeMemZero(void *p, size_t size) {
-    unsigned char *c = static_cast<unsigned char *>(p);
-    while (size--) {
-        *c++ = 0;
-    }
-}
+            static void SafeMemZero(void *p, size_t size) {
+                unsigned char *c = static_cast<unsigned char *>(p);
+                while (size--) {
+                    *c++ = 0;
+                }
+            }
 
-struct ObjFile {
-    ObjFile()
-            : filename(nullptr),
-              start_addr(nullptr),
-              end_addr(nullptr),
-              offset(0),
-              fd(-1),
-              elf_type(-1) {
-        SafeMemZero(&elf_header, sizeof(elf_header));
-    }
+            struct ObjFile {
+                ObjFile()
+                        : filename(nullptr),
+                          start_addr(nullptr),
+                          end_addr(nullptr),
+                          offset(0),
+                          fd(-1),
+                          elf_type(-1) {
+                    SafeMemZero(&elf_header, sizeof(elf_header));
+                }
 
-    char *filename;
-    const void *start_addr;
-    const void *end_addr;
-    uint64_t offset;
+                char *filename;
+                const void *start_addr;
+                const void *end_addr;
+                uint64_t offset;
 
-    // The following fields are initialized on the first access to the
-    // object file.
-    int fd;
-    int elf_type;
-    ElfW(Ehdr)
-    elf_header;
-};
+                // The following fields are initialized on the first access to the
+                // object file.
+                int fd;
+                int elf_type;
+                ElfW(Ehdr)
+                elf_header;
+            };
 
-// Build 4-way associative cache for symbols. Within each cache line, symbols
-// are replaced in LRU order.
-enum {
-    ASSOCIATIVITY = 4,
-};
-struct SymbolCacheLine {
-    const void *pc[ASSOCIATIVITY];
-    char *name[ASSOCIATIVITY];
+            // Build 4-way associative cache for symbols. Within each cache line, symbols
+            // are replaced in LRU order.
+            enum {
+                ASSOCIATIVITY = 4,
+            };
+            struct SymbolCacheLine {
+                const void *pc[ASSOCIATIVITY];
+                char *name[ASSOCIATIVITY];
 
-    // age[i] is incremented when a line is accessed. it's reset to zero if the
-    // i'th entry is read.
-    uint32_t age[ASSOCIATIVITY];
-};
+                // age[i] is incremented when a line is accessed. it's reset to zero if the
+                // i'th entry is read.
+                uint32_t age[ASSOCIATIVITY];
+            };
+            // ---------------------------------------------------------------
+            // An AddrMap is a vector of ObjFile, using SigSafeArena() for allocation.
 
-// ---------------------------------------------------------------
-// An async-signal-safe arena for low_level_alloc
-static std::atomic<memory_internal::low_level_alloc::arena *> g_sig_safe_arena;
+            class AddrMap {
+            public:
+                AddrMap() : size_(0), allocated_(0), obj_(nullptr) {}
 
-static memory_internal::low_level_alloc::arena *SigSafeArena() {
-    return g_sig_safe_arena.load(std::memory_order_acquire);
-}
+                ~AddrMap() {delete [] obj_; }
 
-static void InitSigSafeArena() {
-    if (SigSafeArena() == nullptr) {
-        memory_internal::low_level_alloc::arena *new_arena =
-                memory_internal::low_level_alloc::new_arena(
-                        memory_internal::low_level_alloc::kAsyncSignalSafe);
-        memory_internal::low_level_alloc::arena *old_value = nullptr;
-        if (!g_sig_safe_arena.compare_exchange_strong(old_value, new_arena,
-                                                      std::memory_order_release,
-                                                      std::memory_order_relaxed)) {
-            // We lost a race to allocate an arena; deallocate.
-            memory_internal::low_level_alloc::delete_arena(new_arena);
-        }
-    }
-}
+                int Size() const { return size_; }
 
-// ---------------------------------------------------------------
-// An AddrMap is a vector of ObjFile, using SigSafeArena() for allocation.
+                ObjFile *At(int i) { return &obj_[i]; }
 
-class AddrMap {
-  public:
-    AddrMap() : size_(0), allocated_(0), obj_(nullptr) {}
+                ObjFile *Add();
 
-    ~AddrMap() { memory_internal::low_level_alloc::free(obj_); }
+                void Clear();
 
-    int Size() const { return size_; }
+            private:
+                int size_;       // count of valid elements (<= allocated_)
+                int allocated_;  // count of allocated elements
+                ObjFile *obj_;   // array of allocated_ elements
+                AddrMap(const AddrMap &) = delete;
 
-    ObjFile *At(int i) { return &obj_[i]; }
+                AddrMap &operator=(const AddrMap &) = delete;
+            };
 
-    ObjFile *Add();
+            void AddrMap::Clear() {
+                for (int i = 0; i != size_; i++) {
+                    At(i)->~ObjFile();
+                }
+                size_ = 0;
+            }
 
-    void Clear();
-
-  private:
-    int size_;       // count of valid elements (<= allocated_)
-    int allocated_;  // count of allocated elements
-    ObjFile *obj_;   // array of allocated_ elements
-    AddrMap(const AddrMap &) = delete;
-
-    AddrMap &operator=(const AddrMap &) = delete;
-};
-
-void AddrMap::Clear() {
-    for (int i = 0; i != size_; i++) {
-        At(i)->~ObjFile();
-    }
-    size_ = 0;
-}
-
-ObjFile *AddrMap::Add() {
-    if (size_ == allocated_) {
-        int new_allocated = allocated_ * 2 + 50;
-        ObjFile *new_obj_ =
-                static_cast<ObjFile *>(memory_internal::low_level_alloc::alloc_with_arena(
-                        new_allocated * sizeof(*new_obj_), SigSafeArena()));
-        if (obj_) {
-            memcpy(new_obj_, obj_, allocated_ * sizeof(*new_obj_));
-            memory_internal::low_level_alloc::free(obj_);
-        }
-        obj_ = new_obj_;
-        allocated_ = new_allocated;
-    }
-    return new(&obj_[size_++]) ObjFile;
-}
+            ObjFile *AddrMap::Add() {
+                if (size_ == allocated_) {
+                    int new_allocated = allocated_ * 2 + 50;
+                    ObjFile *new_obj_ =
+                            static_cast<ObjFile *>(new ObjFile[new_allocated]);
+                    if (obj_) {
+                        memcpy(new_obj_, obj_, allocated_ * sizeof(*new_obj_));
+                        delete [] obj_;
+                    }
+                    obj_ = new_obj_;
+                    allocated_ = new_allocated;
+                }
+                return new(&obj_[size_++]) ObjFile;
+            }
 
 
-enum FindSymbolResult {
-    SYMBOL_NOT_FOUND = 1, SYMBOL_TRUNCATED, SYMBOL_FOUND
-};
+            enum FindSymbolResult {
+                SYMBOL_NOT_FOUND = 1, SYMBOL_TRUNCATED, SYMBOL_FOUND
+            };
 
-class Symbolizer {
-  public:
-    Symbolizer();
+            class Symbolizer {
+            public:
+                Symbolizer();
 
-    ~Symbolizer();
+                ~Symbolizer();
 
-    const char *GetSymbol(const void *const pc);
+                const char *GetSymbol(const void *const pc);
 
-  private:
-    char *CopyString(const char *s) {
-        int len = strlen(s);
-        char *dst = static_cast<char *>(
-                memory_internal::low_level_alloc::alloc_with_arena(len + 1, SigSafeArena()));
-        CHECK(dst != nullptr)<< "out of memory";
-        memcpy(dst, s, len + 1);
-        return dst;
-    }
+            private:
+                char *CopyString(const char *s) {
+                    int len = strlen(s);
+                    char *dst = static_cast<char *>( new char[len+1];
+                    CHECK(dst != nullptr) << "out of memory";
+                    memcpy(dst, s, len + 1);
+                    return dst;
+                }
 
-    ObjFile *FindObjFile(const void *const start,
-                         size_t size) FLARE_NO_INLINE;
+                ObjFile *FindObjFile(const void *const start,
+                                     size_t size) FLARE_NO_INLINE;
 
-    static bool RegisterObjFile(const char *filename,
-                                const void *const start_addr,
-                                const void *const end_addr, uint64_t offset,
-                                void *arg);
+                static bool RegisterObjFile(const char *filename,
+                                            const void *const start_addr,
+                                            const void *const end_addr, uint64_t offset,
+                                            void *arg);
 
-    SymbolCacheLine *GetCacheLine(const void *const pc);
+                SymbolCacheLine *GetCacheLine(const void *const pc);
 
-    const char *FindSymbolInCache(const void *const pc);
+                const char *FindSymbolInCache(const void *const pc);
 
-    const char *InsertSymbolInCache(const void *const pc, const char *name);
+                const char *InsertSymbolInCache(const void *const pc, const char *name);
 
-    void AgeSymbols(SymbolCacheLine *line);
+                void AgeSymbols(SymbolCacheLine *line);
 
-    void ClearAddrMap();
+                void ClearAddrMap();
 
-    FindSymbolResult GetSymbolFromObjectFile(const ObjFile &obj,
-                                             const void *const pc,
-                                             const ptrdiff_t relocation,
-                                             char *out, int out_size,
-                                             char *tmp_buf, int tmp_buf_size);
+                FindSymbolResult GetSymbolFromObjectFile(const ObjFile &obj,
+                                                         const void *const pc,
+                                                         const ptrdiff_t relocation,
+                                                         char *out, int out_size,
+                                                         char *tmp_buf, int tmp_buf_size);
 
-    enum {
-        SYMBOL_BUF_SIZE = 3072,
-        TMP_BUF_SIZE = 1024,
-        SYMBOL_CACHE_LINES = 128,
-    };
+                enum {
+                    SYMBOL_BUF_SIZE = 3072,
+                    TMP_BUF_SIZE = 1024,
+                    SYMBOL_CACHE_LINES = 128,
+                };
 
-    AddrMap addr_map_;
+                AddrMap addr_map_;
 
-    bool ok_;
-    bool addr_map_read_;
+                bool ok_;
+                bool addr_map_read_;
 
-    char symbol_buf_[SYMBOL_BUF_SIZE];
+                char symbol_buf_[SYMBOL_BUF_SIZE];
 
-    // tmp_buf_ will be used to store arrays of ElfW(Shdr) and ElfW(Sym)
-    // so we ensure that tmp_buf_ is properly aligned to store either.
-    alignas(16) char tmp_buf_[TMP_BUF_SIZE];
-    static_assert(alignof(ElfW(Shdr)) <= 16,
-                  "alignment of tmp buf too small for Shdr");
-    static_assert(alignof(ElfW(Sym)) <= 16,
-                  "alignment of tmp buf too small for Sym");
+                // tmp_buf_ will be used to store arrays of ElfW(Shdr) and ElfW(Sym)
+                // so we ensure that tmp_buf_ is properly aligned to store either.
+                alignas(16) char tmp_buf_[TMP_BUF_SIZE];
+                static_assert(alignof(ElfW(Shdr)) <= 16,
+                              "alignment of tmp buf too small for Shdr");
+                static_assert(alignof(ElfW(Sym)) <= 16,
+                              "alignment of tmp buf too small for Sym");
 
-    SymbolCacheLine symbol_cache_[SYMBOL_CACHE_LINES];
-};
+                SymbolCacheLine symbol_cache_[SYMBOL_CACHE_LINES];
+            };
 
-static std::atomic<Symbolizer *> g_cached_symbolizer;
+            static std::atomic<Symbolizer *> g_cached_symbolizer;
 
-}  // namespace
+        }  // namespace
 
-static int SymbolizerSize() {
+        static int SymbolizerSize() {
 #if defined(__wasm__) || defined(__asmjs__)
-    int pagesize = getpagesize();
+            int pagesize = getpagesize();
 #else
-    int pagesize = sysconf(_SC_PAGESIZE);
+            int pagesize = sysconf(_SC_PAGESIZE);
 #endif
-    return ((sizeof(Symbolizer) - 1) / pagesize + 1) * pagesize;
-}
-
-// Return (and set null) g_cached_symbolized_state if it is not null.
-// Otherwise return a new symbolizer.
-static Symbolizer *AllocateSymbolizer() {
-    InitSigSafeArena();
-    Symbolizer *symbolizer =
-            g_cached_symbolizer.exchange(nullptr, std::memory_order_acquire);
-    if (symbolizer != nullptr) {
-        return symbolizer;
-    }
-    return new(memory_internal::low_level_alloc::alloc_with_arena(
-            SymbolizerSize(), SigSafeArena())) Symbolizer();
-}
-
-// Set g_cached_symbolize_state to s if it is null, otherwise
-// delete s.
-static void FreeSymbolizer(Symbolizer *s) {
-    Symbolizer *old_cached_symbolizer = nullptr;
-    if (!g_cached_symbolizer.compare_exchange_strong(old_cached_symbolizer, s,
-                                                     std::memory_order_release,
-                                                     std::memory_order_relaxed)) {
-        s->~Symbolizer();
-        memory_internal::low_level_alloc::free(s);
-    }
-}
-
-Symbolizer::Symbolizer() : ok_(true), addr_map_read_(false) {
-    for (SymbolCacheLine &symbol_cache_line : symbol_cache_) {
-        for (size_t j = 0; j < FLARE_ARRAY_SIZE(symbol_cache_line.name); ++j) {
-            symbol_cache_line.pc[j] = nullptr;
-            symbol_cache_line.name[j] = nullptr;
-            symbol_cache_line.age[j] = 0;
+            return ((sizeof(Symbolizer) - 1) / pagesize + 1) * pagesize;
         }
-    }
-}
 
-Symbolizer::~Symbolizer() {
-    for (SymbolCacheLine &symbol_cache_line : symbol_cache_) {
-        for (char *s : symbol_cache_line.name) {
-            memory_internal::low_level_alloc::free(s);
+        // Return (and set null) g_cached_symbolized_state if it is not null.
+        // Otherwise return a new symbolizer.
+        static Symbolizer *AllocateSymbolizer() {
+            Symbolizer *symbolizer =
+                    g_cached_symbolizer.exchange(nullptr, std::memory_order_acquire);
+            if (symbolizer != nullptr) {
+                return symbolizer;
+            }
+            return new Symbolizer();
         }
-    }
-    ClearAddrMap();
-}
+
+            // Set g_ca ched_symbolize_state to s if it is null, otherwise
+            // delete s.
+        static void FreeSymbolizer(Symbolizer *s) {
+            Symbolizer *old_cached_symbolizer = nullptr;
+            if (!g_cached_symbolizer.compare_exchange_strong(old_cached_symbolizer, s,
+                                                             std::memory_order_release,
+                                                             std::memory_order_relaxed)) {
+                delete s;
+            }
+        }
+
+        Symbolizer::Symbolizer() : ok_(true), addr_map_read_(false) {
+            for (SymbolCacheLine &symbol_cache_line : symbol_cache_) {
+                for (size_t j = 0; j < FLARE_ARRAY_SIZE(symbol_cache_line.name); ++j) {
+                    symbol_cache_line.pc[j] = nullptr;
+                    symbol_cache_line.name[j] = nullptr;
+                    symbol_cache_line.age[j] = 0;
+                }
+            }
+        }
+
+        Symbolizer::~Symbolizer() {
+            for (SymbolCacheLine &symbol_cache_line : symbol_cache_) {
+                for (char *s : symbol_cache_line.name) {
+                    delete [] s;
+                }
+            }
+            ClearAddrMap();
+        }
 
 // We don't use assert() since it's not guaranteed to be
 // async-signal-safe.  Instead we define a minimal assertion
@@ -404,106 +374,111 @@ Symbolizer::~Symbolizer() {
 // Read up to "count" bytes from file descriptor "fd" into the buffer
 // starting at "buf" while handling short reads and EINTR.  On
 // success, return the number of bytes read.  Otherwise, return -1.
-static ssize_t ReadPersistent(int fd, void *buf, size_t count) {
-    SAFE_ASSERT(fd >= 0);
-    SAFE_ASSERT(count <= SSIZE_MAX);
-    char *buf0 = reinterpret_cast<char *>(buf);
-    size_t num_bytes = 0;
-    while (num_bytes < count) {
-        ssize_t len;
-        NO_INTR(len = read(fd, buf0 + num_bytes, count - num_bytes));
-        if (len < 0) {  // There was an error other than EINTR.
-            LOG(WARNING)<<"read failed: errno="<< errno;
-            return -1;
+        static ssize_t ReadPersistent(int fd, void *buf, size_t count) {
+            SAFE_ASSERT(fd >= 0);
+            SAFE_ASSERT(count <= SSIZE_MAX);
+            char *buf0 = reinterpret_cast<char *>(buf);
+            size_t num_bytes = 0;
+            while (num_bytes < count) {
+                ssize_t len;
+                NO_INTR(len = read(fd, buf0 + num_bytes, count - num_bytes));
+                if (len < 0) {  // There was an error other than EINTR.
+                    LOG(WARNING) << "read failed: errno=" << errno;
+                    return -1;
+                }
+                if (len == 0) {  // Reached EOF.
+                    break;
+                }
+                num_bytes += len;
+            }
+            SAFE_ASSERT(num_bytes <= count);
+            return static_cast<ssize_t>(num_bytes);
         }
-        if (len == 0) {  // Reached EOF.
-            break;
-        }
-        num_bytes += len;
-    }
-    SAFE_ASSERT(num_bytes <= count);
-    return static_cast<ssize_t>(num_bytes);
-}
 
 // Read up to "count" bytes from "offset" in the file pointed by file
 // descriptor "fd" into the buffer starting at "buf".  On success,
 // return the number of bytes read.  Otherwise, return -1.
-static ssize_t ReadFromOffset(const int fd, void *buf, const size_t count,
-                              const off_t offset) {
-    off_t off = lseek(fd, offset, SEEK_SET);
-    if (off == (off_t) -1) {
-        LOG(WARNING)<<"lseek("<<fd<<"), "<<static_cast<uintmax_t>(offset)<<", SEEK_SET) failed: errno="<<errno;
-        return -1;
-    }
-    return ReadPersistent(fd, buf, count);
-}
+        static ssize_t ReadFromOffset(const int fd, void *buf, const size_t count,
+                                      const off_t offset) {
+            off_t off = lseek(fd, offset, SEEK_SET);
+            if (off == (off_t) -1) {
+                LOG(WARNING) << "lseek(" << fd << "), " << static_cast<uintmax_t>(offset)
+                             << ", SEEK_SET) failed: errno=" << errno;
+                return -1;
+            }
+            return ReadPersistent(fd, buf, count);
+        }
 
 // Try reading exactly "count" bytes from "offset" bytes in a file
 // pointed by "fd" into the buffer starting at "buf" while handling
 // short reads and EINTR.  On success, return true. Otherwise, return
 // false.
-static bool ReadFromOffsetExact(const int fd, void *buf, const size_t count,
-                                const off_t offset) {
-    ssize_t len = ReadFromOffset(fd, buf, count, offset);
-    return len >= 0 && static_cast<size_t>(len) == count;
-}
+        static bool ReadFromOffsetExact(const int fd, void *buf, const size_t count,
+                                        const off_t offset) {
+            ssize_t len = ReadFromOffset(fd, buf, count, offset);
+            return len >= 0 && static_cast<size_t>(len) == count;
+        }
 
 // Returns elf_header.e_type if the file pointed by fd is an ELF binary.
-static int FileGetElfType(const int fd) {
-    ElfW(Ehdr)
-    elf_header;
-    if (!ReadFromOffsetExact(fd, &elf_header, sizeof(elf_header), 0)) {
-        return -1;
-    }
-    if (memcmp(elf_header.e_ident, ELFMAG, SELFMAG) != 0) {
-        return -1;
-    }
-    return elf_header.e_type;
-}
+        static int FileGetElfType(const int fd) {
+            ElfW(Ehdr)
+            elf_header;
+            if (!ReadFromOffsetExact(fd, &elf_header, sizeof(elf_header), 0)) {
+                return -1;
+            }
+            if (memcmp(elf_header.e_ident, ELFMAG, SELFMAG) != 0) {
+                return -1;
+            }
+            return elf_header.e_type;
+        }
 
 // Read the section headers in the given ELF binary, and if a section
 // of the specified type is found, set the output to this section header
 // and return true.  Otherwise, return false.
 // To keep stack consumption low, we would like this function to not get
 // inlined.
-static FLARE_NO_INLINE bool GetSectionHeaderByType(const int fd, ElfW(Half) sh_num, const off_t sh_offset,
-                                                  ElfW(Word) type,
-                                                  ElfW(Shdr)
+        static FLARE_NO_INLINE bool GetSectionHeaderByType(const int fd, ElfW(Half) sh_num, const off_t sh_offset,
+                                                           ElfW(Word) type,
+                                                           ElfW(Shdr)
 
-* out,
-char *tmp_buf,
-int tmp_buf_size
-) {
-ElfW(Shdr)
-*
-buf = reinterpret_cast<ElfW(Shdr) * > (tmp_buf);
-const int buf_entries = tmp_buf_size / sizeof(buf[0]);
-const int buf_bytes = buf_entries * sizeof(buf[0]);
+        * out,
+        char *tmp_buf,
+        int tmp_buf_size
+        ) {
+        ElfW(Shdr)
+        *
+        buf = reinterpret_cast<ElfW(Shdr) * > (tmp_buf);
+        const int buf_entries = tmp_buf_size / sizeof(buf[0]);
+        const int buf_bytes = buf_entries * sizeof(buf[0]);
 
-for (
-int i = 0;
-i<sh_num;
-) {
-const ssize_t num_bytes_left = (sh_num - i) * sizeof(buf[0]);
-const ssize_t num_bytes_to_read =
-        (buf_bytes > num_bytes_left) ? num_bytes_left : buf_bytes;
-const off_t offset = sh_offset + i * sizeof(buf[0]);
-const ssize_t len = ReadFromOffset(fd, buf, num_bytes_to_read, offset);
-if (len % sizeof(buf[0]) != 0) {
-LOG(WARNING)<<"Reading "<<num_bytes_to_read<<" bytes from offset "<<static_cast<uintmax_t>(offset)<<" returned "<<len<<" which is not a "
-          "multiple of "<<sizeof(buf[0])<<".";
-return false;
-}
-const ssize_t num_headers_in_buf = len / sizeof(buf[0]);
-SAFE_ASSERT(num_headers_in_buf <= buf_entries);
-for (
-int j = 0;
-j<num_headers_in_buf;
-++j) {
-if (buf[j].sh_type == type) {
-*
-out = buf[j];
-return true;
+        for (
+        int i = 0;
+        i<sh_num;
+        ) {
+        const ssize_t num_bytes_left = (sh_num - i) * sizeof(buf[0]);
+        const ssize_t num_bytes_to_read =
+                (buf_bytes > num_bytes_left) ? num_bytes_left : buf_bytes;
+        const off_t offset = sh_offset + i * sizeof(buf[0]);
+        const ssize_t len = ReadFromOffset(fd, buf, num_bytes_to_read, offset);
+        if (len % sizeof(buf[0]) != 0) {
+        LOG(WARNING)
+
+        <<"Reading "<<num_bytes_to_read<<" bytes from offset "<<static_cast
+        <uintmax_t>(offset)
+        <<" returned "<<len<<" which is not a "
+        "multiple of "<<sizeof(buf[0])<<".";
+        return false;
+    }
+    const ssize_t num_headers_in_buf = len / sizeof(buf[0]);
+    SAFE_ASSERT(num_headers_in_buf <= buf_entries);
+    for (
+    int j = 0;
+    j<num_headers_in_buf;
+    ++j) {
+    if (buf[j].sh_type == type) {
+    *
+    out = buf[j];
+    return true;
 }
 }
 i +=
@@ -574,66 +549,44 @@ return true;
 }
 
 // name_len should include terminating '\0'.
-bool GetSectionHeaderByName(int fd, const char *name, size_t name_len,
-                            ElfW(Shdr)
+bool GetSectionHeaderByName(int fd, const char *name, size_t name_len, ElfW(Shdr)* out) {
+    char header_name[kMaxSectionNameLen];
+    if (sizeof(header_name) < name_len) {
+        LOG(WARNING)<<"Section name "<<name<<" is too long ("<<name_len<<"); ""section will not be found (even if present).";
+        // No point in even trying.
+        return false;
+    }
 
-* out) {
-char header_name[kMaxSectionNameLen];
-if (sizeof(header_name) < name_len) {
-    LOG(WARNING)<<
-        "Section name "<<name<<" is too long ("<<name_len<<"); "
-        "section will not be found (even if present).";
-// No point in even trying.
-return false;
-}
+    ElfW(Ehdr) elf_header;
+    if (!ReadFromOffsetExact(fd, &elf_header,sizeof(elf_header), 0)) {
+        return false;
+    }
 
-ElfW(Ehdr)
-elf_header;
-if (!
-ReadFromOffsetExact(fd, &elf_header,
-sizeof(elf_header), 0)) {
-return false;
-}
+    ElfW(Shdr) shstrtab;
+    off_t shstrtab_offset =
+            (elf_header.e_shoff + elf_header.e_shentsize * elf_header.e_shstrndx);
+    if (!ReadFromOffsetExact(fd, &shstrtab, sizeof(shstrtab), shstrtab_offset)) {
+        return false;
+    }
 
-ElfW(Shdr)
-shstrtab;
-off_t shstrtab_offset =
-        (elf_header.e_shoff + elf_header.e_shentsize * elf_header.e_shstrndx);
-if (!
-ReadFromOffsetExact(fd, &shstrtab,
-sizeof(shstrtab), shstrtab_offset)) {
-return false;
-}
-
-for (
-int i = 0;
-i<elf_header.
-e_shnum;
-++i) {
-off_t section_header_offset =
-        (elf_header.e_shoff + elf_header.e_shentsize * i);
-if (!
-ReadFromOffsetExact(fd, out,
-sizeof(*out), section_header_offset)) {
-return false;
-}
-off_t name_offset = shstrtab.sh_offset + out->sh_name;
-ssize_t n_read = ReadFromOffset(fd, &header_name, name_len, name_offset);
-if (n_read < 0) {
-return false;
-} else if (static_cast
-<size_t>(n_read)
-!= name_len) {
-// Short read -- name could be at end of file.
-continue;
-}
-if (
-memcmp(header_name, name, name_len
-) == 0) {
-return true;
-}
-}
-return false;
+    for (int i = 0; i<elf_header.e_shnum; ++i) {
+        off_t section_header_offset = (elf_header.e_shoff + elf_header.e_shentsize * i);
+        if (!ReadFromOffsetExact(fd, out,sizeof(*out), section_header_offset)) {
+            return false;
+        }
+        off_t name_offset = shstrtab.sh_offset + out->sh_name;
+        ssize_t n_read = ReadFromOffset(fd, &header_name, name_len, name_offset);
+        if (n_read < 0) {
+            return false;
+        } else if (static_cast<size_t>(n_read) != name_len) {
+            // Short read -- name could be at end of file.
+            continue;
+        }
+        if (memcmp(header_name, name, name_len) == 0) {
+            return true;
+        }
+    }
+    return false;
 }
 
 // Compare symbols at in the same address.
@@ -816,8 +769,11 @@ const size_t off = strtab->sh_offset + best_match.st_name;
 const ssize_t n_read = ReadFromOffset(fd, out, out_size, off);
 if (n_read <= 0) {
 // This should never happen.
-LOG(WARNING)<<
-        "Unable to read from fd %d at offset "<<off<<": n_read = "<< n_read;
+LOG(WARNING)
+
+<<
+"Unable to read from fd %d at offset "<<off<<": n_read = "<<
+n_read;
 return
 SYMBOL_NOT_FOUND;
 }
@@ -901,106 +857,106 @@ FindSymbolResult Symbolizer::GetSymbolFromObjectFile(
 namespace {
 // Thin wrapper around a file descriptor so that the file descriptor
 // gets closed for sure.
-class FileDescriptor {
-  public:
-    explicit FileDescriptor(int fd) : fd_(fd) {}
+    class FileDescriptor {
+    public:
+        explicit FileDescriptor(int fd) : fd_(fd) {}
 
-    FileDescriptor(const FileDescriptor &) = delete;
+        FileDescriptor(const FileDescriptor &) = delete;
 
-    FileDescriptor &operator=(const FileDescriptor &) = delete;
+        FileDescriptor &operator=(const FileDescriptor &) = delete;
 
-    ~FileDescriptor() {
-        if (fd_ >= 0) {
-            NO_INTR(close(fd_));
+        ~FileDescriptor() {
+            if (fd_ >= 0) {
+                NO_INTR(close(fd_));
+            }
         }
-    }
 
-    int get() const { return fd_; }
+        int get() const { return fd_; }
 
-  private:
-    const int fd_;
-};
+    private:
+        const int fd_;
+    };
 
 // Helper class for reading lines from file.
 //
 // Note: we don't use ProcMapsIterator since the object is big (it has
 // a 5k array member) and uses async-unsafe functions such as sscanf()
 // and snprintf().
-class LineReader {
-  public:
-    explicit LineReader(int fd, char *buf, int buf_len)
-            : fd_(fd),
-              buf_len_(buf_len),
-              buf_(buf),
-              bol_(buf),
-              eol_(buf),
-              eod_(buf) {}
+    class LineReader {
+    public:
+        explicit LineReader(int fd, char *buf, int buf_len)
+                : fd_(fd),
+                  buf_len_(buf_len),
+                  buf_(buf),
+                  bol_(buf),
+                  eol_(buf),
+                  eod_(buf) {}
 
-    LineReader(const LineReader &) = delete;
+        LineReader(const LineReader &) = delete;
 
-    LineReader &operator=(const LineReader &) = delete;
+        LineReader &operator=(const LineReader &) = delete;
 
-    // Read '\n'-terminated line from file.  On success, modify "bol"
-    // and "eol", then return true.  Otherwise, return false.
-    //
-    // Note: if the last line doesn't end with '\n', the line will be
-    // dropped.  It's an intentional behavior to make the code simple.
-    bool ReadLine(const char **bol, const char **eol) {
-        if (BufferIsEmpty()) {  // First time.
-            const ssize_t num_bytes = ReadPersistent(fd_, buf_, buf_len_);
-            if (num_bytes <= 0) {  // EOF or error.
-                return false;
-            }
-            eod_ = buf_ + num_bytes;
-            bol_ = buf_;
-        } else {
-            bol_ = eol_ + 1;            // Advance to the next line in the buffer.
-            SAFE_ASSERT(bol_ <= eod_);  // "bol_" can point to "eod_".
-            if (!HasCompleteLine()) {
-                const int incomplete_line_length = eod_ - bol_;
-                // Move the trailing incomplete line to the beginning.
-                memmove(buf_, bol_, incomplete_line_length);
-                // Read text from file and append it.
-                char *const append_pos = buf_ + incomplete_line_length;
-                const int capacity_left = buf_len_ - incomplete_line_length;
-                const ssize_t num_bytes =
-                        ReadPersistent(fd_, append_pos, capacity_left);
+        // Read '\n'-terminated line from file.  On success, modify "bol"
+        // and "eol", then return true.  Otherwise, return false.
+        //
+        // Note: if the last line doesn't end with '\n', the line will be
+        // dropped.  It's an intentional behavior to make the code simple.
+        bool ReadLine(const char **bol, const char **eol) {
+            if (BufferIsEmpty()) {  // First time.
+                const ssize_t num_bytes = ReadPersistent(fd_, buf_, buf_len_);
                 if (num_bytes <= 0) {  // EOF or error.
                     return false;
                 }
-                eod_ = append_pos + num_bytes;
+                eod_ = buf_ + num_bytes;
                 bol_ = buf_;
+            } else {
+                bol_ = eol_ + 1;            // Advance to the next line in the buffer.
+                SAFE_ASSERT(bol_ <= eod_);  // "bol_" can point to "eod_".
+                if (!HasCompleteLine()) {
+                    const int incomplete_line_length = eod_ - bol_;
+                    // Move the trailing incomplete line to the beginning.
+                    memmove(buf_, bol_, incomplete_line_length);
+                    // Read text from file and append it.
+                    char *const append_pos = buf_ + incomplete_line_length;
+                    const int capacity_left = buf_len_ - incomplete_line_length;
+                    const ssize_t num_bytes =
+                            ReadPersistent(fd_, append_pos, capacity_left);
+                    if (num_bytes <= 0) {  // EOF or error.
+                        return false;
+                    }
+                    eod_ = append_pos + num_bytes;
+                    bol_ = buf_;
+                }
             }
+            eol_ = FindLineFeed();
+            if (eol_ == nullptr) {  // '\n' not found.  Malformed line.
+                return false;
+            }
+            *eol_ = '\0';  // Replace '\n' with '\0'.
+
+            *bol = bol_;
+            *eol = eol_;
+            return true;
         }
-        eol_ = FindLineFeed();
-        if (eol_ == nullptr) {  // '\n' not found.  Malformed line.
-            return false;
+
+    private:
+        char *FindLineFeed() const {
+            return reinterpret_cast<char *>(memchr(bol_, '\n', eod_ - bol_));
         }
-        *eol_ = '\0';  // Replace '\n' with '\0'.
 
-        *bol = bol_;
-        *eol = eol_;
-        return true;
-    }
+        bool BufferIsEmpty() const { return buf_ == eod_; }
 
-  private:
-    char *FindLineFeed() const {
-        return reinterpret_cast<char *>(memchr(bol_, '\n', eod_ - bol_));
-    }
+        bool HasCompleteLine() const {
+            return !BufferIsEmpty() && FindLineFeed() != nullptr;
+        }
 
-    bool BufferIsEmpty() const { return buf_ == eod_; }
-
-    bool HasCompleteLine() const {
-        return !BufferIsEmpty() && FindLineFeed() != nullptr;
-    }
-
-    const int fd_;
-    const int buf_len_;
-    char *const buf_;
-    char *bol_;
-    char *eol_;
-    const char *eod_;  // End of data in "buf_".
-};
+        const int fd_;
+        const int buf_len_;
+        char *const buf_;
+        char *bol_;
+        char *eol_;
+        const char *eod_;  // End of data in "buf_".
+    };
 }  // namespace
 
 // Place the hex number read from "start" into "*hex".  The pointer to
@@ -1056,7 +1012,7 @@ static FLARE_NO_INLINE bool ReadAddrMap(
     NO_INTR(maps_fd = open(maps_path, O_RDONLY));
     FileDescriptor wrapped_maps_fd(maps_fd);
     if (wrapped_maps_fd.get() < 0) {
-        LOG(WARNING)<< maps_path<<"error: "<<errno;
+        LOG(WARNING) << maps_path << "error: " << errno;
         return false;
     }
 
@@ -1083,7 +1039,7 @@ static FLARE_NO_INLINE bool ReadAddrMap(
         // Read start address.
         cursor = GetHex(cursor, eol, &start_address);
         if (cursor == eol || *cursor != '-') {
-            LOG(WARNING)<<"Corrupt /proc/self/maps line: "<< line;
+            LOG(WARNING) << "Corrupt /proc/self/maps line: " << line;
             return false;
         }
         ++cursor;  // Skip '-'.
@@ -1092,7 +1048,7 @@ static FLARE_NO_INLINE bool ReadAddrMap(
         const void *end_address;
         cursor = GetHex(cursor, eol, &end_address);
         if (cursor == eol || *cursor != ' ') {
-            LOG(WARNING)<<"Corrupt /proc/self/maps line: "<< line;
+            LOG(WARNING) << "Corrupt /proc/self/maps line: " << line;
             return false;
         }
         ++cursor;  // Skip ' '.
@@ -1104,7 +1060,7 @@ static FLARE_NO_INLINE bool ReadAddrMap(
         }
         // We expect at least four letters for flags (ex. "r-xp").
         if (cursor == eol || cursor < flags_start + 4) {
-            LOG(WARNING)<<"Corrupt /proc/self/maps: "<< line;
+            LOG(WARNING) << "Corrupt /proc/self/maps: " << line;
             return false;
         }
 
@@ -1189,7 +1145,7 @@ ObjFile *Symbolizer::FindObjFile(const void *const addr, size_t len) {
 void Symbolizer::ClearAddrMap() {
     for (int i = 0; i != addr_map_.Size(); i++) {
         ObjFile *o = addr_map_.At(i);
-        memory_internal::low_level_alloc::free(o->filename);
+        delete [] o->filename;
         if (o->fd >= 0) {
             NO_INTR(close(o->fd));
         }
@@ -1243,8 +1199,8 @@ bool Symbolizer::RegisterObjFile(const char *filename,
 // To keep stack consumption low, we would like this function to not
 // get inlined.
 static FLARE_NO_INLINE void DemangleInplace(char *out, int out_size,
-                                           char *tmp_buf,
-                                           int tmp_buf_size) {
+                                            char *tmp_buf,
+                                            int tmp_buf_size) {
     if (Demangle(out, tmp_buf, tmp_buf_size)) {
         // Demangling succeeded. Copy to out if the space allows.
         int len = strlen(tmp_buf);
@@ -1307,8 +1263,8 @@ const char *Symbolizer::InsertSymbolInCache(const void *const pc,
     }
 
     AgeSymbols(line);
-    CHECK(oldest_index >= 0)<< "Corrupt cache";
-    memory_internal::low_level_alloc::free(line->name[oldest_index]);
+    CHECK(oldest_index >= 0) << "Corrupt cache";
+    delete [] line->name[oldest_index];
     line->pc[oldest_index] = pc;
     line->name[oldest_index] = CopyString(name);
     line->age[oldest_index] = 0;
@@ -1359,18 +1315,18 @@ static bool MaybeInitializeObjFile(ObjFile *obj) {
         }
 
         if (obj->fd < 0) {
-            LOG(WARNING)<<obj->filename<<"open failed: errno="<<errno;
+            LOG(WARNING) << obj->filename << "open failed: errno=" << errno;
             return false;
         }
         obj->elf_type = FileGetElfType(obj->fd);
         if (obj->elf_type < 0) {
-            LOG(WARNING)<<obj->filename<<": wrong elf type: "<<obj->elf_type;
+            LOG(WARNING) << obj->filename << ": wrong elf type: " << obj->elf_type;
             return false;
         }
 
         if (!ReadFromOffsetExact(obj->fd, &obj->elf_header, sizeof(obj->elf_header),
                                  0)) {
-            LOG(WARNING)<<obj->filename<<": failed to read elf header";
+            LOG(WARNING) << obj->filename << ": failed to read elf header";
             return false;
         }
     }
@@ -1500,9 +1456,6 @@ bool RegisterFileMappingHint(const void *start, const void *end, uint64_t offset
                              const char *filename) {
     SAFE_ASSERT(start <= end);
     SAFE_ASSERT(filename != nullptr);
-
-    InitSigSafeArena();
-
     if (!g_file_mapping_mu.try_lock()) {
         return false;
     }
@@ -1513,9 +1466,8 @@ bool RegisterFileMappingHint(const void *start, const void *end, uint64_t offset
     } else {
         // TODO(ckennelly): Move this into a std::string copy routine.
         int len = strlen(filename);
-        char *dst = static_cast<char *>(
-                memory_internal::low_level_alloc::alloc_with_arena(len + 1, SigSafeArena()));
-        CHECK(dst != nullptr)<< "out of memory";
+        char *dst = static_cast<char *>(new char[len +1]);
+        CHECK(dst != nullptr) << "out of memory";
         memcpy(dst, filename, len + 1);
 
         auto &hint = g_file_mapping_hints[g_num_file_mapping_hints++];

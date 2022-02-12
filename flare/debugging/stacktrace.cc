@@ -22,7 +22,7 @@
 //    trying to use the unwinder to instrument malloc().
 //
 // Note: if you add a new implementation here, make sure it works
-// correctly when abel::get_stack_trace() is called with max_depth == 0.
+// correctly when flare::debugging::get_stack_trace() is called with max_depth == 0.
 // Some code may do that.
 
 #include "flare/debugging/stacktrace.h"
@@ -38,13 +38,13 @@
 #else
 # error Cannot calculate stack trace: will need to write for your environment
 
-# include "abel/debugging/internal/stacktrace_aarch64-inl.inc"
-# include "abel/debugging/internal/stacktrace_arm-inl.inc"
-# include "abel/debugging/internal/stacktrace_generic-inl.inc"
-# include "abel/debugging/internal/stacktrace_powerpc-inl.inc"
-# include "abel/debugging/internal/stacktrace_unimplemented-inl.inc"
-# include "abel/debugging/internal/stacktrace_win32-inl.inc"
-# include "abel/debugging/internal/stacktrace_x86-inl.inc"
+# include "flare/debugging/internal/stacktrace_aarch64-inl.inc"
+# include "flare/debugging/internal/stacktrace_arm-inl.inc"
+# include "flare/debugging/internal/stacktrace_generic-inl.inc"
+# include "flare/debugging/internal/stacktrace_powerpc-inl.inc"
+# include "flare/debugging/internal/stacktrace_unimplemented-inl.inc"
+# include "flare/debugging/internal/stacktrace_win32-inl.inc"
+# include "flare/debugging/internal/stacktrace_x86-inl.inc"
 #endif
 
 namespace flare::debugging {

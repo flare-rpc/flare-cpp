@@ -5,7 +5,7 @@
 
 // Wrappers around lsan_interface functions.
 // When lsan is not linked in, these functions are not available,
-// therefore abel code which depends on these functions is conditioned on the
+// therefore flare code which depends on these functions is conditioned on the
 // definition of LEAK_SANITIZER.
 #include "flare/debugging/leak_check.h"
 

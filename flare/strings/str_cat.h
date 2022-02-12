@@ -18,7 +18,7 @@
 // to your function, your callers will automagically convert bools, integers,
 // and floating point values to strings for you.
 //
-// NOTE: Use of `alpha_num` outside of the //abel/strings package is unsupported
+// NOTE: Use of `alpha_num` outside of the //flare/strings package is unsupported
 // except for the specific case of function parameters of type `alpha_num` or
 // `const alpha_num &`. In particular, instantiating `alpha_num` directly as a
 // stack variable is not supported.
@@ -58,7 +58,7 @@ namespace flare::strings {
 namespace strings_internal {
 // alpha_num_buffer allows a way to pass a string to string_cat without having to do
 // memory allocation.  It is simply a pair of a fixed-size character array, and
-// a size.  Please don't use outside of abel, yet.
+// a size.  Please don't use outside of flare, yet.
 template<size_t max_size>
 struct alpha_num_buffer {
     std::array<char, max_size> data;

@@ -3,7 +3,7 @@
 // Created by liyinbin lijippy@163.com
 //
 
-// This file contains internal parts of the abel symbolizer.
+// This file contains internal parts of the flare symbolizer.
 // Do not depend on the anything in this file, it may change at anytime.
 
 #ifndef FLARE_DEBUGGING_INTERNAL_SYMBOLIZE_H_
