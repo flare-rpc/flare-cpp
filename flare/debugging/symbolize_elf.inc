@@ -58,7 +58,7 @@
 #include <cstring>
 
 #include "flare/base/math/bit_cast.h"
-#include "flare/thread/dynamic_annotations.h"
+#include "flare/base/dynamic_annotations/dynamic_annotations.h"
 #include "flare/memory/internal/low_level_alloc.h"
 #include "flare/base/logging.h"
 #include "flare/thread/spin_lock.h"
