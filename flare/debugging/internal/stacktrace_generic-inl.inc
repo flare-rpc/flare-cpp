@@ -18,7 +18,7 @@
 #include <atomic>
 #include <cstring>
 
-#include "abel/debugging/stacktrace.h"
+#include "flare/debugging/stacktrace.h"
 #include "flare/base/profile.h"
 
 // Sometimes, we can try to get a stack trace from within a stack

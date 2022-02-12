@@ -22,9 +22,9 @@
 #include <cstdio>
 
 #include "flare/base/profile.h"
-#include "abel/debugging/stacktrace.h"
-#include "abel/debugging/internal/address_is_readable.h"
-#include "abel/debugging/internal/vdso_support.h"  // a no-op on non-elf or non-glibc systems
+#include "flare/debugging/stacktrace.h"
+#include "flare/debugging/internal/address_is_readable.h"
+#include "flare/debugging/internal/vdso_support.h"  // a no-op on non-elf or non-glibc systems
 
 // Given a stack pointer, return the saved link register value.
 // Note that this is the link register for a callee.

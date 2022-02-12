@@ -19,9 +19,9 @@
 #include <iostream>
 
 #include "flare/base/profile.h"
-#include "abel/debugging/internal/address_is_readable.h"
-#include "abel/debugging/internal/vdso_support.h"  // a no-op on non-elf or non-glibc systems
-#include "abel/debugging/stacktrace.h"
+#include "flare/debugging/internal/address_is_readable.h"
+#include "flare/debugging/internal/vdso_support.h"  // a no-op on non-elf or non-glibc systems
+#include "flare/debugging/stacktrace.h"
 
 static const uintptr_t kUnknownFrameSize = 0;
 

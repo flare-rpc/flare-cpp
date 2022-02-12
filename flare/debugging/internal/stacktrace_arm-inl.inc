@@ -6,7 +6,7 @@
 #define FLARE_DEBUGGING_INTERNAL_STACKTRACE_ARM_INL_H_
 
 #include <cstdint>
-#include "abel/debugging/stacktrace.h"
+#include "flare/debugging/stacktrace.h"
 
 // WARNING:
 // This only works if all your code is in either ARM or THUMB mode.  With

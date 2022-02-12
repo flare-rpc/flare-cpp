@@ -21,11 +21,11 @@
 #include <cstdint>
 
 #include "flare/base/profile.h"
-#include "abel/debugging/internal/address_is_readable.h"
-#include "abel/debugging/internal/vdso_support.h"  // a no-op on non-elf or non-glibc systems
-#include "abel/debugging/stacktrace.h"
+#include "flare/debugging/internal/address_is_readable.h"
+#include "flare/debugging/internal/vdso_support.h"  // a no-op on non-elf or non-glibc systems
+#include "flare/debugging/stacktrace.h"
 
-#include "abel/log/logging.h"
+#include "flare/base/logging.h"
 
 using flare::debugging::debugging_internal::address_is_readable;
 
