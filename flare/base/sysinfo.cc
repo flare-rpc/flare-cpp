@@ -64,7 +64,7 @@ namespace flare::base {
 
     }
 
-    pid_t GetTID() {
+    pid_t get_tid() {
         // On Linux and MacOSX, we try to use gettid().
 #if defined FLARE_PLATFORM_LINUX || defined FLARE_PLATFORM_OSX
 #ifndef __NR_gettid
