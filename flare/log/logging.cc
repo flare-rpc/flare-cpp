@@ -210,9 +210,6 @@ namespace flare::log {
             "TRACE", "DEBUG", "INFO", "WARNING", "ERROR", "FATAL"
     };
 
-// Has the user called SetExitOnDFatal(true)?
-    static bool exit_on_dfatal = true;
-
     const char *get_log_severity_name(log_severity severity) {
         return log_severity_names[severity];
     }
@@ -1334,7 +1331,7 @@ namespace flare::log {
                           log_severity severity,
                           void (LogMessage::*send_method)()) {
         allocated_ = NULL;
-        if (severity != FLARE_FATAL || !exit_on_dfatal) {
+        if (severity != FLARE_FATAL || !FLAGS_crash_on_fatal_log) {
 #ifdef GLOG_THREAD_LOCAL_STORAGE
             // No need for locking, because this is thread local.
         if (thread_data_available) {
@@ -1601,7 +1598,7 @@ namespace flare::log {
         // If we log a FATAL message, flush all the log destinations, then toss
         // a signal for others to catch. We leave the logs in a state that
         // someone else can use them (as long as they flush afterwards)
-        if (data_->severity_ == FLARE_FATAL && exit_on_dfatal) {
+        if (data_->severity_ == FLARE_FATAL && FLAGS_crash_on_fatal_log) {
             if (data_->first_fatal_) {
                 // Store crash information so that it is accessible from within signal
                 // handlers that may be invoked later.
@@ -1857,37 +1854,7 @@ namespace flare::log {
         LogDestination::LogToStderr();
     }
 
-    namespace base {
-        namespace internal {
-
-            bool GetExitOnDFatal();
-
-            bool GetExitOnDFatal() {
-                std::unique_lock<std::mutex> l(log_mutex);
-                return exit_on_dfatal;
-            }
-
-// Determines whether we exit the program for a LOG(DFATAL) message in
-// debug mode.  It does this by skipping the call to Fail/FailQuietly.
-// This is intended for testing only.
-//
-// This can have some effects on LOG(FATAL) as well.  Failure messages
-// are always allocated (rather than sharing a buffer), the crash
-// reason is not recorded, the "gwq" status message is not updated,
-// and the stack trace is not recorded.  The LOG(FATAL) *will* still
-// exit the program.  Since this function is used only in testing,
-// these differences are acceptable.
-            void SetExitOnDFatal(bool value);
-
-            void SetExitOnDFatal(bool value) {
-                std::unique_lock<std::mutex> l(log_mutex);
-                exit_on_dfatal = value;
-            }
-
-        }  // namespace internal
-    }  // namespace base
-
-// Shell-escaping as we need to shell out ot /bin/mail.
+    // Shell-escaping as we need to shell out ot /bin/mail.
     static const char kDontNeedShellEscapeChars[] =
             "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
             "abcdefghijklmnopqrstuvwxyz"
