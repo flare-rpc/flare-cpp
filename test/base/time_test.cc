@@ -14,7 +14,7 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
-
+#include <inttypes.h>
 #include <gtest/gtest.h>
 #include "flare/base/profile.h"
 
