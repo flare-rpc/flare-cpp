@@ -127,4 +127,9 @@ namespace flare::bootstrap {
         registry[priority].emplace_back(std::move(init),std::move(fini));
     }
 
+    void bootstrap_init(int argc, char**argv) {
+        GFLAGS_NS::ParseCommandLineFlags(&argc, &argv, true);
+        flare::log::init_logging(argv[0]);
+    }
+
 }  // namespace flare::bootstrap

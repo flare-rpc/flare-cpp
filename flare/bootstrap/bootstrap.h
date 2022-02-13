@@ -51,6 +51,7 @@ namespace flare::bootstrap {
     // `FLARE_BOOTSTRAP`.
     void set_at_exit_callback(std::function<void()> callback);
 
+    void bootstrap_init(int argc, char**argv);
     // Called `flare::run_bootstrap`.
     void run_bootstrap();
 

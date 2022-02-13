@@ -180,18 +180,18 @@ namespace flare::log {
 
     // Initialize google's logging library. You will see the program name
     // specified by argv0 in log outputs.
-    FLARE_EXPORT void InitGoogleLogging(const char *argv0);
+    FLARE_EXPORT void init_logging(const char *argv0);
 
     // Shutdown google's logging library.
-    FLARE_EXPORT void ShutdownGoogleLogging();
+    FLARE_EXPORT void shutdown_logging();
 
     // Install a function which will be called after LOG(FATAL).
     FLARE_EXPORT void InstallFailureFunction(void (*fail_func)());
 
     // Enable/Disable old log cleaner.
-    FLARE_EXPORT void EnableLogCleaner(int overdue_days);
+    FLARE_EXPORT void enable_log_cleaner(int overdue_days);
 
-    FLARE_EXPORT void DisableLogCleaner();
+    FLARE_EXPORT void disable_log_cleaner();
 
     FLARE_EXPORT void SetApplicationFingerprint(const std::string &fingerprint);
 
@@ -323,7 +323,7 @@ namespace flare::log {
     // This formats a value for a failing CHECK_XX statement.  Ordinarily,
     // it uses the definition for operator<<, with a few special cases below.
     template<typename T>
-    inline void MakeCheckOpValueString(std::ostream *os, const T &v) {
+    inline void make_check_op_value_string(std::ostream *os, const T &v) {
         (*os) << v;
     }
 
@@ -331,21 +331,21 @@ namespace flare::log {
     // characters.
     template<>
     FLARE_EXPORT
-    void MakeCheckOpValueString(std::ostream *os, const char &v);
+    void make_check_op_value_string(std::ostream *os, const char &v);
 
     template<>
     FLARE_EXPORT
-    void MakeCheckOpValueString(std::ostream *os, const signed char &v);
+    void make_check_op_value_string(std::ostream *os, const signed char &v);
 
     template<>
     FLARE_EXPORT
-    void MakeCheckOpValueString(std::ostream *os, const unsigned char &v);
+    void make_check_op_value_string(std::ostream *os, const unsigned char &v);
 
 // This is required because nullptr is only present in c++ 11 and later.
 // Provide printable value for nullptr_t
     template<>
     FLARE_EXPORT
-    void MakeCheckOpValueString(std::ostream *os, const std::nullptr_t &v);
+    void make_check_op_value_string(std::ostream *os, const std::nullptr_t &v);
 
 // Build the error message string. Specify no inlining for code size.
     template<typename T1, typename T2>
@@ -394,8 +394,8 @@ namespace flare::log {
     template<typename T1, typename T2>
     std::string *MakeCheckOpString(const T1 &v1, const T2 &v2, const char *exprtext) {
         base::CheckOpMessageBuilder comb(exprtext);
-        MakeCheckOpValueString(comb.ForVar1(), v1);
-        MakeCheckOpValueString(comb.ForVar2(), v2);
+        make_check_op_value_string(comb.ForVar1(), v1);
+        make_check_op_value_string(comb.ForVar2(), v2);
         return comb.NewString();
     }
 

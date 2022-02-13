@@ -1524,7 +1524,7 @@ namespace flare::log {
         // Messages of a given severity get logged to lower severity logs, too
 
         if (!already_warned_before_initgoogle && !IsGoogleLoggingInitialized()) {
-            const char w[] = "WARNING: Logging before InitGoogleLogging() is "
+            const char w[] = "WARNING: Logging before init_logging() is "
                              "written to STDERR\n";
             write_to_stderr(w, strlen(w));
             already_warned_before_initgoogle = true;
@@ -2192,7 +2192,7 @@ namespace flare::log {
     }  // namespace base
 
     template<>
-    void MakeCheckOpValueString(std::ostream *os, const char &v) {
+    void make_check_op_value_string(std::ostream *os, const char &v) {
         if (v >= 32 && v <= 126) {
             (*os) << "'" << v << "'";
         } else {
@@ -2201,7 +2201,7 @@ namespace flare::log {
     }
 
     template<>
-    void MakeCheckOpValueString(std::ostream *os, const signed char &v) {
+    void make_check_op_value_string(std::ostream *os, const signed char &v) {
         if (v >= 32 && v <= 126) {
             (*os) << "'" << v << "'";
         } else {
@@ -2210,7 +2210,7 @@ namespace flare::log {
     }
 
     template<>
-    void MakeCheckOpValueString(std::ostream *os, const unsigned char &v) {
+    void make_check_op_value_string(std::ostream *os, const unsigned char &v) {
         if (v >= 32 && v <= 126) {
             (*os) << "'" << v << "'";
         } else {
@@ -2218,29 +2218,27 @@ namespace flare::log {
         }
     }
 
-#ifdef HAVE_CXX11_NULLPTR_T
     template <>
-    void MakeCheckOpValueString(std::ostream* os, const std::nullptr_t& v) {
+    void make_check_op_value_string(std::ostream* os, const std::nullptr_t& v) {
       (*os) << "nullptr";
     }
-#endif // defined(HAVE_CXX11_NULLPTR_T)
 
-    void InitGoogleLogging(const char *argv0) {
+    void init_logging(const char *argv0) {
         log_internal::InitGoogleLoggingUtilities(argv0);
     }
 
-    void ShutdownGoogleLogging() {
+    void shutdown_logging() {
         log_internal::ShutdownGoogleLoggingUtilities();
         log_destination::delete_log_destinations();
         delete logging_directories_list;
         logging_directories_list = NULL;
     }
 
-    void EnableLogCleaner(int overdue_days) {
+    void enable_log_cleaner(int overdue_days) {
         g_log_cleaner.enable(overdue_days);
     }
 
-    void DisableLogCleaner() {
+    void disable_log_cleaner() {
         g_log_cleaner.disable();
     }
 

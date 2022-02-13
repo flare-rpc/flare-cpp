@@ -32,7 +32,7 @@ namespace flare::log {
     // This lets us dynamically control what is normally set by the --vmodule flag.
     // Returns the level that previously applied to module_pattern.
     // NOTE: To change the log level for VLOG(_IS_ON) sites
-    //	 that have already executed after/during InitGoogleLogging,
+    //	 that have already executed after/during init_logging,
     //	 one needs to supply the exact --vmodule pattern that applied to them.
     //       (If no --vmodule pattern applied to them
     //       the value of FLAGS_v will continue to control them.)

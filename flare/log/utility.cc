@@ -136,7 +136,7 @@ namespace flare::log {
 
         void InitGoogleLoggingUtilities(const char *argv0) {
             CHECK(!IsGoogleLoggingInitialized())
-                            << "You called InitGoogleLogging() twice!";
+                            << "You called init_logging() twice!";
             const char *slash = strrchr(argv0, '/');
             g_program_invocation_short_name = slash ? slash + 1 : argv0;
 
@@ -147,7 +147,7 @@ namespace flare::log {
 
         void ShutdownGoogleLoggingUtilities() {
             CHECK(IsGoogleLoggingInitialized())
-                            << "You called ShutdownGoogleLogging() without calling InitGoogleLogging() first!";
+                            << "You called shutdown_logging() without calling init_logging() first!";
             g_program_invocation_short_name = NULL;
             closelog();
         }
