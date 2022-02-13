@@ -443,13 +443,13 @@ namespace flare::log {
     // file is included).  Save the current meaning now and use it
     // in the macro.
     typedef std::string _Check_string;
-#define CHECK_OP_LOG(name, op, val1, val2, log)                         \
+#define CHECK_OP_LOG(name, op, val1, val2, log_)                         \
   while (flare::log::_Check_string* _result =                \
         flare::log::Check##name##Impl(                      \
              flare::log::GetReferenceableValue(val1),        \
              flare::log::GetReferenceableValue(val2),        \
 #val1 " " #op " " #val2))                                  \
-    log(__FILE__, __LINE__,                                             \
+    log_(__FILE__, __LINE__,                                             \
         flare::log::CheckOpString(_result)).stream()
 #else
 // In optimized mode, use CheckOpString to hint to compiler that
