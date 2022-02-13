@@ -14,6 +14,7 @@
 #include <unistd.h>  // For _exit.
 #include <climits>
 #include <sys/types.h>
+#include <mutex>
 #include <sys/stat.h>
 #include <sys/utsname.h>  // For uname.
 #include <ctime>
