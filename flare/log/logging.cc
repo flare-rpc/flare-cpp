@@ -193,17 +193,17 @@ namespace flare::log {
         void operator=(const log_message_data &);
     };
 
-// A mutex that allows only one thread to log at a time, to keep things from
-// getting jumbled.  Some other very uncommon logging operations (like
-// changing the destination file for log messages of a given severity) also
-// lock this mutex.  Please be sure that anybody who might possibly need to
-// lock it does so.
+    // A mutex that allows only one thread to log at a time, to keep things from
+    // getting jumbled.  Some other very uncommon logging operations (like
+    // changing the destination file for log messages of a given severity) also
+    // lock this mutex.  Please be sure that anybody who might possibly need to
+    // lock it does so.
     static std::mutex log_mutex;
 
-// Number of messages sent at each severity.  Under log_mutex.
-    int64_t log_message::num_messages_[NUM_SEVERITIES] = {0, 0, 0, 0};
+    // Number of messages sent at each severity.  Under log_mutex.
+    int64_t log_message::num_messages_[NUM_SEVERITIES] = {0, 0, 0, 0, 0, 0};
 
-// Globally disable log writing (if disk is full)
+    // Globally disable log writing (if disk is full)
     static bool stop_writing = false;
 
     const char *const log_severity_names[NUM_SEVERITIES] = {
@@ -1721,7 +1721,7 @@ namespace flare::log {
         send_to_log();
     }
 
-// L >= log_mutex (callers must hold the log_mutex).
+    // L >= log_mutex (callers must hold the log_mutex).
     void log_message::send_to_syslog_and_log() {
         // Before any calls to syslog(), make a single call to openlog()
         static bool openlog_already_called = false;
@@ -1890,9 +1890,9 @@ namespace flare::log {
     }
 
 
-// use_logging controls whether the logging functions LOG/VLOG are used
-// to log errors.  It should be set to false when the caller holds the
-// log_mutex.
+    // use_logging controls whether the logging functions LOG/VLOG are used
+    // to log errors.  It should be set to false when the caller holds the
+    // log_mutex.
     static bool SendEmailInternal(const char *dest, const char *subject,
                                   const char *body, bool use_logging) {
         if (dest && *dest) {
