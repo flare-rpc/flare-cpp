@@ -1,4 +1,5 @@
 
+#include <inttypes.h>
 #include <gtest/gtest.h>
 #include "flare/base/time.h"
 #include "flare/base/profile.h"
