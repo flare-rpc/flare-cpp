@@ -5,6 +5,7 @@
 
 #include <stdarg.h>
 #include <cstdio>
+#include <atomic>
 #include <cerrno>
 #include <fcntl.h>                 // for open()
 #include <ctime>
@@ -12,6 +13,7 @@
 #include "flare/log/config.h"
 #include "flare/log/logging.h"          // To pick up flag settings etc.
 #include "flare/log/raw_logging.h"
+#include "flare/base/sysinfo.h"
 
 #ifdef HAVE_STACKTRACE
 
@@ -52,7 +54,7 @@ namespace flare::log {
     }
 
     static const int kLogBufSize = 3000;
-    static bool crashed = false;
+    static std::atomic<bool> crashed{false};
     static crash_reason crash_reason;
     static char crash_buf[kLogBufSize + 1] = {0};  // Will end in '\0'
 
@@ -70,7 +72,7 @@ namespace flare::log {
         // NOTE: this format should match the specification in base/logging.h
         DoRawLog(&buf, &size, "%c00000000 00:00:00.000000 %5u %s:%d] RAW: ",
                  log_severity_names[severity][0],
-                 static_cast<unsigned int>(GetTID()),
+                 static_cast<unsigned int>(flare::base::get_tid()),
                  const_basename(const_cast<char *>(file)), line);
 
         // Record the position and size of the buffer after the prefix
@@ -92,7 +94,8 @@ namespace flare::log {
         // We write just once to avoid races with other invocations of RawLog__.
         ::write(STDERR_FILENO, buffer, strlen(buffer));
         if (severity == FLARE_FATAL) {
-            if (!sync_val_compare_and_swap(&crashed, false, true)) {
+            bool old = false;
+            if (crashed.compare_exchange_weak(old, true, std::memory_order_acquire) && !old) {
                 crash_reason.filename = file;
                 crash_reason.line_number = line;
                 memcpy(crash_buf, msg_start, msg_size);  // Don't include prefix

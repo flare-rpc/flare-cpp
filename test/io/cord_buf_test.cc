@@ -24,7 +24,7 @@
 #include <flare/container/flat_map.h>
 #include "flare/base/time.h"                 // Timer
 #include "flare/base/fd_utility.h"           // make_non_blocking
-#include <flare/io/iobuf.h>
+#include <flare/io/cord_buf.h>
 #include "flare/log/logging.h"
 #include "flare/base/fd_guard.h"
 #include "flare/base/errno.h"

@@ -8,11 +8,14 @@
 #include "flare/log/logging.h"
 #include "flare/log/config.h"
 
+#include <atomic>
 #include <csignal>
 #include <ctime>
+
 #ifdef FLARE_PLATFORM_OSX
 #define _XOPEN_SOURCE
 #endif
+
 #include <ucontext.h>
 #include <algorithm>
 
@@ -30,10 +33,10 @@ namespace flare::log {
             const char *name;
         } kFailureSignals[] = {
                 {SIGSEGV, "SIGSEGV"},
-                {SIGILL, "SIGILL"},
-                {SIGFPE, "SIGFPE"},
+                {SIGILL,  "SIGILL"},
+                {SIGFPE,  "SIGFPE"},
                 {SIGABRT, "SIGABRT"},
-                {SIGBUS, "SIGBUS"},
+                {SIGBUS,  "SIGBUS"},
                 {SIGTERM, "SIGTERM"},
         };
 
@@ -141,49 +144,49 @@ namespace flare::log {
 #ifdef HAVE_SIGACTION
 
         // Dumps information about the signal to STDERR.
-    void DumpSignalInfo(int signal_number, siginfo_t *siginfo) {
-      // Get the signal name.
-      const char* signal_name = NULL;
-      for (size_t i = 0; i < FLARE_ARRAY_SIZE(kFailureSignals); ++i) {
-        if (signal_number == kFailureSignals[i].number) {
-          signal_name = kFailureSignals[i].name;
-        }
-      }
+        void DumpSignalInfo(int signal_number, siginfo_t *siginfo) {
+            // Get the signal name.
+            const char *signal_name = NULL;
+            for (size_t i = 0; i < FLARE_ARRAY_SIZE(kFailureSignals); ++i) {
+                if (signal_number == kFailureSignals[i].number) {
+                    signal_name = kFailureSignals[i].name;
+                }
+            }
 
-      char buf[256];  // Big enough for signal info.
-      MinimalFormatter formatter(buf, sizeof(buf));
+            char buf[256];  // Big enough for signal info.
+            MinimalFormatter formatter(buf, sizeof(buf));
 
-      formatter.AppendString("*** ");
-      if (signal_name) {
-        formatter.AppendString(signal_name);
-      } else {
-        // Use the signal number if the name is unknown.  The signal name
-        // should be known, but just in case.
-        formatter.AppendString("Signal ");
-        formatter.AppendUint64(signal_number, 10);
-      }
-      formatter.AppendString(" (@0x");
-      formatter.AppendUint64(reinterpret_cast<uintptr_t>(siginfo->si_addr), 16);
-      formatter.AppendString(")");
-      formatter.AppendString(" received by PID ");
-      formatter.AppendUint64(getpid(), 10);
-      formatter.AppendString(" (TID 0x");
-      // We assume pthread_t is an integral number or a pointer, rather
-      // than a complex struct.  In some environments, pthread_self()
-      // returns an uint64 but in some other environments pthread_self()
-      // returns a pointer.  Hence we use C-style cast here, rather than
-      // reinterpret/static_cast, to support both types of environments.
-      formatter.AppendUint64((uintptr_t)pthread_self(), 16);
-      formatter.AppendString(") ");
-      // Only linux has the PID of the signal sender in si_pid.
+            formatter.AppendString("*** ");
+            if (signal_name) {
+                formatter.AppendString(signal_name);
+            } else {
+                // Use the signal number if the name is unknown.  The signal name
+                // should be known, but just in case.
+                formatter.AppendString("Signal ");
+                formatter.AppendUint64(signal_number, 10);
+            }
+            formatter.AppendString(" (@0x");
+            formatter.AppendUint64(reinterpret_cast<uintptr_t>(siginfo->si_addr), 16);
+            formatter.AppendString(")");
+            formatter.AppendString(" received by PID ");
+            formatter.AppendUint64(getpid(), 10);
+            formatter.AppendString(" (TID 0x");
+            // We assume pthread_t is an integral number or a pointer, rather
+            // than a complex struct.  In some environments, pthread_self()
+            // returns an uint64 but in some other environments pthread_self()
+            // returns a pointer.  Hence we use C-style cast here, rather than
+            // reinterpret/static_cast, to support both types of environments.
+            formatter.AppendUint64((uintptr_t) pthread_self(), 16);
+            formatter.AppendString(") ");
+            // Only linux has the PID of the signal sender in si_pid.
 #ifdef FLARE_PLATFORM_LINUX
-      formatter.AppendString("from PID ");
-      formatter.AppendUint64(siginfo->si_pid, 10);
-      formatter.AppendString("; ");
+            formatter.AppendString("from PID ");
+            formatter.AppendUint64(siginfo->si_pid, 10);
+            formatter.AppendString("; ");
 #endif
-      formatter.AppendString("stack trace: ***\n");
-      g_failure_writer(buf, formatter.num_bytes_written());
-    }
+            formatter.AppendString("stack trace: ***\n");
+            g_failure_writer(buf, formatter.num_bytes_written());
+        }
 
 #endif  // HAVE_SIGACTION
 
@@ -195,7 +198,7 @@ namespace flare::log {
             // Symbolizes the previous address of pc because pc may be in the
             // next function.
             if (flare::debugging::symbolize(reinterpret_cast<char *>(pc) - 1,
-                          symbolized, sizeof(symbolized))) {
+                                            symbolized, sizeof(symbolized))) {
                 symbol = symbolized;
             }
 
@@ -216,11 +219,11 @@ namespace flare::log {
         void InvokeDefaultSignalHandler(int signal_number) {
 #ifdef HAVE_SIGACTION
             struct sigaction sig_action;
-      memset(&sig_action, 0, sizeof(sig_action));
-      sigemptyset(&sig_action.sa_mask);
-      sig_action.sa_handler = SIG_DFL;
-      sigaction(signal_number, &sig_action, NULL);
-      kill(getpid(), signal_number);
+            memset(&sig_action, 0, sizeof(sig_action));
+            sigemptyset(&sig_action.sa_mask);
+            sig_action.sa_handler = SIG_DFL;
+            sigaction(signal_number, &sig_action, NULL);
+            kill(getpid(), signal_number);
 #endif
         }
 
@@ -228,15 +231,14 @@ namespace flare::log {
         // dumping stuff while another thread is doing it.  Our policy is to let
         // the first thread dump stuff and let other threads wait.
         // See also comments in FailureSignalHandler().
-        static pthread_t *g_entered_thread_id_pointer = NULL;
+        static std::atomic<pthread_t *> g_entered_thread_id_pointer{nullptr};
 
         // Dumps signal and stack frame information, and invokes the default
         // signal handler once our job is done.
 
         void FailureSignalHandler(int signal_number,
                                   siginfo_t *signal_info,
-                                  void *ucontext)
-        {
+                                  void *ucontext) {
             // First check if we've already entered the function.  We use an atomic
             // compare and swap operation for platforms that support it.  For other
             // platforms, we use a naive method that could lead to a subtle race.
@@ -249,12 +251,10 @@ namespace flare::log {
             // ids, but there is no such guarantee.  We need to distinguish if the
             // old value (value returned from __sync_val_compare_and_swap) is
             // different from the original value (in this case NULL).
-            pthread_t *old_thread_id_pointer =
-                    log_internal::sync_val_compare_and_swap(
-                            &g_entered_thread_id_pointer,
-                            static_cast<pthread_t *>(NULL),
-                            &my_thread_id);
-            if (old_thread_id_pointer != NULL) {
+            pthread_t *old_thread_id_pointer = nullptr;
+
+            g_entered_thread_id_pointer.compare_exchange_weak(old_thread_id_pointer, &my_thread_id);
+            if (old_thread_id_pointer != nullptr) {
                 // We've already entered the signal handler.  What should we do?
                 if (pthread_equal(my_thread_id, *g_entered_thread_id_pointer)) {
                     // It looks the current thread is reentering the signal handler.
@@ -318,12 +318,12 @@ namespace flare::log {
         bool IsFailureSignalHandlerInstalled() {
 #ifdef HAVE_SIGACTION
             // TODO(andschwa): Return kFailureSignalHandlerInstalled?
-      struct sigaction sig_action;
-      memset(&sig_action, 0, sizeof(sig_action));
-      sigemptyset(&sig_action.sa_mask);
-      sigaction(SIGABRT, NULL, &sig_action);
-      if (sig_action.sa_sigaction == &FailureSignalHandler)
-        return true;
+            struct sigaction sig_action;
+            memset(&sig_action, 0, sizeof(sig_action));
+            sigemptyset(&sig_action.sa_mask);
+            sigaction(SIGABRT, NULL, &sig_action);
+            if (sig_action.sa_sigaction == &FailureSignalHandler)
+                return true;
 #endif  // HAVE_SIGACTION
             return false;
         }
@@ -333,16 +333,16 @@ namespace flare::log {
     void InstallFailureSignalHandler() {
 #ifdef HAVE_SIGACTION
         // Build the sigaction struct.
-      struct sigaction sig_action;
-      memset(&sig_action, 0, sizeof(sig_action));
-      sigemptyset(&sig_action.sa_mask);
-      sig_action.sa_flags |= SA_SIGINFO;
-      sig_action.sa_sigaction = &FailureSignalHandler;
+        struct sigaction sig_action;
+        memset(&sig_action, 0, sizeof(sig_action));
+        sigemptyset(&sig_action.sa_mask);
+        sig_action.sa_flags |= SA_SIGINFO;
+        sig_action.sa_sigaction = &FailureSignalHandler;
 
-      for (size_t i = 0; i < FLARE_ARRAY_SIZE(kFailureSignals); ++i) {
-        CHECK_ERR(sigaction(kFailureSignals[i].number, &sig_action, NULL));
-      }
-      kFailureSignalHandlerInstalled = true;
+        for (size_t i = 0; i < FLARE_ARRAY_SIZE(kFailureSignals); ++i) {
+            CHECK_ERR(sigaction(kFailureSignals[i].number, &sig_action, NULL));
+        }
+        kFailureSignalHandlerInstalled = true;
 #endif  // HAVE_SIGACTION
     }
 

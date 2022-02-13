@@ -897,7 +897,7 @@ namespace flare::log {
             }
 
             if (static_cast<int>(file_length_ >> 20) >= MaxLogSize() ||
-                PidHasChanged()) {
+                flare::base::pid_has_changed()) {
                 if (file_ != NULL) fclose(file_);
                 file_ = NULL;
                 file_length_ = bytes_since_flush_ = dropped_mem_length_ = 0;
@@ -929,7 +929,7 @@ namespace flare::log {
                                 << setw(2) << tm_time.tm_min
                                 << setw(2) << tm_time.tm_sec
                                 << '.'
-                                << GetMainThreadPid();
+                                << flare::base::get_main_thread_pid();
                 const string &time_pid_string = time_pid_stream.str();
 
                 if (base_filename_selected_) {
@@ -1822,7 +1822,7 @@ namespace flare::log {
                << setw(2) << tm_time->tm_sec << '.'
                << setw(6) << usecs
                << ' '
-               << setfill(' ') << setw(5) << GetTID() << setfill('0')
+               << setfill(' ') << setw(5) << flare::base::get_tid() << setfill('0')
                << ' '
                << file << ':' << line << "] ";
 
