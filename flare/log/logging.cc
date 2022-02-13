@@ -320,11 +320,11 @@ namespace flare::log {
     public:
         friend class log_message;
 
-        friend void ReprintFatalMessage();
+        friend void reprint_fatal_message();
 
-        friend base::inner_logger *base::GetLogger(log_severity);
+        friend base::inner_logger *base::get_logger(log_severity);
 
-        friend void base::SetLogger(log_severity, base::inner_logger *);
+        friend void base::set_logger(log_severity, base::inner_logger *);
 
         // These methods are just forwarded to by their global versions.
         static void set_log_destination(log_severity severity,
@@ -458,7 +458,7 @@ namespace flare::log {
 
     log_destination::~log_destination() {
         if (logger_ && logger_ != &fileobject_) {
-            // Delete user-specified logger set via SetLogger().
+            // Delete user-specified logger set via set_logger().
             delete logger_;
         }
     }
@@ -1503,7 +1503,7 @@ namespace flare::log {
     static time_t fatal_time;
     static char fatal_message[256];
 
-    void ReprintFatalMessage() {
+    void reprint_fatal_message() {
         if (fatal_message[0]) {
             const int n = strlen(fatal_message);
             if (!FLAGS_logtostderr) {
@@ -1712,12 +1712,12 @@ namespace flare::log {
         send_to_log();
     }
 
-    base::inner_logger *base::GetLogger(log_severity severity) {
+    base::inner_logger *base::get_logger(log_severity severity) {
         std::unique_lock<std::mutex> l(log_mutex);
         return log_destination::get_log_destination(severity)->logger_;
     }
 
-    void base::SetLogger(log_severity severity, base::inner_logger *logger) {
+    void base::set_logger(log_severity severity, base::inner_logger *logger) {
         std::unique_lock<std::mutex> l(log_mutex);
         log_destination::get_log_destination(severity)->logger_ = logger;
     }
@@ -1989,7 +1989,7 @@ namespace flare::log {
         }
     }
 
-    void TruncateLogFile(const char *path, int64_t limit, int64_t keep) {
+    void truncate_log_file(const char *path, int64_t limit, int64_t keep) {
 
         struct stat statbuf;
         const int kCopyBlockSize = 8 << 10;
@@ -2064,11 +2064,11 @@ namespace flare::log {
         close(fd);
     }
 
-    void TruncateStdoutStderr() {
+    void truncate_stdout_stderr() {
         int64_t limit = MaxLogSize() << 20;
         int64_t keep = 1 << 20;
-        TruncateLogFile("/proc/self/fd/1", limit, keep);
-        TruncateLogFile("/proc/self/fd/2", limit, keep);
+        truncate_log_file("/proc/self/fd/1", limit, keep);
+        truncate_log_file("/proc/self/fd/2", limit, keep);
     }
 
 

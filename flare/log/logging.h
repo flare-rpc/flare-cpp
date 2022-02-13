@@ -1242,7 +1242,7 @@ PLOG_IF(FATAL, FLARE_UNLIKELY((invocation) == -1))    \
     // Print any fatal message again -- useful to call from signal handler
     // so that the last thing in the output is the fatal message.
     // Thread-hostile, but a race is unlikely.
-    FLARE_EXPORT void ReprintFatalMessage();
+    FLARE_EXPORT void reprint_fatal_message();
 
     // Truncate a log file that may be the append-only output of multiple
     // processes and hence can't simply be renamed/reopened (typically a
@@ -1251,13 +1251,13 @@ PLOG_IF(FATAL, FLARE_UNLIKELY((invocation) == -1))    \
     // be racing with other writers, this approach has the potential to
     // lose very small amounts of data. For security, only follow symlinks
     // if the path is /proc/self/fd/*
-    FLARE_EXPORT void TruncateLogFile(const char *path,
+    FLARE_EXPORT void truncate_log_file(const char *path,
                                       int64_t limit, int64_t keep);
 
     // Truncate stdout and stderr if they are over the value specified by
     // --max_log_size; keep the final 1MB.  This function has the same
-    // race condition as TruncateLogFile.
-    FLARE_EXPORT void TruncateStdoutStderr();
+    // race condition as truncate_log_file.
+    FLARE_EXPORT void truncate_stdout_stderr();
 
     // Return the string representation of the provided log_severity level.
     // Thread-safe.
@@ -1305,12 +1305,12 @@ PLOG_IF(FATAL, FLARE_UNLIKELY((invocation) == -1))    \
         // Get the logger for the specified severity level.  The logger
         // remains the property of the logging module and should not be
         // deleted by the caller.  Thread-safe.
-        extern FLARE_EXPORT inner_logger *GetLogger(log_severity level);
+        extern FLARE_EXPORT inner_logger *get_logger(log_severity level);
 
         // Set the logger for the specified severity level.  The logger
         // becomes the property of the logging module and should not
         // be deleted by the caller.  Thread-safe.
-        extern FLARE_EXPORT void SetLogger(log_severity level, inner_logger *l);
+        extern FLARE_EXPORT void set_logger(log_severity level, inner_logger *l);
 
     }
 
