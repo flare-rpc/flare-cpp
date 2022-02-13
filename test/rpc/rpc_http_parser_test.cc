@@ -19,7 +19,7 @@
 #include <iostream>
 
 #include "flare/base/time.h"
-#include "flare/base/logging.h"
+#include "flare/log/logging.h"
 #include "flare/rpc/details/http_parser.h"
 #include "flare/rpc/builtin/common.h"  // AppendFileName
 

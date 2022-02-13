@@ -13,7 +13,7 @@
 #include <string.h>
 #include <cassert>
 #include <cstddef>
-#include "flare/base/logging.h"
+#include "flare/log/logging.h"
 
 // From binutils/include/elf/common.h (this doesn't appear to be documented
 // anywhere else).

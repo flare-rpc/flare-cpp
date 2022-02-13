@@ -17,7 +17,7 @@
 
 
 #include <gflags/gflags.h>
-#include "flare/base/logging.h"
+#include "flare/log/logging.h"
 #include "flare/base/time.h"
 #include <filesystem>
 #include <flare/variable/all.h>

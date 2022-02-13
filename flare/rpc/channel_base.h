@@ -21,7 +21,7 @@
 
 #include <stdlib.h>
 #include <ostream>
-#include "flare/base/logging.h"
+#include "flare/log/logging.h"
 #include <google/protobuf/service.h>            // google::protobuf::RpcChannel
 #include "flare/rpc/describable.h"
 

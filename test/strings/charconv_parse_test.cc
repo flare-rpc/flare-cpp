@@ -9,7 +9,7 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include "flare/base/logging.h"
+#include "flare/log/logging.h"
 #include "flare/strings/str_cat.h"
 
 using flare::strings::chars_format;

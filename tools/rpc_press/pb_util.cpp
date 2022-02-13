@@ -15,7 +15,7 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#include "flare/base/logging.h"
+#include "flare/log/logging.h"
 #include "pb_util.h"
 
 using google::protobuf::ServiceDescriptor;

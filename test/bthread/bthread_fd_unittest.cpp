@@ -25,7 +25,7 @@
 #include "flare/base/gperftools_profiler.h"
 #include "flare/base/time.h"
 #include "flare/base/fd_utility.h"
-#include "flare/base/logging.h"
+#include "flare/log/logging.h"
 #include "flare/bthread/task_control.h"
 #include "flare/bthread/task_group.h"
 #include "flare/bthread/interrupt_pthread.h"

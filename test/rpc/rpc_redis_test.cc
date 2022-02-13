@@ -19,7 +19,7 @@
 #include <iostream>
 #include <unordered_map>
 #include "flare/base/time.h"
-#include "flare/base/logging.h"
+#include "flare/log/logging.h"
 #include <flare/rpc/redis.h>
 #include <flare/rpc/channel.h>
 #include <flare/rpc/policy/redis_authenticator.h>

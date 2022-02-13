@@ -14,7 +14,7 @@
 #include <limits>
 #include <memory>
 
-#include "flare/base/logging.h"
+#include "flare/log/logging.h"
 #include "flare/strings/ascii.h"
 
 namespace flare::strings {

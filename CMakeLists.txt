@@ -131,13 +131,6 @@ if ((NOT LEVELDB_INCLUDE_PATH) OR (NOT LEVELDB_LIB))
     message(FATAL_ERROR "Fail to find leveldb")
 endif ()
 
-find_path(GLOG_INCLUDE_PATH NAMES glog/logging.h)
-find_library(GLOG_LIB NAMES glog)
-if ((NOT GLOG_INCLUDE_PATH) OR (NOT GLOG_LIB))
-    message(FATAL_ERROR "Fail to find glog")
-endif ()
-include_directories(${GLOG_INCLUDE_PATH})
-
 find_library(PROTOC_LIB NAMES protoc)
 if (NOT PROTOC_LIB)
     message(FATAL_ERROR "Fail to find protoc lib")
@@ -173,9 +166,6 @@ set(DYNAMIC_LIB
 
 
 set(FLARE_PRIVATE_LIBS "-lgflags -lprotobuf -lleveldb -lprotoc -lssl -lcrypto -ldl -lz")
-
-set(DYNAMIC_LIB ${DYNAMIC_LIB} ${GLOG_LIB})
-set(FLARE_PRIVATE_LIBS "${FLARE_PRIVATE_LIBS} -lglog")
 
 if (CMAKE_SYSTEM_NAME STREQUAL "Linux")
     set(DYNAMIC_LIB ${DYNAMIC_LIB} rt)

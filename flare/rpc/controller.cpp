@@ -17,12 +17,13 @@
 
 
 #include <signal.h>
+#include <inttypes.h>
 #include <openssl/md5.h>
 #include <google/protobuf/descriptor.h>
 #include <gflags/gflags.h>
 #include "flare/bthread/bthread.h"
 #include "flare/base/strings.h"
-#include "flare/base/logging.h"
+#include "flare/log/logging.h"
 #include "flare/base/time.h"
 #include "flare/bthread/bthread.h"
 #include "flare/bthread/unstable.h"

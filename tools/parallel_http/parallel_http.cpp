@@ -21,7 +21,7 @@
 #include <gflags/gflags.h>
 #include <deque>
 #include <flare/bthread/bthread.h>
-#include "flare/base/logging.h"
+#include "flare/log/logging.h"
 #include "flare/base/strings.h"
 #include <flare/base/scoped_file.h>
 #include <flare/rpc/channel.h>

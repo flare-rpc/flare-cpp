@@ -20,7 +20,7 @@
 #include "flare/bthread/sys_futex.h"
 #include "flare/bthread/timer_thread.h"
 #include "flare/bthread/bthread.h"
-#include "flare/base/logging.h"
+#include "flare/log/logging.h"
 
 namespace {
 

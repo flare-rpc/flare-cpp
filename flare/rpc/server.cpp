@@ -27,7 +27,7 @@
 #include "flare/bthread/unstable.h"                       // bthread_keytable_pool_init
 #include "flare/base/profile.h"                            // FLARE_ARRAY_SIZE
 #include "flare/base/fd_guard.h"                          // fd_guard
-#include "flare/base/logging.h"                           // CHECK
+#include "flare/log/logging.h"                           // CHECK
 #include "flare/base/time.h"
 #include "flare/base/class_name.h"
 #include "flare/base/strings.h"

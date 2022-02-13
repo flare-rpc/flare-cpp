@@ -1,7 +1,7 @@
 
 #include <gtest/gtest.h>
 #include "flare/base/file_watcher.h"
-#include "flare/base/logging.h"
+#include "flare/log/logging.h"
 
 namespace {
     class FileWatcherTest : public ::testing::Test {

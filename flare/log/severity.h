@@ -16,7 +16,7 @@ namespace flare::log {
             NUM_SEVERITIES = 6;
 #ifndef FLARE_NO_ABBREVIATED_SEVERITIES
 # ifdef ERROR
-#  error ERROR macro is defined. Define GLOG_NO_ABBREVIATED_SEVERITIES before including logging.h. See the document for detail.
+#  error ERROR macro is defined. Define FLARE_LOG_NO_ABBREVIATED_SEVERITIES before including logging.h. See the document for detail.
 # endif
     const int TRACE = flare::log::FLARE_TRACE, DEBUG = flare::log::FLARE_DEBUG, INFO = FLARE_INFO, WARNING = flare::log::FLARE_WARNING,
             ERROR = flare::log::FLARE_ERROR, FATAL = flare::log::FLARE_FATAL;

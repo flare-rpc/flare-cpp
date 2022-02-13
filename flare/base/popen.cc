@@ -1,7 +1,7 @@
 
 
 #include <gflags/gflags.h>
-#include "flare/base/logging.h"
+#include "flare/log/logging.h"
 #include "flare/base/profile.h"
 
 #if defined(FLARE_PLATFORM_LINUX)

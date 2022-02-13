@@ -4,7 +4,7 @@
 
 #include <mutex>                           // std::lock_guard
 #include "flare/base/lock.h"
-#include "flare/base/logging.h"
+#include "flare/log/logging.h"
 #include "flare/base/errno.h"
 #include "flare/base/profile.h"
 #include "flare/base/compat.h"

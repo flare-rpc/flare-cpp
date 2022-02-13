@@ -4,7 +4,7 @@
 //
 
 #include <cstdint>
-#include "flare/base/logging.h"
+#include "flare/log/logging.h"
 
 namespace flare::debugging {
 

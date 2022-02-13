@@ -26,7 +26,7 @@
 #include "flare/base/thread.h"
 #include "flare/base/strings.h"
 #include "flare/base/time.h"
-#include "flare/base/logging.h"
+#include "flare/log/logging.h"
 #include "flare/memory/object_pool.h"
 #include "flare/base/fast_rand.h"
 #include "flare/rpc/shared_object.h"

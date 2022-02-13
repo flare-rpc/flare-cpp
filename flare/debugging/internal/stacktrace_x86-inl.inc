@@ -25,7 +25,7 @@
 #include "flare/debugging/internal/vdso_support.h"  // a no-op on non-elf or non-glibc systems
 #include "flare/debugging/stacktrace.h"
 
-#include "flare/base/logging.h"
+#include "flare/log/logging.h"
 
 using flare::debugging::debugging_internal::address_is_readable;
 

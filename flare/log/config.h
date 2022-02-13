@@ -12,11 +12,11 @@
 
 #include <gflags/gflags.h>
 
-// Define GLOG_DEFINE_* using DEFINE_* . By using these macros, we
-// have GLOG_* environ variables even if we have gflags installed.
+// Define FLARE_LOG_DEFINE_* using DEFINE_* . By using these macros, we
+// have FLARE_LOG_* environ variables even if we have gflags installed.
 //
 // If both an environment variable and a flag are specified, the value
-// specified by a flag wins. E.g., if GLOG_v=0 and --v=1, the
+// specified by a flag wins. E.g., if FLARE_LOG_v=0 and --v=1, the
 // verbosity will be 1, not 0.
 
 #define FLARE_LOG_DEFINE_bool(name, value, meaning) \
@@ -103,7 +103,9 @@ DECLARE_bool(stop_logging_if_full_disk);
 // Use UTC time for logging
 DECLARE_bool(log_utc_time);
 
-DECLARE_bool(exit_on_fatal);
+DECLARE_bool(crash_on_fatal_log);
+
+DECLARE_bool(log_as_json);
 
 #define HAVE_STACKTRACE
 #define HAVE_SIGACTION

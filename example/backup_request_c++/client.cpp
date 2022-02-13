@@ -20,7 +20,7 @@
 // and ends the RPC when any response comes back.
 
 #include <gflags/gflags.h>
-#include "flare/base/logging.h"
+#include "flare/log/logging.h"
 #include "flare/base/time.h"
 #include <flare/rpc/channel.h>
 #include "echo.pb.h"

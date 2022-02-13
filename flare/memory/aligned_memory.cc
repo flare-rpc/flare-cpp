@@ -3,7 +3,7 @@
 // found in the LICENSE file.
 
 #include "flare/memory/aligned_memory.h"
-#include "flare/base/logging.h"
+#include "flare/log/logging.h"
 
 #if defined(FLARE_PLATFORM_ANDROID)
 #include <malloc.h>

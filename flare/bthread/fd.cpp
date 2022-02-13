@@ -33,7 +33,7 @@
 #include "flare/base/static_atomic.h"
 #include "flare/base/time.h"
 #include "flare/base/fd_utility.h"                     // make_non_blocking
-#include "flare/base/logging.h"
+#include "flare/log/logging.h"
 #include "flare/hash/murmurhash3.h"   // fmix32
 #include "flare/bthread/butex.h"                       // butex_*
 #include "flare/bthread/task_group.h"                  // TaskGroup

@@ -21,7 +21,7 @@
 #endif
 
 #include "flare/base/dynamic_annotations/dynamic_annotations.h"
-#include "flare/base/logging.h"
+#include "flare/log/logging.h"
 #include "flare/base/profile.h"
 
 #ifndef AT_SYSINFO_EHDR

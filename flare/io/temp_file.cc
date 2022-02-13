@@ -8,7 +8,7 @@
 #include <errno.h>                                  // errno
 #include <new>                                      // placement new
 #include "flare/io/temp_file.h"                              // temp_file
-#include "flare/base/logging.h"
+#include "flare/log/logging.h"
 
 // Initializing array. Needs to be macro.
 #define BASE_FILES_TEMP_FILE_PATTERN "temp_file_XXXXXX"

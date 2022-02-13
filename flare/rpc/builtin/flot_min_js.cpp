@@ -17,7 +17,7 @@
 
 
 #include <pthread.h>
-#include "flare/base/logging.h"
+#include "flare/log/logging.h"
 #include "flare/rpc/policy/gzip_compress.h"
 #include "flare/rpc/builtin/flot_min_js.h"
 

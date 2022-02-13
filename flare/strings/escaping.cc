@@ -13,7 +13,7 @@
 #include <string>
 
 #include "flare/base/endian.h"
-#include "flare/base/logging.h"
+#include "flare/log/logging.h"
 #include "flare/base/unaligned_access.h"
 #include "flare/strings/internal/char_map.h"
 #include "flare/strings/internal/utf8.h"

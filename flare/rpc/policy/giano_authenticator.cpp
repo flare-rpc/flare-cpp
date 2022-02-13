@@ -18,7 +18,7 @@
 #ifdef BAIDU_INTERNAL
 
 
-#include "flare/base/logging.h"
+#include "flare/log/logging.h"
 #include "flare/rpc/policy/giano_authenticator.h"
 
 namespace flare::rpc {

@@ -4,7 +4,7 @@
 
 #include "flare/io/scoped_temp_dir.h"
 #include "flare/io/temp_file.h"
-#include "flare/base/logging.h"
+#include "flare/log/logging.h"
 
 #define BASE_FILES_TEMP_DIR_PATTERN "temp_dir_XXXXXX"
 

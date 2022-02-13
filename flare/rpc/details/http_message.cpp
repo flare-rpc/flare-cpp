@@ -22,7 +22,7 @@
 #include <iostream>
 #include <gflags/gflags.h>
 #include "flare/base/profile.h"
-#include "flare/base/logging.h"                       // LOG
+#include "flare/log/logging.h"                       // LOG
 #include "flare/base/scoped_lock.h"
 #include "flare/base/endpoint.h"
 #include "flare/base/base64.h"

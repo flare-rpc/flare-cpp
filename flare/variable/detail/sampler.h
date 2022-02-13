@@ -23,7 +23,7 @@
 #include <vector>
 #include "flare/container/linked_list.h"
 #include "flare/base/scoped_lock.h"           // FLARE_SCOPED_LOCK
-#include "flare/base/logging.h"               // LOG()
+#include "flare/log/logging.h"               // LOG()
 #include "flare/container/bounded_queue.h"// bounded_queue
 #include "flare/base/type_traits.h"           // is_same
 #include "flare/base/time.h"                  // gettimeofday_us

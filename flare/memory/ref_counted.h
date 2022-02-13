@@ -9,7 +9,7 @@
 
 #include "flare/base/profile.h"
 #include <atomic>
-#include "flare/base/logging.h"
+#include "flare/log/logging.h"
 
 namespace flare::memory {
 

@@ -24,6 +24,10 @@
 #include "flare/log/severity.h"
 #include "flare/log/vlog_is_on.h"
 #include "flare/log/utility.h"
+#include "flare/base/profile.h"
+#include "flare/base/static_atomic.h" // Used by LOG_EVERY_N, LOG_FIRST_N etc
+#include "flare/base/time.h"      // gettimeofday_us()
+
 // The global value of FLARE_STRIP_LOG. All the messages logged to
 // LOG(XXX) with severity less than FLARE_STRIP_LOG will not be displayed.
 // If it can be determined at compile time that the message will not be
@@ -575,7 +579,7 @@ namespace flare::log {
 //
 // if (poll(fds, nfds, timeout) == -1) { PCHECK(errno == EINTR); ... }
 #define PCHECK(condition)  \
-      PLOG_IF(FATAL, GOOGLE_PREDICT_BRANCH_NOT_TAKEN(!(condition))) \
+      PLOG_IF(FATAL, FLARE_UNLIKELY(!(condition))) \
               << "Check failed: " #condition " "
 
 // A CHECK() macro that lets you assert the success of a function that
@@ -604,7 +608,7 @@ PLOG_IF(FATAL, FLARE_UNLIKELY((invocation) == -1))    \
 
 
 #if defined(FLARE_SANITIZE_THREAD)
-    } // namespace google
+    } // namespace flare::log
 
     // We need to identify the static variables as "benign" races
     // to avoid noisy reports from TSAN.
@@ -615,13 +619,13 @@ PLOG_IF(FATAL, FLARE_UNLIKELY((invocation) == -1))    \
       long size,
       const char *description);
 
-    namespace google {
+    namespace flare::log {
 #endif
 
 #define SOME_KIND_OF_LOG_EVERY_N(severity, n, what_to_do) \
   static std::atomic<int> LOG_OCCURRENCES(0), LOG_OCCURRENCES_MOD_N(0); \
-  _GLOG_IFDEF_THREAD_SANITIZER(AnnotateBenignRaceSized(__FILE__, __LINE__, &LOG_OCCURRENCES, sizeof(int), "")); \
-  _GLOG_IFDEF_THREAD_SANITIZER(AnnotateBenignRaceSized(__FILE__, __LINE__, &LOG_OCCURRENCES_MOD_N, sizeof(int), "")); \
+  FLARE_IFDEF_THREAD_SANITIZER(AnnotateBenignRaceSized(__FILE__, __LINE__, &LOG_OCCURRENCES, sizeof(int), "")); \
+  FLARE_IFDEF_THREAD_SANITIZER(AnnotateBenignRaceSized(__FILE__, __LINE__, &LOG_OCCURRENCES_MOD_N, sizeof(int), "")); \
   ++LOG_OCCURRENCES; \
   if (++LOG_OCCURRENCES_MOD_N > n) LOG_OCCURRENCES_MOD_N -= n; \
   if (LOG_OCCURRENCES_MOD_N == 1) \
@@ -631,34 +635,34 @@ PLOG_IF(FATAL, FLARE_UNLIKELY((invocation) == -1))    \
 
 #define SOME_KIND_OF_LOG_IF_EVERY_N(severity, condition, n, what_to_do) \
   static std::atomic<int> LOG_OCCURRENCES(0), LOG_OCCURRENCES_MOD_N(0); \
-  _GLOG_IFDEF_THREAD_SANITIZER(AnnotateBenignRaceSized(__FILE__, __LINE__, &LOG_OCCURRENCES, sizeof(int), "")); \
-  _GLOG_IFDEF_THREAD_SANITIZER(AnnotateBenignRaceSized(__FILE__, __LINE__, &LOG_OCCURRENCES_MOD_N, sizeof(int), "")); \
+  FLARE_IFDEF_THREAD_SANITIZER(AnnotateBenignRaceSized(__FILE__, __LINE__, &LOG_OCCURRENCES, sizeof(int), "")); \
+  FLARE_IFDEF_THREAD_SANITIZER(AnnotateBenignRaceSized(__FILE__, __LINE__, &LOG_OCCURRENCES_MOD_N, sizeof(int), "")); \
   ++LOG_OCCURRENCES; \
   if (condition && \
       ((LOG_OCCURRENCES_MOD_N=(LOG_OCCURRENCES_MOD_N + 1) % n) == (1 % n))) \
     flare::log::LogMessage( \
-        __FILE__, __LINE__, flare::log::GLOG_ ## severity, LOG_OCCURRENCES, \
+        __FILE__, __LINE__, flare::log::FLARE_ ## severity, LOG_OCCURRENCES, \
                  &what_to_do).stream()
 
 #define SOME_KIND_OF_PLOG_EVERY_N(severity, n, what_to_do) \
   static std::atomic<int> LOG_OCCURRENCES(0), LOG_OCCURRENCES_MOD_N(0); \
-  _GLOG_IFDEF_THREAD_SANITIZER(AnnotateBenignRaceSized(__FILE__, __LINE__, &LOG_OCCURRENCES, sizeof(int), "")); \
-  _GLOG_IFDEF_THREAD_SANITIZER(AnnotateBenignRaceSized(__FILE__, __LINE__, &LOG_OCCURRENCES_MOD_N, sizeof(int), "")); \
+  FLARE_IFDEF_THREAD_SANITIZER(AnnotateBenignRaceSized(__FILE__, __LINE__, &LOG_OCCURRENCES, sizeof(int), "")); \
+  FLARE_IFDEF_THREAD_SANITIZER(AnnotateBenignRaceSized(__FILE__, __LINE__, &LOG_OCCURRENCES_MOD_N, sizeof(int), "")); \
   ++LOG_OCCURRENCES; \
   if (++LOG_OCCURRENCES_MOD_N > n) LOG_OCCURRENCES_MOD_N -= n; \
   if (LOG_OCCURRENCES_MOD_N == 1) \
     flare::log::ErrnoLogMessage( \
-        __FILE__, __LINE__, flare::log::GLOG_ ## severity, LOG_OCCURRENCES, \
+        __FILE__, __LINE__, flare::log::FLARE_ ## severity, LOG_OCCURRENCES, \
         &what_to_do).stream()
 
 #define SOME_KIND_OF_LOG_FIRST_N(severity, n, what_to_do) \
   static std::atomic<int> LOG_OCCURRENCES(0); \
-  _GLOG_IFDEF_THREAD_SANITIZER(AnnotateBenignRaceSized(__FILE__, __LINE__, &LOG_OCCURRENCES, sizeof(int), "")); \
+  FLARE_IFDEF_THREAD_SANITIZER(AnnotateBenignRaceSized(__FILE__, __LINE__, &LOG_OCCURRENCES, sizeof(int), "")); \
   if (LOG_OCCURRENCES <= n) \
     ++LOG_OCCURRENCES; \
   if (LOG_OCCURRENCES <= n) \
     flare::log::LogMessage( \
-        __FILE__, __LINE__, flare::log::GLOG_ ## severity, LOG_OCCURRENCES, \
+        __FILE__, __LINE__, flare::log::FLARE_ ## severity, LOG_OCCURRENCES, \
         &what_to_do).stream()
 
     namespace log_internal {
@@ -692,7 +696,7 @@ PLOG_IF(FATAL, FLARE_UNLIKELY((invocation) == -1))    \
         COUNTER
     };
 
-#ifdef GLOG_NO_ABBREVIATED_SEVERITIES
+#ifdef FLARE_LOG_NO_ABBREVIATED_SEVERITIES
     // wingdi.h defines ERROR to be 0. When we call LOG(ERROR), it gets
     // substituted with 0, and it expands to COMPACT_FLARE_LOG_0. To allow us
     // to keep using this syntax, we define this macro to do the same thing
@@ -701,17 +705,17 @@ PLOG_IF(FATAL, FLARE_UNLIKELY((invocation) == -1))    \
 #define SYSLOG_0 SYSLOG_ERROR
 #define LOG_TO_STRING_0 LOG_TO_STRING_ERROR
     // Needed for LOG_IS_ON(ERROR).
-    const log_severity GLOG_0 = FLARE_ERROR;
+    const log_severity FLARE_LOG_0 = FLARE_ERROR;
 #else
 // Users may include windows.h after logging.h without
 // GLOG_NO_ABBREVIATED_SEVERITIES nor WIN32_LEAN_AND_MEAN.
 // For this case, we cannot detect if ERROR is defined before users
 // actually use ERROR. Let's make an undefined symbol to warn users.
-# define GLOG_ERROR_MSG ERROR_macro_is_defined_Define_GLOG_NO_ABBREVIATED_SEVERITIES_before_including_logging_h_See_the_document_for_detail
-# define COMPACT_FLARE_LOG_0 GLOG_ERROR_MSG
-# define SYSLOG_0 GLOG_ERROR_MSG
-# define LOG_TO_STRING_0 GLOG_ERROR_MSG
-# define GLOG_0 GLOG_ERROR_MSG
+# define FLARE_LOG_ERROR_MSG ERROR_macro_is_defined_Define_FLARE_LOG_NO_ABBREVIATED_SEVERITIES_before_including_logging_h_See_the_document_for_detail
+# define COMPACT_FLARE_LOG_0 FLARE_LOG_ERROR_MSG
+# define SYSLOG_0 FLARE_LOG_ERROR_MSG
+# define LOG_TO_STRING_0 FLARE_LOG_ERROR_MSG
+# define FLARE_LOG_0 FLARE_LOG_ERROR_MSG
 #endif
 
 // Plus some debug-logging macros that get compiled to nothing for production
@@ -1419,6 +1423,165 @@ PLOG_IF(FATAL, FLARE_UNLIKELY((invocation) == -1))    \
             void (*writer)(const char *data, int size));
 
 }  // flare::log
+
+# if DCHECK_IS_ON()
+#  define DPLOG(...) PLOG(__VA_ARGS__)
+#  define DPLOG_IF(...) PLOG_IF(__VA_ARGS__)
+#  define DPCHECK(...) PCHECK(__VA_ARGS__)
+#  define DVPLOG(...) VLOG(__VA_ARGS__)
+# else
+#  define DPLOG(...) DLOG(__VA_ARGS__)
+#  define DPLOG_IF(...) DLOG_IF(__VA_ARGS__)
+#  define DPCHECK(...) DCHECK(__VA_ARGS__)
+#  define DVPLOG(...) DVLOG(__VA_ARGS__)
+# endif
+
+
+#define LOG_AT(severity, file, line)                                    \
+    flare::log::LogMessage(file, line, flare::log::severity).stream()
+
+
+#ifndef NOTIMPLEMENTED_POLICY
+#if defined(FLARE_PLATFORM_ANDROID) && defined(OFFICIAL_BUILD)
+#define NOTIMPLEMENTED_POLICY 0
+#else
+// Select default policy: LOG(ERROR)
+#define NOTIMPLEMENTED_POLICY 4
+#endif
+#endif
+
+#if defined(FLARE_COMPILER_GNUC) || defined(FLARE_COMPILER_CLANG)
+// On Linux, with GCC, we can use __PRETTY_FUNCTION__ to get the demangled name
+// of the current function in the NOTIMPLEMENTED message.
+#define NOTIMPLEMENTED_MSG "Not implemented reached in " << __PRETTY_FUNCTION__
+#else
+#define NOTIMPLEMENTED_MSG "NOT IMPLEMENTED"
+#endif
+
+#if NOTIMPLEMENTED_POLICY == 0
+#define NOTIMPLEMENTED() FLARE_EAT_STREAM_PARAMS
+#elif NOTIMPLEMENTED_POLICY == 1
+// TODO, figure out how to generate a warning
+#define NOTIMPLEMENTED() COMPILE_ASSERT(false, NOT_IMPLEMENTED)
+#elif NOTIMPLEMENTED_POLICY == 2
+#define NOTIMPLEMENTED() COMPILE_ASSERT(false, NOT_IMPLEMENTED)
+#elif NOTIMPLEMENTED_POLICY == 3
+#define NOTIMPLEMENTED() NOTREACHED()
+#elif NOTIMPLEMENTED_POLICY == 4
+#define NOTIMPLEMENTED() LOG(ERROR) << NOTIMPLEMENTED_MSG
+#elif NOTIMPLEMENTED_POLICY == 5
+#define NOTIMPLEMENTED() do {                                   \
+        static bool logged_once = false;                        \
+        LOG_IF(ERROR, !logged_once) << NOTIMPLEMENTED_MSG;      \
+        logged_once = true;                                     \
+    } while(0);                                                 \
+    FLARE_EAT_STREAM_PARAMS
+#endif
+
+#if defined(NDEBUG) && defined(OS_CHROMEOS)
+#define NOTREACHED() LOG(ERROR) << "NOTREACHED() hit in "       \
+    << __FUNCTION__ << ". "
+#else
+#define NOTREACHED() DCHECK(false)
+#endif
+
+// Helper macro included by all *_EVERY_N macros.
+#define FLARE_LOG_IF_EVERY_N_IMPL(logifmacro, severity, condition, N)   \
+    static std::atomic<int32_t> FLARE_CONCAT(logeveryn_, __LINE__){-1}; \
+    const static int FLARE_CONCAT(logeveryn_sc_, __LINE__) = (N);       \
+    const int FLARE_CONCAT(logeveryn_c_, __LINE__) =                    \
+        FLARE_CONCAT(logeveryn_, __LINE__).fetch_add( 1) + 1; \
+    logifmacro(severity, (condition) && FLARE_CONCAT(logeveryn_c_, __LINE__) / \
+               FLARE_CONCAT(logeveryn_sc_, __LINE__) * FLARE_CONCAT(logeveryn_sc_, __LINE__) \
+               == FLARE_CONCAT(logeveryn_c_, __LINE__))
+
+// Helper macro included by all *_FIRST_N macros.
+#define FLARE_LOG_IF_FIRST_N_IMPL(logifmacro, severity, condition, N)   \
+    static std::atomic<int32_t> FLARE_CONCAT(logfstn_, __LINE__){0}; \
+    logifmacro(severity, (condition) && FLARE_CONCAT(logfstn_, __LINE__) < N && \
+               FLARE_CONCAT(logfstn_, __LINE__).fetch_add( 1) + 1 <= N)
+
+// Helper macro included by all *_EVERY_SECOND macros.
+#define FLARE_LOG_IF_EVERY_SECOND_IMPL(logifmacro, severity, condition) \
+    static ::flare::base::EveryManyUS FLARE_CONCAT(logeverys_, __LINE__)(1000); \
+    logifmacro(severity, (condition) && FLARE_CONCAT(logeverys_, __LINE__))
+
+// ===============================================================
+
+// Print a log for at most once. (not present in glog)
+// Almost zero overhead when the log was printed.
+#ifndef LOG_ONCE
+# define LOG_ONCE(severity) LOG_FIRST_N(severity, 1)
+# define LOG_IF_ONCE(severity, condition) LOG_IF_FIRST_N(severity, condition, 1)
+#endif
+
+// Print a log after every N calls. First call always prints.
+// Each call to this macro has a cost of relaxed atomic increment.
+// The corresponding macro in glog is not thread-safe while this is.
+#ifndef LOG_EVERY_N
+# define LOG_EVERY_N(severity, N)                                \
+     FLARE_LOG_IF_EVERY_N_IMPL(LOG_IF, severity, true, N)
+# define LOG_IF_EVERY_N(severity, condition, N)                  \
+     FLARE_LOG_IF_EVERY_N_IMPL(LOG_IF, severity, condition, N)
+#endif
+
+// Print logs for first N calls.
+// Almost zero overhead when the log was printed for N times
+// The corresponding macro in glog is not thread-safe while this is.
+#ifndef LOG_FIRST_N
+# define LOG_FIRST_N(severity, N)                                \
+     FLARE_LOG_IF_FIRST_N_IMPL(LOG_IF, severity, true, N)
+# define LOG_IF_FIRST_N(severity, condition, N)                  \
+     FLARE_LOG_IF_FIRST_N_IMPL(LOG_IF, severity, condition, N)
+#endif
+
+// Print a log every second. (not present in glog). First call always prints.
+// Each call to this macro has a cost of calling gettimeofday.
+#ifndef LOG_EVERY_SECOND
+# define LOG_EVERY_SECOND(severity)                                \
+     FLARE_LOG_IF_EVERY_SECOND_IMPL(LOG_IF, severity, true)
+# define LOG_IF_EVERY_SECOND(severity, condition)                \
+     FLARE_LOG_IF_EVERY_SECOND_IMPL(LOG_IF, severity, condition)
+#endif
+
+#ifndef PLOG_EVERY_N
+# define PLOG_EVERY_N(severity, N)                               \
+     FLARE_LOG_IF_EVERY_N_IMPL(PLOG_IF, severity, true, N)
+# define PLOG_IF_EVERY_N(severity, condition, N)                 \
+     FLARE_LOG_IF_EVERY_N_IMPL(PLOG_IF, severity, condition, N)
+#endif
+
+#ifndef PLOG_FIRST_N
+# define PLOG_FIRST_N(severity, N)                               \
+     FLARE_LOG_IF_FIRST_N_IMPL(PLOG_IF, severity, true, N)
+# define PLOG_IF_FIRST_N(severity, condition, N)                 \
+     FLARE_LOG_IF_FIRST_N_IMPL(PLOG_IF, severity, condition, N)
+#endif
+
+#ifndef PLOG_ONCE
+# define PLOG_ONCE(severity) PLOG_FIRST_N(severity, 1)
+# define PLOG_IF_ONCE(severity, condition) PLOG_IF_FIRST_N(severity, condition, 1)
+#endif
+
+#ifndef PLOG_EVERY_SECOND
+# define PLOG_EVERY_SECOND(severity)                             \
+     FLARE_LOG_IF_EVERY_SECOND_IMPL(PLOG_IF, severity, true)
+# define PLOG_IF_EVERY_SECOND(severity, condition)                       \
+     FLARE_LOG_IF_EVERY_SECOND_IMPL(PLOG_IF, severity, condition)
+#endif
+
+// DEBUG_MODE is for uses like
+//   if (DEBUG_MODE) foo.CheckThatFoo();
+// instead of
+//   #ifndef NDEBUG
+//     foo.CheckThatFoo();
+//   #endif
+//
+// We tie its state to ENABLE_DLOG.
+enum {
+    DEBUG_MODE = DCHECK_IS_ON()
+};
+
 
 
 #endif  // FLARE_LOG_LOGGING_H_

@@ -16,7 +16,7 @@
 // under the License.
 
 #include <algorithm>
-#include "flare/base/logging.h"
+#include "flare/log/logging.h"
 #include <flare/json2pb/pb_to_json.h>
 #include <flare/json2pb/json_to_pb.h>
 #include "pb_util.h"

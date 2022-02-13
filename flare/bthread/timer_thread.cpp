@@ -20,7 +20,7 @@
 
 #include <queue>                           // heap functions
 #include "flare/base/scoped_lock.h"
-#include "flare/base/logging.h"
+#include "flare/log/logging.h"
 #include "flare/hash/murmurhash3.h"   // fmix64
 #include "flare/memory/resource_pool.h"
 #include "flare/variable/all.h"

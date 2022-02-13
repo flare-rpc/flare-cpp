@@ -23,7 +23,7 @@
 #include "flare/io/cord_buf.h"                  // flare::io::cord_buf
 #include <string_view>   // std::string_view
 #include "flare/memory/arena.h"                  // flare::memory::Arena
-#include "flare/base/logging.h"                // CHECK
+#include "flare/log/logging.h"                // CHECK
 #include "parse_result.h"                 // ParseError
 
 

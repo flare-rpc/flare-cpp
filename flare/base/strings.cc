@@ -7,7 +7,7 @@
 #include <cmath>
 #include <climits>
 #include "flare/base/strings.h"
-#include "flare/base/logging.h"
+#include "flare/log/logging.h"
 
 namespace flare::base {
     namespace string_internal {

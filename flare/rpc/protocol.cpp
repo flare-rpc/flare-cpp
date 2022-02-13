@@ -28,7 +28,7 @@ const uint64_t PB_TOTAL_BYETS_LIMITS =
 
 #include <google/protobuf/io/zero_copy_stream_impl_lite.h>
 #include <gflags/gflags.h>
-#include "flare/base/logging.h"
+#include "flare/log/logging.h"
 #include "flare/base/singleton_on_pthread_once.h"
 #include "flare/rpc/protocol.h"
 #include "flare/rpc/controller.h"

@@ -60,7 +60,7 @@
 
 #include "flare/base/math/bit_cast.h"
 #include "flare/base/dynamic_annotations/dynamic_annotations.h"
-#include "flare/base/logging.h"
+#include "flare/log/logging.h"
 #include "flare/base/profile.h"
 #include "flare/debugging/internal/demangle.h"
 #include "flare/debugging/internal/vdso_support.h"

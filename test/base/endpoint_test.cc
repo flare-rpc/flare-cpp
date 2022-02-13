@@ -3,7 +3,7 @@
 #include <gtest/gtest.h>
 #include "flare/base/errno.h"
 #include "flare/base/endpoint.h"
-#include "flare/base/logging.h"
+#include "flare/log/logging.h"
 #include "flare/container/flat_map.h"
 
 namespace {

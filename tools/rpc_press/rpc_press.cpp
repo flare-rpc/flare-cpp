@@ -19,7 +19,7 @@
 #include <google/protobuf/dynamic_message.h>
 #include <google/protobuf/compiler/importer.h>
 #include <flare/rpc/server.h>
-#include "flare/base/logging.h"
+#include "flare/log/logging.h"
 #include <flare/strings/string_splitter.h>
 #include <string.h>
 #include "rpc_press_impl.h"

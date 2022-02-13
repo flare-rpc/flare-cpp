@@ -19,7 +19,7 @@
 
 #include <webfoot_naming.h>                             //webfoot::*
 #include <naming.pb.h>                                  //BnsInput BnsOutput
-#include "flare/base/logging.h"                               // CHECK
+#include "flare/log/logging.h"                               // CHECK
 #include "flare/rpc/policy/baidu_naming_service.h"
 
 namespace flare::rpc {

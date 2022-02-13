@@ -30,7 +30,7 @@
 #include "flare/base/errno.h"                      // errno
 #include "flare/base/thread.h"              // thread_atexit
 #include "flare/base/scoped_lock.h"
-#include "flare/base/logging.h"
+#include "flare/log/logging.h"
 
 namespace flare::variable {
     namespace detail {

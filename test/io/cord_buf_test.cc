@@ -25,7 +25,7 @@
 #include "flare/base/time.h"                 // Timer
 #include "flare/base/fd_utility.h"           // make_non_blocking
 #include <flare/io/iobuf.h>
-#include "flare/base/logging.h"
+#include "flare/log/logging.h"
 #include "flare/base/fd_guard.h"
 #include "flare/base/errno.h"
 #include <flare/base/fast_rand.h>

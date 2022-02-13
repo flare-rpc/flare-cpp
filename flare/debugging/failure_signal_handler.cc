@@ -31,7 +31,7 @@
 #include <ctime>
 
 #include "flare/base/profile.h"
-#include "flare/base/logging.h"
+#include "flare/log/logging.h"
 #include "flare/debugging/internal/examine_stack.h"
 #include "flare/debugging/stacktrace.h"
 

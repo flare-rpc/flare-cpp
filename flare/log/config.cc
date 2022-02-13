@@ -95,3 +95,6 @@ FLARE_LOG_DEFINE_string(log_backtrace_at, "",
 
 FLARE_LOG_DEFINE_bool(log_utc_time, false,
                       "Use UTC time for logging.");
+
+DEFINE_bool(log_as_json, false, "Print log as a valid JSON");
+DEFINE_bool(crash_on_fatal_log, false, "crash on fatal log");

@@ -21,7 +21,7 @@
 #include "flare/bthread/bthread.h"
 #include "flare/base/time.h"
 #include "flare/base/scoped_lock.h"
-#include "flare/base/logging.h"
+#include "flare/log/logging.h"
 #include "flare/rpc/log.h"
 #include "flare/rpc/protocol.h"
 #include "flare/rpc/input_messenger.h"

@@ -15,7 +15,7 @@
 // specific language governing permissions and limitations
 // under the License.
 
-
+#include <inttypes.h>
 #include <google/protobuf/descriptor.h>             // MethodDescriptor
 #include <gflags/gflags.h>
 #include <flare/json2pb/pb_to_json.h>                    // ProtoMessageToJson

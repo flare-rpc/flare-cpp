@@ -27,7 +27,7 @@
 #include <stdexcept>                       // std::invalid_argument
 #include "flare/base/static_atomic.h"                // std::atomic
 #include "flare/base/thread.h"             // thread_atexit
-#include "flare/base/logging.h"                  // CHECK, LOG
+#include "flare/log/logging.h"                  // CHECK, LOG
 #include "flare/base/fd_guard.h"                 // flare::base::fd_guard
 #include "flare/io/cord_buf.h"
 #include "flare/base/profile.h"

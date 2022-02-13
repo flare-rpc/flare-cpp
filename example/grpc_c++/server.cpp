@@ -18,7 +18,7 @@
 // A server to receive HelloRequest and send back HelloReply
 
 #include <gflags/gflags.h>
-#include "flare/base/logging.h"
+#include "flare/log/logging.h"
 #include <flare/rpc/server.h>
 #include <flare/rpc/restful.h>
 #include "helloworld.pb.h"

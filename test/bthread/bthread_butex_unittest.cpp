@@ -18,7 +18,7 @@
 #include <gtest/gtest.h>
 #include "flare/base/static_atomic.h"
 #include "flare/base/time.h"
-#include "flare/base/logging.h"
+#include "flare/log/logging.h"
 #include "flare/bthread/butex.h"
 #include "flare/bthread/task_control.h"
 #include "flare/bthread/task_group.h"

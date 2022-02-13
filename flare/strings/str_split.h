@@ -34,7 +34,7 @@
 #include <vector>
 #include <string_view>
 
-#include "flare/base/logging.h"
+#include "flare/log/logging.h"
 #include "flare/strings/internal/str_split_internal.h"
 #include "flare/strings/strip.h"
 #include "flare/strings/trim.h"

@@ -18,7 +18,7 @@
 // A client sending requests to server every 1 second using grpc.
 
 #include <gflags/gflags.h>
-#include "flare/base/logging.h"
+#include "flare/log/logging.h"
 #include "flare/base/time.h"
 #include <flare/rpc/channel.h>
 #include "helloworld.pb.h"

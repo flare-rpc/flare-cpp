@@ -16,7 +16,7 @@
 // under the License.
 
 
-#include "flare/base/logging.h"
+#include "flare/log/logging.h"
 #include "flare/rpc/compress.h"
 #include "flare/rpc/protocol.h"
 

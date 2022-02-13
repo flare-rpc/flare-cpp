@@ -21,7 +21,7 @@
 #define  FLARE_VARIABLE_RECORDER_H_
 
 #include <stdint.h>                              // int64_t uint64_t
-#include "flare/base/logging.h"                        // LOG
+#include "flare/log/logging.h"                        // LOG
 #include "flare/variable/detail/combiner.h"                // detail::AgentCombiner
 #include "flare/variable/variable.h"
 #include "flare/variable/window.h"

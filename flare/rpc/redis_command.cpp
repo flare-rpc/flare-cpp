@@ -16,7 +16,7 @@
 // under the License.
 
 
-#include "flare/base/logging.h"
+#include "flare/log/logging.h"
 #include "flare/rpc/log.h"
 #include "flare/rpc/redis_command.h"
 

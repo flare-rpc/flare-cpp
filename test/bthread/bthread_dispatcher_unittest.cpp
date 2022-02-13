@@ -23,7 +23,7 @@
 #include "flare/base/time.h"
 #include "flare/base/scoped_lock.h"
 #include "flare/base/fd_utility.h"
-#include "flare/base/logging.h"
+#include "flare/log/logging.h"
 #include "flare/base/gperftools_profiler.h"
 #include "flare/bthread/bthread.h"
 #include "flare/bthread/task_control.h"

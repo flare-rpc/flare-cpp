@@ -15,7 +15,7 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#include "flare/base/logging.h"
+#include "flare/log/logging.h"
 #include "flare/base/singleton_on_pthread_once.h"
 #include "flare/rpc/policy/esp_authenticator.h"
 

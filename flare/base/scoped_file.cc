@@ -3,7 +3,7 @@
 // found in the LICENSE file.
 
 #include "flare/base/scoped_file.h"
-#include "flare/base/logging.h"
+#include "flare/log/logging.h"
 
 #if defined(FLARE_PLATFORM_POSIX)
 #include <unistd.h>

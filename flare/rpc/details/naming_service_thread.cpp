@@ -21,7 +21,7 @@
 #include <gflags/gflags.h>
 #include "flare/bthread/butex.h"
 #include "flare/base/scoped_lock.h"
-#include "flare/base/logging.h"
+#include "flare/log/logging.h"
 #include "flare/rpc/log.h"
 #include "flare/rpc/socket_map.h"
 #include "flare/rpc/details/naming_service_thread.h"

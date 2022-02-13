@@ -28,7 +28,7 @@
 #include "flare/base/singleton_on_pthread_once.h"
 #endif
 
-#include "flare/base/logging.h"
+#include "flare/log/logging.h"
 #include "flare/memory/object_pool.h"
 #include "flare/bthread/errno.h"                 // EWOULDBLOCK
 #include "flare/bthread/sys_futex.h"             // futex_*

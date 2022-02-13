@@ -20,7 +20,7 @@
 #include <google/protobuf/descriptor.h>
 #include <gflags/gflags.h>
 #include "flare/base/time.h"                              // milliseconds_from_now
-#include "flare/base/logging.h"
+#include "flare/log/logging.h"
 #include "flare/base/strings.h"
 #include "flare/hash/murmurhash3.h"
 #include "flare/bthread/unstable.h"                        // bthread_timer_add

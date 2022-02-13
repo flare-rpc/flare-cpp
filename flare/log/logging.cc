@@ -1466,8 +1466,8 @@ namespace flare::log {
 #endif  // defined(__ANDROID__)
     }  // namespace
 
-// Flush buffered message, called by the destructor, or any other function
-// that needs to synchronize the log.
+    // Flush buffered message, called by the destructor, or any other function
+    // that needs to synchronize the log.
     void LogMessage::Flush() {
         if (data_->has_been_flushed_ || data_->severity_ < FLAGS_minloglevel)
             return;
@@ -1503,8 +1503,8 @@ namespace flare::log {
 
 #if defined(__ANDROID__)
         const int level = AndroidLogLevel((int)data_->severity_);
-      const std::string text = std::string(data_->message_text_);
-      __android_log_write(level, "native", text.substr(0,data_->num_chars_to_log_).c_str());
+        const std::string text = std::string(data_->message_text_);
+        __android_log_write(level, "native", text.substr(0,data_->num_chars_to_log_).c_str());
 #endif  // defined(__ANDROID__)
 
         if (append_newline) {
@@ -1527,9 +1527,9 @@ namespace flare::log {
         data_->has_been_flushed_ = true;
     }
 
-// Copy of first FATAL log message so that we can print it out again
-// after all the stack traces.  To preserve legacy behavior, we don't
-// use fatal_msg_data_exclusive.
+    // Copy of first FATAL log message so that we can print it out again
+    // after all the stack traces.  To preserve legacy behavior, we don't
+    // use fatal_msg_data_exclusive.
     static time_t fatal_time;
     static char fatal_message[256];
 

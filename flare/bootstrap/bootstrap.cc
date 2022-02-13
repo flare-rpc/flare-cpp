@@ -12,7 +12,7 @@
 #include <random>
 #include <utility>
 #include <vector>
-#include "flare/base/logging.h"
+#include "flare/log/logging.h"
 #include "flare/memory/resident.h"
 
 namespace flare::bootstrap {

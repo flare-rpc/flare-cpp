@@ -16,7 +16,7 @@
 #include <cstdio>
 
 #include "flare/base/profile.h"
-#include "flare/base/logging.h"
+#include "flare/log/logging.h"
 #include "flare/base/profile.h"
 #include "flare/debugging/stacktrace.h"
 #include "flare/debugging/symbolize.h"

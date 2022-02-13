@@ -22,7 +22,7 @@
 #include "flare/base/strings.h"
 #include "flare/base/profile.h"
 #include "flare/base/endian.h"
-#include "flare/base/logging.h"
+#include "flare/log/logging.h"
 #include "flare/rpc/memcache.h"
 #include "flare/rpc/policy/memcache_binary_header.h"
 
