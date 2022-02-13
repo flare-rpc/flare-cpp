@@ -631,10 +631,6 @@ bool JsonToProtoMessage(const std::string& json_string,
     return JsonToProtoMessageInline(json_string, message, Json2PbOptions(), error);
 }
 
-// For ABI compatibility with 1.0.0.0
-// (https://svn.baidu.com/public/tags/protobuf-json/protobuf-json_1-0-0-0_PD_BL)
-// This method should not be exposed in header, otherwise calls to
-// JsonToProtoMessage will be ambiguous.
 bool JsonToProtoMessage(std::string json_string, 
                         google::protobuf::Message* message,
                         std::string* error) {

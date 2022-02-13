@@ -205,7 +205,7 @@ public:
     google::protobuf::Message* response() const { return _response; }
 
     // An identifier to send to server along with request. This is widely used
-    // throughout baidu's servers to tag a searching session (a series of
+    // servers to tag a searching session (a series of
     // queries following the topology of servers) with a same log_id.
     void set_log_id(uint64_t log_id);
 

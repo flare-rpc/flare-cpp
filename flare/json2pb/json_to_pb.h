@@ -30,7 +30,7 @@ struct Json2PbOptions {
 
     // Decode string in json using base64 decoding if the type of
     // corresponding field is bytes when this option is turned on.
-    // Default: false for baidu-interal, true otherwise.
+    // Default: true.
     bool base64_to_bytes;
 };
 

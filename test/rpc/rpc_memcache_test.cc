@@ -39,11 +39,7 @@ static pid_t g_mc_pid = -1;
 static void RemoveMemcached() {
     puts("[Stopping memcached]");
     char cmd[256];
-#if defined(BAIDU_INTERNAL)
-    snprintf(cmd, sizeof(cmd), "kill %d; rm -rf memcached_for_test", g_mc_pid);
-#else
     snprintf(cmd, sizeof(cmd), "kill %d", g_mc_pid);
-#endif
     CHECK(0 == system(cmd));
     // Wait for mc to stop
     usleep(50000);
@@ -53,20 +49,11 @@ static void RemoveMemcached() {
 #define MEMCACHED_PORT "11211"
 
 static void RunMemcached() {
-#if defined(BAIDU_INTERNAL)
-    puts("Downloading memcached...");
-    if (system("mkdir -p memcached_for_test && cd memcached_for_test && svn co https://svn.baidu.com/third-64/tags/memcached/memcached_1-4-15-100_PD_BL/bin") != 0) {
-        puts("Fail to get memcached from svn");
-        return;
-    }
-# undef MEMCACHED_BIN
-# define MEMCACHED_BIN "memcached_for_test/bin/memcached";
-#else
     if (system("which " MEMCACHED_BIN) != 0) {
         puts("Fail to find " MEMCACHED_BIN ", following tests will be skipped");
         return;
     }
-#endif
+
     atexit(RemoveMemcached);
 
     g_mc_pid = fork();

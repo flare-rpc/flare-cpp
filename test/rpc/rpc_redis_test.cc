@@ -47,11 +47,7 @@ static void RemoveRedisServer() {
     if (g_redis_pid > 0) {
         puts("[Stopping redis-server]");
         char cmd[256];
-#if defined(BAIDU_INTERNAL)
-        snprintf(cmd, sizeof(cmd), "kill %d; rm -rf redis_server_for_test", g_redis_pid);
-#else
         snprintf(cmd, sizeof(cmd), "kill %d", g_redis_pid);
-#endif
         CHECK(0 == system(cmd));
         // Wait for redis to stop
         usleep(50000);
@@ -62,20 +58,10 @@ static void RemoveRedisServer() {
 #define REDIS_SERVER_PORT "6479"
 
 static void RunRedisServer() {
-#if defined(BAIDU_INTERNAL)
-    puts("Downloading redis-server...");
-    if (system("mkdir -p redis_server_for_test && cd redis_server_for_test && svn co https://svn.baidu.com/third-64/tags/redis/redis_2-6-14-100_PD_BL/bin") != 0) {
-        puts("Fail to get redis-server from svn");
-        return;
-    }
-# undef REDIS_SERVER_BIN
-# define REDIS_SERVER_BIN "redis_server_for_test/bin/redis-server";
-#else
     if (system("which " REDIS_SERVER_BIN) != 0) {
         puts("Fail to find " REDIS_SERVER_BIN ", following tests will be skipped");
         return;
     }
-#endif
     atexit(RemoveRedisServer);
 
     g_redis_pid = fork();

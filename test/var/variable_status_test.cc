@@ -40,11 +40,6 @@ protected:
 TEST_F(StatusTest, status) {
     flare::variable::Status<std::string> st1;
     st1.set_value("hello %d", 9);
-#ifdef BAIDU_INTERNAL
-    boost::any v1;
-    st1.get_value(&v1);
-    ASSERT_EQ("hello 9", boost::any_cast<std::string>(v1));
-#endif
     ASSERT_EQ(0, st1.expose("var1"));
     ASSERT_EQ("hello 9", flare::variable::Variable::describe_exposed("var1"));
     ASSERT_EQ("\"hello 9\"", flare::variable::Variable::describe_exposed("var1", true));
@@ -108,11 +103,6 @@ TEST_F(StatusTest, status) {
     flare::variable::Status<int> st4("var4", 9);
     ASSERT_EQ("var4", st4.name());
     ASSERT_EQ(4UL, flare::variable::Variable::count_exposed());
-#ifdef BAIDU_INTERNAL
-    boost::any v4;
-    st4.get_value(&v4);
-    ASSERT_EQ(9, boost::any_cast<int>(v4));
-#endif
     ASSERT_EQ("9", flare::variable::Variable::describe_exposed("var4"));
     flare::variable::Variable::list_exposed(&vars);
     ASSERT_EQ(4UL, vars.size());
@@ -123,11 +113,6 @@ TEST_F(StatusTest, status) {
 
     flare::variable::Status<void*> st5((void*)19UL);
     LOG(INFO) << st5;
-#ifdef BAIDU_INTERNAL
-    boost::any v5;
-    st5.get_value(&v5);
-    ASSERT_EQ((void*)19UL, boost::any_cast<void*>(v5));
-#endif
     ASSERT_EQ("0x13", st5.get_description());
 }
 
@@ -142,11 +127,6 @@ int64_t print2(void* arg) {
 TEST_F(StatusTest, passive_status) {
     flare::variable::BasicPassiveStatus<std::string> st1("var11", print1, (void*)9UL);
     LOG(INFO) << st1;
-#ifdef BAIDU_INTERNAL
-    boost::any v1;
-    st1.get_value(&v1);
-    ASSERT_EQ("0x9", boost::any_cast<std::string>(v1));
-#endif
     std::ostringstream ss;
     ASSERT_EQ(0, flare::variable::Variable::describe_exposed("var11", ss));
     ASSERT_EQ("0x9", ss.str());
@@ -158,17 +138,6 @@ TEST_F(StatusTest, passive_status) {
 
     int64_t tmp2 = 9;
     flare::variable::BasicPassiveStatus<int64_t> st2("var12", print2, &tmp2);
-#ifdef BAIDU_INTERNAL
-    boost::any v2;
-    st2.get_value(&v2);
-    try {
-        boost::any_cast<int32_t>(v2);
-        ASSERT_TRUE(false);
-    } catch (boost::bad_any_cast & e) {
-        LOG(INFO) << "Casting int64_t to int32_t throws.";
-    }
-    ASSERT_EQ(9, boost::any_cast<int64_t>(v2));
-#endif
     ss.str("");
     ASSERT_EQ(0, flare::variable::Variable::describe_exposed("var12", ss));
     ASSERT_EQ("9", ss.str());
@@ -197,10 +166,5 @@ TEST_F(StatusTest, non_primitive) {
     ASSERT_EQ(0, st.get_value().x);
     st.set_value(Foo(1));
     ASSERT_EQ(1, st.get_value().x);
-#ifdef BAIDU_INTERNAL
-    boost::any a1;
-    st.get_value(&a1);
-    ASSERT_EQ(1, boost::any_cast<Foo>(a1).x);
-#endif
 }
 } // namespace
