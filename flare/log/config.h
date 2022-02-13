@@ -1,5 +1,5 @@
 //
-// Created by liyinbin on 2022/2/13.
+// Created by jeff.li.
 //
 
 #ifndef FLARE_LOG_CONFIG_H_
@@ -79,14 +79,21 @@ DECLARE_string(log_dir);
 // Set the log file mode.
 DECLARE_int32(logfile_mode);
 
+DECLARE_int32(logemaillevel);
+
 // Sets the path of the directory into which to put additional links
 // to the log files.
 DECLARE_string(log_link);
 
+DECLARE_string(alsologtoemail);
+
+DECLARE_string(logmailer);
+
+DECLARE_string(log_backtrace_at);
+
 DECLARE_int32(v);  // in vlog_is_on.cc
 
 DECLARE_string(vmodule); // also in vlog_is_on.cc
-
 // Sets the maximum log file size (in MB).
 DECLARE_int32(max_log_size);
 

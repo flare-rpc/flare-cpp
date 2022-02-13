@@ -1,5 +1,5 @@
 //
-// Created by liyinbin on 2022/2/13.
+// Created by jeff.li.
 //
 
 #include "flare/log/utility.h"
@@ -33,9 +33,7 @@ namespace flare::log {
                 {SIGILL, "SIGILL"},
                 {SIGFPE, "SIGFPE"},
                 {SIGABRT, "SIGABRT"},
-#if !defined(OS_WINDOWS)
                 {SIGBUS, "SIGBUS"},
-#endif
                 {SIGTERM, "SIGTERM"},
         };
 
@@ -178,7 +176,7 @@ namespace flare::log {
       formatter.AppendUint64((uintptr_t)pthread_self(), 16);
       formatter.AppendString(") ");
       // Only linux has the PID of the signal sender in si_pid.
-#ifdef OS_LINUX
+#ifdef FLARE_PLATFORM_LINUX
       formatter.AppendString("from PID ");
       formatter.AppendUint64(siginfo->si_pid, 10);
       formatter.AppendString("; ");
@@ -223,28 +221,21 @@ namespace flare::log {
       sig_action.sa_handler = SIG_DFL;
       sigaction(signal_number, &sig_action, NULL);
       kill(getpid(), signal_number);
-#elif defined(OS_WINDOWS)
-            signal(signal_number, SIG_DFL);
-      raise(signal_number);
 #endif
         }
 
-// This variable is used for protecting FailureSignalHandler() from
-// dumping stuff while another thread is doing it.  Our policy is to let
-// the first thread dump stuff and let other threads wait.
-// See also comments in FailureSignalHandler().
+        // This variable is used for protecting FailureSignalHandler() from
+        // dumping stuff while another thread is doing it.  Our policy is to let
+        // the first thread dump stuff and let other threads wait.
+        // See also comments in FailureSignalHandler().
         static pthread_t *g_entered_thread_id_pointer = NULL;
 
-// Dumps signal and stack frame information, and invokes the default
-// signal handler once our job is done.
-#if defined(OS_WINDOWS)
-        void FailureSignalHandler(int signal_number)
-#else
+        // Dumps signal and stack frame information, and invokes the default
+        // signal handler once our job is done.
 
         void FailureSignalHandler(int signal_number,
                                   siginfo_t *signal_info,
                                   void *ucontext)
-#endif
         {
             // First check if we've already entered the function.  We use an atomic
             // compare and swap operation for platforms that support it.  For other
@@ -285,11 +276,9 @@ namespace flare::log {
             // First dump time info.
             DumpTimeInfo();
 
-#if !defined(OS_WINDOWS)
             // Get the program counter from ucontext.
             void *pc = GetPC(ucontext);
             DumpStackFrameInfo("PC: ", pc);
-#endif
 
 #ifdef HAVE_STACKTRACE
             // Get the stack traces.
@@ -335,8 +324,6 @@ namespace flare::log {
       sigaction(SIGABRT, NULL, &sig_action);
       if (sig_action.sa_sigaction == &FailureSignalHandler)
         return true;
-#elif defined(OS_WINDOWS)
-            return kFailureSignalHandlerInstalled;
 #endif  // HAVE_SIGACTION
             return false;
         }
@@ -356,17 +343,11 @@ namespace flare::log {
         CHECK_ERR(sigaction(kFailureSignals[i].number, &sig_action, NULL));
       }
       kFailureSignalHandlerInstalled = true;
-#elif defined(OS_WINDOWS)
-        for (size_t i = 0; i < ARRAYSIZE(kFailureSignals); ++i) {
-        CHECK_NE(signal(kFailureSignals[i].number, &FailureSignalHandler),
-                 SIG_ERR);
-      }
-      kFailureSignalHandlerInstalled = true;
 #endif  // HAVE_SIGACTION
     }
 
     void InstallFailureWriter(void (*writer)(const char *data, int size)) {
-#if defined(HAVE_SIGACTION) || defined(OS_WINDOWS)
+#if defined(HAVE_SIGACTION)
         g_failure_writer = writer;
 #endif  // HAVE_SIGACTION
     }

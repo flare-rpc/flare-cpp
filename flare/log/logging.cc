@@ -1,5 +1,5 @@
 //
-// Created by liyinbin on 2022/2/13.
+// Created by jeff.li.
 //
 
 #define _GNU_SOURCE 1 // needed for O_NOFOLLOW and log_pread()/pwrite()
@@ -37,11 +37,14 @@
 #include "flare/base/time.h"
 #include "flare/base/thread.h"
 #include "flare/base/sysinfo.h"
+
 #ifdef FLARE_PLATFORM_LINUX
 #include <signal.h>
 #endif
 #ifdef HAVE_STACKTRACE
+
 # include "flare/debugging/stacktrace.h"
+
 #endif
 
 #ifdef __ANDROID__
@@ -76,94 +79,6 @@ using std::fdopen;
 // There is no thread annotation support.
 #define EXCLUSIVE_LOCKS_REQUIRED(mu)
 
-static bool BoolFromEnv(const char *varname, bool defval) {
-    const char *const valstr = getenv(varname);
-    if (!valstr) {
-        return defval;
-    }
-    return memchr("tTyY1\0", valstr[0], 6) != NULL;
-}
-
-FLARE_LOG_DEFINE_bool(timestamp_in_logfile_name,
-                      BoolFromEnv("GOOGLE_TIMESTAMP_IN_LOGFILE_NAME", true),
-                      "put a timestamp at the end of the log file name");
-FLARE_LOG_DEFINE_bool(logtostderr, BoolFromEnv("GOOGLE_LOGTOSTDERR", false),
-                      "log messages go to stderr instead of logfiles");
-FLARE_LOG_DEFINE_bool(alsologtostderr, BoolFromEnv("GOOGLE_ALSOLOGTOSTDERR", false),
-                      "log messages go to stderr in addition to logfiles");
-FLARE_LOG_DEFINE_bool(colorlogtostderr, false,
-                      "color messages logged to stderr (if supported by terminal)");
-#ifdef FLARE_PLATFORM_LINUX
-FLARE_LOG_DEFINE_bool(drop_log_memory, true, "Drop in-memory buffers of log contents. "
-                 "Logs can grow very quickly and they are rarely read before they "
-                 "need to be evicted from memory. Instead, drop them from memory "
-                 "as soon as they are flushed to disk.");
-#endif
-
-// By default, errors (including fatal errors) get logged to stderr as
-// well as the file.
-//
-// The default is ERROR instead of FATAL so that users can see problems
-// when they run a program without having to look in another file.
-DEFINE_int32(stderrthreshold,
-             flare::log::FLARE_ERROR,
-             "log messages at or above this level are copied to stderr in "
-             "addition to logfiles.  This flag obsoletes --alsologtostderr.");
-
-FLARE_LOG_DEFINE_string(alsologtoemail, "",
-                        "log messages go to these email addresses "
-                        "in addition to logfiles");
-FLARE_LOG_DEFINE_bool(log_prefix, true,
-                      "Prepend the log prefix to the start of each log line");
-FLARE_LOG_DEFINE_int32(minloglevel, 0, "Messages logged at a lower level than this don't "
-                                       "actually get logged anywhere");
-FLARE_LOG_DEFINE_int32(logbuflevel, 0,
-                       "Buffer log messages logged at this level or lower"
-                       " (-1 means don't buffer; 0 means buffer INFO only;"
-                       " ...)");
-FLARE_LOG_DEFINE_int32(logbufsecs, 30,
-                       "Buffer log messages for at most this many seconds");
-FLARE_LOG_DEFINE_int32(logemaillevel, 999,
-                       "Email log messages logged at this level or higher"
-                       " (0 means email all; 3 means email FATAL only;"
-                       " ...)");
-FLARE_LOG_DEFINE_string(logmailer, "",
-                        "Mailer used to send logging email");
-
-// Compute the default value for --log_dir
-static const char *DefaultLogDir() {
-    const char *env;
-    env = getenv("GOOGLE_LOG_DIR");
-    if (env != NULL && env[0] != '\0') {
-        return env;
-    }
-    env = getenv("TEST_TMPDIR");
-    if (env != NULL && env[0] != '\0') {
-        return env;
-    }
-    return "";
-}
-
-FLARE_LOG_DEFINE_int32(logfile_mode, 0664, "Log file mode/permissions.");
-
-FLARE_LOG_DEFINE_string(log_dir, DefaultLogDir(),
-                        "If specified, logfiles are written into this directory instead "
-                        "of the default logging directory.");
-FLARE_LOG_DEFINE_string(log_link, "", "Put additional links to the log "
-                                      "files in this directory");
-
-FLARE_LOG_DEFINE_int32(max_log_size, 1800,
-                       "approx. maximum log file size (in MB). A value of 0 will "
-                       "be silently overridden to 1.");
-
-FLARE_LOG_DEFINE_bool(stop_logging_if_full_disk, false,
-                      "Stop attempting to log to disk if the disk is full.");
-
-FLARE_LOG_DEFINE_string(log_backtrace_at, "",
-                        "Emit a backtrace when logging at file:linenum.");
-
-FLARE_LOG_DEFINE_bool(log_utc_time, false,
-                      "Use UTC time for logging.");
 
 // TODO(hamaji): consider windows
 #define PATH_SEPARATOR '/'
@@ -219,21 +134,8 @@ namespace flare::log {
         return color;
     }
 
-#ifdef OS_WINDOWS
 
-    // Returns the character attribute for the given color.
-    static WORD GetColorAttribute(GLogColor color) {
-      switch (color) {
-        case COLOR_RED:    return FOREGROUND_RED;
-        case COLOR_GREEN:  return FOREGROUND_GREEN;
-        case COLOR_YELLOW: return FOREGROUND_RED | FOREGROUND_GREEN;
-        default:           return 0;
-      }
-    }
-
-#else
-
-// Returns the ANSI color code for the given color.
+    // Returns the ANSI color code for the given color.
     static const char *GetAnsiColorCode(GLogColor color) {
         switch (color) {
             case COLOR_RED:
@@ -248,15 +150,14 @@ namespace flare::log {
         return NULL; // stop warning about return type.
     }
 
-#endif  // OS_WINDOWS
 
-// Safely get max_log_size, overriding to 1 if it somehow gets defined as 0
+    // Safely get max_log_size, overriding to 1 if it somehow gets defined as 0
     static int32_t MaxLogSize() {
         return (FLAGS_max_log_size > 0 && FLAGS_max_log_size < 4096 ? FLAGS_max_log_size : 1);
     }
 
-// An arbitrary limit on the length of a single log message.  This
-// is so that streaming can be done more efficiently.
+    // An arbitrary limit on the length of a single log message.  This
+    // is so that streaming can be done more efficiently.
     const size_t LogMessage::kMaxLogMessageLen = 30000;
 
     struct LogMessage::LogMessageData {
@@ -305,7 +206,7 @@ namespace flare::log {
     static bool stop_writing = false;
 
     const char *const log_severity_names[NUM_SEVERITIES] = {
-            "TRACE","DEBUG", "INFO", "WARNING", "ERROR", "FATAL"
+            "TRACE", "DEBUG", "INFO", "WARNING", "ERROR", "FATAL"
     };
 
 // Has the user called SetExitOnDFatal(true)?
@@ -680,29 +581,9 @@ namespace flare::log {
             fwrite(message, len, 1, stderr);
             return;
         }
-#ifdef OS_WINDOWS
-        const HANDLE stderr_handle = GetStdHandle(STD_ERROR_HANDLE);
-
-      // Gets the current text color.
-      CONSOLE_SCREEN_BUFFER_INFO buffer_info;
-      GetConsoleScreenBufferInfo(stderr_handle, &buffer_info);
-      const WORD old_color_attrs = buffer_info.wAttributes;
-
-      // We need to flush the stream buffers into the console before each
-      // SetConsoleTextAttribute call lest it affect the text that is already
-      // printed but has not yet reached the console.
-      fflush(stderr);
-      SetConsoleTextAttribute(stderr_handle,
-                              GetColorAttribute(color) | FOREGROUND_INTENSITY);
-      fwrite(message, len, 1, stderr);
-      fflush(stderr);
-      // Restores the text color.
-      SetConsoleTextAttribute(stderr_handle, old_color_attrs);
-#else
         fprintf(stderr, "\033[0;3%sm", GetAnsiColorCode(color));
         fwrite(message, len, 1, stderr);
         fprintf(stderr, "\033[m");  // Resets the terminal to default.
-#endif  // OS_WINDOWS
     }
 
     static void WriteToStderr(const char *message, size_t len) {
@@ -715,21 +596,6 @@ namespace flare::log {
                                                  const char *message, size_t message_len, size_t prefix_len) {
         if ((severity >= FLAGS_stderrthreshold) || FLAGS_alsologtostderr) {
             ColoredWriteToStderr(severity, message, message_len);
-#ifdef OS_WINDOWS
-            // On Windows, also output to the debugger
-        ::OutputDebugStringA(message);
-#elif defined(__ANDROID__)
-            // On Android, also output to logcat
-        const int android_log_levels[NUM_SEVERITIES] = {
-          ANDROID_LOG_INFO,
-          ANDROID_LOG_WARN,
-          ANDROID_LOG_ERROR,
-          ANDROID_LOG_FATAL,
-        };
-        __android_log_write(android_log_levels[severity],
-                            glog_internal_namespace_::ProgramInvocationShortName(),
-                            message + prefix_len);
-#endif
         }
     }
 
@@ -738,7 +604,7 @@ namespace flare::log {
                                                 const char *message, size_t len) {
         if (severity >= email_logging_severity_ ||
             severity >= FLAGS_logemaillevel) {
-            string to(FLAGS_alsologtoemail);
+            std::string to(FLAGS_alsologtoemail);
             if (!addresses_.empty()) {
                 if (!to.empty()) {
                     to += ",";
@@ -983,15 +849,7 @@ namespace flare::log {
                 }
                 return false;
             }
-#ifdef OS_WINDOWS
-            // https://github.com/golang/go/issues/27638 - make sure we seek to the end to append
-      // empirically replicated with wine over mingw build
-      if (!FLAGS_timestamp_in_logfile_name) {
-        if (fseek(file_, 0, SEEK_END) != 0) {
-          return false;
-        }
-      }
-#endif
+
             // We try to create a symlink called <program_name>.<severity>,
             // which is easier to use.  (Every time we create a new logfile,
             // we destroy the old symlink and create a new one, so it always
@@ -1007,27 +865,23 @@ namespace flare::log {
                 linkpath += linkname;
                 unlink(linkpath.c_str());                    // delete old one if it exists
 
-#if defined(OS_WINDOWS)
-                // TODO(hamaji): Create lnk file on Windows?
-#elif defined(HAVE_UNISTD_H)
                 // We must have unistd.h.
-        // Make the symlink be relative (in the same dir) so that if the
-        // entire log directory gets relocated the link is still valid.
-        const char *linkdest = slash ? (slash + 1) : filename;
-        if (symlink(linkdest, linkpath.c_str()) != 0) {
-          // silently ignore failures
-        }
+                // Make the symlink be relative (in the same dir) so that if the
+                // entire log directory gets relocated the link is still valid.
+                const char *linkdest = slash ? (slash + 1) : filename;
+                if (symlink(linkdest, linkpath.c_str()) != 0) {
+                    // silently ignore failures
+                }
 
-        // Make an additional link to the log file in a place specified by
-        // FLAGS_log_link, if indicated
-        if (!FLAGS_log_link.empty()) {
-          linkpath = FLAGS_log_link + "/" + linkname;
-          unlink(linkpath.c_str());                  // delete old one if it exists
-          if (symlink(filename, linkpath.c_str()) != 0) {
-            // silently ignore failures
-          }
-        }
-#endif
+                // Make an additional link to the log file in a place specified by
+                // FLAGS_log_link, if indicated
+                if (!FLAGS_log_link.empty()) {
+                    linkpath = FLAGS_log_link + "/" + linkname;
+                    unlink(linkpath.c_str());                  // delete old one if it exists
+                    if (symlink(filename, linkpath.c_str()) != 0) {
+                        // silently ignore failures
+                    }
+                }
             }
 
             return true;  // Everything worked
@@ -1232,9 +1086,7 @@ namespace flare::log {
 
 
         LogCleaner::LogCleaner() : enabled_(false), overdue_days_(7), dir_delim_('/') {
-#ifdef OS_WINDOWS
-            dir_delim_ = '\\';
-#endif
+
         }
 
         void LogCleaner::Enable(int overdue_days) {
@@ -1566,10 +1418,10 @@ namespace flare::log {
             snprintf(fileline, sizeof(fileline), "%s:%d", data_->basename_, line);
 #ifdef HAVE_STACKTRACE
             if (!strcmp(FLAGS_log_backtrace_at.c_str(), fileline)) {
-          string stacktrace;
-          DumpStackTraceToString(&stacktrace);
-          stream() << " (stacktrace:\n" << stacktrace << ") ";
-        }
+                string stacktrace;
+                DumpStackTraceToString(&stacktrace);
+                stream() << " (stacktrace:\n" << stacktrace << ") ";
+            }
 #endif
         }
     }
@@ -1794,7 +1646,7 @@ namespace flare::log {
                           fatal_msg_data_exclusive.num_prefix_chars_;
 #ifdef HAVE_STACKTRACE
         // Retrieve the stack trace, omitting the logging frames that got us here.
-      reason->depth = flare::debugging::get_stack_trace(reason->stack, FLARE_ARRAY_SIZE(reason->stack), 4);
+        reason->depth = flare::debugging::get_stack_trace(reason->stack, FLARE_ARRAY_SIZE(reason->stack), 4);
 #else
         reason->depth = 0;
 #endif
@@ -1806,9 +1658,6 @@ namespace flare::log {
 # define ATTRIBUTE_NORETURN
 #endif
 
-#if defined(OS_WINDOWS)
-    __declspec(noreturn)
-#endif
 
     static void logging_fail() ATTRIBUTE_NORETURN;
 
@@ -2087,11 +1936,11 @@ namespace flare::log {
                         subject, body, dest);
             }
 
-            string logmailer = FLAGS_logmailer;
+            std::string logmailer = FLAGS_logmailer;
             if (logmailer.empty()) {
                 logmailer = "/bin/mail";
             }
-            string cmd =
+            std::string cmd =
                     logmailer + " -s" +
                     ShellEscape(subject) + " " + ShellEscape(dest);
             VLOG(4) << "Mailing command: " << cmd;
@@ -2129,19 +1978,6 @@ namespace flare::log {
 
     static void GetTempDirectories(vector<string> *list) {
         list->clear();
-#ifdef OS_WINDOWS
-        // On windows we'll try to find a directory in this order:
-      //   C:/Documents & Settings/whomever/TEMP (or whatever GetTempPath() is)
-      //   C:/TMP/
-      //   C:/TEMP/
-      //   C:/WINDOWS/ or C:/WINNT/
-      //   .
-      char tmp[MAX_PATH];
-      if (GetTempPathA(MAX_PATH, tmp))
-        list->push_back(tmp);
-      list->push_back("C:\\tmp\\");
-      list->push_back("C:\\temp\\");
-#else
         // Directories, in order of preference. If we find a dir that
         // exists, we stop adding other less-preferred dirs
         const char *candidates[] = {
@@ -2172,8 +2008,6 @@ namespace flare::log {
                 return;
             }
         }
-
-#endif
     }
 
     static vector<string> *logging_directories_list;
@@ -2188,14 +2022,7 @@ namespace flare::log {
                 logging_directories_list->push_back(FLAGS_log_dir.c_str());
             } else {
                 GetTempDirectories(logging_directories_list);
-#ifdef OS_WINDOWS
-                char tmp[MAX_PATH];
-          if (GetWindowsDirectoryA(tmp, MAX_PATH))
-            logging_directories_list->push_back(tmp);
-          logging_directories_list->push_back(".\\");
-#else
                 logging_directories_list->push_back("./");
-#endif
             }
         }
         return *logging_directories_list;
@@ -2223,92 +2050,85 @@ namespace flare::log {
     }
 
     void TruncateLogFile(const char *path, int64_t limit, int64_t keep) {
-#ifdef HAVE_UNISTD_H
+
         struct stat statbuf;
-      const int kCopyBlockSize = 8 << 10;
-      char copybuf[kCopyBlockSize];
-      int64_t read_offset, write_offset;
-      // Don't follow symlinks unless they're our own fd symlinks in /proc
-      int flags = O_RDWR;
-      // TODO(hamaji): Support other environments.
-#ifdef OS_LINUX
-      const char *procfd_prefix = "/proc/self/fd/";
-      if (strncmp(procfd_prefix, path, strlen(procfd_prefix))) flags |= O_NOFOLLOW;
+        const int kCopyBlockSize = 8 << 10;
+        char copybuf[kCopyBlockSize];
+        int64_t read_offset, write_offset;
+        // Don't follow symlinks unless they're our own fd symlinks in /proc
+        int flags = O_RDWR;
+        // TODO(hamaji): Support other environments.
+#ifdef FLARE_PLATFORM_LINUX
+        const char *procfd_prefix = "/proc/self/fd/";
+        if (strncmp(procfd_prefix, path, strlen(procfd_prefix))) flags |= O_NOFOLLOW;
 #endif
 
-      int fd = open(path, flags);
-      if (fd == -1) {
-        if (errno == EFBIG) {
-          // The log file in question has got too big for us to open. The
-          // real fix for this would be to compile logging.cc (or probably
-          // all of base/...) with -D_FILE_OFFSET_BITS=64 but that's
-          // rather scary.
-          // Instead just truncate the file to something we can manage
-          if (truncate(path, 0) == -1) {
+        int fd = open(path, flags);
+        if (fd == -1) {
+            if (errno == EFBIG) {
+                // The log file in question has got too big for us to open. The
+                // real fix for this would be to compile logging.cc (or probably
+                // all of base/...) with -D_FILE_OFFSET_BITS=64 but that's
+                // rather scary.
+                // Instead just truncate the file to something we can manage
+                if (truncate(path, 0) == -1) {
+                    PLOG(ERROR) << "Unable to truncate " << path;
+                } else {
+                    LOG(ERROR) << "Truncated " << path << " due to EFBIG error";
+                }
+            } else {
+                PLOG(ERROR) << "Unable to open " << path;
+            }
+            return;
+        }
+
+        if (fstat(fd, &statbuf) == -1) {
+            PLOG(ERROR) << "Unable to fstat()";
+            goto out_close_fd;
+        }
+
+        // See if the path refers to a regular file bigger than the
+        // specified limit
+        if (!S_ISREG(statbuf.st_mode)) goto out_close_fd;
+        if (statbuf.st_size <= limit) goto out_close_fd;
+        if (statbuf.st_size <= keep) goto out_close_fd;
+
+        // This log file is too large - we need to truncate it
+        LOG(INFO) << "Truncating " << path << " to " << keep << " bytes";
+
+        // Copy the last "keep" bytes of the file to the beginning of the file
+        read_offset = statbuf.st_size - keep;
+        write_offset = 0;
+        int bytesin, bytesout;
+        while ((bytesin = ::pread(fd, copybuf, sizeof(copybuf), read_offset)) > 0) {
+            bytesout = pwrite(fd, copybuf, bytesin, write_offset);
+            if (bytesout == -1) {
+                PLOG(ERROR) << "Unable to write to " << path;
+                break;
+            } else if (bytesout != bytesin) {
+                LOG(ERROR) << "Expected to write " << bytesin << ", wrote " << bytesout;
+            }
+            read_offset += bytesin;
+            write_offset += bytesout;
+        }
+        if (bytesin == -1) PLOG(ERROR) << "Unable to read from " << path;
+
+        // Truncate the remainder of the file. If someone else writes to the
+        // end of the file after our last read() above, we lose their latest
+        // data. Too bad ...
+        if (ftruncate(fd, write_offset) == -1) {
             PLOG(ERROR) << "Unable to truncate " << path;
-          } else {
-            LOG(ERROR) << "Truncated " << path << " due to EFBIG error";
-          }
-        } else {
-          PLOG(ERROR) << "Unable to open " << path;
         }
-        return;
-      }
 
-      if (fstat(fd, &statbuf) == -1) {
-        PLOG(ERROR) << "Unable to fstat()";
-        goto out_close_fd;
-      }
-
-      // See if the path refers to a regular file bigger than the
-      // specified limit
-      if (!S_ISREG(statbuf.st_mode)) goto out_close_fd;
-      if (statbuf.st_size <= limit)  goto out_close_fd;
-      if (statbuf.st_size <= keep) goto out_close_fd;
-
-      // This log file is too large - we need to truncate it
-      LOG(INFO) << "Truncating " << path << " to " << keep << " bytes";
-
-      // Copy the last "keep" bytes of the file to the beginning of the file
-      read_offset = statbuf.st_size - keep;
-      write_offset = 0;
-      int bytesin, bytesout;
-      while ((bytesin = log_pread(fd, copybuf, sizeof(copybuf), read_offset)) > 0) {
-        bytesout = pwrite(fd, copybuf, bytesin, write_offset);
-        if (bytesout == -1) {
-          PLOG(ERROR) << "Unable to write to " << path;
-          break;
-        } else if (bytesout != bytesin) {
-          LOG(ERROR) << "Expected to write " << bytesin << ", wrote " << bytesout;
-        }
-        read_offset += bytesin;
-        write_offset += bytesout;
-      }
-      if (bytesin == -1) PLOG(ERROR) << "Unable to read from " << path;
-
-      // Truncate the remainder of the file. If someone else writes to the
-      // end of the file after our last read() above, we lose their latest
-      // data. Too bad ...
-      if (ftruncate(fd, write_offset) == -1) {
-        PLOG(ERROR) << "Unable to truncate " << path;
-      }
-
-     out_close_fd:
-      close(fd);
-#else
-        LOG(ERROR) << "No log truncation support.";
-#endif
+        out_close_fd:
+        close(fd);
     }
 
     void TruncateStdoutStderr() {
-#ifdef HAVE_UNISTD_H
         int64_t limit = MaxLogSize() << 20;
-      int64_t keep = 1 << 20;
-      TruncateLogFile("/proc/self/fd/1", limit, keep);
-      TruncateLogFile("/proc/self/fd/2", limit, keep);
-#else
-        LOG(ERROR) << "No log truncation support.";
-#endif
+        int64_t keep = 1 << 20;
+        TruncateLogFile("/proc/self/fd/1", limit, keep);
+        TruncateLogFile("/proc/self/fd/2", limit, keep);
     }
 
 
@@ -2375,11 +2195,11 @@ namespace flare::log {
                 return 0;
             } else {
                 buf[0] = '\000';
-#if defined(OS_MACOSX) || defined(OS_FREEBSD) || defined(OS_OPENBSD)
+#if defined(FLARE_PLATFORM_OSX) || defined(FLARE_PLATFORM_FREEBSD) || defined(FLARE_PLATFORM_OPENBSD)
                 if (reinterpret_cast<intptr_t>(rc) < sys_nerr) {
-            // This means an error on MacOSX or FreeBSD.
-            return -1;
-          }
+                    // This means an error on MacOSX or FreeBSD.
+                    return -1;
+                }
 #endif
                 strncat(buf, rc, len - 1);
                 return 0;

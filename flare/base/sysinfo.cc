@@ -1,5 +1,5 @@
 //
-// Created by liyinbin on 2022/2/13.
+// Created by jeff.li.
 //
 
 #include "flare/base/sysinfo.h"
