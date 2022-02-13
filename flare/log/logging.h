@@ -708,7 +708,7 @@ PLOG_IF(FATAL, FLARE_UNLIKELY((invocation) == -1))    \
     const log_severity FLARE_LOG_0 = FLARE_ERROR;
 #else
 // Users may include windows.h after logging.h without
-// GLOG_NO_ABBREVIATED_SEVERITIES nor WIN32_LEAN_AND_MEAN.
+// FLARE_LOG_NO_ABBREVIATED_SEVERITIES nor WIN32_LEAN_AND_MEAN.
 // For this case, we cannot detect if ERROR is defined before users
 // actually use ERROR. Let's make an undefined symbol to warn users.
 # define FLARE_LOG_ERROR_MSG ERROR_macro_is_defined_Define_FLARE_LOG_NO_ABBREVIATED_SEVERITIES_before_including_logging_h_See_the_document_for_detail
@@ -1485,7 +1485,7 @@ PLOG_IF(FATAL, FLARE_UNLIKELY((invocation) == -1))    \
 
 // ===============================================================
 
-// Print a log for at most once. (not present in glog)
+// Print a log for at most once.
 // Almost zero overhead when the log was printed.
 #ifndef LOG_ONCE
 # define LOG_ONCE(severity) LOG_FIRST_N(severity, 1)
@@ -1494,7 +1494,6 @@ PLOG_IF(FATAL, FLARE_UNLIKELY((invocation) == -1))    \
 
 // Print a log after every N calls. First call always prints.
 // Each call to this macro has a cost of relaxed atomic increment.
-// The corresponding macro in glog is not thread-safe while this is.
 #ifndef LOG_EVERY_N
 # define LOG_EVERY_N(severity, N)                                \
      FLARE_LOG_IF_EVERY_N_IMPL(LOG_IF, severity, true, N)
@@ -1504,7 +1503,6 @@ PLOG_IF(FATAL, FLARE_UNLIKELY((invocation) == -1))    \
 
 // Print logs for first N calls.
 // Almost zero overhead when the log was printed for N times
-// The corresponding macro in glog is not thread-safe while this is.
 #ifndef LOG_FIRST_N
 # define LOG_FIRST_N(severity, N)                                \
      FLARE_LOG_IF_FIRST_N_IMPL(LOG_IF, severity, true, N)

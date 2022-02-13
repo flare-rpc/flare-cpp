@@ -275,7 +275,7 @@ static void* GlobalUpdate(void*) {
     return NULL;
 }
 
-static void BaiduStreamingLogHandler(google::protobuf::LogLevel level,
+static void flare_streaming_log_handler(google::protobuf::LogLevel level,
                                      const char* filename, int line,
                                      const std::string& message) {
     switch (level) {
@@ -310,7 +310,7 @@ static void GlobalInitializeOrDieImpl() {
     }
 
     // Make GOOGLE_LOG print to comlog device
-    SetLogHandler(&BaiduStreamingLogHandler);
+    SetLogHandler(&flare_streaming_log_handler);
 
     // Setting the variable here does not work, the profiler probably check
     // the variable before main() for only once.

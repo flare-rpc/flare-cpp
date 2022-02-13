@@ -49,7 +49,6 @@ To change compiler to clang, add `--cxx=clang++ --cc=clang`.
 
 To not link debugging symbols, add `--nodebugsymbols` and compiled binaries will be much smaller.
 
-To use flare with glog, add `--with-glog`.
 
 To enable [thrift support](../en/thrift.md), install thrift first and add `--with-thrift`.
 
@@ -81,7 +80,6 @@ To change compiler to clang, overwrite environment variable `CC` and `CXX` to `c
 
 To not link debugging symbols, remove `build/CMakeCache.txt` and cmake with `-DWITH_DEBUG_SYMBOLS=OFF`
 
-To use flare with glog, cmake with `-DWITH_GLOG=ON`.
 
 To enable [thrift support](../en/thrift.md), install thrift first and cmake with `-DWITH_THRIFT=ON`.
 
@@ -142,7 +140,6 @@ To change compiler to clang, add `--cxx=clang++ --cc=clang`.
 
 To not link debugging symbols, add `--nodebugsymbols` and compiled binaries will be much smaller.
 
-To use flare with glog, add `--with-glog`.
 
 To enable [thrift support](../en/thrift.md), install thrift first and add `--with-thrift`.
 
@@ -196,7 +193,6 @@ To change compiler to clang, add `--cxx=clang++ --cc=clang`.
 
 To not link debugging symbols, add `--nodebugsymbols` and compiled binaries will be much smaller.
 
-To use flare with glog, add `--with-glog`.
 
 To enable [thrift support](../en/thrift.md), install thrift first and add `--with-thrift`.
 
@@ -246,7 +242,6 @@ $ make
 ```
 To not link debugging symbols, add `--nodebugsymbols` and compiled binaries will be much smaller.
 
-To use flare with glog, add `--with-glog`.
 
 To enable [thrift support](../en/thrift.md), install thrift first and add `--with-thrift`.
 
@@ -319,7 +314,6 @@ If you want to use [cpu profiler](cpu_profiler.md) or [heap profiler](heap_profi
 
 When you remove tcmalloc, not only remove the linkage with tcmalloc but also the macro `-DBRPC_ENABLE_CPU_PROFILER`.
 
-## glog: 0.4.0+
 
 ## valgrind: 3.8+
 

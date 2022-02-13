@@ -13,7 +13,7 @@
 #include "flare/log/raw_logging.h"
 #include "flare/log/init.h"
 
-// glog doesn't have annotation
+// doesn't have annotation
 #define ANNOTATE_BENIGN_RACE(address, description)
 
 using std::string;
