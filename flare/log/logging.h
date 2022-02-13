@@ -55,8 +55,8 @@
 #define LOG_TO_STRING_TRACE(message) flare::log::log_message( \
       __FILE__, __LINE__, flare::log::FLARE_TRACE, message)
 #else
-#define COMPACT_FLARE_LOG_TRACE flare::log::NullStream()
-#define LOG_TO_STRING_TRACE(message) flare::log::NullStream()
+#define COMPACT_FLARE_LOG_TRACE flare::log::null_stream()
+#define LOG_TO_STRING_TRACE(message) flare::log::null_stream()
 #endif
 
 #if FLARE_STRIP_LOG <= 1
@@ -65,8 +65,8 @@
 #define LOG_TO_STRING_DEBUG(message) flare::log::log_message( \
       __FILE__, __LINE__, flare::log::FLARE_DEBUG, message)
 #else
-#define COMPACT_FLARE_LOG_DEBUG flare::log::NullStream()
-#define LOG_TO_STRING_DEBUG(message) flare::log::NullStream()
+#define COMPACT_FLARE_LOG_DEBUG flare::log::null_stream()
+#define LOG_TO_STRING_DEBUG(message) flare::log::null_stream()
 #endif
 
 #if FLARE_STRIP_LOG <= 2
@@ -75,8 +75,8 @@
 #define LOG_TO_STRING_INFO(message) flare::log::log_message( \
       __FILE__, __LINE__, flare::log::FLARE_INFO, message)
 #else
-#define COMPACT_FLARE_LOG_INFO flare::log::NullStream()
-#define LOG_TO_STRING_INFO(message) flare::log::NullStream()
+#define COMPACT_FLARE_LOG_INFO flare::log::null_stream()
+#define LOG_TO_STRING_INFO(message) flare::log::null_stream()
 #endif
 
 #if FLARE_STRIP_LOG <= 3
@@ -85,8 +85,8 @@
 #define LOG_TO_STRING_WARNING(message) flare::log::log_message( \
       __FILE__, __LINE__, flare::log::FLARE_WARNING, message)
 #else
-#define COMPACT_FLARE_LOG_WARNING flare::log::NullStream()
-#define LOG_TO_STRING_WARNING(message) flare::log::NullStream()
+#define COMPACT_FLARE_LOG_WARNING flare::log::null_stream()
+#define LOG_TO_STRING_WARNING(message) flare::log::null_stream()
 #endif
 
 #if FLARE_STRIP_LOG <= 4
@@ -95,8 +95,8 @@
 #define LOG_TO_STRING_ERROR(message) flare::log::log_message( \
       __FILE__, __LINE__, flare::log::FLARE_ERROR, message)
 #else
-#define COMPACT_FLARE_LOG_ERROR flare::log::NullStream()
-#define LOG_TO_STRING_ERROR(message) flare::log::NullStream()
+#define COMPACT_FLARE_LOG_ERROR flare::log::null_stream()
+#define LOG_TO_STRING_ERROR(message) flare::log::null_stream()
 #endif
 
 #if FLARE_STRIP_LOG <= 5
@@ -105,8 +105,8 @@
 #define LOG_TO_STRING_FATAL(message) flare::log::log_message( \
       __FILE__, __LINE__, flare::log::FLARE_FATAL, message)
 #else
-#define COMPACT_FLARE_LOG_FATAL flare::log::NullStreamFatal()
-#define LOG_TO_STRING_FATAL(message) flare::log::NullStreamFatal()
+#define COMPACT_FLARE_LOG_FATAL flare::log::null_stream_fatal()
+#define LOG_TO_STRING_FATAL(message) flare::log::null_stream_fatal()
 #endif
 
 #if defined(NDEBUG) && !defined(DCHECK_ALWAYS_ON)
@@ -123,7 +123,7 @@
 #define COMPACT_FLARE_LOG_DFATAL flare::log::log_message( \
       __FILE__, __LINE__, flare::log::FLARE_FATAL)
 #else
-#define COMPACT_FLARE_LOG_DFATAL flare::log::NullStreamFatal()
+#define COMPACT_FLARE_LOG_DFATAL flare::log::null_stream_fatal()
 #endif
 
 #define FLARE_LOG_TRACE(counter) flare::log::log_message(__FILE__, __LINE__, flare::log::FLARE_TRACE, counter, &flare::log::log_message::send_to_log)
@@ -472,7 +472,7 @@ namespace flare::log {
   CHECK_OP_LOG(name, op, val1, val2, flare::log::log_message_fatal)
 #else
 #define CHECK_OP(name, op, val1, val2) \
-  CHECK_OP_LOG(name, op, val1, val2, flare::log::NullStreamFatal)
+  CHECK_OP_LOG(name, op, val1, val2, flare::log::null_stream_fatal)
 #endif // STRIP_LOG <= 3
 
 // Equality/Inequality checks - compare two values, and log a FATAL message
@@ -1105,19 +1105,19 @@ PLOG_IF(FATAL, FLARE_UNLIKELY((invocation) == -1))    \
 
     // Flushes all log files that contains messages that are at least of
     // the specified severity level.  Thread-safe.
-    FLARE_EXPORT void FlushLogFiles(log_severity min_severity);
+    FLARE_EXPORT void flush_log_files(log_severity min_severity);
 
     // Flushes all log files that contains messages that are at least of
     // the specified severity level. Thread-hostile because it ignores
     // locking -- used for catastrophic failures.
-    FLARE_EXPORT void FlushLogFilesUnsafe(log_severity min_severity);
+    FLARE_EXPORT void flush_log_files_unsafe(log_severity min_severity);
 
     //
     // Set the destination to which a particular severity level of log
     // messages is sent.  If base_filename is "", it means "don't log this
     // severity".  Thread-safe.
     //
-    FLARE_EXPORT void SetLogDestination(log_severity severity,
+    FLARE_EXPORT void set_log_destination(log_severity severity,
                                         const char *base_filename);
 
     //
@@ -1126,7 +1126,7 @@ PLOG_IF(FATAL, FLARE_UNLIKELY((invocation) == -1))    \
     // you don't call this function, the symlink basename is the
     // invocation name of the program.  Thread-safe.
     //
-    FLARE_EXPORT void SetLogSymlink(log_severity severity,
+    FLARE_EXPORT void set_log_symlink(log_severity severity,
                                     const char *symlink_basename);
 
     //
@@ -1188,17 +1188,17 @@ PLOG_IF(FATAL, FLARE_UNLIKELY((invocation) == -1))    \
     };
 
     // Add or remove a log_sink as a consumer of logging data.  Thread-safe.
-    FLARE_EXPORT void AddLogSink(log_sink *destination);
+    FLARE_EXPORT void add_log_sink(log_sink *destination);
 
-    FLARE_EXPORT void RemoveLogSink(log_sink *destination);
+    FLARE_EXPORT void remove_log_sink(log_sink *destination);
 
     //
     // Specify an "extension" added to the filename specified via
-    // SetLogDestination.  This applies to all severity levels.  It's
+    // set_log_destination.  This applies to all severity levels.  It's
     // often used to append the port we're listening on to the logfile
     // name.  Thread-safe.
     //
-    FLARE_EXPORT void SetLogFilenameExtension(
+    FLARE_EXPORT void set_log_filename_extension(
             const char *filename_extension);
 
     //
@@ -1206,12 +1206,12 @@ PLOG_IF(FATAL, FLARE_UNLIKELY((invocation) == -1))    \
     // are logged to stderr (in addition to logging to the usual log
     // file(s)).  Thread-safe.
     //
-    FLARE_EXPORT void SetStderrLogging(log_severity min_severity);
+    FLARE_EXPORT void set_stderr_logging(log_severity min_severity);
 
     //
     // Make it so that all log messages go only to stderr.  Thread-safe.
     //
-    FLARE_EXPORT void LogToStderr();
+    FLARE_EXPORT void log_to_stderr();
 
     //
     // Make it so that all log messages of at least a particular severity are
@@ -1219,7 +1219,7 @@ PLOG_IF(FATAL, FLARE_UNLIKELY((invocation) == -1))    \
     // usual log file(s)).  The list of addresses is just a string containing
     // the email addresses to send to (separated by spaces, say).  Thread-safe.
     //
-    FLARE_EXPORT void SetEmailLogging(log_severity min_severity,
+    FLARE_EXPORT void set_email_logging(log_severity min_severity,
                                       const char *addresses);
 
     // A simple function that sends email. dest is a commma-separated
@@ -1267,7 +1267,7 @@ PLOG_IF(FATAL, FLARE_UNLIKELY((invocation) == -1))    \
     // Implementation details that are not useful to most clients
     // ---------------------------------------------------------------------
 
-    // A Logger is the interface used by logging modules to emit entries
+    // A inner_logger is the interface used by logging modules to emit entries
     // to a log.  A typical implementation will dump formatted data to a
     // sequence of files.  We also provide interfaces that will forward
     // the data to another thread so that the invoker never blocks.
@@ -1276,9 +1276,9 @@ PLOG_IF(FATAL, FLARE_UNLIKELY((invocation) == -1))    \
 
     namespace base {
 
-        class FLARE_EXPORT Logger {
+        class FLARE_EXPORT inner_logger {
         public:
-            virtual ~Logger();
+            virtual ~inner_logger();
 
             // Writes "message[0,message_len-1]" corresponding to an event that
             // occurred at "timestamp".  If "force_flush" is true, the log file
@@ -1288,29 +1288,29 @@ PLOG_IF(FATAL, FLARE_UNLIKELY((invocation) == -1))    \
             // appropriate by the higher level logging facility.  For example,
             // textual log messages already contain timestamps, and the
             // file:linenumber header.
-            virtual void Write(bool force_flush,
+            virtual void write(bool force_flush,
                                time_t timestamp,
                                const char *message,
                                int message_len) = 0;
 
             // Flush any buffered messages
-            virtual void Flush() = 0;
+            virtual void flush() = 0;
 
             // Get the current LOG file size.
             // The returned value is approximate since some
             // logged data may not have been flushed to disk yet.
-            virtual uint32_t LogSize() = 0;
+            virtual uint32_t log_size() = 0;
         };
 
         // Get the logger for the specified severity level.  The logger
         // remains the property of the logging module and should not be
         // deleted by the caller.  Thread-safe.
-        extern FLARE_EXPORT Logger *GetLogger(log_severity level);
+        extern FLARE_EXPORT inner_logger *GetLogger(log_severity level);
 
         // Set the logger for the specified severity level.  The logger
         // becomes the property of the logging module and should not
         // be deleted by the caller.  Thread-safe.
-        extern FLARE_EXPORT void SetLogger(log_severity level, Logger *logger);
+        extern FLARE_EXPORT void SetLogger(log_severity level, inner_logger *l);
 
     }
 
@@ -1332,23 +1332,23 @@ PLOG_IF(FATAL, FLARE_UNLIKELY((invocation) == -1))    \
     FLARE_EXPORT std::string StrError(int err);
 
     // A class for which we define operator<<, which does nothing.
-    class FLARE_EXPORT NullStream : public log_message::log_stream {
+    class FLARE_EXPORT null_stream : public log_message::log_stream {
     public:
         // Initialize the log_stream so the messages can be written somewhere
         // (they'll never be actually displayed). This will be needed if a
-        // NullStream& is implicitly converted to log_stream&, in which case
-        // the overloaded NullStream::operator<< will not be invoked.
-        NullStream() : log_message::log_stream(message_buffer_, 1, 0) {}
+        // null_stream& is implicitly converted to log_stream&, in which case
+        // the overloaded null_stream::operator<< will not be invoked.
+        null_stream() : log_message::log_stream(message_buffer_, 1, 0) {}
 
-        NullStream(const char * /*file*/, int /*line*/,
+        null_stream(const char * /*file*/, int /*line*/,
                    const CheckOpString & /*result*/) :
                 log_message::log_stream(message_buffer_, 1, 0) {}
 
-        NullStream &stream() { return *this; }
+        null_stream &stream() { return *this; }
 
     private:
         // A very short buffer for messages (which we discard anyway). This
-        // will be needed if NullStream& converted to log_stream& (e.g. as a
+        // will be needed if null_stream& converted to log_stream& (e.g. as a
         // result of a conditional expression).
         char message_buffer_[2];
     };
@@ -1356,22 +1356,22 @@ PLOG_IF(FATAL, FLARE_UNLIKELY((invocation) == -1))    \
     // Do nothing. This operator is inline, allowing the message to be
     // compiled away. The message will not be compiled away if we do
     // something like (flag ? LOG(INFO) : LOG(ERROR)) << message; when
-    // SKIP_LOG=WARNING. In those cases, NullStream will be implicitly
+    // SKIP_LOG=WARNING. In those cases, null_stream will be implicitly
     // converted to log_stream and the message will be computed and then
     // quietly discarded.
     template<class T>
-    inline NullStream &operator<<(NullStream &str, const T &) { return str; }
+    inline null_stream &operator<<(null_stream &str, const T &) { return str; }
 
-    // Similar to NullStream, but aborts the program (without stack
+    // Similar to null_stream, but aborts the program (without stack
     // trace), like log_message_fatal.
-    class FLARE_EXPORT NullStreamFatal : public NullStream {
+    class FLARE_EXPORT null_stream_fatal : public null_stream {
     public:
-        NullStreamFatal() {}
+        null_stream_fatal() {}
 
-        NullStreamFatal(const char *file, int line, const CheckOpString &result) :
-                NullStream(file, line, result) {}
+        null_stream_fatal(const char *file, int line, const CheckOpString &result) :
+                null_stream(file, line, result) {}
 
-        ~NullStreamFatal() throw() { _exit(1); }
+        ~null_stream_fatal() throw() { _exit(1); }
     };
 
     // Install a signal handler that will dump signal information and a stack

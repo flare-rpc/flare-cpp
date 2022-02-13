@@ -116,14 +116,14 @@ namespace flare::log {
         };
 
 // Writes the given data with the size to the standard error.
-        void WriteToStderr(const char *data, int size) {
+        void write_to_stderr(const char *data, int size) {
             if (write(STDERR_FILENO, data, size) < 0) {
                 // Ignore errors.
             }
         }
 
 // The writer function can be changed by InstallFailureWriter().
-        void (*g_failure_writer)(const char *data, int size) = WriteToStderr;
+        void (*g_failure_writer)(const char *data, int size) = write_to_stderr;
 
 // Dumps time information.  We don't dump human-readable time information
 // as localtime() is not guaranteed to be async signal safe.
@@ -305,7 +305,7 @@ namespace flare::log {
 
             // Flush the logs before we do anything in case 'anything'
             // causes problems.
-            FlushLogFilesUnsafe(0);
+            flush_log_files_unsafe(0);
 
             // Kill ourself by the default signal handler.
             InvokeDefaultSignalHandler(signal_number);
