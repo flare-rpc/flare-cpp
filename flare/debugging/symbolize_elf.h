@@ -493,9 +493,7 @@ const int kMaxSectionNameLen = 64;
 
 bool ForEachSection(int fd,
                     const std::function<bool( const std::string &name,
-                    const ElfW(Shdr) &
-
-)> &callback) {
+                    const ElfW(Shdr) &)> &callback) {
 ElfW(Ehdr)
 elf_header;
 if (!

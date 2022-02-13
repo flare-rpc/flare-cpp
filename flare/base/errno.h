@@ -56,7 +56,7 @@ class flare_errno_helper {
 };
 
 #define FLARE_REGISTER_ERRNO(error_code, description)                   \
-    const int FLARE_ALLOW_UNUSED FLARE_CONCAT(baidu_errno_dummy_, __LINE__) =              \
+    const int FLARE_ALLOW_UNUSED FLARE_CONCAT(flare_errno_dummy_, __LINE__) =              \
         ::flare::base::describe_customized_errno((error_code), #error_code, (description)); \
     template <> class flare_errno_helper<(int)(error_code)> {};
 
