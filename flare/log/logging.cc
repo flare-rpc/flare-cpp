@@ -2,9 +2,6 @@
 // Created by jeff.li.
 //
 
-#define _GNU_SOURCE 1 // needed for O_NOFOLLOW and log_pread()/pwrite()
-
-
 #include <algorithm>
 #include <cassert>
 #include <filesystem>
