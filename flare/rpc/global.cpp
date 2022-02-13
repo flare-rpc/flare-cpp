@@ -22,10 +22,6 @@
 #include <fcntl.h>                               // O_RDONLY
 #include <signal.h>
 #include "flare/base/profile.h"
-// Naming services
-#ifdef BAIDU_INTERNAL
-#include "flare/rpc/policy/baidu_naming_service.h"
-#endif
 #include "flare/rpc/policy/file_naming_service.h"
 #include "flare/rpc/policy/list_naming_service.h"
 #include "flare/rpc/policy/domain_naming_service.h"
@@ -117,10 +113,7 @@ struct GlobalExtensions {
         , ch_ketama_lb(CONS_HASH_LB_KETAMA)
         , constant_cl(0) {
     }
-    
-#ifdef BAIDU_INTERNAL
-    BaiduNamingService bns;
-#endif
+
     FileNamingService fns;
     ListNamingService lns;
     DomainListNamingService dlns;
@@ -339,10 +332,7 @@ static void GlobalInitializeOrDieImpl() {
     if (NULL == g_ext) {
         exit(1);
     }
-    // Naming Services
-#ifdef BAIDU_INTERNAL
-    NamingServiceExtension()->RegisterOrDie("bns", &g_ext->bns);
-#endif
+
     NamingServiceExtension()->RegisterOrDie("file", &g_ext->fns);
     NamingServiceExtension()->RegisterOrDie("list", &g_ext->lns);
     NamingServiceExtension()->RegisterOrDie("dlist", &g_ext->dlns);

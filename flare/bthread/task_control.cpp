@@ -56,10 +56,7 @@ void run_worker_startfn() {
 }
 
 void* TaskControl::worker_thread(void* arg) {
-    run_worker_startfn();    
-#ifdef BAIDU_INTERNAL
-    logging::ComlogInitializer comlog_initializer;
-#endif
+    run_worker_startfn();
     
     TaskControl* c = static_cast<TaskControl*>(arg);
     TaskGroup* g = c->create_group();

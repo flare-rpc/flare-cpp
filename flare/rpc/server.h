@@ -295,7 +295,7 @@ struct ServiceOptions {
 
     // decode json string to protobuf bytes using base64 decoding when this 
     // option is turned on.
-    // Default: false if BAIDU_INTERNAL is defined, otherwise true
+    // Default: true
     bool pb_bytes_to_base64;
 };
 

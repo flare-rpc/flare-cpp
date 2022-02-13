@@ -1357,11 +1357,7 @@ namespace flare::rpc {
 
     ServiceOptions::ServiceOptions()
             : ownership(SERVER_DOESNT_OWN_SERVICE), allow_default_url(false), allow_http_body_to_pb(true)
-#ifdef BAIDU_INTERNAL
-            , pb_bytes_to_base64(false)
-#else
             , pb_bytes_to_base64(true)
-#endif
     {}
 
     int Server::AddService(google::protobuf::Service *service,

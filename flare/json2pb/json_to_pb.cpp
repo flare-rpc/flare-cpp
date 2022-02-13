@@ -43,11 +43,7 @@
 namespace json2pb {
 
 Json2PbOptions::Json2PbOptions()
-#ifdef BAIDU_INTERNAL
-    : base64_to_bytes(false) {
-#else
     : base64_to_bytes(true) {
-#endif
 }
 
 enum MatchType { 

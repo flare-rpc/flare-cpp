@@ -108,10 +108,6 @@ int UserCodeBackupPool::Init() {
 // Entry of backup thread for running user code.
 void UserCodeBackupPool::UserCodeRunningLoop() {
     bthread::run_worker_startfn();
-#ifdef BAIDU_INTERNAL
-    logging::ComlogInitializer comlog_initializer;
-#endif
-    
     int64_t last_time = flare::base::cpuwide_time_us();
     while (true) {
         bool blocked = false;

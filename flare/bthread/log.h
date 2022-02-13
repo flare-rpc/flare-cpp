@@ -22,10 +22,6 @@
 #ifndef BTHREAD_LOG_H
 #define BTHREAD_LOG_H
 
-#ifdef BAIDU_INTERNAL
-#include "flare/bthread/comlog_initializer.h"
-#endif
-
 #define BT_VLOG VLOG(100)
 
 #endif // BTHREAD_LOG_H
