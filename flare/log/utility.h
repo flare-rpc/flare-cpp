@@ -56,8 +56,8 @@ namespace flare::log {
 
         void DumpStackTraceToString(std::string *stacktrace);
 
-        struct CrashReason {
-            CrashReason() : filename(0), line_number(0), message(0), depth(0) {}
+        struct crash_reason {
+            crash_reason() : filename(0), line_number(0), message(0), depth(0) {}
 
             const char *filename;
             int line_number;
@@ -69,7 +69,7 @@ namespace flare::log {
             int depth;
         };
 
-        void SetCrashReason(const CrashReason *r);
+        void SetCrashReason(const crash_reason *r);
 
         void InitGoogleLoggingUtilities(const char *argv0);
 

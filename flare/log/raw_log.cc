@@ -53,7 +53,7 @@ namespace flare::log {
 
     static const int kLogBufSize = 3000;
     static bool crashed = false;
-    static CrashReason crash_reason;
+    static crash_reason crash_reason;
     static char crash_buf[kLogBufSize + 1] = {0};  // Will end in '\0'
 
     void RawLog__(log_severity severity, const char *file, int line,
@@ -105,7 +105,7 @@ namespace flare::log {
 #endif
                 SetCrashReason(&crash_reason);
             }
-            LogMessage::Fail();  // abort()
+            log_message::fail();  // abort()
         }
     }
 

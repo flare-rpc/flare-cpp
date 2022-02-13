@@ -202,11 +202,11 @@ namespace flare::log {
 #endif
         }
 
-        static const CrashReason *g_reason = 0;
+        static const crash_reason *g_reason = 0;
 
-        void SetCrashReason(const CrashReason *r) {
+        void SetCrashReason(const crash_reason *r) {
             sync_val_compare_and_swap(&g_reason,
-                                      reinterpret_cast<const CrashReason *>(0),
+                                      reinterpret_cast<const crash_reason *>(0),
                                       r);
         }
 

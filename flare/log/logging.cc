@@ -159,26 +159,26 @@ namespace flare::log {
 
     // An arbitrary limit on the length of a single log message.  This
     // is so that streaming can be done more efficiently.
-    const size_t LogMessage::kMaxLogMessageLen = 30000;
+    const size_t log_message::kMaxLogMessageLen = 30000;
 
-    struct LogMessage::LogMessageData {
-        LogMessageData();
+    struct log_message::log_message_data {
+        log_message_data();
 
         int preserved_errno_;      // preserved errno
         // Buffer space; contains complete message text.
-        char message_text_[LogMessage::kMaxLogMessageLen + 1];
-        LogStream stream_;
-        char severity_;      // What level is this LogMessage logged at?
+        char message_text_[log_message::kMaxLogMessageLen + 1];
+        log_stream stream_;
+        char severity_;      // What level is this log_message logged at?
         int line_;                 // line number where logging call is.
-        void (LogMessage::*send_method_)();  // Call this in destructor to send
+        void (log_message::*send_method_)();  // Call this in destructor to send
         union {  // At most one of these is used: union to keep the size low.
-            LogSink *sink_;             // NULL or sink to send message to
+            log_sink *sink_;             // NULL or sink to send message to
             std::vector<std::string> *outvec_; // NULL or vector to push message onto
             std::string *message_;             // NULL or string to write message into
         };
-        time_t timestamp_;            // Time of creation of LogMessage
-        struct ::tm tm_time_;         // Time of creation of LogMessage
-        int32_t usecs_;                   // Time of creation of LogMessage - microseconds part
+        time_t timestamp_;            // Time of creation of log_message
+        struct ::tm tm_time_;         // Time of creation of log_message
+        int32_t usecs_;                   // Time of creation of log_message - microseconds part
         size_t num_prefix_chars_;     // # of chars of prefix in this message
         size_t num_chars_to_log_;     // # of chars of msg to send to log
         size_t num_chars_to_syslog_;  // # of chars of msg to send to syslog
@@ -188,9 +188,9 @@ namespace flare::log {
         bool first_fatal_;            // true => this was first fatal msg
 
     private:
-        LogMessageData(const LogMessageData &);
+        log_message_data(const log_message_data &);
 
-        void operator=(const LogMessageData &);
+        void operator=(const log_message_data &);
     };
 
 // A mutex that allows only one thread to log at a time, to keep things from
@@ -201,7 +201,7 @@ namespace flare::log {
     static std::mutex log_mutex;
 
 // Number of messages sent at each severity.  Under log_mutex.
-    int64_t LogMessage::num_messages_[NUM_SEVERITIES] = {0, 0, 0, 0};
+    int64_t log_message::num_messages_[NUM_SEVERITIES] = {0, 0, 0, 0};
 
 // Globally disable log writing (if disk is full)
     static bool stop_writing = false;
@@ -318,9 +318,9 @@ namespace flare::log {
 
     }  // namespace
 
-    class LogDestination {
+    class log_destination {
     public:
-        friend class LogMessage;
+        friend class log_message;
 
         friend void ReprintFatalMessage();
 
@@ -335,9 +335,9 @@ namespace flare::log {
         static void SetLogSymlink(log_severity severity,
                                   const char *symlink_basename);
 
-        static void AddLogSink(LogSink *destination);
+        static void AddLogSink(log_sink *destination);
 
-        static void RemoveLogSink(LogSink *destination);
+        static void RemoveLogSink(log_sink *destination);
 
         static void SetLogFilenameExtension(const char *filename_extension);
 
@@ -366,9 +366,9 @@ namespace flare::log {
         static void DeleteLogDestinations();
 
     private:
-        LogDestination(log_severity severity, const char *base_filename);
+        log_destination(log_severity severity, const char *base_filename);
 
-        ~LogDestination();
+        ~log_destination();
 
         // Take a log message of a particular severity and log it to stderr
         // iff it's of a high enough severity to deserve it.
@@ -405,44 +405,44 @@ namespace flare::log {
 
         // Wait for all registered sinks via WaitTillSent
         // including the optional one in "data".
-        static void WaitForSinks(LogMessage::LogMessageData *data);
+        static void WaitForSinks(log_message::log_message_data *data);
 
-        static LogDestination *log_destination(log_severity severity);
+        static log_destination *get_log_destination(log_severity severity);
 
         LogFileObject fileobject_;
         base::Logger *logger_;      // Either &fileobject_, or wrapper around it
 
-        static LogDestination *log_destinations_[NUM_SEVERITIES];
+        static log_destination *log_destinations_[NUM_SEVERITIES];
         static log_severity email_logging_severity_;
         static string addresses_;
         static string hostname_;
         static bool terminal_supports_color_;
 
         // arbitrary global logging destinations.
-        static vector<LogSink *> *sinks_;
+        static vector<log_sink *> *sinks_;
 
         // Protects the vector sinks_,
-        // but not the LogSink objects its elements reference.
+        // but not the log_sink objects its elements reference.
         static std::mutex sink_mutex_;
 
         // Disallow
-        LogDestination(const LogDestination &);
+        log_destination(const log_destination &);
 
-        LogDestination &operator=(const LogDestination &);
+        log_destination &operator=(const log_destination &);
     };
 
 // Errors do not get logged to email by default.
-    log_severity LogDestination::email_logging_severity_ = 99999;
+    log_severity log_destination::email_logging_severity_ = 99999;
 
-    string LogDestination::addresses_;
-    string LogDestination::hostname_;
+    string log_destination::addresses_;
+    string log_destination::hostname_;
 
-    vector<LogSink *> *LogDestination::sinks_ = NULL;
-    std::mutex LogDestination::sink_mutex_;
-    bool LogDestination::terminal_supports_color_ = TerminalSupportsColor();
+    vector<log_sink *> *log_destination::sinks_ = NULL;
+    std::mutex log_destination::sink_mutex_;
+    bool log_destination::terminal_supports_color_ = TerminalSupportsColor();
 
 /* static */
-    const string &LogDestination::hostname() {
+    const string &log_destination::hostname() {
         if (hostname_.empty()) {
             hostname_ = flare::base::get_host_name();
             if (hostname_.empty()) {
@@ -452,24 +452,24 @@ namespace flare::log {
         return hostname_;
     }
 
-    LogDestination::LogDestination(log_severity severity,
+    log_destination::log_destination(log_severity severity,
                                    const char *base_filename)
             : fileobject_(severity, base_filename),
               logger_(&fileobject_) {
     }
 
-    LogDestination::~LogDestination() {
+    log_destination::~log_destination() {
         if (logger_ && logger_ != &fileobject_) {
             // Delete user-specified logger set via SetLogger().
             delete logger_;
         }
     }
 
-    inline void LogDestination::FlushLogFilesUnsafe(int min_severity) {
+    inline void log_destination::FlushLogFilesUnsafe(int min_severity) {
         // assume we have the log_mutex or we simply don't care
         // about it
         for (int i = min_severity; i < NUM_SEVERITIES; i++) {
-            LogDestination *log = log_destinations_[i];
+            log_destination *log = log_destinations_[i];
             if (log != NULL) {
                 // Flush the base fileobject_ logger directly instead of going
                 // through any wrappers to reduce chance of deadlock.
@@ -478,44 +478,44 @@ namespace flare::log {
         }
     }
 
-    inline void LogDestination::FlushLogFiles(int min_severity) {
+    inline void log_destination::FlushLogFiles(int min_severity) {
         // Prevent any subtle race conditions by wrapping a mutex lock around
         // all this stuff.
         std::unique_lock<std::mutex> l(log_mutex);
         for (int i = min_severity; i < NUM_SEVERITIES; i++) {
-            LogDestination *log = log_destination(i);
+            log_destination *log = get_log_destination(i);
             if (log != NULL) {
                 log->logger_->Flush();
             }
         }
     }
 
-    inline void LogDestination::SetLogDestination(log_severity severity,
+    inline void log_destination::SetLogDestination(log_severity severity,
                                                   const char *base_filename) {
         assert(severity >= 0 && severity < NUM_SEVERITIES);
         // Prevent any subtle race conditions by wrapping a mutex lock around
         // all this stuff.
         std::unique_lock<std::mutex> l(log_mutex);
-        log_destination(severity)->fileobject_.SetBasename(base_filename);
+        get_log_destination(severity)->fileobject_.SetBasename(base_filename);
     }
 
-    inline void LogDestination::SetLogSymlink(log_severity severity,
+    inline void log_destination::SetLogSymlink(log_severity severity,
                                               const char *symlink_basename) {
         CHECK_GE(severity, 0);
         CHECK_LT(severity, NUM_SEVERITIES);
         std::unique_lock<std::mutex> l(log_mutex);
-        log_destination(severity)->fileobject_.SetSymlinkBasename(symlink_basename);
+        get_log_destination(severity)->fileobject_.SetSymlinkBasename(symlink_basename);
     }
 
-    inline void LogDestination::AddLogSink(LogSink *destination) {
+    inline void log_destination::AddLogSink(log_sink *destination) {
         // Prevent any subtle race conditions by wrapping a mutex lock around
         // all this stuff.
         std::unique_lock<std::mutex> l(sink_mutex_);
-        if (!sinks_) sinks_ = new vector<LogSink *>;
+        if (!sinks_) sinks_ = new vector<log_sink *>;
         sinks_->push_back(destination);
     }
 
-    inline void LogDestination::RemoveLogSink(LogSink *destination) {
+    inline void log_destination::RemoveLogSink(log_sink *destination) {
         // Prevent any subtle race conditions by wrapping a mutex lock around
         // all this stuff.
         std::unique_lock<std::mutex> l(sink_mutex_);
@@ -531,16 +531,16 @@ namespace flare::log {
         }
     }
 
-    inline void LogDestination::SetLogFilenameExtension(const char *ext) {
+    inline void log_destination::SetLogFilenameExtension(const char *ext) {
         // Prevent any subtle race conditions by wrapping a mutex lock around
         // all this stuff.
         std::unique_lock<std::mutex> l(log_mutex);
         for (int severity = 0; severity < NUM_SEVERITIES; ++severity) {
-            log_destination(severity)->fileobject_.SetExtension(ext);
+            get_log_destination(severity)->fileobject_.SetExtension(ext);
         }
     }
 
-    inline void LogDestination::SetStderrLogging(log_severity min_severity) {
+    inline void log_destination::SetStderrLogging(log_severity min_severity) {
         assert(min_severity >= 0 && min_severity < NUM_SEVERITIES);
         // Prevent any subtle race conditions by wrapping a mutex lock around
         // all this stuff.
@@ -548,7 +548,7 @@ namespace flare::log {
         FLAGS_stderrthreshold = min_severity;
     }
 
-    inline void LogDestination::LogToStderr() {
+    inline void log_destination::LogToStderr() {
         // *Don't* put this stuff in a mutex lock, since SetStderrLogging &
         // SetLogDestination already do the locking!
         SetStderrLogging(0);            // thus everything is "also" logged to stderr
@@ -557,20 +557,20 @@ namespace flare::log {
         }
     }
 
-    inline void LogDestination::SetEmailLogging(log_severity min_severity,
+    inline void log_destination::SetEmailLogging(log_severity min_severity,
                                                 const char *addresses) {
         assert(min_severity >= 0 && min_severity < NUM_SEVERITIES);
         // Prevent any subtle race conditions by wrapping a mutex lock around
         // all this stuff.
         std::unique_lock<std::mutex> l(log_mutex);
-        LogDestination::email_logging_severity_ = min_severity;
-        LogDestination::addresses_ = addresses;
+        log_destination::email_logging_severity_ = min_severity;
+        log_destination::addresses_ = addresses;
     }
 
     static void ColoredWriteToStderr(log_severity severity,
                                      const char *message, size_t len) {
         const GLogColor color =
-                (LogDestination::terminal_supports_color() && FLAGS_colorlogtostderr) ?
+                (log_destination::terminal_supports_color() && FLAGS_colorlogtostderr) ?
                 SeverityToColor(severity) : COLOR_DEFAULT;
 
         // Avoid using cerr from this module since we may get called during
@@ -590,7 +590,7 @@ namespace flare::log {
         fwrite(message, len, 1, stderr);
     }
 
-    inline void LogDestination::MaybeLogToStderr(log_severity severity,
+    inline void log_destination::MaybeLogToStderr(log_severity severity,
                                                  const char *message, size_t message_len, size_t prefix_len) {
         if ((severity >= FLAGS_stderrthreshold) || FLAGS_alsologtostderr) {
             ColoredWriteToStderr(severity, message, message_len);
@@ -598,7 +598,7 @@ namespace flare::log {
     }
 
 
-    inline void LogDestination::MaybeLogToEmail(log_severity severity,
+    inline void log_destination::MaybeLogToEmail(log_severity severity,
                                                 const char *message, size_t len) {
         if (severity >= email_logging_severity_ ||
             severity >= FLAGS_logemaillevel) {
@@ -624,16 +624,16 @@ namespace flare::log {
     }
 
 
-    inline void LogDestination::MaybeLogToLogfile(log_severity severity,
+    inline void log_destination::MaybeLogToLogfile(log_severity severity,
                                                   time_t timestamp,
                                                   const char *message,
                                                   size_t len) {
         const bool should_flush = severity > FLAGS_logbuflevel;
-        LogDestination *destination = log_destination(severity);
+        log_destination *destination = get_log_destination(severity);
         destination->logger_->Write(should_flush, timestamp, message, len);
     }
 
-    inline void LogDestination::LogToAllLogfiles(log_severity severity,
+    inline void log_destination::LogToAllLogfiles(log_severity severity,
                                                  time_t timestamp,
                                                  const char *message,
                                                  size_t len) {
@@ -642,11 +642,11 @@ namespace flare::log {
             ColoredWriteToStderr(severity, message, len);
         } else {
             for (int i = severity; i >= 0; --i)
-                LogDestination::MaybeLogToLogfile(i, timestamp, message, len);
+                log_destination::MaybeLogToLogfile(i, timestamp, message, len);
         }
     }
 
-    inline void LogDestination::LogToSinks(log_severity severity,
+    inline void log_destination::LogToSinks(log_severity severity,
                                            const char *full_filename,
                                            const char *base_filename,
                                            int line,
@@ -663,7 +663,7 @@ namespace flare::log {
         }
     }
 
-    inline void LogDestination::WaitForSinks(LogMessage::LogMessageData *data) {
+    inline void log_destination::WaitForSinks(log_message::log_message_data *data) {
         std::unique_lock<std::mutex> l(sink_mutex_);
         if (sinks_) {
             for (int i = sinks_->size() - 1; i >= 0; i--) {
@@ -671,24 +671,24 @@ namespace flare::log {
             }
         }
         const bool send_to_sink =
-                (data->send_method_ == &LogMessage::SendToSink) ||
-                (data->send_method_ == &LogMessage::SendToSinkAndLog);
+                (data->send_method_ == &log_message::send_to_sink) ||
+                (data->send_method_ == &log_message::send_to_sink_and_log);
         if (send_to_sink && data->sink_ != NULL) {
             data->sink_->WaitTillSent();
         }
     }
 
-    LogDestination *LogDestination::log_destinations_[NUM_SEVERITIES];
+    log_destination *log_destination::log_destinations_[NUM_SEVERITIES];
 
-    inline LogDestination *LogDestination::log_destination(log_severity severity) {
+    inline log_destination *log_destination::get_log_destination(log_severity severity) {
         assert(severity >= 0 && severity < NUM_SEVERITIES);
         if (!log_destinations_[severity]) {
-            log_destinations_[severity] = new LogDestination(severity, NULL);
+            log_destinations_[severity] = new log_destination(severity, NULL);
         }
         return log_destinations_[severity];
     }
 
-    void LogDestination::DeleteLogDestinations() {
+    void log_destination::DeleteLogDestinations() {
         for (int severity = 0; severity < NUM_SEVERITIES; ++severity) {
             delete log_destinations_[severity];
             log_destinations_[severity] = NULL;
@@ -1001,7 +1001,7 @@ namespace flare::log {
                                    << setw(2) << tm_time.tm_min << ':'
                                    << setw(2) << tm_time.tm_sec << (FLAGS_log_utc_time ? " UTC\n" : "\n")
                                    << "Running on machine: "
-                                   << LogDestination::hostname() << '\n';
+                                   << log_destination::hostname() << '\n';
 
                 if (!g_application_fingerprint.empty()) {
                     file_header_stream << "Application fingerprint: " << g_application_fingerprint << '\n';
@@ -1255,81 +1255,81 @@ namespace flare::log {
 // for exclusive use by the first thread, and one for shared use by
 // all other threads.
     static std::mutex fatal_msg_lock;
-    static CrashReason crash_reason;
+    static crash_reason crash_reason;
     static bool fatal_msg_exclusive = true;
-    static LogMessage::LogMessageData fatal_msg_data_exclusive;
-    static LogMessage::LogMessageData fatal_msg_data_shared;
+    static log_message::log_message_data fatal_msg_data_exclusive;
+    static log_message::log_message_data fatal_msg_data_shared;
 
 #ifdef GLOG_THREAD_LOCAL_STORAGE
     // Static thread-local log data space to use, because typically at most one
-    // LogMessageData object exists (in this case glog makes zero heap memory
+    // log_message_data object exists (in this case glog makes zero heap memory
     // allocations).
     static GLOG_THREAD_LOCAL_STORAGE bool thread_data_available = true;
 
 #ifdef HAVE_ALIGNED_STORAGE
     static GLOG_THREAD_LOCAL_STORAGE
-        std::aligned_storage<sizeof(LogMessage::LogMessageData),
-                             alignof(LogMessage::LogMessageData)>::type thread_msg_data;
+        std::aligned_storage<sizeof(log_message::log_message_data),
+                             alignof(log_message::log_message_data)>::type thread_msg_data;
 #else
     static GLOG_THREAD_LOCAL_STORAGE
-        char thread_msg_data[sizeof(void*) + sizeof(LogMessage::LogMessageData)];
+        char thread_msg_data[sizeof(void*) + sizeof(log_message::log_message_data)];
 #endif  // HAVE_ALIGNED_STORAGE
 #endif  // defined(GLOG_THREAD_LOCAL_STORAGE)
 
-    LogMessage::LogMessageData::LogMessageData()
-            : stream_(message_text_, LogMessage::kMaxLogMessageLen, 0) {
+    log_message::log_message_data::log_message_data()
+            : stream_(message_text_, log_message::kMaxLogMessageLen, 0) {
     }
 
-    LogMessage::LogMessage(const char *file, int line, log_severity severity,
-                           uint64_t ctr, void (LogMessage::*send_method)())
+    log_message::log_message(const char *file, int line, log_severity severity,
+                           uint64_t ctr, void (log_message::*send_method)())
             : allocated_(NULL) {
-        Init(file, line, severity, send_method);
+        init(file, line, severity, send_method);
         data_->stream_.set_ctr(ctr);
     }
 
-    LogMessage::LogMessage(const char *file, int line,
+    log_message::log_message(const char *file, int line,
                            const CheckOpString &result)
             : allocated_(NULL) {
-        Init(file, line, FLARE_FATAL, &LogMessage::SendToLog);
+        init(file, line, FLARE_FATAL, &log_message::send_to_log);
         stream() << "Check failed: " << (*result.str_) << " ";
     }
 
-    LogMessage::LogMessage(const char *file, int line)
+    log_message::log_message(const char *file, int line)
             : allocated_(NULL) {
-        Init(file, line, FLARE_INFO, &LogMessage::SendToLog);
+        init(file, line, FLARE_INFO, &log_message::send_to_log);
     }
 
-    LogMessage::LogMessage(const char *file, int line, log_severity severity)
+    log_message::log_message(const char *file, int line, log_severity severity)
             : allocated_(NULL) {
-        Init(file, line, severity, &LogMessage::SendToLog);
+        init(file, line, severity, &log_message::send_to_log);
     }
 
-    LogMessage::LogMessage(const char *file, int line, log_severity severity,
-                           LogSink *sink, bool also_send_to_log)
+    log_message::log_message(const char *file, int line, log_severity severity,
+                           log_sink *sink, bool also_send_to_log)
             : allocated_(NULL) {
-        Init(file, line, severity, also_send_to_log ? &LogMessage::SendToSinkAndLog :
-                                   &LogMessage::SendToSink);
+        init(file, line, severity, also_send_to_log ? &log_message::send_to_sink_and_log :
+                                   &log_message::send_to_sink);
         data_->sink_ = sink;  // override Init()'s setting to NULL
     }
 
-    LogMessage::LogMessage(const char *file, int line, log_severity severity,
+    log_message::log_message(const char *file, int line, log_severity severity,
                            vector<string> *outvec)
             : allocated_(NULL) {
-        Init(file, line, severity, &LogMessage::SaveOrSendToLog);
+        init(file, line, severity, &log_message::save_or_send_to_log);
         data_->outvec_ = outvec; // override Init()'s setting to NULL
     }
 
-    LogMessage::LogMessage(const char *file, int line, log_severity severity,
+    log_message::log_message(const char *file, int line, log_severity severity,
                            string *message)
             : allocated_(NULL) {
-        Init(file, line, severity, &LogMessage::WriteToStringAndLog);
+        init(file, line, severity, &log_message::write_to_string_and_log);
         data_->message_ = message;  // override Init()'s setting to NULL
     }
 
-    void LogMessage::Init(const char *file,
+    void log_message::init(const char *file,
                           int line,
                           log_severity severity,
-                          void (LogMessage::*send_method)()) {
+                          void (log_message::*send_method)()) {
         allocated_ = NULL;
         if (severity != FLARE_FATAL || !FLAGS_crash_on_fatal_log) {
 #ifdef GLOG_THREAD_LOCAL_STORAGE
@@ -1337,21 +1337,21 @@ namespace flare::log {
         if (thread_data_available) {
           thread_data_available = false;
 #ifdef HAVE_ALIGNED_STORAGE
-          data_ = new (&thread_msg_data) LogMessageData;
+          data_ = new (&thread_msg_data) log_message_data;
 #else
           const uintptr_t kAlign = sizeof(void*) - 1;
 
           char* align_ptr =
               reinterpret_cast<char*>(reinterpret_cast<uintptr_t>(thread_msg_data + kAlign) & ~kAlign);
-          data_ = new (align_ptr) LogMessageData;
+          data_ = new (align_ptr) log_message_data;
           assert(reinterpret_cast<uintptr_t>(align_ptr) % sizeof(void*) == 0);
 #endif
         } else {
-          allocated_ = new LogMessageData();
+          allocated_ = new log_message_data();
           data_ = allocated_;
         }
 #else // !defined(GLOG_THREAD_LOCAL_STORAGE)
-            allocated_ = new LogMessageData();
+            allocated_ = new log_message_data();
             data_ = allocated_;
 #endif // defined(GLOG_THREAD_LOCAL_STORAGE)
             data_->first_fatal_ = false;
@@ -1424,11 +1424,11 @@ namespace flare::log {
         }
     }
 
-    LogMessage::~LogMessage() {
-        Flush();
+    log_message::~log_message() {
+        flush();
 #ifdef GLOG_THREAD_LOCAL_STORAGE
         if (data_ == static_cast<void*>(&thread_msg_data)) {
-        data_->~LogMessageData();
+        data_->~log_message_data();
         thread_data_available = true;
       }
       else {
@@ -1439,11 +1439,11 @@ namespace flare::log {
 #endif // defined(GLOG_THREAD_LOCAL_STORAGE)
     }
 
-    int LogMessage::preserved_errno() const {
+    int log_message::preserved_errno() const {
         return data_->preserved_errno_;
     }
 
-    ostream &LogMessage::stream() {
+    ostream &log_message::stream() {
         return data_->stream_;
     }
 
@@ -1466,7 +1466,7 @@ namespace flare::log {
 
     // Flush buffered message, called by the destructor, or any other function
     // that needs to synchronize the log.
-    void LogMessage::Flush() {
+    void log_message::flush() {
         if (data_->has_been_flushed_ || data_->severity_ < FLAGS_minloglevel)
             return;
 
@@ -1497,7 +1497,7 @@ namespace flare::log {
             (this->*(data_->send_method_))();
             ++num_messages_[static_cast<int>(data_->severity_)];
         }
-        LogDestination::WaitForSinks(data_);
+        log_destination::WaitForSinks(data_);
 
 #if defined(__ANDROID__)
         const int level = AndroidLogLevel((int)data_->severity_);
@@ -1538,12 +1538,12 @@ namespace flare::log {
                 // Also write to stderr (don't color to avoid terminal checks)
                 WriteToStderr(fatal_message, n);
             }
-            LogDestination::LogToAllLogfiles(FLARE_ERROR, fatal_time, fatal_message, n);
+            log_destination::LogToAllLogfiles(FLARE_ERROR, fatal_time, fatal_message, n);
         }
     }
 
 // L >= log_mutex (callers must hold the log_mutex).
-    void LogMessage::SendToLog() EXCLUSIVE_LOCKS_REQUIRED(log_mutex) {
+    void log_message::send_to_log() EXCLUSIVE_LOCKS_REQUIRED(log_mutex) {
         static bool already_warned_before_initgoogle = false;
 
         RAW_DCHECK(data_->num_chars_to_log_ > 0 &&
@@ -1566,7 +1566,7 @@ namespace flare::log {
                                  data_->message_text_, data_->num_chars_to_log_);
 
             // this could be protected by a flag if necessary.
-            LogDestination::LogToSinks(data_->severity_,
+            log_destination::LogToSinks(data_->severity_,
                                        data_->fullname_, data_->basename_,
                                        data_->line_, &data_->tm_time_,
                                        data_->message_text_ + data_->num_prefix_chars_,
@@ -1576,16 +1576,16 @@ namespace flare::log {
         } else {
 
             // log this message to all log files of severity <= severity_
-            LogDestination::LogToAllLogfiles(data_->severity_, data_->timestamp_,
+            log_destination::LogToAllLogfiles(data_->severity_, data_->timestamp_,
                                              data_->message_text_,
                                              data_->num_chars_to_log_);
 
-            LogDestination::MaybeLogToStderr(data_->severity_, data_->message_text_,
+            log_destination::MaybeLogToStderr(data_->severity_, data_->message_text_,
                                              data_->num_chars_to_log_,
                                              data_->num_prefix_chars_);
-            LogDestination::MaybeLogToEmail(data_->severity_, data_->message_text_,
+            log_destination::MaybeLogToEmail(data_->severity_, data_->message_text_,
                                             data_->num_chars_to_log_);
-            LogDestination::LogToSinks(data_->severity_,
+            log_destination::LogToSinks(data_->severity_,
                                        data_->fullname_, data_->basename_,
                                        data_->line_, &data_->tm_time_,
                                        data_->message_text_ + data_->num_prefix_chars_,
@@ -1602,7 +1602,7 @@ namespace flare::log {
             if (data_->first_fatal_) {
                 // Store crash information so that it is accessible from within signal
                 // handlers that may be invoked later.
-                RecordCrashReason(&crash_reason);
+                record_crash_reason(&crash_reason);
                 SetCrashReason(&crash_reason);
 
                 // Store shortened fatal message for other logs and GWQ status
@@ -1615,29 +1615,29 @@ namespace flare::log {
 
             if (!FLAGS_logtostderr) {
                 for (int i = 0; i < NUM_SEVERITIES; ++i) {
-                    if (LogDestination::log_destinations_[i])
-                        LogDestination::log_destinations_[i]->logger_->Write(true, 0, "", 0);
+                    if (log_destination::log_destinations_[i])
+                        log_destination::log_destinations_[i]->logger_->Write(true, 0, "", 0);
                 }
             }
 
             // release the lock that our caller (directly or indirectly)
-            // LogMessage::~LogMessage() grabbed so that signal handlers
+            // log_message::~log_message() grabbed so that signal handlers
             // can use the logging facility. Alternately, we could add
             // an entire unsafe logging interface to bypass locking
             // for signal handlers but this seems simpler.
             log_mutex.unlock();
-            LogDestination::WaitForSinks(data_);
+            log_destination::WaitForSinks(data_);
 
             const char *message = "*** Check failure stack trace: ***\n";
             if (write(STDERR_FILENO, message, strlen(message)) < 0) {
                 // Ignore errors.
             }
-            Fail();
+            fail();
         }
     }
 
-    void LogMessage::RecordCrashReason(
-            log_internal::CrashReason *reason) {
+    void log_message::record_crash_reason(
+            log_internal::crash_reason *reason) {
         reason->filename = fatal_msg_data_exclusive.fullname_;
         reason->line_number = fatal_msg_data_exclusive.line_;
         reason->message = fatal_msg_data_exclusive.message_text_ +
@@ -1671,12 +1671,12 @@ namespace flare::log {
         g_logging_fail_func = (logging_fail_func_t) fail_func;
     }
 
-    void LogMessage::Fail() {
+    void log_message::fail() {
         g_logging_fail_func();
     }
 
 // L >= log_mutex (callers must hold the log_mutex).
-    void LogMessage::SendToSink() EXCLUSIVE_LOCKS_REQUIRED(log_mutex) {
+    void log_message::send_to_sink() EXCLUSIVE_LOCKS_REQUIRED(log_mutex) {
         if (data_->sink_ != NULL) {
             RAW_DCHECK(data_->num_chars_to_log_ > 0 &&
                        data_->message_text_[data_->num_chars_to_log_ - 1] == '\n', "");
@@ -1690,13 +1690,13 @@ namespace flare::log {
     }
 
 // L >= log_mutex (callers must hold the log_mutex).
-    void LogMessage::SendToSinkAndLog() EXCLUSIVE_LOCKS_REQUIRED(log_mutex) {
-        SendToSink();
-        SendToLog();
+    void log_message::send_to_sink_and_log() EXCLUSIVE_LOCKS_REQUIRED(log_mutex) {
+        send_to_sink();
+        send_to_log();
     }
 
 // L >= log_mutex (callers must hold the log_mutex).
-    void LogMessage::SaveOrSendToLog() EXCLUSIVE_LOCKS_REQUIRED(log_mutex) {
+    void log_message::save_or_send_to_log() EXCLUSIVE_LOCKS_REQUIRED(log_mutex) {
         if (data_->outvec_ != NULL) {
             RAW_DCHECK(data_->num_chars_to_log_ > 0 &&
                        data_->message_text_[data_->num_chars_to_log_ - 1] == '\n', "");
@@ -1705,11 +1705,11 @@ namespace flare::log {
             int len = data_->num_chars_to_log_ - data_->num_prefix_chars_ - 1;
             data_->outvec_->push_back(string(start, len));
         } else {
-            SendToLog();
+            send_to_log();
         }
     }
 
-    void LogMessage::WriteToStringAndLog() EXCLUSIVE_LOCKS_REQUIRED(log_mutex) {
+    void log_message::write_to_string_and_log() EXCLUSIVE_LOCKS_REQUIRED(log_mutex) {
         if (data_->message_ != NULL) {
             RAW_DCHECK(data_->num_chars_to_log_ > 0 &&
                        data_->message_text_[data_->num_chars_to_log_ - 1] == '\n', "");
@@ -1718,11 +1718,11 @@ namespace flare::log {
             int len = data_->num_chars_to_log_ - data_->num_prefix_chars_ - 1;
             data_->message_->assign(start, len);
         }
-        SendToLog();
+        send_to_log();
     }
 
 // L >= log_mutex (callers must hold the log_mutex).
-    void LogMessage::SendToSyslogAndLog() {
+    void log_message::send_to_syslog_and_log() {
         // Before any calls to syslog(), make a single call to openlog()
         static bool openlog_already_called = false;
         if (!openlog_already_called) {
@@ -1737,32 +1737,32 @@ namespace flare::log {
         syslog(LOG_USER | SEVERITY_TO_LEVEL[static_cast<int>(data_->severity_)], "%.*s",
                int(data_->num_chars_to_syslog_),
                data_->message_text_ + data_->num_prefix_chars_);
-        SendToLog();
+        send_to_log();
     }
 
     base::Logger *base::GetLogger(log_severity severity) {
         std::unique_lock<std::mutex> l(log_mutex);
-        return LogDestination::log_destination(severity)->logger_;
+        return log_destination::get_log_destination(severity)->logger_;
     }
 
     void base::SetLogger(log_severity severity, base::Logger *logger) {
         std::unique_lock<std::mutex> l(log_mutex);
-        LogDestination::log_destination(severity)->logger_ = logger;
+        log_destination::get_log_destination(severity)->logger_ = logger;
     }
 
 // L < log_mutex.  Acquires and releases mutex_.
-    int64_t LogMessage::num_messages(int severity) {
+    int64_t log_message::num_messages(int severity) {
         std::unique_lock<std::mutex> l(log_mutex);
         return num_messages_[severity];
     }
 
 // Output the COUNTER value. This is only valid if ostream is a
-// LogStream.
+// log_stream.
     ostream &operator<<(ostream &os, const PRIVATE_Counter &) {
 #ifdef DISABLE_RTTI
-        LogMessage::LogStream *log = static_cast<LogMessage::LogStream*>(&os);
+        log_message::log_stream *log = static_cast<log_message::log_stream*>(&os);
 #else
-        LogMessage::LogStream *log = dynamic_cast<LogMessage::LogStream *>(&os);
+        log_message::log_stream *log = dynamic_cast<log_message::log_stream *>(&os);
 #endif
         CHECK(log && log == log->self())
                         << "You must not use COUNTER with non-glog ostream";
@@ -1770,13 +1770,13 @@ namespace flare::log {
         return os;
     }
 
-    ErrnoLogMessage::ErrnoLogMessage(const char *file, int line,
+    errno_log_message::errno_log_message(const char *file, int line,
                                      log_severity severity, uint64_t ctr,
-                                     void (LogMessage::*send_method)())
-            : LogMessage(file, line, severity, ctr, send_method) {
+                                     void (log_message::*send_method)())
+            : log_message(file, line, severity, ctr, send_method) {
     }
 
-    ErrnoLogMessage::~ErrnoLogMessage() {
+    errno_log_message::~errno_log_message() {
         // Don't access errno directly because it may have been altered
         // while streaming the message.
         stream() << ": " << StrError(preserved_errno()) << " ["
@@ -1784,29 +1784,29 @@ namespace flare::log {
     }
 
     void FlushLogFiles(log_severity min_severity) {
-        LogDestination::FlushLogFiles(min_severity);
+        log_destination::FlushLogFiles(min_severity);
     }
 
     void FlushLogFilesUnsafe(log_severity min_severity) {
-        LogDestination::FlushLogFilesUnsafe(min_severity);
+        log_destination::FlushLogFilesUnsafe(min_severity);
     }
 
     void SetLogDestination(log_severity severity, const char *base_filename) {
-        LogDestination::SetLogDestination(severity, base_filename);
+        log_destination::SetLogDestination(severity, base_filename);
     }
 
     void SetLogSymlink(log_severity severity, const char *symlink_basename) {
-        LogDestination::SetLogSymlink(severity, symlink_basename);
+        log_destination::SetLogSymlink(severity, symlink_basename);
     }
 
-    LogSink::~LogSink() {
+    log_sink::~log_sink() {
     }
 
-    void LogSink::WaitTillSent() {
+    void log_sink::WaitTillSent() {
         // noop default
     }
 
-    string LogSink::ToString(log_severity severity, const char *file, int line,
+    string log_sink::ToString(log_severity severity, const char *file, int line,
                              const struct ::tm *tm_time,
                              const char *message, size_t message_len, int32_t usecs) {
         ostringstream stream(string(message, message_len));
@@ -1830,28 +1830,28 @@ namespace flare::log {
         return stream.str();
     }
 
-    void AddLogSink(LogSink *destination) {
-        LogDestination::AddLogSink(destination);
+    void AddLogSink(log_sink *destination) {
+        log_destination::AddLogSink(destination);
     }
 
-    void RemoveLogSink(LogSink *destination) {
-        LogDestination::RemoveLogSink(destination);
+    void RemoveLogSink(log_sink *destination) {
+        log_destination::RemoveLogSink(destination);
     }
 
     void SetLogFilenameExtension(const char *ext) {
-        LogDestination::SetLogFilenameExtension(ext);
+        log_destination::SetLogFilenameExtension(ext);
     }
 
     void SetStderrLogging(log_severity min_severity) {
-        LogDestination::SetStderrLogging(min_severity);
+        log_destination::SetStderrLogging(min_severity);
     }
 
     void SetEmailLogging(log_severity min_severity, const char *addresses) {
-        LogDestination::SetEmailLogging(min_severity, addresses);
+        log_destination::SetEmailLogging(min_severity, addresses);
     }
 
     void LogToStderr() {
-        LogDestination::LogToStderr();
+        log_destination::LogToStderr();
     }
 
     // Shell-escaping as we need to shell out ot /bin/mail.
@@ -2184,16 +2184,16 @@ namespace flare::log {
         return buf;
     }
 
-    LogMessageFatal::LogMessageFatal(const char *file, int line) :
-            LogMessage(file, line, FLARE_FATAL) {}
+    log_message_fatal::log_message_fatal(const char *file, int line) :
+            log_message(file, line, FLARE_FATAL) {}
 
-    LogMessageFatal::LogMessageFatal(const char *file, int line,
+    log_message_fatal::log_message_fatal(const char *file, int line,
                                      const CheckOpString &result) :
-            LogMessage(file, line, result) {}
+            log_message(file, line, result) {}
 
-    LogMessageFatal::~LogMessageFatal() {
-        Flush();
-        LogMessage::Fail();
+    log_message_fatal::~log_message_fatal() {
+        flush();
+        log_message::fail();
     }
 
     namespace base {
@@ -2259,7 +2259,7 @@ namespace flare::log {
 
     void ShutdownGoogleLogging() {
         log_internal::ShutdownGoogleLoggingUtilities();
-        LogDestination::DeleteLogDestinations();
+        log_destination::DeleteLogDestinations();
         delete logging_directories_list;
         logging_directories_list = NULL;
     }
