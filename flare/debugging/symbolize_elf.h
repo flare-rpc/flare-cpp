@@ -316,15 +316,6 @@ namespace flare::debugging {
 
         }  // namespace
 
-        static int SymbolizerSize() {
-#if defined(__wasm__) || defined(__asmjs__)
-            int pagesize = getpagesize();
-#else
-            int pagesize = sysconf(_SC_PAGESIZE);
-#endif
-            return ((sizeof(Symbolizer) - 1) / pagesize + 1) * pagesize;
-        }
-
         // Return (and set null) g_cached_symbolized_state if it is not null.
         // Otherwise return a new symbolizer.
         static Symbolizer *AllocateSymbolizer() {

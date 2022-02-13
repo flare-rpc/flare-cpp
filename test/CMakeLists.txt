@@ -111,7 +111,7 @@ set_target_properties(flare-shared-debug PROPERTIES
 target_link_libraries(flare-shared-debug ${DYNAMIC_LIB})
 
 # test_io
-add_executable(test_io ${TEST_IO_SRC}
+add_executable(test_io io/cord_buf_test.cc
         ${CMAKE_CURRENT_BINARY_DIR}/cord_buf.pb.cc)
 target_link_libraries(test_io flare-shared-debug
         gtest
