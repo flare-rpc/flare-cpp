@@ -37,7 +37,9 @@
 #include "flare/base/time.h"
 #include "flare/base/thread.h"
 #include "flare/base/sysinfo.h"
-
+#ifdef FLARE_PLATFORM_LINUX
+#include <signal.h>
+#endif
 #ifdef HAVE_STACKTRACE
 # include "flare/debugging/stacktrace.h"
 #endif
