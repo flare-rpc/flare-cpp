@@ -6,7 +6,9 @@
 #include "flare/log/logging.h"
 #include "flare/base/profile.h"
 #include <sys/syscall.h>
-
+#ifdef FLARE_PLATFORM_LINUX
+#include <signal.h>
+#endif
 #ifdef HAVE_STACKTRACE
 
 #include "flare/debugging/stacktrace.h"
