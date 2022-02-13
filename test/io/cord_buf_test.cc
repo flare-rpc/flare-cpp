@@ -31,10 +31,10 @@
 #include <flare/base/fast_rand.h>
 
 #if BAZEL_TEST
-#include "test/iobuf.pb.h"
+#include "test/cord_buf.pb.h"
 #else
 
-#include "iobuf.pb.h"
+#include "cord_buf.pb.h"
 
 #endif   // BAZEL_TEST
 
