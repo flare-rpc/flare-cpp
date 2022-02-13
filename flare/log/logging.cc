@@ -4,7 +4,6 @@
 
 #define _GNU_SOURCE 1 // needed for O_NOFOLLOW and log_pread()/pwrite()
 
-//#include "flare/log/utilities.h"
 
 #include <algorithm>
 #include <cassert>
@@ -79,10 +78,12 @@ using std::fdopen;
 // There is no thread annotation support.
 #define EXCLUSIVE_LOCKS_REQUIRED(mu)
 
-
 // TODO(hamaji): consider windows
 #define PATH_SEPARATOR '/'
 
+#ifdef FLARE_PLATFORM_LINUX
+DECLARE_bool(drop_log_memory);
+#endif
 // Returns true iff terminal supports using colors in output.
 static bool TerminalSupportsColor() {
     bool term_supports_color = false;
