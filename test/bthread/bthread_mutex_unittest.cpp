@@ -15,6 +15,7 @@
 // specific language governing permissions and limitations
 // under the License.
 
+#include <inttypes.h>
 #include <gtest/gtest.h>
 #include "flare/base/compat.h"
 #include "flare/base/time.h"
