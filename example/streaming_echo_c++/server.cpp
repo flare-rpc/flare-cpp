@@ -18,7 +18,7 @@
 // A server to receive EchoRequest and send back EchoResponse.
 
 #include <gflags/gflags.h>
-#include "flare/base/logging.h"
+#include "flare/log/logging.h"
 #include <flare/rpc/server.h>
 #include "echo.pb.h"
 #include <flare/rpc/stream.h>

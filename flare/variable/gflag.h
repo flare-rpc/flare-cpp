@@ -38,9 +38,6 @@ public:
 
     void describe(std::ostream& os, bool quote_string) const override;
 
-#ifdef BAIDU_INTERNAL
-    void get_value(boost::any* value) const override;
-#endif
 
     // Get value of the gflag.
     // We don't bother making the return type generic. This function

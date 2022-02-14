@@ -27,7 +27,7 @@
 #include "flare/bthread/unstable.h"                       // bthread_keytable_pool_init
 #include "flare/base/profile.h"                            // FLARE_ARRAY_SIZE
 #include "flare/base/fd_guard.h"                          // fd_guard
-#include "flare/base/logging.h"                           // CHECK
+#include "flare/log/logging.h"                           // CHECK
 #include "flare/base/time.h"
 #include "flare/base/class_name.h"
 #include "flare/base/strings.h"
@@ -1357,11 +1357,7 @@ namespace flare::rpc {
 
     ServiceOptions::ServiceOptions()
             : ownership(SERVER_DOESNT_OWN_SERVICE), allow_default_url(false), allow_http_body_to_pb(true)
-#ifdef BAIDU_INTERNAL
-            , pb_bytes_to_base64(false)
-#else
             , pb_bytes_to_base64(true)
-#endif
     {}
 
     int Server::AddService(google::protobuf::Service *service,

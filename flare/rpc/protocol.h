@@ -27,7 +27,7 @@
 #include <gflags/gflags_declare.h>                 // DECLARE_xxx
 #include "flare/base/endpoint.h"                         // flare::base::end_point
 #include "flare/io/cord_buf.h"
-#include "flare/base/logging.h"
+#include "flare/log/logging.h"
 #include "flare/rpc/options.pb.h"                  // ProtocolType
 #include "flare/rpc/socket_id.h"                   // SocketId
 #include "flare/rpc/parse_result.h"                // ParseResult

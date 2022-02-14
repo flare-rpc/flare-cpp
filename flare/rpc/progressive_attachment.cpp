@@ -16,7 +16,7 @@
 // under the License.
 
 
-#include "flare/base/logging.h"
+#include "flare/log/logging.h"
 #include "flare/bthread/bthread.h"   // INVALID_BTHREAD_ID before bthread r32748
 #include "flare/rpc/progressive_attachment.h"
 #include "flare/rpc/socket.h"

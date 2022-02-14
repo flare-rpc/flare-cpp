@@ -51,7 +51,7 @@ static const uint32_t KEY_2NDLEVEL_SIZE = 32;
 static const uint32_t KEY_1STLEVEL_SIZE = 31;
 
 // Max tls in one thread, currently the value is 992 which should be enough
-// for most projects throughout baidu. 
+// for most projects.
 static const uint32_t KEYS_MAX = KEY_2NDLEVEL_SIZE * KEY_1STLEVEL_SIZE;
 
 // destructors/version of TLS.

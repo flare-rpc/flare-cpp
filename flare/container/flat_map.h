@@ -7,7 +7,7 @@
 #include <iostream>
 #include <string_view>
 #include <type_traits>
-#include "flare/base/logging.h"
+#include "flare/log/logging.h"
 #include "flare/container/find_cstr.h"
 #include "flare/container/single_threaded_pool.h"            // SingleThreadedPool
 #include "flare/container/hash_tables.h"          // hash<>

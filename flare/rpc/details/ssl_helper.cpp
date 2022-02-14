@@ -21,7 +21,7 @@
 #include <openssl/x509.h>
 #include <openssl/x509v3.h>
 #include <memory>
-#include "flare/base/logging.h"
+#include "flare/log/logging.h"
 #include "flare/io/ssl_compat.h"
 #include "flare/strings/string_splitter.h"
 #include "flare/rpc/socket.h"

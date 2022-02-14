@@ -14,7 +14,7 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
-
+#include <inttypes.h>
 #include <gtest/gtest.h>
 #include "flare/base/profile.h"
 
@@ -24,7 +24,7 @@
 #endif
 
 #include "flare/base/time.h"
-#include "flare/base/logging.h"
+#include "flare/log/logging.h"
 
 namespace {
 

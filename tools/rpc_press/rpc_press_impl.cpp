@@ -27,7 +27,7 @@
 #include "flare/base/time.h"
 #include <flare/rpc/channel.h>
 #include <flare/rpc/controller.h>
-#include "flare/base/logging.h"
+#include "flare/log/logging.h"
 #include <flare/json2pb/pb_to_json.h>
 #include "json_loader.h"
 #include "rpc_press_impl.h"

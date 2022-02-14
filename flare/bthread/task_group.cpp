@@ -21,6 +21,7 @@
 
 #include <sys/types.h>
 #include <stddef.h>                         // size_t
+#include <inttypes.h>
 #include <gflags/gflags.h>
 #include "flare/base/compat.h"                   // FLARE_PLATFORM_OSX
 #include "flare/base/scoped_lock.h"              // FLARE_SCOPED_LOCK

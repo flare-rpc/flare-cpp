@@ -17,7 +17,7 @@
 
 
 #include <limits>
-#include "flare/base/logging.h"
+#include "flare/log/logging.h"
 #include "flare/base/strings.h"
 #include "flare/rpc/redis_reply.h"
 

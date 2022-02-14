@@ -15,7 +15,7 @@
 // specific language governing permissions and limitations
 // under the License.
 
-
+#include <inttypes.h>
 #include <google/protobuf/descriptor.h>            // MethodDescriptor
 #include <google/protobuf/message.h>               // Message
 #include <gflags/gflags.h>

@@ -20,7 +20,7 @@
 #include <google/protobuf/reflection_ops.h>                 // ReflectionOps::Merge
 #include <google/protobuf/wire_format.h>
 #include "flare/rpc/nshead_message.h"
-#include "flare/base/logging.h"
+#include "flare/log/logging.h"
 
 namespace flare::rpc {
 

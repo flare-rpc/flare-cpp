@@ -7,7 +7,7 @@
 #include <vector>
 #include "flare/base/time.h"
 #include "flare/base/strings.h"
-#include "flare/base/logging.h"
+#include "flare/log/logging.h"
 #include "flare/container/hash_tables.h"
 #include "flare/container/flat_map.h"
 #include "pooled_map.h"

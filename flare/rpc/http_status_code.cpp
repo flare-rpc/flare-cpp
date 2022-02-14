@@ -18,7 +18,7 @@
 
 #include <stdio.h>                                  // snprintf
 
-#include "flare/base/logging.h"                           // BAIDU_*
+#include "flare/log/logging.h"                           // BAIDU_*
 #include "flare/base/profile.h"                            // FLARE_ARRAY_SIZE
 #include "flare/base/thread.h"                      // thread_local
 #include "flare/rpc/errno.pb.h"

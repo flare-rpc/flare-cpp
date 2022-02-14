@@ -16,7 +16,7 @@
 #include <gmock/gmock.h>
 #include "flare/base/profile.h"
 #include "flare/base/math/bit_cast.h"
-#include "flare/base/logging.h"
+#include "flare/log/logging.h"
 #include "flare/debugging/internal/stack_consumption.h"
 
 

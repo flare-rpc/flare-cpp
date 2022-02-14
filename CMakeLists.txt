@@ -131,13 +131,6 @@ if ((NOT LEVELDB_INCLUDE_PATH) OR (NOT LEVELDB_LIB))
     message(FATAL_ERROR "Fail to find leveldb")
 endif ()
 
-find_path(GLOG_INCLUDE_PATH NAMES glog/logging.h)
-find_library(GLOG_LIB NAMES glog)
-if ((NOT GLOG_INCLUDE_PATH) OR (NOT GLOG_LIB))
-    message(FATAL_ERROR "Fail to find glog")
-endif ()
-include_directories(${GLOG_INCLUDE_PATH})
-
 find_library(PROTOC_LIB NAMES protoc)
 if (NOT PROTOC_LIB)
     message(FATAL_ERROR "Fail to find protoc lib")
@@ -174,9 +167,6 @@ set(DYNAMIC_LIB
 
 set(FLARE_PRIVATE_LIBS "-lgflags -lprotobuf -lleveldb -lprotoc -lssl -lcrypto -ldl -lz")
 
-set(DYNAMIC_LIB ${DYNAMIC_LIB} ${GLOG_LIB})
-set(FLARE_PRIVATE_LIBS "${FLARE_PRIVATE_LIBS} -lglog")
-
 if (CMAKE_SYSTEM_NAME STREQUAL "Linux")
     set(DYNAMIC_LIB ${DYNAMIC_LIB} rt)
     set(FLARE_PRIVATE_LIBS "${FLARE_PRIVATE_LIBS} -lrt")
@@ -210,6 +200,9 @@ file(GLOB_RECURSE FLARE_IO_SRC "${PROJECT_SOURCE_DIR}/flare/io/*.cc")
 file(GLOB_RECURSE FLARE_MEMORY_SRC "${PROJECT_SOURCE_DIR}/flare/memory/*.cc")
 file(GLOB_RECURSE FLARE_STRINGS_SRC "${PROJECT_SOURCE_DIR}/flare/strings/*.cc")
 file(GLOB_RECURSE FLARE_DEBUG_SRC "${PROJECT_SOURCE_DIR}/flare/debugging/*.cc")
+file(GLOB_RECURSE FLARE_LOG_SRC "${PROJECT_SOURCE_DIR}/flare/log/*.cc")
+file(GLOB_RECURSE FLARE_BOOTSTRAP_SRC "${PROJECT_SOURCE_DIR}/flare/bootstrap/*.cc")
+
 set(FLARE_SRC
         "${PROJECT_SOURCE_DIR}/flare/base/dynamic_annotations/dynamic_annotations.c"
         ${FLARE_BASE_SRC}
@@ -219,6 +212,8 @@ set(FLARE_SRC
         ${FLARE_IO_SRC}
         ${FLARE_STRINGS_SRC}
         ${FLARE_DEBUG_SRC}
+        ${FLARE_LOG_SRC}
+        ${FLARE_BOOTSTRAP_SRC}
         )
 
 file(GLOB_RECURSE VARIABLE_SOURCES "${PROJECT_SOURCE_DIR}/flare/variable/*.cpp")

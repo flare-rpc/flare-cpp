@@ -21,9 +21,6 @@
 #include "flare/base/strings.h"
 #include "flare/io/temp_file.h"
 #include "flare/bthread/bthread.h"
-#ifdef BAIDU_INTERNAL
-#include "flare/rpc/policy/baidu_naming_service.h"
-#endif
 #include "flare/rpc/policy/consul_naming_service.h"
 #include "flare/rpc/policy/domain_naming_service.h"
 #include "flare/rpc/policy/file_naming_service.h"
@@ -66,11 +63,6 @@ bool IsIPListEqual(const std::set<flare::base::ip_t>& s1, const std::set<flare::
 
 TEST(NamingServiceTest, sanity) {
     std::vector<flare::rpc::ServerNode> servers;
-
-#ifdef BAIDU_INTERNAL
-    flare::rpc::policy::BaiduNamingService bns;
-    ASSERT_EQ(0, bns.GetServers("qa-pbrpc.SAT.tjyx", &servers));
-#endif
 
     flare::rpc::policy::DomainNamingService dns;
     ASSERT_EQ(0, dns.GetServers("baidu.com:1234", &servers));
@@ -141,11 +133,6 @@ TEST(NamingServiceTest, sanity) {
 TEST(NamingServiceTest, invalid_port) {
     std::vector<flare::rpc::ServerNode> servers;
 
-#ifdef BAIDU_INTERNAL
-    flare::rpc::policy::BaiduNamingService bns;
-    ASSERT_EQ(0, bns.GetServers("qa-pbrpc.SAT.tjyx:main", &servers));
-#endif
-
     flare::rpc::policy::DomainNamingService dns;
     ASSERT_EQ(-1, dns.GetServers("baidu.com:", &servers));
     ASSERT_EQ(-1, dns.GetServers("baidu.com:123a", &servers));
@@ -154,11 +141,6 @@ TEST(NamingServiceTest, invalid_port) {
 
 TEST(NamingServiceTest, wrong_name) {
     std::vector<flare::rpc::ServerNode> servers;
-
-#ifdef BAIDU_INTERNAL
-    flare::rpc::policy::BaiduNamingService bns;
-    ASSERT_EQ(-1, bns.GetServers("Wrong", &servers));
-#endif
 
     const char *address_list[] =  {
         "10.127.0.1:1234",

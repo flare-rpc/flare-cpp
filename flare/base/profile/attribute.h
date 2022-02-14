@@ -179,4 +179,14 @@ namespace flare::base::base_internal {
 #define FLARE_NO_SANITIZE_ADDRESS
 #endif
 
+#if FLARE_COMPILER_HAS_FEATURE(thread_sanitizer) || __SANITIZE_THREAD__
+#define FLARE_SANITIZE_THREAD 1
+#endif
+
+#if defined(FLARE_SANITIZE_THREAD)
+#define FLARE_IFDEF_THREAD_SANITIZER(X) X
+#else
+#define FLARE_IFDEF_THREAD_SANITIZER(X)
+#endif
+
 #endif // FLARE_BASE_PROFILE_ATTRIBUTE_H_

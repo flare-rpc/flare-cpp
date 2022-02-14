@@ -21,7 +21,7 @@
 #include <filesystem>
 #include <fcntl.h>                           // O_RDONLY
 #include <gflags/gflags.h>
-#include "flare/base/logging.h"
+#include "flare/log/logging.h"
 #include "flare/base/fd_guard.h"                  // fd_guard
 #include "flare/hash/murmurhash3.h"
 #include "flare/base/process_util.h"              // read_command_line

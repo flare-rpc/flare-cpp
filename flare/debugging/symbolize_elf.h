@@ -60,7 +60,7 @@
 
 #include "flare/base/math/bit_cast.h"
 #include "flare/base/dynamic_annotations/dynamic_annotations.h"
-#include "flare/base/logging.h"
+#include "flare/log/logging.h"
 #include "flare/base/profile.h"
 #include "flare/debugging/internal/demangle.h"
 #include "flare/debugging/internal/vdso_support.h"
@@ -316,15 +316,6 @@ namespace flare::debugging {
 
         }  // namespace
 
-        static int SymbolizerSize() {
-#if defined(__wasm__) || defined(__asmjs__)
-            int pagesize = getpagesize();
-#else
-            int pagesize = sysconf(_SC_PAGESIZE);
-#endif
-            return ((sizeof(Symbolizer) - 1) / pagesize + 1) * pagesize;
-        }
-
         // Return (and set null) g_cached_symbolized_state if it is not null.
         // Otherwise return a new symbolizer.
         static Symbolizer *AllocateSymbolizer() {
@@ -493,9 +484,7 @@ const int kMaxSectionNameLen = 64;
 
 bool ForEachSection(int fd,
                     const std::function<bool( const std::string &name,
-                    const ElfW(Shdr) &
-
-)> &callback) {
+                    const ElfW(Shdr) &)> &callback) {
 ElfW(Ehdr)
 elf_header;
 if (!

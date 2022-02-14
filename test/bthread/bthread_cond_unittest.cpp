@@ -15,6 +15,7 @@
 // specific language governing permissions and limitations
 // under the License.
 
+#include <inttypes.h>
 #include <map>
 #include <gtest/gtest.h>
 #include "flare/base/static_atomic.h"

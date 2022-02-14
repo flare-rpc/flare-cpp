@@ -27,27 +27,19 @@
 #include <gflags/gflags_declare.h>
 #include "flare/base/profile.h"               // FLARE_DISALLOW_COPY_AND_ASSIGN
 
-#ifdef BAIDU_INTERNAL
-#include <boost/any.hpp>
-#else
-namespace boost {
-    class any;
-}
-#endif
-
 namespace flare::variable {
 
     DECLARE_bool(save_series);
 
-// Bitwise masks of displayable targets 
+    // Bitwise masks of displayable targets
     enum DisplayFilter {
         DISPLAY_ON_HTML = 1,
         DISPLAY_ON_PLAIN_TEXT = 2,
         DISPLAY_ON_ALL = 3,
     };
 
-// Implement this class to write variables into different places.
-// If dump() returns false, Variable::dump_exposed() stops and returns -1.
+    // Implement this class to write variables into different places.
+    // If dump() returns false, Variable::dump_exposed() stops and returns -1.
     class Dumper {
     public:
         virtual ~Dumper() {}
@@ -109,12 +101,6 @@ namespace flare::variable {
         // string form of describe().
         std::string get_description() const;
 
-#ifdef BAIDU_INTERNAL
-        // Get value.
-        // If subclass does not override this method, the value is the description
-        // and the type is std::string.
-        virtual void get_value(boost::any* value) const;
-#endif
 
         // Describe saved series as a json-string into the stream.
         // The output will be ploted by flot.js
@@ -195,11 +181,6 @@ namespace flare::variable {
                                            std::ostream &,
                                            const SeriesOptions &);
 
-#ifdef BAIDU_INTERNAL
-        // Find an exposed variable by `name' and put its value into `value'.
-        // Returns 0 on found, -1 otherwise.
-        static int get_exposed(const std::string& name, boost::any* value);
-#endif
 
         // Find all exposed variables matching `white_wildcards' but
         // `black_wildcards' and send them to `dumper'.

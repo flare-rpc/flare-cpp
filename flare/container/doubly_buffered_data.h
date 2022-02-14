@@ -7,7 +7,7 @@
 #include <pthread.h>
 #include "flare/base/scoped_lock.h"
 #include "flare/base/thread.h"
-#include "flare/base/logging.h"
+#include "flare/log/logging.h"
 #include "flare/base/type_traits.h"
 #include "flare/base/errno.h"
 #include "flare/base/static_atomic.h"

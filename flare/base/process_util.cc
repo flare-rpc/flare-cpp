@@ -6,7 +6,7 @@
 #include <unistd.h>                     // read, gitpid
 #include <sstream>                      // std::ostringstream
 #include "flare/base/fd_guard.h"             // flare::base::fd_guard
-#include "flare/base/logging.h"
+#include "flare/log/logging.h"
 #include "flare/base/popen.h"                // read_command_output
 #include "flare/base/process_util.h"
 #include "flare/base/profile.h"

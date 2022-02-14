@@ -21,7 +21,7 @@
 #include <sys/socket.h>                         // ^
 #include <sys/un.h>                             // unix domain socket
 #include "flare/base/fd_guard.h"                     // fd_guard
-#include "flare/base/logging.h"
+#include "flare/log/logging.h"
 
 namespace flare::base {
 

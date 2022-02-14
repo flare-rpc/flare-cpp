@@ -21,7 +21,7 @@
 
 #include <string>
 #include "flare/base/scoped_lock.h"
-#include "flare/base/logging.h"
+#include "flare/log/logging.h"
 #include "flare/container/case_ignored_flat_map.h"
 #include "flare/base/singleton_on_pthread_once.h"
 

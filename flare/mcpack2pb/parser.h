@@ -24,7 +24,7 @@
 
 #include <limits>  // std::numeric_limits
 #include <google/protobuf/io/zero_copy_stream.h>
-#include "flare/base/logging.h"
+#include "flare/log/logging.h"
 #include <string_view>
 #include "flare/mcpack2pb/field_type.h"
 

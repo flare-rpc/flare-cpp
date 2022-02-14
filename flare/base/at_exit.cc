@@ -2,7 +2,7 @@
 #include "flare/base/at_exit.h"
 #include <stddef.h>
 #include <ostream>
-#include "flare/base/logging.h"
+#include "flare/log/logging.h"
 
 namespace flare::base {
 

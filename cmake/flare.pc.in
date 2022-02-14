@@ -19,7 +19,7 @@ includedir=${prefix}/@CMAKE_INSTALL_INCLUDEDIR@
 libdir=${prefix}/@CMAKE_INSTALL_LIBDIR@
 
 Name: flare
-Description: An industrial-grade RPC framework based baidu-rpc
+Description: An industrial-grade RPC framework
 Version: @FLARE_VERSION@
 Cflags: -I${includedir}
 Libs: -L${libdir}/ -lbrpc

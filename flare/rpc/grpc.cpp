@@ -22,7 +22,7 @@
 #include "flare/rpc/grpc.h"
 #include "flare/rpc/errno.pb.h"
 #include "flare/rpc/http_status_code.h"
-#include "flare/base/logging.h"
+#include "flare/log/logging.h"
 
 namespace flare::rpc {
 

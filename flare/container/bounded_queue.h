@@ -3,7 +3,7 @@
 #define FLARE_CONTAINER_BOUNDED_QUEUE_H_
 
 #include "flare/base/profile.h"
-#include "flare/base/logging.h"
+#include "flare/log/logging.h"
 
 namespace flare::container {
 

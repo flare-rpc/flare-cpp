@@ -17,12 +17,13 @@
 
 
 #include <signal.h>
+#include <inttypes.h>
 #include <openssl/md5.h>
 #include <google/protobuf/descriptor.h>
 #include <gflags/gflags.h>
 #include "flare/bthread/bthread.h"
 #include "flare/base/strings.h"
-#include "flare/base/logging.h"
+#include "flare/log/logging.h"
 #include "flare/base/time.h"
 #include "flare/bthread/bthread.h"
 #include "flare/bthread/unstable.h"
@@ -231,9 +232,7 @@ namespace flare::rpc {
         // defined in header. Better for cpu cache and faster for lookup.
         _span = NULL;
         _flags = 0;
-#ifndef BAIDU_INTERNAL
         set_pb_bytes_to_base64(true);
-#endif
         _error_code = 0;
         _session_local_data = NULL;
         _server = NULL;

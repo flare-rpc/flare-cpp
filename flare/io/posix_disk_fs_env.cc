@@ -13,7 +13,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include "flare/io/fs_env.h"
-#include "flare/base/logging.h"
+#include "flare/log/logging.h"
 #include "flare/base/errno.h"
 
 namespace flare::io {
@@ -241,8 +241,8 @@ namespace flare::io {
         flare_status sync() override;
 
     private:
-        std::string _file_name;
         int _fd;
+        std::string _file_name;
     };
 
     posix_writeable_file::posix_writeable_file(const std::string &fname)

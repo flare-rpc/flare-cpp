@@ -21,7 +21,7 @@
 
 #include <gtest/gtest.h>
 #include <google/protobuf/stubs/common.h>
-#include "flare/base/logging.h"
+#include "flare/log/logging.h"
 #include "flare/base/time.h"
 #include "flare/rpc/socket.h"
 #include "flare/rpc/server.h"

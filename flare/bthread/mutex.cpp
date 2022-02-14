@@ -32,7 +32,7 @@
 #include "flare/base/fd_guard.h"
 #include <memory>
 #include "flare/hash/murmurhash3.h"
-#include "flare/base/logging.h"
+#include "flare/log/logging.h"
 #include "flare/memory/object_pool.h"
 #include "flare/bthread/butex.h"                       // butex_*
 #include "flare/bthread/processor.h"                   // cpu_relax, barrier

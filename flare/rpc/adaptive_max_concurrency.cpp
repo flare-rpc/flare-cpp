@@ -18,7 +18,7 @@
 #include <cstring>
 #include <strings.h>
 #include "flare/base/strings.h"
-#include "flare/base/logging.h"
+#include "flare/log/logging.h"
 #include "flare/rpc/adaptive_max_concurrency.h"
 
 namespace flare::rpc {

@@ -25,7 +25,7 @@
 #include <gflags/gflags.h>
 #include <google/protobuf/descriptor.h>
 #include "flare/base/time.h"
-#include "flare/base/logging.h"
+#include "flare/log/logging.h"
 #include "flare/io/temp_file.h"
 #include "flare/rpc/socket.h"
 #include "flare/rpc/acceptor.h"
@@ -1989,46 +1989,46 @@ namespace {
         ASSERT_EQ(0, channel.Init("localhost:8888", &opt));
         ASSERT_EQ("localhost:8888", channel._service_name);
 
-        ASSERT_EQ(0, channel.Init("http://baidu.com", &opt));
-        ASSERT_EQ("baidu.com", channel._service_name);
-        ASSERT_EQ(0, channel.Init("http://baidu.com:80", &opt));
-        ASSERT_EQ("baidu.com:80", channel._service_name);
-        ASSERT_EQ(0, channel.Init("http://baidu.com", 80, &opt));
-        ASSERT_EQ("baidu.com:80", channel._service_name);
-        ASSERT_EQ(0, channel.Init("http://baidu.com:8888", &opt));
-        ASSERT_EQ("baidu.com:8888", channel._service_name);
-        ASSERT_EQ(0, channel.Init("http://baidu.com", 8888, &opt));
-        ASSERT_EQ("baidu.com:8888", channel._service_name);
-        ASSERT_EQ(0, channel.Init("http://baidu.com", "rr", &opt));
-        ASSERT_EQ("baidu.com", channel._service_name);
-        ASSERT_EQ(0, channel.Init("http://baidu.com:80", "rr", &opt));
-        ASSERT_EQ("baidu.com:80", channel._service_name);
-        ASSERT_EQ(0, channel.Init("http://baidu.com:8888", "rr", &opt));
-        ASSERT_EQ("baidu.com:8888", channel._service_name);
+        ASSERT_EQ(0, channel.Init("http://github.com", &opt));
+        ASSERT_EQ("github.com", channel._service_name);
+        ASSERT_EQ(0, channel.Init("http://github.com:80", &opt));
+        ASSERT_EQ("github.com:80", channel._service_name);
+        ASSERT_EQ(0, channel.Init("http://github.com", 80, &opt));
+        ASSERT_EQ("github.com:80", channel._service_name);
+        ASSERT_EQ(0, channel.Init("http://github.com:8888", &opt));
+        ASSERT_EQ("github.com:8888", channel._service_name);
+        ASSERT_EQ(0, channel.Init("http://github.com", 8888, &opt));
+        ASSERT_EQ("github.com:8888", channel._service_name);
+        ASSERT_EQ(0, channel.Init("http://github.com", "rr", &opt));
+        ASSERT_EQ("github.com", channel._service_name);
+        ASSERT_EQ(0, channel.Init("http://github.com:80", "rr", &opt));
+        ASSERT_EQ("github.com:80", channel._service_name);
+        ASSERT_EQ(0, channel.Init("http://github.com:8888", "rr", &opt));
+        ASSERT_EQ("github.com:8888", channel._service_name);
 
-        ASSERT_EQ(0, channel.Init("https://baidu.com", &opt));
-        ASSERT_EQ("baidu.com", channel._service_name);
-        ASSERT_EQ(0, channel.Init("https://baidu.com:443", &opt));
-        ASSERT_EQ("baidu.com:443", channel._service_name);
-        ASSERT_EQ(0, channel.Init("https://baidu.com", 443, &opt));
-        ASSERT_EQ("baidu.com:443", channel._service_name);
-        ASSERT_EQ(0, channel.Init("https://baidu.com:1443", &opt));
-        ASSERT_EQ("baidu.com:1443", channel._service_name);
-        ASSERT_EQ(0, channel.Init("https://baidu.com", 1443, &opt));
-        ASSERT_EQ("baidu.com:1443", channel._service_name);
-        ASSERT_EQ(0, channel.Init("https://baidu.com", "rr", &opt));
-        ASSERT_EQ("baidu.com", channel._service_name);
-        ASSERT_EQ(0, channel.Init("https://baidu.com:443", "rr", &opt));
-        ASSERT_EQ("baidu.com:443", channel._service_name);
-        ASSERT_EQ(0, channel.Init("https://baidu.com:1443", "rr", &opt));
-        ASSERT_EQ("baidu.com:1443", channel._service_name);
+        ASSERT_EQ(0, channel.Init("https://github.com", &opt));
+        ASSERT_EQ("github.com", channel._service_name);
+        ASSERT_EQ(0, channel.Init("https://github.com:443", &opt));
+        ASSERT_EQ("github.com:443", channel._service_name);
+        ASSERT_EQ(0, channel.Init("https://github.com", 443, &opt));
+        ASSERT_EQ("github.com:443", channel._service_name);
+        ASSERT_EQ(0, channel.Init("https://github.com:1443", &opt));
+        ASSERT_EQ("github.com:1443", channel._service_name);
+        ASSERT_EQ(0, channel.Init("https://github.com", 1443, &opt));
+        ASSERT_EQ("github.com:1443", channel._service_name);
+        ASSERT_EQ(0, channel.Init("https://github.com", "rr", &opt));
+        ASSERT_EQ("github.com", channel._service_name);
+        ASSERT_EQ(0, channel.Init("https://github.com:443", "rr", &opt));
+        ASSERT_EQ("github.com:443", channel._service_name);
+        ASSERT_EQ(0, channel.Init("https://github.com:1443", "rr", &opt));
+        ASSERT_EQ("github.com:1443", channel._service_name);
 
         const char *address_list[] = {
                 "10.127.0.1:1234",
                 "10.128.0.1:1234 enable",
                 "10.129.0.1:1234",
                 "localhost:1234",
-                "baidu.com:1234"
+                "github.com:1234"
         };
         flare::io::temp_file tmp_file;
         {

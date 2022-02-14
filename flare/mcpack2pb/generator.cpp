@@ -1370,7 +1370,7 @@ bool McpackToProtobuf::Generate(const google::protobuf::FileDescriptor* file,
     
     google::protobuf::io::Printer inc_printer(
         ctx->OpenForInsert(cpp_name, "includes"), '$');
-    inc_printer.Print("#include <flare/base/logging.h>\n"
+    inc_printer.Print("#include <flare/log/logging.h>\n"
                       "#include <mcpack2pb/mcpack2pb.h>\n"
                       "#include <gflags/gflags.h>\n");
 

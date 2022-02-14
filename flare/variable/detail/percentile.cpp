@@ -18,7 +18,7 @@
 // Date: 2015/09/15 15:14:32
 
 #include "flare/variable/detail/percentile.h"
-#include "flare/base/logging.h"
+#include "flare/log/logging.h"
 
 namespace flare::variable {
 namespace detail {

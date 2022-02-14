@@ -21,7 +21,7 @@
 
 #include "flare/base/scoped_lock.h"             // FLARE_SCOPED_LOCK
 #include "flare/base/errno.h"                    // flare_error
-#include "flare/base/logging.h"
+#include "flare/log/logging.h"
 #include "flare/hash/murmurhash3.h"
 #include "flare/bthread/sys_futex.h"            // futex_wake_private
 #include "flare/bthread/interrupt_pthread.h"
@@ -56,10 +56,7 @@ void run_worker_startfn() {
 }
 
 void* TaskControl::worker_thread(void* arg) {
-    run_worker_startfn();    
-#ifdef BAIDU_INTERNAL
-    logging::ComlogInitializer comlog_initializer;
-#endif
+    run_worker_startfn();
     
     TaskControl* c = static_cast<TaskControl*>(arg);
     TaskGroup* g = c->create_group();

@@ -40,7 +40,6 @@ add_library(flare-static STATIC
 
 target_link_libraries(flare-shared ${DYNAMIC_LIB})
 
-target_link_libraries(flare-shared ${GLOG_LIB})
 
 if (FLARE_WITH_THRIFT)
     target_link_libraries(flare-shared thrift)

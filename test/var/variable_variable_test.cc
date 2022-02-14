@@ -63,11 +63,6 @@ protected:
 TEST_F(VariableTest, status) {
     flare::variable::Status<int> st1;
     st1.set_value(9);
-#ifdef BAIDU_INTERNAL
-    boost::any v1;
-    st1.get_value(&v1);
-    ASSERT_EQ(9, boost::any_cast<int>(v1));
-#endif
     ASSERT_EQ(0, st1.expose("var1"));
     ASSERT_EQ("9", flare::variable::Variable::describe_exposed("var1"));
     std::vector<std::string> vars;
@@ -130,11 +125,6 @@ TEST_F(VariableTest, status) {
     flare::variable::Status<int> st4("var4", 12);
     ASSERT_EQ("var4", st4.name());
     ASSERT_EQ(4UL, flare::variable::Variable::count_exposed());
-#ifdef BAIDU_INTERNAL
-    boost::any v4;
-    st4.get_value(&v4);
-    ASSERT_EQ(12, boost::any_cast<int>(v4));
-#endif
     ASSERT_EQ("12", flare::variable::Variable::describe_exposed("var4"));
     flare::variable::Variable::list_exposed(&vars);
     ASSERT_EQ(4UL, vars.size());
@@ -145,11 +135,6 @@ TEST_F(VariableTest, status) {
 
     flare::variable::Status<void*> st5((void*)19UL);
     LOG(INFO) << st5;
-#ifdef BAIDU_INTERNAL
-    boost::any v5;
-    st5.get_value(&v5);
-    ASSERT_EQ((void*)19UL, boost::any_cast<void*>(v5));
-#endif
     ASSERT_EQ("0x13", st5.get_description());
 }
 

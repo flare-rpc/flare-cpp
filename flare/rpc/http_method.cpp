@@ -18,7 +18,7 @@
 
 #include <stdlib.h>                     // abort()
 #include "flare/base/profile.h"
-#include "flare/base/logging.h"
+#include "flare/log/logging.h"
 #include <pthread.h>
 #include <algorithm>
 #include "flare/rpc/http_method.h"

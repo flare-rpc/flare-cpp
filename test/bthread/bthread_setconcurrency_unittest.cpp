@@ -19,10 +19,10 @@
 #include <gflags/gflags.h>
 #include "flare/base/static_atomic.h"
 #include "flare/base/time.h"
-#include "flare/base/logging.h"
+#include "flare/log/logging.h"
 #include "flare/base/thread.h"
 #include <flare/bthread/butex.h>
-#include "flare/base/logging.h"
+#include "flare/log/logging.h"
 #include "flare/bthread/bthread.h"
 #include "flare/bthread/task_control.h"
 

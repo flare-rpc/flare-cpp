@@ -24,7 +24,7 @@
 
 #include "flare/base/profile.h"
 #include "flare/base/static_atomic.h"
-#include "flare/base/logging.h"
+#include "flare/log/logging.h"
 
 namespace bthread {
 

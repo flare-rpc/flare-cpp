@@ -15,11 +15,12 @@
 // specific language governing permissions and limitations
 // under the License.
 
+#include <inttypes.h>
 #include <gtest/gtest.h>
 #include "flare/base/compat.h"
 #include "flare/base/time.h"
 #include "flare/base/strings.h"
-#include "flare/base/logging.h"
+#include "flare/log/logging.h"
 #include "flare/bthread/bthread.h"
 #include "flare/bthread/butex.h"
 #include "flare/bthread/task_control.h"

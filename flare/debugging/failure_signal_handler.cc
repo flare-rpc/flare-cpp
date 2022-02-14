@@ -31,7 +31,7 @@
 #include <ctime>
 
 #include "flare/base/profile.h"
-#include "flare/base/logging.h"
+#include "flare/log/logging.h"
 #include "flare/debugging/internal/examine_stack.h"
 #include "flare/debugging/stacktrace.h"
 
@@ -229,7 +229,7 @@ namespace flare::debugging {
 #endif
     }
 
-    static void WriteToStderr(const char *data) {
+    static void write_to_stderr(const char *data) {
         int old_errno = errno;
         SafeWriteToStderr(data, strlen(data));
         errno = old_errno;
@@ -283,7 +283,7 @@ namespace flare::debugging {
     }
 
 // Called by AbelFailureSignalHandler() to write the failure info. It is
-// called once with writerfn set to WriteToStderr() and then possibly
+// called once with writerfn set to write_to_stderr() and then possibly
 // with writerfn set to the user provided function.
     static void WriteFailureInfo(int signo, void *ucontext,
                                  void (*writerfn)(const char *)) {
@@ -362,7 +362,7 @@ namespace flare::debugging {
 #endif
 
         // First write to stderr.
-        WriteFailureInfo(signo, ucontext, WriteToStderr);
+        WriteFailureInfo(signo, ucontext, write_to_stderr);
 
         // Riskier code (because it is less likely to be async-signal-safe)
         // goes after this point.

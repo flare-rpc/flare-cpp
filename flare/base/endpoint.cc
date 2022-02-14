@@ -11,7 +11,7 @@
 #include <gflags/gflags.h>
 #include "flare/base/fd_guard.h"                    // fd_guard
 #include "flare/base/endpoint.h"                    // ip_t
-#include "flare/base/logging.h"
+#include "flare/log/logging.h"
 #include "flare/base/strings.h"
 #include "flare/base/singleton_on_pthread_once.h"
 #include <sys/socket.h>                        // SO_REUSEADDR SO_REUSEPORT

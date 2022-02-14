@@ -26,7 +26,7 @@
 #include "flare/base/fd_guard.h"                       // fd_guard
 #include "flare/base/time.h"                           // cpuwide_time_us
 #include "flare/memory/object_pool.h"                    // get_object
-#include "flare/base/logging.h"                        // CHECK
+#include "flare/log/logging.h"                        // CHECK
 #include "flare/base/profile.h"
 #include "flare/base/class_name.h"                     // flare::base::class_name
 #include "flare/rpc/log.h"

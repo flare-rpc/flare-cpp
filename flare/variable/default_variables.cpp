@@ -141,7 +141,7 @@ namespace flare::variable {
 
         // NOTE: may return a volatile value that may be overwritten at any time.
         // This is acceptable right now. Both 32-bit and 64-bit numbers are atomic
-        // to fetch in 64-bit machines(most of baidu machines) and the code inside
+        // to fetch in 64-bit machines and the code inside
         // this .cpp utilizing this class generally return a struct with 32-bit
         // and 64-bit numbers.
         template<typename ReadFn>

@@ -20,7 +20,7 @@
 
 #include <gflags/gflags.h>
 #include <memory>
-#include "flare/base/logging.h"
+#include "flare/log/logging.h"
 #include <flare/rpc/server.h>
 #include <flare/base/file_watcher.h>
 #include <flare/base/scoped_file.h>

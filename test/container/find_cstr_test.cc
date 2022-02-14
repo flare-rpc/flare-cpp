@@ -4,7 +4,7 @@
 #include <gtest/gtest.h>
 #include "flare/container/find_cstr.h"
 #include "flare/base/time.h"
-#include "flare/base/logging.h"
+#include "flare/log/logging.h"
 
 namespace {
     class FindCstrTest : public ::testing::Test {

@@ -1,7 +1,7 @@
 
 #include <gtest/gtest.h>
 #include "flare/base/class_name.h"
-#include "flare/base/logging.h"
+#include "flare/log/logging.h"
 
 namespace flare::base {
     namespace foobar {

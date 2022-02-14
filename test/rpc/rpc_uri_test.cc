@@ -21,11 +21,11 @@
 
 TEST(URITest, everything) {
     flare::rpc::URI uri;
-    std::string uri_str = " foobar://user:passwd@www.baidu.com:80/s?wd=uri#frag  ";
+    std::string uri_str = " foobar://user:passwd@github.com:80/s?wd=uri#frag  ";
     ASSERT_EQ(0, uri.SetHttpURL(uri_str));
     ASSERT_EQ("foobar", uri.scheme());
     ASSERT_EQ(80, uri.port());
-    ASSERT_EQ("www.baidu.com", uri.host());
+    ASSERT_EQ("github.com", uri.host());
     ASSERT_EQ("/s", uri.path());
     ASSERT_EQ("user:passwd", uri.user_info());
     ASSERT_EQ("frag", uri.fragment());
@@ -38,16 +38,16 @@ TEST(URITest, everything) {
     int port_out = -1;
     flare::rpc::ParseURL(uri_str.c_str(), &scheme, &host_out, &port_out);
     ASSERT_EQ("foobar", scheme);
-    ASSERT_EQ("www.baidu.com", host_out);
+    ASSERT_EQ("github.com", host_out);
     ASSERT_EQ(80, port_out);
 }
 
 TEST(URITest, only_host) {
     flare::rpc::URI uri;
-    ASSERT_EQ(0, uri.SetHttpURL("  foo1://www.baidu1.com?wd=uri2&nonkey=22 "));
+    ASSERT_EQ(0, uri.SetHttpURL("  foo1://www.github1.com?wd=uri2&nonkey=22 "));
     ASSERT_EQ("foo1", uri.scheme());
     ASSERT_EQ(-1, uri.port());
-    ASSERT_EQ("www.baidu1.com", uri.host());
+    ASSERT_EQ("www.github1.com", uri.host());
     ASSERT_EQ("", uri.path());
     ASSERT_EQ("", uri.user_info());
     ASSERT_EQ("", uri.fragment());
@@ -57,10 +57,10 @@ TEST(URITest, only_host) {
     ASSERT_TRUE(uri.GetQuery("nonkey"));
     ASSERT_EQ(*uri.GetQuery("nonkey"), "22");
 
-    ASSERT_EQ(0, uri.SetHttpURL("foo2://www.baidu2.com:1234?wd=uri2&nonkey=22 "));
+    ASSERT_EQ(0, uri.SetHttpURL("foo2://www.github2.com:1234?wd=uri2&nonkey=22 "));
     ASSERT_EQ("foo2", uri.scheme());
     ASSERT_EQ(1234, uri.port());
-    ASSERT_EQ("www.baidu2.com", uri.host());
+    ASSERT_EQ("www.github2.com", uri.host());
     ASSERT_EQ("", uri.path());
     ASSERT_EQ("", uri.user_info());
     ASSERT_EQ("", uri.fragment());
@@ -70,19 +70,19 @@ TEST(URITest, only_host) {
     ASSERT_TRUE(uri.GetQuery("nonkey"));
     ASSERT_EQ(*uri.GetQuery("nonkey"), "22");
 
-    ASSERT_EQ(0, uri.SetHttpURL(" www.baidu3.com:4321 "));
+    ASSERT_EQ(0, uri.SetHttpURL(" www.github3.com:4321 "));
     ASSERT_EQ("", uri.scheme());
     ASSERT_EQ(4321, uri.port());
-    ASSERT_EQ("www.baidu3.com", uri.host());
+    ASSERT_EQ("www.github3.com", uri.host());
     ASSERT_EQ("", uri.path());
     ASSERT_EQ("", uri.user_info());
     ASSERT_EQ("", uri.fragment());
     ASSERT_EQ(0u, uri.QueryCount());
     
-    ASSERT_EQ(0, uri.SetHttpURL(" www.baidu4.com "));
+    ASSERT_EQ(0, uri.SetHttpURL(" www.github4.com "));
     ASSERT_EQ("", uri.scheme());
     ASSERT_EQ(-1, uri.port());
-    ASSERT_EQ("www.baidu4.com", uri.host());
+    ASSERT_EQ("www.github4.com", uri.host());
     ASSERT_EQ("", uri.path());
     ASSERT_EQ("", uri.user_info());
     ASSERT_EQ("", uri.fragment());
@@ -91,10 +91,10 @@ TEST(URITest, only_host) {
 
 TEST(URITest, no_scheme) {
     flare::rpc::URI uri;
-    ASSERT_EQ(0, uri.SetHttpURL(" user:passwd2@www.baidu1.com/s?wd=uri2&nonkey=22#frag "));
+    ASSERT_EQ(0, uri.SetHttpURL(" user:passwd2@www.github1.com/s?wd=uri2&nonkey=22#frag "));
     ASSERT_EQ("", uri.scheme());
     ASSERT_EQ(-1, uri.port());
-    ASSERT_EQ("www.baidu1.com", uri.host());
+    ASSERT_EQ("www.github1.com", uri.host());
     ASSERT_EQ("/s", uri.path());
     ASSERT_EQ("user:passwd2", uri.user_info());
     ASSERT_EQ("frag", uri.fragment());
@@ -106,10 +106,10 @@ TEST(URITest, no_scheme) {
 
 TEST(URITest, no_scheme_and_user_info) {
     flare::rpc::URI uri;
-    ASSERT_EQ(0, uri.SetHttpURL(" www.baidu2.com/s?wd=uri2&nonkey=22#frag "));
+    ASSERT_EQ(0, uri.SetHttpURL(" www.github2.com/s?wd=uri2&nonkey=22#frag "));
     ASSERT_EQ("", uri.scheme());
     ASSERT_EQ(-1, uri.port());
-    ASSERT_EQ("www.baidu2.com", uri.host());
+    ASSERT_EQ("www.github2.com", uri.host());
     ASSERT_EQ("/s", uri.path());
     ASSERT_EQ("", uri.user_info());
     ASSERT_EQ("frag", uri.fragment());
@@ -273,27 +273,27 @@ TEST(URITest, empty_host) {
 
 TEST(URITest, invalid_spaces) {
     flare::rpc::URI uri;
-    ASSERT_EQ(-1, uri.SetHttpURL("foo bar://user:passwd@www.baidu.com:80/s?wd=uri#frag"));
+    ASSERT_EQ(-1, uri.SetHttpURL("foo bar://user:passwd@github.com:80/s?wd=uri#frag"));
     ASSERT_STREQ("Invalid space in url", uri.status().error_cstr());
-    ASSERT_EQ(-1, uri.SetHttpURL("foobar://us er:passwd@www.baidu.com:80/s?wd=uri#frag"));
+    ASSERT_EQ(-1, uri.SetHttpURL("foobar://us er:passwd@github.com:80/s?wd=uri#frag"));
     ASSERT_STREQ("Invalid space in url", uri.status().error_cstr());
-    ASSERT_EQ(-1, uri.SetHttpURL("foobar://user:pass wd@www.baidu.com:80/s?wd=uri#frag"));
+    ASSERT_EQ(-1, uri.SetHttpURL("foobar://user:pass wd@github.com:80/s?wd=uri#frag"));
     ASSERT_STREQ("Invalid space in url", uri.status().error_cstr());
-    ASSERT_EQ(-1, uri.SetHttpURL("foobar://user:passwd@www. baidu.com:80/s?wd=uri#frag"));
+    ASSERT_EQ(-1, uri.SetHttpURL("foobar://user:passwd@www. github.com:80/s?wd=uri#frag"));
     ASSERT_STREQ("Invalid space in url", uri.status().error_cstr());
-    ASSERT_EQ(-1, uri.SetHttpURL("foobar://user:passwd@www.baidu.com:80/ s?wd=uri#frag"));
+    ASSERT_EQ(-1, uri.SetHttpURL("foobar://user:passwd@github.com:80/ s?wd=uri#frag"));
     ASSERT_STREQ("Invalid space in path", uri.status().error_cstr());
-    ASSERT_EQ(-1, uri.SetHttpURL("foobar://user:passwd@www.baidu.com:80/s ?wd=uri#frag"));
+    ASSERT_EQ(-1, uri.SetHttpURL("foobar://user:passwd@github.com:80/s ?wd=uri#frag"));
     ASSERT_STREQ("Invalid space in path", uri.status().error_cstr());
-    ASSERT_EQ(-1, uri.SetHttpURL("foobar://user:passwd@www.baidu.com:80/s? wd=uri#frag"));
+    ASSERT_EQ(-1, uri.SetHttpURL("foobar://user:passwd@github.com:80/s? wd=uri#frag"));
     ASSERT_STREQ("Invalid space in query", uri.status().error_cstr());
-    ASSERT_EQ(-1, uri.SetHttpURL("foobar://user:passwd@www.baidu.com:80/s?w d=uri#frag"));
+    ASSERT_EQ(-1, uri.SetHttpURL("foobar://user:passwd@github.com:80/s?w d=uri#frag"));
     ASSERT_STREQ("Invalid space in query", uri.status().error_cstr());
-    ASSERT_EQ(-1, uri.SetHttpURL("foobar://user:passwd@www.baidu.com:80/s?wd=uri #frag"));
+    ASSERT_EQ(-1, uri.SetHttpURL("foobar://user:passwd@github.com:80/s?wd=uri #frag"));
     ASSERT_STREQ("Invalid space in query", uri.status().error_cstr());
-    ASSERT_EQ(-1, uri.SetHttpURL("foobar://user:passwd@www.baidu.com:80/s?wd=uri# frag"));
+    ASSERT_EQ(-1, uri.SetHttpURL("foobar://user:passwd@github.com:80/s?wd=uri# frag"));
     ASSERT_STREQ("Invalid space in fragment", uri.status().error_cstr());
-    ASSERT_EQ(-1, uri.SetHttpURL("foobar://user:passwd@www.baidu.com:80/s?wd=uri#fr ag"));
+    ASSERT_EQ(-1, uri.SetHttpURL("foobar://user:passwd@github.com:80/s?wd=uri#fr ag"));
     ASSERT_STREQ("Invalid space in fragment", uri.status().error_cstr());
 }
 
@@ -490,5 +490,5 @@ TEST(URITest, query_remover_key_value_not_changed_after_modified_query) {
 
 TEST(URITest, valid_character) {
     flare::rpc::URI uri;
-    ASSERT_EQ(0, uri.SetHttpURL("www.baidu2.com':/?#[]@!$&()*+,;=-._~%"));
+    ASSERT_EQ(0, uri.SetHttpURL("www.github2.com':/?#[]@!$&()*+,;=-._~%"));
 }

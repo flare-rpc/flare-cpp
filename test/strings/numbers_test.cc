@@ -26,7 +26,7 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include "flare/base/logging.h"
+#include "flare/log/logging.h"
 #include "numbers_test_common.h"
 #include "flare/strings/str_cat.h"
 

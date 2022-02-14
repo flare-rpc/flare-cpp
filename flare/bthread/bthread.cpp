@@ -20,7 +20,7 @@
 // Date: Tue Jul 10 17:40:58 CST 2012
 
 #include <gflags/gflags.h>
-#include "flare/base/logging.h"
+#include "flare/log/logging.h"
 #include "flare/bthread/task_group.h"                // TaskGroup
 #include "flare/bthread/task_control.h"              // TaskControl
 #include "flare/bthread/timer_thread.h"

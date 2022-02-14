@@ -19,7 +19,7 @@
 
 #include <gflags/gflags.h>
 #include <flare/bthread/bthread.h>
-#include "flare/base/logging.h"
+#include "flare/log/logging.h"
 #include <flare/base/strings.h>
 #include "flare/base/time.h"
 #include <flare/rpc/parallel_channel.h>

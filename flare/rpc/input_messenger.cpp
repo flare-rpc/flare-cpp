@@ -18,7 +18,7 @@
 
 #include <gflags/gflags.h>
 #include "flare/base/fd_guard.h"                      // fd_guard
-#include "flare/base/logging.h"                       // CHECK
+#include "flare/log/logging.h"                       // CHECK
 #include "flare/base/time.h"                          // cpuwide_time_us
 #include "flare/base/fd_utility.h"                    // make_non_blocking
 #include "flare/bthread/bthread.h"                     // bthread_start_background

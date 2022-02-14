@@ -15,7 +15,7 @@
 // specific language governing permissions and limitations
 // under the License.
 
-
+#include <inttypes.h>
 #include "flare/bthread/bthread.h"                  // bthread_id_xx
 #include "flare/bthread/unstable.h"                 // bthread_timer_add
 #include "flare/base/static_atomic.h"

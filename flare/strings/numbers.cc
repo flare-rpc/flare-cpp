@@ -20,7 +20,7 @@
 #include <memory>
 #include <utility>
 
-#include "flare/base/logging.h"
+#include "flare/log/logging.h"
 #include "flare/strings/ascii.h"
 #include "flare/strings/char_conv.h"
 //#include "flare/strings/escaping.h"

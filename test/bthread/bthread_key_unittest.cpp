@@ -22,7 +22,7 @@
 #include <gtest/gtest.h>
 #include "flare/base/time.h"
 #include "flare/base/scoped_lock.h"
-#include "flare/base/logging.h"
+#include "flare/log/logging.h"
 #include "flare/bthread/bthread.h"
 #include "flare/bthread/unstable.h"
 

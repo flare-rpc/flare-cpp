@@ -20,21 +20,21 @@
 #include <sys/socket.h>                // socketpair
 #include <errno.h>                     // errno
 #include <fcntl.h>                     // O_RDONLY
-#include <flare/base/temp_file.h>      // temp_file
+#include <flare/io/temp_file.h>      // temp_file
 #include <flare/container/flat_map.h>
 #include "flare/base/time.h"                 // Timer
 #include "flare/base/fd_utility.h"           // make_non_blocking
-#include <flare/io/iobuf.h>
-#include "flare/base/logging.h"
+#include <flare/io/cord_buf.h>
+#include "flare/log/logging.h"
 #include "flare/base/fd_guard.h"
 #include "flare/base/errno.h"
 #include <flare/base/fast_rand.h>
 
 #if BAZEL_TEST
-#include "test/iobuf.pb.h"
+#include "test/cord_buf.pb.h"
 #else
 
-#include "iobuf.pb.h"
+#include "cord_buf.pb.h"
 
 #endif   // BAZEL_TEST
 

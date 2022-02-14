@@ -16,7 +16,7 @@
 // under the License.
 
 #include <gflags/gflags.h>
-#include "flare/base/logging.h"
+#include "flare/log/logging.h"
 #include <flare/rpc/channel.h>
 #include <flare/rpc/server.h>
 #include "echo.pb.h"

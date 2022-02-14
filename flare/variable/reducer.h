@@ -21,7 +21,7 @@
 #define  FLARE_VARIABLE_REDUCER_H_
 
 #include <limits>                                 // std::numeric_limits
-#include "flare/base/logging.h"                         // LOG()
+#include "flare/log/logging.h"                         // LOG()
 #include "flare/base/type_traits.h"                     // flare::base::add_cr_non_integral
 #include "flare/base/class_name.h"                      // class_name_str
 #include "flare/variable/variable.h"                        // Variable
@@ -134,10 +134,7 @@ public:
             os << get_value();
         }
     }
-    
-#ifdef BAIDU_INTERNAL
-    void get_value(boost::any* value) const override { *value = get_value(); }
-#endif
+
 
     // True if this reducer is constructed successfully.
     bool valid() const { return _combiner.valid(); }

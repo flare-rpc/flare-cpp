@@ -18,7 +18,7 @@
 
 
 // Date: Sun Jul 13 15:04:18 CST 2014
-
+#include <inttypes.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <fstream>

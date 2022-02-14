@@ -4,7 +4,7 @@
 
 #include <stdio.h>
 
-#include "flare/base/logging.h"
+#include "flare/log/logging.h"
 #include "flare/base/scoped_generic.h"
 #include "flare/base/profile.h"
 

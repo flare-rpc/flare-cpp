@@ -23,7 +23,7 @@
 #include <limits>                                 // std::numeric_limits
 #include <math.h>                                 // round
 #include <gflags/gflags_declare.h>
-#include "flare/base/logging.h"                         // LOG
+#include "flare/log/logging.h"                         // LOG
 #include "flare/variable/detail/sampler.h"
 #include "flare/variable/detail/series.h"
 #include "flare/variable/variable.h"
@@ -117,10 +117,6 @@ public:
             os << get_value();
         }
     }
-    
-#ifdef BAIDU_INTERNAL
-    void get_value(boost::any* value) const override { *value = get_value(); }
-#endif
 
     time_t window_size() const { return _window_size; }
 

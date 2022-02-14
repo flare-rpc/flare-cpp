@@ -20,7 +20,7 @@
 
 #include "flare/rpc/http_status_code.h"
 
-// To baidu-rpc developers: This is a header included by user, don't depend
+//  This is a header included by user, don't depend
 // on internal structures, use opaque pointers instead.
 
 namespace flare::rpc {

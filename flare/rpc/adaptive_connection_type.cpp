@@ -16,7 +16,7 @@
 // under the License.
 
 
-#include "flare/base/logging.h"
+#include "flare/log/logging.h"
 #include "flare/rpc/adaptive_connection_type.h"
 
 
