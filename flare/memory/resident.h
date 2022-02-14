@@ -23,19 +23,19 @@ namespace flare::memory {
             resident_impl &operator=(const resident_impl &) = delete;
 
             // Accessors.
-            T *Get() noexcept { return reinterpret_cast<T *>(&storage_); }
+            T *get() noexcept { return reinterpret_cast<T *>(&storage_); }
 
-            const T *Get() const noexcept {
+            const T *get() const noexcept {
                 return reinterpret_cast<const T *>(&storage_);
             }
 
-            T *operator->() noexcept { return Get(); }
+            T *operator->() noexcept { return get(); }
 
-            const T *operator->() const noexcept { return Get(); }
+            const T *operator->() const noexcept { return get(); }
 
-            T &operator*() noexcept { return *Get(); }
+            T &operator*() noexcept { return *get(); }
 
-            const T &operator*() const noexcept { return *Get(); }
+            const T &operator*() const noexcept { return *get(); }
 
         protected:
             resident_impl() = default;
@@ -82,7 +82,7 @@ namespace flare::memory {
             new(&this->storage_) T(std::forward<Ts>(args)...);
         }
 
-        using Impl::Get;
+        using Impl::get;
         using Impl::operator->;
         using Impl::operator*;
     };
@@ -95,7 +95,7 @@ namespace flare::memory {
         using Impl = detail::resident_impl<T>;
 
     public:
-        using Impl::Get;
+        using Impl::get;
         using Impl::operator->;
         using Impl::operator*;
 

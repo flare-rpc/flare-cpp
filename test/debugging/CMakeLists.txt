@@ -16,4 +16,4 @@ target_link_libraries(symbolize_test flare-shared-debug
         gtest
         gmock
         ${GPERFTOOLS_LIBRARIES})
-add_test(NAME symbolize_test COMMAND $symbolize_test)
+add_test(NAME symbolize_test COMMAND symbolize_test)

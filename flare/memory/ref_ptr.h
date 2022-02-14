@@ -262,11 +262,11 @@ namespace flare::memory {
         // ref_ptr(T*) = delete;
 
         // Accessors.
-        constexpr T *operator->() const noexcept { return Get(); }
+        constexpr T *operator->() const noexcept { return get(); }
 
-        constexpr T &operator*() const noexcept { return *Get(); }
+        constexpr T &operator*() const noexcept { return *get(); }
 
-        constexpr T *Get() const noexcept { return ptr_; }
+        constexpr T *get() const noexcept { return ptr_; }
 
         // Test if *this holds a pointer.
         constexpr explicit operator bool() const noexcept { return ptr_; }
@@ -304,7 +304,7 @@ namespace flare::memory {
     template<class T, class Deleter>
     constexpr void ref_counted<T, Deleter>::add_ref() noexcept {
         auto was = ref_count_.fetch_add(1, std::memory_order_relaxed);
-        FLARE_DCHECK_GT(was, 0);
+        DCHECK_GT(was, 0);
     }
 
     template<class T, class Deleter>
@@ -316,7 +316,7 @@ namespace flare::memory {
         if (auto was = ref_count_.fetch_sub(1, std::memory_order_acq_rel); was == 1) {
             Deleter()(static_cast<T *>(this));  // Hmmm.
         } else {
-            FLARE_CHECK_GT(was, 1);
+            CHECK_GT(was, 1);
         }
     }
 
@@ -404,17 +404,17 @@ namespace flare::memory {
     template<class T>
     constexpr bool operator==(const ref_ptr<T> &left,
                               const ref_ptr<T> &right) noexcept {
-        return left.Get() == right.Get();
+        return left.get() == right.get();
     }
 
     template<class T>
     constexpr bool operator==(const ref_ptr<T> &ptr, std::nullptr_t) noexcept {
-        return ptr.Get() == nullptr;
+        return ptr.get() == nullptr;
     }
 
     template<class T>
     constexpr bool operator==(std::nullptr_t, const ref_ptr<T> &ptr) noexcept {
-        return ptr.Get() == nullptr;
+        return ptr.get() == nullptr;
     }
 }  // namespace flare::memory
 
@@ -425,7 +425,7 @@ namespace std {
     // @sa: https://en.cppreference.com/w/cpp/memory/shared_ptr/atomic2
     template <class T>
     class atomic<flare::memory::ref_ptr<T>> {
-        using Traits = flare::ref_traits<T>;
+        using Traits = flare::memory::ref_traits<T>;
 
     public:
         constexpr atomic() noexcept : ptr_(nullptr) {}
@@ -461,7 +461,7 @@ namespace std {
         // Loads from this atomic ref-ptr.
         flare::memory::ref_ptr<T> load(
                 std::memory_order order = std::memory_order_seq_cst) const noexcept {
-            return flare::memory::ref_ptr<T>(flare::ref_ptr_v, ptr_.load(order));
+            return flare::memory::ref_ptr<T>(flare::memory::ref_ptr_v, ptr_.load(order));
         }
 
         // Same as `load()`.
@@ -471,7 +471,7 @@ namespace std {
         flare::memory::ref_ptr<T> exchange(
                 flare::memory::ref_ptr<T> ptr,
                 std::memory_order order = std::memory_order_seq_cst) noexcept {
-            return flare::memory::ref_ptr(flare::adopt_ptr_v, ptr_.exchange(ptr.leak(), order));
+            return flare::memory::ref_ptr(flare::memory::adopt_ptr_v, ptr_.exchange(ptr.leak(), order));
         }
 
         // Compares if this atomic holds the `expected` pointer, and exchanges it with
@@ -513,7 +513,7 @@ namespace std {
   void wait(
       flare::memory::ref_ptr<T> old,
       std::memory_order order = std::memory_order_seq_cst) const noexcept {
-    return ptr_.wait(old.Get(), order);
+    return ptr_.wait(old.get(), order);
   }
 
   // Notifies one `wait`.
@@ -531,11 +531,11 @@ namespace std {
         template <class F, class... Orders>
         bool compare_exchange_impl(F&& f, flare::memory::ref_ptr<T>& expected,
                                  flare::memory::ref_ptr<T> desired, Orders... orders) {
-            auto current = expected.Get();
-            if (std::forward<F>(f)(current, desired.Get(), orders...)) {
+            auto current = expected.get();
+            if (std::forward<F>(f)(current, desired.get(), orders...)) {
                 (void)desired.leak();  // Ownership transfer to `ptr_`.
                 // Ownership of the old pointer is transferred to us, release it.
-                flare::memory::ref_ptr(flare::adopt_ptr_v, current);
+                flare::memory::ref_ptr(flare::memory::adopt_ptr_v, current);
                 return true;
             }
             expected = load();  // FIXME: Promoted to `seq_cst` unnecessarily.

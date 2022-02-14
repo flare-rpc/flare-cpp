@@ -14,6 +14,7 @@
 #include <vector>
 #include "flare/log/logging.h"
 #include "flare/memory/resident.h"
+#include "flare/bootstrap/flags.h"
 
 namespace flare::bootstrap {
 
@@ -31,7 +32,7 @@ namespace flare::bootstrap {
 
         at_exit_callback_registry *get_at_exit_callback_registry() {
             static flare::memory::resident<at_exit_callback_registry> registry;
-            return registry.Get();
+            return registry.get();
         }
 
     }  // namespace
@@ -129,6 +130,7 @@ namespace flare::bootstrap {
 
     void bootstrap_init(int argc, char**argv) {
         GFLAGS_NS::ParseCommandLineFlags(&argc, &argv, true);
+        flare::detail::apply_flags_overrider();
         flare::log::init_logging(argv[0]);
     }
 
