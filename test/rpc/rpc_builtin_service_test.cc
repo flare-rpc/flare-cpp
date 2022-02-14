@@ -670,7 +670,7 @@ TEST_F(BuiltinServiceTest, pprof) {
         flare::rpc::Controller cntl;
         service.cmdline(&cntl, NULL, NULL, &done);
         EXPECT_FALSE(cntl.Failed());
-        CheckContent(cntl, "brpc_builtin_service_unittest");
+        CheckContent(cntl, "rpc_builtin_service_test");
     }
 }
 
