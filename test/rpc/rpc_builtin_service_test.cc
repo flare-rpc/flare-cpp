@@ -111,7 +111,7 @@ void MyVLogSite() {
 void CheckContent(const flare::rpc::Controller &cntl, const char *name) {
     const std::string &content = cntl.response_attachment().to_string();
     std::size_t pos = content.find(name);
-    ASSERT_TRUE(pos != std::string::npos) << "name=" << name;
+    ASSERT_TRUE(pos != std::string::npos) << "name=" << name<<"\n content="<<content;
 }
 
 void CheckErrorText(const flare::rpc::Controller &cntl, const char *error) {
@@ -670,7 +670,7 @@ TEST_F(BuiltinServiceTest, pprof) {
         flare::rpc::Controller cntl;
         service.cmdline(&cntl, NULL, NULL, &done);
         EXPECT_FALSE(cntl.Failed());
-        CheckContent(cntl, "brpc_builtin_service_unittest");
+        CheckContent(cntl, "rpc_builtin_service_test");
     }
 }
 
