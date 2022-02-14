@@ -111,7 +111,7 @@ void MyVLogSite() {
 void CheckContent(const flare::rpc::Controller &cntl, const char *name) {
     const std::string &content = cntl.response_attachment().to_string();
     std::size_t pos = content.find(name);
-    ASSERT_TRUE(pos != std::string::npos) << "name=" << name;
+    ASSERT_TRUE(pos != std::string::npos) << "name=" << name<<"\n content="<<content;
 }
 
 void CheckErrorText(const flare::rpc::Controller &cntl, const char *error) {
