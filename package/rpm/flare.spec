@@ -79,7 +79,7 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/pkgconfig/*
 
 %files static
-%{_libdir}/libbrpc.a
+%{_libdir}/libflare.a
 
 %changelog
 
