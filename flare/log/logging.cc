@@ -1632,7 +1632,9 @@ namespace flare::log {
     static void logging_fail() ATTRIBUTE_NORETURN;
 
     static void logging_fail() {
-        abort();
+        if(FLAGS_crash_on_fatal_log) {
+            abort();
+        }
     }
 
     typedef void (*logging_fail_func_t)() ATTRIBUTE_NORETURN;
