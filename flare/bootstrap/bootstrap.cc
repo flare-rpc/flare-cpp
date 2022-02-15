@@ -1,7 +1,3 @@
-// Copyright (c) 2020, Tencent Inc.
-// All rights reserved.
-//
-// Author: Gao Lu <luobogao@tencent.com>
 
 #include "flare/bootstrap/bootstrap.h"
 
