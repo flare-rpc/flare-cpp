@@ -475,33 +475,33 @@ namespace flare {
             return future(futurize_values, C<boxed<Ts...>>());
         }
 
-        struct Context {
-            promise <C<boxed < Ts...>>> promise;
+        struct context {
+            promise <C<boxed < Ts...>>> ctx_promise;
             C <boxed<Ts...>> values;
             std::atomic<std::size_t> left;
         };
-        auto context = std::make_shared<Context>();
+        auto ctx = std::make_shared<context>();
 
         // We cannot inline the initialization in `Context` as `futures.size()`
         // is not constant.
-        context->values.reserve(futures.size());
-        context->left = futures.size();
+        ctx->values.reserve(futures.size());
+        ctx->left = futures.size();
         for (std::size_t index = 0;index != futures.size();++index) {
-            context->values.emplace_back (flare::future_internal::detail::retrieve_boxed<boxed < Ts...>>());
+            ctx->values.emplace_back (flare::future_internal::detail::retrieve_boxed<boxed < Ts...>>());
 
         }
 
         for (std::size_t index = 0;index != futures.size();++index) {
-            std::move(futures[index]).then([index, context](boxed<Ts...> boxed) mutable {
-                context->values[index] = std::move(boxed);
+            std::move(futures[index]).then([index, ctx](boxed<Ts...> boxed) mutable {
+                ctx->values[index] = std::move(boxed);
 
-            if (!--context->left) {
-                context->promise.set_value(std::move(context->values));
+            if (!--ctx->left) {
+                ctx->ctx_promise.set_value(std::move(ctx->values));
             }
             });
         }
 
-        return context->promise.get_future();
+        return ctx->ctx_promise.get_future();
     }
 
     template<template<class...> class C, class... Ts, class R>
@@ -527,22 +527,22 @@ namespace flare {
                "collection is undefined. We simply couldn't "
                "define what does 'wait for a single object in an "
                "empty collection' mean.";
-        struct Context {
-            promise <std::size_t, boxed<Ts...>> promise;
+        struct context {
+            promise <std::size_t, boxed<Ts...>> ctx_promise;
             std::atomic<bool> ever_satisfied{};
         };
-        auto context = std::make_shared<Context>();
+        auto ctx = std::make_shared<context>();
 
         for (std::size_t index = 0; index != futures.size(); ++index) {
-            std::move(futures[index]).then([index, context](boxed<Ts...> boxed) {
-                if (!context->ever_satisfied.exchange(true)) {
+            std::move(futures[index]).then([index, ctx](boxed<Ts...> boxed) {
+                if (!ctx->ever_satisfied.exchange(true)) {
                     // We're the first `future` satisfied.
-                    context->promise.set_value(index, std::move(boxed));
+                    ctx->ctx_promise.set_value(index, std::move(boxed));
                 }
             });
         }
 
-        return context->promise.get_future();
+        return ctx->ctx_promise.get_future();
 
     }
 
