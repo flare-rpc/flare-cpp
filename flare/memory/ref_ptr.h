@@ -201,9 +201,6 @@ namespace flare::memory {
             : ref_traits<detail::as_ref_counted_t<T>> {
     };
 
-    // Our own design of `retain_ptr`, with several naming changes to make it easier
-    // to understand.
-    //
     // @sa: http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0468r1.html
     template<class T>
     class ref_ptr final {
