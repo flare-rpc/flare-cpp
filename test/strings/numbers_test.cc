@@ -1061,7 +1061,7 @@ namespace {
                 }
             }
         } else {
-            EXPECT_EQ(mismatches.size(), 0);
+            EXPECT_EQ(mismatches.size(), 0UL);
             for (size_t i = 0; i < mismatches.size(); ++i) {
                 if (i > 100) i = mismatches.size() - 1;
                 double d = mismatches[i];
