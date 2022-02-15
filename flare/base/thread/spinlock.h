@@ -119,7 +119,7 @@ namespace std {
                 CHECK(false) << "Invalid operation";
                 return;
             }
-            _mutex-unlock();
+            _mutex->unlock();
             _owns_lock = false;
         }
 
