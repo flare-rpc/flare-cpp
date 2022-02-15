@@ -440,32 +440,32 @@ namespace flare {
             static_assert(sizeof...(Ts) != 0,
                           "There's no point in waiting on an empty future pack..");
 
-            struct Context {
-                promise<as_boxed_t<Ts>...> promise;
+            struct context {
+                promise<as_boxed_t<Ts>...> ctx_promise;
                 std::tuple<as_boxed_t<Ts>...> receivers{
                         flare::future_internal::detail::retrieve_boxed<as_boxed_t<Ts >>
                                 ()...
                 };
                 std::atomic<std::size_t> left{sizeof...(Ts)};
             };
-            auto context = std::make_shared<Context>();
+            auto ctx = std::make_shared<context>();
 
             for_each_indexed([&](auto &&future, auto index) {
                 // We chain a continuation for each future. The continuation will
                 // satisfy the promise we made once all of the futures are satisfied.
                 std::move(future).then(
-                        [context](
+                        [ctx](
                                 as_boxed_t<std::remove_reference_t<decltype(future)>> boxed) {
-                            std::get<decltype(index)::value>(context->receivers) =
+                            std::get<decltype(index)::value>(ctx->receivers) =
                                     std::move(boxed);
-                            if (!--context->left) {
-                                context->promise.set_value(std::move(context->receivers)
+                            if (!--ctx->left) {
+                                ctx->ctx_promise.set_value(std::move(ctx->receivers)
                                 );
                             }
                         });
             }, futures...);
 
-            return context->promise.get_future();
+            return ctx->ctx_promise.get_future();
 
         }
 
