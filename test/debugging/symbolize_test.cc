@@ -5,8 +5,10 @@
 #include "flare/debugging/symbolize.h"
 
 #ifndef _WIN32
+
 #include <fcntl.h>
 #include <sys/mman.h>
+
 #endif
 
 #include <cstring>
@@ -25,16 +27,19 @@
 // Tells the compiler/linker to put a given variable into a section and define
 // `__start_ ## name` and `__stop_ ## name` symbols to bracket the section.
 // This functionality is supported by GNU linker.
+#ifdef FLARE_COMPILER_GNUC
 #ifndef FLARE_ATTRIBUTE_SECTION_VARIABLE
 #define FLARE_ATTRIBUTE_SECTION_VARIABLE(name) __attribute__((section(#name)))
 #endif
-
+#else
+#define FLARE_ATTRIBUTE_SECTION_VARIABLE(name)
+#endif
 using testing::Contains;
 
 #ifdef _WIN32
 #define FLARE_SYMBOLIZE_TEST_NOINLINE __declspec(noinline)
 #else
-#define FLARE_SYMBOLIZE_TEST_NOINLINE FLARE_ATTRIBUTE_NOINLINE
+#define FLARE_SYMBOLIZE_TEST_NOINLINE FLARE_NO_INLINE
 #endif
 
 // Functions to symbolize. Use C linkage to avoid mangled names.
@@ -71,24 +76,30 @@ FLARE_NO_INLINE void Foo::func(int) {
 
 // Create functions that will remain in different text sections in the
 // final binary when linker option "-z,keep-text-section-prefix" is used.
-int FLARE_ATTRIBUTE_SECTION_VARIABLE(.text.unlikely)
+int FLARE_ATTRIBUTE_SECTION_VARIABLE(
+.text.unlikely)
+
 unlikely_func() {
     return 0;
 }
 
-int FLARE_ATTRIBUTE_SECTION_VARIABLE(.text.hot)
+int FLARE_ATTRIBUTE_SECTION_VARIABLE(
+.text.hot)
 
 hot_func() {
     return 0;
 }
 
-int FLARE_ATTRIBUTE_SECTION_VARIABLE(.text.startup)
+int FLARE_ATTRIBUTE_SECTION_VARIABLE(
+.text.startup)
 
 startup_func() {
     return 0;
 }
 
-int FLARE_ATTRIBUTE_SECTION_VARIABLE(.text.exit)
+int FLARE_ATTRIBUTE_SECTION_VARIABLE(
+.text.exit)
+
 exit_func() {
     return 0;
 }
@@ -125,15 +136,15 @@ static char try_symbolize_buffer[4096];
 // the result of flare::debugging::symbolize().
 
 static const char *TrySymbolizeWithLimit(void *pc, int limit) {
-    CHECK(static_cast<size_t>(limit) <= sizeof(try_symbolize_buffer))<<
-               "try_symbolize_buffer is too small";
+    CHECK(static_cast<size_t>(limit) <= sizeof(try_symbolize_buffer)) <<
+                                                                      "try_symbolize_buffer is too small";
 
     // Use the heap to facilitate heap and buffer sanitizer tools.
     auto heap_buffer = std::make_unique<char[]>(sizeof(try_symbolize_buffer));
     bool found = flare::debugging::symbolize(pc, heap_buffer.get(), limit);
     if (found) {
-        CHECK(strnlen(heap_buffer.get(), static_cast<size_t>(limit)) < static_cast<size_t>(limit))<<
-                   "flare::debugging::symbolize() did not properly terminate the string";
+        CHECK(strnlen(heap_buffer.get(), static_cast<size_t>(limit)) < static_cast<size_t>(limit)) <<
+                                                                                                   "flare::debugging::symbolize() did not properly terminate the string";
         strncpy(try_symbolize_buffer, heap_buffer.get(),
                 sizeof(try_symbolize_buffer) - 1);
         try_symbolize_buffer[sizeof(try_symbolize_buffer) - 1] = '\0';

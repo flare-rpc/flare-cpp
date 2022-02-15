@@ -49,7 +49,7 @@ namespace flare::memory {
     // `resident<T>` helps you create objects that are never destroyed
     // (without incuring heap memory allocation.).
     //
-    // In certain cases (e.g., singleton), not destroying object can save you from
+    // In certain cases (e.g., singleton), resident object can save you from
     // dealing with destruction order issues.
     //
     // Caveats:

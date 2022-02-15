@@ -30,7 +30,7 @@ namespace flare::memory {
             [[maybe_unused]] resident<C> c2;
             ASSERT_EQ(2, C::instances);
         }
-// Not 0, as `resident<C>` is not destroyed.
+        // Not 0, as `resident<C>` is not destroyed.
         ASSERT_EQ(1, C::instances);
     }
 
