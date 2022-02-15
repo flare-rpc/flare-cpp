@@ -7,6 +7,7 @@
 
 #include <atomic>
 #include <utility>
+#include <memory>
 #include "flare/log/logging.h"
 
 namespace flare::memory {
