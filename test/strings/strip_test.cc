@@ -138,7 +138,7 @@ namespace {
         std::string zero_string = "";
         assert(zero_string.empty());
         flare::strings::trim_complete(&zero_string);
-        EXPECT_EQ(zero_string.size(), 0);
+        EXPECT_EQ(zero_string.size(), 0UL);
         EXPECT_TRUE(zero_string.empty());
     }
 

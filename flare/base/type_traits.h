@@ -40,14 +40,14 @@ namespace flare::base {
             YesType dummy[2];
         };
 
-// This class is an implementation detail for is_convertible, and you
-// don't need to know how it works to use is_convertible. For those
-// who care: we declare two different functions, one whose argument is
-// of type To and one with a variadic argument list. We give them
-// return types of different size, so we can use sizeof to trick the
-// compiler into telling us which function it would have chosen if we
-// had called it with an argument of type From.  See Alexandrescu's
-// _Modern C++ Design_ for more details on this sort of trick.
+        // This class is an implementation detail for is_convertible, and you
+        // don't need to know how it works to use is_convertible. For those
+        // who care: we declare two different functions, one whose argument is
+        // of type To and one with a variadic argument list. We give them
+        // return types of different size, so we can use sizeof to trick the
+        // compiler into telling us which function it would have chosen if we
+        // had called it with an argument of type From.  See Alexandrescu's
+        // _Modern C++ Design_ for more details on this sort of trick.
 
         struct ConvertHelper {
             template<typename To>
@@ -99,8 +99,8 @@ namespace flare::base {
 
 
 
-// True if T is an empty class/struct
-// NOTE: not work for union
+    // True if T is an empty class/struct
+    // NOTE: not work for union
     template<typename T>
     struct is_empty : std::integral_constant<bool, std::is_class<T>::value &&
                                                    sizeof(internal::EmptyHelper1<T>) ==
@@ -157,7 +157,7 @@ namespace flare::base {
         typedef void const volatile type;
     };
 
-// Shortcut for adding/removing const&
+    // Shortcut for adding/removing const&
     template<typename T>
     struct add_const_reference {
         typedef typename add_reference<typename std::add_const<T>::type>::type type;
@@ -167,9 +167,9 @@ namespace flare::base {
         typedef typename std::remove_const<typename std::remove_reference<T>::type>::type type;
     };
 
-// Add const& for non-integral types.
-// add_cr_non_integral<int>::type      -> int
-// add_cr_non_integral<FooClass>::type -> const FooClass&
+    // Add const& for non-integral types.
+    // add_cr_non_integral<int>::type      -> int
+    // add_cr_non_integral<FooClass>::type -> const FooClass&
     template<typename T>
     struct add_cr_non_integral {
         typedef typename std::conditional<std::is_integral<T>::value, T,

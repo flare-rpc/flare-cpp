@@ -188,7 +188,7 @@ namespace {
         {
             // Results stored in a std::map.
             std::map<std::string, std::string> m = flare::strings::string_split("a,1,b,2,a,3", ',');
-            EXPECT_EQ(2, m.size());
+            EXPECT_EQ(2UL, m.size());
             EXPECT_EQ("3", m["a"]);
             EXPECT_EQ("2", m["b"]);
         }
