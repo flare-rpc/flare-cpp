@@ -135,8 +135,10 @@ add_subdirectory(rpc)
 
 #
 add_subdirectory(base)
+add_subdirectory(bootstrap)
 add_subdirectory(container)
 add_subdirectory(memory)
 add_subdirectory(strings)
 add_subdirectory(io)
 add_subdirectory(debugging)
+

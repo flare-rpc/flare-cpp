@@ -27,6 +27,7 @@
 #include <string>                                // std::string
 #include <ostream>                               // std::ostream
 #include <string_view>
+#include <utility>
 #include <google/protobuf/io/zero_copy_stream.h> // ZeroCopyInputStream
 #include "flare/io/snappy/snappy-sinksource.h"
 #include "flare/io/zero_copy_stream_as_streambuf.h"
@@ -791,8 +792,6 @@ namespace flare::io {
     };
 
 }  // namespace flare::io
-
-#include <utility>  // std::swap since C++11
 
 namespace std {
     template<>

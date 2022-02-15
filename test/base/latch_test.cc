@@ -1,0 +1,72 @@
+//
+// Created by liyinbin on 2022/2/15.
+//
+
+#include <atomic>
+#include <chrono>
+#include <memory>
+#include <thread>
+#include "flare/base/thread/latch.h"
+#include "gtest/gtest.h"
+#include "flare/base/time.h"
+
+namespace flare::base {
+
+    std::atomic<bool> exiting{false};
+
+    void RunTest() {
+        std::size_t local_count = 0, remote_count = 0;
+        while (!exiting) {
+            auto called = std::make_shared<std::atomic<bool>>(false);
+            std::this_thread::yield();  // Wait for thread pool to start.
+            latch l(1);
+            auto t = std::thread([&] {
+                if (!called->exchange(true)) {
+                    std::this_thread::yield();  // Something costly.
+                    l.count_down();
+                    ++remote_count;
+                }
+            });
+            std::this_thread::yield();  // Something costly.
+            if (!called->exchange(true)) {
+                l.count_down();
+                ++local_count;
+            }
+            l.wait();
+            t.join();
+        }
+        std::cout << local_count << " " << remote_count << std::endl;
+    }
+
+    TEST(Latch, Torture) {
+        std::thread ts[10];
+        for (auto &&t : ts) {
+            t = std::thread(RunTest);
+        }
+        std::this_thread::sleep_for(std::chrono::seconds(10));
+        exiting = true;
+        for (auto &&t : ts) {
+            t.join();
+        }
+    }
+
+    TEST(Latch, CountDownTwo) {
+        latch l(2);
+        l.arrive_and_wait(2);
+        ASSERT_TRUE(1);
+    }
+
+    TEST(Latch, WaitFor) {
+        latch l(1);
+        ASSERT_FALSE(l.wait_for(100000));
+        l.count_down();
+        ASSERT_TRUE(l.wait_for(0));
+    }
+
+    TEST(Latch, WaitUntil) {
+        latch l(1);
+        ASSERT_FALSE(l.wait_until(flare::base::cpuwide_time_us() + 100 * 1000));
+        l.count_down();
+        ASSERT_TRUE(l.wait_until(flare::base::cpuwide_time_us()));
+    }
+}

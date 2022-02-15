@@ -234,12 +234,6 @@ git clone https://github.com/google/googletest -b release-1.10.0 && cd googletes
 ```
 After the compilation, copy include/ and lib/ into /usr/local/include and /usr/local/lib respectively to expose gtest to all apps
 
-### Compile flare with config_brpc.sh
-git clone flare, cd into the repo and run
-```shell
-$ sh config_brpc.sh --headers=/usr/local/include --libs=/usr/local/lib --cc=clang --cxx=clang++
-$ make
-```
 To not link debugging symbols, add `--nodebugsymbols` and compiled binaries will be much smaller.
 
 

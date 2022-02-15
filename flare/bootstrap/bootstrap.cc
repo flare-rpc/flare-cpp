@@ -1,7 +1,3 @@
-// Copyright (c) 2020, Tencent Inc.
-// All rights reserved.
-//
-// Author: Gao Lu <luobogao@tencent.com>
 
 #include "flare/bootstrap/bootstrap.h"
 
@@ -14,6 +10,7 @@
 #include <vector>
 #include "flare/log/logging.h"
 #include "flare/memory/resident.h"
+#include "flare/bootstrap/flags.h"
 
 namespace flare::bootstrap {
 
@@ -31,7 +28,7 @@ namespace flare::bootstrap {
 
         at_exit_callback_registry *get_at_exit_callback_registry() {
             static flare::memory::resident<at_exit_callback_registry> registry;
-            return registry.Get();
+            return registry.get();
         }
 
     }  // namespace
@@ -124,11 +121,12 @@ namespace flare::bootstrap {
                                                                   "Callbacks may only be registered before `flare::Start` is called.";
 
         auto &&registry = *get_staging_registry();
-        registry[priority].emplace_back(std::move(init),std::move(fini));
+        registry[priority].emplace_back(std::move(init), std::move(fini));
     }
 
-    void bootstrap_init(int argc, char**argv) {
+    void bootstrap_init(int argc, char **argv) {
         GFLAGS_NS::ParseCommandLineFlags(&argc, &argv, true);
+        flare::detail::apply_flags_overrider();
         flare::log::init_logging(argv[0]);
     }
 
