@@ -9,6 +9,7 @@
 #include <mutex>
 #include "flare/base/thread/spinlock.h"
 #include "flare/base/profile.h"
+#include "flare/log/logging.h"
 
 
 namespace flare::base {
