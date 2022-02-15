@@ -121,10 +121,10 @@ namespace flare::bootstrap {
                                                                   "Callbacks may only be registered before `flare::Start` is called.";
 
         auto &&registry = *get_staging_registry();
-        registry[priority].emplace_back(std::move(init),std::move(fini));
+        registry[priority].emplace_back(std::move(init), std::move(fini));
     }
 
-    void bootstrap_init(int argc, char**argv) {
+    void bootstrap_init(int argc, char **argv) {
         GFLAGS_NS::ParseCommandLineFlags(&argc, &argv, true);
         flare::detail::apply_flags_overrider();
         flare::log::init_logging(argv[0]);
