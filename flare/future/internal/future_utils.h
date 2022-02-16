@@ -522,8 +522,7 @@ namespace flare {
         // additionally requires `Ts...` to be DefaultConstructible, which
         // IMO is an overkill.
         CHECK(!futures.empty())<<
-
-               "Calling `when_any(PreservingErrors)` on an empty "
+                "Calling `when_any(PreservingErrors)` on an empty "
                "collection is undefined. We simply couldn't "
                "define what does 'wait for a single object in an "
                "empty collection' mean.";
