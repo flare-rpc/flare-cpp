@@ -309,7 +309,7 @@ namespace flare {
         ASSERT_EQ(1UL, blocking_get(std::move(f2)));
     }
 
-// Primarily a compilation test.
+    // Primarily a compilation test.
     TEST(FutureV2Test, NonDefaultConstructibleTypes) {
         promise<NonDefaultConstructible> p;
 
@@ -812,6 +812,7 @@ namespace flare {
     }
 
     TEST(FutureV2DeathTest, WhenAnyCollectionEmpty) {
+        FLAGS_crash_on_fatal_log = true;
         std::vector<future<>> vfs;
         ASSERT_DEATH(when_any(std::move(vfs)), "on an empty collection is undefined");
 
