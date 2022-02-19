@@ -18,7 +18,7 @@
 // A client sending requests to servers(discovered by naming service) by multiple threads.
 
 #include <gflags/gflags.h>
-#include <flare/bthread/bthread.h>
+#include <flare/fiber/internal/bthread.h>
 #include "flare/log/logging.h"
 #include "flare/base/time.h"
 #include <flare/rpc/channel.h>

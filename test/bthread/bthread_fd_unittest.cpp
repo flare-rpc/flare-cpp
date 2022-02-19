@@ -26,18 +26,18 @@
 #include "flare/base/time.h"
 #include "flare/base/fd_utility.h"
 #include "flare/log/logging.h"
-#include "flare/bthread/task_control.h"
-#include "flare/bthread/task_group.h"
-#include "flare/bthread/interrupt_pthread.h"
-#include "flare/bthread/bthread.h"
-#include "flare/bthread/unstable.h"
+#include "flare/fiber/internal/task_control.h"
+#include "flare/fiber/internal/task_group.h"
+#include "flare/fiber/internal/interrupt_pthread.h"
+#include "flare/fiber/internal/bthread.h"
+#include "flare/fiber/internal/unstable.h"
 #if defined(FLARE_PLATFORM_OSX)
 #include <sys/types.h>                           // struct kevent
 #include <sys/event.h>                           // kevent(), kqueue()
 #endif
 
 #ifndef NDEBUG
-namespace bthread {
+namespace flare::fiber_internal {
 extern std::atomic<int> break_nums;
 extern TaskControl* global_task_control;
 int stop_and_join_epoll_threads();
@@ -228,7 +228,7 @@ inline uint32_t fmix32 ( uint32_t h ) {
 // a kernel patch that lots of machines currently don't have
 TEST(FDTest, ping_pong) {
 #ifndef NDEBUG
-    bthread::break_nums = 0;
+    flare::fiber_internal::break_nums = 0;
 #endif
 
     const size_t REP = 30000;
@@ -340,11 +340,11 @@ TEST(FDTest, ping_pong) {
         pthread_join(eth[i], NULL);
 #endif
     }
-    //bthread::stop_and_join_epoll_threads();
+    //flare::fiber_internal::stop_and_join_epoll_threads();
     bthread_usleep(100000);
 
 #ifndef NDEBUG
-    std::cout << "break_nums=" << bthread::break_nums << std::endl;
+    std::cout << "break_nums=" << flare::fiber_internal::break_nums << std::endl;
 #endif
 }
 
@@ -427,10 +427,10 @@ TEST(FDTest, interrupt_pthread) {
     ASSERT_EQ(0, pthread_create(&th2, NULL, epoll_waiter, (void*)(intptr_t)epfd));
     bthread_usleep(100000L);
     std::cout << "wake up " << th << std::endl;
-    bthread::interrupt_pthread(th);
+    flare::fiber_internal::interrupt_pthread(th);
     bthread_usleep(100000L);
     std::cout << "wake up " << th2 << std::endl;
-    bthread::interrupt_pthread(th2);
+    flare::fiber_internal::interrupt_pthread(th2);
     pthread_join(th, NULL);
     pthread_join(th2, NULL);
 }

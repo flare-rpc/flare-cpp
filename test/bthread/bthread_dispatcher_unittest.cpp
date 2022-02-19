@@ -25,9 +25,9 @@
 #include "flare/base/fd_utility.h"
 #include "flare/log/logging.h"
 #include "flare/base/gperftools_profiler.h"
-#include "flare/bthread/bthread.h"
-#include "flare/bthread/task_control.h"
-#include "flare/bthread/task_group.h"
+#include "flare/fiber/internal/bthread.h"
+#include "flare/fiber/internal/task_control.h"
+#include "flare/fiber/internal/task_group.h"
 #if defined(FLARE_PLATFORM_OSX)
 #include <sys/types.h>                           // struct kevent
 #include <sys/event.h>                           // kevent(), kqueue()
@@ -35,7 +35,7 @@
 
 #define RUN_EPOLL_IN_BTHREAD
 
-namespace bthread {
+namespace flare::fiber_internal {
 extern TaskControl* global_task_control;
 int stop_and_join_epoll_threads();
 }
@@ -311,7 +311,7 @@ TEST(DispatcherTest, dispatch_tasks) {
         pthread_join(eth[i], NULL);
 #endif
     }
-    bthread::stop_and_join_epoll_threads();
+    flare::fiber_internal::stop_and_join_epoll_threads();
     bthread_usleep(100000);
 }
 } // namespace

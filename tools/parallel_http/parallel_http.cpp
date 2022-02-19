@@ -20,7 +20,7 @@
 
 #include <gflags/gflags.h>
 #include <deque>
-#include <flare/bthread/bthread.h>
+#include <flare/fiber/internal/bthread.h>
 #include "flare/log/logging.h"
 #include "flare/base/strings.h"
 #include <flare/base/scoped_file.h>

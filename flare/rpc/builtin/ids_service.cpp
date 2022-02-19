@@ -22,7 +22,7 @@
 #include "flare/rpc/builtin/common.h"
 #include "flare/rpc/builtin/ids_service.h"
 
-namespace bthread {
+namespace flare::fiber_internal {
 void id_status(bthread_id_t id, std::ostream& os);
 void id_pool_status(std::ostream& os);
 }
@@ -42,12 +42,12 @@ void IdsService::default_method(::google::protobuf::RpcController* cntl_base,
     
     if (constraint.empty()) {
         os << "# Use /ids/<call_id>\n";
-        bthread::id_pool_status(os);
+        flare::fiber_internal::id_pool_status(os);
     } else {
         char* endptr = NULL;
         bthread_id_t id = { strtoull(constraint.c_str(), &endptr, 10) };
         if (*endptr == '\0' || *endptr == '/') {
-            bthread::id_status(id, os);
+            flare::fiber_internal::id_status(id, os);
         } else {
             cntl->SetFailed(ENOMETHOD, "path=%s is not a bthread_id",
                             constraint.c_str());

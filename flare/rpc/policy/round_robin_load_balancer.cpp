@@ -26,7 +26,7 @@ namespace flare::rpc {
 namespace policy {
 
 const uint32_t prime_offset[] = {
-#include "flare/bthread/offset_inl.list"
+#include "flare/fiber/internal/offset_inl.list"
 };
 
 inline uint32_t GenRandomStride() {

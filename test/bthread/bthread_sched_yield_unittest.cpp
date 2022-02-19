@@ -20,7 +20,7 @@
 #include <sched.h>
 #include <unistd.h>
 #include <stdio.h>
-#include <flare/bthread/processor.h>
+#include <flare/fiber/internal/processor.h>
 
 namespace {
 volatile bool stop = false;

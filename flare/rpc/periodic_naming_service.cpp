@@ -18,7 +18,7 @@
 
 #include <gflags/gflags.h>
 #include "flare/log/logging.h"
-#include "flare/bthread/bthread.h"
+#include "flare/fiber/internal/bthread.h"
 #include "flare/rpc/log.h"
 #include "flare/rpc/reloadable_flags.h"
 #include "flare/rpc/periodic_naming_service.h"

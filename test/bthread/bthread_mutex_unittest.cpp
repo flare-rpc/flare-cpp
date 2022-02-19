@@ -21,10 +21,10 @@
 #include "flare/base/time.h"
 #include "flare/base/strings.h"
 #include "flare/log/logging.h"
-#include "flare/bthread/bthread.h"
-#include "flare/bthread/butex.h"
-#include "flare/bthread/task_control.h"
-#include "flare/bthread/mutex.h"
+#include "flare/fiber/internal/bthread.h"
+#include "flare/fiber/internal/butex.h"
+#include "flare/fiber/internal/task_control.h"
+#include "flare/fiber/internal/mutex.h"
 #include "flare/base/gperftools_profiler.h"
 
 namespace {
@@ -103,7 +103,7 @@ TEST(MutexTest, timedlock) {
 }
 
 TEST(MutexTest, cpp_wrapper) {
-    bthread::Mutex mutex;
+    flare::fiber_internal::Mutex mutex;
     ASSERT_TRUE(mutex.try_lock());
     mutex.unlock();
     mutex.lock();
@@ -112,8 +112,8 @@ TEST(MutexTest, cpp_wrapper) {
         FLARE_SCOPED_LOCK(mutex);
     }
     {
-        std::unique_lock<bthread::Mutex> lck1;
-        std::unique_lock<bthread::Mutex> lck2(mutex);
+        std::unique_lock<flare::fiber_internal::Mutex> lck1;
+        std::unique_lock<flare::fiber_internal::Mutex> lck2(mutex);
         lck1.swap(lck2);
         lck1.unlock();
         lck1.lock();
@@ -224,13 +224,13 @@ TEST(MutexTest, performance) {
     flare::base::Mutex base_mutex;
     PerfTest(&base_mutex, (pthread_t*)NULL, thread_num, pthread_create, pthread_join);
     PerfTest(&base_mutex, (bthread_t*)NULL, thread_num, bthread_start_background, bthread_join);
-    bthread::Mutex bth_mutex;
+    flare::fiber_internal::Mutex bth_mutex;
     PerfTest(&bth_mutex, (pthread_t*)NULL, thread_num, pthread_create, pthread_join);
     PerfTest(&bth_mutex, (bthread_t*)NULL, thread_num, bthread_start_background, bthread_join);
 }
 
 void* loop_until_stopped(void* arg) {
-    bthread::Mutex *m = (bthread::Mutex*)arg;
+    flare::fiber_internal::Mutex *m = (flare::fiber_internal::Mutex*)arg;
     while (!g_stopped) {
         FLARE_SCOPED_LOCK(*m);
         bthread_usleep(20);
@@ -242,7 +242,7 @@ TEST(MutexTest, mix_thread_types) {
     g_stopped = false;
     const int N = 16;
     const int M = N * 2;
-    bthread::Mutex m;
+    flare::fiber_internal::Mutex m;
     pthread_t pthreads[N];
     bthread_t bthreads[M];
     // reserve enough workers for test. This is a must since we have

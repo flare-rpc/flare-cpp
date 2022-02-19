@@ -22,9 +22,9 @@
 #include "flare/base/time.h"
 #include "flare/base/scoped_lock.h"
 #include "flare/base/gperftools_profiler.h"
-#include "flare/bthread/bthread.h"
-#include "flare/bthread/condition_variable.h"
-#include "flare/bthread/stack.h"
+#include "flare/fiber/internal/bthread.h"
+#include "flare/fiber/internal/condition_variable.h"
+#include "flare/fiber/internal/stack.h"
 
 namespace {
     struct Arg {
@@ -136,8 +136,8 @@ namespace {
     }
 
     struct WrapperArg {
-        bthread::Mutex mutex;
-        bthread::ConditionVariable cond;
+        flare::fiber_internal::Mutex mutex;
+        flare::fiber_internal::ConditionVariable cond;
     };
 
     void *cv_signaler(void *void_arg) {
@@ -161,7 +161,7 @@ namespace {
 
     void *cv_mutex_waiter(void *void_arg) {
         WrapperArg *a = (WrapperArg *) void_arg;
-        std::unique_lock<bthread::Mutex> lck(a->mutex);
+        std::unique_lock<flare::fiber_internal::Mutex> lck(a->mutex);
         while (!stop) {
             a->cond.wait(lck);
         }
@@ -177,7 +177,7 @@ namespace {
 
     TEST(CondTest, cpp_wrapper) {
         stop = false;
-        bthread::ConditionVariable cond;
+        flare::fiber_internal::ConditionVariable cond;
         pthread_t bmutex_waiter_threads[8];
         pthread_t mutex_waiter_threads[8];
         pthread_t signal_thread;
@@ -218,7 +218,7 @@ namespace {
         }
 
         int wait(int old_signal) {
-            std::unique_lock<bthread::Mutex> lck(_m);
+            std::unique_lock<flare::fiber_internal::Mutex> lck(_m);
             while (_signal == old_signal) {
                 _c.wait(lck);
             }
@@ -226,8 +226,8 @@ namespace {
         }
 
     private:
-        bthread::Mutex _m;
-        bthread::ConditionVariable _c;
+        flare::fiber_internal::Mutex _m;
+        flare::fiber_internal::ConditionVariable _c;
         int _signal;
     };
 
@@ -279,9 +279,9 @@ namespace {
     }
 
     struct BroadcastArg {
-        bthread::ConditionVariable wait_cond;
-        bthread::ConditionVariable broadcast_cond;
-        bthread::Mutex mutex;
+        flare::fiber_internal::ConditionVariable wait_cond;
+        flare::fiber_internal::ConditionVariable broadcast_cond;
+        flare::fiber_internal::Mutex mutex;
         int nwaiter;
         int cur_waiter;
         int rounds;
@@ -290,7 +290,7 @@ namespace {
 
     void *wait_thread(void *arg) {
         BroadcastArg *ba = (BroadcastArg *) arg;
-        std::unique_lock<bthread::Mutex> lck(ba->mutex);
+        std::unique_lock<flare::fiber_internal::Mutex> lck(ba->mutex);
         while (ba->rounds > 0) {
             const int saved_round = ba->rounds;
             ++ba->cur_waiter;
@@ -308,7 +308,7 @@ namespace {
         BroadcastArg *ba = (BroadcastArg *) arg;
         //int local_round = 0;
         while (ba->rounds > 0) {
-            std::unique_lock<bthread::Mutex> lck(ba->mutex);
+            std::unique_lock<flare::fiber_internal::Mutex> lck(ba->mutex);
             while (ba->cur_waiter < ba->nwaiter) {
                 ba->broadcast_cond.wait(lck);
             }
@@ -321,7 +321,7 @@ namespace {
 
     void *disturb_thread(void *arg) {
         BroadcastArg *ba = (BroadcastArg *) arg;
-        std::unique_lock<bthread::Mutex> lck(ba->mutex);
+        std::unique_lock<flare::fiber_internal::Mutex> lck(ba->mutex);
         while (ba->rounds > 0) {
             lck.unlock();
             lck.lock();

@@ -24,8 +24,8 @@
 #include "flare/base/time.h"
 #include "flare/log/logging.h"
 #include <flare/json2pb/json_to_pb.h>
-#include <flare/bthread/timer_thread.h>
-#include <flare/bthread/bthread.h>
+#include <flare/fiber/internal/timer_thread.h>
+#include <flare/fiber/internal/bthread.h>
 
 #include <cstdlib>
 #include <fstream>
@@ -50,7 +50,7 @@ DEFINE_bool(use_usleep, false,
             "when processing requests");
 
 
-bthread::TimerThread g_timer_thread;
+flare::fiber_internal::TimerThread g_timer_thread;
 
 int cast_func(void *arg) {
     return *(int *) arg;
@@ -80,7 +80,7 @@ std::atomic<int> cnt(0);
 std::atomic<int> atomic_sleep_time(0);
 flare::variable::PassiveStatus<int> atomic_sleep_time_variable(cast_func, &atomic_sleep_time);
 
-namespace bthread {
+namespace flare::fiber_internal {
     DECLARE_int32(bthread_concurrency);
 }
 
@@ -274,7 +274,7 @@ private:
 int main(int argc, char *argv[]) {
     // Parse gflags. We recommend you to use gflags as well.
     GFLAGS_NS::ParseCommandLineFlags(&argc, &argv, true);
-    bthread::FLAGS_bthread_concurrency = FLAGS_server_bthread_concurrency;
+    flare::fiber_internal::FLAGS_bthread_concurrency = FLAGS_server_bthread_concurrency;
 
     flare::rpc::Server server;
 

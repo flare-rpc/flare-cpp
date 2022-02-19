@@ -17,9 +17,9 @@
 
 #include <gtest/gtest.h>
 #include <gflags/gflags.h>
-#include "flare/bthread/sys_futex.h"
-#include "flare/bthread/timer_thread.h"
-#include "flare/bthread/bthread.h"
+#include "flare/fiber/internal/sys_futex.h"
+#include "flare/fiber/internal/timer_thread.h"
+#include "flare/fiber/internal/bthread.h"
 #include "flare/log/logging.h"
 
 namespace {
@@ -40,7 +40,7 @@ public:
                int sleep_ms)
         : _expect_run_time(run_time), _name(name), _sleep_ms(sleep_ms) {}
 
-    void schedule(bthread::TimerThread* timer_thread) {
+    void schedule(flare::fiber_internal::TimerThread* timer_thread) {
         _task_id = timer_thread->schedule(
             TimeKeeper::routine, this, _expect_run_time);
     }
@@ -58,14 +58,14 @@ public:
         const int saved_sleep_ms = _sleep_ms;
         if (saved_sleep_ms > 0) {
             timespec timeout = flare::base::milliseconds_to_timespec(saved_sleep_ms);
-            bthread::futex_wait_private(&_sleep_ms, saved_sleep_ms, &timeout);
+            flare::fiber_internal::futex_wait_private(&_sleep_ms, saved_sleep_ms, &timeout);
         }
     }
 
     void wakeup() {
         if (_sleep_ms != 0) {
             _sleep_ms = 0;
-            bthread::futex_wake_private(&_sleep_ms, 1);
+            flare::fiber_internal::futex_wake_private(&_sleep_ms, 1);
         } else {
             LOG(ERROR) << "No need to wakeup "
                        << (_name ? _name : "") << " task_id=" << _task_id;
@@ -96,7 +96,7 @@ public:
     }
 
     timespec _expect_run_time;
-    bthread::TimerThread::TaskId _task_id;
+    flare::fiber_internal::TimerThread::TaskId _task_id;
 
 private:
     const char* _name;
@@ -105,7 +105,7 @@ private:
 };
 
 TEST(TimerThreadTest, RunTasks) {
-    bthread::TimerThread timer_thread;
+    flare::fiber_internal::TimerThread timer_thread;
     ASSERT_EQ(0, timer_thread.start(NULL));
 
     timespec _2s_later = flare::base::seconds_from_now(2);
@@ -159,14 +159,14 @@ TEST(TimerThreadTest, RunTasks) {
 // If the scheduled time is before start time, then should run it
 // immediately.
 TEST(TimerThreadTest, start_after_schedule) {
-    bthread::TimerThread timer_thread;
+    flare::fiber_internal::TimerThread timer_thread;
     timespec past_time = { 0, 0 };
     TimeKeeper keeper(past_time, "keeper1");
     keeper.schedule(&timer_thread);
-    ASSERT_EQ(bthread::TimerThread::INVALID_TASK_ID, keeper._task_id);
+    ASSERT_EQ(flare::fiber_internal::TimerThread::INVALID_TASK_ID, keeper._task_id);
     ASSERT_EQ(0, timer_thread.start(NULL));
     keeper.schedule(&timer_thread);
-    ASSERT_NE(bthread::TimerThread::INVALID_TASK_ID, keeper._task_id);
+    ASSERT_NE(flare::fiber_internal::TimerThread::INVALID_TASK_ID, keeper._task_id);
     timespec current_time = flare::base::seconds_from_now(0);
     sleep(1);  // make sure timer thread start and run
     timer_thread.stop_and_join();
@@ -175,7 +175,7 @@ TEST(TimerThreadTest, start_after_schedule) {
 
 class TestTask {
 public:
-    TestTask(bthread::TimerThread* timer_thread, TimeKeeper* keeper1,
+    TestTask(flare::fiber_internal::TimerThread* timer_thread, TimeKeeper* keeper1,
              TimeKeeper* keeper2, int expected_unschedule_result)
         : _timer_thread(timer_thread)
         , _keeper1(keeper1)
@@ -199,7 +199,7 @@ public:
     timespec _running_time;
 
 private:
-    bthread::TimerThread* _timer_thread;  // not owned.
+    flare::fiber_internal::TimerThread* _timer_thread;  // not owned.
     TimeKeeper* _keeper1;  // not owned.
     TimeKeeper* _keeper2;  // not owned.
     int _expected_unschedule_result;
@@ -207,7 +207,7 @@ private:
 
 // Perform schedule and unschedule inside a running task
 TEST(TimerThreadTest, schedule_and_unschedule_in_task) {
-    bthread::TimerThread timer_thread;
+    flare::fiber_internal::TimerThread timer_thread;
     timespec past_time = { 0, 0 };
     timespec future_time = { std::numeric_limits<int>::max(), 0 };
     const timespec _500ms_after = flare::base::milliseconds_from_now(500);

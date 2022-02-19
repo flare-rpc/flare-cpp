@@ -16,8 +16,8 @@
 // under the License.
 
 #include <inttypes.h>
-#include "flare/bthread/bthread.h"                  // bthread_id_xx
-#include "flare/bthread/unstable.h"                 // bthread_timer_add
+#include "flare/fiber/internal/bthread.h"                  // bthread_id_xx
+#include "flare/fiber/internal/unstable.h"                 // bthread_timer_add
 #include "flare/base/static_atomic.h"
 #include "flare/base/time.h"
 #include "flare/base/profile.h"

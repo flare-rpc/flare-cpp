@@ -19,8 +19,8 @@
 #ifndef  FLARE_RPC_STREAM_IMPL_H_
 #define  FLARE_RPC_STREAM_IMPL_H_
 
-#include "flare/bthread/bthread.h"
-#include "flare/bthread/execution_queue.h"
+#include "flare/fiber/internal/bthread.h"
+#include "flare/fiber/internal/execution_queue.h"
 #include "flare/rpc/socket.h"
 #include "flare/rpc/stream.h"
 #include "flare/rpc/streaming_rpc_meta.pb.h"
@@ -80,7 +80,7 @@ friend class MessageBatcher;
     void HandleRpcResponse(flare::io::cord_buf* response_buffer);
     void WriteToHostSocket(flare::io::cord_buf* b);
 
-    static int Consume(void *meta, bthread::TaskIterator<flare::io::cord_buf*>& iter);
+    static int Consume(void *meta, flare::fiber_internal::TaskIterator<flare::io::cord_buf*>& iter);
     static int TriggerOnWritable(bthread_id_t id, void *data, int error_code);
     static void *RunOnWritable(void* arg);
     static void* RunOnConnect(void* arg);
@@ -120,7 +120,7 @@ friend class MessageBatcher;
     StreamSettings _remote_settings;   
 
     bool _parse_rpc_response;
-    bthread::ExecutionQueueId<flare::io::cord_buf*> _consumer_queue;
+    flare::fiber_internal::ExecutionQueueId<flare::io::cord_buf*> _consumer_queue;
     flare::io::cord_buf *_pending_buf;
     int64_t _start_idle_timer_us;
     bthread_timer_t _idle_timer;

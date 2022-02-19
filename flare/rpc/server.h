@@ -22,8 +22,8 @@
 // To flare developers: This is a header included by user, don't depend
 // on internal structures, use opaque pointers instead.
 
-#include "flare/bthread/errno.h"        // Redefine errno
-#include "flare/bthread/bthread.h"      // Server may need some bthread functions,
+#include "flare/fiber/internal/errno.h"        // Redefine errno
+#include "flare/fiber/internal/bthread.h"      // Server may need some bthread functions,
                                   // e.g. bthread_usleep
 #include <google/protobuf/service.h>                 // google::protobuf::Service
 #include "flare/base/profile.h"                            // FLARE_DISALLOW_COPY_AND_ASSIGN

@@ -18,11 +18,11 @@
 #include <iostream>
 #include <gtest/gtest.h>
 #include "flare/base/time.h"
-#include "flare/bthread/bthread.h"
-#include "flare/bthread/task_group.h"
-#include "flare/bthread/butex.h"
+#include "flare/fiber/internal/bthread.h"
+#include "flare/fiber/internal/task_group.h"
+#include "flare/fiber/internal/butex.h"
 
-namespace bthread {
+namespace flare::fiber_internal {
 void id_status(bthread_id_t, std::ostream &);
 uint32_t id_value(bthread_id_t id);
 }
@@ -61,8 +61,8 @@ TEST(BthreadIdTest, join_after_destroy) {
     int x = 0xdead;
     ASSERT_EQ(0, bthread_id_create_ranged(&id1, &x, NULL, 2));
     bthread_id_t id2 = { id1.value + 1 };
-    ASSERT_EQ(get_version(id1), bthread::id_value(id1));
-    ASSERT_EQ(get_version(id1), bthread::id_value(id2));
+    ASSERT_EQ(get_version(id1), flare::fiber_internal::id_value(id1));
+    ASSERT_EQ(get_version(id1), flare::fiber_internal::id_value(id2));
     pthread_t th[8];
     SignalArg args[FLARE_ARRAY_SIZE(th)];
     for (size_t i = 0; i < FLARE_ARRAY_SIZE(th); ++i) {
@@ -81,15 +81,15 @@ TEST(BthreadIdTest, join_after_destroy) {
     ASSERT_EQ(0, bthread_id_join(id1));
     ASSERT_EQ(0, bthread_id_join(id2));
     ASSERT_EQ(0xdead + 1, x);
-    ASSERT_EQ(get_version(id1) + 5, bthread::id_value(id1));
-    ASSERT_EQ(get_version(id1) + 5, bthread::id_value(id2));
+    ASSERT_EQ(get_version(id1) + 5, flare::fiber_internal::id_value(id1));
+    ASSERT_EQ(get_version(id1) + 5, flare::fiber_internal::id_value(id2));
 }
 
 TEST(BthreadIdTest, join_before_destroy) {
     bthread_id_t id1;
     int x = 0xdead;
     ASSERT_EQ(0, bthread_id_create(&id1, &x, NULL));
-    ASSERT_EQ(get_version(id1), bthread::id_value(id1));
+    ASSERT_EQ(get_version(id1), flare::fiber_internal::id_value(id1));
     pthread_t th[8];
     SignalArg args[FLARE_ARRAY_SIZE(th)];
     for (size_t i = 0; i < FLARE_ARRAY_SIZE(th); ++i) {
@@ -100,7 +100,7 @@ TEST(BthreadIdTest, join_before_destroy) {
     }
     ASSERT_EQ(0, bthread_id_join(id1));
     ASSERT_EQ(0xdead + 1, x);
-    ASSERT_EQ(get_version(id1) + 4, bthread::id_value(id1));
+    ASSERT_EQ(get_version(id1) + 4, flare::fiber_internal::id_value(id1));
 
     void* ret[FLARE_ARRAY_SIZE(th)];
     size_t non_null_ret = 0;
@@ -127,11 +127,11 @@ TEST(BthreadIdTest, error_is_destroy) {
     bthread_id_t id1;
     OnResetArg arg = { { 0 }, 0 };
     ASSERT_EQ(0, bthread_id_create(&id1, &arg, on_reset));
-    ASSERT_EQ(get_version(id1), bthread::id_value(id1));
+    ASSERT_EQ(get_version(id1), flare::fiber_internal::id_value(id1));
     ASSERT_EQ(0, bthread_id_error(id1, EBADF));
     ASSERT_EQ(EBADF, arg.error_code);
     ASSERT_EQ(id1.value, arg.id.value);
-    ASSERT_EQ(get_version(id1) + 4, bthread::id_value(id1));
+    ASSERT_EQ(get_version(id1) + 4, flare::fiber_internal::id_value(id1));
 }
 
 TEST(BthreadIdTest, error_is_destroy_ranged) {
@@ -139,30 +139,30 @@ TEST(BthreadIdTest, error_is_destroy_ranged) {
     OnResetArg arg = { { 0 }, 0 };
     ASSERT_EQ(0, bthread_id_create_ranged(&id1, &arg, on_reset, 2));
     bthread_id_t id2 = { id1.value + 1 };
-    ASSERT_EQ(get_version(id1), bthread::id_value(id2));
+    ASSERT_EQ(get_version(id1), flare::fiber_internal::id_value(id2));
     ASSERT_EQ(0, bthread_id_error(id2, EBADF));
     ASSERT_EQ(EBADF, arg.error_code);
     ASSERT_EQ(id2.value, arg.id.value);
-    ASSERT_EQ(get_version(id1) + 5, bthread::id_value(id2));
+    ASSERT_EQ(get_version(id1) + 5, flare::fiber_internal::id_value(id2));
 }
 
 TEST(BthreadIdTest, default_error_is_destroy) {
     bthread_id_t id1;
     ASSERT_EQ(0, bthread_id_create(&id1, NULL, NULL));
-    ASSERT_EQ(get_version(id1), bthread::id_value(id1));
+    ASSERT_EQ(get_version(id1), flare::fiber_internal::id_value(id1));
     ASSERT_EQ(0, bthread_id_error(id1, EBADF));
-    ASSERT_EQ(get_version(id1) + 4, bthread::id_value(id1));
+    ASSERT_EQ(get_version(id1) + 4, flare::fiber_internal::id_value(id1));
 }
 
 TEST(BthreadIdTest, doubly_destroy) {
     bthread_id_t id1;
     ASSERT_EQ(0, bthread_id_create_ranged(&id1, NULL, NULL, 2));
     bthread_id_t id2 = { id1.value + 1 };
-    ASSERT_EQ(get_version(id1), bthread::id_value(id1));
-    ASSERT_EQ(get_version(id1), bthread::id_value(id2));
+    ASSERT_EQ(get_version(id1), flare::fiber_internal::id_value(id1));
+    ASSERT_EQ(get_version(id1), flare::fiber_internal::id_value(id2));
     ASSERT_EQ(0, bthread_id_error(id1, EBADF));
-    ASSERT_EQ(get_version(id1) + 5, bthread::id_value(id1));
-    ASSERT_EQ(get_version(id1) + 5, bthread::id_value(id2));
+    ASSERT_EQ(get_version(id1) + 5, flare::fiber_internal::id_value(id1));
+    ASSERT_EQ(get_version(id1) + 5, flare::fiber_internal::id_value(id2));
     ASSERT_EQ(EINVAL, bthread_id_error(id1, EBADF));
     ASSERT_EQ(EINVAL, bthread_id_error(id2, EBADF));
 }
@@ -178,7 +178,7 @@ TEST(BthreadIdTest, many_error) {
     bthread_id_t id1;
     std::vector<int> result;
     ASSERT_EQ(0, bthread_id_create(&id1, &result, on_numeric_error));
-    ASSERT_EQ(get_version(id1), bthread::id_value(id1));
+    ASSERT_EQ(get_version(id1), flare::fiber_internal::id_value(id1));
     int err = 0;
     const int N = 100;
     for (int i = 0; i < N; ++i) {
@@ -189,13 +189,13 @@ TEST(BthreadIdTest, many_error) {
         ASSERT_EQ(i, result[i]);
     }
     ASSERT_EQ(0, bthread_id_trylock(id1, NULL));
-    ASSERT_EQ(get_version(id1) + 1, bthread::id_value(id1));
+    ASSERT_EQ(get_version(id1) + 1, flare::fiber_internal::id_value(id1));
     for (int i = 0; i < N; ++i) {
         ASSERT_EQ(0, bthread_id_error(id1, err++));
     }
     ASSERT_EQ((size_t)N, result.size());
     ASSERT_EQ(0, bthread_id_unlock(id1));
-    ASSERT_EQ(get_version(id1), bthread::id_value(id1));
+    ASSERT_EQ(get_version(id1), flare::fiber_internal::id_value(id1));
     ASSERT_EQ((size_t)2*N, result.size());
     for (int i = 0; i < 2*N; ++i) {
         EXPECT_EQ(i, result[i]);
@@ -203,7 +203,7 @@ TEST(BthreadIdTest, many_error) {
     result.clear();
     
     ASSERT_EQ(0, bthread_id_trylock(id1, NULL));
-    ASSERT_EQ(get_version(id1) + 1, bthread::id_value(id1));
+    ASSERT_EQ(get_version(id1) + 1, flare::fiber_internal::id_value(id1));
     for (int i = 0; i < N; ++i) {
         ASSERT_EQ(0, bthread_id_error(id1, err++));
     }
@@ -226,7 +226,7 @@ static void* locker(void* arg) {
 TEST(BthreadIdTest, id_lock) {
     bthread_id_t id1;
     ASSERT_EQ(0, bthread_id_create(&id1, NULL, NULL));
-    ASSERT_EQ(get_version(id1), bthread::id_value(id1));
+    ASSERT_EQ(get_version(id1), flare::fiber_internal::id_value(id1));
     pthread_t th[8];
     for (size_t i = 0; i < FLARE_ARRAY_SIZE(th); ++i) {
         ASSERT_EQ(0, pthread_create(&th[i], NULL, locker,
@@ -253,7 +253,7 @@ static void* failed_locker(void* arg) {
 TEST(BthreadIdTest, id_lock_and_destroy) {
     bthread_id_t id1;
     ASSERT_EQ(0, bthread_id_create(&id1, NULL, NULL));
-    ASSERT_EQ(get_version(id1), bthread::id_value(id1));
+    ASSERT_EQ(get_version(id1), flare::fiber_internal::id_value(id1));
     pthread_t th[8];
     for (size_t i = 0; i < FLARE_ARRAY_SIZE(th); ++i) {
         ASSERT_EQ(0, pthread_create(&th[i], NULL, failed_locker,
@@ -272,7 +272,7 @@ TEST(BthreadIdTest, join_after_destroy_before_unlock) {
     bthread_id_t id1;
     int x = 0xdead;
     ASSERT_EQ(0, bthread_id_create(&id1, &x, NULL));
-    ASSERT_EQ(get_version(id1), bthread::id_value(id1));
+    ASSERT_EQ(get_version(id1), flare::fiber_internal::id_value(id1));
     pthread_t th[8];
     SignalArg args[FLARE_ARRAY_SIZE(th)];
     for (size_t i = 0; i < FLARE_ARRAY_SIZE(th); ++i) {
@@ -285,7 +285,7 @@ TEST(BthreadIdTest, join_after_destroy_before_unlock) {
     // join() waits until destroy() is called.
     ASSERT_EQ(0, bthread_id_join(id1));
     ASSERT_EQ(0xdead + 1, x);
-    ASSERT_EQ(get_version(id1) + 4, bthread::id_value(id1));
+    ASSERT_EQ(get_version(id1) + 4, flare::fiber_internal::id_value(id1));
 
     void* ret[FLARE_ARRAY_SIZE(th)];
     size_t non_null_ret = 0;
@@ -305,7 +305,7 @@ void* stopped_waiter(void* void_arg) {
     StoppedWaiterArgs* args = (StoppedWaiterArgs*)void_arg;
     args->thread_started = true;
     EXPECT_EQ(0, bthread_id_join(args->id));
-    EXPECT_EQ(get_version(args->id) + 4, bthread::id_value(args->id));
+    EXPECT_EQ(get_version(args->id) + 4, flare::fiber_internal::id_value(args->id));
     return NULL;
 }
 
@@ -313,7 +313,7 @@ TEST(BthreadIdTest, stop_a_wait_after_fight_before_signal) {
     bthread_id_t id1;
     int x = 0xdead;
     ASSERT_EQ(0, bthread_id_create(&id1, &x, NULL));
-    ASSERT_EQ(get_version(id1), bthread::id_value(id1));
+    ASSERT_EQ(get_version(id1), flare::fiber_internal::id_value(id1));
     void* data;
     ASSERT_EQ(0, bthread_id_trylock(id1, &data));
     ASSERT_EQ(&x, data);
@@ -330,7 +330,7 @@ TEST(BthreadIdTest, stop_a_wait_after_fight_before_signal) {
     }
     bthread_usleep(10000);
     for (size_t i = 0; i < FLARE_ARRAY_SIZE(th); ++i) {
-        ASSERT_TRUE(bthread::TaskGroup::exists(th[i]));
+        ASSERT_TRUE(flare::fiber_internal::TaskGroup::exists(th[i]));
     }
     // destroy the id to end the joinings.
     ASSERT_EQ(0, bthread_id_unlock_and_destroy(id1));
@@ -342,7 +342,7 @@ TEST(BthreadIdTest, stop_a_wait_after_fight_before_signal) {
 void* waiter(void* arg) {
     bthread_id_t id = { (uintptr_t)arg };
     EXPECT_EQ(0, bthread_id_join(id));
-    EXPECT_EQ(get_version(id) + 4, bthread::id_value(id));
+    EXPECT_EQ(get_version(id) + 4, flare::fiber_internal::id_value(id));
     return NULL;
 }
 
@@ -361,7 +361,7 @@ TEST(BthreadIdTest, list_signal) {
     for (size_t i = 0; i < FLARE_ARRAY_SIZE(id); ++i) {
         data[i] = i;
         ASSERT_EQ(0, bthread_id_create(&id[i], &data[i], handle_data));
-        ASSERT_EQ(get_version(id[i]), bthread::id_value(id[i]));
+        ASSERT_EQ(get_version(id[i]), flare::fiber_internal::id_value(id[i]));
         ASSERT_EQ(0, bthread_id_list_add(&list, id[i]));
     }
     pthread_t th[FLARE_ARRAY_SIZE(id)];
@@ -388,20 +388,20 @@ int error_without_unlock(bthread_id_t, void *, int) {
 TEST(BthreadIdTest, status) {
     bthread_id_t id;
     bthread_id_create(&id, NULL, NULL);
-    bthread::id_status(id, std::cout);
+    flare::fiber_internal::id_status(id, std::cout);
     bthread_id_lock(id, NULL);
     bthread_id_error(id, 123);
     bthread_id_error(id, 256);
     bthread_id_error(id, 1256);
-    bthread::id_status(id, std::cout);
+    flare::fiber_internal::id_status(id, std::cout);
     bthread_id_unlock_and_destroy(id);
     bthread_id_create(&id, NULL, error_without_unlock);
     bthread_id_lock(id, NULL);
-    bthread::id_status(id, std::cout);
+    flare::fiber_internal::id_status(id, std::cout);
     bthread_id_error(id, 12);
-    bthread::id_status(id, std::cout);
+    flare::fiber_internal::id_status(id, std::cout);
     bthread_id_unlock(id);
-    bthread::id_status(id, std::cout);
+    flare::fiber_internal::id_status(id, std::cout);
     bthread_id_unlock_and_destroy(id);
 }
 
@@ -409,10 +409,10 @@ TEST(BthreadIdTest, reset_range) {
     bthread_id_t id;
     ASSERT_EQ(0, bthread_id_create(&id, NULL, NULL));
     ASSERT_EQ(0, bthread_id_lock_and_reset_range(id, NULL, 1000));
-    bthread::id_status(id, std::cout);
+    flare::fiber_internal::id_status(id, std::cout);
     bthread_id_unlock(id);
     ASSERT_EQ(0, bthread_id_lock_and_reset_range(id, NULL, 300));
-    bthread::id_status(id, std::cout);
+    flare::fiber_internal::id_status(id, std::cout);
     bthread_id_unlock_and_destroy(id);
 }
 
@@ -444,7 +444,7 @@ TEST(BthreadIdTest, about_to_destroy_before_locking) {
     // The threads should quit soon.
     pthread_join(pth, NULL);
     bthread_join(bth, NULL);
-    bthread::id_status(id, std::cout);
+    flare::fiber_internal::id_status(id, std::cout);
     ASSERT_EQ(0, bthread_id_unlock_and_destroy(id));
 }
 
@@ -468,7 +468,7 @@ TEST(BthreadIdTest, about_to_destroy_cancelled) {
     // The threads should quit soon.
     pthread_join(pth, NULL);
     bthread_join(bth, NULL);
-    bthread::id_status(id, std::cout);
+    flare::fiber_internal::id_status(id, std::cout);
     ASSERT_EQ(0, bthread_id_lock(id, NULL));
     ASSERT_EQ(0, bthread_id_unlock_and_destroy(id));
 }
@@ -491,7 +491,7 @@ TEST(BthreadIdTest, about_to_destroy_during_locking) {
     // The threads should quit soon.
     pthread_join(pth, NULL);
     bthread_join(bth, NULL);
-    bthread::id_status(id, std::cout);
+    flare::fiber_internal::id_status(id, std::cout);
     ASSERT_EQ(0, bthread_id_unlock_and_destroy(id));
 }
 

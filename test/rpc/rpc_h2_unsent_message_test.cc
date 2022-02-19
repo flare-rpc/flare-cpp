@@ -21,7 +21,7 @@
 
 #include <gflags/gflags.h>
 #include <gtest/gtest.h>
-#include "flare/bthread/bthread.h"
+#include "flare/fiber/internal/bthread.h"
 #include "flare/base/static_atomic.h"
 #include "flare/rpc/policy/http_rpc_protocol.h"
 #include "flare/rpc/policy/http2_rpc_protocol.h"

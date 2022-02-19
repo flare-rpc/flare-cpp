@@ -18,7 +18,7 @@
 // A client sending requests to server in parallel by multiple threads.
 
 #include <gflags/gflags.h>
-#include <flare/bthread/bthread.h>
+#include <flare/fiber/internal/bthread.h>
 #include "flare/log/logging.h"
 #include <flare/rpc/selective_channel.h>
 #include <flare/rpc/parallel_channel.h>

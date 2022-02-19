@@ -22,7 +22,7 @@
 #include "flare/base/time.h"
 #include "flare/memory/object_pool.h"
 #include <memory>
-#include "flare/bthread/unstable.h"
+#include "flare/fiber/internal/unstable.h"
 #include "flare/rpc/log.h"
 #include "flare/rpc/socket.h"
 #include "flare/rpc/controller.h"
@@ -82,10 +82,10 @@ int Stream::Create(const StreamOptions &options,
         delete s;
         return -1;
     }
-    bthread::ExecutionQueueOptions q_opt;
+    flare::fiber_internal::ExecutionQueueOptions q_opt;
     q_opt.bthread_attr 
         = FLAGS_usercode_in_pthread ? BTHREAD_ATTR_PTHREAD : BTHREAD_ATTR_NORMAL;
-    if (bthread::execution_queue_start(&s->_consumer_queue, &q_opt, Consume, s) != 0) {
+    if (flare::fiber_internal::execution_queue_start(&s->_consumer_queue, &q_opt, Consume, s) != 0) {
         LOG(FATAL) << "Fail to create ExecutionQueue";
         delete s;
         return -1;
@@ -121,7 +121,7 @@ void Stream::BeforeRecycle(Socket *) {
     }
     
     // The instance is to be deleted in the consumer thread
-    bthread::execution_queue_stop(_consumer_queue);
+    flare::fiber_internal::execution_queue_stop(_consumer_queue);
 }
 
 ssize_t Stream::CutMessageIntoFileDescriptor(int /*fd*/, 
@@ -427,7 +427,7 @@ int Stream::OnReceived(const StreamFrameMeta& fm, flare::io::cord_buf *buf, Sock
         if (!fm.has_continuation()) {
             flare::io::cord_buf *tmp = _pending_buf;
             _pending_buf = NULL;
-            if (bthread::execution_queue_execute(_consumer_queue, tmp) != 0) {
+            if (flare::fiber_internal::execution_queue_execute(_consumer_queue, tmp) != 0) {
                 CHECK(false) << "Fail to push into channel";
                 delete tmp;
                 Close();
@@ -487,7 +487,7 @@ private:
     Stream* _s;
 };
 
-int Stream::Consume(void *meta, bthread::TaskIterator<flare::io::cord_buf*>& iter) {
+int Stream::Consume(void *meta, flare::fiber_internal::TaskIterator<flare::io::cord_buf*>& iter) {
     Stream* s = (Stream*)meta;
     s->StopIdleTimer();
     if (iter.is_queue_stopped()) {
@@ -565,8 +565,8 @@ void Stream::FillSettings(StreamSettings *settings) {
 }
 
 void OnIdleTimeout(void *arg) {
-    bthread::ExecutionQueueId<flare::io::cord_buf*> q = { (uint64_t)arg };
-    bthread::execution_queue_execute(q, (flare::io::cord_buf*)TIMEOUT_TASK);
+    flare::fiber_internal::ExecutionQueueId<flare::io::cord_buf*> q = { (uint64_t)arg };
+    flare::fiber_internal::execution_queue_execute(q, (flare::io::cord_buf*)TIMEOUT_TASK);
 }
 
 void Stream::StartIdleTimer() {

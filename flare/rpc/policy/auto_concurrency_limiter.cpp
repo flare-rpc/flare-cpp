@@ -20,11 +20,11 @@
 #include "flare/rpc/errno.pb.h"
 #include "flare/rpc/policy/auto_concurrency_limiter.h"
 
-namespace bthread {
+namespace flare::fiber_internal {
 
 DECLARE_int32(bthread_concurrency);
 
-}  // namespace bthread
+}  // namespace flare::fiber_internal
 
 namespace flare::rpc {
 namespace policy {
@@ -223,7 +223,7 @@ void AutoConcurrencyLimiter::UpdateQps(double qps) {
 }
 
 void AutoConcurrencyLimiter::AdjustMaxConcurrency(int next_max_concurrency) {
-    next_max_concurrency = std::max(bthread::FLAGS_bthread_concurrency, next_max_concurrency);
+    next_max_concurrency = std::max(flare::fiber_internal::FLAGS_bthread_concurrency, next_max_concurrency);
     if (next_max_concurrency != _max_concurrency) {
         _max_concurrency = next_max_concurrency;
     }

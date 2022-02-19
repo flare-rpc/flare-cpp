@@ -217,7 +217,7 @@ set(FLARE_SRC
         )
 
 file(GLOB_RECURSE VARIABLE_SOURCES "${PROJECT_SOURCE_DIR}/flare/variable/*.cpp")
-file(GLOB_RECURSE BTHREAD_SOURCES "${PROJECT_SOURCE_DIR}/flare/bthread/*.cpp")
+file(GLOB_RECURSE BTHREAD_SOURCES "${PROJECT_SOURCE_DIR}/flare/fiber/*.cc")
 file(GLOB_RECURSE JSON2PB_SOURCES "${PROJECT_SOURCE_DIR}/flare/json2pb/*.cpp")
 file(GLOB_RECURSE RPC_SOURCES "${PROJECT_SOURCE_DIR}/flare/rpc/*.cpp")
 file(GLOB_RECURSE THRIFT_SOURCES "${PROJECT_SOURCE_DIR}/flare/rpc/thrift*.cpp")

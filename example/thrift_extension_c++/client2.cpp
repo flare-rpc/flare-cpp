@@ -20,7 +20,7 @@
 #include "gen-cpp/echo_types.h"
 
 #include <gflags/gflags.h>
-#include <flare/bthread/bthread.h>
+#include <flare/fiber/internal/bthread.h>
 #include "flare/log/logging.h"
 #include <flare/rpc/server.h>
 #include <flare/rpc/channel.h>

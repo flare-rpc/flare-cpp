@@ -18,13 +18,13 @@
 // Date: 2016/06/03 13:25:44
 
 #include <gtest/gtest.h>
-#include <flare/bthread/countdown_event.h>
+#include <flare/fiber/internal/countdown_event.h>
 #include "flare/base/static_atomic.h"
 #include "flare/base/time.h"
 
 namespace {
 struct Arg {
-    bthread::CountdownEvent event;
+    flare::fiber_internal::CountdownEvent event;
     std::atomic<int> num_sig;
 };
 
@@ -50,13 +50,13 @@ TEST(CountdonwEventTest, sanity) {
 }
 
 TEST(CountdonwEventTest, timed_wait) {
-    bthread::CountdownEvent event;
+    flare::fiber_internal::CountdownEvent event;
     int rc = event.timed_wait(flare::base::milliseconds_from_now(100));
     ASSERT_EQ(rc, ETIMEDOUT);
     event.signal();
     rc = event.timed_wait(flare::base::milliseconds_from_now(100));
     ASSERT_EQ(rc, 0);
-    bthread::CountdownEvent event1;
+    flare::fiber_internal::CountdownEvent event1;
     event1.signal();
     rc = event.timed_wait(flare::base::milliseconds_from_now(1));
     ASSERT_EQ(rc, 0);

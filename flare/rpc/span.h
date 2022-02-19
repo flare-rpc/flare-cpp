@@ -29,12 +29,12 @@
 #include "flare/base/endpoint.h"
 #include "flare/strings/string_splitter.h"
 #include "flare/variable/collector.h"
-#include "flare/bthread/task_meta.h"
+#include "flare/fiber/internal/task_meta.h"
 #include "flare/rpc/options.pb.h"                 // ProtocolType
 #include "flare/rpc/span.pb.h"
 
-namespace bthread {
-extern thread_local bthread::LocalStorage tls_bls;
+namespace flare::fiber_internal {
+extern thread_local flare::fiber_internal::LocalStorage tls_bls;
 }
 
 
@@ -73,7 +73,7 @@ public:
 
     // Set tls parent.
     void AsParent() {
-        bthread::tls_bls.rpcz_parent_span = this;
+        flare::fiber_internal::tls_bls.rpcz_parent_span = this;
     }
 
     // Add log with time.
@@ -113,7 +113,7 @@ public:
 
     Span* local_parent() const { return _local_parent; }
     static Span* tls_parent() {
-        return (Span*)bthread::tls_bls.rpcz_parent_span;
+        return (Span*)flare::fiber_internal::tls_bls.rpcz_parent_span;
     }
 
     uint64_t trace_id() const { return _trace_id; }
@@ -146,8 +146,8 @@ private:
     flare::variable::CollectorPreprocessor* preprocessor();
 
     void EndAsParent() {
-        if (this == (Span*)bthread::tls_bls.rpcz_parent_span) {
-            bthread::tls_bls.rpcz_parent_span = NULL;
+        if (this == (Span*)flare::fiber_internal::tls_bls.rpcz_parent_span) {
+            flare::fiber_internal::tls_bls.rpcz_parent_span = NULL;
         }
     }
 

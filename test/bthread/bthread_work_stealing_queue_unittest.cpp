@@ -19,7 +19,7 @@
 #include <gtest/gtest.h>
 #include "flare/base/time.h"
 #include "flare/base/scoped_lock.h"
-#include "flare/bthread/work_stealing_queue.h"
+#include "flare/fiber/internal/work_stealing_queue.h"
 
 namespace {
 typedef size_t value_type;
@@ -31,8 +31,8 @@ pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 void* steal_thread(void* arg) {
     std::vector<value_type> *stolen = new std::vector<value_type>;
     stolen->reserve(N);
-    bthread::WorkStealingQueue<value_type> *q =
-        (bthread::WorkStealingQueue<value_type>*)arg;
+    flare::fiber_internal::WorkStealingQueue<value_type> *q =
+        (flare::fiber_internal::WorkStealingQueue<value_type>*)arg;
     value_type val;
     while (!g_stop) {
         if (q->steal(&val)) {
@@ -47,8 +47,8 @@ void* steal_thread(void* arg) {
 void* push_thread(void* arg) {
     size_t npushed = 0;
     value_type seed = 0;
-    bthread::WorkStealingQueue<value_type> *q =
-        (bthread::WorkStealingQueue<value_type>*)arg;
+    flare::fiber_internal::WorkStealingQueue<value_type> *q =
+        (flare::fiber_internal::WorkStealingQueue<value_type>*)arg;
     while (true) {
         pthread_mutex_lock(&mutex);
         const bool pushed = q->push(seed);
@@ -67,8 +67,8 @@ void* push_thread(void* arg) {
 void* pop_thread(void* arg) {
     std::vector<value_type> *popped = new std::vector<value_type>;
     popped->reserve(N);
-    bthread::WorkStealingQueue<value_type> *q =
-        (bthread::WorkStealingQueue<value_type>*)arg;
+    flare::fiber_internal::WorkStealingQueue<value_type> *q =
+        (flare::fiber_internal::WorkStealingQueue<value_type>*)arg;
     while (!g_stop) {
         value_type val;
         pthread_mutex_lock(&mutex);
@@ -83,7 +83,7 @@ void* pop_thread(void* arg) {
 
 
 TEST(WSQTest, sanity) {
-    bthread::WorkStealingQueue<value_type> q;
+    flare::fiber_internal::WorkStealingQueue<value_type> q;
     ASSERT_EQ(0, q.init(CAP));
     pthread_t rth[8];
     pthread_t wth, pop_th;

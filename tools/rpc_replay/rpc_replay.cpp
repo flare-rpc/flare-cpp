@@ -21,7 +21,7 @@
 #include "flare/base/time.h"
 #include <filesystem>
 #include <flare/variable/all.h>
-#include <flare/bthread/bthread.h>
+#include <flare/fiber/internal/bthread.h>
 #include <flare/rpc/channel.h>
 #include <flare/rpc/server.h>
 #include <flare/rpc/rpc_dump.h>

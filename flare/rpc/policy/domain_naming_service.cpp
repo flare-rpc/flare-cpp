@@ -19,7 +19,7 @@
 #include <netdb.h>                                    // gethostbyname_r
 #include <stdlib.h>                                   // strtol
 #include <string>                                     // std::string
-#include "flare/bthread/bthread.h"
+#include "flare/fiber/internal/bthread.h"
 #include "flare/rpc/log.h"
 #include "flare/rpc/policy/domain_naming_service.h"
 #include "flare/base/profile.h"

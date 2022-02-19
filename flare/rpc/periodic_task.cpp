@@ -16,8 +16,8 @@
 // under the License.
 
 
-#include <flare/bthread/bthread.h>
-#include <flare/bthread/unstable.h>
+#include <flare/fiber/internal/bthread.h>
+#include <flare/fiber/internal/unstable.h>
 #include "flare/rpc/periodic_task.h"
 
 namespace flare::rpc {

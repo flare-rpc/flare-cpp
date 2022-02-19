@@ -34,7 +34,7 @@
 #include "flare/rpc/builtin/pprof_service.h"
 #include "flare/rpc/builtin/common.h"
 #include "flare/rpc/details/tcmalloc_extension.h"
-#include "flare/bthread/bthread.h"                // bthread_usleep
+#include "flare/fiber/internal/bthread.h"                // bthread_usleep
 #include "flare/base/fd_guard.h"
 
 extern "C" {
@@ -45,7 +45,7 @@ int __attribute__((weak)) ProfilerStart(const char *fname);
 void __attribute__((weak)) ProfilerStop();
 }
 
-namespace bthread {
+namespace flare::fiber_internal {
     bool ContentionProfilerStart(const char *filename);
 
     void ContentionProfilerStop();
@@ -189,14 +189,14 @@ namespace flare::rpc {
             cntl->SetFailed(errno, "Fail to create .prof file, %s", flare_error());
             return;
         }
-        if (!bthread::ContentionProfilerStart(prof_name)) {
+        if (!flare::fiber_internal::ContentionProfilerStart(prof_name)) {
             cntl->SetFailed(EAGAIN, "Another profiler is running, try again later");
             return;
         }
         if (bthread_usleep(sleep_sec * 1000000L) != 0) {
             PLOG(WARNING) << "Profiling has been interrupted";
         }
-        bthread::ContentionProfilerStop();
+        flare::fiber_internal::ContentionProfilerStop();
 
         flare::base::fd_guard fd(open(prof_name, O_RDONLY));
         if (fd < 0) {

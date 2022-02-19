@@ -23,8 +23,8 @@
 #include "flare/base/time.h"
 #include "flare/base/scoped_lock.h"
 #include "flare/log/logging.h"
-#include "flare/bthread/bthread.h"
-#include "flare/bthread/unstable.h"
+#include "flare/fiber/internal/bthread.h"
+#include "flare/fiber/internal/unstable.h"
 
 extern "C" {
 int bthread_keytable_pool_size(bthread_keytable_pool_t *pool) {

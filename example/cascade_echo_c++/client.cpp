@@ -21,7 +21,7 @@
 #include <gflags/gflags.h>
 #include "flare/log/logging.h"
 #include "flare/base/time.h"
-#include <flare/bthread/bthread.h>
+#include <flare/fiber/internal/bthread.h>
 #include <flare/rpc/channel.h>
 #include <flare/rpc/server.h>
 #include "echo.pb.h"

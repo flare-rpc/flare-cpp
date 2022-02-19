@@ -23,7 +23,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include <fcntl.h>
-#include <flare/bthread/bthread.h>
+#include <flare/fiber/internal/bthread.h>
 #include "flare/base/time.h"
 #include <flare/rpc/channel.h>
 #include <flare/rpc/controller.h>

@@ -19,27 +19,27 @@
 #include "flare/base/static_atomic.h"
 #include "flare/base/time.h"
 #include "flare/log/logging.h"
-#include "flare/bthread/butex.h"
-#include "flare/bthread/task_control.h"
-#include "flare/bthread/task_group.h"
-#include "flare/bthread/bthread.h"
-#include "flare/bthread/unstable.h"
+#include "flare/fiber/internal/butex.h"
+#include "flare/fiber/internal/task_control.h"
+#include "flare/fiber/internal/task_group.h"
+#include "flare/fiber/internal/bthread.h"
+#include "flare/fiber/internal/unstable.h"
 
-namespace bthread {
+namespace flare::fiber_internal {
 extern std::atomic<TaskControl*> g_task_control;
 inline TaskControl* get_task_control() {
     return g_task_control.load(std::memory_order_consume);
 }
-} // namespace bthread
+} // namespace flare::fiber_internal
 
 namespace {
 TEST(ButexTest, wait_on_already_timedout_butex) {
-    uint32_t* butex = bthread::butex_create_checked<uint32_t>();
+    uint32_t* butex = flare::fiber_internal::butex_create_checked<uint32_t>();
     ASSERT_TRUE(butex);
     timespec now;
     ASSERT_EQ(0, clock_gettime(CLOCK_REALTIME, &now));
     *butex = 1;
-    ASSERT_EQ(-1, bthread::butex_wait(butex, 1, &now));
+    ASSERT_EQ(-1, flare::fiber_internal::butex_wait(butex, 1, &now));
     ASSERT_EQ(ETIMEDOUT, errno);
 }
 
@@ -121,7 +121,7 @@ struct WaiterArg {
 void* waiter(void* arg) {
     WaiterArg * wa = (WaiterArg*)arg;
     const long t1 = flare::base::gettimeofday_us();
-    const int rc = bthread::butex_wait(
+    const int rc = flare::fiber_internal::butex_wait(
         wa->butex, wa->expected_value, wa->ptimeout);
     const long t2 = flare::base::gettimeofday_us();
     if (rc == 0) {
@@ -138,13 +138,13 @@ TEST(ButexTest, sanity) {
     WaiterArg args[N * 4];
     pthread_t t1, t2;
     std::atomic<int>* b1 =
-        bthread::butex_create_checked<std::atomic<int> >();
+        flare::fiber_internal::butex_create_checked<std::atomic<int> >();
     ASSERT_TRUE(b1);
-    bthread::butex_destroy(b1);
+    flare::fiber_internal::butex_destroy(b1);
     
-    b1 = bthread::butex_create_checked<std::atomic<int> >();
+    b1 = flare::fiber_internal::butex_create_checked<std::atomic<int> >();
     *b1 = 1;
-    ASSERT_EQ(0, bthread::butex_wake(b1));
+    ASSERT_EQ(0, flare::fiber_internal::butex_wake(b1));
 
     WaiterArg *unmatched_arg = new WaiterArg;
     unmatched_arg->expected_value = *b1 + 1;
@@ -175,11 +175,11 @@ TEST(ButexTest, sanity) {
     
     sleep(2);
     for (size_t i = 0; i < 2*N; ++i) {
-        ASSERT_EQ(1, bthread::butex_wake(b1));
+        ASSERT_EQ(1, flare::fiber_internal::butex_wake(b1));
     }
-    ASSERT_EQ(0, bthread::butex_wake(b1));
+    ASSERT_EQ(0, flare::fiber_internal::butex_wake(b1));
     sleep(1);
-    bthread::butex_destroy(b1);
+    flare::fiber_internal::butex_destroy(b1);
 }
 
 
@@ -193,7 +193,7 @@ struct ButexWaitArg {
 void* wait_butex(void* void_arg) {
     ButexWaitArg* arg = static_cast<ButexWaitArg*>(void_arg);
     const timespec ts = flare::base::milliseconds_from_now(arg->wait_msec);
-    int rc = bthread::butex_wait(arg->butex, arg->expected_val, &ts);
+    int rc = flare::fiber_internal::butex_wait(arg->butex, arg->expected_val, &ts);
     int saved_errno = errno;
     if (arg->error_code) {
         EXPECT_EQ(-1, rc);
@@ -205,7 +205,7 @@ void* wait_butex(void* void_arg) {
 }
 
 TEST(ButexTest, wait_without_stop) {
-    int* butex = bthread::butex_create_checked<int>();
+    int* butex = flare::fiber_internal::butex_create_checked<int>();
     *butex = 7;
     flare::base::stop_watcher tm;
     const long WAIT_MSEC = 500;
@@ -222,11 +222,11 @@ TEST(ButexTest, wait_without_stop) {
         
         ASSERT_LT(labs(tm.m_elapsed() - WAIT_MSEC), 250);
     }
-    bthread::butex_destroy(butex);
+    flare::fiber_internal::butex_destroy(butex);
 }
 
 TEST(ButexTest, stop_after_running) {
-    int* butex = bthread::butex_create_checked<int>();
+    int* butex = flare::fiber_internal::butex_create_checked<int>();
     *butex = 7;
     flare::base::stop_watcher tm;
     const long WAIT_MSEC = 500;
@@ -245,15 +245,15 @@ TEST(ButexTest, stop_after_running) {
         tm.stop();
 
         ASSERT_LT(labs(tm.m_elapsed() - SLEEP_MSEC), 25);
-        // ASSERT_TRUE(bthread::get_task_control()->
+        // ASSERT_TRUE(flare::fiber_internal::get_task_control()->
         //             timer_thread()._idset.empty());
         ASSERT_EQ(EINVAL, bthread_stop(th));
     }    
-    bthread::butex_destroy(butex);
+    flare::fiber_internal::butex_destroy(butex);
 }
 
 TEST(ButexTest, stop_before_running) {
-    int* butex = bthread::butex_create_checked<int>();
+    int* butex = flare::fiber_internal::butex_create_checked<int>();
     *butex = 7;
     flare::base::stop_watcher tm;
     const long WAIT_MSEC = 500;
@@ -272,11 +272,11 @@ TEST(ButexTest, stop_before_running) {
         tm.stop();
         
         ASSERT_LT(tm.m_elapsed(), 5);
-        // ASSERT_TRUE(bthread::get_task_control()->
+        // ASSERT_TRUE(flare::fiber_internal::get_task_control()->
         //             timer_thread()._idset.empty());
         ASSERT_EQ(EINVAL, bthread_stop(th));
     }
-    bthread::butex_destroy(butex);
+    flare::fiber_internal::butex_destroy(butex);
 }
 
 void* join_the_waiter(void* arg) {
@@ -286,7 +286,7 @@ void* join_the_waiter(void* arg) {
 
 TEST(ButexTest, join_cant_be_wakeup) {
     const long WAIT_MSEC = 100;
-    int* butex = bthread::butex_create_checked<int>();
+    int* butex = flare::fiber_internal::butex_create_checked<int>();
     *butex = 7;
     flare::base::stop_watcher tm;
     ButexWaitArg arg = { butex, *butex, 1000, EINTR };
@@ -300,8 +300,8 @@ TEST(ButexTest, join_cant_be_wakeup) {
         ASSERT_EQ(0, bthread_start_urgent(&th2, &attr, join_the_waiter, (void*)th));
         ASSERT_EQ(0, bthread_stop(th2));
         ASSERT_EQ(0, bthread_usleep(WAIT_MSEC / 2 * 1000L));
-        ASSERT_TRUE(bthread::TaskGroup::exists(th));
-        ASSERT_TRUE(bthread::TaskGroup::exists(th2));
+        ASSERT_TRUE(flare::fiber_internal::TaskGroup::exists(th));
+        ASSERT_TRUE(flare::fiber_internal::TaskGroup::exists(th2));
         ASSERT_EQ(0, bthread_usleep(WAIT_MSEC / 2 * 1000L));
         ASSERT_EQ(0, bthread_stop(th));
         ASSERT_EQ(0, bthread_join(th2, NULL));
@@ -311,7 +311,7 @@ TEST(ButexTest, join_cant_be_wakeup) {
         ASSERT_EQ(EINVAL, bthread_stop(th));
         ASSERT_EQ(EINVAL, bthread_stop(th2));
     }
-    bthread::butex_destroy(butex);
+    flare::fiber_internal::butex_destroy(butex);
 }
 
 TEST(ButexTest, stop_after_slept) {
@@ -335,7 +335,7 @@ TEST(ButexTest, stop_after_slept) {
         } else {
             ASSERT_LT(labs(tm.m_elapsed() - WAIT_MSEC), 15);
         }
-        // ASSERT_TRUE(bthread::get_task_control()->
+        // ASSERT_TRUE(flare::fiber_internal::get_task_control()->
         //             timer_thread()._idset.empty());
         ASSERT_EQ(EINVAL, bthread_stop(th));
     }
@@ -360,7 +360,7 @@ TEST(ButexTest, stop_just_when_sleeping) {
         } else {
             ASSERT_LT(tm.m_elapsed(), 15);
         }
-        // ASSERT_TRUE(bthread::get_task_control()->
+        // ASSERT_TRUE(flare::fiber_internal::get_task_control()->
         //             timer_thread()._idset.empty());
         ASSERT_EQ(EINVAL, bthread_stop(th));
     }
@@ -388,7 +388,7 @@ TEST(ButexTest, stop_before_sleeping) {
         } else {
             ASSERT_LT(tm.m_elapsed(), 10);
         }
-        // ASSERT_TRUE(bthread::get_task_control()->
+        // ASSERT_TRUE(flare::fiber_internal::get_task_control()->
         //             timer_thread()._idset.empty());
         ASSERT_EQ(EINVAL, bthread_stop(th));
     }

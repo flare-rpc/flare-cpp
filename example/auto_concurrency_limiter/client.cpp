@@ -22,7 +22,7 @@
 #include "flare/base/time.h"
 #include <flare/rpc/channel.h>
 #include <flare/variable/all.h>
-#include <flare/bthread/timer_thread.h>
+#include <flare/fiber/internal/timer_thread.h>
 #include <flare/json2pb/json_to_pb.h>
 
 #include <fstream>
@@ -161,7 +161,7 @@ void RunUpdateTask(void* data) {
     TestCaseContext* context = (TestCaseContext*)data;
     bool should_continue = context->Update();
     if (should_continue) {
-        bthread::get_global_timer_thread()->schedule(RunUpdateTask, data, 
+        flare::fiber_internal::get_global_timer_thread()->schedule(RunUpdateTask, data,
             flare::base::microseconds_from_now(FLAGS_client_qps_change_interval_us));
     } else {
         context->running.store(false, std::memory_order_release);
@@ -190,7 +190,7 @@ void RunCase(test::ControlService_Stub &cntl_stub,
     CHECK(!cntl.Failed()) << "control failed";
 
     TestCaseContext context(test_case);
-    bthread::get_global_timer_thread()->schedule(RunUpdateTask, &context, 
+    flare::fiber_internal::get_global_timer_thread()->schedule(RunUpdateTask, &context,
         flare::base::microseconds_from_now(FLAGS_client_qps_change_interval_us));
 
     while (context.running.load(std::memory_order_acquire)) {

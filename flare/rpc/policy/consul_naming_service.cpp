@@ -23,7 +23,7 @@
 #include "flare/rapidjson/document.h"
 #include "flare/rapidjson/stringbuffer.h"
 #include "flare/rapidjson/prettywriter.h"
-#include "flare/bthread/bthread.h"
+#include "flare/fiber/internal/bthread.h"
 #include "flare/rpc/log.h"
 #include "flare/rpc/channel.h"
 #include "flare/rpc/policy/file_naming_service.h"

@@ -18,8 +18,8 @@
 
 #include <gflags/gflags.h>
 #include <google/protobuf/io/zero_copy_stream_impl_lite.h> // StringOutputStream
-#include "flare/bthread/bthread.h"                      // bthread_id_xx
-#include "flare/bthread/unstable.h"                     // bthread_timer_del
+#include "flare/fiber/internal/bthread.h"                      // bthread_id_xx
+#include "flare/fiber/internal/unstable.h"                     // bthread_timer_del
 #include "flare/rpc/log.h"
 #include "flare/rpc/callback.h"                   // Closure
 #include "flare/rpc/channel.h"                    // Channel

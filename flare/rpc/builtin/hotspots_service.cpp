@@ -36,7 +36,7 @@ int __attribute__((weak)) ProfilerStart(const char *fname);
 void __attribute__((weak)) ProfilerStop();
 }
 
-namespace bthread {
+namespace flare::fiber_internal {
     bool ContentionProfilerStart(const char *filename);
 
     void ContentionProfilerStop();
@@ -764,7 +764,7 @@ namespace flare::rpc {
             }
             ProfilerStop();
         } else if (type == PROFILING_CONTENTION) {
-            if (!bthread::ContentionProfilerStart(prof_name)) {
+            if (!flare::fiber_internal::ContentionProfilerStart(prof_name)) {
                 os << "Another profiler (not via /hotspots/contention) is running, "
                       "try again later" << (use_html ? "</body></html>" : "\n");
                 os.move_to(resp);
@@ -774,7 +774,7 @@ namespace flare::rpc {
             if (bthread_usleep(seconds * 1000000L) != 0) {
                 PLOG(WARNING) << "Profiling has been interrupted";
             }
-            bthread::ContentionProfilerStop();
+            flare::fiber_internal::ContentionProfilerStop();
         } else if (type == PROFILING_HEAP) {
             MallocExtension *malloc_ext = MallocExtension::instance();
             if (malloc_ext == NULL || !has_TCMALLOC_SAMPLE_PARAMETER()) {

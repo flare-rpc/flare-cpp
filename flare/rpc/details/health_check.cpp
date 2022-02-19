@@ -23,8 +23,8 @@
 #include "flare/rpc/details/controller_private_accessor.h"
 #include "flare/rpc/global.h"
 #include "flare/rpc/log.h"
-#include "flare/bthread/unstable.h"
-#include "flare/bthread/bthread.h"
+#include "flare/fiber/internal/unstable.h"
+#include "flare/fiber/internal/bthread.h"
 
 namespace flare::rpc {
 

@@ -21,7 +21,7 @@
 #include <leveldb/db.h>
 #include <filesystem>
 #include <leveldb/comparator.h>
-#include "flare/bthread/bthread.h"
+#include "flare/fiber/internal/bthread.h"
 #include "flare/base/scoped_lock.h"
 #include "flare/base/thread.h"
 #include "flare/base/strings.h"
@@ -124,7 +124,7 @@ namespace flare::rpc {
         span->_tls_next = NULL;
         span->_full_method_name = full_method_name;
         span->_info.clear();
-        Span *parent = (Span *) bthread::tls_bls.rpcz_parent_span;
+        Span *parent = (Span *) flare::fiber_internal::tls_bls.rpcz_parent_span;
         if (parent) {
             span->_trace_id = parent->trace_id();
             span->_parent_span_id = parent->span_id();
@@ -292,11 +292,11 @@ namespace flare::rpc {
     }
 
     bool CanAnnotateSpan() {
-        return bthread::tls_bls.rpcz_parent_span;
+        return flare::fiber_internal::tls_bls.rpcz_parent_span;
     }
 
     void AnnotateSpan(const char *fmt, ...) {
-        Span *span = (Span *) bthread::tls_bls.rpcz_parent_span;
+        Span *span = (Span *) flare::fiber_internal::tls_bls.rpcz_parent_span;
         va_list ap;
         va_start(ap, fmt);
         span->Annotate(fmt, ap);

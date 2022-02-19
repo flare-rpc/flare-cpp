@@ -17,7 +17,7 @@
 
 
 #include "flare/log/logging.h"
-#include "flare/bthread/bthread.h"   // INVALID_BTHREAD_ID before bthread r32748
+#include "flare/fiber/internal/bthread.h"   // INVALID_BTHREAD_ID before bthread r32748
 #include "flare/rpc/progressive_attachment.h"
 #include "flare/rpc/socket.h"
 #include "flare/rpc/errno.pb.h"

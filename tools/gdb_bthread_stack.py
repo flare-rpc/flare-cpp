@@ -54,8 +54,8 @@ bthreads = []
 status = False
 
 def get_bthread_num():
-    root_agent = gdb.parse_and_eval("&(((((*bthread::g_task_control)._nbthreads)._combiner)._agents).root_)")
-    global_res = int(gdb.parse_and_eval("((*bthread::g_task_control)._nbthreads)._combiner._global_result"))
+    root_agent = gdb.parse_and_eval("&(((((*flare::fiber_internal::g_task_control)._nbthreads)._combiner)._agents).root_)")
+    global_res = int(gdb.parse_and_eval("((*flare::fiber_internal::g_task_control)._nbthreads)._combiner._global_result"))
     get_agent = "(*(('flare::variable::detail::AgentCombiner<long, long, flare::variable::detail::AddTo<long> >::Agent' *){}))"
     last_node = root_agent
     while True:
@@ -71,13 +71,13 @@ def get_all_bthreads(total):
     global bthreads
     bthreads = []
     count = 0
-    groups = int(gdb.parse_and_eval("'flare::memory::ResourcePool<bthread::TaskMeta>::_ngroup'")["val"])
+    groups = int(gdb.parse_and_eval("'flare::memory::ResourcePool<flare::fiber_internal::TaskMeta>::_ngroup'")["val"])
     for group in range(groups):
-        blocks = int(gdb.parse_and_eval("(*((*((('flare::static_atomic<flare::memory::ResourcePool<bthread::TaskMeta>::BlockGroup*>' *)('flare::memory::ResourcePool<bthread::TaskMeta>::_block_groups')) + {})).val)).nblock._M_i".format(group)))
+        blocks = int(gdb.parse_and_eval("(*((*((('flare::static_atomic<flare::memory::ResourcePool<flare::fiber_internal::TaskMeta>::BlockGroup*>' *)('flare::memory::ResourcePool<flare::fiber_internal::TaskMeta>::_block_groups')) + {})).val)).nblock._M_i".format(group)))
         for block in range(blocks):
-            items = int(gdb.parse_and_eval("(*(*(('std::atomic<flare::memory::ResourcePool<bthread::TaskMeta>::Block*>' *)((*((*((('flare::static_atomic<flare::memory::ResourcePool<bthread::TaskMeta>::BlockGroup*>' *)('flare::memory::ResourcePool<bthread::TaskMeta>::_block_groups')) + {})).val)).blocks) + {}))._M_b._M_p).nitem".format(group, block)))
+            items = int(gdb.parse_and_eval("(*(*(('std::atomic<flare::memory::ResourcePool<flare::fiber_internal::TaskMeta>::Block*>' *)((*((*((('flare::static_atomic<flare::memory::ResourcePool<flare::fiber_internal::TaskMeta>::BlockGroup*>' *)('flare::memory::ResourcePool<flare::fiber_internal::TaskMeta>::_block_groups')) + {})).val)).blocks) + {}))._M_b._M_p).nitem".format(group, block)))
             for item in range(items):
-                task_meta = gdb.parse_and_eval("*(('bthread::TaskMeta' *)((*(*(('std::atomic<flare::memory::ResourcePool<bthread::TaskMeta>::Block*>' *)((*((*((('flare::static_atomic<flare::memory::ResourcePool<bthread::TaskMeta>::BlockGroup*>' *)('flare::memory::ResourcePool<bthread::TaskMeta>::_block_groups')) + {})).val)).blocks) + {}))._M_b._M_p).items) + {})".format(group, block, item))
+                task_meta = gdb.parse_and_eval("*(('flare::fiber_internal::TaskMeta' *)((*(*(('std::atomic<flare::memory::ResourcePool<flare::fiber_internal::TaskMeta>::Block*>' *)((*((*((('flare::static_atomic<flare::memory::ResourcePool<flare::fiber_internal::TaskMeta>::BlockGroup*>' *)('flare::memory::ResourcePool<flare::fiber_internal::TaskMeta>::_block_groups')) + {})).val)).blocks) + {}))._M_b._M_p).items) + {})".format(group, block, item))
                 version_tid = (int(task_meta["tid"]) >> 32)
                 version_butex = gdb.parse_and_eval("*(uint32_t *){}".format(task_meta["version_butex"]))
                 if version_tid == int(version_butex) and int(task_meta["attr"]["stack_type"]) != 0:
@@ -132,7 +132,7 @@ class BthreadFrameCmd(gdb.Command):
         if str(stack) == "0x0":
             print("this bthread has no stack")
             return
-        context = gdb.parse_and_eval("(*(('bthread::ContextualStack' *){})).context".format(stack))
+        context = gdb.parse_and_eval("(*(('flare::fiber_internal::ContextualStack' *){})).context".format(stack))
         rip = gdb.parse_and_eval("*(uint64_t*)({}+7*8)".format(context))
         rbp = gdb.parse_and_eval("*(uint64_t*)({}+6*8)".format(context))
         rsp = gdb.parse_and_eval("{}+8*8".format(context))
@@ -162,7 +162,7 @@ class BthreadRegsCmd(gdb.Command):
         if str(stack) == "0x0":
             print("this bthread has no stack")
             return
-        context = gdb.parse_and_eval("(*(('bthread::ContextualStack' *){})).context".format(stack))
+        context = gdb.parse_and_eval("(*(('flare::fiber_internal::ContextualStack' *){})).context".format(stack))
         rip = int(gdb.parse_and_eval("*(uint64_t*)({}+7*8)".format(context)))
         rbp = int(gdb.parse_and_eval("*(uint64_t*)({}+6*8)".format(context)))
         rbx = int(gdb.parse_and_eval("*(uint64_t*)({}+5*8)".format(context)))

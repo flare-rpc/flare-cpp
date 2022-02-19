@@ -21,7 +21,7 @@
 #include "flare/base/fd_utility.h"                         // make_close_on_exec
 #include "flare/log/logging.h"                            // LOG
 #include "flare/hash/murmurhash3.h"// fmix32
-#include "flare/bthread/bthread.h"                          // bthread_start_background
+#include "flare/fiber/internal/bthread.h"                          // bthread_start_background
 #include "flare/rpc/event_dispatcher.h"
 
 #ifdef FLARE_RPC_SOCKET_HAS_EOF

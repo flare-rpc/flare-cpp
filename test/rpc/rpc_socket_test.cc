@@ -28,8 +28,8 @@
 #include "flare/base/time.h"
 #include "flare/base/fd_utility.h"
 #include "flare/base/strings.h"
-#include "flare/bthread/unstable.h"
-#include "flare/bthread/task_control.h"
+#include "flare/fiber/internal/unstable.h"
+#include "flare/fiber/internal/task_control.h"
 #include "flare/rpc/socket.h"
 #include "flare/rpc/errno.pb.h"
 #include "flare/rpc/acceptor.h"
@@ -47,7 +47,7 @@
 
 #define CONNECT_IN_KEEPWRITE 1;
 
-namespace bthread {
+namespace flare::fiber_internal {
 extern TaskControl* g_task_control;
 }
 
@@ -879,7 +879,7 @@ TEST_F(SocketTest, multi_threaded_write) {
             ASSERT_EQ(0, pthread_join(th[i], NULL));
         }
         ASSERT_TRUE(dest.empty());
-        bthread::g_task_control->print_rq_sizes(std::cout);
+        flare::fiber_internal::g_task_control->print_rq_sizes(std::cout);
         std::cout << std::endl;
 
         ASSERT_EQ(REP * FLARE_ARRAY_SIZE(th), result.size())

@@ -23,7 +23,7 @@
 #include "flare/log/logging.h"
 #include "flare/base/strings.h"
 #include "flare/hash/murmurhash3.h"
-#include "flare/bthread/unstable.h"                        // bthread_timer_add
+#include "flare/fiber/internal/unstable.h"                        // bthread_timer_add
 #include "flare/rpc/socket_map.h"                         // SocketMapInsert
 #include "flare/rpc/compress.h"
 #include "flare/rpc/global.h"

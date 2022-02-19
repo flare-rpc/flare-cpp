@@ -20,7 +20,7 @@
 #define FLARE_RPC_EVENT_DISPATCHER_H_
 
 #include "flare/base/profile.h"                     // FLARE_DISALLOW_COPY_AND_ASSIGN
-#include "flare/bthread/types.h"                   // bthread_t, bthread_attr_t
+#include "flare/fiber/internal/types.h"                   // bthread_t, bthread_attr_t
 #include "flare/rpc/socket.h"                     // Socket, SocketId
 
 

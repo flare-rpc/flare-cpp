@@ -22,7 +22,7 @@
 #include "flare/base/scoped_lock.h"
 #include "flare/rpc/details/usercode_backup_pool.h"
 
-namespace bthread {
+namespace flare::fiber_internal {
 // Defined in bthread/task_control.cpp
 void run_worker_startfn();
 }
@@ -107,7 +107,7 @@ int UserCodeBackupPool::Init() {
 
 // Entry of backup thread for running user code.
 void UserCodeBackupPool::UserCodeRunningLoop() {
-    bthread::run_worker_startfn();
+    flare::fiber_internal::run_worker_startfn();
     int64_t last_time = flare::base::cpuwide_time_us();
     while (true) {
         bool blocked = false;

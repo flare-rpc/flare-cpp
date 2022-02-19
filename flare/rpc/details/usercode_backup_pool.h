@@ -20,7 +20,7 @@
 #define  FLARE_RPC_USERCODE_BACKUP_POOL_H_
 
 #include "flare/base/static_atomic.h"
-#include "flare/bthread/bthread.h"
+#include "flare/fiber/internal/bthread.h"
 #include <gflags/gflags_declare.h>
 
 

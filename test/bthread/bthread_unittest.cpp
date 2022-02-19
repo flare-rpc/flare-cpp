@@ -20,9 +20,9 @@
 #include "flare/base/time.h"
 #include "flare/log/logging.h"
 #include "flare/base/gperftools_profiler.h"
-#include "flare/bthread/bthread.h"
-#include "flare/bthread/unstable.h"
-#include "flare/bthread/task_meta.h"
+#include "flare/fiber/internal/bthread.h"
+#include "flare/fiber/internal/unstable.h"
+#include "flare/fiber/internal/task_meta.h"
 
 namespace {
 class BthreadTest : public ::testing::Test{
@@ -41,7 +41,7 @@ protected:
 };
 
 TEST_F(BthreadTest, sizeof_task_meta) {
-    LOG(INFO) << "sizeof(TaskMeta)=" << sizeof(bthread::TaskMeta);
+    LOG(INFO) << "sizeof(TaskMeta)=" << sizeof(flare::fiber_internal::TaskMeta);
 }
 
 void* unrelated_pthread(void*) {

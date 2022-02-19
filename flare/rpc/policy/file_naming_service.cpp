@@ -21,7 +21,7 @@
 #include <set>                                          // std::set
 #include "flare/base/file_watcher.h"                    // file_watcher
 #include "flare/base/scoped_file.h"                     // scoped_file
-#include "flare/bthread/bthread.h"                            // bthread_usleep
+#include "flare/fiber/internal/bthread.h"                            // bthread_usleep
 #include "flare/rpc/log.h"
 #include "flare/rpc/policy/file_naming_service.h"
 #include "flare/base/strings.h"

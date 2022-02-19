@@ -21,7 +21,7 @@
 #include <openssl/err.h>
 #include <netinet/tcp.h>                         // getsockopt
 #include <gflags/gflags.h>
-#include "flare/bthread/unstable.h"                    // bthread_timer_del
+#include "flare/fiber/internal/unstable.h"                    // bthread_timer_del
 #include "flare/base/fd_utility.h"                     // make_non_blocking
 #include "flare/base/fd_guard.h"                       // fd_guard
 #include "flare/base/time.h"                           // cpuwide_time_us
@@ -47,7 +47,7 @@
 #include <sys/event.h>
 #endif
 
-namespace bthread {
+namespace flare::fiber_internal {
 size_t __attribute__((weak))
 get_sizes(const bthread_id_list_t* list, size_t* cnt, size_t n);
 }
@@ -452,12 +452,12 @@ Socket::Socket(Forbidden)
 {
     CreateVarsOnce();
     pthread_mutex_init(&_id_wait_list_mutex, NULL);
-    _epollout_butex = bthread::butex_create_checked<std::atomic<int> >();
+    _epollout_butex = flare::fiber_internal::butex_create_checked<std::atomic<int> >();
 }
 
 Socket::~Socket() {
     pthread_mutex_destroy(&_id_wait_list_mutex);
-    bthread::butex_destroy(_epollout_butex);
+    flare::fiber_internal::butex_destroy(_epollout_butex);
 }
 
 void Socket::ReturnSuccessfulWriteRequest(Socket::WriteRequest* p) {
@@ -839,7 +839,7 @@ int Socket::SetFailed(int error_code, const char* error_fmt, ...) {
             }
             // Wake up all threads waiting on EPOLLOUT when closing fd
             _epollout_butex->fetch_add(1, std::memory_order_relaxed);
-            bthread::butex_wake_all(_epollout_butex);
+            flare::fiber_internal::butex_wake_all(_epollout_butex);
 
             // Wake up all unresponded RPC.
             CHECK_EQ(0, bthread_id_list_reset2_pthreadsafe(
@@ -1089,7 +1089,7 @@ int Socket::WaitEpollOut(int fd, bool pollin, const timespec* abstime) {
         return -1;
     }
 
-    int rc = bthread::butex_wait(_epollout_butex, expected_val, abstime);
+    int rc = flare::fiber_internal::butex_wait(_epollout_butex, expected_val, abstime);
     const int saved_errno = errno;
     if (rc < 0 && errno == EWOULDBLOCK) {
         // Could be writable or spurious wakeup
@@ -1267,7 +1267,7 @@ int Socket::HandleEpollOut(SocketId id) {
     // Currently `WaitEpollOut' needs `_epollout_butex'
     // TODO(jiangrujie): Remove this in the future
     s->_epollout_butex->fetch_add(1, std::memory_order_relaxed);
-    bthread::butex_wake_except(s->_epollout_butex, 0);  
+    flare::fiber_internal::butex_wake_except(s->_epollout_butex, 0);
     return 0;
 }
 
@@ -2018,8 +2018,8 @@ void Socket::DebugSocket(std::ostream& os, SocketId id) {
     }
     {
         FLARE_SCOPED_LOCK(ptr->_id_wait_list_mutex);
-        if (bthread::get_sizes) {
-            nidsize = bthread::get_sizes(
+        if (flare::fiber_internal::get_sizes) {
+            nidsize = flare::fiber_internal::get_sizes(
                 &ptr->_id_wait_list, idsizes, FLARE_ARRAY_SIZE(idsizes));
         }
     }

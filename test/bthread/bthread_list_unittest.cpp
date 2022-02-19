@@ -18,8 +18,8 @@
 #include <gtest/gtest.h>
 #include "flare/base/time.h"
 #include "flare/log/logging.h"
-#include "flare/bthread/task_group.h"
-#include "flare/bthread/bthread.h"
+#include "flare/fiber/internal/task_group.h"
+#include "flare/fiber/internal/bthread.h"
 
 namespace {
 void* sleeper(void* arg) {
@@ -40,7 +40,7 @@ TEST(ListTest, join_thread_by_list) {
     }
     ASSERT_EQ(0, bthread_list_join(&list));
     for (size_t i = 0; i < tids.size(); ++i) {
-        ASSERT_FALSE(bthread::TaskGroup::exists(tids[i]));
+        ASSERT_FALSE(flare::fiber_internal::TaskGroup::exists(tids[i]));
     }
     bthread_list_destroy(&list);
 }

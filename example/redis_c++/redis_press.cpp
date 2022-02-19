@@ -18,7 +18,7 @@
 // A multi-threaded client getting keys from a redis-server constantly.
 
 #include <gflags/gflags.h>
-#include <flare/bthread/bthread.h>
+#include <flare/fiber/internal/bthread.h>
 #include "flare/log/logging.h"
 #include <flare/base/strings.h>
 #include <flare/variable/all.h>

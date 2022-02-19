@@ -22,7 +22,7 @@
 #include <pthread.h>
 #include <gtest/gtest.h>
 #include <gflags/gflags.h>
-#include "flare/bthread/bthread.h"
+#include "flare/fiber/internal/bthread.h"
 #include "flare/rpc/circuit_breaker.h"
 #include "flare/rpc/socket.h"
 #include "flare/rpc/server.h"

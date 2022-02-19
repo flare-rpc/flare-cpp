@@ -18,7 +18,7 @@
 
 #include <gflags/gflags.h>
 #include <map>
-#include "flare/bthread/bthread.h"
+#include "flare/fiber/internal/bthread.h"
 #include "flare/base/time.h"
 #include "flare/base/scoped_lock.h"
 #include "flare/log/logging.h"

@@ -25,9 +25,9 @@
 #include "flare/base/compat.h"
 #include "flare/base/time.h"
 #include "flare/base/errno.h"
-#include <flare/bthread/sys_futex.h>
-#include <flare/bthread/butex.h>
-#include "flare/bthread/bthread.h"
+#include <flare/fiber/internal/sys_futex.h>
+#include <flare/fiber/internal/butex.h>
+#include "flare/fiber/internal/bthread.h"
 #include "flare/base/static_atomic.h"
 
 namespace {
@@ -87,10 +87,10 @@ void* futex_player(void* void_arg) {
     PlayerArg* arg = static_cast<PlayerArg*>(void_arg);
     int counter = INITIAL_FUTEX_VALUE;
     while (!stop) {
-        int rc = bthread::futex_wait_private(arg->wait_addr, counter, NULL);
+        int rc = flare::fiber_internal::futex_wait_private(arg->wait_addr, counter, NULL);
         ++counter;
         ++*arg->wake_addr;
-        bthread::futex_wake_private(arg->wake_addr, 1);
+        flare::fiber_internal::futex_wake_private(arg->wake_addr, 1);
         ++arg->counter;
         arg->wakeup += (rc == 0);
     }
@@ -101,10 +101,10 @@ void* butex_player(void* void_arg) {
     PlayerArg* arg = static_cast<PlayerArg*>(void_arg);
     int counter = INITIAL_FUTEX_VALUE;
     while (!stop) {
-        int rc = bthread::butex_wait(arg->wait_addr, counter, NULL);
+        int rc = flare::fiber_internal::butex_wait(arg->wait_addr, counter, NULL);
         ++counter;
         ++*arg->wake_addr;
-        bthread::butex_wake(arg->wake_addr);
+        flare::fiber_internal::butex_wake(arg->wake_addr);
         ++arg->counter;
         arg->wakeup += (rc == 0);
     }
@@ -136,9 +136,9 @@ TEST(PingPongTest, ping_pong) {
             arg1->wait_addr = &w1->value;
             arg1->wake_addr = &w2->value;
         } else if (FLAGS_use_butex) {
-            arg1->wait_addr = bthread::butex_create_checked<int>();
+            arg1->wait_addr = flare::fiber_internal::butex_create_checked<int>();
             *arg1->wait_addr = INITIAL_FUTEX_VALUE;
-            arg1->wake_addr = bthread::butex_create_checked<int>();
+            arg1->wake_addr = flare::fiber_internal::butex_create_checked<int>();
             *arg1->wake_addr = INITIAL_FUTEX_VALUE;
         } else {
             ASSERT_TRUE(false);
@@ -179,10 +179,10 @@ TEST(PingPongTest, ping_pong) {
             ASSERT_EQ(1L, write(pipe1[1], &seed, 1));
         } else if (FLAGS_use_futex) {
             ++*arg1->wait_addr;
-            bthread::futex_wake_private(arg1->wait_addr, 1);
+            flare::fiber_internal::futex_wake_private(arg1->wait_addr, 1);
         } else if (FLAGS_use_butex) {
             ++*arg1->wait_addr;
-            bthread::butex_wake(arg1->wait_addr);
+            flare::fiber_internal::butex_wake(arg1->wait_addr);
         } else {
             ASSERT_TRUE(false);
         }

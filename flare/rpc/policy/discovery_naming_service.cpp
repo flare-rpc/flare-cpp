@@ -23,7 +23,7 @@
 #include "flare/base/strings.h"
 #include "flare/strings/str_split.h"
 #include "flare/base/fast_rand.h"
-#include "flare/bthread/bthread.h"
+#include "flare/fiber/internal/bthread.h"
 #include "flare/rpc/channel.h"
 #include "flare/rpc/controller.h"
 #include "flare/rpc/policy/discovery_naming_service.h"

@@ -19,7 +19,7 @@
 #include <set>
 #include <pthread.h>
 #include <gflags/gflags.h>
-#include "flare/bthread/butex.h"
+#include "flare/fiber/internal/butex.h"
 #include "flare/base/scoped_lock.h"
 #include "flare/log/logging.h"
 #include "flare/rpc/log.h"

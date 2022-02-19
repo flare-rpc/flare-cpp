@@ -18,7 +18,7 @@
 // Benchmark http-server by multiple threads.
 
 #include <gflags/gflags.h>
-#include <flare/bthread/bthread.h>
+#include <flare/fiber/internal/bthread.h>
 #include "flare/log/logging.h"
 #include <flare/rpc/channel.h>
 #include <flare/rpc/server.h>
