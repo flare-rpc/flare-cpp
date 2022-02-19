@@ -25,6 +25,7 @@
 #include "flare/fiber/internal/bthread.h"
 #include "flare/fiber/internal/condition_variable.h"
 #include "flare/fiber/internal/stack.h"
+#include "flare/fiber/this_fiber.h"
 
 namespace {
     struct Arg {
@@ -43,7 +44,7 @@ namespace {
         Arg *a = (Arg *) void_arg;
         signal_start_time = flare::base::gettimeofday_us();
         while (!stop) {
-            bthread_usleep(SIGNAL_INTERVAL_US);
+            flare::this_fiber::fiber_sleep_for(SIGNAL_INTERVAL_US);
             bthread_cond_signal(&a->c);
         }
         return NULL;
@@ -85,7 +86,7 @@ namespace {
         bthread_t sth;
         ASSERT_EQ(0, bthread_start_urgent(&sth, NULL, signaler, &a));
 
-        bthread_usleep(SIGNAL_INTERVAL_US * 200);
+        flare::this_fiber::fiber_sleep_for(SIGNAL_INTERVAL_US * 200);
 
         pthread_mutex_lock(&wake_mutex);
         const size_t nbeforestop = wake_time.size();
@@ -144,7 +145,7 @@ namespace {
         WrapperArg *a = (WrapperArg *) void_arg;
         signal_start_time = flare::base::gettimeofday_us();
         while (!stop) {
-            bthread_usleep(SIGNAL_INTERVAL_US);
+            flare::this_fiber::fiber_sleep_for(SIGNAL_INTERVAL_US);
             a->cond.notify_one();
         }
         return NULL;
@@ -189,7 +190,7 @@ namespace {
                                         cv_mutex_waiter, &a));
         }
         ASSERT_EQ(0, pthread_create(&signal_thread, NULL, cv_signaler, &a));
-        bthread_usleep(100L * 1000);
+        flare::this_fiber::fiber_sleep_for(100L * 1000);
         {
             FLARE_SCOPED_LOCK(a.mutex);
             stop = true;
@@ -406,7 +407,7 @@ namespace {
 
     void *usleep_thread(void *) {
         while (!g_stop) {
-            bthread_usleep(1000L * 1000L);
+            flare::this_fiber::fiber_sleep_for(1000L * 1000L);
         }
         return NULL;
     }

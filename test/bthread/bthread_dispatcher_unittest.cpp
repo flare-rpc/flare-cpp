@@ -28,6 +28,8 @@
 #include "flare/fiber/internal/bthread.h"
 #include "flare/fiber/internal/task_control.h"
 #include "flare/fiber/internal/task_group.h"
+#include "flare/fiber/this_fiber.h"
+
 #if defined(FLARE_PLATFORM_OSX)
 #include <sys/types.h>                           // struct kevent
 #include <sys/event.h>                           // kevent(), kqueue()
@@ -312,6 +314,6 @@ TEST(DispatcherTest, dispatch_tasks) {
 #endif
     }
     flare::fiber_internal::stop_and_join_epoll_threads();
-    bthread_usleep(100000);
+    flare::this_fiber::fiber_sleep_for(100000);
 }
 } // namespace

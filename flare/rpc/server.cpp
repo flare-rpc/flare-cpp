@@ -41,6 +41,7 @@
 #include "flare/rpc/protocol.h"                     // ListProtocols
 #include "flare/rpc/nshead_service.h"               // NsheadService
 #include "flare/base/strings.h"
+#include "flare/fiber/this_fiber.h"
 
 #ifdef ENABLE_THRIFT_FRAMED_PROTOCOL
 #include "flare/rpc/thrift_service.h"               // ThriftService
@@ -321,7 +322,7 @@ namespace flare::rpc {
                 }
             } else {
                 consecutive_nosleep = 0;
-                if (bthread_usleep(sleep_us) < 0) {
+                if (flare::this_fiber::fiber_sleep_for(sleep_us) < 0) {
                     PLOG_IF(ERROR, errno != ESTOP) << "Fail to sleep";
                     return NULL;
                 }
@@ -622,7 +623,7 @@ namespace flare::rpc {
         args->result = args->bthread_init_fn(args->bthread_init_args);
         args->done = true;
         while (!args->stop) {
-            bthread_usleep(1000);
+            flare::this_fiber::fiber_sleep_for(1000);
         }
         return NULL;
     }
@@ -798,7 +799,7 @@ namespace flare::rpc {
             // Wait until all created bthreads finish the init function.
             for (size_t i = 0; i < ncreated; ++i) {
                 while (!init_args[i].done) {
-                    bthread_usleep(1000);
+                    flare::this_fiber::fiber_sleep_for(1000);
                 }
             }
             // Stop and join created bthreads.
@@ -1653,7 +1654,7 @@ namespace flare::rpc {
 
     void Server::RunUntilAskedToQuit() {
         while (!IsAskedToQuit()) {
-            bthread_usleep(1000000L);
+            flare::this_fiber::fiber_sleep_for(1000000L);
         }
         Stop(0/*not used now*/);
         Join();

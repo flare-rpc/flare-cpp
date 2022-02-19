@@ -59,7 +59,7 @@ extern int bthread_start_background(bthread_t *__restrict tid,
 
 // Wake up operations blocking the thread. Different functions may behave
 // differently:
-//   bthread_usleep(): returns -1 and sets errno to ESTOP if bthread_stop()
+//   flare::this_fiber::fiber_sleep_for(): returns -1 and sets errno to ESTOP if bthread_stop()
 //                     is called, or to EINTR otherwise.
 //   butex_wait(): returns -1 and sets errno to EINTR
 //   bthread_mutex_*lock: unaffected (still blocking)
@@ -148,14 +148,6 @@ extern int bthread_getconcurrency(void);
 // NOTE: currently concurrency cannot be reduced after any bthread created.
 extern int bthread_setconcurrency(int num);
 
-// Yield processor to another bthread. 
-// Notice that current implementation is not fair, which means that 
-// even if bthread_yield() is called, suspended threads may still starve.
-extern int bthread_yield(void);
-
-// Suspend current thread for at least `microseconds'
-// Interruptible by bthread_interrupt().
-extern int bthread_usleep(uint64_t microseconds);
 
 // ---------------------------------------------
 // Functions for mutex handling.

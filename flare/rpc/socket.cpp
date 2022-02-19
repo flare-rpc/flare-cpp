@@ -43,6 +43,7 @@
 #include "flare/rpc/policy/rtmp_protocol.h"  // FIXME
 #include "flare/rpc/periodic_task.h"
 #include "flare/rpc/details/health_check.h"
+#include "flare/fiber/this_fiber.h"
 #if defined(FLARE_PLATFORM_OSX)
 #include <sys/event.h>
 #endif
@@ -668,7 +669,7 @@ int Socket::WaitAndReset(int32_t expected_nref) {
             return -1;
         }
         if (NRefOfVRef(vref) > expected_nref) {
-            if (bthread_usleep(1000L/*FIXME*/) < 0) {
+            if (flare::this_fiber::fiber_sleep_for(1000L/*FIXME*/) < 0) {
                 PLOG_IF(FATAL, errno != ESTOP) << "Fail to sleep";
                 return -1;
             }

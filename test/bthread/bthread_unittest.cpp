@@ -23,6 +23,7 @@
 #include "flare/fiber/internal/bthread.h"
 #include "flare/fiber/internal/unstable.h"
 #include "flare/fiber/internal/task_meta.h"
+#include "flare/fiber/this_fiber.h"
 
 namespace {
 class BthreadTest : public ::testing::Test{
@@ -90,7 +91,7 @@ TEST_F(BthreadTest, context_sanity) {
 }
 
 TEST_F(BthreadTest, call_bthread_functions_before_tls_created) {
-    ASSERT_EQ(0, bthread_usleep(1000));
+    ASSERT_EQ(0, flare::this_fiber::fiber_sleep_for(1000));
     ASSERT_EQ(EINVAL, bthread_join(0, NULL));
     ASSERT_EQ(0UL, bthread_self());
 }
@@ -99,7 +100,7 @@ std::atomic<bool> stop(false);
 
 void* sleep_for_awhile(void* arg) {
     LOG(INFO) << "sleep_for_awhile(" << arg << ")";
-    bthread_usleep(100000L);
+    flare::this_fiber::fiber_sleep_for(100000L);
     LOG(INFO) << "sleep_for_awhile(" << arg << ") wakes up";
     return NULL;
 }
@@ -114,7 +115,7 @@ void* just_exit(void* arg) {
 void* repeated_sleep(void* arg) {
     for (size_t i = 0; !stop; ++i) {
         LOG(INFO) << "repeated_sleep(" << arg << ") i=" << i;
-        bthread_usleep(1000000L);
+        flare::this_fiber::fiber_sleep_for(1000000L);
     }
     return NULL;
 }
@@ -141,7 +142,7 @@ void* launcher(void* arg) {
     for (size_t i = 0; !stop; ++i) {
         bthread_t th;
         bthread_start_urgent(&th, NULL, do_nothing, (void*)i);
-        bthread_usleep(1000000L);
+        flare::this_fiber::fiber_sleep_for(1000000L);
     }
     return NULL;
 }
@@ -150,7 +151,7 @@ void* stopper(void*) {
     // Need this thread to set `stop' to true. Reason: If spin_and_log (which
     // never yields CPU) is scheduled to main thread, main thread cannot get
     // to run again.
-    bthread_usleep(5*1000000L);
+    flare::this_fiber::fiber_sleep_for(5*1000000L);
     LOG(INFO) << "about to stop";
     stop = true;
     return NULL;
@@ -264,7 +265,7 @@ void* adding_func(void* arg) {
         if (10000 == s->fetch_add(1)) {
             t1 = flare::base::cpuwide_time_us();
         }
-        bthread_usleep(sleep_in_adding_func);
+        flare::this_fiber::fiber_sleep_for(sleep_in_adding_func);
         if (t1) {
             LOG(INFO) << "elapse is " << flare::base::cpuwide_time_us() - t1 << "ns";
         }
@@ -352,7 +353,7 @@ TEST_F(BthreadTest, start_bthreads_frequently) {
         }
         flare::base::stop_watcher tm;
         tm.start();
-        bthread_usleep(200000L);
+        flare::this_fiber::fiber_sleep_for(200000L);
         stop = true;
         for (int i = 0; i < cur_con; ++i) {
             bthread_join(th[i], NULL);
@@ -404,7 +405,7 @@ TEST_F(BthreadTest, start_latency_when_high_idle) {
 }
 
 void* sleep_for_awhile_with_sleep(void* arg) {
-    bthread_usleep((intptr_t)arg);
+    flare::this_fiber::fiber_sleep_for((intptr_t)arg);
     return NULL;
 }
 
@@ -414,7 +415,7 @@ TEST_F(BthreadTest, stop_sleep) {
                   &th, NULL, sleep_for_awhile_with_sleep, (void*)1000000L));
     flare::base::stop_watcher tm;
     tm.start();
-    bthread_usleep(10000);
+    flare::this_fiber::fiber_sleep_for(10000);
     ASSERT_EQ(0, bthread_stop(th));
     ASSERT_EQ(0, bthread_join(th, NULL));
     tm.stop();
@@ -469,11 +470,11 @@ void* check_sleep(void* pthread_task) {
     const pthread_t pid = pthread_self();
     EXPECT_EQ(0, bthread_start_urgent(&th1, &attr, mark_run, &run));
     if (pthread_task) {
-        bthread_usleep(100000L);
+        flare::this_fiber::fiber_sleep_for(100000L);
         // due to NOSIGNAL, mark_run did not run.
         // FIXME: actually runs. someone is still stealing.
         // EXPECT_EQ((pthread_t)0, run);
-        // bthread_usleep = usleep for BTHREAD_ATTR_PTHREAD
+        // flare::this_fiber::fiber_sleep_for = usleep for BTHREAD_ATTR_PTHREAD
         EXPECT_EQ(pid, pthread_self());
         // schedule mark_run
         bthread_flush();
@@ -490,7 +491,7 @@ void* check_sleep(void* pthread_task) {
     return NULL;
 }
 
-TEST_F(BthreadTest, bthread_usleep) {
+TEST_F(BthreadTest, fiber_sleep_for) {
     // NOTE: May fail because worker threads may still be stealing tasks
     // after previous cases.
     usleep(10000);
@@ -519,7 +520,7 @@ TEST_F(BthreadTest, too_many_nosignal_threads) {
 }
 
 static void* yield_thread(void*) {
-    bthread_yield();
+    flare::this_fiber::fiber_yield();
     return NULL;
 }
 

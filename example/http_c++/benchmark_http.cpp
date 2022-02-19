@@ -18,6 +18,7 @@
 // Benchmark http-server by multiple threads.
 
 #include <gflags/gflags.h>
+#include <flare/fiber/this_fiber.h>
 #include <flare/fiber/internal/bthread.h>
 #include "flare/log/logging.h"
 #include <flare/rpc/channel.h>
@@ -66,7 +67,7 @@ static void* sender(void* arg) {
             // is a specific sleeping to prevent this thread from spinning too
             // fast. You should continue the business logic in a production 
             // server rather than sleeping.
-            bthread_usleep(100000);
+            flare::this_fiber::fiber_sleep_for(100000);
         }
     }
     return NULL;

@@ -31,6 +31,7 @@
 #include "flare/fiber/internal/interrupt_pthread.h"
 #include "flare/fiber/internal/bthread.h"
 #include "flare/fiber/internal/unstable.h"
+#include "flare/fiber/this_fiber.h"
 #if defined(FLARE_PLATFORM_OSX)
 #include <sys/types.h>                           // struct kevent
 #include <sys/event.h>                           // kevent(), kqueue()
@@ -110,7 +111,7 @@ void* process_thread(void* arg) {
 }
 
 void* epoll_thread(void* arg) {
-    bthread_usleep(1);
+    flare::this_fiber::fiber_sleep_for(1);
     EpollMeta* m = (EpollMeta*)arg;
     const int epfd = m->epfd;
 #if defined(FLARE_PLATFORM_LINUX)
@@ -341,7 +342,7 @@ TEST(FDTest, ping_pong) {
 #endif
     }
     //flare::fiber_internal::stop_and_join_epoll_threads();
-    bthread_usleep(100000);
+    flare::this_fiber::fiber_sleep_for(100000);
 
 #ifndef NDEBUG
     std::cout << "break_nums=" << flare::fiber_internal::break_nums << std::endl;
@@ -425,10 +426,10 @@ TEST(FDTest, interrupt_pthread) {
     pthread_t th, th2;
     ASSERT_EQ(0, pthread_create(&th, NULL, epoll_waiter, (void*)(intptr_t)epfd));
     ASSERT_EQ(0, pthread_create(&th2, NULL, epoll_waiter, (void*)(intptr_t)epfd));
-    bthread_usleep(100000L);
+    flare::this_fiber::fiber_sleep_for(100000L);
     std::cout << "wake up " << th << std::endl;
     flare::fiber_internal::interrupt_pthread(th);
-    bthread_usleep(100000L);
+    flare::this_fiber::fiber_sleep_for(100000L);
     std::cout << "wake up " << th2 << std::endl;
     flare::fiber_internal::interrupt_pthread(th2);
     pthread_join(th, NULL);
@@ -436,7 +437,7 @@ TEST(FDTest, interrupt_pthread) {
 }
 
 void* close_the_fd(void* arg) {
-    bthread_usleep(10000/*10ms*/);
+    flare::this_fiber::fiber_sleep_for(10000/*10ms*/);
     EXPECT_EQ(0, bthread_close(*(int*)arg));
     return NULL;
 }

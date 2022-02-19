@@ -166,7 +166,7 @@ public:
         if (_sleep_ms > 0) {
             LOG(INFO) << "Sleep " << _sleep_ms
                       << " ms before responding play request";
-            bthread_usleep(_sleep_ms * 1000L);
+            flare::this_fiber::fiber_sleep_for(_sleep_ms * 1000L);
         }
         int rc = bthread_start_background(&_play_thread, NULL,
                                           RunSendData, this);
@@ -235,7 +235,7 @@ void PlayingDummyStream::SendData() {
                                              i, stream_id()));
         SendAudioMessage(amsg);
 
-        bthread_usleep(1000000);
+        flare::this_fiber::fiber_sleep_for(1000000);
     }
 
     LOG(INFO) << "Quit SendData of PlayingDummyStream=" << this;
@@ -287,7 +287,7 @@ public:
         if (_sleep_ms > 0) {
             LOG(INFO) << "Sleep " << _sleep_ms
                       << " ms before responding play request";
-            bthread_usleep(_sleep_ms * 1000L);
+            flare::this_fiber::fiber_sleep_for(_sleep_ms * 1000L);
         }
     }
     void OnFirstMessage() {
@@ -631,7 +631,7 @@ TEST(RtmpTest, successfully_publish_streams) {
             ASSERT_EQ(0, cstreams[j]->SendAudioMessage(amsg));
         }
         
-        bthread_usleep(500000);
+        flare::this_fiber::fiber_sleep_for(500000);
     }
     std::vector<flare::container::intrusive_ptr<PublishStream> > created_streams;
     rtmp_service.move_created_streams(&created_streams);

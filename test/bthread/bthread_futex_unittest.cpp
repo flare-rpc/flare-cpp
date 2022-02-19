@@ -28,6 +28,7 @@
 #include "flare/fiber/internal/bthread.h"
 #include <flare/fiber/internal/sys_futex.h>
 #include <flare/fiber/internal/processor.h>
+#include "flare/fiber/this_fiber.h"
 
 namespace {
 volatile bool stop = false;
@@ -85,7 +86,7 @@ TEST(FutexTest, rdlock_performance) {
     }
     const int64_t t2 = flare::base::cpuwide_time_ns();
 
-    bthread_usleep(3000000);
+    flare::this_fiber::fiber_sleep_for(3000000);
     stop = true;
     for (int i = 0; i < 10; ++i) {
         flare::fiber_internal::futex_wake_private(&lock1, INT_MAX);
@@ -150,7 +151,7 @@ TEST(FutexTest, futex_wake_many_waiters_perf) {
 std::atomic<int> nevent(0);
 
 void* waker(void* lock) {
-    bthread_usleep(10000);
+    flare::this_fiber::fiber_sleep_for(10000);
     const size_t REP = 100000;
     int nwakeup = 0;
     flare::base::stop_watcher tm;
@@ -165,7 +166,7 @@ void* waker(void* lock) {
 } 
 
 void* batch_waker(void* lock) {
-    bthread_usleep(10000);
+    flare::this_fiber::fiber_sleep_for(10000);
     const size_t REP = 100000;
     int nwakeup = 0;
     flare::base::stop_watcher tm;

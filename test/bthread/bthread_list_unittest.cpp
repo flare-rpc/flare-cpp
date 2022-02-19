@@ -20,10 +20,10 @@
 #include "flare/log/logging.h"
 #include "flare/fiber/internal/task_group.h"
 #include "flare/fiber/internal/bthread.h"
-
+#include "flare/fiber/this_fiber.h"
 namespace {
 void* sleeper(void* arg) {
-    bthread_usleep((long)arg);
+    flare::this_fiber::fiber_sleep_for((long)arg);
     return NULL;
 }
 

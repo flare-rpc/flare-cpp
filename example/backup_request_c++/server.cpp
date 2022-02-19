@@ -70,7 +70,7 @@ public:
         response->set_index(request->index());
 
         if (do_sleep) {
-            bthread_usleep(FLAGS_sleep_ms * 1000);
+            flare::this_fiber::fiber_sleep_for(FLAGS_sleep_ms * 1000);
         }
     }
 private:

@@ -18,6 +18,7 @@
 // A multi-threaded client getting keys from a memcache server constantly.
 
 #include <gflags/gflags.h>
+#include <flare/fiber/this_fiber.h>
 #include <flare/fiber/internal/bthread.h>
 #include "flare/log/logging.h"
 #include <flare/base/strings.h>
@@ -93,7 +94,7 @@ static void* sender(void* arg) {
             // is a specific sleeping to prevent this thread from spinning too
             // fast. You should continue the business logic in a production 
             // server rather than sleeping.
-            bthread_usleep(50000);
+            flare::this_fiber::fiber_sleep_for(50000);
         }
     }
     return NULL;

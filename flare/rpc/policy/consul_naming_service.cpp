@@ -28,6 +28,7 @@
 #include "flare/rpc/channel.h"
 #include "flare/rpc/policy/file_naming_service.h"
 #include "flare/rpc/policy/consul_naming_service.h"
+#include "flare/fiber/this_fiber.h"
 
 
 namespace flare::rpc {
@@ -230,7 +231,7 @@ int ConsulNamingService::RunNamingService(const char* service_name,
                 servers.clear();
                 actions->ResetServers(servers);
             }
-            if (bthread_usleep(std::max(FLAGS_consul_retry_interval_ms, 1) * 1000) < 0) {
+            if (flare::this_fiber::fiber_sleep_for(std::max(FLAGS_consul_retry_interval_ms, 1) * 1000) < 0) {
                 if (errno == ESTOP) {
                     RPC_VLOG << "Quit NamingServiceThread=" << bthread_self();
                     return 0;

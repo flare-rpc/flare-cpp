@@ -24,6 +24,7 @@
 #include "flare/fiber/internal/task_group.h"
 #include "flare/fiber/internal/bthread.h"
 #include "flare/fiber/internal/unstable.h"
+#include "flare/fiber/this_fiber.h"
 
 namespace flare::fiber_internal {
 extern std::atomic<TaskControl*> g_task_control;
@@ -44,7 +45,7 @@ TEST(ButexTest, wait_on_already_timedout_butex) {
 }
 
 void* sleeper(void* arg) {
-    bthread_usleep((uint64_t)arg);
+    flare::this_fiber::fiber_sleep_for((uint64_t)arg);
     return NULL;
 }
 
@@ -239,7 +240,7 @@ TEST(ButexTest, stop_after_running) {
 
         tm.start();
         ASSERT_EQ(0, bthread_start_urgent(&th, &attr, wait_butex, &arg));
-        ASSERT_EQ(0, bthread_usleep(SLEEP_MSEC * 1000L));
+        ASSERT_EQ(0, flare::this_fiber::fiber_sleep_for(SLEEP_MSEC * 1000L));
         ASSERT_EQ(0, bthread_stop(th));
         ASSERT_EQ(0, bthread_join(th, NULL));
         tm.stop();
@@ -299,10 +300,10 @@ TEST(ButexTest, join_cant_be_wakeup) {
         ASSERT_EQ(0, bthread_start_urgent(&th, NULL, wait_butex, &arg));
         ASSERT_EQ(0, bthread_start_urgent(&th2, &attr, join_the_waiter, (void*)th));
         ASSERT_EQ(0, bthread_stop(th2));
-        ASSERT_EQ(0, bthread_usleep(WAIT_MSEC / 2 * 1000L));
+        ASSERT_EQ(0, flare::this_fiber::fiber_sleep_for(WAIT_MSEC / 2 * 1000L));
         ASSERT_TRUE(flare::fiber_internal::TaskGroup::exists(th));
         ASSERT_TRUE(flare::fiber_internal::TaskGroup::exists(th2));
-        ASSERT_EQ(0, bthread_usleep(WAIT_MSEC / 2 * 1000L));
+        ASSERT_EQ(0, flare::this_fiber::fiber_sleep_for(WAIT_MSEC / 2 * 1000L));
         ASSERT_EQ(0, bthread_stop(th));
         ASSERT_EQ(0, bthread_join(th2, NULL));
         ASSERT_EQ(0, bthread_join(th, NULL));
@@ -326,7 +327,7 @@ TEST(ButexTest, stop_after_slept) {
         bthread_t th;
         ASSERT_EQ(0, bthread_start_urgent(
                       &th, &attr, sleeper, (void*)(SLEEP_MSEC*1000L)));
-        ASSERT_EQ(0, bthread_usleep(WAIT_MSEC * 1000L));
+        ASSERT_EQ(0, flare::this_fiber::fiber_sleep_for(WAIT_MSEC * 1000L));
         ASSERT_EQ(0, bthread_stop(th));
         ASSERT_EQ(0, bthread_join(th, NULL));
         tm.stop();

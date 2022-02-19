@@ -18,6 +18,7 @@
 // A client sending requests to server in parallel by multiple threads.
 
 #include <gflags/gflags.h>
+#include <flare/fiber/this_fiber.h>
 #include <flare/fiber/internal/bthread.h>
 #include "flare/log/logging.h"
 #include <flare/rpc/selective_channel.h>
@@ -78,7 +79,7 @@ static void* sender(void* arg) {
             // We can't connect to the server, sleep a while. Notice that this
             // is a specific sleeping to prevent this thread from spinning too // fast. You should continue the business logic in a production 
             // server rather than sleeping.
-            bthread_usleep(50000);
+            flare::this_fiber::fiber_sleep_for(50000);
         }
     }
     return NULL;

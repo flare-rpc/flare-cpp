@@ -25,6 +25,7 @@
 #include "flare/log/logging.h"
 #include "flare/fiber/internal/bthread.h"
 #include "flare/fiber/internal/unstable.h"
+#include "flare/fiber/this_fiber.h"
 
 extern "C" {
 int bthread_keytable_pool_size(bthread_keytable_pool_t *pool) {
@@ -91,7 +92,7 @@ namespace {
 
         }
         // Sleep a while to make some context switches. TLS should be unchanged.
-        bthread_usleep(10000);
+        flare::this_fiber::fiber_sleep_for(10000);
 
         for (size_t i = 0; i < FLARE_ARRAY_SIZE(k); ++i) {
             ASSERT_EQ(ws[i], bthread_getspecific(k[i])) << "i=" << i;
@@ -316,7 +317,7 @@ namespace {
             ASSERT_EQ(0, bthread_join(bth, NULL));
             ASSERT_EQ(1, data->ndestroy);
         } else {
-            bthread_usleep(1000);
+            flare::this_fiber::fiber_sleep_for(1000);
         }
         ASSERT_EQ(tls, bthread_getspecific(data->key));
     }

@@ -1,0 +1,22 @@
+//
+// Created by liyinbin on 2022/2/20.
+//
+
+#ifndef FLARE_FIBER_THIS_FIBER_H_
+#define FLARE_FIBER_THIS_FIBER_H_
+
+#include <cstdint>
+
+namespace flare::this_fiber {
+
+    int fiber_yield();
+
+    // expires_at_us should based microseconds flare::base::cpuwide_time_us();
+    int fiber_sleep_until(const int64_t& expires_at_us);
+
+    int fiber_sleep_for(const int64_t& expires_in_us);
+
+}  // namespace flare::this_fiber
+
+#endif // FLARE_FIBER_THIS_FIBER_H_
+

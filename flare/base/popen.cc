@@ -12,7 +12,7 @@
 #include <sys/wait.h>
 
 extern "C" {
-uint64_t FLARE_WEAK bthread_usleep(uint64_t microseconds);
+uint64_t FLARE_WEAK flare::this_fiber::fiber_sleep_for(uint64_t microseconds);
 }
 #endif
 
@@ -91,8 +91,8 @@ namespace flare::base {
                 break;
             }
             if (wpid == 0) {
-                if (bthread_usleep != NULL) {
-                    bthread_usleep(1000);
+                if (flare::this_fiber::fiber_sleep_for != NULL) {
+                    flare::this_fiber::fiber_sleep_for(1000);
                 } else {
                     usleep(1000);
                 }

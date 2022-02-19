@@ -21,6 +21,7 @@
 #include <gflags/gflags.h>
 #include "flare/log/logging.h"
 #include "flare/base/time.h"
+#include <flare/fiber/this_fiber.h>
 #include <flare/fiber/internal/bthread.h>
 #include <flare/rpc/channel.h>
 #include <flare/rpc/server.h>
@@ -79,7 +80,7 @@ void* sender(void* arg) {
             g_latency_recorder << cntl.latency_us();
         }
         if (FLAGS_sleep_ms != 0) {
-            bthread_usleep(FLAGS_sleep_ms * 1000L);
+            flare::this_fiber::fiber_sleep_for(FLAGS_sleep_ms * 1000L);
         }
     }
     return NULL;

@@ -29,6 +29,7 @@
 #include "flare/rpc/policy/dh.h"
 #include "flare/rpc/policy/rtmp_protocol.h"
 #include "flare/base/strings.h"
+#include "flare/fiber/this_fiber.h"
 
 // For printing logs with useful prefixes.
 #define RTMP_LOG(level, socket, mh)                                     \
@@ -615,7 +616,7 @@ static int WriteAll(int fd, flare::io::cord_buf* buf) {
                 // impossible really happens, just spin until the fd becomes
                 // writable.
                 LOG_EVERY_SECOND(ERROR) << "Impossible: meet EAGAIN!";
-                bthread_usleep(1000);
+                flare::this_fiber::fiber_sleep_for(1000);
                 continue;
             }
             return -1;

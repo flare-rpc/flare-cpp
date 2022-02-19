@@ -27,6 +27,7 @@
 #include "flare/rpc/channel.h"
 #include "flare/rpc/controller.h"
 #include "flare/rpc/policy/discovery_naming_service.h"
+#include "flare/fiber/this_fiber.h"
 
 namespace flare::rpc {
 namespace policy {
@@ -212,7 +213,7 @@ void* DiscoveryClient::PeriodicRenew(void* arg) {
     int consecutive_renew_error = 0;
     int64_t init_sleep_s = FLAGS_discovery_renew_interval_s / 2 +
         flare::base::fast_rand_less_than(FLAGS_discovery_renew_interval_s / 2);
-    if (bthread_usleep(init_sleep_s * 1000000) != 0) {
+    if (flare::this_fiber::fiber_sleep_for(init_sleep_s * 1000000) != 0) {
         if (errno == ESTOP) {
             return NULL;
         }
@@ -226,7 +227,7 @@ void* DiscoveryClient::PeriodicRenew(void* arg) {
                 if (d->DoRegister() == 0) {
                     break;
                 }
-                bthread_usleep(FLAGS_discovery_renew_interval_s * 1000000);
+                flare::this_fiber::fiber_sleep_for(FLAGS_discovery_renew_interval_s * 1000000);
             }
             consecutive_renew_error = 0;
         }
@@ -235,7 +236,7 @@ void* DiscoveryClient::PeriodicRenew(void* arg) {
             continue;
         }
         consecutive_renew_error = 0;
-        bthread_usleep(FLAGS_discovery_renew_interval_s * 1000000);
+        flare::this_fiber::fiber_sleep_for(FLAGS_discovery_renew_interval_s * 1000000);
     }
     return NULL;
 }

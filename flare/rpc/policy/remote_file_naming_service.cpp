@@ -20,7 +20,7 @@
 #include <stdio.h>                                      // getline
 #include <string>                                       // std::string
 #include <set>                                          // std::set
-#include "flare/fiber/internal/bthread.h"                            // bthread_usleep
+#include "flare/fiber/internal/bthread.h"                            // flare::this_fiber::fiber_sleep_for
 #include "flare/io/cord_buf.h"
 #include "flare/rpc/log.h"
 #include "flare/rpc/channel.h"

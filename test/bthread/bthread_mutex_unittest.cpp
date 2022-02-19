@@ -26,6 +26,7 @@
 #include "flare/fiber/internal/task_control.h"
 #include "flare/fiber/internal/mutex.h"
 #include "flare/base/gperftools_profiler.h"
+#include "flare/fiber/this_fiber.h"
 
 namespace {
 inline unsigned* get_butex(bthread_mutex_t & m) {
@@ -39,7 +40,7 @@ void* locker(void* arg) {
     bthread_mutex_lock(m);
     printf("[%" PRIu64 "] I'm here, %d, %" PRId64 "ms\n", 
            pthread_numeric_id(), ++c, flare::base::cpuwide_time_ms() - start_time);
-    bthread_usleep(10000);
+    flare::this_fiber::fiber_sleep_for(10000);
     bthread_mutex_unlock(m);
     return NULL;
 }
@@ -156,7 +157,7 @@ void* add_with_mutex(void* void_arg) {
         if (g_started) {
             break;
         }
-        bthread_usleep(1000);
+        flare::this_fiber::fiber_sleep_for(1000);
     }
     t.start();
     while (!g_stopped) {
@@ -233,7 +234,7 @@ void* loop_until_stopped(void* arg) {
     flare::fiber_internal::Mutex *m = (flare::fiber_internal::Mutex*)arg;
     while (!g_stopped) {
         FLARE_SCOPED_LOCK(*m);
-        bthread_usleep(20);
+        flare::this_fiber::fiber_sleep_for(20);
     }
     return NULL;
 }
@@ -257,7 +258,7 @@ TEST(MutexTest, mix_thread_types) {
         const bthread_attr_t *attr = i % 2 ? NULL : &BTHREAD_ATTR_PTHREAD;
         ASSERT_EQ(0, bthread_start_urgent(&bthreads[i], attr, loop_until_stopped, &m));
     }
-    bthread_usleep(1000L * 1000);
+    flare::this_fiber::fiber_sleep_for(1000L * 1000);
     g_stopped = true;
     for (int i = 0; i < M; ++i) {
         bthread_join(bthreads[i], NULL);

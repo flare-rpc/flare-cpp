@@ -28,13 +28,13 @@
 
 namespace flare::fiber_internal {
 
-// Create a butex which is a futex-like 32-bit primitive for synchronizing
-// bthreads/pthreads.
-// Returns a pointer to 32-bit data, NULL on failure.
-// NOTE: all butexes are private(not inter-process).
+    // Create a butex which is a futex-like 32-bit primitive for synchronizing
+    // bthreads/pthreads.
+    // Returns a pointer to 32-bit data, NULL on failure.
+    // NOTE: all butexes are private(not inter-process).
     void *butex_create();
 
-// Check width of user type before casting.
+    // Check width of user type before casting.
     template<typename T>
     T *butex_create_checked() {
         static_assert(sizeof(T) == sizeof(int), "sizeof_T_must_equal_int");

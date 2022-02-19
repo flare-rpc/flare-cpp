@@ -22,6 +22,7 @@
 #include "flare/rpc/log.h"
 #include "flare/rpc/reloadable_flags.h"
 #include "flare/rpc/periodic_naming_service.h"
+#include "flare/fiber/this_fiber.h"
 
 namespace flare::rpc {
 
@@ -47,7 +48,7 @@ int PeriodicNamingService::RunNamingService(
             actions->ResetServers(servers);
         }
 
-        if (bthread_usleep(std::max(FLAGS_ns_access_interval, 1) * 1000000L) < 0) {
+        if (flare::this_fiber::fiber_sleep_for(std::max(FLAGS_ns_access_interval, 1) * 1000000L) < 0) {
             if (errno == ESTOP) {
                 RPC_VLOG << "Quit NamingServiceThread=" << bthread_self();
                 return 0;

@@ -362,24 +362,6 @@ int bthread_timer_del(bthread_timer_t id) {
     return EINVAL;
 }
 
-int bthread_usleep(uint64_t microseconds) {
-    flare::fiber_internal::TaskGroup *g = flare::fiber_internal::tls_task_group;
-    if (NULL != g && !g->is_current_pthread_task()) {
-        return flare::fiber_internal::TaskGroup::usleep(&g, microseconds);
-    }
-    return ::usleep(microseconds);
-}
-
-int bthread_yield(void) {
-    flare::fiber_internal::TaskGroup *g = flare::fiber_internal::tls_task_group;
-    if (NULL != g && !g->is_current_pthread_task()) {
-        flare::fiber_internal::TaskGroup::yield(&g);
-        return 0;
-    }
-    // pthread_yield is not available on MAC
-    return sched_yield();
-}
-
 int bthread_set_worker_startfn(void (*start_fn)()) {
     if (start_fn == NULL) {
         return EINVAL;

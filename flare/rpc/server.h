@@ -24,7 +24,7 @@
 
 #include "flare/fiber/internal/errno.h"        // Redefine errno
 #include "flare/fiber/internal/bthread.h"      // Server may need some bthread functions,
-                                  // e.g. bthread_usleep
+                                  // e.g. flare::this_fiber::fiber_sleep_for
 #include <google/protobuf/service.h>                 // google::protobuf::Service
 #include "flare/base/profile.h"                            // FLARE_DISALLOW_COPY_AND_ASSIGN
 #include "flare/container/doubly_buffered_data.h"   // DoublyBufferedData

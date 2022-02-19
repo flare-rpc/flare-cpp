@@ -794,7 +794,7 @@ int TaskGroup::usleep(TaskGroup** pg, uint64_t timeout_us) {
         // Race with set and may consume multiple interruptions, which are OK.
         e.meta->interrupted = false;
         // NOTE: setting errno to ESTOP is not necessary from bthread's
-        // pespective, however many RPC code expects bthread_usleep to set
+        // pespective, however many RPC code expects flare::this_fiber::fiber_sleep_for to set
         // errno to ESTOP when the thread is stopping, and print FATAL
         // otherwise. To make smooth transitions, ESTOP is still set instead
         // of EINTR when the thread is stopping.
@@ -844,7 +844,7 @@ static int set_butex_waiter(bthread_t tid, fiber_mutex_waiter* w) {
 // is still remembered and will be checked at next blocking. This designing
 // choice simplifies the implementation and reduces notification loss caused
 // by race conditions.
-// TODO: bthreads created by BTHREAD_ATTR_PTHREAD blocking on bthread_usleep()
+// TODO: bthreads created by BTHREAD_ATTR_PTHREAD blocking on flare::this_fiber::fiber_sleep_for()
 // can't be interrupted.
 int TaskGroup::interrupt(bthread_t tid, TaskControl* c) {
     // Consume current_waiter in the fiber_entity, wake it up then set it back.

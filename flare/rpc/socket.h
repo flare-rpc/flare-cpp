@@ -38,6 +38,7 @@
 #include "flare/rpc/socket_id.h"               // SocketId
 #include "flare/rpc/socket_message.h"          // SocketMessagePtr
 #include "flare/variable/all.h"
+#include "flare/fiber/this_fiber.h"
 
 namespace flare::rpc {
 namespace policy {
@@ -837,7 +838,7 @@ private:
             }                                                           \
             sleep_time *= 2;                                            \
             if (sleep_time > 2000) { sleep_time = 2000; }               \
-            ::bthread_usleep(sleep_time);                               \
+            flare::this_fiber::fiber_sleep_for(sleep_time);                               \
         }                                                               \
         __ret_code__;                                                   \
     })
@@ -855,7 +856,7 @@ private:
             }                                                           \
             sleep_time *= 2;                                            \
             if (sleep_time > 2000) { sleep_time = 2000; }               \
-            ::bthread_usleep(sleep_time);                               \
+            ::flare::this_fiber::fiber_sleep_for(sleep_time);                               \
         }                                                               \
         __ret_code__;                                                   \
     })

@@ -20,7 +20,7 @@
 // Date: 2016/04/16 18:43:24
 
 #include "flare/fiber/internal/execution_queue.h"
-
+#include "flare/fiber/this_fiber.h"
 #include "flare/base/singleton_on_pthread_once.h"
 #include "flare/memory/object_pool.h"           // flare::memory::get_object
 #include "flare/memory/resource_pool.h"         // flare::memory::get_resource
@@ -205,7 +205,7 @@ namespace flare::fiber_internal {
                 break;
             }
             CHECK(false) << "Fail to create task_node_t, " << flare_error();
-            ::bthread_usleep(1000);
+            flare::this_fiber::fiber_sleep_for(1000);
         }
     }
 

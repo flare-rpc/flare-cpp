@@ -23,6 +23,7 @@
 #include "flare/base/time.h"
 #include "flare/base/fast_rand.h"
 #include "flare/base/gperftools_profiler.h"
+#include "flare/fiber/this_fiber.h"
 
 namespace {
 bool stopped = false;
@@ -215,7 +216,7 @@ int add_with_suspend(void* meta, flare::fiber_internal::TaskIterator<LongIntTask
             if (iter->value == -100) {
                 g_suspending = true;
                 while (g_suspending) {
-                    bthread_usleep(100);
+                    flare::this_fiber::fiber_sleep_for(100);
                 }
                 g_should_be_urgent = true;
                 if (iter->event) { iter->event->signal(); }

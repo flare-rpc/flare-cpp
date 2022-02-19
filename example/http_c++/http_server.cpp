@@ -89,7 +89,7 @@ namespace example {
                 args->pa->Write(buf, len);
 
                 // sleep a while to send another part.
-                bthread_usleep(10000);
+                flare::this_fiber::fiber_sleep_for(10000);
             }
             return NULL;
         }

@@ -22,6 +22,7 @@
 #include "flare/base/fd_utility.h"               // make_close_on_exec
 #include "flare/base/time.h"                     // gettimeofday_us
 #include "flare/rpc/acceptor.h"
+#include "flare/fiber/this_fiber.h"
 
 
 namespace flare::rpc {
@@ -88,7 +89,7 @@ namespace flare::rpc {
         Acceptor *am = static_cast<Acceptor *>(arg);
         std::vector<SocketId> checking_fds;
         const uint64_t CHECK_INTERVAL_US = 1000000UL;
-        while (bthread_usleep(CHECK_INTERVAL_US) == 0) {
+        while (flare::this_fiber::fiber_sleep_for(CHECK_INTERVAL_US) == 0) {
             // TODO: this is not efficient for a lot of connections(>100K)
             am->ListConnections(&checking_fds);
             for (size_t i = 0; i < checking_fds.size(); ++i) {

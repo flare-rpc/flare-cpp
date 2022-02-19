@@ -27,6 +27,7 @@
 #include "flare/rpc/input_messenger.h"
 #include "flare/rpc/reloadable_flags.h"
 #include "flare/rpc/socket_map.h"
+#include "flare/fiber/this_fiber.h"
 
 namespace flare::rpc {
 
@@ -355,7 +356,7 @@ void SocketMap::WatchConnections() {
     std::vector<SocketId> pooled_sockets;
     std::vector<SocketMapKey> orphan_sockets;
     const uint64_t CHECK_INTERVAL_US = 1000000UL;
-    while (bthread_usleep(CHECK_INTERVAL_US) == 0) {
+    while (flare::this_fiber::fiber_sleep_for(CHECK_INTERVAL_US) == 0) {
         // NOTE: save the gflag which may be reloaded at any time.
         const int idle_seconds = _options.idle_timeout_second_dynamic ?
             *_options.idle_timeout_second_dynamic
