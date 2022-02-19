@@ -98,7 +98,7 @@ friend class MessageBatcher;
         int error_code;
         bool new_thread;
         bool has_timer;
-        bthread_timer_t timer;
+        fiber_timer_id timer;
     };
 
     Socket*     _host_socket;  // Every stream within a Socket holds a reference
@@ -123,7 +123,7 @@ friend class MessageBatcher;
     flare::fiber_internal::ExecutionQueueId<flare::io::cord_buf*> _consumer_queue;
     flare::io::cord_buf *_pending_buf;
     int64_t _start_idle_timer_us;
-    bthread_timer_t _idle_timer;
+    fiber_timer_id _idle_timer;
 };
 
 } // namespace flare::rpc

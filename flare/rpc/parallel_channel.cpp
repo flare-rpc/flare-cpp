@@ -55,7 +55,7 @@ private:
         , _current_done(0)
         , _cntl(cntl)
         , _user_done(user_done)
-        , _callmethod_bthread(INVALID_BTHREAD)
+        , _callmethod_bthread(INVALID_FIBER_ID)
         , _callmethod_pthread(0) {
     }
 
@@ -204,13 +204,13 @@ public:
     // For otherwhere to know if they're in the same thread.
     void SaveThreadInfoOfCallsite() {
         _callmethod_bthread = bthread_self();
-        if (_callmethod_bthread == INVALID_BTHREAD) {
+        if (_callmethod_bthread == INVALID_FIBER_ID) {
             _callmethod_pthread = pthread_self();
         }
     }
 
     bool IsSameThreadAsCallMethod() const {
-        if (_callmethod_bthread != INVALID_BTHREAD) {
+        if (_callmethod_bthread != INVALID_FIBER_ID) {
             return bthread_self() == _callmethod_bthread;
         }
         return pthread_self() == _callmethod_pthread;
@@ -285,9 +285,9 @@ public:
             IsSameThreadAsCallMethod()) {
             // A sub channel's CallMethod calls a subdone directly, create a
             // thread to run OnComplete.
-            bthread_t bh;
-            bthread_attr_t attr = (FLAGS_usercode_in_pthread ?
-                                   BTHREAD_ATTR_PTHREAD : BTHREAD_ATTR_NORMAL);
+            fiber_id_t bh;
+            fiber_attribute attr = (FLAGS_usercode_in_pthread ?
+                                   FIBER_ATTR_PTHREAD : FIBER_ATTR_NORMAL);
             if (bthread_start_background(&bh, &attr, RunOnComplete, this) != 0) {
                 LOG(FATAL) << "Fail to start bthread";
                 OnComplete();
@@ -434,7 +434,7 @@ private:
     std::atomic<uint32_t> _current_done;
     Controller* _cntl;
     google::protobuf::Closure* _user_done;
-    bthread_t _callmethod_bthread;
+    fiber_id_t _callmethod_bthread;
     pthread_t _callmethod_pthread;
     SubDone _sub_done[0];
 };
@@ -705,9 +705,9 @@ FAIL:
     }
     if (done) {
         if (!cntl->is_done_allowed_to_run_in_place()) {
-            bthread_t bh;
-            bthread_attr_t attr = (FLAGS_usercode_in_pthread ?
-                                   BTHREAD_ATTR_PTHREAD : BTHREAD_ATTR_NORMAL);
+            fiber_id_t bh;
+            fiber_attribute attr = (FLAGS_usercode_in_pthread ?
+                                   FIBER_ATTR_PTHREAD : FIBER_ATTR_NORMAL);
             // Hack: save done in cntl->_done to remove a malloc of args.
             cntl->_done = done;
             if (bthread_start_background(&bh, &attr, RunDoneAndDestroy, cntl) == 0) {

@@ -329,7 +329,7 @@ int schedule_group::_destroy_group(fiber_worker* g) {
     return 0;
 }
 
-bool schedule_group::steal_task(bthread_t* tid, size_t* seed, size_t offset) {
+bool schedule_group::steal_task(fiber_id_t* tid, size_t* seed, size_t offset) {
     // 1: Acquiring fence is paired with releasing fence in _add_group to
     // avoid accessing uninitialized slot of _groups.
     const size_t ngroup = _ngroup.load(std::memory_order_acquire/*1*/);

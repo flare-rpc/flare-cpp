@@ -31,7 +31,7 @@ namespace flare::rpc {
 
     Acceptor::Acceptor(bthread_keytable_pool_t *pool)
             : InputMessenger(), _keytable_pool(pool), _status(UNINITIALIZED), _idle_timeout_sec(-1),
-              _close_idle_tid(INVALID_BTHREAD), _listened_fd(-1), _acception_id(0), _empty_cond(), _ssl_ctx(NULL) {
+              _close_idle_tid(INVALID_FIBER_ID), _listened_fd(-1), _acception_id(0), _empty_cond(), _ssl_ctx(NULL) {
     }
 
     Acceptor::~Acceptor() {
@@ -164,7 +164,7 @@ namespace flare::rpc {
         }
         const int saved_idle_timeout_sec = _idle_timeout_sec;
         _idle_timeout_sec = 0;
-        const bthread_t saved_close_idle_tid = _close_idle_tid;
+        const fiber_id_t saved_close_idle_tid = _close_idle_tid;
         mu.unlock();
 
         // Join the bthread outside lock.

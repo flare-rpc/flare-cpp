@@ -159,7 +159,7 @@ TEST(PingPongTest, ping_pong) {
         arg2->wakeup = 0;
 
         pthread_t th1, th2;
-        bthread_t bth1, bth2;
+        fiber_id_t bth1, bth2;
         if (!FLAGS_use_futex && !FLAGS_use_butex) {
             ASSERT_EQ(0, pthread_create(&th1, NULL, pipe_player, arg1));
             ASSERT_EQ(0, pthread_create(&th2, NULL, pipe_player, arg2));

@@ -202,7 +202,7 @@ private:
     }
 
     std::atomic<State> _state;
-    bthread_t _play_thread;
+    fiber_id_t _play_thread;
     int64_t _sleep_ms;
 };
 

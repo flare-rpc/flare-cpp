@@ -1080,7 +1080,7 @@ TEST_F(ServerTest, logoff_and_multiple_start) {
     // Server::Stop(-1)
     {
         ASSERT_EQ(0, server.Start(ep, NULL));
-        bthread_t tid;
+        fiber_id_t tid;
         const int64_t old_count = echo_svc.count.load(std::memory_order_relaxed);
         google::protobuf::Closure* thrd_func = 
             flare::rpc::NewCallback(SendSleepRPC, ep, 100, true);
@@ -1100,7 +1100,7 @@ TEST_F(ServerTest, logoff_and_multiple_start) {
     {
         ++ep.port;
         ASSERT_EQ(0, server.Start(ep, NULL));
-        bthread_t tid;
+        fiber_id_t tid;
         const int64_t old_count = echo_svc.count.load(std::memory_order_relaxed);
         google::protobuf::Closure* thrd_func = 
             flare::rpc::NewCallback(SendSleepRPC, ep, 100, true);
@@ -1123,7 +1123,7 @@ TEST_F(ServerTest, logoff_and_multiple_start) {
     {
         ++ep.port;
         ASSERT_EQ(0, server.Start(ep, NULL));
-        bthread_t tid;
+        fiber_id_t tid;
         const int64_t old_count = echo_svc.count.load(std::memory_order_relaxed);
         google::protobuf::Closure* thrd_func = 
             flare::rpc::NewCallback(SendSleepRPC, ep, 100, true);
@@ -1146,7 +1146,7 @@ TEST_F(ServerTest, logoff_and_multiple_start) {
     {
         ++ep.port;
         ASSERT_EQ(0, server.Start(ep, NULL));
-        bthread_t tid;
+        fiber_id_t tid;
         const int64_t old_count = echo_svc.count.load(std::memory_order_relaxed);
         google::protobuf::Closure* thrd_func = 
             flare::rpc::NewCallback(SendSleepRPC, ep, 100, true);

@@ -24,7 +24,7 @@
 
 #include <errno.h>                               // users need to check errno
 #include <time.h>                                // timespec
-#include "flare/fiber/internal/types.h"                       // bthread_t
+#include "flare/fiber/internal/types.h"                       // fiber_id_t
 
 namespace flare::fiber_internal {
 
@@ -55,7 +55,7 @@ namespace flare::fiber_internal {
     // Wake up all threads waiting on |butex| except a bthread whose identifier
     // is |excluded_bthread|. This function does not yield.
     // Returns # of threads woken up.
-    int butex_wake_except(void *butex, bthread_t excluded_bthread);
+    int butex_wake_except(void *butex, fiber_id_t excluded_bthread);
 
     // Wake up at most 1 thread waiting on |butex1|, let all other threads wait
     // on |butex2| instead.

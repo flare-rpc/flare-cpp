@@ -734,7 +734,7 @@ private:
     // Deadline of this RPC (since the Epoch in microseconds).
     int64_t _deadline_us;
     // Timer registered to trigger RPC timeout event
-    bthread_timer_t _timeout_id;
+    fiber_timer_id _timeout_id;
 
     // Begin/End time of a single RPC call (since Epoch in microseconds)
     int64_t _begin_time_us;

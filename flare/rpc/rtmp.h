@@ -1016,7 +1016,7 @@ friend class RetryingClientMessageHandler;
     int _num_fast_retries;
     int64_t _last_creation_time_us;
     int64_t _last_retry_start_time_us;
-    bthread_timer_t _create_timer_id;
+    fiber_timer_id _create_timer_id;
     // Note: RtmpClient can be efficiently copied.
     RtmpClient _client_copy;
     SubStreamCreator* _sub_stream_creator;

@@ -319,7 +319,7 @@ namespace {
         void *data;
         ASSERT_EQ(0, bthread_id_trylock(id1, &data));
         ASSERT_EQ(&x, data);
-        bthread_t th[8];
+        fiber_id_t th[8];
         StoppedWaiterArgs args[FLARE_ARRAY_SIZE(th)];
         for (size_t i = 0; i < FLARE_ARRAY_SIZE(th); ++i) {
             args[i].id = id1;
@@ -439,7 +439,7 @@ namespace {
         ASSERT_EQ(0, bthread_id_lock(id, NULL));
         ASSERT_EQ(0, bthread_id_about_to_destroy(id));
         pthread_t pth;
-        bthread_t bth;
+        fiber_id_t bth;
         FailToLockIdArgs args = {id, EPERM};
         ASSERT_EQ(0, pthread_create(&pth, NULL, fail_to_lock_id, &args));
         ASSERT_EQ(0, bthread_start_background(&bth, NULL, fail_to_lock_id, &args));
@@ -464,7 +464,7 @@ namespace {
         ASSERT_EQ(0, bthread_id_about_to_destroy(id));
         ASSERT_EQ(0, bthread_id_unlock(id));
         pthread_t pth;
-        bthread_t bth;
+        fiber_id_t bth;
         ASSERT_EQ(0, pthread_create(&pth, NULL, succeed_to_lock_id, &id));
         ASSERT_EQ(0, bthread_start_background(&bth, NULL, succeed_to_lock_id, &id));
         // The threads should quit soon.
@@ -481,7 +481,7 @@ namespace {
         ASSERT_EQ(0, bthread_id_lock(id, NULL));
         any_thread_quit = false;
         pthread_t pth;
-        bthread_t bth;
+        fiber_id_t bth;
         FailToLockIdArgs args = {id, EPERM};
         ASSERT_EQ(0, pthread_create(&pth, NULL, fail_to_lock_id, &args));
         ASSERT_EQ(0, bthread_start_background(&bth, NULL, fail_to_lock_id, &args));

@@ -86,7 +86,7 @@ namespace flare::fiber_internal {
 
     struct fiber_mutex_waiter : public flare::container::link_node<fiber_mutex_waiter> {
         // tids of pthreads are 0
-        bthread_t tid;
+        fiber_id_t tid;
 
         // Erasing node from middle of linked_list is thread-unsafe, we need
         // to hold its container's lock.
@@ -351,7 +351,7 @@ namespace flare::fiber_internal {
         return nwakeup;
     }
 
-    int butex_wake_except(void *arg, bthread_t excluded_bthread) {
+    int butex_wake_except(void *arg, fiber_id_t excluded_bthread) {
         Butex *b = FLARE_CONTAINER_OF(static_cast<std::atomic<int> *>(arg), Butex, value);
 
         ButexWaiterList bthread_waiters;

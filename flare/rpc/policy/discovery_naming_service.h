@@ -61,7 +61,7 @@ private:
     int DoRenew() const;
 
 private:
-    bthread_t _th;
+    fiber_id_t _th;
     std::atomic<bool> _registered;
     DiscoveryRegisterParam _params;
     flare::base::end_point _current_discovery_server;

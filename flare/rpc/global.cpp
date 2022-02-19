@@ -593,7 +593,7 @@ static void GlobalInitializeOrDieImpl() {
     }
 
     // We never join GlobalUpdate, let it quit with the process.
-    bthread_t th;
+    fiber_id_t th;
     CHECK(bthread_start_background(&th, NULL, GlobalUpdate, NULL) == 0)
         << "Fail to start GlobalUpdate";
 }

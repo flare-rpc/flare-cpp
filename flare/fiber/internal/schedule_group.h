@@ -56,7 +56,7 @@ namespace flare::fiber_internal {
         fiber_worker *create_group();
 
         // Steal a task from a "random" group.
-        bool steal_task(bthread_t *tid, size_t *seed, size_t offset);
+        bool steal_task(fiber_id_t *tid, size_t *seed, size_t offset);
 
         // Tell other groups that `n' tasks was just added to caller's runqueue
         void signal_task(int num_task);

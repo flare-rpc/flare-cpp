@@ -152,10 +152,10 @@ static void QueueMessage(InputMessageBase* to_run_msg,
     // until bthread_flush() is called (in the worse case).
                 
     // TODO(gejun): Join threads.
-    bthread_t th;
-    bthread_attr_t tmp = (FLAGS_usercode_in_pthread ?
-                          BTHREAD_ATTR_PTHREAD :
-                          BTHREAD_ATTR_NORMAL) | BTHREAD_NOSIGNAL;
+    fiber_id_t th;
+    fiber_attribute tmp = (FLAGS_usercode_in_pthread ?
+                          FIBER_ATTR_PTHREAD :
+                          FIBER_ATTR_NORMAL) | FIBER_NOSIGNAL;
     tmp.keytable_pool = keytable_pool;
     if (bthread_start_background(
             &th, &tmp, ProcessInputMessage, to_run_msg) == 0) {
@@ -173,7 +173,7 @@ void InputMessenger::OnNewMessages(Socket* m) {
     //   meaning cutting from flare::io::cord_buf. serializing from protobuf is part of
     //   "process") in this bthread. All messages except the last one will be
     //   processed in separate bthreads. To minimize the overhead, scheduling
-    //   is batched(notice the BTHREAD_NOSIGNAL and bthread_flush).
+    //   is batched(notice the FIBER_NOSIGNAL and bthread_flush).
     // - Verify will always be called in this bthread at most once and before
     //   any process.
     InputMessenger* messenger = static_cast<InputMessenger*>(m->user());

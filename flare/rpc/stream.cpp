@@ -84,7 +84,7 @@ int Stream::Create(const StreamOptions &options,
     }
     flare::fiber_internal::ExecutionQueueOptions q_opt;
     q_opt.bthread_attr 
-        = FLAGS_usercode_in_pthread ? BTHREAD_ATTR_PTHREAD : BTHREAD_ATTR_NORMAL;
+        = FLAGS_usercode_in_pthread ? FIBER_ATTR_PTHREAD : FIBER_ATTR_NORMAL;
     if (flare::fiber_internal::execution_queue_start(&s->_consumer_queue, &q_opt, Consume, s) != 0) {
         LOG(FATAL) << "Fail to create ExecutionQueue";
         delete s;
@@ -195,8 +195,8 @@ int Stream::Connect(Socket* ptr, const timespec*,
         meta->arg = _connect_meta.arg;
         meta->ec = _connect_meta.ec;
         bthread_mutex_unlock(&_connect_mutex);
-        bthread_t tid;
-        if (bthread_start_urgent(&tid, &BTHREAD_ATTR_NORMAL, RunOnConnect, meta) != 0) {
+        fiber_id_t tid;
+        if (bthread_start_urgent(&tid, &FIBER_ATTR_NORMAL, RunOnConnect, meta) != 0) {
             LOG(FATAL) << "Fail to start bthread, " << flare_error();
             RunOnConnect(meta);
         }
@@ -249,8 +249,8 @@ void Stream::TriggerOnConnectIfNeed() {
         meta->arg = _connect_meta.arg;
         meta->ec = _connect_meta.ec;
         bthread_mutex_unlock(&_connect_mutex);
-        bthread_t tid;
-        if (bthread_start_urgent(&tid, &BTHREAD_ATTR_NORMAL, RunOnConnect, meta) != 0) {
+        fiber_id_t tid;
+        if (bthread_start_urgent(&tid, &FIBER_ATTR_NORMAL, RunOnConnect, meta) != 0) {
             LOG(FATAL) << "Fail to start bthread, " << flare_error();
             RunOnConnect(meta);
         }
@@ -324,10 +324,10 @@ int Stream::TriggerOnWritable(bthread_id_t id, void *data, int error_code) {
     }
     wm->error_code = error_code;
     if (wm->new_thread) {
-        const bthread_attr_t* attr = 
-            FLAGS_usercode_in_pthread ? &BTHREAD_ATTR_PTHREAD
-            : &BTHREAD_ATTR_NORMAL;
-        bthread_t tid;
+        const fiber_attribute* attr =
+            FLAGS_usercode_in_pthread ? &FIBER_ATTR_PTHREAD
+            : &FIBER_ATTR_NORMAL;
+        fiber_id_t tid;
         if (bthread_start_background(&tid, attr, RunOnWritable, wm) != 0) {
             LOG(FATAL) << "Fail to start bthread" << flare_error();
             RunOnWritable(wm);
@@ -665,10 +665,10 @@ void StreamWait(StreamId stream_id, const timespec *due_time,
         wm->has_timer = false;
         wm->on_writable = on_writable;
         wm->error_code = EINVAL;
-        const bthread_attr_t* attr = 
-            FLAGS_usercode_in_pthread ? &BTHREAD_ATTR_PTHREAD
-            : &BTHREAD_ATTR_NORMAL;
-        bthread_t tid;
+        const fiber_attribute* attr =
+            FLAGS_usercode_in_pthread ? &FIBER_ATTR_PTHREAD
+            : &FIBER_ATTR_NORMAL;
+        fiber_id_t tid;
         if (bthread_start_background(&tid, attr, Stream::RunOnWritable, wm) != 0) {
             PLOG(FATAL) << "Fail to start bthread";
             Stream::RunOnWritable(wm);

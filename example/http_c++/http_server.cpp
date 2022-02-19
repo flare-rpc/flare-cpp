@@ -106,7 +106,7 @@ namespace example {
                 // Send the "largefile" with ProgressiveAttachment.
                 std::unique_ptr<Args> args(new Args);
                 args->pa = cntl->CreateProgressiveAttachment();
-                bthread_t th;
+                fiber_id_t th;
                 bthread_start_background(&th, NULL, SendLargeFile, args.release());
             } else {
                 cntl->response_attachment().append("Getting file: ");

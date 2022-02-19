@@ -518,7 +518,7 @@ namespace flare::rpc {
         // in a new thread.
         RunOnCancelThread *arg = new RunOnCancelThread(
                 static_cast<google::protobuf::Closure *>(data), id);
-        bthread_t th;
+        fiber_id_t th;
         CHECK_EQ(0, bthread_start_urgent(&th, NULL, RunOnCancelThread::RunThis, arg));
         return 0;
     }
@@ -681,9 +681,9 @@ namespace flare::rpc {
             }
             // No need to join this bthread since RPC caller won't wake up
             // (or user's done won't be called) until this bthread finishes
-            bthread_t bt;
-            bthread_attr_t attr = (FLAGS_usercode_in_pthread ?
-                                   BTHREAD_ATTR_PTHREAD : BTHREAD_ATTR_NORMAL);
+            fiber_id_t bt;
+            fiber_attribute attr = (FLAGS_usercode_in_pthread ?
+                                   FIBER_ATTR_PTHREAD : FIBER_ATTR_NORMAL);
             _tmp_completion_info = info;
             if (bthread_start_background(&bt, &attr, RunEndRPC, this) != 0) {
                 LOG(FATAL) << "Fail to start bthread";

@@ -30,56 +30,56 @@
 
 #endif
 
-typedef uint64_t bthread_t;
+typedef uint64_t fiber_id_t;
 
 // tid returned by bthread_start_* never equals this value.
-static const bthread_t INVALID_BTHREAD = 0;
+static const fiber_id_t INVALID_FIBER_ID = 0;
 
 struct sockaddr;
 
-typedef unsigned bthread_stacktype_t;
-static const bthread_stacktype_t BTHREAD_STACKTYPE_UNKNOWN = 0;
-static const bthread_stacktype_t BTHREAD_STACKTYPE_PTHREAD = 1;
-static const bthread_stacktype_t BTHREAD_STACKTYPE_SMALL = 2;
-static const bthread_stacktype_t BTHREAD_STACKTYPE_NORMAL = 3;
-static const bthread_stacktype_t BTHREAD_STACKTYPE_LARGE = 4;
+typedef unsigned fiber_stack_type_t;
+static const fiber_stack_type_t FIBER_STACKTYPE_UNKNOWN = 0;
+static const fiber_stack_type_t FIBER_STACKTYPE_PTHREAD = 1;
+static const fiber_stack_type_t FIBER_STACKTYPE_SMALL = 2;
+static const fiber_stack_type_t FIBER_STACKTYPE_NORMAL = 3;
+static const fiber_stack_type_t FIBER_STACKTYPE_LARGE = 4;
 
-typedef unsigned bthread_attrflags_t;
-static const bthread_attrflags_t BTHREAD_LOG_START_AND_FINISH = 8;
-static const bthread_attrflags_t BTHREAD_LOG_CONTEXT_SWITCH = 16;
-static const bthread_attrflags_t BTHREAD_NOSIGNAL = 32;
-static const bthread_attrflags_t BTHREAD_NEVER_QUIT = 64;
+typedef unsigned fiber_attribute_flag;
+static const fiber_attribute_flag FIBER_LOG_START_AND_FINISH = 8;
+static const fiber_attribute_flag FIBER_LOG_CONTEXT_SWITCH = 16;
+static const fiber_attribute_flag FIBER_NOSIGNAL = 32;
+static const fiber_attribute_flag FIBER_NEVER_QUIT = 64;
 
 // Key of thread-local data, created by bthread_key_create.
 typedef struct {
     uint32_t index;    // index in KeyTable
     uint32_t version;  // ABA avoidance
-} bthread_key_t;
+} fiber_local_key;
 
-static const bthread_key_t INVALID_BTHREAD_KEY = {0, 0};
+static const fiber_local_key INVALID_BTHREAD_KEY = {0, 0};
 
 #if defined(__cplusplus)
 
-// Overload operators for bthread_key_t
-inline bool operator==(bthread_key_t key1, bthread_key_t key2) {
+// Overload operators for fiber_local_key
+inline bool operator==(fiber_local_key key1, fiber_local_key key2) {
     return key1.index == key2.index && key1.version == key2.version;
 }
 
-inline bool operator!=(bthread_key_t key1, bthread_key_t key2) { return !(key1 == key2); }
+inline bool operator!=(fiber_local_key key1, fiber_local_key key2) { return !(key1 == key2); }
 
-inline bool operator<(bthread_key_t key1, bthread_key_t key2) {
+inline bool operator<(fiber_local_key key1, fiber_local_key key2) {
     return key1.index != key2.index ? (key1.index < key2.index) :
            (key1.version < key2.version);
 }
 
-inline bool operator>(bthread_key_t key1, bthread_key_t key2) { return key2 < key1; }
+inline bool operator>(fiber_local_key key1, fiber_local_key key2) { return key2 < key1; }
 
-inline bool operator<=(bthread_key_t key1, bthread_key_t key2) { return !(key2 < key1); }
+inline bool operator<=(fiber_local_key key1, fiber_local_key key2) { return !(key2 < key1); }
 
-inline bool operator>=(bthread_key_t key1, bthread_key_t key2) { return !(key1 < key2); }
+inline bool operator>=(fiber_local_key key1, fiber_local_key key2) { return !(key1 < key2); }
 
-inline std::ostream &operator<<(std::ostream &os, bthread_key_t key) {
-    return os << "bthread_key_t{index=" << key.index << " version="
+inline std::ostream &operator<<(std::ostream &os, fiber_local_key key) {
+    return os << "fiber_local_key{index=" << key.index << " version="
               << key.version << '}';
 }
 
@@ -96,9 +96,9 @@ typedef struct {
 } bthread_keytable_pool_stat_t;
 
 // Attributes for thread creation.
-typedef struct bthread_attr_t {
-    bthread_stacktype_t stack_type;
-    bthread_attrflags_t flags;
+typedef struct fiber_attribute {
+    fiber_stack_type_t stack_type;
+    fiber_attribute_flag flags;
     bthread_keytable_pool_t *keytable_pool;
 
 #if defined(__cplusplus)
@@ -109,15 +109,15 @@ typedef struct bthread_attr_t {
         keytable_pool = NULL;
     }
 
-    bthread_attr_t operator|(unsigned other_flags) const {
+    fiber_attribute operator|(unsigned other_flags) const {
         CHECK(!(other_flags & 7)) << "flags=" << other_flags;
-        bthread_attr_t tmp = *this;
+        fiber_attribute tmp = *this;
         tmp.flags |= (other_flags & ~(unsigned) 7u);
         return tmp;
     }
 
 #endif  // __cplusplus
-} bthread_attr_t;
+} fiber_attribute;
 
 // bthreads started with this attribute will run on stack of worker pthread and
 // all bthread functions that would block the bthread will block the pthread.
@@ -125,28 +125,28 @@ typedef struct bthread_attr_t {
 // memory. This is required to run JNI code which checks layout of stack. The
 // obvious drawback is that you need more worker pthreads when you have a lot
 // of such bthreads.
-static const bthread_attr_t BTHREAD_ATTR_PTHREAD =
-        {BTHREAD_STACKTYPE_PTHREAD, 0, NULL};
+static const fiber_attribute FIBER_ATTR_PTHREAD =
+        {FIBER_STACKTYPE_PTHREAD, 0, NULL};
 
 // bthreads created with following attributes will have different size of
-// stacks. Default is BTHREAD_ATTR_NORMAL.
-static const bthread_attr_t BTHREAD_ATTR_SMALL =
-        {BTHREAD_STACKTYPE_SMALL, 0, NULL};
-static const bthread_attr_t BTHREAD_ATTR_NORMAL =
-        {BTHREAD_STACKTYPE_NORMAL, 0, NULL};
-static const bthread_attr_t BTHREAD_ATTR_LARGE =
-        {BTHREAD_STACKTYPE_LARGE, 0, NULL};
+// stacks. Default is FIBER_ATTR_NORMAL.
+static const fiber_attribute FIBER_ATTR_SMALL =
+        {FIBER_STACKTYPE_SMALL, 0, NULL};
+static const fiber_attribute FIBER_ATTR_NORMAL =
+        {FIBER_STACKTYPE_NORMAL, 0, NULL};
+static const fiber_attribute FIBER_ATTR_LARGE =
+        {FIBER_STACKTYPE_LARGE, 0, NULL};
 
 // bthreads created with this attribute will print log when it's started,
 // context-switched, finished.
-static const bthread_attr_t BTHREAD_ATTR_DEBUG = {
-        BTHREAD_STACKTYPE_NORMAL,
-        BTHREAD_LOG_START_AND_FINISH | BTHREAD_LOG_CONTEXT_SWITCH,
+static const fiber_attribute FIBER_ATTR_DEBUG = {
+        FIBER_STACKTYPE_NORMAL,
+        FIBER_LOG_START_AND_FINISH | FIBER_LOG_CONTEXT_SWITCH,
         NULL
 };
 
 static const size_t BTHREAD_EPOLL_THREAD_NUM = 1;
-static const bthread_t BTHREAD_ATOMIC_INIT = 0;
+static const fiber_id_t BTHREAD_ATOMIC_INIT = 0;
 
 // Min/Max number of work pthreads.
 static const int BTHREAD_MIN_CONCURRENCY = 3 + BTHREAD_EPOLL_THREAD_NUM;
@@ -202,7 +202,7 @@ typedef struct {
 } bthread_id_t;
 
 // bthread_id returned by bthread_id_create* can never be this value.
-// NOTE: don't confuse with INVALID_BTHREAD!
+// NOTE: don't confuse with INVALID_FIBER_ID!
 static const bthread_id_t INVALID_BTHREAD_ID = {0};
 
 #if defined(__cplusplus)
@@ -234,6 +234,6 @@ typedef struct {
     unsigned conflict_size;
 } bthread_id_list_t;
 
-typedef uint64_t bthread_timer_t;
+typedef uint64_t fiber_timer_id;
 
 #endif  // BTHREAD_TYPES_H

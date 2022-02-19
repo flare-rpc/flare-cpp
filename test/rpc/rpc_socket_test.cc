@@ -162,7 +162,7 @@ TEST_F(SocketTest, authentication) {
     flare::rpc::SocketUniquePtr s;
     ASSERT_EQ(0, flare::rpc::Socket::Address(id, &s));
     
-    bthread_t th[64];
+    fiber_id_t th[64];
     for (size_t i = 0; i < FLARE_ARRAY_SIZE(th); ++i) {
         ASSERT_EQ(0, bthread_start_urgent(&th[i], NULL, auth_fighter, s.get()));
     }
@@ -960,7 +960,7 @@ TEST_F(SocketTest, multi_threaded_write_perf) {
     const size_t REP = 1000000000;
     int fds[2];
     ASSERT_EQ(0, socketpair(AF_UNIX, SOCK_STREAM, 0, fds));
-    bthread_t th[3];
+    fiber_id_t th[3];
     WriterArg args[FLARE_ARRAY_SIZE(th)];
 
     flare::rpc::SocketId id = 8888;

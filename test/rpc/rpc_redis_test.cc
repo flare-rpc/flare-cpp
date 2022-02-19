@@ -1044,12 +1044,12 @@ TEST_F(RedisTest, server_concurrency) {
     flare::rpc::ChannelOptions options;
     options.protocol = flare::rpc::PROTOCOL_REDIS;
     options.connection_type = "pooled";
-    std::vector<bthread_t> bths;
+    std::vector<fiber_id_t> bths;
     std::vector<flare::rpc::Channel*> channels;
     for (int i = 0; i < N; ++i) {
         channels.push_back(new flare::rpc::Channel);
         ASSERT_EQ(0, channels.back()->Init("127.0.0.1", server.listen_address().port, &options));
-        bthread_t bth;
+        fiber_id_t bth;
         ASSERT_EQ(bthread_start_background(&bth, NULL, incr_thread, channels.back()), 0);
         bths.push_back(bth);
     }

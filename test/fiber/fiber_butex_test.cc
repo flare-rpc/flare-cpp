@@ -51,17 +51,17 @@ void* sleeper(void* arg) {
 
 void* joiner(void* arg) {
     const long t1 = flare::base::gettimeofday_us();
-    for (bthread_t* th = (bthread_t*)arg; *th; ++th) {
+    for (fiber_id_t* th = (fiber_id_t*)arg; *th; ++th) {
         if (0 != bthread_join(*th, NULL)) {
-            LOG(FATAL) << "fail to join thread_" << th - (bthread_t*)arg;
+            LOG(FATAL) << "fail to join thread_" << th - (fiber_id_t*)arg;
         }
         long elp = flare::base::gettimeofday_us() - t1;
-        EXPECT_LE(labs(elp - (th - (bthread_t*)arg + 1) * 100000L), 15000L)
-            << "timeout when joining thread_" << th - (bthread_t*)arg;
+        EXPECT_LE(labs(elp - (th - (fiber_id_t*)arg + 1) * 100000L), 15000L)
+            << "timeout when joining thread_" << th - (fiber_id_t*)arg;
         LOG(INFO) << "Joined thread " << *th << " at " << elp << "us ["
                   << bthread_self() << "]";
     }
-    for (bthread_t* th = (bthread_t*)arg; *th; ++th) {
+    for (fiber_id_t* th = (fiber_id_t*)arg; *th; ++th) {
         EXPECT_EQ(0, bthread_join(*th, NULL));
     }
     return NULL;
@@ -85,11 +85,11 @@ TEST(ButexTest, with_or_without_array_zero) {
 TEST(ButexTest, join) {
     const size_t N = 6;
     const size_t M = 6;
-    bthread_t th[N+1];
-    bthread_t jth[M];
+    fiber_id_t th[N+1];
+    fiber_id_t jth[M];
     pthread_t pth[M];
     for (size_t i = 0; i < N; ++i) {
-        bthread_attr_t attr = (i == 0 ? BTHREAD_ATTR_PTHREAD : BTHREAD_ATTR_NORMAL);
+        fiber_attribute attr = (i == 0 ? FIBER_ATTR_PTHREAD : FIBER_ATTR_NORMAL);
         ASSERT_EQ(0, bthread_start_urgent(
                       &th[i], &attr, sleeper,
                       (void*)(100000L/*100ms*/ * (i + 1))));
@@ -153,7 +153,7 @@ TEST(ButexTest, sanity) {
     unmatched_arg->butex = b1;
     unmatched_arg->ptimeout = NULL;
     pthread_create(&t2, NULL, waiter, unmatched_arg);
-    bthread_t th;
+    fiber_id_t th;
     ASSERT_EQ(0, bthread_start_urgent(&th, NULL, waiter, unmatched_arg));
 
     const timespec abstime = flare::base::seconds_from_now(1);
@@ -211,10 +211,10 @@ TEST(ButexTest, wait_without_stop) {
     flare::base::stop_watcher tm;
     const long WAIT_MSEC = 500;
     for (int i = 0; i < 2; ++i) {
-        const bthread_attr_t attr =
-            (i == 0 ? BTHREAD_ATTR_PTHREAD : BTHREAD_ATTR_NORMAL);
+        const fiber_attribute attr =
+            (i == 0 ? FIBER_ATTR_PTHREAD : FIBER_ATTR_NORMAL);
         ButexWaitArg arg = { butex, *butex, WAIT_MSEC, ETIMEDOUT };
-        bthread_t th;
+        fiber_id_t th;
         
         tm.start();
         ASSERT_EQ(0, bthread_start_urgent(&th, &attr, wait_butex, &arg));
@@ -233,9 +233,9 @@ TEST(ButexTest, stop_after_running) {
     const long WAIT_MSEC = 500;
     const long SLEEP_MSEC = 10;
     for (int i = 0; i < 2; ++i) {
-        const bthread_attr_t attr =
-            (i == 0 ? BTHREAD_ATTR_PTHREAD : BTHREAD_ATTR_NORMAL);
-        bthread_t th;
+        const fiber_attribute attr =
+            (i == 0 ? FIBER_ATTR_PTHREAD : FIBER_ATTR_NORMAL);
+        fiber_id_t th;
         ButexWaitArg arg = { butex, *butex, WAIT_MSEC, EINTR };
 
         tm.start();
@@ -260,9 +260,9 @@ TEST(ButexTest, stop_before_running) {
     const long WAIT_MSEC = 500;
 
     for (int i = 0; i < 2; ++i) {
-        const bthread_attr_t attr =
-            (i == 0 ? BTHREAD_ATTR_PTHREAD : BTHREAD_ATTR_NORMAL) | BTHREAD_NOSIGNAL;
-        bthread_t th;
+        const fiber_attribute attr =
+            (i == 0 ? FIBER_ATTR_PTHREAD : FIBER_ATTR_NORMAL) | FIBER_NOSIGNAL;
+        fiber_id_t th;
         ButexWaitArg arg = { butex, *butex, WAIT_MSEC, EINTR };
         
         tm.start();
@@ -281,7 +281,7 @@ TEST(ButexTest, stop_before_running) {
 }
 
 void* join_the_waiter(void* arg) {
-    EXPECT_EQ(0, bthread_join((bthread_t)arg, NULL));
+    EXPECT_EQ(0, bthread_join((fiber_id_t)arg, NULL));
     return NULL;
 }
 
@@ -293,10 +293,10 @@ TEST(ButexTest, join_cant_be_wakeup) {
     ButexWaitArg arg = { butex, *butex, 1000, EINTR };
 
     for (int i = 0; i < 2; ++i) {
-        const bthread_attr_t attr =
-            (i == 0 ? BTHREAD_ATTR_PTHREAD : BTHREAD_ATTR_NORMAL);
+        const fiber_attribute attr =
+            (i == 0 ? FIBER_ATTR_PTHREAD : FIBER_ATTR_NORMAL);
         tm.start();
-        bthread_t th, th2;
+        fiber_id_t th, th2;
         ASSERT_EQ(0, bthread_start_urgent(&th, NULL, wait_butex, &arg));
         ASSERT_EQ(0, bthread_start_urgent(&th2, &attr, join_the_waiter, (void*)th));
         ASSERT_EQ(0, bthread_stop(th2));
@@ -321,17 +321,17 @@ TEST(ButexTest, stop_after_slept) {
     const long WAIT_MSEC = 10;
     
     for (int i = 0; i < 2; ++i) {
-        const bthread_attr_t attr =
-            (i == 0 ? BTHREAD_ATTR_PTHREAD : BTHREAD_ATTR_NORMAL);
+        const fiber_attribute attr =
+            (i == 0 ? FIBER_ATTR_PTHREAD : FIBER_ATTR_NORMAL);
         tm.start();
-        bthread_t th;
+        fiber_id_t th;
         ASSERT_EQ(0, bthread_start_urgent(
                       &th, &attr, sleeper, (void*)(SLEEP_MSEC*1000L)));
         ASSERT_EQ(0, flare::this_fiber::fiber_sleep_for(WAIT_MSEC * 1000L));
         ASSERT_EQ(0, bthread_stop(th));
         ASSERT_EQ(0, bthread_join(th, NULL));
         tm.stop();
-        if (attr.stack_type == BTHREAD_STACKTYPE_PTHREAD) {
+        if (attr.stack_type == FIBER_STACKTYPE_PTHREAD) {
             ASSERT_LT(labs(tm.m_elapsed() - SLEEP_MSEC), 15);
         } else {
             ASSERT_LT(labs(tm.m_elapsed() - WAIT_MSEC), 15);
@@ -347,16 +347,16 @@ TEST(ButexTest, stop_just_when_sleeping) {
     const long SLEEP_MSEC = 100;
     
     for (int i = 0; i < 2; ++i) {
-        const bthread_attr_t attr =
-            (i == 0 ? BTHREAD_ATTR_PTHREAD : BTHREAD_ATTR_NORMAL);
+        const fiber_attribute attr =
+            (i == 0 ? FIBER_ATTR_PTHREAD : FIBER_ATTR_NORMAL);
         tm.start();
-        bthread_t th;
+        fiber_id_t th;
         ASSERT_EQ(0, bthread_start_urgent(
                       &th, &attr, sleeper, (void*)(SLEEP_MSEC*1000L)));
         ASSERT_EQ(0, bthread_stop(th));
         ASSERT_EQ(0, bthread_join(th, NULL));
         tm.stop();
-        if (attr.stack_type == BTHREAD_STACKTYPE_PTHREAD) {
+        if (attr.stack_type == FIBER_STACKTYPE_PTHREAD) {
             ASSERT_LT(labs(tm.m_elapsed() - SLEEP_MSEC), 15);
         } else {
             ASSERT_LT(tm.m_elapsed(), 15);
@@ -372,9 +372,9 @@ TEST(ButexTest, stop_before_sleeping) {
     const long SLEEP_MSEC = 100;
 
     for (int i = 0; i < 2; ++i) {
-        bthread_t th;
-        const bthread_attr_t attr =
-            (i == 0 ? BTHREAD_ATTR_PTHREAD : BTHREAD_ATTR_NORMAL) | BTHREAD_NOSIGNAL;
+        fiber_id_t th;
+        const fiber_attribute attr =
+            (i == 0 ? FIBER_ATTR_PTHREAD : FIBER_ATTR_NORMAL) | FIBER_NOSIGNAL;
         
         tm.start();
         ASSERT_EQ(0, bthread_start_background(&th, &attr, sleeper,
@@ -384,7 +384,7 @@ TEST(ButexTest, stop_before_sleeping) {
         ASSERT_EQ(0, bthread_join(th, NULL));
         tm.stop();
 
-        if (attr.stack_type == BTHREAD_STACKTYPE_PTHREAD) {
+        if (attr.stack_type == FIBER_STACKTYPE_PTHREAD) {
             ASSERT_LT(labs(tm.m_elapsed() - SLEEP_MSEC), 10);
         } else {
             ASSERT_LT(tm.m_elapsed(), 10);

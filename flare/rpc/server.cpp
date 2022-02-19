@@ -366,7 +366,7 @@ namespace flare::rpc {
             : _session_local_data_pool(NULL), _status(UNINITIALIZED), _builtin_service_count(0),
               _virtual_service_count(0), _failed_to_set_max_concurrency_of_method(false), _am(NULL), _internal_am(NULL),
               _first_service(NULL), _tab_info_list(NULL), _global_restful_map(NULL), _last_start_time(0),
-              _derivative_thread(INVALID_BTHREAD), _keytable_pool(NULL), _concurrency(0) {
+              _derivative_thread(INVALID_FIBER_ID), _keytable_pool(NULL), _concurrency(0) {
         static_assert(offsetof(Server, _concurrency) % 64 == 0,
                       "Server_concurrency_must_be_aligned_by_cacheline");
     }
@@ -615,7 +615,7 @@ namespace flare::rpc {
         bool result;
         bool done;
         bool stop;
-        bthread_t th;
+        fiber_id_t th;
     };
 
     static void *BthreadInitEntry(void *void_args) {
@@ -789,7 +789,7 @@ namespace flare::rpc {
                 init_args[i].result = false;
                 init_args[i].done = false;
                 init_args[i].stop = false;
-                bthread_attr_t tmp = BTHREAD_ATTR_NORMAL;
+                fiber_attribute tmp = FIBER_ATTR_NORMAL;
                 tmp.keytable_pool = _keytable_pool;
                 if (bthread_start_background(
                         &init_args[i].th, &tmp, BthreadInitEntry, &init_args[i]) != 0) {
@@ -997,7 +997,7 @@ namespace flare::rpc {
         PutPidFileIfNeeded();
 
         // Launch _derivative_thread.
-        CHECK_EQ(INVALID_BTHREAD, _derivative_thread);
+        CHECK_EQ(INVALID_FIBER_ID, _derivative_thread);
         if (bthread_start_background(&_derivative_thread, NULL,
                                      UpdateDerivedVars, this) != 0) {
             LOG(ERROR) << "Fail to create _derivative_thread";
@@ -1120,10 +1120,10 @@ namespace flare::rpc {
         // Have to join _derivative_thread, which may assume that server is running
         // and services in server are not mutated, otherwise data race happens
         // between Add/RemoveService after Join() and the thread.
-        if (_derivative_thread != INVALID_BTHREAD) {
+        if (_derivative_thread != INVALID_FIBER_ID) {
             bthread_stop(_derivative_thread);
             bthread_join(_derivative_thread, NULL);
-            _derivative_thread = INVALID_BTHREAD;
+            _derivative_thread = INVALID_FIBER_ID;
         }
 
         g_running_server_count.fetch_sub(1, std::memory_order_relaxed);

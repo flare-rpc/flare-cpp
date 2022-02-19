@@ -51,7 +51,7 @@ TEST(MutexTest, sanity) {
     ASSERT_EQ(0u, *get_butex(m));
     ASSERT_EQ(0, bthread_mutex_lock(&m));
     ASSERT_EQ(1u, *get_butex(m));
-    bthread_t th1;
+    fiber_id_t th1;
     ASSERT_EQ(0, bthread_start_urgent(&th1, NULL, locker, &m));
     usleep(5000); // wait for locker to run.
     ASSERT_EQ(257u, *get_butex(m)); // contention
@@ -93,7 +93,7 @@ TEST(MutexTest, timedlock) {
 
     bthread_mutex_lock (&m1);
     bthread_mutex_lock (&m2);
-    bthread_t pth;
+    fiber_id_t pth;
     ASSERT_EQ(0, bthread_start_urgent(&pth, NULL, do_locks, &m1));
     ASSERT_EQ(ETIMEDOUT, bthread_cond_timedwait(&c, &m2, &t));
     ASSERT_EQ(0, bthread_join(pth, NULL));
@@ -201,7 +201,7 @@ void PerfTest(Mutex* mutex,
     }
     g_started = true;
     char prof_name[32];
-    snprintf(prof_name, sizeof(prof_name), "mutex_perf_%d.prof", ++g_prof_name_counter); 
+    snprintf(prof_name, sizeof(prof_name), "mutex_perf_%d.prof", ++g_prof_name_counter);
     ProfilerStart(prof_name);
     usleep(500 * 1000);
     ProfilerStop();
@@ -224,10 +224,10 @@ TEST(MutexTest, performance) {
     const int thread_num = 12;
     flare::base::Mutex base_mutex;
     PerfTest(&base_mutex, (pthread_t*)NULL, thread_num, pthread_create, pthread_join);
-    PerfTest(&base_mutex, (bthread_t*)NULL, thread_num, bthread_start_background, bthread_join);
+    PerfTest(&base_mutex, (fiber_id_t*)NULL, thread_num, bthread_start_background, bthread_join);
     flare::fiber_internal::Mutex bth_mutex;
     PerfTest(&bth_mutex, (pthread_t*)NULL, thread_num, pthread_create, pthread_join);
-    PerfTest(&bth_mutex, (bthread_t*)NULL, thread_num, bthread_start_background, bthread_join);
+    PerfTest(&bth_mutex, (fiber_id_t*)NULL, thread_num, bthread_start_background, bthread_join);
 }
 
 void* loop_until_stopped(void* arg) {
@@ -245,9 +245,9 @@ TEST(MutexTest, mix_thread_types) {
     const int M = N * 2;
     flare::fiber_internal::Mutex m;
     pthread_t pthreads[N];
-    bthread_t bthreads[M];
+    fiber_id_t bthreads[M];
     // reserve enough workers for test. This is a must since we have
-    // BTHREAD_ATTR_PTHREAD bthreads which may cause deadlocks (the
+    // FIBER_ATTR_PTHREAD bthreads which may cause deadlocks (the
     // bhtread_usleep below can't be scheduled and g_stopped is never
     // true, thus loop_until_stopped spins forever)
     bthread_setconcurrency(M);
@@ -255,7 +255,7 @@ TEST(MutexTest, mix_thread_types) {
         ASSERT_EQ(0, pthread_create(&pthreads[i], NULL, loop_until_stopped, &m));
     }
     for (int i = 0; i < M; ++i) {
-        const bthread_attr_t *attr = i % 2 ? NULL : &BTHREAD_ATTR_PTHREAD;
+        const fiber_attribute *attr = i % 2 ? NULL : &FIBER_ATTR_PTHREAD;
         ASSERT_EQ(0, bthread_start_urgent(&bthreads[i], attr, loop_until_stopped, &m));
     }
     flare::this_fiber::fiber_sleep_for(1000L * 1000);

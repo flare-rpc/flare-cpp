@@ -145,9 +145,9 @@ void* epoll_thread(void* arg) {
             SocketMeta* m = (SocketMeta*)e[i].udata;
 #endif
             if (m->req.fetch_add(1, std::memory_order_acquire) == 0) {
-                bthread_t th;
+                fiber_id_t th;
                 bthread_start_urgent(
-                    &th, &BTHREAD_ATTR_SMALL, process_thread, m);
+                    &th, &FIBER_ATTR_SMALL, process_thread, m);
                 ++em->nthread;
             } else {
                 ++em->nfold;
@@ -213,7 +213,7 @@ TEST(DispatcherTest, dispatch_tasks) {
     const size_t NCLIENT = 16;
 
     int epfd[NEPOLL];
-    bthread_t eth[NEPOLL];
+    fiber_id_t eth[NEPOLL];
     EpollMeta* em[NEPOLL];
     int fds[2 * NCLIENT];
     pthread_t cth[NCLIENT];

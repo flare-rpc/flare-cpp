@@ -153,7 +153,7 @@ int main(int argc, char* argv[]) {
     }
     g_request.resize(FLAGS_request_size, 'r');
 
-    std::vector<bthread_t> bids;
+    std::vector<fiber_id_t> bids;
     std::vector<pthread_t> pids;
     if (!FLAGS_use_bthread) {
         pids.resize(FLAGS_thread_num);

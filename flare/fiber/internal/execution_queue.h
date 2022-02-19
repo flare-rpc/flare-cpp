@@ -142,8 +142,8 @@ public:
 struct ExecutionQueueOptions {
     ExecutionQueueOptions();
     // Attribute of the bthread which execute runs on
-    // default: BTHREAD_ATTR_NORMAL
-    bthread_attr_t bthread_attr;
+    // default: FIBER_ATTR_NORMAL
+    fiber_attribute bthread_attr;
 
     // Executor that tasks run on. bthread will be used when executor = NULL.
     // Note that TaskOptions.in_place_if_possible = false will not work, if implementation of

@@ -39,10 +39,10 @@ DEFINE_int32(tc_stack_normal, 8, "maximum normal stacks cached by each thread");
 
 namespace flare::fiber_internal {
 
-    static_assert(BTHREAD_STACKTYPE_PTHREAD == STACK_TYPE_PTHREAD, "must match");
-    static_assert(BTHREAD_STACKTYPE_SMALL == STACK_TYPE_SMALL, "must match");
-    static_assert(BTHREAD_STACKTYPE_NORMAL == STACK_TYPE_NORMAL, "must match");
-    static_assert(BTHREAD_STACKTYPE_LARGE == STACK_TYPE_LARGE, "must match");
+    static_assert(FIBER_STACKTYPE_PTHREAD == STACK_TYPE_PTHREAD, "must match");
+    static_assert(FIBER_STACKTYPE_SMALL == STACK_TYPE_SMALL, "must match");
+    static_assert(FIBER_STACKTYPE_NORMAL == STACK_TYPE_NORMAL, "must match");
+    static_assert(FIBER_STACKTYPE_LARGE == STACK_TYPE_LARGE, "must match");
     static_assert(STACK_TYPE_MAIN == 0, "must_be_0");
 
     static flare::static_atomic<int64_t> s_stack_count = FLARE_STATIC_ATOMIC_INIT(0);

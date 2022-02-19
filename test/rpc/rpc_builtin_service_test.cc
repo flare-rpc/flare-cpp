@@ -772,7 +772,7 @@ TEST_F(BuiltinServiceTest, bthreads) {
         CheckErrorText(cntl, "is not a bthread id");
     }
     {
-        bthread_t th;
+        fiber_id_t th;
         EXPECT_EQ(0, bthread_start_background(&th, NULL, dummy_bthread, NULL));
         ClosureChecker done;
         flare::rpc::Controller cntl;

@@ -60,7 +60,7 @@ TEST_F(BthreadTest, unrelated_pthread) {
 }
 
 TEST_F(BthreadTest, attr_init_and_destroy) {
-    bthread_attr_t attr;
+    fiber_attribute attr;
     ASSERT_EQ(0, bthread_attr_init(&attr));
     ASSERT_EQ(0, bthread_attr_destroy(&attr));
 }
@@ -140,7 +140,7 @@ void* do_nothing(void* arg) {
 void* launcher(void* arg) {
     LOG(INFO) << "launcher(" << arg << ")";
     for (size_t i = 0; !stop; ++i) {
-        bthread_t th;
+        fiber_id_t th;
         bthread_start_urgent(&th, NULL, do_nothing, (void*)i);
         flare::this_fiber::fiber_sleep_for(1000000L);
     }
@@ -159,7 +159,7 @@ void* stopper(void*) {
 
 void* misc(void* arg) {
     LOG(INFO) << "misc(" << arg << ")";
-    bthread_t th[8];
+    fiber_id_t th[8];
     EXPECT_EQ(0, bthread_start_urgent(&th[0], NULL, sleep_for_awhile, (void*)2));
     EXPECT_EQ(0, bthread_start_urgent(&th[1], NULL, just_exit, (void*)3));
     EXPECT_EQ(0, bthread_start_urgent(&th[2], NULL, repeated_sleep, (void*)4));
@@ -176,7 +176,7 @@ void* misc(void* arg) {
 
 TEST_F(BthreadTest, sanity) {
     LOG(INFO) << "main thread " << pthread_self();
-    bthread_t th1;
+    fiber_id_t th1;
     ASSERT_EQ(0, bthread_start_urgent(&th1, NULL, misc, (void*)1));
     LOG(INFO) << "back to main thread " << th1 << " " << pthread_self();
     ASSERT_EQ(0, bthread_join(th1, NULL));
@@ -203,7 +203,7 @@ void * tf (void*) {
 }
 
 TEST_F(BthreadTest, backtrace) {
-    bthread_t th;
+    fiber_id_t th;
     ASSERT_EQ(0, bthread_start_urgent(&th, NULL, tf, NULL));
     ASSERT_EQ(0, bthread_join (th, NULL));
 
@@ -222,7 +222,7 @@ void* show_self(void*) {
 
 TEST_F(BthreadTest, bthread_self) {
     ASSERT_EQ(0ul, bthread_self());
-    bthread_t bth;
+    fiber_id_t bth;
     ASSERT_EQ(0, bthread_start_urgent(&bth, NULL, show_self, NULL));
     ASSERT_EQ(0, bthread_join(bth, NULL));
 }
@@ -237,10 +237,10 @@ TEST_F(BthreadTest, bthread_join) {
     ASSERT_EQ(EINVAL, bthread_join(0, NULL));
     
     // Unexisting tid
-    ASSERT_EQ(EINVAL, bthread_join((bthread_t)-1, NULL));
+    ASSERT_EQ(EINVAL, bthread_join((fiber_id_t)-1, NULL));
 
     // Joining self
-    bthread_t th;
+    fiber_id_t th;
     ASSERT_EQ(0, bthread_start_urgent(&th, NULL, join_self, NULL));
 }
 
@@ -250,7 +250,7 @@ void* change_errno(void* arg) {
 }
 
 TEST_F(BthreadTest, errno_not_changed) {
-    bthread_t th;
+    fiber_id_t th;
     errno = 1;
     bthread_start_urgent(&th, NULL, change_errno, (void*)(intptr_t)2);
     ASSERT_EQ(1, errno);
@@ -287,7 +287,7 @@ TEST_F(BthreadTest, small_threads) {
 
         std::atomic<size_t> s(0);
         size_t N = (sleep_in_adding_func ? 40000 : 100000);
-        std::vector<bthread_t> th;
+        std::vector<fiber_id_t> th;
         th.reserve(N);
         flare::base::stop_watcher tm;
         for (size_t j = 0; j < 3; ++j) {
@@ -297,9 +297,9 @@ TEST_F(BthreadTest, small_threads) {
             }
             tm.start();
             for (size_t i = 0; i < N; ++i) {
-                bthread_t t1;
+                fiber_id_t t1;
                 ASSERT_EQ(0, bthread_start_urgent(
-                              &t1, &BTHREAD_ATTR_SMALL, adding_func, &s));
+                              &t1, &FIBER_ATTR_SMALL, adding_func, &s));
                 th.push_back(t1);
             }
             tm.stop();
@@ -322,7 +322,7 @@ TEST_F(BthreadTest, small_threads) {
 
 void* bthread_starter(void* void_counter) {
     while (!stop.load(std::memory_order_relaxed)) {
-        bthread_t th;
+        fiber_id_t th;
         EXPECT_EQ(0, bthread_start_urgent(&th, NULL, adding_func, void_counter));
     }
     return NULL;
@@ -340,7 +340,7 @@ TEST_F(BthreadTest, start_bthreads_frequently) {
     const int con = bthread_getconcurrency();
     ASSERT_GT(con, 0);
     AlignedCounter* counters = new AlignedCounter[con];
-    bthread_t th[con];
+    fiber_id_t th[con];
 
     std::cout << "Perf with different parameters..." << std::endl;
     //ProfilerStart(prof_name);
@@ -384,10 +384,10 @@ TEST_F(BthreadTest, start_latency_when_high_idle) {
     for (int i = 0; i < 10000; ++i) {
         flare::base::stop_watcher tm;
         tm.start();
-        bthread_t th;
+        fiber_id_t th;
         bthread_start_urgent(&th, NULL, log_start_latency, &tm);
         bthread_join(th, NULL);
-        bthread_t th2;
+        fiber_id_t th2;
         flare::base::stop_watcher tm2;
         tm2.start();
         bthread_start_background(&th2, NULL, log_start_latency, &tm2);
@@ -410,7 +410,7 @@ void* sleep_for_awhile_with_sleep(void* arg) {
 }
 
 TEST_F(BthreadTest, stop_sleep) {
-    bthread_t th;
+    fiber_id_t th;
     ASSERT_EQ(0, bthread_start_urgent(
                   &th, NULL, sleep_for_awhile_with_sleep, (void*)1000000L));
     flare::base::stop_watcher tm;
@@ -423,12 +423,12 @@ TEST_F(BthreadTest, stop_sleep) {
 }
 
 TEST_F(BthreadTest, bthread_exit) {
-    bthread_t th1;
-    bthread_t th2;
+    fiber_id_t th1;
+    fiber_id_t th2;
     pthread_t th3;
-    bthread_t th4;
-    bthread_t th5;
-    const bthread_attr_t attr = BTHREAD_ATTR_PTHREAD;
+    fiber_id_t th4;
+    fiber_id_t th5;
+    const fiber_attribute attr = FIBER_ATTR_PTHREAD;
 
     ASSERT_EQ(0, bthread_start_urgent(&th1, NULL, just_exit, NULL));
     ASSERT_EQ(0, bthread_start_background(&th2, NULL, just_exit, NULL));
@@ -444,12 +444,12 @@ TEST_F(BthreadTest, bthread_exit) {
 }
 
 TEST_F(BthreadTest, bthread_equal) {
-    bthread_t th1;
+    fiber_id_t th1;
     ASSERT_EQ(0, bthread_start_urgent(&th1, NULL, do_nothing, NULL));
-    bthread_t th2;
+    fiber_id_t th2;
     ASSERT_EQ(0, bthread_start_urgent(&th2, NULL, do_nothing, NULL));
     ASSERT_EQ(0, bthread_equal(th1, th2));
-    bthread_t th3 = th2;
+    fiber_id_t th3 = th2;
     ASSERT_EQ(1, bthread_equal(th3, th2));
     ASSERT_EQ(0, bthread_join(th1, NULL));
     ASSERT_EQ(0, bthread_join(th2, NULL));
@@ -464,8 +464,8 @@ void* check_sleep(void* pthread_task) {
     EXPECT_TRUE(bthread_self() != 0);
     // Create a no-signal task that other worker will not steal. The task will be
     // run if current bthread does context switch.
-    bthread_attr_t attr = BTHREAD_ATTR_NORMAL | BTHREAD_NOSIGNAL;
-    bthread_t th1;
+    fiber_attribute attr = FIBER_ATTR_NORMAL | FIBER_NOSIGNAL;
+    fiber_id_t th1;
     pthread_t run = 0;
     const pthread_t pid = pthread_self();
     EXPECT_EQ(0, bthread_start_urgent(&th1, &attr, mark_run, &run));
@@ -474,7 +474,7 @@ void* check_sleep(void* pthread_task) {
         // due to NOSIGNAL, mark_run did not run.
         // FIXME: actually runs. someone is still stealing.
         // EXPECT_EQ((pthread_t)0, run);
-        // flare::this_fiber::fiber_sleep_for = usleep for BTHREAD_ATTR_PTHREAD
+        // flare::this_fiber::fiber_sleep_for = usleep for FIBER_ATTR_PTHREAD
         EXPECT_EQ(pid, pthread_self());
         // schedule mark_run
         bthread_flush();
@@ -496,12 +496,12 @@ TEST_F(BthreadTest, fiber_sleep_for) {
     // after previous cases.
     usleep(10000);
     
-    bthread_t th1;
-    ASSERT_EQ(0, bthread_start_urgent(&th1, &BTHREAD_ATTR_PTHREAD,
+    fiber_id_t th1;
+    ASSERT_EQ(0, bthread_start_urgent(&th1, &FIBER_ATTR_PTHREAD,
                                       check_sleep, (void*)1));
     ASSERT_EQ(0, bthread_join(th1, NULL));
     
-    bthread_t th2;
+    fiber_id_t th2;
     ASSERT_EQ(0, bthread_start_urgent(&th2, NULL,
                                       check_sleep, (void*)0));
     ASSERT_EQ(0, bthread_join(th2, NULL));
@@ -513,8 +513,8 @@ void* dummy_thread(void*) {
 
 TEST_F(BthreadTest, too_many_nosignal_threads) {
     for (size_t i = 0; i < 100000; ++i) {
-        bthread_attr_t attr = BTHREAD_ATTR_NORMAL | BTHREAD_NOSIGNAL;
-        bthread_t tid;
+        fiber_attribute attr = FIBER_ATTR_NORMAL | FIBER_NOSIGNAL;
+        fiber_id_t tid;
         ASSERT_EQ(0, bthread_start_urgent(&tid, &attr, dummy_thread, NULL));
     }
 }
@@ -525,7 +525,7 @@ static void* yield_thread(void*) {
 }
 
 TEST_F(BthreadTest, yield_single_thread) {
-    bthread_t tid;
+    fiber_id_t tid;
     ASSERT_EQ(0, bthread_start_background(&tid, NULL, yield_thread, NULL));
     ASSERT_EQ(0, bthread_join(tid, NULL));
 }

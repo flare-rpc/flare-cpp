@@ -172,8 +172,8 @@ void* epoll_thread(void* arg) {
             vec[i].arg = e[i].udata;
 # endif
         }
-        bthread_t tid[n];
-        bthread_startv(tid, vec, n, &BTHREAD_ATTR_SMALL);
+        fiber_id_t tid[n];
+        bthread_startv(tid, vec, n, &FIBER_ATTR_SMALL);
 #else
         for (int i = 0; i < n; ++i) {
 # if defined(FLARE_PLATFORM_LINUX)
@@ -237,13 +237,13 @@ TEST(FDTest, ping_pong) {
 
     int epfd[NEPOLL];
 #ifdef RUN_EPOLL_IN_BTHREAD
-    bthread_t eth[NEPOLL];
+    fiber_id_t eth[NEPOLL];
 #else
     pthread_t eth[NEPOLL];
 #endif
     int fds[2 * NCLIENT];
 #ifdef RUN_CLIENT_IN_BTHREAD
-    bthread_t cth[NCLIENT];
+    fiber_id_t cth[NCLIENT];
 #else
     pthread_t cth[NCLIENT];
 #endif
@@ -464,7 +464,7 @@ TEST(FDTest, invalid_epoll_events) {
     ASSERT_EQ(-1, bthread_fd_wait(fds[0], EPOLLET));
     ASSERT_EQ(EINVAL, errno);
 #endif
-    bthread_t th;
+    fiber_id_t th;
     ASSERT_EQ(0, bthread_start_urgent(&th, NULL, close_the_fd, &fds[1]));
     flare::base::stop_watcher tm;
     tm.start();
@@ -494,7 +494,7 @@ TEST(FDTest, timeout) {
     ASSERT_EQ(0, pipe(fds));
     pthread_t th;
     ASSERT_EQ(0, pthread_create(&th, NULL, wait_for_the_fd, &fds[0]));
-    bthread_t bth;
+    fiber_id_t bth;
     ASSERT_EQ(0, bthread_start_urgent(&bth, NULL, wait_for_the_fd, &fds[0]));
     flare::base::stop_watcher tm;
     tm.start();
@@ -509,7 +509,7 @@ TEST(FDTest, timeout) {
 TEST(FDTest, close_should_wakeup_waiter) {
     int fds[2];
     ASSERT_EQ(0, pipe(fds));
-    bthread_t bth;
+    fiber_id_t bth;
     ASSERT_EQ(0, bthread_start_urgent(&bth, NULL, wait_for_the_fd, &fds[0]));
     flare::base::stop_watcher tm;
     tm.start();

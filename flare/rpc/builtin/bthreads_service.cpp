@@ -23,7 +23,7 @@
 #include "flare/rpc/builtin/bthreads_service.h"
 
 namespace flare::fiber_internal {
-void print_task(std::ostream& os, bthread_t tid);
+void print_task(std::ostream& os, fiber_id_t tid);
 }
 
 
@@ -43,7 +43,7 @@ void BthreadsService::default_method(::google::protobuf::RpcController* cntl_bas
         os << "Use /bthreads/<bthread_id>";
     } else {
         char* endptr = NULL;
-        bthread_t tid = strtoull(constraint.c_str(), &endptr, 10);
+        fiber_id_t tid = strtoull(constraint.c_str(), &endptr, 10);
         if (*endptr == '\0' || *endptr == '/') {
             ::flare::fiber_internal::print_task(os, tid);
         } else {

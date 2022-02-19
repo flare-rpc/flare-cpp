@@ -37,9 +37,9 @@ static void* PeriodicTaskThread(void* arg) {
 }
 
 static void RunPeriodicTaskThread(void* arg) {
-    bthread_t th = 0;
+    fiber_id_t th = 0;
     int rc = bthread_start_background(
-        &th, &BTHREAD_ATTR_NORMAL, PeriodicTaskThread, arg);
+        &th, &FIBER_ATTR_NORMAL, PeriodicTaskThread, arg);
     if (rc != 0) {
         LOG(ERROR) << "Fail to start PeriodicTaskThread";
         static_cast<PeriodicTask*>(arg)->OnDestroyingTask();
@@ -52,7 +52,7 @@ void PeriodicTaskManager::StartTaskAt(PeriodicTask* task, const timespec& abstim
         LOG(ERROR) << "Param[task] is NULL";
         return;
     }
-    bthread_timer_t timer_id;
+    fiber_timer_id timer_id;
     const int rc = bthread_timer_add(
         &timer_id, abstime, RunPeriodicTaskThread, task);
     if (rc != 0) {

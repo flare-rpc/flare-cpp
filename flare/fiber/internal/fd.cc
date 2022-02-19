@@ -394,7 +394,7 @@ namespace flare::fiber_internal {
 
         int _epfd;
         bool _stop;
-        bthread_t _tid;
+        fiber_id_t _tid;
         flare::base::Mutex _start_mutex;
     };
 

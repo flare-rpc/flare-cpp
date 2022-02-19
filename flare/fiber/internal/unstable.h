@@ -36,7 +36,7 @@
 
 __BEGIN_DECLS
 
-// Schedule tasks created by BTHREAD_NOSIGNAL
+// Schedule tasks created by FIBER_NOSIGNAL
 extern void bthread_flush();
 
 // Mark the calling bthread as "about to quit". When the bthread is scheduled,
@@ -46,12 +46,12 @@ extern int bthread_about_to_quit();
 // Run `on_timer(arg)' at or after real-time `abstime'. Put identifier of the
 // timer into *id.
 // Return 0 on success, errno otherwise.
-extern int bthread_timer_add(bthread_timer_t* id, timespec abstime,
+extern int bthread_timer_add(fiber_timer_id* id, timespec abstime,
                              void (*on_timer)(void*), void* arg);
 
 // Unschedule the timer associated with `id'.
 // Returns: 0 - exist & not-run; 1 - still running; EINVAL - not exist.
-extern int bthread_timer_del(bthread_timer_t id);
+extern int bthread_timer_del(fiber_timer_id id);
 
 // Suspend caller thread until the file descriptor `fd' has `epoll_events'.
 // Returns 0 on success, -1 otherwise and errno is set.
@@ -89,11 +89,11 @@ extern int bthread_set_worker_startfn(void (*start_fn)());
 // suspend indefinitely.
 extern void bthread_stop_world();
 
-// Create a bthread_key_t with an additional arg to destructor.
+// Create a fiber_local_key with an additional arg to destructor.
 // Generally the dtor_arg is for passing the creator of data so that we can
 // return the data back to the creator in destructor. Without this arg, we
 // have to do an extra heap allocation to contain data and its creator.
-extern int bthread_key_create2(bthread_key_t* key,
+extern int bthread_key_create2(fiber_local_key* key,
                                void (*destructor)(void* data, const void* dtor_arg),
                                const void* dtor_arg);
 
@@ -123,7 +123,7 @@ extern int bthread_keytable_pool_getstat(bthread_keytable_pool_t* pool,
 // ctor(args).
 extern void bthread_keytable_pool_reserve(
     bthread_keytable_pool_t* pool, size_t nfree,
-    bthread_key_t key, void* ctor(const void* args), const void* args);
+    fiber_local_key key, void* ctor(const void* args), const void* args);
 
 __END_DECLS
 

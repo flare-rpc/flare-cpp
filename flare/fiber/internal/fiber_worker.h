@@ -4,7 +4,7 @@
 
 #include "flare/base/time.h"                             // cpuwide_time_ns
 #include "flare/fiber/internal/schedule_group.h"
-#include "flare/fiber/internal/fiber_entity.h"                     // bthread_t, fiber_entity
+#include "flare/fiber/internal/fiber_entity.h"                     // fiber_id_t, fiber_entity
 #include "flare/fiber/internal/work_stealing_queue.h"           // WorkStealingQueue
 #include "flare/fiber/internal/remote_task_queue.h"             // RemoteTaskQueue
 #include "flare/memory/resource_pool.h"                    // ResourceId
@@ -42,8 +42,8 @@ namespace flare::fiber_internal {
         // to run.
         // Return 0 on success, errno otherwise.
         static int start_foreground(fiber_worker **pg,
-                                    bthread_t *__restrict tid,
-                                    const bthread_attr_t *__restrict attr,
+                                    fiber_id_t *__restrict tid,
+                                    const fiber_attribute *__restrict attr,
                                     void *(*fn)(void *),
                                     void *__restrict arg);
 
@@ -53,8 +53,8 @@ namespace flare::fiber_internal {
         //   Called from non-worker: start_background<true>
         // Return 0 on success, errno otherwise.
         template<bool REMOTE>
-        int start_background(bthread_t *__restrict tid,
-                             const bthread_attr_t *__restrict attr,
+        int start_background(fiber_id_t *__restrict tid,
+                             const fiber_attribute *__restrict attr,
                              void *(*fn)(void *),
                              void *__restrict arg);
 
@@ -68,9 +68,9 @@ namespace flare::fiber_internal {
         // then being popped by sched(pg), which is not necessary.
         static void sched_to(fiber_worker **pg, fiber_entity *next_meta);
 
-        static void sched_to(fiber_worker **pg, bthread_t next_tid);
+        static void sched_to(fiber_worker **pg, fiber_id_t next_tid);
 
-        static void exchange(fiber_worker **pg, bthread_t next_tid);
+        static void exchange(fiber_worker **pg, fiber_id_t next_tid);
 
         // The callback will be run in the beginning of next-run bthread.
         // Can't be called by current bthread directly because it often needs
@@ -94,7 +94,7 @@ namespace flare::fiber_internal {
         static void yield(fiber_worker **pg);
 
         // Suspend caller until bthread `tid' terminates.
-        static int join(bthread_t tid, void **return_value);
+        static int join(fiber_id_t tid, void **return_value);
 
         // Returns true iff the bthread `tid' still exists. Notice that it is
         // just the result at this very moment which may change soon.
@@ -102,19 +102,19 @@ namespace flare::fiber_internal {
         //    if (exists(tid)) {
         //        Wait for events of the thread.   // Racy, may block indefinitely.
         //    }
-        static bool exists(bthread_t tid);
+        static bool exists(fiber_id_t tid);
 
         // Put attribute associated with `tid' into `*attr'.
         // Returns 0 on success, -1 otherwise and errno is set.
-        static int get_attr(bthread_t tid, bthread_attr_t *attr);
+        static int get_attr(fiber_id_t tid, fiber_attribute *attr);
 
         // Get/set fiber_entity.stop of the tid.
-        static void set_stopped(bthread_t tid);
+        static void set_stopped(fiber_id_t tid);
 
-        static bool is_stopped(bthread_t tid);
+        static bool is_stopped(fiber_id_t tid);
 
         // The bthread running run_main_task();
-        bthread_t main_tid() const { return _main_tid; }
+        fiber_id_t main_tid() const { return _main_tid; }
 
         fiber_statistics main_stat() const;
 
@@ -129,7 +129,7 @@ namespace flare::fiber_internal {
         // Meta/Identifier of current task in this group.
         fiber_entity *current_task() const { return _cur_meta; }
 
-        bthread_t current_tid() const { return _cur_meta->tid; }
+        fiber_id_t current_tid() const { return _cur_meta->tid; }
 
         // Uptime of current task in nanoseconds.
         int64_t current_uptime_ns() const { return flare::base::cpuwide_time_ns() - _cur_meta->cpuwide_start_ns; }
@@ -144,13 +144,13 @@ namespace flare::fiber_internal {
         int64_t cumulated_cputime_ns() const { return _cumulated_cputime_ns; }
 
         // Push a bthread into the runqueue
-        void ready_to_run(bthread_t tid, bool nosignal = false);
+        void ready_to_run(fiber_id_t tid, bool nosignal = false);
 
         // Flush tasks pushed to rq but signalled.
         void flush_nosignal_tasks();
 
         // Push a bthread into the runqueue from another non-worker thread.
-        void ready_to_run_remote(bthread_t tid, bool nosignal = false);
+        void ready_to_run_remote(fiber_id_t tid, bool nosignal = false);
 
         void flush_nosignal_tasks_remote_locked(flare::base::Mutex &locked_mutex);
 
@@ -158,7 +158,7 @@ namespace flare::fiber_internal {
 
         // Automatically decide the caller is remote or local, and call
         // the corresponding function.
-        void ready_to_run_general(bthread_t tid, bool nosignal = false);
+        void ready_to_run_general(fiber_id_t tid, bool nosignal = false);
 
         void flush_nosignal_tasks_general();
 
@@ -170,14 +170,14 @@ namespace flare::fiber_internal {
 
         // Wake up blocking ops in the thread.
         // Returns 0 on success, errno otherwise.
-        static int interrupt(bthread_t tid, schedule_group *c);
+        static int interrupt(fiber_id_t tid, schedule_group *c);
 
         // Get the meta associate with the task.
-        static fiber_entity *address_meta(bthread_t tid);
+        static fiber_entity *address_meta(fiber_id_t tid);
 
         // Push a task into _rq, if _rq is full, retry after some time. This
         // process make go on indefinitely.
-        void push_rq(bthread_t tid);
+        void push_rq(fiber_id_t tid);
 
     private:
 
@@ -200,7 +200,7 @@ namespace flare::fiber_internal {
         static void _add_sleep_event(void *);
 
         struct ReadyToRunArgs {
-            bthread_t tid;
+            fiber_id_t tid;
             bool nosignal;
         };
 
@@ -211,9 +211,9 @@ namespace flare::fiber_internal {
         // Wait for a task to run.
         // Returns true on success, false is treated as permanent error and the
         // loop calling this function should end.
-        bool wait_task(bthread_t *tid);
+        bool wait_task(fiber_id_t *tid);
 
-        bool steal_task(bthread_t *tid) {
+        bool steal_task(fiber_id_t *tid) {
             if (_remote_rq.pop(tid)) {
                 return true;
             }
@@ -248,8 +248,8 @@ namespace flare::fiber_internal {
         size_t _steal_seed;
         size_t _steal_offset;
         fiber_contextual_stack *_main_stack;
-        bthread_t _main_tid;
-        WorkStealingQueue<bthread_t> _rq;
+        fiber_id_t _main_tid;
+        WorkStealingQueue<fiber_id_t> _rq;
         RemoteTaskQueue _remote_rq;
         int _remote_num_nosignal;
         int _remote_nsignaled;

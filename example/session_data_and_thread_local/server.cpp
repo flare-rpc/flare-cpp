@@ -177,7 +177,7 @@ public:
         job->request = request;
         job->response = response;
         job->done = done;
-        bthread_t th;
+        fiber_id_t th;
         CHECK_EQ(0, bthread_start_background(&th, NULL, process_thread, job));
 
         // We don't want to call done->Run() here, release the guard.
@@ -188,7 +188,7 @@ public:
     }
 
 private:
-    bthread_key_t _tls2_key;
+    fiber_local_key _tls2_key;
 };
 
 void AsyncJob::run() {

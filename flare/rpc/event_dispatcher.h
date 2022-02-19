@@ -20,7 +20,7 @@
 #define FLARE_RPC_EVENT_DISPATCHER_H_
 
 #include "flare/base/profile.h"                     // FLARE_DISALLOW_COPY_AND_ASSIGN
-#include "flare/fiber/internal/types.h"                   // bthread_t, bthread_attr_t
+#include "flare/fiber/internal/types.h"                   // fiber_id_t, fiber_attribute
 #include "flare/rpc/socket.h"                     // Socket, SocketId
 
 
@@ -39,7 +39,7 @@ public:
     // Use |*consumer_thread_attr| (if it's not NULL) as the attribute to
     // create bthreads running user callbacks.
     // Returns 0 on success, -1 otherwise.
-    virtual int Start(const bthread_attr_t* consumer_thread_attr);
+    virtual int Start(const fiber_attribute* consumer_thread_attr);
 
     // True iff this dispatcher is running in a bthread
     bool Running() const;
@@ -89,13 +89,13 @@ private:
     volatile bool _stop;
 
     // identifier of hosting bthread
-    bthread_t _tid;
+    fiber_id_t _tid;
 
     // The attribute of bthreads calling user callbacks.
-    bthread_attr_t _consumer_thread_attr;
+    fiber_attribute _consumer_thread_attr;
 
     // The attribute of bthread epoll_wait.
-    bthread_attr_t _epoll_thread_attr;
+    fiber_attribute _epoll_thread_attr;
 
     // Pipe fds to wakeup EventDispatcher from `epoll_wait' in order to quit
     int _wakeup_fds[2];

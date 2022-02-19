@@ -20,7 +20,7 @@
 
 #include <mutex>
 #include <condition_variable>
-#include "flare/fiber/internal/bthread.h"                       // bthread_t
+#include "flare/fiber/internal/bthread.h"                       // fiber_id_t
 #include "flare/container/flat_map.h"
 #include "flare/rpc/input_messenger.h"
 
@@ -94,7 +94,7 @@ private:
     bthread_keytable_pool_t* _keytable_pool; // owned by Server
     Status _status;
     int _idle_timeout_sec;
-    bthread_t _close_idle_tid;
+    fiber_id_t _close_idle_tid;
 
     int _listened_fd;
     // The Socket tso accept connections.

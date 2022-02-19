@@ -144,7 +144,7 @@ int main(int argc, char **argv) {
         args[i].offset = i;
         args[i].current_concurrency.store(0, std::memory_order_relaxed);
     }
-    std::vector<bthread_t> tids;
+    std::vector<fiber_id_t> tids;
     tids.resize(FLAGS_thread_num);
     for (int i = 0; i < FLAGS_thread_num; ++i) {
         CHECK_EQ(0, bthread_start_background(&tids[i], NULL, access_thread, &args[i]));

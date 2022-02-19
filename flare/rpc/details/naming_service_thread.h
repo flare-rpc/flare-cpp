@@ -21,7 +21,7 @@
 
 #include <string>
 #include "flare/container/intrusive_ptr.h"               // flare::container::intrusive_ptr
-#include "flare/fiber/internal/bthread.h"                    // bthread_t
+#include "flare/fiber/internal/bthread.h"                    // fiber_id_t
 #include "flare/rpc/server_id.h"                     // ServerId
 #include "flare/rpc/shared_object.h"                 // SharedObject
 #include "flare/rpc/naming_service.h"                // NamingService
@@ -111,7 +111,7 @@ private:
         std::vector<ServerId>* dst, const NamingServiceFilter* filter);
 
     flare::base::Mutex _mutex;
-    bthread_t _tid;
+    fiber_id_t _tid;
     NamingService* _ns;
     std::string _protocol;
     std::string _service_name;

@@ -402,7 +402,7 @@ public:
     }
 
     int fd;
-    bthread_timer_t timer_id;
+    fiber_timer_id timer_id;
     int (*on_epollout_event)(int fd, int err, void* data);
     void* data;
 };
@@ -1309,9 +1309,9 @@ void Socket::AfterAppConnected(int err, void* data) {
         }
         // requests are not setup yet. check the comment on Setup() in Write()
         req->Setup(s);
-        bthread_t th;
+        fiber_id_t th;
         if (bthread_start_background(
-                &th, &BTHREAD_ATTR_NORMAL, KeepWrite, req) != 0) {
+                &th, &FIBER_ATTR_NORMAL, KeepWrite, req) != 0) {
             PLOG(WARNING) << "Fail to start KeepWrite";
             KeepWrite(req);
         }
@@ -1348,10 +1348,10 @@ int Socket::KeepWriteIfConnected(int fd, int err, void* data) {
     if (err == 0 && s->ssl_state() == SSL_CONNECTING) {
         // Run ssl connect in a new bthread to avoid blocking
         // the current bthread (thus blocking the EventDispatcher)
-        bthread_t th;
+        fiber_id_t th;
         google::protobuf::Closure* thrd_func = flare::rpc::NewCallback(
             Socket::CheckConnectedAndKeepWrite, fd, err, data);
-        if ((err = bthread_start_background(&th, &BTHREAD_ATTR_NORMAL,
+        if ((err = bthread_start_background(&th, &FIBER_ATTR_NORMAL,
                                             RunClosure, thrd_func)) == 0) {
             return 0;
         } else {
@@ -1512,7 +1512,7 @@ int Socket::StartWrite(WriteRequest* req, const WriteOptions& opt) {
     }
 
     int saved_errno = 0;
-    bthread_t th;
+    fiber_id_t th;
     SocketUniquePtr ptr_for_keep_write;
     ssize_t nw = 0;
 
@@ -1571,7 +1571,7 @@ int Socket::StartWrite(WriteRequest* req, const WriteOptions& opt) {
 KEEPWRITE_IN_BACKGROUND:
     ReAddress(&ptr_for_keep_write);
     req->socket = ptr_for_keep_write.release();
-    if (bthread_start_background(&th, &BTHREAD_ATTR_NORMAL,
+    if (bthread_start_background(&th, &FIBER_ATTR_NORMAL,
                                  KeepWrite, req) != 0) {
         LOG(FATAL) << "Fail to start KeepWrite";
         KeepWrite(req);
@@ -1916,7 +1916,7 @@ AuthContext* Socket::mutable_auth_context() {
 }
 
 int Socket::StartInputEvent(SocketId id, uint32_t events,
-                            const bthread_attr_t& thread_attr) {
+                            const fiber_attribute& thread_attr) {
     SocketUniquePtr s;
     if (Address(id, &s) < 0) {
         return -1;
@@ -1947,11 +1947,11 @@ int Socket::StartInputEvent(SocketId id, uint32_t events,
         // is just 1500~1700/s
         g_vars->neventthread << 1;
 
-        bthread_t tid;
+        fiber_id_t tid;
         // transfer ownership as well, don't use s anymore!
         Socket* const p = s.release();
 
-        bthread_attr_t attr = thread_attr;
+        fiber_attribute attr = thread_attr;
         attr.keytable_pool = p->_keytable_pool;
         if (bthread_start_urgent(&tid, &attr, ProcessEvent, p) != 0) {
             LOG(FATAL) << "Fail to start ProcessEvent";

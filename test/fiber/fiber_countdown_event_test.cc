@@ -41,7 +41,7 @@ TEST(CountdonwEventTest, sanity) {
         a.num_sig = n;
         a.event.reset(n);
         for (int i = 0; i < n; ++i) {
-            bthread_t tid;
+            fiber_id_t tid;
             ASSERT_EQ(0, bthread_start_urgent(&tid, NULL, signaler, &a));
         }
         a.event.wait();

@@ -1008,10 +1008,10 @@ DECLARE_bool(usercode_in_pthread);
                     sctx->header().set_status_code(HTTP_STATUS_SERVICE_UNAVAILABLE);
                 }
                 for (size_t i = 1; i < goaway_streams.size(); ++i) {
-                    bthread_t th;
-                    bthread_attr_t tmp = (FLAGS_usercode_in_pthread ?
-                                          BTHREAD_ATTR_PTHREAD :
-                                          BTHREAD_ATTR_NORMAL);
+                    fiber_id_t th;
+                    fiber_attribute tmp = (FLAGS_usercode_in_pthread ?
+                                          FIBER_ATTR_PTHREAD :
+                                          FIBER_ATTR_NORMAL);
                     tmp.keytable_pool = _socket->keytable_pool();
                     CHECK_EQ(0, bthread_start_background(&th, &tmp, ProcessHttpResponseWrapper,
                                                          static_cast<InputMessageBase *>(goaway_streams[i])));

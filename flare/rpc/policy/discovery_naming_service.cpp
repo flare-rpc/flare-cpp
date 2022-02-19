@@ -138,7 +138,7 @@ bool DiscoveryRegisterParam::IsValid() const {
 }
 
 DiscoveryClient::DiscoveryClient()
-    : _th(INVALID_BTHREAD)
+    : _th(INVALID_FIBER_ID)
     , _registered(false) {}
 
 DiscoveryClient::~DiscoveryClient() {

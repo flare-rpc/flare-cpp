@@ -24,21 +24,21 @@
 
 namespace flare::fiber_internal {
 
-// Utilities to manipulate bthread_t
-    inline bthread_t make_tid(uint32_t version, flare::memory::ResourceId<fiber_entity> slot) {
-        return (((bthread_t) version) << 32) | (bthread_t) slot.value;
+// Utilities to manipulate fiber_id_t
+    inline fiber_id_t make_tid(uint32_t version, flare::memory::ResourceId<fiber_entity> slot) {
+        return (((fiber_id_t) version) << 32) | (fiber_id_t) slot.value;
     }
 
-    inline flare::memory::ResourceId<fiber_entity> get_slot(bthread_t tid) {
+    inline flare::memory::ResourceId<fiber_entity> get_slot(fiber_id_t tid) {
         flare::memory::ResourceId<fiber_entity> id = {(tid & 0xFFFFFFFFul)};
         return id;
     }
 
-    inline uint32_t get_version(bthread_t tid) {
+    inline uint32_t get_version(fiber_id_t tid) {
         return (uint32_t) ((tid >> 32) & 0xFFFFFFFFul);
     }
 
-    inline fiber_entity *fiber_worker::address_meta(bthread_t tid) {
+    inline fiber_entity *fiber_worker::address_meta(fiber_id_t tid) {
         // fiber_entity * m = address_resource<fiber_entity>(get_slot(tid));
         // if (m != NULL && m->version == get_version(tid)) {
         //     return m;
@@ -47,7 +47,7 @@ namespace flare::fiber_internal {
         return address_resource(get_slot(tid));
     }
 
-    inline void fiber_worker::exchange(fiber_worker **pg, bthread_t next_tid) {
+    inline void fiber_worker::exchange(fiber_worker **pg, fiber_id_t next_tid) {
         fiber_worker *g = *pg;
         if (g->is_current_pthread_task()) {
             return g->ready_to_run(next_tid);
@@ -60,18 +60,18 @@ namespace flare::fiber_internal {
         fiber_worker::sched_to(pg, next_tid);
     }
 
-    inline void fiber_worker::sched_to(fiber_worker **pg, bthread_t next_tid) {
+    inline void fiber_worker::sched_to(fiber_worker **pg, fiber_id_t next_tid) {
         fiber_entity *next_meta = address_meta(next_tid);
         if (next_meta->stack == NULL) {
             fiber_contextual_stack *stk = get_stack(next_meta->stack_type(), task_runner);
             if (stk) {
                 next_meta->set_stack(stk);
             } else {
-                // stack_type is BTHREAD_STACKTYPE_PTHREAD or out of memory,
-                // In latter case, attr is forced to be BTHREAD_STACKTYPE_PTHREAD.
+                // stack_type is FIBER_STACKTYPE_PTHREAD or out of memory,
+                // In latter case, attr is forced to be FIBER_STACKTYPE_PTHREAD.
                 // This basically means that if we can't allocate stack, run
                 // the task in pthread directly.
-                next_meta->attr.stack_type = BTHREAD_STACKTYPE_PTHREAD;
+                next_meta->attr.stack_type = FIBER_STACKTYPE_PTHREAD;
                 next_meta->set_stack((*pg)->_main_stack);
             }
         }
@@ -79,7 +79,7 @@ namespace flare::fiber_internal {
         sched_to(pg, next_meta);
     }
 
-    inline void fiber_worker::push_rq(bthread_t tid) {
+    inline void fiber_worker::push_rq(fiber_id_t tid) {
         while (!_rq.push(tid)) {
             // Created too many bthreads: a promising approach is to insert the
             // task into another fiber_worker, but we don't use it because:

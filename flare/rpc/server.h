@@ -362,7 +362,7 @@ public:
     typedef flare::container::FlatMap<std::string, MethodProperty> MethodMap;
 
     struct ThreadLocalOptions {
-        bthread_key_t tls_key;
+        fiber_local_key tls_key;
         const DataFactory* thread_local_data_factory;
         
         ThreadLocalOptions()
@@ -673,7 +673,7 @@ friend class Controller;
 
     std::string _version;
     time_t _last_start_time;
-    bthread_t _derivative_thread;
+    fiber_id_t _derivative_thread;
     
     bthread_keytable_pool_t* _keytable_pool;
 

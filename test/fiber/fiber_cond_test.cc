@@ -35,7 +35,7 @@ namespace {
 
     pthread_mutex_t wake_mutex = PTHREAD_MUTEX_INITIALIZER;
     long signal_start_time = 0;
-    std::vector<bthread_t> wake_tid;
+    std::vector<fiber_id_t> wake_tid;
     std::vector<long> wake_time;
     volatile bool stop = false;
     const long SIGNAL_INTERVAL_US = 10000;
@@ -77,13 +77,13 @@ namespace {
         wake_time.resize(1024);
         wake_time.clear();
 
-        bthread_t wth[8];
+        fiber_id_t wth[8];
         const size_t NW = FLARE_ARRAY_SIZE(wth);
         for (size_t i = 0; i < NW; ++i) {
             ASSERT_EQ(0, bthread_start_urgent(&wth[i], NULL, waiter, &a));
         }
 
-        bthread_t sth;
+        fiber_id_t sth;
         ASSERT_EQ(0, bthread_start_urgent(&sth, NULL, signaler, &a));
 
         flare::this_fiber::fiber_sleep_for(SIGNAL_INTERVAL_US * 200);
@@ -117,13 +117,13 @@ namespace {
         printf("Average error is %fus\n", sqrt(square_sum / std::max(nbeforestop, 1UL)));
 
         // Check fairness
-        std::map<bthread_t, int> count;
+        std::map<fiber_id_t, int> count;
         for (size_t i = 0; i < wake_tid.size(); ++i) {
             ++count[wake_tid[i]];
         }
         EXPECT_EQ(NW, count.size());
         int avg_count = (int) (wake_tid.size() / count.size());
-        for (std::map<bthread_t, int>::iterator
+        for (std::map<fiber_id_t, int>::iterator
                      it = count.begin(); it != count.end(); ++it) {
             ASSERT_LE(abs(it->second - avg_count), 1)
                                         << "bthread=" << it->first
@@ -263,7 +263,7 @@ namespace {
         PingPongArg arg;
         arg.stopped = false;
         arg.nthread = 0;
-        bthread_t threads[2];
+        fiber_id_t threads[2];
         ProfilerStart("cond.prof");
         for (int i = 0; i < 2; ++i) {
             ASSERT_EQ(0, bthread_start_urgent(&threads[i], NULL, ping_pong_thread, &arg));
@@ -338,7 +338,7 @@ namespace {
         const int NTHREADS = 10;
         ba.nwaiter = NTHREADS * 2;
 
-        bthread_t normal_threads[NTHREADS];
+        fiber_id_t normal_threads[NTHREADS];
         for (int i = 0; i < NTHREADS; ++i) {
             ASSERT_EQ(0, bthread_start_urgent(&normal_threads[i], NULL, wait_thread, &ba));
         }
@@ -422,16 +422,16 @@ namespace {
 
     static void launch_many_bthreads() {
         g_stop = false;
-        bthread_t tid;
+        fiber_id_t tid;
         BthreadCond c;
         c.Init();
         flare::base::stop_watcher tm;
-        bthread_start_urgent(&tid, &BTHREAD_ATTR_PTHREAD, wait_cond_thread, &c);
-        std::vector<bthread_t> tids;
+        bthread_start_urgent(&tid, &FIBER_ATTR_PTHREAD, wait_cond_thread, &c);
+        std::vector<fiber_id_t> tids;
         tids.reserve(32768);
         tm.start();
         for (size_t i = 0; i < 32768; ++i) {
-            bthread_t t0;
+            fiber_id_t t0;
             ASSERT_EQ(0, bthread_start_background(&t0, NULL, usleep_thread, NULL));
             tids.push_back(t0);
         }
@@ -458,7 +458,7 @@ namespace {
     }
 
     TEST(CondTest, too_many_bthreads_from_bthread) {
-        bthread_t th;
+        fiber_id_t th;
         ASSERT_EQ(0, bthread_start_urgent(&th, NULL, run_launch_many_bthreads, NULL));
         bthread_join(th, NULL);
     }

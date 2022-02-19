@@ -46,7 +46,7 @@ TEST(BthreadTest, setconcurrency) {
     ASSERT_EQ(0, bthread_setconcurrency(BTHREAD_MIN_CONCURRENCY + 1));
     ASSERT_EQ(BTHREAD_MIN_CONCURRENCY + 1, bthread_getconcurrency());
     ASSERT_EQ(0, bthread_setconcurrency(BTHREAD_MIN_CONCURRENCY));  // smaller value
-    bthread_t th;
+    fiber_id_t th;
     ASSERT_EQ(0, bthread_start_urgent(&th, NULL, dummy, NULL));
     ASSERT_EQ(BTHREAD_MIN_CONCURRENCY + 1, bthread_getconcurrency());
     ASSERT_EQ(0, bthread_setconcurrency(BTHREAD_MIN_CONCURRENCY + 5));
@@ -95,13 +95,13 @@ TEST(BthreadTest, setconcurrency_with_running_bthread) {
     ASSERT_TRUE(odd != NULL && even != NULL);
     *odd = 0;
     *even = 0;
-    std::vector<bthread_t> tids;
+    std::vector<fiber_id_t> tids;
     const int N = 500;
     for (int i = 0; i < N; ++i) {
-        bthread_t tid;
-        bthread_start_background(&tid, &BTHREAD_ATTR_SMALL, odd_thread, NULL);
+        fiber_id_t tid;
+        bthread_start_background(&tid, &FIBER_ATTR_SMALL, odd_thread, NULL);
         tids.push_back(tid);
-        bthread_start_background(&tid, &BTHREAD_ATTR_SMALL, even_thread, NULL);
+        bthread_start_background(&tid, &FIBER_ATTR_SMALL, even_thread, NULL);
         tids.push_back(tid);
     }
     for (int i = 100; i <= N; ++i) {
@@ -130,8 +130,8 @@ void* sleep_proc(void*) {
 }
 
 void* add_concurrency_proc(void*) {
-    bthread_t tid;
-    bthread_start_background(&tid, &BTHREAD_ATTR_SMALL, sleep_proc, NULL);
+    fiber_id_t tid;
+    bthread_start_background(&tid, &FIBER_ATTR_SMALL, sleep_proc, NULL);
     bthread_join(tid, NULL);
     return NULL;
 }
@@ -172,15 +172,15 @@ TEST(BthreadTest, min_concurrency) {
     ASSERT_EQ(conn + 1, get_min_concurrency());
     ASSERT_EQ(conn + 1, flare::fiber_internal::g_task_control->concurrency());
 
-    std::vector<bthread_t> tids;
+    std::vector<fiber_id_t> tids;
     for (int i = 0; i < conn; ++i) {
-        bthread_t tid;
-        bthread_start_background(&tid, &BTHREAD_ATTR_SMALL, sleep_proc, NULL);
+        fiber_id_t tid;
+        bthread_start_background(&tid, &FIBER_ATTR_SMALL, sleep_proc, NULL);
         tids.push_back(tid);
     }
     for (int i = 0; i < add_conn; ++i) {
-        bthread_t tid;
-        bthread_start_background(&tid, &BTHREAD_ATTR_SMALL, add_concurrency_proc, NULL);
+        fiber_id_t tid;
+        bthread_start_background(&tid, &FIBER_ATTR_SMALL, add_concurrency_proc, NULL);
         tids.push_back(tid);
     }
     for (size_t i = 0; i < tids.size(); ++i) {

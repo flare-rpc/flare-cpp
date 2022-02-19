@@ -50,7 +50,7 @@ namespace {
 // Wrap same counters into different objects to make sure that different key
 // returns different objects as well as aggregate the usages.
     struct CountersWrapper {
-        CountersWrapper(Counters *c, bthread_key_t key) : _c(c), _key(key) {}
+        CountersWrapper(Counters *c, fiber_local_key key) : _c(c), _key(key) {}
 
         ~CountersWrapper() {
             if (_c) {
@@ -61,7 +61,7 @@ namespace {
 
     private:
         Counters *_c;
-        bthread_key_t _key;
+        fiber_local_key _key;
     };
 
     static void destroy_counters_wrapper(void *arg) {
@@ -73,7 +73,7 @@ namespace {
 // NOTE: returns void to use ASSERT
     static void worker1_impl(Counters *cs) {
         cs->nenterthread.fetch_add(1, std::memory_order_relaxed);
-        bthread_key_t k[NKEY_PER_WORKER];
+        fiber_local_key k[NKEY_PER_WORKER];
         CountersWrapper *ws[FLARE_ARRAY_SIZE(k)];
         for (size_t i = 0; i < FLARE_ARRAY_SIZE(k); ++i) {
             ASSERT_EQ(0, bthread_key_create(&k[i], destroy_counters_wrapper));
@@ -109,7 +109,7 @@ namespace {
         Counters args;
         memset(&args, 0, sizeof(args));
         pthread_t th[8];
-        bthread_t bth[8];
+        fiber_id_t bth[8];
         for (size_t i = 0; i < FLARE_ARRAY_SIZE(th); ++i) {
             ASSERT_EQ(0, pthread_create(&th[i], NULL, worker1, &args));
         }
@@ -142,18 +142,18 @@ namespace {
     }
 
 // NOTE: returns void to use ASSERT
-    static void worker2_impl(bthread_key_t k) {
+    static void worker2_impl(fiber_local_key k) {
         ASSERT_EQ(NULL, bthread_getspecific(k));
         ASSERT_EQ(0, bthread_setspecific(k, (void *) seq.fetch_add(1)));
     }
 
     static void *worker2(void *arg) {
-        worker2_impl(*static_cast<bthread_key_t *>(arg));
+        worker2_impl(*static_cast<fiber_local_key *>(arg));
         return NULL;
     }
 
     TEST(KeyTest, use_one_key_in_different_threads) {
-        bthread_key_t k;
+        fiber_local_key k;
         ASSERT_EQ(0, bthread_key_create(&k, dtor2)) << flare_error();
         seqs.clear();
 
@@ -161,7 +161,7 @@ namespace {
         for (size_t i = 0; i < FLARE_ARRAY_SIZE(th); ++i) {
             ASSERT_EQ(0, pthread_create(&th[i], NULL, worker2, &k));
         }
-        bthread_t bth[1];
+        fiber_id_t bth[1];
         for (size_t i = 0; i < FLARE_ARRAY_SIZE(bth); ++i) {
             ASSERT_EQ(0, bthread_start_urgent(&bth[i], NULL, worker2, &k));
         }
@@ -180,8 +180,8 @@ namespace {
     }
 
     struct Keys {
-        bthread_key_t valid_key;
-        bthread_key_t invalid_key;
+        fiber_local_key valid_key;
+        fiber_local_key invalid_key;
     };
 
     void *const DUMMY_PTR = (void *) 1;
@@ -214,7 +214,7 @@ namespace {
         keys.invalid_key.version = 123;
 
         pthread_t th;
-        bthread_t bth;
+        fiber_id_t bth;
         ASSERT_EQ(0, pthread_create(&th, NULL, use_invalid_keys, &keys));
         ASSERT_EQ(0, bthread_start_urgent(&bth, NULL, use_invalid_keys, &keys));
         ASSERT_EQ(0, pthread_join(th, NULL));
@@ -223,12 +223,12 @@ namespace {
     }
 
     TEST(KeyTest, reuse_key) {
-        bthread_key_t key;
+        fiber_local_key key;
         ASSERT_EQ(0, bthread_key_create(&key, NULL));
         ASSERT_EQ(NULL, bthread_getspecific(key));
         ASSERT_EQ(0, bthread_setspecific(key, (void *) 1));
         ASSERT_EQ(0, bthread_key_delete(key)); // delete key before clearing TLS.
-        bthread_key_t key2;
+        fiber_local_key key2;
         ASSERT_EQ(0, bthread_key_create(&key2, NULL));
         ASSERT_EQ(key.index, key2.index);
         // The slot is not NULL, the impl must check version and return NULL.
@@ -237,7 +237,7 @@ namespace {
 
 // NOTE: sid is short for 'set in dtor'.
     struct SidData {
-        bthread_key_t key;
+        fiber_local_key key;
         int seq;
         int end_seq;
     };
@@ -261,7 +261,7 @@ namespace {
     }
 
     TEST(KeyTest, set_in_dtor) {
-        bthread_key_t key;
+        fiber_local_key key;
         ASSERT_EQ(0, bthread_key_create(&key, sid_dtor));
 
         SidData pth_data = {key, 0, 3};
@@ -269,11 +269,11 @@ namespace {
         SidData bth2_data = {key, 0, 3};
 
         pthread_t pth;
-        bthread_t bth;
-        bthread_t bth2;
+        fiber_id_t bth;
+        fiber_id_t bth2;
         ASSERT_EQ(0, pthread_create(&pth, NULL, sid_thread, &pth_data));
         ASSERT_EQ(0, bthread_start_urgent(&bth, NULL, sid_thread, &bth_data));
-        ASSERT_EQ(0, bthread_start_urgent(&bth2, &BTHREAD_ATTR_PTHREAD,
+        ASSERT_EQ(0, bthread_start_urgent(&bth2, &FIBER_ATTR_PTHREAD,
                                           sid_thread, &bth2_data));
 
         ASSERT_EQ(0, pthread_join(pth, NULL));
@@ -288,7 +288,7 @@ namespace {
     }
 
     struct SBAData {
-        bthread_key_t key;
+        fiber_local_key key;
         int level;
         int ndestroy;
     };
@@ -312,7 +312,7 @@ namespace {
         ASSERT_EQ(0, bthread_setspecific(data->key, tls));
         ASSERT_EQ(tls, bthread_getspecific(data->key));
         if (data->level++ == 0) {
-            bthread_t bth;
+            fiber_id_t bth;
             ASSERT_EQ(0, bthread_start_urgent(&bth, NULL, set_before_anybth, data));
             ASSERT_EQ(0, bthread_join(bth, NULL));
             ASSERT_EQ(1, data->ndestroy);
@@ -328,7 +328,7 @@ namespace {
     }
 
     TEST(KeyTest, set_tls_before_creating_any_bthread) {
-        bthread_key_t key;
+        fiber_local_key key;
         ASSERT_EQ(0, bthread_key_create(&key, SBATLS::deleter));
         pthread_t th;
         SBAData data;
@@ -343,7 +343,7 @@ namespace {
     }
 
     struct PoolData {
-        bthread_key_t key;
+        fiber_local_key key;
         PoolData *expected_data;
         int seq;
         int end_seq;
@@ -371,29 +371,29 @@ namespace {
     }
 
     TEST(KeyTest, using_pool) {
-        bthread_key_t key;
+        fiber_local_key key;
         ASSERT_EQ(0, bthread_key_create(&key, pool_dtor));
 
         bthread_keytable_pool_t pool;
         ASSERT_EQ(0, bthread_keytable_pool_init(&pool));
         ASSERT_EQ(0, bthread_keytable_pool_size(&pool));
 
-        bthread_attr_t attr;
+        fiber_attribute attr;
         ASSERT_EQ(0, bthread_attr_init(&attr));
         attr.keytable_pool = &pool;
 
-        bthread_attr_t attr2 = attr;
-        attr2.stack_type = BTHREAD_STACKTYPE_PTHREAD;
+        fiber_attribute attr2 = attr;
+        attr2.stack_type = FIBER_STACKTYPE_PTHREAD;
 
         PoolData bth_data = {key, NULL, 0, 3};
-        bthread_t bth;
+        fiber_id_t bth;
         ASSERT_EQ(0, bthread_start_urgent(&bth, &attr, pool_thread, &bth_data));
         ASSERT_EQ(0, bthread_join(bth, NULL));
         ASSERT_EQ(0, bth_data.seq);
         ASSERT_EQ(1, bthread_keytable_pool_size(&pool));
 
         PoolData bth2_data = {key, &bth_data, 0, 3};
-        bthread_t bth2;
+        fiber_id_t bth2;
         ASSERT_EQ(0, bthread_start_urgent(&bth2, &attr2, pool_thread, &bth2_data));
         ASSERT_EQ(0, bthread_join(bth2, NULL));
         ASSERT_EQ(0, bth2_data.seq);

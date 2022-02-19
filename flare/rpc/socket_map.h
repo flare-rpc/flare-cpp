@@ -182,7 +182,7 @@ private:
     bool _exposed_in_variable;
     flare::variable::PassiveStatus<std::string>* _this_map_var;
     bool _has_close_idle_thread;
-    bthread_t _close_idle_thread;
+    fiber_id_t _close_idle_thread;
 };
 
 } // namespace flare::rpc

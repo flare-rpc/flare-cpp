@@ -42,8 +42,8 @@ __BEGIN_DECLS
 // `tid'. Switch to the new thread and schedule old thread to run. Use this
 // function when the new thread is more urgent.
 // Returns 0 on success, errno otherwise.
-extern int bthread_start_urgent(bthread_t *__restrict tid,
-                                const bthread_attr_t *__restrict attr,
+extern int bthread_start_urgent(fiber_id_t *__restrict tid,
+                                const fiber_attribute *__restrict attr,
                                 void *(*fn)(void *),
                                 void *__restrict args);
 
@@ -52,8 +52,8 @@ extern int bthread_start_urgent(bthread_t *__restrict tid,
 // new thread to run, it returns. In another word, the new thread may take
 // longer time than bthread_start_urgent() to run.
 // Return 0 on success, errno otherwise.
-extern int bthread_start_background(bthread_t *__restrict tid,
-                                    const bthread_attr_t *__restrict attr,
+extern int bthread_start_background(fiber_id_t *__restrict tid,
+                                    const fiber_attribute *__restrict attr,
                                     void *(*fn)(void *),
                                     void *__restrict args);
 
@@ -75,7 +75,7 @@ extern int bthread_start_background(bthread_t *__restrict tid,
 // bthread_interrupt() guarantees that Thread2 is woken up reliably no matter
 // how the 2 threads are interleaved.
 // Returns 0 on success, errno otherwise.
-extern int bthread_interrupt(bthread_t tid);
+extern int bthread_interrupt(fiber_id_t tid);
 
 // Make bthread_stopped() on the bthread return true and interrupt the bthread.
 // Note that current bthread_stop() solely sets the built-in "stop flag" and
@@ -83,19 +83,19 @@ extern int bthread_interrupt(bthread_t tid);
 // fiber, and replaceable by user-defined stop flags plus calls to
 // bthread_interrupt().
 // Returns 0 on success, errno otherwise.
-extern int bthread_stop(bthread_t tid);
+extern int bthread_stop(fiber_id_t tid);
 
 // Returns 1 iff bthread_stop(tid) was called or the thread does not exist,
 // 0 otherwise.
-extern int bthread_stopped(bthread_t tid);
+extern int bthread_stopped(fiber_id_t tid);
 
 // Returns identifier of caller if caller is a bthread, 0 otherwise(Id of a
 // fiber is never zero)
-extern bthread_t bthread_self(void);
+extern fiber_id_t bthread_self(void);
 
 // Compare two bthread identifiers.
 // Returns a non-zero value if t1 and t2 are equal, zero otherwise.
-extern int bthread_equal(bthread_t t1, bthread_t t2);
+extern int bthread_equal(fiber_id_t t1, fiber_id_t t2);
 
 // Terminate calling bthread/pthread and make `retval' available to any
 // successful join with the terminating thread. This function does not return.
@@ -109,14 +109,14 @@ extern void bthread_exit(void *retval) __attribute__((__noreturn__));
 //    from a bthread, pass the value via the `args' created the bthread.
 //  - bthread_join() is not affected by bthread_interrupt.
 // Returns 0 on success, errno otherwise.
-extern int bthread_join(bthread_t bt, void **bthread_return);
+extern int bthread_join(fiber_id_t bt, void **bthread_return);
 
 // Track and join many bthreads.
 // Notice that all bthread_list* functions are NOT thread-safe.
 extern int bthread_list_init(bthread_list_t *list,
                              unsigned size, unsigned conflict_size);
 extern void bthread_list_destroy(bthread_list_t *list);
-extern int bthread_list_add(bthread_list_t *list, bthread_t tid);
+extern int bthread_list_add(bthread_list_t *list, fiber_id_t tid);
 extern int bthread_list_stop(bthread_list_t *list);
 extern int bthread_list_join(bthread_list_t *list);
 
@@ -125,15 +125,15 @@ extern int bthread_list_join(bthread_list_t *list);
 // ------------------------------------------
 
 // Initialize thread attribute `attr' with default attributes.
-extern int bthread_attr_init(bthread_attr_t *attr);
+extern int bthread_attr_init(fiber_attribute *attr);
 
 // Destroy thread attribute `attr'.
-extern int bthread_attr_destroy(bthread_attr_t *attr);
+extern int bthread_attr_destroy(fiber_attribute *attr);
 
 // Initialize bthread attribute `attr' with attributes corresponding to the
 // already running bthread `bt'.  It shall be called on unitialized `attr'
 // and destroyed with bthread_attr_destroy when no longer needed.
-extern int bthread_getattr(bthread_t bt, bthread_attr_t *attr);
+extern int bthread_getattr(fiber_id_t bt, fiber_attribute *attr);
 
 // ---------------------------------------------
 // Functions for scheduling control.
@@ -290,7 +290,7 @@ extern int bthread_barrier_wait(bthread_barrier_t *barrier);
 // when the key is destroyed. `destructor' is not called if the value
 // associated is NULL when the key is destroyed.
 // Returns 0 on success, error code otherwise.
-extern int bthread_key_create(bthread_key_t *key,
+extern int bthread_key_create(fiber_local_key *key,
                               void (*destructor)(void *data));
 
 // Delete a key previously returned by bthread_key_create().
@@ -299,7 +299,7 @@ extern int bthread_key_create(bthread_key_t *key,
 // this function. Any destructor that may have been associated with key
 // will no longer be called upon thread exit.
 // Returns 0 on success, error code otherwise.
-extern int bthread_key_delete(bthread_key_t key);
+extern int bthread_key_delete(fiber_local_key key);
 
 // Store `data' in the thread-specific slot identified by `key'.
 // bthread_setspecific() is callable from within destructor. If the application
@@ -314,12 +314,12 @@ extern int bthread_key_delete(bthread_key_t key);
 // in the server.
 // Returns 0 on success, error code otherwise.
 // If the key is invalid or deleted, return EINVAL.
-extern int bthread_setspecific(bthread_key_t key, void *data);
+extern int bthread_setspecific(fiber_local_key key, void *data);
 
 // Return current value of the thread-specific slot identified by `key'.
 // If bthread_setspecific() had not been called in the thread, return NULL.
 // If the key is invalid or deleted, return NULL.
-extern void *bthread_getspecific(bthread_key_t key);
+extern void *bthread_getspecific(fiber_local_key key);
 
 __END_DECLS
 

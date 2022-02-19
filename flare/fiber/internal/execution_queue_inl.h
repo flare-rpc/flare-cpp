@@ -346,7 +346,7 @@ namespace flare::fiber_internal {
     };
 
     inline ExecutionQueueOptions::ExecutionQueueOptions()
-            : bthread_attr(BTHREAD_ATTR_NORMAL), executor(NULL) {}
+            : bthread_attr(FIBER_ATTR_NORMAL), executor(NULL) {}
 
     template<typename T>
     inline int execution_queue_start(

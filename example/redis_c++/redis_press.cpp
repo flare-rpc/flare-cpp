@@ -147,7 +147,7 @@ int main(int argc, char* argv[]) {
         flare::rpc::StartDummyServerAt(FLAGS_dummy_port);
     }
 
-    std::vector<bthread_t> bids;
+    std::vector<fiber_id_t> bids;
     std::vector<pthread_t> pids;
     bids.resize(FLAGS_thread_num);
     pids.resize(FLAGS_thread_num);

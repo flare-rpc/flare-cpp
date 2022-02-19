@@ -26,7 +26,7 @@
 #include "flare/fiber/internal/errno.h"                       // EAGAIN
 #include "flare/fiber/internal/fiber_worker.h"                  // fiber_worker
 
-// Implement bthread_key_t related functions
+// Implement fiber_local_key related functions
 
 namespace flare::fiber_internal {
 
@@ -166,7 +166,7 @@ public:
         LOG(ERROR) << "Fail to destroy all objects in KeyTable[" << this << ']';
     }
 
-    inline void* get_data(bthread_key_t key) const {
+    inline void* get_data(fiber_local_key key) const {
         const uint32_t subidx = key.index / KEY_2NDLEVEL_SIZE;
         if (subidx < KEY_1STLEVEL_SIZE) {
             const SubKeyTable* sub_kt = _subs[subidx];
@@ -178,7 +178,7 @@ public:
         return NULL;
     }
 
-    inline int set_data(bthread_key_t key, void* data) {
+    inline int set_data(fiber_local_key key, void* data) {
         const uint32_t subidx = key.index / KEY_2NDLEVEL_SIZE;
         if (subidx < KEY_1STLEVEL_SIZE &&
             key.version == s_key_info[key.index].version) {
@@ -344,7 +344,7 @@ int bthread_keytable_pool_getstat(bthread_keytable_pool_t* pool,
 // to the pool in future.
 void bthread_keytable_pool_reserve(bthread_keytable_pool_t* pool,
                                    size_t nfree,
-                                   bthread_key_t key,
+                                   fiber_local_key key,
                                    void* ctor(const void*),
                                    const void* ctor_args) {
     if (pool == NULL) {
@@ -380,7 +380,7 @@ void bthread_keytable_pool_reserve(bthread_keytable_pool_t* pool,
     }
 }
 
-int bthread_key_create2(bthread_key_t* key,
+int bthread_key_create2(fiber_local_key* key,
                         void (*dtor)(void*, const void*),
                         const void* dtor_args) {
     uint32_t index = 0;
@@ -405,7 +405,7 @@ int bthread_key_create2(bthread_key_t* key,
     return 0;
 }
 
-int bthread_key_create(bthread_key_t* key, void (*dtor)(void*)) {
+int bthread_key_create(fiber_local_key* key, void (*dtor)(void*)) {
     if (dtor == NULL) {
         return bthread_key_create2(key, NULL, NULL);
     } else {
@@ -413,7 +413,7 @@ int bthread_key_create(bthread_key_t* key, void (*dtor)(void*)) {
     }
 }
 
-int bthread_key_delete(bthread_key_t key) {
+int bthread_key_delete(fiber_local_key key) {
     if (key.index < flare::fiber_internal::KEYS_MAX &&
         key.version == flare::fiber_internal::s_key_info[key.index].version) {
         FLARE_SCOPED_LOCK(flare::fiber_internal::s_key_mutex);
@@ -436,7 +436,7 @@ int bthread_key_delete(bthread_key_t key) {
 //  -> bthread_getspecific fails to borrow_keytable and returns NULL.
 //  -> bthread_setspecific succeeds to borrow_keytable and overwrites old data
 //     at the position with newly created data, the old data is leaked.
-int bthread_setspecific(bthread_key_t key, void* data) {
+int bthread_setspecific(fiber_local_key key, void* data) {
     flare::fiber_internal::KeyTable* kt = flare::fiber_internal::tls_bls.keytable;
     if (NULL == kt) {
         kt = new (std::nothrow) flare::fiber_internal::KeyTable;
@@ -456,7 +456,7 @@ int bthread_setspecific(bthread_key_t key, void* data) {
     return kt->set_data(key, data);
 }
 
-void* bthread_getspecific(bthread_key_t key) {
+void* bthread_getspecific(fiber_local_key key) {
     flare::fiber_internal::KeyTable* kt = flare::fiber_internal::tls_bls.keytable;
     if (kt) {
         return kt->get_data(key);

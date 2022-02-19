@@ -30,9 +30,9 @@ void* sleeper(void* arg) {
 TEST(ListTest, join_thread_by_list) {
     bthread_list_t list;
     ASSERT_EQ(0, bthread_list_init(&list, 0, 0));
-    std::vector<bthread_t> tids;
+    std::vector<fiber_id_t> tids;
     for (size_t i = 0; i < 10; ++i) {
-        bthread_t th;
+        fiber_id_t th;
         ASSERT_EQ(0, bthread_start_urgent(
                       &th, NULL, sleeper, (void*)10000/*10ms*/));
         ASSERT_EQ(0, bthread_list_add(&list, th));
@@ -48,7 +48,7 @@ TEST(ListTest, join_thread_by_list) {
 TEST(ListTest, join_a_destroyed_list) {
     bthread_list_t list;
     ASSERT_EQ(0, bthread_list_init(&list, 0, 0));
-    bthread_t th;
+    fiber_id_t th;
     ASSERT_EQ(0, bthread_start_urgent(
                   &th, NULL, sleeper, (void*)10000/*10ms*/));
     ASSERT_EQ(0, bthread_list_add(&list, th));

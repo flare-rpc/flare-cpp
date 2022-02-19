@@ -21,7 +21,7 @@
 #include <pthread.h>                 // pthread_spin_init
 #include "flare/fiber/internal/butex.h"           // butex_construct/destruct
 #include "flare/base/static_atomic.h"          // std::atomic
-#include "flare/fiber/internal/types.h"           // bthread_attr_t
+#include "flare/fiber/internal/types.h"           // fiber_attribute
 #include "flare/fiber/internal/stack.h"           // fiber_contextual_stack
 
 namespace flare::fiber_internal {
@@ -67,7 +67,7 @@ namespace flare::fiber_internal {
 
         // The identifier. It does not have to be here, however many code is
         // simplified if they can get tid from fiber_entity.
-        bthread_t tid;
+        fiber_id_t tid;
 
         // User function and argument
         void *(*fn)(void *);
@@ -78,7 +78,7 @@ namespace flare::fiber_internal {
         fiber_contextual_stack *stack;
 
         // Attributes creating this task
-        bthread_attr_t attr;
+        fiber_attribute attr;
 
         // Statistics
         int64_t cpuwide_start_ns;
