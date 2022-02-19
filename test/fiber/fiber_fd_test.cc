@@ -26,8 +26,8 @@
 #include "flare/base/time.h"
 #include "flare/base/fd_utility.h"
 #include "flare/log/logging.h"
-#include "flare/fiber/internal/task_control.h"
-#include "flare/fiber/internal/task_group.h"
+#include "flare/fiber/internal/schedule_group.h"
+#include "flare/fiber/internal/fiber_worker.h"
 #include "flare/fiber/internal/interrupt_pthread.h"
 #include "flare/fiber/internal/bthread.h"
 #include "flare/fiber/internal/unstable.h"
@@ -40,7 +40,7 @@
 #ifndef NDEBUG
 namespace flare::fiber_internal {
 extern std::atomic<int> break_nums;
-extern TaskControl* global_task_control;
+extern schedule_group* global_task_control;
 int stop_and_join_epoll_threads();
 }
 #endif

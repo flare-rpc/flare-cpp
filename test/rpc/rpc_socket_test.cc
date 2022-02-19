@@ -29,7 +29,7 @@
 #include "flare/base/fd_utility.h"
 #include "flare/base/strings.h"
 #include "flare/fiber/internal/unstable.h"
-#include "flare/fiber/internal/task_control.h"
+#include "flare/fiber/internal/schedule_group.h"
 #include "flare/rpc/socket.h"
 #include "flare/rpc/errno.pb.h"
 #include "flare/rpc/acceptor.h"
@@ -49,7 +49,7 @@
 #define CONNECT_IN_KEEPWRITE 1;
 
 namespace flare::fiber_internal {
-extern TaskControl* g_task_control;
+extern schedule_group* g_task_control;
 }
 
 namespace flare::rpc {

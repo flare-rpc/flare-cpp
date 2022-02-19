@@ -19,7 +19,7 @@
 #include <gtest/gtest.h>
 #include "flare/base/time.h"
 #include "flare/fiber/internal/bthread.h"
-#include "flare/fiber/internal/task_group.h"
+#include "flare/fiber/internal/fiber_worker.h"
 #include "flare/fiber/internal/butex.h"
 #include "flare/fiber/this_fiber.h"
 
@@ -332,7 +332,7 @@ namespace {
         }
         flare::this_fiber::fiber_sleep_for(10000);
         for (size_t i = 0; i < FLARE_ARRAY_SIZE(th); ++i) {
-            ASSERT_TRUE(flare::fiber_internal::TaskGroup::exists(th[i]));
+            ASSERT_TRUE(flare::fiber_internal::fiber_worker::exists(th[i]));
         }
         // destroy the id to end the joinings.
         ASSERT_EQ(0, bthread_id_unlock_and_destroy(id1));

@@ -36,14 +36,14 @@
 #include "flare/log/logging.h"
 #include "flare/hash/murmurhash3.h"   // fmix32
 #include "flare/fiber/internal/butex.h"                       // butex_*
-#include "flare/fiber/internal/task_group.h"                  // TaskGroup
+#include "flare/fiber/internal/fiber_worker.h"                  // fiber_worker
 #include "flare/fiber/internal/bthread.h"                             // bthread_start_urgent
 
 // Implement bthread functions on file descriptors
 
 namespace flare::fiber_internal {
 
-    extern FLARE_THREAD_LOCAL TaskGroup *tls_task_group;
+    extern FLARE_THREAD_LOCAL fiber_worker *tls_task_group;
 
     template<typename T, size_t NBLOCK, size_t BLOCK_SIZE>
     class LazyArray {
@@ -501,7 +501,7 @@ int bthread_fd_wait(int fd, unsigned events) {
         errno = EINVAL;
         return -1;
     }
-    flare::fiber_internal::TaskGroup *g = flare::fiber_internal::tls_task_group;
+    flare::fiber_internal::fiber_worker *g = flare::fiber_internal::tls_task_group;
     if (NULL != g && !g->is_current_pthread_task()) {
         return flare::fiber_internal::get_epoll_thread(fd).fd_wait(
                 fd, events, NULL);
@@ -518,7 +518,7 @@ int bthread_fd_timedwait(int fd, unsigned events,
         errno = EINVAL;
         return -1;
     }
-    flare::fiber_internal::TaskGroup *g = flare::fiber_internal::tls_task_group;
+    flare::fiber_internal::fiber_worker *g = flare::fiber_internal::tls_task_group;
     if (NULL != g && !g->is_current_pthread_task()) {
         return flare::fiber_internal::get_epoll_thread(fd).fd_wait(
                 fd, events, abstime);
@@ -528,7 +528,7 @@ int bthread_fd_timedwait(int fd, unsigned events,
 
 int bthread_connect(int sockfd, const sockaddr *serv_addr,
                     socklen_t addrlen) {
-    flare::fiber_internal::TaskGroup *g = flare::fiber_internal::tls_task_group;
+    flare::fiber_internal::fiber_worker *g = flare::fiber_internal::tls_task_group;
     if (NULL == g || g->is_current_pthread_task()) {
         return ::connect(sockfd, serv_addr, addrlen);
     }

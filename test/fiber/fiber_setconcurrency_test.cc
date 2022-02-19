@@ -24,10 +24,10 @@
 #include <flare/fiber/internal/butex.h>
 #include "flare/log/logging.h"
 #include "flare/fiber/internal/bthread.h"
-#include "flare/fiber/internal/task_control.h"
+#include "flare/fiber/internal/schedule_group.h"
 
 namespace flare::fiber_internal {
-    extern TaskControl* g_task_control;
+    extern schedule_group* g_task_control;
 }
 
 namespace {

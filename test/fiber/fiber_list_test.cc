@@ -18,7 +18,7 @@
 #include <gtest/gtest.h>
 #include "flare/base/time.h"
 #include "flare/log/logging.h"
-#include "flare/fiber/internal/task_group.h"
+#include "flare/fiber/internal/fiber_worker.h"
 #include "flare/fiber/internal/bthread.h"
 #include "flare/fiber/this_fiber.h"
 namespace {
@@ -40,7 +40,7 @@ TEST(ListTest, join_thread_by_list) {
     }
     ASSERT_EQ(0, bthread_list_join(&list));
     for (size_t i = 0; i < tids.size(); ++i) {
-        ASSERT_FALSE(flare::fiber_internal::TaskGroup::exists(tids[i]));
+        ASSERT_FALSE(flare::fiber_internal::fiber_worker::exists(tids[i]));
     }
     bthread_list_destroy(&list);
 }

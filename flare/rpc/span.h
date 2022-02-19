@@ -29,7 +29,7 @@
 #include "flare/base/endpoint.h"
 #include "flare/strings/string_splitter.h"
 #include "flare/variable/collector.h"
-#include "flare/fiber/internal/task_meta.h"
+#include "flare/fiber/internal/fiber_entity.h"
 #include "flare/rpc/options.pb.h"                 // ProtocolType
 #include "flare/rpc/span.pb.h"
 

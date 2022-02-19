@@ -20,15 +20,15 @@
 #include "flare/base/time.h"
 #include "flare/log/logging.h"
 #include "flare/fiber/internal/butex.h"
-#include "flare/fiber/internal/task_control.h"
-#include "flare/fiber/internal/task_group.h"
+#include "flare/fiber/internal/schedule_group.h"
+#include "flare/fiber/internal/fiber_worker.h"
 #include "flare/fiber/internal/bthread.h"
 #include "flare/fiber/internal/unstable.h"
 #include "flare/fiber/this_fiber.h"
 
 namespace flare::fiber_internal {
-extern std::atomic<TaskControl*> g_task_control;
-inline TaskControl* get_task_control() {
+extern std::atomic<schedule_group*> g_task_control;
+inline schedule_group* get_task_control() {
     return g_task_control.load(std::memory_order_consume);
 }
 } // namespace flare::fiber_internal
@@ -301,8 +301,8 @@ TEST(ButexTest, join_cant_be_wakeup) {
         ASSERT_EQ(0, bthread_start_urgent(&th2, &attr, join_the_waiter, (void*)th));
         ASSERT_EQ(0, bthread_stop(th2));
         ASSERT_EQ(0, flare::this_fiber::fiber_sleep_for(WAIT_MSEC / 2 * 1000L));
-        ASSERT_TRUE(flare::fiber_internal::TaskGroup::exists(th));
-        ASSERT_TRUE(flare::fiber_internal::TaskGroup::exists(th2));
+        ASSERT_TRUE(flare::fiber_internal::fiber_worker::exists(th));
+        ASSERT_TRUE(flare::fiber_internal::fiber_worker::exists(th2));
         ASSERT_EQ(0, flare::this_fiber::fiber_sleep_for(WAIT_MSEC / 2 * 1000L));
         ASSERT_EQ(0, bthread_stop(th));
         ASSERT_EQ(0, bthread_join(th2, NULL));

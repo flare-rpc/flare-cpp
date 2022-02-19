@@ -23,7 +23,7 @@
 #include "flare/log/logging.h"
 #include "flare/fiber/internal/bthread.h"
 #include "flare/fiber/internal/butex.h"
-#include "flare/fiber/internal/task_control.h"
+#include "flare/fiber/internal/schedule_group.h"
 #include "flare/fiber/internal/mutex.h"
 #include "flare/base/gperftools_profiler.h"
 #include "flare/fiber/this_fiber.h"

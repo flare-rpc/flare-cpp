@@ -27,10 +27,10 @@
 
 namespace flare::fiber_internal {
 
-class TaskGroup;
+class fiber_worker;
 
 // A queue for storing bthreads created by non-workers. Since non-workers
-// randomly choose a TaskGroup to push which distributes the contentions,
+// randomly choose a fiber_worker to push which distributes the contentions,
 // this queue is simply implemented as a queue protected with a lock.
 // The function names should be self-explanatory.
 class RemoteTaskQueue {
@@ -72,7 +72,7 @@ public:
     size_t capacity() const { return _tasks.capacity(); }
     
 private:
-friend class TaskGroup;
+friend class fiber_worker;
     FLARE_DISALLOW_COPY_AND_ASSIGN(RemoteTaskQueue);
     flare::container::bounded_queue<bthread_t> _tasks;
     flare::base::Mutex _mutex;

@@ -33,8 +33,8 @@
 #include "flare/fiber/internal/errno.h"                 // EWOULDBLOCK
 #include "flare/fiber/internal/sys_futex.h"             // futex_*
 #include "flare/fiber/internal/processor.h"             // cpu_relax
-#include "flare/fiber/internal/task_control.h"          // TaskControl
-#include "flare/fiber/internal/task_group.h"            // TaskGroup
+#include "flare/fiber/internal/schedule_group.h"          // schedule_group
+#include "flare/fiber/internal/fiber_worker.h"            // fiber_worker
 #include "flare/fiber/internal/timer_thread.h"
 #include "flare/fiber/internal/butex.h"
 #include "flare/fiber/internal/mutex.h"
@@ -101,7 +101,7 @@ namespace flare::fiber_internal {
         WaiterState waiter_state;
         int expected_value;
         Butex *initial_butex;
-        TaskControl *control;
+        schedule_group *control;
     };
 
 // pthread_task or main_task allocates this structure on stack and queue it
@@ -154,7 +154,7 @@ namespace flare::fiber_internal {
                 // Note that we don't handle the EINTR from futex_wait here since
                 // pthreads waiting on a butex should behave similarly as bthreads
                 // which are not able to be woken-up by signals.
-                // EINTR on butex is only producible by TaskGroup::interrupt().
+                // EINTR on butex is only producible by fiber_worker::interrupt().
 
                 // `pw' is still in the queue, remove it.
                 if (!erase_from_butex(&pw, false, WAITER_STATE_TIMEDOUT)) {
@@ -170,7 +170,7 @@ namespace flare::fiber_internal {
         }
     }
 
-    extern FLARE_THREAD_LOCAL TaskGroup *tls_task_group;
+    extern FLARE_THREAD_LOCAL fiber_worker *tls_task_group;
 
 // Returns 0 when no need to unschedule or successfully unscheduled,
 // -1 otherwise.
@@ -261,8 +261,8 @@ namespace flare::fiber_internal {
         flare::memory::return_object(b);
     }
 
-    inline TaskGroup *get_task_group(TaskControl *c) {
-        TaskGroup *g = tls_task_group;
+    inline fiber_worker *get_task_group(schedule_group *c) {
+        fiber_worker *g = tls_task_group;
         return g ? g : c->choose_one_group();
     }
 
@@ -284,9 +284,9 @@ namespace flare::fiber_internal {
         }
         ButexBthreadWaiter *bbw = static_cast<ButexBthreadWaiter *>(front);
         unsleep_if_necessary(bbw, get_global_timer_thread());
-        TaskGroup *g = tls_task_group;
+        fiber_worker *g = tls_task_group;
         if (g) {
-            TaskGroup::exchange(&g, bbw->tid);
+            fiber_worker::exchange(&g, bbw->tid);
         } else {
             bbw->control->choose_one_group()->ready_to_run_remote(bbw->tid);
         }
@@ -329,7 +329,7 @@ namespace flare::fiber_internal {
         next->remove_from_list();
         unsleep_if_necessary(next, get_global_timer_thread());
         ++nwakeup;
-        TaskGroup *g = get_task_group(next->control);
+        fiber_worker *g = get_task_group(next->control);
         const int saved_nwakeup = nwakeup;
         while (!bthread_waiters.empty()) {
             // pop reversely
@@ -344,7 +344,7 @@ namespace flare::fiber_internal {
             g->flush_nosignal_tasks_general();
         }
         if (g == tls_task_group) {
-            TaskGroup::exchange(&g, next->tid);
+            fiber_worker::exchange(&g, next->tid);
         } else {
             g->ready_to_run_remote(next->tid);
         }
@@ -396,7 +396,7 @@ namespace flare::fiber_internal {
         ButexBthreadWaiter *front = static_cast<ButexBthreadWaiter *>(
                 bthread_waiters.head()->value());
 
-        TaskGroup *g = get_task_group(front->control);
+        fiber_worker *g = get_task_group(front->control);
         const int saved_nwakeup = nwakeup;
         do {
             // pop reversely
@@ -444,9 +444,9 @@ namespace flare::fiber_internal {
         }
         ButexBthreadWaiter *bbw = static_cast<ButexBthreadWaiter *>(front);
         unsleep_if_necessary(bbw, get_global_timer_thread());
-        TaskGroup *g = tls_task_group;
+        fiber_worker *g = tls_task_group;
         if (g) {
-            TaskGroup::exchange(&g, front->tid);
+            fiber_worker::exchange(&g, front->tid);
         } else {
             bbw->control->choose_one_group()->ready_to_run_remote(front->tid);
         }
@@ -526,7 +526,7 @@ namespace flare::fiber_internal {
         }
 
         // b->container is NULL which makes erase_from_butex_and_wakeup() and
-        // TaskGroup::interrupt() no-op, there's no race between following code and
+        // fiber_worker::interrupt() no-op, there's no race between following code and
         // the two functions. The on-stack ButexBthreadWaiter is safe to use and
         // bw->waiter_state will not change again.
         unsleep_if_necessary(bw, get_global_timer_thread());
@@ -535,15 +535,15 @@ namespace flare::fiber_internal {
 
         // // Value unmatched or waiter is already woken up by TimerThread, jump
         // // back to original bthread.
-        // TaskGroup* g = tls_task_group;
+        // fiber_worker* g = tls_task_group;
         // ReadyToRunArgs args = { g->current_tid(), false };
-        // g->set_remained(TaskGroup::ready_to_run_in_worker, &args);
+        // g->set_remained(fiber_worker::ready_to_run_in_worker, &args);
         // // 2: Don't run remained because we're already in a remained function
         // //    otherwise stack may overflow.
-        // TaskGroup::sched_to(&g, bw->tid, false/*2*/);
+        // fiber_worker::sched_to(&g, bw->tid, false/*2*/);
     }
 
-    static int butex_wait_from_pthread(TaskGroup *g, Butex *b, int expected_value,
+    static int butex_wait_from_pthread(fiber_worker *g, Butex *b, int expected_value,
                                        const timespec *abstime) {
         // sys futex needs relative timeout.
         // Compute diff between abstime and now.
@@ -596,7 +596,7 @@ namespace flare::fiber_internal {
 #endif
         }
         if (task) {
-            // If current_waiter is NULL, TaskGroup::interrupt() is running and
+            // If current_waiter is NULL, fiber_worker::interrupt() is running and
             // using pw, spin until current_waiter != NULL.
             BT_LOOP_WHEN(task->current_waiter.exchange(
                     NULL, std::memory_order_acquire) == NULL,
@@ -621,7 +621,7 @@ namespace flare::fiber_internal {
             std::atomic_thread_fence(std::memory_order_acquire);
             return -1;
         }
-        TaskGroup *g = tls_task_group;
+        fiber_worker *g = tls_task_group;
         if (NULL == g || g->is_current_pthread_task()) {
             return butex_wait_from_pthread(g, b, expected_value, abstime);
         }
@@ -661,14 +661,14 @@ namespace flare::fiber_internal {
         // in task_group.cpp to guarantee visibility of `interrupted'.
         bbw.task_meta->current_waiter.store(&bbw, std::memory_order_release);
         g->set_remained(wait_for_butex, &bbw);
-        TaskGroup::sched(&g);
+        fiber_worker::sched(&g);
 
         // erase_from_butex_and_wakeup (called by TimerThread) is possibly still
         // running and using bbw. The chance is small, just spin until it's done.
         BT_LOOP_WHEN(unsleep_if_necessary(&bbw, get_global_timer_thread()) < 0,
                      30/*nops before sched_yield*/);
 
-        // If current_waiter is NULL, TaskGroup::interrupt() is running and using bbw.
+        // If current_waiter is NULL, fiber_worker::interrupt() is running and using bbw.
         // Spin until current_waiter != NULL.
         BT_LOOP_WHEN(bbw.task_meta->current_waiter.exchange(
                 NULL, std::memory_order_acquire) == NULL,

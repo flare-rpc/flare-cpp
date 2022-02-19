@@ -22,7 +22,7 @@
 #include "flare/base/gperftools_profiler.h"
 #include "flare/fiber/internal/bthread.h"
 #include "flare/fiber/internal/unstable.h"
-#include "flare/fiber/internal/task_meta.h"
+#include "flare/fiber/internal/fiber_entity.h"
 #include "flare/fiber/this_fiber.h"
 
 namespace {

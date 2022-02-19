@@ -15,12 +15,8 @@
 // specific language governing permissions and limitations
 // under the License.
 
-// fiber - A M:N threading library to make applications more concurrent.
-
-// Date: Tue Jul 10 17:40:58 CST 2012
-
-#ifndef BTHREAD_TASK_META_H
-#define BTHREAD_TASK_META_H
+#ifndef FLARE_FIBER_INTERNAL_FIBER_ENTITY_H_
+#define FLARE_FIBER_INTERNAL_FIBER_ENTITY_H_
 
 #include <pthread.h>                 // pthread_spin_init
 #include "flare/fiber/internal/butex.h"           // butex_construct/destruct
@@ -126,4 +122,4 @@ namespace flare::fiber_internal {
 
 }  // namespace flare::fiber_internal
 
-#endif  // BTHREAD_TASK_META_H
+#endif  // FLARE_FIBER_INTERNAL_FIBER_ENTITY_H_

@@ -1,23 +1,3 @@
-// Licensed to the Apache Software Foundation (ASF) under one
-// or more contributor license agreements.  See the NOTICE file
-// distributed with this work for additional information
-// regarding copyright ownership.  The ASF licenses this file
-// to you under the Apache License, Version 2.0 (the
-// "License"); you may not use this file except in compliance
-// with the License.  You may obtain a copy of the License at
-//
-//   http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing,
-// software distributed under the License is distributed on an
-// "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-// KIND, either express or implied.  See the License for the
-// specific language governing permissions and limitations
-// under the License.
-
-// fiber - A M:N threading library to make applications more concurrent.
-
-// Date: Tue Jul 10 17:40:58 CST 2012
 
 #include <sys/types.h>
 #include <stddef.h>                         // size_t
@@ -32,8 +12,8 @@
 #include "flare/fiber/internal/butex.h"                  // butex_*
 #include "flare/fiber/internal/sys_futex.h"              // futex_wake_private
 #include "flare/fiber/internal/processor.h"              // cpu_relax
-#include "flare/fiber/internal/task_control.h"
-#include "flare/fiber/internal/task_group.h"
+#include "flare/fiber/internal/schedule_group.h"
+#include "flare/fiber/internal/fiber_worker.h"
 #include "flare/fiber/internal/timer_thread.h"
 #include "flare/fiber/internal/errno.h"
 
@@ -57,7 +37,7 @@ const bool FLARE_ALLOW_UNUSED dummy_show_per_worker_usage_in_vars =
     ::GFLAGS_NS::RegisterFlagValidator(&FLAGS_show_per_worker_usage_in_vars,
                                     pass_bool);
 
-__thread TaskGroup* tls_task_group = NULL;
+__thread fiber_worker* tls_task_group = NULL;
 // Sync with fiber_entity::local_storage when a bthread is created or destroyed.
 // During running, the two fields may be inconsistent, use tls_bls as the
 // groundtruth.
@@ -76,7 +56,7 @@ const size_t OFFSET_TABLE[] = {
 #include "flare/fiber/internal/offset_inl.list"
 };
 
-int TaskGroup::get_attr(bthread_t tid, bthread_attr_t* out) {
+int fiber_worker::get_attr(bthread_t tid, bthread_attr_t* out) {
     fiber_entity* const m = address_meta(tid);
     if (m != NULL) {
         const uint32_t given_ver = get_version(tid);
@@ -90,7 +70,7 @@ int TaskGroup::get_attr(bthread_t tid, bthread_attr_t* out) {
     return -1;
 }
 
-void TaskGroup::set_stopped(bthread_t tid) {
+void fiber_worker::set_stopped(bthread_t tid) {
     fiber_entity* const m = address_meta(tid);
     if (m != NULL) {
         const uint32_t given_ver = get_version(tid);
@@ -101,7 +81,7 @@ void TaskGroup::set_stopped(bthread_t tid) {
     }
 }
 
-bool TaskGroup::is_stopped(bthread_t tid) {
+bool fiber_worker::is_stopped(bthread_t tid) {
     fiber_entity* const m = address_meta(tid);
     if (m != NULL) {
         const uint32_t given_ver = get_version(tid);
@@ -115,7 +95,7 @@ bool TaskGroup::is_stopped(bthread_t tid) {
     return true;
 }
 
-bool TaskGroup::wait_task(bthread_t* tid) {
+bool fiber_worker::wait_task(bthread_t* tid) {
     do {
 #ifndef BTHREAD_DONT_SAVE_PARKING_STATE
         if (_last_pl_state.stopped()) {
@@ -139,22 +119,22 @@ bool TaskGroup::wait_task(bthread_t* tid) {
 }
 
 static double get_cumulated_cputime_from_this(void* arg) {
-    return static_cast<TaskGroup*>(arg)->cumulated_cputime_ns() / 1000000000.0;
+    return static_cast<fiber_worker*>(arg)->cumulated_cputime_ns() / 1000000000.0;
 }
 
-void TaskGroup::run_main_task() {
+void fiber_worker::run_main_task() {
     flare::variable::PassiveStatus<double> cumulated_cputime(
         get_cumulated_cputime_from_this, this);
     std::unique_ptr<flare::variable::PerSecond<flare::variable::PassiveStatus<double> > > usage_variable;
 
-    TaskGroup* dummy = this;
+    fiber_worker* dummy = this;
     bthread_t tid;
     while (wait_task(&tid)) {
-        TaskGroup::sched_to(&dummy, tid);
+        fiber_worker::sched_to(&dummy, tid);
         DCHECK_EQ(this, dummy);
         DCHECK_EQ(_cur_meta->stack, _main_stack);
         if (_cur_meta->tid != _main_tid) {
-            TaskGroup::task_runner(1/*skip remained*/);
+            fiber_worker::task_runner(1/*skip remained*/);
         }
         if (FLAGS_show_per_worker_usage_in_vars && !usage_variable) {
             char name[32];
@@ -173,7 +153,7 @@ void TaskGroup::run_main_task() {
     current_task()->stat.cputime_ns += flare::base::cpuwide_time_ns() - _last_run_ns;
 }
 
-TaskGroup::TaskGroup(TaskControl* c)
+fiber_worker::fiber_worker(schedule_group* c)
     :
 #ifndef NDEBUG
     _sched_recursive_guard(0),
@@ -195,11 +175,11 @@ TaskGroup::TaskGroup(TaskControl* c)
 {
     _steal_seed = flare::base::fast_rand();
     _steal_offset = OFFSET_TABLE[_steal_seed % FLARE_ARRAY_SIZE(OFFSET_TABLE)];
-    _pl = &c->_pl[flare::hash::fmix64(pthread_numeric_id()) % TaskControl::PARKING_LOT_NUM];
+    _pl = &c->_pl[flare::hash::fmix64(pthread_numeric_id()) % schedule_group::PARKING_LOT_NUM];
     CHECK(c);
 }
 
-TaskGroup::~TaskGroup() {
+fiber_worker::~fiber_worker() {
     if (_main_tid) {
         fiber_entity* m = address_meta(_main_tid);
         CHECK(_main_stack == m->stack);
@@ -209,7 +189,7 @@ TaskGroup::~TaskGroup() {
     }
 }
 
-int TaskGroup::init(size_t runqueue_capacity) {
+int fiber_worker::init(size_t runqueue_capacity) {
     if (_rq.init(runqueue_capacity) != 0) {
         LOG(FATAL) << "Fail to init _rq";
         return -1;
@@ -248,10 +228,10 @@ int TaskGroup::init(size_t runqueue_capacity) {
     return 0;
 }
 
-void TaskGroup::task_runner(intptr_t skip_remained) {
+void fiber_worker::task_runner(intptr_t skip_remained) {
     // NOTE: tls_task_group is volatile since tasks are moved around
     //       different groups.
-    TaskGroup* g = tls_task_group;
+    fiber_worker* g = tls_task_group;
 
     if (!skip_remained) {
         while (g->_last_context_remained) {
@@ -325,7 +305,7 @@ void TaskGroup::task_runner(intptr_t skip_remained) {
         // Increase the version and wake up all joiners, if resulting version
         // is 0, change it to 1 to make bthread_t never be 0. Any access
         // or join to the bthread after changing version will be rejected.
-        // The spinlock is for visibility of TaskGroup::get_attr.
+        // The spinlock is for visibility of fiber_worker::get_attr.
         {
             FLARE_SCOPED_LOCK(m->version_lock);
             if (0 == ++*m->version_butex) {
@@ -335,7 +315,7 @@ void TaskGroup::task_runner(intptr_t skip_remained) {
         butex_wake_except(m->version_butex, 0);
 
         g->_control->_nbthreads << -1;
-        g->set_remained(TaskGroup::_release_last_context, m);
+        g->set_remained(fiber_worker::_release_last_context, m);
         ending_sched(&g);
 
     } while (g->_cur_meta->tid != g->_main_tid);
@@ -344,7 +324,7 @@ void TaskGroup::task_runner(intptr_t skip_remained) {
     // tasks to run, quit for more tasks.
 }
 
-void TaskGroup::_release_last_context(void* arg) {
+void fiber_worker::_release_last_context(void* arg) {
     fiber_entity* m = static_cast<fiber_entity*>(arg);
     if (m->stack_type() != STACK_TYPE_PTHREAD) {
         return_stack(m->release_stack()/*may be NULL*/);
@@ -355,7 +335,7 @@ void TaskGroup::_release_last_context(void* arg) {
     return_resource(get_slot(m->tid));
 }
 
-int TaskGroup::start_foreground(TaskGroup** pg,
+int fiber_worker::start_foreground(fiber_worker** pg,
                                 bthread_t* __restrict th,
                                 const bthread_attr_t* __restrict attr,
                                 void * (*fn)(void*),
@@ -387,7 +367,7 @@ int TaskGroup::start_foreground(TaskGroup** pg,
         LOG(INFO) << "Started bthread " << m->tid;
     }
 
-    TaskGroup* g = *pg;
+    fiber_worker* g = *pg;
     g->_control->_nbthreads << 1;
     if (g->is_current_pthread_task()) {
         // never create foreground task in pthread.
@@ -405,13 +385,13 @@ int TaskGroup::start_foreground(TaskGroup** pg,
             (bool)(using_attr.flags & BTHREAD_NOSIGNAL)
         };
         g->set_remained(fn, &args);
-        TaskGroup::sched_to(pg, m->tid);
+        fiber_worker::sched_to(pg, m->tid);
     }
     return 0;
 }
 
 template <bool REMOTE>
-int TaskGroup::start_background(bthread_t* __restrict th,
+int fiber_worker::start_background(bthread_t* __restrict th,
                                 const bthread_attr_t* __restrict attr,
                                 void * (*fn)(void*),
                                 void* __restrict arg) {
@@ -452,17 +432,17 @@ int TaskGroup::start_background(bthread_t* __restrict th,
 
 // Explicit instantiations.
 template int
-TaskGroup::start_background<true>(bthread_t* __restrict th,
+fiber_worker::start_background<true>(bthread_t* __restrict th,
                                   const bthread_attr_t* __restrict attr,
                                   void * (*fn)(void*),
                                   void* __restrict arg);
 template int
-TaskGroup::start_background<false>(bthread_t* __restrict th,
+fiber_worker::start_background<false>(bthread_t* __restrict th,
                                    const bthread_attr_t* __restrict attr,
                                    void * (*fn)(void*),
                                    void* __restrict arg);
 
-int TaskGroup::join(bthread_t tid, void** return_value) {
+int fiber_worker::join(bthread_t tid, void** return_value) {
     if (__builtin_expect(!tid, 0)) {  // tid of bthread is never 0.
         return EINVAL;
     }
@@ -471,7 +451,7 @@ int TaskGroup::join(bthread_t tid, void** return_value) {
         // The bthread is not created yet, this join is definitely wrong.
         return EINVAL;
     }
-    TaskGroup* g = tls_task_group;
+    fiber_worker* g = tls_task_group;
     if (g != NULL && g->current_tid() == tid) {
         // joining self causes indefinite waiting.
         return EINVAL;
@@ -489,7 +469,7 @@ int TaskGroup::join(bthread_t tid, void** return_value) {
     return 0;
 }
 
-bool TaskGroup::exists(bthread_t tid) {
+bool fiber_worker::exists(bthread_t tid) {
     if (tid != 0) {  // tid of bthread is never 0.
         fiber_entity* m = address_meta(tid);
         if (m != NULL) {
@@ -499,13 +479,13 @@ bool TaskGroup::exists(bthread_t tid) {
     return false;
 }
 
-fiber_statistics TaskGroup::main_stat() const {
+fiber_statistics fiber_worker::main_stat() const {
     fiber_entity* m = address_meta(_main_tid);
     return m ? m->stat : EMPTY_STAT;
 }
 
-void TaskGroup::ending_sched(TaskGroup** pg) {
-    TaskGroup* g = *pg;
+void fiber_worker::ending_sched(fiber_worker** pg) {
+    fiber_worker* g = *pg;
     bthread_t next_tid = 0;
     // Find next task to run, if none, switch to idle thread of the group.
 #ifndef BTHREAD_FAIR_WSQ
@@ -545,8 +525,8 @@ void TaskGroup::ending_sched(TaskGroup** pg) {
     sched_to(pg, next_meta);
 }
 
-void TaskGroup::sched(TaskGroup** pg) {
-    TaskGroup* g = *pg;
+void fiber_worker::sched(fiber_worker** pg) {
+    fiber_worker* g = *pg;
     bthread_t next_tid = 0;
     // Find next task to run, if none, switch to idle thread of the group.
 #ifndef BTHREAD_FAIR_WSQ
@@ -561,8 +541,8 @@ void TaskGroup::sched(TaskGroup** pg) {
     sched_to(pg, next_tid);
 }
 
-void TaskGroup::sched_to(TaskGroup** pg, fiber_entity* next_meta) {
-    TaskGroup* g = *pg;
+void fiber_worker::sched_to(fiber_worker** pg, fiber_entity* next_meta) {
+    fiber_worker* g = *pg;
 #ifndef NDEBUG
     if ((++g->_sched_recursive_guard) > 1) {
         LOG(FATAL) << "Recursively(" << g->_sched_recursive_guard - 1
@@ -634,7 +614,7 @@ void TaskGroup::sched_to(TaskGroup** pg, fiber_entity* next_meta) {
     *pg = g;
 }
 
-void TaskGroup::destroy_self() {
+void fiber_worker::destroy_self() {
     if (_control) {
         _control->_destroy_group(this);
         _control = NULL;
@@ -643,7 +623,7 @@ void TaskGroup::destroy_self() {
     }
 }
 
-void TaskGroup::ready_to_run(bthread_t tid, bool nosignal) {
+void fiber_worker::ready_to_run(bthread_t tid, bool nosignal) {
     push_rq(tid);
     if (nosignal) {
         ++_num_nosignal;
@@ -655,7 +635,7 @@ void TaskGroup::ready_to_run(bthread_t tid, bool nosignal) {
     }
 }
 
-void TaskGroup::flush_nosignal_tasks() {
+void fiber_worker::flush_nosignal_tasks() {
     const int val = _num_nosignal;
     if (val) {
         _num_nosignal = 0;
@@ -664,7 +644,7 @@ void TaskGroup::flush_nosignal_tasks() {
     }
 }
 
-void TaskGroup::ready_to_run_remote(bthread_t tid, bool nosignal) {
+void fiber_worker::ready_to_run_remote(bthread_t tid, bool nosignal) {
     _remote_rq._mutex.lock();
     while (!_remote_rq.push_locked(tid)) {
         flush_nosignal_tasks_remote_locked(_remote_rq._mutex);
@@ -685,7 +665,7 @@ void TaskGroup::ready_to_run_remote(bthread_t tid, bool nosignal) {
     }
 }
 
-void TaskGroup::flush_nosignal_tasks_remote_locked(flare::base::Mutex& locked_mutex) {
+void fiber_worker::flush_nosignal_tasks_remote_locked(flare::base::Mutex& locked_mutex) {
     const int val = _remote_num_nosignal;
     if (!val) {
         locked_mutex.unlock();
@@ -697,26 +677,26 @@ void TaskGroup::flush_nosignal_tasks_remote_locked(flare::base::Mutex& locked_mu
     _control->signal_task(val);
 }
 
-void TaskGroup::ready_to_run_general(bthread_t tid, bool nosignal) {
+void fiber_worker::ready_to_run_general(bthread_t tid, bool nosignal) {
     if (tls_task_group == this) {
         return ready_to_run(tid, nosignal);
     }
     return ready_to_run_remote(tid, nosignal);
 }
 
-void TaskGroup::flush_nosignal_tasks_general() {
+void fiber_worker::flush_nosignal_tasks_general() {
     if (tls_task_group == this) {
         return flush_nosignal_tasks();
     }
     return flush_nosignal_tasks_remote();
 }
 
-void TaskGroup::ready_to_run_in_worker(void* args_in) {
+void fiber_worker::ready_to_run_in_worker(void* args_in) {
     ReadyToRunArgs* args = static_cast<ReadyToRunArgs*>(args_in);
     return tls_task_group->ready_to_run(args->tid, args->nosignal);
 }
 
-void TaskGroup::ready_to_run_in_worker_ignoresignal(void* args_in) {
+void fiber_worker::ready_to_run_in_worker_ignoresignal(void* args_in) {
     ReadyToRunArgs* args = static_cast<ReadyToRunArgs*>(args_in);
     return tls_task_group->push_rq(args->tid);
 }
@@ -725,7 +705,7 @@ struct SleepArgs {
     uint64_t timeout_us;
     bthread_t tid;
     fiber_entity* meta;
-    TaskGroup* group;
+    fiber_worker* group;
 };
 
 static void ready_to_run_from_timer_thread(void* arg) {
@@ -734,12 +714,12 @@ static void ready_to_run_from_timer_thread(void* arg) {
     e->group->control()->choose_one_group()->ready_to_run_remote(e->tid);
 }
 
-void TaskGroup::_add_sleep_event(void* void_args) {
+void fiber_worker::_add_sleep_event(void* void_args) {
     // Must copy SleepArgs. After calling TimerThread::schedule(), previous
     // thread may be stolen by a worker immediately and the on-stack SleepArgs
     // will be gone.
     SleepArgs e = *static_cast<SleepArgs*>(void_args);
-    TaskGroup* g = e.group;
+    fiber_worker* g = e.group;
 
     TimerThread::TaskId sleep_id;
     sleep_id = get_global_timer_thread()->schedule(
@@ -777,12 +757,12 @@ void TaskGroup::_add_sleep_event(void* void_args) {
 }
 
 // To be consistent with sys_usleep, set errno and return -1 on error.
-int TaskGroup::usleep(TaskGroup** pg, uint64_t timeout_us) {
+int fiber_worker::usleep(fiber_worker** pg, uint64_t timeout_us) {
     if (0 == timeout_us) {
         yield(pg);
         return 0;
     }
-    TaskGroup* g = *pg;
+    fiber_worker* g = *pg;
     // We have to schedule timer after we switched to next bthread otherwise
     // the timer may wake up(jump to) current still-running context.
     SleepArgs e = { timeout_us, g->current_tid(), g->current_task(), g };
@@ -809,7 +789,7 @@ bool erase_from_butex_because_of_interruption(fiber_mutex_waiter* bw);
 
 static int interrupt_and_consume_waiters(
     bthread_t tid, fiber_mutex_waiter** pw, uint64_t* sleep_id) {
-    fiber_entity* const m = TaskGroup::address_meta(tid);
+    fiber_entity* const m = fiber_worker::address_meta(tid);
     if (m == NULL) {
         return EINVAL;
     }
@@ -826,7 +806,7 @@ static int interrupt_and_consume_waiters(
 }
 
 static int set_butex_waiter(bthread_t tid, fiber_mutex_waiter* w) {
-    fiber_entity* const m = TaskGroup::address_meta(tid);
+    fiber_entity* const m = fiber_worker::address_meta(tid);
     if (m != NULL) {
         const uint32_t given_ver = get_version(tid);
         FLARE_SCOPED_LOCK(m->version_lock);
@@ -846,7 +826,7 @@ static int set_butex_waiter(bthread_t tid, fiber_mutex_waiter* w) {
 // by race conditions.
 // TODO: bthreads created by BTHREAD_ATTR_PTHREAD blocking on flare::this_fiber::fiber_sleep_for()
 // can't be interrupted.
-int TaskGroup::interrupt(bthread_t tid, TaskControl* c) {
+int fiber_worker::interrupt(bthread_t tid, schedule_group* c) {
     // Consume current_waiter in the fiber_entity, wake it up then set it back.
     fiber_mutex_waiter* w = NULL;
     uint64_t sleep_id = 0;
@@ -867,7 +847,7 @@ int TaskGroup::interrupt(bthread_t tid, TaskControl* c) {
         }
     } else if (sleep_id != 0) {
         if (get_global_timer_thread()->unschedule(sleep_id) == 0) {
-            flare::fiber_internal::TaskGroup* g = flare::fiber_internal::tls_task_group;
+            flare::fiber_internal::fiber_worker* g = flare::fiber_internal::tls_task_group;
             if (g) {
                 g->ready_to_run(tid);
             } else {
@@ -881,15 +861,15 @@ int TaskGroup::interrupt(bthread_t tid, TaskControl* c) {
     return 0;
 }
 
-void TaskGroup::yield(TaskGroup** pg) {
-    TaskGroup* g = *pg;
+void fiber_worker::yield(fiber_worker** pg) {
+    fiber_worker* g = *pg;
     ReadyToRunArgs args = { g->current_tid(), false };
     g->set_remained(ready_to_run_in_worker, &args);
     sched(pg);
 }
 
 void print_task(std::ostream& os, bthread_t tid) {
-    fiber_entity* const m = TaskGroup::address_meta(tid);
+    fiber_entity* const m = fiber_worker::address_meta(tid);
     if (m == NULL) {
         os << "bthread=" << tid << " : never existed";
         return;

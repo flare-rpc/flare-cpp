@@ -3,20 +3,20 @@
 //
 
 #include "flare/fiber/this_fiber.h"
-#include "flare/fiber/internal/task_group.h"
+#include "flare/fiber/internal/fiber_worker.h"
 #include "flare/base/time.h"
 
 
 namespace flare::fiber_internal {
-    extern FLARE_THREAD_LOCAL TaskGroup *tls_task_group;
+    extern FLARE_THREAD_LOCAL fiber_worker *tls_task_group;
 }  // namespace flare::fiber_internal
 
 namespace flare::this_fiber {
 
     int fiber_yield() {
-        flare::fiber_internal::TaskGroup *g = flare::fiber_internal::tls_task_group;
+        flare::fiber_internal::fiber_worker *g = flare::fiber_internal::tls_task_group;
         if (nullptr != g && !g->is_current_pthread_task()) {
-            flare::fiber_internal::TaskGroup::yield(&g);
+            flare::fiber_internal::fiber_worker::yield(&g);
             return 0;
         }
         // pthread_yield is not available on MAC
@@ -35,9 +35,9 @@ namespace flare::this_fiber {
     }
 
     int fiber_sleep_for(const int64_t &expires_in_us) {
-        flare::fiber_internal::TaskGroup *g = flare::fiber_internal::tls_task_group;
+        flare::fiber_internal::fiber_worker *g = flare::fiber_internal::tls_task_group;
         if (nullptr != g && !g->is_current_pthread_task()) {
-            return flare::fiber_internal::TaskGroup::usleep(&g, expires_in_us);
+            return flare::fiber_internal::fiber_worker::usleep(&g, expires_in_us);
         }
         return ::usleep(expires_in_us);
     }

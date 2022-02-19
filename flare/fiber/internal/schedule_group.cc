@@ -26,18 +26,18 @@
 #include "flare/fiber/internal/sys_futex.h"            // futex_wake_private
 #include "flare/fiber/internal/interrupt_pthread.h"
 #include "flare/fiber/internal/processor.h"            // cpu_relax
-#include "flare/fiber/internal/task_group.h"           // TaskGroup
-#include "flare/fiber/internal/task_control.h"
+#include "flare/fiber/internal/fiber_worker.h"           // fiber_worker
+#include "flare/fiber/internal/schedule_group.h"
 #include "flare/fiber/internal/timer_thread.h"         // global_timer_thread
 #include <gflags/gflags.h>
 #include "flare/fiber/internal/log.h"
 
 DEFINE_int32(task_group_delete_delay, 1,
-             "delay deletion of TaskGroup for so many seconds");
+             "delay deletion of fiber_worker for so many seconds");
 DEFINE_int32(task_group_runqueue_capacity, 4096,
-             "capacity of runqueue in each TaskGroup");
+             "capacity of runqueue in each fiber_worker");
 DEFINE_int32(task_group_yield_before_idle, 0,
-             "TaskGroup yields so many times before idle");
+             "fiber_worker yields so many times before idle");
 
 namespace flare::fiber_internal {
 
@@ -45,7 +45,7 @@ DECLARE_int32(bthread_concurrency);
 DECLARE_int32(bthread_min_concurrency);
 
 extern pthread_mutex_t g_task_control_mutex;
-extern FLARE_THREAD_LOCAL TaskGroup* tls_task_group;
+extern FLARE_THREAD_LOCAL fiber_worker* tls_task_group;
 void (*g_worker_startfn)() = NULL;
 
 // May be called in other modules to run startfn in non-worker pthreads.
@@ -55,14 +55,14 @@ void run_worker_startfn() {
     }
 }
 
-void* TaskControl::worker_thread(void* arg) {
+void* schedule_group::worker_thread(void* arg) {
     run_worker_startfn();
     
-    TaskControl* c = static_cast<TaskControl*>(arg);
-    TaskGroup* g = c->create_group();
+    schedule_group* c = static_cast<schedule_group*>(arg);
+    fiber_worker* g = c->create_group();
     fiber_statistics stat;
     if (NULL == g) {
-        LOG(ERROR) << "Fail to create TaskGroup in pthread=" << pthread_self();
+        LOG(ERROR) << "Fail to create fiber_worker in pthread=" << pthread_self();
         return NULL;
     }
     BT_VLOG << "Created worker=" << pthread_self()
@@ -82,14 +82,14 @@ void* TaskControl::worker_thread(void* arg) {
     return NULL;
 }
 
-TaskGroup* TaskControl::create_group() {
-    TaskGroup* g = new (std::nothrow) TaskGroup(this);
+fiber_worker* schedule_group::create_group() {
+    fiber_worker* g = new (std::nothrow) fiber_worker(this);
     if (NULL == g) {
-        LOG(FATAL) << "Fail to new TaskGroup";
+        LOG(FATAL) << "Fail to new fiber_worker";
         return NULL;
     }
     if (g->init(FLAGS_task_group_runqueue_capacity) != 0) {
-        LOG(ERROR) << "Fail to init TaskGroup";
+        LOG(ERROR) << "Fail to init fiber_worker";
         delete g;
         return NULL;
     }
@@ -101,26 +101,26 @@ TaskGroup* TaskControl::create_group() {
 }
 
 static void print_rq_sizes_in_the_tc(std::ostream &os, void *arg) {
-    TaskControl *tc = (TaskControl *)arg;
+    schedule_group *tc = (schedule_group *)arg;
     tc->print_rq_sizes(os);
 }
 
 static double get_cumulated_worker_time_from_this(void *arg) {
-    return static_cast<TaskControl*>(arg)->get_cumulated_worker_time();
+    return static_cast<schedule_group*>(arg)->get_cumulated_worker_time();
 }
 
 static int64_t get_cumulated_switch_count_from_this(void *arg) {
-    return static_cast<TaskControl*>(arg)->get_cumulated_switch_count();
+    return static_cast<schedule_group*>(arg)->get_cumulated_switch_count();
 }
 
 static int64_t get_cumulated_signal_count_from_this(void *arg) {
-    return static_cast<TaskControl*>(arg)->get_cumulated_signal_count();
+    return static_cast<schedule_group*>(arg)->get_cumulated_signal_count();
 }
 
-TaskControl::TaskControl()
+schedule_group::schedule_group()
     // NOTE: all fileds must be initialized before the vars.
     : _ngroup(0)
-    , _groups((TaskGroup**)calloc(BTHREAD_MAX_CONCURRENCY, sizeof(TaskGroup*)))
+    , _groups((fiber_worker**)calloc(BTHREAD_MAX_CONCURRENCY, sizeof(fiber_worker*)))
     , _stop(false)
     , _concurrency(0)
     , _nworkers("bthread_worker_count")
@@ -140,7 +140,7 @@ TaskControl::TaskControl()
     CHECK(_groups) << "Fail to create array of groups";
 }
 
-int TaskControl::init(int concurrency) {
+int schedule_group::init(int concurrency) {
     if (_concurrency != 0) {
         LOG(ERROR) << "Already initialized";
         return -1;
@@ -179,7 +179,7 @@ int TaskControl::init(int concurrency) {
     return 0;
 }
 
-int TaskControl::add_workers(int num) {
+int schedule_group::add_workers(int num) {
     if (num <= 0) {
         return 0;
     }
@@ -207,7 +207,7 @@ int TaskControl::add_workers(int num) {
     return _concurrency.load(std::memory_order_relaxed) - old_concurency;
 }
 
-TaskGroup* TaskControl::choose_one_group() {
+fiber_worker* schedule_group::choose_one_group() {
     const size_t ngroup = _ngroup.load(std::memory_order_acquire);
     if (ngroup != 0) {
         return _groups[flare::base::fast_rand_less_than(ngroup)];
@@ -218,7 +218,7 @@ TaskGroup* TaskControl::choose_one_group() {
 
 extern int stop_and_join_epoll_threads();
 
-void TaskControl::stop_and_join() {
+void schedule_group::stop_and_join() {
     // Close epoll threads so that worker threads are not waiting on epoll(
     // which cannot be woken up by signal_task below)
     CHECK_EQ(0, stop_and_join_epoll_threads());
@@ -242,7 +242,7 @@ void TaskControl::stop_and_join() {
     }
 }
 
-TaskControl::~TaskControl() {
+schedule_group::~schedule_group() {
     // NOTE: g_task_control is not destructed now because the situation
     //       is extremely racy.
     delete _pending_time.exchange(NULL, std::memory_order_relaxed);
@@ -257,7 +257,7 @@ TaskControl::~TaskControl() {
     _groups = NULL;
 }
 
-int TaskControl::_add_group(TaskGroup* g) {
+int schedule_group::_add_group(fiber_worker* g) {
     if (__builtin_expect(NULL == g, 0)) {
         return -1;
     }
@@ -272,23 +272,23 @@ int TaskControl::_add_group(TaskGroup* g) {
     }
     mu.unlock();
     // See the comments in _destroy_group
-    // TODO: Not needed anymore since non-worker pthread cannot have TaskGroup
+    // TODO: Not needed anymore since non-worker pthread cannot have fiber_worker
     signal_task(65536);
     return 0;
 }
 
-void TaskControl::delete_task_group(void* arg) {
-    delete(TaskGroup*)arg;
+void schedule_group::delete_task_group(void* arg) {
+    delete(fiber_worker*)arg;
 }
 
-int TaskControl::_destroy_group(TaskGroup* g) {
+int schedule_group::_destroy_group(fiber_worker* g) {
     if (NULL == g) {
         LOG(ERROR) << "Param[g] is NULL";
         return -1;
     }
     if (g->_control != this) {
-        LOG(ERROR) << "TaskGroup=" << g
-                   << " does not belong to this TaskControl=" << this;
+        LOG(ERROR) << "fiber_worker=" << g
+                   << " does not belong to this schedule_group=" << this;
         return -1;
     }
     bool erased = false;
@@ -319,7 +319,7 @@ int TaskControl::_destroy_group(TaskGroup* g) {
     // Can't delete g immediately because for performance consideration,
     // we don't lock _modify_group_mutex in steal_task which may
     // access the removed group concurrently. We use simple strategy here:
-    // Schedule a function which deletes the TaskGroup after
+    // Schedule a function which deletes the fiber_worker after
     // FLAGS_task_group_delete_delay seconds
     if (erased) {
         get_global_timer_thread()->schedule(
@@ -329,7 +329,7 @@ int TaskControl::_destroy_group(TaskGroup* g) {
     return 0;
 }
 
-bool TaskControl::steal_task(bthread_t* tid, size_t* seed, size_t offset) {
+bool schedule_group::steal_task(bthread_t* tid, size_t* seed, size_t offset) {
     // 1: Acquiring fence is paired with releasing fence in _add_group to
     // avoid accessing uninitialized slot of _groups.
     const size_t ngroup = _ngroup.load(std::memory_order_acquire/*1*/);
@@ -341,7 +341,7 @@ bool TaskControl::steal_task(bthread_t* tid, size_t* seed, size_t offset) {
     bool stolen = false;
     size_t s = *seed;
     for (size_t i = 0; i < ngroup; ++i, s += offset) {
-        TaskGroup* g = _groups[s % ngroup];
+        fiber_worker* g = _groups[s % ngroup];
         // g is possibly NULL because of concurrent _destroy_group
         if (g) {
             if (g->_rq.steal(tid)) {
@@ -358,7 +358,7 @@ bool TaskControl::steal_task(bthread_t* tid, size_t* seed, size_t offset) {
     return stolen;
 }
 
-void TaskControl::signal_task(int num_task) {
+void schedule_group::signal_task(int num_task) {
     if (num_task <= 0) {
         return;
     }
@@ -390,7 +390,7 @@ void TaskControl::signal_task(int num_task) {
     }
 }
 
-void TaskControl::print_rq_sizes(std::ostream& os) {
+void schedule_group::print_rq_sizes(std::ostream& os) {
     const size_t ngroup = _ngroup.load(std::memory_order_relaxed);
     DEFINE_SMALL_ARRAY(int, nums, ngroup, 128);
     {
@@ -406,7 +406,7 @@ void TaskControl::print_rq_sizes(std::ostream& os) {
     }
 }
 
-double TaskControl::get_cumulated_worker_time() {
+double schedule_group::get_cumulated_worker_time() {
     int64_t cputime_ns = 0;
     FLARE_SCOPED_LOCK(_modify_group_mutex);
     const size_t ngroup = _ngroup.load(std::memory_order_relaxed);
@@ -418,7 +418,7 @@ double TaskControl::get_cumulated_worker_time() {
     return cputime_ns / 1000000000.0;
 }
 
-int64_t TaskControl::get_cumulated_switch_count() {
+int64_t schedule_group::get_cumulated_switch_count() {
     int64_t c = 0;
     FLARE_SCOPED_LOCK(_modify_group_mutex);
     const size_t ngroup = _ngroup.load(std::memory_order_relaxed);
@@ -430,12 +430,12 @@ int64_t TaskControl::get_cumulated_switch_count() {
     return c;
 }
 
-int64_t TaskControl::get_cumulated_signal_count() {
+int64_t schedule_group::get_cumulated_signal_count() {
     int64_t c = 0;
     FLARE_SCOPED_LOCK(_modify_group_mutex);
     const size_t ngroup = _ngroup.load(std::memory_order_relaxed);
     for (size_t i = 0; i < ngroup; ++i) {
-        TaskGroup* g = _groups[i];
+        fiber_worker* g = _groups[i];
         if (g) {
             c += g->_nsignaled + g->_remote_nsignaled;
         }
@@ -443,7 +443,7 @@ int64_t TaskControl::get_cumulated_signal_count() {
     return c;
 }
 
-flare::variable::LatencyRecorder* TaskControl::create_exposed_pending_time() {
+flare::variable::LatencyRecorder* schedule_group::create_exposed_pending_time() {
     bool is_creator = false;
     _pending_time_mutex.lock();
     flare::variable::LatencyRecorder* pt = _pending_time.load(std::memory_order_consume);

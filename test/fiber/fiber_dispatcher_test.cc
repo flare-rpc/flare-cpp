@@ -26,8 +26,8 @@
 #include "flare/log/logging.h"
 #include "flare/base/gperftools_profiler.h"
 #include "flare/fiber/internal/bthread.h"
-#include "flare/fiber/internal/task_control.h"
-#include "flare/fiber/internal/task_group.h"
+#include "flare/fiber/internal/schedule_group.h"
+#include "flare/fiber/internal/fiber_worker.h"
 #include "flare/fiber/this_fiber.h"
 
 #if defined(FLARE_PLATFORM_OSX)
@@ -38,7 +38,7 @@
 #define RUN_EPOLL_IN_BTHREAD
 
 namespace flare::fiber_internal {
-extern TaskControl* global_task_control;
+extern schedule_group* global_task_control;
 int stop_and_join_epoll_threads();
 }
 

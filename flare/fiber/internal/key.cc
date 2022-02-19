@@ -24,7 +24,7 @@
 #include "flare/base/static_atomic.h"
 #include "flare/variable/passive_status.h"
 #include "flare/fiber/internal/errno.h"                       // EAGAIN
-#include "flare/fiber/internal/task_group.h"                  // TaskGroup
+#include "flare/fiber/internal/fiber_worker.h"                  // fiber_worker
 
 // Implement bthread_key_t related functions
 
@@ -33,7 +33,7 @@ namespace flare::fiber_internal {
 class KeyTable;
 
 // defined in task_group.cpp
-extern __thread TaskGroup* tls_task_group;
+extern __thread fiber_worker* tls_task_group;
 extern thread_local fiber_local_storage tls_bls;
 static __thread bool tls_ever_created_keytable = false;
 
@@ -301,7 +301,7 @@ int bthread_keytable_pool_destroy(bthread_keytable_pool_t* pool) {
         pool->destroyed = 1;
     }
     // Cheat get/setspecific and destroy the keytables.
-    flare::fiber_internal::TaskGroup* const g = flare::fiber_internal::tls_task_group;
+    flare::fiber_internal::fiber_worker* const g = flare::fiber_internal::tls_task_group;
     flare::fiber_internal::KeyTable* old_kt = flare::fiber_internal::tls_bls.keytable;
     while (saved_free_keytables) {
         flare::fiber_internal::KeyTable* kt = saved_free_keytables;
@@ -444,7 +444,7 @@ int bthread_setspecific(bthread_key_t key, void* data) {
             return ENOMEM;
         }
         flare::fiber_internal::tls_bls.keytable = kt;
-        flare::fiber_internal::TaskGroup* const g = flare::fiber_internal::tls_task_group;
+        flare::fiber_internal::fiber_worker* const g = flare::fiber_internal::tls_task_group;
         if (g) {
             g->current_task()->local_storage.keytable = kt;
         }
@@ -461,7 +461,7 @@ void* bthread_getspecific(bthread_key_t key) {
     if (kt) {
         return kt->get_data(key);
     }
-    flare::fiber_internal::TaskGroup* const g = flare::fiber_internal::tls_task_group;
+    flare::fiber_internal::fiber_worker* const g = flare::fiber_internal::tls_task_group;
     if (g) {
         flare::fiber_internal::fiber_entity* const task = g->current_task();
         kt = flare::fiber_internal::borrow_keytable(task->attr.keytable_pool);

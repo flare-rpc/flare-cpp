@@ -1,30 +1,10 @@
-// Licensed to the Apache Software Foundation (ASF) under one
-// or more contributor license agreements.  See the NOTICE file
-// distributed with this work for additional information
-// regarding copyright ownership.  The ASF licenses this file
-// to you under the Apache License, Version 2.0 (the
-// "License"); you may not use this file except in compliance
-// with the License.  You may obtain a copy of the License at
-//
-//   http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing,
-// software distributed under the License is distributed on an
-// "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-// KIND, either express or implied.  See the License for the
-// specific language governing permissions and limitations
-// under the License.
 
-// fiber - A M:N threading library to make applications more concurrent.
-
-// Date: Tue Jul 10 17:40:58 CST 2012
-
-#ifndef BTHREAD_TASK_GROUP_H
-#define BTHREAD_TASK_GROUP_H
+#ifndef FLARE_FIBER_INTERNAL_FIBER_WORKER_H_
+#define FLARE_FIBER_INTERNAL_FIBER_WORKER_H_
 
 #include "flare/base/time.h"                             // cpuwide_time_ns
-#include "flare/fiber/internal/task_control.h"
-#include "flare/fiber/internal/task_meta.h"                     // bthread_t, fiber_entity
+#include "flare/fiber/internal/schedule_group.h"
+#include "flare/fiber/internal/fiber_entity.h"                     // bthread_t, fiber_entity
 #include "flare/fiber/internal/work_stealing_queue.h"           // WorkStealingQueue
 #include "flare/fiber/internal/remote_task_queue.h"             // RemoteTaskQueue
 #include "flare/memory/resource_pool.h"                    // ResourceId
@@ -51,23 +31,23 @@ namespace flare::fiber_internal {
         void *_value;
     };
 
-// Thread-local group of tasks.
-// Notice that most methods involving context switching are static otherwise
-// pointer `this' may change after wakeup. The **pg parameters in following
-// function are updated before returning.
-    class TaskGroup {
+    // Thread-local group of tasks.
+    // Notice that most methods involving context switching are static otherwise
+    // pointer `this' may change after wakeup. The **pg parameters in following
+    // function are updated before returning.
+    class fiber_worker {
     public:
-        // Create task `fn(arg)' with attributes `attr' in TaskGroup *pg and put
+        // Create task `fn(arg)' with attributes `attr' in fiber_worker *pg and put
         // the identifier into `tid'. Switch to the new task and schedule old task
         // to run.
         // Return 0 on success, errno otherwise.
-        static int start_foreground(TaskGroup **pg,
+        static int start_foreground(fiber_worker **pg,
                                     bthread_t *__restrict tid,
                                     const bthread_attr_t *__restrict attr,
                                     void *(*fn)(void *),
                                     void *__restrict arg);
 
-        // Create task `fn(arg)' with attributes `attr' in this TaskGroup, put the
+        // Create task `fn(arg)' with attributes `attr' in this fiber_worker, put the
         // identifier into `tid'. Schedule the new thread to run.
         //   Called from worker: start_background<false>
         //   Called from non-worker: start_background<true>
@@ -78,19 +58,19 @@ namespace flare::fiber_internal {
                              void *(*fn)(void *),
                              void *__restrict arg);
 
-        // Suspend caller and run next bthread in TaskGroup *pg.
-        static void sched(TaskGroup **pg);
+        // Suspend caller and run next bthread in fiber_worker *pg.
+        static void sched(fiber_worker **pg);
 
-        static void ending_sched(TaskGroup **pg);
+        static void ending_sched(fiber_worker **pg);
 
-        // Suspend caller and run bthread `next_tid' in TaskGroup *pg.
+        // Suspend caller and run bthread `next_tid' in fiber_worker *pg.
         // Purpose of this function is to avoid pushing `next_tid' to _rq and
         // then being popped by sched(pg), which is not necessary.
-        static void sched_to(TaskGroup **pg, fiber_entity *next_meta);
+        static void sched_to(fiber_worker **pg, fiber_entity *next_meta);
 
-        static void sched_to(TaskGroup **pg, bthread_t next_tid);
+        static void sched_to(fiber_worker **pg, bthread_t next_tid);
 
-        static void exchange(TaskGroup **pg, bthread_t next_tid);
+        static void exchange(fiber_worker **pg, bthread_t next_tid);
 
         // The callback will be run in the beginning of next-run bthread.
         // Can't be called by current bthread directly because it often needs
@@ -105,13 +85,13 @@ namespace flare::fiber_internal {
         // Suspend caller for at least |timeout_us| microseconds.
         // If |timeout_us| is 0, this function does nothing.
         // If |group| is NULL or current thread is non-bthread, call usleep(3)
-        // instead. This function does not create thread-local TaskGroup.
+        // instead. This function does not create thread-local fiber_worker.
         // Returns: 0 on success, -1 otherwise and errno is set.
-        static int usleep(TaskGroup **pg, uint64_t timeout_us);
+        static int usleep(fiber_worker **pg, uint64_t timeout_us);
 
         // Suspend caller and run another bthread. When the caller will resume
         // is undefined.
-        static void yield(TaskGroup **pg);
+        static void yield(fiber_worker **pg);
 
         // Suspend caller until bthread `tid' terminates.
         static int join(bthread_t tid, void **return_value);
@@ -160,7 +140,7 @@ namespace flare::fiber_internal {
         // True iff current task is in pthread-mode.
         bool is_current_pthread_task() const { return _cur_meta->stack == _main_stack; }
 
-        // Active time in nanoseconds spent by this TaskGroup.
+        // Active time in nanoseconds spent by this fiber_worker.
         int64_t cumulated_cputime_ns() const { return _cumulated_cputime_ns; }
 
         // Push a bthread into the runqueue
@@ -182,15 +162,15 @@ namespace flare::fiber_internal {
 
         void flush_nosignal_tasks_general();
 
-        // The TaskControl that this TaskGroup belongs to.
-        TaskControl *control() const { return _control; }
+        // The schedule_group that this fiber_worker belongs to.
+        schedule_group *control() const { return _control; }
 
         // Call this instead of delete.
         void destroy_self();
 
         // Wake up blocking ops in the thread.
         // Returns 0 on success, errno otherwise.
-        static int interrupt(bthread_t tid, TaskControl *c);
+        static int interrupt(bthread_t tid, schedule_group *c);
 
         // Get the meta associate with the task.
         static fiber_entity *address_meta(bthread_t tid);
@@ -201,16 +181,16 @@ namespace flare::fiber_internal {
 
     private:
 
-        friend class TaskControl;
+        friend class schedule_group;
 
-        // You shall use TaskControl::create_group to create new instance.
-        explicit TaskGroup(TaskControl *);
+        // You shall use schedule_group::create_group to create new instance.
+        explicit fiber_worker(schedule_group *);
 
         int init(size_t runqueue_capacity);
 
         // You shall call destroy_self() instead of destructor because deletion
         // of groups are postponed to avoid race.
-        ~TaskGroup();
+        ~fiber_worker();
 
         static void task_runner(intptr_t skip_remained);
 
@@ -250,7 +230,7 @@ namespace flare::fiber_internal {
         fiber_entity *_cur_meta;
 
         // the control that this group belongs to
-        TaskControl *_control;
+        schedule_group *_control;
         int _num_nosignal;
         int _nsignaled;
         // last scheduling time
@@ -277,6 +257,6 @@ namespace flare::fiber_internal {
 
 }  // namespace flare::fiber_internal
 
-#include "task_group_inl.h"
+#include "flare/fiber/internal/fiber_worker_inl.h"
 
-#endif  // BTHREAD_TASK_GROUP_H
+#endif  // FLARE_FIBER_INTERNAL_FIBER_WORKER_H_
