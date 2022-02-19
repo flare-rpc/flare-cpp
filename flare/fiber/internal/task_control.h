@@ -28,7 +28,7 @@
 #include <stddef.h>                             // size_t
 #include "flare/base/static_atomic.h"                     // std::atomic
 #include "flare/variable/all.h"                          // flare::variable::PassiveStatus
-#include "flare/fiber/internal/task_meta.h"                  // TaskMeta
+#include "flare/fiber/internal/task_meta.h"                  // fiber_entity
 #include "flare/memory/resource_pool.h"                 // ResourcePool
 #include "flare/fiber/internal/work_stealing_queue.h"        // WorkStealingQueue
 #include "flare/fiber/internal/parking_lot.h"

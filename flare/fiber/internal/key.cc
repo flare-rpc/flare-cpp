@@ -34,7 +34,7 @@ class KeyTable;
 
 // defined in task_group.cpp
 extern __thread TaskGroup* tls_task_group;
-extern thread_local LocalStorage tls_bls;
+extern thread_local fiber_local_storage tls_bls;
 static __thread bool tls_ever_created_keytable = false;
 
 // We keep thread specific data in a two-level array. The top-level array
@@ -463,7 +463,7 @@ void* bthread_getspecific(bthread_key_t key) {
     }
     flare::fiber_internal::TaskGroup* const g = flare::fiber_internal::tls_task_group;
     if (g) {
-        flare::fiber_internal::TaskMeta* const task = g->current_task();
+        flare::fiber_internal::fiber_entity* const task = g->current_task();
         kt = flare::fiber_internal::borrow_keytable(task->attr.keytable_pool);
         if (kt) {
             g->current_task()->local_storage.keytable = kt;

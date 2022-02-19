@@ -23,8 +23,11 @@
 #define BTHREAD_TYPES_H
 
 #include <stdint.h>                            // uint64_t
+
 #if defined(__cplusplus)
+
 #include "flare/log/logging.h"                      // CHECK
+
 #endif
 
 typedef uint64_t bthread_t;
@@ -53,33 +56,38 @@ typedef struct {
     uint32_t version;  // ABA avoidance
 } bthread_key_t;
 
-static const bthread_key_t INVALID_BTHREAD_KEY = { 0, 0 };
+static const bthread_key_t INVALID_BTHREAD_KEY = {0, 0};
 
 #if defined(__cplusplus)
+
 // Overload operators for bthread_key_t
-inline bool operator==(bthread_key_t key1, bthread_key_t key2)
-{ return key1.index == key2.index && key1.version == key2.version; }
-inline bool operator!=(bthread_key_t key1, bthread_key_t key2)
-{ return !(key1 == key2); }
+inline bool operator==(bthread_key_t key1, bthread_key_t key2) {
+    return key1.index == key2.index && key1.version == key2.version;
+}
+
+inline bool operator!=(bthread_key_t key1, bthread_key_t key2) { return !(key1 == key2); }
+
 inline bool operator<(bthread_key_t key1, bthread_key_t key2) {
     return key1.index != key2.index ? (key1.index < key2.index) :
-        (key1.version < key2.version);
+           (key1.version < key2.version);
 }
-inline bool operator>(bthread_key_t key1, bthread_key_t key2)
-{ return key2 < key1; }
-inline bool operator<=(bthread_key_t key1, bthread_key_t key2)
-{ return !(key2 < key1); }
-inline bool operator>=(bthread_key_t key1, bthread_key_t key2)
-{ return !(key1 < key2); }
-inline std::ostream& operator<<(std::ostream& os, bthread_key_t key) {
+
+inline bool operator>(bthread_key_t key1, bthread_key_t key2) { return key2 < key1; }
+
+inline bool operator<=(bthread_key_t key1, bthread_key_t key2) { return !(key2 < key1); }
+
+inline bool operator>=(bthread_key_t key1, bthread_key_t key2) { return !(key1 < key2); }
+
+inline std::ostream &operator<<(std::ostream &os, bthread_key_t key) {
     return os << "bthread_key_t{index=" << key.index << " version="
               << key.version << '}';
 }
+
 #endif  // __cplusplus
 
 typedef struct {
     pthread_mutex_t mutex;
-    void* free_keytables;
+    void *free_keytables;
     int destroyed;
 } bthread_keytable_pool_t;
 
@@ -91,20 +99,23 @@ typedef struct {
 typedef struct bthread_attr_t {
     bthread_stacktype_t stack_type;
     bthread_attrflags_t flags;
-    bthread_keytable_pool_t* keytable_pool;
+    bthread_keytable_pool_t *keytable_pool;
 
 #if defined(__cplusplus)
+
     void operator=(unsigned stacktype_and_flags) {
         stack_type = (stacktype_and_flags & 7);
-        flags = (stacktype_and_flags & ~(unsigned)7u);
+        flags = (stacktype_and_flags & ~(unsigned) 7u);
         keytable_pool = NULL;
     }
+
     bthread_attr_t operator|(unsigned other_flags) const {
         CHECK(!(other_flags & 7)) << "flags=" << other_flags;
         bthread_attr_t tmp = *this;
-        tmp.flags |= (other_flags & ~(unsigned)7u);
+        tmp.flags |= (other_flags & ~(unsigned) 7u);
         return tmp;
     }
+
 #endif  // __cplusplus
 } bthread_attr_t;
 
@@ -115,23 +126,23 @@ typedef struct bthread_attr_t {
 // obvious drawback is that you need more worker pthreads when you have a lot
 // of such bthreads.
 static const bthread_attr_t BTHREAD_ATTR_PTHREAD =
-{ BTHREAD_STACKTYPE_PTHREAD, 0, NULL };
+        {BTHREAD_STACKTYPE_PTHREAD, 0, NULL};
 
 // bthreads created with following attributes will have different size of
 // stacks. Default is BTHREAD_ATTR_NORMAL.
 static const bthread_attr_t BTHREAD_ATTR_SMALL =
-{ BTHREAD_STACKTYPE_SMALL, 0, NULL };
+        {BTHREAD_STACKTYPE_SMALL, 0, NULL};
 static const bthread_attr_t BTHREAD_ATTR_NORMAL =
-{ BTHREAD_STACKTYPE_NORMAL, 0, NULL };
+        {BTHREAD_STACKTYPE_NORMAL, 0, NULL};
 static const bthread_attr_t BTHREAD_ATTR_LARGE =
-{ BTHREAD_STACKTYPE_LARGE, 0, NULL };
+        {BTHREAD_STACKTYPE_LARGE, 0, NULL};
 
 // bthreads created with this attribute will print log when it's started,
 // context-switched, finished.
 static const bthread_attr_t BTHREAD_ATTR_DEBUG = {
-    BTHREAD_STACKTYPE_NORMAL,
-    BTHREAD_LOG_START_AND_FINISH | BTHREAD_LOG_CONTEXT_SWITCH,
-    NULL
+        BTHREAD_STACKTYPE_NORMAL,
+        BTHREAD_LOG_START_AND_FINISH | BTHREAD_LOG_CONTEXT_SWITCH,
+        NULL
 };
 
 static const size_t BTHREAD_EPOLL_THREAD_NUM = 1;
@@ -142,7 +153,7 @@ static const int BTHREAD_MIN_CONCURRENCY = 3 + BTHREAD_EPOLL_THREAD_NUM;
 static const int BTHREAD_MAX_CONCURRENCY = 1024;
 
 typedef struct {
-    void* impl;
+    void *impl;
     // following fields are part of previous impl. and not used right now.
     // Don't remove them to break ABI compatibility.
     unsigned head;
@@ -158,7 +169,7 @@ typedef struct {
 } bthread_contention_site_t;
 
 typedef struct {
-    unsigned* butex;
+    unsigned *butex;
     bthread_contention_site_t csite;
 } bthread_mutex_t;
 
@@ -166,8 +177,8 @@ typedef struct {
 } bthread_mutexattr_t;
 
 typedef struct {
-    bthread_mutex_t* m;
-    int* seq;
+    bthread_mutex_t *m;
+    int *seq;
 } bthread_cond_t;
 
 typedef struct {
@@ -195,25 +206,26 @@ typedef struct {
 static const bthread_id_t INVALID_BTHREAD_ID = {0};
 
 #if defined(__cplusplus)
+
 // Overload operators for bthread_id_t
-inline bool operator==(bthread_id_t id1, bthread_id_t id2)
-{ return id1.value == id2.value; }
-inline bool operator!=(bthread_id_t id1, bthread_id_t id2)
-{ return !(id1 == id2); }
-inline bool operator<(bthread_id_t id1, bthread_id_t id2)
-{ return id1.value < id2.value; }
-inline bool operator>(bthread_id_t id1, bthread_id_t id2)
-{ return id2 < id1; }
-inline bool operator<=(bthread_id_t id1, bthread_id_t id2)
-{ return !(id2 < id1); }
-inline bool operator>=(bthread_id_t id1, bthread_id_t id2)
-{ return !(id1 < id2); }
-inline std::ostream& operator<<(std::ostream& os, bthread_id_t id)
-{ return os << id.value; }
+inline bool operator==(bthread_id_t id1, bthread_id_t id2) { return id1.value == id2.value; }
+
+inline bool operator!=(bthread_id_t id1, bthread_id_t id2) { return !(id1 == id2); }
+
+inline bool operator<(bthread_id_t id1, bthread_id_t id2) { return id1.value < id2.value; }
+
+inline bool operator>(bthread_id_t id1, bthread_id_t id2) { return id2 < id1; }
+
+inline bool operator<=(bthread_id_t id1, bthread_id_t id2) { return !(id2 < id1); }
+
+inline bool operator>=(bthread_id_t id1, bthread_id_t id2) { return !(id1 < id2); }
+
+inline std::ostream &operator<<(std::ostream &os, bthread_id_t id) { return os << id.value; }
+
 #endif  // __cplusplus
 
 typedef struct {
-    void* impl;
+    void *impl;
     // following fields are part of previous impl. and not used right now.
     // Don't remove them to break ABI compatibility.
     unsigned head;

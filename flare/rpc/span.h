@@ -34,7 +34,7 @@
 #include "flare/rpc/span.pb.h"
 
 namespace flare::fiber_internal {
-extern thread_local flare::fiber_internal::LocalStorage tls_bls;
+extern thread_local flare::fiber_internal::fiber_local_storage tls_bls;
 }
 
 

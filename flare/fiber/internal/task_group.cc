@@ -58,10 +58,10 @@ const bool FLARE_ALLOW_UNUSED dummy_show_per_worker_usage_in_vars =
                                     pass_bool);
 
 __thread TaskGroup* tls_task_group = NULL;
-// Sync with TaskMeta::local_storage when a bthread is created or destroyed.
+// Sync with fiber_entity::local_storage when a bthread is created or destroyed.
 // During running, the two fields may be inconsistent, use tls_bls as the
 // groundtruth.
-thread_local LocalStorage tls_bls = BTHREAD_LOCAL_STORAGE_INITIALIZER;
+thread_local fiber_local_storage tls_bls = BTHREAD_LOCAL_STORAGE_INITIALIZER;
 
 // defined in bthread/key.cpp
 extern void return_keytable(bthread_keytable_pool_t*, KeyTable*);
@@ -70,14 +70,14 @@ extern void return_keytable(bthread_keytable_pool_t*, KeyTable*);
 // overhead of creation keytable, may be removed later.
 FLARE_THREAD_LOCAL void* tls_unique_user_ptr = NULL;
 
-const TaskStatistics EMPTY_STAT = { 0, 0 };
+const fiber_statistics EMPTY_STAT = { 0, 0 };
 
 const size_t OFFSET_TABLE[] = {
 #include "flare/fiber/internal/offset_inl.list"
 };
 
 int TaskGroup::get_attr(bthread_t tid, bthread_attr_t* out) {
-    TaskMeta* const m = address_meta(tid);
+    fiber_entity* const m = address_meta(tid);
     if (m != NULL) {
         const uint32_t given_ver = get_version(tid);
         FLARE_SCOPED_LOCK(m->version_lock);
@@ -91,7 +91,7 @@ int TaskGroup::get_attr(bthread_t tid, bthread_attr_t* out) {
 }
 
 void TaskGroup::set_stopped(bthread_t tid) {
-    TaskMeta* const m = address_meta(tid);
+    fiber_entity* const m = address_meta(tid);
     if (m != NULL) {
         const uint32_t given_ver = get_version(tid);
         FLARE_SCOPED_LOCK(m->version_lock);
@@ -102,7 +102,7 @@ void TaskGroup::set_stopped(bthread_t tid) {
 }
 
 bool TaskGroup::is_stopped(bthread_t tid) {
-    TaskMeta* const m = address_meta(tid);
+    fiber_entity* const m = address_meta(tid);
     if (m != NULL) {
         const uint32_t given_ver = get_version(tid);
         FLARE_SCOPED_LOCK(m->version_lock);
@@ -201,7 +201,7 @@ TaskGroup::TaskGroup(TaskControl* c)
 
 TaskGroup::~TaskGroup() {
     if (_main_tid) {
-        TaskMeta* m = address_meta(_main_tid);
+        fiber_entity* m = address_meta(_main_tid);
         CHECK(_main_stack == m->stack);
         return_stack(m->release_stack());
         return_resource(get_slot(_main_tid));
@@ -218,15 +218,15 @@ int TaskGroup::init(size_t runqueue_capacity) {
         LOG(FATAL) << "Fail to init _remote_rq";
         return -1;
     }
-    ContextualStack* stk = get_stack(STACK_TYPE_MAIN, NULL);
+    fiber_contextual_stack* stk = get_stack(STACK_TYPE_MAIN, NULL);
     if (NULL == stk) {
         LOG(FATAL) << "Fail to get main stack container";
         return -1;
     }
-    flare::memory::ResourceId<TaskMeta> slot;
-    TaskMeta* m = flare::memory::get_resource<TaskMeta>(&slot);
+    flare::memory::ResourceId<fiber_entity> slot;
+    fiber_entity* m = flare::memory::get_resource<fiber_entity>(&slot);
     if (NULL == m) {
-        LOG(FATAL) << "Fail to get TaskMeta";
+        LOG(FATAL) << "Fail to get fiber_entity";
         return -1;
     }
     m->stop = false;
@@ -276,7 +276,7 @@ void TaskGroup::task_runner(intptr_t skip_remained) {
         // abnormally.
 
         // Meta and identifier of the task is persistent in this run.
-        TaskMeta* const m = g->_cur_meta;
+        fiber_entity* const m = g->_cur_meta;
 
         if (FLAGS_show_bthread_creation_in_vars) {
             // NOTE: the thread triggering exposure of pending time may spend
@@ -345,7 +345,7 @@ void TaskGroup::task_runner(intptr_t skip_remained) {
 }
 
 void TaskGroup::_release_last_context(void* arg) {
-    TaskMeta* m = static_cast<TaskMeta*>(arg);
+    fiber_entity* m = static_cast<fiber_entity*>(arg);
     if (m->stack_type() != STACK_TYPE_PTHREAD) {
         return_stack(m->release_stack()/*may be NULL*/);
     } else {
@@ -365,8 +365,8 @@ int TaskGroup::start_foreground(TaskGroup** pg,
     }
     const int64_t start_ns = flare::base::cpuwide_time_ns();
     const bthread_attr_t using_attr = (attr ? *attr : BTHREAD_ATTR_NORMAL);
-    flare::memory::ResourceId<TaskMeta> slot;
-    TaskMeta* m = flare::memory::get_resource(&slot);
+    flare::memory::ResourceId<fiber_entity> slot;
+    fiber_entity* m = flare::memory::get_resource(&slot);
     if (__builtin_expect(!m, 0)) {
         return ENOMEM;
     }
@@ -420,8 +420,8 @@ int TaskGroup::start_background(bthread_t* __restrict th,
     }
     const int64_t start_ns = flare::base::cpuwide_time_ns();
     const bthread_attr_t using_attr = (attr ? *attr : BTHREAD_ATTR_NORMAL);
-    flare::memory::ResourceId<TaskMeta> slot;
-    TaskMeta* m = flare::memory::get_resource(&slot);
+    flare::memory::ResourceId<fiber_entity> slot;
+    fiber_entity* m = flare::memory::get_resource(&slot);
     if (__builtin_expect(!m, 0)) {
         return ENOMEM;
     }
@@ -466,7 +466,7 @@ int TaskGroup::join(bthread_t tid, void** return_value) {
     if (__builtin_expect(!tid, 0)) {  // tid of bthread is never 0.
         return EINVAL;
     }
-    TaskMeta* m = address_meta(tid);
+    fiber_entity* m = address_meta(tid);
     if (__builtin_expect(!m, 0)) {
         // The bthread is not created yet, this join is definitely wrong.
         return EINVAL;
@@ -491,7 +491,7 @@ int TaskGroup::join(bthread_t tid, void** return_value) {
 
 bool TaskGroup::exists(bthread_t tid) {
     if (tid != 0) {  // tid of bthread is never 0.
-        TaskMeta* m = address_meta(tid);
+        fiber_entity* m = address_meta(tid);
         if (m != NULL) {
             return (*m->version_butex == get_version(tid));
         }
@@ -499,8 +499,8 @@ bool TaskGroup::exists(bthread_t tid) {
     return false;
 }
 
-TaskStatistics TaskGroup::main_stat() const {
-    TaskMeta* m = address_meta(_main_tid);
+fiber_statistics TaskGroup::main_stat() const {
+    fiber_entity* m = address_meta(_main_tid);
     return m ? m->stat : EMPTY_STAT;
 }
 
@@ -521,15 +521,15 @@ void TaskGroup::ending_sched(TaskGroup** pg) {
         next_tid = g->_main_tid;
     }
 
-    TaskMeta* const cur_meta = g->_cur_meta;
-    TaskMeta* next_meta = address_meta(next_tid);
+    fiber_entity* const cur_meta = g->_cur_meta;
+    fiber_entity* next_meta = address_meta(next_tid);
     if (next_meta->stack == NULL) {
         if (next_meta->stack_type() == cur_meta->stack_type()) {
             // also works with pthread_task scheduling to pthread_task, the
             // transfered stack is just _main_stack.
             next_meta->set_stack(cur_meta->release_stack());
         } else {
-            ContextualStack* stk = get_stack(next_meta->stack_type(), task_runner);
+            fiber_contextual_stack* stk = get_stack(next_meta->stack_type(), task_runner);
             if (stk) {
                 next_meta->set_stack(stk);
             } else {
@@ -561,7 +561,7 @@ void TaskGroup::sched(TaskGroup** pg) {
     sched_to(pg, next_tid);
 }
 
-void TaskGroup::sched_to(TaskGroup** pg, TaskMeta* next_meta) {
+void TaskGroup::sched_to(TaskGroup** pg, fiber_entity* next_meta) {
     TaskGroup* g = *pg;
 #ifndef NDEBUG
     if ((++g->_sched_recursive_guard) > 1) {
@@ -573,7 +573,7 @@ void TaskGroup::sched_to(TaskGroup** pg, TaskMeta* next_meta) {
     const int saved_errno = errno;
     void* saved_unique_user_ptr = tls_unique_user_ptr;
 
-    TaskMeta* const cur_meta = g->_cur_meta;
+    fiber_entity* const cur_meta = g->_cur_meta;
     const int64_t now = flare::base::cpuwide_time_ns();
     const int64_t elp_ns = now - g->_last_run_ns;
     g->_last_run_ns = now;
@@ -724,7 +724,7 @@ void TaskGroup::ready_to_run_in_worker_ignoresignal(void* args_in) {
 struct SleepArgs {
     uint64_t timeout_us;
     bthread_t tid;
-    TaskMeta* meta;
+    fiber_entity* meta;
     TaskGroup* group;
 };
 
@@ -752,7 +752,7 @@ void TaskGroup::_add_sleep_event(void* void_args) {
         return;
     }
 
-    // Set TaskMeta::current_sleep which is for interruption.
+    // Set fiber_entity::current_sleep which is for interruption.
     const uint32_t given_ver = get_version(e.tid);
     {
         FLARE_SCOPED_LOCK(e.meta->version_lock);
@@ -805,11 +805,11 @@ int TaskGroup::usleep(TaskGroup** pg, uint64_t timeout_us) {
 }
 
 // Defined in butex.cpp
-bool erase_from_butex_because_of_interruption(ButexWaiter* bw);
+bool erase_from_butex_because_of_interruption(fiber_mutex_waiter* bw);
 
 static int interrupt_and_consume_waiters(
-    bthread_t tid, ButexWaiter** pw, uint64_t* sleep_id) {
-    TaskMeta* const m = TaskGroup::address_meta(tid);
+    bthread_t tid, fiber_mutex_waiter** pw, uint64_t* sleep_id) {
+    fiber_entity* const m = TaskGroup::address_meta(tid);
     if (m == NULL) {
         return EINVAL;
     }
@@ -825,8 +825,8 @@ static int interrupt_and_consume_waiters(
     return EINVAL;
 }
 
-static int set_butex_waiter(bthread_t tid, ButexWaiter* w) {
-    TaskMeta* const m = TaskGroup::address_meta(tid);
+static int set_butex_waiter(bthread_t tid, fiber_mutex_waiter* w) {
+    fiber_entity* const m = TaskGroup::address_meta(tid);
     if (m != NULL) {
         const uint32_t given_ver = get_version(tid);
         FLARE_SCOPED_LOCK(m->version_lock);
@@ -847,8 +847,8 @@ static int set_butex_waiter(bthread_t tid, ButexWaiter* w) {
 // TODO: bthreads created by BTHREAD_ATTR_PTHREAD blocking on bthread_usleep()
 // can't be interrupted.
 int TaskGroup::interrupt(bthread_t tid, TaskControl* c) {
-    // Consume current_waiter in the TaskMeta, wake it up then set it back.
-    ButexWaiter* w = NULL;
+    // Consume current_waiter in the fiber_entity, wake it up then set it back.
+    fiber_mutex_waiter* w = NULL;
     uint64_t sleep_id = 0;
     int rc = interrupt_and_consume_waiters(tid, &w, &sleep_id);
     if (rc) {
@@ -889,7 +889,7 @@ void TaskGroup::yield(TaskGroup** pg) {
 }
 
 void print_task(std::ostream& os, bthread_t tid) {
-    TaskMeta* const m = TaskGroup::address_meta(tid);
+    fiber_entity* const m = TaskGroup::address_meta(tid);
     if (m == NULL) {
         os << "bthread=" << tid << " : never existed";
         return;
@@ -904,7 +904,7 @@ void print_task(std::ostream& os, bthread_t tid) {
     bthread_attr_t attr = BTHREAD_ATTR_NORMAL;
     bool has_tls = false;
     int64_t cpuwide_start_ns = 0;
-    TaskStatistics stat = {0, 0};
+    fiber_statistics stat = {0, 0};
     {
         FLARE_SCOPED_LOCK(m->version_lock);
         if (given_ver == *m->version_butex) {

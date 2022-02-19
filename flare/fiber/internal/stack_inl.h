@@ -49,7 +49,7 @@ namespace flare::fiber_internal {
 
     template<typename StackClass>
     struct StackFactory {
-        struct Wrapper : public ContextualStack {
+        struct Wrapper : public fiber_contextual_stack {
             explicit Wrapper(void (*entry)(intptr_t)) {
                 if (allocate_stack_storage(&storage, *StackClass::stack_size_flag,
                                            FLAGS_guard_page_size) != 0) {
@@ -58,7 +58,7 @@ namespace flare::fiber_internal {
                     return;
                 }
                 context = flare_fiber_make_context(storage.bottom, storage.stacksize, entry);
-                stacktype = (StackType) StackClass::stacktype;
+                stacktype = (fiber_stack_type) StackClass::stacktype;
             }
 
             ~Wrapper() {
@@ -70,19 +70,19 @@ namespace flare::fiber_internal {
             }
         };
 
-        static ContextualStack *get_stack(void (*entry)(intptr_t)) {
+        static fiber_contextual_stack *get_stack(void (*entry)(intptr_t)) {
             return flare::memory::get_object<Wrapper>(entry);
         }
 
-        static void return_stack(ContextualStack *sc) {
+        static void return_stack(fiber_contextual_stack *sc) {
             flare::memory::return_object(static_cast<Wrapper *>(sc));
         }
     };
 
     template<>
     struct StackFactory<MainStackClass> {
-        static ContextualStack *get_stack(void (*)(intptr_t)) {
-            ContextualStack *s = new(std::nothrow) ContextualStack;
+        static fiber_contextual_stack *get_stack(void (*)(intptr_t)) {
+            fiber_contextual_stack *s = new(std::nothrow) fiber_contextual_stack;
             if (NULL == s) {
                 return NULL;
             }
@@ -92,12 +92,12 @@ namespace flare::fiber_internal {
             return s;
         }
 
-        static void return_stack(ContextualStack *s) {
+        static void return_stack(fiber_contextual_stack *s) {
             delete s;
         }
     };
 
-    inline ContextualStack *get_stack(StackType type, void (*entry)(intptr_t)) {
+    inline fiber_contextual_stack *get_stack(fiber_stack_type type, void (*entry)(intptr_t)) {
         switch (type) {
             case STACK_TYPE_PTHREAD:
                 return NULL;
@@ -113,7 +113,7 @@ namespace flare::fiber_internal {
         return NULL;
     }
 
-    inline void return_stack(ContextualStack *s) {
+    inline void return_stack(fiber_contextual_stack *s) {
         if (NULL == s) {
             return;
         }
@@ -132,7 +132,7 @@ namespace flare::fiber_internal {
         }
     }
 
-    inline void jump_stack(ContextualStack *from, ContextualStack *to) {
+    inline void jump_stack(fiber_contextual_stack *from, fiber_contextual_stack *to) {
         flare_fiber_jump_context(&from->context, to->context, 0/*not skip remained*/);
     }
 

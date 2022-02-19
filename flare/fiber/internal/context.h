@@ -68,16 +68,16 @@
 typedef int intptr_t;
 #endif
 
-typedef void *bthread_fcontext_t;
+typedef void *fiber_context_type;
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 intptr_t FLARE_FIBER_CONTEXT_CALL_CONVENTION
-flare_fiber_jump_context(bthread_fcontext_t *ofc, bthread_fcontext_t nfc,
+flare_fiber_jump_context(fiber_context_type *ofc, fiber_context_type nfc,
                          intptr_t vp, bool preserve_fpu = false);
-bthread_fcontext_t FLARE_FIBER_CONTEXT_CALL_CONVENTION
+fiber_context_type FLARE_FIBER_CONTEXT_CALL_CONVENTION
 flare_fiber_make_context(void *sp, size_t size, void (*fn)(intptr_t));
 
 #ifdef __cplusplus

@@ -84,7 +84,7 @@ namespace flare::fiber_internal {
 
     struct Butex;
 
-    struct ButexWaiter : public flare::container::link_node<ButexWaiter> {
+    struct fiber_mutex_waiter : public flare::container::link_node<fiber_mutex_waiter> {
         // tids of pthreads are 0
         bthread_t tid;
 
@@ -95,8 +95,8 @@ namespace flare::fiber_internal {
 
 // non_pthread_task allocates this structure on stack and queue it in
 // Butex::waiters.
-    struct ButexBthreadWaiter : public ButexWaiter {
-        TaskMeta *task_meta;
+    struct ButexBthreadWaiter : public fiber_mutex_waiter {
+        fiber_entity *task_meta;
         TimerThread::TaskId sleep_id;
         WaiterState waiter_state;
         int expected_value;
@@ -106,11 +106,11 @@ namespace flare::fiber_internal {
 
 // pthread_task or main_task allocates this structure on stack and queue it
 // in Butex::waiters.
-    struct ButexPthreadWaiter : public ButexWaiter {
+    struct ButexPthreadWaiter : public fiber_mutex_waiter {
         std::atomic<int> sig;
     };
 
-    typedef flare::container::linked_list<ButexWaiter> ButexWaiterList;
+    typedef flare::container::linked_list<fiber_mutex_waiter> ButexWaiterList;
 
     enum ButexPthreadSignal {
         PTHREAD_NOT_SIGNALLED, PTHREAD_SIGNALLED
@@ -139,7 +139,7 @@ namespace flare::fiber_internal {
         futex_wake_private(&pw->sig, 1);
     }
 
-    bool erase_from_butex(ButexWaiter *, bool, WaiterState);
+    bool erase_from_butex(fiber_mutex_waiter *, bool, WaiterState);
 
     int wait_pthread(ButexPthreadWaiter &pw, timespec *ptimeout) {
         while (true) {
@@ -268,7 +268,7 @@ namespace flare::fiber_internal {
 
     int butex_wake(void *arg) {
         Butex *b = FLARE_CONTAINER_OF(static_cast<std::atomic<int> *>(arg), Butex, value);
-        ButexWaiter *front = NULL;
+        fiber_mutex_waiter *front = NULL;
         {
             FLARE_SCOPED_LOCK(b->waiter_lock);
             if (b->waiters.empty()) {
@@ -301,7 +301,7 @@ namespace flare::fiber_internal {
         {
             FLARE_SCOPED_LOCK(b->waiter_lock);
             while (!b->waiters.empty()) {
-                ButexWaiter *bw = b->waiters.head()->value();
+                fiber_mutex_waiter *bw = b->waiters.head()->value();
                 bw->remove_from_list();
                 bw->container.store(NULL, std::memory_order_relaxed);
                 if (bw->tid) {
@@ -357,10 +357,10 @@ namespace flare::fiber_internal {
         ButexWaiterList bthread_waiters;
         ButexWaiterList pthread_waiters;
         {
-            ButexWaiter *excluded_waiter = NULL;
+            fiber_mutex_waiter *excluded_waiter = NULL;
             FLARE_SCOPED_LOCK(b->waiter_lock);
             while (!b->waiters.empty()) {
-                ButexWaiter *bw = b->waiters.head()->value();
+                fiber_mutex_waiter *bw = b->waiters.head()->value();
                 bw->remove_from_list();
 
                 if (bw->tid) {
@@ -417,7 +417,7 @@ namespace flare::fiber_internal {
         Butex *b = FLARE_CONTAINER_OF(static_cast<std::atomic<int> *>(arg), Butex, value);
         Butex *m = FLARE_CONTAINER_OF(static_cast<std::atomic<int> *>(arg2), Butex, value);
 
-        ButexWaiter *front = NULL;
+        fiber_mutex_waiter *front = NULL;
         {
             std::unique_lock<internal::FastPthreadMutex> lck1(b->waiter_lock, std::defer_lock);
             std::unique_lock<internal::FastPthreadMutex> lck2(m->waiter_lock, std::defer_lock);
@@ -431,7 +431,7 @@ namespace flare::fiber_internal {
             front->container.store(NULL, std::memory_order_relaxed);
 
             while (!b->waiters.empty()) {
-                ButexWaiter *bw = b->waiters.head()->value();
+                fiber_mutex_waiter *bw = b->waiters.head()->value();
                 bw->remove_from_list();
                 m->waiters.append(bw);
                 bw->container.store(m, std::memory_order_relaxed);
@@ -455,15 +455,15 @@ namespace flare::fiber_internal {
 
 // Callable from multiple threads, at most one thread may wake up the waiter.
     static void erase_from_butex_and_wakeup(void *arg) {
-        erase_from_butex(static_cast<ButexWaiter *>(arg), true, WAITER_STATE_TIMEDOUT);
+        erase_from_butex(static_cast<fiber_mutex_waiter *>(arg), true, WAITER_STATE_TIMEDOUT);
     }
 
 // Used in task_group.cpp
-    bool erase_from_butex_because_of_interruption(ButexWaiter *bw) {
+    bool erase_from_butex_because_of_interruption(fiber_mutex_waiter *bw) {
         return erase_from_butex(bw, true, WAITER_STATE_INTERRUPTED);
     }
 
-    inline bool erase_from_butex(ButexWaiter *bw, bool wakeup, WaiterState state) {
+    inline bool erase_from_butex(fiber_mutex_waiter *bw, bool wakeup, WaiterState state) {
         // `bw' is guaranteed to be valid inside this function because waiter
         // will wait until this function being cancelled or finished.
         // NOTE: This function must be no-op when bw->container is NULL.
@@ -560,7 +560,7 @@ namespace flare::fiber_internal {
             ptimeout = &timeout;
         }
 
-        TaskMeta *task = NULL;
+        fiber_entity *task = NULL;
         ButexPthreadWaiter pw;
         pw.tid = 0;
         pw.sig.store(PTHREAD_NOT_SIGNALLED, std::memory_order_relaxed);

@@ -41,7 +41,7 @@ protected:
 };
 
 TEST_F(BthreadTest, sizeof_task_meta) {
-    LOG(INFO) << "sizeof(TaskMeta)=" << sizeof(flare::fiber_internal::TaskMeta);
+    LOG(INFO) << "sizeof(fiber_entity)=" << sizeof(flare::fiber_internal::fiber_entity);
 }
 
 void* unrelated_pthread(void*) {
@@ -64,8 +64,8 @@ TEST_F(BthreadTest, attr_init_and_destroy) {
     ASSERT_EQ(0, bthread_attr_destroy(&attr));
 }
 
-bthread_fcontext_t fcm;
-bthread_fcontext_t fc;
+fiber_context_type fcm;
+fiber_context_type fc;
 typedef std::pair<int,int> pair_t;
 static void f(intptr_t param) {
     pair_t* p = (pair_t*)param;

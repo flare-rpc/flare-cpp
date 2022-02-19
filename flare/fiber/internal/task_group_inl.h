@@ -25,20 +25,20 @@
 namespace flare::fiber_internal {
 
 // Utilities to manipulate bthread_t
-inline bthread_t make_tid(uint32_t version, flare::memory::ResourceId<TaskMeta> slot) {
+inline bthread_t make_tid(uint32_t version, flare::memory::ResourceId<fiber_entity> slot) {
     return (((bthread_t)version) << 32) | (bthread_t)slot.value;
 }
 
-inline flare::memory::ResourceId<TaskMeta> get_slot(bthread_t tid) {
-    flare::memory::ResourceId<TaskMeta> id = { (tid & 0xFFFFFFFFul) };
+inline flare::memory::ResourceId<fiber_entity> get_slot(bthread_t tid) {
+    flare::memory::ResourceId<fiber_entity> id = { (tid & 0xFFFFFFFFul) };
     return id;
 }
 inline uint32_t get_version(bthread_t tid) {
     return (uint32_t)((tid >> 32) & 0xFFFFFFFFul);
 }
 
-inline TaskMeta* TaskGroup::address_meta(bthread_t tid) {
-    // TaskMeta * m = address_resource<TaskMeta>(get_slot(tid));
+inline fiber_entity* TaskGroup::address_meta(bthread_t tid) {
+    // fiber_entity * m = address_resource<fiber_entity>(get_slot(tid));
     // if (m != NULL && m->version == get_version(tid)) {
     //     return m;
     // }
@@ -60,9 +60,9 @@ inline void TaskGroup::exchange(TaskGroup** pg, bthread_t next_tid) {
 }
 
 inline void TaskGroup::sched_to(TaskGroup** pg, bthread_t next_tid) {
-    TaskMeta* next_meta = address_meta(next_tid);
+    fiber_entity* next_meta = address_meta(next_tid);
     if (next_meta->stack == NULL) {
-        ContextualStack* stk = get_stack(next_meta->stack_type(), task_runner);
+        fiber_contextual_stack* stk = get_stack(next_meta->stack_type(), task_runner);
         if (stk) {
             next_meta->set_stack(stk);
         } else {

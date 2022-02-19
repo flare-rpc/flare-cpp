@@ -54,7 +54,7 @@ namespace flare::fiber_internal {
     static flare::variable::PassiveStatus<int64_t> variable_stack_count(
             "bthread_stack_count", get_stack_count, NULL);
 
-    int allocate_stack_storage(StackStorage *s, int stacksize_in, int guardsize_in) {
+    int allocate_stack_storage(fiber_stack_storage *s, int stacksize_in, int guardsize_in) {
         const static int PAGESIZE = getpagesize();
         const int PAGESIZE_M1 = PAGESIZE - 1;
         const int MIN_STACKSIZE = PAGESIZE * 2;
@@ -131,7 +131,7 @@ namespace flare::fiber_internal {
         }
     }
 
-    void deallocate_stack_storage(StackStorage *s) {
+    void deallocate_stack_storage(fiber_stack_storage *s) {
         if (RunningOnValgrind()) {
             VALGRIND_STACK_DEREGISTER(s->valgrind_stack_id);
         }

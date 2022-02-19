@@ -320,7 +320,7 @@ int bthread_setconcurrency(int num) {
 int bthread_about_to_quit() {
     flare::fiber_internal::TaskGroup *g = flare::fiber_internal::tls_task_group;
     if (g != NULL) {
-        flare::fiber_internal::TaskMeta *current_task = g->current_task();
+        flare::fiber_internal::fiber_entity *current_task = g->current_task();
         if (!(current_task->attr.flags & BTHREAD_NEVER_QUIT)) {
             current_task->about_to_quit = true;
         }

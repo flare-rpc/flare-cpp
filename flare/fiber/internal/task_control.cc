@@ -60,7 +60,7 @@ void* TaskControl::worker_thread(void* arg) {
     
     TaskControl* c = static_cast<TaskControl*>(arg);
     TaskGroup* g = c->create_group();
-    TaskStatistics stat;
+    fiber_statistics stat;
     if (NULL == g) {
         LOG(ERROR) << "Fail to create TaskGroup in pthread=" << pthread_self();
         return NULL;
