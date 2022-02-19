@@ -14,13 +14,14 @@
 
 */
 #include "flare/fiber/internal/context.h"
-#if defined(BTHREAD_CONTEXT_PLATFORM_windows_i386) && defined(BTHREAD_CONTEXT_COMPILER_gcc)
+
+#if defined(FLARE_FIBER_CONTEXT_PLATFORM_windows_i386) && defined(FLARE_FIBER_CONTEXT_COMPILER_gcc)
 __asm (
 ".text\n"
 ".p2align 4,,15\n"
-".globl	_bthread_jump_fcontext\n"
-".def	_bthread_jump_fcontext;	.scl	2;	.type	32;	.endef\n"
-"_bthread_jump_fcontext:\n"
+".globl	_flare_fiber_jump_context\n"
+".def	_flare_fiber_jump_context;	.scl	2;	.type	32;	.endef\n"
+"_flare_fiber_jump_context:\n"
 "    mov    0x10(%esp),%ecx\n"
 "    push   %ebp\n"
 "    push   %ebx\n"
@@ -76,13 +77,13 @@ __asm (
 
 #endif
 
-#if defined(BTHREAD_CONTEXT_PLATFORM_windows_i386) && defined(BTHREAD_CONTEXT_COMPILER_gcc)
+#if defined(FLARE_FIBER_CONTEXT_PLATFORM_windows_i386) && defined(FLARE_FIBER_CONTEXT_COMPILER_gcc)
 __asm (
 ".text\n"
 ".p2align 4,,15\n"
-".globl	_bthread_make_fcontext\n"
-".def	_bthread_make_fcontext;	.scl	2;	.type	32;	.endef\n"
-"_bthread_make_fcontext:\n"
+".globl	_flare_fiber_make_context\n"
+".def	_flare_fiber_make_context;	.scl	2;	.type	32;	.endef\n"
+"_flare_fiber_make_context:\n"
 "mov    0x4(%esp),%eax\n"
 "lea    -0x8(%eax),%eax\n"
 "and    $0xfffffff0,%eax\n"
@@ -126,14 +127,14 @@ __asm (
 
 #endif
 
-#if defined(BTHREAD_CONTEXT_PLATFORM_windows_x86_64) && defined(BTHREAD_CONTEXT_COMPILER_gcc)
+#if defined(FLARE_FIBER_CONTEXT_PLATFORM_windows_x86_64) && defined(FLARE_FIBER_CONTEXT_COMPILER_gcc)
 __asm (
 ".text\n"
 ".p2align 4,,15\n"
-".globl	bthread_jump_fcontext\n"
-".def	bthread_jump_fcontext;	.scl	2;	.type	32;	.endef\n"
-".seh_proc	bthread_jump_fcontext\n"
-"bthread_jump_fcontext:\n"
+".globl	flare_fiber_jump_context\n"
+".def	flare_fiber_jump_context;	.scl	2;	.type	32;	.endef\n"
+".seh_proc	flare_fiber_jump_context\n"
+"flare_fiber_jump_context:\n"
 ".seh_endprologue\n"
 "	push   %rbp\n"
 "	push   %rbx\n"
@@ -220,14 +221,14 @@ __asm (
 
 #endif
 
-#if defined(BTHREAD_CONTEXT_PLATFORM_windows_x86_64) && defined(BTHREAD_CONTEXT_COMPILER_gcc)
+#if defined(FLARE_FIBER_CONTEXT_PLATFORM_windows_x86_64) && defined(FLARE_FIBER_CONTEXT_COMPILER_gcc)
 __asm (
 ".text\n"
 ".p2align 4,,15\n"
-".globl	bthread_make_fcontext\n"
-".def	bthread_make_fcontext;	.scl	2;	.type	32;	.endef\n"
-".seh_proc	bthread_make_fcontext\n"
-"bthread_make_fcontext:\n"
+".globl	flare_fiber_make_context\n"
+".def	flare_fiber_make_context;	.scl	2;	.type	32;	.endef\n"
+".seh_proc	flare_fiber_make_context\n"
+"flare_fiber_make_context:\n"
 ".seh_endprologue\n"
 "mov    %rcx,%rax\n"
 "sub    $0x28,%rax\n"
@@ -256,13 +257,13 @@ __asm (
 
 #endif
 
-#if defined(BTHREAD_CONTEXT_PLATFORM_linux_i386) && defined(BTHREAD_CONTEXT_COMPILER_gcc)
+#if defined(FLARE_FIBER_CONTEXT_PLATFORM_linux_i386) && defined(FLARE_FIBER_CONTEXT_COMPILER_gcc)
 __asm (
 ".text\n"
-".globl bthread_jump_fcontext\n"
+".globl flare_fiber_jump_context\n"
 ".align 2\n"
-".type bthread_jump_fcontext,@function\n"
-"bthread_jump_fcontext:\n"
+".type flare_fiber_jump_context,@function\n"
+"flare_fiber_jump_context:\n"
 "    movl  0x10(%esp), %ecx\n"
 "    pushl  %ebp  \n"
 "    pushl  %ebx  \n"
@@ -292,20 +293,20 @@ __asm (
 "    popl  %edx\n"
 "    movl  %eax, 0x4(%esp)\n"
 "    jmp  *%edx\n"
-".size bthread_jump_fcontext,.-bthread_jump_fcontext\n"
+".size flare_fiber_jump_context,.-flare_fiber_jump_context\n"
 ".section .note.GNU-stack,\"\",%progbits\n"
 ".previous\n"
 );
 
 #endif
 
-#if defined(BTHREAD_CONTEXT_PLATFORM_linux_i386) && defined(BTHREAD_CONTEXT_COMPILER_gcc)
+#if defined(FLARE_FIBER_CONTEXT_PLATFORM_linux_i386) && defined(FLARE_FIBER_CONTEXT_COMPILER_gcc)
 __asm (
 ".text\n"
-".globl bthread_make_fcontext\n"
+".globl flare_fiber_make_context\n"
 ".align 2\n"
-".type bthread_make_fcontext,@function\n"
-"bthread_make_fcontext:\n"
+".type flare_fiber_make_context,@function\n"
+"flare_fiber_make_context:\n"
 "    movl  0x4(%esp), %eax\n"
 "    leal  -0x8(%eax), %eax\n"
 "    andl  $-16, %eax\n"
@@ -327,20 +328,20 @@ __asm (
 "    movl  %eax, (%esp)\n"
 "    call  _exit@PLT\n"
 "    hlt\n"
-".size bthread_make_fcontext,.-bthread_make_fcontext\n"
+".size flare_fiber_make_context,.-flare_fiber_make_context\n"
 ".section .note.GNU-stack,\"\",%progbits\n"
 ".previous\n"
 );
 
 #endif
 
-#if defined(BTHREAD_CONTEXT_PLATFORM_linux_x86_64) && defined(BTHREAD_CONTEXT_COMPILER_gcc)
+#if defined(FLARE_FIBER_CONTEXT_PLATFORM_linux_x86_64) && defined(FLARE_FIBER_CONTEXT_COMPILER_gcc)
 __asm (
 ".text\n"
-".globl bthread_jump_fcontext\n"
-".type bthread_jump_fcontext,@function\n"
+".globl flare_fiber_jump_context\n"
+".type flare_fiber_jump_context,@function\n"
 ".align 16\n"
-"bthread_jump_fcontext:\n"
+"flare_fiber_jump_context:\n"
 "    pushq  %rbp  \n"
 "    pushq  %rbx  \n"
 "    pushq  %r15  \n"
@@ -371,20 +372,20 @@ __asm (
 "    movq  %rdx, %rax\n"
 "    movq  %rdx, %rdi\n"
 "    jmp  *%r8\n"
-".size bthread_jump_fcontext,.-bthread_jump_fcontext\n"
+".size flare_fiber_jump_context,.-flare_fiber_jump_context\n"
 ".section .note.GNU-stack,\"\",%progbits\n"
 ".previous\n"
 );
 
 #endif
 
-#if defined(BTHREAD_CONTEXT_PLATFORM_linux_x86_64) && defined(BTHREAD_CONTEXT_COMPILER_gcc)
+#if defined(FLARE_FIBER_CONTEXT_PLATFORM_linux_x86_64) && defined(FLARE_FIBER_CONTEXT_COMPILER_gcc)
 __asm (
 ".text\n"
-".globl bthread_make_fcontext\n"
-".type bthread_make_fcontext,@function\n"
+".globl flare_fiber_make_context\n"
+".type flare_fiber_make_context,@function\n"
 ".align 16\n"
-"bthread_make_fcontext:\n"
+"flare_fiber_make_context:\n"
 "    movq  %rdi, %rax\n"
 "    andq  $-16, %rax\n"
 "    leaq  -0x48(%rax), %rax\n"
@@ -398,19 +399,19 @@ __asm (
 "    xorq  %rdi, %rdi\n"
 "    call  _exit@PLT\n"
 "    hlt\n"
-".size bthread_make_fcontext,.-bthread_make_fcontext\n"
+".size flare_fiber_make_context,.-flare_fiber_make_context\n"
 ".section .note.GNU-stack,\"\",%progbits\n"
 ".previous\n"
 );
 
 #endif
 
-#if defined(BTHREAD_CONTEXT_PLATFORM_apple_x86_64) && defined(BTHREAD_CONTEXT_COMPILER_gcc)
+#if defined(FLARE_FIBER_CONTEXT_PLATFORM_apple_x86_64) && defined(FLARE_FIBER_CONTEXT_COMPILER_gcc)
 __asm (
 ".text\n"
-".globl _bthread_jump_fcontext\n"
+".globl _flare_fiber_jump_context\n"
 ".align 8\n"
-"_bthread_jump_fcontext:\n"
+"_flare_fiber_jump_context:\n"
 "    pushq  %rbp  \n"
 "    pushq  %rbx  \n"
 "    pushq  %r15  \n"
@@ -445,12 +446,12 @@ __asm (
 
 #endif
 
-#if defined(BTHREAD_CONTEXT_PLATFORM_apple_x86_64) && defined(BTHREAD_CONTEXT_COMPILER_gcc)
+#if defined(FLARE_FIBER_CONTEXT_PLATFORM_apple_x86_64) && defined(FLARE_FIBER_CONTEXT_COMPILER_gcc)
 __asm (
 ".text\n"
-".globl _bthread_make_fcontext\n"
+".globl _flare_fiber_make_context\n"
 ".align 8\n"
-"_bthread_make_fcontext:\n"
+"_flare_fiber_make_context:\n"
 "    movq  %rdi, %rax\n"
 "    movabs  $-16,           %r8\n"
 "    andq    %r8,            %rax\n"
@@ -469,12 +470,12 @@ __asm (
 
 #endif
 
-#if defined(BTHREAD_CONTEXT_PLATFORM_apple_i386) && defined(BTHREAD_CONTEXT_COMPILER_gcc)
+#if defined(FLARE_FIBER_CONTEXT_PLATFORM_apple_i386) && defined(FLARE_FIBER_CONTEXT_COMPILER_gcc)
 __asm (
 ".text\n"
-".globl _bthread_jump_fcontext\n"
+".globl _flare_fiber_jump_context\n"
 ".align 2\n"
-"_bthread_jump_fcontext:\n"
+"_flare_fiber_jump_context:\n"
 "    movl  0x10(%esp), %ecx\n"
 "    pushl  %ebp  \n"
 "    pushl  %ebx  \n"
@@ -508,12 +509,12 @@ __asm (
 
 #endif
 
-#if defined(BTHREAD_CONTEXT_PLATFORM_apple_i386) && defined(BTHREAD_CONTEXT_COMPILER_gcc)
+#if defined(FLARE_FIBER_CONTEXT_PLATFORM_apple_i386) && defined(FLARE_FIBER_CONTEXT_COMPILER_gcc)
 __asm (
 ".text\n"
-".globl _bthread_make_fcontext\n"
+".globl _flare_fiber_make_context\n"
 ".align 2\n"
-"_bthread_make_fcontext:\n"
+"_flare_fiber_make_context:\n"
 "    movl  0x4(%esp), %eax\n"
 "    leal  -0x8(%eax), %eax\n"
 "    andl  $-16, %eax\n"
@@ -536,13 +537,13 @@ __asm (
 
 #endif
 
-#if defined(BTHREAD_CONTEXT_PLATFORM_linux_arm32) && defined(BTHREAD_CONTEXT_COMPILER_gcc)
+#if defined(FLARE_FIBER_CONTEXT_PLATFORM_linux_arm32) && defined(FLARE_FIBER_CONTEXT_COMPILER_gcc)
 __asm (
 ".text\n"
-".globl bthread_jump_fcontext\n"
+".globl flare_fiber_jump_context\n"
 ".align 2\n"
-".type bthread_jump_fcontext,%function\n"
-"bthread_jump_fcontext:\n"
+".type flare_fiber_jump_context,%function\n"
+"flare_fiber_jump_context:\n"
 "    @ save LR as PC\n"
 "    push {lr}\n"
 "    @ save V1-V8,LR\n"
@@ -573,25 +574,25 @@ __asm (
 "    @ restore v1-V8,LR,PC\n"
 "    pop {v1-v8,lr}\n"
 "    pop {pc}\n"
-".size bthread_jump_fcontext,.-bthread_jump_fcontext\n"
+".size flare_fiber_jump_context,.-flare_fiber_jump_context\n"
 "@ Mark that we don't need executable stack.\n"
 ".section .note.GNU-stack,\"\",%progbits\n"
 );
 
 #endif
 
-#if defined(BTHREAD_CONTEXT_PLATFORM_linux_arm32) && defined(BTHREAD_CONTEXT_COMPILER_gcc)
+#if defined(FLARE_FIBER_CONTEXT_PLATFORM_linux_arm32) && defined(FLARE_FIBER_CONTEXT_COMPILER_gcc)
 __asm (
 ".text\n"
-".globl bthread_make_fcontext\n"
+".globl flare_fiber_make_context\n"
 ".align 2\n"
-".type bthread_make_fcontext,%function\n"
-"bthread_make_fcontext:\n"
+".type flare_fiber_make_context,%function\n"
+"flare_fiber_make_context:\n"
 "    @ shift address in A1 to lower 16 byte boundary\n"
 "    bic  a1, a1, #15\n"
 "    @ reserve space for context-data on context-stack\n"
 "    sub  a1, a1, #104\n"
-"    @ third arg of bthread_make_fcontext() == address of context-function\n"
+"    @ third arg of flare_fiber_make_context() == address of context-function\n"
 "    str  a3, [a1,#100]\n"
 "    @ compute abs address of label finish\n"
 "    adr  a2, finish\n"
@@ -604,21 +605,21 @@ __asm (
 "    mov  a1, #0\n"
 "    @ exit application\n"
 "    bl  _exit@PLT\n"
-".size bthread_make_fcontext,.-bthread_make_fcontext\n"
+".size flare_fiber_make_context,.-flare_fiber_make_context\n"
 "@ Mark that we don't need executable stack.\n"
 ".section .note.GNU-stack,\"\",%progbits\n"
 );
 
 #endif
 
-#if defined(BTHREAD_CONTEXT_PLATFORM_linux_arm64) && defined(BTHREAD_CONTEXT_COMPILER_gcc)
+#if defined(FLARE_FIBER_CONTEXT_PLATFORM_linux_arm64) && defined(FLARE_FIBER_CONTEXT_COMPILER_gcc)
 __asm (
 ".cpu    generic+fp+simd\n"
 ".text\n"
 ".align  2\n"
-".global bthread_jump_fcontext\n"
-".type   bthread_jump_fcontext, %function\n"
-"bthread_jump_fcontext:\n"
+".global flare_fiber_jump_context\n"
+".type   flare_fiber_jump_context, %function\n"
+"flare_fiber_jump_context:\n"
 "    # prepare stack for GP + FPU\n"
 "    sub  sp, sp, #0xb0\n"
 "# Because gcc may save integer registers in fp registers across a\n"
@@ -675,26 +676,26 @@ __asm (
 "    # restore stack from GP + FPU\n"
 "    add  sp, sp, #0xb0\n"
 "    ret x4\n"
-".size   bthread_jump_fcontext,.-bthread_jump_fcontext\n"
+".size   flare_fiber_jump_context,.-flare_fiber_jump_context\n"
 "# Mark that we don't need executable stack.\n"
 ".section .note.GNU-stack,\"\",%progbits\n"
 );
 
 #endif
 
-#if defined(BTHREAD_CONTEXT_PLATFORM_linux_arm64) && defined(BTHREAD_CONTEXT_COMPILER_gcc)
+#if defined(FLARE_FIBER_CONTEXT_PLATFORM_linux_arm64) && defined(FLARE_FIBER_CONTEXT_COMPILER_gcc)
 __asm (
 ".cpu    generic+fp+simd\n"
 ".text\n"
 ".align  2\n"
-".global bthread_make_fcontext\n"
-".type   bthread_make_fcontext, %function\n"
-"bthread_make_fcontext:\n"
+".global flare_fiber_make_context\n"
+".type   flare_fiber_make_context, %function\n"
+"flare_fiber_make_context:\n"
 "    # shift address in x0 (allocated stack) to lower 16 byte boundary\n"
 "    and x0, x0, ~0xF\n"
 "    # reserve space for context-data on context-stack\n"
 "    sub  x0, x0, #0xb0\n"
-"    # third arg of bthread_make_fcontext() == address of context-function\n"
+"    # third arg of flare_fiber_make_context() == address of context-function\n"
 "    # store address as a PC to jump in\n"
 "    str  x2, [x0, #0xa0]\n"
 "    # save address of finish as return-address for context-function\n"
@@ -707,7 +708,7 @@ __asm (
 "    mov  x0, #0\n"
 "    # exit application\n"
 "    bl  _exit\n"
-".size   bthread_make_fcontext,.-bthread_make_fcontext\n"
+".size   flare_fiber_make_context,.-flare_fiber_make_context\n"
 "# Mark that we don't need executable stack.\n"
 ".section .note.GNU-stack,\"\",%progbits\n"
 );

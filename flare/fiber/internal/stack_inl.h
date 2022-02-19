@@ -57,7 +57,7 @@ namespace flare::fiber_internal {
                     context = NULL;
                     return;
                 }
-                context = bthread_make_fcontext(storage.bottom, storage.stacksize, entry);
+                context = flare_fiber_make_context(storage.bottom, storage.stacksize, entry);
                 stacktype = (StackType) StackClass::stacktype;
             }
 
@@ -133,7 +133,7 @@ namespace flare::fiber_internal {
     }
 
     inline void jump_stack(ContextualStack *from, ContextualStack *to) {
-        bthread_jump_fcontext(&from->context, to->context, 0/*not skip remained*/);
+        flare_fiber_jump_context(&from->context, to->context, 0/*not skip remained*/);
     }
 
 }  // namespace flare::fiber_internal

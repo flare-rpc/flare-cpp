@@ -69,8 +69,8 @@ bthread_fcontext_t fc;
 typedef std::pair<int,int> pair_t;
 static void f(intptr_t param) {
     pair_t* p = (pair_t*)param;
-    p = (pair_t*)bthread_jump_fcontext(&fc, fcm, (intptr_t)(p->first+p->second));
-    bthread_jump_fcontext(&fc, fcm, (intptr_t)(p->first+p->second));
+    p = (pair_t*)flare_fiber_jump_context(&fc, fcm, (intptr_t)(p->first+p->second));
+    flare_fiber_jump_context(&fc, fcm, (intptr_t)(p->first+p->second));
 }
 
 TEST_F(BthreadTest, context_sanity) {
@@ -79,13 +79,13 @@ TEST_F(BthreadTest, context_sanity) {
     void* sp = malloc(size);
 
     pair_t p(std::make_pair(2, 7));
-    fc = bthread_make_fcontext((char*)sp + size, size, f);
+    fc = flare_fiber_make_context((char*)sp + size, size, f);
 
-    int res = (int)bthread_jump_fcontext(&fcm, fc, (intptr_t)&p);
+    int res = (int)flare_fiber_jump_context(&fcm, fc, (intptr_t)&p);
     std::cout << p.first << " + " << p.second << " == " << res << std::endl;
 
     p = std::make_pair(5, 6);
-    res = (int)bthread_jump_fcontext(&fcm, fc, (intptr_t)&p);
+    res = (int)flare_fiber_jump_context(&fcm, fc, (intptr_t)&p);
     std::cout << p.first << " + " << p.second << " == " << res << std::endl;
 }
 
