@@ -126,7 +126,7 @@ namespace flare {
 
         // Or `when_all(&async_file, &failure_file, &void_op, &move_only_file)`.
         when_all(std::move(async_file), std::move(failure_file), std::move(void_op),
-                std::move(move_only_file))
+                 std::move(move_only_file))
                 .then([&](std::tuple<FILE *, int> af, std::tuple<FILE *, int> ff,
                           std::tuple<resource_ptr<FILE>, int> mof) {
                     auto&&[fp1, ec1] = af;
@@ -150,18 +150,18 @@ namespace flare {
         bool cont_called = false;
 
         blocking_get(when_all(AcquireXxxAsync(), AcquireXxxAsync())
-                            .then([&](std::tuple<resource_ptr<void>, int> a,
-                                      std::tuple<resource_ptr<void>, int> b) {
-                                auto&&[a1, a2] = a;
-                                auto&&[b1, b2] = b;
+                             .then([&](std::tuple<resource_ptr<void>, int> a,
+                                       std::tuple<resource_ptr<void>, int> b) {
+                                 auto&&[a1, a2] = a;
+                                 auto&&[b1, b2] = b;
 
-                                ASSERT_NE(nullptr, a1);
-                                ASSERT_EQ(0, a2);
-                                ASSERT_NE(nullptr, b1);
-                                ASSERT_EQ(0, b2);
+                                 ASSERT_NE(nullptr, a1);
+                                 ASSERT_EQ(0, a2);
+                                 ASSERT_NE(nullptr, b1);
+                                 ASSERT_EQ(0, b2);
 
-                                cont_called = true;
-                            }));
+                                 cont_called = true;
+                             }));
 
         ASSERT_TRUE(cont_called);
     }
@@ -742,7 +742,7 @@ namespace flare {
             ASSERT_EQ(0UL, posted_jobs);
         }
 
-    // Now we enable executor.
+        // Now we enable executor.
         FancyExecutor fe;
         future_internal::set_default_executor(fe);
         posted_jobs = 0;
