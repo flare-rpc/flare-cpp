@@ -127,8 +127,8 @@ list(REMOVE_ITEM VARIABLE_SOURCES ${PROJECT_SOURCE_DIR}/flare/variable/default_v
 add_library(VARIABLE_DEBUG_LIB OBJECT ${VARIABLE_SOURCES})
 add_subdirectory(var)
 
-# bthread tests
-add_subdirectory(bthread)
+# fiber tests
+add_subdirectory(fiber)
 
 # rpc tests
 add_subdirectory(rpc)
