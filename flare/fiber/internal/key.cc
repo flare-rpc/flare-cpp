@@ -195,7 +195,7 @@ public:
             return 0;
         }
         // TODO nocheck for testing
-        //CHECK(false) << "bthread_setspecific is called on invalid " << key;
+        //CHECK(false) << "fiber_setspecific is called on invalid " << key;
         return EINVAL;
     }
 
@@ -405,7 +405,7 @@ int bthread_key_create2(fiber_local_key* key,
     return 0;
 }
 
-int bthread_key_create(fiber_local_key* key, void (*dtor)(void*)) {
+int fiber_key_create(fiber_local_key* key, void (*dtor)(void*)) {
     if (dtor == NULL) {
         return bthread_key_create2(key, NULL, NULL);
     } else {
@@ -413,7 +413,7 @@ int bthread_key_create(fiber_local_key* key, void (*dtor)(void*)) {
     }
 }
 
-int bthread_key_delete(fiber_local_key key) {
+int fiber_key_delete(fiber_local_key key) {
     if (key.index < flare::fiber_internal::KEYS_MAX &&
         key.version == flare::fiber_internal::s_key_info[key.index].version) {
         FLARE_SCOPED_LOCK(flare::fiber_internal::s_key_mutex);
@@ -427,16 +427,16 @@ int bthread_key_delete(fiber_local_key key) {
             return 0;
         } 
     }
-    CHECK(false) << "bthread_key_delete is called on invalid " << key;
+    CHECK(false) << "fiber_key_delete is called on invalid " << key;
     return EINVAL;
 }
 
-// NOTE: Can't borrow_keytable in bthread_setspecific, otherwise following
+// NOTE: Can't borrow_keytable in fiber_setspecific, otherwise following
 // memory leak may occur:
-//  -> bthread_getspecific fails to borrow_keytable and returns NULL.
-//  -> bthread_setspecific succeeds to borrow_keytable and overwrites old data
+//  -> fiber_getspecific fails to borrow_keytable and returns NULL.
+//  -> fiber_setspecific succeeds to borrow_keytable and overwrites old data
 //     at the position with newly created data, the old data is leaked.
-int bthread_setspecific(fiber_local_key key, void* data) {
+int fiber_setspecific(fiber_local_key key, void* data) {
     flare::fiber_internal::KeyTable* kt = flare::fiber_internal::tls_bls.keytable;
     if (NULL == kt) {
         kt = new (std::nothrow) flare::fiber_internal::KeyTable;
@@ -456,7 +456,7 @@ int bthread_setspecific(fiber_local_key key, void* data) {
     return kt->set_data(key, data);
 }
 
-void* bthread_getspecific(fiber_local_key key) {
+void* fiber_getspecific(fiber_local_key key) {
     flare::fiber_internal::KeyTable* kt = flare::fiber_internal::tls_bls.keytable;
     if (kt) {
         return kt->get_data(key);

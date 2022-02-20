@@ -18,7 +18,7 @@
 
 #include <map>
 #include <gflags/gflags.h>
-#include "flare/fiber/internal/bthread.h"                         // bthread_id_xx
+#include "flare/fiber/internal/fiber.h"                         // bthread_id_xx
 #include "flare/rpc/socket.h"                             // SocketUser
 #include "flare/rpc/load_balancer.h"                      // LoadBalancer
 #include "flare/rpc/details/controller_private_accessor.h"        // RPCSender

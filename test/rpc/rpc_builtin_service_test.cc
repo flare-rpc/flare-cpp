@@ -260,7 +260,7 @@ protected:
             service.default_method(&cntl, &req, &res, &done);
             EXPECT_FALSE(cntl.Failed());
             EXPECT_EQ(expect_type, cntl.http_response().content_type());
-            CheckContent(cntl, "bthread_concurrency");
+            CheckContent(cntl, "fiber_concurrency");
         }
         {
             ClosureChecker done;
@@ -773,7 +773,7 @@ TEST_F(BuiltinServiceTest, bthreads) {
     }
     {
         fiber_id_t th;
-        EXPECT_EQ(0, bthread_start_background(&th, NULL, dummy_bthread, NULL));
+        EXPECT_EQ(0, fiber_start_background(&th, NULL, dummy_bthread, NULL));
         ClosureChecker done;
         flare::rpc::Controller cntl;
         std::string id_string;

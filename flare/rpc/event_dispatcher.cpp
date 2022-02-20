@@ -21,7 +21,7 @@
 #include "flare/base/fd_utility.h"                         // make_close_on_exec
 #include "flare/log/logging.h"                            // LOG
 #include "flare/hash/murmurhash3.h"// fmix32
-#include "flare/fiber/internal/bthread.h"                          // bthread_start_background
+#include "flare/fiber/internal/fiber.h"                          // fiber_start_background
 #include "flare/rpc/event_dispatcher.h"
 
 #ifdef FLARE_RPC_SOCKET_HAS_EOF
@@ -115,7 +115,7 @@ namespace flare::rpc {
         // when the older comlog (e.g. 3.1.85) calls com_openlog_r(). Since this
         // is also a potential issue for consumer threads, using the same attr
         // should be a reasonable solution.
-        int rc = bthread_start_background(
+        int rc = fiber_start_background(
                 &_tid, &_epoll_thread_attr, RunThis, this);
         if (rc) {
             LOG(FATAL) << "Fail to create epoll/kqueue thread: " << flare_error(rc);
@@ -146,7 +146,7 @@ namespace flare::rpc {
 
     void EventDispatcher::Join() {
         if (_tid) {
-            bthread_join(_tid, NULL);
+            fiber_join(_tid, NULL);
             _tid = 0;
         }
     }

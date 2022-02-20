@@ -159,7 +159,7 @@ int bthread_id_list_reset(bthread_id_list_t* list, int error_code);
 int bthread_id_list_reset_pthreadsafe(
     bthread_id_list_t* list, int error_code, pthread_mutex_t* mutex);
 int bthread_id_list_reset_bthreadsafe(
-    bthread_id_list_t* list, int error_code, bthread_mutex_t* mutex);
+    bthread_id_list_t* list, int error_code, fiber_mutex_t* mutex);
 
 __END_DECLS
 
@@ -187,7 +187,7 @@ int bthread_id_list_reset2_pthreadsafe(bthread_id_list_t* list, int error_code,
                                        pthread_mutex_t* mutex);
 int bthread_id_list_reset2_bthreadsafe(bthread_id_list_t* list, int error_code,
                                        const std::string& error_text,
-                                       bthread_mutex_t* mutex);
+                                       fiber_mutex_t* mutex);
 #endif
 
 #endif  // BTHREAD_ID_H

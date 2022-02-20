@@ -164,10 +164,10 @@ TEST_F(SocketTest, authentication) {
     
     fiber_id_t th[64];
     for (size_t i = 0; i < FLARE_ARRAY_SIZE(th); ++i) {
-        ASSERT_EQ(0, bthread_start_urgent(&th[i], NULL, auth_fighter, s.get()));
+        ASSERT_EQ(0, fiber_start_urgent(&th[i], NULL, auth_fighter, s.get()));
     }
     for (size_t i = 0; i < FLARE_ARRAY_SIZE(th); ++i) {
-        ASSERT_EQ(0, bthread_join(th[i], NULL));
+        ASSERT_EQ(0, fiber_join(th[i], NULL));
     }
     // Only one fighter wins
     ASSERT_EQ(1, winner_count.load());
@@ -985,7 +985,7 @@ TEST_F(SocketTest, multi_threaded_write_perf) {
         args[i].times = REP;
         args[i].offset = i * REP;
         args[i].socket_id = id;
-        bthread_start_background(&th[i], NULL, FastWriter, &args[i]);
+        fiber_start_background(&th[i], NULL, FastWriter, &args[i]);
     }
 
     pthread_t rth;
@@ -1007,7 +1007,7 @@ TEST_F(SocketTest, multi_threaded_write_perf) {
         args[i].times = 0;
     }
     for (size_t i = 0; i < FLARE_ARRAY_SIZE(th); ++i) {
-        ASSERT_EQ(0, bthread_join(th[i], NULL));
+        ASSERT_EQ(0, fiber_join(th[i], NULL));
     }
     ASSERT_EQ(0, s->SetFailed());
     s.release()->Dereference();

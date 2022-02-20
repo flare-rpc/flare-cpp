@@ -21,8 +21,8 @@
 #include "flare/log/logging.h"                       // CHECK
 #include "flare/base/time.h"                          // cpuwide_time_us
 #include "flare/base/fd_utility.h"                    // make_non_blocking
-#include "flare/fiber/internal/bthread.h"                     // bthread_start_background
-#include "flare/fiber/internal/unstable.h"                   // bthread_flush
+#include "flare/fiber/internal/fiber.h"                     // fiber_start_background
+#include "flare/fiber/internal/unstable.h"                   // fiber_flush
 #include "flare/variable/all.h"                          // flare::variable::Adder
 #include "flare/rpc/options.pb.h"               // ProtocolType
 #include "flare/rpc/reloadable_flags.h"         // FLARE_RPC_VALIDATE_GFLAG
@@ -149,7 +149,7 @@ static void QueueMessage(InputMessageBase* to_run_msg,
         return;
     }
     // Create bthread for last_msg. The bthread is not scheduled
-    // until bthread_flush() is called (in the worse case).
+    // until fiber_flush() is called (in the worse case).
                 
     // TODO(gejun): Join threads.
     fiber_id_t th;
@@ -157,7 +157,7 @@ static void QueueMessage(InputMessageBase* to_run_msg,
                           FIBER_ATTR_PTHREAD :
                           FIBER_ATTR_NORMAL) | FIBER_NOSIGNAL;
     tmp.keytable_pool = keytable_pool;
-    if (bthread_start_background(
+    if (fiber_start_background(
             &th, &tmp, ProcessInputMessage, to_run_msg) == 0) {
         ++*num_bthread_created;
     } else {
@@ -173,7 +173,7 @@ void InputMessenger::OnNewMessages(Socket* m) {
     //   meaning cutting from flare::io::cord_buf. serializing from protobuf is part of
     //   "process") in this bthread. All messages except the last one will be
     //   processed in separate bthreads. To minimize the overhead, scheduling
-    //   is batched(notice the FIBER_NOSIGNAL and bthread_flush).
+    //   is batched(notice the FIBER_NOSIGNAL and fiber_flush).
     // - Verify will always be called in this bthread at most once and before
     //   any process.
     InputMessenger* messenger = static_cast<InputMessenger*>(m->user());
@@ -320,12 +320,12 @@ void InputMessenger::OnNewMessages(Socket* m) {
             } else {
                 QueueMessage(msg.release(), &num_bthread_created,
                                  m->_keytable_pool);
-                bthread_flush();
+                fiber_flush();
                 num_bthread_created = 0;
             }
         }
         if (num_bthread_created) {
-            bthread_flush();
+            fiber_flush();
         }
     }
 

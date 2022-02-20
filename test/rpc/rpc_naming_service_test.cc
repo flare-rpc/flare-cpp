@@ -20,7 +20,7 @@
 #include <vector>
 #include "flare/base/strings.h"
 #include "flare/io/temp_file.h"
-#include "flare/fiber/internal/bthread.h"
+#include "flare/fiber/internal/fiber.h"
 #include "flare/rpc/policy/consul_naming_service.h"
 #include "flare/rpc/policy/domain_naming_service.h"
 #include "flare/rpc/policy/file_naming_service.h"

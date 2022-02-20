@@ -19,7 +19,7 @@
 #include <set>
 #include <pthread.h>
 #include <gflags/gflags.h>
-#include "flare/fiber/internal/butex.h"
+#include "flare/fiber/internal/waitable_event.h"
 #include "flare/base/scoped_lock.h"
 #include "flare/log/logging.h"
 #include "flare/rpc/log.h"
@@ -242,8 +242,8 @@ NamingServiceThread::~NamingServiceThread() {
         }
     }
     if (_tid) {
-        bthread_stop(_tid);
-        bthread_join(_tid, NULL);
+        fiber_stop(_tid);
+        fiber_join(_tid, NULL);
         _tid = 0;
     }
     {
@@ -289,7 +289,7 @@ int NamingServiceThread::Start(NamingService* naming_service,
     if (_ns->RunNamingServiceReturnsQuickly()) {
         RunThis(this);
     } else {
-        int rc = bthread_start_urgent(&_tid, NULL, RunThis, this);
+        int rc = fiber_start_urgent(&_tid, NULL, RunThis, this);
         if (rc) {
             LOG(ERROR) << "Fail to create bthread: " << flare_error(rc);
             return -1;

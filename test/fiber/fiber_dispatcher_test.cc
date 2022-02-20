@@ -25,7 +25,7 @@
 #include "flare/base/fd_utility.h"
 #include "flare/log/logging.h"
 #include "flare/base/gperftools_profiler.h"
-#include "flare/fiber/internal/bthread.h"
+#include "flare/fiber/internal/fiber.h"
 #include "flare/fiber/internal/schedule_group.h"
 #include "flare/fiber/internal/fiber_worker.h"
 #include "flare/fiber/this_fiber.h"
@@ -146,7 +146,7 @@ void* epoll_thread(void* arg) {
 #endif
             if (m->req.fetch_add(1, std::memory_order_acquire) == 0) {
                 fiber_id_t th;
-                bthread_start_urgent(
+                fiber_start_urgent(
                     &th, &FIBER_ATTR_SMALL, process_thread, m);
                 ++em->nthread;
             } else {
@@ -267,7 +267,7 @@ TEST(DispatcherTest, dispatch_tasks) {
         em[i] = m;
         m->epfd = epfd[i];
 #ifdef RUN_EPOLL_IN_BTHREAD
-        ASSERT_EQ(0, bthread_start_background(&eth[i], NULL, epoll_thread, m));
+        ASSERT_EQ(0, fiber_start_background(&eth[i], NULL, epoll_thread, m));
 #else
         ASSERT_EQ(0, pthread_create(&eth[i], NULL, epoll_thread, m));
 #endif
@@ -308,7 +308,7 @@ TEST(DispatcherTest, dispatch_tasks) {
         ASSERT_EQ(0, kevent(epfd[i], &kqueue_event, 1, NULL, 0, NULL));
 #endif
 #ifdef RUN_EPOLL_IN_BTHREAD
-        bthread_join(eth[i], NULL);
+        fiber_join(eth[i], NULL);
 #else
         pthread_join(eth[i], NULL);
 #endif

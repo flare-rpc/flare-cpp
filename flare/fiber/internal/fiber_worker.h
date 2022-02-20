@@ -12,7 +12,7 @@
 
 namespace flare::fiber_internal {
 
-    // For exiting a bthread.
+    // For exiting a fiber.
     class ExitException : public std::exception {
     public:
         explicit ExitException(void *value) : _value(value) {}
@@ -58,12 +58,12 @@ namespace flare::fiber_internal {
                              void *(*fn)(void *),
                              void *__restrict arg);
 
-        // Suspend caller and run next bthread in fiber_worker *pg.
+        // Suspend caller and run next fiber in fiber_worker *pg.
         static void sched(fiber_worker **pg);
 
         static void ending_sched(fiber_worker **pg);
 
-        // Suspend caller and run bthread `next_tid' in fiber_worker *pg.
+        // Suspend caller and run fiber `next_tid' in fiber_worker *pg.
         // Purpose of this function is to avoid pushing `next_tid' to _rq and
         // then being popped by sched(pg), which is not necessary.
         static void sched_to(fiber_worker **pg, fiber_entity *next_meta);
@@ -72,8 +72,8 @@ namespace flare::fiber_internal {
 
         static void exchange(fiber_worker **pg, fiber_id_t next_tid);
 
-        // The callback will be run in the beginning of next-run bthread.
-        // Can't be called by current bthread directly because it often needs
+        // The callback will be run in the beginning of next-run fiber.
+        // Can't be called by current fiber directly because it often needs
         // the target to be suspended already.
         typedef void (*RemainedFn)(void *);
 
@@ -84,19 +84,19 @@ namespace flare::fiber_internal {
 
         // Suspend caller for at least |timeout_us| microseconds.
         // If |timeout_us| is 0, this function does nothing.
-        // If |group| is NULL or current thread is non-bthread, call usleep(3)
+        // If |group| is NULL or current thread is non-fiber, call usleep(3)
         // instead. This function does not create thread-local fiber_worker.
         // Returns: 0 on success, -1 otherwise and errno is set.
         static int usleep(fiber_worker **pg, uint64_t timeout_us);
 
-        // Suspend caller and run another bthread. When the caller will resume
+        // Suspend caller and run another fiber. When the caller will resume
         // is undefined.
         static void yield(fiber_worker **pg);
 
-        // Suspend caller until bthread `tid' terminates.
+        // Suspend caller until fiber `tid' terminates.
         static int join(fiber_id_t tid, void **return_value);
 
-        // Returns true iff the bthread `tid' still exists. Notice that it is
+        // Returns true iff the fiber `tid' still exists. Notice that it is
         // just the result at this very moment which may change soon.
         // Don't use this function unless you have to. Never write code like this:
         //    if (exists(tid)) {
@@ -113,7 +113,7 @@ namespace flare::fiber_internal {
 
         static bool is_stopped(fiber_id_t tid);
 
-        // The bthread running run_main_task();
+        // The fiber running run_main_task();
         fiber_id_t main_tid() const { return _main_tid; }
 
         fiber_statistics main_stat() const;
@@ -143,13 +143,13 @@ namespace flare::fiber_internal {
         // Active time in nanoseconds spent by this fiber_worker.
         int64_t cumulated_cputime_ns() const { return _cumulated_cputime_ns; }
 
-        // Push a bthread into the runqueue
+        // Push a fiber into the runqueue
         void ready_to_run(fiber_id_t tid, bool nosignal = false);
 
         // Flush tasks pushed to rq but signalled.
         void flush_nosignal_tasks();
 
-        // Push a bthread into the runqueue from another non-worker thread.
+        // Push a fiber into the runqueue from another non-worker thread.
         void ready_to_run_remote(fiber_id_t tid, bool nosignal = false);
 
         void flush_nosignal_tasks_remote_locked(flare::base::Mutex &locked_mutex);
@@ -217,7 +217,7 @@ namespace flare::fiber_internal {
             if (_remote_rq.pop(tid)) {
                 return true;
             }
-#ifndef BTHREAD_DONT_SAVE_PARKING_STATE
+#ifndef FIBER_DONT_SAVE_PARKING_STATE
             _last_pl_state = _pl->get_state();
 #endif
             return _control->steal_task(tid, &_steal_seed, _steal_offset);
@@ -242,7 +242,7 @@ namespace flare::fiber_internal {
         void *_last_context_remained_arg;
 
         ParkingLot *_pl;
-#ifndef BTHREAD_DONT_SAVE_PARKING_STATE
+#ifndef FIBER_DONT_SAVE_PARKING_STATE
         ParkingLot::State _last_pl_state;
 #endif
         size_t _steal_seed;

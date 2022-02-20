@@ -35,11 +35,11 @@
 #include "flare/base/fd_utility.h"                     // make_non_blocking
 #include "flare/log/logging.h"
 #include "flare/hash/murmurhash3.h"   // fmix32
-#include "flare/fiber/internal/butex.h"                       // butex_*
+#include "flare/fiber/internal/waitable_event.h"                       // butex_*
 #include "flare/fiber/internal/fiber_worker.h"                  // fiber_worker
-#include "flare/fiber/internal/bthread.h"                             // bthread_start_urgent
+#include "flare/fiber/internal/fiber.h"                             // fiber_start_urgent
 
-// Implement bthread functions on file descriptors
+// Implement fiber functions on file descriptors
 
 namespace flare::fiber_internal {
 
@@ -138,11 +138,11 @@ namespace flare::fiber_internal {
                 PLOG(FATAL) << "Fail to epoll_create/kqueue";
                 return -1;
             }
-            if (bthread_start_background(
+            if (fiber_start_background(
                     &_tid, NULL, EpollThread::run_this, this) != 0) {
                 close(_epfd);
                 _epfd = -1;
-                LOG(FATAL) << "Fail to create epoll bthread";
+                LOG(FATAL) << "Fail to create epoll fiber";
                 return -1;
             }
             return 0;
@@ -187,7 +187,7 @@ namespace flare::fiber_internal {
                 return -1;
             }
 
-            const int rc = bthread_join(_tid, NULL);
+            const int rc = fiber_join(_tid, NULL);
             if (rc) {
                 LOG(FATAL) << "Fail to join EpollThread, " << flare_error(rc);
                 return -1;
@@ -210,13 +210,13 @@ namespace flare::fiber_internal {
                 // It is rare to wait on one file descriptor from multiple threads
                 // simultaneously. Creating singleton by optimistic locking here
                 // saves mutexes for each butex.
-                butex = butex_create_checked<EpollButex>();
+                butex = waitable_event_create_checked<EpollButex>();
                 butex->store(0, std::memory_order_relaxed);
                 EpollButex *expected = NULL;
                 if (!p->compare_exchange_strong(expected, butex,
                                                 std::memory_order_release,
                                                 std::memory_order_consume)) {
-                    butex_destroy(butex);
+                    waitable_event_destroy(butex);
                     butex = expected;
                 }
             }
@@ -228,7 +228,7 @@ namespace flare::fiber_internal {
                 butex = p->load(std::memory_order_consume);
             }
             // Save value of butex before adding to epoll because the butex may
-            // be changed before butex_wait. No memory fence because EPOLL_CTL_MOD
+            // be changed before waitable_event_wait. No memory fence because EPOLL_CTL_MOD
             // and EPOLL_CTL_ADD shall have release fence.
             const int expected_val = butex->load(std::memory_order_relaxed);
 
@@ -261,7 +261,7 @@ namespace flare::fiber_internal {
                 return -1;
             }
 #endif
-            if (butex_wait(butex, expected_val, abstime) < 0 &&
+            if (waitable_event_wait(butex, expected_val, abstime) < 0 &&
                 errno != EWOULDBLOCK && errno != EINTR) {
                 return -1;
             }
@@ -288,7 +288,7 @@ namespace flare::fiber_internal {
             }
             if (butex != NULL) {
                 butex->fetch_add(1, std::memory_order_relaxed);
-                butex_wake_all(butex);
+                waitable_event_wake_all(butex);
             }
 #if defined(FLARE_PLATFORM_LINUX)
             epoll_ctl(_epfd, EPOLL_CTL_DEL, fd, NULL);
@@ -381,7 +381,7 @@ namespace flare::fiber_internal {
 #endif
                     if (butex != NULL && butex != CLOSING_GUARD) {
                         butex->fetch_add(1, std::memory_order_relaxed);
-                        butex_wake_all(butex);
+                        waitable_event_wake_all(butex);
                     }
                 }
             }
@@ -398,16 +398,16 @@ namespace flare::fiber_internal {
         flare::base::Mutex _start_mutex;
     };
 
-    EpollThread epoll_thread[BTHREAD_EPOLL_THREAD_NUM];
+    EpollThread epoll_thread[FIBER_EPOLL_THREAD_NUM];
 
     static inline EpollThread &get_epoll_thread(int fd) {
-        if (BTHREAD_EPOLL_THREAD_NUM == 1UL) {
+        if (FIBER_EPOLL_THREAD_NUM == 1UL) {
             EpollThread &et = epoll_thread[0];
             et.start(BTHREAD_DEFAULT_EPOLL_SIZE);
             return et;
         }
 
-        EpollThread &et = epoll_thread[flare::hash::fmix32(fd) % BTHREAD_EPOLL_THREAD_NUM];
+        EpollThread &et = epoll_thread[flare::hash::fmix32(fd) % FIBER_EPOLL_THREAD_NUM];
         et.start(BTHREAD_DEFAULT_EPOLL_SIZE);
         return et;
     }
@@ -416,7 +416,7 @@ namespace flare::fiber_internal {
     int stop_and_join_epoll_threads() {
         // Returns -1 if any epoll thread failed to stop.
         int rc = 0;
-        for (size_t i = 0; i < BTHREAD_EPOLL_THREAD_NUM; ++i) {
+        for (size_t i = 0; i < FIBER_EPOLL_THREAD_NUM; ++i) {
             if (epoll_thread[i].stop_and_join() < 0) {
                 rc = -1;
             }

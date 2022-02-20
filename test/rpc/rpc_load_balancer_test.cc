@@ -25,7 +25,7 @@
 #include <algorithm>
 #include <random>
 #include <gtest/gtest.h>
-#include "flare/fiber/internal/bthread.h"
+#include "flare/fiber/internal/fiber.h"
 #include "flare/base/gperftools_profiler.h"
 #include "flare/base/time.h"
 #include "flare/base/fast_rand.h"

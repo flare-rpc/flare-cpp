@@ -22,15 +22,15 @@
 #include "flare/base/time.h"
 #include "flare/base/scoped_lock.h"
 #include "flare/base/gperftools_profiler.h"
-#include "flare/fiber/internal/bthread.h"
+#include "flare/fiber/internal/fiber.h"
 #include "flare/fiber/internal/condition_variable.h"
 #include "flare/fiber/internal/stack.h"
 #include "flare/fiber/this_fiber.h"
 
 namespace {
     struct Arg {
-        bthread_mutex_t m;
-        bthread_cond_t c;
+        fiber_mutex_t m;
+        fiber_cond_t c;
     };
 
     pthread_mutex_t wake_mutex = PTHREAD_MUTEX_INITIALIZER;
@@ -45,31 +45,31 @@ namespace {
         signal_start_time = flare::base::gettimeofday_us();
         while (!stop) {
             flare::this_fiber::fiber_sleep_for(SIGNAL_INTERVAL_US);
-            bthread_cond_signal(&a->c);
+            fiber_cond_signal(&a->c);
         }
         return NULL;
     }
 
     void *waiter(void *void_arg) {
         Arg *a = (Arg *) void_arg;
-        bthread_mutex_lock(&a->m);
+        fiber_mutex_lock(&a->m);
         while (!stop) {
-            bthread_cond_wait(&a->c, &a->m);
+            fiber_cond_wait(&a->c, &a->m);
 
             FLARE_SCOPED_LOCK(wake_mutex);
-            wake_tid.push_back(bthread_self());
+            wake_tid.push_back(fiber_self());
             wake_time.push_back(flare::base::gettimeofday_us());
         }
-        bthread_mutex_unlock(&a->m);
+        fiber_mutex_unlock(&a->m);
         return NULL;
     }
 
     TEST(CondTest, sanity) {
         Arg a;
-        ASSERT_EQ(0, bthread_mutex_init(&a.m, NULL));
-        ASSERT_EQ(0, bthread_cond_init(&a.c, NULL));
+        ASSERT_EQ(0, fiber_mutex_init(&a.m, NULL));
+        ASSERT_EQ(0, fiber_cond_init(&a.c, NULL));
         // has no effect
-        ASSERT_EQ(0, bthread_cond_signal(&a.c));
+        ASSERT_EQ(0, fiber_cond_signal(&a.c));
 
         stop = false;
         wake_tid.resize(1024);
@@ -80,11 +80,11 @@ namespace {
         fiber_id_t wth[8];
         const size_t NW = FLARE_ARRAY_SIZE(wth);
         for (size_t i = 0; i < NW; ++i) {
-            ASSERT_EQ(0, bthread_start_urgent(&wth[i], NULL, waiter, &a));
+            ASSERT_EQ(0, fiber_start_urgent(&wth[i], NULL, waiter, &a));
         }
 
         fiber_id_t sth;
-        ASSERT_EQ(0, bthread_start_urgent(&sth, NULL, signaler, &a));
+        ASSERT_EQ(0, fiber_start_urgent(&sth, NULL, signaler, &a));
 
         flare::this_fiber::fiber_sleep_for(SIGNAL_INTERVAL_US * 200);
 
@@ -94,12 +94,12 @@ namespace {
 
         stop = true;
         for (size_t i = 0; i < NW; ++i) {
-            bthread_cond_signal(&a.c);
+            fiber_cond_signal(&a.c);
         }
 
-        bthread_join(sth, NULL);
+        fiber_join(sth, NULL);
         for (size_t i = 0; i < NW; ++i) {
-            bthread_join(wth[i], NULL);
+            fiber_join(wth[i], NULL);
         }
 
         printf("wake up for %lu times\n", wake_tid.size());
@@ -132,13 +132,13 @@ namespace {
             printf("%" PRId64 " wakes up %d times\n", it->first, it->second);
         }
 
-        bthread_cond_destroy(&a.c);
-        bthread_mutex_destroy(&a.m);
+        fiber_cond_destroy(&a.c);
+        fiber_mutex_destroy(&a.m);
     }
 
     struct WrapperArg {
-        flare::fiber_internal::Mutex mutex;
-        flare::fiber_internal::ConditionVariable cond;
+        flare::fiber_internal::fiber_mutex mutex;
+        flare::fiber_internal::fiber_cond cond;
     };
 
     void *cv_signaler(void *void_arg) {
@@ -153,7 +153,7 @@ namespace {
 
     void *cv_bmutex_waiter(void *void_arg) {
         WrapperArg *a = (WrapperArg *) void_arg;
-        std::unique_lock<bthread_mutex_t> lck(*a->mutex.native_handler());
+        std::unique_lock<fiber_mutex_t> lck(*a->mutex.native_handler());
         while (!stop) {
             a->cond.wait(lck);
         }
@@ -162,7 +162,7 @@ namespace {
 
     void *cv_mutex_waiter(void *void_arg) {
         WrapperArg *a = (WrapperArg *) void_arg;
-        std::unique_lock<flare::fiber_internal::Mutex> lck(a->mutex);
+        std::unique_lock<flare::fiber_internal::fiber_mutex> lck(a->mutex);
         while (!stop) {
             a->cond.wait(lck);
         }
@@ -172,13 +172,13 @@ namespace {
 #define COND_IN_PTHREAD
 
 #ifndef COND_IN_PTHREAD
-#define pthread_join bthread_join
-#define pthread_create bthread_start_urgent
+#define pthread_join fiber_join
+#define pthread_create fiber_start_urgent
 #endif
 
     TEST(CondTest, cpp_wrapper) {
         stop = false;
-        flare::fiber_internal::ConditionVariable cond;
+        flare::fiber_internal::fiber_cond cond;
         pthread_t bmutex_waiter_threads[8];
         pthread_t mutex_waiter_threads[8];
         pthread_t signal_thread;
@@ -210,6 +210,7 @@ namespace {
 
     class Signal {
     protected:
+
         Signal() : _signal(0) {}
 
         void notify() {
@@ -219,7 +220,7 @@ namespace {
         }
 
         int wait(int old_signal) {
-            std::unique_lock<flare::fiber_internal::Mutex> lck(_m);
+            std::unique_lock<flare::fiber_internal::fiber_mutex> lck(_m);
             while (_signal == old_signal) {
                 _c.wait(lck);
             }
@@ -227,8 +228,8 @@ namespace {
         }
 
     private:
-        flare::fiber_internal::Mutex _m;
-        flare::fiber_internal::ConditionVariable _c;
+        flare::fiber_internal::fiber_mutex _m;
+        flare::fiber_internal::fiber_cond _c;
         int _signal;
     };
 
@@ -266,23 +267,23 @@ namespace {
         fiber_id_t threads[2];
         ProfilerStart("cond.prof");
         for (int i = 0; i < 2; ++i) {
-            ASSERT_EQ(0, bthread_start_urgent(&threads[i], NULL, ping_pong_thread, &arg));
+            ASSERT_EQ(0, fiber_start_urgent(&threads[i], NULL, ping_pong_thread, &arg));
         }
         usleep(1000 * 1000);
         arg.stopped = true;
         arg.sig1.notify();
         arg.sig2.notify();
         for (int i = 0; i < 2; ++i) {
-            ASSERT_EQ(0, bthread_join(threads[i], NULL));
+            ASSERT_EQ(0, fiber_join(threads[i], NULL));
         }
         ProfilerStop();
         LOG(INFO) << "total_count=" << arg.total_count.load();
     }
 
     struct BroadcastArg {
-        flare::fiber_internal::ConditionVariable wait_cond;
-        flare::fiber_internal::ConditionVariable broadcast_cond;
-        flare::fiber_internal::Mutex mutex;
+        flare::fiber_internal::fiber_cond wait_cond;
+        flare::fiber_internal::fiber_cond broadcast_cond;
+        flare::fiber_internal::fiber_mutex mutex;
         int nwaiter;
         int cur_waiter;
         int rounds;
@@ -291,7 +292,7 @@ namespace {
 
     void *wait_thread(void *arg) {
         BroadcastArg *ba = (BroadcastArg *) arg;
-        std::unique_lock<flare::fiber_internal::Mutex> lck(ba->mutex);
+        std::unique_lock<flare::fiber_internal::fiber_mutex> lck(ba->mutex);
         while (ba->rounds > 0) {
             const int saved_round = ba->rounds;
             ++ba->cur_waiter;
@@ -309,7 +310,7 @@ namespace {
         BroadcastArg *ba = (BroadcastArg *) arg;
         //int local_round = 0;
         while (ba->rounds > 0) {
-            std::unique_lock<flare::fiber_internal::Mutex> lck(ba->mutex);
+            std::unique_lock<flare::fiber_internal::fiber_mutex> lck(ba->mutex);
             while (ba->cur_waiter < ba->nwaiter) {
                 ba->broadcast_cond.wait(lck);
             }
@@ -322,7 +323,7 @@ namespace {
 
     void *disturb_thread(void *arg) {
         BroadcastArg *ba = (BroadcastArg *) arg;
-        std::unique_lock<flare::fiber_internal::Mutex> lck(ba->mutex);
+        std::unique_lock<flare::fiber_internal::fiber_mutex> lck(ba->mutex);
         while (ba->rounds > 0) {
             lck.unlock();
             lck.lock();
@@ -340,7 +341,7 @@ namespace {
 
         fiber_id_t normal_threads[NTHREADS];
         for (int i = 0; i < NTHREADS; ++i) {
-            ASSERT_EQ(0, bthread_start_urgent(&normal_threads[i], NULL, wait_thread, &ba));
+            ASSERT_EQ(0, fiber_start_urgent(&normal_threads[i], NULL, wait_thread, &ba));
         }
         pthread_t pthreads[NTHREADS];
         for (int i = 0; i < NTHREADS; ++i) {
@@ -352,7 +353,7 @@ namespace {
         ASSERT_EQ(0, pthread_create(&broadcast, NULL, broadcast_thread, &ba));
         ASSERT_EQ(0, pthread_create(&disturb, NULL, disturb_thread, &ba));
         for (int i = 0; i < NTHREADS; ++i) {
-            bthread_join(normal_threads[i], NULL);
+            fiber_join(normal_threads[i], NULL);
             pthread_join(pthreads[i], NULL);
         }
         pthread_join(broadcast, NULL);
@@ -362,14 +363,14 @@ namespace {
     class BthreadCond {
     public:
         BthreadCond() {
-            bthread_cond_init(&_cond, NULL);
-            bthread_mutex_init(&_mutex, NULL);
+            fiber_cond_init(&_cond, NULL);
+            fiber_mutex_init(&_mutex, NULL);
             _count = 1;
         }
 
         ~BthreadCond() {
-            bthread_mutex_destroy(&_mutex);
-            bthread_cond_destroy(&_cond);
+            fiber_mutex_destroy(&_mutex);
+            fiber_cond_destroy(&_cond);
         }
 
         void Init(int count = 1) {
@@ -378,27 +379,27 @@ namespace {
 
         int Signal() {
             int ret = 0;
-            bthread_mutex_lock(&_mutex);
+            fiber_mutex_lock(&_mutex);
             _count--;
-            bthread_cond_signal(&_cond);
-            bthread_mutex_unlock(&_mutex);
+            fiber_cond_signal(&_cond);
+            fiber_mutex_unlock(&_mutex);
             return ret;
         }
 
         int Wait() {
             int ret = 0;
-            bthread_mutex_lock(&_mutex);
+            fiber_mutex_lock(&_mutex);
             while (_count > 0) {
-                ret = bthread_cond_wait(&_cond, &_mutex);
+                ret = fiber_cond_wait(&_cond, &_mutex);
             }
-            bthread_mutex_unlock(&_mutex);
+            fiber_mutex_unlock(&_mutex);
             return ret;
         }
 
     private:
         int _count;
-        bthread_cond_t _cond;
-        bthread_mutex_t _mutex;
+        fiber_cond_t _cond;
+        fiber_mutex_t _mutex;
     };
 
     volatile bool g_stop = false;
@@ -426,13 +427,13 @@ namespace {
         BthreadCond c;
         c.Init();
         flare::base::stop_watcher tm;
-        bthread_start_urgent(&tid, &FIBER_ATTR_PTHREAD, wait_cond_thread, &c);
+        fiber_start_urgent(&tid, &FIBER_ATTR_PTHREAD, wait_cond_thread, &c);
         std::vector<fiber_id_t> tids;
         tids.reserve(32768);
         tm.start();
         for (size_t i = 0; i < 32768; ++i) {
             fiber_id_t t0;
-            ASSERT_EQ(0, bthread_start_background(&t0, NULL, usleep_thread, NULL));
+            ASSERT_EQ(0, fiber_start_background(&t0, NULL, usleep_thread, NULL));
             tids.push_back(t0);
         }
         tm.stop();
@@ -440,10 +441,10 @@ namespace {
         usleep(3 * 1000 * 1000L);
         c.Signal();
         g_stop = true;
-        bthread_join(tid, NULL);
+        fiber_join(tid, NULL);
         for (size_t i = 0; i < tids.size(); ++i) {
             LOG_EVERY_SECOND(INFO) << "Joined " << i << " threads";
-            bthread_join(tids[i], NULL);
+            fiber_join(tids[i], NULL);
         }
         LOG_EVERY_SECOND(INFO) << "Joined " << tids.size() << " threads";
     }
@@ -459,7 +460,7 @@ namespace {
 
     TEST(CondTest, too_many_bthreads_from_bthread) {
         fiber_id_t th;
-        ASSERT_EQ(0, bthread_start_urgent(&th, NULL, run_launch_many_bthreads, NULL));
-        bthread_join(th, NULL);
+        ASSERT_EQ(0, fiber_start_urgent(&th, NULL, run_launch_many_bthreads, NULL));
+        fiber_join(th, NULL);
     }
 } // namespace

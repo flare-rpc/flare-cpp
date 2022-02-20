@@ -81,17 +81,17 @@ namespace flare::fiber_internal {
 
     inline void fiber_worker::push_rq(fiber_id_t tid) {
         while (!_rq.push(tid)) {
-            // Created too many bthreads: a promising approach is to insert the
+            // Created too many fibers: a promising approach is to insert the
             // task into another fiber_worker, but we don't use it because:
-            // * There're already many bthreads to run, inserting the bthread
+            // * There're already many fibers to run, inserting the fiber
             //   into other fiber_worker does not help.
             // * Insertions into other TaskGroups perform worse when all workers
-            //   are busy at creating bthreads (proved by test_input_messenger in
+            //   are busy at creating fibers (proved by test_input_messenger in
             //   flare)
             flush_nosignal_tasks();
             LOG_EVERY_SECOND(ERROR) << "_rq is full, capacity=" << _rq.capacity();
             // TODO(gejun): May cause deadlock when all workers are spinning here.
-            // A better solution is to pop and run existing bthreads, however which
+            // A better solution is to pop and run existing fibers, however which
             // make set_remained()-callbacks do context switches and need extensive
             // reviews on related code.
             ::usleep(1000);

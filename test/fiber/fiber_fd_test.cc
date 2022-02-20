@@ -29,7 +29,7 @@
 #include "flare/fiber/internal/schedule_group.h"
 #include "flare/fiber/internal/fiber_worker.h"
 #include "flare/fiber/internal/interrupt_pthread.h"
-#include "flare/fiber/internal/bthread.h"
+#include "flare/fiber/internal/fiber.h"
 #include "flare/fiber/internal/unstable.h"
 #include "flare/fiber/this_fiber.h"
 #if defined(FLARE_PLATFORM_OSX)
@@ -294,7 +294,7 @@ TEST(FDTest, ping_pong) {
         cm[i]->times = REP;
 #ifdef RUN_CLIENT_IN_BTHREAD
         flare::base::make_non_blocking(cm[i]->fd);
-        ASSERT_EQ(0, bthread_start_urgent(&cth[i], NULL, client_thread, cm[i]));
+        ASSERT_EQ(0, fiber_start_urgent(&cth[i], NULL, client_thread, cm[i]));
 #else
         ASSERT_EQ(0, pthread_create(&cth[i], NULL, client_thread, cm[i]));
 #endif
@@ -308,7 +308,7 @@ TEST(FDTest, ping_pong) {
         EpollMeta *em = new EpollMeta;
         em->epfd = epfd[i];
 #ifdef RUN_EPOLL_IN_BTHREAD
-        ASSERT_EQ(0, bthread_start_urgent(&eth[i], epoll_thread, em, NULL);
+        ASSERT_EQ(0, fiber_start_urgent(&eth[i], epoll_thread, em, NULL);
 #else
         ASSERT_EQ(0, pthread_create(&eth[i], NULL, epoll_thread, em));
 #endif
@@ -316,7 +316,7 @@ TEST(FDTest, ping_pong) {
 
     for (size_t i = 0; i < NCLIENT; ++i) {
 #ifdef RUN_CLIENT_IN_BTHREAD
-        bthread_join(cth[i], NULL);
+        fiber_join(cth[i], NULL);
 #else
         pthread_join(cth[i], NULL);
 #endif
@@ -336,7 +336,7 @@ TEST(FDTest, ping_pong) {
         ASSERT_EQ(0, kevent(epfd[i], &kqueue_event, 1, NULL, 0, NULL));
 #endif
 #ifdef RUN_EPOLL_IN_BTHREAD
-        bthread_join(eth[i], NULL);
+        fiber_join(eth[i], NULL);
 #else
         pthread_join(eth[i], NULL);
 #endif
@@ -465,7 +465,7 @@ TEST(FDTest, invalid_epoll_events) {
     ASSERT_EQ(EINVAL, errno);
 #endif
     fiber_id_t th;
-    ASSERT_EQ(0, bthread_start_urgent(&th, NULL, close_the_fd, &fds[1]));
+    ASSERT_EQ(0, fiber_start_urgent(&th, NULL, close_the_fd, &fds[1]));
     flare::base::stop_watcher tm;
     tm.start();
 #if defined(FLARE_PLATFORM_LINUX)
@@ -475,7 +475,7 @@ TEST(FDTest, invalid_epoll_events) {
 #endif
     tm.stop();
     ASSERT_LT(tm.m_elapsed(), 20);
-    ASSERT_EQ(0, bthread_join(th, NULL));
+    ASSERT_EQ(0, fiber_join(th, NULL));
     ASSERT_EQ(0, bthread_close(fds[0]));
 }
 
@@ -495,11 +495,11 @@ TEST(FDTest, timeout) {
     pthread_t th;
     ASSERT_EQ(0, pthread_create(&th, NULL, wait_for_the_fd, &fds[0]));
     fiber_id_t bth;
-    ASSERT_EQ(0, bthread_start_urgent(&bth, NULL, wait_for_the_fd, &fds[0]));
+    ASSERT_EQ(0, fiber_start_urgent(&bth, NULL, wait_for_the_fd, &fds[0]));
     flare::base::stop_watcher tm;
     tm.start();
     ASSERT_EQ(0, pthread_join(th, NULL));
-    ASSERT_EQ(0, bthread_join(bth, NULL));
+    ASSERT_EQ(0, fiber_join(bth, NULL));
     tm.stop();
     ASSERT_LT(tm.m_elapsed(), 80);
     ASSERT_EQ(0, bthread_close(fds[0]));
@@ -510,11 +510,11 @@ TEST(FDTest, close_should_wakeup_waiter) {
     int fds[2];
     ASSERT_EQ(0, pipe(fds));
     fiber_id_t bth;
-    ASSERT_EQ(0, bthread_start_urgent(&bth, NULL, wait_for_the_fd, &fds[0]));
+    ASSERT_EQ(0, fiber_start_urgent(&bth, NULL, wait_for_the_fd, &fds[0]));
     flare::base::stop_watcher tm;
     tm.start();
     ASSERT_EQ(0, bthread_close(fds[0]));
-    ASSERT_EQ(0, bthread_join(bth, NULL));
+    ASSERT_EQ(0, fiber_join(bth, NULL));
     tm.stop();
     ASSERT_LT(tm.m_elapsed(), 5);
 

@@ -117,7 +117,7 @@ namespace flare::fiber_internal {
         flare::variable::PassiveStatus<int64_t> _cumulated_signal_count;
         flare::variable::PerSecond<flare::variable::PassiveStatus<int64_t> > _signal_per_second;
         flare::variable::PassiveStatus<std::string> _status;
-        flare::variable::Adder<int64_t> _nbthreads;
+        flare::variable::Adder<int64_t> _nfibers;
 
         static const int PARKING_LOT_NUM = 4;
         ParkingLot _pl[PARKING_LOT_NUM];

@@ -168,7 +168,7 @@ public:
                       << " ms before responding play request";
             flare::this_fiber::fiber_sleep_for(_sleep_ms * 1000L);
         }
-        int rc = bthread_start_background(&_play_thread, NULL,
+        int rc = fiber_start_background(&_play_thread, NULL,
                                           RunSendData, this);
         if (rc) {
             status->set_error(rc, "Fail to create thread");
@@ -177,8 +177,8 @@ public:
         State expected = STATE_UNPLAYING;
         if (!_state.compare_exchange_strong(expected, STATE_PLAYING)) {
             if (expected == STATE_STOPPED) {
-                bthread_stop(_play_thread);
-                bthread_join(_play_thread, NULL);
+                fiber_stop(_play_thread);
+                fiber_join(_play_thread, NULL);
             } else {
                 CHECK(false) << "Impossible";
             }
@@ -188,8 +188,8 @@ public:
     void OnStop() {
         LOG(INFO) << "OnStop of PlayingDummyStream=" << this;
         if (_state.exchange(STATE_STOPPED) == STATE_PLAYING) {
-            bthread_stop(_play_thread);
-            bthread_join(_play_thread, NULL);
+            fiber_stop(_play_thread);
+            fiber_join(_play_thread, NULL);
         }
     }
 
@@ -214,7 +214,7 @@ void PlayingDummyStream::SendData() {
 
     vmsg.timestamp = 1000;
     amsg.timestamp = 1000;
-    for (int i = 0; !bthread_stopped(bthread_self()); ++i) {
+    for (int i = 0; !fiber_stopped(fiber_self()); ++i) {
         vmsg.timestamp += 20;
         amsg.timestamp += 20;
 

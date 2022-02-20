@@ -23,7 +23,7 @@
 #include "flare/rapidjson/document.h"
 #include "flare/rapidjson/stringbuffer.h"
 #include "flare/rapidjson/prettywriter.h"
-#include "flare/fiber/internal/bthread.h"
+#include "flare/fiber/internal/fiber.h"
 #include "flare/rpc/log.h"
 #include "flare/rpc/channel.h"
 #include "flare/rpc/policy/file_naming_service.h"
@@ -216,8 +216,8 @@ int ConsulNamingService::RunNamingService(const char* service_name,
     for (;;) {
         servers.clear();
         const int rc = GetServers(service_name, &servers);
-        if (bthread_stopped(bthread_self())) {
-            RPC_VLOG << "Quit NamingServiceThread=" << bthread_self();
+        if (fiber_stopped(fiber_self())) {
+            RPC_VLOG << "Quit NamingServiceThread=" << fiber_self();
             return 0;
         }
         if (rc == 0) {
@@ -233,7 +233,7 @@ int ConsulNamingService::RunNamingService(const char* service_name,
             }
             if (flare::this_fiber::fiber_sleep_for(std::max(FLAGS_consul_retry_interval_ms, 1) * 1000) < 0) {
                 if (errno == ESTOP) {
-                    RPC_VLOG << "Quit NamingServiceThread=" << bthread_self();
+                    RPC_VLOG << "Quit NamingServiceThread=" << fiber_self();
                     return 0;
                 }
                 PLOG(FATAL) << "Fail to sleep";

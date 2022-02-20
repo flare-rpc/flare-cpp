@@ -34,7 +34,7 @@
 #include "flare/rpc/builtin/pprof_service.h"
 #include "flare/rpc/builtin/common.h"
 #include "flare/rpc/details/tcmalloc_extension.h"
-#include "flare/fiber/internal/bthread.h"                // flare::this_fiber::fiber_sleep_for
+#include "flare/fiber/internal/fiber.h"                // flare::this_fiber::fiber_sleep_for
 #include "flare/base/fd_guard.h"
 #include "flare/fiber/this_fiber.h"
 

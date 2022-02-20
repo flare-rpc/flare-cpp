@@ -791,7 +791,7 @@ namespace flare::rpc {
                 init_args[i].stop = false;
                 fiber_attribute tmp = FIBER_ATTR_NORMAL;
                 tmp.keytable_pool = _keytable_pool;
-                if (bthread_start_background(
+                if (fiber_start_background(
                         &init_args[i].th, &tmp, BthreadInitEntry, &init_args[i]) != 0) {
                     break;
                 }
@@ -807,7 +807,7 @@ namespace flare::rpc {
                 init_args[i].stop = true;
             }
             for (size_t i = 0; i < ncreated; ++i) {
-                bthread_join(init_args[i].th, NULL);
+                fiber_join(init_args[i].th, NULL);
             }
             size_t num_failed_result = 0;
             for (size_t i = 0; i < ncreated; ++i) {
@@ -880,10 +880,10 @@ namespace flare::rpc {
             if (FLAGS_usercode_in_pthread) {
                 _options.num_threads += FLAGS_usercode_backup_threads;
             }
-            if (_options.num_threads < BTHREAD_MIN_CONCURRENCY) {
-                _options.num_threads = BTHREAD_MIN_CONCURRENCY;
+            if (_options.num_threads < FIBER_MIN_CONCURRENCY) {
+                _options.num_threads = FIBER_MIN_CONCURRENCY;
             }
-            bthread_setconcurrency(_options.num_threads);
+            fiber_setconcurrency(_options.num_threads);
         }
 
         for (MethodMap::iterator it = _method_map.begin();
@@ -998,7 +998,7 @@ namespace flare::rpc {
 
         // Launch _derivative_thread.
         CHECK_EQ(INVALID_FIBER_ID, _derivative_thread);
-        if (bthread_start_background(&_derivative_thread, NULL,
+        if (fiber_start_background(&_derivative_thread, NULL,
                                      UpdateDerivedVars, this) != 0) {
             LOG(ERROR) << "Fail to create _derivative_thread";
             return -1;
@@ -1113,7 +1113,7 @@ namespace flare::rpc {
 
         // Delete tls_key as well since we don't need it anymore.
         if (_tl_options.tls_key != INVALID_BTHREAD_KEY) {
-            CHECK_EQ(0, bthread_key_delete(_tl_options.tls_key));
+            CHECK_EQ(0, fiber_key_delete(_tl_options.tls_key));
             _tl_options.tls_key = INVALID_BTHREAD_KEY;
         }
 
@@ -1121,8 +1121,8 @@ namespace flare::rpc {
         // and services in server are not mutated, otherwise data race happens
         // between Add/RemoveService after Join() and the thread.
         if (_derivative_thread != INVALID_FIBER_ID) {
-            bthread_stop(_derivative_thread);
-            bthread_join(_derivative_thread, NULL);
+            fiber_stop(_derivative_thread);
+            fiber_join(_derivative_thread, NULL);
             _derivative_thread = INVALID_FIBER_ID;
         }
 
@@ -1670,11 +1670,11 @@ namespace flare::rpc {
             CHECK(false) << "The protocol impl. may not set tls correctly";
             return NULL;
         }
-        void *data = bthread_getspecific(tl_options->tls_key);
+        void *data = fiber_getspecific(tl_options->tls_key);
         if (data == NULL) {
             data = tl_options->thread_local_data_factory->CreateData();
             if (data != NULL) {
-                CHECK_EQ(0, bthread_setspecific(tl_options->tls_key, data));
+                CHECK_EQ(0, fiber_setspecific(tl_options->tls_key, data));
             }
         }
         return data;

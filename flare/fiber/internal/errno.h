@@ -27,14 +27,14 @@
 
 __BEGIN_DECLS
 
-extern int *bthread_errno_location();
+extern int *fiber_errno_location();
 
 #ifdef errno
 #undef errno
-#define errno *bthread_errno_location()
+#define errno *fiber_errno_location()
 #endif
 
-// List errno used throughout bthread
+// List errno used throughout fiber
 extern const int ESTOP;
 
 __END_DECLS

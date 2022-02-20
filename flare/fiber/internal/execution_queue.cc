@@ -79,7 +79,7 @@ namespace flare::fiber_internal {
             node->next = prev_head;
             return;
         }
-        // Get the right to execute the task, start a bthread to avoid deadlock
+        // Get the right to execute the task, start a fiber to avoid deadlock
         // or stack overflow
         node->next = NULL;
         node->q = this;
@@ -107,9 +107,9 @@ namespace flare::fiber_internal {
             // we can't determine whether the code after execute() is urgent (like
             // unlock a pthread_mutex_t) in which case implicit context switch may
             // cause undefined behavior (e.g. deadlock)
-            if (bthread_start_background(&tid, &_options.bthread_attr,
+            if (fiber_start_background(&tid, &_options.bthread_attr,
                                          _execute_tasks, node) != 0) {
-                PLOG(FATAL) << "Fail to start bthread";
+                PLOG(FATAL) << "Fail to start fiber";
                 _execute_tasks(node);
             }
         } else {
@@ -178,7 +178,7 @@ namespace flare::fiber_internal {
             // 1: release fence to make join sees the newst changes when it sees
             //    the newst _join_butex
             m->_join_butex->fetch_add(2, std::memory_order_release/*1*/);
-            butex_wake_all(m->_join_butex);
+            waitable_event_wake_all(m->_join_butex);
             vars->execq_count << -1;
             flare::memory::return_resource(slot_of_id(m->_this_id));
         }
@@ -219,7 +219,7 @@ namespace flare::fiber_internal {
         int expected = _version_of_id(id);
         // acquire fence makes this thread see changes before changing _join_butex.
         while (expected == m->_join_butex->load(std::memory_order_acquire)) {
-            if (butex_wait(m->_join_butex, expected, NULL) < 0 &&
+            if (waitable_event_wait(m->_join_butex, expected, NULL) < 0 &&
                 errno != EWOULDBLOCK && errno != EINTR) {
                 return errno;
             }

@@ -22,7 +22,7 @@
 #include "flare/fiber/internal/errno.h"
 #include "flare/base/profile.h"
 
-// Define errno in bthread/errno.h
+// Define errno in fiber/internal/errno.h
 extern const int ESTOP = -20;
 
 FLARE_REGISTER_ERRNO(ESTOP, "The structure is stopping")
@@ -33,14 +33,14 @@ extern "C" {
 
 extern int *__errno_location() __attribute__((__const__));
 
-int *bthread_errno_location() {
+int *fiber_errno_location() {
     return __errno_location();
 }
 #elif defined(FLARE_PLATFORM_OSX)
 
 extern int * __error(void);
 
-int *bthread_errno_location() {
+int *fiber_errno_location() {
     return __error();
 }
 #endif

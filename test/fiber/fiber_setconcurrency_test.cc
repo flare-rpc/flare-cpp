@@ -21,9 +21,9 @@
 #include "flare/base/time.h"
 #include "flare/log/logging.h"
 #include "flare/base/thread.h"
-#include <flare/fiber/internal/butex.h>
+#include <flare/fiber/internal/waitable_event.h>
 #include "flare/log/logging.h"
-#include "flare/fiber/internal/bthread.h"
+#include "flare/fiber/internal/fiber.h"
 #include "flare/fiber/internal/schedule_group.h"
 
 namespace flare::fiber_internal {
@@ -36,23 +36,23 @@ void* dummy(void*) {
 }
 
 TEST(BthreadTest, setconcurrency) {
-    ASSERT_EQ(8 + BTHREAD_EPOLL_THREAD_NUM, (size_t)bthread_getconcurrency());
-    ASSERT_EQ(EINVAL, bthread_setconcurrency(BTHREAD_MIN_CONCURRENCY - 1));
-    ASSERT_EQ(EINVAL, bthread_setconcurrency(0));
-    ASSERT_EQ(EINVAL, bthread_setconcurrency(-1));
-    ASSERT_EQ(EINVAL, bthread_setconcurrency(BTHREAD_MAX_CONCURRENCY + 1));
-    ASSERT_EQ(0, bthread_setconcurrency(BTHREAD_MIN_CONCURRENCY));
-    ASSERT_EQ(BTHREAD_MIN_CONCURRENCY, bthread_getconcurrency());
-    ASSERT_EQ(0, bthread_setconcurrency(BTHREAD_MIN_CONCURRENCY + 1));
-    ASSERT_EQ(BTHREAD_MIN_CONCURRENCY + 1, bthread_getconcurrency());
-    ASSERT_EQ(0, bthread_setconcurrency(BTHREAD_MIN_CONCURRENCY));  // smaller value
+    ASSERT_EQ(8 + FIBER_EPOLL_THREAD_NUM, (size_t)fiber_getconcurrency());
+    ASSERT_EQ(EINVAL, fiber_setconcurrency(FIBER_MIN_CONCURRENCY - 1));
+    ASSERT_EQ(EINVAL, fiber_setconcurrency(0));
+    ASSERT_EQ(EINVAL, fiber_setconcurrency(-1));
+    ASSERT_EQ(EINVAL, fiber_setconcurrency(FIBER_MAX_CONCURRENCY + 1));
+    ASSERT_EQ(0, fiber_setconcurrency(FIBER_MIN_CONCURRENCY));
+    ASSERT_EQ(FIBER_MIN_CONCURRENCY, fiber_getconcurrency());
+    ASSERT_EQ(0, fiber_setconcurrency(FIBER_MIN_CONCURRENCY + 1));
+    ASSERT_EQ(FIBER_MIN_CONCURRENCY + 1, fiber_getconcurrency());
+    ASSERT_EQ(0, fiber_setconcurrency(FIBER_MIN_CONCURRENCY));  // smaller value
     fiber_id_t th;
-    ASSERT_EQ(0, bthread_start_urgent(&th, NULL, dummy, NULL));
-    ASSERT_EQ(BTHREAD_MIN_CONCURRENCY + 1, bthread_getconcurrency());
-    ASSERT_EQ(0, bthread_setconcurrency(BTHREAD_MIN_CONCURRENCY + 5));
-    ASSERT_EQ(BTHREAD_MIN_CONCURRENCY + 5, bthread_getconcurrency());
-    ASSERT_EQ(EPERM, bthread_setconcurrency(BTHREAD_MIN_CONCURRENCY + 1));
-    ASSERT_EQ(BTHREAD_MIN_CONCURRENCY + 5, bthread_getconcurrency());
+    ASSERT_EQ(0, fiber_start_urgent(&th, NULL, dummy, NULL));
+    ASSERT_EQ(FIBER_MIN_CONCURRENCY + 1, fiber_getconcurrency());
+    ASSERT_EQ(0, fiber_setconcurrency(FIBER_MIN_CONCURRENCY + 5));
+    ASSERT_EQ(FIBER_MIN_CONCURRENCY + 5, fiber_getconcurrency());
+    ASSERT_EQ(EPERM, fiber_setconcurrency(FIBER_MIN_CONCURRENCY + 1));
+    ASSERT_EQ(FIBER_MIN_CONCURRENCY + 5, fiber_getconcurrency());
 }
 
 static std::atomic<int> *odd;
@@ -70,8 +70,8 @@ static void *odd_thread(void *) {
             counted = true;
             npthreads.fetch_add(1);
         }
-        flare::fiber_internal::butex_wake_all(even);
-        flare::fiber_internal::butex_wait(odd, 0, NULL);
+        flare::fiber_internal::waitable_event_wake_all(even);
+        flare::fiber_internal::waitable_event_wait(odd, 0, NULL);
     }
     return NULL;
 }
@@ -83,15 +83,15 @@ static void *even_thread(void *) {
             counted = true;
             npthreads.fetch_add(1);
         }
-        flare::fiber_internal::butex_wake_all(odd);
-        flare::fiber_internal::butex_wait(even, 0, NULL);
+        flare::fiber_internal::waitable_event_wake_all(odd);
+        flare::fiber_internal::waitable_event_wait(even, 0, NULL);
     }
     return NULL;
 }
 
 TEST(BthreadTest, setconcurrency_with_running_bthread) {
-    odd = flare::fiber_internal::butex_create_checked<std::atomic<int> >();
-    even = flare::fiber_internal::butex_create_checked<std::atomic<int> >();
+    odd = flare::fiber_internal::waitable_event_create_checked<std::atomic<int> >();
+    even = flare::fiber_internal::waitable_event_create_checked<std::atomic<int> >();
     ASSERT_TRUE(odd != NULL && even != NULL);
     *odd = 0;
     *even = 0;
@@ -99,23 +99,23 @@ TEST(BthreadTest, setconcurrency_with_running_bthread) {
     const int N = 500;
     for (int i = 0; i < N; ++i) {
         fiber_id_t tid;
-        bthread_start_background(&tid, &FIBER_ATTR_SMALL, odd_thread, NULL);
+        fiber_start_background(&tid, &FIBER_ATTR_SMALL, odd_thread, NULL);
         tids.push_back(tid);
-        bthread_start_background(&tid, &FIBER_ATTR_SMALL, even_thread, NULL);
+        fiber_start_background(&tid, &FIBER_ATTR_SMALL, even_thread, NULL);
         tids.push_back(tid);
     }
     for (int i = 100; i <= N; ++i) {
-        ASSERT_EQ(0, bthread_setconcurrency(i));
-        ASSERT_EQ(i, bthread_getconcurrency());
+        ASSERT_EQ(0, fiber_setconcurrency(i));
+        ASSERT_EQ(i, fiber_getconcurrency());
     }
     usleep(1000 * N);
     *odd = 1;
     *even = 1;
     stop =  true;
-    flare::fiber_internal::butex_wake_all(odd);
-    flare::fiber_internal::butex_wake_all(even);
+    flare::fiber_internal::waitable_event_wake_all(odd);
+    flare::fiber_internal::waitable_event_wake_all(even);
     for (size_t i = 0; i < tids.size(); ++i) {
-        bthread_join(tids[i], NULL);
+        fiber_join(tids[i], NULL);
     }
     LOG(INFO) << "All bthreads has quit";
     ASSERT_EQ(2*N, nbthreads);
@@ -131,21 +131,21 @@ void* sleep_proc(void*) {
 
 void* add_concurrency_proc(void*) {
     fiber_id_t tid;
-    bthread_start_background(&tid, &FIBER_ATTR_SMALL, sleep_proc, NULL);
-    bthread_join(tid, NULL);
+    fiber_start_background(&tid, &FIBER_ATTR_SMALL, sleep_proc, NULL);
+    fiber_join(tid, NULL);
     return NULL;
 }
 
 bool set_min_concurrency(int num) {
     std::stringstream ss;
     ss << num;
-    std::string ret = GFLAGS_NS::SetCommandLineOption("bthread_min_concurrency", ss.str().c_str());
+    std::string ret = GFLAGS_NS::SetCommandLineOption("fiber_min_concurrency", ss.str().c_str());
     return !ret.empty();
 }
 
 int get_min_concurrency() {
     std::string ret;
-    GFLAGS_NS::GetCommandLineOption("bthread_min_concurrency", &ret);
+    GFLAGS_NS::GetCommandLineOption("fiber_min_concurrency", &ret);
     return atoi(ret.c_str());
 }
 
@@ -153,7 +153,7 @@ TEST(BthreadTest, min_concurrency) {
     ASSERT_EQ(1, set_min_concurrency(-1)); // set min success
     ASSERT_EQ(1, set_min_concurrency(0)); // set min success
     ASSERT_EQ(0, get_min_concurrency());
-    int conn = bthread_getconcurrency();
+    int conn = fiber_getconcurrency();
     int add_conn = 100;
 
     ASSERT_EQ(0, set_min_concurrency(conn + 1)); // set min failed
@@ -162,10 +162,10 @@ TEST(BthreadTest, min_concurrency) {
     ASSERT_EQ(1, set_min_concurrency(conn - 1)); // set min success
     ASSERT_EQ(conn - 1, get_min_concurrency());
 
-    ASSERT_EQ(EINVAL, bthread_setconcurrency(conn - 2)); // set max failed
-    ASSERT_EQ(0, bthread_setconcurrency(conn + add_conn + 1)); // set max success
-    ASSERT_EQ(0, bthread_setconcurrency(conn + add_conn)); // set max success
-    ASSERT_EQ(conn + add_conn, bthread_getconcurrency());
+    ASSERT_EQ(EINVAL, fiber_setconcurrency(conn - 2)); // set max failed
+    ASSERT_EQ(0, fiber_setconcurrency(conn + add_conn + 1)); // set max success
+    ASSERT_EQ(0, fiber_setconcurrency(conn + add_conn)); // set max success
+    ASSERT_EQ(conn + add_conn, fiber_getconcurrency());
     ASSERT_EQ(conn, flare::fiber_internal::g_task_control->concurrency());
 
     ASSERT_EQ(1, set_min_concurrency(conn + 1)); // set min success
@@ -175,18 +175,18 @@ TEST(BthreadTest, min_concurrency) {
     std::vector<fiber_id_t> tids;
     for (int i = 0; i < conn; ++i) {
         fiber_id_t tid;
-        bthread_start_background(&tid, &FIBER_ATTR_SMALL, sleep_proc, NULL);
+        fiber_start_background(&tid, &FIBER_ATTR_SMALL, sleep_proc, NULL);
         tids.push_back(tid);
     }
     for (int i = 0; i < add_conn; ++i) {
         fiber_id_t tid;
-        bthread_start_background(&tid, &FIBER_ATTR_SMALL, add_concurrency_proc, NULL);
+        fiber_start_background(&tid, &FIBER_ATTR_SMALL, add_concurrency_proc, NULL);
         tids.push_back(tid);
     }
     for (size_t i = 0; i < tids.size(); ++i) {
-        bthread_join(tids[i], NULL);
+        fiber_join(tids[i], NULL);
     }
-    ASSERT_EQ(conn + add_conn, bthread_getconcurrency());
+    ASSERT_EQ(conn + add_conn, fiber_getconcurrency());
     ASSERT_EQ(conn + add_conn, flare::fiber_internal::g_task_control->concurrency());
 }
 

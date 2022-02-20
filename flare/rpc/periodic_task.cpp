@@ -16,7 +16,7 @@
 // under the License.
 
 
-#include <flare/fiber/internal/bthread.h>
+#include <flare/fiber/internal/fiber.h>
 #include <flare/fiber/internal/unstable.h>
 #include "flare/rpc/periodic_task.h"
 
@@ -38,7 +38,7 @@ static void* PeriodicTaskThread(void* arg) {
 
 static void RunPeriodicTaskThread(void* arg) {
     fiber_id_t th = 0;
-    int rc = bthread_start_background(
+    int rc = fiber_start_background(
         &th, &FIBER_ATTR_NORMAL, PeriodicTaskThread, arg);
     if (rc != 0) {
         LOG(ERROR) << "Fail to start PeriodicTaskThread";
@@ -53,7 +53,7 @@ void PeriodicTaskManager::StartTaskAt(PeriodicTask* task, const timespec& abstim
         return;
     }
     fiber_timer_id timer_id;
-    const int rc = bthread_timer_add(
+    const int rc = fiber_timer_add(
         &timer_id, abstime, RunPeriodicTaskThread, task);
     if (rc != 0) {
         LOG(ERROR) << "Fail to add timer for RunPerodicTaskThread";

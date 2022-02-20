@@ -50,7 +50,7 @@ static const fiber_attribute_flag FIBER_LOG_CONTEXT_SWITCH = 16;
 static const fiber_attribute_flag FIBER_NOSIGNAL = 32;
 static const fiber_attribute_flag FIBER_NEVER_QUIT = 64;
 
-// Key of thread-local data, created by bthread_key_create.
+// Key of thread-local data, created by fiber_key_create.
 typedef struct {
     uint32_t index;    // index in KeyTable
     uint32_t version;  // ABA avoidance
@@ -119,16 +119,16 @@ typedef struct fiber_attribute {
 #endif  // __cplusplus
 } fiber_attribute;
 
-// bthreads started with this attribute will run on stack of worker pthread and
-// all bthread functions that would block the bthread will block the pthread.
-// The bthread will not allocate its own stack, simply occupying a little meta
+// fibers started with this attribute will run on stack of worker pthread and
+// all fiber functions that would block the fiber will block the pthread.
+// The fiber will not allocate its own stack, simply occupying a little meta
 // memory. This is required to run JNI code which checks layout of stack. The
 // obvious drawback is that you need more worker pthreads when you have a lot
-// of such bthreads.
+// of such fibers.
 static const fiber_attribute FIBER_ATTR_PTHREAD =
         {FIBER_STACKTYPE_PTHREAD, 0, NULL};
 
-// bthreads created with following attributes will have different size of
+// fibers created with following attributes will have different size of
 // stacks. Default is FIBER_ATTR_NORMAL.
 static const fiber_attribute FIBER_ATTR_SMALL =
         {FIBER_STACKTYPE_SMALL, 0, NULL};
@@ -137,7 +137,7 @@ static const fiber_attribute FIBER_ATTR_NORMAL =
 static const fiber_attribute FIBER_ATTR_LARGE =
         {FIBER_STACKTYPE_LARGE, 0, NULL};
 
-// bthreads created with this attribute will print log when it's started,
+// fibers created with this attribute will print log when it's started,
 // context-switched, finished.
 static const fiber_attribute FIBER_ATTR_DEBUG = {
         FIBER_STACKTYPE_NORMAL,
@@ -145,12 +145,12 @@ static const fiber_attribute FIBER_ATTR_DEBUG = {
         NULL
 };
 
-static const size_t BTHREAD_EPOLL_THREAD_NUM = 1;
+static const size_t FIBER_EPOLL_THREAD_NUM = 1;
 static const fiber_id_t BTHREAD_ATOMIC_INIT = 0;
 
 // Min/Max number of work pthreads.
-static const int BTHREAD_MIN_CONCURRENCY = 3 + BTHREAD_EPOLL_THREAD_NUM;
-static const int BTHREAD_MAX_CONCURRENCY = 1024;
+static const int FIBER_MIN_CONCURRENCY = 3 + FIBER_EPOLL_THREAD_NUM;
+static const int FIBER_MAX_CONCURRENCY = 1024;
 
 typedef struct {
     void *impl;
@@ -160,42 +160,42 @@ typedef struct {
     unsigned size;
     unsigned conflict_head;
     unsigned conflict_size;
-} bthread_list_t;
+} fiber_list_t;
 
-// TODO: bthread_contention_site_t should be put into butex.
+// TODO: fiber_contention_site_t should be put into butex.
 typedef struct {
     int64_t duration_ns;
     size_t sampling_range;
-} bthread_contention_site_t;
+} fiber_contention_site_t;
 
 typedef struct {
-    unsigned *butex;
-    bthread_contention_site_t csite;
-} bthread_mutex_t;
+    unsigned *event;
+    fiber_contention_site_t csite;
+} fiber_mutex_t;
 
 typedef struct {
-} bthread_mutexattr_t;
+} fiber_mutexattr_t;
 
 typedef struct {
-    bthread_mutex_t *m;
+    fiber_mutex_t *m;
     int *seq;
-} bthread_cond_t;
+} fiber_cond_t;
 
 typedef struct {
-} bthread_condattr_t;
+} fiber_condattr_t;
 
 typedef struct {
-} bthread_rwlock_t;
+} fiber_rwlock_t;
 
 typedef struct {
-} bthread_rwlockattr_t;
+} fiber_rwlockattr_t;
 
 typedef struct {
     unsigned int count;
-} bthread_barrier_t;
+} fiber_barrier_t;
 
 typedef struct {
-} bthread_barrierattr_t;
+} fiber_barrierattr_t;
 
 typedef struct {
     uint64_t value;

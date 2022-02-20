@@ -34,9 +34,9 @@
 #include "flare/hash/murmurhash3.h"
 #include "flare/log/logging.h"
 #include "flare/memory/object_pool.h"
-#include "flare/fiber/internal/butex.h"                       // butex_*
+#include "flare/fiber/internal/waitable_event.h"                       // waitable_event_*
 #include "flare/fiber/internal/processor.h"                   // cpu_relax, barrier
-#include "flare/fiber/internal/mutex.h"                       // bthread_mutex_t
+#include "flare/fiber/internal/mutex.h"                       // fiber_mutex_t
 #include "flare/fiber/internal/sys_futex.h"
 #include "flare/fiber/internal/log.h"
 
@@ -260,7 +260,7 @@ namespace flare::fiber_internal {
     static pthread_mutex_t g_cp_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 // The map storing information for profiling pthread_mutex. Different from
-// bthread_mutex, we can't save stuff into pthread_mutex, we neither can
+// fiber_mutex, we can't save stuff into pthread_mutex, we neither can
 // save the info in TLS reliably, since a mutex can be unlocked in a different
 // thread from the one locked (although rare)
 // This map must be very fast, since it's accessed inside the lock.
@@ -274,7 +274,7 @@ namespace flare::fiber_internal {
     static_assert((MUTEX_MAP_SIZE & (MUTEX_MAP_SIZE - 1)) == 0, "must_be_power_of_2");
     struct FLARE_CACHELINE_ALIGNMENT MutexMapEntry {
         flare::static_atomic<uint64_t> versioned_mutex;
-        bthread_contention_site_t csite;
+        fiber_contention_site_t csite;
     };
     static MutexMapEntry g_mutex_map[MUTEX_MAP_SIZE] = {}; // zero-initialize
 
@@ -355,12 +355,12 @@ namespace flare::fiber_internal {
     }
 
     FLARE_FORCE_INLINE bool
-    is_contention_site_valid(const bthread_contention_site_t &cs) {
+    is_contention_site_valid(const fiber_contention_site_t &cs) {
         return cs.sampling_range;
     }
 
     FLARE_FORCE_INLINE void
-    make_contention_site_invalid(bthread_contention_site_t *cs) {
+    make_contention_site_invalid(fiber_contention_site_t *cs) {
         cs->sampling_range = 0;
     }
 
@@ -425,7 +425,7 @@ namespace flare::fiber_internal {
     const int TLS_MAX_COUNT = 3;
     struct MutexAndContentionSite {
         pthread_mutex_t *mutex;
-        bthread_contention_site_t csite;
+        fiber_contention_site_t csite;
     };
     struct TLSPthreadContentionSites {
         int count;
@@ -438,7 +438,7 @@ namespace flare::fiber_internal {
 // Guaranteed in linux/win.
     const int PTR_BITS = 48;
 
-    inline bthread_contention_site_t *
+    inline fiber_contention_site_t *
     add_pthread_contention_site(pthread_mutex_t *mutex) {
         MutexMapEntry &entry = g_mutex_map[hash_mutex_ptr(mutex) & (MUTEX_MAP_SIZE - 1)];
         flare::static_atomic<uint64_t> &m = entry.versioned_mutex;
@@ -457,7 +457,7 @@ namespace flare::fiber_internal {
     }
 
     inline bool remove_pthread_contention_site(
-            pthread_mutex_t *mutex, bthread_contention_site_t *saved_csite) {
+            pthread_mutex_t *mutex, fiber_contention_site_t *saved_csite) {
         MutexMapEntry &entry = g_mutex_map[hash_mutex_ptr(mutex) & (MUTEX_MAP_SIZE - 1)];
         flare::static_atomic<uint64_t> &m = entry.versioned_mutex;
         if ((m.load(std::memory_order_relaxed) & ((((uint64_t) 1) << PTR_BITS) - 1))
@@ -478,7 +478,7 @@ namespace flare::fiber_internal {
     }
 
 // Submit the contention along with the callsite('s stacktrace)
-    void submit_contention(const bthread_contention_site_t &csite, int64_t now_ns) {
+    void submit_contention(const fiber_contention_site_t &csite, int64_t now_ns) {
         tls_inside_lock = true;
         SampledContention *sc = flare::memory::get_object<SampledContention>();
         // Normalize duration_us and count so that they're addable in later
@@ -508,7 +508,7 @@ namespace flare::fiber_internal {
         // Ask flare::variable::Collector if this (contended) locking should be sampled
         const size_t sampling_range = flare::variable::is_collectable(&g_cp_sl);
 
-        bthread_contention_site_t *csite = NULL;
+        fiber_contention_site_t *csite = NULL;
 #ifndef DONT_SPEEDUP_PTHREAD_CONTENTION_PROFILER_WITH_TLS
         TLSPthreadContentionSites &fast_alt = tls_csites;
         if (fast_alt.cp_version != g_cp_version) {
@@ -554,7 +554,7 @@ namespace flare::fiber_internal {
         }
         int64_t unlock_start_ns = 0;
         bool miss_in_tls = true;
-        bthread_contention_site_t saved_csite = {0, 0};
+        fiber_contention_site_t saved_csite = {0, 0};
 #ifndef DONT_SPEEDUP_PTHREAD_CONTENTION_PROFILER_WITH_TLS
         TLSPthreadContentionSites &fast_alt = tls_csites;
         for (int i = fast_alt.count - 1; i >= 0; --i) {
@@ -586,7 +586,7 @@ namespace flare::fiber_internal {
         return rc;
     }
 
-// Implement bthread_mutex_t related functions
+// Implement fiber_mutex_t related functions
     struct MutexInternal {
         flare::static_atomic<unsigned char> locked;
         flare::static_atomic<unsigned char> contended;
@@ -597,16 +597,16 @@ namespace flare::fiber_internal {
     const MutexInternal MUTEX_LOCKED_RAW = {{1}, {0}, 0};
 // Define as macros rather than constants which can't be put in read-only
 // section and affected by initialization-order fiasco.
-#define BTHREAD_MUTEX_CONTENDED (*(const unsigned*)&flare::fiber_internal::MUTEX_CONTENDED_RAW)
-#define BTHREAD_MUTEX_LOCKED (*(const unsigned*)&flare::fiber_internal::MUTEX_LOCKED_RAW)
+#define FIBER_MUTEX_CONTENDED (*(const unsigned*)&flare::fiber_internal::MUTEX_CONTENDED_RAW)
+#define FIBER_MUTEX_LOCKED (*(const unsigned*)&flare::fiber_internal::MUTEX_LOCKED_RAW)
 
     static_assert(sizeof(unsigned) == sizeof(MutexInternal),
                   "sizeof_mutex_internal_must_equal_unsigned");
 
-    inline int mutex_lock_contended(bthread_mutex_t *m) {
-        std::atomic<unsigned> *whole = (std::atomic<unsigned> *) m->butex;
-        while (whole->exchange(BTHREAD_MUTEX_CONTENDED) & BTHREAD_MUTEX_LOCKED) {
-            if (flare::fiber_internal::butex_wait(whole, BTHREAD_MUTEX_CONTENDED, NULL) < 0 &&
+    inline int mutex_lock_contended(fiber_mutex_t *m) {
+        std::atomic<unsigned> *whole = (std::atomic<unsigned> *) m->event;
+        while (whole->exchange(FIBER_MUTEX_CONTENDED) & FIBER_MUTEX_LOCKED) {
+            if (flare::fiber_internal::waitable_event_wait(whole, FIBER_MUTEX_CONTENDED, NULL) < 0 &&
                 errno != EWOULDBLOCK && errno != EINTR/*note*/) {
                 // a mutex lock should ignore interrruptions in general since
                 // user code is unlikely to check the return value.
@@ -617,10 +617,10 @@ namespace flare::fiber_internal {
     }
 
     inline int mutex_timedlock_contended(
-            bthread_mutex_t *m, const struct timespec *__restrict abstime) {
-        std::atomic<unsigned> *whole = (std::atomic<unsigned> *) m->butex;
-        while (whole->exchange(BTHREAD_MUTEX_CONTENDED) & BTHREAD_MUTEX_LOCKED) {
-            if (flare::fiber_internal::butex_wait(whole, BTHREAD_MUTEX_CONTENDED, abstime) < 0 &&
+            fiber_mutex_t *m, const struct timespec *__restrict abstime) {
+        std::atomic<unsigned> *whole = (std::atomic<unsigned> *) m->event;
+        while (whole->exchange(FIBER_MUTEX_CONTENDED) & FIBER_MUTEX_LOCKED) {
+            if (flare::fiber_internal::waitable_event_wait(whole, FIBER_MUTEX_CONTENDED, abstime) < 0 &&
                 errno != EWOULDBLOCK && errno != EINTR/*note*/) {
                 // a mutex lock should ignore interrruptions in general since
                 // user code is unlikely to check the return value.
@@ -630,13 +630,13 @@ namespace flare::fiber_internal {
         return 0;
     }
 
-#ifdef BTHREAD_USE_FAST_PTHREAD_MUTEX
+#ifdef FIBER_USE_FAST_PTHREAD_MUTEX
     namespace internal {
 
         int FastPthreadMutex::lock_contended() {
             std::atomic<unsigned> *whole = (std::atomic<unsigned> *) &_futex;
-            while (whole->exchange(BTHREAD_MUTEX_CONTENDED) & BTHREAD_MUTEX_LOCKED) {
-                if (futex_wait_private(whole, BTHREAD_MUTEX_CONTENDED, NULL) < 0
+            while (whole->exchange(FIBER_MUTEX_CONTENDED) & FIBER_MUTEX_LOCKED) {
+                if (futex_wait_private(whole, FIBER_MUTEX_CONTENDED, NULL) < 0
                     && errno != EWOULDBLOCK) {
                     return errno;
                 }
@@ -659,49 +659,49 @@ namespace flare::fiber_internal {
         void FastPthreadMutex::unlock() {
             std::atomic<unsigned> *whole = (std::atomic<unsigned> *) &_futex;
             const unsigned prev = whole->exchange(0, std::memory_order_release);
-            // CAUTION: the mutex may be destroyed, check comments before butex_create
-            if (prev != BTHREAD_MUTEX_LOCKED) {
+            // CAUTION: the mutex may be destroyed, check comments before waitable_event_create
+            if (prev != FIBER_MUTEX_LOCKED) {
                 futex_wake_private(whole, 1);
             }
         }
 
     } // namespace internal
-#endif // BTHREAD_USE_FAST_PTHREAD_MUTEX
+#endif // FIBER_USE_FAST_PTHREAD_MUTEX
 
 } // namespace flare::fiber_internal
 
 extern "C" {
 
-int bthread_mutex_init(bthread_mutex_t *__restrict m,
-                       const bthread_mutexattr_t * __restrict) {
+int fiber_mutex_init(fiber_mutex_t *__restrict m,
+                       const fiber_mutexattr_t * __restrict) {
     flare::fiber_internal::make_contention_site_invalid(&m->csite);
-    m->butex = flare::fiber_internal::butex_create_checked<unsigned>();
-    if (!m->butex) {
+    m->event = flare::fiber_internal::waitable_event_create_checked<unsigned>();
+    if (!m->event) {
         return ENOMEM;
     }
-    *m->butex = 0;
+    *m->event = 0;
     return 0;
 }
 
-int bthread_mutex_destroy(bthread_mutex_t *m) {
-    flare::fiber_internal::butex_destroy(m->butex);
+int fiber_mutex_destroy(fiber_mutex_t *m) {
+    flare::fiber_internal::waitable_event_destroy(m->event);
     return 0;
 }
 
-int bthread_mutex_trylock(bthread_mutex_t *m) {
-    flare::fiber_internal::MutexInternal *split = (flare::fiber_internal::MutexInternal *) m->butex;
+int fiber_mutex_trylock(fiber_mutex_t *m) {
+    flare::fiber_internal::MutexInternal *split = (flare::fiber_internal::MutexInternal *) m->event;
     if (!split->locked.exchange(1, std::memory_order_acquire)) {
         return 0;
     }
     return EBUSY;
 }
 
-int bthread_mutex_lock_contended(bthread_mutex_t *m) {
+int fiber_mutex_lock_contended(fiber_mutex_t *m) {
     return flare::fiber_internal::mutex_lock_contended(m);
 }
 
-int bthread_mutex_lock(bthread_mutex_t *m) {
-    flare::fiber_internal::MutexInternal *split = (flare::fiber_internal::MutexInternal *) m->butex;
+int fiber_mutex_lock(fiber_mutex_t *m) {
+    flare::fiber_internal::MutexInternal *split = (flare::fiber_internal::MutexInternal *) m->event;
     if (!split->locked.exchange(1, std::memory_order_acquire)) {
         return 0;
     }
@@ -726,9 +726,9 @@ int bthread_mutex_lock(bthread_mutex_t *m) {
     return rc;
 }
 
-int bthread_mutex_timedlock(bthread_mutex_t *__restrict m,
+int fiber_mutex_timedlock(fiber_mutex_t *__restrict m,
                             const struct timespec *__restrict abstime) {
-    flare::fiber_internal::MutexInternal *split = (flare::fiber_internal::MutexInternal *) m->butex;
+    flare::fiber_internal::MutexInternal *split = (flare::fiber_internal::MutexInternal *) m->event;
     if (!split->locked.exchange(1, std::memory_order_acquire)) {
         return 0;
     }
@@ -752,31 +752,31 @@ int bthread_mutex_timedlock(bthread_mutex_t *__restrict m,
     } else if (rc == ETIMEDOUT) {
         // Failed to lock due to ETIMEDOUT, submit the elapse directly.
         const int64_t end_ns = flare::base::cpuwide_time_ns();
-        const bthread_contention_site_t csite = {end_ns - start_ns, sampling_range};
+        const fiber_contention_site_t csite = {end_ns - start_ns, sampling_range};
         flare::fiber_internal::submit_contention(csite, end_ns);
     }
     return rc;
 }
 
-int bthread_mutex_unlock(bthread_mutex_t *m) {
-    std::atomic<unsigned> *whole = (std::atomic<unsigned> *) m->butex;
-    bthread_contention_site_t saved_csite = {0, 0};
+int fiber_mutex_unlock(fiber_mutex_t *m) {
+    std::atomic<unsigned> *whole = (std::atomic<unsigned> *) m->event;
+    fiber_contention_site_t saved_csite = {0, 0};
     if (flare::fiber_internal::is_contention_site_valid(m->csite)) {
         saved_csite = m->csite;
         flare::fiber_internal::make_contention_site_invalid(&m->csite);
     }
     const unsigned prev = whole->exchange(0, std::memory_order_release);
-    // CAUTION: the mutex may be destroyed, check comments before butex_create
-    if (prev == BTHREAD_MUTEX_LOCKED) {
+    // CAUTION: the mutex may be destroyed, check comments before waitable_event_create
+    if (prev == FIBER_MUTEX_LOCKED) {
         return 0;
     }
     // Wakeup one waiter
     if (!flare::fiber_internal::is_contention_site_valid(saved_csite)) {
-        flare::fiber_internal::butex_wake(whole);
+        flare::fiber_internal::waitable_event_wake(whole);
         return 0;
     }
     const int64_t unlock_start_ns = flare::base::cpuwide_time_ns();
-    flare::fiber_internal::butex_wake(whole);
+    flare::fiber_internal::waitable_event_wake(whole);
     const int64_t unlock_end_ns = flare::base::cpuwide_time_ns();
     saved_csite.duration_ns += unlock_end_ns - unlock_start_ns;
     flare::fiber_internal::submit_contention(saved_csite, unlock_end_ns);

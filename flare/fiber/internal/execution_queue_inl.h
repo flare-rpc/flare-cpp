@@ -28,7 +28,7 @@
 #include "flare/log/logging.h"               // LOG
 #include "flare/base/time.h"                  // flare::base::cpuwide_time_ns
 #include "flare/variable/all.h"                  // flare::variable::Adder
-#include "flare/fiber/internal/butex.h"              // butex_construct
+#include "flare/fiber/internal/waitable_event.h"              // butex_construct
 
 namespace flare::fiber_internal {
 
@@ -172,12 +172,12 @@ namespace flare::fiber_internal {
         ExecutionQueueBase(Forbidden)
                 : _head(NULL), _versioned_ref(0)  // join() depends on even version
                 , _high_priority_tasks(0) {
-            _join_butex = butex_create_checked<std::atomic<int> >();
+            _join_butex = waitable_event_create_checked<std::atomic<int> >();
             _join_butex->store(0, std::memory_order_relaxed);
         }
 
         ~ExecutionQueueBase() {
-            butex_destroy(_join_butex);
+            waitable_event_destroy(_join_butex);
         }
 
         bool stopped() const { return _stopped.load(std::memory_order_acquire); }

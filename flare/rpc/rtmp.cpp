@@ -18,8 +18,8 @@
 
 #include <gflags/gflags.h>
 #include <google/protobuf/io/zero_copy_stream_impl_lite.h> // StringOutputStream
-#include "flare/fiber/internal/bthread.h"                      // bthread_id_xx
-#include "flare/fiber/internal/unstable.h"                     // bthread_timer_del
+#include "flare/fiber/internal/fiber.h"                      // bthread_id_xx
+#include "flare/fiber/internal/unstable.h"                     // fiber_timer_del
 #include "flare/rpc/log.h"
 #include "flare/rpc/callback.h"                   // Closure
 #include "flare/rpc/channel.h"                    // Channel
@@ -2287,7 +2287,7 @@ namespace flare::rpc {
         }
 
         if (_has_timer_ever) {
-            if (bthread_timer_del(_create_timer_id) == 0) {
+            if (fiber_timer_del(_create_timer_id) == 0) {
                 // The callback is not run yet. Remove the additional ref added
                 // before creating the timer.
                 flare::container::intrusive_ptr<RtmpRetryingClientStream> deref(this, false);
@@ -2457,7 +2457,7 @@ namespace flare::rpc {
             // retry is too frequent, schedule the retry.
             // Add a ref for OnRecreateTimer which does deref.
             flare::container::intrusive_ptr<RtmpRetryingClientStream>(this).detach();
-            if (bthread_timer_add(&_create_timer_id,
+            if (fiber_timer_add(&_create_timer_id,
                                   flare::base::microseconds_from_now(wait_us),
                                   OnRecreateTimer, this) != 0) {
                 LOG(ERROR) << "Fail to create timer";

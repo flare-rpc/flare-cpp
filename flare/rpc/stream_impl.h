@@ -19,7 +19,7 @@
 #ifndef  FLARE_RPC_STREAM_IMPL_H_
 #define  FLARE_RPC_STREAM_IMPL_H_
 
-#include "flare/fiber/internal/bthread.h"
+#include "flare/fiber/internal/fiber.h"
 #include "flare/fiber/internal/execution_queue.h"
 #include "flare/rpc/socket.h"
 #include "flare/rpc/stream.h"
@@ -106,12 +106,12 @@ friend class MessageBatcher;
     StreamId    _id;
     StreamOptions _options;
 
-    bthread_mutex_t     _connect_mutex;
+    fiber_mutex_t     _connect_mutex;
     ConnectMeta         _connect_meta;
     bool                _connected;
     bool                _closed;
     
-    bthread_mutex_t _congestion_control_mutex;
+    fiber_mutex_t _congestion_control_mutex;
     size_t _produced;
     size_t _remote_consumed;
     bthread_id_list_t _writable_wait_list;

@@ -21,7 +21,7 @@
 #include "flare/base/time.h"
 #include <filesystem>
 #include <flare/variable/all.h>
-#include <flare/fiber/internal/bthread.h>
+#include <flare/fiber/internal/fiber.h>
 #include <flare/rpc/channel.h>
 #include <flare/rpc/server.h>
 #include <flare/rpc/rpc_dump.h>
@@ -246,7 +246,7 @@ int main(int argc, char* argv[]) {
     } else {
         bids.resize(FLAGS_thread_num);
         for (int i = 0; i < FLAGS_thread_num; ++i) {
-            if (bthread_start_background(
+            if (fiber_start_background(
                     &bids[i], NULL, replay_thread, &chan_group) != 0) {
                 LOG(ERROR) << "Fail to create bthread";
                 return -1;
@@ -268,7 +268,7 @@ int main(int argc, char* argv[]) {
         if (!FLAGS_use_bthread) {
             pthread_join(pids[i], NULL);
         } else {
-            bthread_join(bids[i], NULL);
+            fiber_join(bids[i], NULL);
         }
     }
     info_thr.stop();

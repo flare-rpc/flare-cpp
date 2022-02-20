@@ -23,7 +23,7 @@
 #include "flare/log/logging.h"
 #include "flare/base/strings.h"
 #include "flare/hash/murmurhash3.h"
-#include "flare/fiber/internal/unstable.h"                        // bthread_timer_add
+#include "flare/fiber/internal/unstable.h"                        // fiber_timer_add
 #include "flare/rpc/socket_map.h"                         // SocketMapInsert
 #include "flare/rpc/compress.h"
 #include "flare/rpc/global.h"
@@ -503,7 +503,7 @@ namespace flare::rpc {
             } else {
                 cntl->_deadline_us = cntl->timeout_ms() * 1000L + start_send_real_us;
             }
-            const int rc = bthread_timer_add(
+            const int rc = fiber_timer_add(
                     &cntl->_timeout_id,
                     flare::base::microseconds_to_timespec(
                             cntl->backup_request_ms() * 1000L + start_send_real_us),
@@ -517,7 +517,7 @@ namespace flare::rpc {
 
             // _deadline_us is for truncating _connect_timeout_ms
             cntl->_deadline_us = cntl->timeout_ms() * 1000L + start_send_real_us;
-            const int rc = bthread_timer_add(
+            const int rc = fiber_timer_add(
                     &cntl->_timeout_id,
                     flare::base::microseconds_to_timespec(cntl->_deadline_us),
                     HandleTimeout, (void *) correlation_id.value);

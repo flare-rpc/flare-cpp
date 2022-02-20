@@ -16,8 +16,8 @@
 // under the License.
 
 #include <inttypes.h>
-#include "flare/fiber/internal/bthread.h"                  // bthread_id_xx
-#include "flare/fiber/internal/unstable.h"                 // bthread_timer_add
+#include "flare/fiber/internal/fiber.h"                  // bthread_id_xx
+#include "flare/fiber/internal/unstable.h"                 // fiber_timer_add
 #include "flare/base/static_atomic.h"
 #include "flare/base/time.h"
 #include "flare/base/profile.h"
@@ -203,7 +203,7 @@ public:
 
     // For otherwhere to know if they're in the same thread.
     void SaveThreadInfoOfCallsite() {
-        _callmethod_bthread = bthread_self();
+        _callmethod_bthread = fiber_self();
         if (_callmethod_bthread == INVALID_FIBER_ID) {
             _callmethod_pthread = pthread_self();
         }
@@ -211,7 +211,7 @@ public:
 
     bool IsSameThreadAsCallMethod() const {
         if (_callmethod_bthread != INVALID_FIBER_ID) {
-            return bthread_self() == _callmethod_bthread;
+            return fiber_self() == _callmethod_bthread;
         }
         return pthread_self() == _callmethod_pthread;
     }
@@ -288,7 +288,7 @@ public:
             fiber_id_t bh;
             fiber_attribute attr = (FLAGS_usercode_in_pthread ?
                                    FIBER_ATTR_PTHREAD : FIBER_ATTR_NORMAL);
-            if (bthread_start_background(&bh, &attr, RunOnComplete, this) != 0) {
+            if (fiber_start_background(&bh, &attr, RunOnComplete, this) != 0) {
                 LOG(FATAL) << "Fail to start bthread";
                 OnComplete();
             }
@@ -662,7 +662,7 @@ void ParallelChannel::CallMethod(
     if (cntl->timeout_ms() >= 0) {
         cntl->_deadline_us = cntl->timeout_ms() * 1000L + cntl->_begin_time_us;
         // Setup timer for RPC timetout
-        const int rc = bthread_timer_add(
+        const int rc = fiber_timer_add(
             &cntl->_timeout_id,
             flare::base::microseconds_to_timespec(cntl->_deadline_us),
             HandleTimeout, (void*)cid.value);
@@ -710,7 +710,7 @@ FAIL:
                                    FIBER_ATTR_PTHREAD : FIBER_ATTR_NORMAL);
             // Hack: save done in cntl->_done to remove a malloc of args.
             cntl->_done = done;
-            if (bthread_start_background(&bh, &attr, RunDoneAndDestroy, cntl) == 0) {
+            if (fiber_start_background(&bh, &attr, RunDoneAndDestroy, cntl) == 0) {
                 return;
             }
             cntl->_done = NULL;

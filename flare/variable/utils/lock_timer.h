@@ -58,7 +58,7 @@
 // typedef ::flare::variable::MutexWithLatencyRecorder<pthread_mutex_t> my_mutex_t;
 //                                       // ^^^
 //                                       // you can use std::mutex (since c++11)
-//                                       // or bthread_mutex_t (in bthread)
+//                                       // or fiber_mutex_t (in bthread)
 //
 // // Define the mutex
 // my_mutex_t mutex(g_mutex_contention);

@@ -52,14 +52,14 @@ Stream::Stream()
     , _idle_timer(0)
 {
     _connect_meta.on_connect = NULL;
-    CHECK_EQ(0, bthread_mutex_init(&_connect_mutex, NULL));
-    CHECK_EQ(0, bthread_mutex_init(&_congestion_control_mutex, NULL));
+    CHECK_EQ(0, fiber_mutex_init(&_connect_mutex, NULL));
+    CHECK_EQ(0, fiber_mutex_init(&_congestion_control_mutex, NULL));
 }
 
 Stream::~Stream() {
     CHECK(_host_socket == NULL);
-    bthread_mutex_destroy(&_connect_mutex);
-    bthread_mutex_destroy(&_congestion_control_mutex);
+    fiber_mutex_destroy(&_connect_mutex);
+    fiber_mutex_destroy(&_congestion_control_mutex);
     bthread_id_list_destroy(&_writable_wait_list);
 }
 
@@ -181,10 +181,10 @@ void* Stream::RunOnConnect(void *arg) {
 int Stream::Connect(Socket* ptr, const timespec*,
                     int (*on_connect)(int, int, void *), void *data) {
     CHECK_EQ(ptr->id(), _id);
-    bthread_mutex_lock(&_connect_mutex);
+    fiber_mutex_lock(&_connect_mutex);
     if (_connect_meta.on_connect != NULL) {
         CHECK(false) << "Connect is supposed to be called once";
-        bthread_mutex_unlock(&_connect_mutex);
+        fiber_mutex_unlock(&_connect_mutex);
         return -1;
     }
     _connect_meta.on_connect = on_connect;
@@ -194,15 +194,15 @@ int Stream::Connect(Socket* ptr, const timespec*,
         meta->on_connect = _connect_meta.on_connect;
         meta->arg = _connect_meta.arg;
         meta->ec = _connect_meta.ec;
-        bthread_mutex_unlock(&_connect_mutex);
+        fiber_mutex_unlock(&_connect_mutex);
         fiber_id_t tid;
-        if (bthread_start_urgent(&tid, &FIBER_ATTR_NORMAL, RunOnConnect, meta) != 0) {
+        if (fiber_start_urgent(&tid, &FIBER_ATTR_NORMAL, RunOnConnect, meta) != 0) {
             LOG(FATAL) << "Fail to start bthread, " << flare_error();
             RunOnConnect(meta);
         }
         return 0;
     }
-    bthread_mutex_unlock(&_connect_mutex);
+    fiber_mutex_unlock(&_connect_mutex);
     return 0;
 }
 
@@ -211,14 +211,14 @@ void Stream::SetConnected() {
 }
 
 void Stream::SetConnected(const StreamSettings* remote_settings) {
-    bthread_mutex_lock(&_connect_mutex);
+    fiber_mutex_lock(&_connect_mutex);
     if (_closed) {
-        bthread_mutex_unlock(&_connect_mutex);
+        fiber_mutex_unlock(&_connect_mutex);
         return;
     }
     if (_connected) {
         CHECK(false);
-        bthread_mutex_unlock(&_connect_mutex);
+        fiber_mutex_unlock(&_connect_mutex);
         return;
     }
     CHECK(_host_socket != NULL);
@@ -248,20 +248,20 @@ void Stream::TriggerOnConnectIfNeed() {
         meta->on_connect = _connect_meta.on_connect;
         meta->arg = _connect_meta.arg;
         meta->ec = _connect_meta.ec;
-        bthread_mutex_unlock(&_connect_mutex);
+        fiber_mutex_unlock(&_connect_mutex);
         fiber_id_t tid;
-        if (bthread_start_urgent(&tid, &FIBER_ATTR_NORMAL, RunOnConnect, meta) != 0) {
+        if (fiber_start_urgent(&tid, &FIBER_ATTR_NORMAL, RunOnConnect, meta) != 0) {
             LOG(FATAL) << "Fail to start bthread, " << flare_error();
             RunOnConnect(meta);
         }
         return;
     }
-    bthread_mutex_unlock(&_connect_mutex);
+    fiber_mutex_unlock(&_connect_mutex);
 }
 
 int Stream::AppendIfNotFull(const flare::io::cord_buf &data) {
     if (_options.max_buf_size > 0) {
-        std::unique_lock<bthread_mutex_t> lck(_congestion_control_mutex);
+        std::unique_lock<fiber_mutex_t> lck(_congestion_control_mutex);
         if (_produced >= _remote_consumed + (size_t)_options.max_buf_size) {
             const size_t saved_produced = _produced;
             const size_t saved_remote_consumed = _remote_consumed;
@@ -291,9 +291,9 @@ void Stream::SetRemoteConsumed(size_t new_remote_consumed) {
     CHECK(_options.max_buf_size > 0);
     bthread_id_list_t tmplist;
     bthread_id_list_init(&tmplist, 0, 0);
-    bthread_mutex_lock(&_congestion_control_mutex);
+    fiber_mutex_lock(&_congestion_control_mutex);
     if (_remote_consumed >= new_remote_consumed) {
-        bthread_mutex_unlock(&_congestion_control_mutex);
+        fiber_mutex_unlock(&_congestion_control_mutex);
         return;
     }
     const bool was_full = _produced >= _remote_consumed + (size_t)_options.max_buf_size;
@@ -302,7 +302,7 @@ void Stream::SetRemoteConsumed(size_t new_remote_consumed) {
     if (was_full && !is_full) {
         bthread_id_list_swap(&tmplist, &_writable_wait_list);
     }
-    bthread_mutex_unlock(&_congestion_control_mutex);
+    fiber_mutex_unlock(&_congestion_control_mutex);
 
     // broadcast
     bthread_id_list_reset(&tmplist, 0);
@@ -320,7 +320,7 @@ int Stream::TriggerOnWritable(bthread_id_t id, void *data, int error_code) {
     WritableMeta *wm = (WritableMeta*)data;
     
     if (wm->has_timer) {
-        bthread_timer_del(wm->timer);
+        fiber_timer_del(wm->timer);
     }
     wm->error_code = error_code;
     if (wm->new_thread) {
@@ -328,7 +328,7 @@ int Stream::TriggerOnWritable(bthread_id_t id, void *data, int error_code) {
             FLAGS_usercode_in_pthread ? &FIBER_ATTR_PTHREAD
             : &FIBER_ATTR_NORMAL;
         fiber_id_t tid;
-        if (bthread_start_background(&tid, attr, RunOnWritable, wm) != 0) {
+        if (fiber_start_background(&tid, attr, RunOnWritable, wm) != 0) {
             LOG(FATAL) << "Fail to start bthread" << flare_error();
             RunOnWritable(wm);
         }
@@ -365,7 +365,7 @@ void Stream::Wait(void (*on_writable)(StreamId, void*, int), void* arg,
     CHECK_EQ(0, bthread_id_lock(wait_id, NULL));
     if (due_time != NULL) {
         wm->has_timer = true;
-        const int rc = bthread_timer_add(&wm->timer, *due_time,
+        const int rc = fiber_timer_add(&wm->timer, *due_time,
                                          OnTimedOut, 
                                          reinterpret_cast<void*>(wait_id.value));
         if (rc != 0) {
@@ -373,15 +373,15 @@ void Stream::Wait(void (*on_writable)(StreamId, void*, int), void* arg,
             CHECK_EQ(0, TriggerOnWritable(wait_id, wm, rc));
         }
     }
-    bthread_mutex_lock(&_congestion_control_mutex);
+    fiber_mutex_lock(&_congestion_control_mutex);
     if (_options.max_buf_size <= 0 
             || _produced < _remote_consumed + (size_t)_options.max_buf_size) {
-        bthread_mutex_unlock(&_congestion_control_mutex);
+        fiber_mutex_unlock(&_congestion_control_mutex);
         CHECK_EQ(0, TriggerOnWritable(wait_id, wm, 0));
         return;
     } else {
         bthread_id_list_add(&_writable_wait_list, wait_id);
-        bthread_mutex_unlock(&_congestion_control_mutex);
+        fiber_mutex_unlock(&_congestion_control_mutex);
     }
     CHECK_EQ(0, bthread_id_unlock(wait_id));
 }
@@ -576,7 +576,7 @@ void Stream::StartIdleTimer() {
     _start_idle_timer_us = flare::base::gettimeofday_us();
     timespec due_time = flare::base::microseconds_to_timespec(
             _start_idle_timer_us + _options.idle_timeout_ms * 1000);
-    const int rc = bthread_timer_add(&_idle_timer, due_time, OnIdleTimeout,
+    const int rc = fiber_timer_add(&_idle_timer, due_time, OnIdleTimeout,
                                      (void*)(_consumer_queue.value));
     LOG_IF(WARNING, rc != 0) << "Fail to add timer";
 }
@@ -586,20 +586,20 @@ void Stream::StopIdleTimer() {
         return;
     }
     if (_idle_timer != 0) {
-        bthread_timer_del(_idle_timer);
+        fiber_timer_del(_idle_timer);
     }
 }
 
 void Stream::Close() {
     _fake_socket_weak_ref->SetFailed();
-    bthread_mutex_lock(&_connect_mutex);
+    fiber_mutex_lock(&_connect_mutex);
     if (_closed) {
-        bthread_mutex_unlock(&_connect_mutex);
+        fiber_mutex_unlock(&_connect_mutex);
         return;
     }
     _closed = true;
     if (_connected) {
-        bthread_mutex_unlock(&_connect_mutex);
+        fiber_mutex_unlock(&_connect_mutex);
         return;
     }
     _connect_meta.ec = ECONNRESET;
@@ -669,7 +669,7 @@ void StreamWait(StreamId stream_id, const timespec *due_time,
             FLAGS_usercode_in_pthread ? &FIBER_ATTR_PTHREAD
             : &FIBER_ATTR_NORMAL;
         fiber_id_t tid;
-        if (bthread_start_background(&tid, attr, Stream::RunOnWritable, wm) != 0) {
+        if (fiber_start_background(&tid, attr, Stream::RunOnWritable, wm) != 0) {
             PLOG(FATAL) << "Fail to start bthread";
             Stream::RunOnWritable(wm);
         }

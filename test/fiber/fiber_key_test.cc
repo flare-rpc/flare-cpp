@@ -23,7 +23,7 @@
 #include "flare/base/time.h"
 #include "flare/base/scoped_lock.h"
 #include "flare/log/logging.h"
-#include "flare/fiber/internal/bthread.h"
+#include "flare/fiber/internal/fiber.h"
 #include "flare/fiber/internal/unstable.h"
 #include "flare/fiber/this_fiber.h"
 
@@ -56,7 +56,7 @@ namespace {
             if (_c) {
                 _c->ndestroy.fetch_add(1, std::memory_order_relaxed);
             }
-            CHECK_EQ(0, bthread_key_delete(_key));
+            CHECK_EQ(0, fiber_key_delete(_key));
         }
 
     private:
@@ -76,26 +76,26 @@ namespace {
         fiber_local_key k[NKEY_PER_WORKER];
         CountersWrapper *ws[FLARE_ARRAY_SIZE(k)];
         for (size_t i = 0; i < FLARE_ARRAY_SIZE(k); ++i) {
-            ASSERT_EQ(0, bthread_key_create(&k[i], destroy_counters_wrapper));
+            ASSERT_EQ(0, fiber_key_create(&k[i], destroy_counters_wrapper));
         }
         for (size_t i = 0; i < FLARE_ARRAY_SIZE(k); ++i) {
             ws[i] = new CountersWrapper(cs, k[i]);
         }
         // Get just-created tls should return NULL.
         for (size_t i = 0; i < FLARE_ARRAY_SIZE(k); ++i) {
-            ASSERT_EQ(NULL, bthread_getspecific(k[i]));
+            ASSERT_EQ(NULL, fiber_getspecific(k[i]));
         }
         for (size_t i = 0; i < FLARE_ARRAY_SIZE(k); ++i) {
             cs->ncreate.fetch_add(1, std::memory_order_relaxed);
-            ASSERT_EQ(0, bthread_setspecific(k[i], ws[i]))
-                                        << "i=" << i << " is_bthread=" << !!bthread_self();
+            ASSERT_EQ(0, fiber_setspecific(k[i], ws[i]))
+                                        << "i=" << i << " is_bthread=" << !!fiber_self();
 
         }
         // Sleep a while to make some context switches. TLS should be unchanged.
         flare::this_fiber::fiber_sleep_for(10000);
 
         for (size_t i = 0; i < FLARE_ARRAY_SIZE(k); ++i) {
-            ASSERT_EQ(ws[i], bthread_getspecific(k[i])) << "i=" << i;
+            ASSERT_EQ(ws[i], fiber_getspecific(k[i])) << "i=" << i;
         }
         cs->nleavethread.fetch_add(1, std::memory_order_relaxed);
     }
@@ -114,13 +114,13 @@ namespace {
             ASSERT_EQ(0, pthread_create(&th[i], NULL, worker1, &args));
         }
         for (size_t i = 0; i < FLARE_ARRAY_SIZE(bth); ++i) {
-            ASSERT_EQ(0, bthread_start_background(&bth[i], NULL, worker1, &args));
+            ASSERT_EQ(0, fiber_start_background(&bth[i], NULL, worker1, &args));
         }
         for (size_t i = 0; i < FLARE_ARRAY_SIZE(th); ++i) {
             ASSERT_EQ(0, pthread_join(th[i], NULL));
         }
         for (size_t i = 0; i < FLARE_ARRAY_SIZE(bth); ++i) {
-            ASSERT_EQ(0, bthread_join(bth[i], NULL));
+            ASSERT_EQ(0, fiber_join(bth[i], NULL));
         }
         ASSERT_EQ(FLARE_ARRAY_SIZE(th) + FLARE_ARRAY_SIZE(bth),
                   args.nenterthread.load(std::memory_order_relaxed));
@@ -143,8 +143,8 @@ namespace {
 
 // NOTE: returns void to use ASSERT
     static void worker2_impl(fiber_local_key k) {
-        ASSERT_EQ(NULL, bthread_getspecific(k));
-        ASSERT_EQ(0, bthread_setspecific(k, (void *) seq.fetch_add(1)));
+        ASSERT_EQ(NULL, fiber_getspecific(k));
+        ASSERT_EQ(0, fiber_setspecific(k, (void *) seq.fetch_add(1)));
     }
 
     static void *worker2(void *arg) {
@@ -154,7 +154,7 @@ namespace {
 
     TEST(KeyTest, use_one_key_in_different_threads) {
         fiber_local_key k;
-        ASSERT_EQ(0, bthread_key_create(&k, dtor2)) << flare_error();
+        ASSERT_EQ(0, fiber_key_create(&k, dtor2)) << flare_error();
         seqs.clear();
 
         pthread_t th[16];
@@ -163,20 +163,20 @@ namespace {
         }
         fiber_id_t bth[1];
         for (size_t i = 0; i < FLARE_ARRAY_SIZE(bth); ++i) {
-            ASSERT_EQ(0, bthread_start_urgent(&bth[i], NULL, worker2, &k));
+            ASSERT_EQ(0, fiber_start_urgent(&bth[i], NULL, worker2, &k));
         }
         for (size_t i = 0; i < FLARE_ARRAY_SIZE(th); ++i) {
             ASSERT_EQ(0, pthread_join(th[i], NULL));
         }
         for (size_t i = 0; i < FLARE_ARRAY_SIZE(bth); ++i) {
-            ASSERT_EQ(0, bthread_join(bth[i], NULL));
+            ASSERT_EQ(0, fiber_join(bth[i], NULL));
         }
         ASSERT_EQ(FLARE_ARRAY_SIZE(th) + FLARE_ARRAY_SIZE(bth), seqs.size());
         std::sort(seqs.begin(), seqs.end());
         ASSERT_EQ(seqs.end(), std::unique(seqs.begin(), seqs.end()));
         ASSERT_EQ(FLARE_ARRAY_SIZE(th) + FLARE_ARRAY_SIZE(bth) - 1, *(seqs.end() - 1) - *seqs.begin());
 
-        ASSERT_EQ(0, bthread_key_delete(k));
+        ASSERT_EQ(0, fiber_key_delete(k));
     }
 
     struct Keys {
@@ -187,18 +187,18 @@ namespace {
     void *const DUMMY_PTR = (void *) 1;
 
     void use_invalid_keys_impl(const Keys *keys) {
-        ASSERT_EQ(NULL, bthread_getspecific(keys->invalid_key));
+        ASSERT_EQ(NULL, fiber_getspecific(keys->invalid_key));
         // valid key returns NULL as well.
-        ASSERT_EQ(NULL, bthread_getspecific(keys->valid_key));
+        ASSERT_EQ(NULL, fiber_getspecific(keys->valid_key));
 
-        // both pthread_setspecific(of nptl) and bthread_setspecific should find
+        // both pthread_setspecific(of nptl) and fiber_setspecific should find
         // the key is invalid.
-        ASSERT_EQ(EINVAL, bthread_setspecific(keys->invalid_key, DUMMY_PTR));
-        ASSERT_EQ(0, bthread_setspecific(keys->valid_key, DUMMY_PTR));
+        ASSERT_EQ(EINVAL, fiber_setspecific(keys->invalid_key, DUMMY_PTR));
+        ASSERT_EQ(0, fiber_setspecific(keys->valid_key, DUMMY_PTR));
 
         // Print error again.
-        ASSERT_EQ(NULL, bthread_getspecific(keys->invalid_key));
-        ASSERT_EQ(DUMMY_PTR, bthread_getspecific(keys->valid_key));
+        ASSERT_EQ(NULL, fiber_getspecific(keys->invalid_key));
+        ASSERT_EQ(DUMMY_PTR, fiber_getspecific(keys->valid_key));
     }
 
     void *use_invalid_keys(void *args) {
@@ -208,7 +208,7 @@ namespace {
 
     TEST(KeyTest, use_invalid_keys) {
         Keys keys;
-        ASSERT_EQ(0, bthread_key_create(&keys.valid_key, NULL));
+        ASSERT_EQ(0, fiber_key_create(&keys.valid_key, NULL));
         // intended to be a created but invalid key.
         keys.invalid_key.index = keys.valid_key.index;
         keys.invalid_key.version = 123;
@@ -216,23 +216,23 @@ namespace {
         pthread_t th;
         fiber_id_t bth;
         ASSERT_EQ(0, pthread_create(&th, NULL, use_invalid_keys, &keys));
-        ASSERT_EQ(0, bthread_start_urgent(&bth, NULL, use_invalid_keys, &keys));
+        ASSERT_EQ(0, fiber_start_urgent(&bth, NULL, use_invalid_keys, &keys));
         ASSERT_EQ(0, pthread_join(th, NULL));
-        ASSERT_EQ(0, bthread_join(bth, NULL));
-        ASSERT_EQ(0, bthread_key_delete(keys.valid_key));
+        ASSERT_EQ(0, fiber_join(bth, NULL));
+        ASSERT_EQ(0, fiber_key_delete(keys.valid_key));
     }
 
     TEST(KeyTest, reuse_key) {
         fiber_local_key key;
-        ASSERT_EQ(0, bthread_key_create(&key, NULL));
-        ASSERT_EQ(NULL, bthread_getspecific(key));
-        ASSERT_EQ(0, bthread_setspecific(key, (void *) 1));
-        ASSERT_EQ(0, bthread_key_delete(key)); // delete key before clearing TLS.
+        ASSERT_EQ(0, fiber_key_create(&key, NULL));
+        ASSERT_EQ(NULL, fiber_getspecific(key));
+        ASSERT_EQ(0, fiber_setspecific(key, (void *) 1));
+        ASSERT_EQ(0, fiber_key_delete(key)); // delete key before clearing TLS.
         fiber_local_key key2;
-        ASSERT_EQ(0, bthread_key_create(&key2, NULL));
+        ASSERT_EQ(0, fiber_key_create(&key2, NULL));
         ASSERT_EQ(key.index, key2.index);
         // The slot is not NULL, the impl must check version and return NULL.
-        ASSERT_EQ(NULL, bthread_getspecific(key2));
+        ASSERT_EQ(NULL, fiber_getspecific(key2));
     }
 
 // NOTE: sid is short for 'set in dtor'.
@@ -245,14 +245,14 @@ namespace {
     static void sid_dtor(void *tls) {
         SidData *data = (SidData *) tls;
         // Should already be set NULL.
-        ASSERT_EQ(NULL, bthread_getspecific(data->key));
+        ASSERT_EQ(NULL, fiber_getspecific(data->key));
         if (++data->seq < data->end_seq) {
-            ASSERT_EQ(0, bthread_setspecific(data->key, data));
+            ASSERT_EQ(0, fiber_setspecific(data->key, data));
         }
     }
 
     static void sid_thread_impl(SidData *data) {
-        ASSERT_EQ(0, bthread_setspecific(data->key, data));
+        ASSERT_EQ(0, fiber_setspecific(data->key, data));
     };
 
     static void *sid_thread(void *args) {
@@ -262,7 +262,7 @@ namespace {
 
     TEST(KeyTest, set_in_dtor) {
         fiber_local_key key;
-        ASSERT_EQ(0, bthread_key_create(&key, sid_dtor));
+        ASSERT_EQ(0, fiber_key_create(&key, sid_dtor));
 
         SidData pth_data = {key, 0, 3};
         SidData bth_data = {key, 0, 3};
@@ -272,15 +272,15 @@ namespace {
         fiber_id_t bth;
         fiber_id_t bth2;
         ASSERT_EQ(0, pthread_create(&pth, NULL, sid_thread, &pth_data));
-        ASSERT_EQ(0, bthread_start_urgent(&bth, NULL, sid_thread, &bth_data));
-        ASSERT_EQ(0, bthread_start_urgent(&bth2, &FIBER_ATTR_PTHREAD,
+        ASSERT_EQ(0, fiber_start_urgent(&bth, NULL, sid_thread, &bth_data));
+        ASSERT_EQ(0, fiber_start_urgent(&bth2, &FIBER_ATTR_PTHREAD,
                                           sid_thread, &bth2_data));
 
         ASSERT_EQ(0, pthread_join(pth, NULL));
-        ASSERT_EQ(0, bthread_join(bth, NULL));
-        ASSERT_EQ(0, bthread_join(bth2, NULL));
+        ASSERT_EQ(0, fiber_join(bth, NULL));
+        ASSERT_EQ(0, fiber_join(bth2, NULL));
 
-        ASSERT_EQ(0, bthread_key_delete(key));
+        ASSERT_EQ(0, fiber_key_delete(key));
 
         EXPECT_EQ(pth_data.end_seq, pth_data.seq);
         EXPECT_EQ(bth_data.end_seq, bth_data.seq);
@@ -306,20 +306,20 @@ namespace {
     void *set_before_anybth(void *args);
 
     void set_before_anybth_impl(SBAData *data) {
-        ASSERT_EQ(NULL, bthread_getspecific(data->key));
+        ASSERT_EQ(NULL, fiber_getspecific(data->key));
         SBATLS *tls = new SBATLS;
         tls->ndestroy = &data->ndestroy;
-        ASSERT_EQ(0, bthread_setspecific(data->key, tls));
-        ASSERT_EQ(tls, bthread_getspecific(data->key));
+        ASSERT_EQ(0, fiber_setspecific(data->key, tls));
+        ASSERT_EQ(tls, fiber_getspecific(data->key));
         if (data->level++ == 0) {
             fiber_id_t bth;
-            ASSERT_EQ(0, bthread_start_urgent(&bth, NULL, set_before_anybth, data));
-            ASSERT_EQ(0, bthread_join(bth, NULL));
+            ASSERT_EQ(0, fiber_start_urgent(&bth, NULL, set_before_anybth, data));
+            ASSERT_EQ(0, fiber_join(bth, NULL));
             ASSERT_EQ(1, data->ndestroy);
         } else {
             flare::this_fiber::fiber_sleep_for(1000);
         }
-        ASSERT_EQ(tls, bthread_getspecific(data->key));
+        ASSERT_EQ(tls, fiber_getspecific(data->key));
     }
 
     void *set_before_anybth(void *args) {
@@ -329,7 +329,7 @@ namespace {
 
     TEST(KeyTest, set_tls_before_creating_any_bthread) {
         fiber_local_key key;
-        ASSERT_EQ(0, bthread_key_create(&key, SBATLS::deleter));
+        ASSERT_EQ(0, fiber_key_create(&key, SBATLS::deleter));
         pthread_t th;
         SBAData data;
         data.key = key;
@@ -337,7 +337,7 @@ namespace {
         data.ndestroy = 0;
         ASSERT_EQ(0, pthread_create(&th, NULL, set_before_anybth, &data));
         ASSERT_EQ(0, pthread_join(th, NULL));
-        ASSERT_EQ(0, bthread_key_delete(key));
+        ASSERT_EQ(0, fiber_key_delete(key));
         ASSERT_EQ(2, data.level);
         ASSERT_EQ(2, data.ndestroy);
     }
@@ -350,9 +350,9 @@ namespace {
     };
 
     static void pool_thread_impl(PoolData *data) {
-        ASSERT_EQ(data->expected_data, (PoolData *) bthread_getspecific(data->key));
-        if (NULL == bthread_getspecific(data->key)) {
-            ASSERT_EQ(0, bthread_setspecific(data->key, data));
+        ASSERT_EQ(data->expected_data, (PoolData *) fiber_getspecific(data->key));
+        if (NULL == fiber_getspecific(data->key)) {
+            ASSERT_EQ(0, fiber_setspecific(data->key, data));
         }
     };
 
@@ -364,22 +364,22 @@ namespace {
     static void pool_dtor(void *tls) {
         PoolData *data = (PoolData *) tls;
         // Should already be set NULL.
-        ASSERT_EQ(NULL, bthread_getspecific(data->key));
+        ASSERT_EQ(NULL, fiber_getspecific(data->key));
         if (++data->seq < data->end_seq) {
-            ASSERT_EQ(0, bthread_setspecific(data->key, data));
+            ASSERT_EQ(0, fiber_setspecific(data->key, data));
         }
     }
 
     TEST(KeyTest, using_pool) {
         fiber_local_key key;
-        ASSERT_EQ(0, bthread_key_create(&key, pool_dtor));
+        ASSERT_EQ(0, fiber_key_create(&key, pool_dtor));
 
         bthread_keytable_pool_t pool;
         ASSERT_EQ(0, bthread_keytable_pool_init(&pool));
         ASSERT_EQ(0, bthread_keytable_pool_size(&pool));
 
         fiber_attribute attr;
-        ASSERT_EQ(0, bthread_attr_init(&attr));
+        ASSERT_EQ(0, fiber_attr_init(&attr));
         attr.keytable_pool = &pool;
 
         fiber_attribute attr2 = attr;
@@ -387,15 +387,15 @@ namespace {
 
         PoolData bth_data = {key, NULL, 0, 3};
         fiber_id_t bth;
-        ASSERT_EQ(0, bthread_start_urgent(&bth, &attr, pool_thread, &bth_data));
-        ASSERT_EQ(0, bthread_join(bth, NULL));
+        ASSERT_EQ(0, fiber_start_urgent(&bth, &attr, pool_thread, &bth_data));
+        ASSERT_EQ(0, fiber_join(bth, NULL));
         ASSERT_EQ(0, bth_data.seq);
         ASSERT_EQ(1, bthread_keytable_pool_size(&pool));
 
         PoolData bth2_data = {key, &bth_data, 0, 3};
         fiber_id_t bth2;
-        ASSERT_EQ(0, bthread_start_urgent(&bth2, &attr2, pool_thread, &bth2_data));
-        ASSERT_EQ(0, bthread_join(bth2, NULL));
+        ASSERT_EQ(0, fiber_start_urgent(&bth2, &attr2, pool_thread, &bth2_data));
+        ASSERT_EQ(0, fiber_join(bth2, NULL));
         ASSERT_EQ(0, bth2_data.seq);
         ASSERT_EQ(1, bthread_keytable_pool_size(&pool));
 
@@ -404,7 +404,7 @@ namespace {
         EXPECT_EQ(bth_data.end_seq, bth_data.seq);
         EXPECT_EQ(0, bth2_data.seq);
 
-        ASSERT_EQ(0, bthread_key_delete(key));
+        ASSERT_EQ(0, fiber_key_delete(key));
     }
 
 }  // namespace

@@ -23,7 +23,7 @@
 // on internal structures, use opaque pointers instead.
 
 #include "flare/fiber/internal/errno.h"        // Redefine errno
-#include "flare/fiber/internal/bthread.h"      // Server may need some bthread functions,
+#include "flare/fiber/internal/fiber.h"      // Server may need some bthread functions,
                                   // e.g. flare::this_fiber::fiber_sleep_for
 #include <google/protobuf/service.h>                 // google::protobuf::Service
 #include "flare/base/profile.h"                            // FLARE_DISALLOW_COPY_AND_ASSIGN

@@ -59,7 +59,7 @@ namespace flare::rpc {
             return -1;
         }
         if (idle_timeout_sec > 0) {
-            if (bthread_start_background(&_close_idle_tid, NULL,
+            if (fiber_start_background(&_close_idle_tid, NULL,
                                          CloseIdleConnections, this) != 0) {
                 LOG(FATAL) << "Fail to start bthread";
                 return -1;
@@ -169,8 +169,8 @@ namespace flare::rpc {
 
         // Join the bthread outside lock.
         if (saved_idle_timeout_sec > 0) {
-            bthread_stop(saved_close_idle_tid);
-            bthread_join(saved_close_idle_tid, NULL);
+            fiber_stop(saved_close_idle_tid);
+            fiber_join(saved_close_idle_tid, NULL);
         }
 
         {

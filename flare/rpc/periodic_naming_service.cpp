@@ -18,7 +18,7 @@
 
 #include <gflags/gflags.h>
 #include "flare/log/logging.h"
-#include "flare/fiber/internal/bthread.h"
+#include "flare/fiber/internal/fiber.h"
 #include "flare/rpc/log.h"
 #include "flare/rpc/reloadable_flags.h"
 #include "flare/rpc/periodic_naming_service.h"
@@ -50,7 +50,7 @@ int PeriodicNamingService::RunNamingService(
 
         if (flare::this_fiber::fiber_sleep_for(std::max(FLAGS_ns_access_interval, 1) * 1000000L) < 0) {
             if (errno == ESTOP) {
-                RPC_VLOG << "Quit NamingServiceThread=" << bthread_self();
+                RPC_VLOG << "Quit NamingServiceThread=" << fiber_self();
                 return 0;
             }
             PLOG(FATAL) << "Fail to sleep";

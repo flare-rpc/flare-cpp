@@ -21,11 +21,11 @@
 #include <openssl/md5.h>
 #include <google/protobuf/descriptor.h>
 #include <gflags/gflags.h>
-#include "flare/fiber/internal/bthread.h"
+#include "flare/fiber/internal/fiber.h"
 #include "flare/base/strings.h"
 #include "flare/log/logging.h"
 #include "flare/base/time.h"
-#include "flare/fiber/internal/bthread.h"
+#include "flare/fiber/internal/fiber.h"
 #include "flare/fiber/internal/unstable.h"
 #include "flare/variable/all.h"
 #include "flare/rpc/socket.h"
@@ -519,7 +519,7 @@ namespace flare::rpc {
         RunOnCancelThread *arg = new RunOnCancelThread(
                 static_cast<google::protobuf::Closure *>(data), id);
         fiber_id_t th;
-        CHECK_EQ(0, bthread_start_urgent(&th, NULL, RunOnCancelThread::RunThis, arg));
+        CHECK_EQ(0, fiber_start_urgent(&th, NULL, RunOnCancelThread::RunThis, arg));
         return 0;
     }
 
@@ -590,7 +590,7 @@ namespace flare::rpc {
             // Reset timeout if needed
             int rc = 0;
             if (timeout_ms() >= 0) {
-                rc = bthread_timer_add(
+                rc = fiber_timer_add(
                         &_timeout_id,
                         flare::base::microseconds_to_timespec(_deadline_us),
                         HandleTimeout, (void *) _correlation_id.value);
@@ -685,7 +685,7 @@ namespace flare::rpc {
             fiber_attribute attr = (FLAGS_usercode_in_pthread ?
                                    FIBER_ATTR_PTHREAD : FIBER_ATTR_NORMAL);
             _tmp_completion_info = info;
-            if (bthread_start_background(&bt, &attr, RunEndRPC, this) != 0) {
+            if (fiber_start_background(&bt, &attr, RunEndRPC, this) != 0) {
                 LOG(FATAL) << "Fail to start bthread";
                 EndRPC(info);
             }
@@ -814,7 +814,7 @@ namespace flare::rpc {
 
     void Controller::EndRPC(const CompletionInfo &info) {
         if (_timeout_id != 0) {
-            bthread_timer_del(_timeout_id);
+            fiber_timer_del(_timeout_id);
             _timeout_id = 0;
         }
 
@@ -918,7 +918,7 @@ namespace flare::rpc {
                     // Make this thread not scheduling itself when launching new
                     // bthreads, saving signalings.
                     // FIXME: We're assuming the calling thread is about to quit.
-                    bthread_about_to_quit();
+                    fiber_about_to_quit();
                     CHECK_EQ(0, bthread_id_unlock_and_destroy(saved_cid));
                 }
             } else {
@@ -928,8 +928,8 @@ namespace flare::rpc {
             // OnRPCEnd for sync RPC is called in Channel::CallMethod to count in
             // latency of the context-switch.
 
-            // Check comments in above branch on bthread_about_to_quit.
-            bthread_about_to_quit();
+            // Check comments in above branch on fiber_about_to_quit.
+            fiber_about_to_quit();
             CHECK_EQ(0, bthread_id_unlock_and_destroy(saved_cid));
         }
     }

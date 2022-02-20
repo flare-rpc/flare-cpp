@@ -24,7 +24,7 @@
 #include "flare/rpc/global.h"
 #include "flare/rpc/log.h"
 #include "flare/fiber/internal/unstable.h"
-#include "flare/fiber/internal/bthread.h"
+#include "flare/fiber/internal/fiber.h"
 #include "flare/fiber/this_fiber.h"
 
 namespace flare::rpc {

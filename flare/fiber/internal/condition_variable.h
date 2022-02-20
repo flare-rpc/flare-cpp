@@ -26,80 +26,82 @@
 #include "flare/fiber/internal/mutex.h"
 
 __BEGIN_DECLS
-extern int bthread_cond_init(bthread_cond_t* __restrict cond,
-                             const bthread_condattr_t* __restrict cond_attr);
-extern int bthread_cond_destroy(bthread_cond_t* cond);
-extern int bthread_cond_signal(bthread_cond_t* cond);
-extern int bthread_cond_broadcast(bthread_cond_t* cond);
-extern int bthread_cond_wait(bthread_cond_t* __restrict cond,
-                             bthread_mutex_t* __restrict mutex);
-extern int bthread_cond_timedwait(
-    bthread_cond_t* __restrict cond,
-    bthread_mutex_t* __restrict mutex,
-    const struct timespec* __restrict abstime);
+extern int fiber_cond_init(fiber_cond_t *__restrict cond,
+                           const fiber_condattr_t *__restrict cond_attr);
+extern int fiber_cond_destroy(fiber_cond_t *cond);
+extern int fiber_cond_signal(fiber_cond_t *cond);
+extern int fiber_cond_broadcast(fiber_cond_t *cond);
+extern int fiber_cond_wait(fiber_cond_t *__restrict cond,
+                           fiber_mutex_t *__restrict mutex);
+extern int fiber_cond_timedwait(
+        fiber_cond_t *__restrict cond,
+        fiber_mutex_t *__restrict mutex,
+        const struct timespec *__restrict abstime);
 __END_DECLS
 
 namespace flare::fiber_internal {
 
-class ConditionVariable {
-    FLARE_DISALLOW_COPY_AND_ASSIGN(ConditionVariable);
-public:
-    typedef bthread_cond_t*         native_handler_type;
-    
-    ConditionVariable() {
-        CHECK_EQ(0, bthread_cond_init(&_cond, NULL));
-    }
-    ~ConditionVariable() {
-        CHECK_EQ(0, bthread_cond_destroy(&_cond));
-    }
+    class fiber_cond {
+        FLARE_DISALLOW_COPY_AND_ASSIGN(fiber_cond);
 
-    native_handler_type native_handler() { return &_cond; }
+    public:
+        typedef fiber_cond_t *native_handler_type;
 
-    void wait(std::unique_lock<flare::fiber_internal::Mutex>& lock) {
-        bthread_cond_wait(&_cond, lock.mutex()->native_handler());
-    }
+        fiber_cond() {
+            CHECK_EQ(0, fiber_cond_init(&_cond, NULL));
+        }
 
-    void wait(std::unique_lock<bthread_mutex_t>& lock) {
-        bthread_cond_wait(&_cond, lock.mutex());
-    }
+        ~fiber_cond() {
+            CHECK_EQ(0, fiber_cond_destroy(&_cond));
+        }
 
-    // Unlike std::condition_variable, we return ETIMEDOUT when time expires
-    // rather than std::timeout
-    int wait_for(std::unique_lock<flare::fiber_internal::Mutex>& lock,
-                 long timeout_us) {
-        return wait_until(lock, flare::base::microseconds_from_now(timeout_us));
-    }
+        native_handler_type native_handler() { return &_cond; }
 
-    int wait_for(std::unique_lock<bthread_mutex_t>& lock,
-                 long timeout_us) {
-        return wait_until(lock, flare::base::microseconds_from_now(timeout_us));
-    }
+        void wait(std::unique_lock<flare::fiber_internal::fiber_mutex> &lock) {
+            fiber_cond_wait(&_cond, lock.mutex()->native_handler());
+        }
 
-    int wait_until(std::unique_lock<flare::fiber_internal::Mutex>& lock,
-                   timespec duetime) {
-        const int rc = bthread_cond_timedwait(
-                &_cond, lock.mutex()->native_handler(), &duetime);
-        return rc == ETIMEDOUT ? ETIMEDOUT : 0;
-    }
+        void wait(std::unique_lock<fiber_mutex_t> &lock) {
+            fiber_cond_wait(&_cond, lock.mutex());
+        }
 
-    int wait_until(std::unique_lock<bthread_mutex_t>& lock,
-                   timespec duetime) {
-        const int rc = bthread_cond_timedwait(
-                &_cond, lock.mutex(), &duetime);
-        return rc == ETIMEDOUT ? ETIMEDOUT : 0;
-    }
+        // Unlike std::condition_variable, we return ETIMEDOUT when time expires
+        // rather than std::timeout
+        int wait_for(std::unique_lock<flare::fiber_internal::fiber_mutex> &lock,
+                     long timeout_us) {
+            return wait_until(lock, flare::base::microseconds_from_now(timeout_us));
+        }
 
-    void notify_one() {
-        bthread_cond_signal(&_cond);
-    }
+        int wait_for(std::unique_lock<fiber_mutex_t> &lock,
+                     long timeout_us) {
+            return wait_until(lock, flare::base::microseconds_from_now(timeout_us));
+        }
 
-    void notify_all() {
-        bthread_cond_broadcast(&_cond);
-    }
+        int wait_until(std::unique_lock<flare::fiber_internal::fiber_mutex> &lock,
+                       timespec duetime) {
+            const int rc = fiber_cond_timedwait(
+                    &_cond, lock.mutex()->native_handler(), &duetime);
+            return rc == ETIMEDOUT ? ETIMEDOUT : 0;
+        }
 
-private:
-    bthread_cond_t                  _cond;
-};
+        int wait_until(std::unique_lock<fiber_mutex_t> &lock,
+                       timespec duetime) {
+            const int rc = fiber_cond_timedwait(
+                    &_cond, lock.mutex(), &duetime);
+            return rc == ETIMEDOUT ? ETIMEDOUT : 0;
+        }
+
+        void notify_one() {
+            fiber_cond_signal(&_cond);
+        }
+
+        void notify_all() {
+            fiber_cond_broadcast(&_cond);
+        }
+
+    private:
+        fiber_cond_t _cond;
+    };
 
 }  // namespace flare::fiber_internal
 

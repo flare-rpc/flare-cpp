@@ -19,7 +19,7 @@
 #include <gflags/gflags.h>
 #include "flare/fiber/internal/sys_futex.h"
 #include "flare/fiber/internal/timer_thread.h"
-#include "flare/fiber/internal/bthread.h"
+#include "flare/fiber/internal/fiber.h"
 #include "flare/log/logging.h"
 
 namespace {

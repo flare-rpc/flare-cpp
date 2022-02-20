@@ -19,7 +19,7 @@
 
 #include <gflags/gflags.h>
 #include <flare/fiber/this_fiber.h>
-#include <flare/fiber/internal/bthread.h>
+#include <flare/fiber/internal/fiber.h>
 #include "flare/log/logging.h"
 #include <flare/base/strings.h>
 #include <flare/variable/all.h>
@@ -162,7 +162,7 @@ int main(int argc, char* argv[]) {
                 return -1;
             }
         } else {
-            if (bthread_start_background(
+            if (fiber_start_background(
                     &bids[i], NULL, sender, &args[i]) != 0) {
                 LOG(ERROR) << "Fail to create bthread";
                 return -1;
@@ -182,7 +182,7 @@ int main(int argc, char* argv[]) {
         if (!FLAGS_use_bthread) {
             pthread_join(pids[i], NULL);
         } else {
-            bthread_join(bids[i], NULL);
+            fiber_join(bids[i], NULL);
         }
     }
     return 0;

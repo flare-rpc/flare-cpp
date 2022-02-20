@@ -21,7 +21,7 @@
 #include <openssl/err.h>
 #include <netinet/tcp.h>                         // getsockopt
 #include <gflags/gflags.h>
-#include "flare/fiber/internal/unstable.h"                    // bthread_timer_del
+#include "flare/fiber/internal/unstable.h"                    // fiber_timer_del
 #include "flare/base/fd_utility.h"                     // make_non_blocking
 #include "flare/base/fd_guard.h"                       // fd_guard
 #include "flare/base/time.h"                           // cpuwide_time_us
@@ -391,7 +391,7 @@ public:
         // Remove the timer at last inside destructor to avoid
         // race with the place that registers the timer
         if (timer_id) {
-            bthread_timer_del(timer_id);
+            fiber_timer_del(timer_id);
             timer_id = 0;
         }
     }
@@ -453,12 +453,12 @@ Socket::Socket(Forbidden)
 {
     CreateVarsOnce();
     pthread_mutex_init(&_id_wait_list_mutex, NULL);
-    _epollout_butex = flare::fiber_internal::butex_create_checked<std::atomic<int> >();
+    _epollout_butex = flare::fiber_internal::waitable_event_create_checked<std::atomic<int> >();
 }
 
 Socket::~Socket() {
     pthread_mutex_destroy(&_id_wait_list_mutex);
-    flare::fiber_internal::butex_destroy(_epollout_butex);
+    flare::fiber_internal::waitable_event_destroy(_epollout_butex);
 }
 
 void Socket::ReturnSuccessfulWriteRequest(Socket::WriteRequest* p) {
@@ -840,7 +840,7 @@ int Socket::SetFailed(int error_code, const char* error_fmt, ...) {
             }
             // Wake up all threads waiting on EPOLLOUT when closing fd
             _epollout_butex->fetch_add(1, std::memory_order_relaxed);
-            flare::fiber_internal::butex_wake_all(_epollout_butex);
+            flare::fiber_internal::waitable_event_wake_all(_epollout_butex);
 
             // Wake up all unresponded RPC.
             CHECK_EQ(0, bthread_id_list_reset2_pthreadsafe(
@@ -1090,7 +1090,7 @@ int Socket::WaitEpollOut(int fd, bool pollin, const timespec* abstime) {
         return -1;
     }
 
-    int rc = flare::fiber_internal::butex_wait(_epollout_butex, expected_val, abstime);
+    int rc = flare::fiber_internal::waitable_event_wait(_epollout_butex, expected_val, abstime);
     const int saved_errno = errno;
     if (rc < 0 && errno == EWOULDBLOCK) {
         // Could be writable or spurious wakeup
@@ -1175,7 +1175,7 @@ int Socket::Connect(const timespec* abstime,
         // called before adding the timer since it will be removed
         // inside destructor of `EpollOutRequest' after leaving this scope
         if (abstime) {
-            int rc = bthread_timer_add(&req->timer_id, *abstime,
+            int rc = fiber_timer_add(&req->timer_id, *abstime,
                                        HandleEpollOutTimeout,
                                        (void*)connect_id);
             if (rc) {
@@ -1268,7 +1268,7 @@ int Socket::HandleEpollOut(SocketId id) {
     // Currently `WaitEpollOut' needs `_epollout_butex'
     // TODO(jiangrujie): Remove this in the future
     s->_epollout_butex->fetch_add(1, std::memory_order_relaxed);
-    flare::fiber_internal::butex_wake_except(s->_epollout_butex, 0);
+    flare::fiber_internal::waitable_event_wake_except(s->_epollout_butex, 0);
     return 0;
 }
 
@@ -1310,7 +1310,7 @@ void Socket::AfterAppConnected(int err, void* data) {
         // requests are not setup yet. check the comment on Setup() in Write()
         req->Setup(s);
         fiber_id_t th;
-        if (bthread_start_background(
+        if (fiber_start_background(
                 &th, &FIBER_ATTR_NORMAL, KeepWrite, req) != 0) {
             PLOG(WARNING) << "Fail to start KeepWrite";
             KeepWrite(req);
@@ -1351,7 +1351,7 @@ int Socket::KeepWriteIfConnected(int fd, int err, void* data) {
         fiber_id_t th;
         google::protobuf::Closure* thrd_func = flare::rpc::NewCallback(
             Socket::CheckConnectedAndKeepWrite, fd, err, data);
-        if ((err = bthread_start_background(&th, &FIBER_ATTR_NORMAL,
+        if ((err = fiber_start_background(&th, &FIBER_ATTR_NORMAL,
                                             RunClosure, thrd_func)) == 0) {
             return 0;
         } else {
@@ -1571,7 +1571,7 @@ int Socket::StartWrite(WriteRequest* req, const WriteOptions& opt) {
 KEEPWRITE_IN_BACKGROUND:
     ReAddress(&ptr_for_keep_write);
     req->socket = ptr_for_keep_write.release();
-    if (bthread_start_background(&th, &FIBER_ATTR_NORMAL,
+    if (fiber_start_background(&th, &FIBER_ATTR_NORMAL,
                                  KeepWrite, req) != 0) {
         LOG(FATAL) << "Fail to start KeepWrite";
         KeepWrite(req);
@@ -1953,7 +1953,7 @@ int Socket::StartInputEvent(SocketId id, uint32_t events,
 
         fiber_attribute attr = thread_attr;
         attr.keytable_pool = p->_keytable_pool;
-        if (bthread_start_urgent(&tid, &attr, ProcessEvent, p) != 0) {
+        if (fiber_start_urgent(&tid, &attr, ProcessEvent, p) != 0) {
             LOG(FATAL) << "Fail to start ProcessEvent";
             ProcessEvent(p);
         }

@@ -22,7 +22,7 @@
 
 namespace flare::fiber_internal {
 
-DECLARE_int32(bthread_concurrency);
+DECLARE_int32(fiber_concurrency);
 
 }  // namespace flare::fiber_internal
 
@@ -223,7 +223,7 @@ void AutoConcurrencyLimiter::UpdateQps(double qps) {
 }
 
 void AutoConcurrencyLimiter::AdjustMaxConcurrency(int next_max_concurrency) {
-    next_max_concurrency = std::max(flare::fiber_internal::FLAGS_bthread_concurrency, next_max_concurrency);
+    next_max_concurrency = std::max(flare::fiber_internal::FLAGS_fiber_concurrency, next_max_concurrency);
     if (next_max_concurrency != _max_concurrency) {
         _max_concurrency = next_max_concurrency;
     }

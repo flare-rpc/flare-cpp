@@ -18,9 +18,9 @@
 #include <iostream>
 #include <gtest/gtest.h>
 #include "flare/base/time.h"
-#include "flare/fiber/internal/bthread.h"
+#include "flare/fiber/internal/fiber.h"
 #include "flare/fiber/internal/fiber_worker.h"
-#include "flare/fiber/internal/butex.h"
+#include "flare/fiber/internal/waitable_event.h"
 #include "flare/fiber/this_fiber.h"
 
 namespace flare::fiber_internal {
@@ -324,11 +324,11 @@ namespace {
         for (size_t i = 0; i < FLARE_ARRAY_SIZE(th); ++i) {
             args[i].id = id1;
             args[i].thread_started = false;
-            ASSERT_EQ(0, bthread_start_urgent(&th[i], NULL, stopped_waiter, &args[i]));
+            ASSERT_EQ(0, fiber_start_urgent(&th[i], NULL, stopped_waiter, &args[i]));
         }
         // stop does not wake up bthread_id_join
         for (size_t i = 0; i < FLARE_ARRAY_SIZE(th); ++i) {
-            bthread_stop(th[i]);
+            fiber_stop(th[i]);
         }
         flare::this_fiber::fiber_sleep_for(10000);
         for (size_t i = 0; i < FLARE_ARRAY_SIZE(th); ++i) {
@@ -337,7 +337,7 @@ namespace {
         // destroy the id to end the joinings.
         ASSERT_EQ(0, bthread_id_unlock_and_destroy(id1));
         for (size_t i = 0; i < FLARE_ARRAY_SIZE(th); ++i) {
-            ASSERT_EQ(0, bthread_join(th[i], NULL));
+            ASSERT_EQ(0, fiber_join(th[i], NULL));
         }
     }
 
@@ -442,10 +442,10 @@ namespace {
         fiber_id_t bth;
         FailToLockIdArgs args = {id, EPERM};
         ASSERT_EQ(0, pthread_create(&pth, NULL, fail_to_lock_id, &args));
-        ASSERT_EQ(0, bthread_start_background(&bth, NULL, fail_to_lock_id, &args));
+        ASSERT_EQ(0, fiber_start_background(&bth, NULL, fail_to_lock_id, &args));
         // The threads should quit soon.
         pthread_join(pth, NULL);
-        bthread_join(bth, NULL);
+        fiber_join(bth, NULL);
         flare::fiber_internal::id_status(id, std::cout);
         ASSERT_EQ(0, bthread_id_unlock_and_destroy(id));
     }
@@ -466,10 +466,10 @@ namespace {
         pthread_t pth;
         fiber_id_t bth;
         ASSERT_EQ(0, pthread_create(&pth, NULL, succeed_to_lock_id, &id));
-        ASSERT_EQ(0, bthread_start_background(&bth, NULL, succeed_to_lock_id, &id));
+        ASSERT_EQ(0, fiber_start_background(&bth, NULL, succeed_to_lock_id, &id));
         // The threads should quit soon.
         pthread_join(pth, NULL);
-        bthread_join(bth, NULL);
+        fiber_join(bth, NULL);
         flare::fiber_internal::id_status(id, std::cout);
         ASSERT_EQ(0, bthread_id_lock(id, NULL));
         ASSERT_EQ(0, bthread_id_unlock_and_destroy(id));
@@ -484,7 +484,7 @@ namespace {
         fiber_id_t bth;
         FailToLockIdArgs args = {id, EPERM};
         ASSERT_EQ(0, pthread_create(&pth, NULL, fail_to_lock_id, &args));
-        ASSERT_EQ(0, bthread_start_background(&bth, NULL, fail_to_lock_id, &args));
+        ASSERT_EQ(0, fiber_start_background(&bth, NULL, fail_to_lock_id, &args));
 
         usleep(100000);
         ASSERT_FALSE(any_thread_quit);
@@ -492,7 +492,7 @@ namespace {
 
         // The threads should quit soon.
         pthread_join(pth, NULL);
-        bthread_join(bth, NULL);
+        fiber_join(bth, NULL);
         flare::fiber_internal::id_status(id, std::cout);
         ASSERT_EQ(0, bthread_id_unlock_and_destroy(id));
     }

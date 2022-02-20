@@ -25,35 +25,35 @@
 #include "flare/fiber/internal/schedule_group.h"              // schedule_group
 #include "flare/fiber/internal/timer_thread.h"
 #include "flare/fiber/internal/list_of_abafree_id.h"
-#include "flare/fiber/internal/bthread.h"
+#include "flare/fiber/internal/fiber.h"
 
 namespace flare::fiber_internal {
 
-    DEFINE_int32(bthread_concurrency, 8 + BTHREAD_EPOLL_THREAD_NUM,
+    DEFINE_int32(fiber_concurrency, 8 + FIBER_EPOLL_THREAD_NUM,
                  "Number of pthread workers");
 
-    DEFINE_int32(bthread_min_concurrency, 0,
+    DEFINE_int32(fiber_min_concurrency, 0,
                  "Initial number of pthread workers which will be added on-demand."
                  " The laziness is disabled when this value is non-positive,"
-                 " and workers will be created eagerly according to -bthread_concurrency and bthread_setconcurrency(). ");
+                 " and workers will be created eagerly according to -fiber_concurrency and fiber_setconcurrency(). ");
 
-    static bool never_set_bthread_concurrency = true;
+    static bool never_set_fiber_concurrency = true;
 
-    static bool validate_bthread_concurrency(const char *, int32_t val) {
-        // bthread_setconcurrency sets the flag on success path which should
+    static bool validate_fiber_concurrency(const char *, int32_t val) {
+        // fiber_setconcurrency sets the flag on success path which should
         // not be strictly in a validator. But it's OK for a int flag.
-        return bthread_setconcurrency(val) == 0;
+        return fiber_setconcurrency(val) == 0;
     }
 
-    const int FLARE_ALLOW_UNUSED register_FLAGS_bthread_concurrency =
-            ::GFLAGS_NS::RegisterFlagValidator(&FLAGS_bthread_concurrency,
-                                               validate_bthread_concurrency);
+    const int FLARE_ALLOW_UNUSED register_FLAGS_fiber_concurrency =
+            ::GFLAGS_NS::RegisterFlagValidator(&FLAGS_fiber_concurrency,
+                                               validate_fiber_concurrency);
 
-    static bool validate_bthread_min_concurrency(const char *, int32_t val);
+    static bool validate_fiber_min_concurrency(const char *, int32_t val);
 
-    const int FLARE_ALLOW_UNUSED register_FLAGS_bthread_min_concurrency =
-            ::GFLAGS_NS::RegisterFlagValidator(&FLAGS_bthread_min_concurrency,
-                                               validate_bthread_min_concurrency);
+    const int FLARE_ALLOW_UNUSED register_FLAGS_fiber_min_concurrency =
+            ::GFLAGS_NS::RegisterFlagValidator(&FLAGS_fiber_min_concurrency,
+                                               validate_fiber_min_concurrency);
 
     static_assert(sizeof(schedule_group *) == sizeof(std::atomic<schedule_group *>), "atomic_size_match");
 
@@ -86,9 +86,9 @@ namespace flare::fiber_internal {
         if (NULL == c) {
             return NULL;
         }
-        int concurrency = FLAGS_bthread_min_concurrency > 0 ?
-                          FLAGS_bthread_min_concurrency :
-                          FLAGS_bthread_concurrency;
+        int concurrency = FLAGS_fiber_min_concurrency > 0 ?
+                          FLAGS_fiber_min_concurrency :
+                          FLAGS_fiber_concurrency;
         if (c->init(concurrency) != 0) {
             LOG(ERROR) << "Fail to init g_task_control";
             delete c;
@@ -98,11 +98,11 @@ namespace flare::fiber_internal {
         return c;
     }
 
-    static bool validate_bthread_min_concurrency(const char *, int32_t val) {
+    static bool validate_fiber_min_concurrency(const char *, int32_t val) {
         if (val <= 0) {
             return true;
         }
-        if (val < BTHREAD_MIN_CONCURRENCY || val > FLAGS_bthread_concurrency) {
+        if (val < FIBER_MIN_CONCURRENCY || val > FLAGS_fiber_concurrency) {
             return false;
         }
         schedule_group *c = get_task_control();
@@ -132,9 +132,9 @@ namespace flare::fiber_internal {
         }
         if (attr != NULL && (attr->flags & FIBER_NOSIGNAL)) {
             // Remember the fiber_worker to insert NOSIGNAL tasks for 2 reasons:
-            // 1. NOSIGNAL is often for creating many bthreads in batch,
+            // 1. NOSIGNAL is often for creating many fibers in batch,
             //    inserting into the same fiber_worker maximizes the batch.
-            // 2. bthread_flush() needs to know which fiber_worker to flush.
+            // 2. fiber_flush() needs to know which fiber_worker to flush.
             fiber_worker *g = tls_task_group_nosignal;
             if (NULL == g) {
                 g = c->choose_one_group();
@@ -159,12 +159,12 @@ namespace flare::fiber_internal {
     typedef ListOfABAFreeId<fiber_id_t, TidTraits> TidList;
 
     struct TidStopper {
-        void operator()(fiber_id_t id) const { bthread_stop(id); }
+        void operator()(fiber_id_t id) const { fiber_stop(id); }
     };
 
     struct TidJoiner {
         void operator()(fiber_id_t &id) const {
-            bthread_join(id, NULL);
+            fiber_join(id, NULL);
             id = INVALID_FIBER_ID;
         }
     };
@@ -173,7 +173,7 @@ namespace flare::fiber_internal {
 
 extern "C" {
 
-int bthread_start_urgent(fiber_id_t *__restrict tid,
+int fiber_start_urgent(fiber_id_t *__restrict tid,
                          const fiber_attribute *__restrict attr,
                          void *(*fn)(void *),
                          void *__restrict arg) {
@@ -185,7 +185,7 @@ int bthread_start_urgent(fiber_id_t *__restrict tid,
     return flare::fiber_internal::start_from_non_worker(tid, attr, fn, arg);
 }
 
-int bthread_start_background(fiber_id_t *__restrict tid,
+int fiber_start_background(fiber_id_t *__restrict tid,
                              const fiber_attribute *__restrict attr,
                              void *(*fn)(void *),
                              void *__restrict arg) {
@@ -197,7 +197,7 @@ int bthread_start_background(fiber_id_t *__restrict tid,
     return flare::fiber_internal::start_from_non_worker(tid, attr, fn, arg);
 }
 
-void bthread_flush() {
+void fiber_flush() {
     flare::fiber_internal::fiber_worker *g = flare::fiber_internal::tls_task_group;
     if (g) {
         return g->flush_nosignal_tasks();
@@ -210,20 +210,20 @@ void bthread_flush() {
     }
 }
 
-int bthread_interrupt(fiber_id_t tid) {
+int fiber_interrupt(fiber_id_t tid) {
     return flare::fiber_internal::fiber_worker::interrupt(tid, flare::fiber_internal::get_task_control());
 }
 
-int bthread_stop(fiber_id_t tid) {
+int fiber_stop(fiber_id_t tid) {
     flare::fiber_internal::fiber_worker::set_stopped(tid);
-    return bthread_interrupt(tid);
+    return fiber_interrupt(tid);
 }
 
-int bthread_stopped(fiber_id_t tid) {
+int fiber_stopped(fiber_id_t tid) {
     return (int) flare::fiber_internal::fiber_worker::is_stopped(tid);
 }
 
-fiber_id_t bthread_self(void) {
+fiber_id_t fiber_self(void) {
     flare::fiber_internal::fiber_worker *g = flare::fiber_internal::tls_task_group;
     // note: return 0 for main tasks now, which include main thread and
     // all work threads. So that we can identify main tasks from logs
@@ -234,11 +234,11 @@ fiber_id_t bthread_self(void) {
     return INVALID_FIBER_ID;
 }
 
-int bthread_equal(fiber_id_t t1, fiber_id_t t2) {
+int fiber_equal(fiber_id_t t1, fiber_id_t t2) {
     return t1 == t2;
 }
 
-void bthread_exit(void *retval) {
+void fiber_exit(void *retval) {
     flare::fiber_internal::fiber_worker *g = flare::fiber_internal::tls_task_group;
     if (g != NULL && !g->is_current_main_task()) {
         throw flare::fiber_internal::ExitException(retval);
@@ -247,40 +247,40 @@ void bthread_exit(void *retval) {
     }
 }
 
-int bthread_join(fiber_id_t tid, void **thread_return) {
+int fiber_join(fiber_id_t tid, void **thread_return) {
     return flare::fiber_internal::fiber_worker::join(tid, thread_return);
 }
 
-int bthread_attr_init(fiber_attribute *a) {
+int fiber_attr_init(fiber_attribute *a) {
     *a = FIBER_ATTR_NORMAL;
     return 0;
 }
 
-int bthread_attr_destroy(fiber_attribute *) {
+int fiber_attr_destroy(fiber_attribute *) {
     return 0;
 }
 
-int bthread_getattr(fiber_id_t tid, fiber_attribute *attr) {
+int fiber_getattr(fiber_id_t tid, fiber_attribute *attr) {
     return flare::fiber_internal::fiber_worker::get_attr(tid, attr);
 }
 
-int bthread_getconcurrency(void) {
-    return flare::fiber_internal::FLAGS_bthread_concurrency;
+int fiber_getconcurrency(void) {
+    return flare::fiber_internal::FLAGS_fiber_concurrency;
 }
 
-int bthread_setconcurrency(int num) {
-    if (num < BTHREAD_MIN_CONCURRENCY || num > BTHREAD_MAX_CONCURRENCY) {
+int fiber_setconcurrency(int num) {
+    if (num < FIBER_MIN_CONCURRENCY || num > FIBER_MAX_CONCURRENCY) {
         LOG(ERROR) << "Invalid concurrency=" << num;
         return EINVAL;
     }
-    if (flare::fiber_internal::FLAGS_bthread_min_concurrency > 0) {
-        if (num < flare::fiber_internal::FLAGS_bthread_min_concurrency) {
+    if (flare::fiber_internal::FLAGS_fiber_min_concurrency > 0) {
+        if (num < flare::fiber_internal::FLAGS_fiber_min_concurrency) {
             return EINVAL;
         }
-        if (flare::fiber_internal::never_set_bthread_concurrency) {
-            flare::fiber_internal::never_set_bthread_concurrency = false;
+        if (flare::fiber_internal::never_set_fiber_concurrency) {
+            flare::fiber_internal::never_set_fiber_concurrency = false;
         }
-        flare::fiber_internal::FLAGS_bthread_concurrency = num;
+        flare::fiber_internal::FLAGS_fiber_concurrency = num;
         return 0;
     }
     flare::fiber_internal::schedule_group *c = flare::fiber_internal::get_task_control();
@@ -294,30 +294,30 @@ int bthread_setconcurrency(int num) {
     FLARE_SCOPED_LOCK(flare::fiber_internal::g_task_control_mutex);
     c = flare::fiber_internal::get_task_control();
     if (c == NULL) {
-        if (flare::fiber_internal::never_set_bthread_concurrency) {
-            flare::fiber_internal::never_set_bthread_concurrency = false;
-            flare::fiber_internal::FLAGS_bthread_concurrency = num;
-        } else if (num > flare::fiber_internal::FLAGS_bthread_concurrency) {
-            flare::fiber_internal::FLAGS_bthread_concurrency = num;
+        if (flare::fiber_internal::never_set_fiber_concurrency) {
+            flare::fiber_internal::never_set_fiber_concurrency = false;
+            flare::fiber_internal::FLAGS_fiber_concurrency = num;
+        } else if (num > flare::fiber_internal::FLAGS_fiber_concurrency) {
+            flare::fiber_internal::FLAGS_fiber_concurrency = num;
         }
         return 0;
     }
-    if (flare::fiber_internal::FLAGS_bthread_concurrency != c->concurrency()) {
-        LOG(ERROR) << "CHECK failed: bthread_concurrency="
-                   << flare::fiber_internal::FLAGS_bthread_concurrency
+    if (flare::fiber_internal::FLAGS_fiber_concurrency != c->concurrency()) {
+        LOG(ERROR) << "CHECK failed: fiber_concurrency="
+                   << flare::fiber_internal::FLAGS_fiber_concurrency
                    << " != tc_concurrency=" << c->concurrency();
-        flare::fiber_internal::FLAGS_bthread_concurrency = c->concurrency();
+        flare::fiber_internal::FLAGS_fiber_concurrency = c->concurrency();
     }
-    if (num > flare::fiber_internal::FLAGS_bthread_concurrency) {
+    if (num > flare::fiber_internal::FLAGS_fiber_concurrency) {
         // Create more workers if needed.
-        flare::fiber_internal::FLAGS_bthread_concurrency +=
-                c->add_workers(num - flare::fiber_internal::FLAGS_bthread_concurrency);
+        flare::fiber_internal::FLAGS_fiber_concurrency +=
+                c->add_workers(num - flare::fiber_internal::FLAGS_fiber_concurrency);
         return 0;
     }
-    return (num == flare::fiber_internal::FLAGS_bthread_concurrency ? 0 : EPERM);
+    return (num == flare::fiber_internal::FLAGS_fiber_concurrency ? 0 : EPERM);
 }
 
-int bthread_about_to_quit() {
+int fiber_about_to_quit() {
     flare::fiber_internal::fiber_worker *g = flare::fiber_internal::tls_task_group;
     if (g != NULL) {
         flare::fiber_internal::fiber_entity *current_task = g->current_task();
@@ -329,7 +329,7 @@ int bthread_about_to_quit() {
     return EPERM;
 }
 
-int bthread_timer_add(fiber_timer_id *id, timespec abstime,
+int fiber_timer_add(fiber_timer_id *id, timespec abstime,
                       void (*on_timer)(void *), void *arg) {
     flare::fiber_internal::schedule_group *c = flare::fiber_internal::get_or_new_task_control();
     if (c == NULL) {
@@ -347,7 +347,7 @@ int bthread_timer_add(fiber_timer_id *id, timespec abstime,
     return ESTOP;
 }
 
-int bthread_timer_del(fiber_timer_id id) {
+int fiber_timer_del(fiber_timer_id id) {
     flare::fiber_internal::schedule_group *c = flare::fiber_internal::get_task_control();
     if (c != NULL) {
         flare::fiber_internal::TimerThread *tt = flare::fiber_internal::get_global_timer_thread();
@@ -362,7 +362,7 @@ int bthread_timer_del(fiber_timer_id id) {
     return EINVAL;
 }
 
-int bthread_set_worker_startfn(void (*start_fn)()) {
+int fiber_set_worker_startfn(void (*start_fn)()) {
     if (start_fn == NULL) {
         return EINVAL;
     }
@@ -370,14 +370,14 @@ int bthread_set_worker_startfn(void (*start_fn)()) {
     return 0;
 }
 
-void bthread_stop_world() {
+void fiber_stop_world() {
     flare::fiber_internal::schedule_group *c = flare::fiber_internal::get_task_control();
     if (c != NULL) {
         c->stop_and_join();
     }
 }
 
-int bthread_list_init(bthread_list_t *list,
+int fiber_list_init(fiber_list_t *list,
                       unsigned /*size*/,
                       unsigned /*conflict_size*/) {
     list->impl = new(std::nothrow) flare::fiber_internal::TidList;
@@ -392,19 +392,19 @@ int bthread_list_init(bthread_list_t *list,
     return 0;
 }
 
-void bthread_list_destroy(bthread_list_t *list) {
+void fiber_list_destroy(fiber_list_t *list) {
     delete static_cast<flare::fiber_internal::TidList *>(list->impl);
     list->impl = NULL;
 }
 
-int bthread_list_add(bthread_list_t *list, fiber_id_t id) {
+int fiber_list_add(fiber_list_t *list, fiber_id_t id) {
     if (list->impl == NULL) {
         return EINVAL;
     }
     return static_cast<flare::fiber_internal::TidList *>(list->impl)->add(id);
 }
 
-int bthread_list_stop(bthread_list_t *list) {
+int fiber_list_stop(fiber_list_t *list) {
     if (list->impl == NULL) {
         return EINVAL;
     }
@@ -412,7 +412,7 @@ int bthread_list_stop(bthread_list_t *list) {
     return 0;
 }
 
-int bthread_list_join(bthread_list_t *list) {
+int fiber_list_join(fiber_list_t *list) {
     if (list->impl == NULL) {
         return EINVAL;
     }

@@ -19,7 +19,7 @@
 #define FLARE_FIBER_INTERNAL_FIBER_ENTITY_H_
 
 #include <pthread.h>                 // pthread_spin_init
-#include "flare/fiber/internal/butex.h"           // butex_construct/destruct
+#include "flare/fiber/internal/waitable_event.h"           // butex_construct/destruct
 #include "flare/base/static_atomic.h"          // std::atomic
 #include "flare/fiber/internal/types.h"           // fiber_attribute
 #include "flare/fiber/internal/stack.h"           // fiber_contextual_stack
@@ -62,7 +62,7 @@ namespace flare::fiber_internal {
         // [Not Reset] guarantee visibility of version_butex.
         pthread_spinlock_t version_lock;
 
-        // [Not Reset] only modified by one bthread at any time, no need to be atomic
+        // [Not Reset] only modified by one fiber at any time, no need to be atomic
         uint32_t *version_butex;
 
         // The identifier. It does not have to be here, however many code is
@@ -85,7 +85,7 @@ namespace flare::fiber_internal {
         fiber_statistics stat;
 
         // fiber local storage, sync with tls_bls (defined in task_group.cpp)
-        // when the bthread is created or destroyed.
+        // when the fiber is created or destroyed.
         // DO NOT use this field directly, use tls_bls instead.
         fiber_local_storage local_storage;
 
@@ -95,12 +95,12 @@ namespace flare::fiber_internal {
         fiber_entity()
                 : current_waiter(NULL), current_sleep(0), stack(NULL) {
             pthread_spin_init(&version_lock, 0);
-            version_butex = butex_create_checked<uint32_t>();
+            version_butex = waitable_event_create_checked<uint32_t>();
             *version_butex = 1;
         }
 
         ~fiber_entity() {
-            butex_destroy(version_butex);
+            waitable_event_destroy(version_butex);
             version_butex = NULL;
             pthread_spin_destroy(&version_lock);
         }

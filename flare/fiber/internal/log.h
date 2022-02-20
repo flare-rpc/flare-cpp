@@ -19,9 +19,9 @@
 
 // Date: Mon Sep 15 10:51:15 CST 2014
 
-#ifndef BTHREAD_LOG_H
-#define BTHREAD_LOG_H
+#ifndef FLARE_FIBER_INTERNAL__LOG_H_
+#define FLARE_FIBER_INTERNAL__LOG_H_
 
 #define BT_VLOG VLOG(100)
 
-#endif // BTHREAD_LOG_H
+#endif  // FLARE_FIBER_INTERNAL__LOG_H_

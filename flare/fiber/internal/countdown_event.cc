@@ -20,7 +20,7 @@
 // Date: 2016/06/03 13:15:24
 
 #include "flare/base/static_atomic.h"     // std::atomic<int>
-#include "flare/fiber/internal/butex.h"
+#include "flare/fiber/internal/waitable_event.h"
 #include "flare/fiber/internal/countdown_event.h"
 
 namespace flare::fiber_internal {
@@ -30,13 +30,13 @@ CountdownEvent::CountdownEvent(int initial_count) {
         LOG(FATAL) << "Invalid initial_count=" << initial_count;
         abort();
     }
-    _butex = butex_create_checked<int>();
+    _butex = waitable_event_create_checked<int>();
     *_butex = initial_count;
     _wait_was_invoked = false;
 }
 
 CountdownEvent::~CountdownEvent() {
-    butex_destroy(_butex);
+    waitable_event_destroy(_butex);
 }
 
 void CountdownEvent::signal(int sig) {
@@ -50,7 +50,7 @@ void CountdownEvent::signal(int sig) {
         return;
     }
     LOG_IF(ERROR, prev < sig) << "Counter is over decreased";
-    butex_wake_all(saved_butex);
+    waitable_event_wake_all(saved_butex);
 }
 
 int CountdownEvent::wait() {
@@ -61,7 +61,7 @@ int CountdownEvent::wait() {
         if (seen_counter <= 0) {
             return 0;
         }
-        if (butex_wait(_butex, seen_counter, NULL) < 0 &&
+        if (waitable_event_wait(_butex, seen_counter, NULL) < 0 &&
             errno != EWOULDBLOCK && errno != EINTR) {
             return errno;
         }
@@ -99,7 +99,7 @@ int CountdownEvent::timed_wait(const timespec& duetime) {
         if (seen_counter <= 0) {
             return 0;
         }
-        if (butex_wait(_butex, seen_counter, &duetime) < 0 &&
+        if (waitable_event_wait(_butex, seen_counter, &duetime) < 0 &&
             errno != EWOULDBLOCK && errno != EINTR) {
             return errno;
         }

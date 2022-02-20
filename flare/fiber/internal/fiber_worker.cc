@@ -9,7 +9,7 @@
 #include <memory>
 #include "flare/hash/murmurhash3.h" // fmix64
 #include "flare/fiber/internal/errno.h"                  // ESTOP
-#include "flare/fiber/internal/butex.h"                  // butex_*
+#include "flare/fiber/internal/waitable_event.h"                  // butex_*
 #include "flare/fiber/internal/sys_futex.h"              // futex_wake_private
 #include "flare/fiber/internal/processor.h"              // cpu_relax
 #include "flare/fiber/internal/schedule_group.h"
@@ -19,13 +19,13 @@
 
 namespace flare::fiber_internal {
 
-    static const fiber_attribute BTHREAD_ATTR_TASKGROUP = {
+    static const fiber_attribute FIBER_ATTR_TASKGROUP = {
             FIBER_STACKTYPE_UNKNOWN, 0, NULL};
 
     static bool pass_bool(const char *, bool) { return true; }
 
     DEFINE_bool(show_bthread_creation_in_vars, false, "When this flags is on, The time "
-                                                      "from bthread creation to first run will be recorded and shown "
+                                                      "from fiber creation to first run will be recorded and shown "
                                                       "in /vars");
     const bool FLARE_ALLOW_UNUSED dummy_show_bthread_creation_in_vars =
             ::GFLAGS_NS::RegisterFlagValidator(&FLAGS_show_bthread_creation_in_vars,
@@ -38,15 +38,15 @@ namespace flare::fiber_internal {
                                                pass_bool);
 
     __thread fiber_worker *tls_task_group = NULL;
-// Sync with fiber_entity::local_storage when a bthread is created or destroyed.
+// Sync with fiber_entity::local_storage when a fiber is created or destroyed.
 // During running, the two fields may be inconsistent, use tls_bls as the
 // groundtruth.
     thread_local fiber_local_storage tls_bls = BTHREAD_LOCAL_STORAGE_INITIALIZER;
 
-// defined in bthread/key.cpp
+// defined in fiber/key.cpp
     extern void return_keytable(bthread_keytable_pool_t *, KeyTable *);
 
-// [Hacky] This is a special TLS set by bthread-rpc privately... to save
+// [Hacky] This is a special TLS set by fiber-rpc privately... to save
 // overhead of creation keytable, may be removed later.
     FLARE_THREAD_LOCAL void *tls_unique_user_ptr = NULL;
 
@@ -97,7 +97,7 @@ namespace flare::fiber_internal {
 
     bool fiber_worker::wait_task(fiber_id_t *tid) {
         do {
-#ifndef BTHREAD_DONT_SAVE_PARKING_STATE
+#ifndef FIBER_DONT_SAVE_PARKING_STATE
             if (_last_pl_state.stopped()) {
                 return false;
             }
@@ -205,7 +205,7 @@ namespace flare::fiber_internal {
         m->local_storage = LOCAL_STORAGE_INIT;
         m->cpuwide_start_ns = flare::base::cpuwide_time_ns();
         m->stat = EMPTY_STAT;
-        m->attr = BTHREAD_ATTR_TASKGROUP;
+        m->attr = FIBER_ATTR_TASKGROUP;
         m->tid = make_tid(*m->version_butex, slot);
         m->set_stack(stk);
 
@@ -255,7 +255,7 @@ namespace flare::fiber_internal {
             }
 
             // Not catch exceptions except ExitException which is for implementing
-            // bthread_exit(). User code is intended to crash when an exception is
+            // fiber_exit(). User code is intended to crash when an exception is
             // not caught explicitly. This is consistent with other threading
             // libraries.
             void *thread_return;
@@ -272,10 +272,10 @@ namespace flare::fiber_internal {
             (void) thread_return;
 
             // Logging must be done before returning the keytable, since the logging lib
-            // use bthread local storage internally, or will cause memory leak.
+            // use fiber local storage internally, or will cause memory leak.
             // FIXME: the time from quiting fn to here is not counted into cputime
             if (m->attr.flags & FIBER_LOG_START_AND_FINISH) {
-                LOG(INFO) << "Finished bthread " << m->tid << ", cputime="
+                LOG(INFO) << "Finished fiber " << m->tid << ", cputime="
                           << m->stat.cputime_ns / 1000000.0 << "ms";
             }
 
@@ -292,7 +292,7 @@ namespace flare::fiber_internal {
 
             // Increase the version and wake up all joiners, if resulting version
             // is 0, change it to 1 to make fiber_id_t never be 0. Any access
-            // or join to the bthread after changing version will be rejected.
+            // or join to the fiber after changing version will be rejected.
             // The spinlock is for visibility of fiber_worker::get_attr.
             {
                 FLARE_SCOPED_LOCK(m->version_lock);
@@ -300,9 +300,9 @@ namespace flare::fiber_internal {
                     ++*m->version_butex;
                 }
             }
-            butex_wake_except(m->version_butex, 0);
+            waitable_event_wake_except(m->version_butex, 0);
 
-            g->_control->_nbthreads << -1;
+            g->_control->_nfibers << -1;
             g->set_remained(fiber_worker::_release_last_context, m);
             ending_sched(&g);
 
@@ -352,11 +352,11 @@ namespace flare::fiber_internal {
         m->tid = make_tid(*m->version_butex, slot);
         *th = m->tid;
         if (using_attr.flags & FIBER_LOG_START_AND_FINISH) {
-            LOG(INFO) << "Started bthread " << m->tid;
+            LOG(INFO) << "Started fiber " << m->tid;
         }
 
         fiber_worker *g = *pg;
-        g->_control->_nbthreads << 1;
+        g->_control->_nfibers << 1;
         if (g->is_current_pthread_task()) {
             // never create foreground task in pthread.
             g->ready_to_run(m->tid, (using_attr.flags & FIBER_NOSIGNAL));
@@ -407,9 +407,9 @@ namespace flare::fiber_internal {
         m->tid = make_tid(*m->version_butex, slot);
         *th = m->tid;
         if (using_attr.flags & FIBER_LOG_START_AND_FINISH) {
-            LOG(INFO) << "Started bthread " << m->tid;
+            LOG(INFO) << "Started fiber " << m->tid;
         }
-        _control->_nbthreads << 1;
+        _control->_nfibers << 1;
         if (REMOTE) {
             ready_to_run_remote(m->tid, (using_attr.flags & FIBER_NOSIGNAL));
         } else {
@@ -432,12 +432,12 @@ namespace flare::fiber_internal {
                                           void *__restrict arg);
 
     int fiber_worker::join(fiber_id_t tid, void **return_value) {
-        if (__builtin_expect(!tid, 0)) {  // tid of bthread is never 0.
+        if (__builtin_expect(!tid, 0)) {  // tid of fiber is never 0.
             return EINVAL;
         }
         fiber_entity *m = address_meta(tid);
         if (__builtin_expect(!m, 0)) {
-            // The bthread is not created yet, this join is definitely wrong.
+            // The fiber is not created yet, this join is definitely wrong.
             return EINVAL;
         }
         fiber_worker *g = tls_task_group;
@@ -447,7 +447,7 @@ namespace flare::fiber_internal {
         }
         const uint32_t expected_version = get_version(tid);
         while (*m->version_butex == expected_version) {
-            if (butex_wait(m->version_butex, expected_version, NULL) < 0 &&
+            if (waitable_event_wait(m->version_butex, expected_version, NULL) < 0 &&
                 errno != EWOULDBLOCK && errno != EINTR) {
                 return errno;
             }
@@ -459,7 +459,7 @@ namespace flare::fiber_internal {
     }
 
     bool fiber_worker::exists(fiber_id_t tid) {
-        if (tid != 0) {  // tid of bthread is never 0.
+        if (tid != 0) {  // tid of fiber is never 0.
             fiber_entity *m = address_meta(tid);
             if (m != NULL) {
                 return (*m->version_butex == get_version(tid));
@@ -538,7 +538,7 @@ namespace flare::fiber_internal {
                        << ") call sched_to(" << g << ")";
         }
 #endif
-        // Save errno so that errno is bthread-specific.
+        // Save errno so that errno is fiber-specific.
         const int saved_errno = errno;
         void *saved_unique_user_ptr = tls_unique_user_ptr;
 
@@ -560,10 +560,10 @@ namespace flare::fiber_internal {
             tls_bls = next_meta->local_storage;
 
             // Logging must be done after switching the local storage, since the logging lib
-            // use bthread local storage internally, or will cause memory leak.
+            // use fiber local storage internally, or will cause memory leak.
             if ((cur_meta->attr.flags & FIBER_LOG_CONTEXT_SWITCH) ||
                 (next_meta->attr.flags & FIBER_LOG_CONTEXT_SWITCH)) {
-                LOG(INFO) << "Switch bthread: " << cur_meta->tid << " -> "
+                LOG(INFO) << "Switch fiber: " << cur_meta->tid << " -> "
                           << next_meta->tid;
             }
 
@@ -583,7 +583,7 @@ namespace flare::fiber_internal {
             }
             // else because of ending_sched(including pthread_task->pthread_task)
         } else {
-            LOG(FATAL) << "bthread=" << g->current_tid() << " sched_to itself!";
+            LOG(FATAL) << "fiber=" << g->current_tid() << " sched_to itself!";
         }
 
         while (g->_last_context_remained) {
@@ -752,7 +752,7 @@ namespace flare::fiber_internal {
             return 0;
         }
         fiber_worker *g = *pg;
-        // We have to schedule timer after we switched to next bthread otherwise
+        // We have to schedule timer after we switched to next fiber otherwise
         // the timer may wake up(jump to) current still-running context.
         SleepArgs e = {timeout_us, g->current_tid(), g->current_task(), g};
         g->set_remained(_add_sleep_event, &e);
@@ -762,7 +762,7 @@ namespace flare::fiber_internal {
         if (e.meta->interrupted) {
             // Race with set and may consume multiple interruptions, which are OK.
             e.meta->interrupted = false;
-            // NOTE: setting errno to ESTOP is not necessary from bthread's
+            // NOTE: setting errno to ESTOP is not necessary from fiber's
             // pespective, however many RPC code expects flare::this_fiber::fiber_sleep_for to set
             // errno to ESTOP when the thread is stopping, and print FATAL
             // otherwise. To make smooth transitions, ESTOP is still set instead
@@ -774,7 +774,7 @@ namespace flare::fiber_internal {
     }
 
 // Defined in butex.cpp
-    bool erase_from_butex_because_of_interruption(fiber_mutex_waiter *bw);
+    bool erase_from_event_because_of_interruption(fiber_mutex_waiter *bw);
 
     static int interrupt_and_consume_waiters(
             fiber_id_t tid, fiber_mutex_waiter **pw, uint64_t *sleep_id) {
@@ -794,13 +794,13 @@ namespace flare::fiber_internal {
         return EINVAL;
     }
 
-    static int set_butex_waiter(fiber_id_t tid, fiber_mutex_waiter *w) {
+    static int set_event_waiter(fiber_id_t tid, fiber_mutex_waiter *w) {
         fiber_entity *const m = fiber_worker::address_meta(tid);
         if (m != NULL) {
             const uint32_t given_ver = get_version(tid);
             FLARE_SCOPED_LOCK(m->version_lock);
             if (given_ver == *m->version_butex) {
-                // Release fence makes m->interrupted visible to butex_wait
+                // Release fence makes m->interrupted visible to waitable_event_wait
                 m->current_waiter.store(w, std::memory_order_release);
                 return 0;
             }
@@ -809,7 +809,7 @@ namespace flare::fiber_internal {
     }
 
 // The interruption is "persistent" compared to the ones caused by signals,
-// namely if a bthread is interrupted when it's not blocked, the interruption
+// namely if a fiber is interrupted when it's not blocked, the interruption
 // is still remembered and will be checked at next blocking. This designing
 // choice simplifies the implementation and reduces notification loss caused
 // by race conditions.
@@ -823,15 +823,15 @@ namespace flare::fiber_internal {
         if (rc) {
             return rc;
         }
-        // a bthread cannot wait on a butex and be sleepy at the same time.
+        // a fiber cannot wait on a butex and be sleepy at the same time.
         CHECK(!sleep_id || !w);
         if (w != NULL) {
-            erase_from_butex_because_of_interruption(w);
-            // If butex_wait() already wakes up before we set current_waiter back,
+            erase_from_event_because_of_interruption(w);
+            // If waitable_event_wait() already wakes up before we set current_waiter back,
             // the function will spin until current_waiter becomes non-NULL.
-            rc = set_butex_waiter(tid, w);
+            rc = set_event_waiter(tid, w);
             if (rc) {
-                LOG(FATAL) << "butex_wait should spin until setting back waiter";
+                LOG(FATAL) << "waitable_event_wait should spin until setting back waiter";
                 return rc;
             }
         } else if (sleep_id != 0) {
@@ -860,7 +860,7 @@ namespace flare::fiber_internal {
     void print_task(std::ostream &os, fiber_id_t tid) {
         fiber_entity *const m = fiber_worker::address_meta(tid);
         if (m == NULL) {
-            os << "bthread=" << tid << " : never existed";
+            os << "fiber=" << tid << " : never existed";
             return;
         }
         const uint32_t given_ver = get_version(tid);
@@ -890,9 +890,9 @@ namespace flare::fiber_internal {
             }
         }
         if (!matched) {
-            os << "bthread=" << tid << " : not exist now";
+            os << "fiber=" << tid << " : not exist now";
         } else {
-            os << "bthread=" << tid << " :\nstop=" << stop
+            os << "fiber=" << tid << " :\nstop=" << stop
                << "\ninterrupted=" << interrupted
                << "\nabout_to_quit=" << about_to_quit
                << "\nfn=" << (void *) fn

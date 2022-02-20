@@ -21,7 +21,7 @@
 #include <leveldb/db.h>
 #include <filesystem>
 #include <leveldb/comparator.h>
-#include "flare/fiber/internal/bthread.h"
+#include "flare/fiber/internal/fiber.h"
 #include "flare/base/scoped_lock.h"
 #include "flare/base/thread.h"
 #include "flare/base/strings.h"

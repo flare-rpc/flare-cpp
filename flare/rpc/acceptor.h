@@ -20,7 +20,7 @@
 
 #include <mutex>
 #include <condition_variable>
-#include "flare/fiber/internal/bthread.h"                       // fiber_id_t
+#include "flare/fiber/internal/fiber.h"                       // fiber_id_t
 #include "flare/container/flat_map.h"
 #include "flare/rpc/input_messenger.h"
 

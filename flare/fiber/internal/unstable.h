@@ -28,30 +28,30 @@
 #include "flare/fiber/internal/errno.h"
 
 // NOTICE:
-//   As the filename implies, this file lists UNSTABLE bthread functions
+//   As the filename implies, this file lists UNSTABLE fiber functions
 //   which are likely to be modified or even removed in future release. We
 //   don't guarantee any kind of backward compatibility. Don't use these
 //   functions if you're not ready to change your code according to newer
-//   versions of bthread.
+//   versions of fiber.
 
 __BEGIN_DECLS
 
 // Schedule tasks created by FIBER_NOSIGNAL
-extern void bthread_flush();
+extern void fiber_flush();
 
-// Mark the calling bthread as "about to quit". When the bthread is scheduled,
+// Mark the calling fiber as "about to quit". When the fiber is scheduled,
 // worker pthreads are not notified.
-extern int bthread_about_to_quit();
+extern int fiber_about_to_quit();
 
 // Run `on_timer(arg)' at or after real-time `abstime'. Put identifier of the
 // timer into *id.
 // Return 0 on success, errno otherwise.
-extern int bthread_timer_add(fiber_timer_id* id, timespec abstime,
+extern int fiber_timer_add(fiber_timer_id* id, timespec abstime,
                              void (*on_timer)(void*), void* arg);
 
 // Unschedule the timer associated with `id'.
 // Returns: 0 - exist & not-run; 1 - still running; EINVAL - not exist.
-extern int bthread_timer_del(fiber_timer_id id);
+extern int fiber_timer_del(fiber_timer_id id);
 
 // Suspend caller thread until the file descriptor `fd' has `epoll_events'.
 // Returns 0 on success, -1 otherwise and errno is set.
@@ -70,24 +70,24 @@ extern int bthread_fd_timedwait(int fd, unsigned epoll_events,
 // Close file descriptor `fd' and wake up all threads waiting on it.
 // User should call this function instead of close(2) if bthread_fd_wait,
 // bthread_fd_timedwait, bthread_connect were called on the file descriptor,
-// otherwise waiters will suspend indefinitely and bthread's internal epoll
+// otherwise waiters will suspend indefinitely and fiber's internal epoll
 // may work abnormally after fork() is called.
 // NOTE: This function does not wake up pthread waiters.(tested on linux 2.6.32)
 extern int bthread_close(int fd);
 
-// Replacement of connect(2) in bthreads.
+// Replacement of connect(2) in fibers.
 extern int bthread_connect(int sockfd, const sockaddr* serv_addr,
                            socklen_t addrlen);
 
 // Add a startup function that each pthread worker will run at the beginning
 // To run code at the end, use flare::base::thread_atexit()
 // Returns 0 on success, error code otherwise.
-extern int bthread_set_worker_startfn(void (*start_fn)());
+extern int fiber_set_worker_startfn(void (*start_fn)());
 
-// Stop all bthread and worker pthreads.
-// You should avoid calling this function which may cause bthread after main()
+// Stop all fiber and worker pthreads.
+// You should avoid calling this function which may cause fiber after main()
 // suspend indefinitely.
-extern void bthread_stop_world();
+extern void fiber_stop_world();
 
 // Create a fiber_local_key with an additional arg to destructor.
 // Generally the dtor_arg is for passing the creator of data so that we can
@@ -102,8 +102,8 @@ extern int bthread_key_create2(fiber_local_key* key,
 
 // [RPC INTERNAL]
 // Create a pool to cache KeyTables so that frequently created/destroyed
-// bthreads reuse these tables, namely when a bthread needs a KeyTable,
-// it fetches one from the pool instead of creating on heap. When a bthread
+// bthreads reuse these tables, namely when a fiber needs a KeyTable,
+// it fetches one from the pool instead of creating on heap. When a fiber
 // exits, it puts the table back to pool instead of deleting it.
 // Returns 0 on success, error code otherwise.
 extern int bthread_keytable_pool_init(bthread_keytable_pool_t*);

@@ -21,7 +21,7 @@
 
 #include <string>
 #include "flare/container/intrusive_ptr.h"               // flare::container::intrusive_ptr
-#include "flare/fiber/internal/bthread.h"                    // fiber_id_t
+#include "flare/fiber/internal/fiber.h"                    // fiber_id_t
 #include "flare/rpc/server_id.h"                     // ServerId
 #include "flare/rpc/shared_object.h"                 // SharedObject
 #include "flare/rpc/naming_service.h"                // NamingService

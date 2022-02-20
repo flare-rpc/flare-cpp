@@ -1013,7 +1013,7 @@ DECLARE_bool(usercode_in_pthread);
                                           FIBER_ATTR_PTHREAD :
                                           FIBER_ATTR_NORMAL);
                     tmp.keytable_pool = _socket->keytable_pool();
-                    CHECK_EQ(0, bthread_start_background(&th, &tmp, ProcessHttpResponseWrapper,
+                    CHECK_EQ(0, fiber_start_background(&th, &tmp, ProcessHttpResponseWrapper,
                                                          static_cast<InputMessageBase *>(goaway_streams[i])));
                 }
                 return MakeH2Message(goaway_streams[0]);

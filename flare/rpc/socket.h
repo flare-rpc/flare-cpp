@@ -28,7 +28,7 @@
 #include "flare/base/profile.h"                       // FLARE_DISALLOW_COPY_AND_ASSIGN
 #include "flare/base/endpoint.h"                     // flare::base::end_point
 #include "flare/memory/resource_pool.h"                // flare::memory::ResourceId
-#include "flare/fiber/internal/butex.h"                      // butex_create_checked
+#include "flare/fiber/internal/waitable_event.h"                      // waitable_event_create_checked
 #include "flare/rpc/authenticator.h"           // Authenticator
 #include "flare/rpc/errno.pb.h"                // EFAILEDSOCKET
 #include "flare/rpc/details/ssl_helper.h"      // SSLState
@@ -809,7 +809,7 @@ private:
     // Queued but written
     std::atomic<int64_t> _unwritten_bytes;
 
-    // Butex to wait for EPOLLOUT event
+    // waitable_event to wait for EPOLLOUT event
     std::atomic<int>* _epollout_butex;
 
     // Storing data that are not flushed into `fd' yet.

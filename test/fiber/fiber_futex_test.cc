@@ -25,7 +25,7 @@
 #include "flare/base/errno.h"
 #include <limits.h>                            // INT_MAX
 #include "flare/base/static_atomic.h"
-#include "flare/fiber/internal/bthread.h"
+#include "flare/fiber/internal/fiber.h"
 #include <flare/fiber/internal/sys_futex.h>
 #include <flare/fiber/internal/processor.h>
 #include "flare/fiber/this_fiber.h"

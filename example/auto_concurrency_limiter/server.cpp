@@ -26,7 +26,7 @@
 #include <flare/json2pb/json_to_pb.h>
 #include <flare/fiber/internal/timer_thread.h>
 #include <flare/fiber/this_fiber.h>
-#include <flare/fiber/internal/bthread.h>
+#include <flare/fiber/internal/fiber.h>
 
 #include <cstdlib>
 #include <fstream>
@@ -35,7 +35,7 @@
 DEFINE_int32(logoff_ms, 2000, "Maximum duration of server's LOGOFF state "
                               "(waiting for client to close connection before server stops)");
 DEFINE_int32(server_bthread_concurrency, 4,
-             "Configuring the value of bthread_concurrency, For compute max qps, ");
+             "Configuring the value of fiber_concurrency, For compute max qps, ");
 DEFINE_int32(server_sync_sleep_us, 2500,
              "Usleep time, each request will be executed once, For compute max qps");
 // max qps = 1000 / 2.5 * 4 
@@ -82,7 +82,7 @@ std::atomic<int> atomic_sleep_time(0);
 flare::variable::PassiveStatus<int> atomic_sleep_time_variable(cast_func, &atomic_sleep_time);
 
 namespace flare::fiber_internal {
-    DECLARE_int32(bthread_concurrency);
+    DECLARE_int32(fiber_concurrency);
 }
 
 void TimerTask(void *data);
@@ -275,7 +275,7 @@ private:
 int main(int argc, char *argv[]) {
     // Parse gflags. We recommend you to use gflags as well.
     GFLAGS_NS::ParseCommandLineFlags(&argc, &argv, true);
-    flare::fiber_internal::FLAGS_bthread_concurrency = FLAGS_server_bthread_concurrency;
+    flare::fiber_internal::FLAGS_fiber_concurrency = FLAGS_server_bthread_concurrency;
 
     flare::rpc::Server server;
 

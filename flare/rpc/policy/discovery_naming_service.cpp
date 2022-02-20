@@ -23,7 +23,7 @@
 #include "flare/base/strings.h"
 #include "flare/strings/str_split.h"
 #include "flare/base/fast_rand.h"
-#include "flare/fiber/internal/bthread.h"
+#include "flare/fiber/internal/fiber.h"
 #include "flare/rpc/channel.h"
 #include "flare/rpc/controller.h"
 #include "flare/rpc/policy/discovery_naming_service.h"
@@ -143,8 +143,8 @@ DiscoveryClient::DiscoveryClient()
 
 DiscoveryClient::~DiscoveryClient() {
     if (_registered.load(std::memory_order_acquire)) {
-        bthread_stop(_th);
-        bthread_join(_th, NULL);
+        fiber_stop(_th);
+        fiber_join(_th, NULL);
         DoCancel();
     }
 }
@@ -219,11 +219,11 @@ void* DiscoveryClient::PeriodicRenew(void* arg) {
         }
     }
 
-    while (!bthread_stopped(bthread_self())) {
+    while (!fiber_stopped(fiber_self())) {
         if (consecutive_renew_error == FLAGS_discovery_reregister_threshold) {
             LOG(WARNING) << "Re-register since discovery renew error threshold reached";
             // Do register until succeed or Cancel is called
-            while (!bthread_stopped(bthread_self())) {
+            while (!fiber_stopped(fiber_self())) {
                 if (d->DoRegister() == 0) {
                     break;
                 }
@@ -254,7 +254,7 @@ int DiscoveryClient::Register(const DiscoveryRegisterParam& params) {
     if (DoRegister() != 0) {
         return -1;
     }
-    if (bthread_start_background(&_th, NULL, PeriodicRenew, this) != 0) {
+    if (fiber_start_background(&_th, NULL, PeriodicRenew, this) != 0) {
         LOG(ERROR) << "Fail to start background PeriodicRenew";
         return -1;
     }

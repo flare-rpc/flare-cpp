@@ -1050,12 +1050,12 @@ TEST_F(RedisTest, server_concurrency) {
         channels.push_back(new flare::rpc::Channel);
         ASSERT_EQ(0, channels.back()->Init("127.0.0.1", server.listen_address().port, &options));
         fiber_id_t bth;
-        ASSERT_EQ(bthread_start_background(&bth, NULL, incr_thread, channels.back()), 0);
+        ASSERT_EQ(fiber_start_background(&bth, NULL, incr_thread, channels.back()), 0);
         bths.push_back(bth);
     }
 
     for (int i = 0; i < N; ++i) {
-        bthread_join(bths[i], NULL);
+        fiber_join(bths[i], NULL);
         delete channels[i];
     }
     ASSERT_EQ(int_map["count"], 10 * 5000LL);

@@ -21,7 +21,7 @@
 #include <gflags/gflags.h>
 #include <deque>
 #include <flare/fiber/this_fiber.h>
-#include <flare/fiber/internal/bthread.h>
+#include <flare/fiber/internal/fiber.h>
 #include "flare/log/logging.h"
 #include "flare/base/strings.h"
 #include <flare/base/scoped_file.h>
@@ -147,7 +147,7 @@ int main(int argc, char **argv) {
     std::vector<fiber_id_t> tids;
     tids.resize(FLAGS_thread_num);
     for (int i = 0; i < FLAGS_thread_num; ++i) {
-        CHECK_EQ(0, bthread_start_background(&tids[i], NULL, access_thread, &args[i]));
+        CHECK_EQ(0, fiber_start_background(&tids[i], NULL, access_thread, &args[i]));
     }
     std::deque<std::pair<std::string, flare::io::cord_buf> > output_queue;
     size_t nprinted = 0;
@@ -203,7 +203,7 @@ int main(int argc, char **argv) {
     }
 
     for (int i = 0; i < FLAGS_thread_num; ++i) {
-        bthread_join(tids[i], NULL);
+        fiber_join(tids[i], NULL);
     }
     for (int i = 0; i < FLAGS_thread_num; ++i) {
         while (args[i].current_concurrency.load(std::memory_order_relaxed) != 0) {

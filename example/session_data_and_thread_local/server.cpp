@@ -105,10 +105,10 @@ static void* process_thread(void* args) {
 class EchoServiceWithThreadAndSessionLocal : public example::EchoService {
 public:
     EchoServiceWithThreadAndSessionLocal() {
-        CHECK_EQ(0, bthread_key_create(&_tls2_key, MyThreadLocalData::deleter));
+        CHECK_EQ(0, fiber_key_create(&_tls2_key, MyThreadLocalData::deleter));
     }
     ~EchoServiceWithThreadAndSessionLocal() {
-        CHECK_EQ(0, bthread_key_delete(_tls2_key));
+        CHECK_EQ(0, fiber_key_delete(_tls2_key));
     };
     void Echo(google::protobuf::RpcController* cntl_base,
               const example::EchoRequest* request,
@@ -147,15 +147,15 @@ public:
 
         // You can create bthread-local data for your own.
         // The interfaces are similar with pthread equivalence:
-        //   pthread_key_create  -> bthread_key_create
-        //   pthread_key_delete  -> bthread_key_delete
-        //   pthread_getspecific -> bthread_getspecific
-        //   pthread_setspecific -> bthread_setspecific
+        //   pthread_key_create  -> fiber_key_create
+        //   pthread_key_delete  -> fiber_key_delete
+        //   pthread_getspecific -> fiber_getspecific
+        //   pthread_setspecific -> fiber_setspecific
         MyThreadLocalData* tls2 = 
-            static_cast<MyThreadLocalData*>(bthread_getspecific(_tls2_key));
+            static_cast<MyThreadLocalData*>(fiber_getspecific(_tls2_key));
         if (tls2 == NULL) {
             tls2 = new MyThreadLocalData;
-            CHECK_EQ(0, bthread_setspecific(_tls2_key, tls2));
+            CHECK_EQ(0, fiber_setspecific(_tls2_key, tls2));
         }
         tls2->y = expected_value + 1;
         
@@ -166,7 +166,7 @@ public:
         CHECK_EQ(tls, flare::rpc::thread_local_data());
         CHECK_EQ(expected_value, tls->y);
 
-        CHECK_EQ(tls2, bthread_getspecific(_tls2_key));
+        CHECK_EQ(tls2, fiber_getspecific(_tls2_key));
         CHECK_EQ(expected_value + 1, tls2->y);
 
         // Process the request asynchronously.
@@ -178,7 +178,7 @@ public:
         job->response = response;
         job->done = done;
         fiber_id_t th;
-        CHECK_EQ(0, bthread_start_background(&th, NULL, process_thread, job));
+        CHECK_EQ(0, fiber_start_background(&th, NULL, process_thread, job));
 
         // We don't want to call done->Run() here, release the guard.
         done_guard.release();

@@ -18,7 +18,7 @@
 
 #include <gflags/gflags.h>
 #include <map>
-#include "flare/fiber/internal/bthread.h"
+#include "flare/fiber/internal/fiber.h"
 #include "flare/base/time.h"
 #include "flare/base/scoped_lock.h"
 #include "flare/log/logging.h"
@@ -140,8 +140,8 @@ SocketMap::SocketMap()
 SocketMap::~SocketMap() {
     RPC_VLOG << "Destroying SocketMap=" << this;
     if (_has_close_idle_thread) {
-        bthread_stop(_close_idle_thread);
-        bthread_join(_close_idle_thread, NULL);
+        fiber_stop(_close_idle_thread);
+        fiber_join(_close_idle_thread, NULL);
     }
     if (!_map.empty()) {
         std::ostringstream err;
@@ -186,7 +186,7 @@ int SocketMap::Init(const SocketMapOptions& options) {
     }
     if (_options.idle_timeout_second_dynamic != NULL ||
         _options.idle_timeout_second > 0) {
-        if (bthread_start_background(&_close_idle_thread, NULL,
+        if (fiber_start_background(&_close_idle_thread, NULL,
                                      RunWatchConnections, this) != 0) {
             LOG(FATAL) << "Fail to start bthread";
             return -1;

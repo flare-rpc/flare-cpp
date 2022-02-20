@@ -41,8 +41,8 @@ DEFINE_int32(task_group_yield_before_idle, 0,
 
 namespace flare::fiber_internal {
 
-DECLARE_int32(bthread_concurrency);
-DECLARE_int32(bthread_min_concurrency);
+DECLARE_int32(fiber_concurrency);
+DECLARE_int32(fiber_min_concurrency);
 
 extern pthread_mutex_t g_task_control_mutex;
 extern FLARE_THREAD_LOCAL fiber_worker* tls_task_group;
@@ -66,14 +66,14 @@ void* schedule_group::worker_thread(void* arg) {
         return NULL;
     }
     BT_VLOG << "Created worker=" << pthread_self()
-            << " bthread=" << g->main_tid();
+            << " fiber=" << g->main_tid();
 
     tls_task_group = g;
     c->_nworkers << 1;
     g->run_main_task();
 
     stat = g->main_stat();
-    BT_VLOG << "Destroying worker=" << pthread_self() << " bthread="
+    BT_VLOG << "Destroying worker=" << pthread_self() << " fiber="
             << g->main_tid() << " idle=" << stat.cputime_ns / 1000000.0
             << "ms uptime=" << g->current_uptime_ns() / 1000000.0 << "ms";
     tls_task_group = NULL;
@@ -120,10 +120,10 @@ static int64_t get_cumulated_signal_count_from_this(void *arg) {
 schedule_group::schedule_group()
     // NOTE: all fileds must be initialized before the vars.
     : _ngroup(0)
-    , _groups((fiber_worker**)calloc(BTHREAD_MAX_CONCURRENCY, sizeof(fiber_worker*)))
+    , _groups((fiber_worker**)calloc(FIBER_MAX_CONCURRENCY, sizeof(fiber_worker*)))
     , _stop(false)
     , _concurrency(0)
-    , _nworkers("bthread_worker_count")
+    , _nworkers("fiber_worker_count")
     , _pending_time(NULL)
       // Delay exposure of following two vars because they rely on TC which
       // is not initialized yet.
@@ -134,7 +134,7 @@ schedule_group::schedule_group()
     , _cumulated_signal_count(get_cumulated_signal_count_from_this, this)
     , _signal_per_second(&_cumulated_signal_count)
     , _status(print_rq_sizes_in_the_tc, this)
-    , _nbthreads("bthread_count")
+    , _nfibers("fiber_count")
 {
     // calloc shall set memory to zero
     CHECK(_groups) << "Fail to create array of groups";
@@ -165,10 +165,10 @@ int schedule_group::init(int concurrency) {
             return -1;
         }
     }
-    _worker_usage_second.expose("bthread_worker_usage");
-    _switch_per_second.expose("bthread_switch_second");
-    _signal_per_second.expose("bthread_signal_second");
-    _status.expose("bthread_group_status");
+    _worker_usage_second.expose("fiber_worker_usage");
+    _switch_per_second.expose("fiber_switch_second");
+    _signal_per_second.expose("fiber_signal_second");
+    _status.expose("fiber_group_status");
 
     // Wait for at least one group is added so that choose_one_group()
     // never returns NULL.
@@ -266,7 +266,7 @@ int schedule_group::_add_group(fiber_worker* g) {
         return -1;
     }
     size_t ngroup = _ngroup.load(std::memory_order_relaxed);
-    if (ngroup < (size_t)BTHREAD_MAX_CONCURRENCY) {
+    if (ngroup < (size_t)FIBER_MAX_CONCURRENCY) {
         _groups[ngroup] = g;
         _ngroup.store(ngroup + 1, std::memory_order_release);
     }
@@ -380,11 +380,11 @@ void schedule_group::signal_task(int num_task) {
         }
     }
     if (num_task > 0 &&
-        FLAGS_bthread_min_concurrency > 0 &&    // test min_concurrency for performance
-        _concurrency.load(std::memory_order_relaxed) < FLAGS_bthread_concurrency) {
+        FLAGS_fiber_min_concurrency > 0 &&    // test min_concurrency for performance
+        _concurrency.load(std::memory_order_relaxed) < FLAGS_fiber_concurrency) {
         // TODO: Reduce this lock
         FLARE_SCOPED_LOCK(g_task_control_mutex);
-        if (_concurrency.load(std::memory_order_acquire) < FLAGS_bthread_concurrency) {
+        if (_concurrency.load(std::memory_order_acquire) < FLAGS_fiber_concurrency) {
             add_workers(1);
         }
     }
@@ -454,7 +454,7 @@ flare::variable::LatencyRecorder* schedule_group::create_exposed_pending_time() 
     }
     _pending_time_mutex.unlock();
     if (is_creator) {
-        pt->expose("bthread_creation");
+        pt->expose("fiber_creation");
     }
     return pt;
 }

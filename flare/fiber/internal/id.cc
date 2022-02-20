@@ -21,11 +21,11 @@
 
 #include <deque>
 #include "flare/log/logging.h"
-#include "flare/fiber/internal/butex.h"                       // butex_*
+#include "flare/fiber/internal/waitable_event.h"                       // butex_*
 #include "flare/fiber/internal/mutex.h"
 #include "flare/fiber/internal/list_of_abafree_id.h"
 #include "flare/memory/resource_pool.h"
-#include "flare/fiber/internal/bthread.h"
+#include "flare/fiber/internal/fiber.h"
 
 namespace flare::fiber_internal {
 
@@ -131,15 +131,15 @@ namespace flare::fiber_internal {
         Id() {
             // Although value of the butex(as version part of bthread_id_t)
             // does not matter, we set it to 0 to make program more deterministic.
-            butex = flare::fiber_internal::butex_create_checked<uint32_t>();
-            join_butex = flare::fiber_internal::butex_create_checked<uint32_t>();
+            butex = flare::fiber_internal::waitable_event_create_checked<uint32_t>();
+            join_butex = flare::fiber_internal::waitable_event_create_checked<uint32_t>();
             *butex = 0;
             *join_butex = 0;
         }
 
         ~Id() {
-            flare::fiber_internal::butex_destroy(butex);
-            flare::fiber_internal::butex_destroy(join_butex);
+            flare::fiber_internal::waitable_event_destroy(butex);
+            flare::fiber_internal::waitable_event_destroy(join_butex);
         }
 
         inline bool has_version(uint32_t id_ver) const {
@@ -452,7 +452,7 @@ int bthread_id_lock_and_reset_range_verbose(
             uint32_t expected_ver = *butex;
             meta->mutex.unlock();
             ever_contended = true;
-            if (flare::fiber_internal::butex_wait(butex, expected_ver, NULL) < 0 &&
+            if (flare::fiber_internal::waitable_event_wait(butex, expected_ver, NULL) < 0 &&
                 errno != EWOULDBLOCK && errno != EINTR) {
                 return errno;
             }
@@ -493,7 +493,7 @@ int bthread_id_about_to_destroy(bthread_id_t id) {
     meta->mutex.unlock();
     if (contended) {
         // wake up all waiting lockers.
-        flare::fiber_internal::butex_wake_except(butex, 0);
+        flare::fiber_internal::waitable_event_wake_except(butex, 0);
     }
     return 0;
 }
@@ -539,7 +539,7 @@ int bthread_id_join(bthread_id_t id) {
         if (!has_ver) {
             break;
         }
-        if (flare::fiber_internal::butex_wait(join_butex, expected_ver, NULL) < 0 &&
+        if (flare::fiber_internal::waitable_event_wait(join_butex, expected_ver, NULL) < 0 &&
             errno != EWOULDBLOCK && errno != EINTR) {
             return errno;
         }
@@ -612,7 +612,7 @@ int bthread_id_unlock(bthread_id_t id) {
         meta->mutex.unlock();
         if (contended) {
             // We may wake up already-reused id, but that's OK.
-            flare::fiber_internal::butex_wake(butex);
+            flare::fiber_internal::waitable_event_wake(butex);
         }
         return 0;
     }
@@ -644,9 +644,9 @@ int bthread_id_unlock_and_destroy(bthread_id_t id) {
     meta->locked_ver = next_ver;
     meta->pending_q.clear();
     meta->mutex.unlock();
-    // Notice that butex_wake* returns # of woken-up, not successful or not.
-    flare::fiber_internal::butex_wake_except(butex, 0);
-    flare::fiber_internal::butex_wake_all(join_butex);
+    // Notice that waitable_event_wake* returns # of woken-up, not successful or not.
+    flare::fiber_internal::waitable_event_wake_except(butex, 0);
+    flare::fiber_internal::waitable_event_wake_all(join_butex);
     return_resource(flare::fiber_internal::get_slot(id));
     return 0;
 }
@@ -694,7 +694,7 @@ int bthread_id_list_reset_pthreadsafe(bthread_id_list_t *list, int error_code,
 }
 
 int bthread_id_list_reset_bthreadsafe(bthread_id_list_t *list, int error_code,
-                                      bthread_mutex_t *mutex) {
+                                      fiber_mutex_t *mutex) {
     return bthread_id_list_reset2_bthreadsafe(
             list, error_code, std::string(), mutex);
 }
@@ -790,7 +790,7 @@ int bthread_id_list_reset2_pthreadsafe(bthread_id_list_t *list,
 int bthread_id_list_reset2_bthreadsafe(bthread_id_list_t *list,
                                        int error_code,
                                        const std::string &error_text,
-                                       bthread_mutex_t *mutex) {
+                                       fiber_mutex_t *mutex) {
     if (mutex == NULL) {
         return EINVAL;
     }
@@ -803,9 +803,9 @@ int bthread_id_list_reset2_bthreadsafe(bthread_id_list_t *list,
         return rc;
     }
     // Swap out the list then reset. The critical section is very small.
-    bthread_mutex_lock(mutex);
+    fiber_mutex_lock(mutex);
     std::swap(list->impl, tmplist.impl);
-    bthread_mutex_unlock(mutex);
+    fiber_mutex_unlock(mutex);
     const int rc2 = bthread_id_list_reset2(&tmplist, error_code, error_text);
     bthread_id_list_destroy(&tmplist);
     return rc2;

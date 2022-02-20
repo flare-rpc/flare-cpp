@@ -107,7 +107,7 @@ namespace example {
                 std::unique_ptr<Args> args(new Args);
                 args->pa = cntl->CreateProgressiveAttachment();
                 fiber_id_t th;
-                bthread_start_background(&th, NULL, SendLargeFile, args.release());
+                fiber_start_background(&th, NULL, SendLargeFile, args.release());
             } else {
                 cntl->response_attachment().append("Getting file: ");
                 cntl->response_attachment().append(filename);

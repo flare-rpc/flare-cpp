@@ -42,7 +42,7 @@ TEST(CountdonwEventTest, sanity) {
         a.event.reset(n);
         for (int i = 0; i < n; ++i) {
             fiber_id_t tid;
-            ASSERT_EQ(0, bthread_start_urgent(&tid, NULL, signaler, &a));
+            ASSERT_EQ(0, fiber_start_urgent(&tid, NULL, signaler, &a));
         }
         a.event.wait();
         ASSERT_EQ(0, a.num_sig.load(std::memory_order_relaxed));
