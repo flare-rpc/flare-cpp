@@ -33,9 +33,9 @@ namespace flare::fiber_internal {
     int waitable_event_wake_all(void *event);
 
     // Wake up all threads waiting on |event| except a fiber whose identifier
-    // is |excluded_bthread|. This function does not yield.
+    // is |excluded_fiber|. This function does not yield.
     // Returns # of threads woken up.
-    int waitable_event_wake_except(void *event, fiber_id_t excluded_bthread);
+    int waitable_event_wake_except(void *event, fiber_id_t excluded_fiber);
 
     // Wake up at most 1 thread waiting on |butex1|, let all other threads wait
     // on |butex2| instead.

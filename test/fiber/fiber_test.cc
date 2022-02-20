@@ -90,7 +90,7 @@ TEST_F(BthreadTest, context_sanity) {
     std::cout << p.first << " + " << p.second << " == " << res << std::endl;
 }
 
-TEST_F(BthreadTest, call_bthread_functions_before_tls_created) {
+TEST_F(BthreadTest, call_fiber_functions_before_tls_created) {
     ASSERT_EQ(0, flare::this_fiber::fiber_sleep_for(1000));
     ASSERT_EQ(EINVAL, fiber_join(0, NULL));
     ASSERT_EQ(0UL, fiber_self());

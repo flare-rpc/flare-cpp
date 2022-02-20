@@ -30,7 +30,7 @@ DECLARE_bool(usercode_in_pthread);
 DECLARE_int32(usercode_backup_threads);
 
 // "user code backup pool" is a set of pthreads to run user code when #pthread
-// workers of bthreads reaches a threshold, avoiding potential deadlock when
+// workers of fibers reaches a threshold, avoiding potential deadlock when
 // -usercode_in_pthread is on. These threads are NOT supposed to be active
 // frequently, if they're, user should configure more num_threads for the
 // server or set -fiber_concurrency to a larger value.
