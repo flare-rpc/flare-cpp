@@ -215,7 +215,7 @@ namespace {
             count += args[i].counter;
         }
         LOG(INFO) << flare::base::class_name<fiber_mutex>() << " in "
-                  << ((void *) create_fn == (void *) pthread_create ? "pthread" : "bthread")
+                  << ((void *) create_fn == (void *) pthread_create ? "pthread" : "fiber")
                   << " thread_num=" << thread_num
                   << " count=" << count
                   << " average_time=" << wait_time / (double) count;

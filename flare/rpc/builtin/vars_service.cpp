@@ -350,10 +350,10 @@ void VarsService::default_method(::google::protobuf::RpcController* cntl_base,
             "  }\n"
             // Normalize ;,\s\* to space, trim beginning/ending spaces and
             // replace all spaces with *;* and add beginning/ending *
-            //   iobuf,bthread         -> *iobuf*;*bthread*
+            //   iobuf,fiber         -> *iobuf*;*fiber*
             //   iobuf,                -> *iobuf*
             //   ;,iobuf               -> *iobuf*
-            //   ,;*iobuf*, bthread;,; -> *iobuf*;*bthread*
+            //   ,;*iobuf*, fiber;,; -> *iobuf*;*fiber*
             "  text = text.replace(/(;|,|\\s|\\*)+/g, ' ').trim()"
             "             .replace(/ /g, '*;*');\n"
             "  if (text == '') {\n"

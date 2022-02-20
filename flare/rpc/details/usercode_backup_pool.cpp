@@ -23,7 +23,7 @@
 #include "flare/rpc/details/usercode_backup_pool.h"
 
 namespace flare::fiber_internal {
-// Defined in bthread/task_control.cpp
+// Defined in fiber/task_control.cpp
 void run_worker_startfn();
 }
 
@@ -93,7 +93,7 @@ static void* UserCodeRunner(void* args) {
 }
 
 int UserCodeBackupPool::Init() {
-    // Like bthread workers, these threads never quit (to avoid potential hang
+    // Like fiber workers, these threads never quit (to avoid potential hang
     // during termination of program).
     for (int i = 0; i < FLAGS_usercode_backup_threads; ++i) {
         pthread_t th;

@@ -474,7 +474,7 @@ void* fiber_getspecific(fiber_local_key key) {
     return NULL;
 }
 
-void bthread_assign_data(void* data) {
+void fiber_assign_data(void* data) {
     flare::fiber_internal::tls_bls.assigned_data = data;
 }
 

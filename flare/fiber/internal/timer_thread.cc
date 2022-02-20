@@ -457,7 +457,7 @@ static void init_global_timer_thread() {
         return;
     }
     TimerThreadOptions options;
-    options.variable_prefix = "bthread_timer";
+    options.variable_prefix = "fiber_timer";
     const int rc = g_timer_thread->start(&options);
     if (rc != 0) {
         LOG(FATAL) << "Fail to start timer_thread, " << flare_error(rc);

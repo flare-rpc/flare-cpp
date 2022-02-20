@@ -19,8 +19,8 @@
 
 // Date: Sun Sep  7 22:37:39 CST 2014
 
-#ifndef BTHREAD_ALLOCATE_STACK_H
-#define BTHREAD_ALLOCATE_STACK_H
+#ifndef FLARE_FIBER_INTERNAL_STACK_H_
+#define FLARE_FIBER_INTERNAL_STACK_H_
 
 #include <assert.h>
 #include <gflags/gflags.h>          // DECLARE_int32
@@ -83,4 +83,4 @@ namespace flare::fiber_internal {
 
 #include "flare/fiber/internal/stack_inl.h"
 
-#endif  // BTHREAD_ALLOCATE_STACK_H
+#endif  // FLARE_FIBER_INTERNAL_STACK_H_

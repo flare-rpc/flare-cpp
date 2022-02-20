@@ -36,7 +36,7 @@ DECLARE_int32(usercode_backup_threads);
 // server or set -fiber_concurrency to a larger value.
 
 // Run the user code in-place or in backup threads. The place depends on
-// busy-ness of bthread workers.
+// busy-ness of fiber workers.
 // NOTE: To avoid memory allocation(for `arg') in the case of in-place running,
 // check out the inline impl. of this function just below.
 void RunUserCode(void (*fn)(void*), void* arg);

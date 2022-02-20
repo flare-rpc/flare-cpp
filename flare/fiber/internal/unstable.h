@@ -19,8 +19,8 @@
 
 // Date: Tue Jul 10 17:40:58 CST 2012
 
-#ifndef BTHREAD_UNSTABLE_H
-#define BTHREAD_UNSTABLE_H
+#ifndef FLARE_FIBER_INTERNAL_UNSTABLE_H_
+#define FLARE_FIBER_INTERNAL_UNSTABLE_H_
 
 #include <pthread.h>
 #include <sys/socket.h>
@@ -46,8 +46,8 @@ extern int fiber_about_to_quit();
 // Run `on_timer(arg)' at or after real-time `abstime'. Put identifier of the
 // timer into *id.
 // Return 0 on success, errno otherwise.
-extern int fiber_timer_add(fiber_timer_id* id, timespec abstime,
-                             void (*on_timer)(void*), void* arg);
+extern int fiber_timer_add(fiber_timer_id *id, timespec abstime,
+                           void (*on_timer)(void *), void *arg);
 
 // Unschedule the timer associated with `id'.
 // Returns: 0 - exist & not-run; 1 - still running; EINVAL - not exist.
@@ -59,24 +59,24 @@ extern int fiber_timer_del(fiber_timer_id id);
 // current implementation relies on EPOLL_CTL_ADD and EPOLL_CTL_DEL which
 // are not scalable, don't use bthread_fd_*wait functions in performance
 // critical scenario.
-extern int bthread_fd_wait(int fd, unsigned events);
+extern int fiber_fd_wait(int fd, unsigned events);
 
 // Suspend caller thread until the file descriptor `fd' has `epoll_events'
 // or CLOCK_REALTIME reached `abstime' if abstime is not NULL.
 // Returns 0 on success, -1 otherwise and errno is set.
-extern int bthread_fd_timedwait(int fd, unsigned epoll_events,
-                                const timespec* abstime);
+extern int fiber_fd_timedwait(int fd, unsigned epoll_events,
+                                const timespec *abstime);
 
 // Close file descriptor `fd' and wake up all threads waiting on it.
-// User should call this function instead of close(2) if bthread_fd_wait,
-// bthread_fd_timedwait, bthread_connect were called on the file descriptor,
+// User should call this function instead of close(2) if fiber_fd_wait,
+// fiber_fd_timedwait, fiber_connect were called on the file descriptor,
 // otherwise waiters will suspend indefinitely and fiber's internal epoll
 // may work abnormally after fork() is called.
 // NOTE: This function does not wake up pthread waiters.(tested on linux 2.6.32)
-extern int bthread_close(int fd);
+extern int fiber_fd_close(int fd);
 
 // Replacement of connect(2) in fibers.
-extern int bthread_connect(int sockfd, const sockaddr* serv_addr,
+extern int fiber_connect(int sockfd, const sockaddr *serv_addr,
                            socklen_t addrlen);
 
 // Add a startup function that each pthread worker will run at the beginning
@@ -93,9 +93,9 @@ extern void fiber_stop_world();
 // Generally the dtor_arg is for passing the creator of data so that we can
 // return the data back to the creator in destructor. Without this arg, we
 // have to do an extra heap allocation to contain data and its creator.
-extern int bthread_key_create2(fiber_local_key* key,
-                               void (*destructor)(void* data, const void* dtor_arg),
-                               const void* dtor_arg);
+extern int bthread_key_create2(fiber_local_key *key,
+                               void (*destructor)(void *data, const void *dtor_arg),
+                               const void *dtor_arg);
 
 // CAUTION: functions marked with [RPC INTERNAL] are NOT supposed to be called
 // by RPC users.
@@ -106,25 +106,25 @@ extern int bthread_key_create2(fiber_local_key* key,
 // it fetches one from the pool instead of creating on heap. When a fiber
 // exits, it puts the table back to pool instead of deleting it.
 // Returns 0 on success, error code otherwise.
-extern int bthread_keytable_pool_init(bthread_keytable_pool_t*);
+extern int bthread_keytable_pool_init(bthread_keytable_pool_t *);
 
 // [RPC INTERNAL]
 // Destroy the pool. All KeyTables inside are destroyed.
 // Returns 0 on success, error code otherwise.
-extern int bthread_keytable_pool_destroy(bthread_keytable_pool_t*);
+extern int bthread_keytable_pool_destroy(bthread_keytable_pool_t *);
 
 // [RPC INTERNAL]
 // Put statistics of `pool' into `stat'.
-extern int bthread_keytable_pool_getstat(bthread_keytable_pool_t* pool,
-                                         bthread_keytable_pool_stat_t* stat);
+extern int bthread_keytable_pool_getstat(bthread_keytable_pool_t *pool,
+                                         bthread_keytable_pool_stat_t *stat);
 
 // [RPC INTERNAL]
 // Reserve at most `nfree' keytables with `key' pointing to data created by
 // ctor(args).
 extern void bthread_keytable_pool_reserve(
-    bthread_keytable_pool_t* pool, size_t nfree,
-    fiber_local_key key, void* ctor(const void* args), const void* args);
+        bthread_keytable_pool_t *pool, size_t nfree,
+        fiber_local_key key, void *ctor(const void *args), const void *args);
 
 __END_DECLS
 
-#endif  // BTHREAD_UNSTABLE_H
+#endif  // FLARE_FIBER_INTERNAL_UNSTABLE_H_

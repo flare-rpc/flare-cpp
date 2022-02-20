@@ -656,9 +656,9 @@ namespace flare::rpc {
             // -usercode_backup_threads) may all block on bthread_id_lock in
             // ProcessXXXResponse(), until the id is unlocked or destroyed which
             // is run in a new thread when new_bthread is true. However since all
-            // workers are blocked, the created bthread will never be scheduled
+            // workers are blocked, the created fiber will never be scheduled
             // and result in deadlock.
-            // Make the id unlockable before creating the bthread fixes the issue.
+            // Make the id unlockable before creating the fiber fixes the issue.
             // When -usercode_in_pthread is false, this also removes some useless
             // waiting of the bthreads processing responses.
 
@@ -679,14 +679,14 @@ namespace flare::rpc {
                 !has_flag(FLAGS_DESTROY_CID_IN_DONE)/*Note[cid]*/) {
                 bthread_id_about_to_destroy(info.id);
             }
-            // No need to join this bthread since RPC caller won't wake up
-            // (or user's done won't be called) until this bthread finishes
+            // No need to join this fiber since RPC caller won't wake up
+            // (or user's done won't be called) until this fiber finishes
             fiber_id_t bt;
             fiber_attribute attr = (FLAGS_usercode_in_pthread ?
                                    FIBER_ATTR_PTHREAD : FIBER_ATTR_NORMAL);
             _tmp_completion_info = info;
             if (fiber_start_background(&bt, &attr, RunEndRPC, this) != 0) {
-                LOG(FATAL) << "Fail to start bthread";
+                LOG(FATAL) << "Fail to start fiber";
                 EndRPC(info);
             }
         } else {
@@ -1204,7 +1204,7 @@ namespace flare::rpc {
         if (!cntl->is_used_by_rpc()) {
             // Cannot destroy the call_id before RPC otherwise an async RPC
             // using the controller cannot be joined and related resources may be
-            // destroyed before done->Run() running in another bthread.
+            // destroyed before done->Run() running in another fiber.
             // The error set will be detected in Channel::CallMethod and fail
             // the RPC.
             cntl->SetFailed(error_code, "Cancel call_id=%" PRId64

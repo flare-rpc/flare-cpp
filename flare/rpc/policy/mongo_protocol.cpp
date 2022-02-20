@@ -34,7 +34,7 @@
 #include "flare/rpc/details/usercode_backup_pool.h"
 
 extern "C" {
-void bthread_assign_data(void* data);
+void fiber_assign_data(void* data);
 }
 
 
@@ -212,10 +212,10 @@ void ProcessMongoRequest(InputMessageBase* msg_base) {
         .set_begin_time_us(msg->received_us())
         .move_in_server_receiving_sock(socket_guard);
 
-    // Tag the bthread with this server's key for
+    // Tag the fiber with this server's key for
     // thread_local_data().
     if (server->thread_local_options().thread_local_data_factory) {
-        bthread_assign_data((void*)&server->thread_local_options());
+        fiber_assign_data((void*)&server->thread_local_options());
     }
     do {
         if (!server->IsRunning()) {

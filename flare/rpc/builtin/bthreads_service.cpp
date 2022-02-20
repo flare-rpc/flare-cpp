@@ -47,7 +47,7 @@ void BthreadsService::default_method(::google::protobuf::RpcController* cntl_bas
         if (*endptr == '\0' || *endptr == '/') {
             ::flare::fiber_internal::print_task(os, tid);
         } else {
-            cntl->SetFailed(ENOMETHOD, "path=%s is not a bthread id",
+            cntl->SetFailed(ENOMETHOD, "path=%s is not a fiber id",
                             constraint.c_str());
         }
     }

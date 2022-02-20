@@ -40,7 +40,7 @@
 #include "flare/rpc/details/server_private_accessor.h"
 
 extern "C" {
-void bthread_assign_data(void* data);
+void fiber_assign_data(void* data);
 }
 
 
@@ -361,9 +361,9 @@ void ProcessRpcRequest(InputMessageBase* msg_base) {
         accessor.set_remote_stream_settings(meta.release_stream_settings());
     }
 
-    // Tag the bthread with this server's key for thread_local_data().
+    // Tag the fiber with this server's key for thread_local_data().
     if (server->thread_local_options().thread_local_data_factory) {
-        bthread_assign_data((void*)&server->thread_local_options());
+        fiber_assign_data((void*)&server->thread_local_options());
     }
 
     Span* span = NULL;

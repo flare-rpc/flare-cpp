@@ -160,7 +160,7 @@ namespace flare::fiber_internal {
 
         // Attribute of the fiber which execute runs on
         // default: FIBER_ATTR_NORMAL
-        fiber_attribute bthread_attr;
+        fiber_attribute fiber_attr;
 
         // Executor that tasks run on. fiber will be used when executor = NULL.
         // Note that TaskOptions.in_place_if_possible = false will not work, if implementation of

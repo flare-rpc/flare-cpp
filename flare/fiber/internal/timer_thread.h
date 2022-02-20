@@ -18,8 +18,8 @@
 // fiber - A M:N threading library to make applications more concurrent.
 
 
-#ifndef BTHREAD_TIMER_THREAD_H
-#define BTHREAD_TIMER_THREAD_H
+#ifndef FLARE_FIBER_INTERNAL_TIMER_THREAD_H_
+#define FLARE_FIBER_INTERNAL_TIMER_THREAD_H_
 
 #include <vector>                     // std::vector
 #include <pthread.h>                  // pthread_*
@@ -109,4 +109,4 @@ TimerThread* get_global_timer_thread();
 
 }   // end namespace flare::fiber_internal
 
-#endif  // BTHREAD_TIMER_THREAD_H
+#endif  // FLARE_FIBER_INTERNAL_TIMER_THREAD_H_

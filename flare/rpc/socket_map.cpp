@@ -188,7 +188,7 @@ int SocketMap::Init(const SocketMapOptions& options) {
         _options.idle_timeout_second > 0) {
         if (fiber_start_background(&_close_idle_thread, NULL,
                                      RunWatchConnections, this) != 0) {
-            LOG(FATAL) << "Fail to start bthread";
+            LOG(FATAL) << "Fail to start fiber";
             return -1;
         }
         _has_close_idle_thread = true;

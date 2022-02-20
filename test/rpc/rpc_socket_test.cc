@@ -391,9 +391,9 @@ TEST_F(SocketTest, single_threaded_connect_and_write) {
                 ASSERT_LT(flare::base::gettimeofday_us(), start_time + 1000000L) << "Too long!";
             }
 #if defined(FLARE_PLATFORM_LINUX)
-            ASSERT_EQ(0, bthread_fd_wait(s->fd(), EPOLLIN));
+            ASSERT_EQ(0, fiber_fd_wait(s->fd(), EPOLLIN));
 #elif defined(FLARE_PLATFORM_OSX)
-            ASSERT_EQ(0, bthread_fd_wait(s->fd(), EVFILT_READ));
+            ASSERT_EQ(0, fiber_fd_wait(s->fd(), EVFILT_READ));
 #endif
             char dest[sizeof(buf)];
             ASSERT_EQ(meta_len + len, (size_t)read(s->fd(), dest, sizeof(dest)));

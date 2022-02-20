@@ -769,7 +769,7 @@ TEST_F(BuiltinServiceTest, bthreads) {
         cntl.http_request()._unresolved_path = "not_valid";
         service.default_method(&cntl, &req, &res, &done);
         EXPECT_TRUE(cntl.Failed());
-        CheckErrorText(cntl, "is not a bthread id");
+        CheckErrorText(cntl, "is not a fiber id");
     }
     {
         fiber_id_t th;

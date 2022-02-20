@@ -2361,7 +2361,7 @@ namespace flare::rpc {
             // Need to check _destroying to avoid setting the new sub_stream to a
             // destroying retrying stream.
             // Note: the load of _destroying and the setting of _using_sub_stream
-            // must be in the same lock, otherwise current bthread may be scheduled
+            // must be in the same lock, otherwise current fiber may be scheduled
             // and Destroy() may be called, making new sub_stream leaked.
             destroying = _destroying.load(std::memory_order_relaxed);
             if (!destroying) {

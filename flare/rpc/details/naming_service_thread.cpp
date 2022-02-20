@@ -291,7 +291,7 @@ int NamingServiceThread::Start(NamingService* naming_service,
     } else {
         int rc = fiber_start_urgent(&_tid, NULL, RunThis, this);
         if (rc) {
-            LOG(ERROR) << "Fail to create bthread: " << flare_error(rc);
+            LOG(ERROR) << "Fail to create fiber: " << flare_error(rc);
             return -1;
         }
     }

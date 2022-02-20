@@ -129,7 +129,7 @@ void* epoll_thread(void* arg) {
             break;
         }
         if (n == 0) {
-            bthread_fd_wait(epfd, EPOLLIN);
+            fiber_fd_wait(epfd, EPOLLIN);
             continue;
         }
 # else
@@ -198,9 +198,9 @@ void* client_thread(void* arg) {
         ssize_t rc;
         do {
 # if defined(FLARE_PLATFORM_LINUX)
-            const int wait_rc = bthread_fd_wait(m->fd, EPOLLIN);
+            const int wait_rc = fiber_fd_wait(m->fd, EPOLLIN);
 # elif defined(FLARE_PLATFORM_OSX)
-            const int wait_rc = bthread_fd_wait(m->fd, EVFILT_READ);
+            const int wait_rc = fiber_fd_wait(m->fd, EVFILT_READ);
 # endif
             EXPECT_EQ(0, wait_rc) << flare_error();
             rc = read(m->fd, &m->count, sizeof(m->count));
@@ -438,30 +438,30 @@ TEST(FDTest, interrupt_pthread) {
 
 void* close_the_fd(void* arg) {
     flare::this_fiber::fiber_sleep_for(10000/*10ms*/);
-    EXPECT_EQ(0, bthread_close(*(int*)arg));
+    EXPECT_EQ(0, fiber_fd_close(*(int*)arg));
     return NULL;
 }
 
 TEST(FDTest, invalid_epoll_events) {
     errno = 0;
 #if defined(FLARE_PLATFORM_LINUX)
-    ASSERT_EQ(-1, bthread_fd_wait(-1, EPOLLIN));
+    ASSERT_EQ(-1, fiber_fd_wait(-1, EPOLLIN));
 #elif defined(FLARE_PLATFORM_OSX)
-    ASSERT_EQ(-1, bthread_fd_wait(-1, EVFILT_READ));
+    ASSERT_EQ(-1, fiber_fd_wait(-1, EVFILT_READ));
 #endif
     ASSERT_EQ(EINVAL, errno);
     errno = 0;
 #if defined(FLARE_PLATFORM_LINUX)
-    ASSERT_EQ(-1, bthread_fd_timedwait(-1, EPOLLIN, NULL));
+    ASSERT_EQ(-1, fiber_fd_timedwait(-1, EPOLLIN, NULL));
 #elif defined(FLARE_PLATFORM_OSX)
-    ASSERT_EQ(-1, bthread_fd_timedwait(-1, EVFILT_READ, NULL));
+    ASSERT_EQ(-1, fiber_fd_timedwait(-1, EVFILT_READ, NULL));
 #endif
     ASSERT_EQ(EINVAL, errno);
 
     int fds[2];
     ASSERT_EQ(0, pipe(fds));
 #if defined(FLARE_PLATFORM_LINUX)
-    ASSERT_EQ(-1, bthread_fd_wait(fds[0], EPOLLET));
+    ASSERT_EQ(-1, fiber_fd_wait(fds[0], EPOLLET));
     ASSERT_EQ(EINVAL, errno);
 #endif
     fiber_id_t th;
@@ -469,22 +469,22 @@ TEST(FDTest, invalid_epoll_events) {
     flare::base::stop_watcher tm;
     tm.start();
 #if defined(FLARE_PLATFORM_LINUX)
-    ASSERT_EQ(0, bthread_fd_wait(fds[0], EPOLLIN | EPOLLET));
+    ASSERT_EQ(0, fiber_fd_wait(fds[0], EPOLLIN | EPOLLET));
 #elif defined(FLARE_PLATFORM_OSX)
-    ASSERT_EQ(0, bthread_fd_wait(fds[0], EVFILT_READ));
+    ASSERT_EQ(0, fiber_fd_wait(fds[0], EVFILT_READ));
 #endif
     tm.stop();
     ASSERT_LT(tm.m_elapsed(), 20);
     ASSERT_EQ(0, fiber_join(th, NULL));
-    ASSERT_EQ(0, bthread_close(fds[0]));
+    ASSERT_EQ(0, fiber_fd_close(fds[0]));
 }
 
 void* wait_for_the_fd(void* arg) {
     timespec ts = flare::base::milliseconds_from_now(50);
 #if defined(FLARE_PLATFORM_LINUX)
-    bthread_fd_timedwait(*(int*)arg, EPOLLIN, &ts);
+    fiber_fd_timedwait(*(int*)arg, EPOLLIN, &ts);
 #elif defined(FLARE_PLATFORM_OSX)
-    bthread_fd_timedwait(*(int*)arg, EVFILT_READ, &ts);
+    fiber_fd_timedwait(*(int*)arg, EVFILT_READ, &ts);
 #endif
     return NULL;
 }
@@ -502,8 +502,8 @@ TEST(FDTest, timeout) {
     ASSERT_EQ(0, fiber_join(bth, NULL));
     tm.stop();
     ASSERT_LT(tm.m_elapsed(), 80);
-    ASSERT_EQ(0, bthread_close(fds[0]));
-    ASSERT_EQ(0, bthread_close(fds[1]));
+    ASSERT_EQ(0, fiber_fd_close(fds[0]));
+    ASSERT_EQ(0, fiber_fd_close(fds[1]));
 }
 
 TEST(FDTest, close_should_wakeup_waiter) {
@@ -513,35 +513,35 @@ TEST(FDTest, close_should_wakeup_waiter) {
     ASSERT_EQ(0, fiber_start_urgent(&bth, NULL, wait_for_the_fd, &fds[0]));
     flare::base::stop_watcher tm;
     tm.start();
-    ASSERT_EQ(0, bthread_close(fds[0]));
+    ASSERT_EQ(0, fiber_fd_close(fds[0]));
     ASSERT_EQ(0, fiber_join(bth, NULL));
     tm.stop();
     ASSERT_LT(tm.m_elapsed(), 5);
 
     // Launch again, should quit soon due to EBADF
 #if defined(FLARE_PLATFORM_LINUX)
-    ASSERT_EQ(-1, bthread_fd_timedwait(fds[0], EPOLLIN, NULL));
+    ASSERT_EQ(-1, fiber_fd_timedwait(fds[0], EPOLLIN, NULL));
 #elif defined(FLARE_PLATFORM_OSX)
-    ASSERT_EQ(-1, bthread_fd_timedwait(fds[0], EVFILT_READ, NULL));
+    ASSERT_EQ(-1, fiber_fd_timedwait(fds[0], EVFILT_READ, NULL));
 #endif
     ASSERT_EQ(EBADF, errno);
 
-    ASSERT_EQ(0, bthread_close(fds[1]));
+    ASSERT_EQ(0, fiber_fd_close(fds[1]));
 }
 
 TEST(FDTest, close_definitely_invalid) {
     int ec = 0;
     ASSERT_EQ(-1, close(-1));
     ec = errno;
-    ASSERT_EQ(-1, bthread_close(-1));
+    ASSERT_EQ(-1, fiber_fd_close(-1));
     ASSERT_EQ(ec, errno);
 }
 
 TEST(FDTest, bthread_close_fd_which_did_not_call_bthread_functions) {
     int fds[2];
     ASSERT_EQ(0, pipe(fds));
-    ASSERT_EQ(0, bthread_close(fds[0]));
-    ASSERT_EQ(0, bthread_close(fds[1]));
+    ASSERT_EQ(0, fiber_fd_close(fds[0]));
+    ASSERT_EQ(0, fiber_fd_close(fds[1]));
 }
 
 TEST(FDTest, double_close) {
@@ -551,8 +551,8 @@ TEST(FDTest, double_close) {
     int ec = 0;
     ASSERT_EQ(-1, close(fds[0]));
     ec = errno;
-    ASSERT_EQ(0, bthread_close(fds[1]));
-    ASSERT_EQ(-1, bthread_close(fds[1]));
+    ASSERT_EQ(0, fiber_fd_close(fds[1]));
+    ASSERT_EQ(-1, fiber_fd_close(fds[1]));
     ASSERT_EQ(ec, errno);
 }
 } // namespace

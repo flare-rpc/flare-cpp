@@ -27,7 +27,7 @@
 #include "flare/base/dynamic_annotations/dynamic_annotations.h" // RunningOnValgrind
 #include "flare/base/valgrind/valgrind.h"   // VALGRIND_STACK_REGISTER
 #include "flare/variable/passive_status.h"
-#include "flare/fiber/internal/types.h"                        // BTHREAD_STACKTYPE_*
+#include "flare/fiber/internal/types.h"                        // FIBER_STACKTYPE_*
 #include "flare/fiber/internal/stack.h"
 
 DEFINE_int32(stack_size_small, 32768, "size of small stacks");
@@ -52,7 +52,7 @@ namespace flare::fiber_internal {
     }
 
     static flare::variable::PassiveStatus<int64_t> variable_stack_count(
-            "bthread_stack_count", get_stack_count, NULL);
+            "fiber_stack_count", get_stack_count, NULL);
 
     int allocate_stack_storage(fiber_stack_storage *s, int stacksize_in, int guardsize_in) {
         const static int PAGESIZE = getpagesize();

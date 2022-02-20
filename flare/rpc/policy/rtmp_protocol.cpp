@@ -3529,7 +3529,7 @@ void OnServerStreamCreated::Run(bool error,
         _stream->_message_stream_id = stream_id;
         // client stream needs to be added here rather than OnDestroyingStream
         // to avoid the race between OnDestroyingStream and a failed OnStatus,
-        // because the former function runs in another bthread and may run later
+        // because the former function runs in another fiber and may run later
         // than OnStatus which needs to see the stream.
         if (!ctx->AddClientStream(_stream.get())) {
             cntl->SetFailed(EINVAL, "Fail to add client stream_id=%u", stream_id);
@@ -3545,7 +3545,7 @@ void OnServerStreamCreated::Run(bool error,
     }
     // Unlocks correlation_id inside. Revert controller's
     // error code if it version check of `cid' fails.
-    // Can't call accessor.OnResponse which does not new bthread.
+    // Can't call accessor.OnResponse which does not new fiber.
     const Controller::CompletionInfo info = { cid, true };
     cntl->OnVersionedRPCReturned(info, true, saved_error);
 }

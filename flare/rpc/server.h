@@ -23,7 +23,7 @@
 // on internal structures, use opaque pointers instead.
 
 #include "flare/fiber/internal/errno.h"        // Redefine errno
-#include "flare/fiber/internal/fiber.h"      // Server may need some bthread functions,
+#include "flare/fiber/internal/fiber.h"      // Server may need some fiber functions,
                                   // e.g. flare::this_fiber::fiber_sleep_for
 #include <google/protobuf/service.h>                 // google::protobuf::Service
 #include "flare/base/profile.h"                            // FLARE_DISALLOW_COPY_AND_ASSIGN
@@ -106,8 +106,8 @@ struct ServerOptions {
     //
     // In a traditional server, number of pthread workers also limits
     // concurrency. However flare runs requests in bthreads which are
-    // mapped to pthread workers, when a bthread context switches, it gives
-    // the pthread worker to another bthread, yielding a higher concurrency
+    // mapped to pthread workers, when a fiber context switches, it gives
+    // the pthread worker to another fiber, yielding a higher concurrency
     // than number of pthreads. In some situations, higher concurrency may
     // consume more resources, to protect the server from running out of
     // resources, you may set this option.
@@ -173,7 +173,7 @@ struct ServerOptions {
     size_t reserved_thread_local_data;
 
     // Call bthread_init_fn(bthread_init_args) in at least #bthread_init_count
-    // bthreads before server runs, mainly for initializing bthread locals.
+    // bthreads before server runs, mainly for initializing fiber locals.
     // You have to set both `bthread_init_fn' and `bthread_init_count' to
     // enable the feature. 
     bool (*bthread_init_fn)(void* args); // default: NULL (do nothing)

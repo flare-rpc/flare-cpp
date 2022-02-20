@@ -46,7 +46,7 @@ TEST_F(BthreadTest, sizeof_task_meta) {
 }
 
 void* unrelated_pthread(void*) {
-    LOG(INFO) << "I did not call any bthread function, "
+    LOG(INFO) << "I did not call any fiber function, "
         "I should begin and end without any problem";
     return (void*)(intptr_t)1;
 }
@@ -463,7 +463,7 @@ void* mark_run(void* run) {
 void* check_sleep(void* pthread_task) {
     EXPECT_TRUE(fiber_self() != 0);
     // Create a no-signal task that other worker will not steal. The task will be
-    // run if current bthread does context switch.
+    // run if current fiber does context switch.
     fiber_attribute attr = FIBER_ATTR_NORMAL | FIBER_NOSIGNAL;
     fiber_id_t th1;
     pthread_t run = 0;

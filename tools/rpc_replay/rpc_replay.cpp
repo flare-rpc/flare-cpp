@@ -32,7 +32,7 @@ DEFINE_string(dir, "", "The directory of dumped requests");
 DEFINE_int32(times, 1, "Repeat replaying for so many times");
 DEFINE_int32(qps, 0, "Limit QPS if this flag is positive");
 DEFINE_int32(thread_num, 0, "Number of threads for replaying");
-DEFINE_bool(use_bthread, true, "Use bthread to replay");
+DEFINE_bool(use_bthread, true, "Use fiber to replay");
 DEFINE_string(connection_type, "", "Connection type, choose automatically "
               "according to protocol by default");
 DEFINE_string(server, "0.0.0.0:8002", "IP Address of server");
@@ -248,7 +248,7 @@ int main(int argc, char* argv[]) {
         for (int i = 0; i < FLAGS_thread_num; ++i) {
             if (fiber_start_background(
                     &bids[i], NULL, replay_thread, &chan_group) != 0) {
-                LOG(ERROR) << "Fail to create bthread";
+                LOG(ERROR) << "Fail to create fiber";
                 return -1;
             }
         }

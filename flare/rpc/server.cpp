@@ -1101,7 +1101,7 @@ namespace flare::rpc {
         if (_keytable_pool) {
             // Destroy _keytable_pool to delete keytables inside. This has to be
             // done here (before leaving Join) because it's legal for users to
-            // delete bthread keys after Join which makes related objects
+            // delete fiber keys after Join which makes related objects
             // in KeyTables undeletable anymore and leaked.
             CHECK_EQ(0, bthread_keytable_pool_destroy(_keytable_pool));
             // TODO: Can't delete _keytable_pool which may be accessed by

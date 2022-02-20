@@ -28,7 +28,7 @@
 #include "echo.pb.h"
 
 DEFINE_int32(thread_num, 50, "Number of threads to send requests");
-DEFINE_bool(use_bthread, false, "Use bthread to send requests");
+DEFINE_bool(use_bthread, false, "Use fiber to send requests");
 DEFINE_int32(attachment_size, 0, "Carry so many byte attachment along with requests");
 DEFINE_int32(request_size, 16, "Bytes of each request");
 DEFINE_string(connection_type, "", "Connection type. Available values: single, pooled, short");
@@ -166,7 +166,7 @@ int main(int argc, char* argv[]) {
         for (int i = 0; i < FLAGS_thread_num; ++i) {
             if (fiber_start_background(
                     &bids[i], NULL, sender, &channel) != 0) {
-                LOG(ERROR) << "Fail to create bthread";
+                LOG(ERROR) << "Fail to create fiber";
                 return -1;
             }
         }

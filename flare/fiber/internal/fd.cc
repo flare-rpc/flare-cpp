@@ -110,7 +110,7 @@ namespace flare::fiber_internal {
 // Able to address 67108864 file descriptors, should be enough.
     LazyArray<EpollButex *, 262144/*NBLOCK*/, 256/*BLOCK_SIZE*/> fd_butexes;
 
-    static const int BTHREAD_DEFAULT_EPOLL_SIZE = 65536;
+    static const int FIBER_DEFAULT_EPOLL_SIZE = 65536;
 
     class EpollThread {
     public:
@@ -150,7 +150,7 @@ namespace flare::fiber_internal {
 
         // Note: This function does not wake up suspended fd_wait. This is fine
         // since stop_and_join is only called on program's termination
-        // (g_task_control.stop()), suspended bthreads do not block quit of
+        // (g_task_control.stop()), suspended fibers do not block quit of
         // worker pthreads and completion of g_task_control.stop().
         int stop_and_join() {
             if (!started()) {
@@ -221,7 +221,7 @@ namespace flare::fiber_internal {
                 }
             }
 
-            while (butex == CLOSING_GUARD) {  // bthread_close() is running.
+            while (butex == CLOSING_GUARD) {  // fiber_fd_close() is running.
                 if (sched_yield() < 0) {
                     return -1;
                 }
@@ -276,7 +276,7 @@ namespace flare::fiber_internal {
             }
             std::atomic<EpollButex *> *pbutex = flare::fiber_internal::fd_butexes.get(fd);
             if (NULL == pbutex) {
-                // Did not call bthread_fd functions, close directly.
+                // Did not call fiber_fd functions, close directly.
                 return close(fd);
             }
             EpollButex *butex = pbutex->exchange(
@@ -403,12 +403,12 @@ namespace flare::fiber_internal {
     static inline EpollThread &get_epoll_thread(int fd) {
         if (FIBER_EPOLL_THREAD_NUM == 1UL) {
             EpollThread &et = epoll_thread[0];
-            et.start(BTHREAD_DEFAULT_EPOLL_SIZE);
+            et.start(FIBER_DEFAULT_EPOLL_SIZE);
             return et;
         }
 
         EpollThread &et = epoll_thread[flare::hash::fmix32(fd) % FIBER_EPOLL_THREAD_NUM];
-        et.start(BTHREAD_DEFAULT_EPOLL_SIZE);
+        et.start(FIBER_DEFAULT_EPOLL_SIZE);
         return et;
     }
 
@@ -496,7 +496,7 @@ namespace flare::fiber_internal {
 
 extern "C" {
 
-int bthread_fd_wait(int fd, unsigned events) {
+int fiber_fd_wait(int fd, unsigned events) {
     if (fd < 0) {
         errno = EINVAL;
         return -1;
@@ -509,10 +509,10 @@ int bthread_fd_wait(int fd, unsigned events) {
     return flare::fiber_internal::pthread_fd_wait(fd, events, NULL);
 }
 
-int bthread_fd_timedwait(int fd, unsigned events,
-                         const timespec *abstime) {
+int fiber_fd_timedwait(int fd, unsigned events,
+                       const timespec *abstime) {
     if (NULL == abstime) {
-        return bthread_fd_wait(fd, events);
+        return fiber_fd_wait(fd, events);
     }
     if (fd < 0) {
         errno = EINVAL;
@@ -526,8 +526,8 @@ int bthread_fd_timedwait(int fd, unsigned events,
     return flare::fiber_internal::pthread_fd_wait(fd, events, abstime);
 }
 
-int bthread_connect(int sockfd, const sockaddr *serv_addr,
-                    socklen_t addrlen) {
+int fiber_connect(int sockfd, const sockaddr *serv_addr,
+                  socklen_t addrlen) {
     flare::fiber_internal::fiber_worker *g = flare::fiber_internal::tls_task_group;
     if (NULL == g || g->is_current_pthread_task()) {
         return ::connect(sockfd, serv_addr, addrlen);
@@ -539,9 +539,9 @@ int bthread_connect(int sockfd, const sockaddr *serv_addr,
         return rc;
     }
 #if defined(FLARE_PLATFORM_LINUX)
-    if (bthread_fd_wait(sockfd, EPOLLOUT) < 0) {
+    if (fiber_fd_wait(sockfd, EPOLLOUT) < 0) {
 #elif defined(FLARE_PLATFORM_OSX)
-    if (bthread_fd_wait(sockfd, EVFILT_WRITE) < 0) {
+    if (fiber_fd_wait(sockfd, EVFILT_WRITE) < 0) {
 #endif
         return -1;
     }
@@ -559,8 +559,8 @@ int bthread_connect(int sockfd, const sockaddr *serv_addr,
     return 0;
 }
 
-// This does not wake pthreads calling bthread_fd_*wait.
-int bthread_close(int fd) {
+// This does not wake pthreads calling fiber_fd_*wait.
+int fiber_fd_close(int fd) {
     return flare::fiber_internal::get_epoll_thread(fd).fd_close(fd);
 }
 

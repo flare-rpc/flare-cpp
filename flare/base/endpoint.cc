@@ -22,7 +22,7 @@ DEFINE_bool(reuse_port, false, "Enable SO_REUSEPORT for all listened sockets");
 DEFINE_bool(reuse_addr, true, "Enable SO_REUSEADDR for all listened sockets");
 
 __BEGIN_DECLS
-int FLARE_WEAK bthread_connect(
+int FLARE_WEAK fiber_connect(
         int sockfd, const struct sockaddr *serv_addr, socklen_t addrlen) {
     return connect(sockfd, serv_addr, addrlen);
 }
@@ -273,8 +273,8 @@ namespace flare::base {
         serv_addr.sin_addr = point.ip;
         serv_addr.sin_port = htons(point.port);
         int rc = 0;
-        if (bthread_connect != NULL) {
-            rc = bthread_connect(sockfd, (struct sockaddr *) &serv_addr,
+        if (fiber_connect != NULL) {
+            rc = fiber_connect(sockfd, (struct sockaddr *) &serv_addr,
                                  sizeof(serv_addr));
         } else {
             rc = ::connect(sockfd, (struct sockaddr *) &serv_addr, sizeof(serv_addr));

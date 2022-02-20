@@ -289,7 +289,7 @@ public:
             fiber_attribute attr = (FLAGS_usercode_in_pthread ?
                                    FIBER_ATTR_PTHREAD : FIBER_ATTR_NORMAL);
             if (fiber_start_background(&bh, &attr, RunOnComplete, this) != 0) {
-                LOG(FATAL) << "Fail to start bthread";
+                LOG(FATAL) << "Fail to start fiber";
                 OnComplete();
             }
         } else {
@@ -714,7 +714,7 @@ FAIL:
                 return;
             }
             cntl->_done = NULL;
-            LOG(FATAL) << "Fail to start bthread";
+            LOG(FATAL) << "Fail to start fiber";
         }
         done->Run();
     }

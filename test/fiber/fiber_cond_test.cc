@@ -126,7 +126,7 @@ namespace {
         for (std::map<fiber_id_t, int>::iterator
                      it = count.begin(); it != count.end(); ++it) {
             ASSERT_LE(abs(it->second - avg_count), 1)
-                                        << "bthread=" << it->first
+                                        << "fiber=" << it->first
                                         << " count=" << it->second
                                         << " avg=" << avg_count;
             printf("%" PRId64 " wakes up %d times\n", it->first, it->second);

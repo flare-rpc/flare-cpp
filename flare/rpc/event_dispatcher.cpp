@@ -97,7 +97,7 @@ namespace flare::rpc {
 
         if (_tid != 0) {
             LOG(FATAL) << "Already started this dispatcher(" << this
-                       << ") in bthread=" << _tid;
+                       << ") in fiber=" << _tid;
             return -1;
         }
 
@@ -106,7 +106,7 @@ namespace flare::rpc {
         _consumer_thread_attr = (consumer_thread_attr ?
                                  *consumer_thread_attr : FIBER_ATTR_NORMAL);
 
-        //_consumer_thread_attr is used in StartInputEvent(), assign flag NEVER_QUIT to it will cause new bthread
+        //_consumer_thread_attr is used in StartInputEvent(), assign flag NEVER_QUIT to it will cause new fiber
         // that created by epoll_wait() never to quit.
         _epoll_thread_attr = _consumer_thread_attr | FIBER_NEVER_QUIT;
 
@@ -366,7 +366,7 @@ namespace flare::rpc {
             CHECK_EQ(0, g_edisp[i].Start(&attr));
         }
         // This atexit is will be run before g_task_control.stop() because above
-        // Start() initializes g_task_control by creating bthread (to run epoll/kqueue).
+        // Start() initializes g_task_control by creating fiber (to run epoll/kqueue).
         CHECK_EQ(0, atexit(StopAndJoinGlobalDispatchers));
     }
 

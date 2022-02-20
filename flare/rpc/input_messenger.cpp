@@ -148,7 +148,7 @@ static void QueueMessage(InputMessageBase* to_run_msg,
     if (!to_run_msg) {
         return;
     }
-    // Create bthread for last_msg. The bthread is not scheduled
+    // Create fiber for last_msg. The fiber is not scheduled
     // until fiber_flush() is called (in the worse case).
                 
     // TODO(gejun): Join threads.
@@ -168,13 +168,13 @@ static void QueueMessage(InputMessageBase* to_run_msg,
 void InputMessenger::OnNewMessages(Socket* m) {
     // Notes:
     // - If the socket has only one message, the message will be parsed and
-    //   processed in this bthread. nova-pbrpc and http works in this way.
+    //   processed in this fiber. nova-pbrpc and http works in this way.
     // - If the socket has several messages, all messages will be parsed (
     //   meaning cutting from flare::io::cord_buf. serializing from protobuf is part of
-    //   "process") in this bthread. All messages except the last one will be
+    //   "process") in this fiber. All messages except the last one will be
     //   processed in separate bthreads. To minimize the overhead, scheduling
     //   is batched(notice the FIBER_NOSIGNAL and fiber_flush).
-    // - Verify will always be called in this bthread at most once and before
+    // - Verify will always be called in this fiber at most once and before
     //   any process.
     InputMessenger* messenger = static_cast<InputMessenger*>(m->user());
     const InputMessageHandler* handlers = messenger->_handlers;

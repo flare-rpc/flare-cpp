@@ -51,7 +51,7 @@
 #endif
 
 extern "C" {
-void bthread_assign_data(void* data);
+void fiber_assign_data(void* data);
 }
 
 namespace flare::rpc {
@@ -500,9 +500,9 @@ void ProcessThriftRequest(InputMessageBase* msg_base) {
         }
     }
 
-    // Tag the bthread with this server's key for thread_local_data().
+    // Tag the fiber with this server's key for thread_local_data().
     if (server->thread_local_options().thread_local_data_factory) {
-        bthread_assign_data((void*)&server->thread_local_options());
+        fiber_assign_data((void*)&server->thread_local_options());
     }
 
     Span* span = NULL;

@@ -145,7 +145,7 @@ public:
         }
         tls->y = expected_value;
 
-        // You can create bthread-local data for your own.
+        // You can create fiber-local data for your own.
         // The interfaces are similar with pthread equivalence:
         //   pthread_key_create  -> fiber_key_create
         //   pthread_key_delete  -> fiber_key_delete

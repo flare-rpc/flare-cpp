@@ -29,7 +29,7 @@
 #include <flare/variable/all.h>
 
 DEFINE_int32(thread_num, 50, "Number of threads to send requests");
-DEFINE_bool(use_bthread, false, "Use bthread to send requests");
+DEFINE_bool(use_bthread, false, "Use fiber to send requests");
 DEFINE_int32(request_size, 16, "Bytes of each request");
 DEFINE_string(connection_type, "", "Connection type. Available values: single, pooled, short");
 DEFINE_string(server, "0.0.0.0:8019", "IP Address of server");
@@ -123,7 +123,7 @@ int main(int argc, char* argv[]) {
         for (int i = 0; i < FLAGS_thread_num; ++i) {
             if (fiber_start_background(
                     &bids[i], NULL, sender, &channel) != 0) {
-                LOG(ERROR) << "Fail to create bthread";
+                LOG(ERROR) << "Fail to create fiber";
                 return -1;
             }
         }

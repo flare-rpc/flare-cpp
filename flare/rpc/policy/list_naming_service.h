@@ -31,7 +31,7 @@ private:
     int RunNamingService(const char* service_name,
                          NamingServiceActions* actions) override;
 
-    // We don't need a dedicated bthread to run this static NS.
+    // We don't need a dedicated fiber to run this static NS.
     bool RunNamingServiceReturnsQuickly() override { return true; }
     
     int GetServers(const char *service_name,

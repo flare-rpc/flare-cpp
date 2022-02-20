@@ -633,7 +633,7 @@ int Socket::Create(const SocketOptions& options, SocketId* id) {
     m->_error_text.clear();
     m->_agent_socket_id.store(INVALID_SOCKET_ID, std::memory_order_relaxed);
     m->_ninflight_app_health_check.store(0, std::memory_order_relaxed);
-    // NOTE: last two params are useless in bthread > r32787
+    // NOTE: last two params are useless in fiber > r32787
     const int rc = bthread_id_list_init(&m->_id_wait_list, 512, 512);
     if (rc) {
         LOG(ERROR) << "Fail to init _id_wait_list: " << flare_error(rc);
@@ -1346,8 +1346,8 @@ int Socket::KeepWriteIfConnected(int fd, int err, void* data) {
     WriteRequest* req = static_cast<WriteRequest*>(data);
     Socket* s = req->socket;
     if (err == 0 && s->ssl_state() == SSL_CONNECTING) {
-        // Run ssl connect in a new bthread to avoid blocking
-        // the current bthread (thus blocking the EventDispatcher)
+        // Run ssl connect in a new fiber to avoid blocking
+        // the current fiber (thus blocking the EventDispatcher)
         fiber_id_t th;
         google::protobuf::Closure* thrd_func = flare::rpc::NewCallback(
             Socket::CheckConnectedAndKeepWrite, fd, err, data);
@@ -1355,7 +1355,7 @@ int Socket::KeepWriteIfConnected(int fd, int err, void* data) {
                                             RunClosure, thrd_func)) == 0) {
             return 0;
         } else {
-            PLOG(ERROR) << "Fail to start bthread";
+            PLOG(ERROR) << "Fail to start fiber";
             // Fall through with non zero `err'
         }
     }
@@ -1537,7 +1537,7 @@ int Socket::StartWrite(WriteRequest* req, const WriteOptions& opt) {
     req->Setup(this);
     
     if (ssl_state() != SSL_OFF) {
-        // Writing into SSL may block the current bthread, always write
+        // Writing into SSL may block the current fiber, always write
         // in the background.
         goto KEEPWRITE_IN_BACKGROUND;
     }
@@ -1750,7 +1750,7 @@ int Socket::SSLHandshake(int fd, bool server_mode) {
     _ssl_state = SSL_CONNECTING;
 
     // Loop until SSL handshake has completed. For SSL_ERROR_WANT_READ/WRITE,
-    // we use bthread_fd_wait as polling mechanism instead of EventDispatcher
+    // we use fiber_fd_wait as polling mechanism instead of EventDispatcher
     // as it may confuse the origin event processing code.
     while (true) {
         int rc = SSL_do_handshake(_ssl_session);
@@ -1764,9 +1764,9 @@ int Socket::SSLHandshake(int fd, bool server_mode) {
         switch (ssl_error) {
         case SSL_ERROR_WANT_READ:
 #if defined(FLARE_PLATFORM_LINUX)
-            if (bthread_fd_wait(fd, EPOLLIN) != 0) {
+            if (fiber_fd_wait(fd, EPOLLIN) != 0) {
 #elif defined(FLARE_PLATFORM_OSX)
-            if (bthread_fd_wait(fd, EVFILT_READ) != 0) {
+            if (fiber_fd_wait(fd, EVFILT_READ) != 0) {
 #endif
                 return -1;
             }
@@ -1774,9 +1774,9 @@ int Socket::SSLHandshake(int fd, bool server_mode) {
 
         case SSL_ERROR_WANT_WRITE:
 #if defined(FLARE_PLATFORM_LINUX)
-            if (bthread_fd_wait(fd, EPOLLOUT) != 0) {
+            if (fiber_fd_wait(fd, EPOLLOUT) != 0) {
 #elif defined(FLARE_PLATFORM_OSX)
-            if (bthread_fd_wait(fd, EVFILT_WRITE) != 0) {
+            if (fiber_fd_wait(fd, EVFILT_WRITE) != 0) {
 #endif
                 return -1;
             }

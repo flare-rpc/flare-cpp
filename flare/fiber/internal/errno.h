@@ -19,11 +19,11 @@
 
 // Date: Wed Jul 30 11:47:19 CST 2014
 
-#ifndef BTHREAD_ERRNO_H
-#define BTHREAD_ERRNO_H
+#ifndef FLARE_FIBER_INTERNAL_ERRNO_H_
+#define FLARE_FIBER_INTERNAL_ERRNO_H_
 
 #include <errno.h>                    // errno
-#include "flare/base/errno.h"                // flare_error(), DEFINE_BTHREAD_ERRNO
+#include "flare/base/errno.h"                // flare_error(),
 
 __BEGIN_DECLS
 
@@ -39,4 +39,4 @@ extern const int ESTOP;
 
 __END_DECLS
 
-#endif  //BTHREAD_ERRNO_H
+#endif  // FLARE_FIBER_INTERNAL_ERRNO_H_

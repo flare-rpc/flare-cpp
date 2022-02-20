@@ -311,7 +311,7 @@ When you remove tcmalloc, not only remove the linkage with tcmalloc but also the
 
 ## valgrind: 3.8+
 
-flare detects valgrind automatically (and registers stacks of bthread). Older valgrind(say 3.2) is not supported.
+flare detects valgrind automatically (and registers stacks of fiber). Older valgrind(say 3.2) is not supported.
 
 ## thrift: 0.9.3-0.11.0
 

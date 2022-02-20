@@ -255,7 +255,7 @@ int HttpMessage::OnBody(const char *at, const size_t length) {
         // of the protocol. A more efficient solution is to remove the
         // socket from epoll and add it back when the _body is not full,
         // which requires a set of complicated "pause" and "unpause"
-        // asynchronous API. We just leave the job to bthread right now
+        // asynchronous API. We just leave the job to fiber right now
         // to make everything work.
         if ((int64_t)_body.size() <= FLAGS_socket_max_unwritten_bytes) {
             _body.append(at, length);

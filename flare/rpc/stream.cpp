@@ -197,7 +197,7 @@ int Stream::Connect(Socket* ptr, const timespec*,
         fiber_mutex_unlock(&_connect_mutex);
         fiber_id_t tid;
         if (fiber_start_urgent(&tid, &FIBER_ATTR_NORMAL, RunOnConnect, meta) != 0) {
-            LOG(FATAL) << "Fail to start bthread, " << flare_error();
+            LOG(FATAL) << "Fail to start fiber, " << flare_error();
             RunOnConnect(meta);
         }
         return 0;
@@ -251,7 +251,7 @@ void Stream::TriggerOnConnectIfNeed() {
         fiber_mutex_unlock(&_connect_mutex);
         fiber_id_t tid;
         if (fiber_start_urgent(&tid, &FIBER_ATTR_NORMAL, RunOnConnect, meta) != 0) {
-            LOG(FATAL) << "Fail to start bthread, " << flare_error();
+            LOG(FATAL) << "Fail to start fiber, " << flare_error();
             RunOnConnect(meta);
         }
         return;
@@ -329,7 +329,7 @@ int Stream::TriggerOnWritable(bthread_id_t id, void *data, int error_code) {
             : &FIBER_ATTR_NORMAL;
         fiber_id_t tid;
         if (fiber_start_background(&tid, attr, RunOnWritable, wm) != 0) {
-            LOG(FATAL) << "Fail to start bthread" << flare_error();
+            LOG(FATAL) << "Fail to start fiber" << flare_error();
             RunOnWritable(wm);
         }
     } else {
@@ -670,7 +670,7 @@ void StreamWait(StreamId stream_id, const timespec *due_time,
             : &FIBER_ATTR_NORMAL;
         fiber_id_t tid;
         if (fiber_start_background(&tid, attr, Stream::RunOnWritable, wm) != 0) {
-            PLOG(FATAL) << "Fail to start bthread";
+            PLOG(FATAL) << "Fail to start fiber";
             Stream::RunOnWritable(wm);
         }
         return;

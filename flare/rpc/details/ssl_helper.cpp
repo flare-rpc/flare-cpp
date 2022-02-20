@@ -619,7 +619,7 @@ static unsigned long SSLGetThreadId() {
 // NOTE: If we replace this with fiber_mutex_t, SSL routines
 // may crash probably due to some TLS data used inside OpenSSL
 // Also according to performance test, there is little difference
-// between pthread mutex and bthread mutex
+// between pthread mutex and fiber mutex
 static flare::base::Mutex* g_ssl_mutexs = NULL;
 
 static void SSLLockCallback(int mode, int n, const char* file, int line) {

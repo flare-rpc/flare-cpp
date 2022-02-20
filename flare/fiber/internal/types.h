@@ -19,8 +19,8 @@
 
 // Date: Tue Jul 10 17:40:58 CST 2012
 
-#ifndef BTHREAD_TYPES_H
-#define BTHREAD_TYPES_H
+#ifndef FLARE_FIBER_INTERNAL__TYPES_H_
+#define FLARE_FIBER_INTERNAL__TYPES_H_
 
 #include <stdint.h>                            // uint64_t
 
@@ -236,4 +236,4 @@ typedef struct {
 
 typedef uint64_t fiber_timer_id;
 
-#endif  // BTHREAD_TYPES_H
+#endif  // FLARE_FIBER_INTERNAL__TYPES_H_

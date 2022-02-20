@@ -19,8 +19,8 @@
 
 // Date: Sun Sep  7 22:37:39 CST 2014
 
-#ifndef BTHREAD_ALLOCATE_STACK_INL_H
-#define BTHREAD_ALLOCATE_STACK_INL_H
+#ifndef FLARE_FIBER_INTERNAL_STACK_INL_H_
+#define FLARE_FIBER_INTERNAL_STACK_INL_H_
 
 DECLARE_int32(guard_page_size);
 DECLARE_int32(tc_stack_small);
@@ -208,4 +208,4 @@ namespace flare::memory {
 
 }  // namespace flare::memory
 
-#endif  // BTHREAD_ALLOCATE_STACK_INL_H
+#endif  // FLARE_FIBER_INTERNAL_STACK_INL_H_

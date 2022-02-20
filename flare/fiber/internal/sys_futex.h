@@ -19,12 +19,13 @@
 
 // Date: Tue Jul 10 17:40:58 CST 2012
 
-#ifndef BTHREAD_SYS_FUTEX_H
-#define BTHREAD_SYS_FUTEX_H
+#ifndef FLARE_FIBER_INTERNAL_SYS_FUTEX_H_
+#define FLARE_FIBER_INTERNAL_SYS_FUTEX_H_
 
 #include "flare/base/profile.h"         // FLARE_PLATFORM_OSX
 #include <unistd.h>                     // syscall
 #include <time.h>                       // timespec
+
 #if defined(FLARE_PLATFORM_LINUX)
 #include <syscall.h>                    // SYS_futex
 #include <linux/futex.h>                // FUTEX_WAIT, FUTEX_WAKE
@@ -57,11 +58,11 @@ inline int futex_requeue_private(void* addr1, int nwake, void* addr2) {
 
 namespace flare::fiber_internal {
 
-int futex_wait_private(void* addr1, int expected, const timespec* timeout);
+    int futex_wait_private(void *addr1, int expected, const timespec *timeout);
 
-int futex_wake_private(void* addr1, int nwake);
+    int futex_wake_private(void *addr1, int nwake);
 
-int futex_requeue_private(void* addr1, int nwake, void* addr2);
+    int futex_requeue_private(void *addr1, int nwake, void *addr2);
 
 }  // namespace flare::fiber_internal
 
@@ -69,4 +70,4 @@ int futex_requeue_private(void* addr1, int nwake, void* addr2);
 #error "Unsupported OS"
 #endif
 
-#endif // BTHREAD_SYS_FUTEX_H
+#endif  // FLARE_FIBER_INTERNAL_SYS_FUTEX_H_

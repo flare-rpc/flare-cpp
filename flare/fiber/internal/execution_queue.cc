@@ -54,8 +54,8 @@ namespace flare::fiber_internal {
     };
 
     ExecutionQueueVars::ExecutionQueueVars()
-            : running_task_count("bthread_execq_running_task_count"), execq_count("bthread_execq_count"),
-              execq_active_count("bthread_execq_active_count") {
+            : running_task_count("fiber_execq_running_task_count"), execq_count("fiber_execq_count"),
+              execq_active_count("fiber_execq_active_count") {
     }
 
     inline ExecutionQueueVars *get_execq_vars() {
@@ -107,7 +107,7 @@ namespace flare::fiber_internal {
             // we can't determine whether the code after execute() is urgent (like
             // unlock a pthread_mutex_t) in which case implicit context switch may
             // cause undefined behavior (e.g. deadlock)
-            if (fiber_start_background(&tid, &_options.bthread_attr,
+            if (fiber_start_background(&tid, &_options.fiber_attr,
                                          _execute_tasks, node) != 0) {
                 PLOG(FATAL) << "Fail to start fiber";
                 _execute_tasks(node);

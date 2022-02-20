@@ -35,19 +35,19 @@ public:
     
     virtual ~EventDispatcher();
 
-    // Start this dispatcher in a bthread.
+    // Start this dispatcher in a fiber.
     // Use |*consumer_thread_attr| (if it's not NULL) as the attribute to
     // create bthreads running user callbacks.
     // Returns 0 on success, -1 otherwise.
     virtual int Start(const fiber_attribute* consumer_thread_attr);
 
-    // True iff this dispatcher is running in a bthread
+    // True iff this dispatcher is running in a fiber
     bool Running() const;
 
-    // Stop bthread of this dispatcher.
+    // Stop fiber of this dispatcher.
     void Stop();
 
-    // Suspend calling thread until bthread of this dispatcher stops.
+    // Suspend calling thread until fiber of this dispatcher stops.
     void Join();
 
     // When edge-triggered events happen on `fd', call
@@ -88,13 +88,13 @@ private:
     // false unless Stop() is called.
     volatile bool _stop;
 
-    // identifier of hosting bthread
+    // identifier of hosting fiber
     fiber_id_t _tid;
 
     // The attribute of bthreads calling user callbacks.
     fiber_attribute _consumer_thread_attr;
 
-    // The attribute of bthread epoll_wait.
+    // The attribute of fiber epoll_wait.
     fiber_attribute _epoll_thread_attr;
 
     // Pipe fds to wakeup EventDispatcher from `epoll_wait' in order to quit

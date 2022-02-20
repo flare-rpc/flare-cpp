@@ -541,7 +541,7 @@ friend void DereferenceSocket(Socket*);
     static int Status(SocketId, int32_t* nref = NULL);  // for unit-test.
 
     // Perform SSL handshake after TCP connection has been established.
-    // Create SSL session inside and block (in bthread) until handshake
+    // Create SSL session inside and block (in fiber) until handshake
     // has completed. Application layer I/O is forbidden during this
     // process to avoid concurrent I/O on the underlying fd
     // Returns 0 on success, -1 otherwise
@@ -680,7 +680,7 @@ private:
     std::atomic<SharedPart*> _shared_part;
 
     // [ Set in dispatcher ]
-    // To keep the callback in at most one bthread at any time. Read comments
+    // To keep the callback in at most one fiber at any time. Read comments
     // about ProcessEvent in socket.cpp to understand the tricks.
     std::atomic<int> _nevent;
 

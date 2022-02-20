@@ -291,7 +291,7 @@ namespace flare::rpc {
 
         if (PrintAnnotationsAndRealTimeSpan(os, span.start_parse_real_us(),
                                             last_time, extr, num_extr)) {
-            os << " Processing the response in a new bthread" << std::endl;
+            os << " Processing the response in a new fiber" << std::endl;
         }
 
         if (PrintAnnotationsAndRealTimeSpan(
@@ -339,7 +339,7 @@ namespace flare::rpc {
         if (PrintAnnotationsAndRealTimeSpan(
                 os, span.start_parse_real_us(),
                 &last_time, extr, FLARE_ARRAY_SIZE(extr))) {
-            os << " Processing the request in a new bthread" << std::endl;
+            os << " Processing the request in a new fiber" << std::endl;
         }
 
         bool entered_user_method = false;

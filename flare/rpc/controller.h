@@ -554,10 +554,10 @@ private:
     // if it exists and destroys the correlation_id. Note that
     // the correlation_id MUST have been locked before this call.
     // Parameter `new_bthread':
-    // false - Run this function in the current bthread/pthread. Note that
+    // false - Run this function in the current fiber/pthread. Note that
     //         it could last for a long time or even block the caller (as
     //         it contains user's `done')
-    // true  - Creates a new bthread to run this function and returns to
+    // true  - Creates a new fiber to run this function and returns to
     //         the caller immediately
     // Parameter `id':
     //         It will be used to checked against `_correlation_id' and
@@ -753,7 +753,7 @@ private:
     SocketId _single_server_id;
     flare::container::intrusive_ptr<SharedLoadBalancer> _lb;
 
-    // for passing parameters to created bthread, don't modify it otherwhere.
+    // for passing parameters to created fiber, don't modify it otherwhere.
     CompletionInfo _tmp_completion_info;
     
     Call _current_call;
