@@ -23,6 +23,7 @@
 #include "flare/base/thread.h"
 #include <flare/fiber/internal/waitable_event.h>
 #include "flare/log/logging.h"
+#include "flare/fiber/runtime.h"
 #include "flare/fiber/internal/fiber.h"
 #include "flare/fiber/internal/schedule_group.h"
 
@@ -36,23 +37,23 @@ namespace {
     }
 
     TEST(FiberTest, setconcurrency) {
-        ASSERT_EQ(8 + FIBER_EPOLL_THREAD_NUM, (size_t) fiber_getconcurrency());
-        ASSERT_EQ(EINVAL, fiber_setconcurrency(FIBER_MIN_CONCURRENCY - 1));
-        ASSERT_EQ(EINVAL, fiber_setconcurrency(0));
-        ASSERT_EQ(EINVAL, fiber_setconcurrency(-1));
-        ASSERT_EQ(EINVAL, fiber_setconcurrency(FIBER_MAX_CONCURRENCY + 1));
-        ASSERT_EQ(0, fiber_setconcurrency(FIBER_MIN_CONCURRENCY));
-        ASSERT_EQ(FIBER_MIN_CONCURRENCY, fiber_getconcurrency());
-        ASSERT_EQ(0, fiber_setconcurrency(FIBER_MIN_CONCURRENCY + 1));
-        ASSERT_EQ(FIBER_MIN_CONCURRENCY + 1, fiber_getconcurrency());
-        ASSERT_EQ(0, fiber_setconcurrency(FIBER_MIN_CONCURRENCY));  // smaller value
+        ASSERT_EQ(8 + FIBER_EPOLL_THREAD_NUM, (size_t) flare::fiber::fiber_getconcurrency());
+        ASSERT_EQ(EINVAL, flare::fiber::fiber_setconcurrency(FIBER_MIN_CONCURRENCY - 1));
+        ASSERT_EQ(EINVAL, flare::fiber::fiber_setconcurrency(0));
+        ASSERT_EQ(EINVAL, flare::fiber::fiber_setconcurrency(-1));
+        ASSERT_EQ(EINVAL, flare::fiber::fiber_setconcurrency(FIBER_MAX_CONCURRENCY + 1));
+        ASSERT_EQ(0, flare::fiber::fiber_setconcurrency(FIBER_MIN_CONCURRENCY));
+        ASSERT_EQ(FIBER_MIN_CONCURRENCY, flare::fiber::fiber_getconcurrency());
+        ASSERT_EQ(0, flare::fiber::fiber_setconcurrency(FIBER_MIN_CONCURRENCY + 1));
+        ASSERT_EQ(FIBER_MIN_CONCURRENCY + 1, flare::fiber::fiber_getconcurrency());
+        ASSERT_EQ(0, flare::fiber::fiber_setconcurrency(FIBER_MIN_CONCURRENCY));  // smaller value
         fiber_id_t th;
         ASSERT_EQ(0, fiber_start_urgent(&th, NULL, dummy, NULL));
-        ASSERT_EQ(FIBER_MIN_CONCURRENCY + 1, fiber_getconcurrency());
-        ASSERT_EQ(0, fiber_setconcurrency(FIBER_MIN_CONCURRENCY + 5));
-        ASSERT_EQ(FIBER_MIN_CONCURRENCY + 5, fiber_getconcurrency());
-        ASSERT_EQ(EPERM, fiber_setconcurrency(FIBER_MIN_CONCURRENCY + 1));
-        ASSERT_EQ(FIBER_MIN_CONCURRENCY + 5, fiber_getconcurrency());
+        ASSERT_EQ(FIBER_MIN_CONCURRENCY + 1, flare::fiber::fiber_getconcurrency());
+        ASSERT_EQ(0, flare::fiber::fiber_setconcurrency(FIBER_MIN_CONCURRENCY + 5));
+        ASSERT_EQ(FIBER_MIN_CONCURRENCY + 5, flare::fiber::fiber_getconcurrency());
+        ASSERT_EQ(EPERM, flare::fiber::fiber_setconcurrency(FIBER_MIN_CONCURRENCY + 1));
+        ASSERT_EQ(FIBER_MIN_CONCURRENCY + 5, flare::fiber::fiber_getconcurrency());
     }
 
     static std::atomic<int> *odd;
@@ -105,8 +106,8 @@ namespace {
             tids.push_back(tid);
         }
         for (int i = 100; i <= N; ++i) {
-            ASSERT_EQ(0, fiber_setconcurrency(i));
-            ASSERT_EQ(i, fiber_getconcurrency());
+            ASSERT_EQ(0, flare::fiber::fiber_setconcurrency(i));
+            ASSERT_EQ(i, flare::fiber::fiber_getconcurrency());
         }
         usleep(1000 * N);
         *odd = 1;
@@ -153,7 +154,7 @@ namespace {
         ASSERT_EQ(1, set_min_concurrency(-1)); // set min success
         ASSERT_EQ(1, set_min_concurrency(0)); // set min success
         ASSERT_EQ(0, get_min_concurrency());
-        int conn = fiber_getconcurrency();
+        int conn = flare::fiber::fiber_getconcurrency();
         int add_conn = 100;
 
         ASSERT_EQ(0, set_min_concurrency(conn + 1)); // set min failed
@@ -162,10 +163,10 @@ namespace {
         ASSERT_EQ(1, set_min_concurrency(conn - 1)); // set min success
         ASSERT_EQ(conn - 1, get_min_concurrency());
 
-        ASSERT_EQ(EINVAL, fiber_setconcurrency(conn - 2)); // set max failed
-        ASSERT_EQ(0, fiber_setconcurrency(conn + add_conn + 1)); // set max success
-        ASSERT_EQ(0, fiber_setconcurrency(conn + add_conn)); // set max success
-        ASSERT_EQ(conn + add_conn, fiber_getconcurrency());
+        ASSERT_EQ(EINVAL, flare::fiber::fiber_setconcurrency(conn - 2)); // set max failed
+        ASSERT_EQ(0, flare::fiber::fiber_setconcurrency(conn + add_conn + 1)); // set max success
+        ASSERT_EQ(0, flare::fiber::fiber_setconcurrency(conn + add_conn)); // set max success
+        ASSERT_EQ(conn + add_conn, flare::fiber::fiber_getconcurrency());
         ASSERT_EQ(conn, flare::fiber_internal::g_task_control->concurrency());
 
         ASSERT_EQ(1, set_min_concurrency(conn + 1)); // set min success
@@ -186,7 +187,7 @@ namespace {
         for (size_t i = 0; i < tids.size(); ++i) {
             fiber_join(tids[i], NULL);
         }
-        ASSERT_EQ(conn + add_conn, fiber_getconcurrency());
+        ASSERT_EQ(conn + add_conn, flare::fiber::fiber_getconcurrency());
         ASSERT_EQ(conn + add_conn, flare::fiber_internal::g_task_control->concurrency());
     }
 
