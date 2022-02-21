@@ -147,9 +147,9 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
         "-Wl,-U,_ProfilerStop")
 endif()
 
-add_executable(redis_cli redis_cli.cpp)
-add_executable(redis_press redis_press.cpp)
-add_executable(redis_server redis_server.cpp)
+add_executable(redis_cli redis_cli.cc)
+add_executable(redis_press redis_press.cc)
+add_executable(redis_server redis_server.cc)
 
 set(AUX_LIB readline ncurses)
 

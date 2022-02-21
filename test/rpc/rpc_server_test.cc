@@ -40,8 +40,8 @@
 #include "flare/rpc/builtin/rpcz_service.h"         // RpczService
 #include "flare/rpc/builtin/dir_service.h"          // DirService
 #include "flare/rpc/builtin/pprof_service.h"        // PProfService
-#include "flare/rpc/builtin/bthreads_service.h"     // BthreadsService
-#include "flare/rpc/builtin/ids_service.h"          // IdsService
+#include "flare/rpc/builtin/fibers_service.h"     // FibersService
+#include "flare/rpc/builtin/token_service.h"          // TokenService
 #include "flare/rpc/builtin/sockets_service.h"      // SocketsService
 #include "flare/rpc/builtin/bad_method_service.h"
 #include "flare/rpc/server.h"
@@ -107,7 +107,7 @@ public:
         if (request->sleep_us() > 0) {
             LOG(INFO) << "Sleep " << request->sleep_us() << " us, protocol="
                       << cntl->request_protocol(); 
-            bthread_usleep(request->sleep_us());
+            flare::this_fiber::fiber_sleep_for(request->sleep_us());
         } else {
             LOG(INFO) << "No sleep, protocol=" << cntl->request_protocol();
         }
@@ -1080,33 +1080,33 @@ TEST_F(ServerTest, logoff_and_multiple_start) {
     // Server::Stop(-1)
     {
         ASSERT_EQ(0, server.Start(ep, NULL));
-        bthread_t tid;
+        fiber_id_t tid;
         const int64_t old_count = echo_svc.count.load(std::memory_order_relaxed);
         google::protobuf::Closure* thrd_func = 
             flare::rpc::NewCallback(SendSleepRPC, ep, 100, true);
-        EXPECT_EQ(0, bthread_start_background(&tid, NULL, RunClosure, thrd_func));
+        EXPECT_EQ(0, fiber_start_background(&tid, NULL, RunClosure, thrd_func));
         while (echo_svc.count.load(std::memory_order_relaxed) == old_count) {
-            bthread_usleep(1000);
+            flare::this_fiber::fiber_sleep_for(1000);
         }
         timer.start();
         ASSERT_EQ(0, server.Stop(-1));
         ASSERT_EQ(0, server.Join());
         timer.stop();
         EXPECT_TRUE(labs(timer.m_elapsed() - 100) < 15) << timer.m_elapsed();
-        bthread_join(tid, NULL);
+        fiber_join(tid, NULL);
     }
 
     // Server::Stop(0)
     {
         ++ep.port;
         ASSERT_EQ(0, server.Start(ep, NULL));
-        bthread_t tid;
+        fiber_id_t tid;
         const int64_t old_count = echo_svc.count.load(std::memory_order_relaxed);
         google::protobuf::Closure* thrd_func = 
             flare::rpc::NewCallback(SendSleepRPC, ep, 100, true);
-        EXPECT_EQ(0, bthread_start_background(&tid, NULL, RunClosure, thrd_func));
+        EXPECT_EQ(0, fiber_start_background(&tid, NULL, RunClosure, thrd_func));
         while (echo_svc.count.load(std::memory_order_relaxed) == old_count) {
-            bthread_usleep(1000);
+            flare::this_fiber::fiber_sleep_for(1000);
         }
         
         timer.start();
@@ -1116,20 +1116,20 @@ TEST_F(ServerTest, logoff_and_multiple_start) {
         // Assertion will fail since EchoServiceImpl::Echo is holding
         // additional reference to the `Socket'
         // EXPECT_TRUE(timer.m_elapsed() < 15) << timer.m_elapsed();
-        bthread_join(tid, NULL);
+        fiber_join(tid, NULL);
     }
 
     // Server::Stop(timeout) where timeout < g_sleep_ms
     {
         ++ep.port;
         ASSERT_EQ(0, server.Start(ep, NULL));
-        bthread_t tid;
+        fiber_id_t tid;
         const int64_t old_count = echo_svc.count.load(std::memory_order_relaxed);
         google::protobuf::Closure* thrd_func = 
             flare::rpc::NewCallback(SendSleepRPC, ep, 100, true);
-        EXPECT_EQ(0, bthread_start_background(&tid, NULL, RunClosure, thrd_func));
+        EXPECT_EQ(0, fiber_start_background(&tid, NULL, RunClosure, thrd_func));
         while (echo_svc.count.load(std::memory_order_relaxed) == old_count) {
-            bthread_usleep(1000);
+            flare::this_fiber::fiber_sleep_for(1000);
         }
 
         timer.start();
@@ -1139,27 +1139,27 @@ TEST_F(ServerTest, logoff_and_multiple_start) {
         // Assertion will fail since EchoServiceImpl::Echo is holding
         // additional reference to the `Socket'
         // EXPECT_TRUE(labs(timer.m_elapsed() - 50) < 15) << timer.m_elapsed();
-        bthread_join(tid, NULL);
+        fiber_join(tid, NULL);
     }
     
     // Server::Stop(timeout) where timeout > g_sleep_ms
     {
         ++ep.port;
         ASSERT_EQ(0, server.Start(ep, NULL));
-        bthread_t tid;
+        fiber_id_t tid;
         const int64_t old_count = echo_svc.count.load(std::memory_order_relaxed);
         google::protobuf::Closure* thrd_func = 
             flare::rpc::NewCallback(SendSleepRPC, ep, 100, true);
-        EXPECT_EQ(0, bthread_start_background(&tid, NULL, RunClosure, thrd_func));
+        EXPECT_EQ(0, fiber_start_background(&tid, NULL, RunClosure, thrd_func));
         while (echo_svc.count.load(std::memory_order_relaxed) == old_count) {
-            bthread_usleep(1000);
+            flare::this_fiber::fiber_sleep_for(1000);
         }
         timer.start();
         ASSERT_EQ(0, server.Stop(1000));
         ASSERT_EQ(0, server.Join());
         timer.stop();
         EXPECT_TRUE(labs(timer.m_elapsed() - 100) < 15) << timer.m_elapsed();
-        bthread_join(tid, NULL);
+        fiber_join(tid, NULL);
     }
 }
 
@@ -1351,7 +1351,7 @@ TEST_F(ServerTest, max_concurrency) {
     req.set_sleep_us(100000);
     stub.Echo(&cntl2, &req, &res, flare::rpc::DoNothing());
 
-    bthread_usleep(20000);
+    flare::this_fiber::fiber_sleep_for(20000);
     LOG(INFO) << "Send other requests";
     
     flare::rpc::Controller cntl3;

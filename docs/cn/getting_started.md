@@ -39,37 +39,6 @@ sudo apt-get install -y cmake libgtest-dev && cd /usr/src/gtest && sudo cmake . 
 ```
 The directory of gtest source code may be changed, try `/usr/src/googletest/googletest` if `/usr/src/gtest` is not there.
 
-### Compile flare with config_brpc.sh
-git clone flare, cd into the repo and run
-```shell
-$ sh config_brpc.sh --headers=/usr/include --libs=/usr/lib
-$ make
-```
-To change compiler to clang, add `--cxx=clang++ --cc=clang`.
-
-To not link debugging symbols, add `--nodebugsymbols` and compiled binaries will be much smaller.
-
-
-To enable [thrift support](../en/thrift.md), install thrift first and add `--with-thrift`.
-
-**Run example**
-
-```shell
-$ cd example/echo_c++
-$ make
-$ ./echo_server &
-$ ./echo_client
-```
-
-Examples link flare statically, if you need to link the shared version, `make clean` and `LINK_SO=1 make`
-
-**Run tests**
-```shell
-$ cd test
-$ make
-$ sh run_tests.sh
-```
-
 ### Compile flare with cmake
 ```shell
 cmake -B build && cmake --build build -j6
@@ -126,39 +95,6 @@ sudo yum install gperftools-devel
 If you need to run tests, install and compile gtest-devel (which is not compiled yet):
 ```shell
 sudo yum install gtest-devel
-```
-
-### Compile flare with config_brpc.sh
-
-git clone flare, cd into the repo and run
-
-```shell
-$ sh config_brpc.sh --headers=/usr/include --libs=/usr/lib64
-$ make
-```
-To change compiler to clang, add `--cxx=clang++ --cc=clang`.
-
-To not link debugging symbols, add `--nodebugsymbols` and compiled binaries will be much smaller.
-
-
-To enable [thrift support](../en/thrift.md), install thrift first and add `--with-thrift`.
-
-**Run example**
-
-```shell
-$ cd example/echo_c++
-$ make
-$ ./echo_server &
-$ ./echo_client
-```
-
-Examples link flare statically, if you need to link the shared version, `make clean` and `LINK_SO=1 make`
-
-**Run tests**
-```shell
-$ cd test
-$ make
-$ sh run_tests.sh
 ```
 
 ### Compile flare with cmake
@@ -311,7 +247,7 @@ When you remove tcmalloc, not only remove the linkage with tcmalloc but also the
 
 ## valgrind: 3.8+
 
-flare detects valgrind automatically (and registers stacks of bthread). Older valgrind(say 3.2) is not supported.
+flare detects valgrind automatically (and registers stacks of fiber). Older valgrind(say 3.2) is not supported.
 
 ## thrift: 0.9.3-0.11.0
 

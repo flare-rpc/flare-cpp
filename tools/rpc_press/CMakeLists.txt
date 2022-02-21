@@ -15,6 +15,6 @@
 # specific language governing permissions and limitations
 # under the License.
 
-file(GLOB SOURCES "${PROJECT_SOURCE_DIR}/tools/rpc_press/*.cpp")
+file(GLOB SOURCES "${PROJECT_SOURCE_DIR}/tools/rpc_press/*.cc")
 add_executable(rpc_press ${SOURCES})
 target_link_libraries(rpc_press flare-static ${DYNAMIC_LIB})

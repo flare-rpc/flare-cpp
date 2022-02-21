@@ -15,5 +15,5 @@
 # specific language governing permissions and limitations
 # under the License.
 
-add_executable(trackme_server trackme_server.cpp)
+add_executable(trackme_server trackme_server.cc)
 target_link_libraries(trackme_server flare-static ${DYNAMIC_LIB})

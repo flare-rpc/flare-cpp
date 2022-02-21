@@ -45,8 +45,8 @@
 #include "flare/rpc/builtin/rpcz_service.h"         // RpczService
 #include "flare/rpc/builtin/dir_service.h"          // DirService
 #include "flare/rpc/builtin/pprof_service.h"        // PProfService
-#include "flare/rpc/builtin/bthreads_service.h"     // BthreadsService
-#include "flare/rpc/builtin/ids_service.h"          // IdsService
+#include "flare/rpc/builtin/fibers_service.h"     // FibersService
+#include "flare/rpc/builtin/token_service.h"          // TokenService
 #include "flare/rpc/builtin/sockets_service.h"      // SocketsService
 #include "flare/rpc/builtin/common.h"
 #include "flare/rpc/builtin/bad_method_service.h"
@@ -82,7 +82,7 @@ public:
         flare::rpc::ClosureGuard done_guard(done);
         TRACEPRINTF("MyAnnotation: %ld", cntl->log_id());
         if (req->sleep_us() > 0) {
-            bthread_usleep(req->sleep_us());
+            flare::this_fiber::fiber_sleep_for(req->sleep_us());
         }
         char buf[32];
         snprintf(buf, sizeof(buf), "%" PRIu64, cntl->trace_id());
@@ -260,7 +260,7 @@ protected:
             service.default_method(&cntl, &req, &res, &done);
             EXPECT_FALSE(cntl.Failed());
             EXPECT_EQ(expect_type, cntl.http_response().content_type());
-            CheckContent(cntl, "bthread_concurrency");
+            CheckContent(cntl, "fiber_concurrency");
         }
         {
             ClosureChecker done;
@@ -714,16 +714,16 @@ TEST_F(BuiltinServiceTest, dir) {
     }
 }
 
-TEST_F(BuiltinServiceTest, ids) {
-    flare::rpc::IdsService service;
-    flare::rpc::IdsRequest req;
-    flare::rpc::IdsResponse res;
+TEST_F(BuiltinServiceTest, token) {
+    flare::rpc::TokenService service;
+    flare::rpc::TokenRequest req;
+    flare::rpc::TokenResponse res;
     {
         ClosureChecker done;
         flare::rpc::Controller cntl;
         service.default_method(&cntl, &req, &res, &done);
         EXPECT_FALSE(cntl.Failed());
-        CheckContent(cntl, "Use /ids/<call_id>");
+        CheckContent(cntl, "Use /token/<call_id>");
     }
     {
         ClosureChecker done;
@@ -731,11 +731,11 @@ TEST_F(BuiltinServiceTest, ids) {
         cntl.http_request()._unresolved_path = "not_valid";
         service.default_method(&cntl, &req, &res, &done);
         EXPECT_TRUE(cntl.Failed());
-        CheckErrorText(cntl, "is not a bthread_id");
+        CheckErrorText(cntl, "is not a fiber_token");
     }
     {
-        bthread_id_t id;
-        EXPECT_EQ(0, bthread_id_create(&id, NULL, NULL));
+        fiber_token_t id;
+        EXPECT_EQ(0, fiber_token_create(&id, NULL, NULL));
         ClosureChecker done;
         flare::rpc::Controller cntl;
         std::string id_string;
@@ -747,21 +747,21 @@ TEST_F(BuiltinServiceTest, ids) {
     }
 }
 
-void *dummy_bthread(void *) {
-    bthread_usleep(1000000);
+void *dummy_fiber(void *) {
+    flare::this_fiber::fiber_sleep_for(1000000);
     return NULL;
 }
 
-TEST_F(BuiltinServiceTest, bthreads) {
-    flare::rpc::BthreadsService service;
-    flare::rpc::BthreadsRequest req;
-    flare::rpc::BthreadsResponse res;
+TEST_F(BuiltinServiceTest, fibers) {
+    flare::rpc::FibersService service;
+    flare::rpc::FibersRequest req;
+    flare::rpc::FibersResponse res;
     {
         ClosureChecker done;
         flare::rpc::Controller cntl;
         service.default_method(&cntl, &req, &res, &done);
         EXPECT_FALSE(cntl.Failed());
-        CheckContent(cntl, "Use /bthreads/<bthread_id>");
+        CheckContent(cntl, "Use /fibers/<fiber_id>");
     }
     {
         ClosureChecker done;
@@ -769,11 +769,11 @@ TEST_F(BuiltinServiceTest, bthreads) {
         cntl.http_request()._unresolved_path = "not_valid";
         service.default_method(&cntl, &req, &res, &done);
         EXPECT_TRUE(cntl.Failed());
-        CheckErrorText(cntl, "is not a bthread id");
+        CheckErrorText(cntl, "is not a fiber id");
     }
     {
-        bthread_t th;
-        EXPECT_EQ(0, bthread_start_background(&th, NULL, dummy_bthread, NULL));
+        fiber_id_t th;
+        EXPECT_EQ(0, fiber_start_background(&th, NULL, dummy_fiber, NULL));
         ClosureChecker done;
         flare::rpc::Controller cntl;
         std::string id_string;

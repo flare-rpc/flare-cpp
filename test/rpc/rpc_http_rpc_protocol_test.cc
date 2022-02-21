@@ -41,6 +41,7 @@
 #include "flare/json2pb/json_to_pb.h"
 #include "flare/rpc/details/method_status.h"
 #include "flare/base/strings.h"
+#include "flare/fiber/this_fiber.h"
 
 int main(int argc, char* argv[]) {
     testing::InitGoogleTest(&argc, argv);
@@ -94,7 +95,7 @@ public:
         const std::string* sleep_ms_str =
             cntl->http_request().uri().GetQuery("sleep_ms");
         if (sleep_ms_str) {
-            bthread_usleep(strtol(sleep_ms_str->data(), NULL, 10) * 1000);
+            flare::this_fiber::fiber_sleep_for(strtol(sleep_ms_str->data(), NULL, 10) * 1000);
         }
         res->set_message(EXP_RESPONSE);
     }
@@ -516,7 +517,7 @@ public:
                 if (errno == flare::rpc::EOVERCROWDED) {
                     LOG_EVERY_SECOND(INFO) << "full pa=" << pa.get();
                     _ever_full = true;
-                    bthread_usleep(10000);
+                    flare::this_fiber::fiber_sleep_for(10000);
                     continue;
                 } else {
                     _last_errno = errno;
@@ -558,7 +559,7 @@ public:
             if (pa->Write(buf, sizeof(buf)) != 0) {
                 if (errno == flare::rpc::EOVERCROWDED) {
                     LOG_EVERY_SECOND(INFO) << "full pa=" << pa.get();
-                    bthread_usleep(10000);
+                    flare::this_fiber::fiber_sleep_for(10000);
                     continue;
                 } else {
                     _last_errno = errno;
@@ -1431,7 +1432,7 @@ TEST_F(HttpTest, http2_handle_goaway_streams) {
     int servfd = accept(listenfd, NULL, NULL);
     ASSERT_GT(servfd, 0);
     // Sleep for a while to make sure that server has received all data.
-    bthread_usleep(2000);
+    flare::this_fiber::fiber_sleep_for(2000);
     char goawaybuf[flare::rpc::policy::FRAME_HEAD_SIZE + 8];
     SerializeFrameHead(goawaybuf, 8, flare::rpc::policy::H2_FRAME_GOAWAY, 0, 0);
     SaveUint32(goawaybuf + flare::rpc::policy::FRAME_HEAD_SIZE, 0);

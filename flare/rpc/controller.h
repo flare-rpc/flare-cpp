@@ -25,10 +25,10 @@
 #include <gflags/gflags.h>                     // Users often need gflags
 #include <string>
 #include "flare/container/intrusive_ptr.h"             // flare::container::intrusive_ptr
-#include "flare/bthread/errno.h"                     // Redefine errno
+#include "flare/fiber/internal/errno.h"                     // Redefine errno
 #include "flare/base/endpoint.h"                    // flare::base::end_point
 #include "flare/io/cord_buf.h"                       // flare::io::cord_buf
-#include "flare/bthread/types.h"                     // bthread_id_t
+#include "flare/fiber/internal/types.h"                     // fiber_token_t
 #include "flare/rpc/options.pb.h"                   // CompressType
 #include "flare/rpc/errno.pb.h"                     // error code
 #include "flare/rpc/http_header.h"                  // HttpHeader
@@ -89,7 +89,7 @@ extern const IdlNames idl_multi_req_single_res;
 extern const IdlNames idl_multi_req_multi_res;
 
 // The identifier to be associated with a RPC call.
-typedef bthread_id_t CallId;
+typedef fiber_token_t CallId;
 
 // Styles for stopping progressive attachment.
 enum StopStyle {
@@ -553,11 +553,11 @@ private:
     // it will try to retry this RPC. Otherwise, it calls user `done'
     // if it exists and destroys the correlation_id. Note that
     // the correlation_id MUST have been locked before this call.
-    // Parameter `new_bthread':
-    // false - Run this function in the current bthread/pthread. Note that
+    // Parameter `new_fiber':
+    // false - Run this function in the current fiber/pthread. Note that
     //         it could last for a long time or even block the caller (as
     //         it contains user's `done')
-    // true  - Creates a new bthread to run this function and returns to
+    // true  - Creates a new fiber to run this function and returns to
     //         the caller immediately
     // Parameter `id':
     //         It will be used to checked against `_correlation_id' and
@@ -566,16 +566,16 @@ private:
     // Parameter `saved_error':
     //         If the above check failed, `_error_code' will be reverted to this
     void OnVersionedRPCReturned(const CompletionInfo&,
-                                bool new_bthread, int saved_error);
+                                bool new_fiber, int saved_error);
 
     static void* RunEndRPC(void* arg);
     void EndRPC(const CompletionInfo&);
 
-    static int HandleSocketFailed(bthread_id_t, void* data, int error_code,
+    static int HandleSocketFailed(fiber_token_t, void* data, int error_code,
                                   const std::string& error_text);
     void HandleSendFailed();
 
-    static int RunOnCancel(bthread_id_t, void* data, int error_code);
+    static int RunOnCancel(fiber_token_t, void* data, int error_code);
     
     void set_auth_context(const AuthContext* ctx);
 
@@ -706,7 +706,7 @@ private:
     
     void* _session_local_data;
     const Server* _server;
-    bthread_id_t _oncancel_id;
+    fiber_token_t _oncancel_id;
     const AuthContext* _auth_context;        // Authentication result
     flare::container::intrusive_ptr<MongoContext> _mongo_session_data;
     SampledRequest* _sampled_request;
@@ -734,7 +734,7 @@ private:
     // Deadline of this RPC (since the Epoch in microseconds).
     int64_t _deadline_us;
     // Timer registered to trigger RPC timeout event
-    bthread_timer_t _timeout_id;
+    fiber_timer_id _timeout_id;
 
     // Begin/End time of a single RPC call (since Epoch in microseconds)
     int64_t _begin_time_us;
@@ -753,7 +753,7 @@ private:
     SocketId _single_server_id;
     flare::container::intrusive_ptr<SharedLoadBalancer> _lb;
 
-    // for passing parameters to created bthread, don't modify it otherwhere.
+    // for passing parameters to created fiber, don't modify it otherwhere.
     CompletionInfo _tmp_completion_info;
     
     Call _current_call;

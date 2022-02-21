@@ -19,7 +19,7 @@
 #define FLARE_RPC_LOG_H_
 
 #include <inttypes.h>  // PRId64 PRIu64
-#include "flare/bthread/errno.h"
+#include "flare/fiber/internal/errno.h"
 
 #define RPC_VLOG_LEVEL     99
 #define RPC_VLOG_IS_ON     VLOG_IS_ON(RPC_VLOG_LEVEL)

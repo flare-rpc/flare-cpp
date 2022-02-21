@@ -42,6 +42,7 @@
 #include "echo.pb.h"
 #include "flare/rpc/options.pb.h"
 #include "flare/base/strings.h"
+#include "flare/fiber/this_fiber.h"
 
 namespace flare::rpc {
     DECLARE_int32(idle_timeout_second);
@@ -156,7 +157,7 @@ namespace {
             }
             if (req->sleep_us() > 0) {
                 LOG(INFO) << "sleep " << req->sleep_us() << "us...";
-                bthread_usleep(req->sleep_us());
+                flare::this_fiber::fiber_sleep_for(req->sleep_us());
             }
             res->set_message("received " + req->message());
             if (req->code() != 0) {
@@ -265,7 +266,7 @@ namespace {
             int listening_fd = -1;
             while ((listening_fd = tcp_listen(ep)) < 0) {
                 if (errno == EADDRINUSE) {
-                    bthread_usleep(1000);
+                    flare::this_fiber::fiber_sleep_for(1000);
                 } else {
                     return -1;
                 }
@@ -316,7 +317,7 @@ namespace {
                     delete channel;
                 }
                 // Callback MUST be called for once and only once
-                bthread_id_join(sync_id);
+                fiber_token_join(sync_id);
             }
         }
 
@@ -336,7 +337,7 @@ namespace {
                     delete channel;
                 }
                 // Callback MUST be called for once and only once
-                bthread_id_join(sync_id);
+                fiber_token_join(sync_id);
             }
         }
 
@@ -443,7 +444,7 @@ namespace {
                 const int64_t start_time = flare::base::gettimeofday_us();
                 while (_messenger.ConnectionCount() != 0) {
                     EXPECT_LT(flare::base::gettimeofday_us(), start_time + 100000L/*100ms*/);
-                    bthread_usleep(1000);
+                    flare::this_fiber::fiber_sleep_for(1000);
                 }
             } else {
                 EXPECT_GE(1ul, _messenger.ConnectionCount());
@@ -585,7 +586,7 @@ namespace {
                 const int64_t start_time = flare::base::gettimeofday_us();
                 while (_messenger.ConnectionCount() != 0) {
                     EXPECT_LT(flare::base::gettimeofday_us(), start_time + 100000L/*100ms*/);
-                    bthread_usleep(1000);
+                    flare::this_fiber::fiber_sleep_for(1000);
                 }
             } else {
                 EXPECT_GE(1ul, _messenger.ConnectionCount());
@@ -637,7 +638,7 @@ namespace {
                 const int64_t start_time = flare::base::gettimeofday_us();
                 while (_messenger.ConnectionCount() != 0) {
                     EXPECT_LT(flare::base::gettimeofday_us(), start_time + 100000L/*100ms*/);
-                    bthread_usleep(1000);
+                    flare::this_fiber::fiber_sleep_for(1000);
                 }
             } else {
                 EXPECT_GE(1ul, _messenger.ConnectionCount());
@@ -681,7 +682,7 @@ namespace {
                 const int64_t start_time = flare::base::gettimeofday_us();
                 while (_messenger.ConnectionCount() != 0) {
                     EXPECT_LT(flare::base::gettimeofday_us(), start_time + 100000L/*100ms*/);
-                    bthread_usleep(1000);
+                    flare::this_fiber::fiber_sleep_for(1000);
                 }
             } else {
                 EXPECT_GE(1ul, _messenger.ConnectionCount());
@@ -730,7 +731,7 @@ namespace {
                 const int64_t start_time = flare::base::gettimeofday_us();
                 while (_messenger.ConnectionCount() != 0) {
                     EXPECT_LT(flare::base::gettimeofday_us(), start_time + 100000L/*100ms*/);
-                    bthread_usleep(1000);
+                    flare::this_fiber::fiber_sleep_for(1000);
                 }
             } else {
                 EXPECT_GE(1ul, _messenger.ConnectionCount());
@@ -791,7 +792,7 @@ namespace {
                 const int64_t start_time = flare::base::gettimeofday_us();
                 while (_messenger.ConnectionCount() != 0) {
                     EXPECT_LT(flare::base::gettimeofday_us(), start_time + 100000L/*100ms*/);
-                    bthread_usleep(1000);
+                    flare::this_fiber::fiber_sleep_for(1000);
                 }
             } else {
                 EXPECT_GE(1ul, _messenger.ConnectionCount());
@@ -807,7 +808,7 @@ namespace {
         static void *Canceler(void *void_arg) {
             CancelerArg *arg = static_cast<CancelerArg *>(void_arg);
             if (arg->sleep_before_cancel_us > 0) {
-                bthread_usleep(arg->sleep_before_cancel_us);
+                flare::this_fiber::fiber_sleep_for(arg->sleep_before_cancel_us);
             }
             LOG(INFO) << "Start to cancel cid=" << arg->cid.value;
             flare::rpc::StartCancel(arg->cid);
@@ -1033,7 +1034,7 @@ namespace {
             CallMethod(&channel, &cntl, &req, &res, async);
             EXPECT_EQ(0, cntl.ErrorCode());
             EXPECT_EQ(0, cntl.sub_count());
-            ASSERT_EQ(EINVAL, bthread_id_error(cid, ECANCELED));
+            ASSERT_EQ(EINVAL, fiber_token_error(cid, ECANCELED));
             StopAndJoin();
         }
 
@@ -1067,7 +1068,7 @@ namespace {
             for (int i = 0; i < cntl.sub_count(); ++i) {
                 EXPECT_TRUE(cntl.sub(i) && !cntl.sub(i)->Failed()) << "i=" << i;
             }
-            ASSERT_EQ(EINVAL, bthread_id_error(cid, ECANCELED));
+            ASSERT_EQ(EINVAL, fiber_token_error(cid, ECANCELED));
             StopAndJoin();
         }
 
@@ -1092,7 +1093,7 @@ namespace {
                 const int64_t start_time = flare::base::gettimeofday_us();
                 while (_messenger.ConnectionCount() != 0) {
                     EXPECT_LT(flare::base::gettimeofday_us(), start_time + 100000L/*100ms*/);
-                    bthread_usleep(1000);
+                    flare::this_fiber::fiber_sleep_for(1000);
                 }
             } else {
                 EXPECT_GE(1ul, _messenger.ConnectionCount());
@@ -1498,7 +1499,7 @@ namespace {
             const int64_t start_time = flare::base::gettimeofday_us();
             while (_messenger.ConnectionCount() != 0) {
                 EXPECT_LT(flare::base::gettimeofday_us(), start_time + 100000L/*100ms*/);
-                bthread_usleep(1000);
+                flare::this_fiber::fiber_sleep_for(1000);
             }
 
             StopAndJoin();
@@ -1531,7 +1532,7 @@ namespace {
             const int64_t start_time = flare::base::gettimeofday_us();
             while (_messenger.ConnectionCount() != 0) {
                 EXPECT_LT(flare::base::gettimeofday_us(), start_time + 100000L/*100ms*/);
-                bthread_usleep(1000);
+                flare::this_fiber::fiber_sleep_for(1000);
             }
             StopAndJoin();
         }
@@ -1567,7 +1568,7 @@ namespace {
             const int64_t start_time = flare::base::gettimeofday_us();
             while (_messenger.ConnectionCount() != 0) {
                 EXPECT_LT(flare::base::gettimeofday_us(), start_time + 100000L/*100ms*/);
-                bthread_usleep(1000);
+                flare::this_fiber::fiber_sleep_for(1000);
             }
             StopAndJoin();
         }
@@ -1747,7 +1748,7 @@ namespace {
             CallMethod(&channel, &cntl, &req, &res, async);
             EXPECT_EQ(flare::rpc::ERPCTIMEDOUT, cntl.ErrorCode()) << cntl.ErrorText();
             EXPECT_EQ(0, cntl.retried_count());
-            bthread_usleep(100000);  // wait for the sleep task to finish
+            flare::this_fiber::fiber_sleep_for(100000);  // wait for the sleep task to finish
 
             // Retry when connection broken
             cntl.Reset();
@@ -1764,7 +1765,7 @@ namespace {
                 const int64_t start_time = flare::base::gettimeofday_us();
                 while (_messenger.ConnectionCount() != 0) {
                     EXPECT_LT(flare::base::gettimeofday_us(), start_time + 100000L/*100ms*/);
-                    bthread_usleep(1000);
+                    flare::this_fiber::fiber_sleep_for(1000);
                 }
             } else {
                 // May fail if health checker can't revive in time
@@ -1776,7 +1777,7 @@ namespace {
                 }
             }
             StopAndJoin();
-            bthread_usleep(100000);  // wait for stop
+            flare::this_fiber::fiber_sleep_for(100000);  // wait for stop
 
             // Retry when connection failed
             cntl.Reset();
@@ -2605,14 +2606,14 @@ namespace {
             flare::rpc::Controller cntl;
             cid1 = cntl.call_id();
         }
-        ASSERT_EQ(EINVAL, bthread_id_error(cid1, ECANCELED));
+        ASSERT_EQ(EINVAL, fiber_token_error(cid1, ECANCELED));
 
         {
             flare::rpc::CallId cid2 = {0};
             flare::rpc::Controller cntl;
             cid2 = cntl.call_id();
             cntl.Reset();
-            ASSERT_EQ(EINVAL, bthread_id_error(cid2, ECANCELED));
+            ASSERT_EQ(EINVAL, fiber_token_error(cid2, ECANCELED));
         }
     }
 

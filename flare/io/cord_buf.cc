@@ -906,7 +906,7 @@ namespace flare::io {
     }
 
 // Since cut_into_file_descriptor() allocates iovec on stack, IOV_MAX=1024
-// is too large(in the worst case) for bthreads with small stacks.
+// is too large(in the worst case) for fibers with small stacks.
     static const size_t IOBUF_IOV_MAX = 256;
 
     ssize_t cord_buf::pcut_into_file_descriptor(int fd, off_t offset, size_t size_hint) {

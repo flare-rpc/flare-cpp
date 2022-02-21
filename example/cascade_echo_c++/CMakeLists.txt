@@ -139,8 +139,8 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
         "-Wl,-U,_ProfilerStop")
 endif()
 
-add_executable(cascade_echo_client client.cpp ${PROTO_SRC} ${PROTO_HEADER})
-add_executable(cascade_echo_server server.cpp ${PROTO_SRC} ${PROTO_HEADER})
+add_executable(cascade_echo_client client.cc ${PROTO_SRC} ${PROTO_HEADER})
+add_executable(cascade_echo_server server.cc ${PROTO_SRC} ${PROTO_HEADER})
 
 target_link_libraries(cascade_echo_client ${FLARE_LIB} ${DYNAMIC_LIB})
 target_link_libraries(cascade_echo_server ${FLARE_LIB} ${DYNAMIC_LIB})

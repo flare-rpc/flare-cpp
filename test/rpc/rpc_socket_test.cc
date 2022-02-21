@@ -28,8 +28,8 @@
 #include "flare/base/time.h"
 #include "flare/base/fd_utility.h"
 #include "flare/base/strings.h"
-#include "flare/bthread/unstable.h"
-#include "flare/bthread/task_control.h"
+#include "flare/fiber/internal/unstable.h"
+#include "flare/fiber/internal/schedule_group.h"
 #include "flare/rpc/socket.h"
 #include "flare/rpc/errno.pb.h"
 #include "flare/rpc/acceptor.h"
@@ -40,6 +40,7 @@
 #include "flare/rpc/server.h"
 #include "flare/rpc/channel.h"
 #include "flare/rpc/controller.h"
+#include "flare/fiber/this_fiber.h"
 #include "health_check.pb.h"
 #if defined(FLARE_PLATFORM_OSX)
 #include <sys/event.h>
@@ -47,8 +48,8 @@
 
 #define CONNECT_IN_KEEPWRITE 1;
 
-namespace bthread {
-extern TaskControl* g_task_control;
+namespace flare::fiber_internal {
+extern schedule_group* g_task_control;
 }
 
 namespace flare::rpc {
@@ -72,18 +73,18 @@ int main(int argc, char* argv[]) {
 }
 
 struct WaitData {
-    bthread_id_t id;
+    fiber_token_t id;
     int error_code;
     std::string error_text;
 
-    WaitData() : id(INVALID_BTHREAD_ID), error_code(0) {}
+    WaitData() : id(INVALID_FIBER_TOKEN), error_code(0) {}
 };
-int OnWaitIdReset(bthread_id_t id, void* data, int error_code,
+int OnWaitIdReset(fiber_token_t id, void* data, int error_code,
                   const std::string& error_text) {
     static_cast<WaitData*>(data)->id = id;
     static_cast<WaitData*>(data)->error_code = error_code;
     static_cast<WaitData*>(data)->error_text = error_text;
-    return bthread_id_unlock_and_destroy(id);
+    return fiber_token_unlock_and_destroy(id);
 }
 
 class SocketTest : public ::testing::Test{
@@ -142,7 +143,7 @@ std::atomic<int> winner_count(0);
 const int AUTH_ERR = -9;
 
 void* auth_fighter(void* arg) {
-    bthread_usleep(10000);
+    flare::this_fiber::fiber_sleep_for(10000);
     int auth_error = 0;
     flare::rpc::Socket* s = (flare::rpc::Socket*)arg;
     if (s->FightAuthentication(&auth_error) == 0) {
@@ -161,12 +162,12 @@ TEST_F(SocketTest, authentication) {
     flare::rpc::SocketUniquePtr s;
     ASSERT_EQ(0, flare::rpc::Socket::Address(id, &s));
     
-    bthread_t th[64];
+    fiber_id_t th[64];
     for (size_t i = 0; i < FLARE_ARRAY_SIZE(th); ++i) {
-        ASSERT_EQ(0, bthread_start_urgent(&th[i], NULL, auth_fighter, s.get()));
+        ASSERT_EQ(0, fiber_start_urgent(&th[i], NULL, auth_fighter, s.get()));
     }
     for (size_t i = 0; i < FLARE_ARRAY_SIZE(th); ++i) {
-        ASSERT_EQ(0, bthread_join(th[i], NULL));
+        ASSERT_EQ(0, fiber_join(th[i], NULL));
     }
     // Only one fighter wins
     ASSERT_EQ(1, winner_count.load());
@@ -237,13 +238,13 @@ TEST_F(SocketTest, single_threaded_write) {
             } else if (i % 4 == 1) {
                 flare::rpc::SocketMessagePtr<MyErrorMessage> msg(
                     new MyErrorMessage(flare::base::flare_status(EINVAL, "Invalid input")));
-                bthread_id_t wait_id;
+                fiber_token_t wait_id;
                 WaitData data;
-                ASSERT_EQ(0, bthread_id_create2(&wait_id, &data, OnWaitIdReset));
+                ASSERT_EQ(0, fiber_token_create2(&wait_id, &data, OnWaitIdReset));
                 flare::rpc::Socket::WriteOptions wopt;
                 wopt.id_wait = wait_id;
                 ASSERT_EQ(0, s->Write(msg, &wopt));
-                ASSERT_EQ(0, bthread_id_join(wait_id));
+                ASSERT_EQ(0, fiber_token_join(wait_id));
                 ASSERT_EQ(wait_id.value, data.id.value);
                 ASSERT_EQ(EINVAL, data.error_code);
                 ASSERT_EQ("Invalid input", data.error_text);
@@ -377,7 +378,7 @@ TEST_F(SocketTest, single_threaded_connect_and_write) {
             if (i == 0) {
                 // connection needs to be established at first time.
                 // Should be intentionally blocked in app_connect.
-                bthread_usleep(10000);
+                flare::this_fiber::fiber_sleep_for(10000);
                 ASSERT_TRUE(my_connect->is_start_connect_called());
                 ASSERT_LT(0, s->fd()); // already tcp connected
                 ASSERT_EQ(0, called); // request is not serialized yet.
@@ -386,13 +387,13 @@ TEST_F(SocketTest, single_threaded_connect_and_write) {
             }
             int64_t start_time = flare::base::gettimeofday_us();
             while (s->fd() < 0) {
-                bthread_usleep(1000);
+                flare::this_fiber::fiber_sleep_for(1000);
                 ASSERT_LT(flare::base::gettimeofday_us(), start_time + 1000000L) << "Too long!";
             }
 #if defined(FLARE_PLATFORM_LINUX)
-            ASSERT_EQ(0, bthread_fd_wait(s->fd(), EPOLLIN));
+            ASSERT_EQ(0, fiber_fd_wait(s->fd(), EPOLLIN));
 #elif defined(FLARE_PLATFORM_OSX)
-            ASSERT_EQ(0, bthread_fd_wait(s->fd(), EVFILT_READ));
+            ASSERT_EQ(0, fiber_fd_wait(s->fd(), EVFILT_READ));
 #endif
             char dest[sizeof(buf)];
             ASSERT_EQ(meta_len + len, (size_t)read(s->fd(), dest, sizeof(dest)));
@@ -428,8 +429,8 @@ void* FailedWriter(void* void_arg) {
     }
     char buf[32];
     for (size_t i = 0; i < arg->times; ++i) {
-        bthread_id_t id;
-        EXPECT_EQ(0, bthread_id_create(&id, NULL, NULL));
+        fiber_token_t id;
+        EXPECT_EQ(0, fiber_token_create(&id, NULL, NULL));
         snprintf(buf, sizeof(buf), "%0" FLARE_SYMBOLSTR(NUMBER_WIDTH) "lu",
                  i + arg->offset);
         flare::io::cord_buf src;
@@ -437,7 +438,7 @@ void* FailedWriter(void* void_arg) {
         flare::rpc::Socket::WriteOptions wopt;
         wopt.id_wait = id;
         sock->Write(&src, &wopt);
-        EXPECT_EQ(0, bthread_id_join(id));
+        EXPECT_EQ(0, fiber_token_join(id));
         // Only the first connect can see ECONNREFUSED and then
         // calls `SetFailed' making others' error_code=EINVAL
         //EXPECT_EQ(ECONNREFUSED, error_code);
@@ -478,7 +479,7 @@ TEST_F(SocketTest, fail_to_connect) {
     // KeepWrite is possibly still running.
     int64_t start_time = flare::base::gettimeofday_us();
     while (global_sock != NULL) {
-        bthread_usleep(1000);
+        flare::this_fiber::fiber_sleep_for(1000);
         ASSERT_LT(flare::base::gettimeofday_us(), start_time + 1000000L) << "Too long!";
     }
     ASSERT_EQ(-1, flare::rpc::Socket::Status(id));
@@ -518,13 +519,13 @@ TEST_F(SocketTest, not_health_check_when_nref_hits_0) {
         src.append(buf, 12 + meta_len + len);
         ASSERT_EQ(12 + meta_len + len, src.length());
 #ifdef CONNECT_IN_KEEPWRITE
-        bthread_id_t wait_id;
+        fiber_token_t wait_id;
         WaitData data;
-        ASSERT_EQ(0, bthread_id_create2(&wait_id, &data, OnWaitIdReset));
+        ASSERT_EQ(0, fiber_token_create2(&wait_id, &data, OnWaitIdReset));
         flare::rpc::Socket::WriteOptions wopt;
         wopt.id_wait = wait_id;
         ASSERT_EQ(0, s->Write(&src, &wopt));
-        ASSERT_EQ(0, bthread_id_join(wait_id));
+        ASSERT_EQ(0, fiber_token_join(wait_id));
         ASSERT_EQ(wait_id.value, data.id.value);
         ASSERT_EQ(ECONNREFUSED, data.error_code);
         ASSERT_TRUE(flare::base::starts_with(data.error_text,
@@ -542,7 +543,7 @@ TEST_F(SocketTest, not_health_check_when_nref_hits_0) {
     // to be NULL because invalidating id happens before calling BeforeRecycle.
     const int64_t start_time = flare::base::gettimeofday_us();
     while (global_sock != NULL) {
-        bthread_usleep(1000);
+        flare::this_fiber::fiber_sleep_for(1000);
         ASSERT_LT(flare::base::gettimeofday_us(), start_time + 1000000L);
     }
     ASSERT_EQ(-1, flare::rpc::Socket::Status(id));
@@ -561,7 +562,7 @@ public:
         flare::rpc::ClosureGuard done_guard(done);
         flare::rpc::Controller* cntl = (flare::rpc::Controller*)cntl_base;
         if (_sleep_flag) {
-            bthread_usleep(510000 /* 510ms, a little bit longer than the default
+            flare::this_fiber::fiber_sleep_for(510000 /* 510ms, a little bit longer than the default
                                      timeout of health check rpc */);
         }
         cntl->response_attachment().append("OK");
@@ -593,12 +594,12 @@ TEST_F(SocketTest, app_level_health_check) {
     // sending-rpc state. Because the remote is not down, so hc rpc would keep
     // sending.
     int listening_fd = tcp_listen(point);
-    bthread_usleep(2000000);
+    flare::this_fiber::fiber_sleep_for(2000000);
 
     // 2s to make sure HealthCheckTask find socket is failed and correct impl
     // should trigger next round of hc
     close(listening_fd);
-    bthread_usleep(2000000);
+    flare::this_fiber::fiber_sleep_for(2000000);
    
     flare::rpc::Server server;
     HealthCheckTestServiceImpl hc_service;
@@ -612,10 +613,10 @@ TEST_F(SocketTest, app_level_health_check) {
         cntl.http_request().uri() = "/";
         channel.CallMethod(NULL, &cntl, NULL, NULL, NULL);
         ASSERT_EQ(EHOSTDOWN, cntl.ErrorCode());
-        bthread_usleep(1000000 /*1s*/);
+        flare::this_fiber::fiber_sleep_for(1000000 /*1s*/);
     }
     hc_service._sleep_flag = false;
-    bthread_usleep(2000000 /* a little bit longer than hc rpc timeout + hc interval */);
+    flare::this_fiber::fiber_sleep_for(2000000 /* a little bit longer than hc rpc timeout + hc interval */);
     // should recover now
     {
         flare::rpc::Controller cntl;
@@ -677,9 +678,9 @@ TEST_F(SocketTest, health_check) {
         ASSERT_EQ(12 + meta_len + len, src.length());
     }
 #ifdef CONNECT_IN_KEEPWRITE
-    bthread_id_t wait_id;
+    fiber_token_t wait_id;
     WaitData data;
-    ASSERT_EQ(0, bthread_id_create2(&wait_id, &data, OnWaitIdReset));
+    ASSERT_EQ(0, fiber_token_create2(&wait_id, &data, OnWaitIdReset));
     flare::rpc::Socket::WriteOptions wopt;
     wopt.id_wait = wait_id;
     if (use_my_message) {
@@ -687,7 +688,7 @@ TEST_F(SocketTest, health_check) {
     } else {
         ASSERT_EQ(0, s->Write(&src, &wopt));
     }
-    ASSERT_EQ(0, bthread_id_join(wait_id));
+    ASSERT_EQ(0, fiber_token_join(wait_id));
     ASSERT_EQ(wait_id.value, data.id.value);
     ASSERT_EQ(ECONNREFUSED, data.error_code);
     ASSERT_TRUE(flare::base::starts_with(data.error_text,
@@ -724,7 +725,7 @@ TEST_F(SocketTest, health_check) {
     int64_t start_time = flare::base::gettimeofday_us();
     nref = -1;
     while (flare::rpc::Socket::Status(id, &nref) != 0) {
-        bthread_usleep(1000);
+        flare::this_fiber::fiber_sleep_for(1000);
         ASSERT_LT(flare::base::gettimeofday_us(),
                   start_time + kCheckInteval * 1000000L + 100000L/*100ms*/);
     }
@@ -744,7 +745,7 @@ TEST_F(SocketTest, health_check) {
     ASSERT_EQ(fd, s->fd());
     start_time = flare::base::gettimeofday_us();
     while (flare::rpc::Socket::Status(id) != 0) {
-        bthread_usleep(1000);
+        flare::this_fiber::fiber_sleep_for(1000);
         ASSERT_LT(flare::base::gettimeofday_us(), start_time + 1000000L);
     }
     ASSERT_TRUE(global_sock);
@@ -768,7 +769,7 @@ TEST_F(SocketTest, health_check) {
     // HealthCheckThread is possibly still addressing the Socket.
     start_time = flare::base::gettimeofday_us();
     while (global_sock != NULL) {
-        bthread_usleep(1000);
+        flare::this_fiber::fiber_sleep_for(1000);
         ASSERT_LT(flare::base::gettimeofday_us(), start_time + 1000000L);
     }
     ASSERT_EQ(-1, flare::rpc::Socket::Status(id));
@@ -793,7 +794,7 @@ void* Writer(void* void_arg) {
         if (sock->Write(&src) != 0) {
             if (errno == flare::rpc::EOVERCROWDED) {
                 // The buf is full, sleep a while and retry.
-                bthread_usleep(1000);
+                flare::this_fiber::fiber_sleep_for(1000);
                 --i;
                 continue;
             }
@@ -843,7 +844,7 @@ TEST_F(SocketTest, multi_threaded_write) {
 
         if (k == 1) {
             printf("sleep 100ms to block writers\n");
-            bthread_usleep(100000);
+            flare::this_fiber::fiber_sleep_for(100000);
         }
         
         flare::io::IOPortal dest;
@@ -857,7 +858,7 @@ TEST_F(SocketTest, multi_threaded_write) {
                 if (EAGAIN != errno) {
                     ASSERT_EQ(EAGAIN, errno) << flare_error();
                 }
-                bthread_usleep(1000);
+                flare::this_fiber::fiber_sleep_for(1000);
                 if (flare::base::gettimeofday_us() >= start_time + 2000000L) {
                     LOG(FATAL) << "Wait too long!";
                     break;
@@ -879,7 +880,7 @@ TEST_F(SocketTest, multi_threaded_write) {
             ASSERT_EQ(0, pthread_join(th[i], NULL));
         }
         ASSERT_TRUE(dest.empty());
-        bthread::g_task_control->print_rq_sizes(std::cout);
+        flare::fiber_internal::g_task_control->print_rq_sizes(std::cout);
         std::cout << std::endl;
 
         ASSERT_EQ(REP * FLARE_ARRAY_SIZE(th), result.size())
@@ -915,7 +916,7 @@ void* FastWriter(void* void_arg) {
         if (sock->Write(&src) != 0) {
             if (errno == flare::rpc::EOVERCROWDED) {
                 // The buf is full, sleep a while and retry.
-                bthread_usleep(1000);
+                flare::this_fiber::fiber_sleep_for(1000);
                 --c;
                 ++nretry;
                 continue;
@@ -959,7 +960,7 @@ TEST_F(SocketTest, multi_threaded_write_perf) {
     const size_t REP = 1000000000;
     int fds[2];
     ASSERT_EQ(0, socketpair(AF_UNIX, SOCK_STREAM, 0, fds));
-    bthread_t th[3];
+    fiber_id_t th[3];
     WriterArg args[FLARE_ARRAY_SIZE(th)];
 
     flare::rpc::SocketId id = 8888;
@@ -984,7 +985,7 @@ TEST_F(SocketTest, multi_threaded_write_perf) {
         args[i].times = REP;
         args[i].offset = i * REP;
         args[i].socket_id = id;
-        bthread_start_background(&th[i], NULL, FastWriter, &args[i]);
+        fiber_start_background(&th[i], NULL, FastWriter, &args[i]);
     }
 
     pthread_t rth;
@@ -1006,7 +1007,7 @@ TEST_F(SocketTest, multi_threaded_write_perf) {
         args[i].times = 0;
     }
     for (size_t i = 0; i < FLARE_ARRAY_SIZE(th); ++i) {
-        ASSERT_EQ(0, bthread_join(th[i], NULL));
+        ASSERT_EQ(0, fiber_join(th[i], NULL));
     }
     ASSERT_EQ(0, s->SetFailed());
     s.release()->Dereference();

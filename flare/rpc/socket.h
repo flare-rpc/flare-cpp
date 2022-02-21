@@ -23,12 +23,12 @@
 #include <deque>                               // std::deque
 #include <set>                                 // std::set
 #include "flare/base/static_atomic.h"                    // std::atomic
-#include "flare/bthread/types.h"                      // bthread_id_t
+#include "flare/fiber/internal/types.h"                      // fiber_token_t
 #include "flare/io/cord_buf.h"                        // flare::io::cord_buf, IOPortal
 #include "flare/base/profile.h"                       // FLARE_DISALLOW_COPY_AND_ASSIGN
 #include "flare/base/endpoint.h"                     // flare::base::end_point
 #include "flare/memory/resource_pool.h"                // flare::memory::ResourceId
-#include "flare/bthread/butex.h"                      // butex_create_checked
+#include "flare/fiber/internal/waitable_event.h"                      // waitable_event_create_checked
 #include "flare/rpc/authenticator.h"           // Authenticator
 #include "flare/rpc/errno.pb.h"                // EFAILEDSOCKET
 #include "flare/rpc/details/ssl_helper.h"      // SSLState
@@ -38,6 +38,7 @@
 #include "flare/rpc/socket_id.h"               // SocketId
 #include "flare/rpc/socket_message.h"          // SocketMessagePtr
 #include "flare/variable/all.h"
+#include "flare/fiber/this_fiber.h"
 
 namespace flare::rpc {
 namespace policy {
@@ -154,11 +155,11 @@ struct PipelinedInfo {
     void reset() {
         count = 0;
         with_auth = false;
-        id_wait = INVALID_BTHREAD_ID;
+        id_wait = INVALID_FIBER_TOKEN;
     }
     uint32_t count;
     bool with_auth;
-    bthread_id_t id_wait;
+    fiber_token_t id_wait;
 };
 
 struct SocketSSLContext {
@@ -188,7 +189,7 @@ struct SocketOptions {
     void (*on_edge_triggered_events)(Socket*);
     int health_check_interval_s;
     std::shared_ptr<SocketSSLContext> initial_ssl_ctx;
-    bthread_keytable_pool_t* keytable_pool;
+    fiber_keytable_pool_t* keytable_pool;
     SocketConnection* conn;
     std::shared_ptr<AppConnect> app_connect;
     // The created socket will set parsing_context with this value.
@@ -239,10 +240,10 @@ public:
     // - Wait-free when contended.
     struct WriteOptions {
         // `id_wait' is signalled when this Socket is SetFailed. To disable
-        // the signal, set this field to INVALID_BTHREAD_ID.
+        // the signal, set this field to INVALID_FIBER_TOKEN.
         // `on_reset' of `id_wait' is NOT called when Write() returns non-zero.
-        // Default: INVALID_BTHREAD_ID
-        bthread_id_t id_wait;
+        // Default: INVALID_FIBER_TOKEN
+        fiber_token_t id_wait;
         // If no connection exists, a connection will be established to
         // remote_side() regarding deadline `abstime'. NULL means no timeout.
         // Default: NULL
@@ -263,7 +264,7 @@ public:
         bool ignore_eovercrowded;
 
         WriteOptions()
-            : id_wait(INVALID_BTHREAD_ID), abstime(NULL)
+            : id_wait(INVALID_FIBER_TOKEN), abstime(NULL)
             , pipelined_count(0), with_auth(false)
             , ignore_eovercrowded(false) {}
     };
@@ -358,9 +359,9 @@ public:
     bool DidReleaseAdditionalRereference() const
     { return _recycle_flag.load(std::memory_order_relaxed); }
 
-    // Notify `id' object (by calling bthread_id_error) when this Socket
+    // Notify `id' object (by calling fiber_token_error) when this Socket
     // has been `SetFailed'. If it already has, notify `id' immediately
-    void NotifyOnFailed(bthread_id_t id);
+    void NotifyOnFailed(fiber_token_t id);
 
     // Release the additional reference which added inside `Create'
     // before so that `Socket' will be recycled automatically once
@@ -382,7 +383,7 @@ public:
     // Start to process edge-triggered events from the fd.
     // This function does not block caller.
     static int StartInputEvent(SocketId id, uint32_t events,
-                               const bthread_attr_t& thread_attr);
+                               const fiber_attribute& thread_attr);
 
     static const int PROGRESS_INIT = 1;
     bool MoreReadEvents(int* progress);
@@ -526,12 +527,12 @@ public:
     // Returns true if the remote side is overcrowded.
     bool is_overcrowded() const { return _overcrowded; }
 
-    bthread_keytable_pool_t* keytable_pool() const { return _keytable_pool; }
+    fiber_keytable_pool_t* keytable_pool() const { return _keytable_pool; }
 
 private:
     FLARE_DISALLOW_COPY_AND_ASSIGN(Socket);
 
-    int ConductError(bthread_id_t);
+    int ConductError(fiber_token_t);
     int StartWrite(WriteRequest*, const WriteOptions&);
 
     int Dereference();
@@ -540,7 +541,7 @@ friend void DereferenceSocket(Socket*);
     static int Status(SocketId, int32_t* nref = NULL);  // for unit-test.
 
     // Perform SSL handshake after TCP connection has been established.
-    // Create SSL session inside and block (in bthread) until handshake
+    // Create SSL session inside and block (in fiber) until handshake
     // has completed. Application layer I/O is forbidden during this
     // process to avoid concurrent I/O on the underlying fd
     // Returns 0 on success, -1 otherwise
@@ -679,13 +680,13 @@ private:
     std::atomic<SharedPart*> _shared_part;
 
     // [ Set in dispatcher ]
-    // To keep the callback in at most one bthread at any time. Read comments
+    // To keep the callback in at most one fiber at any time. Read comments
     // about ProcessEvent in socket.cpp to understand the tricks.
     std::atomic<int> _nevent;
 
     // May be set by Acceptor to share keytables between reading threads
     // on sockets created by the Acceptor.
-    bthread_keytable_pool_t* _keytable_pool;
+    fiber_keytable_pool_t* _keytable_pool;
 
     // [ Set in ResetFileDescriptor ]
     std::atomic<int> _fd;  // -1 when not connected.
@@ -762,7 +763,7 @@ private:
     // 1 - authentication completed (whether it succeeded or not
     //     depends on `auth error')
     std::atomic<uint64_t> _auth_flag_error;
-    bthread_id_t _auth_id;
+    fiber_token_t _auth_id;
 
     // Stores authentication result/context of this socket. This only
     // exists in server side
@@ -801,14 +802,14 @@ private:
 
     // For storing call-id of in-progress RPC.
     pthread_mutex_t _id_wait_list_mutex;
-    bthread_id_list_t _id_wait_list;
+    fiber_token_list_t _id_wait_list;
 
     // Set with cpuwide_time_us() at last write operation
     std::atomic<int64_t> _last_writetime_us;
     // Queued but written
     std::atomic<int64_t> _unwritten_bytes;
 
-    // Butex to wait for EPOLLOUT event
+    // waitable_event to wait for EPOLLOUT event
     std::atomic<int>* _epollout_butex;
 
     // Storing data that are not flushed into `fd' yet.
@@ -837,7 +838,7 @@ private:
             }                                                           \
             sleep_time *= 2;                                            \
             if (sleep_time > 2000) { sleep_time = 2000; }               \
-            ::bthread_usleep(sleep_time);                               \
+            flare::this_fiber::fiber_sleep_for(sleep_time);                               \
         }                                                               \
         __ret_code__;                                                   \
     })
@@ -855,7 +856,7 @@ private:
             }                                                           \
             sleep_time *= 2;                                            \
             if (sleep_time > 2000) { sleep_time = 2000; }               \
-            ::bthread_usleep(sleep_time);                               \
+            ::flare::this_fiber::fiber_sleep_for(sleep_time);                               \
         }                                                               \
         __ret_code__;                                                   \
     })

@@ -135,8 +135,8 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
         "-Wl,-U,_RegisterThriftProtocol")
 endif()
 
-add_executable(server server.cpp ${PROTO_SRC} ${PROTO_HEADER} )
-add_executable(client client.cpp ${PROTO_SRC} ${PROTO_HEADER})
+add_executable(server server.cc ${PROTO_SRC} ${PROTO_HEADER} )
+add_executable(client client.cc ${PROTO_SRC} ${PROTO_HEADER})
 
 target_link_libraries(server ${FLARE_LIB} ${DYNAMIC_LIB} ${GPERFTOOLS_LIBRARIES})
 target_link_libraries(client ${FLARE_LIB} ${DYNAMIC_LIB} ${GPERFTOOLS_LIBRARIES})

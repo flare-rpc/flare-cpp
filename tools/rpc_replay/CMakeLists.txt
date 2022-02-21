@@ -15,6 +15,6 @@
 # specific language governing permissions and limitations
 # under the License.
 
-file(GLOB SOURCES "${PROJECT_SOURCE_DIR}/tools/rpc_replay/*.cpp")
+file(GLOB SOURCES "${PROJECT_SOURCE_DIR}/tools/rpc_replay/*.cc")
 add_executable(rpc_replay ${SOURCES})
 target_link_libraries(rpc_replay flare-static ${DYNAMIC_LIB})

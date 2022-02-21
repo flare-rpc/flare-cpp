@@ -23,7 +23,7 @@
 // on internal structures, use opaque pointers instead.
 
 #include <ostream>                          // std::ostream
-#include "flare/bthread/errno.h"                  // Redefine errno
+#include "flare/fiber/internal/errno.h"                  // Redefine errno
 #include "flare/container/intrusive_ptr.h"          // flare::container::intrusive_ptr
 #include "flare/container/ptr_container.h"
 #include "flare/rpc/ssl_options.h"               // ChannelSSLOptions

@@ -24,6 +24,7 @@
 #include "flare/rpc/grpc.h"
 #include "flare/base/time.h"
 #include "flare/base/strings.h"
+#include "flare/fiber/this_fiber.h"
 #include "grpc.pb.h"
 
 int main(int argc, char* argv[]) {
@@ -83,7 +84,7 @@ public:
               ::test::GrpcResponse* res,
               ::google::protobuf::Closure* done) {
         flare::rpc::ClosureGuard done_guard(done);
-        bthread_usleep(2000000 /*2s*/);
+        flare::this_fiber::fiber_sleep_for(2000000 /*2s*/);
         res->set_message(g_prefix + req->message());
         return;
     }

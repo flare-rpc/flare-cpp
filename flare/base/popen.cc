@@ -10,10 +10,6 @@
 #include <errno.h>
 #include <sys/types.h>
 #include <sys/wait.h>
-
-extern "C" {
-uint64_t FLARE_WEAK bthread_usleep(uint64_t microseconds);
-}
 #endif
 
 namespace flare::base {
@@ -91,11 +87,7 @@ namespace flare::base {
                 break;
             }
             if (wpid == 0) {
-                if (bthread_usleep != NULL) {
-                    bthread_usleep(1000);
-                } else {
-                    usleep(1000);
-                }
+                usleep(1000);
                 continue;
             }
             rc = -1;

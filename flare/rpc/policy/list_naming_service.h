@@ -16,48 +16,51 @@
 // under the License.
 
 
-#ifndef  BRPC_POLICY_LIST_NAMING_SERVICE
-#define  BRPC_POLICY_LIST_NAMING_SERVICE
+#ifndef  FLARE_RPC_POLICY_LIST_NAMING_SERVICE_H_
+#define  FLARE_RPC_POLICY_LIST_NAMING_SERVICE_H_
 
 #include "flare/rpc/naming_service.h"
 #include "flare/rpc/periodic_naming_service.h"
 
 
 namespace flare::rpc {
-namespace policy {
+    namespace policy {
 
-class ListNamingService : public NamingService {
-private:
-    int RunNamingService(const char* service_name,
-                         NamingServiceActions* actions) override;
+        class ListNamingService : public NamingService {
+        private:
 
-    // We don't need a dedicated bthread to run this static NS.
-    bool RunNamingServiceReturnsQuickly() override { return true; }
-    
-    int GetServers(const char *service_name,
-                   std::vector<ServerNode>* servers);
+            int RunNamingService(const char *service_name,
+                                 NamingServiceActions *actions) override;
 
-    void Describe(std::ostream& os, const DescribeOptions& options) const override;
+            // We don't need a dedicated fiber to run this static NS.
+            bool RunNamingServiceReturnsQuickly() override { return true; }
 
-    NamingService* New() const override;
-    
-    void Destroy() override;
-};
+            int GetServers(const char *service_name,
+                           std::vector<ServerNode> *servers);
 
-class DomainListNamingService : public PeriodicNamingService {
-private:
-    int GetServers(const char* service_name,
-                   std::vector<ServerNode>* servers) override;
-    void Describe(std::ostream& os,
-                  const DescribeOptions& options) const override;
+            void Describe(std::ostream &os, const DescribeOptions &options) const override;
 
-    NamingService* New() const override;
+            NamingService *New() const override;
 
-    void Destroy() override;
-};
+            void Destroy() override;
+        };
 
-}  // namespace policy
+        class DomainListNamingService : public PeriodicNamingService {
+        private:
+
+            int GetServers(const char *service_name,
+                           std::vector<ServerNode> *servers) override;
+
+            void Describe(std::ostream &os,
+                          const DescribeOptions &options) const override;
+
+            NamingService *New() const override;
+
+            void Destroy() override;
+        };
+
+    }  // namespace policy
 } // namespace flare::rpc
 
 
-#endif  //BRPC_POLICY_LIST_NAMING_SERVICE
+#endif  //FLARE_RPC_POLICY_LIST_NAMING_SERVICE_H_

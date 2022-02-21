@@ -19,8 +19,8 @@
 #ifndef  FLARE_RPC_STREAM_IMPL_H_
 #define  FLARE_RPC_STREAM_IMPL_H_
 
-#include "flare/bthread/bthread.h"
-#include "flare/bthread/execution_queue.h"
+#include "flare/fiber/internal/fiber.h"
+#include "flare/fiber/internal/execution_queue.h"
 #include "flare/rpc/socket.h"
 #include "flare/rpc/stream.h"
 #include "flare/rpc/streaming_rpc_meta.pb.h"
@@ -73,15 +73,15 @@ friend class MessageBatcher;
     void SetRemoteConsumed(size_t _remote_consumed);
     void TriggerOnConnectIfNeed();
     void Wait(void (*on_writable)(StreamId, void*, int), void* arg, 
-              const timespec* due_time, bool new_thread, bthread_id_t *join_id);
+              const timespec* due_time, bool new_thread, fiber_token_t *join_id);
     void SendFeedback();
     void StartIdleTimer();
     void StopIdleTimer();
     void HandleRpcResponse(flare::io::cord_buf* response_buffer);
     void WriteToHostSocket(flare::io::cord_buf* b);
 
-    static int Consume(void *meta, bthread::TaskIterator<flare::io::cord_buf*>& iter);
-    static int TriggerOnWritable(bthread_id_t id, void *data, int error_code);
+    static int Consume(void *meta, flare::fiber_internal::TaskIterator<flare::io::cord_buf*>& iter);
+    static int TriggerOnWritable(fiber_token_t id, void *data, int error_code);
     static void *RunOnWritable(void* arg);
     static void* RunOnConnect(void* arg);
 
@@ -98,7 +98,7 @@ friend class MessageBatcher;
         int error_code;
         bool new_thread;
         bool has_timer;
-        bthread_timer_t timer;
+        fiber_timer_id timer;
     };
 
     Socket*     _host_socket;  // Every stream within a Socket holds a reference
@@ -106,24 +106,24 @@ friend class MessageBatcher;
     StreamId    _id;
     StreamOptions _options;
 
-    bthread_mutex_t     _connect_mutex;
+    fiber_mutex_t     _connect_mutex;
     ConnectMeta         _connect_meta;
     bool                _connected;
     bool                _closed;
     
-    bthread_mutex_t _congestion_control_mutex;
+    fiber_mutex_t _congestion_control_mutex;
     size_t _produced;
     size_t _remote_consumed;
-    bthread_id_list_t _writable_wait_list;
+    fiber_token_list_t _writable_wait_list;
 
     int64_t _local_consumed;
     StreamSettings _remote_settings;   
 
     bool _parse_rpc_response;
-    bthread::ExecutionQueueId<flare::io::cord_buf*> _consumer_queue;
+    flare::fiber_internal::ExecutionQueueId<flare::io::cord_buf*> _consumer_queue;
     flare::io::cord_buf *_pending_buf;
     int64_t _start_idle_timer_us;
-    bthread_timer_t _idle_timer;
+    fiber_timer_id _idle_timer;
 };
 
 } // namespace flare::rpc

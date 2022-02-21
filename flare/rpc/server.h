@@ -22,9 +22,9 @@
 // To flare developers: This is a header included by user, don't depend
 // on internal structures, use opaque pointers instead.
 
-#include "flare/bthread/errno.h"        // Redefine errno
-#include "flare/bthread/bthread.h"      // Server may need some bthread functions,
-                                  // e.g. bthread_usleep
+#include "flare/fiber/internal/errno.h"        // Redefine errno
+#include "flare/fiber/internal/fiber.h"      // Server may need some fiber functions,
+                                  // e.g. flare::this_fiber::fiber_sleep_for
 #include <google/protobuf/service.h>                 // google::protobuf::Service
 #include "flare/base/profile.h"                            // FLARE_DISALLOW_COPY_AND_ASSIGN
 #include "flare/container/doubly_buffered_data.h"   // DoublyBufferedData
@@ -105,9 +105,9 @@ struct ServerOptions {
     // "concurrency" = "number of requests processed in parallel"
     //
     // In a traditional server, number of pthread workers also limits
-    // concurrency. However flare runs requests in bthreads which are
-    // mapped to pthread workers, when a bthread context switches, it gives
-    // the pthread worker to another bthread, yielding a higher concurrency
+    // concurrency. However flare runs requests in fibers which are
+    // mapped to pthread workers, when a fiber context switches, it gives
+    // the pthread worker to another fiber, yielding a higher concurrency
     // than number of pthreads. In some situations, higher concurrency may
     // consume more resources, to protect the server from running out of
     // resources, you may set this option.
@@ -172,13 +172,13 @@ struct ServerOptions {
     // Default: 0
     size_t reserved_thread_local_data;
 
-    // Call bthread_init_fn(bthread_init_args) in at least #bthread_init_count
-    // bthreads before server runs, mainly for initializing bthread locals.
-    // You have to set both `bthread_init_fn' and `bthread_init_count' to
+    // Call fiber_init_fn(fiber_init_args) in at least #fiber_init_count
+    // fibers before server runs, mainly for initializing fiber locals.
+    // You have to set both `fiber_init_fn' and `fiber_init_count' to
     // enable the feature. 
-    bool (*bthread_init_fn)(void* args); // default: NULL (do nothing)
-    void* bthread_init_args;             // default: NULL
-    size_t bthread_init_count;           // default: 0
+    bool (*fiber_init_fn)(void* args); // default: NULL (do nothing)
+    void* fiber_init_args;             // default: NULL
+    size_t fiber_init_count;           // default: 0
 
     // Provide builtin services at this port rather than the port to Start().
     // When your server needs to be accessed from public (including traffic
@@ -362,11 +362,11 @@ public:
     typedef flare::container::FlatMap<std::string, MethodProperty> MethodMap;
 
     struct ThreadLocalOptions {
-        bthread_key_t tls_key;
+        fiber_local_key tls_key;
         const DataFactory* thread_local_data_factory;
         
         ThreadLocalOptions()
-            : tls_key(INVALID_BTHREAD_KEY)
+            : tls_key(INVALID_FIBER_KEY)
             , thread_local_data_factory(NULL) {}
     };
 
@@ -673,9 +673,9 @@ friend class Controller;
 
     std::string _version;
     time_t _last_start_time;
-    bthread_t _derivative_thread;
+    fiber_id_t _derivative_thread;
     
-    bthread_keytable_pool_t* _keytable_pool;
+    fiber_keytable_pool_t* _keytable_pool;
 
     // mutable is required for `ServerPrivateAccessor' to change this variable
     mutable flare::variable::Adder<int64_t> _nerror_var;

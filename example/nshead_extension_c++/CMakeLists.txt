@@ -138,8 +138,8 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
         "-Wl,-U,_ProfilerStop")
 endif()
 
-add_executable(nshead_extension_client client.cpp)
-add_executable(nshead_extension_server server.cpp)
+add_executable(nshead_extension_client client.cc)
+add_executable(nshead_extension_server server.cc)
 
 target_link_libraries(nshead_extension_client ${FLARE_LIB} ${DYNAMIC_LIB})
 target_link_libraries(nshead_extension_server ${FLARE_LIB} ${DYNAMIC_LIB})

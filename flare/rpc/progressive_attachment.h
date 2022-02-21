@@ -23,7 +23,7 @@
 #include "flare/base/static_atomic.h"
 #include "flare/io/cord_buf.h"
 #include "flare/base/endpoint.h"       // flare::base::end_point
-#include "flare/bthread/types.h"        // bthread_id_t
+#include "flare/fiber/internal/types.h"        // fiber_token_t
 #include "flare/rpc/socket_id.h"       // SocketUniquePtr
 #include "flare/rpc/shared_object.h"   // SharedObject
 
@@ -69,7 +69,7 @@ protected:
     flare::base::Mutex _mutex;
     SocketUniquePtr _httpsock;
     flare::io::cord_buf _saved_buf;
-    bthread_id_t _notify_id;
+    fiber_token_t _notify_id;
 
 private:
     static const int RPC_RUNNING;

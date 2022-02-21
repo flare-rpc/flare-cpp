@@ -19,5 +19,5 @@ include(FindProtobuf)
 protobuf_generate_cpp(PROTO_SRC PROTO_HEADER view.proto)
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
-add_executable(rpc_view rpc_view.cpp ${PROTO_SRC})
+add_executable(rpc_view rpc_view.cc ${PROTO_SRC})
 target_link_libraries(rpc_view flare-static ${DYNAMIC_LIB})

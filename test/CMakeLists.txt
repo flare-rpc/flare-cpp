@@ -53,7 +53,7 @@ else ()
 endif ()
 
 set(CMAKE_CPP_FLAGS "${DEFINE_CLOCK_GETTIME}  -DGFLAGS_NS=${GFLAGS_NS}")
-set(CMAKE_CPP_FLAGS "${CMAKE_CPP_FLAGS} -DBTHREAD_USE_FAST_PTHREAD_MUTEX -D__const__= -D_GNU_SOURCE -DUSE_SYMBOLIZE -DNO_TCMALLOC -D__STDC_FORMAT_MACROS -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -DUNIT_TEST -Dprivate=public -Dprotected=public -DVARIABLE_NOT_LINK_DEFAULT_VARIABLES -D__STRICT_ANSI__ -include ${PROJECT_SOURCE_DIR}/test/sstream_workaround.h")
+set(CMAKE_CPP_FLAGS "${CMAKE_CPP_FLAGS} -DFIBER_USE_FAST_PTHREAD_MUTEX -D__const__= -D_GNU_SOURCE -DUSE_SYMBOLIZE -DNO_TCMALLOC -D__STDC_FORMAT_MACROS -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -DUNIT_TEST -Dprivate=public -Dprotected=public -DVARIABLE_NOT_LINK_DEFAULT_VARIABLES -D__STRICT_ANSI__ -include ${PROJECT_SOURCE_DIR}/test/sstream_workaround.h")
 set(CMAKE_CXX_FLAGS "${CMAKE_CPP_FLAGS} -g -O2 -pipe -Wall -W -fPIC -fstrict-aliasing -Wno-invalid-offsetof -Wno-unused-parameter -fno-omit-frame-pointer")
 use_cxx17()
 
@@ -77,13 +77,13 @@ set(IO_TEST_SRC
         )
 
 
-# bthread_* functions are used in logging.cc, and they need to be marked as
+# fiber_* functions are used in logging.cc, and they need to be marked as
 # weak symbols explicitly in Darwin system.
 if (CMAKE_SYSTEM_NAME STREQUAL "Darwin")
     set(DYNAMIC_LIB ${DYNAMIC_LIB}
-            "-Wl,-U,_bthread_getspecific"
-            "-Wl,-U,_bthread_setspecific"
-            "-Wl,-U,_bthread_key_create")
+            "-Wl,-U,_fiber_getspecific"
+            "-Wl,-U,_fiber_setspecific"
+            "-Wl,-U,_fiber_key_create")
 endif ()
 
 file(GLOB_RECURSE TESTING_SOURCES "${PROJECT_SOURCE_DIR}/test/testing/*.cc")
@@ -122,13 +122,13 @@ add_test(NAME test_io COMMAND test_io)
 
 # test_variable
 # -DVARIABLE_NOT_LINK_DEFAULT_VARIABLES not work for gcc >= 5.0, just remove the file to prevent linking into unit tests
-list(REMOVE_ITEM VARIABLE_SOURCES ${PROJECT_SOURCE_DIR}/flare/variable/default_variables.cpp)
+list(REMOVE_ITEM VARIABLE_SOURCES ${PROJECT_SOURCE_DIR}/flare/variable/default_variables.cc)
 
 add_library(VARIABLE_DEBUG_LIB OBJECT ${VARIABLE_SOURCES})
 add_subdirectory(var)
 
-# bthread tests
-add_subdirectory(bthread)
+# fiber tests
+add_subdirectory(fiber)
 
 # rpc tests
 add_subdirectory(rpc)

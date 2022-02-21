@@ -140,6 +140,6 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
         "-Wl,-U,_ProfilerStop")
 endif()
 
-add_executable(memcache_client client.cpp)
+add_executable(memcache_client client.cc)
 
 target_link_libraries(memcache_client ${FLARE_LIB} ${DYNAMIC_LIB})

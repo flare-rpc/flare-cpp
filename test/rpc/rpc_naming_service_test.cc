@@ -20,7 +20,7 @@
 #include <vector>
 #include "flare/base/strings.h"
 #include "flare/io/temp_file.h"
-#include "flare/bthread/bthread.h"
+#include "flare/fiber/internal/fiber.h"
 #include "flare/rpc/policy/consul_naming_service.h"
 #include "flare/rpc/policy/domain_naming_service.h"
 #include "flare/rpc/policy/file_naming_service.h"
@@ -419,7 +419,7 @@ TEST(NamingServiceTest, consul_with_backup_file) {
                                    restful_map.c_str()));
     ASSERT_EQ(0, server.Start("localhost:8500", NULL));
 
-    bthread_usleep(5000000);
+    flare::this_fiber::fiber_sleep_for(5000000);
 
     flare::base::end_point n1;
     ASSERT_EQ(0, flare::base::str2endpoint("10.121.36.189:8003", &n1));
@@ -658,7 +658,7 @@ TEST(NamingServiceTest, discovery_sanity) {
         // svc.RenewCount() be one.
         ASSERT_EQ(0, dc.Register(dparam));
         ASSERT_EQ(0, dc.Register(dparam));
-        bthread_usleep(100000);
+        flare::this_fiber::fiber_sleep_for(100000);
         ASSERT_TRUE(svc.HasAddr("grpc://10.0.0.1:8000"));
         ASSERT_FALSE(svc.HasAddr("http://10.0.0.1:8000"));
     }
