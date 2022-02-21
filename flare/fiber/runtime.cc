@@ -2,7 +2,7 @@
 // Created by liyinbin on 2022/2/21.
 //
 
-#include "flare/fiber/fiber/internal/fiber.h"
+#include "flare/fiber/internal/fiber.h"
 
 namespace flare::fiber {
 
