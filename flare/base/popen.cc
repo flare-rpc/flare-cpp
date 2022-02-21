@@ -10,7 +10,6 @@
 #include <errno.h>
 #include <sys/types.h>
 #include <sys/wait.h>
-#include "flare/fiber/this_fiber.h"
 #endif
 
 namespace flare::base {
@@ -88,7 +87,7 @@ namespace flare::base {
                 break;
             }
             if (wpid == 0) {
-                flare::this_fiber::fiber_sleep_for(1000);
+                usleep(1000);
                 continue;
             }
             rc = -1;
