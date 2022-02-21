@@ -673,7 +673,7 @@ namespace flare::fiber_internal {
 extern "C" {
 
 int fiber_mutex_init(fiber_mutex_t *__restrict m,
-                       const fiber_mutexattr_t * __restrict) {
+                     const fiber_mutexattr_t * __restrict) {
     flare::fiber_internal::make_contention_site_invalid(&m->csite);
     m->event = flare::fiber_internal::waitable_event_create_checked<unsigned>();
     if (!m->event) {
@@ -727,7 +727,7 @@ int fiber_mutex_lock(fiber_mutex_t *m) {
 }
 
 int fiber_mutex_timedlock(fiber_mutex_t *__restrict m,
-                            const struct timespec *__restrict abstime) {
+                          const struct timespec *__restrict abstime) {
     flare::fiber_internal::MutexInternal *split = (flare::fiber_internal::MutexInternal *) m->event;
     if (!split->locked.exchange(1, std::memory_order_acquire)) {
         return 0;

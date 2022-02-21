@@ -34,13 +34,13 @@ inline schedule_group* get_task_control() {
 } // namespace flare::fiber_internal
 
 namespace {
-TEST(ButexTest, wait_on_already_timedout_butex) {
-    uint32_t* butex = flare::fiber_internal::waitable_event_create_checked<uint32_t>();
-    ASSERT_TRUE(butex);
+TEST(WaitableEventTest, wait_on_already_timedout_event) {
+    uint32_t* event = flare::fiber_internal::waitable_event_create_checked<uint32_t>();
+    ASSERT_TRUE(event);
     timespec now;
     ASSERT_EQ(0, clock_gettime(CLOCK_REALTIME, &now));
-    *butex = 1;
-    ASSERT_EQ(-1, flare::fiber_internal::waitable_event_wait(butex, 1, &now));
+    *event = 1;
+    ASSERT_EQ(-1, flare::fiber_internal::waitable_event_wait(event, 1, &now));
     ASSERT_EQ(ETIMEDOUT, errno);
 }
 
@@ -77,12 +77,12 @@ struct B {
 };
 
 
-TEST(ButexTest, with_or_without_array_zero) {
+TEST(WaitableEventTest, with_or_without_array_zero) {
     ASSERT_EQ(sizeof(B), sizeof(A));
 }
 
 
-TEST(ButexTest, join) {
+TEST(WaitableEventTest, join) {
     const size_t N = 6;
     const size_t M = 6;
     fiber_id_t th[N+1];
@@ -115,7 +115,7 @@ TEST(ButexTest, join) {
 struct WaiterArg {
     int expected_result;
     int expected_value;
-    std::atomic<int> *butex;
+    std::atomic<int> *event;
     const timespec *ptimeout;
 };
 
@@ -123,7 +123,7 @@ void* waiter(void* arg) {
     WaiterArg * wa = (WaiterArg*)arg;
     const long t1 = flare::base::gettimeofday_us();
     const int rc = flare::fiber_internal::waitable_event_wait(
-        wa->butex, wa->expected_value, wa->ptimeout);
+        wa->event, wa->expected_value, wa->ptimeout);
     const long t2 = flare::base::gettimeofday_us();
     if (rc == 0) {
         EXPECT_EQ(wa->expected_result, 0) << fiber_self();
@@ -134,7 +134,7 @@ void* waiter(void* arg) {
     return NULL;
 }
 
-TEST(ButexTest, sanity) {
+TEST(WaitableEventTest, sanity) {
     const size_t N = 5;
     WaiterArg args[N * 4];
     pthread_t t1, t2;
@@ -150,7 +150,7 @@ TEST(ButexTest, sanity) {
     WaiterArg *unmatched_arg = new WaiterArg;
     unmatched_arg->expected_value = *b1 + 1;
     unmatched_arg->expected_result = EWOULDBLOCK;
-    unmatched_arg->butex = b1;
+    unmatched_arg->event = b1;
     unmatched_arg->ptimeout = NULL;
     pthread_create(&t2, NULL, waiter, unmatched_arg);
     fiber_id_t th;
@@ -159,7 +159,7 @@ TEST(ButexTest, sanity) {
     const timespec abstime = flare::base::seconds_from_now(1);
     for (size_t i = 0; i < 4*N; ++i) {
         args[i].expected_value = *b1;
-        args[i].butex = b1;
+        args[i].event = b1;
         if ((i % 2) == 0) {
             args[i].expected_result = 0;
             args[i].ptimeout = NULL;
@@ -184,17 +184,17 @@ TEST(ButexTest, sanity) {
 }
 
 
-struct ButexWaitArg {
-    int* butex;
+struct event_wait_arg {
+    int* event;
     int expected_val;
     long wait_msec;
     int error_code;
 };
 
-void* wait_butex(void* void_arg) {
-    ButexWaitArg* arg = static_cast<ButexWaitArg*>(void_arg);
+void* wait_event(void* void_arg) {
+    event_wait_arg* arg = static_cast<event_wait_arg*>(void_arg);
     const timespec ts = flare::base::milliseconds_from_now(arg->wait_msec);
-    int rc = flare::fiber_internal::waitable_event_wait(arg->butex, arg->expected_val, &ts);
+    int rc = flare::fiber_internal::waitable_event_wait(arg->event, arg->expected_val, &ts);
     int saved_errno = errno;
     if (arg->error_code) {
         EXPECT_EQ(-1, rc);
@@ -205,30 +205,30 @@ void* wait_butex(void* void_arg) {
     return NULL;
 }
 
-TEST(ButexTest, wait_without_stop) {
-    int* butex = flare::fiber_internal::waitable_event_create_checked<int>();
-    *butex = 7;
+TEST(WaitableEventTest, wait_without_stop) {
+    int* event = flare::fiber_internal::waitable_event_create_checked<int>();
+    *event = 7;
     flare::base::stop_watcher tm;
     const long WAIT_MSEC = 500;
     for (int i = 0; i < 2; ++i) {
         const fiber_attribute attr =
             (i == 0 ? FIBER_ATTR_PTHREAD : FIBER_ATTR_NORMAL);
-        ButexWaitArg arg = { butex, *butex, WAIT_MSEC, ETIMEDOUT };
+        event_wait_arg arg = { event, *event, WAIT_MSEC, ETIMEDOUT };
         fiber_id_t th;
         
         tm.start();
-        ASSERT_EQ(0, fiber_start_urgent(&th, &attr, wait_butex, &arg));
+        ASSERT_EQ(0, fiber_start_urgent(&th, &attr, wait_event, &arg));
         ASSERT_EQ(0, fiber_join(th, NULL));
         tm.stop();
         
         ASSERT_LT(labs(tm.m_elapsed() - WAIT_MSEC), 250);
     }
-    flare::fiber_internal::waitable_event_destroy(butex);
+    flare::fiber_internal::waitable_event_destroy(event);
 }
 
-TEST(ButexTest, stop_after_running) {
-    int* butex = flare::fiber_internal::waitable_event_create_checked<int>();
-    *butex = 7;
+TEST(WaitableEventTest, stop_after_running) {
+    int* event = flare::fiber_internal::waitable_event_create_checked<int>();
+    *event = 7;
     flare::base::stop_watcher tm;
     const long WAIT_MSEC = 500;
     const long SLEEP_MSEC = 10;
@@ -236,10 +236,10 @@ TEST(ButexTest, stop_after_running) {
         const fiber_attribute attr =
             (i == 0 ? FIBER_ATTR_PTHREAD : FIBER_ATTR_NORMAL);
         fiber_id_t th;
-        ButexWaitArg arg = { butex, *butex, WAIT_MSEC, EINTR };
+        event_wait_arg arg = { event, *event, WAIT_MSEC, EINTR };
 
         tm.start();
-        ASSERT_EQ(0, fiber_start_urgent(&th, &attr, wait_butex, &arg));
+        ASSERT_EQ(0, fiber_start_urgent(&th, &attr, wait_event, &arg));
         ASSERT_EQ(0, flare::this_fiber::fiber_sleep_for(SLEEP_MSEC * 1000L));
         ASSERT_EQ(0, fiber_stop(th));
         ASSERT_EQ(0, fiber_join(th, NULL));
@@ -250,12 +250,12 @@ TEST(ButexTest, stop_after_running) {
         //             timer_thread()._idset.empty());
         ASSERT_EQ(EINVAL, fiber_stop(th));
     }    
-    flare::fiber_internal::waitable_event_destroy(butex);
+    flare::fiber_internal::waitable_event_destroy(event);
 }
 
-TEST(ButexTest, stop_before_running) {
-    int* butex = flare::fiber_internal::waitable_event_create_checked<int>();
-    *butex = 7;
+TEST(WaitableEventTest, stop_before_running) {
+    int* event = flare::fiber_internal::waitable_event_create_checked<int>();
+    *event = 7;
     flare::base::stop_watcher tm;
     const long WAIT_MSEC = 500;
 
@@ -263,10 +263,10 @@ TEST(ButexTest, stop_before_running) {
         const fiber_attribute attr =
             (i == 0 ? FIBER_ATTR_PTHREAD : FIBER_ATTR_NORMAL) | FIBER_NOSIGNAL;
         fiber_id_t th;
-        ButexWaitArg arg = { butex, *butex, WAIT_MSEC, EINTR };
+        event_wait_arg arg = { event, *event, WAIT_MSEC, EINTR };
         
         tm.start();
-        ASSERT_EQ(0, fiber_start_background(&th, &attr, wait_butex, &arg));
+        ASSERT_EQ(0, fiber_start_background(&th, &attr, wait_event, &arg));
         ASSERT_EQ(0, fiber_stop(th));
         fiber_flush();
         ASSERT_EQ(0, fiber_join(th, NULL));
@@ -277,7 +277,7 @@ TEST(ButexTest, stop_before_running) {
         //             timer_thread()._idset.empty());
         ASSERT_EQ(EINVAL, fiber_stop(th));
     }
-    flare::fiber_internal::waitable_event_destroy(butex);
+    flare::fiber_internal::waitable_event_destroy(event);
 }
 
 void* join_the_waiter(void* arg) {
@@ -285,19 +285,19 @@ void* join_the_waiter(void* arg) {
     return NULL;
 }
 
-TEST(ButexTest, join_cant_be_wakeup) {
+TEST(WaitableEventTest, join_cant_be_wakeup) {
     const long WAIT_MSEC = 100;
-    int* butex = flare::fiber_internal::waitable_event_create_checked<int>();
-    *butex = 7;
+    int* event = flare::fiber_internal::waitable_event_create_checked<int>();
+    *event = 7;
     flare::base::stop_watcher tm;
-    ButexWaitArg arg = { butex, *butex, 1000, EINTR };
+    event_wait_arg arg = { event, *event, 1000, EINTR };
 
     for (int i = 0; i < 2; ++i) {
         const fiber_attribute attr =
             (i == 0 ? FIBER_ATTR_PTHREAD : FIBER_ATTR_NORMAL);
         tm.start();
         fiber_id_t th, th2;
-        ASSERT_EQ(0, fiber_start_urgent(&th, NULL, wait_butex, &arg));
+        ASSERT_EQ(0, fiber_start_urgent(&th, NULL, wait_event, &arg));
         ASSERT_EQ(0, fiber_start_urgent(&th2, &attr, join_the_waiter, (void*)th));
         ASSERT_EQ(0, fiber_stop(th2));
         ASSERT_EQ(0, flare::this_fiber::fiber_sleep_for(WAIT_MSEC / 2 * 1000L));
@@ -312,10 +312,10 @@ TEST(ButexTest, join_cant_be_wakeup) {
         ASSERT_EQ(EINVAL, fiber_stop(th));
         ASSERT_EQ(EINVAL, fiber_stop(th2));
     }
-    flare::fiber_internal::waitable_event_destroy(butex);
+    flare::fiber_internal::waitable_event_destroy(event);
 }
 
-TEST(ButexTest, stop_after_slept) {
+TEST(WaitableEventTest, stop_after_slept) {
     flare::base::stop_watcher tm;
     const long SLEEP_MSEC = 100;
     const long WAIT_MSEC = 10;
@@ -342,7 +342,7 @@ TEST(ButexTest, stop_after_slept) {
     }
 }
 
-TEST(ButexTest, stop_just_when_sleeping) {
+TEST(WaitableEventTest, stop_just_when_sleeping) {
     flare::base::stop_watcher tm;
     const long SLEEP_MSEC = 100;
     
@@ -367,7 +367,7 @@ TEST(ButexTest, stop_just_when_sleeping) {
     }
 }
 
-TEST(ButexTest, stop_before_sleeping) {
+TEST(WaitableEventTest, stop_before_sleeping) {
     flare::base::stop_watcher tm;
     const long SLEEP_MSEC = 100;
 

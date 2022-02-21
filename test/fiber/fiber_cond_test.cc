@@ -23,7 +23,7 @@
 #include "flare/base/scoped_lock.h"
 #include "flare/base/gperftools_profiler.h"
 #include "flare/fiber/internal/fiber.h"
-#include "flare/fiber/internal/fiber_cond.h"
+#include "flare/fiber/fiber_cond.h"
 #include "flare/fiber/internal/stack.h"
 #include "flare/fiber/this_fiber.h"
 
@@ -137,8 +137,8 @@ namespace {
     }
 
     struct WrapperArg {
-        flare::fiber_internal::fiber_mutex mutex;
-        flare::fiber_internal::fiber_cond cond;
+        flare::fiber::fiber_mutex mutex;
+        flare::fiber::fiber_cond cond;
     };
 
     void *cv_signaler(void *void_arg) {
@@ -162,7 +162,7 @@ namespace {
 
     void *cv_mutex_waiter(void *void_arg) {
         WrapperArg *a = (WrapperArg *) void_arg;
-        std::unique_lock<flare::fiber_internal::fiber_mutex> lck(a->mutex);
+        std::unique_lock<flare::fiber::fiber_mutex> lck(a->mutex);
         while (!stop) {
             a->cond.wait(lck);
         }
@@ -178,7 +178,7 @@ namespace {
 
     TEST(CondTest, cpp_wrapper) {
         stop = false;
-        flare::fiber_internal::fiber_cond cond;
+        flare::fiber::fiber_cond cond;
         pthread_t bmutex_waiter_threads[8];
         pthread_t mutex_waiter_threads[8];
         pthread_t signal_thread;
@@ -220,7 +220,7 @@ namespace {
         }
 
         int wait(int old_signal) {
-            std::unique_lock<flare::fiber_internal::fiber_mutex> lck(_m);
+            std::unique_lock<flare::fiber::fiber_mutex> lck(_m);
             while (_signal == old_signal) {
                 _c.wait(lck);
             }
@@ -228,8 +228,8 @@ namespace {
         }
 
     private:
-        flare::fiber_internal::fiber_mutex _m;
-        flare::fiber_internal::fiber_cond _c;
+        flare::fiber::fiber_mutex _m;
+        flare::fiber::fiber_cond _c;
         int _signal;
     };
 
@@ -281,9 +281,9 @@ namespace {
     }
 
     struct BroadcastArg {
-        flare::fiber_internal::fiber_cond wait_cond;
-        flare::fiber_internal::fiber_cond broadcast_cond;
-        flare::fiber_internal::fiber_mutex mutex;
+        flare::fiber::fiber_cond wait_cond;
+        flare::fiber::fiber_cond broadcast_cond;
+        flare::fiber::fiber_mutex mutex;
         int nwaiter;
         int cur_waiter;
         int rounds;
@@ -292,7 +292,7 @@ namespace {
 
     void *wait_thread(void *arg) {
         BroadcastArg *ba = (BroadcastArg *) arg;
-        std::unique_lock<flare::fiber_internal::fiber_mutex> lck(ba->mutex);
+        std::unique_lock<flare::fiber::fiber_mutex> lck(ba->mutex);
         while (ba->rounds > 0) {
             const int saved_round = ba->rounds;
             ++ba->cur_waiter;
@@ -310,7 +310,7 @@ namespace {
         BroadcastArg *ba = (BroadcastArg *) arg;
         //int local_round = 0;
         while (ba->rounds > 0) {
-            std::unique_lock<flare::fiber_internal::fiber_mutex> lck(ba->mutex);
+            std::unique_lock<flare::fiber::fiber_mutex> lck(ba->mutex);
             while (ba->cur_waiter < ba->nwaiter) {
                 ba->broadcast_cond.wait(lck);
             }
@@ -323,7 +323,7 @@ namespace {
 
     void *disturb_thread(void *arg) {
         BroadcastArg *ba = (BroadcastArg *) arg;
-        std::unique_lock<flare::fiber_internal::fiber_mutex> lck(ba->mutex);
+        std::unique_lock<flare::fiber::fiber_mutex> lck(ba->mutex);
         while (ba->rounds > 0) {
             lck.unlock();
             lck.lock();
