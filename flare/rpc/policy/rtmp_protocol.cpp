@@ -2622,7 +2622,7 @@ bool RtmpChunkStream::OnCreateStream(const RtmpMessageHeader& mh,
             error_text = "Fail to add stream";
             LOG(ERROR) << error_text;
         } else {
-            const int rc = bthread_id_create(&stream->_onfail_id, stream.get(),
+            const int rc = fiber_token_create(&stream->_onfail_id, stream.get(),
                                              RtmpServerStream::RunOnFailed);
             if (rc) {
                 LOG(ERROR) << "Fail to create RtmpServerStream._onfail_id: "
@@ -2673,7 +2673,7 @@ bool RtmpChunkStream::OnCreateStream(const RtmpMessageHeader& mh,
         // End the stream at server-side.
         const fiber_token_t id = stream->_onfail_id;
         if (id != INVALID_FIBER_TOKEN) {
-            bthread_id_error(id, 0);
+            fiber_token_error(id, 0);
         }
         return false;
     }
@@ -2977,7 +2977,7 @@ bool RtmpChunkStream::OnDeleteStream(const RtmpMessageHeader& mh,
     }
     fiber_token_t id = static_cast<RtmpServerStream*>(stream.get())->_onfail_id;
     if (id != INVALID_FIBER_TOKEN) {
-        bthread_id_error(id, 0);
+        fiber_token_error(id, 0);
     }
     return true;
 }
@@ -3492,7 +3492,7 @@ void OnServerStreamCreated::Run(bool error,
     const int64_t base_realtime = flare::base::gettimeofday_us() - received_us;
     const fiber_token_t cid = _call_id;
     Controller* cntl = NULL;
-    const int rc = bthread_id_lock(cid, (void**)&cntl);
+    const int rc = fiber_token_lock(cid, (void**)&cntl);
     if (rc != 0) {
         LOG_IF(ERROR, rc != EINVAL && rc != EPERM)
             << "Fail to lock correlation_id=" << cid << ": " << flare_error(rc);

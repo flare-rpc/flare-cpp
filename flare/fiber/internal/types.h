@@ -201,7 +201,7 @@ typedef struct {
     uint64_t value;
 } fiber_token_t;
 
-// bthread_id returned by bthread_id_create* can never be this value.
+// bthread_id returned by fiber_token_create* can never be this value.
 // NOTE: don't confuse with INVALID_FIBER_ID!
 static const fiber_token_t INVALID_FIBER_TOKEN = {0};
 

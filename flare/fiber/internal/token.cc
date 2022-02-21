@@ -1,23 +1,3 @@
-// Licensed to the Apache Software Foundation (ASF) under one
-// or more contributor license agreements.  See the NOTICE file
-// distributed with this work for additional information
-// regarding copyright ownership.  The ASF licenses this file
-// to you under the Apache License, Version 2.0 (the
-// "License"); you may not use this file except in compliance
-// with the License.  You may obtain a copy of the License at
-//
-//   http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing,
-// software distributed under the License is distributed on an
-// "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-// KIND, either express or implied.  See the License for the
-// specific language governing permissions and limitations
-// under the License.
-
-// fiber - A M:N threading library to make applications more concurrent.
-
-// Date: Sun Aug  3 12:46:15 CST 2014
 
 #include <deque>
 #include "flare/log/logging.h"
@@ -193,13 +173,13 @@ namespace flare::fiber_internal {
         return 0;  // valid version never be zero
     }
 
-    static int default_bthread_id_on_error(fiber_token_t id, void *, int) {
-        return bthread_id_unlock_and_destroy(id);
+    static int default_fiber_id_on_error(fiber_token_t id, void *, int) {
+        return fiber_token_unlock_and_destroy(id);
     }
 
-    static int default_bthread_id_on_error2(
+    static int default_fiber_id_on_error2(
             fiber_token_t id, void *, int, const std::string &) {
-        return bthread_id_unlock_and_destroy(id);
+        return fiber_token_unlock_and_destroy(id);
     }
 
     void id_status(fiber_token_t id, std::ostream &os) {
@@ -275,13 +255,13 @@ namespace flare::fiber_internal {
                 }
             }
             if (on_error) {
-                if (on_error == default_bthread_id_on_error) {
+                if (on_error == default_fiber_id_on_error) {
                     os << "\nOnError: unlock_and_destroy";
                 } else {
                     os << "\nOnError: " << (void *) on_error;
                 }
             } else {
-                if (on_error2 == default_bthread_id_on_error2) {
+                if (on_error2 == default_fiber_id_on_error2) {
                     os << "\nOnError2: unlock_and_destroy";
                 } else {
                     os << "\nOnError2: " << (void *) on_error2;
@@ -315,7 +295,7 @@ namespace flare::fiber_internal {
                 : _error_code(ec), _error_text(et) {}
 
         void operator()(fiber_token_t &id) const {
-            bthread_id_error2_verbose(
+            fiber_token_error2_verbose(
                     id, _error_code, _error_text, __FILE__ ":" FLARE_SYMBOLSTR(__LINE__));
             id = INVALID_FIBER_TOKEN;
         }
@@ -397,24 +377,24 @@ namespace flare::fiber_internal {
 
 extern "C" {
 
-int bthread_id_create(
+int fiber_token_create(
         fiber_token_t *id, void *data,
         int (*on_error)(fiber_token_t, void *, int)) {
     return flare::fiber_internal::id_create_impl(
             id, data,
-            (on_error ? on_error : flare::fiber_internal::default_bthread_id_on_error), NULL);
+            (on_error ? on_error : flare::fiber_internal::default_fiber_id_on_error), NULL);
 }
 
-int bthread_id_create_ranged(fiber_token_t *id, void *data,
+int fiber_token_create_ranged(fiber_token_t *id, void *data,
                              int (*on_error)(fiber_token_t, void *, int),
                              int range) {
     return flare::fiber_internal::id_create_ranged_impl(
             id, data,
-            (on_error ? on_error : flare::fiber_internal::default_bthread_id_on_error),
+            (on_error ? on_error : flare::fiber_internal::default_fiber_id_on_error),
             NULL, range);
 }
 
-int bthread_id_lock_and_reset_range_verbose(
+int fiber_token_lock_and_reset_range_verbose(
         fiber_token_t id, void **pdata, int range, const char *location) {
     flare::fiber_internal::Id *const meta = address_resource(flare::fiber_internal::get_slot(id));
     if (!meta) {
@@ -457,7 +437,7 @@ int bthread_id_lock_and_reset_range_verbose(
                 return errno;
             }
             meta->mutex.lock();
-        } else { // bthread_id_about_to_destroy was called.
+        } else { // fiber_token_about_to_destroy was called.
             meta->mutex.unlock();
             return EPERM;
         }
@@ -466,12 +446,12 @@ int bthread_id_lock_and_reset_range_verbose(
     return EINVAL;
 }
 
-int bthread_id_error_verbose(fiber_token_t id, int error_code,
+int fiber_token_error_verbose(fiber_token_t id, int error_code,
                              const char *location) {
-    return bthread_id_error2_verbose(id, error_code, std::string(), location);
+    return fiber_token_error2_verbose(id, error_code, std::string(), location);
 }
 
-int bthread_id_about_to_destroy(fiber_token_t id) {
+int fiber_token_about_to_destroy(fiber_token_t id) {
     flare::fiber_internal::Id *const meta = address_resource(flare::fiber_internal::get_slot(id));
     if (!meta) {
         return EINVAL;
@@ -485,7 +465,7 @@ int bthread_id_about_to_destroy(fiber_token_t id) {
     }
     if (*butex == meta->first_ver) {
         meta->mutex.unlock();
-        LOG(FATAL) << "bthread_id=" << id.value << " is not locked!";
+        LOG(FATAL) << "fiber_token=" << id.value << " is not locked!";
         return EPERM;
     }
     const bool contended = (*butex == meta->contended_ver());
@@ -498,7 +478,7 @@ int bthread_id_about_to_destroy(fiber_token_t id) {
     return 0;
 }
 
-int bthread_id_cancel(fiber_token_t id) {
+int fiber_token_cancel(fiber_token_t id) {
     flare::fiber_internal::Id *const meta = address_resource(flare::fiber_internal::get_slot(id));
     if (!meta) {
         return EINVAL;
@@ -522,7 +502,7 @@ int bthread_id_cancel(fiber_token_t id) {
     return 0;
 }
 
-int bthread_id_join(fiber_token_t id) {
+int fiber_token_join(fiber_token_t id) {
     const flare::fiber_internal::IdResourceId slot = flare::fiber_internal::get_slot(id);
     flare::fiber_internal::Id *const meta = address_resource(slot);
     if (!meta) {
@@ -547,7 +527,7 @@ int bthread_id_join(fiber_token_t id) {
     return 0;
 }
 
-int bthread_id_trylock(fiber_token_t id, void **pdata) {
+int fiber_token_trylock(fiber_token_t id, void **pdata) {
     flare::fiber_internal::Id *const meta = address_resource(flare::fiber_internal::get_slot(id));
     if (!meta) {
         return EINVAL;
@@ -571,12 +551,12 @@ int bthread_id_trylock(fiber_token_t id, void **pdata) {
     return 0;
 }
 
-int bthread_id_lock_verbose(fiber_token_t id, void **pdata,
+int fiber_token_lock_verbose(fiber_token_t id, void **pdata,
                             const char *location) {
-    return bthread_id_lock_and_reset_range_verbose(id, pdata, 0, location);
+    return fiber_token_lock_and_reset_range_verbose(id, pdata, 0, location);
 }
 
-int bthread_id_unlock(fiber_token_t id) {
+int fiber_token_unlock(fiber_token_t id) {
     flare::fiber_internal::Id *const meta = address_resource(flare::fiber_internal::get_slot(id));
     if (!meta) {
         return EINVAL;
@@ -588,12 +568,12 @@ int bthread_id_unlock(fiber_token_t id) {
     meta->mutex.lock();
     if (!meta->has_version(id_ver)) {
         meta->mutex.unlock();
-        LOG(FATAL) << "Invalid bthread_id=" << id.value;
+        LOG(FATAL) << "Invalid fiber_token=" << id.value;
         return EINVAL;
     }
     if (*butex == meta->first_ver) {
         meta->mutex.unlock();
-        LOG(FATAL) << "bthread_id=" << id.value << " is not locked!";
+        LOG(FATAL) << "fiber_token=" << id.value << " is not locked!";
         return EPERM;
     }
     flare::fiber_internal::PendingError front;
@@ -618,7 +598,7 @@ int bthread_id_unlock(fiber_token_t id) {
     }
 }
 
-int bthread_id_unlock_and_destroy(fiber_token_t id) {
+int fiber_token_unlock_and_destroy(fiber_token_t id) {
     flare::fiber_internal::Id *const meta = address_resource(flare::fiber_internal::get_slot(id));
     if (!meta) {
         return EINVAL;
@@ -629,12 +609,12 @@ int bthread_id_unlock_and_destroy(fiber_token_t id) {
     meta->mutex.lock();
     if (!meta->has_version(id_ver)) {
         meta->mutex.unlock();
-        LOG(FATAL) << "Invalid bthread_id=" << id.value;
+        LOG(FATAL) << "Invalid fiber_token=" << id.value;
         return EINVAL;
     }
     if (*butex == meta->first_ver) {
         meta->mutex.unlock();
-        LOG(FATAL) << "bthread_id=" << id.value << " is not locked!";
+        LOG(FATAL) << "fiber_token=" << id.value << " is not locked!";
         return EPERM;
     }
     const uint32_t next_ver = meta->end_ver();
@@ -651,7 +631,7 @@ int bthread_id_unlock_and_destroy(fiber_token_t id) {
     return 0;
 }
 
-int bthread_id_list_init(fiber_token_list_t *list,
+int fiber_token_list_init(fiber_token_list_t *list,
                          unsigned /*size*/,
                          unsigned /*conflict_size*/) {
     list->impl = NULL;  // create on demand.
@@ -663,12 +643,12 @@ int bthread_id_list_init(fiber_token_list_t *list,
     return 0;
 }
 
-void bthread_id_list_destroy(fiber_token_list_t *list) {
+void fiber_token_list_destroy(fiber_token_list_t *list) {
     delete static_cast<flare::fiber_internal::IdList *>(list->impl);
     list->impl = NULL;
 }
 
-int bthread_id_list_add(fiber_token_list_t *list, fiber_token_t id) {
+int fiber_token_list_add(fiber_token_list_t *list, fiber_token_t id) {
     if (list->impl == NULL) {
         list->impl = new(std::nothrow) flare::fiber_internal::IdList;
         if (NULL == list->impl) {
@@ -678,47 +658,47 @@ int bthread_id_list_add(fiber_token_list_t *list, fiber_token_t id) {
     return static_cast<flare::fiber_internal::IdList *>(list->impl)->add(id);
 }
 
-int bthread_id_list_reset(fiber_token_list_t *list, int error_code) {
-    return bthread_id_list_reset2(list, error_code, std::string());
+int fiber_token_list_reset(fiber_token_list_t *list, int error_code) {
+    return fiber_token_reset2(list, error_code, std::string());
 }
 
-void bthread_id_list_swap(fiber_token_list_t *list1,
+void fiber_token_list_swap(fiber_token_list_t *list1,
                           fiber_token_list_t *list2) {
     std::swap(list1->impl, list2->impl);
 }
 
-int bthread_id_list_reset_pthreadsafe(fiber_token_list_t *list, int error_code,
+int fiber_token_list_reset_pthreadsafe(fiber_token_list_t *list, int error_code,
                                       pthread_mutex_t *mutex) {
-    return bthread_id_list_reset2_pthreadsafe(
+    return fiber_token_list_reset2_pthreadsafe(
             list, error_code, std::string(), mutex);
 }
 
-int bthread_id_list_reset_bthreadsafe(fiber_token_list_t *list, int error_code,
+int fiber_token_list_reset_fibersafe(fiber_token_list_t *list, int error_code,
                                       fiber_mutex_t *mutex) {
-    return bthread_id_list_reset2_bthreadsafe(
+    return fiber_token_list_reset2_fibersafe(
             list, error_code, std::string(), mutex);
 }
 
 }  // extern "C"
 
-int bthread_id_create2(
+int fiber_token_create2(
         fiber_token_t *id, void *data,
         int (*on_error)(fiber_token_t, void *, int, const std::string &)) {
     return flare::fiber_internal::id_create_impl(
             id, data, NULL,
-            (on_error ? on_error : flare::fiber_internal::default_bthread_id_on_error2));
+            (on_error ? on_error : flare::fiber_internal::default_fiber_id_on_error2));
 }
 
-int bthread_id_create2_ranged(
+int fiber_token_create2_ranged(
         fiber_token_t *id, void *data,
         int (*on_error)(fiber_token_t, void *, int, const std::string &),
         int range) {
     return flare::fiber_internal::id_create_ranged_impl(
             id, data, NULL,
-            (on_error ? on_error : flare::fiber_internal::default_bthread_id_on_error2), range);
+            (on_error ? on_error : flare::fiber_internal::default_fiber_id_on_error2), range);
 }
 
-int bthread_id_error2_verbose(fiber_token_t id, int error_code,
+int fiber_token_error2_verbose(fiber_token_t id, int error_code,
                               const std::string &error_text,
                               const char *location) {
     flare::fiber_internal::Id *const meta = address_resource(flare::fiber_internal::get_slot(id));
@@ -753,7 +733,7 @@ int bthread_id_error2_verbose(fiber_token_t id, int error_code,
     }
 }
 
-int bthread_id_list_reset2(fiber_token_list_t *list,
+int fiber_token_reset2(fiber_token_list_t *list,
                            int error_code,
                            const std::string &error_text) {
     if (list->impl != NULL) {
@@ -763,7 +743,7 @@ int bthread_id_list_reset2(fiber_token_list_t *list,
     return 0;
 }
 
-int bthread_id_list_reset2_pthreadsafe(fiber_token_list_t *list,
+int fiber_token_list_reset2_pthreadsafe(fiber_token_list_t *list,
                                        int error_code,
                                        const std::string &error_text,
                                        pthread_mutex_t *mutex) {
@@ -774,7 +754,7 @@ int bthread_id_list_reset2_pthreadsafe(fiber_token_list_t *list,
         return 0;
     }
     fiber_token_list_t tmplist;
-    const int rc = bthread_id_list_init(&tmplist, 0, 0);
+    const int rc = fiber_token_list_init(&tmplist, 0, 0);
     if (rc != 0) {
         return rc;
     }
@@ -782,12 +762,12 @@ int bthread_id_list_reset2_pthreadsafe(fiber_token_list_t *list,
     pthread_mutex_lock(mutex);
     std::swap(list->impl, tmplist.impl);
     pthread_mutex_unlock(mutex);
-    const int rc2 = bthread_id_list_reset2(&tmplist, error_code, error_text);
-    bthread_id_list_destroy(&tmplist);
+    const int rc2 = fiber_token_reset2(&tmplist, error_code, error_text);
+    fiber_token_list_destroy(&tmplist);
     return rc2;
 }
 
-int bthread_id_list_reset2_bthreadsafe(fiber_token_list_t *list,
+int fiber_token_list_reset2_fibersafe(fiber_token_list_t *list,
                                        int error_code,
                                        const std::string &error_text,
                                        fiber_mutex_t *mutex) {
@@ -798,7 +778,7 @@ int bthread_id_list_reset2_bthreadsafe(fiber_token_list_t *list,
         return 0;
     }
     fiber_token_list_t tmplist;
-    const int rc = bthread_id_list_init(&tmplist, 0, 0);
+    const int rc = fiber_token_list_init(&tmplist, 0, 0);
     if (rc != 0) {
         return rc;
     }
@@ -806,7 +786,7 @@ int bthread_id_list_reset2_bthreadsafe(fiber_token_list_t *list,
     fiber_mutex_lock(mutex);
     std::swap(list->impl, tmplist.impl);
     fiber_mutex_unlock(mutex);
-    const int rc2 = bthread_id_list_reset2(&tmplist, error_code, error_text);
-    bthread_id_list_destroy(&tmplist);
+    const int rc2 = fiber_token_reset2(&tmplist, error_code, error_text);
+    fiber_token_list_destroy(&tmplist);
     return rc2;
 }

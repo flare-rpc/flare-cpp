@@ -189,10 +189,10 @@ namespace flare::rpc {
         delete _sampled_request;
 
         if (!is_used_by_rpc() && _correlation_id != INVALID_FIBER_TOKEN) {
-            CHECK_NE(EPERM, bthread_id_cancel(_correlation_id));
+            CHECK_NE(EPERM, fiber_token_cancel(_correlation_id));
         }
         if (_oncancel_id != INVALID_FIBER_TOKEN) {
-            bthread_id_error(_oncancel_id, 0);
+            fiber_token_error(_oncancel_id, 0);
         }
         if (_pchan_sub_count > 0) {
             DestroyParallelChannelDone(_done);
@@ -350,7 +350,7 @@ namespace flare::rpc {
     }
 
     void StartCancel(CallId id) {
-        bthread_id_error(id, ECANCELED);
+        fiber_token_error(id, ECANCELED);
     }
 
     void Controller::StartCancel() {
@@ -496,7 +496,7 @@ namespace flare::rpc {
 
         void Run() {
             _cb->Run();
-            CHECK_EQ(0, bthread_id_unlock_and_destroy(_id));
+            CHECK_EQ(0, fiber_token_unlock_and_destroy(_id));
             delete this;
         }
 
@@ -510,7 +510,7 @@ namespace flare::rpc {
             // Called from Controller::ResetNonPods upon Controller's Reset or
             // destruction, we just call the callback in-place.
             static_cast<google::protobuf::Closure *>(data)->Run();
-            CHECK_EQ(0, bthread_id_unlock_and_destroy(id));
+            CHECK_EQ(0, fiber_token_unlock_and_destroy(id));
             return 0;
         }
         // Called from Socket::SetFailed, should be infrequent.
@@ -534,7 +534,7 @@ namespace flare::rpc {
             LOG(FATAL) << "NotifyCancel a single call more than once!";
             return;
         }
-        if (bthread_id_create(&_oncancel_id, callback, RunOnCancel) != 0) {
+        if (fiber_token_create(&_oncancel_id, callback, RunOnCancel) != 0) {
             PLOG(FATAL) << "Fail to create bthread_id";
             return;
         }
@@ -548,16 +548,16 @@ namespace flare::rpc {
     }
 
     void Join(CallId id) {
-        bthread_id_join(id);
+        fiber_token_join(id);
     }
 
     void JoinResponse(CallId id) {
-        bthread_id_join(id);
+        fiber_token_join(id);
     }
 
     static void HandleTimeout(void *arg) {
         fiber_token_t correlation_id = {(uint64_t) arg};
-        bthread_id_error(correlation_id, ERPCTIMEDOUT);
+        fiber_token_error(correlation_id, ERPCTIMEDOUT);
     }
 
     void Controller::OnVersionedRPCReturned(const CompletionInfo &info,
@@ -578,7 +578,7 @@ namespace flare::rpc {
             // Ignore all non-backup requests and failed backup requests.
             _error_code = saved_error;
             response_attachment().clear();
-            CHECK_EQ(0, bthread_id_unlock(info.id));
+            CHECK_EQ(0, fiber_token_unlock(info.id));
             return;
         }
 
@@ -653,7 +653,7 @@ namespace flare::rpc {
         if (new_bthread) {
             // [ Essential for -usercode_in_pthread=true ]
             // When -usercode_in_pthread is on, the reserved threads (set by
-            // -usercode_backup_threads) may all block on bthread_id_lock in
+            // -usercode_backup_threads) may all block on fiber_token_lock in
             // ProcessXXXResponse(), until the id is unlocked or destroyed which
             // is run in a new thread when new_bthread is true. However since all
             // workers are blocked, the created fiber will never be scheduled
@@ -670,14 +670,14 @@ namespace flare::rpc {
             // conversely the callid may still be locked/unlocked for many times
             // before destroying. E.g. in slective channel, the callid is referenced
             // by multiple sub-done and only destroyed by the last one. Calling
-            // bthread_id_about_to_destroy right here which makes the id unlockable
+            // fiber_token_about_to_destroy right here which makes the id unlockable
             // anymore, is wrong. On the other hand, the combo channles setting
             // FLAGS_DESTROY_CID_IN_DONE to true must be aware of
             // -usercode_in_pthread and avoid deadlock by their own (TBR)
 
             if ((FLAGS_usercode_in_pthread || _done != NULL/*Note[_done]*/) &&
                 !has_flag(FLAGS_DESTROY_CID_IN_DONE)/*Note[cid]*/) {
-                bthread_id_about_to_destroy(info.id);
+                fiber_token_about_to_destroy(info.id);
             }
             // No need to join this fiber since RPC caller won't wake up
             // (or user's done won't be called) until this fiber finishes
@@ -692,7 +692,7 @@ namespace flare::rpc {
         } else {
             if (_done != NULL/*Note[_done]*/ &&
                 !has_flag(FLAGS_DESTROY_CID_IN_DONE)/*Note[cid]*/) {
-                bthread_id_about_to_destroy(info.id);
+                fiber_token_about_to_destroy(info.id);
             }
             EndRPC(info);
         }
@@ -919,7 +919,7 @@ namespace flare::rpc {
                     // bthreads, saving signalings.
                     // FIXME: We're assuming the calling thread is about to quit.
                     fiber_about_to_quit();
-                    CHECK_EQ(0, bthread_id_unlock_and_destroy(saved_cid));
+                    CHECK_EQ(0, fiber_token_unlock_and_destroy(saved_cid));
                 }
             } else {
                 RunUserCode(RunDoneInBackupThread, this);
@@ -930,7 +930,7 @@ namespace flare::rpc {
 
             // Check comments in above branch on fiber_about_to_quit.
             fiber_about_to_quit();
-            CHECK_EQ(0, bthread_id_unlock_and_destroy(saved_cid));
+            CHECK_EQ(0, fiber_token_unlock_and_destroy(saved_cid));
         }
     }
 
@@ -947,7 +947,7 @@ namespace flare::rpc {
         _done->Run();
         // NOTE: Don't touch fields of controller anymore, it may be deleted.
         if (!destroy_cid_in_done) {
-            CHECK_EQ(0, bthread_id_unlock_and_destroy(saved_cid));
+            CHECK_EQ(0, fiber_token_unlock_and_destroy(saved_cid));
         }
     }
 
@@ -999,7 +999,7 @@ namespace flare::rpc {
             if (_sender->IssueRPC(start_realtime_us) != 0) {
                 return HandleSendFailed();
             }
-            CHECK_EQ(0, bthread_id_unlock(cid));
+            CHECK_EQ(0, fiber_token_unlock(cid));
             return;
         }
 
@@ -1185,7 +1185,7 @@ namespace flare::rpc {
             // to confirm the credential data
             _current_call.sending_sock->SetAuthentication(rc);
         }
-        CHECK_EQ(0, bthread_id_unlock(cid));
+        CHECK_EQ(0, fiber_token_unlock(cid));
     }
 
     void Controller::set_auth_context(const AuthContext *ctx) {
@@ -1209,7 +1209,7 @@ namespace flare::rpc {
             // the RPC.
             cntl->SetFailed(error_code, "Cancel call_id=%" PRId64
                                         " before CallMethod()", id.value);
-            return bthread_id_unlock(id);
+            return fiber_token_unlock(id);
         }
         const int saved_error = cntl->ErrorCode();
         if (error_code == ERPCTIMEDOUT) {
@@ -1242,10 +1242,10 @@ namespace flare::rpc {
         // Optimistic locking.
         CallId cid = {0};
         // The range of this id will be reset in Channel::CallMethod
-        CHECK_EQ(0, bthread_id_create2(&cid, this, HandleSocketFailed));
+        CHECK_EQ(0, fiber_token_create2(&cid, this, HandleSocketFailed));
         if (!target->compare_exchange_strong(loaded, cid.value,
                                              std::memory_order_relaxed)) {
-            bthread_id_cancel(cid);
+            fiber_token_cancel(cid);
             cid.value = loaded;
         }
         return cid;

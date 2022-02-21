@@ -317,7 +317,7 @@ namespace {
                     delete channel;
                 }
                 // Callback MUST be called for once and only once
-                bthread_id_join(sync_id);
+                fiber_token_join(sync_id);
             }
         }
 
@@ -337,7 +337,7 @@ namespace {
                     delete channel;
                 }
                 // Callback MUST be called for once and only once
-                bthread_id_join(sync_id);
+                fiber_token_join(sync_id);
             }
         }
 
@@ -1034,7 +1034,7 @@ namespace {
             CallMethod(&channel, &cntl, &req, &res, async);
             EXPECT_EQ(0, cntl.ErrorCode());
             EXPECT_EQ(0, cntl.sub_count());
-            ASSERT_EQ(EINVAL, bthread_id_error(cid, ECANCELED));
+            ASSERT_EQ(EINVAL, fiber_token_error(cid, ECANCELED));
             StopAndJoin();
         }
 
@@ -1068,7 +1068,7 @@ namespace {
             for (int i = 0; i < cntl.sub_count(); ++i) {
                 EXPECT_TRUE(cntl.sub(i) && !cntl.sub(i)->Failed()) << "i=" << i;
             }
-            ASSERT_EQ(EINVAL, bthread_id_error(cid, ECANCELED));
+            ASSERT_EQ(EINVAL, fiber_token_error(cid, ECANCELED));
             StopAndJoin();
         }
 
@@ -2606,14 +2606,14 @@ namespace {
             flare::rpc::Controller cntl;
             cid1 = cntl.call_id();
         }
-        ASSERT_EQ(EINVAL, bthread_id_error(cid1, ECANCELED));
+        ASSERT_EQ(EINVAL, fiber_token_error(cid1, ECANCELED));
 
         {
             flare::rpc::CallId cid2 = {0};
             flare::rpc::Controller cntl;
             cid2 = cntl.call_id();
             cntl.Reset();
-            ASSERT_EQ(EINVAL, bthread_id_error(cid2, ECANCELED));
+            ASSERT_EQ(EINVAL, fiber_token_error(cid2, ECANCELED));
         }
     }
 

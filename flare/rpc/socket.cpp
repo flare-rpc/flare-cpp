@@ -355,7 +355,7 @@ void Socket::WriteRequest::Setup(Socket* s) {
             if (!st.ok()) {
                 // Abandon the request.
                 data.clear();
-                bthread_id_error2(id_wait, st.error_code(), st.error_cstr());
+                fiber_token_error2(id_wait, st.error_code(), st.error_cstr());
                 return;
             }
         }
@@ -480,7 +480,7 @@ void Socket::ReturnFailedWriteRequest(Socket::WriteRequest* p, int error_code,
     const fiber_token_t id_wait = p->id_wait;
     flare::memory::return_object(p);
     if (id_wait != INVALID_FIBER_TOKEN) {
-        bthread_id_error2(id_wait, error_code, error_text);
+        fiber_token_error2(id_wait, error_code, error_text);
     }
 }
 
@@ -612,7 +612,7 @@ int Socket::Create(const SocketOptions& options, SocketId* id) {
     m->_health_check_interval_s = options.health_check_interval_s;
     m->_ninprocess.store(1, std::memory_order_relaxed);
     m->_auth_flag_error.store(0, std::memory_order_relaxed);
-    const int rc2 = bthread_id_create(&m->_auth_id, NULL, NULL);
+    const int rc2 = fiber_token_create(&m->_auth_id, NULL, NULL);
     if (rc2) {
         LOG(ERROR) << "Fail to create auth_id: " << flare_error(rc2);
         m->SetFailed(rc2, "Fail to create auth_id: %s", flare_error(rc2));
@@ -634,7 +634,7 @@ int Socket::Create(const SocketOptions& options, SocketId* id) {
     m->_agent_socket_id.store(INVALID_SOCKET_ID, std::memory_order_relaxed);
     m->_ninflight_app_health_check.store(0, std::memory_order_relaxed);
     // NOTE: last two params are useless in fiber > r32787
-    const int rc = bthread_id_list_init(&m->_id_wait_list, 512, 512);
+    const int rc = fiber_token_list_init(&m->_id_wait_list, 512, 512);
     if (rc) {
         LOG(ERROR) << "Fail to init _id_wait_list: " << flare_error(rc);
         m->SetFailed(rc, "Fail to init _id_wait_list: %s", flare_error(rc));
@@ -708,8 +708,8 @@ int Socket::WaitAndReset(int32_t expected_nref) {
     _read_buf.clear();
     _ninprocess.store(1, std::memory_order_relaxed);
     _auth_flag_error.store(0, std::memory_order_relaxed);
-    bthread_id_error(_auth_id, 0);
-    const int rc = bthread_id_create(&_auth_id, NULL, NULL);
+    fiber_token_error(_auth_id, 0);
+    const int rc = fiber_token_create(&_auth_id, NULL, NULL);
     if (rc != 0) {
         LOG(FATAL) << "Fail to create _auth_id, " << flare_error(rc);
         return -1;
@@ -843,7 +843,7 @@ int Socket::SetFailed(int error_code, const char* error_fmt, ...) {
             flare::fiber_internal::waitable_event_wake_all(_epollout_butex);
 
             // Wake up all unresponded RPC.
-            CHECK_EQ(0, bthread_id_list_reset2_pthreadsafe(
+            CHECK_EQ(0, fiber_token_list_reset2_pthreadsafe(
                          &_id_wait_list, error_code, error_text,
                          &_id_wait_list_mutex));
 
@@ -908,16 +908,16 @@ int Socket::SetFailed(SocketId id) {
 void Socket::NotifyOnFailed(fiber_token_t id) {
     pthread_mutex_lock(&_id_wait_list_mutex);
     if (!Failed()) {
-        const int rc = bthread_id_list_add(&_id_wait_list, id);
+        const int rc = fiber_token_list_add(&_id_wait_list, id);
         pthread_mutex_unlock(&_id_wait_list_mutex);
         if (rc != 0) {
-            bthread_id_error(id, rc);
+            fiber_token_error(id, rc);
         }
     } else {
         const int rc = non_zero_error_code();
         const std::string desc = _error_text;
         pthread_mutex_unlock(&_id_wait_list_mutex);
-        bthread_id_error2(id, rc, desc);
+        fiber_token_error2(id, rc, desc);
     }
 }
 
@@ -977,9 +977,9 @@ void Socket::OnRecycle() {
     _read_buf.clear();
 
     _auth_flag_error.store(0, std::memory_order_relaxed);
-    bthread_id_error(_auth_id, 0);
+    fiber_token_error(_auth_id, 0);
     
-    bthread_id_list_destroy(&_id_wait_list);
+    fiber_token_list_destroy(&_id_wait_list);
 
     if (_ssl_session) {
         SSL_free(_ssl_session);
@@ -1388,7 +1388,7 @@ void Socket::CheckConnectedAndKeepWrite(int fd, int err, void* data) {
      
 inline int SetError(fiber_token_t id_wait, int ec) {
     if (id_wait != INVALID_FIBER_TOKEN) {
-        bthread_id_error(id_wait, ec);
+        fiber_token_error(id_wait, ec);
         return 0;
     } else {
         errno = ec;
@@ -1403,7 +1403,7 @@ int Socket::ConductError(fiber_token_t id_wait) {
         if (id_wait != INVALID_FIBER_TOKEN) {
             const std::string error_text = _error_text;
             pthread_mutex_unlock(&_id_wait_list_mutex);
-            bthread_id_error2(id_wait, error_code, error_text);
+            fiber_token_error2(id_wait, error_code, error_text);
             return 0;
         } else {
             pthread_mutex_unlock(&_id_wait_list_mutex);
@@ -1868,7 +1868,7 @@ ssize_t Socket::DoRead(size_t size_hint) {
 }
 
 int Socket::FightAuthentication(int* auth_error) {
-    // Use relaxed fence since `bthread_id_trylock' ensures thread safety
+    // Use relaxed fence since `fiber_token_trylock' ensures thread safety
     // Here `flag_error' just acts like a cache information
     uint64_t flag_error = _auth_flag_error.load(std::memory_order_relaxed);
     if (flag_error & AUTH_FLAG) {
@@ -1876,13 +1876,13 @@ int Socket::FightAuthentication(int* auth_error) {
         *auth_error = (int32_t)(flag_error & 0xFFFFFFFFul);
         return EINVAL;
     }
-    if (0 == bthread_id_trylock(_auth_id, NULL)) {
+    if (0 == fiber_token_trylock(_auth_id, NULL)) {
         // Winner
         return 0;
     } else {
-        // Use relaxed fence since `bthread_id_join' has acquire fence to ensure
+        // Use relaxed fence since `fiber_token_join' has acquire fence to ensure
         // `_auth_flag_error' to be the latest value
-        bthread_id_join(_auth_id);
+        fiber_token_join(_auth_id);
         flag_error = _auth_flag_error.load(std::memory_order_relaxed);
         *auth_error = (int32_t)(flag_error & 0xFFFFFFFFul);
         return EINVAL;
@@ -1900,7 +1900,7 @@ void Socket::SetAuthentication(int error_code) {
         if (error_code != 0) {
             SetFailed(error_code, "Fail to authenticate %s", description().c_str());
         }
-        CHECK_EQ(0, bthread_id_unlock_and_destroy(_auth_id));
+        CHECK_EQ(0, fiber_token_unlock_and_destroy(_auth_id));
     }
 }
 

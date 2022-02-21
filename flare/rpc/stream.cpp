@@ -60,7 +60,7 @@ Stream::~Stream() {
     CHECK(_host_socket == NULL);
     fiber_mutex_destroy(&_connect_mutex);
     fiber_mutex_destroy(&_congestion_control_mutex);
-    bthread_id_list_destroy(&_writable_wait_list);
+    fiber_token_list_destroy(&_writable_wait_list);
 }
 
 int Stream::Create(const StreamOptions &options, 
@@ -78,7 +78,7 @@ int Stream::Create(const StreamOptions &options,
     } else {
         s->_parse_rpc_response = true;
     }
-    if (bthread_id_list_init(&s->_writable_wait_list, 8, 8/*FIXME*/)) {
+    if (fiber_token_list_init(&s->_writable_wait_list, 8, 8/*FIXME*/)) {
         delete s;
         return -1;
     }
@@ -107,7 +107,7 @@ int Stream::Create(const StreamOptions &options,
 
 void Stream::BeforeRecycle(Socket *) {
     // No one holds reference now, so we don't need lock here
-    bthread_id_list_reset(&_writable_wait_list, ECONNRESET);
+    fiber_token_list_reset(&_writable_wait_list, ECONNRESET);
     if (_connected) {
         // Send CLOSE frame
         RPC_VLOG << "Send close frame";
@@ -290,7 +290,7 @@ int Stream::AppendIfNotFull(const flare::io::cord_buf &data) {
 void Stream::SetRemoteConsumed(size_t new_remote_consumed) {
     CHECK(_options.max_buf_size > 0);
     fiber_token_list_t tmplist;
-    bthread_id_list_init(&tmplist, 0, 0);
+    fiber_token_list_init(&tmplist, 0, 0);
     fiber_mutex_lock(&_congestion_control_mutex);
     if (_remote_consumed >= new_remote_consumed) {
         fiber_mutex_unlock(&_congestion_control_mutex);
@@ -300,13 +300,13 @@ void Stream::SetRemoteConsumed(size_t new_remote_consumed) {
     _remote_consumed = new_remote_consumed;
     const bool is_full = _produced >= _remote_consumed + (size_t)_options.max_buf_size;
     if (was_full && !is_full) {
-        bthread_id_list_swap(&tmplist, &_writable_wait_list);
+        fiber_token_list_swap(&tmplist, &_writable_wait_list);
     }
     fiber_mutex_unlock(&_congestion_control_mutex);
 
     // broadcast
-    bthread_id_list_reset(&tmplist, 0);
-    bthread_id_list_destroy(&tmplist);
+    fiber_token_list_reset(&tmplist, 0);
+    fiber_token_list_destroy(&tmplist);
 }
 
 void* Stream::RunOnWritable(void* arg) {
@@ -335,12 +335,12 @@ int Stream::TriggerOnWritable(fiber_token_t id, void *data, int error_code) {
     } else {
         RunOnWritable(wm);
     }
-    return bthread_id_unlock_and_destroy(id);
+    return fiber_token_unlock_and_destroy(id);
 }
 
 void OnTimedOut(void *arg) {
     fiber_token_t id = { reinterpret_cast<uint64_t>(arg) };
-    bthread_id_error(id, ETIMEDOUT);
+    fiber_token_error(id, ETIMEDOUT);
 }
 
 void Stream::Wait(void (*on_writable)(StreamId, void*, int), void* arg, 
@@ -352,7 +352,7 @@ void Stream::Wait(void (*on_writable)(StreamId, void*, int), void* arg,
     wm->new_thread = new_thread;
     wm->has_timer = false;
     fiber_token_t wait_id;
-    const int rc = bthread_id_create(&wait_id, wm, TriggerOnWritable);
+    const int rc = fiber_token_create(&wait_id, wm, TriggerOnWritable);
     if (rc != 0) {
         CHECK(false) << "Fail to create bthread_id, " << flare_error(rc);
         wm->error_code = rc;
@@ -362,7 +362,7 @@ void Stream::Wait(void (*on_writable)(StreamId, void*, int), void* arg,
     if (join_id) {
         *join_id = wait_id;
     }
-    CHECK_EQ(0, bthread_id_lock(wait_id, NULL));
+    CHECK_EQ(0, fiber_token_lock(wait_id, NULL));
     if (due_time != NULL) {
         wm->has_timer = true;
         const int rc = fiber_timer_add(&wm->timer, *due_time,
@@ -380,10 +380,10 @@ void Stream::Wait(void (*on_writable)(StreamId, void*, int), void* arg,
         CHECK_EQ(0, TriggerOnWritable(wait_id, wm, 0));
         return;
     } else {
-        bthread_id_list_add(&_writable_wait_list, wait_id);
+        fiber_token_list_add(&_writable_wait_list, wait_id);
         fiber_mutex_unlock(&_congestion_control_mutex);
     }
-    CHECK_EQ(0, bthread_id_unlock(wait_id));
+    CHECK_EQ(0, fiber_token_unlock(wait_id));
 }
 
 void Stream::Wait(void (*on_writable)(StreamId, void *, int), void *arg,
@@ -400,7 +400,7 @@ int Stream::Wait(const timespec* due_time) {
     fiber_token_t join_id = INVALID_FIBER_TOKEN;
     Wait(OnWritable, &rc, due_time, false, &join_id);
     if (join_id != INVALID_FIBER_TOKEN) {
-        bthread_id_join(join_id);
+        fiber_token_join(join_id);
     }
     return rc;
 }

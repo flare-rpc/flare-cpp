@@ -64,7 +64,7 @@ ProgressiveAttachment::~ProgressiveAttachment() {
         }
     }
     if (_notify_id != INVALID_FIBER_TOKEN) {
-        bthread_id_error(_notify_id, 0);
+        fiber_token_error(_notify_id, 0);
     }
 }
 
@@ -233,7 +233,7 @@ flare::base::end_point ProgressiveAttachment::local_side() const {
 }
 
 static int RunOnFailed(fiber_token_t id, void* data, int) {
-    bthread_id_unlock_and_destroy(id);
+    fiber_token_unlock_and_destroy(id);
     static_cast<google::protobuf::Closure*>(data)->Run();
     return 0;
 }
@@ -250,7 +250,7 @@ void ProgressiveAttachment::NotifyOnStopped(google::protobuf::Closure* done) {
     if (_httpsock == NULL) {
         return done->Run();
     }
-    const int rc = bthread_id_create(&_notify_id, done, RunOnFailed);
+    const int rc = fiber_token_create(&_notify_id, done, RunOnFailed);
     if (rc) {
         LOG(ERROR) << "Fail to create _notify_id: " << flare_error(rc);
         return done->Run();

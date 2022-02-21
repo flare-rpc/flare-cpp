@@ -1683,7 +1683,7 @@ namespace flare::rpc {
                 onfail_id = _onfail_id;
                 mu.unlock();
                 _self_ref.swap(self_ref);
-                bthread_id_error(onfail_id, 0);
+                fiber_token_error(onfail_id, 0);
                 return;
             case STATE_ERROR:
                 _state = STATE_DESTROYING;
@@ -1713,7 +1713,7 @@ namespace flare::rpc {
                 _state = STATE_ERROR;
                 onfail_id = _onfail_id;
                 mu.unlock();
-                bthread_id_error(onfail_id, 0);
+                fiber_token_error(onfail_id, 0);
                 return;
             case STATE_ERROR:
             case STATE_DESTROYING:
@@ -1765,7 +1765,7 @@ namespace flare::rpc {
         // Must happen after NotifyOnFailed which is after all other callsites
         // to OnStopInternal().
         stream->OnStopInternal();
-        bthread_id_unlock_and_destroy(id);
+        fiber_token_unlock_and_destroy(id);
         return 0;
     }
 
@@ -1847,7 +1847,7 @@ namespace flare::rpc {
             switch (_state) {
                 case STATE_CREATING:
                     CHECK(_rtmpsock);
-                    rc = bthread_id_create(&onfail_id, this, RunOnFailed);
+                    rc = fiber_token_create(&onfail_id, this, RunOnFailed);
                     if (rc) {
                         cntl->SetFailed(ENOMEM, "Fail to create _onfail_id: %s", flare_error(rc));
                         mu.unlock();
@@ -2716,7 +2716,7 @@ namespace flare::rpc {
                 static_cast<RtmpServerStream *>(data), false);
         CHECK(stream->_rtmpsock);
         stream->OnStopInternal();
-        bthread_id_unlock_and_destroy(id);
+        fiber_token_unlock_and_destroy(id);
         return 0;
     }
 

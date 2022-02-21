@@ -227,7 +227,7 @@ public:
                 for (int i = 0; i < _ndone; ++i) {
                     SubDone* sd = sub_done(i);
                     if (fin != sd) {
-                        bthread_id_error(sd->cntl.call_id(), ECANCELED);
+                        fiber_token_error(sd->cntl.call_id(), ECANCELED);
                     }
                 }
             }
@@ -248,7 +248,7 @@ public:
             // If _cntl->call_id() is still there, stop it by sending a special
             // error(which will be cleared) and return.
             if (!(val & 0x80000000)) {
-                bthread_id_error(saved_cid, EPCHANFINISH);
+                fiber_token_error(saved_cid, EPCHANFINISH);
                 return;
             }
         } else {
@@ -263,7 +263,7 @@ public:
             // if not all of them finish.
             if ((val & 0x7fffffff) != (uint32_t)_ndone) {
                 for (int i = 0; i < _ndone; ++i) {
-                    bthread_id_error(sub_done(i)->cntl.call_id(), ECANCELED);
+                    fiber_token_error(sub_done(i)->cntl.call_id(), ECANCELED);
                 }
             }
             // NOTE: Don't access any member after the fetch_or because
@@ -389,7 +389,7 @@ public:
             _cntl->OnRPCEnd(flare::base::gettimeofday_us());
             user_done->Run();
         }
-        CHECK_EQ(0, bthread_id_unlock_and_destroy(saved_cid));
+        CHECK_EQ(0, fiber_token_unlock_and_destroy(saved_cid));
     }
 
     int sub_done_size() const { return _ndone; }
@@ -533,7 +533,7 @@ ParallelChannel::~ParallelChannel() {
 
 static void HandleTimeout(void* arg) {
     fiber_token_t correlation_id = { (uint64_t)arg };
-    bthread_id_error(correlation_id, ERPCTIMEDOUT);
+    fiber_token_error(correlation_id, ERPCTIMEDOUT);
 }
 
 void* ParallelChannel::RunDoneAndDestroy(void* arg) {
@@ -544,7 +544,7 @@ void* ParallelChannel::RunDoneAndDestroy(void* arg) {
     // Save call_id from the controller which may be deleted after Run().
     const fiber_token_t cid = c->call_id();
     done->Run();
-    CHECK_EQ(0, bthread_id_unlock_and_destroy(cid));
+    CHECK_EQ(0, fiber_token_unlock_and_destroy(cid));
     return NULL;
 }
 
@@ -561,7 +561,7 @@ void ParallelChannel::CallMethod(
     cntl->_pchan_sub_count = nchan;
 
     const CallId cid = cntl->call_id();
-    const int rc = bthread_id_lock(cid, NULL);
+    const int rc = fiber_token_lock(cid, NULL);
     if (rc != 0) {
         CHECK_EQ(EINVAL, rc);
         if (!cntl->FailedInline()) {
@@ -674,7 +674,7 @@ void ParallelChannel::CallMethod(
         cntl->_deadline_us = -1;
     }
     d->SaveThreadInfoOfCallsite();
-    CHECK_EQ(0, bthread_id_unlock(cid));
+    CHECK_EQ(0, fiber_token_unlock(cid));
     // Don't touch `cntl' and `d' again (for async RPC)
     
     for (int i = 0, j = 0; i < nchan; ++i) {
@@ -718,7 +718,7 @@ FAIL:
         }
         done->Run();
     }
-    CHECK_EQ(0, bthread_id_unlock_and_destroy(cid));
+    CHECK_EQ(0, fiber_token_unlock_and_destroy(cid));
 }
 
 int ParallelChannel::Weight() {

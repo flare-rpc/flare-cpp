@@ -359,7 +359,7 @@ public:
     bool DidReleaseAdditionalRereference() const
     { return _recycle_flag.load(std::memory_order_relaxed); }
 
-    // Notify `id' object (by calling bthread_id_error) when this Socket
+    // Notify `id' object (by calling fiber_token_error) when this Socket
     // has been `SetFailed'. If it already has, notify `id' immediately
     void NotifyOnFailed(fiber_token_t id);
 

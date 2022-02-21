@@ -45,7 +45,7 @@
 #include "flare/rpc/builtin/rpcz_service.h"         // RpczService
 #include "flare/rpc/builtin/dir_service.h"          // DirService
 #include "flare/rpc/builtin/pprof_service.h"        // PProfService
-#include "flare/rpc/builtin/bthreads_service.h"     // BthreadsService
+#include "flare/rpc/builtin/fibers_service.h"     // FibersService
 #include "flare/rpc/builtin/ids_service.h"          // IdsService
 #include "flare/rpc/builtin/sockets_service.h"      // SocketsService
 #include "flare/rpc/builtin/common.h"
@@ -735,7 +735,7 @@ TEST_F(BuiltinServiceTest, ids) {
     }
     {
         fiber_token_t id;
-        EXPECT_EQ(0, bthread_id_create(&id, NULL, NULL));
+        EXPECT_EQ(0, fiber_token_create(&id, NULL, NULL));
         ClosureChecker done;
         flare::rpc::Controller cntl;
         std::string id_string;
@@ -753,7 +753,7 @@ void *dummy_bthread(void *) {
 }
 
 TEST_F(BuiltinServiceTest, bthreads) {
-    flare::rpc::BthreadsService service;
+    flare::rpc::FibersService service;
     flare::rpc::BthreadsRequest req;
     flare::rpc::BthreadsResponse res;
     {

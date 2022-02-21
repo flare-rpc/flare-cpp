@@ -24,11 +24,11 @@
 
 namespace flare::rpc {
 
-class BthreadsService : public bthreads {
+class FibersService : public fibers {
 public:
     void default_method(::google::protobuf::RpcController* cntl_base,
-                        const ::flare::rpc::BthreadsRequest* request,
-                        ::flare::rpc::BthreadsResponse* response,
+                        const ::flare::rpc::FibersRequest* request,
+                        ::flare::rpc::FibersResponse* response,
                         ::google::protobuf::Closure* done);
 };
 

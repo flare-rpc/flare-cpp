@@ -63,7 +63,7 @@ namespace flare::rpc {
 
     NamingServiceThread::Actions::Actions(NamingServiceThread *owner)
             : _owner(owner), _wait_id(INVALID_FIBER_TOKEN), _has_wait_error(false), _wait_error(0) {
-        CHECK_EQ(0, bthread_id_create(&_wait_id, NULL, NULL));
+        CHECK_EQ(0, fiber_token_create(&_wait_id, NULL, NULL));
     }
 
     NamingServiceThread::Actions::~Actions() {
@@ -205,10 +205,10 @@ namespace flare::rpc {
     }
 
     void NamingServiceThread::Actions::EndWait(int error_code) {
-        if (bthread_id_trylock(_wait_id, NULL) == 0) {
+        if (fiber_token_trylock(_wait_id, NULL) == 0) {
             _wait_error = error_code;
             _has_wait_error.store(true, std::memory_order_release);
-            bthread_id_unlock_and_destroy(_wait_id);
+            fiber_token_unlock_and_destroy(_wait_id);
         }
     }
 
@@ -216,7 +216,7 @@ namespace flare::rpc {
         // Wait can happen before signal in which case it returns non-zero,
         // so we ignore return value here and use `_wait_error' instead
         if (!_has_wait_error.load(std::memory_order_acquire)) {
-            bthread_id_join(_wait_id);
+            fiber_token_join(_wait_id);
         }
         return _wait_error;
     }

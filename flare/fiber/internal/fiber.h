@@ -34,7 +34,7 @@
 
 #endif
 
-#include "flare/fiber/internal/id.h"
+#include "flare/fiber/internal/token.h"
 
 __BEGIN_DECLS
 

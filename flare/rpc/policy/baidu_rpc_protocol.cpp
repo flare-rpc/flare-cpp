@@ -552,7 +552,7 @@ void ProcessRpcResponse(InputMessageBase* msg_base) {
 
     const fiber_token_t cid = { static_cast<uint64_t>(meta.correlation_id()) };
     Controller* cntl = NULL;
-    const int rc = bthread_id_lock(cid, (void**)&cntl);
+    const int rc = fiber_token_lock(cid, (void**)&cntl);
     if (rc != 0) {
         LOG_IF(ERROR, rc != EINVAL && rc != EPERM)
             << "Fail to lock correlation_id=" << cid << ": " << flare_error(rc);

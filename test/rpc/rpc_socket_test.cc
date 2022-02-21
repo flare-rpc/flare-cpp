@@ -84,7 +84,7 @@ int OnWaitIdReset(fiber_token_t id, void* data, int error_code,
     static_cast<WaitData*>(data)->id = id;
     static_cast<WaitData*>(data)->error_code = error_code;
     static_cast<WaitData*>(data)->error_text = error_text;
-    return bthread_id_unlock_and_destroy(id);
+    return fiber_token_unlock_and_destroy(id);
 }
 
 class SocketTest : public ::testing::Test{
@@ -240,11 +240,11 @@ TEST_F(SocketTest, single_threaded_write) {
                     new MyErrorMessage(flare::base::flare_status(EINVAL, "Invalid input")));
                 fiber_token_t wait_id;
                 WaitData data;
-                ASSERT_EQ(0, bthread_id_create2(&wait_id, &data, OnWaitIdReset));
+                ASSERT_EQ(0, fiber_token_create2(&wait_id, &data, OnWaitIdReset));
                 flare::rpc::Socket::WriteOptions wopt;
                 wopt.id_wait = wait_id;
                 ASSERT_EQ(0, s->Write(msg, &wopt));
-                ASSERT_EQ(0, bthread_id_join(wait_id));
+                ASSERT_EQ(0, fiber_token_join(wait_id));
                 ASSERT_EQ(wait_id.value, data.id.value);
                 ASSERT_EQ(EINVAL, data.error_code);
                 ASSERT_EQ("Invalid input", data.error_text);
@@ -430,7 +430,7 @@ void* FailedWriter(void* void_arg) {
     char buf[32];
     for (size_t i = 0; i < arg->times; ++i) {
         fiber_token_t id;
-        EXPECT_EQ(0, bthread_id_create(&id, NULL, NULL));
+        EXPECT_EQ(0, fiber_token_create(&id, NULL, NULL));
         snprintf(buf, sizeof(buf), "%0" FLARE_SYMBOLSTR(NUMBER_WIDTH) "lu",
                  i + arg->offset);
         flare::io::cord_buf src;
@@ -438,7 +438,7 @@ void* FailedWriter(void* void_arg) {
         flare::rpc::Socket::WriteOptions wopt;
         wopt.id_wait = id;
         sock->Write(&src, &wopt);
-        EXPECT_EQ(0, bthread_id_join(id));
+        EXPECT_EQ(0, fiber_token_join(id));
         // Only the first connect can see ECONNREFUSED and then
         // calls `SetFailed' making others' error_code=EINVAL
         //EXPECT_EQ(ECONNREFUSED, error_code);
@@ -521,11 +521,11 @@ TEST_F(SocketTest, not_health_check_when_nref_hits_0) {
 #ifdef CONNECT_IN_KEEPWRITE
         fiber_token_t wait_id;
         WaitData data;
-        ASSERT_EQ(0, bthread_id_create2(&wait_id, &data, OnWaitIdReset));
+        ASSERT_EQ(0, fiber_token_create2(&wait_id, &data, OnWaitIdReset));
         flare::rpc::Socket::WriteOptions wopt;
         wopt.id_wait = wait_id;
         ASSERT_EQ(0, s->Write(&src, &wopt));
-        ASSERT_EQ(0, bthread_id_join(wait_id));
+        ASSERT_EQ(0, fiber_token_join(wait_id));
         ASSERT_EQ(wait_id.value, data.id.value);
         ASSERT_EQ(ECONNREFUSED, data.error_code);
         ASSERT_TRUE(flare::base::starts_with(data.error_text,
@@ -680,7 +680,7 @@ TEST_F(SocketTest, health_check) {
 #ifdef CONNECT_IN_KEEPWRITE
     fiber_token_t wait_id;
     WaitData data;
-    ASSERT_EQ(0, bthread_id_create2(&wait_id, &data, OnWaitIdReset));
+    ASSERT_EQ(0, fiber_token_create2(&wait_id, &data, OnWaitIdReset));
     flare::rpc::Socket::WriteOptions wopt;
     wopt.id_wait = wait_id;
     if (use_my_message) {
@@ -688,7 +688,7 @@ TEST_F(SocketTest, health_check) {
     } else {
         ASSERT_EQ(0, s->Write(&src, &wopt));
     }
-    ASSERT_EQ(0, bthread_id_join(wait_id));
+    ASSERT_EQ(0, fiber_token_join(wait_id));
     ASSERT_EQ(wait_id.value, data.id.value);
     ASSERT_EQ(ECONNREFUSED, data.error_code);
     ASSERT_TRUE(flare::base::starts_with(data.error_text,

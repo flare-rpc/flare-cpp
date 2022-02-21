@@ -63,7 +63,7 @@
 #include "flare/rpc/builtin/rpcz_service.h"         // RpczService
 #include "flare/rpc/builtin/dir_service.h"          // DirService
 #include "flare/rpc/builtin/pprof_service.h"        // PProfService
-#include "flare/rpc/builtin/bthreads_service.h"     // BthreadsService
+#include "flare/rpc/builtin/fibers_service.h"     // FibersService
 #include "flare/rpc/builtin/ids_service.h"          // IdsService
 #include "flare/rpc/builtin/sockets_service.h"      // SocketsService
 #include "flare/rpc/builtin/hotspots_service.h"     // HotspotsService
@@ -486,8 +486,8 @@ namespace flare::rpc {
             LOG(ERROR) << "Fail to add DirService";
             return -1;
         }
-        if (AddBuiltinService(new(std::nothrow) BthreadsService)) {
-            LOG(ERROR) << "Fail to add BthreadsService";
+        if (AddBuiltinService(new(std::nothrow) FibersService)) {
+            LOG(ERROR) << "Fail to add FibersService";
             return -1;
         }
         if (AddBuiltinService(new(std::nothrow) IdsService)) {

@@ -20,7 +20,7 @@
 #include "flare/rpc/closure_guard.h"        // ClosureGuard
 #include "flare/rpc/controller.h"           // Controller
 #include "flare/rpc/builtin/common.h"
-#include "flare/rpc/builtin/bthreads_service.h"
+#include "flare/rpc/builtin/fibers_service.h"
 
 namespace flare::fiber_internal {
 void print_task(std::ostream& os, fiber_id_t tid);
@@ -29,9 +29,9 @@ void print_task(std::ostream& os, fiber_id_t tid);
 
 namespace flare::rpc {
 
-void BthreadsService::default_method(::google::protobuf::RpcController* cntl_base,
-                                     const ::flare::rpc::BthreadsRequest*,
-                                     ::flare::rpc::BthreadsResponse*,
+void FibersService::default_method(::google::protobuf::RpcController* cntl_base,
+                                     const ::flare::rpc::FibersRequest*,
+                                     ::flare::rpc::FibersResponse*,
                                      ::google::protobuf::Closure* done) {
     ClosureGuard done_guard(done);
     Controller *cntl = static_cast<Controller*>(cntl_base);
@@ -40,7 +40,7 @@ void BthreadsService::default_method(::google::protobuf::RpcController* cntl_bas
     const std::string& constraint = cntl->http_request().unresolved_path();
     
     if (constraint.empty()) {
-        os << "Use /bthreads/<bthread_id>";
+        os << "Use /fibers/<fiber_id>";
     } else {
         char* endptr = NULL;
         fiber_id_t tid = strtoull(constraint.c_str(), &endptr, 10);

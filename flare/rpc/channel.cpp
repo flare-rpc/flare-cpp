@@ -352,12 +352,12 @@ namespace flare::rpc {
 
     static void HandleTimeout(void *arg) {
         fiber_token_t correlation_id = {(uint64_t) arg};
-        bthread_id_error(correlation_id, ERPCTIMEDOUT);
+        fiber_token_error(correlation_id, ERPCTIMEDOUT);
     }
 
     static void HandleBackupRequest(void *arg) {
         fiber_token_t correlation_id = {(uint64_t) arg};
-        bthread_id_error(correlation_id, EBACKUPREQUEST);
+        fiber_token_error(correlation_id, EBACKUPREQUEST);
     }
 
     void Channel::CallMethod(const google::protobuf::MethodDescriptor *method,
@@ -395,7 +395,7 @@ namespace flare::rpc {
             cntl->add_flag(Controller::FLAGS_ENABLED_CIRCUIT_BREAKER);
         }
         const CallId correlation_id = cntl->call_id();
-        const int rc = bthread_id_lock_and_reset_range(
+        const int rc = fiber_token_lock_and_reset_range(
                 correlation_id, NULL, 2 + cntl->max_retry());
         if (rc != 0) {
             CHECK_EQ(EINVAL, rc);

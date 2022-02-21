@@ -338,7 +338,7 @@ int Sender::IssueRPC(int64_t start_realtime_us) {
 
 void SubDone::Run() {
     Controller* main_cntl = NULL;
-    const int rc = bthread_id_lock(_cid, (void**)&main_cntl);
+    const int rc = fiber_token_lock(_cid, (void**)&main_cntl);
     if (rc != 0) {
         // _cid must be valid because schan does not dtor before cancelling
         // all sub calls.
@@ -386,9 +386,9 @@ void Sender::Run() {
             ids[i] = _alloc_resources[i].sub_done->_cntl.call_id();
         }
         CallId cid = _main_cntl->call_id();
-        CHECK_EQ(0, bthread_id_unlock(cid));
+        CHECK_EQ(0, fiber_token_unlock(cid));
         for (int i = 0; i < saved_nalloc; ++i) {
-            bthread_id_error(ids[i], error);
+            fiber_token_error(ids[i], error);
         }
     } else {
         Clear();
@@ -407,7 +407,7 @@ void Sender::Clear() {
     if (_user_done) {
         _user_done->Run();
     }
-    bthread_id_unlock_and_destroy(cid);
+    fiber_token_unlock_and_destroy(cid);
 }
 
 inline Resource Sender::PopFree() {
