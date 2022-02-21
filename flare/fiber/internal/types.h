@@ -162,7 +162,6 @@ typedef struct {
     unsigned conflict_size;
 } fiber_list_t;
 
-// TODO: fiber_contention_site_t should be put into butex.
 typedef struct {
     int64_t duration_ns;
     size_t sampling_range;

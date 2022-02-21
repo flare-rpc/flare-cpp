@@ -23,7 +23,7 @@
 #include "flare/base/scoped_lock.h"
 #include "flare/base/gperftools_profiler.h"
 #include "flare/fiber/internal/fiber.h"
-#include "flare/fiber/internal/condition_variable.h"
+#include "flare/fiber/internal/fiber_cond.h"
 #include "flare/fiber/internal/stack.h"
 #include "flare/fiber/this_fiber.h"
 
