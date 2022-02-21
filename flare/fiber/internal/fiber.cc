@@ -149,12 +149,12 @@ namespace flare::fiber_internal {
     struct TidTraits {
         static const size_t BLOCK_SIZE = 63;
         static const size_t MAX_ENTRIES = 65536;
-        static const fiber_id_t ID_INIT;
+        static const fiber_id_t TOKEN_INIT;
 
         static bool exists(fiber_id_t id) { return flare::fiber_internal::fiber_worker::exists(id); }
     };
 
-    const fiber_id_t TidTraits::ID_INIT = INVALID_FIBER_ID;
+    const fiber_id_t TidTraits::TOKEN_INIT = INVALID_FIBER_ID;
 
     typedef ListOfABAFreeId<fiber_id_t, TidTraits> TidList;
 

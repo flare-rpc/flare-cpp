@@ -47,8 +47,8 @@ message VarsRequest {}
 message VarsResponse {}
 message FibersRequest {}
 message FibersResponse {}
-message IdsRequest {}
-message IdsResponse{}
+message TokenRequest {}
+message TokenResponse{}
 message SocketsRequest {}
 message SocketsResponse {}
 message RpczRequest {}
@@ -106,8 +106,8 @@ service fibers {
     rpc default_method(FibersRequest) returns (FibersResponse);
 }
 
-service ids {
-    rpc default_method(IdsRequest) returns (IdsResponse);
+service token {
+    rpc default_method(TokenRequest) returns (TokenResponse);
 }
 
 service sockets {

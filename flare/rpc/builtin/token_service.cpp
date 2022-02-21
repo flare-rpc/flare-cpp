@@ -20,19 +20,19 @@
 #include "flare/rpc/closure_guard.h"        // ClosureGuard
 #include "flare/rpc/controller.h"           // Controller
 #include "flare/rpc/builtin/common.h"
-#include "flare/rpc/builtin/ids_service.h"
+#include "flare/rpc/builtin/token_service.h"
 
 namespace flare::fiber_internal {
-void id_status(fiber_token_t id, std::ostream& os);
-void id_pool_status(std::ostream& os);
+void token_status(fiber_token_t id, std::ostream& os);
+void token_pool_status(std::ostream& os);
 }
 
 
 namespace flare::rpc {
 
-void IdsService::default_method(::google::protobuf::RpcController* cntl_base,
-                                const ::flare::rpc::IdsRequest*,
-                                ::flare::rpc::IdsResponse*,
+void TokenService::default_method(::google::protobuf::RpcController* cntl_base,
+                                const ::flare::rpc::TokenRequest*,
+                                ::flare::rpc::TokenResponse*,
                                 ::google::protobuf::Closure* done) {
     ClosureGuard done_guard(done);
     Controller *cntl = static_cast<Controller*>(cntl_base);
@@ -42,12 +42,12 @@ void IdsService::default_method(::google::protobuf::RpcController* cntl_base,
     
     if (constraint.empty()) {
         os << "# Use /ids/<call_id>\n";
-        flare::fiber_internal::id_pool_status(os);
+        flare::fiber_internal::token_pool_status(os);
     } else {
         char* endptr = NULL;
         fiber_token_t id = { strtoull(constraint.c_str(), &endptr, 10) };
         if (*endptr == '\0' || *endptr == '/') {
-            flare::fiber_internal::id_status(id, os);
+            flare::fiber_internal::token_status(id, os);
         } else {
             cntl->SetFailed(ENOMETHOD, "path=%s is not a fiber_id",
                             constraint.c_str());

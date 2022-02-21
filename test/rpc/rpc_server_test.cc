@@ -41,7 +41,7 @@
 #include "flare/rpc/builtin/dir_service.h"          // DirService
 #include "flare/rpc/builtin/pprof_service.h"        // PProfService
 #include "flare/rpc/builtin/fibers_service.h"     // FibersService
-#include "flare/rpc/builtin/ids_service.h"          // IdsService
+#include "flare/rpc/builtin/token_service.h"          // TokenService
 #include "flare/rpc/builtin/sockets_service.h"      // SocketsService
 #include "flare/rpc/builtin/bad_method_service.h"
 #include "flare/rpc/server.h"

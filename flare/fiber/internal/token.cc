@@ -13,10 +13,10 @@ namespace flare::fiber_internal {
     template<typename T, int N>
     class SmallQueue {
     public:
-        SmallQueue() : _begin(0), _size(0), _full(NULL) {}
+        SmallQueue() : _begin(0), _size(0), _full(nullptr) {}
 
         void push(const T &val) {
-            if (_full != NULL && !_full->empty()) {
+            if (_full != nullptr && !_full->empty()) {
                 _full->push_back(val);
             } else if (_size < N) {
                 int tail = _begin + _size;
@@ -26,7 +26,7 @@ namespace flare::fiber_internal {
                 _c[tail] = val;
                 ++_size;
             } else {
-                if (_full == NULL) {
+                if (_full == nullptr) {
                     _full = new std::deque<T>;
                 }
                 _full->push_back(val);
@@ -51,7 +51,7 @@ namespace flare::fiber_internal {
         }
 
         bool empty() const {
-            return _size == 0 && (_full == NULL || _full->empty());
+            return _size == 0 && (_full == nullptr || _full->empty());
         }
 
         size_t size() const {
@@ -68,7 +68,7 @@ namespace flare::fiber_internal {
 
         ~SmallQueue() {
             delete _full;
-            _full = NULL;
+            _full = nullptr;
         }
 
     private:
@@ -81,15 +81,15 @@ namespace flare::fiber_internal {
     };
 
     struct PendingError {
-        fiber_token_t id;
+        fiber_token_t tn;
         int error_code;
         std::string error_text;
         const char *location;
 
-        PendingError() : id(INVALID_FIBER_TOKEN), error_code(0), location(NULL) {}
+        PendingError() : tn(INVALID_FIBER_TOKEN), error_code(0), location(nullptr) {}
     };
 
-    struct FLARE_CACHELINE_ALIGNMENT Id {
+    struct FLARE_CACHELINE_ALIGNMENT token {
         // first_ver ~ locked_ver - 1: unlocked versions
         // locked_ver: locked
         // unlockable_ver: locked and about to be destroyed
@@ -104,26 +104,26 @@ namespace flare::fiber_internal {
         int (*on_error2)(fiber_token_t, void *, int, const std::string &);
 
         const char *lock_location;
-        uint32_t *butex;
+        uint32_t *event;
         uint32_t *join_butex;
         SmallQueue<PendingError, 2> pending_q;
 
-        Id() {
-            // Although value of the butex(as version part of fiber_token_t)
+        token() {
+            // Although value of the event(as version part of fiber_token_t)
             // does not matter, we set it to 0 to make program more deterministic.
-            butex = flare::fiber_internal::waitable_event_create_checked<uint32_t>();
+            event = flare::fiber_internal::waitable_event_create_checked<uint32_t>();
             join_butex = flare::fiber_internal::waitable_event_create_checked<uint32_t>();
-            *butex = 0;
+            *event = 0;
             *join_butex = 0;
         }
 
-        ~Id() {
-            flare::fiber_internal::waitable_event_destroy(butex);
+        ~token() {
+            flare::fiber_internal::waitable_event_destroy(event);
             flare::fiber_internal::waitable_event_destroy(join_butex);
         }
 
-        inline bool has_version(uint32_t id_ver) const {
-            return id_ver >= first_ver && id_ver < locked_ver;
+        inline bool has_version(uint32_t token_ver) const {
+            return token_ver >= first_ver && token_ver < locked_ver;
         }
 
         inline uint32_t contended_ver() const { return locked_ver + 1; }
@@ -136,9 +136,9 @@ namespace flare::fiber_internal {
         inline uint32_t end_ver() const { return last_ver() + 1; }
     };
 
-    static_assert(sizeof(Id) % 64 == 0, "sizeof_Id_must_align");
+    static_assert(sizeof(token) % 64 == 0, "sizeof token must align");
 
-    typedef flare::memory::ResourceId<Id> IdResourceId;
+    typedef flare::memory::ResourceId<token> IdResourceId;
 
     inline fiber_token_t make_id(uint32_t version, IdResourceId slot) {
         const fiber_token_t tmp =
@@ -146,64 +146,64 @@ namespace flare::fiber_internal {
         return tmp;
     }
 
-    inline IdResourceId get_slot(fiber_token_t id) {
-        const IdResourceId tmp = {(id.value >> 32)};
+    inline IdResourceId get_slot(fiber_token_t tn) {
+        const IdResourceId tmp = {(tn.value >> 32)};
         return tmp;
     }
 
-    inline uint32_t get_version(fiber_token_t id) {
-        return (uint32_t) (id.value & 0xFFFFFFFFul);
+    inline uint32_t get_version(fiber_token_t tn) {
+        return (uint32_t) (tn.value & 0xFFFFFFFFul);
     }
 
-    inline bool id_exists_with_true_negatives(fiber_token_t id) {
-        Id *const meta = address_resource(get_slot(id));
-        if (meta == NULL) {
+    inline bool token_exists_with_true_negatives(fiber_token_t tn) {
+        token *const meta = address_resource(get_slot(tn));
+        if (meta == nullptr) {
             return false;
         }
-        const uint32_t id_ver = flare::fiber_internal::get_version(id);
-        return id_ver >= meta->first_ver && id_ver <= meta->last_ver();
+        const uint32_t token_ver = flare::fiber_internal::get_version(tn);
+        return token_ver >= meta->first_ver && token_ver <= meta->last_ver();
     }
 
 // required by unittest
-    uint32_t id_value(fiber_token_t id) {
-        Id *const meta = address_resource(get_slot(id));
-        if (meta != NULL) {
-            return *meta->butex;
+    uint32_t token_value(fiber_token_t tn) {
+        token *const meta = address_resource(get_slot(tn));
+        if (meta != nullptr) {
+            return *meta->event;
         }
         return 0;  // valid version never be zero
     }
 
-    static int default_fiber_id_on_error(fiber_token_t id, void *, int) {
-        return fiber_token_unlock_and_destroy(id);
+    static int default_fiber_token_on_error(fiber_token_t tn, void *, int) {
+        return fiber_token_unlock_and_destroy(tn);
     }
 
-    static int default_fiber_id_on_error2(
-            fiber_token_t id, void *, int, const std::string &) {
-        return fiber_token_unlock_and_destroy(id);
+    static int default_fiber_token_on_error2(
+            fiber_token_t tn, void *, int, const std::string &) {
+        return fiber_token_unlock_and_destroy(tn);
     }
 
-    void id_status(fiber_token_t id, std::ostream &os) {
-        flare::fiber_internal::Id *const meta = address_resource(flare::fiber_internal::get_slot(id));
+    void token_status(fiber_token_t tn, std::ostream &os) {
+        flare::fiber_internal::token *const meta = address_resource(flare::fiber_internal::get_slot(tn));
         if (!meta) {
-            os << "Invalid id=" << id.value << '\n';
+            os << "Invalid token=" << tn.value << '\n';
             return;
         }
-        const uint32_t id_ver = flare::fiber_internal::get_version(id);
-        uint32_t *butex = meta->butex;
+        const uint32_t token_ver = flare::fiber_internal::get_version(tn);
+        uint32_t *event = meta->event;
         bool valid = true;
-        void *data = NULL;
-        int (*on_error)(fiber_token_t, void *, int) = NULL;
-        int (*on_error2)(fiber_token_t, void *, int, const std::string &) = NULL;
+        void *data = nullptr;
+        int (*on_error)(fiber_token_t, void *, int) = nullptr;
+        int (*on_error2)(fiber_token_t, void *, int, const std::string &) = nullptr;
         uint32_t first_ver = 0;
         uint32_t locked_ver = 0;
         uint32_t unlockable_ver = 0;
         uint32_t contended_ver = 0;
-        const char *lock_location = NULL;
+        const char *lock_location = nullptr;
         SmallQueue<PendingError, 2> pending_q;
         uint32_t butex_value = 0;
 
         meta->mutex.lock();
-        if (meta->has_version(id_ver)) {
+        if (meta->has_version(token_ver)) {
             data = meta->data;
             on_error = meta->on_error;
             on_error2 = meta->on_error2;
@@ -219,15 +219,15 @@ namespace flare::fiber_internal {
                 meta->pending_q.push(front);
                 pending_q.push(front);
             }
-            butex_value = *butex;
+            butex_value = *event;
         } else {
             valid = false;
         }
         meta->mutex.unlock();
 
         if (valid) {
-            os << "First id: "
-               << flare::fiber_internal::make_id(first_ver, flare::fiber_internal::get_slot(id)).value << '\n'
+            os << "First token: "
+               << flare::fiber_internal::make_id(first_ver, flare::fiber_internal::get_slot(tn)).value << '\n'
                << "Range: " << locked_ver - first_ver << '\n'
                << "Status: ";
             if (butex_value != first_ver) {
@@ -255,13 +255,13 @@ namespace flare::fiber_internal {
                 }
             }
             if (on_error) {
-                if (on_error == default_fiber_id_on_error) {
+                if (on_error == default_fiber_token_on_error) {
                     os << "\nOnError: unlock_and_destroy";
                 } else {
                     os << "\nOnError: " << (void *) on_error;
                 }
             } else {
-                if (on_error2 == default_fiber_id_on_error2) {
+                if (on_error2 == default_fiber_token_on_error2) {
                     os << "\nOnError2: unlock_and_destroy";
                 } else {
                     os << "\nOnError2: " << (void *) on_error2;
@@ -269,35 +269,35 @@ namespace flare::fiber_internal {
             }
             os << "\nData: " << data;
         } else {
-            os << "Invalid id=" << id.value;
+            os << "Invalid token=" << tn.value;
         }
         os << '\n';
     }
 
-    void id_pool_status(std::ostream &os) {
-        os << flare::memory::describe_resources<Id>() << '\n';
+    void token_pool_status(std::ostream &os) {
+        os << flare::memory::describe_resources<token>() << '\n';
     }
 
-    struct IdTraits {
+    struct token_traits {
         static const size_t BLOCK_SIZE = 63;
         static const size_t MAX_ENTRIES = 100000;
-        static const fiber_token_t ID_INIT;
+        static const fiber_token_t TOKEN_INIT;
 
-        static bool exists(fiber_token_t id) { return flare::fiber_internal::id_exists_with_true_negatives(id); }
+        static bool exists(fiber_token_t tn) { return flare::fiber_internal::token_exists_with_true_negatives(tn); }
     };
 
-    const fiber_token_t IdTraits::ID_INIT = INVALID_FIBER_TOKEN;
+    const fiber_token_t token_traits::TOKEN_INIT = INVALID_FIBER_TOKEN;
 
-    typedef ListOfABAFreeId<fiber_token_t, IdTraits> IdList;
+    typedef ListOfABAFreeId<fiber_token_t, token_traits> token_list;
 
-    struct IdResetter {
-        explicit IdResetter(int ec, const std::string &et)
+    struct token_resetter {
+        explicit token_resetter(int ec, const std::string &et)
                 : _error_code(ec), _error_text(et) {}
 
-        void operator()(fiber_token_t &id) const {
+        void operator()(fiber_token_t &tn) const {
             fiber_token_error2_verbose(
-                    id, _error_code, _error_text, __FILE__ ":" FLARE_SYMBOLSTR(__LINE__));
-            id = INVALID_FIBER_TOKEN;
+                    tn, _error_code, _error_text, __FILE__ ":" FLARE_SYMBOLSTR(__LINE__));
+            tn = INVALID_FIBER_TOKEN;
         }
 
     private:
@@ -306,68 +306,68 @@ namespace flare::fiber_internal {
     };
 
     size_t get_sizes(const fiber_token_list_t *list, size_t *cnt, size_t n) {
-        if (list->impl == NULL) {
+        if (list->impl == nullptr) {
             return 0;
         }
-        return static_cast<flare::fiber_internal::IdList *>(list->impl)->get_sizes(cnt, n);
+        return static_cast<flare::fiber_internal::token_list *>(list->impl)->get_sizes(cnt, n);
     }
 
-    const int ID_MAX_RANGE = 1024;
+    const int TOKEN_MAX_RANGE = 1024;
 
-    static int id_create_impl(
-            fiber_token_t *id, void *data,
+    static int token_create_impl(
+            fiber_token_t *tn, void *data,
             int (*on_error)(fiber_token_t, void *, int),
             int (*on_error2)(fiber_token_t, void *, int, const std::string &)) {
         IdResourceId slot;
-        Id *const meta = get_resource(&slot);
+        token *const meta = get_resource(&slot);
         if (meta) {
             meta->data = data;
             meta->on_error = on_error;
             meta->on_error2 = on_error2;
             CHECK(meta->pending_q.empty());
-            uint32_t *butex = meta->butex;
-            if (0 == *butex || *butex + ID_MAX_RANGE + 2 < *butex) {
+            uint32_t *event = meta->event;
+            if (0 == *event || *event + TOKEN_MAX_RANGE + 2 < *event) {
                 // Skip 0 so that fiber_token_t is never 0
                 // avoid overflow to make comparisons simpler.
-                *butex = 1;
+                *event = 1;
             }
-            *meta->join_butex = *butex;
-            meta->first_ver = *butex;
-            meta->locked_ver = *butex + 1;
-            *id = make_id(*butex, slot);
+            *meta->join_butex = *event;
+            meta->first_ver = *event;
+            meta->locked_ver = *event + 1;
+            *tn = make_id(*event, slot);
             return 0;
         }
         return ENOMEM;
     }
 
-    static int id_create_ranged_impl(
-            fiber_token_t *id, void *data,
+    static int token_create_ranged_impl(
+            fiber_token_t *tn, void *data,
             int (*on_error)(fiber_token_t, void *, int),
             int (*on_error2)(fiber_token_t, void *, int, const std::string &),
             int range) {
-        if (range < 1 || range > ID_MAX_RANGE) {
+        if (range < 1 || range > TOKEN_MAX_RANGE) {
             LOG_IF(FATAL, range < 1) << "range must be positive, actually " << range;
-            LOG_IF(FATAL, range > ID_MAX_RANGE) << "max of range is "
-                                                << ID_MAX_RANGE << ", actually " << range;
+            LOG_IF(FATAL, range > TOKEN_MAX_RANGE) << "max of range is "
+                                                   << TOKEN_MAX_RANGE << ", actually " << range;
             return EINVAL;
         }
         IdResourceId slot;
-        Id *const meta = get_resource(&slot);
+        token *const meta = get_resource(&slot);
         if (meta) {
             meta->data = data;
             meta->on_error = on_error;
             meta->on_error2 = on_error2;
             CHECK(meta->pending_q.empty());
-            uint32_t *butex = meta->butex;
-            if (0 == *butex || *butex + ID_MAX_RANGE + 2 < *butex) {
+            uint32_t *event = meta->event;
+            if (0 == *event || *event + TOKEN_MAX_RANGE + 2 < *event) {
                 // Skip 0 so that fiber_token_t is never 0
                 // avoid overflow to make comparisons simpler.
-                *butex = 1;
+                *event = 1;
             }
-            *meta->join_butex = *butex;
-            meta->first_ver = *butex;
-            meta->locked_ver = *butex + range;
-            *id = make_id(*butex, slot);
+            *meta->join_butex = *event;
+            meta->first_ver = *event;
+            meta->locked_ver = *event + range;
+            *tn = make_id(*event, slot);
             return 0;
         }
         return ENOMEM;
@@ -378,61 +378,61 @@ namespace flare::fiber_internal {
 extern "C" {
 
 int fiber_token_create(
-        fiber_token_t *id, void *data,
+        fiber_token_t *tn, void *data,
         int (*on_error)(fiber_token_t, void *, int)) {
-    return flare::fiber_internal::id_create_impl(
-            id, data,
-            (on_error ? on_error : flare::fiber_internal::default_fiber_id_on_error), NULL);
+    return flare::fiber_internal::token_create_impl(
+            tn, data,
+            (on_error ? on_error : flare::fiber_internal::default_fiber_token_on_error), nullptr);
 }
 
-int fiber_token_create_ranged(fiber_token_t *id, void *data,
-                             int (*on_error)(fiber_token_t, void *, int),
-                             int range) {
-    return flare::fiber_internal::id_create_ranged_impl(
-            id, data,
-            (on_error ? on_error : flare::fiber_internal::default_fiber_id_on_error),
-            NULL, range);
+int fiber_token_create_ranged(fiber_token_t *tn, void *data,
+                              int (*on_error)(fiber_token_t, void *, int),
+                              int range) {
+    return flare::fiber_internal::token_create_ranged_impl(
+            tn, data,
+            (on_error ? on_error : flare::fiber_internal::default_fiber_token_on_error),
+            nullptr, range);
 }
 
 int fiber_token_lock_and_reset_range_verbose(
-        fiber_token_t id, void **pdata, int range, const char *location) {
-    flare::fiber_internal::Id *const meta = address_resource(flare::fiber_internal::get_slot(id));
+        fiber_token_t tn, void **pdata, int range, const char *location) {
+    flare::fiber_internal::token *const meta = address_resource(flare::fiber_internal::get_slot(tn));
     if (!meta) {
         return EINVAL;
     }
-    const uint32_t id_ver = flare::fiber_internal::get_version(id);
-    uint32_t *butex = meta->butex;
+    const uint32_t token_ver = flare::fiber_internal::get_version(tn);
+    uint32_t *event = meta->event;
     bool ever_contended = false;
     meta->mutex.lock();
-    while (meta->has_version(id_ver)) {
-        if (*butex == meta->first_ver) {
-            // contended locker always wakes up the butex at unlock.
+    while (meta->has_version(token_ver)) {
+        if (*event == meta->first_ver) {
+            // contended locker always wakes up the event at unlock.
             meta->lock_location = location;
             if (range == 0) {
                 // fast path
             } else if (range < 0 ||
-                       range > flare::fiber_internal::ID_MAX_RANGE ||
+                       range > flare::fiber_internal::TOKEN_MAX_RANGE ||
                        range + meta->first_ver <= meta->locked_ver) {
                 LOG_IF(FATAL, range < 0) << "range must be positive, actually "
                                          << range;
-                LOG_IF(FATAL, range > flare::fiber_internal::ID_MAX_RANGE)
-                                << "max range is " << flare::fiber_internal::ID_MAX_RANGE
+                LOG_IF(FATAL, range > flare::fiber_internal::TOKEN_MAX_RANGE)
+                                << "max range is " << flare::fiber_internal::TOKEN_MAX_RANGE
                                 << ", actually " << range;
             } else {
                 meta->locked_ver = meta->first_ver + range;
             }
-            *butex = (ever_contended ? meta->contended_ver() : meta->locked_ver);
+            *event = (ever_contended ? meta->contended_ver() : meta->locked_ver);
             meta->mutex.unlock();
             if (pdata) {
                 *pdata = meta->data;
             }
             return 0;
-        } else if (*butex != meta->unlockable_ver()) {
-            *butex = meta->contended_ver();
-            uint32_t expected_ver = *butex;
+        } else if (*event != meta->unlockable_ver()) {
+            *event = meta->contended_ver();
+            uint32_t expected_ver = *event;
             meta->mutex.unlock();
             ever_contended = true;
-            if (flare::fiber_internal::waitable_event_wait(butex, expected_ver, NULL) < 0 &&
+            if (flare::fiber_internal::waitable_event_wait(event, expected_ver, nullptr) < 0 &&
                 errno != EWOULDBLOCK && errno != EINTR) {
                 return errno;
             }
@@ -446,80 +446,80 @@ int fiber_token_lock_and_reset_range_verbose(
     return EINVAL;
 }
 
-int fiber_token_error_verbose(fiber_token_t id, int error_code,
-                             const char *location) {
-    return fiber_token_error2_verbose(id, error_code, std::string(), location);
+int fiber_token_error_verbose(fiber_token_t tn, int error_code,
+                              const char *location) {
+    return fiber_token_error2_verbose(tn, error_code, std::string(), location);
 }
 
-int fiber_token_about_to_destroy(fiber_token_t id) {
-    flare::fiber_internal::Id *const meta = address_resource(flare::fiber_internal::get_slot(id));
+int fiber_token_about_to_destroy(fiber_token_t tn) {
+    flare::fiber_internal::token *const meta = address_resource(flare::fiber_internal::get_slot(tn));
     if (!meta) {
         return EINVAL;
     }
-    const uint32_t id_ver = flare::fiber_internal::get_version(id);
-    uint32_t *butex = meta->butex;
+    const uint32_t token_ver = flare::fiber_internal::get_version(tn);
+    uint32_t *event = meta->event;
     meta->mutex.lock();
-    if (!meta->has_version(id_ver)) {
+    if (!meta->has_version(token_ver)) {
         meta->mutex.unlock();
         return EINVAL;
     }
-    if (*butex == meta->first_ver) {
+    if (*event == meta->first_ver) {
         meta->mutex.unlock();
-        LOG(FATAL) << "fiber_token=" << id.value << " is not locked!";
+        LOG(FATAL) << "fiber_token=" << tn.value << " is not locked!";
         return EPERM;
     }
-    const bool contended = (*butex == meta->contended_ver());
-    *butex = meta->unlockable_ver();
+    const bool contended = (*event == meta->contended_ver());
+    *event = meta->unlockable_ver();
     meta->mutex.unlock();
     if (contended) {
         // wake up all waiting lockers.
-        flare::fiber_internal::waitable_event_wake_except(butex, 0);
+        flare::fiber_internal::waitable_event_wake_except(event, 0);
     }
     return 0;
 }
 
-int fiber_token_cancel(fiber_token_t id) {
-    flare::fiber_internal::Id *const meta = address_resource(flare::fiber_internal::get_slot(id));
+int fiber_token_cancel(fiber_token_t tn) {
+    flare::fiber_internal::token *const meta = address_resource(flare::fiber_internal::get_slot(tn));
     if (!meta) {
         return EINVAL;
     }
-    uint32_t *butex = meta->butex;
-    const uint32_t id_ver = flare::fiber_internal::get_version(id);
+    uint32_t *event = meta->event;
+    const uint32_t token_ver = flare::fiber_internal::get_version(tn);
     meta->mutex.lock();
-    if (!meta->has_version(id_ver)) {
+    if (!meta->has_version(token_ver)) {
         meta->mutex.unlock();
         return EINVAL;
     }
-    if (*butex != meta->first_ver) {
+    if (*event != meta->first_ver) {
         meta->mutex.unlock();
         return EPERM;
     }
-    *butex = meta->end_ver();
-    meta->first_ver = *butex;
-    meta->locked_ver = *butex;
+    *event = meta->end_ver();
+    meta->first_ver = *event;
+    meta->locked_ver = *event;
     meta->mutex.unlock();
-    return_resource(flare::fiber_internal::get_slot(id));
+    return_resource(flare::fiber_internal::get_slot(tn));
     return 0;
 }
 
-int fiber_token_join(fiber_token_t id) {
-    const flare::fiber_internal::IdResourceId slot = flare::fiber_internal::get_slot(id);
-    flare::fiber_internal::Id *const meta = address_resource(slot);
+int fiber_token_join(fiber_token_t tn) {
+    const flare::fiber_internal::IdResourceId slot = flare::fiber_internal::get_slot(tn);
+    flare::fiber_internal::token *const meta = address_resource(slot);
     if (!meta) {
-        // The id is not created yet, this join is definitely wrong.
+        // The token is not created yet, this join is definitely wrong.
         return EINVAL;
     }
-    const uint32_t id_ver = flare::fiber_internal::get_version(id);
+    const uint32_t token_ver = flare::fiber_internal::get_version(tn);
     uint32_t *join_butex = meta->join_butex;
     while (1) {
         meta->mutex.lock();
-        const bool has_ver = meta->has_version(id_ver);
+        const bool has_ver = meta->has_version(token_ver);
         const uint32_t expected_ver = *join_butex;
         meta->mutex.unlock();
         if (!has_ver) {
             break;
         }
-        if (flare::fiber_internal::waitable_event_wait(join_butex, expected_ver, NULL) < 0 &&
+        if (flare::fiber_internal::waitable_event_wait(join_butex, expected_ver, nullptr) < 0 &&
             errno != EWOULDBLOCK && errno != EINTR) {
             return errno;
         }
@@ -527,53 +527,53 @@ int fiber_token_join(fiber_token_t id) {
     return 0;
 }
 
-int fiber_token_trylock(fiber_token_t id, void **pdata) {
-    flare::fiber_internal::Id *const meta = address_resource(flare::fiber_internal::get_slot(id));
+int fiber_token_trylock(fiber_token_t tn, void **pdata) {
+    flare::fiber_internal::token *const meta = address_resource(flare::fiber_internal::get_slot(tn));
     if (!meta) {
         return EINVAL;
     }
-    uint32_t *butex = meta->butex;
-    const uint32_t id_ver = flare::fiber_internal::get_version(id);
+    uint32_t *event = meta->event;
+    const uint32_t token_ver = flare::fiber_internal::get_version(tn);
     meta->mutex.lock();
-    if (!meta->has_version(id_ver)) {
+    if (!meta->has_version(token_ver)) {
         meta->mutex.unlock();
         return EINVAL;
     }
-    if (*butex != meta->first_ver) {
+    if (*event != meta->first_ver) {
         meta->mutex.unlock();
         return EBUSY;
     }
-    *butex = meta->locked_ver;
+    *event = meta->locked_ver;
     meta->mutex.unlock();
-    if (pdata != NULL) {
+    if (pdata != nullptr) {
         *pdata = meta->data;
     }
     return 0;
 }
 
-int fiber_token_lock_verbose(fiber_token_t id, void **pdata,
-                            const char *location) {
-    return fiber_token_lock_and_reset_range_verbose(id, pdata, 0, location);
+int fiber_token_lock_verbose(fiber_token_t tn, void **pdata,
+                             const char *location) {
+    return fiber_token_lock_and_reset_range_verbose(tn, pdata, 0, location);
 }
 
-int fiber_token_unlock(fiber_token_t id) {
-    flare::fiber_internal::Id *const meta = address_resource(flare::fiber_internal::get_slot(id));
+int fiber_token_unlock(fiber_token_t tn) {
+    flare::fiber_internal::token *const meta = address_resource(flare::fiber_internal::get_slot(tn));
     if (!meta) {
         return EINVAL;
     }
-    uint32_t *butex = meta->butex;
+    uint32_t *event = meta->event;
     // Release fence makes sure all changes made before signal visible to
     // woken-up waiters.
-    const uint32_t id_ver = flare::fiber_internal::get_version(id);
+    const uint32_t token_ver = flare::fiber_internal::get_version(tn);
     meta->mutex.lock();
-    if (!meta->has_version(id_ver)) {
+    if (!meta->has_version(token_ver)) {
         meta->mutex.unlock();
-        LOG(FATAL) << "Invalid fiber_token=" << id.value;
+        LOG(FATAL) << "Invalid fiber_token=" << tn.value;
         return EINVAL;
     }
-    if (*butex == meta->first_ver) {
+    if (*event == meta->first_ver) {
         meta->mutex.unlock();
-        LOG(FATAL) << "fiber_token=" << id.value << " is not locked!";
+        LOG(FATAL) << "fiber_token=" << tn.value << " is not locked!";
         return EPERM;
     }
     flare::fiber_internal::PendingError front;
@@ -581,60 +581,60 @@ int fiber_token_unlock(fiber_token_t id) {
         meta->lock_location = front.location;
         meta->mutex.unlock();
         if (meta->on_error) {
-            return meta->on_error(front.id, meta->data, front.error_code);
+            return meta->on_error(front.tn, meta->data, front.error_code);
         } else {
-            return meta->on_error2(front.id, meta->data, front.error_code,
+            return meta->on_error2(front.tn, meta->data, front.error_code,
                                    front.error_text);
         }
     } else {
-        const bool contended = (*butex == meta->contended_ver());
-        *butex = meta->first_ver;
+        const bool contended = (*event == meta->contended_ver());
+        *event = meta->first_ver;
         meta->mutex.unlock();
         if (contended) {
-            // We may wake up already-reused id, but that's OK.
-            flare::fiber_internal::waitable_event_wake(butex);
+            // We may wake up already-reused token, but that's OK.
+            flare::fiber_internal::waitable_event_wake(event);
         }
         return 0;
     }
 }
 
-int fiber_token_unlock_and_destroy(fiber_token_t id) {
-    flare::fiber_internal::Id *const meta = address_resource(flare::fiber_internal::get_slot(id));
+int fiber_token_unlock_and_destroy(fiber_token_t tn) {
+    flare::fiber_internal::token *const meta = address_resource(flare::fiber_internal::get_slot(tn));
     if (!meta) {
         return EINVAL;
     }
-    uint32_t *butex = meta->butex;
+    uint32_t *event = meta->event;
     uint32_t *join_butex = meta->join_butex;
-    const uint32_t id_ver = flare::fiber_internal::get_version(id);
+    const uint32_t token_ver = flare::fiber_internal::get_version(tn);
     meta->mutex.lock();
-    if (!meta->has_version(id_ver)) {
+    if (!meta->has_version(token_ver)) {
         meta->mutex.unlock();
-        LOG(FATAL) << "Invalid fiber_token=" << id.value;
+        LOG(FATAL) << "Invalid fiber_token=" << tn.value;
         return EINVAL;
     }
-    if (*butex == meta->first_ver) {
+    if (*event == meta->first_ver) {
         meta->mutex.unlock();
-        LOG(FATAL) << "fiber_token=" << id.value << " is not locked!";
+        LOG(FATAL) << "fiber_token=" << tn.value << " is not locked!";
         return EPERM;
     }
     const uint32_t next_ver = meta->end_ver();
-    *butex = next_ver;
+    *event = next_ver;
     *join_butex = next_ver;
     meta->first_ver = next_ver;
     meta->locked_ver = next_ver;
     meta->pending_q.clear();
     meta->mutex.unlock();
     // Notice that waitable_event_wake* returns # of woken-up, not successful or not.
-    flare::fiber_internal::waitable_event_wake_except(butex, 0);
+    flare::fiber_internal::waitable_event_wake_except(event, 0);
     flare::fiber_internal::waitable_event_wake_all(join_butex);
-    return_resource(flare::fiber_internal::get_slot(id));
+    return_resource(flare::fiber_internal::get_slot(tn));
     return 0;
 }
 
 int fiber_token_list_init(fiber_token_list_t *list,
-                         unsigned /*size*/,
-                         unsigned /*conflict_size*/) {
-    list->impl = NULL;  // create on demand.
+                          unsigned /*size*/,
+                          unsigned /*conflict_size*/) {
+    list->impl = nullptr;  // create on demand.
     // Set unused fields to zero as well.
     list->head = 0;
     list->size = 0;
@@ -644,18 +644,18 @@ int fiber_token_list_init(fiber_token_list_t *list,
 }
 
 void fiber_token_list_destroy(fiber_token_list_t *list) {
-    delete static_cast<flare::fiber_internal::IdList *>(list->impl);
-    list->impl = NULL;
+    delete static_cast<flare::fiber_internal::token_list *>(list->impl);
+    list->impl = nullptr;
 }
 
-int fiber_token_list_add(fiber_token_list_t *list, fiber_token_t id) {
-    if (list->impl == NULL) {
-        list->impl = new(std::nothrow) flare::fiber_internal::IdList;
-        if (NULL == list->impl) {
+int fiber_token_list_add(fiber_token_list_t *list, fiber_token_t tn) {
+    if (list->impl == nullptr) {
+        list->impl = new(std::nothrow) flare::fiber_internal::token_list;
+        if (nullptr == list->impl) {
             return ENOMEM;
         }
     }
-    return static_cast<flare::fiber_internal::IdList *>(list->impl)->add(id);
+    return static_cast<flare::fiber_internal::token_list *>(list->impl)->add(tn);
 }
 
 int fiber_token_list_reset(fiber_token_list_t *list, int error_code) {
@@ -663,18 +663,18 @@ int fiber_token_list_reset(fiber_token_list_t *list, int error_code) {
 }
 
 void fiber_token_list_swap(fiber_token_list_t *list1,
-                          fiber_token_list_t *list2) {
+                           fiber_token_list_t *list2) {
     std::swap(list1->impl, list2->impl);
 }
 
 int fiber_token_list_reset_pthreadsafe(fiber_token_list_t *list, int error_code,
-                                      pthread_mutex_t *mutex) {
+                                       pthread_mutex_t *mutex) {
     return fiber_token_list_reset2_pthreadsafe(
             list, error_code, std::string(), mutex);
 }
 
 int fiber_token_list_reset_fibersafe(fiber_token_list_t *list, int error_code,
-                                      fiber_mutex_t *mutex) {
+                                     fiber_mutex_t *mutex) {
     return fiber_token_list_reset2_fibersafe(
             list, error_code, std::string(), mutex);
 }
@@ -682,48 +682,48 @@ int fiber_token_list_reset_fibersafe(fiber_token_list_t *list, int error_code,
 }  // extern "C"
 
 int fiber_token_create2(
-        fiber_token_t *id, void *data,
+        fiber_token_t *tn, void *data,
         int (*on_error)(fiber_token_t, void *, int, const std::string &)) {
-    return flare::fiber_internal::id_create_impl(
-            id, data, NULL,
-            (on_error ? on_error : flare::fiber_internal::default_fiber_id_on_error2));
+    return flare::fiber_internal::token_create_impl(
+            tn, data, nullptr,
+            (on_error ? on_error : flare::fiber_internal::default_fiber_token_on_error2));
 }
 
 int fiber_token_create2_ranged(
-        fiber_token_t *id, void *data,
+        fiber_token_t *tn, void *data,
         int (*on_error)(fiber_token_t, void *, int, const std::string &),
         int range) {
-    return flare::fiber_internal::id_create_ranged_impl(
-            id, data, NULL,
-            (on_error ? on_error : flare::fiber_internal::default_fiber_id_on_error2), range);
+    return flare::fiber_internal::token_create_ranged_impl(
+            tn, data, nullptr,
+            (on_error ? on_error : flare::fiber_internal::default_fiber_token_on_error2), range);
 }
 
-int fiber_token_error2_verbose(fiber_token_t id, int error_code,
-                              const std::string &error_text,
-                              const char *location) {
-    flare::fiber_internal::Id *const meta = address_resource(flare::fiber_internal::get_slot(id));
+int fiber_token_error2_verbose(fiber_token_t tn, int error_code,
+                               const std::string &error_text,
+                               const char *location) {
+    flare::fiber_internal::token *const meta = address_resource(flare::fiber_internal::get_slot(tn));
     if (!meta) {
         return EINVAL;
     }
-    const uint32_t id_ver = flare::fiber_internal::get_version(id);
-    uint32_t *butex = meta->butex;
+    const uint32_t token_ver = flare::fiber_internal::get_version(tn);
+    uint32_t *event = meta->event;
     meta->mutex.lock();
-    if (!meta->has_version(id_ver)) {
+    if (!meta->has_version(token_ver)) {
         meta->mutex.unlock();
         return EINVAL;
     }
-    if (*butex == meta->first_ver) {
-        *butex = meta->locked_ver;
+    if (*event == meta->first_ver) {
+        *event = meta->locked_ver;
         meta->lock_location = location;
         meta->mutex.unlock();
         if (meta->on_error) {
-            return meta->on_error(id, meta->data, error_code);
+            return meta->on_error(tn, meta->data, error_code);
         } else {
-            return meta->on_error2(id, meta->data, error_code, error_text);
+            return meta->on_error2(tn, meta->data, error_code, error_text);
         }
     } else {
         flare::fiber_internal::PendingError e;
-        e.id = id;
+        e.tn = tn;
         e.error_code = error_code;
         e.error_text = error_text;
         e.location = location;
@@ -734,23 +734,23 @@ int fiber_token_error2_verbose(fiber_token_t id, int error_code,
 }
 
 int fiber_token_reset2(fiber_token_list_t *list,
-                           int error_code,
-                           const std::string &error_text) {
-    if (list->impl != NULL) {
-        static_cast<flare::fiber_internal::IdList *>(list->impl)->apply(
-                flare::fiber_internal::IdResetter(error_code, error_text));
+                       int error_code,
+                       const std::string &error_text) {
+    if (list->impl != nullptr) {
+        static_cast<flare::fiber_internal::token_list *>(list->impl)->apply(
+                flare::fiber_internal::token_resetter(error_code, error_text));
     }
     return 0;
 }
 
 int fiber_token_list_reset2_pthreadsafe(fiber_token_list_t *list,
-                                       int error_code,
-                                       const std::string &error_text,
-                                       pthread_mutex_t *mutex) {
-    if (mutex == NULL) {
+                                        int error_code,
+                                        const std::string &error_text,
+                                        pthread_mutex_t *mutex) {
+    if (mutex == nullptr) {
         return EINVAL;
     }
-    if (list->impl == NULL) {
+    if (list->impl == nullptr) {
         return 0;
     }
     fiber_token_list_t tmplist;
@@ -768,13 +768,13 @@ int fiber_token_list_reset2_pthreadsafe(fiber_token_list_t *list,
 }
 
 int fiber_token_list_reset2_fibersafe(fiber_token_list_t *list,
-                                       int error_code,
-                                       const std::string &error_text,
-                                       fiber_mutex_t *mutex) {
-    if (mutex == NULL) {
+                                      int error_code,
+                                      const std::string &error_text,
+                                      fiber_mutex_t *mutex) {
+    if (mutex == nullptr) {
         return EINVAL;
     }
-    if (list->impl == NULL) {
+    if (list->impl == nullptr) {
         return 0;
     }
     fiber_token_list_t tmplist;

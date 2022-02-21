@@ -24,11 +24,11 @@
 
 namespace flare::rpc {
 
-class IdsService: public ids {
+class TokenService: public token {
 public:
     void default_method(::google::protobuf::RpcController* cntl_base,
-                        const ::flare::rpc::IdsRequest* request,
-                        ::flare::rpc::IdsResponse* response,
+                        const ::flare::rpc::TokenRequest* request,
+                        ::flare::rpc::TokenResponse* response,
                         ::google::protobuf::Closure* done);
 };
 

@@ -46,7 +46,7 @@
 #include "flare/rpc/builtin/dir_service.h"          // DirService
 #include "flare/rpc/builtin/pprof_service.h"        // PProfService
 #include "flare/rpc/builtin/fibers_service.h"     // FibersService
-#include "flare/rpc/builtin/ids_service.h"          // IdsService
+#include "flare/rpc/builtin/token_service.h"          // TokenService
 #include "flare/rpc/builtin/sockets_service.h"      // SocketsService
 #include "flare/rpc/builtin/common.h"
 #include "flare/rpc/builtin/bad_method_service.h"
@@ -715,7 +715,7 @@ TEST_F(BuiltinServiceTest, dir) {
 }
 
 TEST_F(BuiltinServiceTest, ids) {
-    flare::rpc::IdsService service;
+    flare::rpc::TokenService service;
     flare::rpc::IdsRequest req;
     flare::rpc::IdsResponse res;
     {

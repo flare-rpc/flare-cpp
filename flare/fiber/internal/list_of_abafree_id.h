@@ -41,7 +41,7 @@ namespace flare::fiber_internal {
 // [The approach]
 // Don't remove old identifiers eagerly, replace them when new ones are inserted.
 
-// IdTraits MUST have {
+// token_traits MUST have {
 //   // #identifiers in each block
 //   static const size_t BLOCK_SIZE = 63;
 //
@@ -50,7 +50,7 @@ namespace flare::fiber_internal {
 //   static const size_t MAX_ENTRIES = 65536;
 //
 //   // Initial value of id. Id with the value is treated as invalid.
-//   static const Id ID_INIT = ...;
+//   static const Id TOKEN_INIT = ...;
 //
 //   // Returns true if the id is valid. The "validness" must be permanent or
 //   // stable for a very long period (to make the id ABA-free).
@@ -59,7 +59,7 @@ namespace flare::fiber_internal {
 
 // This container is NOT thread-safe right now, and shouldn't be
 // an issue in current usages throughout flare.
-    template<typename Id, typename IdTraits>
+    template<typename Id, typename token_traits>
     class ListOfABAFreeId {
     public:
         ListOfABAFreeId();
@@ -81,7 +81,7 @@ namespace flare::fiber_internal {
         FLARE_DISALLOW_COPY_AND_ASSIGN(ListOfABAFreeId);
 
         struct IdBlock {
-            Id ids[IdTraits::BLOCK_SIZE];
+            Id ids[token_traits::BLOCK_SIZE];
             IdBlock *next;
         };
 
@@ -95,17 +95,17 @@ namespace flare::fiber_internal {
 
 // [impl.]
 
-    template<typename Id, typename IdTraits>
-    ListOfABAFreeId<Id, IdTraits>::ListOfABAFreeId()
+    template<typename Id, typename token_traits>
+    ListOfABAFreeId<Id, token_traits>::ListOfABAFreeId()
             : _cur_block(&_head_block), _cur_index(0), _nblock(1) {
-        for (size_t i = 0; i < IdTraits::BLOCK_SIZE; ++i) {
-            _head_block.ids[i] = IdTraits::ID_INIT;
+        for (size_t i = 0; i < token_traits::BLOCK_SIZE; ++i) {
+            _head_block.ids[i] = token_traits::TOKEN_INIT;
         }
         _head_block.next = NULL;
     }
 
-    template<typename Id, typename IdTraits>
-    ListOfABAFreeId<Id, IdTraits>::~ListOfABAFreeId() {
+    template<typename Id, typename token_traits>
+    ListOfABAFreeId<Id, token_traits>::~ListOfABAFreeId() {
         _cur_block = NULL;
         _cur_index = 0;
         _nblock = 0;
@@ -117,9 +117,9 @@ namespace flare::fiber_internal {
         _head_block.next = NULL;
     }
 
-    template<typename Id, typename IdTraits>
-    inline void ListOfABAFreeId<Id, IdTraits>::forward_index() {
-        if (++_cur_index >= IdTraits::BLOCK_SIZE) {
+    template<typename Id, typename token_traits>
+    inline void ListOfABAFreeId<Id, token_traits>::forward_index() {
+        if (++_cur_index >= token_traits::BLOCK_SIZE) {
             _cur_index = 0;
             if (_cur_block->next) {
                 _cur_block = _cur_block->next;
@@ -129,15 +129,15 @@ namespace flare::fiber_internal {
         }
     }
 
-    template<typename Id, typename IdTraits>
-    int ListOfABAFreeId<Id, IdTraits>::add(Id id) {
+    template<typename Id, typename token_traits>
+    int ListOfABAFreeId<Id, token_traits>::add(Id id) {
         // Scan for at most 4 positions, if any of them is empty, use the position.
         Id *saved_pos[4];
         for (size_t i = 0; i < FLARE_ARRAY_SIZE(saved_pos); ++i) {
             Id *const pos = _cur_block->ids + _cur_index;
             forward_index();
             // The position is not used.
-            if (*pos == IdTraits::ID_INIT || !IdTraits::exists(*pos)) {
+            if (*pos == token_traits::TOKEN_INIT || !token_traits::exists(*pos)) {
                 *pos = id;
                 return 0;
             }
@@ -155,7 +155,7 @@ namespace flare::fiber_internal {
         //
         //  [..xxxx....] -> [......yyyy] -> [..........]
         //    block A        new block      block B
-        if (_nblock * IdTraits::BLOCK_SIZE > IdTraits::MAX_ENTRIES) {
+        if (_nblock * token_traits::BLOCK_SIZE > token_traits::MAX_ENTRIES) {
             return EAGAIN;
         }
         IdBlock *new_block = new(std::nothrow) IdBlock;
@@ -164,11 +164,11 @@ namespace flare::fiber_internal {
         }
         ++_nblock;
         for (size_t i = 0; i < _cur_index; ++i) {
-            new_block->ids[i] = IdTraits::ID_INIT;
+            new_block->ids[i] = token_traits::TOKEN_INIT;
         }
-        for (size_t i = _cur_index; i < IdTraits::BLOCK_SIZE; ++i) {
+        for (size_t i = _cur_index; i < token_traits::BLOCK_SIZE; ++i) {
             new_block->ids[i] = _cur_block->ids[i];
-            _cur_block->ids[i] = IdTraits::ID_INIT;
+            _cur_block->ids[i] = token_traits::TOKEN_INIT;
         }
         new_block->next = _cur_block->next;
         _cur_block->next = new_block;
@@ -180,36 +180,36 @@ namespace flare::fiber_internal {
         //    block A        new block      block B
         _cur_block->ids[_cur_index] = *saved_pos[2];
         *saved_pos[2] = *saved_pos[1];
-        *saved_pos[1] = IdTraits::ID_INIT;
+        *saved_pos[1] = token_traits::TOKEN_INIT;
         forward_index();
         forward_index();
         _cur_block->ids[_cur_index] = *saved_pos[3];
-        *saved_pos[3] = IdTraits::ID_INIT;
+        *saved_pos[3] = token_traits::TOKEN_INIT;
         forward_index();
         _cur_block->ids[_cur_index] = id;
         forward_index();
         return 0;
     }
 
-    template<typename Id, typename IdTraits>
+    template<typename Id, typename token_traits>
     template<typename Fn>
-    void ListOfABAFreeId<Id, IdTraits>::apply(const Fn &fn) {
+    void ListOfABAFreeId<Id, token_traits>::apply(const Fn &fn) {
         for (IdBlock *p = &_head_block; p != NULL; p = p->next) {
-            for (size_t i = 0; i < IdTraits::BLOCK_SIZE; ++i) {
-                if (p->ids[i] != IdTraits::ID_INIT && IdTraits::exists(p->ids[i])) {
+            for (size_t i = 0; i < token_traits::BLOCK_SIZE; ++i) {
+                if (p->ids[i] != token_traits::TOKEN_INIT && token_traits::exists(p->ids[i])) {
                     fn(p->ids[i]);
                 }
             }
         }
     }
 
-    template<typename Id, typename IdTraits>
-    size_t ListOfABAFreeId<Id, IdTraits>::get_sizes(size_t *cnts, size_t n) {
+    template<typename Id, typename token_traits>
+    size_t ListOfABAFreeId<Id, token_traits>::get_sizes(size_t *cnts, size_t n) {
         if (n == 0) {
             return 0;
         }
         // Current impl. only has one level.
-        cnts[0] = _nblock * IdTraits::BLOCK_SIZE;
+        cnts[0] = _nblock * token_traits::BLOCK_SIZE;
         return 1;
     }
 
