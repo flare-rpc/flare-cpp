@@ -714,16 +714,16 @@ TEST_F(BuiltinServiceTest, dir) {
     }
 }
 
-TEST_F(BuiltinServiceTest, ids) {
+TEST_F(BuiltinServiceTest, token) {
     flare::rpc::TokenService service;
-    flare::rpc::IdsRequest req;
-    flare::rpc::IdsResponse res;
+    flare::rpc::TokenRequest req;
+    flare::rpc::TokenResponse res;
     {
         ClosureChecker done;
         flare::rpc::Controller cntl;
         service.default_method(&cntl, &req, &res, &done);
         EXPECT_FALSE(cntl.Failed());
-        CheckContent(cntl, "Use /ids/<call_id>");
+        CheckContent(cntl, "Use /token/<call_id>");
     }
     {
         ClosureChecker done;
@@ -731,7 +731,7 @@ TEST_F(BuiltinServiceTest, ids) {
         cntl.http_request()._unresolved_path = "not_valid";
         service.default_method(&cntl, &req, &res, &done);
         EXPECT_TRUE(cntl.Failed());
-        CheckErrorText(cntl, "is not a fiber_id");
+        CheckErrorText(cntl, "is not a fiber_token");
     }
     {
         fiber_token_t id;
