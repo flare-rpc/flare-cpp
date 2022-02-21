@@ -46,30 +46,30 @@ void* read_thread(void* arg) {
 }
 
 void* write_thread(void*) {
-    return NULL;
+    return nullptr;
 }
 
 TEST(RWLockTest, rdlock_performance) {
 #ifdef CHECK_RWLOCK
     pthread_rwlock_t lock1;
-    ASSERT_EQ(0, pthread_rwlock_init(&lock1, NULL));
+    ASSERT_EQ(0, pthread_rwlock_init(&lock1, nullptr));
 #else
     pthread_mutex_t lock1;
-    ASSERT_EQ(0, pthread_mutex_init(&lock1, NULL));
+    ASSERT_EQ(0, pthread_mutex_init(&lock1, nullptr));
 #endif
     pthread_t rth[16];
     pthread_t wth;
     for (size_t i = 0; i < FLARE_ARRAY_SIZE(rth); ++i) {
-        ASSERT_EQ(0, pthread_create(&rth[i], NULL, read_thread, &lock1));
+        ASSERT_EQ(0, pthread_create(&rth[i], nullptr, read_thread, &lock1));
     }
-    ASSERT_EQ(0, pthread_create(&wth, NULL, write_thread, &lock1));
+    ASSERT_EQ(0, pthread_create(&wth, nullptr, write_thread, &lock1));
     
     for (size_t i = 0; i < FLARE_ARRAY_SIZE(rth); ++i) {
-        long* res = NULL;
+        long* res = nullptr;
         pthread_join(rth[i], (void**)&res);
         printf("read thread %lu = %ldns\n", i, *res);
     }
-    pthread_join(wth, NULL);
+    pthread_join(wth, nullptr);
 #ifdef CHECK_RWLOCK
     pthread_rwlock_destroy(&lock1);
 #else

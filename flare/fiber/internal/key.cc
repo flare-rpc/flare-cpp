@@ -93,9 +93,9 @@ namespace flare::fiber_internal {
             for (uint32_t i = 0; i < KEY_2NDLEVEL_SIZE; ++i) {
                 void *p = _data[i].ptr;
                 if (p) {
-                    // Set the position to NULL before calling dtor which may set
+                    // Set the position to nullptr before calling dtor which may set
                     // the position again.
-                    _data[i].ptr = NULL;
+                    _data[i].ptr = nullptr;
 
                     KeyInfo info = flare::fiber_internal::s_key_info[offset + i];
                     if (info.dtor && _data[i].version == info.version) {
@@ -120,7 +120,7 @@ namespace flare::fiber_internal {
             if (_data[index].version == version) {
                 return _data[index].ptr;
             }
-            return NULL;
+            return nullptr;
         }
 
         inline void set_data(uint32_t index, uint32_t version, void *data) {
@@ -140,7 +140,7 @@ namespace flare::fiber_internal {
 // Align with cacheline to avoid false sharing.
     class FLARE_CACHELINE_ALIGNMENT KeyTable {
     public:
-        KeyTable() : next(NULL) {
+        KeyTable() : next(nullptr) {
             memset(_subs, 0, sizeof(_subs));
             nkeytable.fetch_add(1, std::memory_order_relaxed);
         }
@@ -155,7 +155,7 @@ namespace flare::fiber_internal {
                 }
                 bool all_cleared = true;
                 for (uint32_t i = 0; i < KEY_1STLEVEL_SIZE; ++i) {
-                    if (_subs[i] != NULL && !_subs[i]->cleared()) {
+                    if (_subs[i] != nullptr && !_subs[i]->cleared()) {
                         all_cleared = false;
                         break;
                     }
@@ -179,7 +179,7 @@ namespace flare::fiber_internal {
                             key.index - subidx * KEY_2NDLEVEL_SIZE, key.version);
                 }
             }
-            return NULL;
+            return nullptr;
         }
 
         inline int set_data(fiber_local_key key, void *data) {
@@ -187,9 +187,9 @@ namespace flare::fiber_internal {
             if (subidx < KEY_1STLEVEL_SIZE &&
                 key.version == s_key_info[key.index].version) {
                 SubKeyTable *sub_kt = _subs[subidx];
-                if (sub_kt == NULL) {
+                if (sub_kt == nullptr) {
                     sub_kt = new(std::nothrow) SubKeyTable;
-                    if (NULL == sub_kt) {
+                    if (nullptr == sub_kt) {
                         return ENOMEM;
                     }
                     _subs[subidx] = sub_kt;
@@ -210,7 +210,7 @@ namespace flare::fiber_internal {
     };
 
     static KeyTable *borrow_keytable(fiber_keytable_pool_t *pool) {
-        if (pool != NULL && pool->free_keytables) {
+        if (pool != nullptr && pool->free_keytables) {
             FLARE_SCOPED_LOCK(pool->mutex);
             KeyTable *p = (KeyTable *) pool->free_keytables;
             if (p) {
@@ -218,16 +218,16 @@ namespace flare::fiber_internal {
                 return p;
             }
         }
-        return NULL;
+        return nullptr;
     }
 
 // Referenced in task_group.cpp, must be extern.
 // Caller of this function must hold the KeyTable
     void return_keytable(fiber_keytable_pool_t *pool, KeyTable *kt) {
-        if (NULL == kt) {
+        if (nullptr == kt) {
             return;
         }
-        if (pool == NULL) {
+        if (pool == nullptr) {
             delete kt;
             return;
         }
@@ -246,7 +246,7 @@ namespace flare::fiber_internal {
         if (kt) {
             delete kt;
             // After deletion: tls may be set during deletion.
-            tls_bls.keytable = NULL;
+            tls_bls.keytable = nullptr;
         }
     }
 
@@ -271,38 +271,38 @@ namespace flare::fiber_internal {
     }
 
     static flare::variable::PassiveStatus<int> s_fiber_key_count(
-            "fiber_key_count", get_key_count, NULL);
+            "fiber_key_count", get_key_count, nullptr);
     static flare::variable::PassiveStatus<size_t> s_fiber_keytable_count(
-            "fiber_keytable_count", get_keytable_count, NULL);
+            "fiber_keytable_count", get_keytable_count, nullptr);
     static flare::variable::PassiveStatus<size_t> s_fiber_keytable_memory(
-            "fiber_keytable_memory", get_keytable_memory, NULL);
+            "fiber_keytable_memory", get_keytable_memory, nullptr);
 
 }  // namespace flare::fiber_internal
 
 extern "C" {
 
 int fiber_keytable_pool_init(fiber_keytable_pool_t *pool) {
-    if (pool == NULL) {
-        LOG(ERROR) << "Param[pool] is NULL";
+    if (pool == nullptr) {
+        LOG(ERROR) << "Param[pool] is nullptr";
         return EINVAL;
     }
-    pthread_mutex_init(&pool->mutex, NULL);
-    pool->free_keytables = NULL;
+    pthread_mutex_init(&pool->mutex, nullptr);
+    pool->free_keytables = nullptr;
     pool->destroyed = 0;
     return 0;
 }
 
 int fiber_keytable_pool_destroy(fiber_keytable_pool_t *pool) {
-    if (pool == NULL) {
-        LOG(ERROR) << "Param[pool] is NULL";
+    if (pool == nullptr) {
+        LOG(ERROR) << "Param[pool] is nullptr";
         return EINVAL;
     }
-    flare::fiber_internal::KeyTable *saved_free_keytables = NULL;
+    flare::fiber_internal::KeyTable *saved_free_keytables = nullptr;
     {
         FLARE_SCOPED_LOCK(pool->mutex);
         if (pool->free_keytables) {
             saved_free_keytables = (flare::fiber_internal::KeyTable *) pool->free_keytables;
-            pool->free_keytables = NULL;
+            pool->free_keytables = nullptr;
         }
         pool->destroyed = 1;
     }
@@ -318,7 +318,7 @@ int fiber_keytable_pool_destroy(fiber_keytable_pool_t *pool) {
         }
         delete kt;
         if (old_kt == kt) {
-            old_kt = NULL;
+            old_kt = nullptr;
         }
     }
     flare::fiber_internal::tls_bls.keytable = old_kt;
@@ -333,8 +333,8 @@ int fiber_keytable_pool_destroy(fiber_keytable_pool_t *pool) {
 
 int fiber_keytable_pool_getstat(fiber_keytable_pool_t *pool,
                                 fiber_keytable_pool_stat_t *stat) {
-    if (pool == NULL || stat == NULL) {
-        LOG(ERROR) << "Param[pool] or Param[stat] is NULL";
+    if (pool == nullptr || stat == nullptr) {
+        LOG(ERROR) << "Param[pool] or Param[stat] is nullptr";
         return EINVAL;
     }
     std::unique_lock<pthread_mutex_t> mu(pool->mutex);
@@ -353,8 +353,8 @@ void fiber_keytable_pool_reserve(fiber_keytable_pool_t *pool,
                                  fiber_local_key key,
                                  void *ctor(const void *),
                                  const void *ctor_args) {
-    if (pool == NULL) {
-        LOG(ERROR) << "Param[pool] is NULL";
+    if (pool == nullptr) {
+        LOG(ERROR) << "Param[pool] is nullptr";
         return;
     }
     fiber_keytable_pool_stat_t stat;
@@ -364,7 +364,7 @@ void fiber_keytable_pool_reserve(fiber_keytable_pool_t *pool,
     }
     for (size_t i = stat.nfree; i < nfree; ++i) {
         flare::fiber_internal::KeyTable *kt = new(std::nothrow) flare::fiber_internal::KeyTable;
-        if (kt == NULL) {
+        if (kt == nullptr) {
             break;
         }
         void *data = ctor(ctor_args);
@@ -380,7 +380,7 @@ void fiber_keytable_pool_reserve(fiber_keytable_pool_t *pool,
         }
         kt->next = (flare::fiber_internal::KeyTable *) pool->free_keytables;
         pool->free_keytables = kt;
-        if (data == NULL) {
+        if (data == nullptr) {
             break;
         }
     }
@@ -412,8 +412,8 @@ int fiber_key_create2(fiber_local_key *key,
 }
 
 int fiber_key_create(fiber_local_key *key, void (*dtor)(void *)) {
-    if (dtor == NULL) {
-        return fiber_key_create2(key, NULL, NULL);
+    if (dtor == nullptr) {
+        return fiber_key_create2(key, nullptr, nullptr);
     } else {
         return fiber_key_create2(key, flare::fiber_internal::arg_as_dtor, (const void *) dtor);
     }
@@ -427,8 +427,8 @@ int fiber_key_delete(fiber_local_key key) {
             if (++flare::fiber_internal::s_key_info[key.index].version == 0) {
                 ++flare::fiber_internal::s_key_info[key.index].version;
             }
-            flare::fiber_internal::s_key_info[key.index].dtor = NULL;
-            flare::fiber_internal::s_key_info[key.index].dtor_args = NULL;
+            flare::fiber_internal::s_key_info[key.index].dtor = nullptr;
+            flare::fiber_internal::s_key_info[key.index].dtor_args = nullptr;
             flare::fiber_internal::s_free_keys[flare::fiber_internal::nfreekey++] = key.index;
             return 0;
         }
@@ -439,14 +439,14 @@ int fiber_key_delete(fiber_local_key key) {
 
 // NOTE: Can't borrow_keytable in fiber_setspecific, otherwise following
 // memory leak may occur:
-//  -> fiber_getspecific fails to borrow_keytable and returns NULL.
+//  -> fiber_getspecific fails to borrow_keytable and returns nullptr.
 //  -> fiber_setspecific succeeds to borrow_keytable and overwrites old data
 //     at the position with newly created data, the old data is leaked.
 int fiber_setspecific(fiber_local_key key, void *data) {
     flare::fiber_internal::KeyTable *kt = flare::fiber_internal::tls_bls.keytable;
-    if (NULL == kt) {
+    if (nullptr == kt) {
         kt = new(std::nothrow) flare::fiber_internal::KeyTable;
-        if (NULL == kt) {
+        if (nullptr == kt) {
             return ENOMEM;
         }
         flare::fiber_internal::tls_bls.keytable = kt;
@@ -477,7 +477,7 @@ void *fiber_getspecific(fiber_local_key key) {
             return kt->get_data(key);
         }
     }
-    return NULL;
+    return nullptr;
 }
 
 void fiber_assign_data(void *data) {

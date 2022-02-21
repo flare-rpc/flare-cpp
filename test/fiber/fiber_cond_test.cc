@@ -47,7 +47,7 @@ namespace {
             flare::this_fiber::fiber_sleep_for(SIGNAL_INTERVAL_US);
             fiber_cond_signal(&a->c);
         }
-        return NULL;
+        return nullptr;
     }
 
     void *waiter(void *void_arg) {
@@ -61,13 +61,13 @@ namespace {
             wake_time.push_back(flare::base::gettimeofday_us());
         }
         fiber_mutex_unlock(&a->m);
-        return NULL;
+        return nullptr;
     }
 
     TEST(CondTest, sanity) {
         Arg a;
-        ASSERT_EQ(0, fiber_mutex_init(&a.m, NULL));
-        ASSERT_EQ(0, fiber_cond_init(&a.c, NULL));
+        ASSERT_EQ(0, fiber_mutex_init(&a.m, nullptr));
+        ASSERT_EQ(0, fiber_cond_init(&a.c, nullptr));
         // has no effect
         ASSERT_EQ(0, fiber_cond_signal(&a.c));
 
@@ -80,11 +80,11 @@ namespace {
         fiber_id_t wth[8];
         const size_t NW = FLARE_ARRAY_SIZE(wth);
         for (size_t i = 0; i < NW; ++i) {
-            ASSERT_EQ(0, fiber_start_urgent(&wth[i], NULL, waiter, &a));
+            ASSERT_EQ(0, fiber_start_urgent(&wth[i], nullptr, waiter, &a));
         }
 
         fiber_id_t sth;
-        ASSERT_EQ(0, fiber_start_urgent(&sth, NULL, signaler, &a));
+        ASSERT_EQ(0, fiber_start_urgent(&sth, nullptr, signaler, &a));
 
         flare::this_fiber::fiber_sleep_for(SIGNAL_INTERVAL_US * 200);
 
@@ -97,9 +97,9 @@ namespace {
             fiber_cond_signal(&a.c);
         }
 
-        fiber_join(sth, NULL);
+        fiber_join(sth, nullptr);
         for (size_t i = 0; i < NW; ++i) {
-            fiber_join(wth[i], NULL);
+            fiber_join(wth[i], nullptr);
         }
 
         printf("wake up for %lu times\n", wake_tid.size());
@@ -148,7 +148,7 @@ namespace {
             flare::this_fiber::fiber_sleep_for(SIGNAL_INTERVAL_US);
             a->cond.notify_one();
         }
-        return NULL;
+        return nullptr;
     }
 
     void *cv_bmutex_waiter(void *void_arg) {
@@ -157,7 +157,7 @@ namespace {
         while (!stop) {
             a->cond.wait(lck);
         }
-        return NULL;
+        return nullptr;
     }
 
     void *cv_mutex_waiter(void *void_arg) {
@@ -166,7 +166,7 @@ namespace {
         while (!stop) {
             a->cond.wait(lck);
         }
-        return NULL;
+        return nullptr;
     }
 
 #define COND_IN_PTHREAD
@@ -184,22 +184,22 @@ namespace {
         pthread_t signal_thread;
         WrapperArg a;
         for (size_t i = 0; i < FLARE_ARRAY_SIZE(bmutex_waiter_threads); ++i) {
-            ASSERT_EQ(0, pthread_create(&bmutex_waiter_threads[i], NULL,
+            ASSERT_EQ(0, pthread_create(&bmutex_waiter_threads[i], nullptr,
                                         cv_bmutex_waiter, &a));
-            ASSERT_EQ(0, pthread_create(&mutex_waiter_threads[i], NULL,
+            ASSERT_EQ(0, pthread_create(&mutex_waiter_threads[i], nullptr,
                                         cv_mutex_waiter, &a));
         }
-        ASSERT_EQ(0, pthread_create(&signal_thread, NULL, cv_signaler, &a));
+        ASSERT_EQ(0, pthread_create(&signal_thread, nullptr, cv_signaler, &a));
         flare::this_fiber::fiber_sleep_for(100L * 1000);
         {
             FLARE_SCOPED_LOCK(a.mutex);
             stop = true;
         }
-        pthread_join(signal_thread, NULL);
+        pthread_join(signal_thread, nullptr);
         a.cond.notify_all();
         for (size_t i = 0; i < FLARE_ARRAY_SIZE(bmutex_waiter_threads); ++i) {
-            pthread_join(bmutex_waiter_threads[i], NULL);
-            pthread_join(mutex_waiter_threads[i], NULL);
+            pthread_join(bmutex_waiter_threads[i], nullptr);
+            pthread_join(mutex_waiter_threads[i], nullptr);
         }
     }
 
@@ -257,7 +257,7 @@ namespace {
             ++local_count;
         }
         a->total_count.fetch_add(local_count);
-        return NULL;
+        return nullptr;
     }
 
     TEST(CondTest, ping_pong) {
@@ -267,14 +267,14 @@ namespace {
         fiber_id_t threads[2];
         ProfilerStart("cond.prof");
         for (int i = 0; i < 2; ++i) {
-            ASSERT_EQ(0, fiber_start_urgent(&threads[i], NULL, ping_pong_thread, &arg));
+            ASSERT_EQ(0, fiber_start_urgent(&threads[i], nullptr, ping_pong_thread, &arg));
         }
         usleep(1000 * 1000);
         arg.stopped = true;
         arg.sig1.notify();
         arg.sig2.notify();
         for (int i = 0; i < 2; ++i) {
-            ASSERT_EQ(0, fiber_join(threads[i], NULL));
+            ASSERT_EQ(0, fiber_join(threads[i], nullptr));
         }
         ProfilerStop();
         LOG(INFO) << "total_count=" << arg.total_count.load();
@@ -303,7 +303,7 @@ namespace {
                 ba->wait_cond.wait(lck);
             }
         }
-        return NULL;
+        return nullptr;
     }
 
     void *broadcast_thread(void *arg) {
@@ -318,7 +318,7 @@ namespace {
             --ba->rounds;
             ba->wait_cond.notify_all();
         }
-        return NULL;
+        return nullptr;
     }
 
     void *disturb_thread(void *arg) {
@@ -328,7 +328,7 @@ namespace {
             lck.unlock();
             lck.lock();
         }
-        return NULL;
+        return nullptr;
     }
 
     TEST(CondTest, mixed_usage) {
@@ -341,30 +341,30 @@ namespace {
 
         fiber_id_t normal_threads[NTHREADS];
         for (int i = 0; i < NTHREADS; ++i) {
-            ASSERT_EQ(0, fiber_start_urgent(&normal_threads[i], NULL, wait_thread, &ba));
+            ASSERT_EQ(0, fiber_start_urgent(&normal_threads[i], nullptr, wait_thread, &ba));
         }
         pthread_t pthreads[NTHREADS];
         for (int i = 0; i < NTHREADS; ++i) {
-            ASSERT_EQ(0, pthread_create(&pthreads[i], NULL,
+            ASSERT_EQ(0, pthread_create(&pthreads[i], nullptr,
                                         wait_thread, &ba));
         }
         pthread_t broadcast;
         pthread_t disturb;
-        ASSERT_EQ(0, pthread_create(&broadcast, NULL, broadcast_thread, &ba));
-        ASSERT_EQ(0, pthread_create(&disturb, NULL, disturb_thread, &ba));
+        ASSERT_EQ(0, pthread_create(&broadcast, nullptr, broadcast_thread, &ba));
+        ASSERT_EQ(0, pthread_create(&disturb, nullptr, disturb_thread, &ba));
         for (int i = 0; i < NTHREADS; ++i) {
-            fiber_join(normal_threads[i], NULL);
-            pthread_join(pthreads[i], NULL);
+            fiber_join(normal_threads[i], nullptr);
+            pthread_join(pthreads[i], nullptr);
         }
-        pthread_join(broadcast, NULL);
-        pthread_join(disturb, NULL);
+        pthread_join(broadcast, nullptr);
+        pthread_join(disturb, nullptr);
     }
 
     class FiberCond {
     public:
         FiberCond() {
-            fiber_cond_init(&_cond, NULL);
-            fiber_mutex_init(&_mutex, NULL);
+            fiber_cond_init(&_cond, nullptr);
+            fiber_mutex_init(&_mutex, nullptr);
             _count = 1;
         }
 
@@ -410,7 +410,7 @@ namespace {
         while (!g_stop) {
             flare::this_fiber::fiber_sleep_for(1000L * 1000L);
         }
-        return NULL;
+        return nullptr;
     }
 
     void *wait_cond_thread(void *arg) {
@@ -418,7 +418,7 @@ namespace {
         started_wait = true;
         c->Wait();
         ended_wait = true;
-        return NULL;
+        return nullptr;
     }
 
     static void launch_many_fibers() {
@@ -433,7 +433,7 @@ namespace {
         tm.start();
         for (size_t i = 0; i < 32768; ++i) {
             fiber_id_t t0;
-            ASSERT_EQ(0, fiber_start_background(&t0, NULL, usleep_thread, NULL));
+            ASSERT_EQ(0, fiber_start_background(&t0, nullptr, usleep_thread, nullptr));
             tids.push_back(t0);
         }
         tm.stop();
@@ -441,10 +441,10 @@ namespace {
         usleep(3 * 1000 * 1000L);
         c.Signal();
         g_stop = true;
-        fiber_join(tid, NULL);
+        fiber_join(tid, nullptr);
         for (size_t i = 0; i < tids.size(); ++i) {
             LOG_EVERY_SECOND(INFO) << "Joined " << i << " threads";
-            fiber_join(tids[i], NULL);
+            fiber_join(tids[i], nullptr);
         }
         LOG_EVERY_SECOND(INFO) << "Joined " << tids.size() << " threads";
     }
@@ -455,12 +455,12 @@ namespace {
 
     static void *run_launch_many_fibers(void *) {
         launch_many_fibers();
-        return NULL;
+        return nullptr;
     }
 
     TEST(CondTest, too_many_fibers_from_fiber) {
         fiber_id_t th;
-        ASSERT_EQ(0, fiber_start_urgent(&th, NULL, run_launch_many_fibers, NULL));
-        fiber_join(th, NULL);
+        ASSERT_EQ(0, fiber_start_urgent(&th, nullptr, run_launch_many_fibers, nullptr));
+        fiber_join(th, nullptr);
     }
 } // namespace

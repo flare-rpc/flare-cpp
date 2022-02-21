@@ -43,34 +43,34 @@ namespace {
                pthread_numeric_id(), ++c, flare::base::cpuwide_time_ms() - start_time);
         flare::this_fiber::fiber_sleep_for(10000);
         fiber_mutex_unlock(m);
-        return NULL;
+        return nullptr;
     }
 
     TEST(MutexTest, sanity) {
         fiber_mutex_t m;
-        ASSERT_EQ(0, fiber_mutex_init(&m, NULL));
+        ASSERT_EQ(0, fiber_mutex_init(&m, nullptr));
         ASSERT_EQ(0u, *get_butex(m));
         ASSERT_EQ(0, fiber_mutex_lock(&m));
         ASSERT_EQ(1u, *get_butex(m));
         fiber_id_t th1;
-        ASSERT_EQ(0, fiber_start_urgent(&th1, NULL, locker, &m));
+        ASSERT_EQ(0, fiber_start_urgent(&th1, nullptr, locker, &m));
         usleep(5000); // wait for locker to run.
         ASSERT_EQ(257u, *get_butex(m)); // contention
         ASSERT_EQ(0, fiber_mutex_unlock(&m));
-        ASSERT_EQ(0, fiber_join(th1, NULL));
+        ASSERT_EQ(0, fiber_join(th1, nullptr));
         ASSERT_EQ(0u, *get_butex(m));
         ASSERT_EQ(0, fiber_mutex_destroy(&m));
     }
 
     TEST(MutexTest, used_in_pthread) {
         fiber_mutex_t m;
-        ASSERT_EQ(0, fiber_mutex_init(&m, NULL));
+        ASSERT_EQ(0, fiber_mutex_init(&m, nullptr));
         pthread_t th[8];
         for (size_t i = 0; i < FLARE_ARRAY_SIZE(th); ++i) {
-            ASSERT_EQ(0, pthread_create(&th[i], NULL, locker, &m));
+            ASSERT_EQ(0, pthread_create(&th[i], nullptr, locker, &m));
         }
         for (size_t i = 0; i < FLARE_ARRAY_SIZE(th); ++i) {
-            pthread_join(th[i], NULL);
+            pthread_join(th[i], nullptr);
         }
         ASSERT_EQ(0u, *get_butex(m));
         ASSERT_EQ(0, fiber_mutex_destroy(&m));
@@ -79,25 +79,25 @@ namespace {
     void *do_locks(void *arg) {
         struct timespec t = {-2, 0};
         EXPECT_EQ(ETIMEDOUT, fiber_mutex_timedlock((fiber_mutex_t *) arg, &t));
-        return NULL;
+        return nullptr;
     }
 
     TEST(MutexTest, timedlock) {
         fiber_cond_t c;
         fiber_mutex_t m1;
         fiber_mutex_t m2;
-        ASSERT_EQ(0, fiber_cond_init(&c, NULL));
-        ASSERT_EQ(0, fiber_mutex_init(&m1, NULL));
-        ASSERT_EQ(0, fiber_mutex_init(&m2, NULL));
+        ASSERT_EQ(0, fiber_cond_init(&c, nullptr));
+        ASSERT_EQ(0, fiber_mutex_init(&m1, nullptr));
+        ASSERT_EQ(0, fiber_mutex_init(&m2, nullptr));
 
         struct timespec t = {-2, 0};
 
         fiber_mutex_lock(&m1);
         fiber_mutex_lock(&m2);
         fiber_id_t pth;
-        ASSERT_EQ(0, fiber_start_urgent(&pth, NULL, do_locks, &m1));
+        ASSERT_EQ(0, fiber_start_urgent(&pth, nullptr, do_locks, &m1));
         ASSERT_EQ(ETIMEDOUT, fiber_cond_timedwait(&c, &m2, &t));
-        ASSERT_EQ(0, fiber_join(pth, NULL));
+        ASSERT_EQ(0, fiber_join(pth, nullptr));
         fiber_mutex_unlock(&m1);
         fiber_mutex_unlock(&m2);
         fiber_mutex_destroy(&m1);
@@ -146,7 +146,7 @@ namespace {
         int64_t elapse_ns;
         bool ready;
 
-        PerfArgs() : mutex(NULL), counter(0), elapse_ns(0), ready(false) {}
+        PerfArgs() : mutex(nullptr), counter(0), elapse_ns(0), ready(false) {}
     };
 
     template<typename fiber_mutex>
@@ -167,7 +167,7 @@ namespace {
         }
         t.stop();
         args->elapse_ns = t.n_elapsed();
-        return NULL;
+        return nullptr;
     }
 
     int g_prof_name_counter = 0;
@@ -185,7 +185,7 @@ namespace {
         std::vector<PerfArgs<fiber_mutex> > args(thread_num);
         for (int i = 0; i < thread_num; ++i) {
             args[i].mutex = mutex;
-            create_fn(&threads[i], NULL, add_with_mutex<fiber_mutex>, &args[i]);
+            create_fn(&threads[i], nullptr, add_with_mutex<fiber_mutex>, &args[i]);
         }
         while (true) {
             bool all_ready = true;
@@ -210,7 +210,7 @@ namespace {
         int64_t wait_time = 0;
         int64_t count = 0;
         for (int i = 0; i < thread_num; ++i) {
-            join_fn(threads[i], NULL);
+            join_fn(threads[i], nullptr);
             wait_time += args[i].elapse_ns;
             count += args[i].counter;
         }
@@ -224,11 +224,11 @@ namespace {
     TEST(MutexTest, performance) {
         const int thread_num = 12;
         flare::base::Mutex base_mutex;
-        PerfTest(&base_mutex, (pthread_t *) NULL, thread_num, pthread_create, pthread_join);
-        PerfTest(&base_mutex, (fiber_id_t *) NULL, thread_num, fiber_start_background, fiber_join);
+        PerfTest(&base_mutex, (pthread_t *) nullptr, thread_num, pthread_create, pthread_join);
+        PerfTest(&base_mutex, (fiber_id_t *) nullptr, thread_num, fiber_start_background, fiber_join);
         flare::fiber::fiber_mutex fbr_mutex;
-        PerfTest(&fbr_mutex, (pthread_t *) NULL, thread_num, pthread_create, pthread_join);
-        PerfTest(&fbr_mutex, (fiber_id_t *) NULL, thread_num, fiber_start_background, fiber_join);
+        PerfTest(&fbr_mutex, (pthread_t *) nullptr, thread_num, pthread_create, pthread_join);
+        PerfTest(&fbr_mutex, (fiber_id_t *) nullptr, thread_num, fiber_start_background, fiber_join);
     }
 
     void *loop_until_stopped(void *arg) {
@@ -237,7 +237,7 @@ namespace {
             FLARE_SCOPED_LOCK(*m);
             flare::this_fiber::fiber_sleep_for(20);
         }
-        return NULL;
+        return nullptr;
     }
 
     TEST(MutexTest, mix_thread_types) {
@@ -253,19 +253,19 @@ namespace {
         // true, thus loop_until_stopped spins forever)
         fiber_setconcurrency(M);
         for (int i = 0; i < N; ++i) {
-            ASSERT_EQ(0, pthread_create(&pthreads[i], NULL, loop_until_stopped, &m));
+            ASSERT_EQ(0, pthread_create(&pthreads[i], nullptr, loop_until_stopped, &m));
         }
         for (int i = 0; i < M; ++i) {
-            const fiber_attribute *attr = i % 2 ? NULL : &FIBER_ATTR_PTHREAD;
+            const fiber_attribute *attr = i % 2 ? nullptr : &FIBER_ATTR_PTHREAD;
             ASSERT_EQ(0, fiber_start_urgent(&fibers[i], attr, loop_until_stopped, &m));
         }
         flare::this_fiber::fiber_sleep_for(1000L * 1000);
         g_stopped = true;
         for (int i = 0; i < M; ++i) {
-            fiber_join(fibers[i], NULL);
+            fiber_join(fibers[i], nullptr);
         }
         for (int i = 0; i < N; ++i) {
-            pthread_join(pthreads[i], NULL);
+            pthread_join(pthreads[i], nullptr);
         }
     }
 } // namespace
