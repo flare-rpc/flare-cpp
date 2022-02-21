@@ -147,8 +147,8 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
         "-Wl,-U,_ProfilerStop")
 endif()
 
-add_executable(session_data_and_thread_local_client client.cpp ${PROTO_SRC} ${PROTO_HEADER})
-add_executable(session_data_and_thread_local_server server.cpp ${PROTO_SRC} ${PROTO_HEADER})
+add_executable(session_data_and_thread_local_client client.cc ${PROTO_SRC} ${PROTO_HEADER})
+add_executable(session_data_and_thread_local_server server.cc ${PROTO_SRC} ${PROTO_HEADER})
 
 target_link_libraries(session_data_and_thread_local_client ${FLARE_LIB} ${DYNAMIC_LIB} ${GPERFTOOLS_LIBRARIES})
 target_link_libraries(session_data_and_thread_local_server ${FLARE_LIB} ${DYNAMIC_LIB} ${GPERFTOOLS_LIBRARIES})

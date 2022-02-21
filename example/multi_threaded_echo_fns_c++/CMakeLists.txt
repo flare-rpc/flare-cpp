@@ -146,8 +146,8 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
         "-Wl,-U,_ProfilerStop")
 endif()
 
-add_executable(multi_threaded_echo_fns_client client.cpp ${PROTO_SRC} ${PROTO_HEADER})
-add_executable(multi_threaded_echo_fns_server server.cpp ${PROTO_SRC} ${PROTO_HEADER})
+add_executable(multi_threaded_echo_fns_client client.cc ${PROTO_SRC} ${PROTO_HEADER})
+add_executable(multi_threaded_echo_fns_server server.cc ${PROTO_SRC} ${PROTO_HEADER})
 
 target_link_libraries(multi_threaded_echo_fns_client ${FLARE_LIB} ${DYNAMIC_LIB} ${GPERFTOOLS_LIBRARIES})
 target_link_libraries(multi_threaded_echo_fns_server ${FLARE_LIB} ${DYNAMIC_LIB} ${GPERFTOOLS_LIBRARIES})

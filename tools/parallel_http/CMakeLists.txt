@@ -15,5 +15,5 @@
 # specific language governing permissions and limitations
 # under the License.
 
-add_executable(parallel_http parallel_http.cpp)
+add_executable(parallel_http parallel_http.cc)
 target_link_libraries(parallel_http flare-static ${DYNAMIC_LIB})

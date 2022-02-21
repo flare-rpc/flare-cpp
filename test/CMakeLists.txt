@@ -122,7 +122,7 @@ add_test(NAME test_io COMMAND test_io)
 
 # test_variable
 # -DVARIABLE_NOT_LINK_DEFAULT_VARIABLES not work for gcc >= 5.0, just remove the file to prevent linking into unit tests
-list(REMOVE_ITEM VARIABLE_SOURCES ${PROJECT_SOURCE_DIR}/flare/variable/default_variables.cpp)
+list(REMOVE_ITEM VARIABLE_SOURCES ${PROJECT_SOURCE_DIR}/flare/variable/default_variables.cc)
 
 add_library(VARIABLE_DEBUG_LIB OBJECT ${VARIABLE_SOURCES})
 add_subdirectory(var)

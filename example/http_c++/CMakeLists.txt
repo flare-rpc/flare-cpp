@@ -147,9 +147,9 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
         "-Wl,-U,_ProfilerStop")
 endif()
 
-add_executable(http_client http_client.cpp)
-add_executable(http_server http_server.cpp ${PROTO_SRC} ${PROTO_HEADER})
-add_executable(benchmark_http benchmark_http.cpp)
+add_executable(http_client http_client.cc)
+add_executable(http_server http_server.cc ${PROTO_SRC} ${PROTO_HEADER})
+add_executable(benchmark_http benchmark_http.cc)
 
 target_link_libraries(http_server ${FLARE_LIB} ${DYNAMIC_LIB} ${GPERFTOOLS_LIBRARIES})
 target_link_libraries(http_client ${FLARE_LIB} ${DYNAMIC_LIB} ${GPERFTOOLS_LIBRARIES})

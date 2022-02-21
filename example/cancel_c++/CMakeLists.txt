@@ -140,8 +140,8 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
         "-Wl,-U,_ProfilerStop")
 endif()
 
-add_executable(cancel_client client.cpp ${PROTO_SRC} ${PROTO_HEADER})
-add_executable(cancel_server server.cpp ${PROTO_SRC} ${PROTO_HEADER})
+add_executable(cancel_client client.cc ${PROTO_SRC} ${PROTO_HEADER})
+add_executable(cancel_server server.cc ${PROTO_SRC} ${PROTO_HEADER})
 
 target_link_libraries(cancel_client ${FLARE_LIB} ${DYNAMIC_LIB})
 target_link_libraries(cancel_server ${FLARE_LIB} ${DYNAMIC_LIB})

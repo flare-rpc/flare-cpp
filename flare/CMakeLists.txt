@@ -53,7 +53,7 @@ SET_TARGET_PROPERTIES(flare-shared PROPERTIES OUTPUT_NAME flare CLEAN_DIRECT_OUT
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/output/bin)
 
 set(protoc_gen_mcpack_SOURCES
-        ${PROJECT_SOURCE_DIR}/flare/mcpack2pb/generator.cpp
+        ${PROJECT_SOURCE_DIR}/flare/mcpack2pb/generator.cc
         )
 add_executable(protoc-gen-mcpack ${protoc_gen_mcpack_SOURCES})
 target_link_libraries(protoc-gen-mcpack flare-shared)

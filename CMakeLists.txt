@@ -216,11 +216,11 @@ set(FLARE_SRC
         ${FLARE_BOOTSTRAP_SRC}
         )
 
-file(GLOB_RECURSE VARIABLE_SOURCES "${PROJECT_SOURCE_DIR}/flare/variable/*.cpp")
+file(GLOB_RECURSE VARIABLE_SOURCES "${PROJECT_SOURCE_DIR}/flare/variable/*.cc")
 file(GLOB_RECURSE FIBER_SOURCES "${PROJECT_SOURCE_DIR}/flare/fiber/*.cc")
-file(GLOB_RECURSE JSON2PB_SOURCES "${PROJECT_SOURCE_DIR}/flare/json2pb/*.cpp")
-file(GLOB_RECURSE RPC_SOURCES "${PROJECT_SOURCE_DIR}/flare/rpc/*.cpp")
-file(GLOB_RECURSE THRIFT_SOURCES "${PROJECT_SOURCE_DIR}/flare/rpc/thrift*.cpp")
+file(GLOB_RECURSE JSON2PB_SOURCES "${PROJECT_SOURCE_DIR}/flare/json2pb/*.cc")
+file(GLOB_RECURSE RPC_SOURCES "${PROJECT_SOURCE_DIR}/flare/rpc/*.cc")
+file(GLOB_RECURSE THRIFT_SOURCES "${PROJECT_SOURCE_DIR}/flare/rpc/thrift*.cc")
 
 if (WITH_THRIFT)
     message("flare compile with thrift protocol")
@@ -233,10 +233,10 @@ else ()
 endif ()
 
 set(MCPACK2PB_SOURCES
-        ${PROJECT_SOURCE_DIR}/flare/mcpack2pb/field_type.cpp
-        ${PROJECT_SOURCE_DIR}/flare/mcpack2pb/mcpack2pb.cpp
-        ${PROJECT_SOURCE_DIR}/flare/mcpack2pb/parser.cpp
-        ${PROJECT_SOURCE_DIR}/flare/mcpack2pb/serializer.cpp)
+        ${PROJECT_SOURCE_DIR}/flare/mcpack2pb/field_type.cc
+        ${PROJECT_SOURCE_DIR}/flare/mcpack2pb/mcpack2pb.cc
+        ${PROJECT_SOURCE_DIR}/flare/mcpack2pb/parser.cc
+        ${PROJECT_SOURCE_DIR}/flare/mcpack2pb/serializer.cc)
 
 include(CompileProto)
 set(PROTO_FILES flare/idl_options.proto
