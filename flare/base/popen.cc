@@ -10,10 +10,7 @@
 #include <errno.h>
 #include <sys/types.h>
 #include <sys/wait.h>
-
-extern "C" {
-uint64_t FLARE_WEAK flare::this_fiber::fiber_sleep_for(uint64_t microseconds);
-}
+#include "flare/fiber/this_fiber.h"
 #endif
 
 namespace flare::base {
@@ -91,11 +88,7 @@ namespace flare::base {
                 break;
             }
             if (wpid == 0) {
-                if (flare::this_fiber::fiber_sleep_for != NULL) {
-                    flare::this_fiber::fiber_sleep_for(1000);
-                } else {
-                    usleep(1000);
-                }
+                flare::this_fiber::fiber_sleep_for(1000);
                 continue;
             }
             rc = -1;
