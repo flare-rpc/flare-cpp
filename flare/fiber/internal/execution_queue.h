@@ -19,8 +19,8 @@
 
 // Date: 2015/10/23 18:16:16
 
-#ifndef  BTHREAD_EXECUTION_QUEUE_H
-#define  BTHREAD_EXECUTION_QUEUE_H
+#ifndef FLARE_FIBER_INTERNAL_EXECUTION_QUEUE_H_
+#define  FLARE_FIBER_INTERNAL_EXECUTION_QUEUE_H_
 
 #include "flare/fiber/internal/fiber.h"
 #include "flare/base/type_traits.h"
@@ -247,4 +247,4 @@ namespace flare::fiber_internal {
 
 #include "flare/fiber/internal/execution_queue_inl.h"
 
-#endif  //BTHREAD_EXECUTION_QUEUE_H
+#endif  // FLARE_FIBER_INTERNAL_EXECUTION_QUEUE_H_

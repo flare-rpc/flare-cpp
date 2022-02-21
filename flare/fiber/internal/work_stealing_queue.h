@@ -19,8 +19,8 @@
 
 // Date: Tue Jul 10 17:40:58 CST 2012
 
-#ifndef BTHREAD_WORK_STEALING_QUEUE_H
-#define BTHREAD_WORK_STEALING_QUEUE_H
+#ifndef FLARE_FIBER_INTERNAL_WORK_STEALING_QUEUE_H_
+#define FLARE_FIBER_INTERNAL_WORK_STEALING_QUEUE_H_
 
 #include "flare/base/profile.h"
 #include "flare/base/static_atomic.h"
@@ -151,4 +151,4 @@ namespace flare::fiber_internal {
 
 }  // namespace flare::fiber_internal
 
-#endif  // BTHREAD_WORK_STEALING_QUEUE_H
+#endif  // FLARE_FIBER_INTERNAL_WORK_STEALING_QUEUE_H_

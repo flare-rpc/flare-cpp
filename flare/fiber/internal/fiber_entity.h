@@ -41,9 +41,9 @@ namespace flare::fiber_internal {
         void *rpcz_parent_span;
     };
 
-#define BTHREAD_LOCAL_STORAGE_INITIALIZER { NULL, NULL, NULL }
+#define FIBER_LOCAL_STORAGE_INITIALIZER { NULL, NULL, NULL }
 
-    const static fiber_local_storage LOCAL_STORAGE_INIT = BTHREAD_LOCAL_STORAGE_INITIALIZER;
+    const static fiber_local_storage LOCAL_STORAGE_INIT = FIBER_LOCAL_STORAGE_INITIALIZER;
 
     struct fiber_entity {
         // [Not Reset]

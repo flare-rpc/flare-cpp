@@ -19,8 +19,8 @@
 
 // Date: Tue Jul 10 17:40:58 CST 2012
 
-#ifndef BTHREAD_INTERRUPT_PTHREAD_H
-#define BTHREAD_INTERRUPT_PTHREAD_H
+#ifndef FLARE_FIBER_INTERNAL_INTERRUPT_PTHREAD_H_
+#define FLARE_FIBER_INTERNAL_INTERRUPT_PTHREAD_H_
 
 #include <pthread.h>
 
@@ -32,4 +32,4 @@ namespace flare::fiber_internal {
 
 }  // namespace flare::fiber_internal
 
-#endif // BTHREAD_INTERRUPT_PTHREAD_H
+#endif // FLARE_FIBER_INTERNAL_INTERRUPT_PTHREAD_H_

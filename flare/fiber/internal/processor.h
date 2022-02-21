@@ -19,8 +19,8 @@
 
 // Date: Fri Dec  5 13:40:57 CST 2014
 
-#ifndef BTHREAD_PROCESSOR_H
-#define BTHREAD_PROCESSOR_H
+#ifndef FLARE_FIBER_INTERNAL_PROCESSOR_H_
+#define FLARE_FIBER_INTERNAL_PROCESSOR_H_
 
 #include "flare/base/profile.h"
 
@@ -53,4 +53,4 @@
         errno = saved_errno;                                            \
     } while (0)
 
-#endif // BTHREAD_PROCESSOR_H
+#endif // FLARE_FIBER_INTERNAL_PROCESSOR_H_

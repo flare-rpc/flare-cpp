@@ -41,7 +41,7 @@ namespace flare::fiber_internal {
 // Sync with fiber_entity::local_storage when a fiber is created or destroyed.
 // During running, the two fields may be inconsistent, use tls_bls as the
 // groundtruth.
-    thread_local fiber_local_storage tls_bls = BTHREAD_LOCAL_STORAGE_INITIALIZER;
+    thread_local fiber_local_storage tls_bls = FIBER_LOCAL_STORAGE_INITIALIZER;
 
 // defined in fiber/key.cpp
     extern void return_keytable(fiber_keytable_pool_t *, KeyTable *);
@@ -477,8 +477,8 @@ namespace flare::fiber_internal {
         fiber_worker *g = *pg;
         fiber_id_t next_tid = 0;
         // Find next task to run, if none, switch to idle thread of the group.
-#ifndef BTHREAD_FAIR_WSQ
-        // When BTHREAD_FAIR_WSQ is defined, profiling shows that cpu cost of
+#ifndef FIBER_FAIR_WSQ
+        // When FIBER_FAIR_WSQ is defined, profiling shows that cpu cost of
         // WSQ::steal() in example/multi_threaded_echo_c++ changes from 1.9%
         // to 2.9%
         const bool popped = g->_rq.pop(&next_tid);
@@ -518,7 +518,7 @@ namespace flare::fiber_internal {
         fiber_worker *g = *pg;
         fiber_id_t next_tid = 0;
         // Find next task to run, if none, switch to idle thread of the group.
-#ifndef BTHREAD_FAIR_WSQ
+#ifndef FIBER_FAIR_WSQ
         const bool popped = g->_rq.pop(&next_tid);
 #else
         const bool popped = g->_rq.steal(&next_tid);

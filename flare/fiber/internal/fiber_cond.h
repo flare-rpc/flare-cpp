@@ -19,8 +19,8 @@
 
 // Date: 2015/12/14 21:26:26
 
-#ifndef  BTHREAD_CONDITION_VARIABLE_H
-#define  BTHREAD_CONDITION_VARIABLE_H
+#ifndef  FLARE_FIBER_INTERNAL_FIBER_COND_H_
+#define  FLARE_FIBER_INTERNAL_FIBER_COND_H_
 
 #include "flare/base/time.h"
 #include "flare/fiber/internal/mutex.h"
@@ -105,4 +105,4 @@ namespace flare::fiber_internal {
 
 }  // namespace flare::fiber_internal
 
-#endif  //BTHREAD_CONDITION_VARIABLE_H
+#endif  // FLARE_FIBER_INTERNAL_FIBER_COND_H_
