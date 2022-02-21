@@ -19,7 +19,7 @@
 # under the License.
 
 """
-Bthread Stack Print Tool
+Fiber Stack Print Tool
 
 this only for running process, core dump is not supported.
 
@@ -86,7 +86,7 @@ def get_all_fibers(total):
                     if count >= total:
                         return
 
-class BthreadListCmd(gdb.Command):
+class FiberListCmd(gdb.Command):
     """list all fibers, print format is 'id\ttid\tfunction\thas stack'"""
     def __init__(self):
         gdb.Command.__init__(self, "fiber_list", gdb.COMMAND_STACK, gdb.COMPLETE_NONE)
@@ -101,7 +101,7 @@ class BthreadListCmd(gdb.Command):
         for i, t in enumerate(fibers):
             print("#{}\t\t{}\t\t{}\t\t{}".format(i, t["tid"], t["fn"], "no" if str(t["stack"]) == "0x0" else "yes"))
 
-class BthreadNumCmd(gdb.Command):
+class FiberNumCmd(gdb.Command):
     """list active fibers num"""
     def __init__(self):
         gdb.Command.__init__(self, "fibers_num", gdb.COMMAND_STACK, gdb.COMPLETE_NONE)
@@ -110,7 +110,7 @@ class BthreadNumCmd(gdb.Command):
         res = get_fiber_num()
         print(res)
 
-class BthreadFrameCmd(gdb.Command):
+class FiberFrameCmd(gdb.Command):
     """fiber_frame <id>, select fiber frame by id"""
     def __init__(self):
         gdb.Command.__init__(self, "fiber_frame", gdb.COMMAND_STACK, gdb.COMPLETE_NONE)
@@ -140,7 +140,7 @@ class BthreadFrameCmd(gdb.Command):
         gdb.parse_and_eval("$rsp = {}".format(rsp))
         gdb.parse_and_eval("$rbp = {}".format(rbp))
 
-class BthreadRegsCmd(gdb.Command):
+class FiberRegsCmd(gdb.Command):
     """fibers_regs <id>, print fiber registers"""
     def __init__(self):
         gdb.Command.__init__(self, "fibers_regs", gdb.COMMAND_STACK, gdb.COMPLETE_NONE)
@@ -173,7 +173,7 @@ class BthreadRegsCmd(gdb.Command):
         rsp = int(gdb.parse_and_eval("{}+8*8".format(context)))
         print("rip: 0x{:x}\nrsp: 0x{:x}\nrbp: 0x{:x}\nrbx: 0x{:x}\nr15: 0x{:x}\nr14: 0x{:x}\nr13: 0x{:x}\nr12: 0x{:x}".format(rip, rsp, rbp, rbx, r15, r14, r13, r12))
 
-class BthreadMetaCmd(gdb.Command):
+class FiberMetaCmd(gdb.Command):
     """fibers_meta <id>, print task meta by id"""
     def __init__(self):
         gdb.Command.__init__(self, "fibers_meta", gdb.COMMAND_STACK, gdb.COMPLETE_NONE)
@@ -193,7 +193,7 @@ class BthreadMetaCmd(gdb.Command):
             return
         print(fibers[fibers_id])
 
-class BthreadBeginCmd(gdb.Command):
+class FiberBeginCmd(gdb.Command):
     """enter fiber debug mode"""
     def __init__(self):
         gdb.Command.__init__(self, "fibers_begin", gdb.COMMAND_STACK, gdb.COMPLETE_NONE)
@@ -219,7 +219,7 @@ class BthreadBeginCmd(gdb.Command):
         status = True
         print("Enter fiber debug mode, do not switch thread before exec 'fibers_end' !!!")
 
-class BthreadRegRestoreCmd(gdb.Command):
+class FiberRegRestoreCmd(gdb.Command):
     """restore registers"""
     def __init__(self):
         gdb.Command.__init__(self, "fibers_reg_restore", gdb.COMMAND_STACK, gdb.COMPLETE_NONE)
@@ -234,7 +234,7 @@ class BthreadRegRestoreCmd(gdb.Command):
         gdb.parse_and_eval("$rbp = $saved_rbp")
         print("OK")
 
-class BthreadEndCmd(gdb.Command):
+class FiberEndCmd(gdb.Command):
     """exit fiber debug mode"""
     def __init__(self):
         gdb.Command.__init__(self, "fibers_end", gdb.COMMAND_STACK, gdb.COMPLETE_NONE)
@@ -250,11 +250,11 @@ class BthreadEndCmd(gdb.Command):
         status = False
         print("Exit fiber debug mode")
 
-BthreadListCmd()
-BthreadNumCmd()
-BthreadBeginCmd()
-BthreadEndCmd()
-BthreadFrameCmd()
-BthreadMetaCmd()
-BthreadRegRestoreCmd()
-BthreadRegsCmd()
+FiberListCmd()
+FiberNumCmd()
+FiberBeginCmd()
+FiberEndCmd()
+FiberFrameCmd()
+FiberMetaCmd()
+FiberRegRestoreCmd()
+FiberRegsCmd()

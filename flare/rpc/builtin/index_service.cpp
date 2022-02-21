@@ -153,7 +153,7 @@ void IndexService::default_method(::google::protobuf::RpcController* controller,
        << Path("/vlog", html_addr) << " : List all VLOG callsites" << NL
        << Path("/sockets", html_addr) << " : Check status of a Socket" << NL
        << Path("/fibers", html_addr) << " : Check status of a fiber" << NL
-       << Path("/ids", html_addr) << " : Check status of a bthread_id" << NL
+       << Path("/ids", html_addr) << " : Check status of a fiber_id" << NL
        << Path("/protobufs", html_addr) << " : List all protobuf services and messages" << NL
        << Path("/list", html_addr) << " : json signature of methods" << NL
        << Path("/threads", html_addr) << " : Check pstack"

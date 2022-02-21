@@ -31,7 +31,7 @@ void run_worker_startfn();
 namespace flare::rpc {
 
 DEFINE_int32(usercode_backup_threads, 5, "# of backup threads to run user code"
-             " when too many pthread worker of bthreads are used");
+             " when too many pthread worker of fibers are used");
 DEFINE_int32(max_pending_in_each_backup_thread, 10,
              "Max number of un-run user code in each backup thread, requests"
              " still coming in will be failed");

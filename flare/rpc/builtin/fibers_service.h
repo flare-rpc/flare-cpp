@@ -16,23 +16,23 @@
 // under the License.
 
 
-#ifndef FLARE_RPC_BTHREADS_SERVICE_H_
-#define FLARE_RPC_BTHREADS_SERVICE_H_
+#ifndef FLARE_RPC_FIBERS_SERVICE_H_
+#define FLARE_RPC_FIBERS_SERVICE_H_
 
 #include "flare/rpc/builtin_service.pb.h"
 
 
 namespace flare::rpc {
 
-class FibersService : public fibers {
-public:
-    void default_method(::google::protobuf::RpcController* cntl_base,
-                        const ::flare::rpc::FibersRequest* request,
-                        ::flare::rpc::FibersResponse* response,
-                        ::google::protobuf::Closure* done);
-};
+    class FibersService : public fibers {
+    public:
+        void default_method(::google::protobuf::RpcController *cntl_base,
+                            const ::flare::rpc::FibersRequest *request,
+                            ::flare::rpc::FibersResponse *response,
+                            ::google::protobuf::Closure *done);
+    };
 
 } // namespace flare::rpc
 
 
-#endif // FLARE_RPC_BTHREADS_SERVICE_H_
+#endif // FLARE_RPC_FIBERS_SERVICE_H_

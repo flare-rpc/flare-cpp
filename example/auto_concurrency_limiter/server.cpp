@@ -34,7 +34,7 @@
 
 DEFINE_int32(logoff_ms, 2000, "Maximum duration of server's LOGOFF state "
                               "(waiting for client to close connection before server stops)");
-DEFINE_int32(server_bthread_concurrency, 4,
+DEFINE_int32(server_fiber_concurrency, 4,
              "Configuring the value of fiber_concurrency, For compute max qps, ");
 DEFINE_int32(server_sync_sleep_us, 2500,
              "Usleep time, each request will be executed once, For compute max qps");
@@ -275,7 +275,7 @@ private:
 int main(int argc, char *argv[]) {
     // Parse gflags. We recommend you to use gflags as well.
     GFLAGS_NS::ParseCommandLineFlags(&argc, &argv, true);
-    flare::fiber_internal::FLAGS_fiber_concurrency = FLAGS_server_bthread_concurrency;
+    flare::fiber_internal::FLAGS_fiber_concurrency = FLAGS_server_fiber_concurrency;
 
     flare::rpc::Server server;
 

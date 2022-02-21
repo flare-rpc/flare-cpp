@@ -57,7 +57,7 @@ extern int fiber_timer_del(fiber_timer_id id);
 // Returns 0 on success, -1 otherwise and errno is set.
 // NOTE: Due to an epoll bug(https://patchwork.kernel.org/patch/1970231),
 // current implementation relies on EPOLL_CTL_ADD and EPOLL_CTL_DEL which
-// are not scalable, don't use bthread_fd_*wait functions in performance
+// are not scalable, don't use fiber_fd_*wait functions in performance
 // critical scenario.
 extern int fiber_fd_wait(int fd, unsigned events);
 
@@ -93,7 +93,7 @@ extern void fiber_stop_world();
 // Generally the dtor_arg is for passing the creator of data so that we can
 // return the data back to the creator in destructor. Without this arg, we
 // have to do an extra heap allocation to contain data and its creator.
-extern int bthread_key_create2(fiber_local_key *key,
+extern int fiber_key_create2(fiber_local_key *key,
                                void (*destructor)(void *data, const void *dtor_arg),
                                const void *dtor_arg);
 
@@ -102,26 +102,26 @@ extern int bthread_key_create2(fiber_local_key *key,
 
 // [RPC INTERNAL]
 // Create a pool to cache KeyTables so that frequently created/destroyed
-// bthreads reuse these tables, namely when a fiber needs a KeyTable,
+// fibers reuse these tables, namely when a fiber needs a KeyTable,
 // it fetches one from the pool instead of creating on heap. When a fiber
 // exits, it puts the table back to pool instead of deleting it.
 // Returns 0 on success, error code otherwise.
-extern int bthread_keytable_pool_init(fiber_keytable_pool_t *);
+extern int fiber_keytable_pool_init(fiber_keytable_pool_t *);
 
 // [RPC INTERNAL]
 // Destroy the pool. All KeyTables inside are destroyed.
 // Returns 0 on success, error code otherwise.
-extern int bthread_keytable_pool_destroy(fiber_keytable_pool_t *);
+extern int fiber_keytable_pool_destroy(fiber_keytable_pool_t *);
 
 // [RPC INTERNAL]
 // Put statistics of `pool' into `stat'.
-extern int bthread_keytable_pool_getstat(fiber_keytable_pool_t *pool,
+extern int fiber_keytable_pool_getstat(fiber_keytable_pool_t *pool,
                                          fiber_keytable_pool_stat_t *stat);
 
 // [RPC INTERNAL]
 // Reserve at most `nfree' keytables with `key' pointing to data created by
 // ctor(args).
-extern void bthread_keytable_pool_reserve(
+extern void fiber_keytable_pool_reserve(
         fiber_keytable_pool_t *pool, size_t nfree,
         fiber_local_key key, void *ctor(const void *args), const void *args);
 

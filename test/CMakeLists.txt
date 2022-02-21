@@ -77,13 +77,13 @@ set(IO_TEST_SRC
         )
 
 
-# bthread_* functions are used in logging.cc, and they need to be marked as
+# fiber_* functions are used in logging.cc, and they need to be marked as
 # weak symbols explicitly in Darwin system.
 if (CMAKE_SYSTEM_NAME STREQUAL "Darwin")
     set(DYNAMIC_LIB ${DYNAMIC_LIB}
-            "-Wl,-U,_bthread_getspecific"
-            "-Wl,-U,_bthread_setspecific"
-            "-Wl,-U,_bthread_key_create")
+            "-Wl,-U,_fiber_getspecific"
+            "-Wl,-U,_fiber_setspecific"
+            "-Wl,-U,_fiber_key_create")
 endif ()
 
 file(GLOB_RECURSE TESTING_SOURCES "${PROJECT_SOURCE_DIR}/test/testing/*.cc")

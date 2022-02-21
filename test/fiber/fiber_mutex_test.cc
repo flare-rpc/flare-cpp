@@ -246,9 +246,9 @@ namespace {
         const int M = N * 2;
         flare::fiber_internal::fiber_mutex m;
         pthread_t pthreads[N];
-        fiber_id_t bthreads[M];
+        fiber_id_t fibers[M];
         // reserve enough workers for test. This is a must since we have
-        // FIBER_ATTR_PTHREAD bthreads which may cause deadlocks (the
+        // FIBER_ATTR_PTHREAD fibers which may cause deadlocks (the
         // bhtread_usleep below can't be scheduled and g_stopped is never
         // true, thus loop_until_stopped spins forever)
         fiber_setconcurrency(M);
@@ -257,12 +257,12 @@ namespace {
         }
         for (int i = 0; i < M; ++i) {
             const fiber_attribute *attr = i % 2 ? NULL : &FIBER_ATTR_PTHREAD;
-            ASSERT_EQ(0, fiber_start_urgent(&bthreads[i], attr, loop_until_stopped, &m));
+            ASSERT_EQ(0, fiber_start_urgent(&fibers[i], attr, loop_until_stopped, &m));
         }
         flare::this_fiber::fiber_sleep_for(1000L * 1000);
         g_stopped = true;
         for (int i = 0; i < M; ++i) {
-            fiber_join(bthreads[i], NULL);
+            fiber_join(fibers[i], NULL);
         }
         for (int i = 0; i < N; ++i) {
             pthread_join(pthreads[i], NULL);

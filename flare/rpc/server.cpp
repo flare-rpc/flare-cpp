@@ -24,7 +24,7 @@
 #include <gflags/gflags.h>
 #include <google/protobuf/descriptor.h>             // ServiceDescriptor
 #include "flare/idl_options.pb.h"                         // option(idl_support)
-#include "flare/fiber/internal/unstable.h"                       // bthread_keytable_pool_init
+#include "flare/fiber/internal/unstable.h"                       // fiber_keytable_pool_init
 #include "flare/base/profile.h"                            // FLARE_ARRAY_SIZE
 #include "flare/base/fd_guard.h"                          // fd_guard
 #include "flare/log/logging.h"                           // CHECK
@@ -87,7 +87,7 @@ inline std::ostream &operator<<(std::ostream &os, const timeval &tm) {
 }
 
 extern "C" {
-void *bthread_get_assigned_data();
+void *fiber_get_assigned_data();
 }
 
 namespace flare::rpc {
@@ -130,7 +130,7 @@ namespace flare::rpc {
             : idle_timeout_sec(-1), nshead_service(NULL), thrift_service(NULL), mongo_service_adaptor(NULL), auth(NULL),
               server_owns_auth(false), num_threads(8), max_concurrency(0), session_local_data_factory(NULL),
               reserved_session_local_data(0), thread_local_data_factory(NULL), reserved_thread_local_data(0),
-              bthread_init_fn(NULL), bthread_init_args(NULL), bthread_init_count(0), internal_port(-1),
+              fiber_init_fn(NULL), fiber_init_args(NULL), fiber_init_count(0), internal_port(-1),
               has_builtin_services(true), http_master_service(NULL), health_reporter(NULL), rtmp_service(NULL),
               redis_service(NULL) {
         if (s_ncore > 0) {
@@ -609,18 +609,18 @@ namespace flare::rpc {
         static_cast<const DataFactory *>(void_factory)->DestroyData(data);
     }
 
-    struct BthreadInitArgs {
-        bool (*bthread_init_fn)(void *args); // default: NULL (do nothing)
-        void *bthread_init_args;             // default: NULL
+    struct FiberInitArgs {
+        bool (*fiber_init_fn)(void *args); // default: NULL (do nothing)
+        void *fiber_init_args;             // default: NULL
         bool result;
         bool done;
         bool stop;
         fiber_id_t th;
     };
 
-    static void *BthreadInitEntry(void *void_args) {
-        BthreadInitArgs *args = (BthreadInitArgs *) void_args;
-        args->result = args->bthread_init_fn(args->bthread_init_args);
+    static void *FiberInitEntry(void *void_args) {
+        FiberInitArgs *args = (FiberInitArgs *) void_args;
+        args->result = args->fiber_init_fn(args->fiber_init_args);
         args->done = true;
         while (!args->stop) {
             flare::this_fiber::fiber_sleep_for(1000);
@@ -751,7 +751,7 @@ namespace flare::rpc {
         // Init _keytable_pool always. If the server was stopped before, the pool
         // should be destroyed in Join().
         _keytable_pool = new fiber_keytable_pool_t;
-        if (bthread_keytable_pool_init(_keytable_pool) != 0) {
+        if (fiber_keytable_pool_init(_keytable_pool) != 0) {
             LOG(ERROR) << "Fail to init _keytable_pool";
             delete _keytable_pool;
             _keytable_pool = NULL;
@@ -760,13 +760,13 @@ namespace flare::rpc {
 
         if (_options.thread_local_data_factory) {
             _tl_options.thread_local_data_factory = _options.thread_local_data_factory;
-            if (bthread_key_create2(&_tl_options.tls_key, DestroyServerTLS,
+            if (fiber_key_create2(&_tl_options.tls_key, DestroyServerTLS,
                                     _options.thread_local_data_factory) != 0) {
                 LOG(ERROR) << "Fail to create thread-local key";
                 return -1;
             }
             if (_options.reserved_thread_local_data) {
-                bthread_keytable_pool_reserve(_keytable_pool,
+                fiber_keytable_pool_reserve(_keytable_pool,
                                               _options.reserved_thread_local_data,
                                               _tl_options.tls_key,
                                               CreateServerTLS,
@@ -776,33 +776,33 @@ namespace flare::rpc {
             _tl_options = ThreadLocalOptions();
         }
 
-        if (_options.bthread_init_count != 0 &&
-            _options.bthread_init_fn != NULL) {
-            // Create some special bthreads to call the init functions. The
-            // bthreads will not quit until all bthreads finish the init function.
-            BthreadInitArgs *init_args
-                    = new BthreadInitArgs[_options.bthread_init_count];
+        if (_options.fiber_init_count != 0 &&
+            _options.fiber_init_fn != NULL) {
+            // Create some special fibers to call the init functions. The
+            // fibers will not quit until all fibers finish the init function.
+            FiberInitArgs *init_args
+                    = new FiberInitArgs[_options.fiber_init_count];
             size_t ncreated = 0;
-            for (size_t i = 0; i < _options.bthread_init_count; ++i, ++ncreated) {
-                init_args[i].bthread_init_fn = _options.bthread_init_fn;
-                init_args[i].bthread_init_args = _options.bthread_init_args;
+            for (size_t i = 0; i < _options.fiber_init_count; ++i, ++ncreated) {
+                init_args[i].fiber_init_fn = _options.fiber_init_fn;
+                init_args[i].fiber_init_args = _options.fiber_init_args;
                 init_args[i].result = false;
                 init_args[i].done = false;
                 init_args[i].stop = false;
                 fiber_attribute tmp = FIBER_ATTR_NORMAL;
                 tmp.keytable_pool = _keytable_pool;
                 if (fiber_start_background(
-                        &init_args[i].th, &tmp, BthreadInitEntry, &init_args[i]) != 0) {
+                        &init_args[i].th, &tmp, FiberInitEntry, &init_args[i]) != 0) {
                     break;
                 }
             }
-            // Wait until all created bthreads finish the init function.
+            // Wait until all created fibers finish the init function.
             for (size_t i = 0; i < ncreated; ++i) {
                 while (!init_args[i].done) {
                     flare::this_fiber::fiber_sleep_for(1000);
                 }
             }
-            // Stop and join created bthreads.
+            // Stop and join created fibers.
             for (size_t i = 0; i < ncreated; ++i) {
                 init_args[i].stop = true;
             }
@@ -816,13 +816,13 @@ namespace flare::rpc {
                 }
             }
             delete[] init_args;
-            if (ncreated != _options.bthread_init_count) {
+            if (ncreated != _options.fiber_init_count) {
                 LOG(ERROR) << "Fail to create "
-                           << _options.bthread_init_count - ncreated << " bthreads";
+                           << _options.fiber_init_count - ncreated << " fibers";
                 return -1;
             }
             if (num_failed_result != 0) {
-                LOG(ERROR) << num_failed_result << " bthread_init_fn failed";
+                LOG(ERROR) << num_failed_result << " fiber_init_fn failed";
                 return -1;
             }
         }
@@ -1103,18 +1103,18 @@ namespace flare::rpc {
             // done here (before leaving Join) because it's legal for users to
             // delete fiber keys after Join which makes related objects
             // in KeyTables undeletable anymore and leaked.
-            CHECK_EQ(0, bthread_keytable_pool_destroy(_keytable_pool));
+            CHECK_EQ(0, fiber_keytable_pool_destroy(_keytable_pool));
             // TODO: Can't delete _keytable_pool which may be accessed by
-            // still-running bthreads (created by the server). The memory is
+            // still-running fibers (created by the server). The memory is
             // leaked but servers are unlikely to be started/stopped frequently,
             // the leak is acceptable in most scenarios.
             _keytable_pool = NULL;
         }
 
         // Delete tls_key as well since we don't need it anymore.
-        if (_tl_options.tls_key != INVALID_BTHREAD_KEY) {
+        if (_tl_options.tls_key != INVALID_FIBER_KEY) {
             CHECK_EQ(0, fiber_key_delete(_tl_options.tls_key));
-            _tl_options.tls_key = INVALID_BTHREAD_KEY;
+            _tl_options.tls_key = INVALID_FIBER_KEY;
         }
 
         // Have to join _derivative_thread, which may assume that server is running
@@ -1662,7 +1662,7 @@ namespace flare::rpc {
 
     void *thread_local_data() {
         const Server::ThreadLocalOptions *tl_options =
-                static_cast<const Server::ThreadLocalOptions *>(bthread_get_assigned_data());
+                static_cast<const Server::ThreadLocalOptions *>(fiber_get_assigned_data());
         if (tl_options == NULL) { // not in server threads.
             return NULL;
         }

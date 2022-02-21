@@ -553,7 +553,7 @@ private:
     // it will try to retry this RPC. Otherwise, it calls user `done'
     // if it exists and destroys the correlation_id. Note that
     // the correlation_id MUST have been locked before this call.
-    // Parameter `new_bthread':
+    // Parameter `new_fiber':
     // false - Run this function in the current fiber/pthread. Note that
     //         it could last for a long time or even block the caller (as
     //         it contains user's `done')
@@ -566,7 +566,7 @@ private:
     // Parameter `saved_error':
     //         If the above check failed, `_error_code' will be reverted to this
     void OnVersionedRPCReturned(const CompletionInfo&,
-                                bool new_bthread, int saved_error);
+                                bool new_fiber, int saved_error);
 
     static void* RunEndRPC(void* arg);
     void EndRPC(const CompletionInfo&);

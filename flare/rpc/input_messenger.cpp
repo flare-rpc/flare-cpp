@@ -143,7 +143,7 @@ struct RunLastMessage {
 };
 
 static void QueueMessage(InputMessageBase* to_run_msg,
-                         int* num_bthread_created,
+                         int* num_fiber_created,
                          fiber_keytable_pool_t* keytable_pool) {
     if (!to_run_msg) {
         return;
@@ -159,7 +159,7 @@ static void QueueMessage(InputMessageBase* to_run_msg,
     tmp.keytable_pool = keytable_pool;
     if (fiber_start_background(
             &th, &tmp, ProcessInputMessage, to_run_msg) == 0) {
-        ++*num_bthread_created;
+        ++*num_fiber_created;
     } else {
         ProcessInputMessage(to_run_msg);
     }
@@ -172,7 +172,7 @@ void InputMessenger::OnNewMessages(Socket* m) {
     // - If the socket has several messages, all messages will be parsed (
     //   meaning cutting from flare::io::cord_buf. serializing from protobuf is part of
     //   "process") in this fiber. All messages except the last one will be
-    //   processed in separate bthreads. To minimize the overhead, scheduling
+    //   processed in separate fibers. To minimize the overhead, scheduling
     //   is batched(notice the FIBER_NOSIGNAL and fiber_flush).
     // - Verify will always be called in this fiber at most once and before
     //   any process.
@@ -228,7 +228,7 @@ void InputMessenger::OnNewMessages(Socket* m) {
         m->_last_readtime_us.store(received_us, std::memory_order_relaxed);
         
         size_t last_size = m->_read_buf.length();
-        int num_bthread_created = 0;
+        int num_fiber_created = 0;
         while (1) {
             size_t index = 8888;
             ParseResult pr = messenger->CutInputMessage(m, &index, read_eof);
@@ -284,7 +284,7 @@ void InputMessenger::OnNewMessages(Socket* m) {
             // This unique_ptr prevents msg to be lost before transfering
             // ownership to last_msg
             DestroyingPtr<InputMessageBase> msg(pr.message());
-            QueueMessage(last_msg.release(), &num_bthread_created,
+            QueueMessage(last_msg.release(), &num_fiber_created,
                              m->_keytable_pool);
             if (handlers[index].process == NULL) {
                 LOG(ERROR) << "process of index=" << index << " is NULL";
@@ -318,13 +318,13 @@ void InputMessenger::OnNewMessages(Socket* m) {
                 // Transfer ownership to last_msg
                 last_msg.reset(msg.release());
             } else {
-                QueueMessage(msg.release(), &num_bthread_created,
+                QueueMessage(msg.release(), &num_fiber_created,
                                  m->_keytable_pool);
                 fiber_flush();
-                num_bthread_created = 0;
+                num_fiber_created = 0;
             }
         }
-        if (num_bthread_created) {
+        if (num_fiber_created) {
             fiber_flush();
         }
     }

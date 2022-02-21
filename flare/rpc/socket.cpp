@@ -1891,7 +1891,7 @@ int Socket::FightAuthentication(int* auth_error) {
 
 void Socket::SetAuthentication(int error_code) {
     uint64_t expected = 0;       
-    // `bthread_id_destroy' has release fence to prevent this CAS being
+    // `fiber_token_destroy' has release fence to prevent this CAS being
     // reordered after it.
     if (_auth_flag_error.compare_exchange_strong(
                 expected, (AUTH_FLAG | error_code),

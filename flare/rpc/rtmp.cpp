@@ -18,7 +18,7 @@
 
 #include <gflags/gflags.h>
 #include <google/protobuf/io/zero_copy_stream_impl_lite.h> // StringOutputStream
-#include "flare/fiber/internal/fiber.h"                      // bthread_id_xx
+#include "flare/fiber/internal/fiber.h"                      // fiber_token_xx
 #include "flare/fiber/internal/unstable.h"                     // fiber_timer_del
 #include "flare/rpc/log.h"
 #include "flare/rpc/callback.h"                   // Closure

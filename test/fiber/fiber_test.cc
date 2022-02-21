@@ -26,22 +26,22 @@
 #include "flare/fiber/this_fiber.h"
 
 namespace {
-class BthreadTest : public ::testing::Test{
+class FiberTest : public ::testing::Test{
 protected:
-    BthreadTest(){
+    FiberTest(){
         const int kNumCores = sysconf(_SC_NPROCESSORS_ONLN);
         if (kNumCores > 0) {
             fiber_setconcurrency(kNumCores);
         }
     };
-    virtual ~BthreadTest(){};
+    virtual ~FiberTest(){};
     virtual void SetUp() {
     };
     virtual void TearDown() {
     };
 };
 
-TEST_F(BthreadTest, sizeof_task_meta) {
+TEST_F(FiberTest, sizeof_task_meta) {
     LOG(INFO) << "sizeof(fiber_entity)=" << sizeof(flare::fiber_internal::fiber_entity);
 }
 
@@ -51,7 +51,7 @@ void* unrelated_pthread(void*) {
     return (void*)(intptr_t)1;
 }
 
-TEST_F(BthreadTest, unrelated_pthread) {
+TEST_F(FiberTest, unrelated_pthread) {
     pthread_t th;
     ASSERT_EQ(0, pthread_create(&th, NULL, unrelated_pthread, NULL));
     void* ret = NULL;
@@ -59,7 +59,7 @@ TEST_F(BthreadTest, unrelated_pthread) {
     ASSERT_EQ(1, (intptr_t)ret);
 }
 
-TEST_F(BthreadTest, attr_init_and_destroy) {
+TEST_F(FiberTest, attr_init_and_destroy) {
     fiber_attribute attr;
     ASSERT_EQ(0, fiber_attr_init(&attr));
     ASSERT_EQ(0, fiber_attr_destroy(&attr));
@@ -74,7 +74,7 @@ static void f(intptr_t param) {
     flare_fiber_jump_context(&fc, fcm, (intptr_t)(p->first+p->second));
 }
 
-TEST_F(BthreadTest, context_sanity) {
+TEST_F(FiberTest, context_sanity) {
     fcm = NULL;
     std::size_t size(8192);
     void* sp = malloc(size);
@@ -90,7 +90,7 @@ TEST_F(BthreadTest, context_sanity) {
     std::cout << p.first << " + " << p.second << " == " << res << std::endl;
 }
 
-TEST_F(BthreadTest, call_fiber_functions_before_tls_created) {
+TEST_F(FiberTest, call_fiber_functions_before_tls_created) {
     ASSERT_EQ(0, flare::this_fiber::fiber_sleep_for(1000));
     ASSERT_EQ(EINVAL, fiber_join(0, NULL));
     ASSERT_EQ(0UL, fiber_self());
@@ -174,7 +174,7 @@ void* misc(void* arg) {
     return NULL;
 }
 
-TEST_F(BthreadTest, sanity) {
+TEST_F(FiberTest, sanity) {
     LOG(INFO) << "main thread " << pthread_self();
     fiber_id_t th1;
     ASSERT_EQ(0, fiber_start_urgent(&th1, NULL, misc, (void*)1));
@@ -202,7 +202,7 @@ void * tf (void*) {
     return NULL;
 }
 
-TEST_F(BthreadTest, backtrace) {
+TEST_F(FiberTest, backtrace) {
     fiber_id_t th;
     ASSERT_EQ(0, fiber_start_urgent(&th, NULL, tf, NULL));
     ASSERT_EQ(0, fiber_join (th, NULL));
@@ -220,7 +220,7 @@ void* show_self(void*) {
     return NULL;
 }
 
-TEST_F(BthreadTest, fiber_self) {
+TEST_F(FiberTest, fiber_self) {
     ASSERT_EQ(0ul, fiber_self());
     fiber_id_t bth;
     ASSERT_EQ(0, fiber_start_urgent(&bth, NULL, show_self, NULL));
@@ -232,7 +232,7 @@ void* join_self(void*) {
     return NULL;
 }
 
-TEST_F(BthreadTest, fiber_join) {
+TEST_F(FiberTest, fiber_join) {
     // Invalid tid
     ASSERT_EQ(EINVAL, fiber_join(0, NULL));
     
@@ -249,7 +249,7 @@ void* change_errno(void* arg) {
     return NULL;
 }
 
-TEST_F(BthreadTest, errno_not_changed) {
+TEST_F(FiberTest, errno_not_changed) {
     fiber_id_t th;
     errno = 1;
     fiber_start_urgent(&th, NULL, change_errno, (void*)(intptr_t)2);
@@ -275,7 +275,7 @@ void* adding_func(void* arg) {
     return NULL;
 }
 
-TEST_F(BthreadTest, small_threads) {
+TEST_F(FiberTest, small_threads) {
     for (size_t z = 0; z < 2; ++z) {
         sleep_in_adding_func = (z ? 1 : 0);
         char prof_name[32];
@@ -320,7 +320,7 @@ TEST_F(BthreadTest, small_threads) {
     }
 }
 
-void* bthread_starter(void* void_counter) {
+void* fiber_starter(void* void_counter) {
     while (!stop.load(std::memory_order_relaxed)) {
         fiber_id_t th;
         EXPECT_EQ(0, fiber_start_urgent(&th, NULL, adding_func, void_counter));
@@ -333,10 +333,10 @@ struct FLARE_CACHELINE_ALIGNMENT AlignedCounter {
     std::atomic<size_t> value;
 };
 
-TEST_F(BthreadTest, start_bthreads_frequently) {
+TEST_F(FiberTest, start_fibers_frequently) {
     sleep_in_adding_func = 0;
     char prof_name[32];
-    snprintf(prof_name, sizeof(prof_name), "start_bthreads_frequently.prof");
+    snprintf(prof_name, sizeof(prof_name), "start_fibers_frequently.prof");
     const int con = fiber_getconcurrency();
     ASSERT_GT(con, 0);
     AlignedCounter* counters = new AlignedCounter[con];
@@ -349,7 +349,7 @@ TEST_F(BthreadTest, start_bthreads_frequently) {
         for (int i = 0; i < cur_con; ++i) {
             counters[i].value = 0;
             ASSERT_EQ(0, fiber_start_urgent(
-                          &th[i], NULL, bthread_starter, &counters[i].value));
+                          &th[i], NULL, fiber_starter, &counters[i].value));
         }
         flare::base::stop_watcher tm;
         tm.start();
@@ -376,7 +376,7 @@ void* log_start_latency(void* void_arg) {
     return NULL;
 }
 
-TEST_F(BthreadTest, start_latency_when_high_idle) {
+TEST_F(FiberTest, start_latency_when_high_idle) {
     bool warmup = true;
     long elp1 = 0;
     long elp2 = 0;
@@ -409,7 +409,7 @@ void* sleep_for_awhile_with_sleep(void* arg) {
     return NULL;
 }
 
-TEST_F(BthreadTest, stop_sleep) {
+TEST_F(FiberTest, stop_sleep) {
     fiber_id_t th;
     ASSERT_EQ(0, fiber_start_urgent(
                   &th, NULL, sleep_for_awhile_with_sleep, (void*)1000000L));
@@ -422,7 +422,7 @@ TEST_F(BthreadTest, stop_sleep) {
     ASSERT_LE(labs(tm.m_elapsed() - 10), 10);
 }
 
-TEST_F(BthreadTest, fiber_exit) {
+TEST_F(FiberTest, fiber_exit) {
     fiber_id_t th1;
     fiber_id_t th2;
     pthread_t th3;
@@ -443,7 +443,7 @@ TEST_F(BthreadTest, fiber_exit) {
     ASSERT_EQ(0, fiber_join(th5, NULL));
 }
 
-TEST_F(BthreadTest, fiber_equal) {
+TEST_F(FiberTest, fiber_equal) {
     fiber_id_t th1;
     ASSERT_EQ(0, fiber_start_urgent(&th1, NULL, do_nothing, NULL));
     fiber_id_t th2;
@@ -491,7 +491,7 @@ void* check_sleep(void* pthread_task) {
     return NULL;
 }
 
-TEST_F(BthreadTest, fiber_sleep_for) {
+TEST_F(FiberTest, fiber_sleep_for) {
     // NOTE: May fail because worker threads may still be stealing tasks
     // after previous cases.
     usleep(10000);
@@ -511,7 +511,7 @@ void* dummy_thread(void*) {
     return NULL;
 }
 
-TEST_F(BthreadTest, too_many_nosignal_threads) {
+TEST_F(FiberTest, too_many_nosignal_threads) {
     for (size_t i = 0; i < 100000; ++i) {
         fiber_attribute attr = FIBER_ATTR_NORMAL | FIBER_NOSIGNAL;
         fiber_id_t tid;
@@ -524,7 +524,7 @@ static void* yield_thread(void*) {
     return NULL;
 }
 
-TEST_F(BthreadTest, yield_single_thread) {
+TEST_F(FiberTest, yield_single_thread) {
     fiber_id_t tid;
     ASSERT_EQ(0, fiber_start_background(&tid, NULL, yield_thread, NULL));
     ASSERT_EQ(0, fiber_join(tid, NULL));

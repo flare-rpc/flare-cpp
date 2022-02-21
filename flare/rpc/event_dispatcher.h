@@ -27,7 +27,7 @@
 namespace flare::rpc {
 
 // Dispatch edge-triggered events of file descriptors to consumers
-// running in separate bthreads.
+// running in separate fibers.
 class EventDispatcher {
 friend class Socket;
 public:
@@ -37,7 +37,7 @@ public:
 
     // Start this dispatcher in a fiber.
     // Use |*consumer_thread_attr| (if it's not NULL) as the attribute to
-    // create bthreads running user callbacks.
+    // create fibers running user callbacks.
     // Returns 0 on success, -1 otherwise.
     virtual int Start(const fiber_attribute* consumer_thread_attr);
 
@@ -91,7 +91,7 @@ private:
     // identifier of hosting fiber
     fiber_id_t _tid;
 
-    // The attribute of bthreads calling user callbacks.
+    // The attribute of fibers calling user callbacks.
     fiber_attribute _consumer_thread_attr;
 
     // The attribute of fiber epoll_wait.

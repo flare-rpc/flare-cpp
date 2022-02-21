@@ -27,7 +27,7 @@
 #include <flare/variable/all.h>
 
 DEFINE_int32(thread_num, 50, "Number of threads to send requests");
-DEFINE_bool(use_bthread, false, "Use fiber to send requests");
+DEFINE_bool(use_fiber, false, "Use fiber to send requests");
 DEFINE_int32(attachment_size, 0, "Carry so many byte attachment along with requests");
 DEFINE_int32(request_size, 16, "Bytes of each request");
 DEFINE_string(protocol, "baidu_std", "Protocol type. Defined in flare/rpc/options.proto");
@@ -122,7 +122,7 @@ int main(int argc, char* argv[]) {
 
     std::vector<fiber_id_t> bids;
     std::vector<pthread_t> pids;
-    if (!FLAGS_use_bthread) {
+    if (!FLAGS_use_fiber) {
         pids.resize(FLAGS_thread_num);
         for (int i = 0; i < FLAGS_thread_num; ++i) {
             if (pthread_create(&pids[i], NULL, sender, &channel) != 0) {
@@ -149,7 +149,7 @@ int main(int argc, char* argv[]) {
 
     LOG(INFO) << "EchoClient is going to quit";
     for (int i = 0; i < FLAGS_thread_num; ++i) {
-        if (!FLAGS_use_bthread) {
+        if (!FLAGS_use_fiber) {
             pthread_join(pids[i], NULL);
         } else {
             fiber_join(bids[i], NULL);

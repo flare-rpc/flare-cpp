@@ -360,15 +360,15 @@ namespace {
         pthread_join(disturb, NULL);
     }
 
-    class BthreadCond {
+    class FiberCond {
     public:
-        BthreadCond() {
+        FiberCond() {
             fiber_cond_init(&_cond, NULL);
             fiber_mutex_init(&_mutex, NULL);
             _count = 1;
         }
 
-        ~BthreadCond() {
+        ~FiberCond() {
             fiber_mutex_destroy(&_mutex);
             fiber_cond_destroy(&_cond);
         }
@@ -414,17 +414,17 @@ namespace {
     }
 
     void *wait_cond_thread(void *arg) {
-        BthreadCond *c = (BthreadCond *) arg;
+        FiberCond *c = (FiberCond *) arg;
         started_wait = true;
         c->Wait();
         ended_wait = true;
         return NULL;
     }
 
-    static void launch_many_bthreads() {
+    static void launch_many_fibers() {
         g_stop = false;
         fiber_id_t tid;
-        BthreadCond c;
+        FiberCond c;
         c.Init();
         flare::base::stop_watcher tm;
         fiber_start_urgent(&tid, &FIBER_ATTR_PTHREAD, wait_cond_thread, &c);
@@ -437,7 +437,7 @@ namespace {
             tids.push_back(t0);
         }
         tm.stop();
-        LOG(INFO) << "Creating bthreads took " << tm.u_elapsed() << " us";
+        LOG(INFO) << "Creating fibers took " << tm.u_elapsed() << " us";
         usleep(3 * 1000 * 1000L);
         c.Signal();
         g_stop = true;
@@ -449,18 +449,18 @@ namespace {
         LOG_EVERY_SECOND(INFO) << "Joined " << tids.size() << " threads";
     }
 
-    TEST(CondTest, too_many_bthreads_from_pthread) {
-        launch_many_bthreads();
+    TEST(CondTest, too_many_fibers_from_pthread) {
+        launch_many_fibers();
     }
 
-    static void *run_launch_many_bthreads(void *) {
-        launch_many_bthreads();
+    static void *run_launch_many_fibers(void *) {
+        launch_many_fibers();
         return NULL;
     }
 
-    TEST(CondTest, too_many_bthreads_from_bthread) {
+    TEST(CondTest, too_many_fibers_from_fiber) {
         fiber_id_t th;
-        ASSERT_EQ(0, fiber_start_urgent(&th, NULL, run_launch_many_bthreads, NULL));
+        ASSERT_EQ(0, fiber_start_urgent(&th, NULL, run_launch_many_fibers, NULL));
         fiber_join(th, NULL);
     }
 } // namespace

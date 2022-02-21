@@ -28,9 +28,9 @@
 #include "flare/fiber/this_fiber.h"
 
 extern "C" {
-int bthread_keytable_pool_size(fiber_keytable_pool_t *pool) {
+int fiber_keytable_pool_size(fiber_keytable_pool_t *pool) {
     fiber_keytable_pool_stat_t s;
-    if (bthread_keytable_pool_getstat(pool, &s) != 0) {
+    if (fiber_keytable_pool_getstat(pool, &s) != 0) {
         return 0;
     }
     return s.nfree;
@@ -88,7 +88,7 @@ namespace {
         for (size_t i = 0; i < FLARE_ARRAY_SIZE(k); ++i) {
             cs->ncreate.fetch_add(1, std::memory_order_relaxed);
             ASSERT_EQ(0, fiber_setspecific(k[i], ws[i]))
-                                        << "i=" << i << " is_bthread=" << !!fiber_self();
+                                        << "i=" << i << " is_fiber=" << !!fiber_self();
 
         }
         // Sleep a while to make some context switches. TLS should be unchanged.
@@ -327,7 +327,7 @@ namespace {
         return NULL;
     }
 
-    TEST(KeyTest, set_tls_before_creating_any_bthread) {
+    TEST(KeyTest, set_tls_before_creating_any_fiber) {
         fiber_local_key key;
         ASSERT_EQ(0, fiber_key_create(&key, SBATLS::deleter));
         pthread_t th;
@@ -375,8 +375,8 @@ namespace {
         ASSERT_EQ(0, fiber_key_create(&key, pool_dtor));
 
         fiber_keytable_pool_t pool;
-        ASSERT_EQ(0, bthread_keytable_pool_init(&pool));
-        ASSERT_EQ(0, bthread_keytable_pool_size(&pool));
+        ASSERT_EQ(0, fiber_keytable_pool_init(&pool));
+        ASSERT_EQ(0, fiber_keytable_pool_size(&pool));
 
         fiber_attribute attr;
         ASSERT_EQ(0, fiber_attr_init(&attr));
@@ -390,16 +390,16 @@ namespace {
         ASSERT_EQ(0, fiber_start_urgent(&bth, &attr, pool_thread, &bth_data));
         ASSERT_EQ(0, fiber_join(bth, NULL));
         ASSERT_EQ(0, bth_data.seq);
-        ASSERT_EQ(1, bthread_keytable_pool_size(&pool));
+        ASSERT_EQ(1, fiber_keytable_pool_size(&pool));
 
         PoolData bth2_data = {key, &bth_data, 0, 3};
         fiber_id_t bth2;
         ASSERT_EQ(0, fiber_start_urgent(&bth2, &attr2, pool_thread, &bth2_data));
         ASSERT_EQ(0, fiber_join(bth2, NULL));
         ASSERT_EQ(0, bth2_data.seq);
-        ASSERT_EQ(1, bthread_keytable_pool_size(&pool));
+        ASSERT_EQ(1, fiber_keytable_pool_size(&pool));
 
-        ASSERT_EQ(0, bthread_keytable_pool_destroy(&pool));
+        ASSERT_EQ(0, fiber_keytable_pool_destroy(&pool));
 
         EXPECT_EQ(bth_data.end_seq, bth_data.seq);
         EXPECT_EQ(0, bth2_data.seq);

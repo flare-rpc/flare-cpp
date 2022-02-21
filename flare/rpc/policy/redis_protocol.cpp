@@ -197,7 +197,7 @@ ParseResult ParseRedisMessage(flare::io::cord_buf* source, Socket* socket,
         // I thought before. The Socket._pipeline_q is a SPSC queue pushed before
         // sending and popped when response comes back, being protected by a
         // mutex. Previously the mutex is shared with Socket._id_wait_list. When
-        // 200 bthreads access one redis-server, ~1.5s in total is spent on
+        // 200 fibers access one redis-server, ~1.5s in total is spent on
         // contention in 10-second duration. If the mutex is separated, the time
         // drops to ~0.25s. I further replaced PeekPipelinedInfo() with
         // GivebackPipelinedInfo() to lock only once(when receiving response)

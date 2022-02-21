@@ -28,7 +28,7 @@
 #include <flare/rpc/redis.h>
 
 DEFINE_int32(thread_num, 50, "Number of threads to send requests");
-DEFINE_bool(use_bthread, false, "Use fiber to send requests");
+DEFINE_bool(use_fiber, false, "Use fiber to send requests");
 DEFINE_string(connection_type, "", "Connection type. Available values: single, pooled, short");
 DEFINE_string(server, "0.0.0.0:6379", "IP Address of server");
 DEFINE_int32(timeout_ms, 100, "RPC timeout in milliseconds");
@@ -156,7 +156,7 @@ int main(int argc, char* argv[]) {
     for (int i = 0; i < FLAGS_thread_num; ++i) {
         args[i].base_index = i * FLAGS_batch;
         args[i].redis_channel = &channel;
-        if (!FLAGS_use_bthread) {
+        if (!FLAGS_use_fiber) {
             if (pthread_create(&pids[i], NULL, sender, &args[i]) != 0) {
                 LOG(ERROR) << "Fail to create pthread";
                 return -1;
@@ -179,7 +179,7 @@ int main(int argc, char* argv[]) {
 
     LOG(INFO) << "redis_client is going to quit";
     for (int i = 0; i < FLAGS_thread_num; ++i) {
-        if (!FLAGS_use_bthread) {
+        if (!FLAGS_use_fiber) {
             pthread_join(pids[i], NULL);
         } else {
             fiber_join(bids[i], NULL);

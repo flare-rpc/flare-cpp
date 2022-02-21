@@ -105,7 +105,7 @@ struct ServerOptions {
     // "concurrency" = "number of requests processed in parallel"
     //
     // In a traditional server, number of pthread workers also limits
-    // concurrency. However flare runs requests in bthreads which are
+    // concurrency. However flare runs requests in fibers which are
     // mapped to pthread workers, when a fiber context switches, it gives
     // the pthread worker to another fiber, yielding a higher concurrency
     // than number of pthreads. In some situations, higher concurrency may
@@ -172,13 +172,13 @@ struct ServerOptions {
     // Default: 0
     size_t reserved_thread_local_data;
 
-    // Call bthread_init_fn(bthread_init_args) in at least #bthread_init_count
-    // bthreads before server runs, mainly for initializing fiber locals.
-    // You have to set both `bthread_init_fn' and `bthread_init_count' to
+    // Call fiber_init_fn(fiber_init_args) in at least #fiber_init_count
+    // fibers before server runs, mainly for initializing fiber locals.
+    // You have to set both `fiber_init_fn' and `fiber_init_count' to
     // enable the feature. 
-    bool (*bthread_init_fn)(void* args); // default: NULL (do nothing)
-    void* bthread_init_args;             // default: NULL
-    size_t bthread_init_count;           // default: 0
+    bool (*fiber_init_fn)(void* args); // default: NULL (do nothing)
+    void* fiber_init_args;             // default: NULL
+    size_t fiber_init_count;           // default: 0
 
     // Provide builtin services at this port rather than the port to Start().
     // When your server needs to be accessed from public (including traffic
@@ -366,7 +366,7 @@ public:
         const DataFactory* thread_local_data_factory;
         
         ThreadLocalOptions()
-            : tls_key(INVALID_BTHREAD_KEY)
+            : tls_key(INVALID_FIBER_KEY)
             , thread_local_data_factory(NULL) {}
     };
 

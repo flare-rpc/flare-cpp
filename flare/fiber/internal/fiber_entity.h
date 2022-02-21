@@ -91,7 +91,7 @@ namespace flare::fiber_internal {
 
     public:
         // Only initialize [Not Reset] fields, other fields will be reset in
-        // bthread_start* functions
+        // fiber_start* functions
         fiber_entity()
                 : current_waiter(NULL), current_sleep(0), stack(NULL) {
             pthread_spin_init(&version_lock, 0);

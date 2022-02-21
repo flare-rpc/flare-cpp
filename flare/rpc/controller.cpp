@@ -535,7 +535,7 @@ namespace flare::rpc {
             return;
         }
         if (fiber_token_create(&_oncancel_id, callback, RunOnCancel) != 0) {
-            PLOG(FATAL) << "Fail to create bthread_id";
+            PLOG(FATAL) << "Fail to create fiber_token";
             return;
         }
         SocketUniquePtr sock;
@@ -561,7 +561,7 @@ namespace flare::rpc {
     }
 
     void Controller::OnVersionedRPCReturned(const CompletionInfo &info,
-                                            bool new_bthread, int saved_error) {
+                                            bool new_fiber, int saved_error) {
         // TODO(gejun): Simplify call-ending code.
         // Intercept previous calls
         while (info.id != _correlation_id && info.id != current_id()) {
@@ -650,17 +650,17 @@ namespace flare::rpc {
         }
 
         END_OF_RPC:
-        if (new_bthread) {
+        if (new_fiber) {
             // [ Essential for -usercode_in_pthread=true ]
             // When -usercode_in_pthread is on, the reserved threads (set by
             // -usercode_backup_threads) may all block on fiber_token_lock in
             // ProcessXXXResponse(), until the id is unlocked or destroyed which
-            // is run in a new thread when new_bthread is true. However since all
+            // is run in a new thread when new_fiber is true. However since all
             // workers are blocked, the created fiber will never be scheduled
             // and result in deadlock.
             // Make the id unlockable before creating the fiber fixes the issue.
             // When -usercode_in_pthread is false, this also removes some useless
-            // waiting of the bthreads processing responses.
+            // waiting of the fibers processing responses.
 
             // Note[_done]: callid is destroyed after _done which possibly takes
             // a lot of time, stop useless locking
@@ -916,7 +916,7 @@ namespace flare::rpc {
                 // deleted by done.
                 if (!destroy_cid_in_done) {
                     // Make this thread not scheduling itself when launching new
-                    // bthreads, saving signalings.
+                    // fibers, saving signalings.
                     // FIXME: We're assuming the calling thread is about to quit.
                     fiber_about_to_quit();
                     CHECK_EQ(0, fiber_token_unlock_and_destroy(saved_cid));
@@ -974,8 +974,8 @@ namespace flare::rpc {
         // same stack of CallMethod, the code is deadlocked.
         // We don't need to run the callback in new thread in a sync call since
         // the created thread needs to be joined anyway before end of CallMethod.
-        const bool new_bthread = (_done != NULL && !is_done_allowed_to_run_in_place());
-        OnVersionedRPCReturned(info, new_bthread, _error_code);
+        const bool new_fiber = (_done != NULL && !is_done_allowed_to_run_in_place());
+        OnVersionedRPCReturned(info, new_fiber, _error_code);
     }
 
     void Controller::IssueRPC(int64_t start_realtime_us) {

@@ -32,7 +32,7 @@ DEFINE_string(dir, "", "The directory of dumped requests");
 DEFINE_int32(times, 1, "Repeat replaying for so many times");
 DEFINE_int32(qps, 0, "Limit QPS if this flag is positive");
 DEFINE_int32(thread_num, 0, "Number of threads for replaying");
-DEFINE_bool(use_bthread, true, "Use fiber to replay");
+DEFINE_bool(use_fiber, true, "Use fiber to replay");
 DEFINE_string(connection_type, "", "Connection type, choose automatically "
               "according to protocol by default");
 DEFINE_string(server, "0.0.0.0:8002", "IP Address of server");
@@ -107,7 +107,7 @@ ChannelGroup::~ChannelGroup() {
 
 static void handle_response(flare::rpc::Controller* cntl, int64_t start_time,
                             bool sleep_on_error/*note*/) {
-    // TODO(gejun): some bthreads are starved when new bthreads are created 
+    // TODO(jeff): some fibers are starved when new fibers are created
     // continuously, which happens when server is down and RPC keeps failing.
     // Sleep a while on error to avoid that now.
     const int64_t end_time = flare::base::gettimeofday_us();
@@ -235,7 +235,7 @@ int main(int argc, char* argv[]) {
 
     std::vector<fiber_id_t> bids;
     std::vector<pthread_t> pids;
-    if (!FLAGS_use_bthread) {
+    if (!FLAGS_use_fiber) {
         pids.resize(FLAGS_thread_num);
         for (int i = 0; i < FLAGS_thread_num; ++i) {
             if (pthread_create(&pids[i], NULL, replay_thread, &chan_group) != 0) {
@@ -265,7 +265,7 @@ int main(int argc, char* argv[]) {
     }
 
     for (int i = 0; i < FLAGS_thread_num; ++i) {
-        if (!FLAGS_use_bthread) {
+        if (!FLAGS_use_fiber) {
             pthread_join(pids[i], NULL);
         } else {
             fiber_join(bids[i], NULL);

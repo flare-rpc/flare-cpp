@@ -24,15 +24,15 @@ namespace flare::fiber_internal {
 
     static bool pass_bool(const char *, bool) { return true; }
 
-    DEFINE_bool(show_bthread_creation_in_vars, false, "When this flags is on, The time "
+    DEFINE_bool(show_fiber_creation_in_vars, false, "When this flags is on, The time "
                                                       "from fiber creation to first run will be recorded and shown "
                                                       "in /vars");
-    const bool FLARE_ALLOW_UNUSED dummy_show_bthread_creation_in_vars =
-            ::GFLAGS_NS::RegisterFlagValidator(&FLAGS_show_bthread_creation_in_vars,
+    const bool FLARE_ALLOW_UNUSED dummy_show_fiber_creation_in_vars =
+            ::GFLAGS_NS::RegisterFlagValidator(&FLAGS_show_fiber_creation_in_vars,
                                                pass_bool);
 
     DEFINE_bool(show_per_worker_usage_in_vars, false,
-                "Show per-worker usage in /vars/bthread_per_worker_usage_<tid>");
+                "Show per-worker usage in /vars/fiber_per_worker_usage_<tid>");
     const bool FLARE_ALLOW_UNUSED dummy_show_per_worker_usage_in_vars =
             ::GFLAGS_NS::RegisterFlagValidator(&FLAGS_show_per_worker_usage_in_vars,
                                                pass_bool);
@@ -139,10 +139,10 @@ namespace flare::fiber_internal {
             if (FLAGS_show_per_worker_usage_in_vars && !usage_variable) {
                 char name[32];
 #if defined(FLARE_PLATFORM_OSX)
-                snprintf(name, sizeof(name), "bthread_worker_usage_%" PRIu64,
+                snprintf(name, sizeof(name), "fiber_worker_usage_%" PRIu64,
                          pthread_numeric_id());
 #else
-                snprintf(name, sizeof(name), "bthread_worker_usage_%ld",
+                snprintf(name, sizeof(name), "fiber_worker_usage_%ld",
                          (long)syscall(SYS_gettid));
 #endif
                 usage_variable.reset(new flare::variable::PerSecond<flare::variable::PassiveStatus<double> >
@@ -246,7 +246,7 @@ namespace flare::fiber_internal {
             // Meta and identifier of the task is persistent in this run.
             fiber_entity *const m = g->_cur_meta;
 
-            if (FLAGS_show_bthread_creation_in_vars) {
+            if (FLAGS_show_fiber_creation_in_vars) {
                 // NOTE: the thread triggering exposure of pending time may spend
                 // considerable time because a single flare::variable::LatencyRecorder
                 // contains many variable.
@@ -813,7 +813,7 @@ namespace flare::fiber_internal {
 // is still remembered and will be checked at next blocking. This designing
 // choice simplifies the implementation and reduces notification loss caused
 // by race conditions.
-// TODO: bthreads created by FIBER_ATTR_PTHREAD blocking on flare::this_fiber::fiber_sleep_for()
+// TODO: fibers created by FIBER_ATTR_PTHREAD blocking on flare::this_fiber::fiber_sleep_for()
 // can't be interrupted.
     int fiber_worker::interrupt(fiber_id_t tid, schedule_group *c) {
         // Consume current_waiter in the fiber_entity, wake it up then set it back.

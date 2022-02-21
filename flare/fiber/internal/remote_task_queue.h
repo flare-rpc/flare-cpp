@@ -29,7 +29,7 @@ namespace flare::fiber_internal {
 
 class fiber_worker;
 
-// A queue for storing bthreads created by non-workers. Since non-workers
+// A queue for storing fibers created by non-workers. Since non-workers
 // randomly choose a fiber_worker to push which distributes the contentions,
 // this queue is simply implemented as a queue protected with a lock.
 // The function names should be self-explanatory.

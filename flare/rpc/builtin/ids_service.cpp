@@ -49,7 +49,7 @@ void IdsService::default_method(::google::protobuf::RpcController* cntl_base,
         if (*endptr == '\0' || *endptr == '/') {
             flare::fiber_internal::id_status(id, os);
         } else {
-            cntl->SetFailed(ENOMETHOD, "path=%s is not a bthread_id",
+            cntl->SetFailed(ENOMETHOD, "path=%s is not a fiber_id",
                             constraint.c_str());
             return;
         }

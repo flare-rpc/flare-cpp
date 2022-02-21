@@ -35,7 +35,7 @@
 #include <sys/event.h>                           // kevent(), kqueue()
 #endif
 
-#define RUN_EPOLL_IN_BTHREAD
+#define RUN_EPOLL_IN_FIBER
 
 namespace flare::fiber_internal {
 extern schedule_group* global_task_control;
@@ -266,7 +266,7 @@ TEST(DispatcherTest, dispatch_tasks) {
         EpollMeta *m = new EpollMeta;
         em[i] = m;
         m->epfd = epfd[i];
-#ifdef RUN_EPOLL_IN_BTHREAD
+#ifdef RUN_EPOLL_IN_FIBER
         ASSERT_EQ(0, fiber_start_background(&eth[i], NULL, epoll_thread, m));
 #else
         ASSERT_EQ(0, pthread_create(&eth[i], NULL, epoll_thread, m));
@@ -307,7 +307,7 @@ TEST(DispatcherTest, dispatch_tasks) {
         EV_SET(&kqueue_event, 0, EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, NULL);
         ASSERT_EQ(0, kevent(epfd[i], &kqueue_event, 1, NULL, 0, NULL));
 #endif
-#ifdef RUN_EPOLL_IN_BTHREAD
+#ifdef RUN_EPOLL_IN_FIBER
         fiber_join(eth[i], NULL);
 #else
         pthread_join(eth[i], NULL);

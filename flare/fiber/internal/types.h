@@ -32,7 +32,7 @@
 
 typedef uint64_t fiber_id_t;
 
-// tid returned by bthread_start_* never equals this value.
+// tid returned by fiber_start_* never equals this value.
 static const fiber_id_t INVALID_FIBER_ID = 0;
 
 struct sockaddr;
@@ -56,7 +56,7 @@ typedef struct {
     uint32_t version;  // ABA avoidance
 } fiber_local_key;
 
-static const fiber_local_key INVALID_BTHREAD_KEY = {0, 0};
+static const fiber_local_key INVALID_FIBER_KEY = {0, 0};
 
 #if defined(__cplusplus)
 
@@ -201,7 +201,7 @@ typedef struct {
     uint64_t value;
 } fiber_token_t;
 
-// bthread_id returned by fiber_token_create* can never be this value.
+// fiber_token returned by fiber_token_create* can never be this value.
 // NOTE: don't confuse with INVALID_FIBER_ID!
 static const fiber_token_t INVALID_FIBER_TOKEN = {0};
 

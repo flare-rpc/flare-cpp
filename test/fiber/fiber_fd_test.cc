@@ -56,9 +56,9 @@ TEST(FDTest, read_kernel_version) {
          << "machine=" << name.machine << std::endl;
 }
 
-#define RUN_CLIENT_IN_BTHREAD 1
+#define RUN_CLIENT_IN_FIBER 1
 //#define USE_BLOCKING_EPOLL 1
-//#define RUN_EPOLL_IN_BTHREAD 1
+//#define RUN_EPOLL_IN_FIBER 1
 //#define CREATE_THREAD_TO_PROCESS 1
 
 volatile bool stop = false;
@@ -163,7 +163,7 @@ void* epoll_thread(void* arg) {
         }
 
 #ifdef CREATE_THREAD_TO_PROCESS
-        bthread_fvec vec[n];
+        fiber_fvec vec[n];
         for (int i = 0; i < n; ++i) {
             vec[i].fn = process_thread;
 # if defined(FLARE_PLATFORM_LINUX)
@@ -173,7 +173,7 @@ void* epoll_thread(void* arg) {
 # endif
         }
         fiber_id_t tid[n];
-        bthread_startv(tid, vec, n, &FIBER_ATTR_SMALL);
+        fiber_startv(tid, vec, n, &FIBER_ATTR_SMALL);
 #else
         for (int i = 0; i < n; ++i) {
 # if defined(FLARE_PLATFORM_LINUX)
@@ -194,7 +194,7 @@ void* client_thread(void* arg) {
             LOG(FATAL) << "Should not happen in this test";
             return NULL;
         }
-#ifdef RUN_CLIENT_IN_BTHREAD
+#ifdef RUN_CLIENT_IN_FIBER
         ssize_t rc;
         do {
 # if defined(FLARE_PLATFORM_LINUX)
@@ -236,13 +236,13 @@ TEST(FDTest, ping_pong) {
     const size_t NEPOLL = 2;
 
     int epfd[NEPOLL];
-#ifdef RUN_EPOLL_IN_BTHREAD
+#ifdef RUN_EPOLL_IN_FIBER
     fiber_id_t eth[NEPOLL];
 #else
     pthread_t eth[NEPOLL];
 #endif
     int fds[2 * NCLIENT];
-#ifdef RUN_CLIENT_IN_BTHREAD
+#ifdef RUN_CLIENT_IN_FIBER
     fiber_id_t cth[NCLIENT];
 #else
     pthread_t cth[NCLIENT];
@@ -292,7 +292,7 @@ TEST(FDTest, ping_pong) {
         cm[i]->fd = fds[i * 2 + 1];
         cm[i]->count = i;
         cm[i]->times = REP;
-#ifdef RUN_CLIENT_IN_BTHREAD
+#ifdef RUN_CLIENT_IN_FIBER
         flare::base::make_non_blocking(cm[i]->fd);
         ASSERT_EQ(0, fiber_start_urgent(&cth[i], NULL, client_thread, cm[i]));
 #else
@@ -307,7 +307,7 @@ TEST(FDTest, ping_pong) {
     for (size_t i = 0; i < NEPOLL; ++i) {
         EpollMeta *em = new EpollMeta;
         em->epfd = epfd[i];
-#ifdef RUN_EPOLL_IN_BTHREAD
+#ifdef RUN_EPOLL_IN_FIBER
         ASSERT_EQ(0, fiber_start_urgent(&eth[i], epoll_thread, em, NULL);
 #else
         ASSERT_EQ(0, pthread_create(&eth[i], NULL, epoll_thread, em));
@@ -315,7 +315,7 @@ TEST(FDTest, ping_pong) {
     }
 
     for (size_t i = 0; i < NCLIENT; ++i) {
-#ifdef RUN_CLIENT_IN_BTHREAD
+#ifdef RUN_CLIENT_IN_FIBER
         fiber_join(cth[i], NULL);
 #else
         pthread_join(cth[i], NULL);
@@ -335,7 +335,7 @@ TEST(FDTest, ping_pong) {
         EV_SET(&kqueue_event, 0, EVFILT_WRITE, EV_ADD | EV_ENABLE, 0, 0, NULL);
         ASSERT_EQ(0, kevent(epfd[i], &kqueue_event, 1, NULL, 0, NULL));
 #endif
-#ifdef RUN_EPOLL_IN_BTHREAD
+#ifdef RUN_EPOLL_IN_FIBER
         fiber_join(eth[i], NULL);
 #else
         pthread_join(eth[i], NULL);
@@ -537,7 +537,7 @@ TEST(FDTest, close_definitely_invalid) {
     ASSERT_EQ(ec, errno);
 }
 
-TEST(FDTest, bthread_close_fd_which_did_not_call_bthread_functions) {
+TEST(FDTest, fiber_close_fd_which_did_not_call_fiber_functions) {
     int fds[2];
     ASSERT_EQ(0, pipe(fds));
     ASSERT_EQ(0, fiber_fd_close(fds[0]));

@@ -16,7 +16,7 @@
 // under the License.
 
 #include <inttypes.h>
-#include "flare/fiber/internal/fiber.h"                  // bthread_id_xx
+#include "flare/fiber/internal/fiber.h"                  // fiber_token_xx
 #include "flare/fiber/internal/unstable.h"                 // fiber_timer_add
 #include "flare/base/static_atomic.h"
 #include "flare/base/time.h"
@@ -55,7 +55,7 @@ private:
         , _current_done(0)
         , _cntl(cntl)
         , _user_done(user_done)
-        , _callmethod_bthread(INVALID_FIBER_ID)
+        , _callmethod_fiber(INVALID_FIBER_ID)
         , _callmethod_pthread(0) {
     }
 
@@ -203,15 +203,15 @@ public:
 
     // For otherwhere to know if they're in the same thread.
     void SaveThreadInfoOfCallsite() {
-        _callmethod_bthread = fiber_self();
-        if (_callmethod_bthread == INVALID_FIBER_ID) {
+        _callmethod_fiber = fiber_self();
+        if (_callmethod_fiber == INVALID_FIBER_ID) {
             _callmethod_pthread = pthread_self();
         }
     }
 
     bool IsSameThreadAsCallMethod() const {
-        if (_callmethod_bthread != INVALID_FIBER_ID) {
-            return fiber_self() == _callmethod_bthread;
+        if (_callmethod_fiber != INVALID_FIBER_ID) {
+            return fiber_self() == _callmethod_fiber;
         }
         return pthread_self() == _callmethod_pthread;
     }
@@ -434,7 +434,7 @@ private:
     std::atomic<uint32_t> _current_done;
     Controller* _cntl;
     google::protobuf::Closure* _user_done;
-    fiber_id_t _callmethod_bthread;
+    fiber_id_t _callmethod_fiber;
     pthread_t _callmethod_pthread;
     SubDone _sub_done[0];
 };

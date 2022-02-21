@@ -731,7 +731,7 @@ TEST_F(BuiltinServiceTest, ids) {
         cntl.http_request()._unresolved_path = "not_valid";
         service.default_method(&cntl, &req, &res, &done);
         EXPECT_TRUE(cntl.Failed());
-        CheckErrorText(cntl, "is not a bthread_id");
+        CheckErrorText(cntl, "is not a fiber_id");
     }
     {
         fiber_token_t id;
@@ -747,21 +747,21 @@ TEST_F(BuiltinServiceTest, ids) {
     }
 }
 
-void *dummy_bthread(void *) {
+void *dummy_fiber(void *) {
     flare::this_fiber::fiber_sleep_for(1000000);
     return NULL;
 }
 
-TEST_F(BuiltinServiceTest, bthreads) {
+TEST_F(BuiltinServiceTest, fibers) {
     flare::rpc::FibersService service;
-    flare::rpc::BthreadsRequest req;
-    flare::rpc::BthreadsResponse res;
+    flare::rpc::FibersRequest req;
+    flare::rpc::FibersResponse res;
     {
         ClosureChecker done;
         flare::rpc::Controller cntl;
         service.default_method(&cntl, &req, &res, &done);
         EXPECT_FALSE(cntl.Failed());
-        CheckContent(cntl, "Use /bthreads/<bthread_id>");
+        CheckContent(cntl, "Use /fibers/<fiber_id>");
     }
     {
         ClosureChecker done;
@@ -773,7 +773,7 @@ TEST_F(BuiltinServiceTest, bthreads) {
     }
     {
         fiber_id_t th;
-        EXPECT_EQ(0, fiber_start_background(&th, NULL, dummy_bthread, NULL));
+        EXPECT_EQ(0, fiber_start_background(&th, NULL, dummy_fiber, NULL));
         ClosureChecker done;
         flare::rpc::Controller cntl;
         std::string id_string;
