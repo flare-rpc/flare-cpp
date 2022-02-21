@@ -26,12 +26,12 @@ namespace {
         flare::fiber::fiber_latch *event;
 
         LongIntTask(long v)
-                : value(v), event(NULL) {}
+                : value(v), event(nullptr) {}
 
         LongIntTask(long v, flare::fiber::fiber_latch *e)
                 : value(v), event(e) {}
 
-        LongIntTask() : value(0), event(NULL) {}
+        LongIntTask() : value(0), event(nullptr) {}
     };
 
     int add(void *meta, flare::fiber_internal::TaskIterator<LongIntTask> &iter) {
@@ -84,7 +84,7 @@ namespace {
         timer.start();
         int num = 0;
         flare::fiber::fiber_latch e;
-        LongIntTask t(num, pa->wait_task_completed ? &e : NULL);
+        LongIntTask t(num, pa->wait_task_completed ? &e : nullptr);
         if (pa->wait_task_completed) {
             e.reset(1);
         }
@@ -100,7 +100,7 @@ namespace {
         pa->expected_value.fetch_add(sum, std::memory_order_relaxed);
         pa->total_num.fetch_add(num);
         pa->total_time.fetch_add(timer.n_elapsed());
-        return NULL;
+        return nullptr;
     }
 
     void *push_thread_which_addresses_execq(void *arg) {
@@ -121,7 +121,7 @@ namespace {
         pa->expected_value.fetch_add(sum, std::memory_order_relaxed);
         pa->total_num.fetch_add(num);
         pa->total_time.fetch_add(timer.n_elapsed());
-        return NULL;
+        return nullptr;
     }
 
     TEST_F(ExecutionQueueTest, performance) {
@@ -139,12 +139,12 @@ namespace {
         pa.stopped = false;
         ProfilerStart("execq.prof");
         for (size_t i = 0; i < FLARE_ARRAY_SIZE(threads); ++i) {
-            pthread_create(&threads[i], NULL, &push_thread_which_addresses_execq, &pa);
+            pthread_create(&threads[i], nullptr, &push_thread_which_addresses_execq, &pa);
         }
         usleep(500 * 1000);
         ASSERT_EQ(0, flare::fiber_internal::execution_queue_stop(queue_id));
         for (size_t i = 0; i < FLARE_ARRAY_SIZE(threads); ++i) {
-            pthread_join(threads[i], NULL);
+            pthread_join(threads[i], nullptr);
         }
         ProfilerStop();
         ASSERT_EQ(0, flare::fiber_internal::execution_queue_join(queue_id));
@@ -165,12 +165,12 @@ namespace {
         pa.stopped = false;
         ProfilerStart("execq_id.prof");
         for (size_t i = 0; i < FLARE_ARRAY_SIZE(threads); ++i) {
-            pthread_create(&threads[i], NULL, &push_thread, &pa);
+            pthread_create(&threads[i], nullptr, &push_thread, &pa);
         }
         usleep(500 * 1000);
         ASSERT_EQ(0, flare::fiber_internal::execution_queue_stop(queue_id));
         for (size_t i = 0; i < FLARE_ARRAY_SIZE(threads); ++i) {
-            pthread_join(threads[i], NULL);
+            pthread_join(threads[i], nullptr);
         }
         ProfilerStop();
         ASSERT_EQ(0, flare::fiber_internal::execution_queue_join(queue_id));
@@ -235,7 +235,7 @@ namespace {
         pa.stopped = false;
         pa.wait_task_completed = true;
         for (size_t i = 0; i < FLARE_ARRAY_SIZE(threads); ++i) {
-            pthread_create(&threads[i], NULL, &push_thread, &pa);
+            pthread_create(&threads[i], nullptr, &push_thread, &pa);
         }
         g_suspending = false;
         usleep(1000);
@@ -254,7 +254,7 @@ namespace {
         pa.stopped = true;
         ASSERT_EQ(0, flare::fiber_internal::execution_queue_stop(queue_id));
         for (size_t i = 0; i < FLARE_ARRAY_SIZE(threads); ++i) {
-            pthread_join(threads[i], NULL);
+            pthread_join(threads[i], nullptr);
         }
         LOG(INFO) << "result=" << result;
         ASSERT_EQ(0, flare::fiber_internal::execution_queue_join(queue_id));
@@ -302,7 +302,7 @@ namespace {
         for (int i = 0; i < 100000; ++i) {
             flare::fiber_internal::execution_queue_execute(id, ((long) thread_id << 32) | i);
         }
-        return NULL;
+        return nullptr;
     }
 
     int check_order(void *meta, flare::fiber_internal::TaskIterator<LongIntTask> &iter) {
@@ -328,10 +328,10 @@ namespace {
                                                                   check_order, &disorder_times));
         pthread_t threads[12];
         for (size_t i = 0; i < FLARE_ARRAY_SIZE(threads); ++i) {
-            pthread_create(&threads[i], NULL, &push_thread_with_id, (void *) queue_id.value);
+            pthread_create(&threads[i], nullptr, &push_thread_with_id, (void *) queue_id.value);
         }
         for (size_t i = 0; i < FLARE_ARRAY_SIZE(threads); ++i) {
-            pthread_join(threads[i], NULL);
+            pthread_join(threads[i], nullptr);
         }
         ASSERT_EQ(0, flare::fiber_internal::execution_queue_stop(queue_id));
         ASSERT_EQ(0, flare::fiber_internal::execution_queue_join(queue_id));
@@ -372,7 +372,7 @@ namespace {
         task.thread_id = pthread_self();
         EXPECT_EQ(0, flare::fiber_internal::execution_queue_execute(queue_id, task,
                                                                     &flare::fiber_internal::TASK_OPTIONS_INPLACE));
-        return NULL;
+        return nullptr;
     }
 
     int stuck_and_check_running_thread(void *arg, flare::fiber_internal::TaskIterator<InPlaceTask> &iter) {
@@ -385,7 +385,7 @@ namespace {
             futex->store(1);
             flare::fiber_internal::futex_wake_private(futex, 1);
             while (futex->load() != 2) {
-                flare::fiber_internal::futex_wait_private(futex, 1, NULL);
+                flare::fiber_internal::futex_wait_private(futex, 1, nullptr);
             }
             ++iter;
             EXPECT_FALSE(iter);
@@ -406,9 +406,9 @@ namespace {
                                                                   stuck_and_check_running_thread,
                                                                   (void *) &futex));
         pthread_t thread;
-        ASSERT_EQ(0, pthread_create(&thread, NULL, run_first_tasks, (void *) queue_id.value));
+        ASSERT_EQ(0, pthread_create(&thread, nullptr, run_first_tasks, (void *) queue_id.value));
         while (futex.load() != 1) {
-            flare::fiber_internal::futex_wait_private(&futex, 0, NULL);
+            flare::fiber_internal::futex_wait_private(&futex, 0, nullptr);
         }
         for (size_t i = 0; i < 100; ++i) {
             InPlaceTask task;
@@ -431,7 +431,7 @@ namespace {
             flare::fiber_internal::execution_queue_execute(id, ((long) thread_id << 32) | i,
                                                            &flare::fiber_internal::TASK_OPTIONS_INPLACE);
         }
-        return NULL;
+        return nullptr;
     }
 
     TEST_F(ExecutionQueueTest, inplace_and_order) {
@@ -443,10 +443,10 @@ namespace {
                                                                   check_order, &disorder_times));
         pthread_t threads[12];
         for (size_t i = 0; i < FLARE_ARRAY_SIZE(threads); ++i) {
-            pthread_create(&threads[i], NULL, &inplace_push_thread, (void *) queue_id.value);
+            pthread_create(&threads[i], nullptr, &inplace_push_thread, (void *) queue_id.value);
         }
         for (size_t i = 0; i < FLARE_ARRAY_SIZE(threads); ++i) {
-            pthread_join(threads[i], NULL);
+            pthread_join(threads[i], nullptr);
         }
         ASSERT_EQ(0, flare::fiber_internal::execution_queue_stop(queue_id));
         ASSERT_EQ(0, flare::fiber_internal::execution_queue_join(queue_id));
@@ -486,14 +486,14 @@ namespace {
                                                                   add_with_suspend2, &result));
         g_suspending = false;
         flare::fiber_internal::TaskHandle handle0;
-        ASSERT_EQ(0, flare::fiber_internal::execution_queue_execute(queue_id, -100, NULL, &handle0));
+        ASSERT_EQ(0, flare::fiber_internal::execution_queue_execute(queue_id, -100, nullptr, &handle0));
         while (!g_suspending) {
             usleep(10);
         }
         ASSERT_EQ(1, flare::fiber_internal::execution_queue_cancel(handle0));
         ASSERT_EQ(1, flare::fiber_internal::execution_queue_cancel(handle0));
         flare::fiber_internal::TaskHandle handle1;
-        ASSERT_EQ(0, flare::fiber_internal::execution_queue_execute(queue_id, 100, NULL, &handle1));
+        ASSERT_EQ(0, flare::fiber_internal::execution_queue_execute(queue_id, 100, nullptr, &handle1));
         ASSERT_EQ(0, flare::fiber_internal::execution_queue_cancel(handle1));
         g_suspending = false;
         ASSERT_EQ(-1, flare::fiber_internal::execution_queue_cancel(handle1));
@@ -509,7 +509,7 @@ namespace {
     int cancel_self(void * /*meta*/, flare::fiber_internal::TaskIterator<CancelSelf *> &iter) {
 
         for (; iter; ++iter) {
-            while ((*iter)->handle == NULL) {
+            while ((*iter)->handle == nullptr) {
                 usleep(10);
             }
             EXPECT_EQ(1, flare::fiber_internal::execution_queue_cancel(*(*iter)->handle.load()));
@@ -523,11 +523,11 @@ namespace {
         flare::fiber_internal::ExecutionQueueId<CancelSelf *> queue_id = {0}; // to suppress warnings
         flare::fiber_internal::ExecutionQueueOptions options;
         ASSERT_EQ(0, flare::fiber_internal::execution_queue_start(&queue_id, &options,
-                                                                  cancel_self, NULL));
+                                                                  cancel_self, nullptr));
         CancelSelf task;
-        task.handle = NULL;
+        task.handle = nullptr;
         flare::fiber_internal::TaskHandle handle;
-        ASSERT_EQ(0, flare::fiber_internal::execution_queue_execute(queue_id, &task, NULL, &handle));
+        ASSERT_EQ(0, flare::fiber_internal::execution_queue_execute(queue_id, &task, nullptr, &handle));
         task.handle.store(&handle);
         ASSERT_EQ(0, flare::fiber_internal::execution_queue_stop(queue_id));
         ASSERT_EQ(0, flare::fiber_internal::execution_queue_join(queue_id));
@@ -579,7 +579,7 @@ namespace {
         m.succ_times.store(0);
         m.fail_times.store(0);
         m.race_times.store(0);
-        ASSERT_EQ(0, flare::fiber_internal::execution_queue_start(&queue_id, NULL,
+        ASSERT_EQ(0, flare::fiber_internal::execution_queue_start(&queue_id, nullptr,
                                                                   add_with_cancel, &m));
         int64_t expected = 0;
         for (int i = 0; i < 100000; ++i) {
@@ -587,7 +587,7 @@ namespace {
             AddTask t;
             t.value = i;
             t.cancel_task = false;
-            ASSERT_EQ(0, flare::fiber_internal::execution_queue_execute(queue_id, t, NULL, &h));
+            ASSERT_EQ(0, flare::fiber_internal::execution_queue_execute(queue_id, t, nullptr, &h));
             const int r = flare::base::fast_rand_less_than(4);
             expected += i;
             if (r == 0) {
@@ -598,7 +598,7 @@ namespace {
                 t.cancel_task = true;
                 t.cancel_value = i;
                 t.handle = h;
-                ASSERT_EQ(0, flare::fiber_internal::execution_queue_execute(queue_id, t, NULL));
+                ASSERT_EQ(0, flare::fiber_internal::execution_queue_execute(queue_id, t, nullptr));
             } else if (r == 2) {
                 t.cancel_task = true;
                 t.cancel_value = i;

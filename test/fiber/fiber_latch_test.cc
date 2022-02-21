@@ -14,7 +14,7 @@ namespace {
         Arg *a = (Arg *) arg;
         a->num_sig.fetch_sub(1, std::memory_order_relaxed);
         a->latcher.signal();
-        return NULL;
+        return nullptr;
     }
 
     TEST(CountdonwEventTest, sanity) {
@@ -24,7 +24,7 @@ namespace {
             a.latcher.reset(n);
             for (int i = 0; i < n; ++i) {
                 fiber_id_t tid;
-                ASSERT_EQ(0, fiber_start_urgent(&tid, NULL, signaler, &a));
+                ASSERT_EQ(0, fiber_start_urgent(&tid, nullptr, signaler, &a));
             }
             a.latcher.wait();
             ASSERT_EQ(0, a.num_sig.load(std::memory_order_relaxed));
