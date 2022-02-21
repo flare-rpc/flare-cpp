@@ -83,7 +83,7 @@ int Stream::Create(const StreamOptions &options,
         return -1;
     }
     flare::fiber_internal::ExecutionQueueOptions q_opt;
-    q_opt.bthread_attr 
+    q_opt.fiber_attr
         = FLAGS_usercode_in_pthread ? FIBER_ATTR_PTHREAD : FIBER_ATTR_NORMAL;
     if (flare::fiber_internal::execution_queue_start(&s->_consumer_queue, &q_opt, Consume, s) != 0) {
         LOG(FATAL) << "Fail to create ExecutionQueue";
@@ -289,7 +289,7 @@ int Stream::AppendIfNotFull(const flare::io::cord_buf &data) {
 
 void Stream::SetRemoteConsumed(size_t new_remote_consumed) {
     CHECK(_options.max_buf_size > 0);
-    bthread_id_list_t tmplist;
+    fiber_token_list_t tmplist;
     bthread_id_list_init(&tmplist, 0, 0);
     fiber_mutex_lock(&_congestion_control_mutex);
     if (_remote_consumed >= new_remote_consumed) {
@@ -316,7 +316,7 @@ void* Stream::RunOnWritable(void* arg) {
     return NULL;
 }
 
-int Stream::TriggerOnWritable(bthread_id_t id, void *data, int error_code) {
+int Stream::TriggerOnWritable(fiber_token_t id, void *data, int error_code) {
     WritableMeta *wm = (WritableMeta*)data;
     
     if (wm->has_timer) {
@@ -339,19 +339,19 @@ int Stream::TriggerOnWritable(bthread_id_t id, void *data, int error_code) {
 }
 
 void OnTimedOut(void *arg) {
-    bthread_id_t id = { reinterpret_cast<uint64_t>(arg) };
+    fiber_token_t id = { reinterpret_cast<uint64_t>(arg) };
     bthread_id_error(id, ETIMEDOUT);
 }
 
 void Stream::Wait(void (*on_writable)(StreamId, void*, int), void* arg, 
-                  const timespec* due_time, bool new_thread, bthread_id_t *join_id) {
+                  const timespec* due_time, bool new_thread, fiber_token_t *join_id) {
     WritableMeta *wm = new WritableMeta;
     wm->on_writable = on_writable;
     wm->id = id();
     wm->arg = arg;
     wm->new_thread = new_thread;
     wm->has_timer = false;
-    bthread_id_t wait_id;
+    fiber_token_t wait_id;
     const int rc = bthread_id_create(&wait_id, wm, TriggerOnWritable);
     if (rc != 0) {
         CHECK(false) << "Fail to create bthread_id, " << flare_error(rc);
@@ -397,9 +397,9 @@ void OnWritable(StreamId, void *arg, int error_code) {
 
 int Stream::Wait(const timespec* due_time) {
     int rc;
-    bthread_id_t join_id = INVALID_BTHREAD_ID;
+    fiber_token_t join_id = INVALID_FIBER_TOKEN;
     Wait(OnWritable, &rc, due_time, false, &join_id);
-    if (join_id != INVALID_BTHREAD_ID) {
+    if (join_id != INVALID_FIBER_TOKEN) {
         bthread_id_join(join_id);
     }
     return rc;

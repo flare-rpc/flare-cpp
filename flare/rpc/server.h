@@ -675,7 +675,7 @@ friend class Controller;
     time_t _last_start_time;
     fiber_id_t _derivative_thread;
     
-    bthread_keytable_pool_t* _keytable_pool;
+    fiber_keytable_pool_t* _keytable_pool;
 
     // mutable is required for `ServerPrivateAccessor' to change this variable
     mutable flare::variable::Adder<int64_t> _nerror_var;

@@ -205,7 +205,7 @@ private:
     SubKeyTable* _subs[KEY_1STLEVEL_SIZE];
 };
 
-static KeyTable* borrow_keytable(bthread_keytable_pool_t* pool) {
+static KeyTable* borrow_keytable(fiber_keytable_pool_t* pool) {
     if (pool != NULL && pool->free_keytables) {
         FLARE_SCOPED_LOCK(pool->mutex);
         KeyTable* p = (KeyTable*)pool->free_keytables;
@@ -219,7 +219,7 @@ static KeyTable* borrow_keytable(bthread_keytable_pool_t* pool) {
 
 // Referenced in task_group.cpp, must be extern.
 // Caller of this function must hold the KeyTable
-void return_keytable(bthread_keytable_pool_t* pool, KeyTable* kt) {
+void return_keytable(fiber_keytable_pool_t* pool, KeyTable* kt) {
     if (NULL == kt) {
         return;
     }
@@ -275,7 +275,7 @@ static flare::variable::PassiveStatus<size_t> s_bthread_keytable_memory(
 
 extern "C" {
 
-int bthread_keytable_pool_init(bthread_keytable_pool_t* pool) {
+int bthread_keytable_pool_init(fiber_keytable_pool_t* pool) {
     if (pool == NULL) {
         LOG(ERROR) << "Param[pool] is NULL";
         return EINVAL;
@@ -286,7 +286,7 @@ int bthread_keytable_pool_init(bthread_keytable_pool_t* pool) {
     return 0;
 }
 
-int bthread_keytable_pool_destroy(bthread_keytable_pool_t* pool) {
+int bthread_keytable_pool_destroy(fiber_keytable_pool_t* pool) {
     if (pool == NULL) {
         LOG(ERROR) << "Param[pool] is NULL";
         return EINVAL;
@@ -325,8 +325,8 @@ int bthread_keytable_pool_destroy(bthread_keytable_pool_t* pool) {
     return 0;
 }
 
-int bthread_keytable_pool_getstat(bthread_keytable_pool_t* pool,
-                                  bthread_keytable_pool_stat_t* stat) {
+int bthread_keytable_pool_getstat(fiber_keytable_pool_t* pool,
+                                  fiber_keytable_pool_stat_t* stat) {
     if (pool == NULL || stat == NULL) {
         LOG(ERROR) << "Param[pool] or Param[stat] is NULL";
         return EINVAL;
@@ -342,7 +342,7 @@ int bthread_keytable_pool_getstat(bthread_keytable_pool_t* pool,
 // TODO: this is not strict `reserve' because we only check #free.
 // Currently there's no way to track KeyTables that may be returned
 // to the pool in future.
-void bthread_keytable_pool_reserve(bthread_keytable_pool_t* pool,
+void bthread_keytable_pool_reserve(fiber_keytable_pool_t* pool,
                                    size_t nfree,
                                    fiber_local_key key,
                                    void* ctor(const void*),
@@ -351,7 +351,7 @@ void bthread_keytable_pool_reserve(bthread_keytable_pool_t* pool,
         LOG(ERROR) << "Param[pool] is NULL";
         return;
     }
-    bthread_keytable_pool_stat_t stat;
+    fiber_keytable_pool_stat_t stat;
     if (bthread_keytable_pool_getstat(pool, &stat) != 0) {
         LOG(ERROR) << "Fail to getstat of pool=" << pool;
         return;

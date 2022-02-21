@@ -23,7 +23,7 @@
 #include "flare/rpc/builtin/ids_service.h"
 
 namespace flare::fiber_internal {
-void id_status(bthread_id_t id, std::ostream& os);
+void id_status(fiber_token_t id, std::ostream& os);
 void id_pool_status(std::ostream& os);
 }
 
@@ -45,7 +45,7 @@ void IdsService::default_method(::google::protobuf::RpcController* cntl_base,
         flare::fiber_internal::id_pool_status(os);
     } else {
         char* endptr = NULL;
-        bthread_id_t id = { strtoull(constraint.c_str(), &endptr, 10) };
+        fiber_token_t id = { strtoull(constraint.c_str(), &endptr, 10) };
         if (*endptr == '\0' || *endptr == '/') {
             flare::fiber_internal::id_status(id, os);
         } else {

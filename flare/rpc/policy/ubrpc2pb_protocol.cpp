@@ -443,7 +443,7 @@ void ProcessUbrpcResponse(InputMessageBase* msg_base) {
     Socket* socket = msg->socket();
     
     // Fetch correlation id that we saved before in `PackUbrpcRequest'
-    const bthread_id_t cid = { static_cast<uint64_t>(socket->correlation_id()) };
+    const fiber_token_t cid = { static_cast<uint64_t>(socket->correlation_id()) };
     Controller* cntl = NULL;
     const int rc = bthread_id_lock(cid, (void**)&cntl);
     if (rc != 0) {

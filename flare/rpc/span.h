@@ -90,8 +90,8 @@ public:
     int64_t GetEndRealTimeUs() const;
 
     void set_log_id(uint64_t cid) { _log_id = cid; }
-    void set_base_cid(bthread_id_t id) { _base_cid = id; }
-    void set_ending_cid(bthread_id_t id) { _ending_cid = id; }
+    void set_base_cid(fiber_token_t id) { _base_cid = id; }
+    void set_ending_cid(fiber_token_t id) { _ending_cid = id; }
     void set_remote_side(const flare::base::end_point& pt) { _remote_side = pt; }
     void set_protocol(ProtocolType p) { _protocol = p; }
     void set_error_code(int error_code) { _error_code = error_code; }
@@ -120,8 +120,8 @@ public:
     uint64_t parent_span_id() const { return _parent_span_id; }
     uint64_t span_id() const { return _span_id; }
     uint64_t log_id() const { return _log_id; }
-    bthread_id_t base_cid() const { return _base_cid; }
-    bthread_id_t ending_cid() const { return _ending_cid; }
+    fiber_token_t base_cid() const { return _base_cid; }
+    fiber_token_t ending_cid() const { return _ending_cid; }
     const flare::base::end_point& remote_side() const { return _remote_side; }
     SpanType type() const { return _type; }
     ProtocolType protocol() const { return _protocol; }
@@ -155,8 +155,8 @@ private:
     uint64_t _span_id;
     uint64_t _parent_span_id;
     uint64_t _log_id;
-    bthread_id_t _base_cid;
-    bthread_id_t _ending_cid;
+    fiber_token_t _base_cid;
+    fiber_token_t _ending_cid;
     flare::base::end_point _remote_side;
     SpanType _type;
     bool _async;

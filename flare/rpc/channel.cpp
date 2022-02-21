@@ -351,12 +351,12 @@ namespace flare::rpc {
     }
 
     static void HandleTimeout(void *arg) {
-        bthread_id_t correlation_id = {(uint64_t) arg};
+        fiber_token_t correlation_id = {(uint64_t) arg};
         bthread_id_error(correlation_id, ERPCTIMEDOUT);
     }
 
     static void HandleBackupRequest(void *arg) {
-        bthread_id_t correlation_id = {(uint64_t) arg};
+        fiber_token_t correlation_id = {(uint64_t) arg};
         bthread_id_error(correlation_id, EBACKUPREQUEST);
     }
 

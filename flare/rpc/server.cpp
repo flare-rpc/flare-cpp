@@ -750,7 +750,7 @@ namespace flare::rpc {
 
         // Init _keytable_pool always. If the server was stopped before, the pool
         // should be destroyed in Join().
-        _keytable_pool = new bthread_keytable_pool_t;
+        _keytable_pool = new fiber_keytable_pool_t;
         if (bthread_keytable_pool_init(_keytable_pool) != 0) {
             LOG(ERROR) << "Fail to init _keytable_pool";
             delete _keytable_pool;

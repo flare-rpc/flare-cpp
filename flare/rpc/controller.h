@@ -28,7 +28,7 @@
 #include "flare/fiber/internal/errno.h"                     // Redefine errno
 #include "flare/base/endpoint.h"                    // flare::base::end_point
 #include "flare/io/cord_buf.h"                       // flare::io::cord_buf
-#include "flare/fiber/internal/types.h"                     // bthread_id_t
+#include "flare/fiber/internal/types.h"                     // fiber_token_t
 #include "flare/rpc/options.pb.h"                   // CompressType
 #include "flare/rpc/errno.pb.h"                     // error code
 #include "flare/rpc/http_header.h"                  // HttpHeader
@@ -89,7 +89,7 @@ extern const IdlNames idl_multi_req_single_res;
 extern const IdlNames idl_multi_req_multi_res;
 
 // The identifier to be associated with a RPC call.
-typedef bthread_id_t CallId;
+typedef fiber_token_t CallId;
 
 // Styles for stopping progressive attachment.
 enum StopStyle {
@@ -571,11 +571,11 @@ private:
     static void* RunEndRPC(void* arg);
     void EndRPC(const CompletionInfo&);
 
-    static int HandleSocketFailed(bthread_id_t, void* data, int error_code,
+    static int HandleSocketFailed(fiber_token_t, void* data, int error_code,
                                   const std::string& error_text);
     void HandleSendFailed();
 
-    static int RunOnCancel(bthread_id_t, void* data, int error_code);
+    static int RunOnCancel(fiber_token_t, void* data, int error_code);
     
     void set_auth_context(const AuthContext* ctx);
 
@@ -706,7 +706,7 @@ private:
     
     void* _session_local_data;
     const Server* _server;
-    bthread_id_t _oncancel_id;
+    fiber_token_t _oncancel_id;
     const AuthContext* _auth_context;        // Authentication result
     flare::container::intrusive_ptr<MongoContext> _mongo_session_data;
     SampledRequest* _sampled_request;

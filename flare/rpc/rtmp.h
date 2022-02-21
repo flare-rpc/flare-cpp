@@ -848,7 +848,7 @@ friend class RtmpRetryingClientStream;
 
     void OnFailedToCreateStream();
     
-    static int RunOnFailed(bthread_id_t id, void* data, int);
+    static int RunOnFailed(fiber_token_t id, void* data, int);
     void OnStopInternal();
 
     // Called when the stream received a status message. Server may send status
@@ -861,7 +861,7 @@ friend class RtmpRetryingClientStream;
 
     flare::container::intrusive_ptr<RtmpClientImpl> _client_impl;
     flare::container::intrusive_ptr<RtmpClientStream> _self_ref;
-    bthread_id_t _onfail_id;
+    fiber_token_t _onfail_id;
     CallId _create_stream_rpc_id;
     bool _from_socketmap;
     bool _created_stream_with_play_or_publish;
@@ -1116,12 +1116,12 @@ private:
 friend class policy::RtmpContext;
 friend class policy::RtmpChunkStream;
     int SendStreamDry();
-    static int RunOnFailed(bthread_id_t id, void* data, int);
+    static int RunOnFailed(fiber_token_t id, void* data, int);
     void OnStopInternal();
     // Indicating the client supports multiple streams over one connection.
     bool _client_supports_stream_multiplexing;
     bool _is_publish;
-    bthread_id_t _onfail_id;
+    fiber_token_t _onfail_id;
 };
 
 } // namespace flare::rpc

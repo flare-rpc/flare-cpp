@@ -73,13 +73,13 @@ int main(int argc, char* argv[]) {
 }
 
 struct WaitData {
-    bthread_id_t id;
+    fiber_token_t id;
     int error_code;
     std::string error_text;
 
-    WaitData() : id(INVALID_BTHREAD_ID), error_code(0) {}
+    WaitData() : id(INVALID_FIBER_TOKEN), error_code(0) {}
 };
-int OnWaitIdReset(bthread_id_t id, void* data, int error_code,
+int OnWaitIdReset(fiber_token_t id, void* data, int error_code,
                   const std::string& error_text) {
     static_cast<WaitData*>(data)->id = id;
     static_cast<WaitData*>(data)->error_code = error_code;
@@ -238,7 +238,7 @@ TEST_F(SocketTest, single_threaded_write) {
             } else if (i % 4 == 1) {
                 flare::rpc::SocketMessagePtr<MyErrorMessage> msg(
                     new MyErrorMessage(flare::base::flare_status(EINVAL, "Invalid input")));
-                bthread_id_t wait_id;
+                fiber_token_t wait_id;
                 WaitData data;
                 ASSERT_EQ(0, bthread_id_create2(&wait_id, &data, OnWaitIdReset));
                 flare::rpc::Socket::WriteOptions wopt;
@@ -429,7 +429,7 @@ void* FailedWriter(void* void_arg) {
     }
     char buf[32];
     for (size_t i = 0; i < arg->times; ++i) {
-        bthread_id_t id;
+        fiber_token_t id;
         EXPECT_EQ(0, bthread_id_create(&id, NULL, NULL));
         snprintf(buf, sizeof(buf), "%0" FLARE_SYMBOLSTR(NUMBER_WIDTH) "lu",
                  i + arg->offset);
@@ -519,7 +519,7 @@ TEST_F(SocketTest, not_health_check_when_nref_hits_0) {
         src.append(buf, 12 + meta_len + len);
         ASSERT_EQ(12 + meta_len + len, src.length());
 #ifdef CONNECT_IN_KEEPWRITE
-        bthread_id_t wait_id;
+        fiber_token_t wait_id;
         WaitData data;
         ASSERT_EQ(0, bthread_id_create2(&wait_id, &data, OnWaitIdReset));
         flare::rpc::Socket::WriteOptions wopt;
@@ -678,7 +678,7 @@ TEST_F(SocketTest, health_check) {
         ASSERT_EQ(12 + meta_len + len, src.length());
     }
 #ifdef CONNECT_IN_KEEPWRITE
-    bthread_id_t wait_id;
+    fiber_token_t wait_id;
     WaitData data;
     ASSERT_EQ(0, bthread_id_create2(&wait_id, &data, OnWaitIdReset));
     flare::rpc::Socket::WriteOptions wopt;

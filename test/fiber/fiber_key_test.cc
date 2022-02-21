@@ -28,8 +28,8 @@
 #include "flare/fiber/this_fiber.h"
 
 extern "C" {
-int bthread_keytable_pool_size(bthread_keytable_pool_t *pool) {
-    bthread_keytable_pool_stat_t s;
+int bthread_keytable_pool_size(fiber_keytable_pool_t *pool) {
+    fiber_keytable_pool_stat_t s;
     if (bthread_keytable_pool_getstat(pool, &s) != 0) {
         return 0;
     }
@@ -374,7 +374,7 @@ namespace {
         fiber_local_key key;
         ASSERT_EQ(0, fiber_key_create(&key, pool_dtor));
 
-        bthread_keytable_pool_t pool;
+        fiber_keytable_pool_t pool;
         ASSERT_EQ(0, bthread_keytable_pool_init(&pool));
         ASSERT_EQ(0, bthread_keytable_pool_size(&pool));
 

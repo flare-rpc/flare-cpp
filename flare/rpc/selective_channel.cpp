@@ -111,7 +111,7 @@ class SubDone : public google::protobuf::Closure {
 public:
     explicit SubDone(Sender* owner)
         : _owner(owner)
-        , _cid(INVALID_BTHREAD_ID)
+        , _cid(INVALID_FIBER_TOKEN)
         , _peer_id(INVALID_SOCKET_ID) {
     }
     ~SubDone() {}

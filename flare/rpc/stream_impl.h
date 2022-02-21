@@ -73,7 +73,7 @@ friend class MessageBatcher;
     void SetRemoteConsumed(size_t _remote_consumed);
     void TriggerOnConnectIfNeed();
     void Wait(void (*on_writable)(StreamId, void*, int), void* arg, 
-              const timespec* due_time, bool new_thread, bthread_id_t *join_id);
+              const timespec* due_time, bool new_thread, fiber_token_t *join_id);
     void SendFeedback();
     void StartIdleTimer();
     void StopIdleTimer();
@@ -81,7 +81,7 @@ friend class MessageBatcher;
     void WriteToHostSocket(flare::io::cord_buf* b);
 
     static int Consume(void *meta, flare::fiber_internal::TaskIterator<flare::io::cord_buf*>& iter);
-    static int TriggerOnWritable(bthread_id_t id, void *data, int error_code);
+    static int TriggerOnWritable(fiber_token_t id, void *data, int error_code);
     static void *RunOnWritable(void* arg);
     static void* RunOnConnect(void* arg);
 
@@ -114,7 +114,7 @@ friend class MessageBatcher;
     fiber_mutex_t _congestion_control_mutex;
     size_t _produced;
     size_t _remote_consumed;
-    bthread_id_list_t _writable_wait_list;
+    fiber_token_list_t _writable_wait_list;
 
     int64_t _local_consumed;
     StreamSettings _remote_settings;   

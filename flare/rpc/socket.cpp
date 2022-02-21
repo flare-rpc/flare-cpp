@@ -50,7 +50,7 @@
 
 namespace flare::fiber_internal {
 size_t __attribute__((weak))
-get_sizes(const bthread_id_list_t* list, size_t* cnt, size_t n);
+get_sizes(const fiber_token_list_t* list, size_t* cnt, size_t n);
 }
 
 
@@ -298,7 +298,7 @@ struct FLARE_CACHELINE_ALIGNMENT Socket::WriteRequest {
     
     flare::io::cord_buf data;
     WriteRequest* next;
-    bthread_id_t id_wait;
+    fiber_token_t id_wait;
     Socket* socket;
     
     uint32_t pipelined_count() const {
@@ -432,7 +432,7 @@ Socket::Socket(Forbidden)
     , _health_check_interval_s(-1)
     , _ninprocess(1)
     , _auth_flag_error(0)
-    , _auth_id(INVALID_BTHREAD_ID)
+    , _auth_id(INVALID_FIBER_TOKEN)
     , _auth_context(NULL)
     , _ssl_state(SSL_UNKNOWN)
     , _ssl_session(NULL)
@@ -464,9 +464,9 @@ Socket::~Socket() {
 void Socket::ReturnSuccessfulWriteRequest(Socket::WriteRequest* p) {
     DCHECK(p->data.empty());
     AddOutputMessages(1);
-    const bthread_id_t id_wait = p->id_wait;
+    const fiber_token_t id_wait = p->id_wait;
     flare::memory::return_object(p);
-    if (id_wait != INVALID_BTHREAD_ID) {
+    if (id_wait != INVALID_FIBER_TOKEN) {
         NotifyOnFailed(id_wait);
     }
 }
@@ -477,9 +477,9 @@ void Socket::ReturnFailedWriteRequest(Socket::WriteRequest* p, int error_code,
         CancelUnwrittenBytes(p->data.size());
     }
     p->data.clear();  // data is probably not written.
-    const bthread_id_t id_wait = p->id_wait;
+    const fiber_token_t id_wait = p->id_wait;
     flare::memory::return_object(p);
-    if (id_wait != INVALID_BTHREAD_ID) {
+    if (id_wait != INVALID_FIBER_TOKEN) {
         bthread_id_error2(id_wait, error_code, error_text);
     }
 }
@@ -905,7 +905,7 @@ int Socket::SetFailed(SocketId id) {
     return ptr->SetFailed();
 }
 
-void Socket::NotifyOnFailed(bthread_id_t id) {
+void Socket::NotifyOnFailed(fiber_token_t id) {
     pthread_mutex_lock(&_id_wait_list_mutex);
     if (!Failed()) {
         const int rc = bthread_id_list_add(&_id_wait_list, id);
@@ -1386,8 +1386,8 @@ void Socket::CheckConnectedAndKeepWrite(int fd, int err, void* data) {
     }
 }
      
-inline int SetError(bthread_id_t id_wait, int ec) {
-    if (id_wait != INVALID_BTHREAD_ID) {
+inline int SetError(fiber_token_t id_wait, int ec) {
+    if (id_wait != INVALID_FIBER_TOKEN) {
         bthread_id_error(id_wait, ec);
         return 0;
     } else {
@@ -1396,11 +1396,11 @@ inline int SetError(bthread_id_t id_wait, int ec) {
     }
 }
 
-int Socket::ConductError(bthread_id_t id_wait) {
+int Socket::ConductError(fiber_token_t id_wait) {
     pthread_mutex_lock(&_id_wait_list_mutex);
     if (Failed()) {
         const int error_code = non_zero_error_code();
-        if (id_wait != INVALID_BTHREAD_ID) {
+        if (id_wait != INVALID_FIBER_TOKEN) {
             const std::string error_text = _error_text;
             pthread_mutex_unlock(&_id_wait_list_mutex);
             bthread_id_error2(id_wait, error_code, error_text);

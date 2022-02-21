@@ -1648,7 +1648,7 @@ namespace flare::rpc {
 // ============ RtmpClientStream =============
 
     RtmpClientStream::RtmpClientStream()
-            : RtmpStreamBase(true), _onfail_id(INVALID_BTHREAD_ID), _create_stream_rpc_id(INVALID_BTHREAD_ID),
+            : RtmpStreamBase(true), _onfail_id(INVALID_FIBER_TOKEN), _create_stream_rpc_id(INVALID_FIBER_TOKEN),
               _from_socketmap(true), _created_stream_with_play_or_publish(false), _state(STATE_UNINITIALIZED) {
         get_rtmp_variables()->client_stream_count << 1;
         _self_ref.reset(this);
@@ -1659,8 +1659,8 @@ namespace flare::rpc {
     }
 
     void RtmpClientStream::Destroy() {
-        bthread_id_t onfail_id = INVALID_BTHREAD_ID;
-        CallId create_stream_rpc_id = INVALID_BTHREAD_ID;
+        fiber_token_t onfail_id = INVALID_FIBER_TOKEN;
+        CallId create_stream_rpc_id = INVALID_FIBER_TOKEN;
         flare::container::intrusive_ptr<RtmpClientStream> self_ref;
 
         std::unique_lock<flare::base::Mutex> mu(_state_mutex);
@@ -1697,7 +1697,7 @@ namespace flare::rpc {
     }
 
     void RtmpClientStream::SignalError() {
-        bthread_id_t onfail_id = INVALID_BTHREAD_ID;
+        fiber_token_t onfail_id = INVALID_FIBER_TOKEN;
         std::unique_lock<flare::base::Mutex> mu(_state_mutex);
         switch (_state) {
             case STATE_UNINITIALIZED:
@@ -1758,7 +1758,7 @@ namespace flare::rpc {
         return this;
     }
 
-    int RtmpClientStream::RunOnFailed(bthread_id_t id, void *data, int) {
+    int RtmpClientStream::RunOnFailed(fiber_token_t id, void *data, int) {
         flare::container::intrusive_ptr<RtmpClientStream> stream(
                 static_cast<RtmpClientStream *>(data), false);
         CHECK(stream->_rtmpsock);
@@ -1841,7 +1841,7 @@ namespace flare::rpc {
         }
 
         int rc = 0;
-        bthread_id_t onfail_id = INVALID_BTHREAD_ID;
+        fiber_token_t onfail_id = INVALID_FIBER_TOKEN;
         {
             std::unique_lock<flare::base::Mutex> mu(_state_mutex);
             switch (_state) {
@@ -1870,7 +1870,7 @@ namespace flare::rpc {
                     return OnStopInternal();
             }
         }
-        if (onfail_id != INVALID_BTHREAD_ID) {
+        if (onfail_id != INVALID_FIBER_TOKEN) {
             _rtmpsock->NotifyOnFailed(onfail_id);
         }
     }
@@ -2587,7 +2587,7 @@ namespace flare::rpc {
 
     RtmpServerStream::RtmpServerStream()
             : RtmpStreamBase(false), _client_supports_stream_multiplexing(false), _is_publish(false),
-              _onfail_id(INVALID_BTHREAD_ID) {
+              _onfail_id(INVALID_FIBER_TOKEN) {
         get_rtmp_variables()->server_stream_count << 1;
     }
 
@@ -2711,7 +2711,7 @@ namespace flare::rpc {
         return SendControlMessage(policy::RTMP_MESSAGE_USER_CONTROL, data, sizeof(data));
     }
 
-    int RtmpServerStream::RunOnFailed(bthread_id_t id, void *data, int) {
+    int RtmpServerStream::RunOnFailed(fiber_token_t id, void *data, int) {
         flare::container::intrusive_ptr<RtmpServerStream> stream(
                 static_cast<RtmpServerStream *>(data), false);
         CHECK(stream->_rtmpsock);

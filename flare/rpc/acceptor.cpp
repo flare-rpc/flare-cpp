@@ -29,7 +29,7 @@ namespace flare::rpc {
 
     static const int INITIAL_CONNECTION_CAP = 65536;
 
-    Acceptor::Acceptor(bthread_keytable_pool_t *pool)
+    Acceptor::Acceptor(fiber_keytable_pool_t *pool)
             : InputMessenger(), _keytable_pool(pool), _status(UNINITIALIZED), _idle_timeout_sec(-1),
               _close_idle_tid(INVALID_FIBER_ID), _listened_fd(-1), _acception_id(0), _empty_cond(), _ssl_ctx(NULL) {
     }

@@ -24,18 +24,18 @@
 #include "flare/fiber/this_fiber.h"
 
 namespace flare::fiber_internal {
-    void id_status(bthread_id_t, std::ostream &);
+    void id_status(fiber_token_t, std::ostream &);
 
-    uint32_t id_value(bthread_id_t id);
+    uint32_t id_value(fiber_token_t id);
 }
 
 namespace {
-    inline uint32_t get_version(bthread_id_t id) {
+    inline uint32_t get_version(fiber_token_t id) {
         return (uint32_t) (id.value & 0xFFFFFFFFul);
     }
 
     struct SignalArg {
-        bthread_id_t id;
+        fiber_token_t id;
         long sleep_us_before_fight;
         long sleep_us_before_signal;
     };
@@ -59,10 +59,10 @@ namespace {
     }
 
     TEST(BthreadIdTest, join_after_destroy) {
-        bthread_id_t id1;
+        fiber_token_t id1;
         int x = 0xdead;
         ASSERT_EQ(0, bthread_id_create_ranged(&id1, &x, NULL, 2));
-        bthread_id_t id2 = {id1.value + 1};
+        fiber_token_t id2 = {id1.value + 1};
         ASSERT_EQ(get_version(id1), flare::fiber_internal::id_value(id1));
         ASSERT_EQ(get_version(id1), flare::fiber_internal::id_value(id2));
         pthread_t th[8];
@@ -88,7 +88,7 @@ namespace {
     }
 
     TEST(BthreadIdTest, join_before_destroy) {
-        bthread_id_t id1;
+        fiber_token_t id1;
         int x = 0xdead;
         ASSERT_EQ(0, bthread_id_create(&id1, &x, NULL));
         ASSERT_EQ(get_version(id1), flare::fiber_internal::id_value(id1));
@@ -114,11 +114,11 @@ namespace {
     }
 
     struct OnResetArg {
-        bthread_id_t id;
+        fiber_token_t id;
         int error_code;
     };
 
-    int on_reset(bthread_id_t id, void *data, int error_code) {
+    int on_reset(fiber_token_t id, void *data, int error_code) {
         OnResetArg *arg = static_cast<OnResetArg *>(data);
         arg->id = id;
         arg->error_code = error_code;
@@ -126,7 +126,7 @@ namespace {
     }
 
     TEST(BthreadIdTest, error_is_destroy) {
-        bthread_id_t id1;
+        fiber_token_t id1;
         OnResetArg arg = {{0}, 0};
         ASSERT_EQ(0, bthread_id_create(&id1, &arg, on_reset));
         ASSERT_EQ(get_version(id1), flare::fiber_internal::id_value(id1));
@@ -137,10 +137,10 @@ namespace {
     }
 
     TEST(BthreadIdTest, error_is_destroy_ranged) {
-        bthread_id_t id1;
+        fiber_token_t id1;
         OnResetArg arg = {{0}, 0};
         ASSERT_EQ(0, bthread_id_create_ranged(&id1, &arg, on_reset, 2));
-        bthread_id_t id2 = {id1.value + 1};
+        fiber_token_t id2 = {id1.value + 1};
         ASSERT_EQ(get_version(id1), flare::fiber_internal::id_value(id2));
         ASSERT_EQ(0, bthread_id_error(id2, EBADF));
         ASSERT_EQ(EBADF, arg.error_code);
@@ -149,7 +149,7 @@ namespace {
     }
 
     TEST(BthreadIdTest, default_error_is_destroy) {
-        bthread_id_t id1;
+        fiber_token_t id1;
         ASSERT_EQ(0, bthread_id_create(&id1, NULL, NULL));
         ASSERT_EQ(get_version(id1), flare::fiber_internal::id_value(id1));
         ASSERT_EQ(0, bthread_id_error(id1, EBADF));
@@ -157,9 +157,9 @@ namespace {
     }
 
     TEST(BthreadIdTest, doubly_destroy) {
-        bthread_id_t id1;
+        fiber_token_t id1;
         ASSERT_EQ(0, bthread_id_create_ranged(&id1, NULL, NULL, 2));
-        bthread_id_t id2 = {id1.value + 1};
+        fiber_token_t id2 = {id1.value + 1};
         ASSERT_EQ(get_version(id1), flare::fiber_internal::id_value(id1));
         ASSERT_EQ(get_version(id1), flare::fiber_internal::id_value(id2));
         ASSERT_EQ(0, bthread_id_error(id1, EBADF));
@@ -169,7 +169,7 @@ namespace {
         ASSERT_EQ(EINVAL, bthread_id_error(id2, EBADF));
     }
 
-    static int on_numeric_error(bthread_id_t id, void *data, int error_code) {
+    static int on_numeric_error(fiber_token_t id, void *data, int error_code) {
         std::vector<int> *result = static_cast<std::vector<int> *>(data);
         result->push_back(error_code);
         EXPECT_EQ(0, bthread_id_unlock(id));
@@ -177,7 +177,7 @@ namespace {
     }
 
     TEST(BthreadIdTest, many_error) {
-        bthread_id_t id1;
+        fiber_token_t id1;
         std::vector<int> result;
         ASSERT_EQ(0, bthread_id_create(&id1, &result, on_numeric_error));
         ASSERT_EQ(get_version(id1), flare::fiber_internal::id_value(id1));
@@ -214,7 +214,7 @@ namespace {
     }
 
     static void *locker(void *arg) {
-        bthread_id_t id = {(uintptr_t) arg};
+        fiber_token_t id = {(uintptr_t) arg};
         flare::base::stop_watcher tm;
         tm.start();
         EXPECT_EQ(0, bthread_id_lock(id, NULL));
@@ -226,7 +226,7 @@ namespace {
     }
 
     TEST(BthreadIdTest, id_lock) {
-        bthread_id_t id1;
+        fiber_token_t id1;
         ASSERT_EQ(0, bthread_id_create(&id1, NULL, NULL));
         ASSERT_EQ(get_version(id1), flare::fiber_internal::id_value(id1));
         pthread_t th[8];
@@ -240,7 +240,7 @@ namespace {
     }
 
     static void *failed_locker(void *arg) {
-        bthread_id_t id = {(uintptr_t) arg};
+        fiber_token_t id = {(uintptr_t) arg};
         int rc = bthread_id_lock(id, NULL);
         if (rc == 0) {
             flare::this_fiber::fiber_sleep_for(2000);
@@ -253,7 +253,7 @@ namespace {
     }
 
     TEST(BthreadIdTest, id_lock_and_destroy) {
-        bthread_id_t id1;
+        fiber_token_t id1;
         ASSERT_EQ(0, bthread_id_create(&id1, NULL, NULL));
         ASSERT_EQ(get_version(id1), flare::fiber_internal::id_value(id1));
         pthread_t th[8];
@@ -271,7 +271,7 @@ namespace {
     }
 
     TEST(BthreadIdTest, join_after_destroy_before_unlock) {
-        bthread_id_t id1;
+        fiber_token_t id1;
         int x = 0xdead;
         ASSERT_EQ(0, bthread_id_create(&id1, &x, NULL));
         ASSERT_EQ(get_version(id1), flare::fiber_internal::id_value(id1));
@@ -299,7 +299,7 @@ namespace {
     }
 
     struct StoppedWaiterArgs {
-        bthread_id_t id;
+        fiber_token_t id;
         bool thread_started;
     };
 
@@ -312,7 +312,7 @@ namespace {
     }
 
     TEST(BthreadIdTest, stop_a_wait_after_fight_before_signal) {
-        bthread_id_t id1;
+        fiber_token_t id1;
         int x = 0xdead;
         ASSERT_EQ(0, bthread_id_create(&id1, &x, NULL));
         ASSERT_EQ(get_version(id1), flare::fiber_internal::id_value(id1));
@@ -342,13 +342,13 @@ namespace {
     }
 
     void *waiter(void *arg) {
-        bthread_id_t id = {(uintptr_t) arg};
+        fiber_token_t id = {(uintptr_t) arg};
         EXPECT_EQ(0, bthread_id_join(id));
         EXPECT_EQ(get_version(id) + 4, flare::fiber_internal::id_value(id));
         return NULL;
     }
 
-    int handle_data(bthread_id_t id, void *data, int error_code) {
+    int handle_data(fiber_token_t id, void *data, int error_code) {
         EXPECT_EQ(EBADF, error_code);
         ++*(int *) data;
         EXPECT_EQ(0, bthread_id_unlock_and_destroy(id));
@@ -356,9 +356,9 @@ namespace {
     }
 
     TEST(BthreadIdTest, list_signal) {
-        bthread_id_list_t list;
+        fiber_token_list_t list;
         ASSERT_EQ(0, bthread_id_list_init(&list, 32, 32));
-        bthread_id_t id[16];
+        fiber_token_t id[16];
         int data[FLARE_ARRAY_SIZE(id)];
         for (size_t i = 0; i < FLARE_ARRAY_SIZE(id); ++i) {
             data[i] = i;
@@ -383,12 +383,12 @@ namespace {
         bthread_id_list_destroy(&list);
     }
 
-    int error_without_unlock(bthread_id_t, void *, int) {
+    int error_without_unlock(fiber_token_t, void *, int) {
         return 0;
     }
 
     TEST(BthreadIdTest, status) {
-        bthread_id_t id;
+        fiber_token_t id;
         bthread_id_create(&id, NULL, NULL);
         flare::fiber_internal::id_status(id, std::cout);
         bthread_id_lock(id, NULL);
@@ -408,7 +408,7 @@ namespace {
     }
 
     TEST(BthreadIdTest, reset_range) {
-        bthread_id_t id;
+        fiber_token_t id;
         ASSERT_EQ(0, bthread_id_create(&id, NULL, NULL));
         ASSERT_EQ(0, bthread_id_lock_and_reset_range(id, NULL, 1000));
         flare::fiber_internal::id_status(id, std::cout);
@@ -421,7 +421,7 @@ namespace {
     static bool any_thread_quit = false;
 
     struct FailToLockIdArgs {
-        bthread_id_t id;
+        fiber_token_t id;
         int expected_return;
     };
 
@@ -434,7 +434,7 @@ namespace {
     }
 
     TEST(BthreadIdTest, about_to_destroy_before_locking) {
-        bthread_id_t id;
+        fiber_token_t id;
         ASSERT_EQ(0, bthread_id_create(&id, NULL, NULL));
         ASSERT_EQ(0, bthread_id_lock(id, NULL));
         ASSERT_EQ(0, bthread_id_about_to_destroy(id));
@@ -451,14 +451,14 @@ namespace {
     }
 
     static void *succeed_to_lock_id(void *arg) {
-        bthread_id_t id = *(bthread_id_t *) arg;
+        fiber_token_t id = *(fiber_token_t *) arg;
         EXPECT_EQ(0, bthread_id_lock(id, NULL));
         EXPECT_EQ(0, bthread_id_unlock(id));
         return NULL;
     }
 
     TEST(BthreadIdTest, about_to_destroy_cancelled) {
-        bthread_id_t id;
+        fiber_token_t id;
         ASSERT_EQ(0, bthread_id_create(&id, NULL, NULL));
         ASSERT_EQ(0, bthread_id_lock(id, NULL));
         ASSERT_EQ(0, bthread_id_about_to_destroy(id));
@@ -476,7 +476,7 @@ namespace {
     }
 
     TEST(BthreadIdTest, about_to_destroy_during_locking) {
-        bthread_id_t id;
+        fiber_token_t id;
         ASSERT_EQ(0, bthread_id_create(&id, NULL, NULL));
         ASSERT_EQ(0, bthread_id_lock(id, NULL));
         any_thread_quit = false;
@@ -504,7 +504,7 @@ namespace {
     int expected_code = 0;
     const char *expected_desc = "";
 
-    int handler_without_desc(bthread_id_t id, void *data, int error_code) {
+    int handler_without_desc(fiber_token_t id, void *data, int error_code) {
         EXPECT_EQ(DUMMY_DATA1, data);
         EXPECT_EQ(expected_code, error_code);
         if (error_code == ESTOP) {
@@ -516,7 +516,7 @@ namespace {
         }
     }
 
-    int handler_with_desc(bthread_id_t id, void *data, int error_code,
+    int handler_with_desc(fiber_token_t id, void *data, int error_code,
                           const std::string &error_text) {
         EXPECT_EQ(DUMMY_DATA2, data);
         EXPECT_EQ(expected_code, error_code);
@@ -531,9 +531,9 @@ namespace {
     }
 
     TEST(BthreadIdTest, error_with_descriptions) {
-        bthread_id_t id1;
+        fiber_token_t id1;
         ASSERT_EQ(0, bthread_id_create(&id1, DUMMY_DATA1, handler_without_desc));
-        bthread_id_t id2;
+        fiber_token_t id2;
         ASSERT_EQ(0, bthread_id_create2(&id2, DUMMY_DATA2, handler_with_desc));
 
         // [ Matched in-place ]

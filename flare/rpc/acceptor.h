@@ -44,7 +44,7 @@ public:
     };
 
 public:
-    explicit Acceptor(bthread_keytable_pool_t* pool = NULL);
+    explicit Acceptor(fiber_keytable_pool_t* pool = NULL);
     ~Acceptor();
 
     // [thread-safe] Accept connections from `listened_fd'. Ownership of
@@ -91,7 +91,7 @@ private:
     // Remove the accepted socket `sock' from inside
     void BeforeRecycle(Socket* sock) override;
 
-    bthread_keytable_pool_t* _keytable_pool; // owned by Server
+    fiber_keytable_pool_t* _keytable_pool; // owned by Server
     Status _status;
     int _idle_timeout_sec;
     fiber_id_t _close_idle_tid;

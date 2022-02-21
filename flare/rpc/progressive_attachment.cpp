@@ -17,7 +17,7 @@
 
 
 #include "flare/log/logging.h"
-#include "flare/fiber/internal/fiber.h"   // INVALID_BTHREAD_ID before fiber r32748
+#include "flare/fiber/internal/fiber.h"   // INVALID_FIBER_TOKEN before fiber r32748
 #include "flare/rpc/progressive_attachment.h"
 #include "flare/rpc/socket.h"
 #include "flare/rpc/errno.pb.h"
@@ -37,7 +37,7 @@ ProgressiveAttachment::ProgressiveAttachment(SocketUniquePtr& movable_httpsock,
     : _before_http_1_1(before_http_1_1)
     , _pause_from_mark_rpc_as_done(false)
     , _rpc_state(RPC_RUNNING)
-    , _notify_id(INVALID_BTHREAD_ID) {
+    , _notify_id(INVALID_FIBER_TOKEN) {
     _httpsock.swap(movable_httpsock);
 }
 
@@ -63,7 +63,7 @@ ProgressiveAttachment::~ProgressiveAttachment() {
             _httpsock->ReleaseAdditionalReference();
         }
     }
-    if (_notify_id != INVALID_BTHREAD_ID) {
+    if (_notify_id != INVALID_FIBER_TOKEN) {
         bthread_id_error(_notify_id, 0);
     }
 }
@@ -232,7 +232,7 @@ flare::base::end_point ProgressiveAttachment::local_side() const {
     return _httpsock ? _httpsock->local_side() : flare::base::end_point();
 }
 
-static int RunOnFailed(bthread_id_t id, void* data, int) {
+static int RunOnFailed(fiber_token_t id, void* data, int) {
     bthread_id_unlock_and_destroy(id);
     static_cast<google::protobuf::Closure*>(data)->Run();
     return 0;
@@ -243,7 +243,7 @@ void ProgressiveAttachment::NotifyOnStopped(google::protobuf::Closure* done) {
         LOG(ERROR) << "Param[done] is NULL";
         return;
     }
-    if (_notify_id != INVALID_BTHREAD_ID) {
+    if (_notify_id != INVALID_FIBER_TOKEN) {
         LOG(ERROR) << "NotifyOnStopped() can only be called once";
         return done->Run();
     }

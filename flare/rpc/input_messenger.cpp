@@ -144,7 +144,7 @@ struct RunLastMessage {
 
 static void QueueMessage(InputMessageBase* to_run_msg,
                          int* num_bthread_created,
-                         bthread_keytable_pool_t* keytable_pool) {
+                         fiber_keytable_pool_t* keytable_pool) {
     if (!to_run_msg) {
         return;
     }

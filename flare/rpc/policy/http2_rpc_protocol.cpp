@@ -1185,7 +1185,7 @@ DECLARE_bool(usercode_in_pthread);
                 , _state(H2_STREAM_IDLE)
 #endif
                 , _stream_id(0), _stream_ended(false), _remote_window_left(0), _deferred_window_update(0),
-                  _correlation_id(INVALID_BTHREAD_ID.value) {
+                  _correlation_id(INVALID_FIBER_TOKEN.value) {
             header().set_version(2, 0);
 #ifndef NDEBUG
             get_h2_variables()->h2_stream_context_count << 1;

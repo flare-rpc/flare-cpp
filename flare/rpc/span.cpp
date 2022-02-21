@@ -106,8 +106,8 @@ namespace flare::rpc {
             return NULL;
         }
         span->_log_id = 0;
-        span->_base_cid = INVALID_BTHREAD_ID;
-        span->_ending_cid = INVALID_BTHREAD_ID;
+        span->_base_cid = INVALID_FIBER_TOKEN;
+        span->_ending_cid = INVALID_FIBER_TOKEN;
         span->_type = SPAN_TYPE_CLIENT;
         span->_async = false;
         span->_protocol = PROTOCOL_UNKNOWN;
@@ -158,8 +158,8 @@ namespace flare::rpc {
         span->_span_id = (span_id ? span_id : GenerateSpanId());
         span->_parent_span_id = parent_span_id;
         span->_log_id = 0;
-        span->_base_cid = INVALID_BTHREAD_ID;
-        span->_ending_cid = INVALID_BTHREAD_ID;
+        span->_base_cid = INVALID_FIBER_TOKEN;
+        span->_ending_cid = INVALID_FIBER_TOKEN;
         span->_type = SPAN_TYPE_SERVER;
         span->_async = false;
         span->_protocol = PROTOCOL_UNKNOWN;

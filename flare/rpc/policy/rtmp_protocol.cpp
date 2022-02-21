@@ -2671,8 +2671,8 @@ bool RtmpChunkStream::OnCreateStream(const RtmpMessageHeader& mh,
         PLOG(WARNING) << socket->remote_side() << '[' << mh.stream_id
                       << "] Fail to respond createStream";
         // End the stream at server-side.
-        const bthread_id_t id = stream->_onfail_id;
-        if (id != INVALID_BTHREAD_ID) {
+        const fiber_token_t id = stream->_onfail_id;
+        if (id != INVALID_FIBER_TOKEN) {
             bthread_id_error(id, 0);
         }
         return false;
@@ -2975,8 +2975,8 @@ bool RtmpChunkStream::OnDeleteStream(const RtmpMessageHeader& mh,
         //RTMP_WARNING(socket, mh) << "Fail to find stream_id=" << stream_id;
         return false;
     }
-    bthread_id_t id = static_cast<RtmpServerStream*>(stream.get())->_onfail_id;
-    if (id != INVALID_BTHREAD_ID) {
+    fiber_token_t id = static_cast<RtmpServerStream*>(stream.get())->_onfail_id;
+    if (id != INVALID_FIBER_TOKEN) {
         bthread_id_error(id, 0);
     }
     return true;
@@ -3490,7 +3490,7 @@ void OnServerStreamCreated::Run(bool error,
     // TODO(gejun): Don't have received time right now.
     const int64_t received_us = start_parse_us;
     const int64_t base_realtime = flare::base::gettimeofday_us() - received_us;
-    const bthread_id_t cid = _call_id;
+    const fiber_token_t cid = _call_id;
     Controller* cntl = NULL;
     const int rc = bthread_id_lock(cid, (void**)&cntl);
     if (rc != 0) {

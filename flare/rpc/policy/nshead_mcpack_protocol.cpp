@@ -101,7 +101,7 @@ void ProcessNsheadMcpackResponse(InputMessageBase* msg_base) {
     const Socket* socket = msg->socket();
     
     // Fetch correlation id that we saved before in `PackNsheadMcpackRequest'
-    const bthread_id_t cid = { static_cast<uint64_t>(socket->correlation_id()) };
+    const fiber_token_t cid = { static_cast<uint64_t>(socket->correlation_id()) };
     Controller* cntl = NULL;
     const int rc = bthread_id_lock(cid, (void**)&cntl);
     if (rc != 0) {

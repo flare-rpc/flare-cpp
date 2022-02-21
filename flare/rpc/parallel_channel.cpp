@@ -532,7 +532,7 @@ ParallelChannel::~ParallelChannel() {
 }
 
 static void HandleTimeout(void* arg) {
-    bthread_id_t correlation_id = { (uint64_t)arg };
+    fiber_token_t correlation_id = { (uint64_t)arg };
     bthread_id_error(correlation_id, ERPCTIMEDOUT);
 }
 
@@ -542,7 +542,7 @@ void* ParallelChannel::RunDoneAndDestroy(void* arg) {
     google::protobuf::Closure* done = c->_done;
     c->_done = NULL;
     // Save call_id from the controller which may be deleted after Run().
-    const bthread_id_t cid = c->call_id();
+    const fiber_token_t cid = c->call_id();
     done->Run();
     CHECK_EQ(0, bthread_id_unlock_and_destroy(cid));
     return NULL;

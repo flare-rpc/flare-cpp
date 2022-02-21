@@ -89,17 +89,17 @@ typedef struct {
     pthread_mutex_t mutex;
     void *free_keytables;
     int destroyed;
-} bthread_keytable_pool_t;
+} fiber_keytable_pool_t;
 
 typedef struct {
     size_t nfree;
-} bthread_keytable_pool_stat_t;
+} fiber_keytable_pool_stat_t;
 
 // Attributes for thread creation.
 typedef struct fiber_attribute {
     fiber_stack_type_t stack_type;
     fiber_attribute_flag flags;
-    bthread_keytable_pool_t *keytable_pool;
+    fiber_keytable_pool_t *keytable_pool;
 
 #if defined(__cplusplus)
 
@@ -146,7 +146,7 @@ static const fiber_attribute FIBER_ATTR_DEBUG = {
 };
 
 static const size_t FIBER_EPOLL_THREAD_NUM = 1;
-static const fiber_id_t BTHREAD_ATOMIC_INIT = 0;
+static const fiber_id_t FIBER_ATOMIC_INIT = 0;
 
 // Min/Max number of work pthreads.
 static const int FIBER_MIN_CONCURRENCY = 3 + FIBER_EPOLL_THREAD_NUM;
@@ -199,28 +199,28 @@ typedef struct {
 
 typedef struct {
     uint64_t value;
-} bthread_id_t;
+} fiber_token_t;
 
 // bthread_id returned by bthread_id_create* can never be this value.
 // NOTE: don't confuse with INVALID_FIBER_ID!
-static const bthread_id_t INVALID_BTHREAD_ID = {0};
+static const fiber_token_t INVALID_FIBER_TOKEN = {0};
 
 #if defined(__cplusplus)
 
-// Overload operators for bthread_id_t
-inline bool operator==(bthread_id_t id1, bthread_id_t id2) { return id1.value == id2.value; }
+// Overload operators for fiber_token_t
+inline bool operator==(fiber_token_t id1, fiber_token_t id2) { return id1.value == id2.value; }
 
-inline bool operator!=(bthread_id_t id1, bthread_id_t id2) { return !(id1 == id2); }
+inline bool operator!=(fiber_token_t id1, fiber_token_t id2) { return !(id1 == id2); }
 
-inline bool operator<(bthread_id_t id1, bthread_id_t id2) { return id1.value < id2.value; }
+inline bool operator<(fiber_token_t id1, fiber_token_t id2) { return id1.value < id2.value; }
 
-inline bool operator>(bthread_id_t id1, bthread_id_t id2) { return id2 < id1; }
+inline bool operator>(fiber_token_t id1, fiber_token_t id2) { return id2 < id1; }
 
-inline bool operator<=(bthread_id_t id1, bthread_id_t id2) { return !(id2 < id1); }
+inline bool operator<=(fiber_token_t id1, fiber_token_t id2) { return !(id2 < id1); }
 
-inline bool operator>=(bthread_id_t id1, bthread_id_t id2) { return !(id1 < id2); }
+inline bool operator>=(fiber_token_t id1, fiber_token_t id2) { return !(id1 < id2); }
 
-inline std::ostream &operator<<(std::ostream &os, bthread_id_t id) { return os << id.value; }
+inline std::ostream &operator<<(std::ostream &os, fiber_token_t id) { return os << id.value; }
 
 #endif  // __cplusplus
 
@@ -232,7 +232,7 @@ typedef struct {
     unsigned size;
     unsigned conflict_head;
     unsigned conflict_size;
-} bthread_id_list_t;
+} fiber_token_list_t;
 
 typedef uint64_t fiber_timer_id;
 

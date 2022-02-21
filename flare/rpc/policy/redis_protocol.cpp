@@ -45,7 +45,7 @@ DEFINE_bool(redis_verbose, false,
             "[DEBUG] Print EVERY redis request/response");
 
 struct InputResponse : public InputMessageBase {
-    bthread_id_t id_wait;
+    fiber_token_t id_wait;
     RedisResponse response;
 
     // @InputMessageBase
@@ -252,7 +252,7 @@ void ProcessRedisResponse(InputMessageBase* msg_base) {
     const int64_t start_parse_us = flare::base::cpuwide_time_us();
     DestroyingPtr<InputResponse> msg(static_cast<InputResponse*>(msg_base));
 
-    const bthread_id_t cid = msg->id_wait;
+    const fiber_token_t cid = msg->id_wait;
     Controller* cntl = NULL;
     const int rc = bthread_id_lock(cid, (void**)&cntl);
     if (rc != 0) {

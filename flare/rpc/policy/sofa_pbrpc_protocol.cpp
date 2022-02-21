@@ -488,7 +488,7 @@ void ProcessSofaResponse(InputMessageBase* msg_base) {
         return;
     }
 
-    const bthread_id_t cid = { static_cast<uint64_t>(meta.sequence_id()) };
+    const fiber_token_t cid = { static_cast<uint64_t>(meta.sequence_id()) };
     Controller* cntl = NULL;
     const int rc = bthread_id_lock(cid, (void**)&cntl);
     if (rc != 0) {

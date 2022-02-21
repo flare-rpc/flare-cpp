@@ -30,12 +30,12 @@ __BEGIN_DECLS
 // ----------------------------------------------------------------------
 // Functions to create 64-bit identifiers that can be attached with data
 // and locked without ABA issues. All functions can be called from
-// multiple threads simultaneously. Notice that bthread_id_t is designed
+// multiple threads simultaneously. Notice that fiber_token_t is designed
 // for managing a series of non-heavily-contended actions on an object.
 // It's slower than mutex and not proper for general synchronizations.
 // ----------------------------------------------------------------------
 
-// Create a bthread_id_t and put it into *id. Crash when `id' is NULL.
+// Create a fiber_token_t and put it into *id. Crash when `id' is NULL.
 // id->value will never be zero.
 // `on_error' will be called after bthread_id_error() is called.
 // -------------------------------------------------------------------------
@@ -44,8 +44,8 @@ __BEGIN_DECLS
 // -------------------------------------------------------------------------
 // Returns 0 on success, error code otherwise.
 int bthread_id_create(
-    bthread_id_t* id, void* data,
-    int (*on_error)(bthread_id_t id, void* data, int error_code));
+    fiber_token_t* id, void* data,
+    int (*on_error)(fiber_token_t id, void* data, int error_code));
 
 // When this function is called successfully, *id, *id+1 ... *id + range - 1
 // are mapped to same internal entity. Operations on any of the id work as
@@ -54,18 +54,18 @@ int bthread_id_create(
 // versions into identifiers.
 // `range' is limited inside [1, 1024].
 int bthread_id_create_ranged(
-    bthread_id_t* id, void* data,
-    int (*on_error)(bthread_id_t id, void* data, int error_code),
+    fiber_token_t* id, void* data,
+    int (*on_error)(fiber_token_t id, void* data, int error_code),
     int range);
 
 // Wait until `id' being destroyed.
-// Waiting on a destroyed bthread_id_t returns immediately.
+// Waiting on a destroyed fiber_token_t returns immediately.
 // Returns 0 on success, error code otherwise.
-int bthread_id_join(bthread_id_t id);
+int bthread_id_join(fiber_token_t id);
 
-// Destroy a created but never-used bthread_id_t.
+// Destroy a created but never-used fiber_token_t.
 // Returns 0 on success, EINVAL otherwise.
-int bthread_id_cancel(bthread_id_t id);
+int bthread_id_cancel(fiber_token_t id);
 
 // Issue an error to `id'.
 // If `id' is not locked, lock the id and run `on_error' immediately. Otherwise
@@ -75,7 +75,7 @@ int bthread_id_cancel(bthread_id_t id);
 #define bthread_id_error(id, err)                                        \
     bthread_id_error_verbose(id, err, __FILE__ ":" FLARE_SYMBOLSTR(__LINE__))
 
-int bthread_id_error_verbose(bthread_id_t id, int error_code, 
+int bthread_id_error_verbose(fiber_token_t id, int error_code,
                              const char *location);
 
 // Make other bthread_id_lock/bthread_id_trylock on the id fail, the id must
@@ -84,12 +84,12 @@ int bthread_id_error_verbose(bthread_id_t id, int error_code,
 // waiting on a bthread_id which will be destroyed soon but still needs to
 // be joinable.
 // Returns 0 on success, error code otherwise.
-int bthread_id_about_to_destroy(bthread_id_t id);
+int bthread_id_about_to_destroy(fiber_token_t id);
 
 // Try to lock `id' (for using the data exclusively)
 // On success return 0 and set `pdata' with the `data' parameter to
 // bthread_id_create[_ranged], EBUSY on already locked, error code otherwise.
-int bthread_id_trylock(bthread_id_t id, void** pdata);
+int bthread_id_trylock(fiber_token_t id, void** pdata);
 
 // Lock `id' (for using the data exclusively). If `id' is locked
 // by others, wait until `id' is unlocked or destroyed.
@@ -97,7 +97,7 @@ int bthread_id_trylock(bthread_id_t id, void** pdata);
 // bthread_id_create[_ranged], error code otherwise.
 #define bthread_id_lock(id, pdata)                                      \
     bthread_id_lock_verbose(id, pdata, __FILE__ ":" FLARE_SYMBOLSTR(__LINE__))
-int bthread_id_lock_verbose(bthread_id_t id, void** pdata, 
+int bthread_id_lock_verbose(fiber_token_t id, void** pdata,
                             const char *location);
 
 // Lock `id' (for using the data exclusively) and reset the range. If `id' is 
@@ -107,59 +107,59 @@ int bthread_id_lock_verbose(bthread_id_t id, void** pdata,
     bthread_id_lock_and_reset_range_verbose(id, pdata, range,           \
                                __FILE__ ":" FLARE_SYMBOLSTR(__LINE__))
 int bthread_id_lock_and_reset_range_verbose(
-    bthread_id_t id, void **pdata, 
+    fiber_token_t id, void **pdata,
     int range, const char *location);
 
 // Unlock `id'. Must be called after a successful call to bthread_id_trylock()
 // or bthread_id_lock().
 // Returns 0 on success, error code otherwise.
-int bthread_id_unlock(bthread_id_t id);
+int bthread_id_unlock(fiber_token_t id);
 
 // Unlock and destroy `id'. Waiters blocking on bthread_id_join() or
 // bthread_id_lock() will wake up. Must be called after a successful call to
 // bthread_id_trylock() or bthread_id_lock().
 // Returns 0 on success, error code otherwise.
-int bthread_id_unlock_and_destroy(bthread_id_t id);
+int bthread_id_unlock_and_destroy(fiber_token_t id);
 
 // **************************************************************************
 // bthread_id_list_xxx functions are NOT thread-safe unless explicitly stated
 
-// Initialize a list for storing bthread_id_t. When an id is destroyed, it will
+// Initialize a list for storing fiber_token_t. When an id is destroyed, it will
 // be removed from the list automatically.
 // The commented parameters are not used anymore and just kept to not break
 // compatibility.
-int bthread_id_list_init(bthread_id_list_t* list,
+int bthread_id_list_init(fiber_token_list_t* list,
                          unsigned /*size*/,
                          unsigned /*conflict_size*/);
 // Destroy the list.
-void bthread_id_list_destroy(bthread_id_list_t* list);
+void bthread_id_list_destroy(fiber_token_list_t* list);
 
-// Add a bthread_id_t into the list.
-int bthread_id_list_add(bthread_id_list_t* list, bthread_id_t id);
+// Add a fiber_token_t into the list.
+int bthread_id_list_add(fiber_token_list_t* list, fiber_token_t id);
 
 // Swap internal fields of two lists.
-void bthread_id_list_swap(bthread_id_list_t* dest, 
-                          bthread_id_list_t* src);
+void bthread_id_list_swap(fiber_token_list_t* dest,
+                          fiber_token_list_t* src);
 
-// Issue error_code to all bthread_id_t inside `list' and clear `list'.
+// Issue error_code to all fiber_token_t inside `list' and clear `list'.
 // Notice that this function iterates all id inside the list and may call
 // on_error() of each valid id in-place, in another word, this thread-unsafe
 // function is not suitable to be enclosed within a lock directly.
 // To make the critical section small, swap the list inside the lock and
 // reset the swapped list outside the lock as follows:
-//   bthread_id_list_t tmplist;
+//   fiber_token_list_t tmplist;
 //   bthread_id_list_init(&tmplist, 0, 0);
 //   LOCK;
 //   bthread_id_list_swap(&tmplist, &the_list_to_reset);
 //   UNLOCK;
 //   bthread_id_list_reset(&tmplist, error_code);
 //   bthread_id_list_destroy(&tmplist);
-int bthread_id_list_reset(bthread_id_list_t* list, int error_code);
+int bthread_id_list_reset(fiber_token_list_t* list, int error_code);
 // Following 2 functions wrap above process.
 int bthread_id_list_reset_pthreadsafe(
-    bthread_id_list_t* list, int error_code, pthread_mutex_t* mutex);
+    fiber_token_list_t* list, int error_code, pthread_mutex_t* mutex);
 int bthread_id_list_reset_bthreadsafe(
-    bthread_id_list_t* list, int error_code, fiber_mutex_t* mutex);
+    fiber_token_list_t* list, int error_code, fiber_mutex_t* mutex);
 
 __END_DECLS
 
@@ -167,25 +167,25 @@ __END_DECLS
 // cpp specific API, with an extra `error_text' so that error information
 // is more comprehensive
 int bthread_id_create2(
-    bthread_id_t* id, void* data,
-    int (*on_error)(bthread_id_t id, void* data, int error_code,
+    fiber_token_t* id, void* data,
+    int (*on_error)(fiber_token_t id, void* data, int error_code,
                     const std::string& error_text));
 int bthread_id_create2_ranged(
-    bthread_id_t* id, void* data,
-    int (*on_error)(bthread_id_t id, void* data, int error_code,
+    fiber_token_t* id, void* data,
+    int (*on_error)(fiber_token_t id, void* data, int error_code,
                     const std::string& error_text),
     int range);
 #define bthread_id_error2(id, ec, et)                                   \
     bthread_id_error2_verbose(id, ec, et, __FILE__ ":" FLARE_SYMBOLSTR(__LINE__))
-int bthread_id_error2_verbose(bthread_id_t id, int error_code,
+int bthread_id_error2_verbose(fiber_token_t id, int error_code,
                               const std::string& error_text,
                               const char *location);
-int bthread_id_list_reset2(bthread_id_list_t* list, int error_code,
+int bthread_id_list_reset2(fiber_token_list_t* list, int error_code,
                            const std::string& error_text);
-int bthread_id_list_reset2_pthreadsafe(bthread_id_list_t* list, int error_code,
+int bthread_id_list_reset2_pthreadsafe(fiber_token_list_t* list, int error_code,
                                        const std::string& error_text,
                                        pthread_mutex_t* mutex);
-int bthread_id_list_reset2_bthreadsafe(bthread_id_list_t* list, int error_code,
+int bthread_id_list_reset2_bthreadsafe(fiber_token_list_t* list, int error_code,
                                        const std::string& error_text,
                                        fiber_mutex_t* mutex);
 #endif

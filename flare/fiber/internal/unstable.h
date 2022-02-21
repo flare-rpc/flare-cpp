@@ -106,23 +106,23 @@ extern int bthread_key_create2(fiber_local_key *key,
 // it fetches one from the pool instead of creating on heap. When a fiber
 // exits, it puts the table back to pool instead of deleting it.
 // Returns 0 on success, error code otherwise.
-extern int bthread_keytable_pool_init(bthread_keytable_pool_t *);
+extern int bthread_keytable_pool_init(fiber_keytable_pool_t *);
 
 // [RPC INTERNAL]
 // Destroy the pool. All KeyTables inside are destroyed.
 // Returns 0 on success, error code otherwise.
-extern int bthread_keytable_pool_destroy(bthread_keytable_pool_t *);
+extern int bthread_keytable_pool_destroy(fiber_keytable_pool_t *);
 
 // [RPC INTERNAL]
 // Put statistics of `pool' into `stat'.
-extern int bthread_keytable_pool_getstat(bthread_keytable_pool_t *pool,
-                                         bthread_keytable_pool_stat_t *stat);
+extern int bthread_keytable_pool_getstat(fiber_keytable_pool_t *pool,
+                                         fiber_keytable_pool_stat_t *stat);
 
 // [RPC INTERNAL]
 // Reserve at most `nfree' keytables with `key' pointing to data created by
 // ctor(args).
 extern void bthread_keytable_pool_reserve(
-        bthread_keytable_pool_t *pool, size_t nfree,
+        fiber_keytable_pool_t *pool, size_t nfree,
         fiber_local_key key, void *ctor(const void *args), const void *args);
 
 __END_DECLS

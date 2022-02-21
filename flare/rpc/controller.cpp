@@ -188,10 +188,10 @@ namespace flare::rpc {
         _mongo_session_data.reset();
         delete _sampled_request;
 
-        if (!is_used_by_rpc() && _correlation_id != INVALID_BTHREAD_ID) {
+        if (!is_used_by_rpc() && _correlation_id != INVALID_FIBER_TOKEN) {
             CHECK_NE(EPERM, bthread_id_cancel(_correlation_id));
         }
-        if (_oncancel_id != INVALID_BTHREAD_ID) {
+        if (_oncancel_id != INVALID_FIBER_TOKEN) {
             bthread_id_error(_oncancel_id, 0);
         }
         if (_pchan_sub_count > 0) {
@@ -236,13 +236,13 @@ namespace flare::rpc {
         _error_code = 0;
         _session_local_data = NULL;
         _server = NULL;
-        _oncancel_id = INVALID_BTHREAD_ID;
+        _oncancel_id = INVALID_FIBER_TOKEN;
         _auth_context = NULL;
         _sampled_request = NULL;
         _request_protocol = PROTOCOL_UNKNOWN;
         _max_retry = UNSET_MAGIC_NUM;
         _retry_policy = NULL;
-        _correlation_id = INVALID_BTHREAD_ID;
+        _correlation_id = INVALID_FIBER_TOKEN;
         _connection_type = CONNECTION_TYPE_UNKNOWN;
         _timeout_ms = UNSET_MAGIC_NUM;
         _backup_request_ms = UNSET_MAGIC_NUM;
@@ -486,7 +486,7 @@ namespace flare::rpc {
 
     class RunOnCancelThread {
     public:
-        RunOnCancelThread(google::protobuf::Closure *cb, bthread_id_t id)
+        RunOnCancelThread(google::protobuf::Closure *cb, fiber_token_t id)
                 : _cb(cb), _id(id) {}
 
         static void *RunThis(void *arg) {
@@ -502,10 +502,10 @@ namespace flare::rpc {
 
     private:
         google::protobuf::Closure *_cb;
-        bthread_id_t _id;
+        fiber_token_t _id;
     };
 
-    int Controller::RunOnCancel(bthread_id_t id, void *data, int error_code) {
+    int Controller::RunOnCancel(fiber_token_t id, void *data, int error_code) {
         if (error_code == 0) {
             // Called from Controller::ResetNonPods upon Controller's Reset or
             // destruction, we just call the callback in-place.
@@ -530,7 +530,7 @@ namespace flare::rpc {
         }
 
         ClosureGuard guard(callback);
-        if (_oncancel_id != INVALID_BTHREAD_ID) {
+        if (_oncancel_id != INVALID_FIBER_TOKEN) {
             LOG(FATAL) << "NotifyCancel a single call more than once!";
             return;
         }
@@ -556,7 +556,7 @@ namespace flare::rpc {
     }
 
     static void HandleTimeout(void *arg) {
-        bthread_id_t correlation_id = {(uint64_t) arg};
+        fiber_token_t correlation_id = {(uint64_t) arg};
         bthread_id_error(correlation_id, ERPCTIMEDOUT);
     }
 
@@ -1198,7 +1198,7 @@ namespace flare::rpc {
         _auth_context = ctx;
     }
 
-    int Controller::HandleSocketFailed(bthread_id_t id, void *data, int error_code,
+    int Controller::HandleSocketFailed(fiber_token_t id, void *data, int error_code,
                                        const std::string &error_text) {
         Controller *cntl = static_cast<Controller *>(data);
         if (!cntl->is_used_by_rpc()) {

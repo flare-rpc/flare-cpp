@@ -44,7 +44,7 @@ namespace flare::fiber_internal {
     thread_local fiber_local_storage tls_bls = BTHREAD_LOCAL_STORAGE_INITIALIZER;
 
 // defined in fiber/key.cpp
-    extern void return_keytable(bthread_keytable_pool_t *, KeyTable *);
+    extern void return_keytable(fiber_keytable_pool_t *, KeyTable *);
 
 // [Hacky] This is a special TLS set by fiber-rpc privately... to save
 // overhead of creation keytable, may be removed later.

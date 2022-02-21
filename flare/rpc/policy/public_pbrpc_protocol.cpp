@@ -164,7 +164,7 @@ void ProcessPublicPbrpcResponse(InputMessageBase* msg_base) {
     }
     const ResponseHead& head = pbres.responsehead();
     const ResponseBody& body = pbres.responsebody(0);
-    const bthread_id_t cid = { static_cast<uint64_t>(body.id()) };
+    const fiber_token_t cid = { static_cast<uint64_t>(body.id()) };
     Controller* cntl = NULL;
     const int rc = bthread_id_lock(cid, (void**)&cntl);
     if (rc != 0) {

@@ -168,10 +168,10 @@ namespace flare::fiber_internal {
         Executor *executor;
     };
 
-// Start a ExecutionQueue. If |options| is NULL, the queue will be created with
-// the default options. 
-// Returns 0 on success, errno otherwise
-// NOTE: type |T| can be non-POD but must be copy-constructible
+    // Start a ExecutionQueue. If |options| is NULL, the queue will be created with
+    // the default options.
+    // Returns 0 on success, errno otherwise
+    // NOTE: type |T| can be non-POD but must be copy-constructible
     template<typename T>
     int execution_queue_start(
             ExecutionQueueId<T> *id,

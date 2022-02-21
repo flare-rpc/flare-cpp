@@ -154,7 +154,7 @@ namespace flare::rpc {
             const int64_t start_parse_us = flare::base::cpuwide_time_us();
             DestroyingPtr<MostCommonMessage> msg(static_cast<MostCommonMessage *>(msg_base));
 
-            const bthread_id_t cid = msg->pi.id_wait;
+            const fiber_token_t cid = msg->pi.id_wait;
             Controller *cntl = NULL;
             const int rc = bthread_id_lock(cid, (void **) &cntl);
             if (rc != 0) {

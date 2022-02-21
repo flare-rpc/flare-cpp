@@ -254,7 +254,7 @@ namespace flare::rpc {
                 LOG(WARNING) << "Fail to find correlation_id from " << *socket;
                 return;
             }
-            const bthread_id_t cid = {cid_value};
+            const fiber_token_t cid = {cid_value};
             Controller *cntl = NULL;
             const int rc = bthread_id_lock(cid, (void **) &cntl);
             if (rc != 0) {

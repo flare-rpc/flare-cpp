@@ -62,7 +62,7 @@ namespace flare::rpc {
     static pthread_mutex_t g_nsthread_map_mutex = PTHREAD_MUTEX_INITIALIZER;
 
     NamingServiceThread::Actions::Actions(NamingServiceThread *owner)
-            : _owner(owner), _wait_id(INVALID_BTHREAD_ID), _has_wait_error(false), _wait_error(0) {
+            : _owner(owner), _wait_id(INVALID_FIBER_TOKEN), _has_wait_error(false), _wait_error(0) {
         CHECK_EQ(0, bthread_id_create(&_wait_id, NULL, NULL));
     }
 
