@@ -20,6 +20,7 @@
 // Date: Tue Jul 10 17:40:58 CST 2012
 
 #include <gflags/gflags.h>
+#include <utility>
 #include "flare/log/logging.h"
 #include "flare/fiber/internal/fiber_worker.h"                // fiber_worker
 #include "flare/fiber/internal/schedule_group.h"              // schedule_group
@@ -124,7 +125,7 @@ namespace flare::fiber_internal {
     FLARE_FORCE_INLINE int
     start_from_non_worker(fiber_id_t *__restrict tid,
                           const fiber_attribute *__restrict attr,
-                          void *(*fn)(void *),
+                          flare::base::function<void*(void*)> && fn,
                           void *__restrict arg) {
         schedule_group *c = get_or_new_task_control();
         if (NULL == c) {
@@ -140,10 +141,10 @@ namespace flare::fiber_internal {
                 g = c->choose_one_group();
                 tls_task_group_nosignal = g;
             }
-            return g->start_background<true>(tid, attr, fn, arg);
+            return g->start_background<true>(tid, attr, std::move(fn), arg);
         }
         return c->choose_one_group()->start_background<true>(
-                tid, attr, fn, arg);
+                tid, attr, std::move(fn), arg);
     }
 
     struct TidTraits {
@@ -175,26 +176,26 @@ extern "C" {
 
 int fiber_start_urgent(fiber_id_t *__restrict tid,
                          const fiber_attribute *__restrict attr,
-                         void *(*fn)(void *),
+                       flare::base::function<void*(void*)> && fn,
                          void *__restrict arg) {
     flare::fiber_internal::fiber_worker *g = flare::fiber_internal::tls_task_group;
     if (g) {
         // start from worker
-        return flare::fiber_internal::fiber_worker::start_foreground(&g, tid, attr, fn, arg);
+        return flare::fiber_internal::fiber_worker::start_foreground(&g, tid, attr, std::move(fn), arg);
     }
-    return flare::fiber_internal::start_from_non_worker(tid, attr, fn, arg);
+    return flare::fiber_internal::start_from_non_worker(tid, attr, std::move(fn), arg);
 }
 
 int fiber_start_background(fiber_id_t *__restrict tid,
                              const fiber_attribute *__restrict attr,
-                             void *(*fn)(void *),
+                           flare::base::function<void*(void*)> && fn,
                              void *__restrict arg) {
     flare::fiber_internal::fiber_worker *g = flare::fiber_internal::tls_task_group;
     if (g) {
         // start from worker
-        return g->start_background<false>(tid, attr, fn, arg);
+        return g->start_background<false>(tid, attr, std::move(fn), arg);
     }
-    return flare::fiber_internal::start_from_non_worker(tid, attr, fn, arg);
+    return flare::fiber_internal::start_from_non_worker(tid, attr, std::move(fn), arg);
 }
 
 void fiber_flush() {

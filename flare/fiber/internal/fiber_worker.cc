@@ -20,13 +20,13 @@
 namespace flare::fiber_internal {
 
     static const fiber_attribute FIBER_ATTR_TASKGROUP = {
-            FIBER_STACKTYPE_UNKNOWN, 0, NULL};
+            FIBER_STACKTYPE_UNKNOWN, 0, nullptr};
 
     static bool pass_bool(const char *, bool) { return true; }
 
     DEFINE_bool(show_fiber_creation_in_vars, false, "When this flags is on, The time "
-                                                      "from fiber creation to first run will be recorded and shown "
-                                                      "in /vars");
+                                                    "from fiber creation to first run will be recorded and shown "
+                                                    "in /vars");
     const bool FLARE_ALLOW_UNUSED dummy_show_fiber_creation_in_vars =
             ::GFLAGS_NS::RegisterFlagValidator(&FLAGS_show_fiber_creation_in_vars,
                                                pass_bool);
@@ -37,7 +37,7 @@ namespace flare::fiber_internal {
             ::GFLAGS_NS::RegisterFlagValidator(&FLAGS_show_per_worker_usage_in_vars,
                                                pass_bool);
 
-    __thread fiber_worker *tls_task_group = NULL;
+    __thread fiber_worker *tls_task_group = nullptr;
 // Sync with fiber_entity::local_storage when a fiber is created or destroyed.
 // During running, the two fields may be inconsistent, use tls_bls as the
 // groundtruth.
@@ -48,7 +48,7 @@ namespace flare::fiber_internal {
 
 // [Hacky] This is a special TLS set by fiber-rpc privately... to save
 // overhead of creation keytable, may be removed later.
-    FLARE_THREAD_LOCAL void *tls_unique_user_ptr = NULL;
+    FLARE_THREAD_LOCAL void *tls_unique_user_ptr = nullptr;
 
     const fiber_statistics EMPTY_STAT = {0, 0};
 
@@ -58,7 +58,7 @@ namespace flare::fiber_internal {
 
     int fiber_worker::get_attr(fiber_id_t tid, fiber_attribute *out) {
         fiber_entity *const m = address_meta(tid);
-        if (m != NULL) {
+        if (m != nullptr) {
             const uint32_t given_ver = get_version(tid);
             FLARE_SCOPED_LOCK(m->version_lock);
             if (given_ver == *m->version_butex) {
@@ -72,7 +72,7 @@ namespace flare::fiber_internal {
 
     void fiber_worker::set_stopped(fiber_id_t tid) {
         fiber_entity *const m = address_meta(tid);
-        if (m != NULL) {
+        if (m != nullptr) {
             const uint32_t given_ver = get_version(tid);
             FLARE_SCOPED_LOCK(m->version_lock);
             if (given_ver == *m->version_butex) {
@@ -83,7 +83,7 @@ namespace flare::fiber_internal {
 
     bool fiber_worker::is_stopped(fiber_id_t tid) {
         fiber_entity *const m = address_meta(tid);
-        if (m != NULL) {
+        if (m != nullptr) {
             const uint32_t given_ver = get_version(tid);
             FLARE_SCOPED_LOCK(m->version_lock);
             if (given_ver == *m->version_butex) {
@@ -158,9 +158,10 @@ namespace flare::fiber_internal {
 #ifndef NDEBUG
             _sched_recursive_guard(0),
 #endif
-            _cur_meta(NULL), _control(c), _num_nosignal(0), _nsignaled(0), _last_run_ns(flare::base::cpuwide_time_ns()),
-            _cumulated_cputime_ns(0), _nswitch(0), _last_context_remained(NULL), _last_context_remained_arg(NULL),
-            _pl(NULL), _main_stack(NULL), _main_tid(0), _remote_num_nosignal(0), _remote_nsignaled(0) {
+            _cur_meta(nullptr), _control(c), _num_nosignal(0), _nsignaled(0),
+            _last_run_ns(flare::base::cpuwide_time_ns()),
+            _cumulated_cputime_ns(0), _nswitch(0), _last_context_remained(nullptr), _last_context_remained_arg(nullptr),
+            _pl(nullptr), _main_stack(nullptr), _main_tid(0), _remote_num_nosignal(0), _remote_nsignaled(0) {
         _steal_seed = flare::base::fast_rand();
         _steal_offset = OFFSET_TABLE[_steal_seed % FLARE_ARRAY_SIZE(OFFSET_TABLE)];
         _pl = &c->_pl[flare::hash::fmix64(pthread_numeric_id()) % schedule_group::PARKING_LOT_NUM];
@@ -186,22 +187,22 @@ namespace flare::fiber_internal {
             LOG(FATAL) << "Fail to init _remote_rq";
             return -1;
         }
-        fiber_contextual_stack *stk = get_stack(STACK_TYPE_MAIN, NULL);
-        if (NULL == stk) {
+        fiber_contextual_stack *stk = get_stack(STACK_TYPE_MAIN, nullptr);
+        if (nullptr == stk) {
             LOG(FATAL) << "Fail to get main stack container";
             return -1;
         }
         flare::memory::ResourceId<fiber_entity> slot;
         fiber_entity *m = flare::memory::get_resource<fiber_entity>(&slot);
-        if (NULL == m) {
+        if (nullptr == m) {
             LOG(FATAL) << "Fail to get fiber_entity";
             return -1;
         }
         m->stop = false;
         m->interrupted = false;
         m->about_to_quit = false;
-        m->fn = NULL;
-        m->arg = NULL;
+        m->fn = nullptr;
+        m->arg = nullptr;
         m->local_storage = LOCAL_STORAGE_INIT;
         m->cpuwide_start_ns = flare::base::cpuwide_time_ns();
         m->stat = EMPTY_STAT;
@@ -224,7 +225,7 @@ namespace flare::fiber_internal {
         if (!skip_remained) {
             while (g->_last_context_remained) {
                 RemainedFn fn = g->_last_context_remained;
-                g->_last_context_remained = NULL;
+                g->_last_context_remained = nullptr;
                 fn(g->_last_context_remained_arg);
                 g = tls_task_group;
             }
@@ -283,11 +284,11 @@ namespace flare::fiber_internal {
             // otherwise another thread just joined this thread may not see side
             // effects of destructing tls variables.
             KeyTable *kt = tls_bls.keytable;
-            if (kt != NULL) {
+            if (kt != nullptr) {
                 return_keytable(m->attr.keytable_pool, kt);
                 // After deletion: tls may be set during deletion.
-                tls_bls.keytable = NULL;
-                m->local_storage.keytable = NULL; // optional
+                tls_bls.keytable = nullptr;
+                m->local_storage.keytable = nullptr; // optional
             }
 
             // Increase the version and wake up all joiners, if resulting version
@@ -315,10 +316,10 @@ namespace flare::fiber_internal {
     void fiber_worker::_release_last_context(void *arg) {
         fiber_entity *m = static_cast<fiber_entity *>(arg);
         if (m->stack_type() != STACK_TYPE_PTHREAD) {
-            return_stack(m->release_stack()/*may be NULL*/);
+            return_stack(m->release_stack()/*may be nullptr*/);
         } else {
             // it's _main_stack, don't return.
-            m->set_stack(NULL);
+            m->set_stack(nullptr);
         }
         return_resource(get_slot(m->tid));
     }
@@ -326,7 +327,7 @@ namespace flare::fiber_internal {
     int fiber_worker::start_foreground(fiber_worker **pg,
                                        fiber_id_t *__restrict th,
                                        const fiber_attribute *__restrict attr,
-                                       void *(*fn)(void *),
+                                       flare::base::function<void *(void *)> &&fn,
                                        void *__restrict arg) {
         if (__builtin_expect(!fn, 0)) {
             return EINVAL;
@@ -338,13 +339,13 @@ namespace flare::fiber_internal {
         if (__builtin_expect(!m, 0)) {
             return ENOMEM;
         }
-        CHECK(m->current_waiter.load(std::memory_order_relaxed) == NULL);
+        CHECK(m->current_waiter.load(std::memory_order_relaxed) == nullptr);
         m->stop = false;
         m->interrupted = false;
         m->about_to_quit = false;
-        m->fn = fn;
+        m->fn = std::move(fn);
         m->arg = arg;
-        CHECK(m->stack == NULL);
+        CHECK(m->stack == nullptr);
         m->attr = using_attr;
         m->local_storage = LOCAL_STORAGE_INIT;
         m->cpuwide_start_ns = start_ns;
@@ -362,7 +363,7 @@ namespace flare::fiber_internal {
             g->ready_to_run(m->tid, (using_attr.flags & FIBER_NOSIGNAL));
         } else {
             // NOSIGNAL affects current task, not the new task.
-            RemainedFn fn = NULL;
+            RemainedFn fn = nullptr;
             if (g->current_task()->about_to_quit) {
                 fn = ready_to_run_in_worker_ignoresignal;
             } else {
@@ -381,7 +382,7 @@ namespace flare::fiber_internal {
     template<bool REMOTE>
     int fiber_worker::start_background(fiber_id_t *__restrict th,
                                        const fiber_attribute *__restrict attr,
-                                       void *(*fn)(void *),
+                                       flare::base::function<void *(void *)> &&fn,
                                        void *__restrict arg) {
         if (__builtin_expect(!fn, 0)) {
             return EINVAL;
@@ -393,13 +394,13 @@ namespace flare::fiber_internal {
         if (__builtin_expect(!m, 0)) {
             return ENOMEM;
         }
-        CHECK(m->current_waiter.load(std::memory_order_relaxed) == NULL);
+        CHECK(m->current_waiter.load(std::memory_order_relaxed) == nullptr);
         m->stop = false;
         m->interrupted = false;
         m->about_to_quit = false;
-        m->fn = fn;
+        m->fn = std::move(fn);
         m->arg = arg;
-        CHECK(m->stack == NULL);
+        CHECK(m->stack == nullptr);
         m->attr = using_attr;
         m->local_storage = LOCAL_STORAGE_INIT;
         m->cpuwide_start_ns = start_ns;
@@ -422,13 +423,13 @@ namespace flare::fiber_internal {
     template int
     fiber_worker::start_background<true>(fiber_id_t *__restrict th,
                                          const fiber_attribute *__restrict attr,
-                                         void *(*fn)(void *),
+                                         flare::base::function<void *(void *)> &&fn,
                                          void *__restrict arg);
 
     template int
     fiber_worker::start_background<false>(fiber_id_t *__restrict th,
                                           const fiber_attribute *__restrict attr,
-                                          void *(*fn)(void *),
+                                          flare::base::function<void *(void *)> &&fn,
                                           void *__restrict arg);
 
     int fiber_worker::join(fiber_id_t tid, void **return_value) {
@@ -441,19 +442,19 @@ namespace flare::fiber_internal {
             return EINVAL;
         }
         fiber_worker *g = tls_task_group;
-        if (g != NULL && g->current_tid() == tid) {
+        if (g != nullptr && g->current_tid() == tid) {
             // joining self causes indefinite waiting.
             return EINVAL;
         }
         const uint32_t expected_version = get_version(tid);
         while (*m->version_butex == expected_version) {
-            if (waitable_event_wait(m->version_butex, expected_version, NULL) < 0 &&
+            if (waitable_event_wait(m->version_butex, expected_version, nullptr) < 0 &&
                 errno != EWOULDBLOCK && errno != EINTR) {
                 return errno;
             }
         }
         if (return_value) {
-            *return_value = NULL;
+            *return_value = nullptr;
         }
         return 0;
     }
@@ -461,7 +462,7 @@ namespace flare::fiber_internal {
     bool fiber_worker::exists(fiber_id_t tid) {
         if (tid != 0) {  // tid of fiber is never 0.
             fiber_entity *m = address_meta(tid);
-            if (m != NULL) {
+            if (m != nullptr) {
                 return (*m->version_butex == get_version(tid));
             }
         }
@@ -492,7 +493,7 @@ namespace flare::fiber_internal {
 
         fiber_entity *const cur_meta = g->_cur_meta;
         fiber_entity *next_meta = address_meta(next_tid);
-        if (next_meta->stack == NULL) {
+        if (next_meta->stack == nullptr) {
             if (next_meta->stack_type() == cur_meta->stack_type()) {
                 // also works with pthread_task scheduling to pthread_task, the
                 // transfered stack is just _main_stack.
@@ -567,7 +568,7 @@ namespace flare::fiber_internal {
                           << next_meta->tid;
             }
 
-            if (cur_meta->stack != NULL) {
+            if (cur_meta->stack != nullptr) {
                 if (next_meta->stack != cur_meta->stack) {
                     jump_stack(cur_meta->stack, next_meta->stack);
                     // probably went to another group, need to assign g again.
@@ -588,7 +589,7 @@ namespace flare::fiber_internal {
 
         while (g->_last_context_remained) {
             RemainedFn fn = g->_last_context_remained;
-            g->_last_context_remained = NULL;
+            g->_last_context_remained = nullptr;
             fn(g->_last_context_remained_arg);
             g = tls_task_group;
         }
@@ -606,7 +607,7 @@ namespace flare::fiber_internal {
     void fiber_worker::destroy_self() {
         if (_control) {
             _control->_destroy_group(this);
-            _control = NULL;
+            _control = nullptr;
         } else {
             CHECK(false);
         }
@@ -698,7 +699,7 @@ namespace flare::fiber_internal {
     };
 
     static void ready_to_run_from_timer_thread(void *arg) {
-        CHECK(tls_task_group == NULL);
+        CHECK(tls_task_group == nullptr);
         const SleepArgs *e = static_cast<const SleepArgs *>(arg);
         e->group->control()->choose_one_group()->ready_to_run_remote(e->tid);
     }
@@ -779,13 +780,13 @@ namespace flare::fiber_internal {
     static int interrupt_and_consume_waiters(
             fiber_id_t tid, fiber_mutex_waiter **pw, uint64_t *sleep_id) {
         fiber_entity *const m = fiber_worker::address_meta(tid);
-        if (m == NULL) {
+        if (m == nullptr) {
             return EINVAL;
         }
         const uint32_t given_ver = get_version(tid);
         FLARE_SCOPED_LOCK(m->version_lock);
         if (given_ver == *m->version_butex) {
-            *pw = m->current_waiter.exchange(NULL, std::memory_order_acquire);
+            *pw = m->current_waiter.exchange(nullptr, std::memory_order_acquire);
             *sleep_id = m->current_sleep;
             m->current_sleep = 0;  // only one stopper gets the sleep_id
             m->interrupted = true;
@@ -796,7 +797,7 @@ namespace flare::fiber_internal {
 
     static int set_event_waiter(fiber_id_t tid, fiber_mutex_waiter *w) {
         fiber_entity *const m = fiber_worker::address_meta(tid);
-        if (m != NULL) {
+        if (m != nullptr) {
             const uint32_t given_ver = get_version(tid);
             FLARE_SCOPED_LOCK(m->version_lock);
             if (given_ver == *m->version_butex) {
@@ -817,7 +818,7 @@ namespace flare::fiber_internal {
 // can't be interrupted.
     int fiber_worker::interrupt(fiber_id_t tid, schedule_group *c) {
         // Consume current_waiter in the fiber_entity, wake it up then set it back.
-        fiber_mutex_waiter *w = NULL;
+        fiber_mutex_waiter *w = nullptr;
         uint64_t sleep_id = 0;
         int rc = interrupt_and_consume_waiters(tid, &w, &sleep_id);
         if (rc) {
@@ -825,10 +826,10 @@ namespace flare::fiber_internal {
         }
         // a fiber cannot wait on a butex and be sleepy at the same time.
         CHECK(!sleep_id || !w);
-        if (w != NULL) {
+        if (w != nullptr) {
             erase_from_event_because_of_interruption(w);
             // If waitable_event_wait() already wakes up before we set current_waiter back,
-            // the function will spin until current_waiter becomes non-NULL.
+            // the function will spin until current_waiter becomes non-nullptr.
             rc = set_event_waiter(tid, w);
             if (rc) {
                 LOG(FATAL) << "waitable_event_wait should spin until setting back waiter";
@@ -859,7 +860,7 @@ namespace flare::fiber_internal {
 
     void print_task(std::ostream &os, fiber_id_t tid) {
         fiber_entity *const m = fiber_worker::address_meta(tid);
-        if (m == NULL) {
+        if (m == nullptr) {
             os << "fiber=" << tid << " : never existed";
             return;
         }
@@ -868,8 +869,8 @@ namespace flare::fiber_internal {
         bool stop = false;
         bool interrupted = false;
         bool about_to_quit = false;
-        void *(*fn)(void *) = NULL;
-        void *arg = NULL;
+        flare::base::function<void *(void *)> *fn = nullptr;
+        void *arg = nullptr;
         fiber_attribute attr = FIBER_ATTR_NORMAL;
         bool has_tls = false;
         int64_t cpuwide_start_ns = 0;
@@ -881,7 +882,7 @@ namespace flare::fiber_internal {
                 stop = m->stop;
                 interrupted = m->interrupted;
                 about_to_quit = m->about_to_quit;
-                fn = m->fn;
+                fn = &m->fn;
                 arg = m->arg;
                 attr = m->attr;
                 has_tls = m->local_storage.keytable;

@@ -219,6 +219,23 @@ namespace {
         }
     }
 
+    TEST_F(FiberTest, lambda_backtrace) {
+        fiber_id_t th;
+        ASSERT_EQ(0, fiber_start_urgent(&th, nullptr, [](void*)->void*{
+            if (call_do_bt() != 57) {
+                return (void *) 1L;
+            }
+            return nullptr;
+            }, nullptr));
+        ASSERT_EQ(0, fiber_join(th, nullptr));
+
+        char **text = backtrace_symbols(bt_array, bt_cnt);
+        ASSERT_TRUE(text);
+        for (int i = 0; i < bt_cnt; ++i) {
+            puts(text[i]);
+        }
+    }
+
     void *show_self(void *) {
         EXPECT_NE(0ul, fiber_self());
         LOG(INFO) << "fiber_self=" << fiber_self();
