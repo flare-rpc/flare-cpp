@@ -28,6 +28,7 @@ namespace flare::fiber {
         if(!_detached) {
             ::fiber_join(_fid, nullptr);
         }
+        _fid = INVALID_FIBER_ID;
     }
 
     void fiber::detach() {
@@ -43,7 +44,7 @@ namespace flare::fiber {
     }
 
     fiber::~fiber() {
-        if(!_detached)  {
+        if(!_detached && _fid != INVALID_FIBER_ID)  {
             stop();
             join();
         }
