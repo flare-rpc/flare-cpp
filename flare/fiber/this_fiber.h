@@ -16,6 +16,8 @@ namespace flare::this_fiber {
 
     int fiber_sleep_for(const int64_t& expires_in_us);
 
+    uint64_t get_fiber_id();
+
 }  // namespace flare::this_fiber
 
 #endif // FLARE_FIBER_THIS_FIBER_H_

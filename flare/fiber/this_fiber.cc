@@ -41,4 +41,12 @@ namespace flare::this_fiber {
         }
         return ::usleep(expires_in_us);
     }
+
+    uint64_t get_fiber_id() {
+        flare::fiber_internal::fiber_worker *g = flare::fiber_internal::tls_task_group;
+        if (nullptr != g && !g->is_current_pthread_task()) {
+            return static_cast<uint64_t>(g->current_fid());
+        }
+        return static_cast<uint64_t>(INVALID_FIBER_ID);
+    }
 }  // namespace flare::this_fiber

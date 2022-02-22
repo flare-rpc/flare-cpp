@@ -230,7 +230,7 @@ fiber_id_t fiber_self(void) {
     // all work threads. So that we can identify main tasks from logs
     // more easily. This is probably questionable in future.
     if (g != NULL && !g->is_current_main_task()/*note*/) {
-        return g->current_tid();
+        return g->current_fid();
     }
     return INVALID_FIBER_ID;
 }

@@ -129,13 +129,13 @@ namespace flare::fiber_internal {
         // Meta/Identifier of current task in this group.
         fiber_entity *current_task() const { return _cur_meta; }
 
-        fiber_id_t current_tid() const { return _cur_meta->tid; }
+        fiber_id_t current_fid() const { return _cur_meta->tid; }
 
         // Uptime of current task in nanoseconds.
         int64_t current_uptime_ns() const { return flare::base::cpuwide_time_ns() - _cur_meta->cpuwide_start_ns; }
 
         // True iff current task is the one running run_main_task()
-        bool is_current_main_task() const { return current_tid() == _main_tid; }
+        bool is_current_main_task() const { return current_fid() == _main_tid; }
 
         // True iff current task is in pthread-mode.
         bool is_current_pthread_task() const { return _cur_meta->stack == _main_stack; }
