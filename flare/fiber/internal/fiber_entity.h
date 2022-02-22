@@ -23,6 +23,7 @@
 #include "flare/base/static_atomic.h"          // std::atomic
 #include "flare/fiber/internal/types.h"           // fiber_attribute
 #include "flare/fiber/internal/stack.h"           // fiber_contextual_stack
+#include "flare/base/functional.h"
 
 namespace flare::fiber_internal {
 
@@ -70,8 +71,8 @@ namespace flare::fiber_internal {
         fiber_id_t tid;
 
         // User function and argument
-        void *(*fn)(void *);
-
+        //void *(*fn)(void *);
+        flare::base::function<void*(void*)> fn;
         void *arg;
 
         // Stack of this task.

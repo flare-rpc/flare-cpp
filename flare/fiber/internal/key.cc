@@ -136,8 +136,8 @@ namespace flare::fiber_internal {
         Data _data[KEY_2NDLEVEL_SIZE];
     };
 
-// The first-level array.
-// Align with cacheline to avoid false sharing.
+    // The first-level array.
+    // Align with cacheline to avoid false sharing.
     class FLARE_CACHELINE_ALIGNMENT KeyTable {
     public:
         KeyTable() : next(nullptr) {

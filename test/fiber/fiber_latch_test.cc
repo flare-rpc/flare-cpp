@@ -17,7 +17,7 @@ namespace {
         return nullptr;
     }
 
-    TEST(CountdonwEventTest, sanity) {
+    TEST(FiberLatchTest, sanity) {
         for (int n = 1; n < 10; ++n) {
             Arg a;
             a.num_sig = n;
@@ -31,16 +31,19 @@ namespace {
         }
     }
 
-    TEST(CountdonwEventTest, timed_wait) {
+    TEST(FiberLatchTest, timed_wait) {
         flare::fiber::fiber_latch latcher;
-        int rc = latcher.timed_wait(flare::base::milliseconds_from_now(100));
+        auto ts = flare::base::milliseconds_from_now(100);
+        int rc = latcher.timed_wait(&ts);
         ASSERT_EQ(rc, ETIMEDOUT);
         latcher.signal();
-        rc = latcher.timed_wait(flare::base::milliseconds_from_now(100));
+        auto ts1 = flare::base::milliseconds_from_now(100);
+        rc = latcher.timed_wait(&ts1);
         ASSERT_EQ(rc, 0);
         flare::fiber::fiber_latch latcher1;
         latcher1.signal();
-        rc = latcher.timed_wait(flare::base::milliseconds_from_now(1));
+        auto ts2 = flare::base::milliseconds_from_now(1);
+        rc = latcher.timed_wait(&ts2);
         ASSERT_EQ(rc, 0);
     }
 } // namespace

@@ -71,7 +71,7 @@ namespace flare::fiber {
         _wait_was_invoked = false;
     }
 
-    int fiber_latch::timed_wait(const timespec &duetime) {
+    int fiber_latch::timed_wait(const timespec *duetime) {
         _wait_was_invoked = true;
         for (;;) {
             const int seen_counter =
@@ -79,7 +79,7 @@ namespace flare::fiber {
             if (seen_counter <= 0) {
                 return 0;
             }
-            if (flare::fiber_internal::waitable_event_wait(_event, seen_counter, &duetime) < 0 &&
+            if (flare::fiber_internal::waitable_event_wait(_event, seen_counter, duetime) < 0 &&
                 errno != EWOULDBLOCK && errno != EINTR) {
                 return errno;
             }
