@@ -125,7 +125,7 @@ namespace flare::fiber_internal {
     FLARE_FORCE_INLINE int
     start_from_non_worker(fiber_id_t *__restrict tid,
                           const fiber_attribute *__restrict attr,
-                          flare::base::function<void*(void*)> && fn,
+                          flare::base::function<void *(void *)> &&fn,
                           void *__restrict arg) {
         schedule_group *c = get_or_new_task_control();
         if (NULL == c) {
@@ -175,9 +175,9 @@ namespace flare::fiber_internal {
 extern "C" {
 
 int fiber_start_urgent(fiber_id_t *__restrict tid,
-                         const fiber_attribute *__restrict attr,
-                       flare::base::function<void*(void*)> && fn,
-                         void *__restrict arg) {
+                       const fiber_attribute *__restrict attr,
+                       flare::base::function<void *(void *)> &&fn,
+                       void *__restrict arg) {
     flare::fiber_internal::fiber_worker *g = flare::fiber_internal::tls_task_group;
     if (g) {
         // start from worker
@@ -187,9 +187,9 @@ int fiber_start_urgent(fiber_id_t *__restrict tid,
 }
 
 int fiber_start_background(fiber_id_t *__restrict tid,
-                             const fiber_attribute *__restrict attr,
-                           flare::base::function<void*(void*)> && fn,
-                             void *__restrict arg) {
+                           const fiber_attribute *__restrict attr,
+                           flare::base::function<void *(void *)> &&fn,
+                           void *__restrict arg) {
     flare::fiber_internal::fiber_worker *g = flare::fiber_internal::tls_task_group;
     if (g) {
         // start from worker
@@ -331,7 +331,7 @@ int fiber_about_to_quit() {
 }
 
 int fiber_timer_add(fiber_timer_id *id, timespec abstime,
-                      void (*on_timer)(void *), void *arg) {
+                    void (*on_timer)(void *), void *arg) {
     flare::fiber_internal::schedule_group *c = flare::fiber_internal::get_or_new_task_control();
     if (c == NULL) {
         return ENOMEM;
@@ -379,8 +379,8 @@ void fiber_stop_world() {
 }
 
 int fiber_list_init(fiber_list_t *list,
-                      unsigned /*size*/,
-                      unsigned /*conflict_size*/) {
+                    unsigned /*size*/,
+                    unsigned /*conflict_size*/) {
     list->impl = new(std::nothrow) flare::fiber_internal::TidList;
     if (NULL == list->impl) {
         return ENOMEM;

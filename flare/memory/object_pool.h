@@ -3,7 +3,7 @@
 #define FLARE_MEMORY_OBJECT_POOL_H_
 
 #include <cstddef>                       // size_t
-
+#include "flare/memory/ref_ptr.h"
 // ObjectPool is a derivative class of ResourcePool to allocate and
 // reuse fixed-size objects without identifiers.
 
@@ -96,6 +96,47 @@ namespace flare::memory {
     template<typename T>
     ObjectPoolInfo describe_objects() {
         return ObjectPool<T>::singleton()->describe_objects();
+    }
+
+    template<class T>
+    struct object_pool_deleter {
+        void operator()(T *p) const noexcept;
+    };
+
+    // For classes that's both ref-counted and pooled, inheriting from this class
+    // can be handy (so that you don't need to write your own `RefTraits`.).
+    //
+    // Note that reference count is always initialized to one, either after
+    // construction or returned by object pool. So use `adopt_ptr` should you
+    // want to construct a `ref_ptr` from a raw pointer.
+    template<class T>
+    using pool_ref_counted = flare::memory::ref_counted<T, object_pool_deleter<T>>;
+
+    // Interface of `abel::object_pool::get` does not align very well with
+    // `ref_ptr`. It returns a `pooled_ptr`, which itself is a RAII wrapper. To
+    // simplify the use of pooled `RefCounted`, we provide this method.
+    template<class T,
+            class = std::enable_if_t<std::is_base_of_v<pool_ref_counted<T>, T>>>
+    ref_ptr<T> get_ref_counted() {
+#ifndef NDEBUG
+        auto ptr = ref_ptr(adopt_ptr_v, get_object<T>());
+        DCHECK_EQ(1, ptr->unsafe_ref_count());
+        return ptr;
+#else
+        return ref_ptr(adopt_ptr_v, get_object<T>());
+#endif
+    }
+
+    template<class T>
+    void object_pool_deleter<T>::operator()(T *p) const noexcept {
+        DCHECK_EQ(p->ref_count_.load(std::memory_order_relaxed), 0);
+
+        // Keep ref-count as 1 for reuse.
+        //
+        // It shouldn't be necessary to enforce memory ordering here as any ordering
+        // requirement should already been satisfied by `ref_counted<T>::deref()`.
+        p->ref_count_.store(1, std::memory_order_relaxed);
+        return_object<T>(p);
     }
 
 }  // namespace flare::memory

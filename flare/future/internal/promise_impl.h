@@ -7,7 +7,6 @@
 
 
 #include "flare/future/internal/promise.h"
-
 #include <memory>
 #include <utility>
 #include "flare/future/internal/executor.h"
