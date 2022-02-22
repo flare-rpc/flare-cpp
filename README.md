@@ -37,6 +37,7 @@ python语言的应用尤为广泛，因此，python与c++语言的无缝对接�
     * [time](docs/cn/time.md)
     * [fiber](docs/cn/fiber.md)
     * [future](docs/cn/future.md)
+    * [log](docs/cn/log.md)
 * rpc
     * server
     
