@@ -5,6 +5,7 @@
 #ifndef FLARE_FIBER_FIBER_LOCAL_H_
 #define FLARE_FIBER_FIBER_LOCAL_H_
 
+#include <memory>
 #include "flare/fiber/internal/types.h"
 #include "flare/fiber/internal/fiber.h"
 #include "flare/fiber/internal/unstable.h"
