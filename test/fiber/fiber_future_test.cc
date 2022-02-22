@@ -17,6 +17,7 @@ namespace flare::fiber {
     TEST(Future, BlockingGet) {
         for (int i = 0; i != 200; ++i) {
             fiber fbs[100];
+            std::vector<int> bv{1, 2, 3, 4, 5};
             for (auto &&f : fbs) {
                 auto op = [](void *) -> void * {
                     auto v = fiber_future_get(fiber_async(launch_policy::eLazy, [] {
@@ -27,7 +28,8 @@ namespace flare::fiber {
                         }
                         return v;
                     }));
-                    EXPECT_EQ(v, ::testing::ElementsAre(1, 2, 3, 4, 5));
+                    std::vector<int> basw{1, 2, 3, 4, 5};
+                    EXPECT_EQ(v, basw);
                     return nullptr;
                 };
                 f = fiber(op, nullptr);
