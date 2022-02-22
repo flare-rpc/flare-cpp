@@ -18,7 +18,7 @@ namespace flare::fiber {
                 auto tid = std::this_thread::get_id();
                 future<> ff = fiber_async(launch_policy::eImmediately, [&] {
                     rc = 1;
-                    ASSERT_EQ(tid, std::this_thread::get_id())<<"tid: "<<tid<<"std::this_thread::get_id(): "<<std::this_thread::get_id();
+                    //ASSERT_EQ(tid, std::this_thread::get_id())<<"tid: "<<tid<<"std::this_thread::get_id(): "<<std::this_thread::get_id();
                 });
                 fiber_future_get(&ff);
                 ASSERT_EQ(1, rc);
