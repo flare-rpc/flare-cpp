@@ -33,10 +33,14 @@ namespace flare::fiber {
 
     void fiber::detach() {
         _detached = true;
+        _fid = INVALID_FIBER_ID;
     }
 
     bool fiber::stopped() const {
-        return ::fiber_stopped(_fid) == 0;
+        if(_detached && _fid != INVALID_FIBER_ID)  {
+            return ::fiber_stopped(_fid) == 0;
+        }
+        return true;
     }
 
     void fiber::stop() {
