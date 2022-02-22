@@ -18,6 +18,9 @@ flare系列框架现代化的后台开发框架。包括c++， go， python，ru
 部分业务的逻辑处理对性能要求并不高，同时，对业务迭代的时间要求比较苛刻，特别是在AI蓬勃发展的今天
 python语言的应用尤为广泛，因此，python与c++语言的无缝对接尤为重要。
 
+随着硬件的发展，服务器的cpu核数从单核到多核，甚至可达上百个核心，高效利用多核也是编程中的极大的难题，
+通过一套框架，很好的将这些基础而重要的问题从业务层剥离开，能很好的帮助业务提高效能。
+
 * python版本[flare-py](https://github.com/flare-rpc/flare-py)
 * go版本[flare-go](https://github.com/flare-rpc/flare-go)
 * c++版本[flare-cpp](https://github.com/flare-rpc/flare-cpp)
