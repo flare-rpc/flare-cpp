@@ -370,7 +370,7 @@ namespace flare::fiber_internal {
                 fn = ready_to_run_in_worker;
             }
             ReadyToRunArgs args = {
-                    g->current_tid(),
+                    g->current_fid(),
                     (bool) (using_attr.flags & FIBER_NOSIGNAL)
             };
             g->set_remained(fn, &args);
@@ -442,7 +442,7 @@ namespace flare::fiber_internal {
             return EINVAL;
         }
         fiber_worker *g = tls_task_group;
-        if (g != nullptr && g->current_tid() == tid) {
+        if (g != nullptr && g->current_fid() == tid) {
             // joining self causes indefinite waiting.
             return EINVAL;
         }
@@ -584,7 +584,7 @@ namespace flare::fiber_internal {
             }
             // else because of ending_sched(including pthread_task->pthread_task)
         } else {
-            LOG(FATAL) << "fiber=" << g->current_tid() << " sched_to itself!";
+            LOG(FATAL) << "fiber=" << g->current_fid() << " sched_to itself!";
         }
 
         while (g->_last_context_remained) {
@@ -755,7 +755,7 @@ namespace flare::fiber_internal {
         fiber_worker *g = *pg;
         // We have to schedule timer after we switched to next fiber otherwise
         // the timer may wake up(jump to) current still-running context.
-        SleepArgs e = {timeout_us, g->current_tid(), g->current_task(), g};
+        SleepArgs e = {timeout_us, g->current_fid(), g->current_task(), g};
         g->set_remained(_add_sleep_event, &e);
         sched(pg);
         g = *pg;
@@ -853,7 +853,7 @@ namespace flare::fiber_internal {
 
     void fiber_worker::yield(fiber_worker **pg) {
         fiber_worker *g = *pg;
-        ReadyToRunArgs args = {g->current_tid(), false};
+        ReadyToRunArgs args = {g->current_fid(), false};
         g->set_remained(ready_to_run_in_worker, &args);
         sched(pg);
     }

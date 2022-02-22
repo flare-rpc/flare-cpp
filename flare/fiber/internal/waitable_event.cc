@@ -516,7 +516,7 @@ namespace flare::fiber_internal {
         // // Value unmatched or waiter is already woken up by TimerThread, jump
         // // back to original fiber.
         // fiber_worker* g = tls_task_group;
-        // ReadyToRunArgs args = { g->current_tid(), false };
+        // ReadyToRunArgs args = { g->current_fid(), false };
         // g->set_remained(fiber_worker::ready_to_run_in_worker, &args);
         // // 2: Don't run remained because we're already in a remained function
         // //    otherwise stack may overflow.
@@ -607,7 +607,7 @@ namespace flare::fiber_internal {
         }
         event_fiber_waiter bbw;
         // tid is 0 iff the thread is non-fiber
-        bbw.tid = g->current_tid();
+        bbw.tid = g->current_fid();
         bbw.container.store(NULL, std::memory_order_relaxed);
         bbw.task_meta = g->current_task();
         bbw.sleep_id = 0;

@@ -73,7 +73,7 @@ namespace flare::fiber {
 
     template <class... Ts>
     auto fiber_future_get(future<Ts...>* f) {
-        return fiber_blocking_get(std::move(*f));
+        return fiber_future_get(std::move(*f));
     }
 
     template <class... Ts>
