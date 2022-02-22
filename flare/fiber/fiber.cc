@@ -28,14 +28,19 @@ namespace flare::fiber {
         if(!_detached) {
             ::fiber_join(_fid, nullptr);
         }
+        _fid = INVALID_FIBER_ID;
     }
 
     void fiber::detach() {
         _detached = true;
+        _fid = INVALID_FIBER_ID;
     }
 
     bool fiber::stopped() const {
-        return ::fiber_stopped(_fid) == 0;
+        if(_detached && _fid != INVALID_FIBER_ID)  {
+            return ::fiber_stopped(_fid) == 0;
+        }
+        return true;
     }
 
     void fiber::stop() {
@@ -43,7 +48,7 @@ namespace flare::fiber {
     }
 
     fiber::~fiber() {
-        if(!_detached)  {
+        if(!_detached && _fid != INVALID_FIBER_ID)  {
             stop();
             join();
         }

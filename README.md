@@ -1,6 +1,35 @@
 flare
 ===
 
-# try
+flare系列框架现代化的后台开发框架。包括c++， go， python，rust四种语言版本。旨在提供方便、稳定、高效的
+后台服务框架，并在多种业务场景中是使用不同语言，能够无障碍互通的框架体系。另外flare系统框架不仅提供rpc通信能力
+更是一款基础服务开发库。
+
+# 背景
+
+在服务端编程的领域中，通常情况下，c/c++编程是高性能的代名词。但是高性能的背后，编程难度高，调试困难，业务迭代速
+度慢等问题在生产环境中尤为棘手。使用c++编程，归纳起来有几个核心的问题
+
+* 异步编程复杂。
+* 业务调用关系在异步框架下，代码复杂。
+* 内存生命周期管理在异步环境下复杂，难以调试。
+* 多线程竞态问题处理
+
+部分业务的逻辑处理对性能要求并不高，同时，对业务迭代的时间要求比较苛刻，特别是在AI蓬勃发展的今天
+python语言的应用尤为广泛，因此，python与c++语言的无缝对接尤为重要。
+
+* python版本[flare-py](https://github.com/flare-rpc/flare-py)
+* go版本[flare-go](https://github.com/flare-rpc/flare-go)
+* c++版本[flare-cpp](https://github.com/flare-rpc/flare-cpp)
+
+
+# 开始使用
 
 * [编译安装](docs/cn/getting_started.md)
+
+* 基础库
+    * [string](docs/cn/string.md)
+    * [filesystem](docs/cn/filesystem.md)
+    * [bootstrap](docs/cn/bootstrap.md)
+    * [container](docs/cn/container.md)
+    * [memory](docs/cn/memory.md)
