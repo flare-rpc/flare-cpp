@@ -27,7 +27,7 @@
 
 namespace flare::fiber_internal {
 
-// Park idle workers.
+    // Park idle workers.
     class FLARE_CACHELINE_ALIGNMENT ParkingLot {
     public:
         class State {
