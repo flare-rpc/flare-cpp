@@ -22,121 +22,129 @@
 
 namespace flare::rpc {
 
-EspMessage::EspMessage()
-    : ::google::protobuf::Message() {
-    SharedCtor();
-}
+    EspMessage::EspMessage()
+            : ::google::protobuf::Message() {
+        SharedCtor();
+    }
 
-EspMessage::EspMessage(const EspMessage& from)
-    : ::google::protobuf::Message() {
-    SharedCtor();
-    MergeFrom(from);
-}
+    EspMessage::EspMessage(const EspMessage &from)
+            : ::google::protobuf::Message() {
+        SharedCtor();
+        MergeFrom(from);
+    }
 
-void EspMessage::SharedCtor() {
-    memset(&head, 0, sizeof(head));
-}
+    void EspMessage::SharedCtor() {
+        memset(&head, 0, sizeof(head));
+    }
 
-EspMessage::~EspMessage() {
-    SharedDtor();
-}
+    EspMessage::~EspMessage() {
+        SharedDtor();
+    }
 
-void EspMessage::SharedDtor() {
-}
+    void EspMessage::SharedDtor() {
+    }
 
-const ::google::protobuf::Descriptor* EspMessage::descriptor() {
-    return EspMessageBase::descriptor();
-}
+    const ::google::protobuf::Descriptor *EspMessage::descriptor() {
+        return EspMessageBase::descriptor();
+    }
 
-EspMessage* EspMessage::New() const {
-    return new EspMessage;
-}
+    EspMessage *EspMessage::New() const {
+        return new EspMessage;
+    }
 
-void EspMessage::Clear() {
-    head.body_len = 0;
-    body.clear();
-}
+#if GOOGLE_PROTOBUF_VERSION >= 3006000
 
-bool EspMessage::MergePartialFromCodedStream(
-        ::google::protobuf::io::CodedInputStream* input) {
+    EspMessage *EspMessage::New(::google::protobuf::Arena *arena) const {
+        return CreateMaybeMessage<EspMessage>(arena);
+    }
+
+#endif
+
+    void EspMessage::Clear() {
+        head.body_len = 0;
+        body.clear();
+    }
+
+    bool EspMessage::MergePartialFromCodedStream(
+            ::google::protobuf::io::CodedInputStream *input) {
 #define DO_(EXPRESSION) if (!(EXPRESSION)) return false
-    ::google::protobuf::uint32 tag;
+        ::google::protobuf::uint32 tag;
 
-    while ((tag = input->ReadTag()) != 0) {
-        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+        while ((tag = input->ReadTag()) != 0) {
+            if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
                 ::google::protobuf::internal::WireFormatLite::WIRETYPE_END_GROUP) {
-            return true;
+                return true;
+            }
+        }
+        return true;
+#undef DO_
+    }
+
+    void EspMessage::SerializeWithCachedSizes(
+            ::google::protobuf::io::CodedOutputStream *) const {
+    }
+
+    ::google::protobuf::uint8 *EspMessage::SerializeWithCachedSizesToArray(
+            ::google::protobuf::uint8 *target) const {
+        return target;
+    }
+
+    int EspMessage::ByteSize() const {
+        return sizeof(head) + body.size();
+    }
+
+    void EspMessage::MergeFrom(const ::google::protobuf::Message &from) {
+        GOOGLE_CHECK_NE(&from, this);
+        const EspMessage *source = dynamic_cast<const EspMessage *>(&from);
+        if (source == NULL) {
+            ::google::protobuf::internal::ReflectionOps::Merge(from, this);
+        } else {
+            MergeFrom(*source);
         }
     }
-    return true;
-#undef DO_
-}
 
-void EspMessage::SerializeWithCachedSizes(
-        ::google::protobuf::io::CodedOutputStream*) const {
-}
-
-::google::protobuf::uint8* EspMessage::SerializeWithCachedSizesToArray(
-        ::google::protobuf::uint8* target) const {
-    return target;
-}
-
-int EspMessage::ByteSize() const {
-    return sizeof(head) + body.size();
-}
-
-void EspMessage::MergeFrom(const ::google::protobuf::Message& from) {
-    GOOGLE_CHECK_NE(&from, this);
-    const EspMessage* source = dynamic_cast<const EspMessage*>(&from);
-    if (source == NULL) {
-        ::google::protobuf::internal::ReflectionOps::Merge(from, this);
-    } else {
-        MergeFrom(*source);
-    }
-}
-
-void EspMessage::MergeFrom(const EspMessage& from) {
-    GOOGLE_CHECK_NE(&from, this);
-    head = from.head;
-    body = from.body;
-}
-
-void EspMessage::CopyFrom(const ::google::protobuf::Message& from) {
-    if (&from == this) {
-        return;
+    void EspMessage::MergeFrom(const EspMessage &from) {
+        GOOGLE_CHECK_NE(&from, this);
+        head = from.head;
+        body = from.body;
     }
 
-    Clear();
-    MergeFrom(from);
-}
+    void EspMessage::CopyFrom(const ::google::protobuf::Message &from) {
+        if (&from == this) {
+            return;
+        }
 
-void EspMessage::CopyFrom(const EspMessage& from) {
-    if (&from == this) {
-        return;
+        Clear();
+        MergeFrom(from);
     }
 
-    Clear();
-    MergeFrom(from);
-}
+    void EspMessage::CopyFrom(const EspMessage &from) {
+        if (&from == this) {
+            return;
+        }
 
-bool EspMessage::IsInitialized() const {
-    return true;
-}
-
-void EspMessage::Swap(EspMessage* other) {
-    if (other != this) {
-        const EspHead tmp = other->head;
-        other->head = head;
-        head = tmp;
-        body.swap(other->body);
+        Clear();
+        MergeFrom(from);
     }
-}
 
-::google::protobuf::Metadata EspMessage::GetMetadata() const {
-    ::google::protobuf::Metadata metadata;
-    metadata.descriptor = EspMessage::descriptor();
-    metadata.reflection = NULL;
-    return metadata;
-}
+    bool EspMessage::IsInitialized() const {
+        return true;
+    }
+
+    void EspMessage::Swap(EspMessage *other) {
+        if (other != this) {
+            const EspHead tmp = other->head;
+            other->head = head;
+            head = tmp;
+            body.swap(other->body);
+        }
+    }
+
+    ::google::protobuf::Metadata EspMessage::GetMetadata() const {
+        ::google::protobuf::Metadata metadata;
+        metadata.descriptor = EspMessage::descriptor();
+        metadata.reflection = NULL;
+        return metadata;
+    }
 
 } // namespace flare::rpc
