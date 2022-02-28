@@ -25,40 +25,40 @@
 
 namespace flare::rpc {
 
-struct CompressHandler {
-    // Compress serialized `msg' into `buf'.
+    struct CompressHandler {
+        // Compress serialized `msg' into `buf'.
+        // Returns true on success, false otherwise
+        bool (*Compress)(const google::protobuf::Message &msg, flare::io::cord_buf *buf);
+
+        // Parse decompressed `data' as `msg'.
+        // Returns true on success, false otherwise
+        bool (*Decompress)(const flare::io::cord_buf &data, google::protobuf::Message *msg);
+
+        // Name of the compression algorithm, must be string constant.
+        const char *name;
+    };
+
+    // [NOT thread-safe] Register `handler' using key=`type'
+    // Returns 0 on success, -1 otherwise
+    int RegisterCompressHandler(CompressType type, CompressHandler handler);
+
+    // Returns the `name' of the CompressType if registered
+    const char *CompressTypeToCStr(CompressType type);
+
+    // Put all registered handlers into `vec'.
+    void ListCompressHandler(std::vector<CompressHandler> *vec);
+
+    // Parse decompressed `data' as `msg' using registered `compress_type'.
     // Returns true on success, false otherwise
-    bool (*Compress)(const google::protobuf::Message& msg, flare::io::cord_buf* buf);
+    bool ParseFromCompressedData(const flare::io::cord_buf &data,
+                                 google::protobuf::Message *msg,
+                                 CompressType compress_type);
 
-    // Parse decompressed `data' as `msg'.
+    // Compress serialized `msg' into `buf' using registered `compress_type'.
     // Returns true on success, false otherwise
-    bool (*Decompress)(const flare::io::cord_buf& data, google::protobuf::Message* msg);
-
-    // Name of the compression algorithm, must be string constant.
-    const char* name;
-};
-
-// [NOT thread-safe] Register `handler' using key=`type'
-// Returns 0 on success, -1 otherwise
-int RegisterCompressHandler(CompressType type, CompressHandler handler);
-
-// Returns the `name' of the CompressType if registered
-const char* CompressTypeToCStr(CompressType type);
-
-// Put all registered handlers into `vec'.
-void ListCompressHandler(std::vector<CompressHandler>* vec);
-
-// Parse decompressed `data' as `msg' using registered `compress_type'.
-// Returns true on success, false otherwise
-bool ParseFromCompressedData(const flare::io::cord_buf& data,
-                             google::protobuf::Message* msg,
-                             CompressType compress_type);
-
-// Compress serialized `msg' into `buf' using registered `compress_type'.
-// Returns true on success, false otherwise
-bool SerializeAsCompressedData(const google::protobuf::Message& msg,
-                               flare::io::cord_buf* buf,
-                               CompressType compress_type);
+    bool SerializeAsCompressedData(const google::protobuf::Message &msg,
+                                   flare::io::cord_buf *buf,
+                                   CompressType compress_type);
 
 } // namespace flare::rpc
 

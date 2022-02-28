@@ -4,7 +4,7 @@
 #define FLARE_IO_TEMP_FILE_H_
 
 #include "flare/base/profile.h"
-#include <filesystem>
+#include "flare/base/filesystem.h"
 
 namespace flare::io {
 

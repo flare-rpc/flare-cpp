@@ -10,17 +10,17 @@
 
 namespace flare::io {
 
-    static bool create_temporary_dir_in_dir_impl(const std::filesystem::path &base_dir,
+    static bool create_temporary_dir_in_dir_impl(const flare::filesystem::path &base_dir,
                                                  const std::string &name_tmpl,
-                                                 std::filesystem::path *new_dir);
+                                                 flare::filesystem::path *new_dir);
 
-    bool create_temporary_dir_in_dir_impl(const std::filesystem::path &base_dir,
+    bool create_temporary_dir_in_dir_impl(const flare::filesystem::path &base_dir,
                                           const std::string &name_tmpl,
-                                          std::filesystem::path *new_dir) {
+                                          flare::filesystem::path *new_dir) {
         DCHECK(name_tmpl.find("XXXXXX") != std::string::npos)
                             << "Directory name template must contain \"XXXXXX\".";
 
-        std::filesystem::path sub_dir = base_dir;
+        flare::filesystem::path sub_dir = base_dir;
         sub_dir /= name_tmpl;
         std::string sub_dir_string = sub_dir.generic_string();
 
@@ -31,12 +31,12 @@ namespace flare::io {
             DPLOG(ERROR) << "mkdtemp";
             return false;
         }
-        *new_dir = std::filesystem::path(dtemp);
+        *new_dir = flare::filesystem::path(dtemp);
         return true;
     }
 
-    bool create_new_temp_directory(const std::filesystem::path &prefix, std::filesystem::path *newPath) {
-        std::filesystem::path tmp_dir;
+    bool create_new_temp_directory(const flare::filesystem::path &prefix, flare::filesystem::path *newPath) {
+        flare::filesystem::path tmp_dir;
         if (prefix.empty()) {
             return false;
         }
@@ -44,7 +44,7 @@ namespace flare::io {
             tmp_dir = prefix;
         } else {
             std::error_code ec;
-            tmp_dir = std::filesystem::temp_directory_path(ec);
+            tmp_dir = flare::filesystem::temp_directory_path(ec);
             if (ec) {
                 return false;
             }
@@ -53,8 +53,8 @@ namespace flare::io {
         return create_temporary_dir_in_dir_impl(tmp_dir, BASE_FILES_TEMP_DIR_PATTERN, newPath);
     }
 
-    bool create_temporary_dir_in_dir(const std::filesystem::path &base, const std::string &prefix,
-                                     std::filesystem::path *newPath) {
+    bool create_temporary_dir_in_dir(const flare::filesystem::path &base, const std::string &prefix,
+                                     flare::filesystem::path *newPath) {
         std::string mkdtemp_template = prefix + "XXXXXX";
         return create_temporary_dir_in_dir_impl(base, mkdtemp_template, newPath);
     }
@@ -72,20 +72,20 @@ namespace flare::io {
             return false;
         // This "scoped_dir" prefix is only used on Windows and serves as a template
         // for the unique name.
-        static std::filesystem::path kScopedDir("scoped_dir");
+        static flare::filesystem::path kScopedDir("scoped_dir");
         if (!create_new_temp_directory(kScopedDir, &_path))
             return false;
 
         return true;
     }
 
-    bool scoped_temp_dir::create_unique_temp_dir_under_path(const std::filesystem::path &base_path) {
+    bool scoped_temp_dir::create_unique_temp_dir_under_path(const flare::filesystem::path &base_path) {
         if (!_path.empty())
             return false;
 
         // If |base_path| does not exist, create it.
         std::error_code ec;
-        if (!std::filesystem::create_directories(base_path, ec))
+        if (!flare::filesystem::create_directories(base_path, ec))
             return false;
 
         // Create a new, uniquely named directory under |base_path|.
@@ -96,12 +96,12 @@ namespace flare::io {
         return true;
     }
 
-    bool scoped_temp_dir::set(const std::filesystem::path &path) {
+    bool scoped_temp_dir::set(const flare::filesystem::path &path) {
         if (!_path.empty())
             return false;
 
         std::error_code ec;
-        if (!std::filesystem::exists(path, ec) && !std::filesystem::create_directories(path, ec))
+        if (!flare::filesystem::exists(path, ec) && !flare::filesystem::create_directories(path, ec))
             return false;
 
         _path = path;
@@ -112,7 +112,7 @@ namespace flare::io {
         if (_path.empty())
             return false;
         std::error_code ec;
-        bool ret = std::filesystem::remove_all(_path, ec);
+        bool ret = flare::filesystem::remove_all(_path, ec);
         if (ret) {
             // We only clear the path if deleted the directory.
             _path.clear();
@@ -121,15 +121,15 @@ namespace flare::io {
         return ret;
     }
 
-    std::filesystem::path scoped_temp_dir::take() {
-        std::filesystem::path ret = _path;
-        _path = std::filesystem::path();
+    flare::filesystem::path scoped_temp_dir::take() {
+        flare::filesystem::path ret = _path;
+        _path = flare::filesystem::path();
         return ret;
     }
 
     bool scoped_temp_dir::is_valid() const {
         std::error_code ec;
-        return !_path.empty() && std::filesystem::exists(_path, ec) && std::filesystem::is_directory(_path, ec);
+        return !_path.empty() && flare::filesystem::exists(_path, ec) && flare::filesystem::is_directory(_path, ec);
     }
 
 }  // namespace flare::io

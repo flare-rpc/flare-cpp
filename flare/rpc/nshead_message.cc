@@ -24,116 +24,124 @@
 
 namespace flare::rpc {
 
-NsheadMessage::NsheadMessage()
-    : ::google::protobuf::Message() {
-    SharedCtor();
-}
+    NsheadMessage::NsheadMessage()
+            : ::google::protobuf::Message() {
+        SharedCtor();
+    }
 
-NsheadMessage::NsheadMessage(const NsheadMessage& from)
-    : ::google::protobuf::Message() {
-    SharedCtor();
-    MergeFrom(from);
-}
+    NsheadMessage::NsheadMessage(const NsheadMessage &from)
+            : ::google::protobuf::Message() {
+        SharedCtor();
+        MergeFrom(from);
+    }
 
-void NsheadMessage::SharedCtor() {
-    memset(&head, 0, sizeof(head));
-}
+    void NsheadMessage::SharedCtor() {
+        memset(&head, 0, sizeof(head));
+    }
 
-NsheadMessage::~NsheadMessage() {
-    SharedDtor();
-}
+    NsheadMessage::~NsheadMessage() {
+        SharedDtor();
+    }
 
-void NsheadMessage::SharedDtor() {
-}
+    void NsheadMessage::SharedDtor() {
+    }
 
-const ::google::protobuf::Descriptor* NsheadMessage::descriptor() {
-    return NsheadMessageBase::descriptor();
-}
+    const ::google::protobuf::Descriptor *NsheadMessage::descriptor() {
+        return NsheadMessageBase::descriptor();
+    }
 
-NsheadMessage* NsheadMessage::New() const {
-    return new NsheadMessage;
-}
+    NsheadMessage *NsheadMessage::New() const {
+        return new NsheadMessage;
+    }
 
-void NsheadMessage::Clear() {
-    memset(&head, 0, sizeof(head));
-    body.clear();
-}
+#if GOOGLE_PROTOBUF_VERSION >= 3006000
 
-bool NsheadMessage::MergePartialFromCodedStream(
-    ::google::protobuf::io::CodedInputStream* input) {
+    NsheadMessage *NsheadMessage::New(::google::protobuf::Arena *arena) const {
+        return CreateMaybeMessage<NsheadMessage>(arena);
+    }
+
+#endif
+
+    void NsheadMessage::Clear() {
+        memset(&head, 0, sizeof(head));
+        body.clear();
+    }
+
+    bool NsheadMessage::MergePartialFromCodedStream(
+            ::google::protobuf::io::CodedInputStream *input) {
 #define DO_(EXPRESSION) if (!(EXPRESSION)) return false
-    ::google::protobuf::uint32 tag;
-    while ((tag = input->ReadTag()) != 0) {
-        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
-            ::google::protobuf::internal::WireFormatLite::WIRETYPE_END_GROUP) {
-            return true;
+        ::google::protobuf::uint32 tag;
+        while ((tag = input->ReadTag()) != 0) {
+            if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+                ::google::protobuf::internal::WireFormatLite::WIRETYPE_END_GROUP) {
+                return true;
+            }
+        }
+        return true;
+#undef DO_
+    }
+
+    void NsheadMessage::SerializeWithCachedSizes(
+            ::google::protobuf::io::CodedOutputStream *) const {
+    }
+
+    ::google::protobuf::uint8 *NsheadMessage::SerializeWithCachedSizesToArray(
+            ::google::protobuf::uint8 *target) const {
+        return target;
+    }
+
+    int NsheadMessage::ByteSize() const {
+        return sizeof(nshead_t) + body.size();
+    }
+
+    void NsheadMessage::MergeFrom(const ::google::protobuf::Message &from) {
+        GOOGLE_CHECK_NE(&from, this);
+        const NsheadMessage *source = dynamic_cast<const NsheadMessage *>(&from);
+        if (source == NULL) {
+            LOG(ERROR) << "Can only merge from NsheadMessage";
+            return;
+        } else {
+            MergeFrom(*source);
         }
     }
-    return true;
-#undef DO_
-}
 
-void NsheadMessage::SerializeWithCachedSizes(
-    ::google::protobuf::io::CodedOutputStream*) const {
-}
-
-::google::protobuf::uint8* NsheadMessage::SerializeWithCachedSizesToArray(
-    ::google::protobuf::uint8* target) const {
-    return target;
-}
-
-int NsheadMessage::ByteSize() const {
-    return sizeof(nshead_t) + body.size();
-}
-
-void NsheadMessage::MergeFrom(const ::google::protobuf::Message& from) {
-    GOOGLE_CHECK_NE(&from, this);
-    const NsheadMessage* source = dynamic_cast<const NsheadMessage*>(&from);
-    if (source == NULL) {
-        LOG(ERROR) << "Can only merge from NsheadMessage";
-        return;
-    } else {
-        MergeFrom(*source);
+    void NsheadMessage::MergeFrom(const NsheadMessage &from) {
+        GOOGLE_CHECK_NE(&from, this);
+        // No way to merge two nshead messages, just overwrite.
+        head = from.head;
+        body = from.body;
     }
-}
 
-void NsheadMessage::MergeFrom(const NsheadMessage& from) {
-    GOOGLE_CHECK_NE(&from, this);
-    // No way to merge two nshead messages, just overwrite.
-    head = from.head;
-    body = from.body;
-}
-
-void NsheadMessage::CopyFrom(const ::google::protobuf::Message& from) {
-    if (&from == this) return;
-    Clear();
-    MergeFrom(from);
-}
-
-void NsheadMessage::CopyFrom(const NsheadMessage& from) {
-    if (&from == this) return;
-    Clear();
-    MergeFrom(from);
-}
-
-bool NsheadMessage::IsInitialized() const {
-    return true;
-}
-
-void NsheadMessage::Swap(NsheadMessage* other) {
-    if (other != this) {
-        const nshead_t tmp = other->head;
-        other->head = head;
-        head = tmp;
-        body.swap(other->body);
+    void NsheadMessage::CopyFrom(const ::google::protobuf::Message &from) {
+        if (&from == this) return;
+        Clear();
+        MergeFrom(from);
     }
-}
 
-::google::protobuf::Metadata NsheadMessage::GetMetadata() const {
-    ::google::protobuf::Metadata metadata;
-    metadata.descriptor = NsheadMessage::descriptor();
-    metadata.reflection = NULL;
-    return metadata;
-}
+    void NsheadMessage::CopyFrom(const NsheadMessage &from) {
+        if (&from == this) return;
+        Clear();
+        MergeFrom(from);
+    }
+
+    bool NsheadMessage::IsInitialized() const {
+        return true;
+    }
+
+    void NsheadMessage::Swap(NsheadMessage *other) {
+        if (other != this) {
+            const nshead_t tmp = other->head;
+            other->head = head;
+            head = tmp;
+            body.swap(other->body);
+        }
+    }
+
+    ::google::protobuf::Metadata NsheadMessage::GetMetadata() const {
+        ::google::protobuf::Metadata metadata;
+        metadata.descriptor = NsheadMessage::descriptor();
+        metadata.reflection = NULL;
+        return metadata;
+    }
 
 } // namespace flare::rpc

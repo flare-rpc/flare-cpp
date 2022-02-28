@@ -1,0 +1,11 @@
+name: flare-dev
+channels:
+  - conda-forge
+  - defaults
+  - flare-rpc
+dependencies:
+  - cmake >=3.17
+  - make
+  - gflags
+  - leveldb
+  - protobuf=3.* # includes Protobuf compiler, C++ headers, Python libraries

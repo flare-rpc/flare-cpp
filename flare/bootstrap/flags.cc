@@ -3,7 +3,7 @@
 #include <string>
 #include <unordered_map>
 #include <utility>
-#include "gflags/gflags.h"
+#include <gflags/gflags.h>
 #include "flare/log/logging.h"
 #include "flare/memory/resident.h"
 
@@ -32,9 +32,9 @@ namespace flare::detail {
     void apply_flags_overrider() {
         for (auto&&[k, v] : *get_registry()) {
             // Make sure the flag name is present.
-            auto current = google::GetCommandLineFlagInfoOrDie(k.c_str());
+            auto current = GFLAGS_NS::GetCommandLineFlagInfoOrDie(k.c_str());
             if (current.is_default || v.second) {
-                google::SetCommandLineOption(k.c_str(), v.first.c_str());
+                GFLAGS_NS::SetCommandLineOption(k.c_str(), v.first.c_str());
                 VLOG(10)<<"Overriding flag ["<<k<<"] with ["<<v.first<<"].";
             }
         }

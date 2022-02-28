@@ -17,6 +17,7 @@
 
 
 #define INTERNAL_SUPPRESS_PROTOBUF_FIELD_DEPRECATION
+
 #include "flare/rpc/thrift_message.h"
 
 #include <algorithm>
@@ -30,122 +31,130 @@
 
 namespace flare::rpc {
 
-ThriftFramedMessage::ThriftFramedMessage()
-    : ::google::protobuf::Message() {
-    SharedCtor();
-}
-
-void ThriftFramedMessage::SharedCtor() {
-    field_id = THRIFT_INVALID_FID;
-    _own_raw_instance = false;
-    _raw_instance = nullptr;
-}
-
-ThriftFramedMessage::~ThriftFramedMessage() {
-    SharedDtor();
-    if (_own_raw_instance) {
-        delete _raw_instance;
+    ThriftFramedMessage::ThriftFramedMessage()
+            : ::google::protobuf::Message() {
+        SharedCtor();
     }
-}
 
-void ThriftFramedMessage::SharedDtor() {
-}
-
-const ::google::protobuf::Descriptor* ThriftFramedMessage::descriptor() {
-    return ThriftFramedMessageBase::descriptor();
-}
-
-ThriftFramedMessage* ThriftFramedMessage::New() const {
-    return new ThriftFramedMessage;
-}
-
-void ThriftFramedMessage::Clear() {
-    body.clear();
-    if (_own_raw_instance) {
-        delete _raw_instance;
+    void ThriftFramedMessage::SharedCtor() {
+        field_id = THRIFT_INVALID_FID;
         _own_raw_instance = false;
-        _raw_instance = NULL;
+        _raw_instance = nullptr;
     }
-}
 
-bool ThriftFramedMessage::MergePartialFromCodedStream(
-    ::google::protobuf::io::CodedInputStream* input) {
-#define DO_(EXPRESSION) if (!(EXPRESSION)) return false
-    ::google::protobuf::uint32 tag;
-    while ((tag = input->ReadTag()) != 0) {
-        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
-            ::google::protobuf::internal::WireFormatLite::WIRETYPE_END_GROUP) {
-            return true;
+    ThriftFramedMessage::~ThriftFramedMessage() {
+        SharedDtor();
+        if (_own_raw_instance) {
+            delete _raw_instance;
         }
     }
-    return true;
+
+    void ThriftFramedMessage::SharedDtor() {
+    }
+
+    const ::google::protobuf::Descriptor *ThriftFramedMessage::descriptor() {
+        return ThriftFramedMessageBase::descriptor();
+    }
+
+    ThriftFramedMessage *ThriftFramedMessage::New() const {
+        return new ThriftFramedMessage;
+    }
+
+#if GOOGLE_PROTOBUF_VERSION >= 3006000
+
+    ThriftFramedMessage *ThriftFramedMessage::New(::google::protobuf::Arena *arena) const {
+        return CreateMaybeMessage<ThriftFramedMessage>(arena);
+    }
+
+#endif
+
+    void ThriftFramedMessage::Clear() {
+        body.clear();
+        if (_own_raw_instance) {
+            delete _raw_instance;
+            _own_raw_instance = false;
+            _raw_instance = NULL;
+        }
+    }
+
+    bool ThriftFramedMessage::MergePartialFromCodedStream(
+            ::google::protobuf::io::CodedInputStream *input) {
+#define DO_(EXPRESSION) if (!(EXPRESSION)) return false
+        ::google::protobuf::uint32 tag;
+        while ((tag = input->ReadTag()) != 0) {
+            if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+                ::google::protobuf::internal::WireFormatLite::WIRETYPE_END_GROUP) {
+                return true;
+            }
+        }
+        return true;
 #undef DO_
-}
-
-void ThriftFramedMessage::SerializeWithCachedSizes(
-    ::google::protobuf::io::CodedOutputStream*) const {
-}
-
-::google::protobuf::uint8* ThriftFramedMessage::SerializeWithCachedSizesToArray(
-    ::google::protobuf::uint8* target) const {
-    return target;
-}
-
-int ThriftFramedMessage::ByteSize() const {
-    if (_raw_instance) {
-        LOG(ERROR) << "ByteSize() is always 0 when _raw_instance is set";
-        return 0;
     }
-    return body.size();
-}
 
-void ThriftFramedMessage::MergeFrom(const ::google::protobuf::Message& from) {
-    GOOGLE_CHECK_NE(&from, this);
-    LOG(ERROR) << "ThriftFramedMessage does not support MergeFrom";
-}
-
-void ThriftFramedMessage::MergeFrom(const ThriftFramedMessage& from) {
-    GOOGLE_CHECK_NE(&from, this);
-    LOG(ERROR) << "ThriftFramedMessage does not support MergeFrom";
-}
-
-void ThriftFramedMessage::CopyFrom(const ::google::protobuf::Message& from) {
-    if (&from == this) return;
-    LOG(ERROR) << "ThriftFramedMessage does not support CopyFrom";
-}
-
-void ThriftFramedMessage::CopyFrom(const ThriftFramedMessage& from) {
-    if (&from == this) return;
-    LOG(ERROR) << "ThriftFramedMessage does not support CopyFrom";
-}
-
-bool ThriftFramedMessage::IsInitialized() const {
-    return true;
-}
-
-void ThriftFramedMessage::Swap(ThriftFramedMessage* other) {
-    if (other != this) {
-        body.swap(other->body);
-        std::swap(field_id, other->field_id);
-        std::swap(_own_raw_instance, other->_own_raw_instance);
-        std::swap(_raw_instance, other->_raw_instance);
+    void ThriftFramedMessage::SerializeWithCachedSizes(
+            ::google::protobuf::io::CodedOutputStream *) const {
     }
-}
 
-::google::protobuf::Metadata ThriftFramedMessage::GetMetadata() const {
-    ::google::protobuf::Metadata metadata;
-    metadata.descriptor = ThriftFramedMessage::descriptor();
-    metadata.reflection = NULL;
-    return metadata;
-}
+    ::google::protobuf::uint8 *ThriftFramedMessage::SerializeWithCachedSizesToArray(
+            ::google::protobuf::uint8 *target) const {
+        return target;
+    }
 
-void ThriftStub::CallMethod(const char* method_name,
-                            Controller* cntl,
-                            const ThriftFramedMessage* req,
-                            ThriftFramedMessage* res,
-                            ::google::protobuf::Closure* done) {
-    cntl->_thrift_method_name.assign(method_name);
-    _channel->CallMethod(NULL, cntl, req, res, done);
-}
+    int ThriftFramedMessage::ByteSize() const {
+        if (_raw_instance) {
+            LOG(ERROR) << "ByteSize() is always 0 when _raw_instance is set";
+            return 0;
+        }
+        return body.size();
+    }
+
+    void ThriftFramedMessage::MergeFrom(const ::google::protobuf::Message &from) {
+        GOOGLE_CHECK_NE(&from, this);
+        LOG(ERROR) << "ThriftFramedMessage does not support MergeFrom";
+    }
+
+    void ThriftFramedMessage::MergeFrom(const ThriftFramedMessage &from) {
+        GOOGLE_CHECK_NE(&from, this);
+        LOG(ERROR) << "ThriftFramedMessage does not support MergeFrom";
+    }
+
+    void ThriftFramedMessage::CopyFrom(const ::google::protobuf::Message &from) {
+        if (&from == this) return;
+        LOG(ERROR) << "ThriftFramedMessage does not support CopyFrom";
+    }
+
+    void ThriftFramedMessage::CopyFrom(const ThriftFramedMessage &from) {
+        if (&from == this) return;
+        LOG(ERROR) << "ThriftFramedMessage does not support CopyFrom";
+    }
+
+    bool ThriftFramedMessage::IsInitialized() const {
+        return true;
+    }
+
+    void ThriftFramedMessage::Swap(ThriftFramedMessage *other) {
+        if (other != this) {
+            body.swap(other->body);
+            std::swap(field_id, other->field_id);
+            std::swap(_own_raw_instance, other->_own_raw_instance);
+            std::swap(_raw_instance, other->_raw_instance);
+        }
+    }
+
+    ::google::protobuf::Metadata ThriftFramedMessage::GetMetadata() const {
+        ::google::protobuf::Metadata metadata;
+        metadata.descriptor = ThriftFramedMessage::descriptor();
+        metadata.reflection = NULL;
+        return metadata;
+    }
+
+    void ThriftStub::CallMethod(const char *method_name,
+                                Controller *cntl,
+                                const ThriftFramedMessage *req,
+                                ThriftFramedMessage *res,
+                                ::google::protobuf::Closure *done) {
+        cntl->_thrift_method_name.assign(method_name);
+        _channel->CallMethod(NULL, cntl, req, res, done);
+    }
 
 } // namespace flare::rpc

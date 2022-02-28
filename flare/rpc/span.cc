@@ -19,7 +19,7 @@
 #include <netinet/in.h>
 #include <gflags/gflags.h>
 #include <leveldb/db.h>
-#include <filesystem>
+#include "flare/base/filesystem.h"
 #include <leveldb/comparator.h>
 #include "flare/fiber/internal/fiber.h"
 #include "flare/base/scoped_lock.h"
@@ -484,8 +484,8 @@ namespace flare::rpc {
         local.id_db_name.append(prefix, nw + nw2);
         // Create the dir first otherwise leveldb fails.
         std::error_code ec;
-        const std::filesystem::path dir(local.id_db_name);
-        if (!std::filesystem::create_directories(dir, ec)) {
+        const flare::filesystem::path dir(local.id_db_name);
+        if (!flare::filesystem::create_directories(dir, ec)) {
             LOG(ERROR) << "Fail to create directory=`" << dir.c_str() << ", "
                        << ec.message();
             return NULL;

@@ -4,7 +4,6 @@
 
 #include "flare/fiber/future.h"
 #include "flare/fiber/fiber.h"
-#include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "flare/fiber/this_fiber.h"
 #include "flare/fiber/async.h"

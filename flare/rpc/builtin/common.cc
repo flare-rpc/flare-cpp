@@ -18,7 +18,7 @@
 
 #include <iomanip>
 #include <sys/time.h>
-#include <filesystem>
+#include "flare/base/filesystem.h"
 #include <fcntl.h>                           // O_RDONLY
 #include <gflags/gflags.h>
 #include "flare/log/logging.h"
