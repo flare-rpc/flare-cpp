@@ -12,15 +12,15 @@
 // (create_unique_temp_dir, create_unique_temp_dir_under_path, and Set) must have
 // intervening calls to Delete or Take, or the calls will fail.
 
-#include <filesystem>
+#include "flare/base/filesystem.h"
 #include "flare/base/profile.h"
 
 namespace flare::io {
 
-    bool create_new_temp_directory(const std::filesystem::path &prefix, std::filesystem::path *newPath);
+    bool create_new_temp_directory(const flare::filesystem::path &prefix, flare::filesystem::path *newPath);
 
-    bool create_temporary_dir_in_dir(const std::filesystem::path &base, const std::string &prefix,
-                                     std::filesystem::path *newPath);
+    bool create_temporary_dir_in_dir(const flare::filesystem::path &base, const std::string &prefix,
+                                     flare::filesystem::path *newPath);
 
     class FLARE_EXPORT scoped_temp_dir {
     public:
@@ -35,20 +35,20 @@ namespace flare::io {
         bool create_unique_temp_dir() FLARE_WARN_UNUSED_RESULT;
 
         // Creates a unique directory under a given path, and takes ownership of it.
-        bool create_unique_temp_dir_under_path(const std::filesystem::path &path) FLARE_WARN_UNUSED_RESULT;
+        bool create_unique_temp_dir_under_path(const flare::filesystem::path &path) FLARE_WARN_UNUSED_RESULT;
 
         // Takes ownership of directory at |path|, creating it if necessary.
         // Don't call multiple times unless Take() has been called first.
-        bool set(const std::filesystem::path &path) FLARE_WARN_UNUSED_RESULT;
+        bool set(const flare::filesystem::path &path) FLARE_WARN_UNUSED_RESULT;
 
         // Deletes the temporary directory wrapped by this object.
         bool remove() FLARE_WARN_UNUSED_RESULT;
 
         // Caller takes ownership of the temporary directory so it won't be destroyed
         // when this object goes out of scope.
-        std::filesystem::path take();
+        flare::filesystem::path take();
 
-        const std::filesystem::path &path() const { return _path; }
+        const flare::filesystem::path &path() const { return _path; }
 
         // Returns true if _path is non-empty and exists.
         bool is_valid() const;
@@ -56,7 +56,7 @@ namespace flare::io {
         operator bool() const { return is_valid(); }
 
     private:
-        std::filesystem::path _path;
+        flare::filesystem::path _path;
 
         FLARE_DISALLOW_COPY_AND_ASSIGN(scoped_temp_dir);
     };

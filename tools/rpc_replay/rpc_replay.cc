@@ -19,7 +19,7 @@
 #include <gflags/gflags.h>
 #include "flare/log/logging.h"
 #include "flare/base/time.h"
-#include <filesystem>
+#include "flare/base/filesystem.h"
 #include <flare/variable/all.h>
 #include <flare/fiber/internal/fiber.h>
 #include <flare/rpc/channel.h>
@@ -204,7 +204,7 @@ int main(int argc, char* argv[]) {
     GFLAGS_NS::ParseCommandLineFlags(&argc, &argv, true);
 
     if (FLAGS_dir.empty() ||
-        !std::filesystem::exists(FLAGS_dir)) {
+        !flare::filesystem::exists(FLAGS_dir)) {
         LOG(ERROR) << "--dir=<dir-of-dumped-files> is required";
         return -1;
     }

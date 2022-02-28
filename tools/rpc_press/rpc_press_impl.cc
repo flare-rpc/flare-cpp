@@ -19,7 +19,7 @@
 #include <pthread.h>
 #include <sys/select.h>
 #include <sys/time.h>
-#include <filesystem>
+#include "flare/base/filesystem.h"
 #include <sys/types.h>
 #include <unistd.h>
 #include <fcntl.h>
@@ -132,10 +132,10 @@ namespace pbrpcframework {
 
         if (!_options.output.empty()) {
 
-            auto dir = std::filesystem::path(_options.output).parent_path();
+            auto dir = flare::filesystem::path(_options.output).parent_path();
             std::error_code ec;
 
-            if (!std::filesystem::create_directories(dir, ec)) {
+            if (!flare::filesystem::create_directories(dir, ec)) {
                 LOG(ERROR) << "Fail to create directory=`" << dir.c_str()
                            << "', " << ec.message();
                 return -1;
@@ -156,7 +156,7 @@ namespace pbrpcframework {
         }
         flare::rpc::JsonLoader json_util(_importer, &_factory,
                                    _options.service, _options.method);
-        if (std::filesystem::exists(_options.input)) {
+        if (flare::filesystem::exists(_options.input)) {
             int fd = open(_options.input.c_str(), O_RDONLY);
             if (fd < 0) {
                 PLOG(ERROR) << "Fail to open " << _options.input;

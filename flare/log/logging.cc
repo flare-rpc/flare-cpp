@@ -4,7 +4,7 @@
 
 #include <algorithm>
 #include <cassert>
-#include <filesystem>
+#include "flare/base/filesystem.h"
 #include <iomanip>
 #include <string>
 #include <unistd.h>  // For _exit.

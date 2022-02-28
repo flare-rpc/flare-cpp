@@ -21,7 +21,7 @@
 
 #include <pthread.h>
 #include <execinfo.h>
-#include <filesystem>
+#include "flare/base/filesystem.h"
 #include <dlfcn.h>                               // dlsym
 #include <fcntl.h>                               // O_RDONLY
 #include "flare/base/static_atomic.h"
@@ -218,9 +218,9 @@ namespace flare::fiber_internal {
         }
         // Write _disk_buf into _filename
         std::error_code ec;
-        std::filesystem::path path(_filename);
+        flare::filesystem::path path(_filename);
         auto dir = path.parent_path();
-        if (!std::filesystem::create_directories(dir, ec)) {
+        if (!flare::filesystem::create_directories(dir, ec)) {
             LOG(ERROR) << "Fail to create directory=`" << dir.c_str()
                        << "', " << ec.message();
             return;
