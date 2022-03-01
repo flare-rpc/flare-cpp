@@ -47,7 +47,7 @@ TEST_F(NamingServiceFilterTest, sanity) {
         "localhost:1234",
         "baidu.com:1234"
     };
-    flare::io::temp_file tmp_file;
+    flare::temp_file tmp_file;
     {
         FILE* fp = fopen(tmp_file.fname(), "w");
         for (size_t i = 0; i < FLARE_ARRAY_SIZE(address_list); ++i) {

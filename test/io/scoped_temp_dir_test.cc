@@ -6,7 +6,7 @@
 #include "flare/io/scoped_temp_dir.h"
 #include <gtest/gtest.h>
 
-namespace flare::io {
+namespace flare {
 
     TEST(scoped_temp_dir, FullPath) {
         flare::filesystem::path test_path;
@@ -90,4 +90,4 @@ namespace flare::io {
     }
 
 
-}  // namespace flare::io
+}  // namespace flare

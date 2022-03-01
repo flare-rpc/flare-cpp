@@ -47,7 +47,7 @@ extern const char* const g_server_info_prefix;
 // calculates quantiles in the server side.
 class PrometheusMetricsDumper : public flare::variable::Dumper {
 public:
-    explicit PrometheusMetricsDumper(flare::io::cord_buf_builder* os,
+    explicit PrometheusMetricsDumper(flare::cord_buf_builder* os,
                                      const std::string& server_prefix)
         : _os(os)
         , _server_prefix(server_prefix) {
@@ -77,7 +77,7 @@ private:
                                                      const std::string_view& desc);
 
 private:
-    flare::io::cord_buf_builder* _os;
+    flare::cord_buf_builder* _os;
     const std::string _server_prefix;
     std::map<std::string, SummaryItems> _m;
 };
@@ -193,8 +193,8 @@ void PrometheusMetricsService::default_method(::google::protobuf::RpcController*
     }
 }
 
-int DumpPrometheusMetricsToCordBuf(flare::io::cord_buf* output) {
-    flare::io::cord_buf_builder os;
+int DumpPrometheusMetricsToCordBuf(flare::cord_buf* output) {
+    flare::cord_buf_builder os;
     PrometheusMetricsDumper dumper(&os, g_server_info_prefix);
     const int ndump = flare::variable::Variable::dump_exposed(&dumper, NULL);
     if (ndump < 0) {

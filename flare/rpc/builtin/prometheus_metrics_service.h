@@ -31,7 +31,7 @@ public:
                         ::google::protobuf::Closure* done) override;
 };
 
-int DumpPrometheusMetricsToCordBuf(flare::io::cord_buf* output);
+int DumpPrometheusMetricsToCordBuf(flare::cord_buf* output);
 
 } // namepace flare::rpc
 

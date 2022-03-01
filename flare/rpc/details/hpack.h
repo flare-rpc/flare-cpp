@@ -19,7 +19,7 @@
 #ifndef  FLARE_RPC_HPACK_H_
 #define  FLARE_RPC_HPACK_H_
 
-#include "flare/io/cord_buf.h"                             // flare::io::cord_buf
+#include "flare/io/cord_buf.h"                             // flare::cord_buf
 #include <string_view>              // std::string_view
 #include "flare/rpc/http2.h"
 #include "flare/rpc/describable.h"
@@ -103,9 +103,9 @@ public:
 
     // Encode header and append the encoded buffer to |out|
     // Returns true on success.
-    void Encode(flare::io::cord_buf_appender* out, const Header& header,
+    void Encode(flare::cord_buf_appender* out, const Header& header,
                 const HPackOptions& options);
-    void Encode(flare::io::cord_buf_appender* out, const Header& header)
+    void Encode(flare::cord_buf_appender* out, const Header& header)
     { return Encode(out, header, HPackOptions()); }
 
     // Try to decode at most one Header from source and erase corresponding
@@ -114,11 +114,11 @@ public:
     //  * $size of decoded buffer when a header is succesfully decoded
     //  * 0 when the source is incompleted
     //  * -1 when the source is malformed
-    ssize_t Decode(flare::io::cord_buf* source, Header* h);
+    ssize_t Decode(flare::cord_buf* source, Header* h);
 
     // Like the previous function, except that the source is from
     // cord_buf_bytes_iterator.
-    ssize_t Decode(flare::io::cord_buf_bytes_iterator& source, Header* h);
+    ssize_t Decode(flare::cord_buf_bytes_iterator& source, Header* h);
 
     void Describe(std::ostream& os, const DescribeOptions&) const;
     
@@ -128,7 +128,7 @@ private:
     int FindNameFromIndexTable(const std::string& name) const;
     const Header* HeaderAt(int index) const;
     ssize_t DecodeWithKnownPrefix(
-            flare::io::cord_buf_bytes_iterator& iter, Header* h, uint8_t prefix_size) const;
+            flare::cord_buf_bytes_iterator& iter, Header* h, uint8_t prefix_size) const;
 
     IndexTable* _encode_table;
     IndexTable* _decode_table;
@@ -137,8 +137,8 @@ private:
 // Lowercase the input string, a fast implementation.
 void tolower(std::string* s);
 
-inline ssize_t HPacker::Decode(flare::io::cord_buf* source, Header* h) {
-    flare::io::cord_buf_bytes_iterator iter(*source);
+inline ssize_t HPacker::Decode(flare::cord_buf* source, Header* h) {
+    flare::cord_buf_bytes_iterator iter(*source);
     const ssize_t nc = Decode(iter, h);
     if (nc > 0) {
         source->pop_front(nc);

@@ -20,7 +20,7 @@
 #define FLARE_RPC_COMPRESS_H_
 
 #include <google/protobuf/message.h>              // Message
-#include "flare/io/cord_buf.h"                           // flare::io::cord_buf
+#include "flare/io/cord_buf.h"                           // flare::cord_buf
 #include "flare/rpc/options.pb.h"                     // CompressType
 
 namespace flare::rpc {
@@ -28,11 +28,11 @@ namespace flare::rpc {
     struct CompressHandler {
         // Compress serialized `msg' into `buf'.
         // Returns true on success, false otherwise
-        bool (*Compress)(const google::protobuf::Message &msg, flare::io::cord_buf *buf);
+        bool (*Compress)(const google::protobuf::Message &msg, flare::cord_buf *buf);
 
         // Parse decompressed `data' as `msg'.
         // Returns true on success, false otherwise
-        bool (*Decompress)(const flare::io::cord_buf &data, google::protobuf::Message *msg);
+        bool (*Decompress)(const flare::cord_buf &data, google::protobuf::Message *msg);
 
         // Name of the compression algorithm, must be string constant.
         const char *name;
@@ -50,14 +50,14 @@ namespace flare::rpc {
 
     // Parse decompressed `data' as `msg' using registered `compress_type'.
     // Returns true on success, false otherwise
-    bool ParseFromCompressedData(const flare::io::cord_buf &data,
+    bool ParseFromCompressedData(const flare::cord_buf &data,
                                  google::protobuf::Message *msg,
                                  CompressType compress_type);
 
     // Compress serialized `msg' into `buf' using registered `compress_type'.
     // Returns true on success, false otherwise
     bool SerializeAsCompressedData(const google::protobuf::Message &msg,
-                                   flare::io::cord_buf *buf,
+                                   flare::cord_buf *buf,
                                    CompressType compress_type);
 
 } // namespace flare::rpc

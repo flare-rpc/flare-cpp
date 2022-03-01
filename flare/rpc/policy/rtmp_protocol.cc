@@ -108,32 +108,32 @@ static const size_t MAGIC_NUMBER_SIZE = 4; /* magic number */
 // ========== The handshaking described in RTMP spec ==========
 
 // The random data for handshaking
-static flare::io::cord_buf* s_rtmp_handshake_server_random = NULL;
+static flare::cord_buf* s_rtmp_handshake_server_random = NULL;
 static pthread_once_t s_sr_once = PTHREAD_ONCE_INIT;
 static void InitRtmpHandshakeServerRandom() {
     char buf[1528];
     for (int i = 0; i < 191; ++i) {
         ((uint64_t*)buf)[i] = flare::base::fast_rand();
     }
-    s_rtmp_handshake_server_random = new flare::io::cord_buf;
+    s_rtmp_handshake_server_random = new flare::cord_buf;
     s_rtmp_handshake_server_random->append(buf, sizeof(buf));
 }
-static const flare::io::cord_buf& GetRtmpHandshakeServerRandom() {
+static const flare::cord_buf& GetRtmpHandshakeServerRandom() {
     pthread_once(&s_sr_once, InitRtmpHandshakeServerRandom);
     return *s_rtmp_handshake_server_random;
 }
 
-static flare::io::cord_buf* s_rtmp_handshake_client_random = NULL;
+static flare::cord_buf* s_rtmp_handshake_client_random = NULL;
 static pthread_once_t s_cr_once = PTHREAD_ONCE_INIT;
 static void InitRtmpHandshakeClientRandom() {
     char buf[1528];
     for (int i = 0; i < 191; ++i) {
         ((uint64_t*)buf)[i] = flare::base::fast_rand();
     }
-    s_rtmp_handshake_client_random = new flare::io::cord_buf;
+    s_rtmp_handshake_client_random = new flare::cord_buf;
     s_rtmp_handshake_client_random->append(buf, sizeof(buf));
 }
-static const flare::io::cord_buf& GetRtmpHandshakeClientRandom() {
+static const flare::cord_buf& GetRtmpHandshakeClientRandom() {
     pthread_once(&s_cr_once, InitRtmpHandshakeClientRandom);
     return *s_rtmp_handshake_client_random;
 }
@@ -602,7 +602,7 @@ WriteBasicHeader(char** buf, RtmpChunkType chunk_type, uint32_t cs_id) {
 // Returns 0 on success, -1 otherwise.
 // Writing *all* is possible because we only call this fn during handshaking
 // and connecting, the data in total is generally less than socket buffer.
-static int WriteAll(int fd, flare::io::cord_buf* buf) {
+static int WriteAll(int fd, flare::cord_buf* buf) {
     while (!buf->empty()) {
         ssize_t nw = buf->cut_into_file_descriptor(fd);
         if (nw < 0) {
@@ -629,7 +629,7 @@ static int WriteAll(int fd, flare::io::cord_buf* buf) {
 // Used in rtmp.cpp
 int SendC0C1(int fd, bool* is_simple_handshake) {
     bool done_adobe_hs = false;
-    flare::io::cord_buf tmp;
+    flare::cord_buf tmp;
     if (!FLAGS_rtmp_client_use_simple_handshake) {
         adobe_hs::C1 c1;
         if (c1.Generate(adobe_hs::SCHEMA1)) {
@@ -694,7 +694,7 @@ RtmpUnsentMessage* MakeUnsentControlMessage(
 }
 
 RtmpUnsentMessage* MakeUnsentControlMessage(
-    uint8_t message_type, uint32_t chunk_stream_id, const flare::io::cord_buf& body) {
+    uint8_t message_type, uint32_t chunk_stream_id, const flare::cord_buf& body) {
     RtmpUnsentMessage* msg = new RtmpUnsentMessage;
     msg->header.message_length = body.size();
     msg->header.message_type = message_type;
@@ -705,7 +705,7 @@ RtmpUnsentMessage* MakeUnsentControlMessage(
 }
 
 RtmpUnsentMessage* MakeUnsentControlMessage(
-    uint8_t message_type, const flare::io::cord_buf& body) {
+    uint8_t message_type, const flare::cord_buf& body) {
     return MakeUnsentControlMessage(
         message_type, RTMP_CONTROL_CHUNK_STREAM_ID, body);
 }
@@ -783,7 +783,7 @@ void RtmpContext::Destroy() {
 }
 
 flare::base::flare_status
-RtmpUnsentMessage::AppendAndDestroySelf(flare::io::cord_buf* out, Socket* s) {
+RtmpUnsentMessage::AppendAndDestroySelf(flare::cord_buf* out, Socket* s) {
     std::unique_ptr<RtmpUnsentMessage> destroy_self(this);
     if (s == NULL) { // abandoned
         RPC_VLOG << "Socket=NULL";
@@ -1048,9 +1048,9 @@ RtmpContext::RemoveTransaction(uint32_t transaction_id) {
 }
 
 int RtmpContext::SendConnectRequest(const flare::base::end_point& remote_side, int fd, bool simplified_rtmp) {
-    flare::io::cord_buf req_buf;
+    flare::cord_buf req_buf;
     {
-        flare::io::cord_buf_as_zero_copy_output_stream zc_stream(&req_buf);
+        flare::cord_buf_as_zero_copy_output_stream zc_stream(&req_buf);
         AMFOutputStream ostream(&zc_stream);
         WriteAMFString(RTMP_AMF0_COMMAND_CONNECT, &ostream);
         WriteAMFUint32(1, &ostream);
@@ -1098,7 +1098,7 @@ int RtmpContext::SendConnectRequest(const flare::base::end_point& remote_side, i
     header.message_type = RTMP_MESSAGE_COMMAND_AMF0;
     header.stream_id = RTMP_CONTROL_MESSAGE_STREAM_ID;
 
-    flare::io::cord_buf msg_buf;
+    flare::cord_buf msg_buf;
     if (simplified_rtmp) {
         char buf[5];
         char* p = buf;
@@ -1121,7 +1121,7 @@ int RtmpContext::SendConnectRequest(const flare::base::end_point& remote_side, i
         header2.message_length = sizeof(cntl_buf);
         header2.message_type = RTMP_MESSAGE_WINDOW_ACK_SIZE;
         header2.stream_id = RTMP_CONTROL_MESSAGE_STREAM_ID;
-        flare::io::cord_buf tmp;
+        flare::cord_buf tmp;
         tmp.append(cntl_buf, sizeof(cntl_buf));
         if (cstream->SerializeMessage(&msg_buf, header2, &tmp) != 0) {
             LOG(ERROR) << "Fail to serialize WindowAckSize message";
@@ -1138,7 +1138,7 @@ int RtmpContext::SendConnectRequest(const flare::base::end_point& remote_side, i
         header3.message_length = sizeof(cntl_buf);
         header3.message_type = RTMP_MESSAGE_SET_CHUNK_SIZE;
         header3.stream_id = RTMP_CONTROL_MESSAGE_STREAM_ID;
-        flare::io::cord_buf tmp;
+        flare::cord_buf tmp;
         tmp.append(cntl_buf, sizeof(cntl_buf));
         if (cstream->SerializeMessage(&msg_buf, header3, &tmp) != 0) {
             LOG(ERROR) << "Fail to serialize SetChunkSize message";
@@ -1150,7 +1150,7 @@ int RtmpContext::SendConnectRequest(const flare::base::end_point& remote_side, i
     return WriteAll(fd, &msg_buf);
 }
 
-ParseResult RtmpContext::Feed(flare::io::cord_buf* source, Socket* socket) {
+ParseResult RtmpContext::Feed(flare::cord_buf* source, Socket* socket) {
     switch (_state) {
     case STATE_UNINITIALIZED:
         if (socket->CreatedByConnect()) {
@@ -1170,7 +1170,7 @@ ParseResult RtmpContext::Feed(flare::io::cord_buf* source, Socket* socket) {
     return MakeParseError(PARSE_ERROR_NO_RESOURCE);
 }
 
-ParseResult RtmpContext::WaitForC0C1orSimpleRtmp(flare::io::cord_buf* source, Socket* socket) {
+ParseResult RtmpContext::WaitForC0C1orSimpleRtmp(flare::cord_buf* source, Socket* socket) {
     if (source->length() < RTMP_HANDSHAKE_SIZE0 + MAGIC_NUMBER_SIZE) {
         return MakeParseError(PARSE_ERROR_NOT_ENOUGH_DATA);
     }
@@ -1191,7 +1191,7 @@ ParseResult RtmpContext::WaitForC0C1orSimpleRtmp(flare::io::cord_buf* source, So
     source->cutn(c0c1_buf, sizeof(c0c1_buf));
     SetState(socket->remote_side(), STATE_RECEIVED_C0C1);
 
-    flare::io::cord_buf tmp;
+    flare::cord_buf tmp;
     adobe_hs::C1 c1;
     if (c1.Load(c0c1_buf + RTMP_HANDSHAKE_SIZE0)) {
         RPC_VLOG << socket->remote_side() << ": Loaded C1 with schema"
@@ -1248,7 +1248,7 @@ ParseResult RtmpContext::WaitForC0C1orSimpleRtmp(flare::io::cord_buf* source, So
     return WaitForC2(source, socket);
 }
     
-ParseResult RtmpContext::WaitForC2(flare::io::cord_buf* source, Socket* socket) {
+ParseResult RtmpContext::WaitForC2(flare::cord_buf* source, Socket* socket) {
     if (source->length() < RTMP_HANDSHAKE_SIZE2) {
         return MakeParseError(PARSE_ERROR_NOT_ENOUGH_DATA);
     }
@@ -1267,7 +1267,7 @@ ParseResult RtmpContext::WaitForC2(flare::io::cord_buf* source, Socket* socket) 
     return OnChunks(source, socket);
 }
 
-ParseResult RtmpContext::WaitForS0S1(flare::io::cord_buf* source, Socket* socket) {
+ParseResult RtmpContext::WaitForS0S1(flare::cord_buf* source, Socket* socket) {
     if (source->length() < RTMP_HANDSHAKE_SIZE0 + RTMP_HANDSHAKE_SIZE1) {
         return MakeParseError(PARSE_ERROR_NOT_ENOUGH_DATA);
     }
@@ -1276,7 +1276,7 @@ ParseResult RtmpContext::WaitForS0S1(flare::io::cord_buf* source, Socket* socket
     source->cutn(s0s1_buf, sizeof(s0s1_buf));
     SetState(socket->remote_side(), STATE_RECEIVED_S0S1);
 
-    flare::io::cord_buf tmp;
+    flare::cord_buf tmp;
     bool done_adobe_hs = false;
     if (!_only_check_simple_s0s1) {
         adobe_hs::S1 s1;
@@ -1309,7 +1309,7 @@ ParseResult RtmpContext::WaitForS0S1(flare::io::cord_buf* source, Socket* socket
     return WaitForS2(source, socket);
 }
     
-ParseResult RtmpContext::WaitForS2(flare::io::cord_buf* source, Socket* socket) {
+ParseResult RtmpContext::WaitForS2(flare::cord_buf* source, Socket* socket) {
     if (source->length() < RTMP_HANDSHAKE_SIZE2) {
         return MakeParseError(PARSE_ERROR_NOT_ENOUGH_DATA);
     }
@@ -1324,7 +1324,7 @@ ParseResult RtmpContext::WaitForS2(flare::io::cord_buf* source, Socket* socket) 
     return OnChunks(source, socket);
 }
 
-ParseResult RtmpContext::OnChunks(flare::io::cord_buf* source, Socket* socket) {
+ParseResult RtmpContext::OnChunks(flare::cord_buf* source, Socket* socket) {
     // Parse basic header.
     const char* p = (const char*)source->fetch1();
     if (NULL == p) {
@@ -1422,7 +1422,7 @@ inline void AddChunk() {
 }
 
 ParseResult RtmpChunkStream::Feed(const RtmpBasicHeader& bh,
-                                  flare::io::cord_buf* source, Socket* socket) {
+                                  flare::cord_buf* source, Socket* socket) {
     // Parse message header. Notice that basic header is still in source.
     uint32_t header_len = bh.header_length;
     bool has_extended_ts = false;
@@ -1644,9 +1644,9 @@ ParseResult RtmpChunkStream::Feed(const RtmpBasicHeader& bh,
     return MakeMessage(NULL);
 }
 
-int RtmpChunkStream::SerializeMessage(flare::io::cord_buf* buf,
+int RtmpChunkStream::SerializeMessage(flare::cord_buf* buf,
                                       const RtmpMessageHeader& mh,
-                                      flare::io::cord_buf* body) {
+                                      flare::cord_buf* body) {
     const size_t bh_size = GetBasicHeaderLength(_cs_id);
     if (bh_size == 0) {
         CHECK(false) << "Invalid chunk_stream_id=" << _cs_id;
@@ -1791,7 +1791,7 @@ static void InitCommandHandlers() {
 
 bool RtmpChunkStream::OnMessage(const RtmpBasicHeader& bh,
                                 const RtmpMessageHeader& mh,
-                                flare::io::cord_buf* msg_body,
+                                flare::cord_buf* msg_body,
                                 Socket* socket) {
     // Make sure msg_body is consistent with the header. Previous code
     // forgot to clear msg_body before appending new message.
@@ -1830,7 +1830,7 @@ bool RtmpChunkStream::OnMessage(const RtmpBasicHeader& bh,
 }
 
 bool RtmpChunkStream::OnSetChunkSize(
-    const RtmpMessageHeader& mh, flare::io::cord_buf* msg_body, Socket* socket) {
+    const RtmpMessageHeader& mh, flare::cord_buf* msg_body, Socket* socket) {
     if (mh.message_length != 4u) {
         RTMP_ERROR(socket, mh) << "Expected message_length=4, actually "
                                << mh.message_length;
@@ -1852,7 +1852,7 @@ bool RtmpChunkStream::OnSetChunkSize(
 }
 
 bool RtmpChunkStream::OnAbortMessage(
-    const RtmpMessageHeader& mh, flare::io::cord_buf* msg_body, Socket* socket) {
+    const RtmpMessageHeader& mh, flare::cord_buf* msg_body, Socket* socket) {
     if (mh.message_length != 4u) {
         RTMP_ERROR(socket, mh) << "Expected message_length=4, actually "
                                << mh.message_length;
@@ -1870,7 +1870,7 @@ bool RtmpChunkStream::OnAbortMessage(
 }
 
 bool RtmpChunkStream::OnAck(
-    const RtmpMessageHeader& mh, flare::io::cord_buf* msg_body, Socket* socket) {
+    const RtmpMessageHeader& mh, flare::cord_buf* msg_body, Socket* socket) {
     if (mh.message_length != 4u) {
         RTMP_ERROR(socket, mh) << "Expected message_length=4, actually "
                                << mh.message_length;
@@ -1886,7 +1886,7 @@ bool RtmpChunkStream::OnAck(
 }
 
 bool RtmpChunkStream::OnWindowAckSize(
-    const RtmpMessageHeader& mh, flare::io::cord_buf* msg_body, Socket* socket) {
+    const RtmpMessageHeader& mh, flare::cord_buf* msg_body, Socket* socket) {
     if (mh.message_length != 4u) {
         RTMP_ERROR(socket, mh) << "Expected message_length=4, actually "
                                << mh.message_length;
@@ -1903,7 +1903,7 @@ bool RtmpChunkStream::OnWindowAckSize(
 }
 
 bool RtmpChunkStream::OnSetPeerBandwidth(
-    const RtmpMessageHeader& mh, flare::io::cord_buf* msg_body, Socket* socket) {
+    const RtmpMessageHeader& mh, flare::cord_buf* msg_body, Socket* socket) {
     if (mh.message_length != 5u) {
         RTMP_ERROR(socket, mh) << "Expected message_length=5, actually "
                                << mh.message_length;
@@ -1920,7 +1920,7 @@ bool RtmpChunkStream::OnSetPeerBandwidth(
 }
 
 bool RtmpChunkStream::OnUserControlMessage(
-    const RtmpMessageHeader& mh, flare::io::cord_buf* msg_body, Socket* socket) {
+    const RtmpMessageHeader& mh, flare::cord_buf* msg_body, Socket* socket) {
     if (mh.message_length > 32) {
         RTMP_ERROR(socket, mh) << "No user control message long as "
                                << mh.message_length << " bytes";
@@ -2132,7 +2132,7 @@ bool RtmpChunkStream::OnBufferReady(const RtmpMessageHeader& mh,
 }
 
 bool RtmpChunkStream::OnAudioMessage(
-    const RtmpMessageHeader& mh, flare::io::cord_buf* msg_body, Socket* socket) {
+    const RtmpMessageHeader& mh, flare::cord_buf* msg_body, Socket* socket) {
     char first_byte = 0;
     if (!msg_body->cut1(&first_byte)) {
         // pretty common, don't print logs.
@@ -2160,7 +2160,7 @@ bool RtmpChunkStream::OnAudioMessage(
 }
 
 bool RtmpChunkStream::OnVideoMessage(
-    const RtmpMessageHeader& mh, flare::io::cord_buf* msg_body, Socket* socket) {
+    const RtmpMessageHeader& mh, flare::cord_buf* msg_body, Socket* socket) {
     char first_byte = 0;
     if (!msg_body->cut1(&first_byte)) {
         // pretty common, don't print logs.
@@ -2192,8 +2192,8 @@ bool RtmpChunkStream::OnVideoMessage(
 }
 
 bool RtmpChunkStream::OnDataMessageAMF0(
-    const RtmpMessageHeader& mh, flare::io::cord_buf* msg_body, Socket* socket) {
-    flare::io::cord_buf_as_zero_copy_input_stream zc_stream(*msg_body);
+    const RtmpMessageHeader& mh, flare::cord_buf* msg_body, Socket* socket) {
+    flare::cord_buf_as_zero_copy_input_stream zc_stream(*msg_body);
     AMFInputStream istream(&zc_stream);
     std::string name;
     if (!ReadAMFString(&name, &istream)) {
@@ -2258,14 +2258,14 @@ bool RtmpChunkStream::OnDataMessageAMF0(
 }
 
 bool RtmpChunkStream::OnSharedObjectMessageAMF0(
-    const RtmpMessageHeader&, flare::io::cord_buf*, Socket* socket) {
+    const RtmpMessageHeader&, flare::cord_buf*, Socket* socket) {
     LOG_EVERY_SECOND(ERROR) << socket->remote_side() << ": Not implemented";
     return false;
 }
 
 bool RtmpChunkStream::OnCommandMessageAMF0(
-    const RtmpMessageHeader& mh, flare::io::cord_buf* msg_body, Socket* socket) {
-    flare::io::cord_buf_as_zero_copy_input_stream zc_stream(*msg_body);
+    const RtmpMessageHeader& mh, flare::cord_buf* msg_body, Socket* socket) {
+    flare::cord_buf_as_zero_copy_input_stream zc_stream(*msg_body);
     AMFInputStream istream(&zc_stream);
     std::string command_name;
     if (!ReadAMFString(&command_name, &istream)) {
@@ -2286,25 +2286,25 @@ bool RtmpChunkStream::OnCommandMessageAMF0(
 }
 
 bool RtmpChunkStream::OnDataMessageAMF3(
-    const RtmpMessageHeader& mh, flare::io::cord_buf* msg_body, Socket* socket) {
+    const RtmpMessageHeader& mh, flare::cord_buf* msg_body, Socket* socket) {
     msg_body->pop_front(1);
     return OnDataMessageAMF0(mh, msg_body, socket);
 }
 
 bool RtmpChunkStream::OnSharedObjectMessageAMF3(
-    const RtmpMessageHeader&, flare::io::cord_buf*, Socket*) {
+    const RtmpMessageHeader&, flare::cord_buf*, Socket*) {
     LOG(ERROR) << "Not implemented";
     return false;
 }
 
 bool RtmpChunkStream::OnCommandMessageAMF3(
-    const RtmpMessageHeader& mh, flare::io::cord_buf* msg_body, Socket* socket) {
+    const RtmpMessageHeader& mh, flare::cord_buf* msg_body, Socket* socket) {
     msg_body->pop_front(1);
     return OnCommandMessageAMF0(mh, msg_body, socket);
 }
 
 bool RtmpChunkStream::OnAggregateMessage(
-    const RtmpMessageHeader&, flare::io::cord_buf*, Socket*) {
+    const RtmpMessageHeader&, flare::cord_buf*, Socket*) {
     LOG(ERROR) << "Not implemented";
     return false;
 }
@@ -2380,13 +2380,13 @@ bool RtmpChunkStream::OnConnect(const RtmpMessageHeader& mh,
     msgs.push().reset(scs_msg);
     
     // _result
-    flare::io::cord_buf req_buf;
+    flare::cord_buf req_buf;
     RtmpInfo info;
     RtmpConnectResponse response;
     // TODO: Set this field.
     std::string error_text; 
     {
-        flare::io::cord_buf_as_zero_copy_output_stream zc_stream(&req_buf);
+        flare::cord_buf_as_zero_copy_output_stream zc_stream(&req_buf);
         AMFOutputStream ostream(&zc_stream);
         WriteAMFString((!error_text.empty() ? RTMP_AMF0_COMMAND_ERROR :
                         RTMP_AMF0_COMMAND_RESULT), &ostream);
@@ -2422,7 +2422,7 @@ bool RtmpChunkStream::OnConnect(const RtmpMessageHeader& mh,
     // onBWDone
     req_buf.clear();
     {
-        flare::io::cord_buf_as_zero_copy_output_stream zc_stream(&req_buf);
+        flare::cord_buf_as_zero_copy_output_stream zc_stream(&req_buf);
         AMFOutputStream ostream(&zc_stream);
         WriteAMFString(RTMP_AMF0_COMMAND_ON_BW_DONE, &ostream);
         WriteAMFUint32(0, &ostream);
@@ -2637,9 +2637,9 @@ bool RtmpChunkStream::OnCreateStream(const RtmpMessageHeader& mh,
         }
     }
     // Respond createStream
-    flare::io::cord_buf req_buf;
+    flare::cord_buf req_buf;
     {
-        flare::io::cord_buf_as_zero_copy_output_stream zc_stream(&req_buf);
+        flare::cord_buf_as_zero_copy_output_stream zc_stream(&req_buf);
         AMFOutputStream ostream(&zc_stream);
         WriteAMFString((!error_text.empty() ? RTMP_AMF0_COMMAND_ERROR :
                         RTMP_AMF0_COMMAND_RESULT), &ostream);
@@ -2683,9 +2683,9 @@ bool RtmpChunkStream::OnCreateStream(const RtmpMessageHeader& mh,
     if (stream_name.empty()) {
         return true;
     }
-    flare::io::cord_buf cmd_buf;
+    flare::cord_buf cmd_buf;
     {
-        flare::io::cord_buf_as_zero_copy_output_stream zc_ostream(&cmd_buf);
+        flare::cord_buf_as_zero_copy_output_stream zc_ostream(&cmd_buf);
         AMFOutputStream ostream(&zc_ostream);
         WriteAMFUint32(0, &ostream);  // TransactionId
         WriteAMFNull(&ostream);       // CommandObject
@@ -2694,7 +2694,7 @@ bool RtmpChunkStream::OnCreateStream(const RtmpMessageHeader& mh,
             WriteAMFString(RtmpPublishType2Str(publish_type), &ostream);
         }
     }
-    flare::io::cord_buf_as_zero_copy_input_stream zc_istream(cmd_buf);
+    flare::cord_buf_as_zero_copy_input_stream zc_istream(cmd_buf);
     AMFInputStream cmd_istream(&zc_istream);
     RtmpMessageHeader header;
     header.timestamp = mh.timestamp;
@@ -2788,7 +2788,7 @@ bool RtmpChunkStream::OnPlay(const RtmpMessageHeader& mh,
              << " duration=" << play_opt.duration
              << " reset=" << play_opt.reset << '}';
 
-    flare::io::cord_buf req_buf;
+    flare::cord_buf req_buf;
     TemporaryArrayBuilder<SocketMessagePtr<RtmpUnsentMessage>, 5> msgs;
     
     // TODO(gejun): RTMP spec sends StreamIsRecorded before StreamBegin
@@ -2808,7 +2808,7 @@ bool RtmpChunkStream::OnPlay(const RtmpMessageHeader& mh,
         // play command sent by the client has set the reset flag. 
         req_buf.clear();
         {
-            flare::io::cord_buf_as_zero_copy_output_stream zc_stream(&req_buf);
+            flare::cord_buf_as_zero_copy_output_stream zc_stream(&req_buf);
             AMFOutputStream ostream(&zc_stream);
             WriteAMFString(RTMP_AMF0_COMMAND_ON_STATUS, &ostream);
             WriteAMFUint32(0, &ostream);
@@ -2831,7 +2831,7 @@ bool RtmpChunkStream::OnPlay(const RtmpMessageHeader& mh,
     // Play.Start
     req_buf.clear();
     {
-        flare::io::cord_buf_as_zero_copy_output_stream zc_stream(&req_buf);
+        flare::cord_buf_as_zero_copy_output_stream zc_stream(&req_buf);
         AMFOutputStream ostream(&zc_stream);
         WriteAMFString(RTMP_AMF0_COMMAND_ON_STATUS, &ostream);
         WriteAMFUint32(0, &ostream);
@@ -2853,7 +2853,7 @@ bool RtmpChunkStream::OnPlay(const RtmpMessageHeader& mh,
     // |RtmpSampleAccess(true, true)
     req_buf.clear();
     {
-        flare::io::cord_buf_as_zero_copy_output_stream zc_stream(&req_buf);
+        flare::cord_buf_as_zero_copy_output_stream zc_stream(&req_buf);
         AMFOutputStream ostream(&zc_stream);
         WriteAMFString(RTMP_AMF0_SAMPLE_ACCESS, &ostream);
         WriteAMFBool(true, &ostream);
@@ -2870,7 +2870,7 @@ bool RtmpChunkStream::OnPlay(const RtmpMessageHeader& mh,
     // onStatus(NetStream.Data.Start)
     req_buf.clear();
     {
-        flare::io::cord_buf_as_zero_copy_output_stream zc_stream(&req_buf);
+        flare::cord_buf_as_zero_copy_output_stream zc_stream(&req_buf);
         AMFOutputStream ostream(&zc_stream);
         WriteAMFString(RTMP_AMF0_COMMAND_ON_STATUS, &ostream);
         RtmpInfo info;
@@ -3035,9 +3035,9 @@ void OnPublishContinuation::Run() {
         }
         return;
     }
-    flare::io::cord_buf req_buf;
+    flare::cord_buf req_buf;
     {
-        flare::io::cord_buf_as_zero_copy_output_stream zc_stream(&req_buf);
+        flare::cord_buf_as_zero_copy_output_stream zc_stream(&req_buf);
         AMFOutputStream ostream(&zc_stream);
         WriteAMFString(RTMP_AMF0_COMMAND_ON_STATUS, &ostream);
         WriteAMFUint32(0, &ostream);
@@ -3118,9 +3118,9 @@ bool RtmpChunkStream::OnPublish(const RtmpMessageHeader& mh,
 }
 
 static bool SendFMLEStartResponse(Socket* sock, double transaction_id) {
-    flare::io::cord_buf req_buf;
+    flare::cord_buf req_buf;
     {
-        flare::io::cord_buf_as_zero_copy_output_stream zc_stream(&req_buf);
+        flare::cord_buf_as_zero_copy_output_stream zc_stream(&req_buf);
         AMFOutputStream ostream(&zc_stream);
         WriteAMFString(RTMP_AMF0_COMMAND_RESULT, &ostream);
         WriteAMFNumber(transaction_id, &ostream);
@@ -3255,9 +3255,9 @@ bool RtmpChunkStream::OnSeek(const RtmpMessageHeader& mh,
     }
     // TODO(gejun): Run in execq.
     int rc = static_cast<RtmpServerStream*>(stream.get())->OnSeek(milliseconds);
-    flare::io::cord_buf req_buf;
+    flare::cord_buf req_buf;
     {
-        flare::io::cord_buf_as_zero_copy_output_stream zc_stream(&req_buf);
+        flare::cord_buf_as_zero_copy_output_stream zc_stream(&req_buf);
         AMFOutputStream ostream(&zc_stream);
         if (rc == 0) {
             WriteAMFString(RTMP_AMF0_COMMAND_ON_STATUS, &ostream);
@@ -3339,9 +3339,9 @@ bool RtmpChunkStream::OnPause(const RtmpMessageHeader& mh,
         pause_or_unpause, milliseconds);
 
     // Send back status.
-    flare::io::cord_buf req_buf;
+    flare::cord_buf req_buf;
     {
-        flare::io::cord_buf_as_zero_copy_output_stream zc_stream(&req_buf);
+        flare::cord_buf_as_zero_copy_output_stream zc_stream(&req_buf);
         AMFOutputStream ostream(&zc_stream);
         if (rc == 0) {
             WriteAMFString(RTMP_AMF0_COMMAND_ON_STATUS, &ostream);
@@ -3408,7 +3408,7 @@ bool RtmpChunkStream::OnPause(const RtmpMessageHeader& mh,
 
 // ============== protocol handlers =============
 
-inline ParseResult IsPossiblyRtmp(const flare::io::cord_buf* source) {
+inline ParseResult IsPossiblyRtmp(const flare::cord_buf* source) {
     const char* p = (const char*)source->fetch1();
     if (p == NULL) {
         return MakeParseError(PARSE_ERROR_NOT_ENOUGH_DATA);
@@ -3419,7 +3419,7 @@ inline ParseResult IsPossiblyRtmp(const flare::io::cord_buf* source) {
     return MakeMessage(NULL);
 }
 
-ParseResult ParseRtmpMessage(flare::io::cord_buf* source, Socket *socket, bool read_eof,
+ParseResult ParseRtmpMessage(flare::cord_buf* source, Socket *socket, bool read_eof,
                              const void* arg) {
     RtmpContext* rtmp_ctx = static_cast<RtmpContext*>(socket->parsing_context());
     if (rtmp_ctx == NULL) {
@@ -3555,7 +3555,7 @@ void OnServerStreamCreated::Cancel() {
 }
 
 flare::base::flare_status
-RtmpCreateStreamMessage::AppendAndDestroySelf(flare::io::cord_buf* out, Socket* s) {
+RtmpCreateStreamMessage::AppendAndDestroySelf(flare::cord_buf* out, Socket* s) {
     std::unique_ptr<RtmpCreateStreamMessage> destroy_self(this);
     if (s == NULL) {  // abandoned
         return flare::base::flare_status::OK();
@@ -3566,9 +3566,9 @@ RtmpCreateStreamMessage::AppendAndDestroySelf(flare::io::cord_buf* out, Socket* 
         return flare::base::flare_status(EINVAL, "RtmpContext of %s is not created",
                             socket->description().c_str());
     }
-    flare::io::cord_buf req_buf;
+    flare::cord_buf req_buf;
     {
-        flare::io::cord_buf_as_zero_copy_output_stream zc_stream(&req_buf);
+        flare::cord_buf_as_zero_copy_output_stream zc_stream(&req_buf);
         AMFOutputStream ostream(&zc_stream);
         WriteAMFString(RTMP_AMF0_COMMAND_CREATE_STREAM, &ostream);
         WriteAMFUint32(transaction_id, &ostream);
@@ -3620,12 +3620,12 @@ RtmpCreateStreamMessage::AppendAndDestroySelf(flare::io::cord_buf* out, Socket* 
     return flare::base::flare_status::OK();
 }
 
-void PackRtmpRequest(flare::io::cord_buf* /*buf*/,
+void PackRtmpRequest(flare::cord_buf* /*buf*/,
                      SocketMessage** user_message,
                      uint64_t /*correlation_id*/,
                      const google::protobuf::MethodDescriptor* /*NULL*/,
                      Controller* cntl,
-                     const flare::io::cord_buf& /*request*/,
+                     const flare::cord_buf& /*request*/,
                      const Authenticator*) {
     // Send createStream command
     ControllerPrivateAccessor accessor(cntl);
@@ -3665,7 +3665,7 @@ void PackRtmpRequest(flare::io::cord_buf* /*buf*/,
     *user_message = msg;
 }
 
-void SerializeRtmpRequest(flare::io::cord_buf* /*buf*/,
+void SerializeRtmpRequest(flare::cord_buf* /*buf*/,
                           Controller* /*cntl*/,
                           const google::protobuf::Message* /*NULL*/) {
 }

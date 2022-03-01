@@ -20,7 +20,7 @@
 #include <gflags/gflags.h>
 
 #include "flare/base/time.h"
-#include "flare/io/cord_buf.h"                         // flare::io::cord_buf
+#include "flare/io/cord_buf.h"                         // flare::cord_buf
 
 #include "flare/rpc/controller.h"               // Controller
 #include "flare/rpc/socket.h"                   // Socket
@@ -38,7 +38,7 @@ namespace flare::rpc {
 namespace policy {
 
 ParseResult ParseEspMessage(
-        flare::io::cord_buf* source,
+        flare::cord_buf* source,
         Socket*, 
         bool /*read_eof*/, 
         const void* /*arg*/) {
@@ -63,7 +63,7 @@ ParseResult ParseEspMessage(
 }
 
 void SerializeEspRequest(
-        flare::io::cord_buf* request_buf,
+        flare::cord_buf* request_buf,
         Controller* cntl,
         const google::protobuf::Message* req_base) {
 
@@ -86,12 +86,12 @@ void SerializeEspRequest(
     request_buf->append(req->body);
 }
 
-void PackEspRequest(flare::io::cord_buf* packet_buf,
+void PackEspRequest(flare::cord_buf* packet_buf,
                     SocketMessage**,
                     uint64_t correlation_id,
                     const google::protobuf::MethodDescriptor*,
                     Controller* cntl,
-                    const flare::io::cord_buf& request,
+                    const flare::cord_buf& request,
                     const Authenticator* auth) {
 
     ControllerPrivateAccessor accessor(cntl);

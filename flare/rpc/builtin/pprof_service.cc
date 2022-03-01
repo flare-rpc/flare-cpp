@@ -153,7 +153,7 @@ namespace flare::rpc {
             cntl->SetFailed(ENOENT, "Fail to open %s", prof_name);
             return;
         }
-        flare::io::IOPortal portal;
+        flare::IOPortal portal;
         portal.append_from_file_descriptor(fd, ULONG_MAX);
         cntl->response_attachment().swap(portal);
     }
@@ -204,7 +204,7 @@ namespace flare::rpc {
             cntl->SetFailed(ENOENT, "Fail to open %s", prof_name);
             return;
         }
-        flare::io::IOPortal portal;
+        flare::IOPortal portal;
         portal.append_from_file_descriptor(fd, ULONG_MAX);
         cntl->response_attachment().swap(portal);
     }
@@ -490,7 +490,7 @@ static void LoadSymbols() {
     RPC_VLOG << "Loaded all symbols in " << tm.m_elapsed() << "ms";
 }
 
-static void FindSymbols(flare::io::cord_buf *out, std::vector<uintptr_t> &addr_list) {
+static void FindSymbols(flare::cord_buf *out, std::vector<uintptr_t> &addr_list) {
     char buf[32];
     for (size_t i = 0; i < addr_list.size(); ++i) {
         int len = snprintf(buf, sizeof(buf), "0x%08lx\t", addr_list[i]);

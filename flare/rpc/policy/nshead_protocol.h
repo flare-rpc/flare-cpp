@@ -26,7 +26,7 @@ namespace flare::rpc {
 namespace policy {
 
 // Parse binary format of nshead
-ParseResult ParseNsheadMessage(flare::io::cord_buf* source, Socket* socket, bool read_eof, const void *arg);
+ParseResult ParseNsheadMessage(flare::cord_buf* source, Socket* socket, bool read_eof, const void *arg);
 
 // Actions to a (client) request in nshead format
 void ProcessNsheadRequest(InputMessageBase* msg);
@@ -34,16 +34,16 @@ void ProcessNsheadRequest(InputMessageBase* msg);
 // Actions to a (server) response in nshead format
 void ProcessNsheadResponse(InputMessageBase* msg);
 
-void SerializeNsheadRequest(flare::io::cord_buf* request_buf, Controller* controller,
+void SerializeNsheadRequest(flare::cord_buf* request_buf, Controller* controller,
                             const google::protobuf::Message* request);
 
 void PackNsheadRequest(
-    flare::io::cord_buf* packet_buf,
+    flare::cord_buf* packet_buf,
     SocketMessage**,
     uint64_t correlation_id,
     const google::protobuf::MethodDescriptor*,
     Controller* controller,
-    const flare::io::cord_buf&,
+    const flare::cord_buf&,
     const Authenticator*);
 
 // Verify authentication information in nshead format

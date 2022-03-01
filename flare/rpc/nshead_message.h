@@ -30,7 +30,7 @@ namespace flare::rpc {
 class NsheadMessage : public ::google::protobuf::Message {
 public:
     nshead_t head;
-    flare::io::cord_buf body;
+    flare::cord_buf body;
     
 public:
     NsheadMessage();

@@ -132,12 +132,12 @@ protected:
         const flare::rpc::policy::SofaRpcMeta& meta) {
         flare::rpc::policy::MostCommonMessage* msg =
                 flare::rpc::policy::MostCommonMessage::Get();
-        flare::io::cord_buf_as_zero_copy_output_stream meta_stream(&msg->meta);
+        flare::cord_buf_as_zero_copy_output_stream meta_stream(&msg->meta);
         EXPECT_TRUE(meta.SerializeToZeroCopyStream(&meta_stream));
 
         test::EchoRequest req;
         req.set_message(EXP_REQUEST);
-        flare::io::cord_buf_as_zero_copy_output_stream req_stream(&msg->payload);
+        flare::cord_buf_as_zero_copy_output_stream req_stream(&msg->payload);
         EXPECT_TRUE(req.SerializeToZeroCopyStream(&req_stream));
         return msg;
     }
@@ -146,12 +146,12 @@ protected:
         const flare::rpc::policy::SofaRpcMeta& meta) {
         flare::rpc::policy::MostCommonMessage* msg =
                 flare::rpc::policy::MostCommonMessage::Get();
-        flare::io::cord_buf_as_zero_copy_output_stream meta_stream(&msg->meta);
+        flare::cord_buf_as_zero_copy_output_stream meta_stream(&msg->meta);
         EXPECT_TRUE(meta.SerializeToZeroCopyStream(&meta_stream));
 
         test::EchoResponse res;
         res.set_message(EXP_RESPONSE);
-        flare::io::cord_buf_as_zero_copy_output_stream res_stream(&msg->payload);
+        flare::cord_buf_as_zero_copy_output_stream res_stream(&msg->payload);
         EXPECT_TRUE(res.SerializeToZeroCopyStream(&res_stream));
         return msg;
     }
@@ -165,7 +165,7 @@ protected:
         }
 
         EXPECT_GT(bytes_in_pipe, 0);
-        flare::io::IOPortal buf;
+        flare::IOPortal buf;
         EXPECT_EQ((ssize_t)bytes_in_pipe,
                   buf.append_from_file_descriptor(_pipe_fds[0], 1024));
         flare::rpc::ParseResult pr = flare::rpc::policy::ParseSofaMessage(&buf, NULL, false, NULL);
@@ -174,14 +174,14 @@ protected:
             static_cast<flare::rpc::policy::MostCommonMessage*>(pr.message());
 
         flare::rpc::policy::SofaRpcMeta meta;
-        flare::io::cord_buf_as_zero_copy_input_stream meta_stream(msg->meta);
+        flare::cord_buf_as_zero_copy_input_stream meta_stream(msg->meta);
         EXPECT_TRUE(meta.ParseFromZeroCopyStream(&meta_stream));
         EXPECT_EQ(expect_code, meta.error_code());
     }
 
     void TestSofaCompress(flare::rpc::CompressType type) {
-        flare::io::cord_buf request_buf;
-        flare::io::cord_buf total_buf;
+        flare::cord_buf request_buf;
+        flare::cord_buf total_buf;
         flare::rpc::Controller cntl;
         test::EchoRequest req;
         test::EchoResponse res;
@@ -274,8 +274,8 @@ TEST_F(SofaTest, process_response_error_code) {
 }
 
 TEST_F(SofaTest, complete_flow) {
-    flare::io::cord_buf request_buf;
-    flare::io::cord_buf total_buf;
+    flare::cord_buf request_buf;
+    flare::cord_buf total_buf;
     flare::rpc::Controller cntl;
     test::EchoRequest req;
     test::EchoResponse res;
@@ -299,7 +299,7 @@ TEST_F(SofaTest, complete_flow) {
     ProcessMessage(flare::rpc::policy::ProcessSofaRequest, req_msg, false);
 
     // Read response from pipe
-    flare::io::IOPortal response_buf;
+    flare::IOPortal response_buf;
     response_buf.append_from_file_descriptor(_pipe_fds[0], 1024);
     flare::rpc::ParseResult res_pr =
             flare::rpc::policy::ParseSofaMessage(&response_buf, NULL, false, NULL);
@@ -312,8 +312,8 @@ TEST_F(SofaTest, complete_flow) {
 }
 
 TEST_F(SofaTest, close_in_callback) {
-    flare::io::cord_buf request_buf;
-    flare::io::cord_buf total_buf;
+    flare::cord_buf request_buf;
+    flare::cord_buf total_buf;
     flare::rpc::Controller cntl;
     test::EchoRequest req;
 

@@ -123,7 +123,7 @@ namespace {
         flare::rpc::Socket *ptr = msg->socket();
 
         flare::rpc::policy::RpcMeta meta;
-        flare::io::cord_buf_as_zero_copy_input_stream wrapper(msg->meta);
+        flare::cord_buf_as_zero_copy_input_stream wrapper(msg->meta);
         EXPECT_TRUE(meta.ParseFromZeroCopyStream(&wrapper));
 
         if (meta.has_authentication_data()) {
@@ -225,7 +225,7 @@ namespace {
             }
 
             flare::rpc::policy::RpcMeta meta;
-            flare::io::cord_buf_as_zero_copy_input_stream wrapper(msg->meta);
+            flare::cord_buf_as_zero_copy_input_stream wrapper(msg->meta);
             EXPECT_TRUE(meta.ParseFromZeroCopyStream(&wrapper));
             const flare::rpc::policy::RpcRequestMeta &req_meta = meta.request();
             ASSERT_EQ(ts->_svc.descriptor()->full_name(), req_meta.service_name());
@@ -234,12 +234,12 @@ namespace {
             google::protobuf::Message *req =
                     ts->_svc.GetRequestPrototype(method).New();
             if (meta.attachment_size() != 0) {
-                flare::io::cord_buf req_buf;
+                flare::cord_buf req_buf;
                 msg->payload.cutn(&req_buf, msg->payload.size() - meta.attachment_size());
-                flare::io::cord_buf_as_zero_copy_input_stream wrapper2(req_buf);
+                flare::cord_buf_as_zero_copy_input_stream wrapper2(req_buf);
                 EXPECT_TRUE(req->ParseFromZeroCopyStream(&wrapper2));
             } else {
-                flare::io::cord_buf_as_zero_copy_input_stream wrapper2(msg->payload);
+                flare::cord_buf_as_zero_copy_input_stream wrapper2(msg->payload);
                 EXPECT_TRUE(req->ParseFromZeroCopyStream(&wrapper2));
             }
             flare::rpc::Controller *cntl = new flare::rpc::Controller();
@@ -1795,7 +1795,7 @@ namespace {
             if (short_connection) {
                 opt.connection_type = flare::rpc::CONNECTION_TYPE_SHORT;
             }
-            flare::io::temp_file server_list;
+            flare::temp_file server_list;
             EXPECT_EQ(0, server_list.save_format(
                     "127.0.0.1:100\n"
                     "127.0.0.1:200\n"
@@ -1817,7 +1817,7 @@ namespace {
         }
 
         flare::base::end_point _ep;
-        flare::io::temp_file _server_list;
+        flare::temp_file _server_list;
         std::string _naming_url;
 
         flare::rpc::Acceptor _messenger;
@@ -1912,7 +1912,7 @@ namespace {
         flare::rpc::ChannelOptions opt;
         opt.succeed_without_server = false;
         flare::rpc::Channel channel;
-        flare::io::temp_file server_list;
+        flare::temp_file server_list;
         ASSERT_EQ(0, server_list.save(""));
         std::string naming_url = std::string("file://") + server_list.fname();
         // empty file list results in error.
@@ -1934,7 +1934,7 @@ namespace {
 
     TEST_F(ChannelTest, init_using_naming_service) {
         flare::rpc::Channel *channel = new flare::rpc::Channel();
-        flare::io::temp_file server_list;
+        flare::temp_file server_list;
         ASSERT_EQ(0, server_list.save("127.0.0.1:8888"));
         std::string naming_url = std::string("filE://") + server_list.fname();
         // Rr are intended to test case-insensitivity.
@@ -2031,7 +2031,7 @@ namespace {
                 "localhost:1234",
                 "github.com:1234"
         };
-        flare::io::temp_file tmp_file;
+        flare::temp_file tmp_file;
         {
             FILE *fp = fopen(tmp_file.fname(), "w");
             for (size_t i = 0; i < FLARE_ARRAY_SIZE(address_list); ++i) {

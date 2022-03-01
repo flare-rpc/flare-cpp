@@ -185,11 +185,11 @@ namespace flare::rpc {
             return (ct.empty() || ct.front() == ';') ? type : HTTP_CONTENT_OTHERS;
         }
 
-        static void PrintMessage(const flare::io::cord_buf &inbuf,
+        static void PrintMessage(const flare::cord_buf &inbuf,
                                  bool request_or_response,
                                  bool has_content) {
-            flare::io::cord_buf buf1 = inbuf;
-            flare::io::cord_buf buf2;
+            flare::cord_buf buf1 = inbuf;
+            flare::cord_buf buf2;
             char str[48];
             if (request_or_response) {
                 snprintf(str, sizeof(str), "[ HTTP REQUEST @%s ]", flare::base::my_ip_cstr());
@@ -208,21 +208,21 @@ namespace flare::rpc {
             if (!has_content) {
                 LOG(INFO) << '\n' << buf2 << buf1;
             } else {
-                LOG(INFO) << '\n' << buf2 << flare::io::to_printable_string(buf1, FLAGS_http_verbose_max_body_length);
+                LOG(INFO) << '\n' << buf2 << flare::to_printable_string(buf1, FLAGS_http_verbose_max_body_length);
             }
         }
 
-        static void AddGrpcPrefix(flare::io::cord_buf *body, bool compressed) {
+        static void AddGrpcPrefix(flare::cord_buf *body, bool compressed) {
             char buf[5];
             buf[0] = (compressed ? 1 : 0);
             *(uint32_t *) (buf + 1) = flare::base::flare_hton32(body->size());
-            flare::io::cord_buf tmp_buf;
+            flare::cord_buf tmp_buf;
             tmp_buf.append(buf, sizeof(buf));
-            tmp_buf.append(flare::io::cord_buf::Movable(*body));
+            tmp_buf.append(flare::cord_buf::Movable(*body));
             body->swap(tmp_buf);
         }
 
-        static bool RemoveGrpcPrefix(flare::io::cord_buf *body, bool *compressed) {
+        static bool RemoveGrpcPrefix(flare::cord_buf *body, bool *compressed) {
             if (body->empty()) {
                 *compressed = false;
                 return true;
@@ -276,7 +276,7 @@ namespace flare::rpc {
 
             HttpHeader *res_header = &cntl->http_response();
             res_header->Swap(imsg_guard->header());
-            flare::io::cord_buf &res_body = imsg_guard->body();
+            flare::cord_buf &res_body = imsg_guard->body();
             CHECK(cntl->response_attachment().empty());
             const int saved_error = cntl->ErrorCode();
 
@@ -404,7 +404,7 @@ namespace flare::rpc {
                 if (encoding != NULL && *encoding == common->GZIP) {
                     TRACEPRINTF("Decompressing response=%lu",
                                 (unsigned long) res_body.size());
-                    flare::io::cord_buf uncompressed;
+                    flare::cord_buf uncompressed;
                     if (!policy::GzipDecompress(res_body, &uncompressed)) {
                         cntl->SetFailed(ERESPONSE, "Fail to un-gzip response body");
                         break;
@@ -418,7 +418,7 @@ namespace flare::rpc {
                     }
                 } else if (content_type == HTTP_CONTENT_JSON) {
                     // message body is json
-                    flare::io::cord_buf_as_zero_copy_input_stream wrapper(res_body);
+                    flare::cord_buf_as_zero_copy_input_stream wrapper(res_body);
                     std::string err;
                     json2pb::Json2PbOptions options;
                     options.base64_to_bytes = cntl->has_pb_bytes_to_base64();
@@ -440,7 +440,7 @@ namespace flare::rpc {
             accessor.OnResponse(cid, saved_error);
         }
 
-        void SerializeHttpRequest(flare::io::cord_buf * /*not used*/,
+        void SerializeHttpRequest(flare::cord_buf * /*not used*/,
                                   Controller *cntl,
                                   const google::protobuf::Message *pbreq) {
             HttpHeader &hreq = cntl->http_request();
@@ -487,7 +487,7 @@ namespace flare::rpc {
                     is_grpc = (is_http2 && is_grpc_ct);
                 }
 
-                flare::io::cord_buf_as_zero_copy_output_stream wrapper(&cntl->request_attachment());
+                flare::cord_buf_as_zero_copy_output_stream wrapper(&cntl->request_attachment());
                 if (content_type == HTTP_CONTENT_PROTO) {
                     // Serialize content as protobuf
                     if (!pbreq->SerializeToZeroCopyStream(&wrapper)) {
@@ -533,7 +533,7 @@ namespace flare::rpc {
                 const size_t request_size = cntl->request_attachment().size();
                 if (request_size >= (size_t) FLAGS_http_body_compress_threshold) {
                     TRACEPRINTF("Compressing request=%lu", (unsigned long) request_size);
-                    flare::io::cord_buf compressed;
+                    flare::cord_buf compressed;
                     if (GzipCompress(cntl->request_attachment(), &compressed, NULL)) {
                         cntl->request_attachment().swap(compressed);
                         if (is_grpc) {
@@ -608,12 +608,12 @@ namespace flare::rpc {
             }
         }
 
-        void PackHttpRequest(flare::io::cord_buf *buf,
+        void PackHttpRequest(flare::cord_buf *buf,
                              SocketMessage **,
                              uint64_t correlation_id,
                              const google::protobuf::MethodDescriptor *,
                              Controller *cntl,
-                             const flare::io::cord_buf & /*unused*/,
+                             const flare::cord_buf & /*unused*/,
                              const Authenticator *auth) {
             if (cntl->connection_type() == CONNECTION_TYPE_SINGLE) {
                 return cntl->SetFailed(EREQUEST, "http can't work with CONNECTION_TYPE_SINGLE");
@@ -741,7 +741,7 @@ namespace flare::rpc {
                 !cntl->Failed()) {
                 // ^ pb response in failed RPC is undefined, no need to convert.
 
-                flare::io::cord_buf_as_zero_copy_output_stream wrapper(&cntl->response_attachment());
+                flare::cord_buf_as_zero_copy_output_stream wrapper(&cntl->response_attachment());
                 if (content_type == HTTP_CONTENT_PROTO) {
                     if (!res->SerializeToZeroCopyStream(&wrapper)) {
                         cntl->SetFailed(ERESPONSE, "Fail to serialize %s", res->GetTypeName().c_str());
@@ -833,7 +833,7 @@ namespace flare::rpc {
                 if (response_size >= (size_t) FLAGS_http_body_compress_threshold
                     && (is_http2 || SupportGzip(cntl))) {
                     TRACEPRINTF("Compressing response=%lu", (unsigned long) response_size);
-                    flare::io::cord_buf tmpbuf;
+                    flare::cord_buf tmpbuf;
                     if (GzipCompress(cntl->response_attachment(), &tmpbuf, NULL)) {
                         cntl->response_attachment().swap(tmpbuf);
                         if (is_grpc) {
@@ -879,11 +879,11 @@ namespace flare::rpc {
                     rc = socket->Write(h2_response, &wopt);
                 }
             } else {
-                flare::io::cord_buf *content = NULL;
+                flare::cord_buf *content = NULL;
                 if (cntl->Failed() || !cntl->has_progressive_writer()) {
                     content = &cntl->response_attachment();
                 }
-                flare::io::cord_buf res_buf;
+                flare::cord_buf res_buf;
                 MakeRawHttpResponse(&res_buf, res_header, content);
                 if (FLAGS_http_verbose) {
                     PrintMessage(res_buf, false, !!content);
@@ -1028,7 +1028,7 @@ namespace flare::rpc {
             return NULL;
         }
 
-        ParseResult ParseHttpMessage(flare::io::cord_buf *source, Socket *socket,
+        ParseResult ParseHttpMessage(flare::cord_buf *source, Socket *socket,
                                      bool read_eof, const void * /*arg*/) {
             HttpContext *http_imsg =
                     static_cast<HttpContext *>(socket->parsing_context());
@@ -1135,7 +1135,7 @@ namespace flare::rpc {
                         return MakeParseError(PARSE_ERROR_NOT_ENOUGH_DATA);
                     }
                     // Send 400 back.
-                    flare::io::cord_buf bad_req;
+                    flare::cord_buf bad_req;
                     HttpHeader header;
                     header.set_status_code(HTTP_STATUS_BAD_REQUEST);
                     MakeRawHttpRequest(&bad_req, &header, socket->remote_side(), NULL);
@@ -1224,7 +1224,7 @@ namespace flare::rpc {
             ControllerPrivateAccessor accessor(cntl);
             HttpHeader &req_header = cntl->http_request();
             imsg_guard->header().Swap(req_header);
-            flare::io::cord_buf &req_body = imsg_guard->body();
+            flare::cord_buf &req_body = imsg_guard->body();
 
             flare::base::end_point user_addr;
             if (!GetUserAddressFromHeader(req_header, &user_addr)) {
@@ -1446,7 +1446,7 @@ namespace flare::rpc {
                     if (encoding != NULL && *encoding == common->GZIP) {
                         TRACEPRINTF("Decompressing request=%lu",
                                     (unsigned long) req_body.size());
-                        flare::io::cord_buf uncompressed;
+                        flare::cord_buf uncompressed;
                         if (!policy::GzipDecompress(req_body, &uncompressed)) {
                             cntl->SetFailed(EREQUEST, "Fail to un-gzip request body");
                             return;
@@ -1460,7 +1460,7 @@ namespace flare::rpc {
                             return;
                         }
                     } else {
-                        flare::io::cord_buf_as_zero_copy_input_stream wrapper(req_body);
+                        flare::cord_buf_as_zero_copy_input_stream wrapper(req_body);
                         std::string err;
                         json2pb::Json2PbOptions options;
                         options.base64_to_bytes = sp->params.pb_bytes_to_base64;

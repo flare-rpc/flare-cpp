@@ -20,7 +20,7 @@
 #define FLARE_RPC_REDIS_REPLY_H_
 
 #include <stdarg.h>
-#include "flare/io/cord_buf.h"                  // flare::io::cord_buf
+#include "flare/io/cord_buf.h"                  // flare::cord_buf
 #include <string_view>   // std::string_view
 #include "flare/memory/arena.h"                  // flare::memory::Arena
 #include "flare/log/logging.h"                // CHECK
@@ -120,10 +120,10 @@ public:
     // reply. As a contrast, if the parsing needs `buf' to be intact,
     // the complexity in worst case may be O(N^2).
     // Returns PARSE_ERROR_ABSOLUTELY_WRONG if the parsing failed.
-    ParseError ConsumePartialCordBuf(flare::io::cord_buf& buf);
+    ParseError ConsumePartialCordBuf(flare::cord_buf& buf);
 
     // Serialize to cord_buf appender using redis protocol
-    bool SerializeTo(flare::io::cord_buf_appender* appender);
+    bool SerializeTo(flare::cord_buf_appender* appender);
 
     // Swap internal fields with another reply.
     void Swap(RedisReply& other);

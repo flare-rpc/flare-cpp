@@ -25,19 +25,19 @@
 namespace flare::rpc {
 
 static pthread_once_t s_jquery_min_buf_once = PTHREAD_ONCE_INIT; 
-static flare::io::cord_buf* s_jquery_min_buf = NULL;
-static flare::io::cord_buf* s_jquery_min_buf_gzip = NULL;
+static flare::cord_buf* s_jquery_min_buf = NULL;
+static flare::cord_buf* s_jquery_min_buf_gzip = NULL;
 static void InitJQueryMinBuf() {
-    s_jquery_min_buf = new flare::io::cord_buf;
+    s_jquery_min_buf = new flare::cord_buf;
     s_jquery_min_buf->append(jquery_min_js());
-    s_jquery_min_buf_gzip = new flare::io::cord_buf;
+    s_jquery_min_buf_gzip = new flare::cord_buf;
     CHECK(policy::GzipCompress(*s_jquery_min_buf, s_jquery_min_buf_gzip, NULL));
 }
-const flare::io::cord_buf& jquery_min_js_iobuf() {
+const flare::cord_buf& jquery_min_js_iobuf() {
     pthread_once(&s_jquery_min_buf_once, InitJQueryMinBuf);
     return *s_jquery_min_buf;
 }
-const flare::io::cord_buf& jquery_min_js_iobuf_gzip() {
+const flare::cord_buf& jquery_min_js_iobuf_gzip() {
     pthread_once(&s_jquery_min_buf_once, InitJQueryMinBuf);
     return *s_jquery_min_buf_gzip;
 }

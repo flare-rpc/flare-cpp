@@ -91,9 +91,9 @@ namespace flare::rpc {
 
         int pipelined_count() const { return _pipelined_count; }
 
-        flare::io::cord_buf &raw_buffer() { return _buf; }
+        flare::cord_buf &raw_buffer() { return _buf; }
 
-        const flare::io::cord_buf &raw_buffer() const { return _buf; }
+        const flare::cord_buf &raw_buffer() const { return _buf; }
 
         // Protobuf methods.
         MemcacheRequest *New() const;
@@ -152,7 +152,7 @@ namespace flare::rpc {
         void SetCachedSize(int size) const;
 
         int _pipelined_count;
-        flare::io::cord_buf _buf;
+        flare::cord_buf _buf;
         mutable int _cached_size_;
     };
 
@@ -212,7 +212,7 @@ namespace flare::rpc {
 
         const std::string &LastError() const { return _err; }
 
-        bool PopGet(flare::io::cord_buf *value, uint32_t *flags, uint64_t *cas_value);
+        bool PopGet(flare::cord_buf *value, uint32_t *flags, uint64_t *cas_value);
 
         bool PopGet(std::string *value, uint32_t *flags, uint64_t *cas_value);
 
@@ -238,9 +238,9 @@ namespace flare::rpc {
 
         bool PopVersion(std::string *version);
 
-        flare::io::cord_buf &raw_buffer() { return _buf; }
+        flare::cord_buf &raw_buffer() { return _buf; }
 
-        const flare::io::cord_buf &raw_buffer() const { return _buf; }
+        const flare::cord_buf &raw_buffer() const { return _buf; }
 
         static const char *status_str(Status);
 
@@ -297,7 +297,7 @@ namespace flare::rpc {
         void SetCachedSize(int size) const;
 
         std::string _err;
-        flare::io::cord_buf _buf;
+        flare::cord_buf _buf;
         mutable int _cached_size_;
     };
 

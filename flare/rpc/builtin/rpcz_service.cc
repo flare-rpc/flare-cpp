@@ -152,7 +152,7 @@ namespace flare::rpc {
             return;
         }
 
-        flare::io::cord_buf_builder os;
+        flare::cord_buf_builder os;
         DescribeSpanDB(os);
         os.move_to(cntl->response_attachment());
     }
@@ -479,7 +479,7 @@ namespace flare::rpc {
         cntl->http_response().set_content_type(
                 use_html ? "text/html" : "text/plain");
 
-        flare::io::cord_buf_builder os;
+        flare::cord_buf_builder os;
         if (use_html) {
             os << "<!DOCTYPE html><html><head>\n"
                << "<script language=\"javascript\" type=\"text/javascript\" src=\"/js/jquery_min\"></script>\n"

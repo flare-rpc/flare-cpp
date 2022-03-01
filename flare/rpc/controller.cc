@@ -1125,7 +1125,7 @@ namespace flare::rpc {
             }
         }
         // Make request
-        flare::io::cord_buf packet;
+        flare::cord_buf packet;
         SocketMessage *user_packet = NULL;
         _pack_request(&packet, &user_packet, cid.value, _method, this,
                       _request_buf, using_auth);

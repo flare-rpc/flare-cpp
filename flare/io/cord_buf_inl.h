@@ -26,7 +26,7 @@
 
 void *fast_memcpy(void *__restrict dest, const void *__restrict src, size_t n);
 
-namespace flare::io {
+namespace flare {
 
     inline ssize_t cord_buf::cut_into_file_descriptor(int fd, size_t size_hint) {
         return pcut_into_file_descriptor(fd, -1, size_hint);
@@ -333,7 +333,7 @@ namespace flare::io {
         }
     }
 
-    inline cord_buf_bytes_iterator::cord_buf_bytes_iterator(const flare::io::cord_buf &buf)
+    inline cord_buf_bytes_iterator::cord_buf_bytes_iterator(const flare::cord_buf &buf)
             : _block_begin(NULL), _block_end(NULL), _block_count(0),
               _bytes_left(buf.length()), _buf(&buf) {
         try_next_block();
@@ -415,6 +415,6 @@ namespace flare::io {
         return nc;
     }
 
-}  // namespace flare::io
+}  // namespace flare
 
 #endif  // FLARE_IO_IOBUF_INL_H_

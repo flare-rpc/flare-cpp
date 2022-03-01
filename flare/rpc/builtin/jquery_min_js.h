@@ -28,8 +28,8 @@ namespace flare::rpc {
 // We need to pack all js inside C++ code so that builtin services can be
 // accessed without external resources and network connection.
 const char* jquery_min_js();
-const flare::io::cord_buf& jquery_min_js_iobuf();
-const flare::io::cord_buf& jquery_min_js_iobuf_gzip();
+const flare::cord_buf& jquery_min_js_iobuf();
+const flare::cord_buf& jquery_min_js_iobuf_gzip();
 
 } // namespace flare::rpc
 

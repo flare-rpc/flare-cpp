@@ -19,7 +19,7 @@
 
 #include "flare/io/zero_copy_stream_as_streambuf.h"
 
-namespace flare::io {
+namespace flare {
 
     static_assert(sizeof(std::streambuf::char_type) == sizeof(char),
                   "only_support_char");
@@ -67,4 +67,4 @@ namespace flare::io {
     }
 
 
-}  // namespace flare::io
+}  // namespace flare

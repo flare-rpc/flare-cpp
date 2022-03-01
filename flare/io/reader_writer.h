@@ -22,7 +22,7 @@
 
 #include <sys/uio.h>                             // iovec
 
-namespace flare::io {
+namespace flare {
 
     // Abstraction for reading data.
     // The simplest implementation is to embed a file descriptor and read from it.
@@ -48,6 +48,6 @@ namespace flare::io {
         virtual ssize_t writev(const iovec *iov, int iovcnt) = 0;
     };
 
-}  // namespace flare::io
+}  // namespace flare
 
 #endif  // FLARE_IO_READER_WRITER_H_

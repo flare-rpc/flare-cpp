@@ -49,7 +49,7 @@ inline void AppendHeader(std::string& buf, char fc, unsigned long value) {
     header[len + 2] = '\n';
     buf.append(header, len + 3);
 }
-inline void AppendHeader(flare::io::cord_buf& buf, char fc, unsigned long value) {
+inline void AppendHeader(flare::cord_buf& buf, char fc, unsigned long value) {
     char header[32];
     header[0] = fc;
     size_t len = AppendDecimal(header + 1, value);
@@ -73,7 +73,7 @@ static void FlushComponent(std::string* out, std::string* compbuf, int* ncomp) {
 // https://github.com/redis/hiredis/blob/master/hiredis.c to keep close
 // compatibility with hiredis.
 flare::base::flare_status
-RedisCommandFormatV(flare::io::cord_buf* outbuf, const char* fmt, va_list ap) {
+RedisCommandFormatV(flare::cord_buf* outbuf, const char* fmt, va_list ap) {
     if (outbuf == NULL || fmt == NULL) {
         return flare::base::flare_status(EINVAL, "Param[outbuf] or [fmt] is NULL");
     }
@@ -269,7 +269,7 @@ RedisCommandFormatV(flare::io::cord_buf* outbuf, const char* fmt, va_list ap) {
     return flare::base::flare_status::OK();
 }
 
-flare::base::flare_status RedisCommandFormat(flare::io::cord_buf* buf, const char* fmt, ...) {
+flare::base::flare_status RedisCommandFormat(flare::cord_buf* buf, const char* fmt, ...) {
     va_list ap;
     va_start(ap, fmt);
     const flare::base::flare_status st = RedisCommandFormatV(buf, fmt, ap);
@@ -278,7 +278,7 @@ flare::base::flare_status RedisCommandFormat(flare::io::cord_buf* buf, const cha
 }
 
 flare::base::flare_status
-RedisCommandNoFormat(flare::io::cord_buf* outbuf, const std::string_view& cmd) {
+RedisCommandNoFormat(flare::cord_buf* outbuf, const std::string_view& cmd) {
     if (outbuf == NULL || cmd.empty()) {
         return flare::base::flare_status(EINVAL, "Param[outbuf] or [cmd] is NULL");
     }
@@ -341,7 +341,7 @@ RedisCommandNoFormat(flare::io::cord_buf* outbuf, const std::string_view& cmd) {
     return flare::base::flare_status::OK();
 }
 
-flare::base::flare_status RedisCommandByComponents(flare::io::cord_buf* output,
+flare::base::flare_status RedisCommandByComponents(flare::cord_buf* output,
                                       const std::string_view* components,
                                       size_t ncomponents) {
     if (output == NULL) {
@@ -361,7 +361,7 @@ RedisCommandParser::RedisCommandParser()
     , _length(0)
     , _index(0) {}
 
-ParseError RedisCommandParser::Consume(flare::io::cord_buf& buf,
+ParseError RedisCommandParser::Consume(flare::cord_buf& buf,
                                        std::vector<std::string_view>* args,
                                        flare::memory::Arena* arena) {
     const char* pfc = (const char*)buf.fetch1();

@@ -39,7 +39,7 @@ DEFINE_bool(only_show_host, false, "Print host name only");
 struct AccessThreadArgs {
     const std::deque<std::string> *url_list;
     size_t offset;
-    std::deque<std::pair<std::string, flare::io::cord_buf> > output_queue;
+    std::deque<std::pair<std::string, flare::cord_buf> > output_queue;
     flare::base::Mutex output_queue_mutex;
     std::atomic<int> current_concurrency;
 };
@@ -59,7 +59,7 @@ void OnHttpCallEnd::Run() {
     {
         FLARE_SCOPED_LOCK(args->output_queue_mutex);
         if (cntl.Failed()) {
-            args->output_queue.push_back(std::make_pair(url, flare::io::cord_buf()));
+            args->output_queue.push_back(std::make_pair(url, flare::cord_buf()));
         } else {
             args->output_queue.push_back(
                     std::make_pair(url, cntl.response_attachment()));
@@ -83,7 +83,7 @@ void *access_thread(void *void_args) {
         if (channel.Init(url.c_str(), &options) != 0) {
             LOG(ERROR) << "Fail to create channel to url=" << url;
             FLARE_SCOPED_LOCK(args->output_queue_mutex);
-            args->output_queue.push_back(std::make_pair(url, flare::io::cord_buf()));
+            args->output_queue.push_back(std::make_pair(url, flare::cord_buf()));
             continue;
         }
         while (args->current_concurrency.fetch_add(1, std::memory_order_relaxed)
@@ -149,7 +149,7 @@ int main(int argc, char **argv) {
     for (int i = 0; i < FLAGS_thread_num; ++i) {
         CHECK_EQ(0, fiber_start_background(&tids[i], NULL, access_thread, &args[i]));
     }
-    std::deque<std::pair<std::string, flare::io::cord_buf> > output_queue;
+    std::deque<std::pair<std::string, flare::cord_buf> > output_queue;
     size_t nprinted = 0;
     while (nprinted != url_list.size()) {
         for (int i = 0; i < FLAGS_thread_num; ++i) {

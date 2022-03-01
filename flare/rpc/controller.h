@@ -27,7 +27,7 @@
 #include "flare/container/intrusive_ptr.h"             // flare::container::intrusive_ptr
 #include "flare/fiber/internal/errno.h"                     // Redefine errno
 #include "flare/base/endpoint.h"                    // flare::base::end_point
-#include "flare/io/cord_buf.h"                       // flare::io::cord_buf
+#include "flare/io/cord_buf.h"                       // flare::cord_buf
 #include "flare/fiber/internal/types.h"                     // fiber_token_t
 #include "flare/rpc/options.pb.h"                   // CompressType
 #include "flare/rpc/errno.pb.h"                     // error code
@@ -249,7 +249,7 @@ public:
 
     // User attached data or body of http request, which is wired to network
     // directly instead of being serialized into protobuf messages.
-    flare::io::cord_buf& request_attachment() { return _request_attachment; }
+    flare::cord_buf& request_attachment() { return _request_attachment; }
 
     ConnectionType connection_type() const { return _connection_type; }
     // Get the called method. May-be NULL for non-pb services.
@@ -386,7 +386,7 @@ public:
     
     // User attached data or body of http response, which is wired to network
     // directly instead of being serialized into protobuf messages.
-    flare::io::cord_buf& response_attachment() { return _response_attachment; }
+    flare::cord_buf& response_attachment() { return _response_attachment; }
 
     // Create a ProgressiveAttachment to write (often after RPC).
     // If `stop_style' is FORCE_STOP, the underlying socket will be failed
@@ -493,8 +493,8 @@ public:
     const HttpHeader& http_response() const
     { return _http_response != NULL ? *_http_response : DefaultHttpHeader(); }
 
-    const flare::io::cord_buf& request_attachment() const { return _request_attachment; }
-    const flare::io::cord_buf& response_attachment() const { return _response_attachment; }
+    const flare::cord_buf& request_attachment() const { return _request_attachment; }
+    const flare::cord_buf& response_attachment() const { return _response_attachment; }
 
     // Get the object to write key/value which will be flushed into
     // LOG(INFO) when this controller is deleted.
@@ -766,7 +766,7 @@ private:
     Protocol::PackRequest _pack_request;
     const google::protobuf::MethodDescriptor* _method;
     const Authenticator* _auth;
-    flare::io::cord_buf _request_buf;
+    flare::cord_buf _request_buf;
     IdlNames _idl_names;
     int64_t _idl_result;
 
@@ -776,8 +776,8 @@ private:
     std::unique_ptr<KVMap> _session_kv;
 
     // Fields with large size but low access frequency 
-    flare::io::cord_buf _request_attachment;
-    flare::io::cord_buf _response_attachment;
+    flare::cord_buf _request_attachment;
+    flare::cord_buf _response_attachment;
 
     // Writable progressive attachment
     flare::container::intrusive_ptr<ProgressiveAttachment> _wpa;

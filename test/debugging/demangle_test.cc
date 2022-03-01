@@ -16,19 +16,19 @@ namespace flare::debugging {
     namespace debugging_internal {
         namespace {
 
-// A wrapper function for Demangle() to make the unit test simple.
+            // A wrapper function for Demangle() to make the unit test simple.
 
-static const char *DemangleIt(const char * const mangled) {
-  static char demangled[4096];
-  if (Demangle(mangled, demangled, sizeof(demangled))) {
-    return demangled;
-  } else {
-    return mangled;
-  }
-}
+            static const char *DemangleIt(const char *const mangled) {
+                static char demangled[4096];
+                if (Demangle(mangled, demangled, sizeof(demangled))) {
+                    return demangled;
+                } else {
+                    return mangled;
+                }
+            }
 
 
-// Test corner cases of bounary conditions.
+        // Test corner cases of bounary conditions.
             TEST(Demangle, CornerCases) {
                 char tmp[10];
                 EXPECT_TRUE(Demangle("_Z6foobarv", tmp, sizeof(tmp)));
@@ -43,11 +43,11 @@ static const char *DemangleIt(const char * const mangled) {
                 EXPECT_FALSE(Demangle("_Z1000000", tmp, 9));
             }
 
-// Test handling of functions suffixed with .clone.N, which is used
-// by GCC 4.5.x (and our locally-modified version of GCC 4.4.x), and
-// .constprop.N and .isra.N, which are used by GCC 4.6.x.  These
-// suffixes are used to indicate functions which have been cloned
-// during optimization.  We ignore these suffixes.
+            // Test handling of functions suffixed with .clone.N, which is used
+            // by GCC 4.5.x (and our locally-modified version of GCC 4.4.x), and
+            // .constprop.N and .isra.N, which are used by GCC 4.6.x.  These
+            // suffixes are used to indicate functions which have been cloned
+            // during optimization.  We ignore these suffixes.
             TEST(Demangle, Clones) {
                 char tmp[20];
                 EXPECT_TRUE(Demangle("_ZL3Foov", tmp, sizeof(tmp)));

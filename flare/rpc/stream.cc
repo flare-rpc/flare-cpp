@@ -36,7 +36,7 @@ namespace flare::rpc {
 
     DECLARE_bool(usercode_in_pthread);
 
-    const static flare::io::cord_buf *TIMEOUT_TASK = (flare::io::cord_buf *) -1L;
+    const static flare::cord_buf *TIMEOUT_TASK = (flare::cord_buf *) -1L;
 
     Stream::Stream()
             : _host_socket(NULL), _fake_socket_weak_ref(NULL), _connected(false), _closed(false), _produced(0),
@@ -116,7 +116,7 @@ namespace flare::rpc {
     }
 
     ssize_t Stream::CutMessageIntoFileDescriptor(int /*fd*/,
-                                                 flare::io::cord_buf **data_list,
+                                                 flare::cord_buf **data_list,
                                                  size_t size) {
         if (_host_socket == NULL) {
             CHECK(false) << "Not connected";
@@ -131,7 +131,7 @@ namespace flare::rpc {
             errno = EBADF;
             return -1;
         }
-        flare::io::cord_buf out;
+        flare::cord_buf out;
         ssize_t len = 0;
         for (size_t i = 0; i < size; ++i) {
             StreamFrameMeta fm;
@@ -148,11 +148,11 @@ namespace flare::rpc {
         return len;
     }
 
-    void Stream::WriteToHostSocket(flare::io::cord_buf *b) {
+    void Stream::WriteToHostSocket(flare::cord_buf *b) {
         FLARE_RPC_HANDLE_EOVERCROWDED(_host_socket->Write(b));
     }
 
-    ssize_t Stream::CutMessageIntoSSLChannel(SSL *, flare::io::cord_buf **, size_t) {
+    ssize_t Stream::CutMessageIntoSSLChannel(SSL *, flare::cord_buf **, size_t) {
         CHECK(false) << "Stream does support SSL";
         errno = EINVAL;
         return -1;
@@ -250,7 +250,7 @@ namespace flare::rpc {
         fiber_mutex_unlock(&_connect_mutex);
     }
 
-    int Stream::AppendIfNotFull(const flare::io::cord_buf &data) {
+    int Stream::AppendIfNotFull(const flare::cord_buf &data) {
         if (_options.max_buf_size > 0) {
             std::unique_lock<fiber_mutex_t> lck(_congestion_control_mutex);
             if (_produced >= _remote_consumed + (size_t) _options.max_buf_size) {
@@ -266,7 +266,7 @@ namespace flare::rpc {
             }
             _produced += data.length();
         }
-        flare::io::cord_buf copied_data(data);
+        flare::cord_buf copied_data(data);
         const int rc = _fake_socket_weak_ref->Write(&copied_data);
         if (rc != 0) {
             // Stream may be closed by peer before
@@ -396,7 +396,7 @@ namespace flare::rpc {
         return rc;
     }
 
-    int Stream::OnReceived(const StreamFrameMeta &fm, flare::io::cord_buf *buf, Socket *sock) {
+    int Stream::OnReceived(const StreamFrameMeta &fm, flare::cord_buf *buf, Socket *sock) {
         if (_host_socket == NULL) {
             if (SetHostSocket(sock) != 0) {
                 return -1;
@@ -412,11 +412,11 @@ namespace flare::rpc {
                     _pending_buf->append(*buf);
                     buf->clear();
                 } else {
-                    _pending_buf = new flare::io::cord_buf;
+                    _pending_buf = new flare::cord_buf;
                     _pending_buf->swap(*buf);
                 }
                 if (!fm.has_continuation()) {
-                    flare::io::cord_buf *tmp = _pending_buf;
+                    flare::cord_buf *tmp = _pending_buf;
                     _pending_buf = NULL;
                     if (flare::fiber_internal::execution_queue_execute(_consumer_queue, tmp) != 0) {
                         CHECK(false) << "Fail to push into channel";
@@ -443,7 +443,7 @@ namespace flare::rpc {
 
     class MessageBatcher {
     public:
-        MessageBatcher(flare::io::cord_buf *storage[], size_t cap, Stream *s)
+        MessageBatcher(flare::cord_buf *storage[], size_t cap, Stream *s)
                 : _storage(storage), _cap(cap), _size(0), _total_length(0), _s(s) {}
 
         ~MessageBatcher() { flush(); }
@@ -459,7 +459,7 @@ namespace flare::rpc {
             _size = 0;
         }
 
-        void push(flare::io::cord_buf *buf) {
+        void push(flare::cord_buf *buf) {
             if (_size == _cap) {
                 flush();
             }
@@ -471,14 +471,14 @@ namespace flare::rpc {
         size_t total_length() { return _total_length; }
 
     private:
-        flare::io::cord_buf **_storage;
+        flare::cord_buf **_storage;
         size_t _cap;
         size_t _size;
         size_t _total_length;
         Stream *_s;
     };
 
-    int Stream::Consume(void *meta, flare::fiber_internal::TaskIterator<flare::io::cord_buf *> &iter) {
+    int Stream::Consume(void *meta, flare::fiber_internal::TaskIterator<flare::cord_buf *> &iter) {
         Stream *s = (Stream *) meta;
         s->StopIdleTimer();
         if (iter.is_queue_stopped()) {
@@ -493,11 +493,11 @@ namespace flare::rpc {
             delete s;
             return 0;
         }
-        DEFINE_SMALL_ARRAY(flare::io::cord_buf*, buf_list, s->_options.messages_in_batch, 256);
+        DEFINE_SMALL_ARRAY(flare::cord_buf*, buf_list, s->_options.messages_in_batch, 256);
         MessageBatcher mb(buf_list, s->_options.messages_in_batch, s);
         bool has_timeout_task = false;
         for (; iter; ++iter) {
-            flare::io::cord_buf *t = *iter;
+            flare::cord_buf *t = *iter;
             if (t == TIMEOUT_TASK) {
                 has_timeout_task = true;
             } else {
@@ -529,7 +529,7 @@ namespace flare::rpc {
         fm.set_stream_id(_remote_settings.stream_id());
         fm.set_source_stream_id(id());
         fm.mutable_feedback()->set_consumed_size(_local_consumed);
-        flare::io::cord_buf out;
+        flare::cord_buf out;
         policy::PackStreamMessage(&out, fm, NULL);
         WriteToHostSocket(&out);
     }
@@ -556,8 +556,8 @@ namespace flare::rpc {
     }
 
     void OnIdleTimeout(void *arg) {
-        flare::fiber_internal::ExecutionQueueId<flare::io::cord_buf *> q = {(uint64_t) arg};
-        flare::fiber_internal::execution_queue_execute(q, (flare::io::cord_buf *) TIMEOUT_TASK);
+        flare::fiber_internal::ExecutionQueueId<flare::cord_buf *> q = {(uint64_t) arg};
+        flare::fiber_internal::execution_queue_execute(q, (flare::cord_buf *) TIMEOUT_TASK);
     }
 
     void Stream::StartIdleTimer() {
@@ -609,10 +609,10 @@ namespace flare::rpc {
         return 0;
     }
 
-    void Stream::HandleRpcResponse(flare::io::cord_buf *response_buffer) {
+    void Stream::HandleRpcResponse(flare::cord_buf *response_buffer) {
         CHECK(!_remote_settings.IsInitialized());
         CHECK(_host_socket != NULL);
-        std::unique_ptr<flare::io::cord_buf> buf_guard(response_buffer);
+        std::unique_ptr<flare::cord_buf> buf_guard(response_buffer);
         ParseResult pr = policy::ParseRpcMessage(response_buffer, NULL, true, NULL);
         if (!pr.is_ok()) {
             CHECK(false);
@@ -633,7 +633,7 @@ namespace flare::rpc {
         policy::ProcessRpcResponse(msg);
     }
 
-    int StreamWrite(StreamId stream_id, const flare::io::cord_buf &message) {
+    int StreamWrite(StreamId stream_id, const flare::cord_buf &message) {
         SocketUniquePtr ptr;
         if (Socket::Address(stream_id, &ptr) != 0) {
             return EINVAL;

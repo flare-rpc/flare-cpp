@@ -42,7 +42,7 @@ namespace google {
     }  // namespace protobuf
 }  // namespace google
 
-namespace flare::io {
+namespace flare {
     class cord_buf;
 }
 
@@ -82,7 +82,7 @@ namespace flare::rpc {
         //     from `source' before returning.
         //  MakeMessage(InputMessageBase*):
         //     The message is parsed successfully and cut from `source'.
-        typedef ParseResult (*Parse)(flare::io::cord_buf *source, Socket *socket,
+        typedef ParseResult (*Parse)(flare::cord_buf *source, Socket *socket,
                                      bool read_eof, const void *arg);
 
         Parse parse;
@@ -93,7 +93,7 @@ namespace flare::rpc {
         // `cntl' provides additional data needed by some protocol (say HTTP).
         // Call cntl->SetFailed() on error.
         typedef void (*SerializeRequest)(
-                flare::io::cord_buf *request_buf,
+                flare::cord_buf *request_buf,
                 Controller *cntl,
                 const google::protobuf::Message *request);
 
@@ -105,12 +105,12 @@ namespace flare::rpc {
         // Remember to pack authentication information when `auth' is not NULL.
         // Call cntl->SetFailed() on error.
         typedef void (*PackRequest)(
-                flare::io::cord_buf *iobuf_out,
+                flare::cord_buf *iobuf_out,
                 SocketMessage **user_message_out,
                 uint64_t correlation_id,
                 const google::protobuf::MethodDescriptor *method,
                 Controller *controller,
-                const flare::io::cord_buf &request_buf,
+                const flare::cord_buf &request_buf,
                 const Authenticator *auth);
 
         PackRequest pack_request;
@@ -199,7 +199,7 @@ namespace flare::rpc {
     void ListProtocols(std::vector<std::pair<ProtocolType, Protocol> > *vec);
 
 // The common serialize_request implementation used by many protocols.
-    void SerializeRequestDefault(flare::io::cord_buf *buf,
+    void SerializeRequestDefault(flare::cord_buf *buf,
                                  Controller *cntl,
                                  const google::protobuf::Message *request);
 
@@ -208,7 +208,7 @@ namespace flare::rpc {
     bool ParsePbFromZeroCopyStream(google::protobuf::Message *msg,
                                    google::protobuf::io::ZeroCopyInputStream *input);
 
-    bool ParsePbFromCordBuf(google::protobuf::Message *msg, const flare::io::cord_buf &buf);
+    bool ParsePbFromCordBuf(google::protobuf::Message *msg, const flare::cord_buf &buf);
 
     bool ParsePbFromArray(google::protobuf::Message *msg, const void *data, size_t size);
 

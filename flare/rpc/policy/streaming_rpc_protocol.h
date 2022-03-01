@@ -26,11 +26,11 @@
 namespace flare::rpc {
 namespace policy {
 
-void PackStreamMessage(flare::io::cord_buf* out,
+void PackStreamMessage(flare::cord_buf* out,
                        const StreamFrameMeta &fm,
-                       const flare::io::cord_buf *data);
+                       const flare::cord_buf *data);
 
-ParseResult ParseStreamingMessage(flare::io::cord_buf* source, Socket* socket,
+ParseResult ParseStreamingMessage(flare::cord_buf* source, Socket* socket,
                                   bool read_eof, const void* arg);
 
 void ProcessStreamingMessage(InputMessageBase* msg);
@@ -40,7 +40,7 @@ void SendStreamRst(Socket* sock, int64_t remote_stream_id);
 void SendStreamClose(Socket *sock, int64_t remote_stream_id,
                      int64_t source_stream_id);
 
-int SendStreamData(Socket* sock, const flare::io::cord_buf* data,
+int SendStreamData(Socket* sock, const flare::cord_buf* data,
                    int64_t remote_stream_id, int64_t source_stream_id);
 
 }  // namespace policy

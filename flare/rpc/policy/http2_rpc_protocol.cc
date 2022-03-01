@@ -92,13 +92,13 @@ DECLARE_bool(usercode_in_pthread);
         }
 
 // A series of utilities to load numbers from http2 streams.
-        inline uint8_t LoadUint8(flare::io::cord_buf_bytes_iterator &it) {
+        inline uint8_t LoadUint8(flare::cord_buf_bytes_iterator &it) {
             uint8_t v = *it;
             ++it;
             return v;
         }
 
-        inline uint16_t LoadUint16(flare::io::cord_buf_bytes_iterator &it) {
+        inline uint16_t LoadUint16(flare::cord_buf_bytes_iterator &it) {
             uint16_t v = *it;
             ++it;
             v = ((v << 8) | *it);
@@ -106,7 +106,7 @@ DECLARE_bool(usercode_in_pthread);
             return v;
         }
 
-        inline uint32_t LoadUint32(flare::io::cord_buf_bytes_iterator &it) {
+        inline uint32_t LoadUint32(flare::cord_buf_bytes_iterator &it) {
             uint32_t v = *it;
             ++it;
             v = ((v << 8) | *it);
@@ -162,7 +162,7 @@ DECLARE_bool(usercode_in_pthread);
         }
 
         static int WriteAck(Socket *s, const void *data, size_t n) {
-            flare::io::cord_buf sendbuf;
+            flare::cord_buf sendbuf;
             sendbuf.append(data, n);
             Socket::WriteOptions wopt;
             wopt.ignore_eovercrowded = true;
@@ -182,7 +182,7 @@ DECLARE_bool(usercode_in_pthread);
 
 // Parse from n bytes from the iterator.
 // Returns true on success.
-        bool ParseH2Settings(H2Settings *out, flare::io::cord_buf_bytes_iterator &it, size_t n) {
+        bool ParseH2Settings(H2Settings *out, flare::cord_buf_bytes_iterator &it, size_t n) {
             const uint32_t npairs = n / 6;
             if (npairs * 6 != n) {
                 LOG(ERROR) << "Invalid payload_size=" << n;
@@ -459,7 +459,7 @@ DECLARE_bool(usercode_in_pthread);
         }
 
         ParseResult H2Context::ConsumeFrameHead(
-                flare::io::cord_buf_bytes_iterator &it, H2FrameHead *frame_head) {
+                flare::cord_buf_bytes_iterator &it, H2FrameHead *frame_head) {
             uint8_t length_buf[3];
             size_t n = it.copy_and_forward(length_buf, sizeof(length_buf));
             if (n < 3) {
@@ -488,7 +488,7 @@ DECLARE_bool(usercode_in_pthread);
         }
 
         ParseResult H2Context::Consume(
-                flare::io::cord_buf_bytes_iterator &it, Socket *socket) {
+                flare::cord_buf_bytes_iterator &it, Socket *socket) {
             if (_conn_state == H2_CONNECTION_UNINITIALIZED) {
                 if (is_server_side()) {
                     // Wait for the client connection preface prefix
@@ -566,7 +566,7 @@ DECLARE_bool(usercode_in_pthread);
         }
 
         H2ParseResult H2Context::OnHeaders(
-                flare::io::cord_buf_bytes_iterator &it, const H2FrameHead &frame_head) {
+                flare::cord_buf_bytes_iterator &it, const H2FrameHead &frame_head) {
             // HEADERS frames MUST be associated with a stream.  If a HEADERS frame
             // is received whose stream identifier field is 0x0, the recipient MUST
             // respond with a connection error (Section 5.4.1) of type PROTOCOL_ERROR.
@@ -637,13 +637,13 @@ DECLARE_bool(usercode_in_pthread);
         }
 
         H2ParseResult H2StreamContext::OnHeaders(
-                flare::io::cord_buf_bytes_iterator &it, const H2FrameHead &frame_head,
+                flare::cord_buf_bytes_iterator &it, const H2FrameHead &frame_head,
                 uint32_t frag_size, uint8_t pad_length) {
             _parsed_length += FRAME_HEAD_SIZE + frame_head.payload_size;
 #if defined(FLARE_RPC_H2_STREAM_STATE)
             SetState(H2_STREAM_OPEN);
 #endif
-            flare::io::cord_buf_bytes_iterator it2(it, frag_size);
+            flare::cord_buf_bytes_iterator it2(it, frag_size);
             if (ConsumeHeaders(it2) < 0) {
                 LOG(ERROR) << "Invalid header, frag_size=" << frag_size
                            << ", stream_id=" << frame_head.stream_id;
@@ -676,7 +676,7 @@ DECLARE_bool(usercode_in_pthread);
         }
 
         H2ParseResult H2Context::OnContinuation(
-                flare::io::cord_buf_bytes_iterator &it, const H2FrameHead &frame_head) {
+                flare::cord_buf_bytes_iterator &it, const H2FrameHead &frame_head) {
             H2StreamContext *sctx = FindStream(frame_head.stream_id);
             if (sctx == NULL) {
                 if (is_client_side()) {
@@ -695,11 +695,11 @@ DECLARE_bool(usercode_in_pthread);
         }
 
         H2ParseResult H2StreamContext::OnContinuation(
-                flare::io::cord_buf_bytes_iterator &it, const H2FrameHead &frame_head) {
+                flare::cord_buf_bytes_iterator &it, const H2FrameHead &frame_head) {
             _parsed_length += FRAME_HEAD_SIZE + frame_head.payload_size;
             it.append_and_forward(&_remaining_header_fragment, frame_head.payload_size);
             const size_t size = _remaining_header_fragment.size();
-            flare::io::cord_buf_bytes_iterator it2(_remaining_header_fragment);
+            flare::cord_buf_bytes_iterator it2(_remaining_header_fragment);
             if (ConsumeHeaders(it2) < 0) {
                 LOG(ERROR) << "Invalid header: payload_size=" << frame_head.payload_size
                            << ", stream_id=" << frame_head.stream_id;
@@ -720,7 +720,7 @@ DECLARE_bool(usercode_in_pthread);
         }
 
         H2ParseResult H2Context::OnData(
-                flare::io::cord_buf_bytes_iterator &it, const H2FrameHead &frame_head) {
+                flare::cord_buf_bytes_iterator &it, const H2FrameHead &frame_head) {
             uint32_t frag_size = frame_head.payload_size;
             uint8_t pad_length = 0;
             if (frame_head.flags & H2_FLAGS_PADDED) {
@@ -749,10 +749,10 @@ DECLARE_bool(usercode_in_pthread);
         }
 
         H2ParseResult H2StreamContext::OnData(
-                flare::io::cord_buf_bytes_iterator &it, const H2FrameHead &frame_head,
+                flare::cord_buf_bytes_iterator &it, const H2FrameHead &frame_head,
                 uint32_t frag_size, uint8_t pad_length) {
             _parsed_length += FRAME_HEAD_SIZE + frame_head.payload_size;
-            flare::io::cord_buf data;
+            flare::cord_buf data;
             it.append_and_forward(&data, frag_size);
             it.forward(pad_length);
             for (size_t i = 0; i < data.backing_block_num(); ++i) {
@@ -797,7 +797,7 @@ DECLARE_bool(usercode_in_pthread);
         }
 
         H2ParseResult H2Context::OnResetStream(
-                flare::io::cord_buf_bytes_iterator &it, const H2FrameHead &frame_head) {
+                flare::cord_buf_bytes_iterator &it, const H2FrameHead &frame_head) {
             if (frame_head.payload_size != 4) {
                 LOG(ERROR) << "Invalid payload_size=" << frame_head.payload_size;
                 return MakeH2Error(H2_FRAME_SIZE_ERROR);
@@ -864,7 +864,7 @@ DECLARE_bool(usercode_in_pthread);
         }
 
         H2ParseResult H2Context::OnSettings(
-                flare::io::cord_buf_bytes_iterator &it, const H2FrameHead &frame_head) {
+                flare::cord_buf_bytes_iterator &it, const H2FrameHead &frame_head) {
             // SETTINGS frames always apply to a connection, never a single stream.
             // The stream identifier for a SETTINGS frame MUST be zero (0x0).  If an
             // endpoint receives a SETTINGS frame whose stream identifier field is
@@ -934,19 +934,19 @@ DECLARE_bool(usercode_in_pthread);
         }
 
         H2ParseResult H2Context::OnPriority(
-                flare::io::cord_buf_bytes_iterator &, const H2FrameHead &) {
+                flare::cord_buf_bytes_iterator &, const H2FrameHead &) {
             LOG(ERROR) << "Not support PRIORITY frame yet";
             return MakeH2Error(H2_PROTOCOL_ERROR);
         }
 
         H2ParseResult H2Context::OnPushPromise(
-                flare::io::cord_buf_bytes_iterator &, const H2FrameHead &) {
+                flare::cord_buf_bytes_iterator &, const H2FrameHead &) {
             LOG(ERROR) << "Not support PUSH_PROMISE frame yet";
             return MakeH2Error(H2_PROTOCOL_ERROR);
         }
 
         H2ParseResult H2Context::OnPing(
-                flare::io::cord_buf_bytes_iterator &it, const H2FrameHead &frame_head) {
+                flare::cord_buf_bytes_iterator &it, const H2FrameHead &frame_head) {
             if (frame_head.payload_size != 8) {
                 LOG(ERROR) << "Invalid payload_size=" << frame_head.payload_size;
                 return MakeH2Error(H2_FRAME_SIZE_ERROR);
@@ -975,7 +975,7 @@ DECLARE_bool(usercode_in_pthread);
         }
 
         H2ParseResult H2Context::OnGoAway(
-                flare::io::cord_buf_bytes_iterator &it, const H2FrameHead &h) {
+                flare::cord_buf_bytes_iterator &it, const H2FrameHead &h) {
             if (h.payload_size < 8) {
                 LOG(ERROR) << "Invalid payload_size=" << h.payload_size;
                 return MakeH2Error(H2_FRAME_SIZE_ERROR);
@@ -1024,7 +1024,7 @@ DECLARE_bool(usercode_in_pthread);
         }
 
         H2ParseResult H2Context::OnWindowUpdate(
-                flare::io::cord_buf_bytes_iterator &it, const H2FrameHead &frame_head) {
+                flare::cord_buf_bytes_iterator &it, const H2FrameHead &frame_head) {
             if (frame_head.payload_size != 4) {
                 LOG(ERROR) << "Invalid payload_size=" << frame_head.payload_size;
                 return MakeH2Error(H2_FRAME_SIZE_ERROR);
@@ -1119,7 +1119,7 @@ DECLARE_bool(usercode_in_pthread);
             "h2_parse_second", &g_parse_time);
 #endif
 
-        ParseResult ParseH2Message(flare::io::cord_buf *source, Socket *socket,
+        ParseResult ParseH2Message(flare::cord_buf *source, Socket *socket,
                                    bool read_eof, const void *arg) {
 #if defined(FLARE_RPC_PROFILE_H2)
             flare::variable::ScopedTimer<flare::variable::Adder<int64_t> > tm(g_parse_time);
@@ -1138,7 +1138,7 @@ DECLARE_bool(usercode_in_pthread);
                 }
                 socket->initialize_parsing_context(&ctx);
             }
-            flare::io::cord_buf_bytes_iterator it(*source);
+            flare::cord_buf_bytes_iterator it(*source);
             size_t last_bytes_left = it.bytes_left();
             CHECK_EQ(last_bytes_left, source->size());
             while (true) {
@@ -1237,7 +1237,7 @@ DECLARE_bool(usercode_in_pthread);
             return true;
         }
 
-        int H2StreamContext::ConsumeHeaders(flare::io::cord_buf_bytes_iterator &it) {
+        int H2StreamContext::ConsumeHeaders(flare::cord_buf_bytes_iterator &it) {
             HPacker &hpacker = _conn_ctx->hpacker();
             HttpHeader &h = header();
             while (it) {
@@ -1308,9 +1308,9 @@ DECLARE_bool(usercode_in_pthread);
                 }
 
                 if (FLAGS_http_verbose) {
-                    flare::io::cord_buf_builder *vs = this->_vmsgbuilder;
+                    flare::cord_buf_builder *vs = this->_vmsgbuilder;
                     if (vs == NULL) {
-                        vs = new flare::io::cord_buf_builder;
+                        vs = new flare::cord_buf_builder;
                         this->_vmsgbuilder = vs;
                         if (_conn_ctx->is_server_side()) {
                             *vs << "[ H2 REQUEST @" << flare::base::my_ip() << " ]";
@@ -1327,10 +1327,10 @@ DECLARE_bool(usercode_in_pthread);
 
         const CommonStrings *get_common_strings();
 
-        static void PackH2Message(flare::io::cord_buf *out,
-                                  flare::io::cord_buf &headers,
-                                  flare::io::cord_buf &trailer_headers,
-                                  const flare::io::cord_buf &data,
+        static void PackH2Message(flare::cord_buf *out,
+                                  flare::cord_buf &headers,
+                                  flare::cord_buf &trailer_headers,
+                                  const flare::cord_buf &data,
                                   int stream_id,
                                   H2Context *conn_ctx) {
             const H2Settings &remote_settings = conn_ctx->remote_settings();
@@ -1344,7 +1344,7 @@ DECLARE_bool(usercode_in_pthread);
                 headers_head.flags |= H2_FLAGS_END_HEADERS;
                 SerializeFrameHead(headbuf, headers_head);
                 out->append(headbuf, sizeof(headbuf));
-                out->append(flare::io::cord_buf::Movable(headers));
+                out->append(flare::cord_buf::Movable(headers));
             } else {
                 headers_head.payload_size = remote_settings.max_frame_size;
                 SerializeFrameHead(headbuf, headers_head);
@@ -1366,7 +1366,7 @@ DECLARE_bool(usercode_in_pthread);
             }
             if (!data.empty()) {
                 H2FrameHead data_head = {0, H2_FRAME_DATA, 0, stream_id};
-                flare::io::cord_buf_bytes_iterator it(data);
+                flare::cord_buf_bytes_iterator it(data);
                 while (it.bytes_left()) {
                     if (it.bytes_left() <= remote_settings.max_frame_size) {
                         data_head.payload_size = it.bytes_left();
@@ -1388,7 +1388,7 @@ DECLARE_bool(usercode_in_pthread);
                 headers_head.flags |= H2_FLAGS_END_HEADERS;
                 SerializeFrameHead(headbuf, headers_head);
                 out->append(headbuf, sizeof(headbuf));
-                out->append(flare::io::cord_buf::Movable(trailer_headers));
+                out->append(flare::cord_buf::Movable(trailer_headers));
             }
             const int64_t conn_wu = conn_ctx->ReleaseDeferredWindowUpdate();
             if (conn_wu > 0) {
@@ -1517,7 +1517,7 @@ DECLARE_bool(usercode_in_pthread);
 #endif
 
         flare::base::flare_status
-        H2UnsentRequest::AppendAndDestroySelf(flare::io::cord_buf *out, Socket *socket) {
+        H2UnsentRequest::AppendAndDestroySelf(flare::cord_buf *out, Socket *socket) {
 #if defined(FLARE_RPC_PROFILE_H2)
             flare::variable::ScopedTimer<flare::variable::Adder<int64_t> > tm(g_append_request_time);
 #endif
@@ -1591,7 +1591,7 @@ DECLARE_bool(usercode_in_pthread);
             _sctx.release();
 
             HPacker &hpacker = ctx->hpacker();
-            flare::io::cord_buf_appender appender;
+            flare::cord_buf_appender appender;
             HPackOptions options;
             options.encode_name = FLAGS_h2_hpack_encode_name;
             options.encode_value = FLAGS_h2_hpack_encode_value;
@@ -1606,9 +1606,9 @@ DECLARE_bool(usercode_in_pthread);
                     hpacker.Encode(&appender, header, options);
                 }
             }
-            flare::io::cord_buf frag;
+            flare::cord_buf frag;
             appender.move_to(frag);
-            flare::io::cord_buf dummy_buf;
+            flare::cord_buf dummy_buf;
             PackH2Message(out, frag, dummy_buf, _cntl->request_attachment(), _stream_id, ctx);
             return flare::base::flare_status::OK();
         }
@@ -1649,11 +1649,11 @@ DECLARE_bool(usercode_in_pthread);
                     os << "> " << it->first << " = " << it->second << '\n';
                 }
             }
-            const flare::io::cord_buf *body = &_cntl->request_attachment();
+            const flare::cord_buf *body = &_cntl->request_attachment();
             if (!body->empty()) {
                 os << "> \n";
             }
-            os << flare::io::to_printable(*body, FLAGS_http_verbose_max_body_length);
+            os << flare::to_printable(*body, FLAGS_http_verbose_max_body_length);
 
         }
 
@@ -1703,7 +1703,7 @@ DECLARE_bool(usercode_in_pthread);
 #endif
 
         flare::base::flare_status
-        H2UnsentResponse::AppendAndDestroySelf(flare::io::cord_buf *out, Socket *socket) {
+        H2UnsentResponse::AppendAndDestroySelf(flare::cord_buf *out, Socket *socket) {
 #if defined(FLARE_RPC_PROFILE_H2)
             flare::variable::ScopedTimer<flare::variable::Adder<int64_t> > tm(g_append_response_time);
 #endif
@@ -1729,7 +1729,7 @@ DECLARE_bool(usercode_in_pthread);
             }
 
             HPacker &hpacker = ctx->hpacker();
-            flare::io::cord_buf_appender appender;
+            flare::cord_buf_appender appender;
             HPackOptions options;
             options.encode_name = FLAGS_h2_hpack_encode_name;
             options.encode_value = FLAGS_h2_hpack_encode_value;
@@ -1744,10 +1744,10 @@ DECLARE_bool(usercode_in_pthread);
                     hpacker.Encode(&appender, header, options);
                 }
             }
-            flare::io::cord_buf frag;
+            flare::cord_buf frag;
             appender.move_to(frag);
 
-            flare::io::cord_buf trailer_frag;
+            flare::cord_buf trailer_frag;
             if (_is_grpc) {
                 HPacker::Header status_header("grpc-status",
                                               flare::base::string_printf("%d", _grpc_status));
@@ -1792,15 +1792,15 @@ DECLARE_bool(usercode_in_pthread);
             if (!_data.empty()) {
                 os << "> \n";
             }
-            os << flare::io::to_printable(_data, FLAGS_http_verbose_max_body_length);
+            os << flare::to_printable(_data, FLAGS_http_verbose_max_body_length);
         }
 
-        void PackH2Request(flare::io::cord_buf *,
+        void PackH2Request(flare::cord_buf *,
                            SocketMessage **user_message,
                            uint64_t correlation_id,
                            const google::protobuf::MethodDescriptor *,
                            Controller *cntl,
-                           const flare::io::cord_buf &,
+                           const flare::cord_buf &,
                            const Authenticator *auth) {
             ControllerPrivateAccessor accessor(cntl);
 

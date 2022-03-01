@@ -26,7 +26,7 @@ namespace flare::rpc {
 namespace policy {
 
 // Parse redis response.
-ParseResult ParseRedisMessage(flare::io::cord_buf* source, Socket *socket, bool read_eof,
+ParseResult ParseRedisMessage(flare::cord_buf* source, Socket *socket, bool read_eof,
                               const void *arg);
 
 // Actions to a redis response.
@@ -40,17 +40,17 @@ void ProcessRedisResponse(InputMessageBase* msg);
 void ProcessRedisRequest(InputMessageBase* msg);
 
 // Serialize a redis request.
-void SerializeRedisRequest(flare::io::cord_buf* buf,
+void SerializeRedisRequest(flare::cord_buf* buf,
                            Controller* cntl,
                            const google::protobuf::Message* request);
 
 // Pack `request' to `method' into `buf'.
-void PackRedisRequest(flare::io::cord_buf* buf,
+void PackRedisRequest(flare::cord_buf* buf,
                       SocketMessage**,
                       uint64_t correlation_id,
                       const google::protobuf::MethodDescriptor* method,
                       Controller* controller,
-                      const flare::io::cord_buf& request,
+                      const flare::cord_buf& request,
                       const Authenticator* auth);
 
 const std::string& GetRedisMethodName(

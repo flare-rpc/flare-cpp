@@ -46,7 +46,7 @@ DECLARE_bool(rpc_dump);
 
 class SampledRequest : public flare::variable::Collected {
 public:
-    flare::io::cord_buf request;
+    flare::cord_buf request;
     RpcDumpMeta meta;
 
     // Implement methods of Sampled.
@@ -89,9 +89,9 @@ public:
 private:
     // Parse on request from the buf. Set `format_error' to true when
     // the buf does not match the format.
-    static SampledRequest* Pop(flare::io::cord_buf& buf, bool* format_error);
+    static SampledRequest* Pop(flare::cord_buf& buf, bool* format_error);
     
-    flare::io::IOPortal _cur_buf;
+    flare::IOPortal _cur_buf;
     int _cur_fd;
     flare::filesystem::directory_iterator _enum;
     std::string _dir;

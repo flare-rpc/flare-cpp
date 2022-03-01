@@ -19,7 +19,7 @@
 #ifndef FLARE_RPC_INPUT_MESSENGER_H_
 #define FLARE_RPC_INPUT_MESSENGER_H_
 
-#include "flare/io/cord_buf.h"                    // flare::io::cord_buf
+#include "flare/io/cord_buf.h"                    // flare::cord_buf
 #include "flare/rpc/socket.h"              // SocketId, SocketUser
 #include "flare/rpc/parse_result.h"        // ParseResult
 #include "flare/rpc/input_message_base.h"  // InputMessageBase
@@ -41,7 +41,7 @@ struct InputMessageHandler {
     //     from `source' before returning.
     //  MakeMessage(InputMessageBase*):
     //     The message is parsed successfully and cut from `source'.
-    typedef ParseResult (*Parse)(flare::io::cord_buf* source, Socket *socket,
+    typedef ParseResult (*Parse)(flare::cord_buf* source, Socket *socket,
                                  bool read_eof, const void *arg);
     Parse parse;
     

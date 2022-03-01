@@ -79,14 +79,14 @@ namespace flare::rpc {
         LOG(WARNING) << "You're not supposed to parse a MemcacheRequest";
 
         // simple approach just making it work.
-        flare::io::cord_buf tmp;
+        flare::cord_buf tmp;
         const void *data = NULL;
         int size = 0;
         while (input->GetDirectBufferPointer(&data, &size)) {
             tmp.append(data, size);
             input->Skip(size);
         }
-        const flare::io::cord_buf saved = tmp;
+        const flare::cord_buf saved = tmp;
         int count = 0;
         for (; !tmp.empty(); ++count) {
             char aux_buf[sizeof(policy::MemcacheRequestHeader)];
@@ -114,7 +114,7 @@ namespace flare::rpc {
         LOG(WARNING) << "You're not supposed to serialize a MemcacheRequest";
 
         // simple approach just making it work.
-        flare::io::cord_buf_as_zero_copy_input_stream wrapper(_buf);
+        flare::cord_buf_as_zero_copy_input_stream wrapper(_buf);
         const void *data = NULL;
         int size = 0;
         while (wrapper.Next(&data, &size)) {
@@ -244,7 +244,7 @@ namespace flare::rpc {
         LOG(WARNING) << "You're not supposed to serialize a MemcacheResponse";
 
         // simple approach just making it work.
-        flare::io::cord_buf_as_zero_copy_input_stream wrapper(_buf);
+        flare::cord_buf_as_zero_copy_input_stream wrapper(_buf);
         const void *data = NULL;
         int size = 0;
         while (wrapper.Next(&data, &size)) {
@@ -430,7 +430,7 @@ namespace flare::rpc {
 //   +---------------+---------------+---------------+---------------+
 //   Total 4 bytes
     bool MemcacheResponse::PopGet(
-            flare::io::cord_buf *value, uint32_t *flags, uint64_t *cas_value) {
+            flare::cord_buf *value, uint32_t *flags, uint64_t *cas_value) {
         const size_t n = _buf.size();
         policy::MemcacheResponseHeader header;
         if (n < sizeof(header)) {
@@ -496,7 +496,7 @@ namespace flare::rpc {
 
     bool MemcacheResponse::PopGet(
             std::string *value, uint32_t *flags, uint64_t *cas_value) {
-        flare::io::cord_buf tmp;
+        flare::cord_buf tmp;
         if (PopGet(&tmp, flags, cas_value)) {
             tmp.copy_to(value);
             return true;

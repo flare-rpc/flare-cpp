@@ -186,7 +186,7 @@ public:
     MyMessage(const char* str, size_t len, int* called = NULL)
         : _str(str), _len(len), _called(called) {}
 private:
-    flare::base::flare_status AppendAndDestroySelf(flare::io::cord_buf* out_buf, flare::rpc::Socket*) {
+    flare::base::flare_status AppendAndDestroySelf(flare::cord_buf* out_buf, flare::rpc::Socket*) {
         out_buf->append(_str, _len);
         if (_called) {
             *_called = g_called_seq.fetch_add(1, std::memory_order_relaxed);
@@ -203,7 +203,7 @@ class MyErrorMessage : public flare::rpc::SocketMessage {
 public:
     explicit MyErrorMessage(const flare::base::flare_status& st) : _status(st) {}
 private:
-    flare::base::flare_status AppendAndDestroySelf(flare::io::cord_buf*, flare::rpc::Socket*) {
+    flare::base::flare_status AppendAndDestroySelf(flare::cord_buf*, flare::rpc::Socket*) {
         return _status;
     };
     flare::base::flare_status _status;
@@ -272,7 +272,7 @@ TEST_F(SocketTest, single_threaded_write) {
                     ASSERT_LT(seq[j-1], seq[j]) << "j=" << j;
                 }
             } else {
-                flare::io::cord_buf src;
+                flare::cord_buf src;
                 src.append(buf);
                 ASSERT_EQ(len, src.length());
                 ASSERT_EQ(0, s->Write(&src));
@@ -291,7 +291,7 @@ TEST_F(SocketTest, single_threaded_write) {
 void EchoProcessHuluRequest(flare::rpc::InputMessageBase* msg_base) {
     flare::rpc::DestroyingPtr<flare::rpc::policy::MostCommonMessage> msg(
         static_cast<flare::rpc::policy::MostCommonMessage*>(msg_base));
-    flare::io::cord_buf buf;
+    flare::cord_buf buf;
     buf.append(msg->meta);
     buf.append(msg->payload);
     ASSERT_EQ(0, msg->socket()->Write(&buf));
@@ -369,7 +369,7 @@ TEST_F(SocketTest, single_threaded_connect_and_write) {
                     new MyMessage(buf, 12 + meta_len + len, &called));
                 ASSERT_EQ(0, s->Write(msg));
             } else {
-                flare::io::cord_buf src;
+                flare::cord_buf src;
                 src.append(buf, 12 + meta_len + len);
                 ASSERT_EQ(12 + meta_len + len, src.length());
                 ASSERT_EQ(0, s->Write(&src));
@@ -433,7 +433,7 @@ void* FailedWriter(void* void_arg) {
         EXPECT_EQ(0, fiber_token_create(&id, NULL, NULL));
         snprintf(buf, sizeof(buf), "%0" FLARE_SYMBOLSTR(NUMBER_WIDTH) "lu",
                  i + arg->offset);
-        flare::io::cord_buf src;
+        flare::cord_buf src;
         src.append(buf);
         flare::rpc::Socket::WriteOptions wopt;
         wopt.id_wait = id;
@@ -515,7 +515,7 @@ TEST_F(SocketTest, not_health_check_when_nref_hits_0) {
         // HULU uses host byte order directly...
         *(uint32_t*)(buf + 4) = len + meta_len;
         *(uint32_t*)(buf + 8) = meta_len;
-        flare::io::cord_buf src;
+        flare::cord_buf src;
         src.append(buf, 12 + meta_len + len);
         ASSERT_EQ(12 + meta_len + len, src.length());
 #ifdef CONNECT_IN_KEEPWRITE
@@ -669,7 +669,7 @@ TEST_F(SocketTest, health_check) {
     const bool use_my_message = (flare::base::fast_rand_less_than(2) == 0);
     flare::rpc::SocketMessagePtr<MyMessage> msg;
     int appended_msg = 0;
-    flare::io::cord_buf src;
+    flare::cord_buf src;
     if (use_my_message) {
         LOG(INFO) << "Use MyMessage";
         msg.reset(new MyMessage(buf, 12 + meta_len + len, &appended_msg));
@@ -789,7 +789,7 @@ void* Writer(void* void_arg) {
     for (size_t i = 0; i < arg->times; ++i) {
         snprintf(buf, sizeof(buf), "%0" FLARE_SYMBOLSTR(NUMBER_WIDTH) "lu",
                  i + arg->offset);
-        flare::io::cord_buf src;
+        flare::cord_buf src;
         src.append(buf);
         if (sock->Write(&src) != 0) {
             if (errno == flare::rpc::EOVERCROWDED) {
@@ -847,7 +847,7 @@ TEST_F(SocketTest, multi_threaded_write) {
             flare::this_fiber::fiber_sleep_for(100000);
         }
         
-        flare::io::IOPortal dest;
+        flare::IOPortal dest;
         const int64_t start_time = flare::base::gettimeofday_us();
         for (;;) {
             ssize_t nr = dest.append_from_file_descriptor(fds[0], 32768);
@@ -911,7 +911,7 @@ void* FastWriter(void* void_arg) {
     int64_t nretry = 0;
     size_t c = 0;
     for (; c < arg->times; ++c) {
-        flare::io::cord_buf src;
+        flare::cord_buf src;
         src.append(buf, 16);
         if (sock->Write(&src) != 0) {
             if (errno == flare::rpc::EOVERCROWDED) {

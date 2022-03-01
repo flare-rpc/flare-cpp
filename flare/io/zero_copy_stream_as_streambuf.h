@@ -23,7 +23,7 @@
 #include <streambuf>
 #include <google/protobuf/io/zero_copy_stream.h>
 
-namespace flare::io {
+namespace flare {
 
 // Wrap a ZeroCopyOutputStream into std::streambuf. Notice that before 
 // destruction or shrink(), BackUp() of the stream are not called. In another
@@ -52,6 +52,6 @@ namespace flare::io {
         google::protobuf::io::ZeroCopyOutputStream *_zero_copy_stream;
     };
 
-}  // namespace flare::io
+}  // namespace flare
 
 #endif  // FLARE_IO_ZERO_COPY_STREAM_AS_STREAMBUF_H_

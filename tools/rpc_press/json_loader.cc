@@ -42,7 +42,7 @@ public:
         _file_buf.append(jsons);
     }
 
-    bool get_next_json(flare::io::cord_buf* json1);
+    bool get_next_json(flare::cord_buf* json1);
     bool read_some();
 
 private:
@@ -50,7 +50,7 @@ private:
     int _brace_depth;
     bool _quoted; // quoted by " or '
     char _quote_char;
-    flare::io::IOPortal _file_buf;
+    flare::IOPortal _file_buf;
 };
 
 // Load data from the file.
@@ -73,8 +73,8 @@ bool JsonLoader::Reader::read_some() {
 }
 
 // Ignore json only with spaces and newline
-static bool possibly_valid_json(const flare::io::cord_buf& json) {
-    flare::io::cord_buf_as_zero_copy_input_stream it(json);
+static bool possibly_valid_json(const flare::cord_buf& json) {
+    flare::cord_buf_as_zero_copy_input_stream it(json);
     const void* data = NULL;
     int size = 0;
     int total_size = 0;
@@ -90,7 +90,7 @@ static bool possibly_valid_json(const flare::io::cord_buf& json) {
 }
 
 // Separate jsons with closed braces.
-bool JsonLoader::Reader::get_next_json(flare::io::cord_buf* json1) {
+bool JsonLoader::Reader::get_next_json(flare::cord_buf* json1) {
     if (_file_buf.empty()) {
         if (!read_some()) {
             return false;
@@ -98,7 +98,7 @@ bool JsonLoader::Reader::get_next_json(flare::io::cord_buf* json1) {
     }
     json1->clear();
     while (1) {
-        flare::io::cord_buf_as_zero_copy_input_stream it(_file_buf);
+        flare::cord_buf_as_zero_copy_input_stream it(_file_buf);
         const void* data = NULL;
         int size = 0;
         int total_size = 0;
@@ -195,13 +195,13 @@ void JsonLoader::load_messages(
     JsonLoader::Reader* ctx,
     std::deque<google::protobuf::Message*>* out_msgs) {
     out_msgs->clear();
-    flare::io::cord_buf request_json;
+    flare::cord_buf request_json;
     while (ctx->get_next_json(&request_json)) {
         VLOG(1) << "Load " << out_msgs->size() + 1 << "-th json=`"
                 << request_json << '\'';
         std::string error;
         google::protobuf::Message* request = _request_prototype->New();
-        flare::io::cord_buf_as_zero_copy_input_stream wrapper(request_json);
+        flare::cord_buf_as_zero_copy_input_stream wrapper(request_json);
         if (!json2pb::JsonToProtoMessage(&wrapper, request, &error)) {
             LOG(WARNING) << "Fail to convert to pb: " << error << ", json=`"
                          << request_json << '\'';

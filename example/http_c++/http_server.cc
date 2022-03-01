@@ -55,7 +55,7 @@ namespace example {
                     static_cast<flare::rpc::Controller *>(cntl_base);
             // Fill response.
             cntl->http_response().set_content_type("text/plain");
-            flare::io::cord_buf_builder os;
+            flare::cord_buf_builder os;
             os << "queries:";
             for (flare::rpc::URI::QueryIterator it = cntl->http_request().uri().QueryBegin();
                  it != cntl->http_request().uri().QueryEnd(); ++it) {

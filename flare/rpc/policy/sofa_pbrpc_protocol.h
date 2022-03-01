@@ -27,7 +27,7 @@ namespace flare::rpc {
 namespace policy {
 
 // Parse binary format of sofa-pbrpc.
-ParseResult ParseSofaMessage(flare::io::cord_buf* source, Socket *socket, bool read_eof, const void *arg);
+ParseResult ParseSofaMessage(flare::cord_buf* source, Socket *socket, bool read_eof, const void *arg);
 
 // Actions to a (client) request in sofa-pbrpc format.
 void ProcessSofaRequest(InputMessageBase* msg);
@@ -39,12 +39,12 @@ void ProcessSofaResponse(InputMessageBase* msg);
 bool VerifySofaRequest(const InputMessageBase* msg);
 
 // Pack `request' to `method' into `buf'.
-void PackSofaRequest(flare::io::cord_buf* buf,
+void PackSofaRequest(flare::cord_buf* buf,
                      SocketMessage**,
                      uint64_t correlation_id,
                      const google::protobuf::MethodDescriptor* method,
                      Controller* controller,
-                     const flare::io::cord_buf& request,
+                     const flare::cord_buf& request,
                      const Authenticator* auth);
 
 }  // namespace policy

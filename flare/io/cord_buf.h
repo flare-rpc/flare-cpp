@@ -45,7 +45,7 @@ struct const_iovec {
 struct ssl_st;
 }
 
-namespace flare::io {
+namespace flare {
 
 // cord_buf is a non-continuous buffer that can be cut and combined w/o copying
 // payload. It can be read from or flushed into file descriptors as well.
@@ -294,7 +294,7 @@ namespace flare::io {
         // Returns bytes copied.
         size_t append_to(cord_buf *buf, size_t n = (size_t) -1L, size_t pos = 0) const;
 
-        // Explicitly declare this overload as error to avoid copy_to(flare::io::cord_buf*)
+        // Explicitly declare this overload as error to avoid copy_to(flare::cord_buf*)
         // from being interpreted as copy_to(void*) by the compiler (which causes
         // undefined behavior).
         size_t copy_to(cord_buf *buf, size_t n = (size_t) -1L, size_t pos = 0) const
@@ -446,17 +446,17 @@ namespace flare::io {
 
     std::ostream &operator<<(std::ostream &, const cord_buf &buf);
 
-    inline bool operator==(const flare::io::cord_buf &b, const std::string_view &s) { return b.equals(s); }
+    inline bool operator==(const flare::cord_buf &b, const std::string_view &s) { return b.equals(s); }
 
-    inline bool operator==(const std::string_view &s, const flare::io::cord_buf &b) { return b.equals(s); }
+    inline bool operator==(const std::string_view &s, const flare::cord_buf &b) { return b.equals(s); }
 
-    inline bool operator!=(const flare::io::cord_buf &b, const std::string_view &s) { return !b.equals(s); }
+    inline bool operator!=(const flare::cord_buf &b, const std::string_view &s) { return !b.equals(s); }
 
-    inline bool operator!=(const std::string_view &s, const flare::io::cord_buf &b) { return !b.equals(s); }
+    inline bool operator!=(const std::string_view &s, const flare::cord_buf &b) { return !b.equals(s); }
 
-    inline bool operator==(const flare::io::cord_buf &b1, const flare::io::cord_buf &b2) { return b1.equals(b2); }
+    inline bool operator==(const flare::cord_buf &b1, const flare::cord_buf &b2) { return b1.equals(b2); }
 
-    inline bool operator!=(const flare::io::cord_buf &b1, const flare::io::cord_buf &b2) { return !b1.equals(b2); }
+    inline bool operator!=(const flare::cord_buf &b1, const flare::cord_buf &b2) { return !b1.equals(b2); }
 
     // IOPortal is a subclass of cord_buf that can read from file descriptors.
     // Typically used as the buffer to store bytes from sockets.
@@ -513,13 +513,13 @@ namespace flare::io {
     // The cut cord_buf can be appended during cutting.
     class cord_buf_cutter {
     public:
-        explicit cord_buf_cutter(flare::io::cord_buf *buf);
+        explicit cord_buf_cutter(flare::cord_buf *buf);
 
         ~cord_buf_cutter();
 
         // Cut off n bytes and APPEND to `out'
         // Returns bytes cut.
-        size_t cutn(flare::io::cord_buf *out, size_t n);
+        size_t cutn(flare::cord_buf *out, size_t n);
 
         size_t cutn(std::string *out, size_t n);
 
@@ -624,7 +624,7 @@ namespace flare::io {
     // Wrap cord_buf into input of snappy compresson.
     class cord_buf_as_snappy_source : public flare::snappy::Source {
     public:
-        explicit cord_buf_as_snappy_source(const flare::io::cord_buf &buf)
+        explicit cord_buf_as_snappy_source(const flare::cord_buf &buf)
                 : _buf(&buf), _stream(buf) {}
 
         virtual ~cord_buf_as_snappy_source() {}
@@ -640,14 +640,14 @@ namespace flare::io {
         void Skip(size_t n) override;
 
     private:
-        const flare::io::cord_buf *_buf;
-        flare::io::cord_buf_as_zero_copy_input_stream _stream;
+        const flare::cord_buf *_buf;
+        flare::cord_buf_as_zero_copy_input_stream _stream;
     };
 
 // Wrap cord_buf into output of snappy compression.
     class cord_buf_as_snappy_sink : public flare::snappy::Sink {
     public:
-        explicit cord_buf_as_snappy_sink(flare::io::cord_buf &buf);
+        explicit cord_buf_as_snappy_sink(flare::cord_buf &buf);
 
         virtual ~cord_buf_as_snappy_sink() {}
 
@@ -660,8 +660,8 @@ namespace flare::io {
     private:
         char *_cur_buf;
         int _cur_len;
-        flare::io::cord_buf *_buf;
-        flare::io::cord_buf_as_zero_copy_output_stream _buf_stream;
+        flare::cord_buf *_buf;
+        flare::cord_buf_as_zero_copy_output_stream _buf_stream;
     };
 
     // A std::ostream to build cord_buf.
@@ -746,7 +746,7 @@ namespace flare::io {
 // During iteration, the iobuf should NOT be changed.
     class cord_buf_bytes_iterator {
     public:
-        explicit cord_buf_bytes_iterator(const flare::io::cord_buf &buf);
+        explicit cord_buf_bytes_iterator(const flare::cord_buf &buf);
 
         // Construct from another iterator.
         cord_buf_bytes_iterator(const cord_buf_bytes_iterator &it);
@@ -775,7 +775,7 @@ namespace flare::io {
 
         // Append at most n bytes into buf, forwarding this iterator. Data are
         // referenced rather than copied.
-        size_t append_and_forward(flare::io::cord_buf *buf, size_t n);
+        size_t append_and_forward(flare::cord_buf *buf, size_t n);
 
         bool forward_one_block(const void **data, size_t *size);
 
@@ -788,14 +788,14 @@ namespace flare::io {
         const char *_block_end;
         uint32_t _block_count;
         uint32_t _bytes_left;
-        const flare::io::cord_buf *_buf;
+        const flare::cord_buf *_buf;
     };
 
-}  // namespace flare::io
+}  // namespace flare
 
 namespace std {
     template<>
-    inline void swap(flare::io::cord_buf &a, flare::io::cord_buf &b) {
+    inline void swap(flare::cord_buf &a, flare::cord_buf &b) {
         return a.swap(b);
     }
 } // namespace std

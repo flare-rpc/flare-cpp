@@ -555,7 +555,7 @@ std::string GetCompleteCommand(const std::vector<std::string_view>& commands) {
 
 TEST_F(RedisTest, command_parser) {
     flare::rpc::RedisCommandParser parser;
-    flare::io::cord_buf buf;
+    flare::cord_buf buf;
     std::vector<std::string_view> command_out;
     flare::memory::Arena arena;
     {
@@ -627,8 +627,8 @@ TEST_F(RedisTest, redis_reply_codec) {
     // status
     {
         flare::rpc::RedisReply r(&arena);
-        flare::io::cord_buf buf;
-        flare::io::cord_buf_appender appender;
+        flare::cord_buf buf;
+        flare::cord_buf_appender appender;
         r.SetStatus("OK");
         ASSERT_TRUE(r.SerializeTo(&appender));
         appender.move_to(buf);
@@ -644,8 +644,8 @@ TEST_F(RedisTest, redis_reply_codec) {
     // error
     {
         flare::rpc::RedisReply r(&arena);
-        flare::io::cord_buf buf;
-        flare::io::cord_buf_appender appender;
+        flare::cord_buf buf;
+        flare::cord_buf_appender appender;
         r.SetError("not exist \'key\'");
         ASSERT_TRUE(r.SerializeTo(&appender));
         appender.move_to(buf);
@@ -660,8 +660,8 @@ TEST_F(RedisTest, redis_reply_codec) {
     // string
     {
         flare::rpc::RedisReply r(&arena);
-        flare::io::cord_buf buf;
-        flare::io::cord_buf_appender appender;
+        flare::cord_buf buf;
+        flare::cord_buf_appender appender;
         r.SetNullString();
         ASSERT_TRUE(r.SerializeTo(&appender));
         appender.move_to(buf);
@@ -699,8 +699,8 @@ TEST_F(RedisTest, redis_reply_codec) {
     // integer
     {
         flare::rpc::RedisReply r(&arena);
-        flare::io::cord_buf buf;
-        flare::io::cord_buf_appender appender;
+        flare::cord_buf buf;
+        flare::cord_buf_appender appender;
         int t = 2;
         int input[] = { -1, 1234567 };
         const char* output[] = { ":-1\r\n", ":1234567\r\n" };
@@ -720,8 +720,8 @@ TEST_F(RedisTest, redis_reply_codec) {
     // array
     {
         flare::rpc::RedisReply r(&arena);
-        flare::io::cord_buf buf;
-        flare::io::cord_buf_appender appender;
+        flare::cord_buf buf;
+        flare::cord_buf_appender appender;
         r.SetArray(3);
         flare::rpc::RedisReply& sub_reply = r[0];
         sub_reply.SetArray(2);

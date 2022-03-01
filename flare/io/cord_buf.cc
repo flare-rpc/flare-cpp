@@ -32,7 +32,8 @@
 #include "flare/io/cord_buf.h"
 #include "flare/base/profile.h"
 
-namespace flare::io {
+namespace flare {
+
     namespace iobuf {
 
         typedef ssize_t (*iov_function)(int fd, const struct iovec *vector,
@@ -1112,7 +1113,7 @@ namespace flare::io {
         if (empty()) {
             swap(movable_other.value());
         } else {
-            flare::io::cord_buf &other = movable_other.value();
+            flare::cord_buf &other = movable_other.value();
             const size_t nref = other._ref_num();
             for (size_t i = 0; i < nref; ++i) {
                 _move_back_ref(other._ref_at(i));
@@ -1473,7 +1474,7 @@ namespace flare::io {
         return std::string_view();
     }
 
-    bool cord_buf::equals(const flare::io::cord_buf &other) const {
+    bool cord_buf::equals(const flare::cord_buf &other) const {
         const size_t sz1 = size();
         if (sz1 != other.size()) {
             return false;
@@ -1705,7 +1706,7 @@ namespace flare::io {
 
 //////////////// cord_buf_cutter ////////////////
 
-    cord_buf_cutter::cord_buf_cutter(flare::io::cord_buf *buf)
+    cord_buf_cutter::cord_buf_cutter(flare::cord_buf *buf)
             : _data(NULL), _data_end(NULL), _block(NULL), _buf(buf) {
     }
 
@@ -1770,7 +1771,7 @@ namespace flare::io {
         return (char *) dst - (char *) saved_dst;
     }
 
-    size_t cord_buf_cutter::cutn(flare::io::cord_buf *out, size_t n) {
+    size_t cord_buf_cutter::cutn(flare::cord_buf *out, size_t n) {
         if (n == 0) {
             return 0;
         }
@@ -2014,7 +2015,7 @@ namespace flare::io {
         _cur_block = NULL;
     }
 
-    cord_buf_as_snappy_sink::cord_buf_as_snappy_sink(flare::io::cord_buf &buf)
+    cord_buf_as_snappy_sink::cord_buf_as_snappy_sink(flare::cord_buf &buf)
             : _cur_buf(NULL), _cur_len(0), _buf(&buf), _buf_stream(&buf) {
     }
 
@@ -2030,7 +2031,7 @@ namespace flare::io {
     }
 
     char *cord_buf_as_snappy_sink::GetAppendBuffer(size_t length, char *scratch) {
-        // TODO: flare::io::cord_buf supports dynamic sized blocks.
+        // TODO: flare::cord_buf supports dynamic sized blocks.
         if (length <= 8000/*just a hint*/) {
             if (_buf_stream.Next(reinterpret_cast<void **>(&_cur_buf), &_cur_len)) {
                 if (_cur_len >= static_cast<int>(length)) {
@@ -2073,7 +2074,7 @@ namespace flare::io {
             : _data(NULL), _data_end(NULL), _zc_stream(&_buf) {
     }
 
-    size_t cord_buf_bytes_iterator::append_and_forward(flare::io::cord_buf *buf, size_t n) {
+    size_t cord_buf_bytes_iterator::append_and_forward(flare::cord_buf *buf, size_t n) {
         size_t nc = 0;
         while (nc < n && _bytes_left != 0) {
             const cord_buf::BlockRef &r = _buf->_ref_at(_block_count - 1);
@@ -2104,8 +2105,8 @@ namespace flare::io {
         return true;
     }
 
-}  // namespace flare::io
+}  // namespace flare
 
 void *fast_memcpy(void *__restrict dest, const void *__restrict src, size_t n) {
-    return flare::io::iobuf::cp(dest, src, n);
+    return flare::iobuf::cp(dest, src, n);
 }

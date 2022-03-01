@@ -41,8 +41,8 @@ static void LogError(const google::protobuf::io::GzipInputStream& gzip) {
     }
 }
 
-bool GzipCompress(const google::protobuf::Message& msg, flare::io::cord_buf* buf) {
-    flare::io::cord_buf_as_zero_copy_output_stream wrapper(buf);
+bool GzipCompress(const google::protobuf::Message& msg, flare::cord_buf* buf) {
+    flare::cord_buf_as_zero_copy_output_stream wrapper(buf);
     google::protobuf::io::GzipOutputStream::Options gzip_opt;
     gzip_opt.format = google::protobuf::io::GzipOutputStream::GZIP;
     google::protobuf::io::GzipOutputStream gzip(&wrapper, gzip_opt);
@@ -53,8 +53,8 @@ bool GzipCompress(const google::protobuf::Message& msg, flare::io::cord_buf* buf
     return gzip.Close();
 }
 
-bool GzipDecompress(const flare::io::cord_buf& data, google::protobuf::Message* msg) {
-    flare::io::cord_buf_as_zero_copy_input_stream wrapper(data);
+bool GzipDecompress(const flare::cord_buf& data, google::protobuf::Message* msg) {
+    flare::cord_buf_as_zero_copy_input_stream wrapper(data);
     google::protobuf::io::GzipInputStream gzip(
             &wrapper, google::protobuf::io::GzipInputStream::GZIP);
     if (!ParsePbFromZeroCopyStream(msg, &gzip)) {
@@ -64,15 +64,15 @@ bool GzipDecompress(const flare::io::cord_buf& data, google::protobuf::Message* 
     return true;
 }
 
-bool GzipCompress(const flare::io::cord_buf& msg, flare::io::cord_buf* buf,
+bool GzipCompress(const flare::cord_buf& msg, flare::cord_buf* buf,
                   const GzipCompressOptions* options_in) {
-    flare::io::cord_buf_as_zero_copy_output_stream wrapper(buf);
+    flare::cord_buf_as_zero_copy_output_stream wrapper(buf);
     google::protobuf::io::GzipOutputStream::Options gzip_opt;
     if (options_in) {
         gzip_opt = *options_in;
     }
     google::protobuf::io::GzipOutputStream out(&wrapper, gzip_opt);
-    flare::io::cord_buf_as_zero_copy_input_stream in(msg);
+    flare::cord_buf_as_zero_copy_input_stream in(msg);
     const void* data_in = NULL;
     int size_in = 0;
     void* data_out = NULL;
@@ -103,11 +103,11 @@ bool GzipCompress(const flare::io::cord_buf& msg, flare::io::cord_buf* buf,
 }
 
 inline bool GzipDecompressBase(
-    const flare::io::cord_buf& data, flare::io::cord_buf* msg,
+    const flare::cord_buf& data, flare::cord_buf* msg,
     google::protobuf::io::GzipInputStream::Format format) {
-    flare::io::cord_buf_as_zero_copy_input_stream wrapper(data);
+    flare::cord_buf_as_zero_copy_input_stream wrapper(data);
     google::protobuf::io::GzipInputStream in(&wrapper, format);
-    flare::io::cord_buf_as_zero_copy_output_stream out(msg);
+    flare::cord_buf_as_zero_copy_output_stream out(msg);
     const void* data_in = NULL;
     int size_in = 0;
     void* data_out = NULL;
@@ -141,27 +141,27 @@ inline bool GzipDecompressBase(
     return true;
 }
 
-bool ZlibCompress(const google::protobuf::Message& res, flare::io::cord_buf* buf) {
-    flare::io::cord_buf_as_zero_copy_output_stream wrapper(buf);
+bool ZlibCompress(const google::protobuf::Message& res, flare::cord_buf* buf) {
+    flare::cord_buf_as_zero_copy_output_stream wrapper(buf);
     google::protobuf::io::GzipOutputStream::Options zlib_opt;
     zlib_opt.format = google::protobuf::io::GzipOutputStream::ZLIB;
     google::protobuf::io::GzipOutputStream zlib(&wrapper, zlib_opt);
     return res.SerializeToZeroCopyStream(&zlib) && zlib.Close();
 }
 
-bool ZlibDecompress(const flare::io::cord_buf& data, google::protobuf::Message* req) {
-    flare::io::cord_buf_as_zero_copy_input_stream wrapper(data);
+bool ZlibDecompress(const flare::cord_buf& data, google::protobuf::Message* req) {
+    flare::cord_buf_as_zero_copy_input_stream wrapper(data);
     google::protobuf::io::GzipInputStream zlib(
         &wrapper, google::protobuf::io::GzipInputStream::ZLIB);
     return ParsePbFromZeroCopyStream(req, &zlib);
 }
 
-bool GzipDecompress(const flare::io::cord_buf& data, flare::io::cord_buf* msg) {
+bool GzipDecompress(const flare::cord_buf& data, flare::cord_buf* msg) {
     return GzipDecompressBase(
         data, msg, google::protobuf::io::GzipInputStream::GZIP);
 }
 
-bool ZlibDecompress(const flare::io::cord_buf& data, flare::io::cord_buf* msg) {
+bool ZlibDecompress(const flare::cord_buf& data, flare::cord_buf* msg) {
     return GzipDecompressBase(
         data, msg, google::protobuf::io::GzipInputStream::ZLIB);
 }

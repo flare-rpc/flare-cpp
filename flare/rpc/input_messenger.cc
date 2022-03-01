@@ -170,7 +170,7 @@ void InputMessenger::OnNewMessages(Socket* m) {
     // - If the socket has only one message, the message will be parsed and
     //   processed in this fiber. nova-pbrpc and http works in this way.
     // - If the socket has several messages, all messages will be parsed (
-    //   meaning cutting from flare::io::cord_buf. serializing from protobuf is part of
+    //   meaning cutting from flare::cord_buf. serializing from protobuf is part of
     //   "process") in this fiber. All messages except the last one will be
     //   processed in separate fibers. To minimize the overhead, scheduling
     //   is batched(notice the FIBER_NOSIGNAL and fiber_flush).
@@ -242,7 +242,7 @@ void InputMessenger::OnNewMessages(Socket* m) {
                 } else if (pr.error() == PARSE_ERROR_TRY_OTHERS) {
                     LOG(WARNING)
                         << "Close " << *m << " due to unknown message: "
-                        << flare::io::to_printable(m->_read_buf);
+                        << flare::to_printable(m->_read_buf);
                     m->SetFailed(EINVAL, "Close %s due to unknown message",
                                  m->description().c_str());
                     return;

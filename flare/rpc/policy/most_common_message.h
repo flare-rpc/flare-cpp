@@ -31,8 +31,8 @@ namespace policy {
 // you have to new the messages or use a separate ObjectPool (which is likely
 // to waste more memory)
 struct FLARE_CACHELINE_ALIGNMENT MostCommonMessage : public InputMessageBase {
-    flare::io::cord_buf meta;
-    flare::io::cord_buf payload;
+    flare::cord_buf meta;
+    flare::cord_buf payload;
     PipelinedInfo pi;
 
     inline static MostCommonMessage* Get() {

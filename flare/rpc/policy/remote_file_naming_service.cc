@@ -42,11 +42,11 @@ namespace flare::rpc {
                                    std::string_view *server_addr,
                                    std::string_view *tag);
 
-        static bool CutLineFromCordBuf(flare::io::cord_buf *source, std::string *line_out) {
+        static bool CutLineFromCordBuf(flare::cord_buf *source, std::string *line_out) {
             if (source->empty()) {
                 return false;
             }
-            flare::io::cord_buf line_data;
+            flare::cord_buf line_data;
             if (source->cut_until(&line_data, "\n") != 0) {
                 source->cutn(line_out, source->size());
                 return true;
