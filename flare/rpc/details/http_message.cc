@@ -26,7 +26,7 @@
 #include "flare/base/scoped_lock.h"
 #include "flare/base/endpoint.h"
 #include "flare/base/base64.h"
-#include "flare/fiber/internal/fiber.h"                    // flare::this_fiber::fiber_sleep_for
+#include "flare/fiber/internal/fiber.h"                    // flare::fiber_sleep_for
 #include "flare/rpc/log.h"
 #include "flare/rpc/reloadable_flags.h"
 #include "flare/rpc/details/http_message.h"
@@ -262,7 +262,7 @@ int HttpMessage::OnBody(const char *at, const size_t length) {
             return 0;
         }
         mu.unlock();
-        flare::this_fiber::fiber_sleep_for(10000/*10ms*/);
+        flare::fiber_sleep_for(10000/*10ms*/);
         mu.lock();
         r = _body_reader;
     }

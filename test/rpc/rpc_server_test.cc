@@ -107,7 +107,7 @@ public:
         if (request->sleep_us() > 0) {
             LOG(INFO) << "Sleep " << request->sleep_us() << " us, protocol="
                       << cntl->request_protocol(); 
-            flare::this_fiber::fiber_sleep_for(request->sleep_us());
+            flare::fiber_sleep_for(request->sleep_us());
         } else {
             LOG(INFO) << "No sleep, protocol=" << cntl->request_protocol();
         }
@@ -1086,7 +1086,7 @@ TEST_F(ServerTest, logoff_and_multiple_start) {
             flare::rpc::NewCallback(SendSleepRPC, ep, 100, true);
         EXPECT_EQ(0, fiber_start_background(&tid, NULL, RunClosure, thrd_func));
         while (echo_svc.count.load(std::memory_order_relaxed) == old_count) {
-            flare::this_fiber::fiber_sleep_for(1000);
+            flare::fiber_sleep_for(1000);
         }
         timer.start();
         ASSERT_EQ(0, server.Stop(-1));
@@ -1106,7 +1106,7 @@ TEST_F(ServerTest, logoff_and_multiple_start) {
             flare::rpc::NewCallback(SendSleepRPC, ep, 100, true);
         EXPECT_EQ(0, fiber_start_background(&tid, NULL, RunClosure, thrd_func));
         while (echo_svc.count.load(std::memory_order_relaxed) == old_count) {
-            flare::this_fiber::fiber_sleep_for(1000);
+            flare::fiber_sleep_for(1000);
         }
         
         timer.start();
@@ -1129,7 +1129,7 @@ TEST_F(ServerTest, logoff_and_multiple_start) {
             flare::rpc::NewCallback(SendSleepRPC, ep, 100, true);
         EXPECT_EQ(0, fiber_start_background(&tid, NULL, RunClosure, thrd_func));
         while (echo_svc.count.load(std::memory_order_relaxed) == old_count) {
-            flare::this_fiber::fiber_sleep_for(1000);
+            flare::fiber_sleep_for(1000);
         }
 
         timer.start();
@@ -1152,7 +1152,7 @@ TEST_F(ServerTest, logoff_and_multiple_start) {
             flare::rpc::NewCallback(SendSleepRPC, ep, 100, true);
         EXPECT_EQ(0, fiber_start_background(&tid, NULL, RunClosure, thrd_func));
         while (echo_svc.count.load(std::memory_order_relaxed) == old_count) {
-            flare::this_fiber::fiber_sleep_for(1000);
+            flare::fiber_sleep_for(1000);
         }
         timer.start();
         ASSERT_EQ(0, server.Stop(1000));
@@ -1351,7 +1351,7 @@ TEST_F(ServerTest, max_concurrency) {
     req.set_sleep_us(100000);
     stub.Echo(&cntl2, &req, &res, flare::rpc::DoNothing());
 
-    flare::this_fiber::fiber_sleep_for(20000);
+    flare::fiber_sleep_for(20000);
     LOG(INFO) << "Send other requests";
     
     flare::rpc::Controller cntl3;

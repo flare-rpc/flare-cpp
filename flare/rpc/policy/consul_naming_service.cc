@@ -231,7 +231,7 @@ int ConsulNamingService::RunNamingService(const char* service_name,
                 servers.clear();
                 actions->ResetServers(servers);
             }
-            if (flare::this_fiber::fiber_sleep_for(std::max(FLAGS_consul_retry_interval_ms, 1) * 1000) < 0) {
+            if (flare::fiber_sleep_for(std::max(FLAGS_consul_retry_interval_ms, 1) * 1000) < 0) {
                 if (errno == ESTOP) {
                     RPC_VLOG << "Quit NamingServiceThread=" << fiber_self();
                     return 0;

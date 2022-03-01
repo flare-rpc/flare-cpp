@@ -8,7 +8,7 @@
 #include "flare/fiber/internal/fiber_cond.h"
 #include "flare/fiber/fiber_mutex.h"
 
-namespace flare::fiber {
+namespace flare {
     class fiber_cond {
         FLARE_DISALLOW_COPY_AND_ASSIGN(fiber_cond);
 
@@ -25,7 +25,7 @@ namespace flare::fiber {
 
         native_handler_type native_handler() { return &_cond; }
 
-        void wait(std::unique_lock<flare::fiber::fiber_mutex> &lock) {
+        void wait(std::unique_lock<flare::fiber_mutex> &lock) {
             fiber_cond_wait(&_cond, lock.mutex()->native_handler());
         }
 
@@ -35,7 +35,7 @@ namespace flare::fiber {
 
         // Unlike std::condition_variable, we return ETIMEDOUT when time expires
         // rather than std::timeout
-        int wait_for(std::unique_lock<flare::fiber::fiber_mutex> &lock,
+        int wait_for(std::unique_lock<flare::fiber_mutex> &lock,
                      long timeout_us) {
             return wait_until(lock, flare::base::microseconds_from_now(timeout_us));
         }
@@ -45,7 +45,7 @@ namespace flare::fiber {
             return wait_until(lock, flare::base::microseconds_from_now(timeout_us));
         }
 
-        int wait_until(std::unique_lock<flare::fiber::fiber_mutex> &lock,
+        int wait_until(std::unique_lock<flare::fiber_mutex> &lock,
                        timespec duetime) {
             const int rc = fiber_cond_timedwait(
                     &_cond, lock.mutex()->native_handler(), &duetime);
@@ -71,6 +71,6 @@ namespace flare::fiber {
         fiber_cond_t _cond;
     };
 
-}  // namespace flare::fiber
+}  // namespace flare
 
 #endif // FLARE_FIBER_FIBER_COND_H_

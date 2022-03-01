@@ -4,7 +4,7 @@
 #include "flare/memory/resident.h"
 #include "gtest/gtest.h"
 
-namespace flare::memory {
+namespace flare {
 
     struct C {
         C() { ++instances; }

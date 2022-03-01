@@ -11,7 +11,7 @@
 
 using namespace std::literals;
 
-namespace flare::memory {
+namespace flare {
 
     struct RefCounted1 {
         std::atomic<int> ref_count{1};

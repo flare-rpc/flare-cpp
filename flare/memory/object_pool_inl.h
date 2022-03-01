@@ -41,7 +41,7 @@
 #define FLARE_OBJECT_POOL_FREE_ITEM_NUM_SUB1
 #endif
 
-namespace flare::memory {
+namespace flare {
 
     template<typename T, size_t NITEM>
     struct ObjectPoolFreeChunk {
@@ -549,6 +549,6 @@ namespace flare::memory {
 #endif
                 ;
     }
-}  // namespace flare::memory
+}  // namespace flare
 
 #endif  // FLARE_MEMORY_OBJECT_POOL_INL_H_

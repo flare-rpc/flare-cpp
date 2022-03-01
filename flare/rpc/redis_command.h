@@ -51,7 +51,7 @@ public:
     // to `args' and length to `len' if successful. Memory of args are allocated 
     // in `arena'.
     ParseError Consume(flare::cord_buf& buf, std::vector<std::string_view>* args,
-                       flare::memory::Arena* arena);
+                       flare::Arena* arena);
 
 private:
     // Reset parser to the initial state.

@@ -25,12 +25,12 @@ namespace flare::rpc {
 
 // Utility functions to combine and extract SocketId.
 FLARE_FORCE_INLINE SocketId
-MakeSocketId(uint32_t version, flare::memory::ResourceId<Socket> slot) {
+MakeSocketId(uint32_t version, flare::ResourceId<Socket> slot) {
     return SocketId((((uint64_t)version) << 32) | slot.value);
 }
 
-FLARE_FORCE_INLINE flare::memory::ResourceId<Socket> SlotOfSocketId(SocketId sid) {
-    flare::memory::ResourceId<Socket> id = { (sid & 0xFFFFFFFFul) };
+FLARE_FORCE_INLINE flare::ResourceId<Socket> SlotOfSocketId(SocketId sid) {
+    flare::ResourceId<Socket> id = { (sid & 0xFFFFFFFFul) };
     return id;
 }
 
@@ -122,7 +122,7 @@ inline int Socket::Dereference() {
 }
 
 inline int Socket::Address(SocketId id, SocketUniquePtr* ptr) {
-    const flare::memory::ResourceId<Socket> slot = SlotOfSocketId(id);
+    const flare::ResourceId<Socket> slot = SlotOfSocketId(id);
     Socket* const m = address_resource(slot);
     if (__builtin_expect(m != NULL, 1)) {
         // acquire fence makes sure this thread sees latest changes before
@@ -173,7 +173,7 @@ inline void Socket::ReAddress(SocketUniquePtr* ptr) {
 }
 
 inline int Socket::AddressFailedAsWell(SocketId id, SocketUniquePtr* ptr) {
-    const flare::memory::ResourceId<Socket> slot = SlotOfSocketId(id);
+    const flare::ResourceId<Socket> slot = SlotOfSocketId(id);
     Socket* const m = address_resource(slot);
     if (__builtin_expect(m != NULL, 1)) {
         const uint64_t vref1 = m->_versioned_ref.fetch_add(

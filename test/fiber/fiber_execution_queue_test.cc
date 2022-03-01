@@ -23,12 +23,12 @@ namespace {
 
     struct LongIntTask {
         long value;
-        flare::fiber::fiber_latch *event;
+        flare::fiber_latch *event;
 
         LongIntTask(long v)
                 : value(v), event(nullptr) {}
 
-        LongIntTask(long v, flare::fiber::fiber_latch *e)
+        LongIntTask(long v, flare::fiber_latch *e)
                 : value(v), event(e) {}
 
         LongIntTask() : value(0), event(nullptr) {}
@@ -83,7 +83,7 @@ namespace {
         flare::base::stop_watcher timer;
         timer.start();
         int num = 0;
-        flare::fiber::fiber_latch e;
+        flare::fiber_latch e;
         LongIntTask t(num, pa->wait_task_completed ? &e : nullptr);
         if (pa->wait_task_completed) {
             e.reset(1);
@@ -204,7 +204,7 @@ namespace {
                 if (iter->value == -100) {
                     g_suspending = true;
                     while (g_suspending) {
-                        flare::this_fiber::fiber_sleep_for(100);
+                        flare::fiber_sleep_for(100);
                     }
                     g_should_be_urgent = true;
                     if (iter->event) { iter->event->signal(); }

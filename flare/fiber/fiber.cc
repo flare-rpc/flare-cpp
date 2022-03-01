@@ -5,7 +5,7 @@
 #include "flare/fiber/fiber.h"
 #include "flare/fiber/internal/fiber.h"
 
-namespace flare::fiber {
+namespace flare {
     fiber::fiber() : _save_error(0), _fid(INVALID_FIBER_ID), _detached(true) {
 
     }

@@ -24,7 +24,7 @@
 #include "flare/memory/aligned_memory.h"
 #include "flare/base/dynamic_annotations/dynamic_annotations.h"
 
-namespace flare::memory {
+namespace flare {
     namespace internal {
 
         // Our AtomicWord doubles as a spinlock, where a value of
@@ -141,12 +141,12 @@ namespace flare::memory {
         }
 
     private:
-        static flare::memory::aligned_memory<sizeof(Type), FLARE_ALIGN_OF(Type)> buffer_;
+        static flare::aligned_memory<sizeof(Type), FLARE_ALIGN_OF(Type)> buffer_;
         // Signal the object was already deleted, so it is not revived.
         static std::atomic<int32_t> dead_;
     };
 
-    template<typename Type> flare::memory::aligned_memory<sizeof(Type), FLARE_ALIGN_OF(Type)>
+    template<typename Type> flare::aligned_memory<sizeof(Type), FLARE_ALIGN_OF(Type)>
             StaticMemorySingletonTraits<Type>::buffer_;
     template<typename Type> std::atomic<int32_t>
             StaticMemorySingletonTraits<Type>::dead_ = 0;
@@ -240,7 +240,7 @@ namespace flare::memory {
             // The load has acquire memory ordering as the thread which reads the
             // instance_ pointer must acquire visibility over the singleton data.
             intptr_t value = instance_.load(std::memory_order_acquire);
-            if (value != 0 && value != flare::memory::internal::kBeingCreatedMarker) {
+            if (value != 0 && value != flare::internal::kBeingCreatedMarker) {
                 // See the corresponding HAPPENS_BEFORE below.
                 ANNOTATE_HAPPENS_AFTER(&instance_);
                 return reinterpret_cast<Type *>(value);
@@ -248,7 +248,7 @@ namespace flare::memory {
 
             // Object isn't created yet, maybe we will get to create it, let's try...
             intptr_t old = 0;
-            instance_.compare_exchange_weak(old, flare::memory::internal::kBeingCreatedMarker,
+            instance_.compare_exchange_weak(old, flare::internal::kBeingCreatedMarker,
                                             std::memory_order_acquire);
             if (old == 0) {
                 // instance_ was nullptr and is now kBeingCreatedMarker.  Only one thread
@@ -270,7 +270,7 @@ namespace flare::memory {
             }
 
             // We hit a race. Wait for the other thread to complete it.
-            value = flare::memory::internal::WaitForInstance(&instance_);
+            value = flare::internal::WaitForInstance(&instance_);
 
             // See the corresponding HAPPENS_BEFORE above.
             ANNOTATE_HAPPENS_AFTER(&instance_);
@@ -293,5 +293,5 @@ namespace flare::memory {
 
     template<typename Type, typename Traits, typename DifferentiatingType>
     std::atomic<intptr_t> Singleton<Type, Traits, DifferentiatingType>::instance_ = 0;
-}  // namespace flare::memory
+}  // namespace flare
 #endif  // FLARE_MEMORY_SINGLETON_H_

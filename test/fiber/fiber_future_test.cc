@@ -11,7 +11,7 @@
 
 using namespace std::literals;
 
-namespace flare::fiber {
+namespace flare {
 
     TEST(Future, BlockingGet) {
         for (int i = 0; i != 200; ++i) {
@@ -23,7 +23,7 @@ namespace flare::fiber {
                         std::vector<int> v{1, 2, 3, 4, 5};
                         int round = flare::base::fast_rand_less_than(10);
                         for (int j = 0; j != round; ++j) {
-                            flare::this_fiber::fiber_yield();
+                            flare::fiber_yield();
                         }
                         return v;
                     }));
@@ -42,13 +42,13 @@ namespace flare::fiber {
     TEST(Future, BlockingTryGetOk) {
         std::atomic<bool> f{};
         auto future = fiber_async([&] {
-            flare::this_fiber::fiber_sleep_for(1000000);
+            flare::fiber_sleep_for(1000000);
             f = true;
         });
         auto ts = flare::base::microseconds_to_timespec(flare::base::cpuwide_time_us() + 1000000);
         ASSERT_FALSE(fiber_future_try_get_until(std::move(future), &ts));
         ASSERT_FALSE(f);
-        flare::this_fiber::fiber_sleep_for(2000000);
+        flare::fiber_sleep_for(2000000);
         ASSERT_TRUE(f);
     }
 

@@ -4,7 +4,7 @@
 
 #include "flare/fiber/internal/fiber.h"
 
-namespace flare::fiber {
+namespace flare {
 
     // A synchronization primitive to wait for multiple signallers.
     class fiber_latch {
@@ -37,6 +37,6 @@ namespace flare::fiber {
         bool _wait_was_invoked;
     };
 
-}  // namespace flare::fiber
+}  // namespace flare
 
 #endif  // FLARE_FIBER_FIBER_LATCH_H_

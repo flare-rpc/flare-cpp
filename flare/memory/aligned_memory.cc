@@ -9,7 +9,7 @@
 #include <malloc.h>
 #endif
 
-namespace flare::memory {
+namespace flare {
 
     void *aligned_alloc(size_t size, size_t alignment) {
         DCHECK_GT(size, 0U);
@@ -42,4 +42,4 @@ namespace flare::memory {
         return ptr;
     }
 
-}  // namespace flare::memory
+}  // namespace flare

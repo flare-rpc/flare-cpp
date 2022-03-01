@@ -7,10 +7,10 @@
 // ObjectPool is a derivative class of ResourcePool to allocate and
 // reuse fixed-size objects without identifiers.
 
-namespace flare::memory {
+namespace flare {
 
     // Specialize following classes to override default parameters for type T.
-    //   namespace flare::memory {
+    //   namespace flare {
     //     template <> struct ObjectPoolBlockMaxSize<Foo> {
     //       static const size_t value = 1024;
     //     };
@@ -47,11 +47,11 @@ namespace flare::memory {
         static bool validate(const T *) { return true; }
     };
 
-}  // namespace flare::memory
+}  // namespace flare
 
 #include "flare/memory/object_pool_inl.h"
 
-namespace flare::memory {
+namespace flare {
 
     // Get an object typed |T|. The object should be cleared before usage.
     // NOTE: T must be default-constructible.
@@ -110,7 +110,7 @@ namespace flare::memory {
     // construction or returned by object pool. So use `adopt_ptr` should you
     // want to construct a `ref_ptr` from a raw pointer.
     template<class T>
-    using pool_ref_counted = flare::memory::ref_counted<T, object_pool_deleter<T>>;
+    using pool_ref_counted = flare::ref_counted<T, object_pool_deleter<T>>;
 
     // Interface of `abel::object_pool::get` does not align very well with
     // `ref_ptr`. It returns a `pooled_ptr`, which itself is a RAII wrapper. To
@@ -139,6 +139,6 @@ namespace flare::memory {
         return_object<T>(p);
     }
 
-}  // namespace flare::memory
+}  // namespace flare
 
 #endif  // FLARE_MEMORY_OBJECT_POOL_H_

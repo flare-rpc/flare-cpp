@@ -38,7 +38,7 @@ void SocketsService::default_method(::google::protobuf::RpcController* cntl_base
     
     if (constraint.empty()) {
         os << "# Use /sockets/<SocketId>\n"
-           << flare::memory::describe_resources<Socket>() << '\n';
+           << flare::describe_resources<Socket>() << '\n';
     } else {
         char* endptr = NULL;
         SocketId sid = strtoull(constraint.c_str(), &endptr, 10);

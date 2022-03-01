@@ -5,7 +5,7 @@
 #ifndef FLARE_FIBER_RUNTIME_H_
 #define FLARE_FIBER_RUNTIME_H_
 
-namespace flare::fiber {
+namespace flare {
 
 
     // ---------------------------------------------
@@ -21,5 +21,5 @@ namespace flare::fiber {
     // NOTE: currently concurrency cannot be reduced after any fiber created.
     int fiber_setconcurrency(int num);
 
-}  // namespace flare::fiber
+}  // namespace flare
 #endif // FLARE_FIBER_RUNTIME_H_

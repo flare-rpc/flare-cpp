@@ -89,7 +89,7 @@ void *access_thread(void *void_args) {
         while (args->current_concurrency.fetch_add(1, std::memory_order_relaxed)
                > concurrency_for_this_thread) {
             args->current_concurrency.fetch_sub(1, std::memory_order_relaxed);
-            flare::this_fiber::fiber_sleep_for(5000);
+            flare::fiber_sleep_for(5000);
         }
         OnHttpCallEnd *done = new OnHttpCallEnd;
         done->cntl.http_request().uri() = url;

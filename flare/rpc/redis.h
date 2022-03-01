@@ -244,7 +244,7 @@ namespace flare::rpc {
 
         RedisReply _first_reply;
         RedisReply *_other_replies;
-        flare::memory::Arena _arena;
+        flare::Arena _arena;
         int _nreply;
         mutable int _cached_size_;
     };

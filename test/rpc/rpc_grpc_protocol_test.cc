@@ -84,7 +84,7 @@ public:
               ::test::GrpcResponse* res,
               ::google::protobuf::Closure* done) {
         flare::rpc::ClosureGuard done_guard(done);
-        flare::this_fiber::fiber_sleep_for(2000000 /*2s*/);
+        flare::fiber_sleep_for(2000000 /*2s*/);
         res->set_message(g_prefix + req->message());
         return;
     }

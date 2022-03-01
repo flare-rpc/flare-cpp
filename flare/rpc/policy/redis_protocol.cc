@@ -73,7 +73,7 @@ public:
     int batched_size;
 
     RedisCommandParser parser;
-    flare::memory::Arena arena;
+    flare::Arena arena;
 };
 
 int ConsumeCommand(RedisConnContext* ctx,

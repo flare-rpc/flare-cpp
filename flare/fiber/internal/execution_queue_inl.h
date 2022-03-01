@@ -5,7 +5,7 @@
 
 #include "flare/base/static_atomic.h"             // std::atomic
 #include "flare/base/profile.h"                // FLARE_CACHELINE_ALIGNMENT
-#include "flare/memory/scoped_ptr.h"     // flare::memory::scoped_ptr
+#include "flare/memory/scoped_ptr.h"     // flare::scoped_ptr
 #include "flare/log/logging.h"               // LOG
 #include "flare/base/time.h"                  // flare::base::cpuwide_time_ns
 #include "flare/variable/all.h"                  // flare::variable::Adder

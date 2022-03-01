@@ -30,7 +30,7 @@ namespace {
     };
 }
 
-namespace flare::memory {
+namespace flare {
     template<>
     struct ObjectPoolBlockMaxSize<MyObject> {
         static const size_t value = 128;
@@ -52,10 +52,10 @@ namespace flare::memory {
             return foo->x != 0;
         }
     };
-}  // namespace flare::memory
+}  // namespace flare
 
 namespace {
-    using namespace flare::memory;
+    using namespace flare;
 
     class ObjectPoolTest : public ::testing::Test {
     protected:

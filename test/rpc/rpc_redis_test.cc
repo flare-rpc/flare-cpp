@@ -557,7 +557,7 @@ TEST_F(RedisTest, command_parser) {
     flare::rpc::RedisCommandParser parser;
     flare::cord_buf buf;
     std::vector<std::string_view> command_out;
-    flare::memory::Arena arena;
+    flare::Arena arena;
     {
         // parse from whole command
         std::string command = "set abc edc";
@@ -623,7 +623,7 @@ TEST_F(RedisTest, command_parser) {
 }
 
 TEST_F(RedisTest, redis_reply_codec) {
-    flare::memory::Arena arena;
+    flare::Arena arena;
     // status
     {
         flare::rpc::RedisReply r(&arena);

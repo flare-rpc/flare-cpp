@@ -192,8 +192,8 @@ namespace flare::fiber_internal {
             LOG(FATAL) << "Fail to get main stack container";
             return -1;
         }
-        flare::memory::ResourceId<fiber_entity> slot;
-        fiber_entity *m = flare::memory::get_resource<fiber_entity>(&slot);
+        flare::ResourceId<fiber_entity> slot;
+        fiber_entity *m = flare::get_resource<fiber_entity>(&slot);
         if (nullptr == m) {
             LOG(FATAL) << "Fail to get fiber_entity";
             return -1;
@@ -334,8 +334,8 @@ namespace flare::fiber_internal {
         }
         const int64_t start_ns = flare::base::cpuwide_time_ns();
         const fiber_attribute using_attr = (attr ? *attr : FIBER_ATTR_NORMAL);
-        flare::memory::ResourceId<fiber_entity> slot;
-        fiber_entity *m = flare::memory::get_resource(&slot);
+        flare::ResourceId<fiber_entity> slot;
+        fiber_entity *m = flare::get_resource(&slot);
         if (__builtin_expect(!m, 0)) {
             return ENOMEM;
         }
@@ -389,8 +389,8 @@ namespace flare::fiber_internal {
         }
         const int64_t start_ns = flare::base::cpuwide_time_ns();
         const fiber_attribute using_attr = (attr ? *attr : FIBER_ATTR_NORMAL);
-        flare::memory::ResourceId<fiber_entity> slot;
-        fiber_entity *m = flare::memory::get_resource(&slot);
+        flare::ResourceId<fiber_entity> slot;
+        fiber_entity *m = flare::get_resource(&slot);
         if (__builtin_expect(!m, 0)) {
             return ENOMEM;
         }
@@ -764,7 +764,7 @@ namespace flare::fiber_internal {
             // Race with set and may consume multiple interruptions, which are OK.
             e.meta->interrupted = false;
             // NOTE: setting errno to ESTOP is not necessary from fiber's
-            // pespective, however many RPC code expects flare::this_fiber::fiber_sleep_for to set
+            // pespective, however many RPC code expects flare::fiber_sleep_for to set
             // errno to ESTOP when the thread is stopping, and print FATAL
             // otherwise. To make smooth transitions, ESTOP is still set instead
             // of EINTR when the thread is stopping.
@@ -814,7 +814,7 @@ namespace flare::fiber_internal {
 // is still remembered and will be checked at next blocking. This designing
 // choice simplifies the implementation and reduces notification loss caused
 // by race conditions.
-// TODO: fibers created by FIBER_ATTR_PTHREAD blocking on flare::this_fiber::fiber_sleep_for()
+// TODO: fibers created by FIBER_ATTR_PTHREAD blocking on flare::fiber_sleep_for()
 // can't be interrupted.
     int fiber_worker::interrupt(fiber_id_t tid, schedule_group *c) {
         // Consume current_waiter in the fiber_entity, wake it up then set it back.

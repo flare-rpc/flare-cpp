@@ -81,7 +81,7 @@ public:
                 int64_t end_time = flare::base::gettimeofday_us() + (int64_t) delay;
                 while (flare::base::gettimeofday_us() < end_time) {}
             } else {
-                flare::this_fiber::fiber_sleep_for((int64_t) delay);
+                flare::fiber_sleep_for((int64_t) delay);
             }
         }
 

@@ -101,7 +101,7 @@ namespace flare::rpc {
 
     Span *Span::CreateClientSpan(const std::string &full_method_name,
                                  int64_t base_real_us) {
-        Span *span = flare::memory::get_object<Span>(Forbidden());
+        Span *span = flare::get_object<Span>(Forbidden());
         if (__builtin_expect(span == NULL, 0)) {
             return NULL;
         }
@@ -150,7 +150,7 @@ namespace flare::rpc {
             const std::string &full_method_name,
             uint64_t trace_id, uint64_t span_id, uint64_t parent_span_id,
             int64_t base_real_us) {
-        Span *span = flare::memory::get_object<Span>(Forbidden());
+        Span *span = flare::get_object<Span>(Forbidden());
         if (__builtin_expect(span == NULL, 0)) {
             return NULL;
         }
@@ -199,11 +199,11 @@ namespace flare::rpc {
         while (p) {
             Span *p_next = p->_next_client;
             p->_info.clear();
-            flare::memory::return_object(p);
+            flare::return_object(p);
             p = p_next;
         }
         _info.clear();
-        flare::memory::return_object(this);
+        flare::return_object(this);
     }
 
     void Span::Annotate(const char *fmt, ...) {

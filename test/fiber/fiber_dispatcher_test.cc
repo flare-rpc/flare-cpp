@@ -317,6 +317,6 @@ namespace {
 #endif
         }
         flare::fiber_internal::stop_and_join_epoll_threads();
-        flare::this_fiber::fiber_sleep_for(100000);
+        flare::fiber_sleep_for(100000);
     }
 } // namespace

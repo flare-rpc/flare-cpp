@@ -293,7 +293,7 @@ namespace flare::fiber_internal {
     }
 
     void SampledContention::destroy() {
-        flare::memory::return_object(this);
+        flare::return_object(this);
     }
 
 // Remember the conflict hashes for troubleshooting, should be 0 at most of time.
@@ -480,7 +480,7 @@ namespace flare::fiber_internal {
 // Submit the contention along with the callsite('s stacktrace)
     void submit_contention(const fiber_contention_site_t &csite, int64_t now_ns) {
         tls_inside_lock = true;
-        SampledContention *sc = flare::memory::get_object<SampledContention>();
+        SampledContention *sc = flare::get_object<SampledContention>();
         // Normalize duration_us and count so that they're addable in later
         // processings. Notice that sampling_range is adjusted periodically by
         // collecting thread.

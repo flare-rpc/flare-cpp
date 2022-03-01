@@ -15,7 +15,7 @@
 
 namespace {
 
-    using flare::memory::aligned_memory;
+    using flare::aligned_memory;
 
     TEST(aligned_memoryTest, StaticAlignment) {
         static aligned_memory<8, 8> raw8;
@@ -83,30 +83,30 @@ namespace {
     }
 
     TEST(aligned_memoryTest, DynamicAllocation) {
-        void* p = flare::memory::aligned_alloc(8, 8);
+        void* p = flare::aligned_alloc(8, 8);
         EXPECT_TRUE(p);
         EXPECT_ALIGNED(p, 8);
-        flare::memory::aligned_free(p);
+        flare::aligned_free(p);
 
-        p = flare::memory::aligned_alloc(8, 16);
+        p = flare::aligned_alloc(8, 16);
         EXPECT_TRUE(p);
         EXPECT_ALIGNED(p, 16);
-        flare::memory::aligned_free(p);
+        flare::aligned_free(p);
 
-        p = flare::memory::aligned_alloc(8, 256);
+        p = flare::aligned_alloc(8, 256);
         EXPECT_TRUE(p);
         EXPECT_ALIGNED(p, 256);
-        flare::memory::aligned_free(p);
+        flare::aligned_free(p);
 
-        p = flare::memory::aligned_alloc(8, 4096);
+        p = flare::aligned_alloc(8, 4096);
         EXPECT_TRUE(p);
         EXPECT_ALIGNED(p, 4096);
-        flare::memory::aligned_free(p);
+        flare::aligned_free(p);
     }
 
     TEST(aligned_memoryTest, ScopedDynamicAllocation) {
-        scoped_ptr<float, flare::memory::aligned_free_deleter> p(
-                static_cast<float*>(flare::memory::aligned_alloc(8, 8)));
+        scoped_ptr<float, flare::aligned_free_deleter> p(
+                static_cast<float*>(flare::aligned_alloc(8, 8)));
         EXPECT_TRUE(p.get());
         EXPECT_ALIGNED(p.get(), 8);
     }

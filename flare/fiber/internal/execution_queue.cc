@@ -22,8 +22,8 @@
 #include "flare/fiber/internal/execution_queue.h"
 #include "flare/fiber/this_fiber.h"
 #include "flare/base/singleton_on_pthread_once.h"
-#include "flare/memory/object_pool.h"           // flare::memory::get_object
-#include "flare/memory/resource_pool.h"         // flare::memory::get_resource
+#include "flare/memory/object_pool.h"           // flare::get_object
+#include "flare/memory/resource_pool.h"         // flare::get_resource
 
 namespace flare::fiber_internal {
 
@@ -33,7 +33,7 @@ namespace flare::fiber_internal {
     static_assert(sizeof(TaskIterator<int>) == sizeof(TaskIteratorBase),
                   "sizeof_TaskIterator_must_be_the_same_with_TaskIteratorBase");
     namespace /*anonymous*/ {
-        typedef flare::memory::ResourceId<ExecutionQueueBase> slot_id_t;
+        typedef flare::ResourceId<ExecutionQueueBase> slot_id_t;
 
         inline slot_id_t FLARE_WARN_UNUSED_RESULT slot_of_id(uint64_t id) {
             slot_id_t slot = {(id & 0xFFFFFFFFul)};
@@ -180,7 +180,7 @@ namespace flare::fiber_internal {
             m->_join_butex->fetch_add(2, std::memory_order_release/*1*/);
             waitable_event_wake_all(m->_join_butex);
             vars->execq_count << -1;
-            flare::memory::return_resource(slot_of_id(m->_this_id));
+            flare::return_resource(slot_of_id(m->_this_id));
         }
         vars->execq_active_count << -1;
         return NULL;
@@ -188,14 +188,14 @@ namespace flare::fiber_internal {
 
     void ExecutionQueueBase::return_task_node(TaskNode *node) {
         node->clear_before_return(_clear_func);
-        flare::memory::return_object<TaskNode>(node);
+        flare::return_object<TaskNode>(node);
         get_execq_vars()->running_task_count << -1;
     }
 
     void ExecutionQueueBase::_on_recycle() {
         // Push a closed tasks
         while (true) {
-            TaskNode *node = flare::memory::get_object<TaskNode>();
+            TaskNode *node = flare::get_object<TaskNode>();
             if (FLARE_LIKELY(node != NULL)) {
                 get_execq_vars()->running_task_count << 1;
                 node->stop_task = true;
@@ -205,13 +205,13 @@ namespace flare::fiber_internal {
                 break;
             }
             CHECK(false) << "Fail to create task_node_t, " << flare_error();
-            flare::this_fiber::fiber_sleep_for(1000);
+            flare::fiber_sleep_for(1000);
         }
     }
 
     int ExecutionQueueBase::join(uint64_t id) {
         const slot_id_t slot = slot_of_id(id);
-        ExecutionQueueBase *const m = flare::memory::address_resource(slot);
+        ExecutionQueueBase *const m = flare::address_resource(slot);
         if (m == NULL) {
             // The queue is not created yet, this join is definitely wrong.
             return EINVAL;
@@ -280,7 +280,7 @@ namespace flare::fiber_internal {
 
     TaskNode *ExecutionQueueBase::allocate_node() {
         get_execq_vars()->running_task_count << 1;
-        return flare::memory::get_object<TaskNode>();
+        return flare::get_object<TaskNode>();
     }
 
     TaskNode *const TaskNode::UNCONNECTED = (TaskNode *) -1L;
@@ -288,7 +288,7 @@ namespace flare::fiber_internal {
     ExecutionQueueBase::scoped_ptr_t ExecutionQueueBase::address(uint64_t id) {
         scoped_ptr_t ret;
         const slot_id_t slot = slot_of_id(id);
-        ExecutionQueueBase *const m = flare::memory::address_resource(slot);
+        ExecutionQueueBase *const m = flare::address_resource(slot);
         if (FLARE_LIKELY(m != NULL)) {
             // acquire fence makes sure this thread sees latest changes before
             // _dereference()
@@ -344,7 +344,7 @@ namespace flare::fiber_internal {
         }
 
         slot_id_t slot;
-        ExecutionQueueBase *const m = flare::memory::get_resource(&slot, Forbidden());
+        ExecutionQueueBase *const m = flare::get_resource(&slot, Forbidden());
         if (FLARE_LIKELY(m != NULL)) {
             m->_execute_func = execute_func;
             m->_clear_func = clear_func;

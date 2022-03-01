@@ -6,7 +6,7 @@
 
 namespace {
     struct Arg {
-        flare::fiber::fiber_latch latcher;
+        flare::fiber_latch latcher;
         std::atomic<int> num_sig;
     };
 
@@ -32,7 +32,7 @@ namespace {
     }
 
     TEST(FiberLatchTest, timed_wait) {
-        flare::fiber::fiber_latch latcher;
+        flare::fiber_latch latcher;
         auto ts = flare::base::milliseconds_from_now(100);
         int rc = latcher.timed_wait(&ts);
         ASSERT_EQ(rc, ETIMEDOUT);
@@ -40,7 +40,7 @@ namespace {
         auto ts1 = flare::base::milliseconds_from_now(100);
         rc = latcher.timed_wait(&ts1);
         ASSERT_EQ(rc, 0);
-        flare::fiber::fiber_latch latcher1;
+        flare::fiber_latch latcher1;
         latcher1.signal();
         auto ts2 = flare::base::milliseconds_from_now(1);
         rc = latcher.timed_wait(&ts2);

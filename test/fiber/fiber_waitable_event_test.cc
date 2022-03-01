@@ -46,7 +46,7 @@ namespace {
     }
 
     void *sleeper(void *arg) {
-        flare::this_fiber::fiber_sleep_for((uint64_t) arg);
+        flare::fiber_sleep_for((uint64_t) arg);
         return nullptr;
     }
 
@@ -241,7 +241,7 @@ namespace {
 
             tm.start();
             ASSERT_EQ(0, fiber_start_urgent(&th, &attr, wait_event, &arg));
-            ASSERT_EQ(0, flare::this_fiber::fiber_sleep_for(SLEEP_MSEC * 1000L));
+            ASSERT_EQ(0, flare::fiber_sleep_for(SLEEP_MSEC * 1000L));
             ASSERT_EQ(0, fiber_stop(th));
             ASSERT_EQ(0, fiber_join(th, nullptr));
             tm.stop();
@@ -301,10 +301,10 @@ namespace {
             ASSERT_EQ(0, fiber_start_urgent(&th, nullptr, wait_event, &arg));
             ASSERT_EQ(0, fiber_start_urgent(&th2, &attr, join_the_waiter, (void *) th));
             ASSERT_EQ(0, fiber_stop(th2));
-            ASSERT_EQ(0, flare::this_fiber::fiber_sleep_for(WAIT_MSEC / 2 * 1000L));
+            ASSERT_EQ(0, flare::fiber_sleep_for(WAIT_MSEC / 2 * 1000L));
             ASSERT_TRUE(flare::fiber_internal::fiber_worker::exists(th));
             ASSERT_TRUE(flare::fiber_internal::fiber_worker::exists(th2));
-            ASSERT_EQ(0, flare::this_fiber::fiber_sleep_for(WAIT_MSEC / 2 * 1000L));
+            ASSERT_EQ(0, flare::fiber_sleep_for(WAIT_MSEC / 2 * 1000L));
             ASSERT_EQ(0, fiber_stop(th));
             ASSERT_EQ(0, fiber_join(th2, nullptr));
             ASSERT_EQ(0, fiber_join(th, nullptr));
@@ -328,7 +328,7 @@ namespace {
             fiber_id_t th;
             ASSERT_EQ(0, fiber_start_urgent(
                     &th, &attr, sleeper, (void *) (SLEEP_MSEC * 1000L)));
-            ASSERT_EQ(0, flare::this_fiber::fiber_sleep_for(WAIT_MSEC * 1000L));
+            ASSERT_EQ(0, flare::fiber_sleep_for(WAIT_MSEC * 1000L));
             ASSERT_EQ(0, fiber_stop(th));
             ASSERT_EQ(0, fiber_join(th, nullptr));
             tm.stop();

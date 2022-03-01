@@ -11,7 +11,7 @@ namespace flare::fiber_internal {
     extern FLARE_THREAD_LOCAL fiber_worker *tls_task_group;
 }  // namespace flare::fiber_internal
 
-namespace flare::this_fiber {
+namespace flare {
 
     int fiber_yield() {
         flare::fiber_internal::fiber_worker *g = flare::fiber_internal::tls_task_group;
@@ -49,4 +49,4 @@ namespace flare::this_fiber {
         }
         return static_cast<uint64_t>(INVALID_FIBER_ID);
     }
-}  // namespace flare::this_fiber
+}  // namespace flare

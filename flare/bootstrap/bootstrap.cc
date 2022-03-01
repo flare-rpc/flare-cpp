@@ -12,7 +12,7 @@
 #include "flare/memory/resident.h"
 #include "flare/bootstrap/flags.h"
 
-namespace flare::bootstrap {
+namespace flare {
 
     namespace {
 
@@ -27,16 +27,16 @@ namespace flare::bootstrap {
         };
 
         at_exit_callback_registry *get_at_exit_callback_registry() {
-            static flare::memory::resident<at_exit_callback_registry> registry;
+            static flare::resident<at_exit_callback_registry> registry;
             return registry.get();
         }
 
     }  // namespace
 
-}  // namespace flare::bootstrap
+}  // namespace flare
 
 
-namespace flare::bootstrap {
+namespace flare {
 
     void set_at_exit_callback(std::function<void()> callback) {
         auto &&registry = get_at_exit_callback_registry();
@@ -130,4 +130,4 @@ namespace flare::bootstrap {
         flare::log::init_logging(argv[0]);
     }
 
-}  // namespace flare::bootstrap
+}  // namespace flare

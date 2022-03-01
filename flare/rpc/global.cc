@@ -219,7 +219,7 @@ static void* GlobalUpdate(void*) {
     while (1) {
         const int64_t sleep_us = 1000000L + last_time_us - flare::base::gettimeofday_us();
         if (sleep_us > 0) {
-            if (flare::this_fiber::fiber_sleep_for(sleep_us) < 0) {
+            if (flare::fiber_sleep_for(sleep_us) < 0) {
                 PLOG_IF(FATAL, errno != ESTOP) << "Fail to sleep";
                 break;
             }

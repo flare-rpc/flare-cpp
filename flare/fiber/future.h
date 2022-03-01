@@ -12,12 +12,12 @@
 #include "flare/fiber/fiber_latch.h"
 #include "flare/future/future.h"
 
-namespace flare::fiber {
+namespace flare {
 
     template <class... Ts>
     auto fiber_future_get(future<Ts...>&& f) {
         fiber_latch l;
-        flare::memory::lazy_init<future_internal::boxed<Ts...>> receiver;
+        flare::lazy_init<future_internal::boxed<Ts...>> receiver;
 
         // Once the `future` is satisfied, our continuation will move the
         // result into `receiver` and notify `cv` to wake us up.
@@ -81,6 +81,6 @@ namespace flare::fiber {
         return fiber_future_try_get_until(std::move(*f), timeout);
     }
 
-}  // namespace flare::fiber
+}  // namespace flare
 
 #endif // FLARE_FIBER_FUTURE_H_

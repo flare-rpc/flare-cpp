@@ -419,7 +419,7 @@ TEST(NamingServiceTest, consul_with_backup_file) {
                                    restful_map.c_str()));
     ASSERT_EQ(0, server.Start("localhost:8500", NULL));
 
-    flare::this_fiber::fiber_sleep_for(5000000);
+    flare::fiber_sleep_for(5000000);
 
     flare::base::end_point n1;
     ASSERT_EQ(0, flare::base::str2endpoint("10.121.36.189:8003", &n1));
@@ -658,7 +658,7 @@ TEST(NamingServiceTest, discovery_sanity) {
         // svc.RenewCount() be one.
         ASSERT_EQ(0, dc.Register(dparam));
         ASSERT_EQ(0, dc.Register(dparam));
-        flare::this_fiber::fiber_sleep_for(100000);
+        flare::fiber_sleep_for(100000);
         ASSERT_TRUE(svc.HasAddr("grpc://10.0.0.1:8000"));
         ASSERT_FALSE(svc.HasAddr("http://10.0.0.1:8000"));
     }

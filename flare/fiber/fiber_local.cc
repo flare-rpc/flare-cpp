@@ -4,6 +4,6 @@
 
 #include "flare/fiber/fiber_local.h"
 
-namespace flare::fiber {
+namespace flare {
 
-}  // namespace flare::fiber
+}  // namespace flare

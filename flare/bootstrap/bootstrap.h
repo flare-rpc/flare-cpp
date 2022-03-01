@@ -38,7 +38,7 @@
                                                        __VA_ARGS__);
 
 // Implementation goes below.
-namespace flare::bootstrap {
+namespace flare {
 
     // Called by `OnInitRegistration`.
     void register_bootstrap_callback(std::int32_t priority, const std::function<void()> &init, const std::function<void()> &fini);
@@ -57,7 +57,7 @@ namespace flare::bootstrap {
 
     void run_finalizers();
 
-}  // namespace flare::bootstrap
+}  // namespace flare
 
 namespace flare::internal {
 
@@ -71,7 +71,7 @@ namespace flare::internal {
         bootstrap_registration(const char *file, std::uint32_t line,
                            std::int32_t priority, std::function<void()> init,
                            std::function<void()> fini = nullptr) {
-            flare::bootstrap::register_bootstrap_callback(priority, std::move(init), std::move(fini));
+            flare::register_bootstrap_callback(priority, std::move(init), std::move(fini));
         }
     };
 

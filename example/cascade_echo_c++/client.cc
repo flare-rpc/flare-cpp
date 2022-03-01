@@ -80,7 +80,7 @@ void* sender(void* arg) {
             g_latency_recorder << cntl.latency_us();
         }
         if (FLAGS_sleep_ms != 0) {
-            flare::this_fiber::fiber_sleep_for(FLAGS_sleep_ms * 1000L);
+            flare::fiber_sleep_for(FLAGS_sleep_ms * 1000L);
         }
     }
     return NULL;

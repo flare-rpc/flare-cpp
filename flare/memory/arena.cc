@@ -3,7 +3,7 @@
 #include <algorithm>
 #include "flare/memory/arena.h"
 
-namespace flare::memory {
+namespace flare {
 
     ArenaOptions::ArenaOptions()
             : initial_block_size(64), max_block_size(8192) {}
@@ -78,4 +78,4 @@ namespace flare::memory {
         return b->data;
     }
 
-}  // namespace flare::memory
+}  // namespace flare

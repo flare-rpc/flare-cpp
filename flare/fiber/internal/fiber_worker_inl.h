@@ -5,12 +5,12 @@
 namespace flare::fiber_internal {
 
     // Utilities to manipulate fiber_id_t
-    inline fiber_id_t make_tid(uint32_t version, flare::memory::ResourceId<fiber_entity> slot) {
+    inline fiber_id_t make_tid(uint32_t version, flare::ResourceId<fiber_entity> slot) {
         return (((fiber_id_t) version) << 32) | (fiber_id_t) slot.value;
     }
 
-    inline flare::memory::ResourceId<fiber_entity> get_slot(fiber_id_t tid) {
-        flare::memory::ResourceId<fiber_entity> id = {(tid & 0xFFFFFFFFul)};
+    inline flare::ResourceId<fiber_entity> get_slot(fiber_id_t tid) {
+        flare::ResourceId<fiber_entity> id = {(tid & 0xFFFFFFFFul)};
         return id;
     }
 

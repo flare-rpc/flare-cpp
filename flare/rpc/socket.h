@@ -27,7 +27,7 @@
 #include "flare/io/cord_buf.h"                        // flare::cord_buf, IOPortal
 #include "flare/base/profile.h"                       // FLARE_DISALLOW_COPY_AND_ASSIGN
 #include "flare/base/endpoint.h"                     // flare::base::end_point
-#include "flare/memory/resource_pool.h"                // flare::memory::ResourceId
+#include "flare/memory/resource_pool.h"                // flare::ResourceId
 #include "flare/fiber/internal/waitable_event.h"                      // waitable_event_create_checked
 #include "flare/rpc/authenticator.h"           // Authenticator
 #include "flare/rpc/errno.pb.h"                // EFAILEDSOCKET
@@ -838,7 +838,7 @@ private:
             }                                                           \
             sleep_time *= 2;                                            \
             if (sleep_time > 2000) { sleep_time = 2000; }               \
-            flare::this_fiber::fiber_sleep_for(sleep_time);                               \
+            flare::fiber_sleep_for(sleep_time);                               \
         }                                                               \
         __ret_code__;                                                   \
     })
@@ -856,7 +856,7 @@ private:
             }                                                           \
             sleep_time *= 2;                                            \
             if (sleep_time > 2000) { sleep_time = 2000; }               \
-            ::flare::this_fiber::fiber_sleep_for(sleep_time);                               \
+            ::flare::fiber_sleep_for(sleep_time);                               \
         }                                                               \
         __ret_code__;                                                   \
     })

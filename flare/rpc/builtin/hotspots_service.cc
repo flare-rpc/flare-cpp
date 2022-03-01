@@ -760,7 +760,7 @@ namespace flare::rpc {
                 cntl->http_response().set_status_code(HTTP_STATUS_SERVICE_UNAVAILABLE);
                 return NotifyWaiters(type, cntl, view);
             }
-            if (flare::this_fiber::fiber_sleep_for(seconds * 1000000L) != 0) {
+            if (flare::fiber_sleep_for(seconds * 1000000L) != 0) {
                 PLOG(WARNING) << "Profiling has been interrupted";
             }
             ProfilerStop();
@@ -772,7 +772,7 @@ namespace flare::rpc {
                 cntl->http_response().set_status_code(HTTP_STATUS_SERVICE_UNAVAILABLE);
                 return NotifyWaiters(type, cntl, view);
             }
-            if (flare::this_fiber::fiber_sleep_for(seconds * 1000000L) != 0) {
+            if (flare::fiber_sleep_for(seconds * 1000000L) != 0) {
                 PLOG(WARNING) << "Profiling has been interrupted";
             }
             flare::fiber_internal::ContentionProfilerStop();

@@ -322,7 +322,7 @@ namespace flare::rpc {
                 }
             } else {
                 consecutive_nosleep = 0;
-                if (flare::this_fiber::fiber_sleep_for(sleep_us) < 0) {
+                if (flare::fiber_sleep_for(sleep_us) < 0) {
                     PLOG_IF(ERROR, errno != ESTOP) << "Fail to sleep";
                     return nullptr;
                 }
@@ -623,7 +623,7 @@ namespace flare::rpc {
         args->result = args->fiber_init_fn(args->fiber_init_args);
         args->done = true;
         while (!args->stop) {
-            flare::this_fiber::fiber_sleep_for(1000);
+            flare::fiber_sleep_for(1000);
         }
         return nullptr;
     }
@@ -799,7 +799,7 @@ namespace flare::rpc {
             // Wait until all created fibers finish the init function.
             for (size_t i = 0; i < ncreated; ++i) {
                 while (!init_args[i].done) {
-                    flare::this_fiber::fiber_sleep_for(1000);
+                    flare::fiber_sleep_for(1000);
                 }
             }
             // Stop and join created fibers.
@@ -1654,7 +1654,7 @@ namespace flare::rpc {
 
     void Server::RunUntilAskedToQuit() {
         while (!IsAskedToQuit()) {
-            flare::this_fiber::fiber_sleep_for(1000000L);
+            flare::fiber_sleep_for(1000000L);
         }
         Stop(0/*not used now*/);
         Join();

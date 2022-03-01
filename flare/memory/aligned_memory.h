@@ -43,7 +43,7 @@
 #include <stdlib.h>
 #endif
 
-namespace flare::memory {
+namespace flare {
 
     // aligned_memory is specialized for all supported alignments.
     // Make sure we get a compiler error if someone uses an unsupported alignment.
@@ -114,13 +114,13 @@ namespace flare::memory {
     }
 
     // Deleter for use with scoped_ptr. E.g., use as
-    //   scoped_ptr<Foo, flare::memory::aligned_free_deleter> foo;
+    //   scoped_ptr<Foo, flare::aligned_free_deleter> foo;
     struct aligned_free_deleter {
         inline void operator()(void *ptr) const {
             aligned_free(ptr);
         }
     };
 
-}  // namespace flare::memory
+}  // namespace flare
 
 #endif  // FLARE_MEMORY_ALIGNED_MEMORY_H_

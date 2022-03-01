@@ -36,7 +36,7 @@ struct FLARE_CACHELINE_ALIGNMENT MostCommonMessage : public InputMessageBase {
     PipelinedInfo pi;
 
     inline static MostCommonMessage* Get() {
-        return flare::memory::get_object<MostCommonMessage>();
+        return flare::get_object<MostCommonMessage>();
     }
 
     // @InputMessageBase
@@ -44,7 +44,7 @@ struct FLARE_CACHELINE_ALIGNMENT MostCommonMessage : public InputMessageBase {
         meta.clear();
         payload.clear();
         pi.reset();
-        flare::memory::return_object(this);
+        flare::return_object(this);
     }
 };
 

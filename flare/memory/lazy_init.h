@@ -11,7 +11,7 @@
 
 #include "flare/log/logging.h"
 
-namespace flare::memory {
+namespace flare {
 
     template<class T>
     class lazy_init {
@@ -49,6 +49,6 @@ namespace flare::memory {
         std::optional<T> value_;
     };
 
-}  // namespace flare::memory
+}  // namespace flare
 
 #endif  // FLARE_MEMORY_LAZY_INIT_H_

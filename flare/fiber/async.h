@@ -10,7 +10,7 @@
 #include "flare/future/future.h"
 #include "flare/fiber/fiber.h"
 
-namespace flare::fiber {
+namespace flare {
 
     // Runs `f` with `args...` asynchronously.
     //
@@ -47,5 +47,5 @@ namespace flare::fiber {
         return fiber_async(launch_policy::eLazy, std::forward<F>(f), std::forward<Args>(args)...);
     }
 
-}  // namespace flare::fiber
+}  // namespace flare
 #endif // FLARE_FIBER_ASYNC_H_

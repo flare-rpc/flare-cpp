@@ -6,7 +6,7 @@
 #include <thread>
 #include <chrono>
 
-namespace flare::memory {
+namespace flare {
     namespace internal {
 
         intptr_t WaitForInstance(std::atomic<intptr_t> *instance) {
@@ -31,4 +31,4 @@ namespace flare::memory {
         }
 
     }  // namespace internal
-}  // namespace flare::memory
+}  // namespace flare

@@ -21,7 +21,7 @@
 #define BAIDU_RESOURCE_POOL_FREE_ITEM_NUM_SUB1
 #endif
 
-namespace flare::memory {
+namespace flare {
     
 template <typename T>
 struct ResourceId {
@@ -606,6 +606,6 @@ inline std::ostream& operator<<(std::ostream& os,
            ;
 }
 
-}  // namespace flare::memory
+}  // namespace flare
 
 #endif  // FLARE_MEMORY_RESOURCE_POOL_INL_H_

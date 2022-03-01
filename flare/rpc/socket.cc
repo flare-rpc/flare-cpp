@@ -465,7 +465,7 @@ void Socket::ReturnSuccessfulWriteRequest(Socket::WriteRequest* p) {
     DCHECK(p->data.empty());
     AddOutputMessages(1);
     const fiber_token_t id_wait = p->id_wait;
-    flare::memory::return_object(p);
+    flare::return_object(p);
     if (id_wait != INVALID_FIBER_TOKEN) {
         NotifyOnFailed(id_wait);
     }
@@ -478,7 +478,7 @@ void Socket::ReturnFailedWriteRequest(Socket::WriteRequest* p, int error_code,
     }
     p->data.clear();  // data is probably not written.
     const fiber_token_t id_wait = p->id_wait;
-    flare::memory::return_object(p);
+    flare::return_object(p);
     if (id_wait != INVALID_FIBER_TOKEN) {
         fiber_token_error2(id_wait, error_code, error_text);
     }
@@ -579,8 +579,8 @@ int Socket::ResetFileDescriptor(int fd) {
 //   version: from version part of _versioned_nref, must be an EVEN number.
 //   slot: designated by ResourcePool.
 int Socket::Create(const SocketOptions& options, SocketId* id) {
-    flare::memory::ResourceId<Socket> slot;
-    Socket* const m = flare::memory::get_resource(&slot, Forbidden());
+    flare::ResourceId<Socket> slot;
+    Socket* const m = flare::get_resource(&slot, Forbidden());
     if (m == NULL) {
         LOG(FATAL) << "Fail to get_resource<Socket>";
         return -1;
@@ -669,7 +669,7 @@ int Socket::WaitAndReset(int32_t expected_nref) {
             return -1;
         }
         if (NRefOfVRef(vref) > expected_nref) {
-            if (flare::this_fiber::fiber_sleep_for(1000L/*FIXME*/) < 0) {
+            if (flare::fiber_sleep_for(1000L/*FIXME*/) < 0) {
                 PLOG_IF(FATAL, errno != ESTOP) << "Fail to sleep";
                 return -1;
             }
@@ -923,7 +923,7 @@ void Socket::NotifyOnFailed(fiber_token_t id) {
 
 // For unit-test.
 int Socket::Status(SocketId id, int32_t* nref) {
-    const flare::memory::ResourceId<Socket> slot = SlotOfSocketId(id);
+    const flare::ResourceId<Socket> slot = SlotOfSocketId(id);
     Socket* const m = address_resource(slot);
     if (m != NULL) {
         const uint64_t vref = m->_versioned_ref.load(std::memory_order_relaxed);
@@ -1447,7 +1447,7 @@ int Socket::Write(flare::cord_buf* data, const WriteOptions* options_in) {
         return SetError(opt.id_wait, EOVERCROWDED);
     }
 
-    WriteRequest* req = flare::memory::get_object<WriteRequest>();
+    WriteRequest* req = flare::get_object<WriteRequest>();
     if (!req) {
         return SetError(opt.id_wait, ENOMEM);
     }
@@ -1484,7 +1484,7 @@ int Socket::Write(SocketMessagePtr<>& msg, const WriteOptions* options_in) {
         return SetError(opt.id_wait, EOVERCROWDED);
     }
     
-    WriteRequest* req = flare::memory::get_object<WriteRequest>();
+    WriteRequest* req = flare::get_object<WriteRequest>();
     if (!req) {
         return SetError(opt.id_wait, ENOMEM);
     }

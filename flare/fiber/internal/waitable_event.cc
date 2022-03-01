@@ -225,7 +225,7 @@ namespace flare::fiber_internal {
 // infrequent, even rare. The extra spurious wakeups should be acceptable.
 
     void *waitable_event_create() {
-        waitable_event *b = flare::memory::get_object<waitable_event>();
+        waitable_event *b = flare::get_object<waitable_event>();
         if (b) {
             return &b->value;
         }
@@ -238,7 +238,7 @@ namespace flare::fiber_internal {
         }
         waitable_event *b = static_cast<waitable_event *>(
                 FLARE_CONTAINER_OF(static_cast<std::atomic<int> *>(event), waitable_event, value));
-        flare::memory::return_object(b);
+        flare::return_object(b);
     }
 
     inline fiber_worker *get_task_group(schedule_group *c) {
@@ -679,7 +679,7 @@ namespace flare::fiber_internal {
 
 }  // namespace flare::fiber_internal
 
-namespace flare::memory {
+namespace flare {
     template<>
     struct ObjectPoolBlockMaxItem<flare::fiber_internal::waitable_event> {
         static const size_t value = 128;

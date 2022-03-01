@@ -96,7 +96,7 @@ namespace {
     }
 
     TEST_F(FiberTest, call_fiber_functions_before_tls_created) {
-        ASSERT_EQ(0, flare::this_fiber::fiber_sleep_for(1000));
+        ASSERT_EQ(0, flare::fiber_sleep_for(1000));
         ASSERT_EQ(EINVAL, fiber_join(0, nullptr));
         ASSERT_EQ(0UL, fiber_self());
     }
@@ -105,7 +105,7 @@ namespace {
 
     void *sleep_for_awhile(void *arg) {
         LOG(INFO) << "sleep_for_awhile(" << arg << ")";
-        flare::this_fiber::fiber_sleep_for(100000L);
+        flare::fiber_sleep_for(100000L);
         LOG(INFO) << "sleep_for_awhile(" << arg << ") wakes up";
         return nullptr;
     }
@@ -120,7 +120,7 @@ namespace {
     void *repeated_sleep(void *arg) {
         for (size_t i = 0; !stop; ++i) {
             LOG(INFO) << "repeated_sleep(" << arg << ") i=" << i;
-            flare::this_fiber::fiber_sleep_for(1000000L);
+            flare::fiber_sleep_for(1000000L);
         }
         return nullptr;
     }
@@ -147,7 +147,7 @@ namespace {
         for (size_t i = 0; !stop; ++i) {
             fiber_id_t th;
             fiber_start_urgent(&th, nullptr, do_nothing, (void *) i);
-            flare::this_fiber::fiber_sleep_for(1000000L);
+            flare::fiber_sleep_for(1000000L);
         }
         return nullptr;
     }
@@ -156,7 +156,7 @@ namespace {
         // Need this thread to set `stop' to true. Reason: If spin_and_log (which
         // never yields CPU) is scheduled to main thread, main thread cannot get
         // to run again.
-        flare::this_fiber::fiber_sleep_for(5 * 1000000L);
+        flare::fiber_sleep_for(5 * 1000000L);
         LOG(INFO) << "about to stop";
         stop = true;
         return nullptr;
@@ -287,7 +287,7 @@ namespace {
             if (10000 == s->fetch_add(1)) {
                 t1 = flare::base::cpuwide_time_us();
             }
-            flare::this_fiber::fiber_sleep_for(sleep_in_adding_func);
+            flare::fiber_sleep_for(sleep_in_adding_func);
             if (t1) {
                 LOG(INFO) << "elapse is " << flare::base::cpuwide_time_us() - t1 << "ns";
             }
@@ -376,7 +376,7 @@ namespace {
             }
             flare::base::stop_watcher tm;
             tm.start();
-            flare::this_fiber::fiber_sleep_for(200000L);
+            flare::fiber_sleep_for(200000L);
             stop = true;
             for (int i = 0; i < cur_con; ++i) {
                 fiber_join(th[i], nullptr);
@@ -428,7 +428,7 @@ namespace {
     }
 
     void *sleep_for_awhile_with_sleep(void *arg) {
-        flare::this_fiber::fiber_sleep_for((intptr_t) arg);
+        flare::fiber_sleep_for((intptr_t) arg);
         return nullptr;
     }
 
@@ -438,7 +438,7 @@ namespace {
                 &th, nullptr, sleep_for_awhile_with_sleep, (void *) 1000000L));
         flare::base::stop_watcher tm;
         tm.start();
-        flare::this_fiber::fiber_sleep_for(10000);
+        flare::fiber_sleep_for(10000);
         ASSERT_EQ(0, fiber_stop(th));
         ASSERT_EQ(0, fiber_join(th, nullptr));
         tm.stop();
@@ -493,11 +493,11 @@ namespace {
         const pthread_t pid = pthread_self();
         EXPECT_EQ(0, fiber_start_urgent(&th1, &attr, mark_run, &run));
         if (pthread_task) {
-            flare::this_fiber::fiber_sleep_for(100000L);
+            flare::fiber_sleep_for(100000L);
             // due to NOSIGNAL, mark_run did not run.
             // FIXME: actually runs. someone is still stealing.
             // EXPECT_EQ((pthread_t)0, run);
-            // flare::this_fiber::fiber_sleep_for = usleep for FIBER_ATTR_PTHREAD
+            // flare::fiber_sleep_for = usleep for FIBER_ATTR_PTHREAD
             EXPECT_EQ(pid, pthread_self());
             // schedule mark_run
             fiber_flush();
@@ -543,7 +543,7 @@ namespace {
     }
 
     static void *yield_thread(void *) {
-        flare::this_fiber::fiber_yield();
+        flare::fiber_yield();
         return nullptr;
     }
 

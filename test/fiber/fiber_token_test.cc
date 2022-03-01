@@ -42,14 +42,14 @@ namespace {
 
     void *signaller(void *void_arg) {
         SignalArg arg = *(SignalArg *) void_arg;
-        flare::this_fiber::fiber_sleep_for(arg.sleep_us_before_fight);
+        flare::fiber_sleep_for(arg.sleep_us_before_fight);
         void *data = nullptr;
         int rc = fiber_token_trylock(arg.id, &data);
         if (rc == 0) {
             EXPECT_EQ(0xdead, *(int *) data);
             ++*(int *) data;
             //EXPECT_EQ(EBUSY, fiber_token_destroy(arg.id, ECANCELED));
-            flare::this_fiber::fiber_sleep_for(arg.sleep_us_before_signal);
+            flare::fiber_sleep_for(arg.sleep_us_before_signal);
             EXPECT_EQ(0, fiber_token_unlock_and_destroy(arg.id));
             return void_arg;
         } else {
@@ -218,7 +218,7 @@ namespace {
         flare::base::stop_watcher tm;
         tm.start();
         EXPECT_EQ(0, fiber_token_lock(id, nullptr));
-        flare::this_fiber::fiber_sleep_for(2000);
+        flare::fiber_sleep_for(2000);
         EXPECT_EQ(0, fiber_token_unlock(id));
         tm.stop();
         LOG(INFO) << "Unlocked, tm=" << tm.u_elapsed();
@@ -243,7 +243,7 @@ namespace {
         fiber_token_t id = {(uintptr_t) arg};
         int rc = fiber_token_lock(id, nullptr);
         if (rc == 0) {
-            flare::this_fiber::fiber_sleep_for(2000);
+            flare::fiber_sleep_for(2000);
             EXPECT_EQ(0, fiber_token_unlock_and_destroy(id));
             return (void *) 1;
         } else {
@@ -283,7 +283,7 @@ namespace {
             args[i].id = id1;
             ASSERT_EQ(0, pthread_create(&th[i], nullptr, signaller, &args[i]));
         }
-        flare::this_fiber::fiber_sleep_for(10000);
+        flare::fiber_sleep_for(10000);
         // join() waits until destroy() is called.
         ASSERT_EQ(0, fiber_token_join(id1));
         ASSERT_EQ(0xdead + 1, x);
@@ -330,7 +330,7 @@ namespace {
         for (size_t i = 0; i < FLARE_ARRAY_SIZE(th); ++i) {
             fiber_stop(th[i]);
         }
-        flare::this_fiber::fiber_sleep_for(10000);
+        flare::fiber_sleep_for(10000);
         for (size_t i = 0; i < FLARE_ARRAY_SIZE(th); ++i) {
             ASSERT_TRUE(flare::fiber_internal::fiber_worker::exists(th[i]));
         }
@@ -370,7 +370,7 @@ namespace {
         for (size_t i = 0; i < FLARE_ARRAY_SIZE(th); ++i) {
             ASSERT_EQ(0, pthread_create(&th[i], nullptr, waiter, (void *) (intptr_t) id[i].value));
         }
-        flare::this_fiber::fiber_sleep_for(10000);
+        flare::fiber_sleep_for(10000);
         ASSERT_EQ(0, fiber_token_list_reset(&list, EBADF));
 
         for (size_t i = 0; i < FLARE_ARRAY_SIZE(th); ++i) {

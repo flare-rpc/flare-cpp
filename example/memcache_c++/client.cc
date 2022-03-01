@@ -94,7 +94,7 @@ static void* sender(void* arg) {
             // is a specific sleeping to prevent this thread from spinning too
             // fast. You should continue the business logic in a production 
             // server rather than sleeping.
-            flare::this_fiber::fiber_sleep_for(50000);
+            flare::fiber_sleep_for(50000);
         }
     }
     return NULL;

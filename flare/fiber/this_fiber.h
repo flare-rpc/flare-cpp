@@ -7,7 +7,7 @@
 
 #include <cstdint>
 
-namespace flare::this_fiber {
+namespace flare {
 
     int fiber_yield();
 
@@ -18,7 +18,7 @@ namespace flare::this_fiber {
 
     uint64_t get_fiber_id();
 
-}  // namespace flare::this_fiber
+}  // namespace flare
 
 #endif // FLARE_FIBER_THIS_FIBER_H_
 

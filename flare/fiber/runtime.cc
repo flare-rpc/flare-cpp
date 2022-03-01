@@ -4,7 +4,7 @@
 
 #include "flare/fiber/internal/fiber.h"
 
-namespace flare::fiber {
+namespace flare {
 
     int fiber_getconcurrency(void) {
         return ::fiber_getconcurrency();
@@ -14,4 +14,4 @@ namespace flare::fiber {
         return ::fiber_setconcurrency(num);
     }
 
-}  // namespace flare::fiber
+}  // namespace flare

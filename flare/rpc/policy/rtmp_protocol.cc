@@ -616,7 +616,7 @@ static int WriteAll(int fd, flare::cord_buf* buf) {
                 // impossible really happens, just spin until the fd becomes
                 // writable.
                 LOG_EVERY_SECOND(ERROR) << "Impossible: meet EAGAIN!";
-                flare::this_fiber::fiber_sleep_for(1000);
+                flare::fiber_sleep_for(1000);
                 continue;
             }
             return -1;

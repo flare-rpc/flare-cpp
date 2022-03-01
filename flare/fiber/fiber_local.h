@@ -10,7 +10,7 @@
 #include "flare/fiber/internal/fiber.h"
 #include "flare/fiber/internal/unstable.h"
 
-namespace flare::fiber {
+namespace flare {
 
     template <typename T>
     inline void local_dtor(void *data, const void *args) {
@@ -49,6 +49,6 @@ namespace flare::fiber {
         fiber_local_key _key;
     };
 
-}  // namespace flare::fiber
+}  // namespace flare
 
 #endif  // FLARE_FIBER_FIBER_LOCAL_H_

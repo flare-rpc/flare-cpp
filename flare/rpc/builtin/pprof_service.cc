@@ -34,7 +34,7 @@
 #include "flare/rpc/builtin/pprof_service.h"
 #include "flare/rpc/builtin/common.h"
 #include "flare/rpc/details/tcmalloc_extension.h"
-#include "flare/fiber/internal/fiber.h"                // flare::this_fiber::fiber_sleep_for
+#include "flare/fiber/internal/fiber.h"                // flare::fiber_sleep_for
 #include "flare/base/fd_guard.h"
 #include "flare/fiber/this_fiber.h"
 
@@ -143,7 +143,7 @@ namespace flare::rpc {
             cntl->SetFailed(EAGAIN, "Another profiler is running, try again later");
             return;
         }
-        if (flare::this_fiber::fiber_sleep_for(sleep_sec * 1000000L) != 0) {
+        if (flare::fiber_sleep_for(sleep_sec * 1000000L) != 0) {
             PLOG(WARNING) << "Profiling has been interrupted";
         }
         ProfilerStop();
@@ -194,7 +194,7 @@ namespace flare::rpc {
             cntl->SetFailed(EAGAIN, "Another profiler is running, try again later");
             return;
         }
-        if (flare::this_fiber::fiber_sleep_for(sleep_sec * 1000000L) != 0) {
+        if (flare::fiber_sleep_for(sleep_sec * 1000000L) != 0) {
             PLOG(WARNING) << "Profiling has been interrupted";
         }
         flare::fiber_internal::ContentionProfilerStop();

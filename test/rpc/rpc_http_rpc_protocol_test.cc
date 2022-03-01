@@ -95,7 +95,7 @@ public:
         const std::string* sleep_ms_str =
             cntl->http_request().uri().GetQuery("sleep_ms");
         if (sleep_ms_str) {
-            flare::this_fiber::fiber_sleep_for(strtol(sleep_ms_str->data(), NULL, 10) * 1000);
+            flare::fiber_sleep_for(strtol(sleep_ms_str->data(), NULL, 10) * 1000);
         }
         res->set_message(EXP_RESPONSE);
     }
@@ -517,7 +517,7 @@ public:
                 if (errno == flare::rpc::EOVERCROWDED) {
                     LOG_EVERY_SECOND(INFO) << "full pa=" << pa.get();
                     _ever_full = true;
-                    flare::this_fiber::fiber_sleep_for(10000);
+                    flare::fiber_sleep_for(10000);
                     continue;
                 } else {
                     _last_errno = errno;
@@ -559,7 +559,7 @@ public:
             if (pa->Write(buf, sizeof(buf)) != 0) {
                 if (errno == flare::rpc::EOVERCROWDED) {
                     LOG_EVERY_SECOND(INFO) << "full pa=" << pa.get();
-                    flare::this_fiber::fiber_sleep_for(10000);
+                    flare::fiber_sleep_for(10000);
                     continue;
                 } else {
                     _last_errno = errno;
@@ -1432,7 +1432,7 @@ TEST_F(HttpTest, http2_handle_goaway_streams) {
     int servfd = accept(listenfd, NULL, NULL);
     ASSERT_GT(servfd, 0);
     // Sleep for a while to make sure that server has received all data.
-    flare::this_fiber::fiber_sleep_for(2000);
+    flare::fiber_sleep_for(2000);
     char goawaybuf[flare::rpc::policy::FRAME_HEAD_SIZE + 8];
     SerializeFrameHead(goawaybuf, 8, flare::rpc::policy::H2_FRAME_GOAWAY, 0, 0);
     SaveUint32(goawaybuf + flare::rpc::policy::FRAME_HEAD_SIZE, 0);

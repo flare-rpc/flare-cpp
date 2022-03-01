@@ -60,7 +60,7 @@ extern int fiber_start_background(fiber_id_t *__restrict tid,
 
 // Wake up operations blocking the thread. Different functions may behave
 // differently:
-//   flare::this_fiber::fiber_sleep_for(): returns -1 and sets errno to ESTOP if fiber_stop()
+//   flare::fiber_sleep_for(): returns -1 and sets errno to ESTOP if fiber_stop()
 //                     is called, or to EINTR otherwise.
 //   waitable_event_wait(): returns -1 and sets errno to EINTR
 //   fiber_mutex_*lock: unaffected (still blocking)

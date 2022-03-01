@@ -30,7 +30,7 @@ namespace {
     };
 }
 
-namespace flare::memory {
+namespace flare {
     template<>
     struct ResourcePoolBlockMaxSize<MyObject> {
         static const size_t value = 128;
@@ -53,10 +53,10 @@ namespace flare::memory {
         }
     };
 
-}  // namespace flare::memory
+}  // namespace flare
 
 namespace {
-    using namespace flare::memory;
+    using namespace flare;
 
     class ResourcePoolTest : public ::testing::Test {
     protected:
@@ -113,15 +113,15 @@ namespace {
         int a[2];
         printf("%lu\n", FLARE_ARRAY_SIZE(a));
 
-        flare::memory::ResourcePoolInfo info = flare::memory::describe_resources<MyObject>();
-        flare::memory::ResourcePoolInfo zero_info = {0, 0, 0, 0, 3, 3, 0};
+        flare::ResourcePoolInfo info = flare::describe_resources<MyObject>();
+        flare::ResourcePoolInfo zero_info = {0, 0, 0, 0, 3, 3, 0};
         ASSERT_EQ(0, memcmp(&info, &zero_info, sizeof(info)));
 
-        flare::memory::ResourceId<MyObject> id = {0};
+        flare::ResourceId<MyObject> id = {0};
         get_resource<MyObject>(&id);
-        std::cout << flare::memory::describe_resources<MyObject>() << std::endl;
+        std::cout << flare::describe_resources<MyObject>() << std::endl;
         return_resource(id);
-        std::cout << flare::memory::describe_resources<MyObject>() << std::endl;
+        std::cout << flare::describe_resources<MyObject>() << std::endl;
     }
 
     struct NonDefaultCtorObject {
@@ -134,29 +134,29 @@ namespace {
 
     TEST_F(ResourcePoolTest, sanity) {
         ptr_set.clear();
-        flare::memory::ResourceId<NonDefaultCtorObject> id0 = {0};
-        flare::memory::get_resource<NonDefaultCtorObject>(&id0, 10);
-        ASSERT_EQ(10, flare::memory::address_resource(id0)->_value);
-        flare::memory::get_resource<NonDefaultCtorObject>(&id0, 100, 30);
-        ASSERT_EQ(130, flare::memory::address_resource(id0)->_value);
+        flare::ResourceId<NonDefaultCtorObject> id0 = {0};
+        flare::get_resource<NonDefaultCtorObject>(&id0, 10);
+        ASSERT_EQ(10, flare::address_resource(id0)->_value);
+        flare::get_resource<NonDefaultCtorObject>(&id0, 100, 30);
+        ASSERT_EQ(130, flare::address_resource(id0)->_value);
 
-        printf("BLOCK_NITEM=%lu\n", flare::memory::ResourcePool<YellObj>::BLOCK_NITEM);
+        printf("BLOCK_NITEM=%lu\n", flare::ResourcePool<YellObj>::BLOCK_NITEM);
 
         nc = 0;
         nd = 0;
         {
-            flare::memory::ResourceId<YellObj> id1;
-            YellObj *o1 = flare::memory::get_resource(&id1);
+            flare::ResourceId<YellObj> id1;
+            YellObj *o1 = flare::get_resource(&id1);
             ASSERT_TRUE(o1);
-            ASSERT_EQ(o1, flare::memory::address_resource(id1));
+            ASSERT_EQ(o1, flare::address_resource(id1));
 
             ASSERT_EQ(1, nc);
             ASSERT_EQ(0, nd);
 
-            flare::memory::ResourceId<YellObj> id2;
-            YellObj *o2 = flare::memory::get_resource(&id2);
+            flare::ResourceId<YellObj> id2;
+            YellObj *o2 = flare::get_resource(&id2);
             ASSERT_TRUE(o2);
-            ASSERT_EQ(o2, flare::memory::address_resource(id2));
+            ASSERT_EQ(o2, flare::address_resource(id2));
 
             ASSERT_EQ(2, nc);
             ASSERT_EQ(0, nd);
@@ -171,7 +171,7 @@ namespace {
         }
         ASSERT_EQ(0, nd);
 
-        flare::memory::clear_resources<YellObj>();
+        flare::clear_resources<YellObj>();
         ASSERT_EQ(2, nd);
         ASSERT_TRUE(ptr_set.empty()) << ptr_set.size();
     }
@@ -180,36 +180,36 @@ namespace {
         nfoo_dtor = 0;
         int nfoo = 0;
         for (int i = 0; i < 100; ++i) {
-            flare::memory::ResourceId<Foo> id = {0};
-            Foo *foo = flare::memory::get_resource<Foo>(&id);
+            flare::ResourceId<Foo> id = {0};
+            Foo *foo = flare::get_resource<Foo>(&id);
             if (foo) {
                 ASSERT_EQ(1, foo->x);
                 ++nfoo;
             }
         }
         ASSERT_EQ(nfoo + nfoo_dtor, 100);
-        ASSERT_EQ((size_t) nfoo, flare::memory::describe_resources<Foo>().item_num);
+        ASSERT_EQ((size_t) nfoo, flare::describe_resources<Foo>().item_num);
     }
 
     TEST_F(ResourcePoolTest, get_int) {
-        flare::memory::clear_resources<int>();
+        flare::clear_resources<int>();
 
         // Perf of this test is affected by previous case.
         const size_t N = 100000;
 
         flare::base::stop_watcher tm;
-        flare::memory::ResourceId<int> id;
+        flare::ResourceId<int> id;
 
         // warm up
-        if (flare::memory::get_resource(&id)) {
-            flare::memory::return_resource(id);
+        if (flare::get_resource(&id)) {
+            flare::return_resource(id);
         }
         ASSERT_EQ(0UL, id);
         delete (new int);
 
         tm.start();
         for (size_t i = 0; i < N; ++i) {
-            *flare::memory::get_resource(&id) = i;
+            *flare::get_resource(&id) = i;
         }
         tm.stop();
         printf("get a int takes %.1fns\n", tm.n_elapsed() / (double) N);
@@ -224,7 +224,7 @@ namespace {
         tm.start();
         for (size_t i = 0; i < N; ++i) {
             id.value = i;
-            *flare::memory::ResourcePool<int>::unsafe_address_resource(id) = i;
+            *flare::ResourcePool<int>::unsafe_address_resource(id) = i;
         }
         tm.stop();
         printf("unsafe_address a int takes %.1fns\n", tm.n_elapsed() / (double) N);
@@ -232,14 +232,14 @@ namespace {
         tm.start();
         for (size_t i = 0; i < N; ++i) {
             id.value = i;
-            *flare::memory::address_resource(id) = i;
+            *flare::address_resource(id) = i;
         }
         tm.stop();
         printf("address a int takes %.1fns\n", tm.n_elapsed() / (double) N);
 
-        std::cout << flare::memory::describe_resources<int>() << std::endl;
-        flare::memory::clear_resources<int>();
-        std::cout << flare::memory::describe_resources<int>() << std::endl;
+        std::cout << flare::describe_resources<int>() << std::endl;
+        flare::clear_resources<int>();
+        std::cout << flare::describe_resources<int>() << std::endl;
     }
 
 
@@ -251,13 +251,13 @@ namespace {
         const size_t N = 10000;
         std::vector<SilentObj *> new_list;
         new_list.reserve(N);
-        flare::memory::ResourceId<SilentObj> id;
+        flare::ResourceId<SilentObj> id;
 
         flare::base::stop_watcher tm1, tm2;
 
         // warm up
-        if (flare::memory::get_resource(&id)) {
-            flare::memory::return_resource(id);
+        if (flare::get_resource(&id)) {
+            flare::return_resource(id);
         }
         delete (new SilentObj);
 
@@ -284,7 +284,7 @@ namespace {
             new_list.clear();
         }
 
-        std::cout << flare::memory::describe_resources<SilentObj>() << std::endl;
+        std::cout << flare::describe_resources<SilentObj>() << std::endl;
     }
 
     struct D {

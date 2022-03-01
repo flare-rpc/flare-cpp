@@ -22,7 +22,7 @@
 #include <stdarg.h>
 #include "flare/io/cord_buf.h"                  // flare::cord_buf
 #include <string_view>   // std::string_view
-#include "flare/memory/arena.h"                  // flare::memory::Arena
+#include "flare/memory/arena.h"                  // flare::Arena
 #include "flare/log/logging.h"                // CHECK
 #include "parse_result.h"                 // ParseError
 
@@ -46,7 +46,7 @@ class RedisReply {
 public:
     // The initial value for a reply is a nil.
     // All needed memory is allocated on `arena'.
-    RedisReply(flare::memory::Arena* arena);
+    RedisReply(flare::Arena* arena);
 
     // Type of the reply.
     RedisReplyType type() const { return _type; }
@@ -162,7 +162,7 @@ private:
         } array;
         uint64_t padding[2]; // For swapping, must cover all bytes.
     } _data;
-    flare::memory::Arena* _arena;
+    flare::Arena* _arena;
 };
 
 // =========== inline impl. ==============
@@ -180,7 +180,7 @@ inline void RedisReply::Reset() {
     // _arena should not be reset because further memory allocation needs it.
 }
 
-inline RedisReply::RedisReply(flare::memory::Arena* arena)
+inline RedisReply::RedisReply(flare::Arena* arena)
     : _arena(arena) {
     Reset();
 }

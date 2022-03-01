@@ -21,7 +21,7 @@
 #include <set>                                          // std::set
 #include "flare/base/file_watcher.h"                    // file_watcher
 #include "flare/base/scoped_file.h"                     // scoped_file
-#include "flare/fiber/internal/fiber.h"                            // flare::this_fiber::fiber_sleep_for
+#include "flare/fiber/internal/fiber.h"                            // flare::fiber_sleep_for
 #include "flare/rpc/log.h"
 #include "flare/rpc/policy/file_naming_service.h"
 #include "flare/base/strings.h"
@@ -139,7 +139,7 @@ int FileNamingService::RunNamingService(const char* service_name,
             if (change < 0) {
                 LOG(ERROR) << "`" << service_name << "' was deleted";
             }
-            if (flare::this_fiber::fiber_sleep_for(100000L/*100ms*/) < 0) {
+            if (flare::fiber_sleep_for(100000L/*100ms*/) < 0) {
                 if (errno == ESTOP) {
                     return 0;
                 }

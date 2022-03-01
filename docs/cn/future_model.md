@@ -28,13 +28,13 @@
 
 - 我们可以通过`Promise<Ts...>` / `Future<Ts...>`**从pthread环境传递数据到fiber环境中**。
 
-  此处调用`Promise<Ts...>::SetValue`的代码（即传给HTTP库的回调）位于HTTP库自己的pthread线程池（非Flare环境），而`flare::fiber::BlockingGet(...)`的调用时机为Flare环境中的某个fiber中。
+  此处调用`Promise<Ts...>::SetValue`的代码（即传给HTTP库的回调）位于HTTP库自己的pthread线程池（非Flare环境），而`flare::BlockingGet(...)`的调用时机为Flare环境中的某个fiber中。
 
 - 在Fiber中阻塞等待`Future<Ts...>`**不会阻塞底层pthread**，因此**没有性能损耗**（除了`Future<Ts...>`本身固有的移动对象等开销外）。
 
   因此我们可以将异步方法转换成*只阻塞Fiber*的同步方法，并且不影响我们实现的函数本身（对外）的同步接口（即对外不需要返回`Future<Ts...>`）。
 
-  *注意这儿需要使用`flare::fiber::BlockingGet(...)`，如果使用`flare::BlockingGet(...)`（内部通过pthread的同步原语实现）则会阻塞底层pthread。如果使用Flare的RPC框架，则通常均应当使用前者。*
+  *注意这儿需要使用`flare::BlockingGet(...)`，如果使用`flare::BlockingGet(...)`（内部通过pthread的同步原语实现）则会阻塞底层pthread。如果使用Flare的RPC框架，则通常均应当使用前者。*
 
 这种设计亦可以用于将多数其他异步客户端以较小的成本转换为Fiber环境下可用的同步版本（而不阻塞底层pthread）。
 
@@ -66,7 +66,7 @@ void EchoServiceImpl::Echo(...) {
   // `BlockingGet(...)` returns `std::tuple` if (and only if) there are more
   //  than one types in `Future<Ts...>`, here we're using structured binding to
   // expand the tuple.
-  auto&& [status, body] = flare::fiber::BlockingGet(&future);
+  auto&& [status, body] = flare::BlockingGet(&future);
   if (status != 200) {
     FLARE_LOG_WARNING("HTTP request failed with status {}.", status);
   } else {
@@ -117,17 +117,17 @@ void EchoServiceImpl::Echo(...) {
 
 - `Future<Ts...>`不再绑定到某种特定的线程模型。
 
-  在我们的设计中，可以通过`flare::BlockingGet(Future<Ts...>*)`来阻塞底层pthread（通常用于非fiber环境）等待结果，也可以通过（fiber环境下）`flare::fiber::BlockingGet(Future<Ts...>*)`来阻塞fiber（但*不*阻塞底层pthread）来等待结果。
+  在我们的设计中，可以通过`flare::BlockingGet(Future<Ts...>*)`来阻塞底层pthread（通常用于非fiber环境）等待结果，也可以通过（fiber环境下）`flare::BlockingGet(Future<Ts...>*)`来阻塞fiber（但*不*阻塞底层pthread）来等待结果。
 
   *别担心，我们通过特定的trick（[`future/utils.h`文件尾部](../base/future/utils.h)）避免了符号寻找时ADL生效。因此unqualified `BlockingGet(...)`会编译错误，而不会直接默认使用`flare::BlockingGet(...)`。*
 
   **因此我们的fiber环境支持使用Future乃至可以阻塞等待Future且不造成（除Future本身固有的执行成本外的）性能影响。**
 
-  *对于检索等需要同时请求多个下游的场景，可以通过发起一系列异步RPC后`flare::fiber::BlockingGet(WhenAll(...))`等待所有RPC返回，然后继续使用同步模型编码。既可以满足并发请求的需求又不需要将Promise/Future模型对外暴露（即无模型的传染性）。*
+  *对于检索等需要同时请求多个下游的场景，可以通过发起一系列异步RPC后`flare::BlockingGet(WhenAll(...))`等待所有RPC返回，然后继续使用同步模型编码。既可以满足并发请求的需求又不需要将Promise/Future模型对外暴露（即无模型的传染性）。*
 
   事实上我们的设计更进一步，**不但允许pthread之间、或fiber之间通过`Future<Ts...>`传递数据，也支持在pthread和fiber之间传递数据**。
 
-  如可以在pthread中调用`Promise<Ts...>::SetValue(...)`、在fiber中调用`flare::fiber::BlockingGet(...)`来实现从pthread向fiber传递数据。
+  如可以在pthread中调用`Promise<Ts...>::SetValue(...)`、在fiber中调用`flare::BlockingGet(...)`来实现从pthread向fiber传递数据。
 
   *从fiber向pthread传递数据只依赖pthread，因此各种`future<T>`均支持，没有太大特殊性。*
 

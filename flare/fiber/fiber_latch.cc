@@ -3,7 +3,7 @@
 #include "flare/fiber/internal/waitable_event.h"
 #include "flare/fiber/fiber_latch.h"
 
-namespace flare::fiber {
+namespace flare {
 
     fiber_latch::fiber_latch(int initial_count) {
         if (initial_count < 0) {
@@ -86,4 +86,4 @@ namespace flare::fiber {
         }
     }
 
-}  // namespace flare::fiber
+}  // namespace flare

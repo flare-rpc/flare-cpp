@@ -82,7 +82,7 @@ public:
         flare::rpc::ClosureGuard done_guard(done);
         TRACEPRINTF("MyAnnotation: %ld", cntl->log_id());
         if (req->sleep_us() > 0) {
-            flare::this_fiber::fiber_sleep_for(req->sleep_us());
+            flare::fiber_sleep_for(req->sleep_us());
         }
         char buf[32];
         snprintf(buf, sizeof(buf), "%" PRIu64, cntl->trace_id());
@@ -748,7 +748,7 @@ TEST_F(BuiltinServiceTest, token) {
 }
 
 void *dummy_fiber(void *) {
-    flare::this_fiber::fiber_sleep_for(1000000);
+    flare::fiber_sleep_for(1000000);
     return NULL;
 }
 
