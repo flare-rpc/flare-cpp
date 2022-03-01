@@ -23,7 +23,7 @@
 #include <string>                       // std::string
 #include "flare/base/static_atomic.h"
 #include "flare/base/type_traits.h"
-#include "flare/base/strings.h"
+#include "flare/strings/str_format.h"
 #include "flare/base/lock.h"
 #include "flare/variable/detail/is_atomical.h"
 #include "flare/variable/variable.h"
@@ -179,7 +179,7 @@ namespace flare::variable {
             if (fmt) {
                 va_list ap;
                 va_start(ap, fmt);
-                flare::base::string_vprintf(&_value, fmt, ap);
+                flare::string_vprintf(&_value, fmt, ap);
                 va_end(ap);
             }
             expose(name);
@@ -190,7 +190,7 @@ namespace flare::variable {
             if (fmt) {
                 va_list ap;
                 va_start(ap, fmt);
-                flare::base::string_vprintf(&_value, fmt, ap);
+                flare::string_vprintf(&_value, fmt, ap);
                 va_end(ap);
             }
             expose_as(prefix, name);
@@ -216,7 +216,7 @@ namespace flare::variable {
             va_start(ap, fmt);
             {
                 flare::base::AutoLock guard(_lock);
-                flare::base::string_vprintf(&_value, fmt, ap);
+                flare::string_vprintf(&_value, fmt, ap);
             }
             va_end(ap);
         }

@@ -5,7 +5,7 @@
 
 #include "flare/strings/internal/ostringstream.h"
 
-namespace flare::strings {
+namespace flare {
 
 namespace strings_internal {
 
@@ -24,4 +24,4 @@ std::streamsize OStringStream::xsputn(const char *s, std::streamsize n) {
 
 }  // namespace strings_internal
 
-}  // namespace flare::strings
+}  // namespace flare

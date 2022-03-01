@@ -19,7 +19,7 @@
 #include <gtest/gtest.h>
 #include "flare/base/compat.h"
 #include "flare/base/time.h"
-#include "flare/base/strings.h"
+#include "flare/strings/str_format.h"
 #include "flare/log/logging.h"
 #include "flare/fiber/internal/fiber.h"
 #include "flare/fiber/internal/waitable_event.h"

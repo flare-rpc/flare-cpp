@@ -189,7 +189,7 @@ public:
     bool PopAnnotation(int64_t before_this_time,
                        int64_t* time, std::string* annotation);
 private:
-    flare::strings::StringSplitter _sp;
+    flare::StringSplitter _sp;
 };
 
 // These two functions can be used for composing TRACEPRINT as well as hiding

@@ -13,7 +13,7 @@
 
 #include "flare/base/profile.h"
 
-namespace flare::strings {
+namespace flare {
 
 namespace strings_internal {
 
@@ -78,6 +78,6 @@ class OStringStream : private std::basic_streambuf<char>, public std::ostream {
 
 }  // namespace strings_internal
 
-}  // namespace flare::strings
+}  // namespace flare
 
 #endif  // FLARE_STRINGS_INTERNAL_OSTRINGSTREAM_H_

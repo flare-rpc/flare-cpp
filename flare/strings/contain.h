@@ -9,7 +9,7 @@
 #include <string_view>
 #include "flare/base/profile.h"
 
-namespace flare::strings {
+namespace flare {
 
 //! Tests of string contains pattern
 
@@ -17,6 +17,6 @@ FLARE_FORCE_INLINE bool string_contains(std::string_view str, std::string_view m
     return str.find(match, 0) != str.npos;
 }
 
-}  // namespace flare::strings
+}  // namespace flare
 
 #endif  // FLARE_BASE_STRING_CONTAIN_H_

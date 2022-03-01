@@ -24,7 +24,8 @@
 #include <typeinfo>
 #include <limits> 
 #include <google/protobuf/descriptor.h>
-#include "flare/base/strings.h"
+#include "flare/strings/str_format.h"
+#include "flare/strings/numbers.h"
 #include "json_to_pb.h"
 #include "zero_copy_stream_reader.h"       // ZeroCopyStreamReader
 #include "encode_decode.h"
@@ -37,7 +38,7 @@
         if (!perr->empty()) {                                           \
             perr->append(", ", 2);                                      \
         }                                                               \
-        flare::base::string_appendf(perr, fmt, ##__VA_ARGS__);                 \
+        flare::string_appendf(perr, fmt, ##__VA_ARGS__);                 \
     } else { }
 
 namespace json2pb {
@@ -59,15 +60,15 @@ static void string_append_value(const RAPIDJSON_NAMESPACE::Value& value,
     } else if (value.IsBool()) {
         output->append(value.GetBool() ? "true" : "false");
     } else if (value.IsInt()) {
-        flare::base::string_appendf(output, "%d", value.GetInt());
+        flare::string_appendf(output, "%d", value.GetInt());
     } else if (value.IsUint()) {
-        flare::base::string_appendf(output, "%u", value.GetUint());
+        flare::string_appendf(output, "%u", value.GetUint());
     } else if (value.IsInt64()) {
-        flare::base::string_appendf(output, "%" PRId64, value.GetInt64());
+        flare::string_appendf(output, "%" PRId64, value.GetInt64());
     } else if (value.IsUint64()) {
-        flare::base::string_appendf(output, "%" PRIu64, value.GetUint64());
+        flare::string_appendf(output, "%" PRIu64, value.GetUint64());
     } else if (value.IsDouble()) {
-        flare::base::string_appendf(output, "%f", value.GetDouble());
+        flare::string_appendf(output, "%f", value.GetDouble());
     } else if (value.IsString()) {
         output->push_back('"');
         output->append(value.GetString(), value.GetStringLength());
@@ -94,7 +95,7 @@ inline bool value_invalid(const google::protobuf::FieldDescriptor* field, const 
         }
         err->append("Invalid value `");
         string_append_value(value, err);
-        flare::base::string_appendf(err, "' for %sfield `%s' which SHOULD be %s",
+        flare::string_appendf(err, "' for %sfield `%s' which SHOULD be %s",
                        optional ? "optional " : "",
                        field->full_name().c_str(), type);
     }
@@ -217,11 +218,11 @@ inline bool convert_int64_type(const RAPIDJSON_NAMESPACE::Value& item, bool repe
             reflection->SetInt64(message, field, item.GetInt64());
         }
     } else if (item.IsString()) {
-        auto r = flare::base::try_parse<int64_t>({item.GetString(), item.GetStringLength()});
-        if(!r) {
+        int64_t r;
+        if(!flare::simple_atoi(std::string_view(item.GetString(), item.GetStringLength()), &r)) {
             return value_invalid(field, "INT64", item, err);
         }
-        num = *r;
+        num = r;
         if (repeated) {
             reflection->AddInt64(message, field, num);
         } else {
@@ -247,11 +248,11 @@ inline bool convert_uint64_type(const RAPIDJSON_NAMESPACE::Value& item,
             reflection->SetUInt64(message, field, item.GetUint64());
         }
     } else if (item.IsString()) {
-        auto r = flare::base::try_parse<int64_t>({item.GetString(), item.GetStringLength()});
-        if(!r) {
+        int64_t r;
+        if(!!flare::simple_atoi(std::string_view(item.GetString(), item.GetStringLength()), &r)) {
             return value_invalid(field, "INT64", item, err);
         }
-        num = *r;
+        num = r;
         if (repeated) {
             reflection->AddUInt64(message, field, num);
         } else {

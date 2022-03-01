@@ -19,10 +19,10 @@
 #include <google/protobuf/reflection_ops.h>     // ReflectionOps::Merge
 #include <gflags/gflags.h>
 #include "flare/base/status.h"
-#include "flare/base/strings.h"
+#include "flare/strings/case_conv.h"
 #include "flare/rpc/redis.h"
 #include "flare/rpc/redis_command.h"
-#include "flare/base/strings.h"
+#include "flare/strings/utility.h"
 
 namespace flare::rpc {
 
@@ -448,7 +448,7 @@ namespace flare::rpc {
     }
 
     bool RedisService::AddCommandHandler(const std::string &name, RedisCommandHandler *handler) {
-        std::string lcname = flare::base::string_to_lower(name);
+        std::string lcname = flare::string_to_lower(name);
         auto it = _command_map.find(lcname);
         if (it != _command_map.end()) {
             LOG(ERROR) << "redis command name=" << name << " exist";
@@ -459,7 +459,7 @@ namespace flare::rpc {
     }
 
     RedisCommandHandler *RedisService::FindCommandHandler(const std::string_view &name) const {
-        auto it = _command_map.find(flare::base::as_string(name));
+        auto it = _command_map.find(flare::as_string(name));
         if (it != _command_map.end()) {
             return it->second;
         }

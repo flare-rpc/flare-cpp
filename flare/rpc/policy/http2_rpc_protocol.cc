@@ -1444,7 +1444,7 @@ DECLARE_bool(usercode_in_pthread);
                     if (uri.port() < 0) {
                         *val = uri.host();
                     } else {
-                        flare::base::string_printf(val, "%s:%d", uri.host().c_str(), uri.port());
+                        flare::string_printf(val, "%s:%d", uri.host().c_str(), uri.port());
                     }
                 } else if (c->remote_side().port != 0) {
                     *val = flare::base::endpoint2str(c->remote_side()).c_str();
@@ -1679,7 +1679,7 @@ DECLARE_bool(usercode_in_pthread);
             if (h->status_code() == 200) {
                 msg->push(common->H2_STATUS, common->STATUS_200);
             } else {
-                flare::base::string_printf(&msg->push(common->H2_STATUS),
+                flare::string_printf(&msg->push(common->H2_STATUS),
                                            "%d", h->status_code());
             }
             if (need_content_type) {
@@ -1750,7 +1750,7 @@ DECLARE_bool(usercode_in_pthread);
             flare::cord_buf trailer_frag;
             if (_is_grpc) {
                 HPacker::Header status_header("grpc-status",
-                                              flare::base::string_printf("%d", _grpc_status));
+                                              flare::string_printf("%d", _grpc_status));
                 hpacker.Encode(&appender, status_header, options);
                 if (!_grpc_message.empty()) {
                     HPacker::Header msg_header("grpc-message", _grpc_message);

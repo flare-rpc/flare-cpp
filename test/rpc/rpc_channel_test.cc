@@ -41,7 +41,7 @@
 #include "flare/rpc/controller.h"
 #include "echo.pb.h"
 #include "flare/rpc/options.pb.h"
-#include "flare/base/strings.h"
+#include "flare/strings/ends_with.h"
 #include "flare/fiber/this_fiber.h"
 
 namespace flare::rpc {
@@ -763,7 +763,7 @@ namespace {
 
             for (size_t i = 0; i < NCHANS; ++i) {
                 ::test::EchoRequest *sub_req = req.add_requests();
-                sub_req->set_message(flare::base::string_printf("hello_%llu", (long long) i));
+                sub_req->set_message(flare::string_printf("hello_%llu", (long long) i));
                 sub_req->set_code(i + 1);
             }
 
@@ -772,7 +772,7 @@ namespace {
             CallMethod(&subchans[0], &cntl, &req, &res, false);
             ASSERT_TRUE(cntl.Failed());
             ASSERT_EQ(flare::rpc::EINTERNAL, cntl.ErrorCode()) << cntl.ErrorText();
-            ASSERT_TRUE(flare::base::ends_with(cntl.ErrorText(), "Method ComboEcho() not implemented."));
+            ASSERT_TRUE(flare::ends_with(cntl.ErrorText(), "Method ComboEcho() not implemented."));
 
             // do the rpc call.
             cntl.Reset();
@@ -782,7 +782,7 @@ namespace {
             ASSERT_GT(cntl.latency_us(), 0);
             ASSERT_EQ((int) NCHANS, res.responses_size());
             for (int i = 0; i < res.responses_size(); ++i) {
-                EXPECT_EQ(flare::base::string_printf("received hello_%d", i),
+                EXPECT_EQ(flare::string_printf("received hello_%d", i),
                           res.responses(i).message());
                 ASSERT_EQ(1, res.responses(i).code_list_size());
                 EXPECT_EQ(i + 1, res.responses(i).code_list(0));

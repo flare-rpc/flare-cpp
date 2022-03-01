@@ -149,7 +149,7 @@ int main(int argc, char* argv[]) {
     g_sub_channel_latency = new flare::variable::LatencyRecorder[FLAGS_channel_num];
     for (int i = 0; i < FLAGS_channel_num; ++i) {
         std::string name;
-        flare::base::string_printf(&name, "client_sub_%d", i);
+        flare::string_printf(&name, "client_sub_%d", i);
         g_sub_channel_latency[i].expose(name);
     }
 

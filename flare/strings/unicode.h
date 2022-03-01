@@ -11,7 +11,7 @@
 #include "flare/base/throw_delegate.h"
 #include <string>
 
-namespace flare::strings {
+namespace flare {
 
 enum utf8_states_t {
     S_STRT = 0, S_RJCT = 8
@@ -422,5 +422,5 @@ void gbk_trans(Uint16ContainerConIter begin, Uint16ContainerConIter end, std::st
 }
 
 
-}  // namespace flare::strings
+}  // namespace flare
 #endif  // FLARE_UNICODE_H_

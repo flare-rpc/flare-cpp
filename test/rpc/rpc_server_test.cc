@@ -1280,7 +1280,7 @@ TEST_F(ServerTest, base64_to_string) {
         ASSERT_EQ(0, chan.Init("localhost:8613", &opt));
         flare::rpc::Controller cntl;
         cntl.http_request().uri() = "/EchoService/BytesEcho" +
-                flare::base::string_printf("%d", i + 1);
+                flare::string_printf("%d", i + 1);
         cntl.http_request().set_method(flare::rpc::HTTP_METHOD_POST);
         cntl.http_request().set_content_type("application/json");
         cntl.set_pb_bytes_to_base64(true);

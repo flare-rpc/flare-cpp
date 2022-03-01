@@ -25,12 +25,15 @@
 #include "flare/base/filesystem.h"
 #include "flare/container/flat_map.h"           // flare::container::FlatMap
 #include "flare/base/scoped_lock.h"                   // BAIDU_SCOPE_LOCK
-#include "flare/strings/string_splitter.h"               // flare::strings::StringSplitter
+#include "flare/strings/string_splitter.h"               // flare::StringSplitter
 #include "flare/base/errno.h"                          // flare_error
 #include "flare/base/time.h"                          // milliseconds_from_now
 #include "flare/variable/gflag.h"
 #include "flare/variable/variable.h"
-#include "flare/base/strings.h"
+#include "flare/strings/utility.h"
+#include "flare/strings/str_format.h"
+#include "flare/strings/ends_with.h"
+#include "flare/strings/strip.h"
 
 namespace flare::variable {
 
@@ -150,7 +153,7 @@ namespace flare::variable {
         _name.reserve((prefix.size() + name.size()) * 5 / 4);
         if (!prefix.empty()) {
             to_underscored_name(&_name, prefix);
-            if (!_name.empty() && flare::base::back_char(_name) != '_') {
+            if (!_name.empty() && flare::back_char(_name) != '_') {
                 _name.push_back('_');
             }
         }
@@ -397,7 +400,7 @@ namespace flare::variable {
             }
             std::string name;
             const char wc_pattern[3] = {'*', question_mark, '\0'};
-            for (flare::strings::StringMultiSplitter sp(wildcards.c_str(), ",;");
+            for (flare::StringMultiSplitter sp(wildcards.c_str(), ",;");
                  sp != NULL; ++sp) {
                 name.assign(sp.field(), sp.length());
                 if (name.find_first_of(wc_pattern) != std::string::npos) {
@@ -533,7 +536,7 @@ namespace flare::variable {
         // safety we normalize the name.
         std::string s;
         if (command_name.size() >= 2UL && command_name[0] == '(' &&
-            flare::base::back_char(command_name) == ')') {
+            flare::back_char(command_name) == ')') {
             // remove parenthesis.
             to_underscored_name(&s,
                                 std::string_view(command_name.data() + 1,
@@ -556,7 +559,7 @@ namespace flare::variable {
             // normalize it.
             if (!s.empty()) {
                 to_underscored_name(&_prefix, s);
-                if (flare::base::back_char(_prefix) != '_') {
+                if (flare::back_char(_prefix) != '_') {
                     _prefix.push_back('_');
                 }
             }
@@ -610,16 +613,16 @@ namespace flare::variable {
         FileDumperGroup(std::string tabs, std::string filename,
                         std::string_view s/*prefix*/) {
             std::string_view path_str(filename);
-            if (flare::base::ends_with(path_str, ".data")) {
+            if (flare::ends_with(path_str, ".data")) {
                 // .data will be appended later
-                flare::base::consume_suffix(&path_str, ".data");
+                flare::consume_suffix(&path_str, ".data");
             }
 
-            for (flare::strings::KeyValuePairsSplitter sp(tabs, ';', '='); sp; ++sp) {
-                std::string key = flare::base::as_string(sp.key());
-                std::string value = flare::base::as_string(sp.value());
+            for (flare::KeyValuePairsSplitter sp(tabs, ';', '='); sp; ++sp) {
+                std::string key = flare::as_string(sp.key());
+                std::string value = flare::as_string(sp.value());
                 std::string pathString(path_str.data(), path_str.size());
-                flare::base::string_appendf(&pathString, ".%s.data", key.c_str());
+                flare::string_appendf(&pathString, ".%s.data", key.c_str());
                 FileDumper *f = new FileDumper(pathString, s);
                 WildcardMatcher *m = new WildcardMatcher(value, '?', true);
                 dumpers.emplace_back(f, m);
@@ -664,14 +667,14 @@ namespace flare::variable {
     DEFINE_int32(variable_dump_interval, 10, "Seconds between consecutive dump");
     DEFINE_string(variable_dump_file, "monitor/variable.<app>.data", "Dump variable into this file");
     DEFINE_string(variable_dump_include, "", "Dump variable matching these wildcards, "
-                                         "separated by semicolon(;), empty means including all");
+                                             "separated by semicolon(;), empty means including all");
     DEFINE_string(variable_dump_exclude, "", "Dump variable excluded from these wildcards, "
-                                         "separated by semicolon(;), empty means no exclusion");
+                                             "separated by semicolon(;), empty means no exclusion");
     DEFINE_string(variable_dump_prefix, "<app>", "Every dumped name starts with this prefix");
     DEFINE_string(variable_dump_tabs, "latency=*_latency*"
-                                  "; qps=*_qps*"
-                                  "; error=*_error*"
-                                  "; system=*process_*,*malloc_*,*kernel_*",
+                                      "; qps=*_qps*"
+                                      "; error=*_error*"
+                                      "; system=*process_*,*malloc_*,*kernel_*",
                   "Dump variable into different tabs according to the filters (seperated by semicolon), "
                   "format: *(tab_name=wildcards;)");
 
@@ -833,7 +836,7 @@ namespace flare::variable {
             if (isalpha(*p)) {
                 if (*p < 'a') { // upper cases
                     if (p != src.data() && !isupper(p[-1]) &&
-                        flare::base::back_char(*name) != '_') {
+                        flare::back_char(*name) != '_') {
                         name->push_back('_');
                     }
                     name->push_back(*p - 'A' + 'a');
@@ -842,7 +845,7 @@ namespace flare::variable {
                 }
             } else if (isdigit(*p)) {
                 name->push_back(*p);
-            } else if (name->empty() || flare::base::back_char(*name) != '_') {
+            } else if (name->empty() || flare::back_char(*name) != '_') {
                 name->push_back('_');
             }
         }

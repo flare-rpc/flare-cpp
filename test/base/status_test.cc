@@ -2,7 +2,7 @@
 #include <errno.h>
 #include <gtest/gtest.h>
 #include "flare/base/status.h"
-#include "flare/base/strings.h"
+#include "flare/strings/utility.h"
 
 namespace {
     class StatusTest : public ::testing::Test {
@@ -246,9 +246,9 @@ namespace {
         std::ostringstream oss;
         char str[32] = "hello world";
         std::string_view slice(str);
-        ASSERT_EQ(11UL, flare::base::as_string(slice).size());
+        ASSERT_EQ(11UL, flare::as_string(slice).size());
         str[5] = '\0';
-        ASSERT_EQ(11UL, flare::base::as_string(slice).size());
+        ASSERT_EQ(11UL, flare::as_string(slice).size());
         flare::base::flare_status st1(ENOMEM, slice);
         ASSERT_FALSE(st1.ok());
         ASSERT_EQ(ENOMEM, st1.error_code());

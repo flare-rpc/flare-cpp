@@ -7,7 +7,7 @@
 
 #include "flare/strings/internal/utf8.h"
 
-namespace flare::strings {
+namespace flare {
 
 namespace strings_internal {
 
@@ -41,4 +41,4 @@ size_t EncodeUTF8Char(char *buffer, char32_t utf8_char) {
 
 }  // namespace strings_internal
 
-}  // namespace flare::strings
+}  // namespace flare

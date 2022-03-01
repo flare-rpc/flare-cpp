@@ -4,7 +4,7 @@
 
 
 #include "flare/base/md5.h"
-#include "flare/base/strings.h"
+#include "flare/strings/hex_dump.h"
 #include "flare/base/math.h"
 
 namespace flare::base {
@@ -239,13 +239,13 @@ namespace flare::base {
     std::string MD5::digest_hex() {
         uint8_t digest[kDigestLength];
         finalize(digest);
-        return hex_dump_lc(digest, kDigestLength);
+        return flare::hex_dump_lc(digest, kDigestLength);
     }
 
     std::string MD5::digest_hex_uc() {
         uint8_t digest[kDigestLength];
         finalize(digest);
-        return hex_dump(digest, kDigestLength);
+        return flare::hex_dump(digest, kDigestLength);
     }
 
     std::string md5_hex(const void *data, uint32_t size) {

@@ -18,7 +18,7 @@
 #include <stdio.h>
 #include <gtest/gtest.h>
 #include <vector>
-#include "flare/base/strings.h"
+#include "flare/strings/str_format.h"
 #include "flare/io/temp_file.h"
 #include "flare/rpc/socket.h"
 #include "flare/rpc/channel.h"

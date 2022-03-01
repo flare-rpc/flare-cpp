@@ -22,7 +22,7 @@
 #include "flare/base/filesystem.h"
 #include <sys/stat.h>
 #include <fcntl.h>                          // O_RDONLY
-#include "flare/base/strings.h"             // string_printf
+#include "flare/strings/str_format.h"             // string_printf
 #include "flare/strings/string_splitter.h"           // StringSplitter
 #include "flare/base/scoped_file.h"         // scoped_file
 #include "flare/base/time.h"
@@ -305,7 +305,7 @@ namespace flare::rpc {
     }
     std::string line;
     while (std::getline(ss, line)) {
-        flare::strings::StringSplitter sp(line.c_str(), ' ');
+        flare::StringSplitter sp(line.c_str(), ' ');
         if (sp == NULL) {
             continue;
         }
@@ -401,7 +401,7 @@ static void LoadSymbols() {
     size_t line_len = 0;
     ssize_t nr = 0;
     while ((nr = getline(&line, &line_len, fp.get())) != -1) {
-        flare::strings::StringSplitter sp(line, line + nr, ' ');
+        flare::StringSplitter sp(line, line + nr, ' ');
         if (sp == NULL) {
             continue;
         }
@@ -541,7 +541,7 @@ void PProfService::symbol(
         }
         std::vector<uintptr_t> addr_list;
         addr_list.reserve(32);
-        flare::strings::StringSplitter sp(addr_cstr, '+');
+        flare::StringSplitter sp(addr_cstr, '+');
         for (; sp != NULL; ++sp) {
             char *endptr;
             uintptr_t addr = strtoull(sp.field(), &endptr, 16);

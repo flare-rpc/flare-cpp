@@ -11,11 +11,11 @@ namespace {
         std::string text = "the";
         std::string_view data(text);
 
-        EXPECT_TRUE(flare::strings::equal_case(data, "The"));
-        EXPECT_TRUE(flare::strings::equal_case(data, "THE"));
-        EXPECT_TRUE(flare::strings::equal_case(data, "the"));
-        EXPECT_FALSE(flare::strings::equal_case(data, "Quick"));
-        EXPECT_FALSE(flare::strings::equal_case(data, "then"));
+        EXPECT_TRUE(flare::equal_case(data, "The"));
+        EXPECT_TRUE(flare::equal_case(data, "THE"));
+        EXPECT_TRUE(flare::equal_case(data, "the"));
+        EXPECT_FALSE(flare::equal_case(data, "Quick"));
+        EXPECT_FALSE(flare::equal_case(data, "then"));
     }
 
 }

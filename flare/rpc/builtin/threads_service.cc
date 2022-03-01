@@ -23,7 +23,7 @@
 #include "flare/rpc/closure_guard.h"        // ClosureGuard
 #include "flare/rpc/builtin/threads_service.h"
 #include "flare/rpc/builtin/common.h"
-#include "flare/base/strings.h"
+#include "flare/strings/str_format.h"
 
 namespace flare::rpc {
 
@@ -36,7 +36,7 @@ void ThreadsService::default_method(::google::protobuf::RpcController* cntl_base
     cntl->http_response().set_content_type("text/plain");
     flare::cord_buf& resp = cntl->response_attachment();
 
-    std::string cmd = flare::base::string_printf("pstack %lld", (long long)getpid());
+    std::string cmd = flare::string_printf("pstack %lld", (long long)getpid());
     flare::base::stop_watcher tm;
     tm.start();
     flare::cord_buf_builder pstack_output;
@@ -47,7 +47,7 @@ void ThreadsService::default_method(::google::protobuf::RpcController* cntl_base
     }
     pstack_output.move_to(resp);
     tm.stop();
-    resp.append(flare::base::string_printf("\n\ntime=%" PRId64 "ms", tm.m_elapsed()));
+    resp.append(flare::string_printf("\n\ntime=%" PRId64 "ms", tm.m_elapsed()));
 }
 
 } // namespace flare::rpc

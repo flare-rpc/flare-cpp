@@ -28,7 +28,8 @@
 #include "flare/rpc/policy/rtmp_protocol.h"       // policy::*
 #include "flare/rpc/rtmp.h"
 #include "flare/rpc/details/rtmp_utils.h"
-#include "flare/base/strings.h"
+#include "flare/strings/starts_with.h"
+#include "flare/strings/utility.h"
 
 
 namespace flare::rpc {
@@ -649,7 +650,7 @@ namespace flare::rpc {
                 if (!st.ok()) {
                     return st;
                 }
-                sps_list.push_back(flare::base::as_string(buf.substr(2, sps_length)));
+                sps_list.push_back(flare::as_string(buf.substr(2, sps_length)));
             }
             buf.remove_prefix(2 + sps_length);
         }
@@ -669,7 +670,7 @@ namespace flare::rpc {
                 return flare::base::flare_status(EINVAL, "Not enough data to decode PPS");
             }
             if (pps_length > 0) {
-                pps_list.push_back(flare::base::as_string(buf.substr(2, pps_length)));
+                pps_list.push_back(flare::as_string(buf.substr(2, pps_length)));
             }
             buf.remove_prefix(2 + pps_length);
         }
@@ -2458,8 +2459,8 @@ namespace flare::rpc {
             // Add a ref for OnRecreateTimer which does deref.
             flare::container::intrusive_ptr<RtmpRetryingClientStream>(this).detach();
             if (fiber_timer_add(&_create_timer_id,
-                                  flare::base::microseconds_from_now(wait_us),
-                                  OnRecreateTimer, this) != 0) {
+                                flare::base::microseconds_from_now(wait_us),
+                                OnRecreateTimer, this) != 0) {
                 LOG(ERROR) << "Fail to create timer";
                 return CallOnStopIfNeeded();
             }
@@ -2678,7 +2679,7 @@ namespace flare::rpc {
             }
             info.set_level(RTMP_INFO_LEVEL_ERROR);
             if (!error_desc.empty()) {
-                info.set_description(flare::base::as_string(error_desc));
+                info.set_description(flare::as_string(error_desc));
             }
             WriteAMFObject(info, &ostream);
         }
@@ -2737,7 +2738,7 @@ namespace flare::rpc {
     }
 
     std::string_view RemoveRtmpPrefix(const std::string_view &url_in) {
-        if (!flare::base::starts_with(url_in, "rtmp://")) {
+        if (!flare::starts_with(url_in, "rtmp://")) {
             return url_in;
         }
         std::string_view url = url_in;
@@ -2816,10 +2817,10 @@ namespace flare::rpc {
         }
         if (vhost) {
             std::string_view qstr = app_and_vhost.substr(q_pos + 1);
-            flare::strings::StringSplitter sp(qstr.data(), qstr.data() + qstr.size(), '&');
+            flare::StringSplitter sp(qstr.data(), qstr.data() + qstr.size(), '&');
             for (; sp; ++sp) {
                 std::string_view field(sp.field(), sp.length());
-                if (flare::base::starts_with(field, "vhost=")) {
+                if (flare::starts_with(field, "vhost=")) {
                     *vhost = field.substr(6);
                     // vhost cannot have port.
                     const size_t colon_pos = vhost->find_last_of(':');

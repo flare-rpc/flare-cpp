@@ -32,7 +32,7 @@
 #include "flare/rpc/redis.h"
 #include "flare/rpc/redis_command.h"
 #include "flare/rpc/policy/redis_protocol.h"
-#include "flare/base/strings.h"
+#include "flare/strings/utility.h"
 
 namespace flare::rpc {
 
@@ -94,7 +94,7 @@ int ConsumeCommand(RedisConnContext* ctx,
         RedisCommandHandler* ch = ctx->redis_service->FindCommandHandler(args[0]);
         if (!ch) {
             char buf[64];
-            snprintf(buf, sizeof(buf), "ERR unknown command `%s`", flare::base::as_string(args[0]).c_str());
+            snprintf(buf, sizeof(buf), "ERR unknown command `%s`", flare::as_string(args[0]).c_str());
             output.SetError(buf);
         } else {
             result = ch->Run(args, &output, flush_batched);

@@ -40,7 +40,8 @@
 #include "flare/json2pb/pb_to_json.h"
 #include "flare/json2pb/json_to_pb.h"
 #include "flare/rpc/details/method_status.h"
-#include "flare/base/strings.h"
+#include "flare/strings/starts_with.h"
+#include "flare/strings/ends_with.h"
 #include "flare/fiber/this_fiber.h"
 
 int main(int argc, char* argv[]) {
@@ -452,7 +453,7 @@ TEST_F(HttpTest, chunked_uploading) {
     const std::string req = "{\"message\":\"hello\"}";
     const std::string res_fname = "curl.out";
     std::string cmd;
-    flare::base::string_printf(&cmd, "curl -X POST -d '%s' -H 'Transfer-Encoding:chunked' "
+    flare::string_printf(&cmd, "curl -X POST -d '%s' -H 'Transfer-Encoding:chunked' "
                         "-H 'Content-Type:application/json' -o %s "
                         "http://localhost:%d/EchoService/Echo",
                         req.c_str(), res_fname.c_str(), port);
@@ -1145,7 +1146,7 @@ TEST_F(HttpTest, http2_window_used_up) {
             // the last message should fail according to flow control policy.
             ASSERT_FALSE(st.ok());
             ASSERT_TRUE(st.error_code() == flare::rpc::ELIMIT);
-            ASSERT_TRUE(flare::base::starts_with(st.error_str(), "remote_window_left is not enough"));
+            ASSERT_TRUE(flare::starts_with(st.error_str(), "remote_window_left is not enough"));
         } else {
             ASSERT_TRUE(st.ok());
         }
@@ -1293,7 +1294,7 @@ TEST_F(HttpTest, http2_header_after_data) {
         }
         {
             flare::rpc::HPacker::Header header("content-length",
-                    flare::base::string_printf("%llu", (unsigned long long)data_buf.size()));
+                    flare::string_printf("%llu", (unsigned long long)data_buf.size()));
             hpacker.Encode(&header1_appender, header, options);
         }
         {
@@ -1396,7 +1397,7 @@ TEST_F(HttpTest, http2_goaway_sanity) {
     flare::cord_buf dummy;
     flare::base::flare_status st = socket_message->AppendAndDestroySelf(&dummy, _h2_client_sock.get());
     ASSERT_EQ(st.error_code(), flare::rpc::ELOGOFF);
-    ASSERT_TRUE(flare::base::ends_with(st.error_data(), "the connection just issued GOAWAY"));
+    ASSERT_TRUE(flare::ends_with(st.error_data(), "the connection just issued GOAWAY"));
 }
 
 class AfterRecevingGoAway : public ::google::protobuf::Closure {

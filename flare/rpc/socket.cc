@@ -822,7 +822,7 @@ int Socket::SetFailed(int error_code, const char* error_fmt, ...) {
             if (error_fmt != NULL) {
                 va_list ap;
                 va_start(ap, error_fmt);
-                flare::base::string_vprintf(&error_text, error_fmt, ap);
+                flare::string_vprintf(&error_text, error_fmt, ap);
                 va_end(ap);
             }
             pthread_mutex_lock(&_id_wait_list_mutex);
@@ -2618,18 +2618,18 @@ std::string Socket::description() const {
     // NOTE: The output should be consistent with operator<<()
     std::string result;
     result.reserve(64);
-    flare::base::string_appendf(&result, "Socket{id=%" PRIu64, id());
+    flare::string_appendf(&result, "Socket{id=%" PRIu64, id());
     const int saved_fd = fd();
     if (saved_fd >= 0) {
-        flare::base::string_appendf(&result, " fd=%d", saved_fd);
+        flare::string_appendf(&result, " fd=%d", saved_fd);
     }
-    flare::base::string_appendf(&result, " addr=%s",
+    flare::string_appendf(&result, " addr=%s",
                           flare::base::endpoint2str(remote_side()).c_str());
     const int local_port = local_side().port;
     if (local_port > 0) {
-        flare::base::string_appendf(&result, ":%d", local_port);
+        flare::string_appendf(&result, ":%d", local_port);
     }
-    flare::base::string_appendf(&result, "} (0x%p)", this);
+    flare::string_appendf(&result, "} (0x%p)", this);
     return result;
 }
 

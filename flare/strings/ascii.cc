@@ -4,7 +4,7 @@
 
 #include "flare/strings/ascii.h"
 
-namespace flare::strings {
+namespace flare {
 
 const character_properties kCtrlOrSpace = character_properties::eControl | character_properties::eSpace;
 
@@ -169,4 +169,4 @@ const character_properties ascii::kCharacterProperties[128] = {
 
 };
 
-}  // namespace flare::strings
+}  // namespace flare

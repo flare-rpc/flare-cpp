@@ -3,7 +3,7 @@
 // Created by liyinbin lijippy@163.com
 
 #include "flare/base/sha1.h"
-#include "flare/base/strings.h"
+#include "flare/strings/hex_dump.h"
 #include "flare/base/math.h"
 
 namespace flare::base {
@@ -191,13 +191,13 @@ namespace flare::base {
     std::string SHA1::digest_hex() {
         uint8_t digest[kDigestLength];
         finalize(digest);
-        return hex_dump_lc(digest, kDigestLength);
+        return flare::hex_dump_lc(digest, kDigestLength);
     }
 
     std::string SHA1::digest_hex_uc() {
         uint8_t digest[kDigestLength];
         finalize(digest);
-        return hex_dump(digest, kDigestLength);
+        return flare::hex_dump(digest, kDigestLength);
     }
 
     std::string sha1_hex(const void *data, uint32_t size) {

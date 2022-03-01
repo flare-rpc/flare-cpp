@@ -12,10 +12,10 @@
 #include "flare/log/logging.h"
 #include "flare/strings/str_cat.h"
 
-using flare::strings::chars_format;
-using flare::strings::strings_internal::FloatType;
-using flare::strings::strings_internal::ParsedFloat;
-using flare::strings::strings_internal::ParseFloat;
+using flare::chars_format;
+using flare::strings_internal::FloatType;
+using flare::strings_internal::ParsedFloat;
+using flare::strings_internal::ParseFloat;
 
 namespace {
 
@@ -31,7 +31,7 @@ namespace {
 // the location of the extended NaN string.  For numbers, this is the location
 // of the full, over-large mantissa.
     template<int base>
-    void ExpectParsedFloat(std::string s, flare::strings::chars_format format_flags,
+    void ExpectParsedFloat(std::string s, flare::chars_format format_flags,
                            FloatType expected_type, uint64_t expected_mantissa,
                            int expected_exponent,
                            int expected_literal_exponent = -999) {
@@ -88,7 +88,7 @@ namespace {
 // Input string `s` must contain a '$' character.  It marks the end of the
 // characters that were consumed by the match.
     template<int base>
-    void ExpectNumber(std::string s, flare::strings::chars_format format_flags,
+    void ExpectNumber(std::string s, flare::chars_format format_flags,
                       uint64_t expected_mantissa, int expected_exponent,
                       int expected_literal_exponent = -999) {
         ExpectParsedFloat<base>(std::move(s), format_flags, FloatType::kNumber,
@@ -100,7 +100,7 @@ namespace {
 //
 // This tests against both number bases, since infinities and NaNs have
 // identical representations in both modes.
-    void ExpectSpecial(const std::string &s, flare::strings::chars_format format_flags,
+    void ExpectSpecial(const std::string &s, flare::chars_format format_flags,
                        FloatType type) {
         ExpectParsedFloat<10>(s, format_flags, type, 0, 0);
         ExpectParsedFloat<16>(s, format_flags, type, 0, 0);
@@ -108,7 +108,7 @@ namespace {
 
 // Check that a given input string is not matched by Float.
     template<int base>
-    void ExpectFailedParse(std::string_view s, flare::strings::chars_format format_flags) {
+    void ExpectFailedParse(std::string_view s, flare::chars_format format_flags) {
         ParsedFloat parsed =
                 ParseFloat<base>(s.data(), s.data() + s.size(), format_flags);
         EXPECT_EQ(parsed.end, nullptr);

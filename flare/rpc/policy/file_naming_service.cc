@@ -24,7 +24,7 @@
 #include "flare/fiber/internal/fiber.h"                            // flare::fiber_sleep_for
 #include "flare/rpc/log.h"
 #include "flare/rpc/policy/file_naming_service.h"
-#include "flare/base/strings.h"
+#include "flare/strings/utility.h"
 #include "flare/fiber/this_fiber.h"
 
 
@@ -103,7 +103,7 @@ int FileNamingService::GetServers(const char *service_name,
         }
         ServerNode node;
         node.addr = point;
-        flare::base::copy_to_string(tag, &node.tag);
+        flare::copy_to_string(tag, &node.tag);
         if (presence.insert(node).second) {
             servers->push_back(node);
         } else {

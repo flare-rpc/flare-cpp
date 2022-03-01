@@ -20,7 +20,7 @@
 #include "flare/rapidjson/document.h"
 #include "flare/rapidjson/memorybuffer.h"
 #include "flare/rapidjson/writer.h"
-#include "flare/base/strings.h"
+#include "flare/strings/str_format.h"
 #include "flare/strings/str_split.h"
 #include "flare/base/fast_rand.h"
 #include "flare/fiber/internal/fiber.h"
@@ -275,7 +275,7 @@ int DiscoveryClient::DoRegister() {
     os << "appid=" << _params.appid
         << "&hostname=" << _params.hostname;
 
-    std::vector<std::string_view> addrs = flare::strings::string_split(_params.addrs, ',');
+    std::vector<std::string_view> addrs = flare::string_split(_params.addrs, ',');
     for (size_t i = 0; i < addrs.size(); ++i) {
         if (!addrs[i].empty()) {
             os << "&addrs=" << addrs[i];
@@ -357,7 +357,7 @@ int DiscoveryNamingService::GetServers(const char* service_name,
     }
     servers->clear();
     Controller cntl;
-    std::string uri_str = flare::base::string_printf(
+    std::string uri_str = flare::string_printf(
             "/discovery/fetchs?appid=%s&env=%s&status=%s", service_name,
             FLAGS_discovery_env.c_str(), FLAGS_discovery_status.c_str());
     if (!FLAGS_discovery_zone.empty()) {

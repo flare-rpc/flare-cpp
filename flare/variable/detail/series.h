@@ -282,7 +282,7 @@ void Series<Vector<T,N>, Op>::describe(std::ostream& os,
     // to exactly accurate.
     pthread_mutex_unlock(&this->_mutex);
 
-    flare::strings::StringSplitter sp(vector_names ? vector_names->c_str() : "", ',');
+    flare::StringSplitter sp(vector_names ? vector_names->c_str() : "", ',');
     os << '[';
     for (size_t j = 0; j < N; ++j) {
         if (j) {

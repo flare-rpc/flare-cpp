@@ -24,7 +24,7 @@
 #include "flare/rpc/policy/http_rpc_protocol.h"
 #include <memory>                       // std::unique_ptr
 #include "flare/strings/string_splitter.h"                  // StringMultiSplitter
-#include "flare/base/strings.h"
+#include "flare/strings/starts_with.h"
 #include "flare/base/time.h"
 #include "flare/base/endian.h"
 #include "flare/rpc/compress.h"
@@ -41,7 +41,7 @@
 #include "flare/rpc/policy/http2_rpc_protocol.h"
 #include "flare/rpc/details/usercode_backup_pool.h"
 #include "flare/rpc/grpc.h"
-#include "flare/base/strings.h"
+#include "flare/strings/str_format.h"
 
 extern "C" {
 void fiber_assign_data(void *data);
@@ -147,12 +147,12 @@ namespace flare::rpc {
             //   subtype     = token
 
             const std::string_view prefix = "application/";
-            if (!flare::base::starts_with(ct, prefix)) {
+            if (!flare::starts_with(ct, prefix)) {
                 return HTTP_CONTENT_OTHERS;
             }
             ct.remove_prefix(prefix.size());
 
-            if (flare::base::starts_with(ct, "grpc")) {
+            if (flare::starts_with(ct, "grpc")) {
                 if (ct.size() == (size_t) 4 || ct[4] == ';') {
                     if (is_grpc_ct) {
                         *is_grpc_ct = true;
@@ -170,13 +170,13 @@ namespace flare::rpc {
             }
 
             HttpContentType type = HTTP_CONTENT_OTHERS;
-            if (flare::base::starts_with(ct, "json")) {
+            if (flare::starts_with(ct, "json")) {
                 type = HTTP_CONTENT_JSON;
                 ct.remove_prefix(4);
-            } else if (flare::base::starts_with(ct, "proto")) {
+            } else if (flare::starts_with(ct, "proto")) {
                 type = HTTP_CONTENT_PROTO;
                 ct.remove_prefix(5);
-            } else if (flare::base::starts_with(ct, "x-protobuf")) {
+            } else if (flare::starts_with(ct, "x-protobuf")) {
                 type = HTTP_CONTENT_PROTO;
                 ct.remove_prefix(10);
             } else {
@@ -356,7 +356,7 @@ namespace flare::rpc {
                 // ErrorCode of RPC is unified to EHTTP.
                 const int sc = res_header->status_code();
                 if (sc < 200 || sc >= 300) {
-                    std::string err = flare::base::string_printf(
+                    std::string err = flare::string_printf(
                             "HTTP/%d.%d %d %s",
                             res_header->major_version(),
                             res_header->minor_version(),
@@ -551,7 +551,7 @@ namespace flare::rpc {
             // Fill log-id if user set it.
             if (cntl->has_log_id()) {
                 hreq.SetHeader(common->LOG_ID,
-                               flare::base::string_printf("%llu", (unsigned long long) cntl->log_id()));
+                               flare::string_printf("%llu", (unsigned long long) cntl->log_id()));
             }
             if (!cntl->request_id().empty()) {
                 hreq.SetHeader(FLAGS_request_id_header, cntl->request_id());
@@ -575,7 +575,7 @@ namespace flare::rpc {
                     hreq.SetHeader(common->TE, common->TRAILERS);
                     if (cntl->timeout_ms() >= 0) {
                         hreq.SetHeader(common->GRPC_TIMEOUT,
-                                       flare::base::string_printf("%" PRId64 "m", cntl->timeout_ms()));
+                                       flare::string_printf("%" PRId64 "m", cntl->timeout_ms()));
                     }
                     // Append compressed and length before body
                     AddGrpcPrefix(&cntl->request_attachment(), grpc_compressed);
@@ -599,11 +599,11 @@ namespace flare::rpc {
 
             Span *span = accessor.span();
             if (span) {
-                hreq.SetHeader("x-bd-trace-id", flare::base::string_printf(
+                hreq.SetHeader("x-bd-trace-id", flare::string_printf(
                         "%llu", (unsigned long long) span->trace_id()));
-                hreq.SetHeader("x-bd-span-id", flare::base::string_printf(
+                hreq.SetHeader("x-bd-span-id", flare::string_printf(
                         "%llu", (unsigned long long) span->span_id()));
-                hreq.SetHeader("x-bd-parent-span-id", flare::base::string_printf(
+                hreq.SetHeader("x-bd-parent-span-id", flare::string_printf(
                         "%llu", (unsigned long long) span->parent_span_id()));
             }
         }
@@ -808,7 +808,7 @@ namespace flare::rpc {
                     }
                     // Fill ErrorCode into header
                     res_header->SetHeader(common->ERROR_CODE,
-                                          flare::base::string_printf("%d", cntl->ErrorCode()));
+                                          flare::string_printf("%d", cntl->ErrorCode()));
 
                     // Fill body with ErrorText.
                     // user may compress the output and change content-encoding. However
@@ -911,7 +911,7 @@ namespace flare::rpc {
 // put it into `unresolved_path'
         static void FillUnresolvedPath(std::string *unresolved_path,
                                        const std::string &uri_path,
-                                       flare::strings::StringSplitter &splitter) {
+                                       flare::StringSplitter &splitter) {
             if (unresolved_path == NULL) {
                 return;
             }
@@ -924,7 +924,7 @@ namespace flare::rpc {
                     uri_path.c_str() + uri_path.size() - splitter.field();
             unresolved_path->reserve(path_len);
             unresolved_path->clear();
-            for (flare::strings::StringSplitter slash_sp(
+            for (flare::StringSplitter slash_sp(
                     splitter.field(), splitter.field() + path_len, '/');
                  slash_sp != NULL; ++slash_sp) {
                 if (!unresolved_path->empty()) {
@@ -938,7 +938,7 @@ namespace flare::rpc {
         FindMethodPropertyByURIImpl(const std::string &uri_path, const Server *server,
                                     std::string *unresolved_path) {
             ServerPrivateAccessor wrapper(server);
-            flare::strings::StringSplitter splitter(uri_path.c_str(), '/');
+            flare::StringSplitter splitter(uri_path.c_str(), '/');
             // Show index page for empty URI
             if (NULL == splitter) {
                 return wrapper.FindMethodPropertyByFullName(
@@ -1339,7 +1339,7 @@ namespace flare::rpc {
             } else if (sp->service->GetDescriptor() == BadMethodService::descriptor()) {
                 BadMethodRequest breq;
                 BadMethodResponse bres;
-                flare::strings::StringSplitter split(path.c_str(), '/');
+                flare::StringSplitter split(path.c_str(), '/');
                 breq.set_service_name(std::string(split.field(), split.length()));
                 sp->service->CallMethod(sp->method, cntl, &breq, &bres, NULL);
                 return;

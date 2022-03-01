@@ -18,7 +18,7 @@
 
 #include <limits>
 #include "flare/log/logging.h"
-#include "flare/base/strings.h"
+#include "flare/strings/str_format.h"
 #include "flare/rpc/redis_reply.h"
 
 namespace flare::rpc {
@@ -468,7 +468,7 @@ void RedisReply::FormatStringImpl(const char* fmt, va_list args, RedisReplyType 
     } else {
         std::string str;
         str.reserve(ret + 1);
-        flare::base::string_vappendf(&str, fmt, args);
+        flare::string_vappendf(&str, fmt, args);
         return SetStringImpl(str, type);
     }
 }

@@ -22,7 +22,7 @@
 #include "flare/strings/str_join.h"
 #include <string_view>
 
-namespace flare::strings {
+namespace flare {
 
 
 // unescape()
@@ -55,7 +55,7 @@ namespace flare::strings {
 //
 //   std::string s = "foo\\rbar\\nbaz\\t";
 //   std::string unescaped_s;
-//   if (!flare::strings::unescape(s, &unescaped_s) {
+//   if (!flare::unescape(s, &unescaped_s) {
 //     ...
 //   }
 //   EXPECT_EQ(unescaped_s, "foo\rbar\nbaz\t");
@@ -75,7 +75,7 @@ FLARE_FORCE_INLINE bool unescape(std::string_view source, std::string *dest) {
 // Example:
 //
 //   std::string s = "foo\rbar\tbaz\010\011\012\013\014\x0d\n";
-//   std::string escaped_s = flare::strings::escape(s);
+//   std::string escaped_s = flare::escape(s);
 //   EXPECT_EQ(escaped_s, "foo\\rbar\\tbaz\\010\\t\\n\\013\\014\\r\\n");
 std::string escape(std::string_view src);
 
@@ -88,7 +88,7 @@ std::string escape(std::string_view src);
 // Example:
 //
 //   std::string s = "foo\rbar\tbaz\010\011\012\013\014\x0d\n";
-//   std::string escaped_s = flare::strings::hex_escape(s);
+//   std::string escaped_s = flare::hex_escape(s);
 //   EXPECT_EQ(escaped_s, "foo\\rbar\\tbaz\\x08\\t\\n\\x0b\\x0c\\r\\n");
 std::string hex_escape(std::string_view src);
 
@@ -151,6 +151,6 @@ std::string hex_string_to_bytes(std::string_view from);
 std::string bytes_to_hex_string(std::string_view from);
 
 
-}  // namespace flare::strings
+}  // namespace flare
 
 #endif  // FLARE_STRINGS_ESCAPING_H_

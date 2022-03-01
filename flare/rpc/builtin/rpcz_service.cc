@@ -19,7 +19,7 @@
 #include <ostream>
 #include <iomanip>
 #include <gflags/gflags.h>
-#include "flare/base/strings.h"
+#include "flare/strings/utility.h"
 #include "flare/strings/string_splitter.h"
 #include "flare/base/profile.h"
 #include "flare/base/time.h"
@@ -196,7 +196,7 @@ namespace flare::rpc {
                 PrintRealTime(os, anno_time);
                 PrintElapse(os, anno_time, last_time);
                 os << ' ' << a;
-                if (a.empty() || flare::base::back_char(a) != '\n') {
+                if (a.empty() || flare::back_char(a) != '\n') {
                     os << '\n';
                 }
             }

@@ -29,7 +29,8 @@
 #include "flare/rpc/builtin/pprof_perl.h"
 #include "flare/rpc/builtin/hotspots_service.h"
 #include "flare/rpc/details/tcmalloc_extension.h"
-#include "flare/base/strings.h"
+#include "flare/strings/starts_with.h"
+#include "flare/strings/ends_with.h"
 #include "flare/fiber/this_fiber.h"
 
 extern "C" {
@@ -265,7 +266,7 @@ namespace flare::rpc {
 // system related functions (popen/system/exec ...) to avoid potential
 // injections from URL and other user inputs.
     static bool ValidProfilePath(const std::string_view &path) {
-        if (!flare::base::starts_with(path, FLAGS_rpc_profiling_dir)) {
+        if (!flare::starts_with(path, FLAGS_rpc_profiling_dir)) {
             // Must be under the directory.
             return false;
         }
@@ -1038,7 +1039,7 @@ namespace flare::rpc {
                 if (past_profs.empty()) {
                     past_profs.reserve(16);
                 }
-                if (!entry.is_directory() && flare::base::ends_with(entry.path().c_str(), type_str)) {
+                if (!entry.is_directory() && flare::ends_with(entry.path().c_str(), type_str)) {
                     past_profs.push_back(entry.path().generic_string());
                 }
             }

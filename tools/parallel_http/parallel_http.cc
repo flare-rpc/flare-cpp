@@ -23,7 +23,9 @@
 #include <flare/fiber/this_fiber.h>
 #include <flare/fiber/internal/fiber.h>
 #include "flare/log/logging.h"
-#include "flare/base/strings.h"
+#include "flare/strings/starts_with.h"
+#include "flare/strings/trim.h"
+#include "flare/strings/utility.h"
 #include <flare/base/scoped_file.h>
 #include <flare/rpc/channel.h>
 
@@ -130,9 +132,9 @@ int main(int argc, char **argv) {
             --nr;
         }
         std::string_view line(line_buf, nr);
-        line = flare::base::strip_ascii_whitespace(line);
+        line = flare::strip_ascii_whitespace(line);
         if (!line.empty()) {
-            url_list.push_back(flare::base::as_string(line));
+            url_list.push_back(flare::as_string(line));
         }
     }
     if (url_list.empty()) {
@@ -160,7 +162,7 @@ int main(int argc, char **argv) {
             for (size_t i = 0; i < output_queue.size(); ++i) {
                 std::string_view url = output_queue[i].first;
                 std::string_view hostname;
-                if (flare::base::starts_with(url, "http://")) {
+                if (flare::starts_with(url, "http://")) {
                     url.remove_prefix(7);
                 }
                 size_t slash_pos = url.find('/');

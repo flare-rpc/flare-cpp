@@ -131,16 +131,16 @@ double Pow10(int exp) {
 
 namespace {
 
-    using flare::strings::numbers_internal::kSixDigitsToBufferSize;
-    using flare::strings::numbers_internal::safe_strto32_base;
-    using flare::strings::numbers_internal::safe_strto64_base;
-    using flare::strings::numbers_internal::safe_strtou32_base;
-    using flare::strings::numbers_internal::safe_strtou64_base;
-    using flare::strings::numbers_internal::six_digits_to_buffer;
-    using flare::strings::strings_internal::Itoa;
-    using flare::strings::strings_internal::strtouint32_test_cases;
-    using flare::strings::strings_internal::strtouint64_test_cases;
-    using flare::strings::simple_atoi;
+    using flare::numbers_internal::kSixDigitsToBufferSize;
+    using flare::numbers_internal::safe_strto32_base;
+    using flare::numbers_internal::safe_strto64_base;
+    using flare::numbers_internal::safe_strtou32_base;
+    using flare::numbers_internal::safe_strtou64_base;
+    using flare::numbers_internal::six_digits_to_buffer;
+    using flare::strings_internal::Itoa;
+    using flare::strings_internal::strtouint32_test_cases;
+    using flare::strings_internal::strtouint64_test_cases;
+    using flare::simple_atoi;
     using testing::Eq;
     using testing::MatchesRegex;
 
@@ -246,21 +246,21 @@ namespace {
     typedef MyInteger<uint64_t> MyUInt64;
 
     void CheckInt32(int32_t x) {
-        char buffer[flare::strings::numbers_internal::kFastToBufferSize];
-        char *actual = flare::strings::numbers_internal::fast_int_to_buffer(x, buffer);
+        char buffer[flare::numbers_internal::kFastToBufferSize];
+        char *actual = flare::numbers_internal::fast_int_to_buffer(x, buffer);
         std::string expected = std::to_string(x);
         EXPECT_EQ(expected, std::string(buffer, actual)) << " Input " << x;
 
-        char *generic_actual = flare::strings::numbers_internal::fast_int_to_buffer(x, buffer);
+        char *generic_actual = flare::numbers_internal::fast_int_to_buffer(x, buffer);
         EXPECT_EQ(expected, std::string(buffer, generic_actual)) << " Input " << x;
     }
 
     void CheckInt64(int64_t x) {
-        char buffer[flare::strings::numbers_internal::kFastToBufferSize + 3];
+        char buffer[flare::numbers_internal::kFastToBufferSize + 3];
         buffer[0] = '*';
         buffer[23] = '*';
         buffer[24] = '*';
-        char *actual = flare::strings::numbers_internal::fast_int_to_buffer(x, &buffer[1]);
+        char *actual = flare::numbers_internal::fast_int_to_buffer(x, &buffer[1]);
         std::string expected = std::to_string(x);
         EXPECT_EQ(expected, std::string(&buffer[1], actual)) << " Input " << x;
         EXPECT_EQ(buffer[0], '*');
@@ -268,41 +268,41 @@ namespace {
         EXPECT_EQ(buffer[24], '*');
 
         char *my_actual =
-                flare::strings::numbers_internal::fast_int_to_buffer(MyInt64(x), &buffer[1]);
+                flare::numbers_internal::fast_int_to_buffer(MyInt64(x), &buffer[1]);
         EXPECT_EQ(expected, std::string(&buffer[1], my_actual)) << " Input " << x;
     }
 
     void CheckUInt32(uint32_t x) {
-        char buffer[flare::strings::numbers_internal::kFastToBufferSize];
-        char *actual = flare::strings::numbers_internal::fast_int_to_buffer(x, buffer);
+        char buffer[flare::numbers_internal::kFastToBufferSize];
+        char *actual = flare::numbers_internal::fast_int_to_buffer(x, buffer);
         std::string expected = std::to_string(x);
         EXPECT_EQ(expected, std::string(buffer, actual)) << " Input " << x;
 
-        char *generic_actual = flare::strings::numbers_internal::fast_int_to_buffer(x, buffer);
+        char *generic_actual = flare::numbers_internal::fast_int_to_buffer(x, buffer);
         EXPECT_EQ(expected, std::string(buffer, generic_actual)) << " Input " << x;
     }
 
     void CheckUInt64(uint64_t x) {
-        char buffer[flare::strings::numbers_internal::kFastToBufferSize + 1];
-        char *actual = flare::strings::numbers_internal::fast_int_to_buffer(x, &buffer[1]);
+        char buffer[flare::numbers_internal::kFastToBufferSize + 1];
+        char *actual = flare::numbers_internal::fast_int_to_buffer(x, &buffer[1]);
         std::string expected = std::to_string(x);
         EXPECT_EQ(expected, std::string(&buffer[1], actual)) << " Input " << x;
 
-        char *generic_actual = flare::strings::numbers_internal::fast_int_to_buffer(x, &buffer[1]);
+        char *generic_actual = flare::numbers_internal::fast_int_to_buffer(x, &buffer[1]);
         EXPECT_EQ(expected, std::string(&buffer[1], generic_actual))
                             << " Input " << x;
 
         char *my_actual =
-                flare::strings::numbers_internal::fast_int_to_buffer(MyUInt64(x), &buffer[1]);
+                flare::numbers_internal::fast_int_to_buffer(MyUInt64(x), &buffer[1]);
         EXPECT_EQ(expected, std::string(&buffer[1], my_actual)) << " Input " << x;
     }
 
     void CheckHex64(uint64_t v) {
         char expected[16 + 1];
-        std::string actual = flare::strings::string_cat(flare::strings::hex(v, flare::strings::kZeroPad16));
+        std::string actual = flare::string_cat(flare::hex(v, flare::kZeroPad16));
         snprintf(expected, sizeof(expected), "%016" PRIx64, static_cast<uint64_t>(v));
         EXPECT_EQ(expected, actual) << " Input " << v;
-        actual = flare::strings::string_cat(flare::strings::hex(v, flare::strings::kSpacePad16));
+        actual = flare::string_cat(flare::hex(v, flare::kSpacePad16));
         snprintf(expected, sizeof(expected), "%16" PRIx64, static_cast<uint64_t>(v));
         EXPECT_EQ(expected, actual) << " Input " << v;
     }
@@ -347,7 +347,7 @@ namespace {
     void VerifySimpleAtoiGood(in_val_type in_value, int_type exp_value) {
         std::string s;
         // uint128 can be streamed but not string_cat'd
-        flare::strings::strings_internal::OStringStream(&s) << in_value;
+        flare::strings_internal::OStringStream(&s) << in_value;
         int_type x = static_cast<int_type>(~exp_value);
         EXPECT_TRUE(simple_atoi(s, &x))
                             << "in_value=" << in_value << " s=" << s << " x=" << x;
@@ -359,7 +359,7 @@ namespace {
 
     template<typename int_type, typename in_val_type>
     void VerifySimpleAtoiBad(in_val_type in_value) {
-        std::string s = flare::strings::string_cat(in_value);
+        std::string s = flare::string_cat(in_value);
         int_type x;
         EXPECT_FALSE(simple_atoi(s, &x));
         EXPECT_FALSE(simple_atoi(s.c_str(), &x));
@@ -748,16 +748,16 @@ namespace {
 
             // Test overflow
             EXPECT_FALSE(
-                    parse_func(flare::strings::string_cat(std::numeric_limits<IntType>::max(), value),
+                    parse_func(flare::string_cat(std::numeric_limits<IntType>::max(), value),
                                &parsed_value, base));
 
             // Test underflow
             if (std::numeric_limits<IntType>::min() < 0) {
                 EXPECT_FALSE(
-                        parse_func(flare::strings::string_cat(std::numeric_limits<IntType>::min(), value),
+                        parse_func(flare::string_cat(std::numeric_limits<IntType>::min(), value),
                                    &parsed_value, base));
             } else {
-                EXPECT_FALSE(parse_func(flare::strings::string_cat("-", value), &parsed_value, base));
+                EXPECT_FALSE(parse_func(flare::string_cat("-", value), &parsed_value, base));
             }
         }
     }
@@ -783,10 +783,10 @@ namespace {
         // uint128 can be streamed but not string_cat'd, so this code must be custom
         // implemented for uint128, but is generally the same as what's above.
         // test_random_integer_parse_base<flare::base::uint128>(
-        //     &flare::strings::numbers_internal::safe_strtou128_base);
+        //     &flare::numbers_internal::safe_strtou128_base);
         using RandomEngine = std::minstd_rand0;
         using IntType = flare::base::uint128;
-        constexpr auto parse_func = &flare::strings::numbers_internal::safe_strtou128_base;
+        constexpr auto parse_func = &flare::numbers_internal::safe_strtou128_base;
 
         std::random_device rd;
         RandomEngine rng(rd());
@@ -808,13 +808,13 @@ namespace {
 
             // Test overflow
             std::string s;
-            flare::strings::strings_internal::OStringStream(&s)
+            flare::strings_internal::OStringStream(&s)
                     << std::numeric_limits<IntType>::max() << value;
             EXPECT_FALSE(parse_func(s, &parsed_value, base));
 
             // Test underflow
             s.clear();
-            flare::strings::strings_internal::OStringStream(&s) << "-" << value;
+            flare::strings_internal::OStringStream(&s) << "-" << value;
             EXPECT_FALSE(parse_func(s, &parsed_value, base));
         }
     }
@@ -993,7 +993,7 @@ namespace {
                 mismatches.push_back(d);
                 if (mismatches.size() < 10) {
                     LOG(ERROR) <<
-                               flare::strings::string_cat("Six-digit failure with double.  ", "d=", d,
+                               flare::string_cat("Six-digit failure with double.  ", "d=", d,
                                                           "=", d, " sixdigits=", sixdigitsbuf,
                                                           " printf(%g)=", snprintfbuf).c_str();
                 }
@@ -1044,7 +1044,7 @@ namespace {
                     // The exhaustive test takes a very long time, so log progress.
                     char buf[kSixDigitsToBufferSize];
                     LOG(INFO) <<
-                              flare::strings::string_cat("Exp ", exponent, " powten=", powten, "(", powten,
+                              flare::string_cat("Exp ", exponent, " powten=", powten, "(", powten,
                                                          ") (",
                                                          std::string(buf, six_digits_to_buffer(powten, buf)), ")")
                                       .c_str();
@@ -1073,7 +1073,7 @@ namespace {
                 double after = nextafter(d, 1.7976931348623157e308);
                 char b1[32], b2[kSixDigitsToBufferSize];
                 LOG(ERROR) <<
-                           flare::strings::string_cat(
+                           flare::string_cat(
                                    "Mismatch #", i, "  d=", d, " (", ToNineDigits(d), ")",
                                    " sixdigits='", sixdigitsbuf, "'", " snprintf='", snprintfbuf,
                                    "'", " Before.=", PerfectDtoa(before), " ",
@@ -1102,8 +1102,8 @@ namespace {
                 {" ",                                              false, 0},
                 {"-",                                              false, 0},
                 {"123@@@",                                         false, 123},
-                {flare::strings::string_cat(int32_min, int32_max), false, int32_min},
-                {flare::strings::string_cat(int32_max, int32_max), false, int32_max},
+                {flare::string_cat(int32_min, int32_max), false, int32_min},
+                {flare::string_cat(int32_max, int32_max), false, int32_max},
         };
 
         for (const Int32TestLine &test_line : int32_test_line) {
@@ -1134,7 +1134,7 @@ namespace {
                 {" ",                                                false, 0},
                 {"-",                                                false, 0},
                 {"123@@@",                                           false, 123},
-                {flare::strings::string_cat(uint32_max, uint32_max), false, uint32_max},
+                {flare::string_cat(uint32_max, uint32_max), false, uint32_max},
         };
 
         for (const Uint32TestLine &test_line : uint32_test_line) {
@@ -1166,8 +1166,8 @@ namespace {
                 {" ",                                              false, 0},
                 {"-",                                              false, 0},
                 {"123@@@",                                         false, 123},
-                {flare::strings::string_cat(int64_min, int64_max), false, int64_min},
-                {flare::strings::string_cat(int64_max, int64_max), false, int64_max},
+                {flare::string_cat(int64_min, int64_max), false, int64_min},
+                {flare::string_cat(int64_max, int64_max), false, int64_max},
         };
 
         for (const Int64TestLine &test_line : int64_test_line) {
@@ -1198,7 +1198,7 @@ namespace {
                 {" ",                                                false, 0},
                 {"-",                                                false, 0},
                 {"123@@@",                                           false, 123},
-                {flare::strings::string_cat(uint64_max, uint64_max), false, uint64_max},
+                {flare::string_cat(uint64_max, uint64_max), false, uint64_max},
         };
 
         for (const Uint64TestLine &test_line : uint64_test_line) {
@@ -1349,7 +1349,7 @@ namespace {
 
     void TestFastHexToBufferZeroPad16(uint64_t v) {
         char buf[16];
-        auto digits = flare::strings::numbers_internal::fast_hex_to_buffer_zero_pad16(v, buf);
+        auto digits = flare::numbers_internal::fast_hex_to_buffer_zero_pad16(v, buf);
         std::string_view res(buf, 16);
         char buf2[17];
         snprintf(buf2, sizeof(buf2), "%016" PRIx64, v);

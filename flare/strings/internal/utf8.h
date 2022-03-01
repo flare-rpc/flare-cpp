@@ -11,7 +11,7 @@
 #include <cstdint>
 #include "flare/base/profile.h"
 
-namespace flare::strings {
+namespace flare {
 
 namespace strings_internal {
 
@@ -37,6 +37,6 @@ size_t EncodeUTF8Char(char *buffer, char32_t utf8_char);
 
 }  // namespace strings_internal
 
-}  // namespace flare::strings
+}  // namespace flare
 
 #endif  // FLARE_STRINGS_INTERNAL_UTF8_H_

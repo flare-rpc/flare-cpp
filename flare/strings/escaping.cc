@@ -21,7 +21,7 @@
 #include "flare/strings/str_join.h"
 #include <string_view>
 
-namespace flare::strings {
+namespace flare {
 
 namespace {
 
@@ -33,7 +33,7 @@ FLARE_FORCE_INLINE bool is_octal_digit(char c) { return ('0' <= c) && (c <= '7')
 FLARE_FORCE_INLINE int hex_digit_to_int(char c) {
     static_assert('0' == 0x30 && 'A' == 0x41 && 'a' == 0x61,
                   "Character set must be ASCII.");
-    assert(flare::strings::ascii::is_hex_digit(c));
+    assert(flare::ascii::is_hex_digit(c));
     int x = static_cast<unsigned char>(c);
     if (x > '9') {
         x += 9;
@@ -44,7 +44,7 @@ FLARE_FORCE_INLINE int hex_digit_to_int(char c) {
 FLARE_FORCE_INLINE bool IsSurrogate(char32_t c, std::string_view src, std::string *error) {
     if (c >= 0xD800 && c <= 0xDFFF) {
         if (error) {
-            *error = flare::strings::string_cat("invalid surrogate character (0xD800-DFFF): \\",
+            *error = flare::string_cat("invalid surrogate character (0xD800-DFFF): \\",
                                       src);
         }
         return true;
@@ -159,13 +159,13 @@ bool CUnescapeInternal(std::string_view source, bool leave_nulls_escaped,
                     if (p >= last_byte) {
                         if (error) *error = "String cannot end with \\x";
                         return false;
-                    } else if (!flare::strings::ascii::is_hex_digit(p[1])) {
+                    } else if (!flare::ascii::is_hex_digit(p[1])) {
                         if (error) *error = "\\x cannot be followed by a non-hex digit";
                         return false;
                     }
                     unsigned int ch = 0;
                     const char *hex_start = p;
-                    while (p < last_byte && flare::strings::ascii::is_hex_digit(p[1]))
+                    while (p < last_byte && flare::ascii::is_hex_digit(p[1]))
                         // Arbitrarily many hex digits
                         ch = (ch << 4) + hex_digit_to_int(*++p);
                     if (ch > 0xFF) {
@@ -200,7 +200,7 @@ bool CUnescapeInternal(std::string_view source, bool leave_nulls_escaped,
                     }
                     for (int i = 0; i < 4; ++i) {
                         // Look one char ahead.
-                        if (flare::strings::ascii::is_hex_digit(p[1])) {
+                        if (flare::ascii::is_hex_digit(p[1])) {
                             rune = (rune << 4) + hex_digit_to_int(*++p);  // Advance p.
                         } else {
                             if (error) {
@@ -236,7 +236,7 @@ bool CUnescapeInternal(std::string_view source, bool leave_nulls_escaped,
                     }
                     for (int i = 0; i < 8; ++i) {
                         // Look one char ahead.
-                        if (flare::strings::ascii::is_hex_digit(p[1])) {
+                        if (flare::ascii::is_hex_digit(p[1])) {
                             // Don't change rune until we're sure this
                             // is within the Unicode limit, but do advance p.
                             uint32_t newrune = (rune << 4) + hex_digit_to_int(*++p);
@@ -314,7 +314,7 @@ bool CUnescapeInternal(std::string_view source, bool leave_nulls_escaped,
 //    preparing query flags.  The 'hex' version uses hexadecimal rather than
 //    octal sequences.  The 'Utf8Safe' version does not touch UTF-8 bytes.
 //
-//    Escaped chars: \n, \r, \t, ", ', \, and !flare::strings::ascii_isprint().
+//    Escaped chars: \n, \r, \t, ", ', \, and !flare::ascii_isprint().
 // ----------------------------------------------------------------------
 std::string CEscapeInternal(std::string_view src, bool use_hex,
                             bool utf8_safe) {
@@ -347,8 +347,8 @@ std::string CEscapeInternal(std::string_view src, bool use_hex,
                 // digit then that digit must be escaped too to prevent it being
                 // interpreted as part of the character code by C.
                 if ((!utf8_safe || c < 0x80) &&
-                    (!flare::strings::ascii::is_print(c) ||
-                     (last_hex_escape && flare::strings::ascii::is_hex_digit(c)))) {
+                    (!flare::ascii::is_print(c) ||
+                     (last_hex_escape && flare::ascii::is_hex_digit(c)))) {
                     if (use_hex) {
                         dest.append("\\" "x");
                         dest.push_back(numbers_internal::kHexChar[c / 16]);
@@ -482,7 +482,7 @@ bool Base64UnescapeInternal(const char *src_param, size_t szsrc, char *dest,
   ch = *src++;                                                  \
   decode = unbase64[ch];                                        \
   if (decode < 0) {                                             \
-    if (flare::strings::ascii::is_space(ch) && szsrc >= remain) goto label; \
+    if (flare::ascii::is_space(ch) && szsrc >= remain) goto label; \
     state = 4 - remain;                                         \
     break;                                                      \
   }
@@ -572,7 +572,7 @@ bool Base64UnescapeInternal(const char *src_param, size_t szsrc, char *dest,
     // if the loop terminated because we read a bad character, return
     // now.
     if (decode < 0 && ch != kPad64Equals && ch != kPad64Dot &&
-        !flare::strings::ascii::is_space(ch))
+        !flare::ascii::is_space(ch))
         return false;
 
     if (ch == kPad64Equals || ch == kPad64Dot) {
@@ -591,7 +591,7 @@ bool Base64UnescapeInternal(const char *src_param, size_t szsrc, char *dest,
             ch = *src++;
             decode = unbase64[ch];
             if (decode < 0) {
-                if (flare::strings::ascii::is_space(ch)) {
+                if (flare::ascii::is_space(ch)) {
                     continue;
                 } else if (ch == kPad64Equals || ch == kPad64Dot) {
                     // back up one character; we'll read it again when we check
@@ -674,7 +674,7 @@ bool Base64UnescapeInternal(const char *src_param, size_t szsrc, char *dest,
     while (szsrc > 0) {
         if (*src == kPad64Equals || *src == kPad64Dot)
             ++equals;
-        else if (!flare::strings::ascii::is_space(*src))
+        else if (!flare::ascii::is_space(*src))
             return false;
         --szsrc;
         ++src;
@@ -1118,17 +1118,17 @@ std::string hex_string_to_bytes(std::string_view from) {
     std::string result;
     const auto num = from.size() / 2;
     flare::base::string_resize_uninitialized(&result, num);
-    flare::strings::HexStringToBytesInternal<std::string &>(from.data(), result, num);
+    flare::HexStringToBytesInternal<std::string &>(from.data(), result, num);
     return result;
 }
 
 std::string bytes_to_hex_string(std::string_view from) {
     std::string result;
     flare::base::string_resize_uninitialized(&result, 2 * from.size());
-    flare::strings::BytesToHexStringInternal<std::string &>(
+    flare::BytesToHexStringInternal<std::string &>(
             reinterpret_cast<const unsigned char *>(from.data()), result, from.size());
     return result;
 }
 
 
-}  // namespace flare::strings
+}  // namespace flare

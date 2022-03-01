@@ -221,7 +221,7 @@ void PlayingDummyStream::SendData() {
         vmsg.frame_type = flare::rpc::FLV_VIDEO_FRAME_KEYFRAME;
         vmsg.codec = flare::rpc::FLV_VIDEO_AVC;
         vmsg.data.clear();
-        vmsg.data.append(flare::base::string_printf("video_%d(ms_id=%u)",
+        vmsg.data.append(flare::string_printf("video_%d(ms_id=%u)",
                                              i, stream_id()));
         //failing to send is possible
         SendVideoMessage(vmsg);
@@ -231,7 +231,7 @@ void PlayingDummyStream::SendData() {
         amsg.bits = flare::rpc::FLV_SOUND_16BIT;
         amsg.type = flare::rpc::FLV_SOUND_STEREO;
         amsg.data.clear();
-        amsg.data.append(flare::base::string_printf("audio_%d(ms_id=%u)",
+        amsg.data.append(flare::string_printf("audio_%d(ms_id=%u)",
                                              i, stream_id()));
         SendAudioMessage(amsg);
 
@@ -542,8 +542,8 @@ TEST(RtmpTest, successfully_play_streams) {
     for (int i = 0; i < NSTREAM; ++i) {
         cstreams[i].reset(new TestRtmpClientStream);
         flare::rpc::RtmpClientStreamOptions opt;
-        opt.play_name = flare::base::string_printf("play_name_%d", i);
-        //opt.publish_name = flare::base::string_printf("pub_name_%d", i);
+        opt.play_name = flare::string_printf("play_name_%d", i);
+        //opt.publish_name = flare::string_printf("pub_name_%d", i);
         opt.wait_until_play_or_publish_is_sent = true;
         cstreams[i]->Init(&rtmp_client, opt);
     }
@@ -605,7 +605,7 @@ TEST(RtmpTest, successfully_publish_streams) {
     for (int i = 0; i < NSTREAM; ++i) {
         cstreams[i].reset(new TestRtmpClientStream);
         flare::rpc::RtmpClientStreamOptions opt;
-        opt.publish_name = flare::base::string_printf("pub_name_%d", i);
+        opt.publish_name = flare::string_printf("pub_name_%d", i);
         opt.wait_until_play_or_publish_is_sent = true;
         cstreams[i]->Init(&rtmp_client, opt);
     }
@@ -615,7 +615,7 @@ TEST(RtmpTest, successfully_publish_streams) {
         vmsg.timestamp = 1000 + i * 20;
         vmsg.frame_type = flare::rpc::FLV_VIDEO_FRAME_KEYFRAME;
         vmsg.codec = flare::rpc::FLV_VIDEO_AVC;
-        vmsg.data.append(flare::base::string_printf("video_%d", i));
+        vmsg.data.append(flare::string_printf("video_%d", i));
         for (int j = 0; j < NSTREAM; j += 2) {
             ASSERT_EQ(0, cstreams[j]->SendVideoMessage(vmsg));
         }
@@ -626,7 +626,7 @@ TEST(RtmpTest, successfully_publish_streams) {
         amsg.rate = flare::rpc::FLV_SOUND_RATE_44100HZ;
         amsg.bits = flare::rpc::FLV_SOUND_16BIT;
         amsg.type = flare::rpc::FLV_SOUND_STEREO;
-        amsg.data.append(flare::base::string_printf("audio_%d", i));
+        amsg.data.append(flare::string_printf("audio_%d", i));
         for (int j = 1; j < NSTREAM; j += 2) {
             ASSERT_EQ(0, cstreams[j]->SendAudioMessage(amsg));
         }
@@ -701,7 +701,7 @@ TEST(RtmpTest, failed_to_connect_client_streams) {
     for (int i = 0; i < NSTREAM; ++i) {
         cstreams[i].reset(new TestRtmpClientStream);
         flare::rpc::RtmpClientStreamOptions opt;
-        opt.play_name = flare::base::string_printf("play_name_%d", i);
+        opt.play_name = flare::string_printf("play_name_%d", i);
         opt.wait_until_play_or_publish_is_sent = true;
         cstreams[i]->Init(&rtmp_client, opt);
         cstreams[i]->assertions_on_failure();
@@ -726,7 +726,7 @@ TEST(RtmpTest, destroy_client_streams_before_init) {
         ASSERT_EQ(1, cstreams[i]->_called_on_stop);
         ASSERT_EQ(flare::rpc::RtmpClientStream::STATE_DESTROYING, cstreams[i]->_state);
         flare::rpc::RtmpClientStreamOptions opt;
-        opt.play_name = flare::base::string_printf("play_name_%d", i);
+        opt.play_name = flare::string_printf("play_name_%d", i);
         opt.wait_until_play_or_publish_is_sent = true;
         cstreams[i]->Init(&rtmp_client, opt);
         cstreams[i]->assertions_on_failure();
@@ -750,7 +750,7 @@ TEST(RtmpTest, destroy_retrying_client_streams_before_init) {
         cstreams[i]->Destroy();
         ASSERT_EQ(1, cstreams[i]->_called_on_stop);
         flare::rpc::RtmpRetryingClientStreamOptions opt;
-        opt.play_name = flare::base::string_printf("play_name_%d", i);
+        opt.play_name = flare::string_printf("play_name_%d", i);
         flare::rpc::SubStreamCreator* sc = new RtmpSubStreamCreator(&rtmp_client);
         cstreams[i]->Init(sc, opt);
         ASSERT_EQ(1, cstreams[i]->_called_on_stop);
@@ -778,7 +778,7 @@ TEST(RtmpTest, destroy_client_streams_during_creation) {
     for (int i = 0; i < NSTREAM; ++i) {
         cstreams[i].reset(new TestRtmpClientStream);
         flare::rpc::RtmpClientStreamOptions opt;
-        opt.play_name = flare::base::string_printf("play_name_%d", i);
+        opt.play_name = flare::string_printf("play_name_%d", i);
         cstreams[i]->Init(&rtmp_client, opt);
         ASSERT_EQ(0, cstreams[i]->_called_on_stop);
         usleep(500*1000);
@@ -810,7 +810,7 @@ TEST(RtmpTest, destroy_retrying_client_streams_during_creation) {
     for (int i = 0; i < NSTREAM; ++i) {
         cstreams[i].reset(new TestRtmpRetryingClientStream);
         flare::rpc::RtmpRetryingClientStreamOptions opt;
-        opt.play_name = flare::base::string_printf("play_name_%d", i);
+        opt.play_name = flare::string_printf("play_name_%d", i);
         flare::rpc::SubStreamCreator* sc = new RtmpSubStreamCreator(&rtmp_client);
         cstreams[i]->Init(sc, opt);
         ASSERT_EQ(0, cstreams[i]->_called_on_stop);
@@ -844,7 +844,7 @@ TEST(RtmpTest, retrying_stream) {
         cstreams[i].reset(new TestRtmpRetryingClientStream);
         flare::rpc::Controller cntl;
         flare::rpc::RtmpRetryingClientStreamOptions opt;
-        opt.play_name = flare::base::string_printf("name_%d", i);
+        opt.play_name = flare::string_printf("name_%d", i);
         flare::rpc::SubStreamCreator* sc = new RtmpSubStreamCreator(&rtmp_client);
         cstreams[i]->Init(sc, opt);
     }

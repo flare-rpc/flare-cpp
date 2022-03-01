@@ -12,104 +12,104 @@
 
 TEST(trim_left, FromStringView) {
     EXPECT_EQ(std::string_view{},
-              flare::strings::trim_left(std::string_view{}));
-    EXPECT_EQ("foo", flare::strings::trim_left({"foo"}));
-    EXPECT_EQ("foo", flare::strings::trim_left({"\t  \n\f\r\n\vfoo"}));
+              flare::trim_left(std::string_view{}));
+    EXPECT_EQ("foo", flare::trim_left({"foo"}));
+    EXPECT_EQ("foo", flare::trim_left({"\t  \n\f\r\n\vfoo"}));
     EXPECT_EQ("foo foo\n ",
-              flare::strings::trim_left({"\t  \n\f\r\n\vfoo foo\n "}));
-    EXPECT_EQ(std::string_view{}, flare::strings::trim_left(
+              flare::trim_left({"\t  \n\f\r\n\vfoo foo\n "}));
+    EXPECT_EQ(std::string_view{}, flare::trim_left(
             {"\t  \n\f\r\v\n\t  \n\f\r\v\n"}));
 }
 
 TEST(trim_left, InPlace) {
     std::string str;
 
-    flare::strings::trim_left(&str);
+    flare::trim_left(&str);
     EXPECT_EQ("", str);
 
     str = "foo";
-    flare::strings::trim_left(&str);
+    flare::trim_left(&str);
     EXPECT_EQ("foo", str);
 
     str = "\t  \n\f\r\n\vfoo";
-    flare::strings::trim_left(&str);
+    flare::trim_left(&str);
     EXPECT_EQ("foo", str);
 
     str = "\t  \n\f\r\n\vfoo foo\n ";
-    flare::strings::trim_left(&str);
+    flare::trim_left(&str);
     EXPECT_EQ("foo foo\n ", str);
 
     str = "\t  \n\f\r\v\n\t  \n\f\r\v\n";
-    flare::strings::trim_left(&str);
+    flare::trim_left(&str);
     EXPECT_EQ(std::string_view{}, str);
 }
 
 TEST(trim_right, FromStringView) {
     EXPECT_EQ(std::string_view{},
-              flare::strings::trim_right(std::string_view{}));
-    EXPECT_EQ("foo", flare::strings::trim_right({"foo"}));
-    EXPECT_EQ("foo", flare::strings::trim_right({"foo\t  \n\f\r\n\v"}));
+              flare::trim_right(std::string_view{}));
+    EXPECT_EQ("foo", flare::trim_right({"foo"}));
+    EXPECT_EQ("foo", flare::trim_right({"foo\t  \n\f\r\n\v"}));
     EXPECT_EQ(" \nfoo foo",
-              flare::strings::trim_right({" \nfoo foo\t  \n\f\r\n\v"}));
-    EXPECT_EQ(std::string_view{}, flare::strings::trim_right(
+              flare::trim_right({" \nfoo foo\t  \n\f\r\n\v"}));
+    EXPECT_EQ(std::string_view{}, flare::trim_right(
             {"\t  \n\f\r\v\n\t  \n\f\r\v\n"}));
 }
 
 TEST(trim_right, InPlace) {
     std::string str;
 
-    flare::strings::trim_right(&str);
+    flare::trim_right(&str);
     EXPECT_EQ("", str);
 
     str = "foo";
-    flare::strings::trim_right(&str);
+    flare::trim_right(&str);
     EXPECT_EQ("foo", str);
 
     str = "foo\t  \n\f\r\n\v";
-    flare::strings::trim_right(&str);
+    flare::trim_right(&str);
     EXPECT_EQ("foo", str);
 
     str = " \nfoo foo\t  \n\f\r\n\v";
-    flare::strings::trim_right(&str);
+    flare::trim_right(&str);
     EXPECT_EQ(" \nfoo foo", str);
 
     str = "\t  \n\f\r\v\n\t  \n\f\r\v\n";
-    flare::strings::trim_right(&str);
+    flare::trim_right(&str);
     EXPECT_EQ(std::string_view{}, str);
 }
 
 TEST(trim_all, FromStringView) {
     EXPECT_EQ(std::string_view{},
-              flare::strings::trim_all(std::string_view{}));
-    EXPECT_EQ("foo", flare::strings::trim_all({"foo"}));
+              flare::trim_all(std::string_view{}));
+    EXPECT_EQ("foo", flare::trim_all({"foo"}));
     EXPECT_EQ("foo",
-              flare::strings::trim_all({"\t  \n\f\r\n\vfoo\t  \n\f\r\n\v"}));
-    EXPECT_EQ("foo foo", flare::strings::trim_all(
+              flare::trim_all({"\t  \n\f\r\n\vfoo\t  \n\f\r\n\v"}));
+    EXPECT_EQ("foo foo", flare::trim_all(
             {"\t  \n\f\r\n\vfoo foo\t  \n\f\r\n\v"}));
     EXPECT_EQ(std::string_view{},
-              flare::strings::trim_all({"\t  \n\f\r\v\n\t  \n\f\r\v\n"}));
+              flare::trim_all({"\t  \n\f\r\v\n\t  \n\f\r\v\n"}));
 }
 
 TEST(trim_all, InPlace) {
     std::string str;
 
-    flare::strings::trim_all(&str);
+    flare::trim_all(&str);
     EXPECT_EQ("", str);
 
     str = "foo";
-    flare::strings::trim_all(&str);
+    flare::trim_all(&str);
     EXPECT_EQ("foo", str);
 
     str = "\t  \n\f\r\n\vfoo\t  \n\f\r\n\v";
-    flare::strings::trim_all(&str);
+    flare::trim_all(&str);
     EXPECT_EQ("foo", str);
 
     str = "\t  \n\f\r\n\vfoo foo\t  \n\f\r\n\v";
-    flare::strings::trim_all(&str);
+    flare::trim_all(&str);
     EXPECT_EQ("foo foo", str);
 
     str = "\t  \n\f\r\v\n\t  \n\f\r\v\n";
-    flare::strings::trim_all(&str);
+    flare::trim_all(&str);
     EXPECT_EQ(std::string_view{}, str);
 }
 
@@ -139,7 +139,7 @@ TEST(trim_complete, InPlace) {
 
     for (int i = 0; i < NUM_TESTS; i++) {
         std::string s(inputs[i]);
-        flare::strings::trim_complete(&s);
+        flare::trim_complete(&s);
         EXPECT_EQ(outputs[i], s);
     }
 }

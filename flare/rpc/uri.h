@@ -219,7 +219,7 @@ namespace flare::rpc {
     }
 
 // Split query in the format of "key1=value1&key2&key3=value3"
-    class QuerySplitter : public flare::strings::KeyValuePairsSplitter {
+    class QuerySplitter : public flare::KeyValuePairsSplitter {
     public:
         inline QuerySplitter(const char *str_begin, const char *str_end)
                 : KeyValuePairsSplitter(str_begin, str_end, '&', '=') {}

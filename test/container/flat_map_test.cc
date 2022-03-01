@@ -6,7 +6,7 @@
 #include <random>
 #include <vector>
 #include "flare/base/time.h"
-#include "flare/base/strings.h"
+#include "flare/strings/str_format.h"
 #include "flare/log/logging.h"
 #include "flare/container/hash_tables.h"
 #include "flare/container/flat_map.h"
@@ -335,7 +335,7 @@ namespace {
         size_t sum = 0;
         keys.reserve(N);
         for (size_t i = 0; i < N; ++i) {
-            keys.push_back(flare::base::string_printf("up_latency_as_key_%lu", i));
+            keys.push_back(flare::string_printf("up_latency_as_key_%lu", i));
         }
 
         tm1.start();

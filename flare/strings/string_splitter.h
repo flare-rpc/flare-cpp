@@ -30,7 +30,7 @@
 // we don't modify input. You can copy the field to a dedicated buffer
 // or apply a function supporting length.
 
-namespace flare::strings {
+namespace flare {
 
     enum EmptyFieldAction {
         SKIP_EMPTY_FIELD,
@@ -210,11 +210,11 @@ namespace flare::strings {
                                         pair_delimiter, key_value_delimiter) {}
 
         inline std::string_view key() {
-            return flare::strings::safe_substr(key_and_value(), 0, _delim_pos);
+            return flare::safe_substr(key_and_value(), 0, _delim_pos);
         }
 
         inline std::string_view value() {
-            return flare::strings::safe_substr(key_and_value(), _delim_pos + 1);
+            return flare::safe_substr(key_and_value(), _delim_pos + 1);
         }
 
         // Get the current value of key and value
@@ -247,7 +247,7 @@ namespace flare::strings {
         const char _key_value_delim;
     };
 
-}  // namespace flare::strings
+}  // namespace flare
 
 #include "flare/strings/string_splitter_inl.h"
 

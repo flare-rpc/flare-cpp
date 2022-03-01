@@ -30,7 +30,7 @@
 #include "flare/strings/internal/ostringstream.h"
 #include "flare/strings/str_cat.h"
 
-namespace flare::strings {
+namespace flare {
 
 namespace strings_internal {
 
@@ -301,6 +301,6 @@ std::string join_range(const Range &range, std::string_view separator) {
 
 }  // namespace strings_internal
 
-}  // namespace flare::strings
+}  // namespace flare
 
 #endif  // FLARE_STRINGS_INTERNAL_STR_JOIN_INTERNAL_H_

@@ -21,7 +21,7 @@
 #include <gflags/gflags.h>
 #include "flare/base/time.h"                              // milliseconds_from_now
 #include "flare/log/logging.h"
-#include "flare/base/strings.h"
+#include "flare/strings/trim.h"
 #include "flare/hash/murmurhash3.h"
 #include "flare/fiber/internal/unstable.h"                        // fiber_timer_add
 #include "flare/rpc/socket_map.h"                         // SocketMapInsert
@@ -183,7 +183,7 @@ namespace flare::rpc {
         // Normalize connection_group
         std::string &cg = _options.connection_group;
         if (!cg.empty() && (::isspace(cg.front()) || ::isspace(cg.back()))) {
-            flare::base::strip_ascii_whitespace(&cg);
+            flare::strip_ascii_whitespace(&cg);
         }
         return 0;
     }

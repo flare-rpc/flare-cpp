@@ -29,7 +29,7 @@
 #include "flare/strings/trim.h"
 #include "flare/strings/compare.h"
 
-namespace flare::strings {
+namespace flare {
 
 
     bool simple_atof(std::string_view str, float *out) {
@@ -38,7 +38,7 @@ namespace flare::strings {
         if (!str.empty() && str[0] == '+') {
             str.remove_prefix(1);
         }
-        auto result = flare::strings::from_chars(str.data(), str.data() + str.size(), *out);
+        auto result = flare::from_chars(str.data(), str.data() + str.size(), *out);
         if (result.ec == std::errc::invalid_argument) {
             return false;
         }
@@ -64,7 +64,7 @@ namespace flare::strings {
         if (!str.empty() && str[0] == '+') {
             str.remove_prefix(1);
         }
-        auto result = flare::strings::from_chars(str.data(), str.data() + str.size(), *out);
+        auto result = flare::from_chars(str.data(), str.data() + str.size(), *out);
         if (result.ec == std::errc::invalid_argument) {
             return false;
         }
@@ -629,10 +629,10 @@ namespace flare::strings {
             int base = *base_ptr;
 
             // Consume whitespace.
-            while (start < end && flare::strings::ascii::is_space(start[0])) {
+            while (start < end && flare::ascii::is_space(start[0])) {
                 ++start;
             }
-            while (start < end && flare::strings::ascii::is_space(end[-1])) {
+            while (start < end && flare::ascii::is_space(end[-1])) {
                 --end;
             }
             if (start >= end) {
@@ -997,4 +997,4 @@ namespace flare::strings {
 
     }  // namespace numbers_internal
 
-}  // namespace flare::strings
+}  // namespace flare

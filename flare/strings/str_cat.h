@@ -52,7 +52,7 @@
 #include "flare/strings/numbers.h"
 #include <string_view>
 
-namespace flare::strings {
+namespace flare {
 
 
 namespace strings_internal {
@@ -127,44 +127,44 @@ struct hex {
 
     template<typename Int>
     explicit hex(
-            Int v, pad_spec spec = flare::strings::kNoPad,
+            Int v, pad_spec spec = flare::kNoPad,
             typename std::enable_if<sizeof(Int) == 1 &&
                                     !std::is_pointer<Int>::value>::type * = nullptr)
             : hex(spec, static_cast<uint8_t>(v)) {}
 
     template<typename Int>
     explicit hex(
-            Int v, pad_spec spec = flare::strings::kNoPad,
+            Int v, pad_spec spec = flare::kNoPad,
             typename std::enable_if<sizeof(Int) == 2 &&
                                     !std::is_pointer<Int>::value>::type * = nullptr)
             : hex(spec, static_cast<uint16_t>(v)) {}
 
     template<typename Int>
     explicit hex(
-            Int v, pad_spec spec = flare::strings::kNoPad,
+            Int v, pad_spec spec = flare::kNoPad,
             typename std::enable_if<sizeof(Int) == 4 &&
                                     !std::is_pointer<Int>::value>::type * = nullptr)
             : hex(spec, static_cast<uint32_t>(v)) {}
 
     template<typename Int>
     explicit hex(
-            Int v, pad_spec spec = flare::strings::kNoPad,
+            Int v, pad_spec spec = flare::kNoPad,
             typename std::enable_if<sizeof(Int) == 8 &&
                                     !std::is_pointer<Int>::value>::type * = nullptr)
             : hex(spec, static_cast<uint64_t>(v)) {}
 
     template<typename Pointee>
-    explicit hex(Pointee *v, pad_spec spec = flare::strings::kNoPad)
+    explicit hex(Pointee *v, pad_spec spec = flare::kNoPad)
             : hex(spec, reinterpret_cast<uintptr_t>(v)) {}
 
   private:
     hex(pad_spec spec, uint64_t v)
             : value(v),
-              width(spec == flare::strings::kNoPad
+              width(spec == flare::kNoPad
                     ? 1
-                    : spec >= flare::strings::kSpacePad2 ? spec - flare::strings::kSpacePad2 + 2
-                                               : spec - flare::strings::kZeroPad2 + 2),
-              fill(spec >= flare::strings::kSpacePad2 ? ' ' : '0') {}
+                    : spec >= flare::kSpacePad2 ? spec - flare::kSpacePad2 + 2
+                                               : spec - flare::kZeroPad2 + 2),
+              fill(spec >= flare::kSpacePad2 ? ' ' : '0') {}
 };
 
 // -----------------------------------------------------------------------------
@@ -181,15 +181,15 @@ struct dec {
     bool neg;
 
     template<typename Int>
-    explicit dec(Int v, pad_spec spec = flare::strings::kNoPad,
+    explicit dec(Int v, pad_spec spec = flare::kNoPad,
                  typename std::enable_if<(sizeof(Int) <= 8)>::type * = nullptr)
             : value(v >= 0 ? static_cast<uint64_t>(v)
                            : uint64_t{0} - static_cast<uint64_t>(v)),
-              width(spec == flare::strings::kNoPad
+              width(spec == flare::kNoPad
                     ? 1
-                    : spec >= flare::strings::kSpacePad2 ? spec - flare::strings::kSpacePad2 + 2
-                                               : spec - flare::strings::kZeroPad2 + 2),
-              fill(spec >= flare::strings::kSpacePad2 ? ' ' : '0'),
+                    : spec >= flare::kSpacePad2 ? spec - flare::kSpacePad2 + 2
+                                               : spec - flare::kZeroPad2 + 2),
+              fill(spec >= flare::kSpacePad2 ? ' ' : '0'),
               neg(v < 0) {}
 };
 
@@ -412,6 +412,6 @@ SixDigits(double d) {
 }
 
 
-}  // namespace flare::strings
+}  // namespace flare
 
 #endif  // FLARE_STRINGS_STR_CAT_H_

@@ -7,7 +7,7 @@
 
 #include "flare/strings/str_cat.h"
 
-namespace flare::strings {
+namespace flare {
 
 namespace strings_internal {
 
@@ -70,4 +70,4 @@ int string_replace_all(strings_internal::FixedMapping replacements,
 }
 
 
-}  // namespace flare::strings
+}  // namespace flare

@@ -23,7 +23,7 @@
 #include "flare/rpc/channel.h"
 #include "flare/rpc/grpc.h"
 #include "flare/base/time.h"
-#include "flare/base/strings.h"
+#include "flare/strings/ends_with.h"
 #include "flare/fiber/this_fiber.h"
 #include "grpc.pb.h"
 
@@ -174,7 +174,7 @@ TEST_F(GrpcTest, return_error) {
     stub.Method(&cntl, &req, &res, NULL);
     EXPECT_TRUE(cntl.Failed());
     EXPECT_EQ(cntl.ErrorCode(), flare::rpc::EINTERNAL);
-    EXPECT_TRUE(flare::base::ends_with(cntl.ErrorText(), flare::base::string_printf("%s", g_prefix.c_str())));
+    EXPECT_TRUE(flare::ends_with(cntl.ErrorText(), flare::string_printf("%s", g_prefix.c_str())));
 }
 
 TEST_F(GrpcTest, RpcTimedOut) {
@@ -207,7 +207,7 @@ TEST_F(GrpcTest, MethodNotExist) {
     stub.MethodNotExist(&cntl, &req, &res, NULL);
     EXPECT_TRUE(cntl.Failed());
     EXPECT_EQ(cntl.ErrorCode(), flare::rpc::EINTERNAL);
-    ASSERT_TRUE(flare::base::ends_with(cntl.ErrorText(), "Method MethodNotExist() not implemented."));
+    ASSERT_TRUE(flare::ends_with(cntl.ErrorText(), "Method MethodNotExist() not implemented."));
 }
 
 TEST_F(GrpcTest, GrpcTimeOut) {

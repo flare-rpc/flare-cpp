@@ -22,7 +22,7 @@
 #include <google/protobuf/descriptor.h>
 #include <gflags/gflags.h>
 #include "flare/fiber/internal/fiber.h"
-#include "flare/base/strings.h"
+#include "flare/strings/str_format.h"
 #include "flare/log/logging.h"
 #include "flare/base/time.h"
 #include "flare/fiber/internal/fiber.h"
@@ -379,7 +379,7 @@ namespace flare::rpc {
             }
             _error_text.push_back(']');
         } else {
-            flare::base::string_appendf(&_error_text, "[%s:%d]",
+            flare::string_appendf(&_error_text, "[%s:%d]",
                                         flare::base::my_ip_cstr(), _server->listen_address().port);
         }
     }
@@ -410,7 +410,7 @@ namespace flare::rpc {
             _error_text.push_back(' ');
         }
         if (_current_call.nretry != 0) {
-            flare::base::string_appendf(&_error_text, "[R%d]", _current_call.nretry);
+            flare::string_appendf(&_error_text, "[R%d]", _current_call.nretry);
         } else {
             AppendServerIdentiy();
         }
@@ -432,17 +432,17 @@ namespace flare::rpc {
             _error_text.push_back(' ');
         }
         if (_current_call.nretry != 0) {
-            flare::base::string_appendf(&_error_text, "[R%d]", _current_call.nretry);
+            flare::string_appendf(&_error_text, "[R%d]", _current_call.nretry);
         } else {
             AppendServerIdentiy();
         }
         const size_t old_size = _error_text.size();
         if (_error_code != -1) {
-            flare::base::string_appendf(&_error_text, "[E%d]", _error_code);
+            flare::string_appendf(&_error_text, "[E%d]", _error_code);
         }
         va_list ap;
         va_start(ap, reason_fmt);
-        flare::base::string_vappendf(&_error_text, reason_fmt, ap);
+        flare::string_vappendf(&_error_text, reason_fmt, ap);
         va_end(ap);
         if (_span) {
             _span->set_error_code(_error_code);
@@ -460,17 +460,17 @@ namespace flare::rpc {
             _error_text.push_back(' ');
         }
         if (_current_call.nretry != 0) {
-            flare::base::string_appendf(&_error_text, "[R%d]", _current_call.nretry);
+            flare::string_appendf(&_error_text, "[R%d]", _current_call.nretry);
         } else {
             AppendServerIdentiy();
         }
         const size_t old_size = _error_text.size();
         if (_error_code != -1) {
-            flare::base::string_appendf(&_error_text, "[E%d]", _error_code);
+            flare::string_appendf(&_error_text, "[E%d]", _error_code);
         }
         va_list ap;
         va_start(ap, reason_fmt);
-        flare::base::string_vappendf(&_error_text, reason_fmt, ap);
+        flare::string_vappendf(&_error_text, reason_fmt, ap);
         va_end(ap);
         if (_span) {
             _span->set_error_code(_error_code);

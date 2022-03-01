@@ -8,10 +8,10 @@
 #include <cstddef>
 #include <cstring>
 #include "flare/base/profile.h"  // disable some warnings on Windows
-#include "flare/strings/ascii.h"  // for flare::strings::ascii_tolower
+#include "flare/strings/ascii.h"  // for flare::ascii_tolower
 
 
-namespace flare::strings {
+namespace flare {
 namespace strings_internal {
 
 FLARE_FORCE_INLINE char *char_cat(char *dest, size_t destlen, const char *src,
@@ -46,10 +46,10 @@ const char *int_char_match(const char *haystack, size_t haylen,
     for (; haystack < hayend; ++haystack) {
         char hay = case_sensitive
                    ? *haystack
-                   : flare::strings::ascii::to_lower(static_cast<unsigned char>(*haystack));
+                   : flare::ascii::to_lower(static_cast<unsigned char>(*haystack));
         char nee = case_sensitive
                    ? *needle
-                   : flare::strings::ascii::to_lower(static_cast<unsigned char>(*needle));
+                   : flare::ascii::to_lower(static_cast<unsigned char>(*needle));
         if (hay == nee) {
             if (++needle == needleend) {
                 return haystack + 1 - neelen;
@@ -91,6 +91,6 @@ const char *char_match(const char *phaystack, size_t haylen, const char *pneedle
 
 
 }  // namespace strings_internal
-}  // namespace flare::strings
+}  // namespace flare
 
 #endif  // FLARE_STRINGS_INTERNAL_CHAR_TRAITS_H_

@@ -9,7 +9,7 @@
 #include <climits>
 #include <string_view>
 
-namespace flare::strings {
+namespace flare {
 
 
     // Implements a set of byte.
@@ -223,6 +223,6 @@ namespace flare::strings {
     };
 
 
-}  // namespace flare::strings
+}  // namespace flare
 
 #endif  // FLARE_STRINGS_BYTE_SET_H_

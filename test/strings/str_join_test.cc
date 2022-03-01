@@ -29,42 +29,42 @@ namespace {
         {
             // Collection of strings
             std::vector<std::string> v = {"foo", "bar", "baz"};
-            EXPECT_EQ("foo-bar-baz", flare::strings::string_join(v, "-"));
+            EXPECT_EQ("foo-bar-baz", flare::string_join(v, "-"));
         }
 
         {
             // Collection of std::string_view
             std::vector<std::string_view> v = {"foo", "bar", "baz"};
-            EXPECT_EQ("foo-bar-baz", flare::strings::string_join(v, "-"));
+            EXPECT_EQ("foo-bar-baz", flare::string_join(v, "-"));
         }
 
         {
             // Collection of const char*
             std::vector<const char *> v = {"foo", "bar", "baz"};
-            EXPECT_EQ("foo-bar-baz", flare::strings::string_join(v, "-"));
+            EXPECT_EQ("foo-bar-baz", flare::string_join(v, "-"));
         }
 
         {
             // Collection of non-const char*
             std::string a = "foo", b = "bar", c = "baz";
             std::vector<char *> v = {&a[0], &b[0], &c[0]};
-            EXPECT_EQ("foo-bar-baz", flare::strings::string_join(v, "-"));
+            EXPECT_EQ("foo-bar-baz", flare::string_join(v, "-"));
         }
 
         {
             // Collection of ints
             std::vector<int> v = {1, 2, 3, -4};
-            EXPECT_EQ("1-2-3--4", flare::strings::string_join(v, "-"));
+            EXPECT_EQ("1-2-3--4", flare::string_join(v, "-"));
         }
 
         {
             // Literals passed as a std::initializer_list
-            std::string s = flare::strings::string_join({"a", "b", "c"}, "-");
+            std::string s = flare::string_join({"a", "b", "c"}, "-");
             EXPECT_EQ("a-b-c", s);
         }
         {
             // Join a std::tuple<T...>.
-            std::string s = flare::strings::string_join(std::make_tuple(123, "abc", 0.456), "-");
+            std::string s = flare::string_join(std::make_tuple(123, "abc", 0.456), "-");
             EXPECT_EQ("123-abc-0.456", s);
         }
 
@@ -74,20 +74,20 @@ namespace {
             v.emplace_back(new int(1));
             v.emplace_back(new int(2));
             v.emplace_back(new int(3));
-            EXPECT_EQ("1-2-3", flare::strings::string_join(v, "-"));
+            EXPECT_EQ("1-2-3", flare::string_join(v, "-"));
         }
 
         {
             // Array of ints
             const int a[] = {1, 2, 3, -4};
-            EXPECT_EQ("1-2-3--4", flare::strings::string_join(a, a + FLARE_ARRAY_SIZE(a), "-"));
+            EXPECT_EQ("1-2-3--4", flare::string_join(a, a + FLARE_ARRAY_SIZE(a), "-"));
         }
 
         {
             // Collection of pointers
             int x = 1, y = 2, z = 3;
             std::vector<int *> v = {&x, &y, &z};
-            EXPECT_EQ("1-2-3", flare::strings::string_join(v, "-"));
+            EXPECT_EQ("1-2-3", flare::string_join(v, "-"));
         }
 
         {
@@ -95,14 +95,14 @@ namespace {
             int x = 1, y = 2, z = 3;
             int *px = &x, *py = &y, *pz = &z;
             std::vector<int **> v = {&px, &py, &pz};
-            EXPECT_EQ("1-2-3", flare::strings::string_join(v, "-"));
+            EXPECT_EQ("1-2-3", flare::string_join(v, "-"));
         }
 
         {
             // Collection of pointers to std::string
             std::string a("a"), b("b");
             std::vector<std::string *> v = {&a, &b};
-            EXPECT_EQ("a-b", flare::strings::string_join(v, "-"));
+            EXPECT_EQ("a-b", flare::string_join(v, "-"));
         }
 
         {
@@ -110,14 +110,14 @@ namespace {
             std::map<std::string, int> m = {{"a", 1},
                                             {"b", 2},
                                             {"c", 3}};
-            EXPECT_EQ("a=1,b=2,c=3", flare::strings::string_join(m, ",", flare::strings::pair_formatter("=")));
+            EXPECT_EQ("a=1,b=2,c=3", flare::string_join(m, ",", flare::pair_formatter("=")));
         }
 
         {
-            // Shows flare::strings:: string_split and flare::strings::string_join working together. This example is
+            // Shows flare:: string_split and flare::string_join working together. This example is
             // equivalent to s/=/-/g.
             const std::string s = "a=b=c=d";
-            EXPECT_EQ("a-b-c-d", flare::strings::string_join(flare::strings::string_split(s, "="), "-"));
+            EXPECT_EQ("a-b-c-d", flare::string_join(flare::string_split(s, "="), "-"));
         }
 
         //
@@ -127,38 +127,38 @@ namespace {
         {
             // Empty range yields an empty std::string.
             std::vector<std::string> v;
-            EXPECT_EQ("", flare::strings::string_join(v, "-"));
+            EXPECT_EQ("", flare::string_join(v, "-"));
         }
 
         {
             // A range of 1 element gives a std::string with that element but no
             // separator.
             std::vector<std::string> v = {"foo"};
-            EXPECT_EQ("foo", flare::strings::string_join(v, "-"));
+            EXPECT_EQ("foo", flare::string_join(v, "-"));
         }
 
         {
             // A range with a single empty std::string element
             std::vector<std::string> v = {""};
-            EXPECT_EQ("", flare::strings::string_join(v, "-"));
+            EXPECT_EQ("", flare::string_join(v, "-"));
         }
 
         {
             // A range with 2 elements, one of which is an empty std::string
             std::vector<std::string> v = {"a", ""};
-            EXPECT_EQ("a-", flare::strings::string_join(v, "-"));
+            EXPECT_EQ("a-", flare::string_join(v, "-"));
         }
 
         {
             // A range with 2 empty elements.
             std::vector<std::string> v = {"", ""};
-            EXPECT_EQ("-", flare::strings::string_join(v, "-"));
+            EXPECT_EQ("-", flare::string_join(v, "-"));
         }
 
         {
             // A std::vector of bool.
             std::vector<bool> v = {true, false, true};
-            EXPECT_EQ("1-0-1", flare::strings::string_join(v, "-"));
+            EXPECT_EQ("1-0-1", flare::string_join(v, "-"));
         }
     }
 
@@ -166,8 +166,8 @@ namespace {
         std::vector<std::string> v{"One", "Two", "Three"};
         {
             std::string joined =
-                    flare::strings::string_join(v, "", [](std::string *out, const std::string &in) {
-                        flare::strings::string_append(out, "(", in, ")");
+                    flare::string_join(v, "", [](std::string *out, const std::string &in) {
+                        flare::string_append(out, "(", in, ")");
                     });
             EXPECT_EQ("(One)(Two)(Three)", joined);
         }
@@ -175,29 +175,29 @@ namespace {
             class ImmovableFormatter {
             public:
                 void operator()(std::string *out, const std::string &in) {
-                    flare::strings::string_append(out, "(", in, ")");
+                    flare::string_append(out, "(", in, ")");
                 }
 
                 ImmovableFormatter() {}
 
                 ImmovableFormatter(const ImmovableFormatter &) = delete;
             };
-            EXPECT_EQ("(One)(Two)(Three)", flare::strings::string_join(v, "", ImmovableFormatter()));
+            EXPECT_EQ("(One)(Two)(Three)", flare::string_join(v, "", ImmovableFormatter()));
         }
         {
             class OverloadedFormatter {
             public:
                 void operator()(std::string *out, const std::string &in) {
-                    flare::strings::string_append(out, "(", in, ")");
+                    flare::string_append(out, "(", in, ")");
                 }
 
                 void operator()(std::string *out, const std::string &in) const {
-                    flare::strings::string_append(out, "[", in, "]");
+                    flare::string_append(out, "[", in, "]");
                 }
             };
-            EXPECT_EQ("(One)(Two)(Three)", flare::strings::string_join(v, "", OverloadedFormatter()));
+            EXPECT_EQ("(One)(Two)(Three)", flare::string_join(v, "", OverloadedFormatter()));
             const OverloadedFormatter fmt = {};
-            EXPECT_EQ("[One][Two][Three]", flare::strings::string_join(v, "", fmt));
+            EXPECT_EQ("[One][Two][Three]", flare::string_join(v, "", fmt));
         }
     }
 
@@ -208,7 +208,7 @@ namespace {
     TEST(alpha_num_formatter, FormatterAPI) {
         // Not an exhaustive test. See strings/strcat_test.h for the exhaustive test
         // of what alpha_num can convert.
-        auto f = flare::strings::alpha_num_formatter();
+        auto f = flare::alpha_num_formatter();
         std::string s;
         f(&s, "Testing: ");
         f(&s, static_cast<int>(1));
@@ -223,9 +223,9 @@ namespace {
     }
 
 // Make sure people who are mistakenly using std::vector<bool> even though
-// they're not memory-constrained can use flare::strings::alpha_num_formatter().
+// they're not memory-constrained can use flare::alpha_num_formatter().
     TEST(alpha_num_formatter, VectorOfBool) {
-        auto f = flare::strings::alpha_num_formatter();
+        auto f = flare::alpha_num_formatter();
         std::string s;
         std::vector<bool> v = {true, false, true};
         f(&s, *v.cbegin());
@@ -235,9 +235,9 @@ namespace {
     }
 
     TEST(alpha_num_formatter, alpha_num) {
-        auto f = flare::strings::alpha_num_formatter();
+        auto f = flare::alpha_num_formatter();
         std::string s;
-        f(&s, flare::strings::alpha_num("hello"));
+        f(&s, flare::alpha_num("hello"));
         EXPECT_EQ("hello", s);
     }
 
@@ -251,7 +251,7 @@ namespace {
     }
 
     TEST(stream_formatter, FormatterAPI) {
-        auto f = flare::strings::stream_formatter();
+        auto f = flare::stream_formatter();
         std::string s;
         f(&s, "Testing: ");
         f(&s, static_cast<int>(1));
@@ -272,7 +272,7 @@ namespace {
     struct TestingParenFormatter {
         template<typename T>
         void operator()(std::string *s, const T &t) {
-            flare::strings::string_append(s, "(", t, ")");
+            flare::string_append(s, "(", t, ")");
         }
     };
 
@@ -280,7 +280,7 @@ namespace {
         {
             // Tests default pair_formatter(sep) that uses alpha_num_formatter for the
             // 'first' and 'second' members.
-            const auto f = flare::strings::pair_formatter("=");
+            const auto f = flare::pair_formatter("=");
             std::string s;
             f(&s, std::make_pair("a", "b"));
             f(&s, std::make_pair(1, 2));
@@ -289,7 +289,7 @@ namespace {
 
         {
             // Tests using a custom formatter for the 'first' and 'second' members.
-            auto f = flare::strings::pair_formatter(TestingParenFormatter(), "=",
+            auto f = flare::pair_formatter(TestingParenFormatter(), "=",
                                           TestingParenFormatter());
             std::string s;
             f(&s, std::make_pair("a", "b"));
@@ -301,8 +301,8 @@ namespace {
     TEST(dereference_formatter, FormatterAPI) {
         {
             // Tests wrapping the default alpha_num_formatter.
-            const flare::strings::strings_internal::dereference_formatter_impl<
-                    flare::strings::strings_internal::alpha_num_formatter_impl>
+            const flare::strings_internal::dereference_formatter_impl<
+                    flare::strings_internal::alpha_num_formatter_impl>
                     f;
             int x = 1, y = 2, z = 3;
             std::string s;
@@ -314,8 +314,8 @@ namespace {
 
         {
             // Tests wrapping std::string's default formatter.
-            flare::strings::strings_internal::dereference_formatter_impl<
-                    flare::strings::strings_internal::default_formatter<std::string>::Type>
+            flare::strings_internal::dereference_formatter_impl<
+                    flare::strings_internal::default_formatter<std::string>::Type>
                     f;
 
             std::string x = "x";
@@ -330,7 +330,7 @@ namespace {
 
         {
             // Tests wrapping a custom formatter.
-            auto f = flare::strings::dereference_formatter(TestingParenFormatter());
+            auto f = flare::dereference_formatter(TestingParenFormatter());
             int x = 1, y = 2, z = 3;
             std::string s;
             f(&s, &x);
@@ -340,8 +340,8 @@ namespace {
         }
 
         {
-            flare::strings::strings_internal::dereference_formatter_impl<
-                    flare::strings::strings_internal::alpha_num_formatter_impl>
+            flare::strings_internal::dereference_formatter_impl<
+                    flare::strings_internal::alpha_num_formatter_impl>
                     f;
             auto x = std::unique_ptr<int>(new int(1));
             auto y = std::unique_ptr<int>(new int(2));
@@ -363,75 +363,75 @@ namespace {
 
         // Iterators + formatter
         EXPECT_EQ("a-b-c",
-                  flare::strings::string_join(v.begin(), v.end(), "-", flare::strings::alpha_num_formatter()));
+                  flare::string_join(v.begin(), v.end(), "-", flare::alpha_num_formatter()));
         // Range + formatter
-        EXPECT_EQ("a-b-c", flare::strings::string_join(v, "-", flare::strings::alpha_num_formatter()));
+        EXPECT_EQ("a-b-c", flare::string_join(v, "-", flare::alpha_num_formatter()));
         // Iterators, no formatter
-        EXPECT_EQ("a-b-c", flare::strings::string_join(v.begin(), v.end(), "-"));
+        EXPECT_EQ("a-b-c", flare::string_join(v.begin(), v.end(), "-"));
         // Range, no formatter
-        EXPECT_EQ("a-b-c", flare::strings::string_join(v, "-"));
+        EXPECT_EQ("a-b-c", flare::string_join(v, "-"));
     }
 
     TEST(string_join, Array) {
         const std::string_view a[] = {"a", "b", "c"};
-        EXPECT_EQ("a-b-c", flare::strings::string_join(a, "-"));
+        EXPECT_EQ("a-b-c", flare::string_join(a, "-"));
     }
 
     TEST(string_join, InitializerList) {
-        { EXPECT_EQ("a-b-c", flare::strings::string_join({"a", "b", "c"}, "-")); }
+        { EXPECT_EQ("a-b-c", flare::string_join({"a", "b", "c"}, "-")); }
 
         {
             auto a = {"a", "b", "c"};
-            EXPECT_EQ("a-b-c", flare::strings::string_join(a, "-"));
+            EXPECT_EQ("a-b-c", flare::string_join(a, "-"));
         }
 
         {
             std::initializer_list<const char *> a = {"a", "b", "c"};
-            EXPECT_EQ("a-b-c", flare::strings::string_join(a, "-"));
+            EXPECT_EQ("a-b-c", flare::string_join(a, "-"));
         }
 
         {
             std::initializer_list<std::string> a = {"a", "b", "c"};
-            EXPECT_EQ("a-b-c", flare::strings::string_join(a, "-"));
+            EXPECT_EQ("a-b-c", flare::string_join(a, "-"));
         }
 
         {
             std::initializer_list<std::string_view> a = {"a", "b", "c"};
-            EXPECT_EQ("a-b-c", flare::strings::string_join(a, "-"));
+            EXPECT_EQ("a-b-c", flare::string_join(a, "-"));
         }
 
         {
             // Tests initializer_list with a non-default formatter
             auto a = {"a", "b", "c"};
             TestingParenFormatter f;
-            EXPECT_EQ("(a)-(b)-(c)", flare::strings::string_join(a, "-", f));
+            EXPECT_EQ("(a)-(b)-(c)", flare::string_join(a, "-", f));
         }
 
         {
             // initializer_list of ints
-            EXPECT_EQ("1-2-3", flare::strings::string_join({1, 2, 3}, "-"));
+            EXPECT_EQ("1-2-3", flare::string_join({1, 2, 3}, "-"));
         }
 
         {
             // Tests initializer_list of ints with a non-default formatter
             auto a = {1, 2, 3};
             TestingParenFormatter f;
-            EXPECT_EQ("(1)-(2)-(3)", flare::strings::string_join(a, "-", f));
+            EXPECT_EQ("(1)-(2)-(3)", flare::string_join(a, "-", f));
         }
     }
 
     TEST(string_join, Tuple) {
-        EXPECT_EQ("", flare::strings::string_join(std::make_tuple(), "-"));
-        EXPECT_EQ("hello", flare::strings::string_join(std::make_tuple("hello"), "-"));
+        EXPECT_EQ("", flare::string_join(std::make_tuple(), "-"));
+        EXPECT_EQ("hello", flare::string_join(std::make_tuple("hello"), "-"));
 
         int x(10);
         std::string y("hello");
         double z(3.14);
-        EXPECT_EQ("10-hello-3.14", flare::strings::string_join(std::make_tuple(x, y, z), "-"));
+        EXPECT_EQ("10-hello-3.14", flare::string_join(std::make_tuple(x, y, z), "-"));
 
         // Faster! Faster!!
         EXPECT_EQ("10-hello-3.14",
-                  flare::strings::string_join(std::make_tuple(x, std::cref(y), z), "-"));
+                  flare::string_join(std::make_tuple(x, std::cref(y), z), "-"));
 
         struct TestFormatter {
             char buffer[128];
@@ -452,21 +452,21 @@ namespace {
             }
         };
         EXPECT_EQ("0x0000000a-hell-3.",
-                  flare::strings::string_join(std::make_tuple(x, y, z), "-", TestFormatter()));
+                  flare::string_join(std::make_tuple(x, y, z), "-", TestFormatter()));
         EXPECT_EQ(
                 "0x0000000a-hell-3.",
-                flare::strings::string_join(std::make_tuple(x, std::cref(y), z), "-", TestFormatter()));
+                flare::string_join(std::make_tuple(x, std::cref(y), z), "-", TestFormatter()));
         EXPECT_EQ("0x0000000a-hell-3.",
-                  flare::strings::string_join(std::make_tuple(&x, &y, &z), "-",
-                                    flare::strings::dereference_formatter(TestFormatter())));
+                  flare::string_join(std::make_tuple(&x, &y, &z), "-",
+                                    flare::dereference_formatter(TestFormatter())));
         EXPECT_EQ("0x0000000a-hell-3.",
-                  flare::strings::string_join(std::make_tuple(std::make_unique<int>(x),
+                  flare::string_join(std::make_tuple(std::make_unique<int>(x),
                                                     std::make_unique<std::string>(y),
                                                     std::make_unique<double>(z)),
-                                    "-", flare::strings::dereference_formatter(TestFormatter())));
+                                    "-", flare::dereference_formatter(TestFormatter())));
         EXPECT_EQ("0x0000000a-hell-3.",
-                  flare::strings::string_join(std::make_tuple(std::make_unique<int>(x), &y, &z),
-                                    "-", flare::strings::dereference_formatter(TestFormatter())));
+                  flare::string_join(std::make_tuple(std::make_unique<int>(x), &y, &z),
+                                    "-", flare::dereference_formatter(TestFormatter())));
     }
 
 }  // namespace

@@ -19,7 +19,7 @@
 
 #include "flare/base/base64.h"
 #include "flare/io/cord_buf.h"
-#include "flare/base/strings.h"
+#include "flare/strings/str_format.h"
 #include "flare/base/endian.h"
 #include "flare/rpc/redis_command.h"
 

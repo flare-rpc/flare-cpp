@@ -17,7 +17,7 @@
 #include "flare/log/logging.h"
 #include "flare/strings/ascii.h"
 
-namespace flare::strings {
+namespace flare {
 
 
 namespace {
@@ -129,4 +129,4 @@ std::string_view by_length::find(std::string_view text,
 }
 
 
-}  // namespace flare::strings
+}  // namespace flare

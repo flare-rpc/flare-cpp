@@ -8,7 +8,7 @@
 #include "flare/base/profile.h"
 #include <cstdint>
 
-namespace flare::strings {
+namespace flare {
 
     enum class character_properties : uint32_t {
         eNone = 0x0,
@@ -351,6 +351,6 @@ namespace flare::strings {
         return kToUpper[ch];
     }
 
-}  // namespace flare::strings
+}  // namespace flare
 
 #endif // FLARE_BASE_STERING_ASCII_H_

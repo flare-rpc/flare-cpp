@@ -24,7 +24,7 @@
 #include "flare/fiber/internal/fiber.h"
 #include "flare/base/scoped_lock.h"
 #include "flare/base/thread.h"
-#include "flare/base/strings.h"
+#include "flare/strings/str_format.h"
 #include "flare/base/time.h"
 #include "flare/log/logging.h"
 #include "flare/memory/object_pool.h"
@@ -208,31 +208,31 @@ namespace flare::rpc {
 
     void Span::Annotate(const char *fmt, ...) {
         const int64_t anno_time = flare::base::cpuwide_time_us() + _base_real_us;
-        flare::base::string_appendf(&_info, FLARE_RPC_SPAN_INFO_SEP "%lld ",
+        flare::string_appendf(&_info, FLARE_RPC_SPAN_INFO_SEP "%lld ",
                                     (long long) anno_time);
         va_list ap;
         va_start(ap, fmt);
-        flare::base::string_vappendf(&_info, fmt, ap);
+        flare::string_vappendf(&_info, fmt, ap);
         va_end(ap);
     }
 
     void Span::Annotate(const char *fmt, va_list args) {
         const int64_t anno_time = flare::base::cpuwide_time_us() + _base_real_us;
-        flare::base::string_appendf(&_info, FLARE_RPC_SPAN_INFO_SEP "%lld ",
+        flare::string_appendf(&_info, FLARE_RPC_SPAN_INFO_SEP "%lld ",
                                     (long long) anno_time);
-        flare::base::string_vappendf(&_info, fmt, args);
+        flare::string_vappendf(&_info, fmt, args);
     }
 
     void Span::Annotate(const std::string &info) {
         const int64_t anno_time = flare::base::cpuwide_time_us() + _base_real_us;
-        flare::base::string_appendf(&_info, FLARE_RPC_SPAN_INFO_SEP "%lld ",
+        flare::string_appendf(&_info, FLARE_RPC_SPAN_INFO_SEP "%lld ",
                                     (long long) anno_time);
         _info.append(info);
     }
 
     void Span::AnnotateCStr(const char *info, size_t length) {
         const int64_t anno_time = flare::base::cpuwide_time_us() + _base_real_us;
-        flare::base::string_appendf(&_info, FLARE_RPC_SPAN_INFO_SEP "%lld ",
+        flare::string_appendf(&_info, FLARE_RPC_SPAN_INFO_SEP "%lld ",
                                     (long long) anno_time);
         if (length <= 0) {
             _info.append(info);
@@ -268,7 +268,7 @@ namespace flare::rpc {
     bool SpanInfoExtractor::PopAnnotation(
             int64_t before_this_time, int64_t *time, std::string *annotation) {
         for (; _sp != NULL; ++_sp) {
-            flare::strings::StringSplitter sp_time(_sp.field(), _sp.field() + _sp.length(), ' ');
+            flare::StringSplitter sp_time(_sp.field(), _sp.field() + _sp.length(), ' ');
             if (sp_time) {
                 char *endptr;
                 const int64_t anno_time = strtoll(sp_time.field(), &endptr, 10);
@@ -333,7 +333,7 @@ namespace flare::rpc {
             delete id_db;
             delete time_db;
             if (!FLAGS_rpcz_keep_span_db) {
-                std::string cmd = flare::base::string_printf("rm -rf %s %s",
+                std::string cmd = flare::string_printf("rm -rf %s %s",
                                                              id_db_name.c_str(),
                                                              time_db_name.c_str());
                 flare::base::ignore_result(system(cmd.c_str()));

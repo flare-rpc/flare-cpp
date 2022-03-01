@@ -16,7 +16,7 @@
 #include "flare/strings/internal/charconv_parse.h"
 
 
-namespace flare::strings {
+namespace flare {
 
 namespace strings_internal {
 
@@ -31,7 +31,7 @@ extern const uint32_t kTenToNth[kMaxSmallPowerOfTen + 1];
 // Large, fixed-width unsigned integer.
 //
 // Exact rounding for decimal-to-binary floating point conversion requires very
-// large integer math, but a design goal of flare::strings::from_chars is to avoid
+// large integer math, but a design goal of flare::from_chars is to avoid
 // allocating memory.  The integer precision needed for decimal-to-binary
 // conversions is large but bounded, so a huge fixed-width integer class
 // suffices.
@@ -415,6 +415,6 @@ class big_unsigned<84>;
 
 }  // namespace strings_internal
 
-}  // namespace flare::strings
+}  // namespace flare
 
 #endif  // FLARE_STRINGS_INTERNAL_CHARCONV_BIGINT_H_

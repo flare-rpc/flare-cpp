@@ -11,7 +11,7 @@
 #include "flare/strings/char_conv.h"
 #include "flare/strings/internal/char_traits.h"
 
-namespace flare::strings {
+namespace flare {
 
 namespace {
 
@@ -497,4 +497,4 @@ template ParsedFloat ParseFloat<16>(const char *begin, const char *end,
 
 }  // namespace strings_internal
 
-}  // namespace flare::strings
+}  // namespace flare

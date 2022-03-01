@@ -18,7 +18,7 @@
 #include <stdio.h>
 #include <gtest/gtest.h>
 #include <vector>
-#include "flare/base/strings.h"
+#include "flare/strings/str_format.h"
 #include "flare/io/temp_file.h"
 #include "flare/fiber/internal/fiber.h"
 #include "flare/rpc/policy/consul_naming_service.h"
@@ -29,7 +29,7 @@
 #include "flare/rpc/policy/discovery_naming_service.h"
 #include "echo.pb.h"
 #include "flare/rpc/server.h"
-#include "flare/base/strings.h"
+#include "flare/strings/utility.h"
 
 
 namespace flare::rpc {
@@ -118,7 +118,7 @@ TEST(NamingServiceTest, sanity) {
 
     std::string s;
     for (size_t i = 0; i < FLARE_ARRAY_SIZE(address_list); ++i) {
-        ASSERT_EQ(0, flare::base::string_appendf(&s, "%s,", address_list[i]));
+        ASSERT_EQ(0, flare::string_appendf(&s, "%s,", address_list[i]));
     }
     flare::rpc::policy::ListNamingService lns;
     ASSERT_EQ(0, lns.GetServers(s.c_str(), &servers));
@@ -166,7 +166,7 @@ TEST(NamingServiceTest, wrong_name) {
 
     std::string s;
     for (size_t i = 0; i < FLARE_ARRAY_SIZE(address_list); ++i) {
-        ASSERT_EQ(0, flare::base::string_appendf(&s, ", %s", address_list[i]));
+        ASSERT_EQ(0, flare::string_appendf(&s, ", %s", address_list[i]));
     }
     flare::rpc::policy::ListNamingService lns;
     ASSERT_EQ(0, lns.GetServers(s.c_str(), &servers));
@@ -565,7 +565,7 @@ public:
         auto body = cntl->request_attachment().to_string();
         for (flare::rpc::QuerySplitter sp(body); sp; ++sp) {
             if (sp.key() == "addrs") {
-                _addrs.insert(flare::base::as_string(sp.value()));
+                _addrs.insert(flare::as_string(sp.value()));
             }
         }
         cntl->response_attachment().append(R"({

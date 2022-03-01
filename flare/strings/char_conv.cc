@@ -20,7 +20,7 @@
 #define FLARE_BIT_PACK_FLOATS 1
 #endif
 
-namespace flare::strings {
+namespace flare {
 
 namespace {
 
@@ -203,7 +203,7 @@ bool HandleEdgeCase(const strings_internal::ParsedFloat &input, bool negative,
 
 template<typename FloatType>
 void EncodeResult(const CalculatedFloat &calculated, bool negative,
-                  flare::strings::from_chars_result *result, FloatType *value) {
+                  flare::from_chars_result *result, FloatType *value) {
     if (calculated.exponent == kOverflow) {
         result->ec = std::errc::result_out_of_range;
         *value = negative ? -std::numeric_limits<FloatType>::max()
@@ -255,17 +255,17 @@ uint64_t ShiftRightAndRound(flare::base::uint128 value, int shift, bool input_ex
 
 bool MustRoundUp(uint64_t guess_mantissa, int guess_exponent,
                  const strings_internal::ParsedFloat &parsed_decimal) {
-    flare::strings::strings_internal::big_unsigned<84> exact_mantissa;
+    flare::strings_internal::big_unsigned<84> exact_mantissa;
     int exact_exponent = exact_mantissa.ReadFloatMantissa(parsed_decimal, 768);
 
     // Adjust the `guess` arguments to be halfway between A and B.
     guess_mantissa = guess_mantissa * 2 + 1;
     guess_exponent -= 1;
-    flare::strings::strings_internal::big_unsigned<84> &lhs = exact_mantissa;
+    flare::strings_internal::big_unsigned<84> &lhs = exact_mantissa;
     int comparison;
     if (exact_exponent >= 0) {
         lhs.MultiplyByFiveToTheNth(exact_exponent);
-        flare::strings::strings_internal::big_unsigned<84> rhs(guess_mantissa);
+        flare::strings_internal::big_unsigned<84> rhs(guess_mantissa);
         // There are powers of 2 on both sides of the inequality; reduce this to
         // a single bit-shift.
         if (exact_exponent > guess_exponent) {
@@ -275,8 +275,8 @@ bool MustRoundUp(uint64_t guess_mantissa, int guess_exponent,
         }
         comparison = Compare(lhs, rhs);
     } else {
-        flare::strings::strings_internal::big_unsigned<84> rhs =
-                flare::strings::strings_internal::big_unsigned<84>::FiveToTheNth(-exact_exponent);
+        flare::strings_internal::big_unsigned<84> rhs =
+                flare::strings_internal::big_unsigned<84>::FiveToTheNth(-exact_exponent);
         rhs.MultiplyBy(guess_mantissa);
         if (exact_exponent > guess_exponent) {
             lhs.ShiftLeft(exact_exponent - guess_exponent);
@@ -756,4 +756,4 @@ const int16_t kPower10ExponentTable[] = {
 
 }  // namespace
 
-}  // namespace flare::strings
+}  // namespace flare
