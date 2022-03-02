@@ -83,7 +83,7 @@ namespace flare::rpc {
 
     bool ParseRestfulPath(std::string_view path,
                           RestfulMethodPath *path_out) {
-        path = flare::strip_ascii_whitespace(path);
+        path = flare::trim_all(path);
         if (path.empty()) {
             LOG(ERROR) << "Parameter[path] is empty";
             return false;
@@ -231,7 +231,7 @@ namespace flare::rpc {
                     }
                     // Treat right part of the arrow as method_name.
                     std::string_view method_name_piece(p + i + 1, n - (i + 1));
-                    method_name_piece = flare::strip_ascii_whitespace(method_name_piece);
+                    method_name_piece = flare::trim_all(method_name_piece);
                     if (method_name_piece.empty()) {
                         LOG(ERROR) << "No method name in " << nmappings
                                    << "-th mapping";

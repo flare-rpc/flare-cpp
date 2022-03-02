@@ -26,6 +26,12 @@ namespace flare {
 
         // this should be OK since mkdtemp just replaces characters in place
         char *buffer = const_cast<char *>(sub_dir_string.c_str());
+        std::error_code ec;
+        if(!flare::filesystem::exists(sub_dir, ec)) {
+            if(!flare::filesystem::create_directories(sub_dir, ec)) {
+                return false;
+            }
+        }
         char *dtemp = mkdtemp(buffer);
         if (!dtemp) {
             DPLOG(ERROR) << "mkdtemp";
@@ -85,7 +91,7 @@ namespace flare {
 
         // If |base_path| does not exist, create it.
         std::error_code ec;
-        if (!flare::filesystem::create_directories(base_path, ec))
+        if (!flare::filesystem::exists(base_path, ec) && !flare::filesystem::create_directories(base_path, ec))
             return false;
 
         // Create a new, uniquely named directory under |base_path|.

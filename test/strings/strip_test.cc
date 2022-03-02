@@ -105,7 +105,7 @@ namespace {
         EXPECT_EQ(flare::strip_suffix("", ""), "");
     }
 
-    TEST(Strip, trim_complete) {
+    TEST(Strip, trim_inplace_complete) {
         const char *inputs[] = {
                 "No extra space",
                 "  Leading whitespace",
@@ -128,7 +128,7 @@ namespace {
 
         for (int i = 0; i < NUM_TESTS; i++) {
             std::string s(inputs[i]);
-            flare::trim_complete(&s);
+            flare::trim_inplace_complete(&s);
             EXPECT_STREQ(outputs[i], s.c_str());
         }
 
@@ -137,26 +137,26 @@ namespace {
         // tests involving empty())
         std::string zero_string = "";
         assert(zero_string.empty());
-        flare::trim_complete(&zero_string);
+        flare::trim_inplace_complete(&zero_string);
         EXPECT_EQ(zero_string.size(), 0UL);
         EXPECT_TRUE(zero_string.empty());
     }
 
-    TEST(Strip, trim_right) {
+    TEST(Strip, trim_inplace_right) {
         std::string test = "foo  ";
-        flare::trim_right(&test);
+        flare::trim_inplace_right(&test);
         EXPECT_EQ(test, "foo");
 
         test = "   ";
-        flare::trim_right(&test);
+        flare::trim_inplace_right(&test);
         EXPECT_EQ(test, "");
 
         test = "";
-        flare::trim_right(&test);
+        flare::trim_inplace_right(&test);
         EXPECT_EQ(test, "");
 
         test = " abc\t";
-        flare::trim_right(&test);
+        flare::trim_inplace_right(&test);
         EXPECT_EQ(test, " abc");
     }
 
@@ -167,18 +167,18 @@ namespace {
         EXPECT_EQ(std::string_view(), flare::trim_left(orig));
     }
 
-    TEST(Strip, trim_all) {
+    TEST(Strip, trim_inplace_all) {
         std::string test2 = "\t  \f\r\n\vfoo \t\f\r\v\n";
-        flare::trim_all(&test2);
+        flare::trim_inplace_all(&test2);
         EXPECT_EQ(test2, "foo");
         std::string test3 = "bar";
-        flare::trim_all(&test3);
+        flare::trim_inplace_all(&test3);
         EXPECT_EQ(test3, "bar");
         std::string test4 = "\t  \f\r\n\vfoo";
-        flare::trim_all(&test4);
+        flare::trim_inplace_all(&test4);
         EXPECT_EQ(test4, "foo");
         std::string test5 = "foo \t\f\r\v\n";
-        flare::trim_all(&test5);
+        flare::trim_inplace_all(&test5);
         EXPECT_EQ(test5, "foo");
         std::string_view test6("\t  \f\r\n\vfoo \t\f\r\v\n");
         test6 = flare::trim_all(test6);
@@ -186,5 +186,14 @@ namespace {
         test6 = flare::trim_all(test6);
         EXPECT_EQ(test6, "foo");  // already stripped
     }
+
+    TEST(Strip, trim_all) {
+        std::string_view test6("\t  \f\r\n\vfoo \t\f\r\v\n");
+        test6 = flare::trim_all(test6);
+        EXPECT_EQ(test6, "foo");
+        test6 = flare::trim_all(test6);
+        EXPECT_EQ(test6, "foo");  // already stripped
+    }
+
 
 }  // namespace

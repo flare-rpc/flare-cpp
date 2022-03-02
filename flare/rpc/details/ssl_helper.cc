@@ -68,7 +68,7 @@ static int ParseSSLProtocols(const std::string& str_protocol) {
                              str_protocol.data() + str_protocol.size(), ',');
     for (; sp; ++sp) {
         std::string_view protocol(sp.field(), sp.length());
-        protocol = flare::strip_ascii_whitespace(protocol);
+        protocol = flare::trim_all(protocol);
         if (strncasecmp(protocol.data(), "SSLv3", protocol.size()) == 0) {
             protocol_flag |= SSLv3;
         } else if (strncasecmp(protocol.data(), "TLSv1", protocol.size()) == 0) {

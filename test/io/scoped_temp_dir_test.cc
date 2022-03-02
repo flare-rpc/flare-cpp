@@ -10,8 +10,8 @@ namespace flare {
 
     TEST(scoped_temp_dir, FullPath) {
         flare::filesystem::path test_path;
-        create_new_temp_directory("scoped_temp_dir",
-                                  &test_path);
+        EXPECT_TRUE(create_new_temp_directory("scoped_temp_dir",
+                                  &test_path))<<test_path;
 
         // Against an existing dir, it should get destroyed when leaving scope.
         EXPECT_TRUE(flare::filesystem::exists(test_path));
