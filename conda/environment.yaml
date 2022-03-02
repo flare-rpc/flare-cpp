@@ -4,8 +4,8 @@ channels:
   - defaults
   - flare-rpc
 dependencies:
-  - cmake >=3.17
+  - cmake =3.19
   - make
-  - gflags
-  - leveldb
-  - protobuf=3.* # includes Protobuf compiler, C++ headers, Python libraries
+  - gflags =2.2.2
+  - leveldb =1.22
+  - protobuf=3.12.4 # includes Protobuf compiler, C++ headers, Python libraries
