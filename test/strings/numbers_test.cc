@@ -423,24 +423,24 @@ namespace {
         VerifySimpleAtoiGood<uint64_t>(std::numeric_limits<uint64_t>::max(),
                                        std::numeric_limits<uint64_t>::max());
 
-        // simple_atoi(std::string_view, flare::base::uint128)
-        VerifySimpleAtoiGood<flare::base::uint128>(0, 0);
-        VerifySimpleAtoiGood<flare::base::uint128>(42, 42);
-        VerifySimpleAtoiBad<flare::base::uint128>(-42);
+        // simple_atoi(std::string_view, flare::uint128)
+        VerifySimpleAtoiGood<flare::uint128>(0, 0);
+        VerifySimpleAtoiGood<flare::uint128>(42, 42);
+        VerifySimpleAtoiBad<flare::uint128>(-42);
 
-        VerifySimpleAtoiBad<flare::base::uint128>(std::numeric_limits<int32_t>::min());
-        VerifySimpleAtoiGood<flare::base::uint128>(std::numeric_limits<int32_t>::max(),
+        VerifySimpleAtoiBad<flare::uint128>(std::numeric_limits<int32_t>::min());
+        VerifySimpleAtoiGood<flare::uint128>(std::numeric_limits<int32_t>::max(),
                                                    std::numeric_limits<int32_t>::max());
-        VerifySimpleAtoiGood<flare::base::uint128>(std::numeric_limits<uint32_t>::max(),
+        VerifySimpleAtoiGood<flare::uint128>(std::numeric_limits<uint32_t>::max(),
                                                    std::numeric_limits<uint32_t>::max());
-        VerifySimpleAtoiBad<flare::base::uint128>(std::numeric_limits<int64_t>::min());
-        VerifySimpleAtoiGood<flare::base::uint128>(std::numeric_limits<int64_t>::max(),
+        VerifySimpleAtoiBad<flare::uint128>(std::numeric_limits<int64_t>::min());
+        VerifySimpleAtoiGood<flare::uint128>(std::numeric_limits<int64_t>::max(),
                                                    std::numeric_limits<int64_t>::max());
-        VerifySimpleAtoiGood<flare::base::uint128>(std::numeric_limits<uint64_t>::max(),
+        VerifySimpleAtoiGood<flare::uint128>(std::numeric_limits<uint64_t>::max(),
                                                    std::numeric_limits<uint64_t>::max());
-        VerifySimpleAtoiGood<flare::base::uint128>(
-                std::numeric_limits<flare::base::uint128>::max(),
-                std::numeric_limits<flare::base::uint128>::max());
+        VerifySimpleAtoiGood<flare::uint128>(
+                std::numeric_limits<flare::uint128>::max(),
+                std::numeric_limits<flare::uint128>::max());
 
         // Some other types
         VerifySimpleAtoiGood<int>(-42, -42);
@@ -782,10 +782,10 @@ namespace {
         // random number generators don't work for uint128, and
         // uint128 can be streamed but not string_cat'd, so this code must be custom
         // implemented for uint128, but is generally the same as what's above.
-        // test_random_integer_parse_base<flare::base::uint128>(
+        // test_random_integer_parse_base<flare::uint128>(
         //     &flare::numbers_internal::safe_strtou128_base);
         using RandomEngine = std::minstd_rand0;
-        using IntType = flare::base::uint128;
+        using IntType = flare::uint128;
         constexpr auto parse_func = &flare::numbers_internal::safe_strtou128_base;
 
         std::random_device rd;

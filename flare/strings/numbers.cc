@@ -991,8 +991,8 @@ namespace flare {
             return safe_uint_internal<uint64_t>(text, value, base);
         }
 
-        bool safe_strtou128_base(std::string_view text, flare::base::uint128 *value, int base) {
-            return safe_uint_internal<flare::base::uint128>(text, value, base);
+        bool safe_strtou128_base(std::string_view text, flare::uint128 *value, int base) {
+            return safe_uint_internal<flare::uint128>(text, value, base);
         }
 
     }  // namespace numbers_internal

@@ -575,7 +575,7 @@ inline void EncodeString(flare::cord_buf_appender* out, const std::string& s,
         EncodeInteger(out, 0x00, 7, s.size());
         if (LOWERCASE) {
             for (size_t i = 0; i < s.size(); ++i) {
-                out->push_back(flare::base::ascii_tolower(s[i]));
+                out->push_back(flare::ascii::to_lower(s[i]));
             }
         } else {
             out->append(s);
@@ -586,7 +586,7 @@ inline void EncodeString(flare::cord_buf_appender* out, const std::string& s,
     uint32_t bit_len = 0;
     if (LOWERCASE) {
         for (size_t i = 0; i < s.size(); ++i) {
-            bit_len += s_huffman_table[(uint8_t)flare::base::ascii_tolower(s[i])].bit_len;
+            bit_len += s_huffman_table[(uint8_t)flare::ascii::to_lower(s[i])].bit_len;
         }
     } else {
         for (size_t i = 0; i < s.size(); ++i) {
@@ -597,7 +597,7 @@ inline void EncodeString(flare::cord_buf_appender* out, const std::string& s,
     HuffmanEncoder e(out, s_huffman_table);
     if (LOWERCASE) {
         for (size_t i = 0; i < s.size(); ++i) {
-            e.Encode(flare::base::ascii_tolower(s[i]));
+            e.Encode(flare::ascii::to_lower(s[i]));
         }
     } else {
         for (size_t i = 0; i < s.size(); ++i) {
@@ -872,7 +872,7 @@ void tolower(std::string* s) {
     const char* d = s->c_str();
     for (size_t i = 0; i < s->size(); ++i) {
         const char c = d[i];
-        const char c2 = flare::base::ascii_tolower(c);
+        const char c2 = flare::ascii::to_lower(c);
         if (c2 != c) {
             (*s)[i] = c2;
         }

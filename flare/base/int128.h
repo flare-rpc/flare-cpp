@@ -28,54 +28,54 @@
 #define FLARE_INTERNAL_WCHAR_T wchar_t
 #endif  // defined(_MSC_VER)
 
-namespace flare::base {
+namespace flare {
 
     class int128;
 
-// uint128
-//
-// An unsigned 128-bit integer type. The API is meant to mimic an intrinsic type
-// as closely as is practical, including exhibiting undefined behavior in
-// analogous cases (e.g. division by zero). This type is intended to be a
-// drop-in replacement once C++ supports an intrinsic `uint128_t` type; when
-// that occurs, existing well-behaved uses of `uint128` will continue to work
-// using that new type.
-//
-// Note: code written with this type will continue to compile once `uint128_t`
-// is introduced, provided the replacement helper functions
-// `Uint128(Low|High)64()` and `make_uint128()` are made.
-//
-// A `uint128` supports the following:
-//
-//   * Implicit construction from integral types
-//   * Explicit conversion to integral types
-//
-// Additionally, if your compiler supports `__int128`, `uint128` is
-// interoperable with that type. (flare checks for this compatibility through
-// the `FLARE_HAVE_INTRINSIC_INT128` macro.)
-//
-// However, a `uint128` differs from intrinsic integral types in the following
-// ways:
-//
-//   * Errors on implicit conversions that do not preserve value (such as
-//     loss of precision when converting to float values).
-//   * Requires explicit construction from and conversion to floating point
-//     types.
-//   * Conversion to integral types requires an explicit static_cast() to
-//     mimic use of the `-Wnarrowing` compiler flag.
-//   * The alignment requirement of `uint128` may differ from that of an
-//     intrinsic 128-bit integer type depending on platform and build
-//     configuration.
-//
-// Example:
-//
-//     float y = flare::base::Uint128Max();  // Error. uint128 cannot be implicitly
-//                                    // converted to float.
-//
-//     flare::base::uint128 v;
-//     uint64_t i = v;                         // Error
-//     uint64_t i = static_cast<uint64_t>(v);  // OK
-//
+    // uint128
+    //
+    // An unsigned 128-bit integer type. The API is meant to mimic an intrinsic type
+    // as closely as is practical, including exhibiting undefined behavior in
+    // analogous cases (e.g. division by zero). This type is intended to be a
+    // drop-in replacement once C++ supports an intrinsic `uint128_t` type; when
+    // that occurs, existing well-behaved uses of `uint128` will continue to work
+    // using that new type.
+    //
+    // Note: code written with this type will continue to compile once `uint128_t`
+    // is introduced, provided the replacement helper functions
+    // `Uint128(Low|High)64()` and `make_uint128()` are made.
+    //
+    // A `uint128` supports the following:
+    //
+    //   * Implicit construction from integral types
+    //   * Explicit conversion to integral types
+    //
+    // Additionally, if your compiler supports `__int128`, `uint128` is
+    // interoperable with that type. (flare checks for this compatibility through
+    // the `FLARE_HAVE_INTRINSIC_INT128` macro.)
+    //
+    // However, a `uint128` differs from intrinsic integral types in the following
+    // ways:
+    //
+    //   * Errors on implicit conversions that do not preserve value (such as
+    //     loss of precision when converting to float values).
+    //   * Requires explicit construction from and conversion to floating point
+    //     types.
+    //   * Conversion to integral types requires an explicit static_cast() to
+    //     mimic use of the `-Wnarrowing` compiler flag.
+    //   * The alignment requirement of `uint128` may differ from that of an
+    //     intrinsic 128-bit integer type depending on platform and build
+    //     configuration.
+    //
+    // Example:
+    //
+    //     float y = flare::uint128_max();  // Error. uint128 cannot be implicitly
+    //                                    // converted to float.
+    //
+    //     flare::uint128 v;
+    //     uint64_t i = v;                         // Error
+    //     uint64_t i = static_cast<uint64_t>(v);  // OK
+    //
     class
 #if defined(FLARE_HAVE_INTRINSIC_INT128)
     alignas(unsigned __int128)
@@ -220,15 +220,15 @@ namespace flare::base {
         //
         // Example:
         //
-        //   flare::base::uint128 big = flare::base::make_uint128(1, 0);
+        //   flare::uint128 big = flare::make_uint128(1, 0);
         friend constexpr uint128 make_uint128(uint64_t high, uint64_t low);
 
-        // Uint128Max()
+        // uint128_max()
         //
         // Returns the highest value for a 128-bit unsigned integer.
-        friend constexpr uint128 Uint128Max();
+        friend constexpr uint128 uint128_max();
 
-        // Support for flare::base::hash.
+        // Support for flare::hash.
         template<typename H>
         friend H flare_hash_value(H h, uint128 v) {
             return H::combine(std::move(h), uint128_high64(v), uint128_low64(v));
@@ -252,7 +252,7 @@ namespace flare::base {
 #endif  // byte order
     };
 
-// Prefer to use the constexpr `Uint128Max()`.
+// Prefer to use the constexpr `uint128_max()`.
 //
 // TODO(flare-team) deprecate kuint128max once migration tool is released.
     extern const uint128 kuint128max;
@@ -262,7 +262,7 @@ namespace flare::base {
 
 // TODO(strel) add operator>>(std::istream&, uint128)
 
-    constexpr uint128 Uint128Max() {
+    constexpr uint128 uint128_max() {
         return uint128((std::numeric_limits<uint64_t>::max)(),
                        (std::numeric_limits<uint64_t>::max)());
     }
@@ -272,7 +272,7 @@ namespace flare::base {
 // Specialized numeric_limits for uint128.
 namespace std {
     template<>
-    class numeric_limits<flare::base::uint128> {
+    class numeric_limits<flare::uint128> {
     public:
         static constexpr bool is_specialized = true;
         static constexpr bool is_signed = false;
@@ -302,63 +302,63 @@ namespace std {
 #endif  // FLARE_HAVE_INTRINSIC_INT128
         static constexpr bool tinyness_before = false;
 
-        static constexpr flare::base::uint128 (min)() { return 0; }
+        static constexpr flare::uint128 (min)() { return 0; }
 
-        static constexpr flare::base::uint128 lowest() { return 0; }
+        static constexpr flare::uint128 lowest() { return 0; }
 
-        static constexpr flare::base::uint128 (max)() { return flare::base::Uint128Max(); }
+        static constexpr flare::uint128 (max)() { return flare::uint128_max(); }
 
-        static constexpr flare::base::uint128 epsilon() { return 0; }
+        static constexpr flare::uint128 epsilon() { return 0; }
 
-        static constexpr flare::base::uint128 round_error() { return 0; }
+        static constexpr flare::uint128 round_error() { return 0; }
 
-        static constexpr flare::base::uint128 infinity() { return 0; }
+        static constexpr flare::uint128 infinity() { return 0; }
 
-        static constexpr flare::base::uint128 quiet_NaN() { return 0; }
+        static constexpr flare::uint128 quiet_NaN() { return 0; }
 
-        static constexpr flare::base::uint128 signaling_NaN() { return 0; }
+        static constexpr flare::uint128 signaling_NaN() { return 0; }
 
-        static constexpr flare::base::uint128 denorm_min() { return 0; }
+        static constexpr flare::uint128 denorm_min() { return 0; }
     };
 }  // namespace std
 
-namespace flare::base {
+namespace flare {
 
 
-// int128
-//
-// A signed 128-bit integer type. The API is meant to mimic an intrinsic
-// integral type as closely as is practical, including exhibiting undefined
-// behavior in analogous cases (e.g. division by zero).
-//
-// An `int128` supports the following:
-//
-//   * Implicit construction from integral types
-//   * Explicit conversion to integral types
-//
-// However, an `int128` differs from intrinsic integral types in the following
-// ways:
-//
-//   * It is not implicitly convertible to other integral types.
-//   * Requires explicit construction from and conversion to floating point
-//     types.
+    // int128
+    //
+    // A signed 128-bit integer type. The API is meant to mimic an intrinsic
+    // integral type as closely as is practical, including exhibiting undefined
+    // behavior in analogous cases (e.g. division by zero).
+    //
+    // An `int128` supports the following:
+    //
+    //   * Implicit construction from integral types
+    //   * Explicit conversion to integral types
+    //
+    // However, an `int128` differs from intrinsic integral types in the following
+    // ways:
+    //
+    //   * It is not implicitly convertible to other integral types.
+    //   * Requires explicit construction from and conversion to floating point
+    //     types.
 
-// Additionally, if your compiler supports `__int128`, `int128` is
-// interoperable with that type. (flare checks for this compatibility through
-// the `FLARE_HAVE_INTRINSIC_INT128` macro.)
-//
-// The design goal for `int128` is that it will be compatible with a future
-// `int128_t`, if that type becomes a part of the standard.
-//
-// Example:
-//
-//     float y = flare::base::int128(17);  // Error. int128 cannot be implicitly
-//                                  // converted to float.
-//
-//     flare::base::int128 v;
-//     int64_t i = v;                        // Error
-//     int64_t i = static_cast<int64_t>(v);  // OK
-//
+    // Additionally, if your compiler supports `__int128`, `int128` is
+    // interoperable with that type. (flare checks for this compatibility through
+    // the `FLARE_HAVE_INTRINSIC_INT128` macro.)
+    //
+    // The design goal for `int128` is that it will be compatible with a future
+    // `int128_t`, if that type becomes a part of the standard.
+    //
+    // Example:
+    //
+    //     float y = flare::int128(17);  // Error. int128 cannot be implicitly
+    //                                  // converted to float.
+    //
+    //     flare::int128 v;
+    //     int64_t i = v;                        // Error
+    //     int64_t i = static_cast<int64_t>(v);  // OK
+    //
     class int128 {
     public:
         int128() = default;
@@ -489,15 +489,15 @@ namespace flare::base {
         // Constructs a `int128` numeric value from two 64-bit integers. Note that
         // signedness is conveyed in the upper `high` value.
         //
-        //   (flare::base::int128(1) << 64) * high + low
+        //   (flare::int128(1) << 64) * high + low
         //
         // Note that this factory function is the only way to construct a `int128`
         // from integer values greater than 2^64 or less than -2^64.
         //
         // Example:
         //
-        //   flare::base::int128 big = flare::base::make_int128(1, 0);
-        //   flare::base::int128 big_n = flare::base::make_int128(-1, 0);
+        //   flare::int128 big = flare::make_int128(1, 0);
+        //   flare::int128 big_n = flare::make_int128(-1, 0);
         friend constexpr int128 make_int128(int64_t high, uint64_t low);
 
         // int128_max()
@@ -510,7 +510,7 @@ namespace flare::base {
         // Returns the minimum value for a 128-bit signed integer.
         friend constexpr int128 int128_min();
 
-        // Support for flare::base::hash.
+        // Support for flare::hash.
         template<typename H>
         friend H flare_hash_value(H h, int128 v) {
             return H::combine(std::move(h), int128_high64(v), int128_low64(v));
@@ -547,12 +547,12 @@ namespace flare::base {
         return int128((std::numeric_limits<int64_t>::min)(), 0);
     }
 
-}  // namespace flare::base
+}  // namespace flare
 
 // Specialized numeric_limits for int128.
 namespace std {
     template<>
-    class numeric_limits<flare::base::int128> {
+    class numeric_limits<flare::int128> {
     public:
         static constexpr bool is_specialized = true;
         static constexpr bool is_signed = true;
@@ -582,30 +582,30 @@ namespace std {
 #endif  // FLARE_HAVE_INTRINSIC_INT128
         static constexpr bool tinyness_before = false;
 
-        static constexpr flare::base::int128 (min)() { return flare::base::int128_min(); }
+        static constexpr flare::int128 (min)() { return flare::int128_min(); }
 
-        static constexpr flare::base::int128 lowest() { return flare::base::int128_min(); }
+        static constexpr flare::int128 lowest() { return flare::int128_min(); }
 
-        static constexpr flare::base::int128 (max)() { return flare::base::int128_max(); }
+        static constexpr flare::int128 (max)() { return flare::int128_max(); }
 
-        static constexpr flare::base::int128 epsilon() { return 0; }
+        static constexpr flare::int128 epsilon() { return 0; }
 
-        static constexpr flare::base::int128 round_error() { return 0; }
+        static constexpr flare::int128 round_error() { return 0; }
 
-        static constexpr flare::base::int128 infinity() { return 0; }
+        static constexpr flare::int128 infinity() { return 0; }
 
-        static constexpr flare::base::int128 quiet_NaN() { return 0; }
+        static constexpr flare::int128 quiet_NaN() { return 0; }
 
-        static constexpr flare::base::int128 signaling_NaN() { return 0; }
+        static constexpr flare::int128 signaling_NaN() { return 0; }
 
-        static constexpr flare::base::int128 denorm_min() { return 0; }
+        static constexpr flare::int128 denorm_min() { return 0; }
     };
 }  // namespace std
 
 // --------------------------------------------------------------------------
 //                      Implementation details follow
 // --------------------------------------------------------------------------
-namespace flare::base {
+namespace flare {
 
     constexpr uint128 make_uint128(uint64_t high, uint64_t low) {
         return uint128(high, low);
@@ -1196,7 +1196,7 @@ namespace flare::base {
 #endif  // FLARE_HAVE_INTRINSIC_INT128
 
 
-}  // namespace flare::base
+}  // namespace flare
 
 #undef FLARE_INTERNAL_WCHAR_T
 

@@ -3,7 +3,7 @@
 #define FLARE_CONTAINER_CASE_IGNORED_FLAT_MAP_H_
 
 #include "flare/container/flat_map.h"
-#include "flare/base/ascii.h"
+#include "flare/strings/ascii.h"
 
 namespace flare::container {
 
@@ -11,7 +11,7 @@ namespace flare::container {
         size_t operator()(const std::string &s) const {
             std::size_t result = 0;
             for (std::string::const_iterator i = s.begin(); i != s.end(); ++i) {
-                result = result * 101 + flare::base::ascii_tolower(*i);
+                result = result * 101 + flare::ascii::to_lower(*i);
             }
             return result;
         }
@@ -19,7 +19,7 @@ namespace flare::container {
         size_t operator()(const char *s) const {
             std::size_t result = 0;
             for (; *s; ++s) {
-                result = result * 101 + flare::base::ascii_tolower(*s);
+                result = result * 101 + flare::ascii::to_lower(*s);
             }
             return result;
         }

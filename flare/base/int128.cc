@@ -12,7 +12,7 @@
 #include <string>
 #include <type_traits>
 
-namespace flare::base {
+namespace flare {
 
 
 const uint128 kuint128max = make_uint128(std::numeric_limits<uint64_t>::max(),
@@ -349,51 +349,51 @@ std::ostream &operator<<(std::ostream &os, int128 v) {
 }  // namespace flare::base
 
 namespace std {
-constexpr bool numeric_limits<flare::base::uint128>::is_specialized;
-constexpr bool numeric_limits<flare::base::uint128>::is_signed;
-constexpr bool numeric_limits<flare::base::uint128>::is_integer;
-constexpr bool numeric_limits<flare::base::uint128>::is_exact;
-constexpr bool numeric_limits<flare::base::uint128>::has_infinity;
-constexpr bool numeric_limits<flare::base::uint128>::has_quiet_NaN;
-constexpr bool numeric_limits<flare::base::uint128>::has_signaling_NaN;
-constexpr float_denorm_style numeric_limits<flare::base::uint128>::has_denorm;
-constexpr bool numeric_limits<flare::base::uint128>::has_denorm_loss;
-constexpr float_round_style numeric_limits<flare::base::uint128>::round_style;
-constexpr bool numeric_limits<flare::base::uint128>::is_iec559;
-constexpr bool numeric_limits<flare::base::uint128>::is_bounded;
-constexpr bool numeric_limits<flare::base::uint128>::is_modulo;
-constexpr int numeric_limits<flare::base::uint128>::digits;
-constexpr int numeric_limits<flare::base::uint128>::digits10;
-constexpr int numeric_limits<flare::base::uint128>::max_digits10;
-constexpr int numeric_limits<flare::base::uint128>::radix;
-constexpr int numeric_limits<flare::base::uint128>::min_exponent;
-constexpr int numeric_limits<flare::base::uint128>::min_exponent10;
-constexpr int numeric_limits<flare::base::uint128>::max_exponent;
-constexpr int numeric_limits<flare::base::uint128>::max_exponent10;
-constexpr bool numeric_limits<flare::base::uint128>::traps;
-constexpr bool numeric_limits<flare::base::uint128>::tinyness_before;
+constexpr bool numeric_limits<flare::uint128>::is_specialized;
+constexpr bool numeric_limits<flare::uint128>::is_signed;
+constexpr bool numeric_limits<flare::uint128>::is_integer;
+constexpr bool numeric_limits<flare::uint128>::is_exact;
+constexpr bool numeric_limits<flare::uint128>::has_infinity;
+constexpr bool numeric_limits<flare::uint128>::has_quiet_NaN;
+constexpr bool numeric_limits<flare::uint128>::has_signaling_NaN;
+constexpr float_denorm_style numeric_limits<flare::uint128>::has_denorm;
+constexpr bool numeric_limits<flare::uint128>::has_denorm_loss;
+constexpr float_round_style numeric_limits<flare::uint128>::round_style;
+constexpr bool numeric_limits<flare::uint128>::is_iec559;
+constexpr bool numeric_limits<flare::uint128>::is_bounded;
+constexpr bool numeric_limits<flare::uint128>::is_modulo;
+constexpr int numeric_limits<flare::uint128>::digits;
+constexpr int numeric_limits<flare::uint128>::digits10;
+constexpr int numeric_limits<flare::uint128>::max_digits10;
+constexpr int numeric_limits<flare::uint128>::radix;
+constexpr int numeric_limits<flare::uint128>::min_exponent;
+constexpr int numeric_limits<flare::uint128>::min_exponent10;
+constexpr int numeric_limits<flare::uint128>::max_exponent;
+constexpr int numeric_limits<flare::uint128>::max_exponent10;
+constexpr bool numeric_limits<flare::uint128>::traps;
+constexpr bool numeric_limits<flare::uint128>::tinyness_before;
 
-constexpr bool numeric_limits<flare::base::int128>::is_specialized;
-constexpr bool numeric_limits<flare::base::int128>::is_signed;
-constexpr bool numeric_limits<flare::base::int128>::is_integer;
-constexpr bool numeric_limits<flare::base::int128>::is_exact;
-constexpr bool numeric_limits<flare::base::int128>::has_infinity;
-constexpr bool numeric_limits<flare::base::int128>::has_quiet_NaN;
-constexpr bool numeric_limits<flare::base::int128>::has_signaling_NaN;
-constexpr float_denorm_style numeric_limits<flare::base::int128>::has_denorm;
-constexpr bool numeric_limits<flare::base::int128>::has_denorm_loss;
-constexpr float_round_style numeric_limits<flare::base::int128>::round_style;
-constexpr bool numeric_limits<flare::base::int128>::is_iec559;
-constexpr bool numeric_limits<flare::base::int128>::is_bounded;
-constexpr bool numeric_limits<flare::base::int128>::is_modulo;
-constexpr int numeric_limits<flare::base::int128>::digits;
-constexpr int numeric_limits<flare::base::int128>::digits10;
-constexpr int numeric_limits<flare::base::int128>::max_digits10;
-constexpr int numeric_limits<flare::base::int128>::radix;
-constexpr int numeric_limits<flare::base::int128>::min_exponent;
-constexpr int numeric_limits<flare::base::int128>::min_exponent10;
-constexpr int numeric_limits<flare::base::int128>::max_exponent;
-constexpr int numeric_limits<flare::base::int128>::max_exponent10;
-constexpr bool numeric_limits<flare::base::int128>::traps;
-constexpr bool numeric_limits<flare::base::int128>::tinyness_before;
+constexpr bool numeric_limits<flare::int128>::is_specialized;
+constexpr bool numeric_limits<flare::int128>::is_signed;
+constexpr bool numeric_limits<flare::int128>::is_integer;
+constexpr bool numeric_limits<flare::int128>::is_exact;
+constexpr bool numeric_limits<flare::int128>::has_infinity;
+constexpr bool numeric_limits<flare::int128>::has_quiet_NaN;
+constexpr bool numeric_limits<flare::int128>::has_signaling_NaN;
+constexpr float_denorm_style numeric_limits<flare::int128>::has_denorm;
+constexpr bool numeric_limits<flare::int128>::has_denorm_loss;
+constexpr float_round_style numeric_limits<flare::int128>::round_style;
+constexpr bool numeric_limits<flare::int128>::is_iec559;
+constexpr bool numeric_limits<flare::int128>::is_bounded;
+constexpr bool numeric_limits<flare::int128>::is_modulo;
+constexpr int numeric_limits<flare::int128>::digits;
+constexpr int numeric_limits<flare::int128>::digits10;
+constexpr int numeric_limits<flare::int128>::max_digits10;
+constexpr int numeric_limits<flare::int128>::radix;
+constexpr int numeric_limits<flare::int128>::min_exponent;
+constexpr int numeric_limits<flare::int128>::min_exponent10;
+constexpr int numeric_limits<flare::int128>::max_exponent;
+constexpr int numeric_limits<flare::int128>::max_exponent10;
+constexpr bool numeric_limits<flare::int128>::traps;
+constexpr bool numeric_limits<flare::int128>::tinyness_before;
 }  // namespace std

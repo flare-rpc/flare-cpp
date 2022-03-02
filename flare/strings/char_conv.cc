@@ -147,7 +147,7 @@ struct CalculatedFloat {
 
 // Returns the bit width of the given uint128.  (Equivalently, returns 128
 // minus the number of leading zero bits.)
-int BitWidth(flare::base::uint128 value) {
+int BitWidth(flare::uint128 value) {
     if (uint128_high64(value) == 0) {
         return 64 - flare::base::countl_zero(uint128_low64(value));
     }
@@ -163,7 +163,7 @@ int NormalizedShiftSize(int mantissa_width, int binary_exponent) {
     return std::max(normal_shift, minimum_shift);
 }
 
-int TruncateToBitWidth(int bit_width, flare::base::uint128 *value) {
+int TruncateToBitWidth(int bit_width, flare::uint128 *value) {
     const int current_bit_width = BitWidth(*value);
     const int shift = current_bit_width - bit_width;
     *value >>= shift;
@@ -218,7 +218,7 @@ void EncodeResult(const CalculatedFloat &calculated, bool negative,
                                           calculated.exponent, negative);
 }
 
-uint64_t ShiftRightAndRound(flare::base::uint128 value, int shift, bool input_exact,
+uint64_t ShiftRightAndRound(flare::uint128 value, int shift, bool input_exact,
                             bool *output_exact) {
     if (shift <= 0) {
         *output_exact = input_exact;
@@ -230,10 +230,10 @@ uint64_t ShiftRightAndRound(flare::base::uint128 value, int shift, bool input_ex
     }
 
     *output_exact = true;
-    const flare::base::uint128 shift_mask = (flare::base::uint128(1) << shift) - 1;
-    const flare::base::uint128 halfway_point = flare::base::uint128(1) << (shift - 1);
+    const flare::uint128 shift_mask = (flare::uint128(1) << shift) - 1;
+    const flare::uint128 halfway_point = flare::uint128(1) << (shift - 1);
 
-    const flare::base::uint128 shifted_bits = value & shift_mask;
+    const flare::uint128 shifted_bits = value & shift_mask;
     value >>= shift;
     if (shifted_bits > halfway_point) {
         // Shifted bits greater than 10000... require rounding up.
@@ -341,7 +341,7 @@ CalculatedFloat CalculateFromParsedDecimal(
         return result;
     }
 
-    flare::base::uint128 wide_binary_mantissa = parsed_decimal.mantissa;
+    flare::uint128 wide_binary_mantissa = parsed_decimal.mantissa;
     wide_binary_mantissa *= Power10Mantissa(parsed_decimal.exponent);
     int binary_exponent = Power10Exponent(parsed_decimal.exponent);
 

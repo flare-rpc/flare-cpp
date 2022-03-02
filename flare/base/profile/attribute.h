@@ -65,7 +65,7 @@ namespace flare::base::base_internal {
 // FLARE_DEPRECATED void dont_call_me_anymore(int arg);
 // ...
 // warning: 'void dont_call_me_anymore(int)' is deprecated
-#if defined(FLARE_COMPILER_GNUC) ||  defined(FLARE_COMPILER_CLANG)
+#if defined(FLARE_COMPILER_GNUC) || defined(FLARE_COMPILER_CLANG)
 # define FLARE_DEPRECATED __attribute__((deprecated))
 #elif defined(FLARE_COMPILER_MSVC)
 # define FLARE_DEPRECATED __declspec(deprecated)
@@ -187,6 +187,29 @@ namespace flare::base::base_internal {
 #define FLARE_IFDEF_THREAD_SANITIZER(X) X
 #else
 #define FLARE_IFDEF_THREAD_SANITIZER(X)
+#endif
+
+
+// FLARE_HOT, FLARE_COLD
+//
+// Tells GCC that a function is hot or cold. GCC can use this information to
+// improve static analysis, i.e. a conditional branch to a cold function
+// is likely to be not-taken.
+// This annotation is used for function declarations.
+//
+// Example:
+//
+//   int foo() FLARE_HOT;
+#if FLARE_COMPILER_HAS_ATTRIBUTE(hot) || (defined(__GNUC__) && !defined(__clang__))
+#define FLARE_HOT __attribute__((hot))
+#else
+#define FLARE_HOT
+#endif
+
+#if FLARE_COMPILER_HAS_ATTRIBUTE(cold) || (defined(__GNUC__) && !defined(__clang__))
+#define FLARE_COLD __attribute__((cold))
+#else
+#define FLARE_COLD
 #endif
 
 #endif // FLARE_BASE_PROFILE_ATTRIBUTE_H_

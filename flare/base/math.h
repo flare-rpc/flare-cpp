@@ -23,5 +23,7 @@
 #include "flare/base/math/rotl.h"
 #include "flare/base/math/rotr.h"
 #include "flare/base/math/sgn.h"
+#include "flare/base/math/infinity.h"
+#include "flare/base/math/round.h"
 
 #endif  // FLARE_BASE_MATH_H_

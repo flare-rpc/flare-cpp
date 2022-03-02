@@ -23,7 +23,7 @@ namespace flare {
                 fiber_future_get(&ff);
                 ASSERT_EQ(1, rc);
                 future<int> f = fiber_async([&] {
-                    // Which thread is running this abel is unknown. No assertion here.
+                    // Which thread is running this flare is unknown. No assertion here.
                     return 5;
                 });
                 flare::fiber_yield();

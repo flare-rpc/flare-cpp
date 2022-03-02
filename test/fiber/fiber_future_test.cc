@@ -52,4 +52,4 @@ namespace flare {
         ASSERT_TRUE(f);
     }
 
-}  // namespace abel
+}  // namespace flare
