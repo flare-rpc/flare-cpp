@@ -4,7 +4,7 @@
 #ifndef FLARE_STRINGS_STRING_SPLITTER_INL_H_
 #define FLARE_STRINGS_STRING_SPLITTER_INL_H_
 
-namespace flare::strings {
+namespace flare {
 
     StringSplitter::StringSplitter(const char *str_begin,
                                    const char *str_end,
@@ -299,6 +299,6 @@ namespace flare::strings {
         }
     }
 
-}  // namespace flare::strings
+}  // namespace flare
 
 #endif  // FLARE_STRINGS_STRING_SPLITTER_INL_H_

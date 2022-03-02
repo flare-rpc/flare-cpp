@@ -10,7 +10,7 @@
 
 using namespace std::literals;
 
-namespace flare::fiber {
+namespace flare {
 
     TEST(Async, Execute) {
             for (int i = 0; i != 10000; ++i) {
@@ -26,9 +26,9 @@ namespace flare::fiber {
                     // Which thread is running this abel is unknown. No assertion here.
                     return 5;
                 });
-                flare::this_fiber::fiber_yield();
+                flare::fiber_yield();
                 ASSERT_EQ(5, fiber_future_get(&f));
             }
         }
 
-}  // namespace flare::fiber
+}  // namespace flare

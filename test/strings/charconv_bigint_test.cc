@@ -8,7 +8,7 @@
 
 #include "gtest/gtest.h"
 
-namespace flare::strings {
+namespace flare {
 
     namespace strings_internal {
 
@@ -192,4 +192,4 @@ namespace flare::strings {
 
     }  // namespace strings_internal
 
-}  // namespace flare::strings
+}  // namespace flare

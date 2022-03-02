@@ -20,7 +20,7 @@
 
 #include "flare/base/endian.h"
 
-namespace flare::io {
+namespace flare {
 
 // -------------------------------------------------------------------------
 // NOTE: raw_packer/raw_unpacker is used for packing/unpacking low-level and
@@ -34,12 +34,12 @@ namespace flare::io {
 // unpack..() methods to get the integers back.
 // Example:
 //   char buf[16];  // 4 + 8 + 4 bytes.
-//   flare::io::raw_packer(buf).pack32(a).pack64(b).pack32(c);  // buf holds packed data
+//   flare::raw_packer(buf).pack32(a).pack64(b).pack32(c);  // buf holds packed data
 //
 //   ... network ...
 //
 //   // positional correspondence with pack..()
-//   flare::io::Unpacker(buf2).unpack32(a).unpack64(b).unpack32(c);
+//   flare::Unpacker(buf2).unpack32(a).unpack64(b).unpack32(c);
     class raw_packer {
     public:
         // Notice: User must guarantee `stream' is as long as the packed data.
@@ -92,6 +92,6 @@ namespace flare::io {
         const char *_stream;
     };
 
-}  // namespace flare::io
+}  // namespace flare
 
 #endif  // FLARE_IO_RAW_PACK_H_

@@ -86,7 +86,7 @@ static void* sender(void* arg) {
             // is a specific sleeping to prevent this thread from spinning too
             // fast. You should continue the business logic in a production 
             // server rather than sleeping.
-            flare::this_fiber::fiber_sleep_for(50000);
+            flare::fiber_sleep_for(50000);
         }
     }
     return NULL;
@@ -149,7 +149,7 @@ int main(int argc, char* argv[]) {
     g_sub_channel_latency = new flare::variable::LatencyRecorder[FLAGS_channel_num];
     for (int i = 0; i < FLAGS_channel_num; ++i) {
         std::string name;
-        flare::base::string_printf(&name, "client_sub_%d", i);
+        flare::string_printf(&name, "client_sub_%d", i);
         g_sub_channel_latency[i].expose(name);
     }
 

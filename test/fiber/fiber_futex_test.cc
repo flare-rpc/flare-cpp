@@ -86,7 +86,7 @@ namespace {
         }
         const int64_t t2 = flare::base::cpuwide_time_ns();
 
-        flare::this_fiber::fiber_sleep_for(3000000);
+        flare::fiber_sleep_for(3000000);
         stop = true;
         for (int i = 0; i < 10; ++i) {
             flare::fiber_internal::futex_wake_private(&lock1, INT_MAX);
@@ -151,7 +151,7 @@ namespace {
     std::atomic<int> nevent(0);
 
     void *waker(void *lock) {
-        flare::this_fiber::fiber_sleep_for(10000);
+        flare::fiber_sleep_for(10000);
         const size_t REP = 100000;
         int nwakeup = 0;
         flare::base::stop_watcher tm;
@@ -166,7 +166,7 @@ namespace {
     }
 
     void *batch_waker(void *lock) {
-        flare::this_fiber::fiber_sleep_for(10000);
+        flare::fiber_sleep_for(10000);
         const size_t REP = 100000;
         int nwakeup = 0;
         flare::base::stop_watcher tm;

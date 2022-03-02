@@ -141,7 +141,7 @@ protected:
             EXPECT_TRUE(req.SerializeToString(
                 meta->mutable_requestbody(0)->mutable_serialized_request()));
         }
-        flare::io::cord_buf_as_zero_copy_output_stream meta_stream(&msg->payload);
+        flare::cord_buf_as_zero_copy_output_stream meta_stream(&msg->payload);
         EXPECT_TRUE(meta->SerializeToZeroCopyStream(&meta_stream));
         return msg;
     }
@@ -159,7 +159,7 @@ protected:
             EXPECT_TRUE(res.SerializeToString(
                 meta->mutable_responsebody(0)->mutable_serialized_response()));
         }
-        flare::io::cord_buf_as_zero_copy_output_stream meta_stream(&msg->payload);
+        flare::cord_buf_as_zero_copy_output_stream meta_stream(&msg->payload);
         EXPECT_TRUE(meta->SerializeToZeroCopyStream(&meta_stream));
         return msg;
     }
@@ -173,7 +173,7 @@ protected:
         }
 
         EXPECT_GT(bytes_in_pipe, 0);
-        flare::io::IOPortal buf;
+        flare::IOPortal buf;
         EXPECT_EQ((ssize_t)bytes_in_pipe,
                   buf.append_from_file_descriptor(_pipe_fds[0], 1024));
         flare::rpc::ParseResult pr = flare::rpc::policy::ParseNsheadMessage(&buf, NULL, false, NULL);
@@ -182,7 +182,7 @@ protected:
             static_cast<flare::rpc::policy::MostCommonMessage*>(pr.message());
 
         flare::rpc::policy::PublicPbrpcResponse meta;
-        flare::io::cord_buf_as_zero_copy_input_stream meta_stream(msg->payload);
+        flare::cord_buf_as_zero_copy_input_stream meta_stream(msg->payload);
         EXPECT_TRUE(meta.ParseFromZeroCopyStream(&meta_stream));
         EXPECT_EQ(expect_code, meta.responsehead().code());
     }
@@ -260,8 +260,8 @@ TEST_F(PublicPbrpcTest, process_response_error_code) {
 }
 
 TEST_F(PublicPbrpcTest, complete_flow) {
-    flare::io::cord_buf request_buf;
-    flare::io::cord_buf total_buf;
+    flare::cord_buf request_buf;
+    flare::cord_buf total_buf;
     flare::rpc::Controller cntl;
     test::EchoRequest req;
     test::EchoResponse res;
@@ -286,7 +286,7 @@ TEST_F(PublicPbrpcTest, complete_flow) {
     ProcessMessage(flare::rpc::policy::ProcessNsheadRequest, req_msg, false);
 
     // Read response from pipe
-    flare::io::IOPortal response_buf;
+    flare::IOPortal response_buf;
     response_buf.append_from_file_descriptor(_pipe_fds[0], 1024);
     flare::rpc::ParseResult res_pr =
             flare::rpc::policy::ParseNsheadMessage(&response_buf, NULL, false, NULL);
@@ -299,8 +299,8 @@ TEST_F(PublicPbrpcTest, complete_flow) {
 }
 
 TEST_F(PublicPbrpcTest, close_in_callback) {
-    flare::io::cord_buf request_buf;
-    flare::io::cord_buf total_buf;
+    flare::cord_buf request_buf;
+    flare::cord_buf total_buf;
     flare::rpc::Controller cntl;
     test::EchoRequest req;
 

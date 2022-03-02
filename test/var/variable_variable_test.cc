@@ -24,7 +24,7 @@
 #include <iostream>
 #include <sstream>
 #include "flare/base/time.h"
-#include "flare/base/strings.h"
+#include "flare/strings/utility.h"
 #include "flare/variable/all.h"
 
 #include <gflags/gflags.h>
@@ -179,7 +179,7 @@ class MyDumper : public flare::variable::Dumper {
 public:
     bool dump(const std::string& name,
               const std::string_view& description) {
-        _list.push_back(std::make_pair(name, flare::base::as_string(description)));
+        _list.push_back(std::make_pair(name, flare::as_string(description)));
         return true;
     }
 

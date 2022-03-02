@@ -9,7 +9,7 @@
 #include "flare/fiber/internal/types.h"
 #include "flare/fiber/internal/fiber.h"
 
-namespace flare::fiber {
+namespace flare {
 
     enum class launch_policy {
         eImmediately,
@@ -86,5 +86,5 @@ namespace flare::fiber {
         fiber_id_t _fid;
         bool _detached;
     };
-}  // namespace flare::fiber
+}  // namespace flare
 #endif // FLARE_FIBER_FIBER_H_

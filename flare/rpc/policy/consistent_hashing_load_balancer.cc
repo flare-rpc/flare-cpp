@@ -24,7 +24,7 @@
 #include "flare/rpc/socket.h"
 #include "flare/rpc/policy/consistent_hashing_load_balancer.h"
 #include "flare/rpc/policy/hasher.h"
-#include "flare/base/strings.h"
+#include "flare/strings/numbers.h"
 
 namespace flare::rpc {
     namespace policy {
@@ -382,18 +382,18 @@ namespace flare::rpc {
         }
 
         bool ConsistentHashingLoadBalancer::SetParameters(const std::string_view &params) {
-            for (flare::strings::KeyValuePairsSplitter sp(params.begin(), params.end(), ' ', '=');
+            for (flare::KeyValuePairsSplitter sp(params.begin(), params.end(), ' ', '=');
                  sp; ++sp) {
                 if (sp.value().empty()) {
                     LOG(ERROR) << "Empty value for " << sp.key() << " in lb parameter";
                     return false;
                 }
                 if (sp.key() == "replicas") {
-                    auto r = flare::base::try_parse<size_t>(sp.value());
-                    if (!r) {
+                    int64_t  r;
+                    if (!flare::simple_atoi(sp.value(), &r)) {
                         return false;
                     }
-                    _num_replicas = *r;
+                    _num_replicas = r;
                     continue;
                 }
                 LOG(ERROR) << "Failed to set this unknown parameters " << sp.key_and_value();

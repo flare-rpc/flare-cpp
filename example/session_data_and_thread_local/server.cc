@@ -160,7 +160,7 @@ public:
         tls2->y = expected_value + 1;
         
         // sleep awhile to force context switching.
-        flare::this_fiber::fiber_sleep_for(10000);
+        flare::fiber_sleep_for(10000);
 
         // tls is unchanged after context switching.
         CHECK_EQ(tls, flare::rpc::thread_local_data());
@@ -195,7 +195,7 @@ void AsyncJob::run() {
     flare::rpc::ClosureGuard done_guard(done);
 
     // Sleep some time to make sure that Echo() exits.
-    flare::this_fiber::fiber_sleep_for(10000);
+    flare::fiber_sleep_for(10000);
 
     // Still the session-local data that we saw in Echo().
     // This is the major difference between session-local data and thread-local

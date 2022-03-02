@@ -15,7 +15,7 @@
 #include <cstring>
 #include "flare/base/profile.h"
 
-namespace flare::strings {
+namespace flare {
 
 namespace strings_internal {
 
@@ -150,6 +150,6 @@ constexpr Charmap PunctCharmap() { return GraphCharmap() & ~AlnumCharmap(); }
 
 }  // namespace strings_internal
 
-}  // namespace flare::strings
+}  // namespace flare
 
 #endif  // FLARE_STRINGS_INTERNAL_CHAR_MAP_H_

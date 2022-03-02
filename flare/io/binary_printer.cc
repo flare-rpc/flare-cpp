@@ -21,7 +21,7 @@
 #include "flare/io/cord_buf.h"
 #include "flare/io/binary_printer.h"
 
-namespace flare::io {
+namespace flare {
 
     static char s_binary_char_map[] = {
             '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
@@ -179,4 +179,4 @@ namespace flare::io {
         return result;
     }
 
-} // namespace flare::io
+} // namespace flare

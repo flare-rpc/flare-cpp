@@ -29,7 +29,8 @@
 #include "flare/rpc/builtin/pprof_perl.h"
 #include "flare/rpc/builtin/hotspots_service.h"
 #include "flare/rpc/details/tcmalloc_extension.h"
-#include "flare/base/strings.h"
+#include "flare/strings/starts_with.h"
+#include "flare/strings/ends_with.h"
 #include "flare/fiber/this_fiber.h"
 
 extern "C" {
@@ -145,7 +146,7 @@ namespace flare::rpc {
 
         int64_t id;
         int status_code;
-        flare::io::cord_buf result;
+        flare::cord_buf result;
     };
 
     static bool g_written_pprof_perl = false;
@@ -192,7 +193,7 @@ namespace flare::rpc {
     }
 
     static bool WriteSmallFile(const char *filepath_in,
-                               const flare::io::cord_buf &content) {
+                               const flare::cord_buf &content) {
         std::error_code ec;
         flare::filesystem::path dir = flare::filesystem::path(filepath_in).parent_path();
         if (!flare::filesystem::create_directories(dir, ec)) {
@@ -205,7 +206,7 @@ namespace flare::rpc {
             LOG(ERROR) << "Fail to open `" << filepath_in << '\'';
             return false;
         }
-        flare::io::cord_buf_as_zero_copy_input_stream iter(content);
+        flare::cord_buf_as_zero_copy_input_stream iter(content);
         const void *data = NULL;
         int size = 0;
         while (iter.Next(&data, &size)) {
@@ -265,7 +266,7 @@ namespace flare::rpc {
 // system related functions (popen/system/exec ...) to avoid potential
 // injections from URL and other user inputs.
     static bool ValidProfilePath(const std::string_view &path) {
-        if (!flare::base::starts_with(path, FLAGS_rpc_profiling_dir)) {
+        if (!flare::starts_with(path, FLAGS_rpc_profiling_dir)) {
             // Must be under the directory.
             return false;
         }
@@ -404,15 +405,15 @@ namespace flare::rpc {
     static void DisplayResult(Controller *cntl,
                               google::protobuf::Closure *done,
                               const char *prof_name,
-                              const flare::io::cord_buf &result_prefix) {
+                              const flare::cord_buf &result_prefix) {
         ClosureGuard done_guard(done);
-        flare::io::cord_buf prof_result;
+        flare::cord_buf prof_result;
         if (cntl->IsCanceled()) {
             // If the page is refreshed, older connections are likely to be
             // already closed by browser.
             return;
         }
-        flare::io::cord_buf &resp = cntl->response_attachment();
+        flare::cord_buf &resp = cntl->response_attachment();
         const bool use_html = UseHTML(cntl->http_request());
         const bool show_ccount = cntl->http_request().uri().GetQuery("ccount");
         const std::string *base_name = cntl->http_request().uri().GetQuery("base");
@@ -441,7 +442,7 @@ namespace flare::rpc {
                         EINVAL, "The profile denoted by `base' does not exist");
             }
         }
-        flare::io::cord_buf_builder os;
+        flare::cord_buf_builder os;
         os << result_prefix;
         char expected_result_name[256];
         MakeCacheName(expected_result_name, sizeof(expected_result_name),
@@ -529,7 +530,7 @@ namespace flare::rpc {
             }
             errno = 0; // read_command_output may not set errno, clear it to make sure if
             // we see non-zero errno, it's real error.
-            flare::io::cord_buf_builder pprof_output;
+            flare::cord_buf_builder pprof_output;
             RPC_VLOG << "Running cmd=" << cmd;
             const int rc = flare::base::read_command_output(pprof_output, cmd.c_str());
             if (rc != 0) {
@@ -558,8 +559,8 @@ namespace flare::rpc {
 
             // Append the profile name as the visual reminder for what
             // current profile is.
-            flare::io::cord_buf before_label;
-            flare::io::cord_buf tmp;
+            flare::cord_buf before_label;
+            flare::cord_buf tmp;
             if (cntl->http_request().uri().GetQuery("view") == NULL) {
                 tmp.append(prof_name);
                 tmp.append("[addToProfEnd]");
@@ -611,11 +612,11 @@ namespace flare::rpc {
                             ::google::protobuf::Closure *done) {
         ClosureGuard done_guard(done);
         Controller *cntl = static_cast<Controller *>(cntl_base);
-        flare::io::cord_buf &resp = cntl->response_attachment();
+        flare::cord_buf &resp = cntl->response_attachment();
         const bool use_html = UseHTML(cntl->http_request());
         cntl->http_response().set_content_type(use_html ? "text/html" : "text/plain");
 
-        flare::io::cord_buf_builder os;
+        flare::cord_buf_builder os;
         if (use_html) {
             os << "<!DOCTYPE html><html><head>\n"
                   "<meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\" />\n"
@@ -760,7 +761,7 @@ namespace flare::rpc {
                 cntl->http_response().set_status_code(HTTP_STATUS_SERVICE_UNAVAILABLE);
                 return NotifyWaiters(type, cntl, view);
             }
-            if (flare::this_fiber::fiber_sleep_for(seconds * 1000000L) != 0) {
+            if (flare::fiber_sleep_for(seconds * 1000000L) != 0) {
                 PLOG(WARNING) << "Profiling has been interrupted";
             }
             ProfilerStop();
@@ -772,7 +773,7 @@ namespace flare::rpc {
                 cntl->http_response().set_status_code(HTTP_STATUS_SERVICE_UNAVAILABLE);
                 return NotifyWaiters(type, cntl, view);
             }
-            if (flare::this_fiber::fiber_sleep_for(seconds * 1000000L) != 0) {
+            if (flare::fiber_sleep_for(seconds * 1000000L) != 0) {
                 PLOG(WARNING) << "Profiling has been interrupted";
             }
             flare::fiber_internal::ContentionProfilerStop();
@@ -842,9 +843,9 @@ namespace flare::rpc {
                                ::google::protobuf::Closure *done) {
         ClosureGuard done_guard(done);
         Controller *cntl = static_cast<Controller *>(cntl_base);
-        flare::io::cord_buf &resp = cntl->response_attachment();
+        flare::cord_buf &resp = cntl->response_attachment();
         const bool use_html = UseHTML(cntl->http_request());
-        flare::io::cord_buf_builder os;
+        flare::cord_buf_builder os;
         bool enabled = false;
         const char *extra_desc = "";
         if (type == PROFILING_CPU) {
@@ -1038,7 +1039,7 @@ namespace flare::rpc {
                 if (past_profs.empty()) {
                     past_profs.reserve(16);
                 }
-                if (!entry.is_directory() && flare::base::ends_with(entry.path().c_str(), type_str)) {
+                if (!entry.is_directory() && flare::ends_with(entry.path().c_str(), type_str)) {
                     past_profs.push_back(entry.path().generic_string());
                 }
             }

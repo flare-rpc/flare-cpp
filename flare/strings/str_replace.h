@@ -7,7 +7,7 @@
 // File: str_replace.h
 // -----------------------------------------------------------------------------
 //
-// This file defines `flare::strings::string_replace_all()`, a general-purpose string
+// This file defines `flare::string_replace_all()`, a general-purpose string
 // replacement function designed for large, arbitrary text substitutions,
 // especially on strings which you are receiving from some other system for
 // further processing (e.g. processing regular expressions, escaping HTML
@@ -15,11 +15,11 @@
 // one substitution is being performed, or when substitution is rare.
 //
 // If the string being modified is known at compile-time, and the substitutions
-// vary, `flare::strings::Substitute()` may be a better choice.
+// vary, `flare::Substitute()` may be a better choice.
 //
 // Example:
 //
-// std::string html_escaped = flare::strings::string_replace_all(user_input, {
+// std::string html_escaped = flare::string_replace_all(user_input, {
 //                                                {"&", "&amp;"},
 //                                                {"<", "&lt;"},
 //                                                {">", "&gt;"},
@@ -35,7 +35,7 @@
 #include "flare/base/profile.h"
 #include <string_view>
 
-namespace flare::strings {
+namespace flare {
 
 
 // string_replace_all()
@@ -49,9 +49,9 @@ namespace flare::strings {
 //
 // Example:
 //
-//   std::string s = flare::strings::string_replace_all(
+//   std::string s = flare::string_replace_all(
 //       "$who bought $count #Noun. Thanks $who!",
-//       {{"$count", flare::strings::string_cat(5)},
+//       {{"$count", flare::string_cat(5)},
 //        {"$who", "Bob"},
 //        {"#Noun", "Apples"}});
 //   EXPECT_EQ("Bob bought 5 Apples. Thanks Bob!", s);
@@ -70,7 +70,7 @@ FLARE_MUST_USE_RESULT std::string string_replace_all(
 //   replacements["$who"] = "Bob";
 //   replacements["$count"] = "5";
 //   replacements["#Noun"] = "Apples";
-//   std::string s = flare::strings::string_replace_all(
+//   std::string s = flare::string_replace_all(
 //       "$who bought $count #Noun. Thanks $who!",
 //       replacements);
 //   EXPECT_EQ("Bob bought 5 Apples. Thanks Bob!", s);
@@ -80,7 +80,7 @@ FLARE_MUST_USE_RESULT std::string string_replace_all(
 //   replacements.push_back({"&", "&amp;"});
 //   replacements.push_back({"<", "&lt;"});
 //   replacements.push_back({">", "&gt;"});
-//   std::string s = flare::strings::string_replace_all("if (ptr < &foo)",
+//   std::string s = flare::string_replace_all("if (ptr < &foo)",
 //                                  replacements);
 //   EXPECT_EQ("if (ptr &lt; &amp;foo)", s);
 template<typename StrToStrMapping>
@@ -95,7 +95,7 @@ std::string string_replace_all(std::string_view s,
 //
 //   std::string s = std::string("$who bought $count #Noun. Thanks $who!");
 //   int count;
-//   count = flare::strings::string_replace_all({{"$count", flare::strings::string_cat(5)},
+//   count = flare::string_replace_all({{"$count", flare::string_cat(5)},
 //                               {"$who", "Bob"},
 //                               {"#Noun", "Apples"}}, &s);
 //  EXPECT_EQ(count, 4);
@@ -112,7 +112,7 @@ int string_replace_all(
 // Example:
 //
 //   std::string s = std::string("if (ptr < &foo)");
-//   int count = flare::strings::string_replace_all({{"&", "&amp;"},
+//   int count = flare::string_replace_all({{"&", "&amp;"},
 //                                    {"<", "&lt;"},
 //                                    {">", "&gt;"}}, &s);
 //  EXPECT_EQ(count, 2);
@@ -204,6 +204,6 @@ int string_replace_all(const StrToStrMapping &replacements, std::string *target)
 }
 
 
-}  // namespace flare::strings
+}  // namespace flare
 
 #endif  // FLARE_STRINGS_STR_REPLACE_H_

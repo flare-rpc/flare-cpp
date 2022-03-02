@@ -26,7 +26,7 @@
 #include "flare/strings/string_splitter.h"
 #include "flare/rpc/socket.h"
 #include "flare/rpc/details/ssl_helper.h"
-#include "flare/base/strings.h"
+#include "flare/strings/trim.h"
 
 namespace flare::rpc {
 
@@ -64,11 +64,11 @@ const char* SSLStateToString(SSLState s) {
 
 static int ParseSSLProtocols(const std::string& str_protocol) {
     int protocol_flag = 0;
-    flare::strings::StringSplitter sp(str_protocol.data(),
+    flare::StringSplitter sp(str_protocol.data(),
                              str_protocol.data() + str_protocol.size(), ',');
     for (; sp; ++sp) {
         std::string_view protocol(sp.field(), sp.length());
-        protocol = flare::base::strip_ascii_whitespace(protocol);
+        protocol = flare::strip_ascii_whitespace(protocol);
         if (strncasecmp(protocol.data(), "SSLv3", protocol.size()) == 0) {
             protocol_flag |= SSLv3;
         } else if (strncasecmp(protocol.data(), "TLSv1", protocol.size()) == 0) {

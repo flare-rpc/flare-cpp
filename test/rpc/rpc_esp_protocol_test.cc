@@ -73,10 +73,10 @@ protected:
         req.head.msg_id = MSG_ID;
         req.body.append(EXP_RESPONSE);
     
-        flare::io::cord_buf req_buf;
+        flare::cord_buf req_buf;
         flare::rpc::policy::SerializeEspRequest(&req_buf, &cntl, &req);
     
-        flare::io::cord_buf packet_buf;
+        flare::cord_buf packet_buf;
         flare::rpc::policy::PackEspRequest(&packet_buf, NULL, cntl.call_id().value, NULL, &cntl, req_buf, NULL);
     
         packet_buf.cut_into_file_descriptor(_pipe_fds[1], packet_buf.size());
@@ -95,7 +95,7 @@ TEST_F(EspTest, complete_flow) {
     req.head.msg_id = MSG_ID;
     req.body.append(EXP_REQUEST);
 
-    flare::io::cord_buf req_buf;
+    flare::cord_buf req_buf;
     flare::rpc::Controller cntl;
     cntl._response = &res;
     ASSERT_EQ(0, flare::rpc::Socket::Address(_socket->id(), &cntl._current_call.sending_sock));
@@ -105,7 +105,7 @@ TEST_F(EspTest, complete_flow) {
     ASSERT_EQ(sizeof(req.head) + req.body.size(), req_buf.size());
 
     const flare::rpc::Authenticator* auth = flare::rpc::policy::global_esp_authenticator();
-    flare::io::cord_buf packet_buf;
+    flare::cord_buf packet_buf;
     flare::rpc::policy::PackEspRequest(&packet_buf, NULL, cntl.call_id().value, NULL, &cntl, req_buf, auth);
 
     std::string auth_str;
@@ -116,7 +116,7 @@ TEST_F(EspTest, complete_flow) {
 
     WriteResponse(cntl, MSG);
 
-    flare::io::IOPortal response_buf;
+    flare::IOPortal response_buf;
     response_buf.append_from_file_descriptor(_pipe_fds[0], 1024);
 
     flare::rpc::ParseResult res_pr =
@@ -140,7 +140,7 @@ TEST_F(EspTest, wrong_response_head) {
 
     WriteResponse(cntl, WRONG_MSG);
 
-    flare::io::IOPortal response_buf;
+    flare::IOPortal response_buf;
     response_buf.append_from_file_descriptor(_pipe_fds[0], 1024);
 
     flare::rpc::ParseResult res_pr =

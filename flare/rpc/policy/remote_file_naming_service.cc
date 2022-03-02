@@ -20,12 +20,12 @@
 #include <stdio.h>                                      // getline
 #include <string>                                       // std::string
 #include <set>                                          // std::set
-#include "flare/fiber/internal/fiber.h"                            // flare::this_fiber::fiber_sleep_for
+#include "flare/fiber/internal/fiber.h"                            // flare::fiber_sleep_for
 #include "flare/io/cord_buf.h"
 #include "flare/rpc/log.h"
 #include "flare/rpc/channel.h"
 #include "flare/rpc/policy/remote_file_naming_service.h"
-#include "flare/base/strings.h"
+#include "flare/strings/utility.h"
 #include "flare/strings/safe_substr.h"
 
 namespace flare::rpc {
@@ -42,17 +42,17 @@ namespace flare::rpc {
                                    std::string_view *server_addr,
                                    std::string_view *tag);
 
-        static bool CutLineFromCordBuf(flare::io::cord_buf *source, std::string *line_out) {
+        static bool CutLineFromCordBuf(flare::cord_buf *source, std::string *line_out) {
             if (source->empty()) {
                 return false;
             }
-            flare::io::cord_buf line_data;
+            flare::cord_buf line_data;
             if (source->cut_until(&line_data, "\n") != 0) {
                 source->cutn(line_out, source->size());
                 return true;
             }
             line_data.copy_to(line_out);
-            if (!line_out->empty() && flare::base::back_char(*line_out) == '\r') {
+            if (!line_out->empty() && flare::back_char(*line_out) == '\r') {
                 line_out->resize(line_out->size() - 1);
             }
             return true;
@@ -67,7 +67,7 @@ namespace flare::rpc {
                 size_t pos = tmpname.find("://");
                 std::string_view proto;
                 if (pos != std::string_view::npos) {
-                    proto =flare::strings::safe_substr(tmpname, 0, pos);
+                    proto =flare::safe_substr(tmpname, 0, pos);
                     for (pos += 3; tmpname[pos] == '/'; ++pos) {}
                     tmpname.remove_prefix(pos);
                 } else {
@@ -84,8 +84,8 @@ namespace flare::rpc {
                     server_addr_piece = tmpname;
                     _path = "/";
                 } else {
-                    server_addr_piece =flare::strings::safe_substr(tmpname, 0, slash_pos);
-                    _path = flare::base::as_string(flare::strings::safe_substr(tmpname, slash_pos));
+                    server_addr_piece =flare::safe_substr(tmpname, 0, slash_pos);
+                    _path = flare::as_string(flare::safe_substr(tmpname, slash_pos));
                 }
                 _server_addr.reserve(proto.size() + 3 + server_addr_piece.size());
                 _server_addr.append(proto.data(), proto.size());
@@ -133,7 +133,7 @@ namespace flare::rpc {
                 }
                 ServerNode node;
                 node.addr = point;
-                flare::base::copy_to_string(tag, &node.tag);
+                flare::copy_to_string(tag, &node.tag);
                 if (presence.insert(node).second) {
                     servers->push_back(node);
                 } else {

@@ -7,7 +7,7 @@
 
 using namespace std::literals;
 
-namespace flare::memory {
+namespace flare {
 
     int dtor_called = 0;
 

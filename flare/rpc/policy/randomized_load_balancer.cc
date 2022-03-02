@@ -20,7 +20,7 @@
 #include "flare/base/fast_rand.h"
 #include "flare/rpc/socket.h"
 #include "flare/rpc/policy/randomized_load_balancer.h"
-#include "flare/base/strings.h"
+#include "flare/strings/str_format.h"
 
 namespace flare::rpc {
     namespace policy {

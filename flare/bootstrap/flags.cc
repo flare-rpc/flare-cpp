@@ -14,7 +14,7 @@ namespace flare::detail {
         using flags_registry = std::unordered_map<std::string, std::pair<std::string, bool>>;
 
         flags_registry *get_registry() {
-            static flare::memory::resident<flags_registry> registry;
+            static flare::resident<flags_registry> registry;
             return registry.get();
         }
 

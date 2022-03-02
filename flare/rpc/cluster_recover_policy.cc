@@ -26,7 +26,7 @@
 #include "flare/base/fast_rand.h"
 #include "flare/base/time.h"
 #include "flare/strings/string_splitter.h"
-#include "flare/base/strings.h"
+#include "flare/strings/numbers.h"
 
 namespace flare::rpc {
 
@@ -113,27 +113,27 @@ bool GetRecoverPolicyByParams(const std::string_view& params,
     int64_t min_working_instances = -1;
     int64_t hold_seconds = -1;
     bool has_meet_params = false;
-    for (flare::strings::KeyValuePairsSplitter sp(params.begin(), params.end(), ' ', '=');
+    for (flare::KeyValuePairsSplitter sp(params.begin(), params.end(), ' ', '=');
             sp; ++sp) {
         if (sp.value().empty()) {
             LOG(ERROR) << "Empty value for " << sp.key() << " in lb parameter";
             return false;
         }
         if (sp.key() == "min_working_instances") {
-            auto r = flare::base::try_parse<int64_t>(sp.value());
-            if (!r) {
+            int64_t  r;
+            if (!flare::simple_atoi(sp.value(), &r)) {
                 return false;
             }
 
-            min_working_instances = *r;
+            min_working_instances = r;
             has_meet_params = true;
             continue;
         } else if (sp.key() == "hold_seconds") {
-            auto r = flare::base::try_parse<int64_t>(sp.value());
-            if (!r) {
+            int64_t r;
+            if (!flare::simple_atoi(sp.value(), &r)) {
                 return false;
             }
-            hold_seconds = *r;
+            hold_seconds = r;
             has_meet_params = true;
             continue;
         }

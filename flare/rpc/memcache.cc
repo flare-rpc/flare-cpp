@@ -19,7 +19,7 @@
 #include <algorithm>
 #include <google/protobuf/reflection_ops.h>
 #include <google/protobuf/wire_format.h>
-#include "flare/base/strings.h"
+#include "flare/strings/str_format.h"
 #include "flare/base/profile.h"
 #include "flare/base/endian.h"
 #include "flare/log/logging.h"
@@ -79,14 +79,14 @@ namespace flare::rpc {
         LOG(WARNING) << "You're not supposed to parse a MemcacheRequest";
 
         // simple approach just making it work.
-        flare::io::cord_buf tmp;
+        flare::cord_buf tmp;
         const void *data = NULL;
         int size = 0;
         while (input->GetDirectBufferPointer(&data, &size)) {
             tmp.append(data, size);
             input->Skip(size);
         }
-        const flare::io::cord_buf saved = tmp;
+        const flare::cord_buf saved = tmp;
         int count = 0;
         for (; !tmp.empty(); ++count) {
             char aux_buf[sizeof(policy::MemcacheRequestHeader)];
@@ -114,7 +114,7 @@ namespace flare::rpc {
         LOG(WARNING) << "You're not supposed to serialize a MemcacheRequest";
 
         // simple approach just making it work.
-        flare::io::cord_buf_as_zero_copy_input_stream wrapper(_buf);
+        flare::cord_buf_as_zero_copy_input_stream wrapper(_buf);
         const void *data = NULL;
         int size = 0;
         while (wrapper.Next(&data, &size)) {
@@ -244,7 +244,7 @@ namespace flare::rpc {
         LOG(WARNING) << "You're not supposed to serialize a MemcacheResponse";
 
         // simple approach just making it work.
-        flare::io::cord_buf_as_zero_copy_input_stream wrapper(_buf);
+        flare::cord_buf_as_zero_copy_input_stream wrapper(_buf);
         const void *data = NULL;
         int size = 0;
         while (wrapper.Next(&data, &size)) {
@@ -430,20 +430,20 @@ namespace flare::rpc {
 //   +---------------+---------------+---------------+---------------+
 //   Total 4 bytes
     bool MemcacheResponse::PopGet(
-            flare::io::cord_buf *value, uint32_t *flags, uint64_t *cas_value) {
+            flare::cord_buf *value, uint32_t *flags, uint64_t *cas_value) {
         const size_t n = _buf.size();
         policy::MemcacheResponseHeader header;
         if (n < sizeof(header)) {
-            flare::base::string_printf(&_err, "buffer is too small to contain a header");
+            flare::string_printf(&_err, "buffer is too small to contain a header");
             return false;
         }
         _buf.copy_to(&header, sizeof(header));
         if (header.command != (uint8_t) policy::MC_BINARY_GET) {
-            flare::base::string_printf(&_err, "not a GET response");
+            flare::string_printf(&_err, "not a GET response");
             return false;
         }
         if (n < sizeof(header) + header.total_body_length) {
-            flare::base::string_printf(&_err, "response=%u < header=%u + body=%u",
+            flare::string_printf(&_err, "response=%u < header=%u + body=%u",
                                        (unsigned) n, (unsigned) sizeof(header), header.total_body_length);
             return false;
         }
@@ -453,7 +453,7 @@ namespace flare::rpc {
             const int value_size = (int) header.total_body_length - (int) header.extras_length
                                    - (int) header.key_length;
             if (value_size < 0) {
-                flare::base::string_printf(&_err, "value_size=%d is non-negative", value_size);
+                flare::string_printf(&_err, "value_size=%d is non-negative", value_size);
                 return false;
             }
             _buf.pop_front(sizeof(header) + header.extras_length +
@@ -463,18 +463,18 @@ namespace flare::rpc {
             return false;
         }
         if (header.extras_length != 4u) {
-            flare::base::string_printf(&_err, "GET response must have flags as extras, actual length=%u",
+            flare::string_printf(&_err, "GET response must have flags as extras, actual length=%u",
                                        header.extras_length);
             return false;
         }
         if (header.key_length != 0) {
-            flare::base::string_printf(&_err, "GET response must not have key");
+            flare::string_printf(&_err, "GET response must not have key");
             return false;
         }
         const int value_size = (int) header.total_body_length - (int) header.extras_length
                                - (int) header.key_length;
         if (value_size < 0) {
-            flare::base::string_printf(&_err, "value_size=%d is non-negative", value_size);
+            flare::string_printf(&_err, "value_size=%d is non-negative", value_size);
             return false;
         }
         _buf.pop_front(sizeof(header));
@@ -496,7 +496,7 @@ namespace flare::rpc {
 
     bool MemcacheResponse::PopGet(
             std::string *value, uint32_t *flags, uint64_t *cas_value) {
-        flare::io::cord_buf tmp;
+        flare::cord_buf tmp;
         if (PopGet(&tmp, flags, cas_value)) {
             tmp.copy_to(value);
             return true;
@@ -574,16 +574,16 @@ namespace flare::rpc {
         const size_t n = _buf.size();
         policy::MemcacheResponseHeader header;
         if (n < sizeof(header)) {
-            flare::base::string_printf(&_err, "buffer is too small to contain a header");
+            flare::string_printf(&_err, "buffer is too small to contain a header");
             return false;
         }
         _buf.copy_to(&header, sizeof(header));
         if (header.command != command) {
-            flare::base::string_printf(&_err, "Not a STORE response");
+            flare::string_printf(&_err, "Not a STORE response");
             return false;
         }
         if (n < sizeof(header) + header.total_body_length) {
-            flare::base::string_printf(&_err, "Not enough data");
+            flare::string_printf(&_err, "Not enough data");
             return false;
         }
         LOG_IF(ERROR, header.extras_length != 0) << "STORE response must not have flags";
@@ -744,16 +744,16 @@ namespace flare::rpc {
         const size_t n = _buf.size();
         policy::MemcacheResponseHeader header;
         if (n < sizeof(header)) {
-            flare::base::string_printf(&_err, "buffer is too small to contain a header");
+            flare::string_printf(&_err, "buffer is too small to contain a header");
             return false;
         }
         _buf.copy_to(&header, sizeof(header));
         if (header.command != command) {
-            flare::base::string_printf(&_err, "not a INCR/DECR response");
+            flare::string_printf(&_err, "not a INCR/DECR response");
             return false;
         }
         if (n < sizeof(header) + header.total_body_length) {
-            flare::base::string_printf(&_err, "response=%u < header=%u + body=%u",
+            flare::string_printf(&_err, "response=%u < header=%u + body=%u",
                                        (unsigned) n, (unsigned) sizeof(header), header.total_body_length);
             return false;
         }
@@ -765,7 +765,7 @@ namespace flare::rpc {
 
         if (header.status != (uint16_t) STATUS_SUCCESS) {
             if (value_size < 0) {
-                flare::base::string_printf(&_err, "value_size=%d is negative", value_size);
+                flare::string_printf(&_err, "value_size=%d is negative", value_size);
             } else {
                 _err.clear();
                 _buf.cutn(&_err, value_size);
@@ -773,7 +773,7 @@ namespace flare::rpc {
             return false;
         }
         if (value_size != 8) {
-            flare::base::string_printf(&_err, "value_size=%d is not 8", value_size);
+            flare::string_printf(&_err, "value_size=%d is not 8", value_size);
             return false;
         }
         uint64_t raw_value = 0;
@@ -865,16 +865,16 @@ namespace flare::rpc {
         const size_t n = _buf.size();
         policy::MemcacheResponseHeader header;
         if (n < sizeof(header)) {
-            flare::base::string_printf(&_err, "buffer is too small to contain a header");
+            flare::string_printf(&_err, "buffer is too small to contain a header");
             return false;
         }
         _buf.copy_to(&header, sizeof(header));
         if (header.command != policy::MC_BINARY_VERSION) {
-            flare::base::string_printf(&_err, "not a VERSION response");
+            flare::string_printf(&_err, "not a VERSION response");
             return false;
         }
         if (n < sizeof(header) + header.total_body_length) {
-            flare::base::string_printf(&_err, "response=%u < header=%u + body=%u",
+            flare::string_printf(&_err, "response=%u < header=%u + body=%u",
                                        (unsigned) n, (unsigned) sizeof(header), header.total_body_length);
             return false;
         }
@@ -884,7 +884,7 @@ namespace flare::rpc {
                                - (int) header.key_length;
         _buf.pop_front(sizeof(header) + header.extras_length + header.key_length);
         if (value_size < 0) {
-            flare::base::string_printf(&_err, "value_size=%d is negative", value_size);
+            flare::string_printf(&_err, "value_size=%d is negative", value_size);
             return false;
         }
         if (header.status != (uint16_t) STATUS_SUCCESS) {

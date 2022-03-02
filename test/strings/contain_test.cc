@@ -15,13 +15,13 @@ namespace {
         std::string_view b("abcd");
         std::string_view c("efg");
         std::string_view d("gh");
-        EXPECT_TRUE(flare::strings::string_contains(a, a));
-        EXPECT_TRUE(flare::strings::string_contains(a, b));
-        EXPECT_TRUE(flare::strings::string_contains(a, c));
-        EXPECT_FALSE(flare::strings::string_contains(a, d));
-        EXPECT_TRUE(flare::strings::string_contains("", ""));
-        EXPECT_TRUE(flare::strings::string_contains("abc", ""));
-        EXPECT_FALSE(flare::strings::string_contains("", "a"));
+        EXPECT_TRUE(flare::string_contains(a, a));
+        EXPECT_TRUE(flare::string_contains(a, b));
+        EXPECT_TRUE(flare::string_contains(a, c));
+        EXPECT_FALSE(flare::string_contains(a, d));
+        EXPECT_TRUE(flare::string_contains("", ""));
+        EXPECT_TRUE(flare::string_contains("abc", ""));
+        EXPECT_FALSE(flare::string_contains("", "a"));
     }
 
     TEST(MatchTest, ContainsNull) {
@@ -32,9 +32,9 @@ namespace {
         EXPECT_EQ(s, "foo");
         EXPECT_EQ(sv, "foo");
         EXPECT_NE(sv2, "foo");
-        EXPECT_TRUE(flare::strings::ends_with(s, sv));
-        EXPECT_TRUE(flare::strings::starts_with(cs, sv));
-        EXPECT_TRUE(flare::strings::string_contains(cs, sv));
-        EXPECT_FALSE(flare::strings::string_contains(cs, sv2));
+        EXPECT_TRUE(flare::ends_with(s, sv));
+        EXPECT_TRUE(flare::starts_with(cs, sv));
+        EXPECT_TRUE(flare::string_contains(cs, sv));
+        EXPECT_FALSE(flare::string_contains(cs, sv2));
     }
 }

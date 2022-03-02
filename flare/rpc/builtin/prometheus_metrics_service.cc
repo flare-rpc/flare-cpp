@@ -25,18 +25,21 @@
 #include "flare/rpc/builtin/prometheus_metrics_service.h"
 #include "flare/rpc/builtin/common.h"
 #include "flare/variable/all.h"
-#include "flare/base/strings.h"
+#include "flare/strings/str_format.h"
+#include "flare/strings/utility.h"
+#include "flare/strings/starts_with.h"
+#include "flare/strings/ends_with.h"
 
 namespace flare::variable {
-DECLARE_int32(variable_latency_p1);
-DECLARE_int32(variable_latency_p2);
-DECLARE_int32(variable_latency_p3);
+    DECLARE_int32(variable_latency_p1);
+    DECLARE_int32(variable_latency_p2);
+    DECLARE_int32(variable_latency_p3);
 }
 
 namespace flare::rpc {
 
 // Defined in server.cpp
-extern const char* const g_server_info_prefix;
+    extern const char *const g_server_info_prefix;
 
 // This is a class that convert variable result to prometheus output.
 // Currently the output only includes gauge and summary for two
@@ -45,163 +48,163 @@ extern const char* const g_server_info_prefix;
 // more counter is just another gauge.
 // 2) Histogram and summary is equivalent except that histogram
 // calculates quantiles in the server side.
-class PrometheusMetricsDumper : public flare::variable::Dumper {
-public:
-    explicit PrometheusMetricsDumper(flare::io::cord_buf_builder* os,
-                                     const std::string& server_prefix)
-        : _os(os)
-        , _server_prefix(server_prefix) {
-    }
-
-    bool dump(const std::string& name, const std::string_view& desc) override;
-
-private:
-    FLARE_DISALLOW_COPY_AND_ASSIGN(PrometheusMetricsDumper);
-
-    // Return true iff name ends with suffix output by LatencyRecorder.
-    bool DumpLatencyRecorderSuffix(const std::string_view& name,
-                                   const std::string_view& desc);
-
-    // 6 is the number of variables in LatencyRecorder that indicating percentiles
-    static const int NPERCENTILES = 6;
-
-    struct SummaryItems {
-        std::string latency_percentiles[NPERCENTILES];
-        int64_t latency_avg;
-        int64_t count;
-        std::string metric_name;
-
-        bool IsComplete() const { return !metric_name.empty(); }
-    };
-    const SummaryItems* ProcessLatencyRecorderSuffix(const std::string_view& name,
-                                                     const std::string_view& desc);
-
-private:
-    flare::io::cord_buf_builder* _os;
-    const std::string _server_prefix;
-    std::map<std::string, SummaryItems> _m;
-};
-
-bool PrometheusMetricsDumper::dump(const std::string& name,
-                                   const std::string_view& desc) {
-    if (!desc.empty() && desc[0] == '"') {
-        // there is no necessary to monitor string in prometheus
-        return true;
-    }
-    if (DumpLatencyRecorderSuffix(name, desc)) {
-        // Has encountered name with suffix exposed by LatencyRecorder,
-        // Leave it to DumpLatencyRecorderSuffix to output Summary.
-        return true;
-    }
-    *_os << "# HELP " << name << '\n'
-         << "# TYPE " << name << " gauge" << '\n'
-         << name << " " << desc << '\n';
-    return true;
-}
-
-const PrometheusMetricsDumper::SummaryItems*
-PrometheusMetricsDumper::ProcessLatencyRecorderSuffix(const std::string_view& name,
-                                                      const std::string_view& desc) {
-    static std::string latency_names[] = {
-        flare::base::string_printf("_latency_%d", (int)flare::variable::FLAGS_variable_latency_p1),
-        flare::base::string_printf("_latency_%d", (int)flare::variable::FLAGS_variable_latency_p2),
-        flare::base::string_printf("_latency_%d", (int)flare::variable::FLAGS_variable_latency_p3),
-        "_latency_999", "_latency_9999", "_max_latency"
-    };
-    CHECK(NPERCENTILES == FLARE_ARRAY_SIZE(latency_names));
-    const std::string desc_str(desc.data(), desc.size());
-    std::string_view metric_name(name);
-    for (int i = 0; i < NPERCENTILES; ++i) {
-        if (!flare::base::ends_with(metric_name, latency_names[i])) {
-            continue;
+    class PrometheusMetricsDumper : public flare::variable::Dumper {
+    public:
+        explicit PrometheusMetricsDumper(flare::cord_buf_builder *os,
+                                         const std::string &server_prefix)
+                : _os(os), _server_prefix(server_prefix) {
         }
-        metric_name.remove_suffix(latency_names[i].size());
-        SummaryItems* si = &_m[flare::base::as_string(metric_name)];
-        si->latency_percentiles[i] = desc_str;
-        if (i == NPERCENTILES - 1) {
-            // '_max_latency' is the last suffix name that appear in the sorted variable
-            // list, which means all related percentiles have been gathered and we are
-            // ready to output a Summary.
-            si->metric_name = flare::base::as_string(metric_name);
-        }
-        return si;
-    }
-    // Get the average of latency in recent window size
-    if (flare::base::ends_with(metric_name, "_latency")) {
-        metric_name.remove_suffix(8);
-        SummaryItems* si = &_m[flare::base::as_string(metric_name)];
-        si->latency_avg = strtoll(desc_str.data(), NULL, 10);
-        return si;
-    }
-    if (flare::base::ends_with(metric_name, "_count")) {
-        metric_name.remove_suffix(6);
-        SummaryItems* si = &_m[flare::base::as_string(metric_name)];
-        si->count = strtoll(desc_str.data(), NULL, 10);
-        return si;
-    }
-    return NULL;
-}
 
-bool PrometheusMetricsDumper::DumpLatencyRecorderSuffix(
-    const std::string_view& name,
-    const std::string_view& desc) {
-    if (!flare::base::starts_with(name, _server_prefix)) {
-        return false;
-    }
-    const SummaryItems* si = ProcessLatencyRecorderSuffix(name, desc);
-    if (!si) {
-        return false;
-    }
-    if (!si->IsComplete()) {
+        bool dump(const std::string &name, const std::string_view &desc) override;
+
+    private:
+        FLARE_DISALLOW_COPY_AND_ASSIGN(PrometheusMetricsDumper);
+
+        // Return true iff name ends with suffix output by LatencyRecorder.
+        bool DumpLatencyRecorderSuffix(const std::string_view &name,
+                                       const std::string_view &desc);
+
+        // 6 is the number of variables in LatencyRecorder that indicating percentiles
+        static const int NPERCENTILES = 6;
+
+        struct SummaryItems {
+            std::string latency_percentiles[NPERCENTILES];
+            int64_t latency_avg;
+            int64_t count;
+            std::string metric_name;
+
+            bool IsComplete() const { return !metric_name.empty(); }
+        };
+
+        const SummaryItems *ProcessLatencyRecorderSuffix(const std::string_view &name,
+                                                         const std::string_view &desc);
+
+    private:
+        flare::cord_buf_builder *_os;
+        const std::string _server_prefix;
+        std::map<std::string, SummaryItems> _m;
+    };
+
+    bool PrometheusMetricsDumper::dump(const std::string &name,
+                                       const std::string_view &desc) {
+        if (!desc.empty() && desc[0] == '"') {
+            // there is no necessary to monitor string in prometheus
+            return true;
+        }
+        if (DumpLatencyRecorderSuffix(name, desc)) {
+            // Has encountered name with suffix exposed by LatencyRecorder,
+            // Leave it to DumpLatencyRecorderSuffix to output Summary.
+            return true;
+        }
+        *_os << "# HELP " << name << '\n'
+             << "# TYPE " << name << " gauge" << '\n'
+             << name << " " << desc << '\n';
         return true;
     }
-    *_os << "# HELP " << si->metric_name << '\n'
-         << "# TYPE " << si->metric_name << " summary\n"
-         << si->metric_name << "{quantile=\""
-         << (double)(flare::variable::FLAGS_variable_latency_p1) / 100 << "\"} "
-         << si->latency_percentiles[0] << '\n'
-         << si->metric_name << "{quantile=\""
-         << (double)(flare::variable::FLAGS_variable_latency_p2) / 100 << "\"} "
-         << si->latency_percentiles[1] << '\n'
-         << si->metric_name << "{quantile=\""
-         << (double)(flare::variable::FLAGS_variable_latency_p3) / 100 << "\"} "
-         << si->latency_percentiles[2] << '\n'
-         << si->metric_name << "{quantile=\"0.999\"} "
-         << si->latency_percentiles[3] << '\n'
-         << si->metric_name << "{quantile=\"0.9999\"} "
-         << si->latency_percentiles[4] << '\n'
-         << si->metric_name << "{quantile=\"1\"} "
-         << si->latency_percentiles[5] << '\n'
-         << si->metric_name << "_sum "
-         // There is no sum of latency in variable output, just use
-         // average * count as approximation
-         << si->latency_avg * si->count << '\n'
-         << si->metric_name << "_count " << si->count << '\n';
-    return true;
-}
 
-void PrometheusMetricsService::default_method(::google::protobuf::RpcController* cntl_base,
-                                              const ::flare::rpc::MetricsRequest*,
-                                              ::flare::rpc::MetricsResponse*,
-                                              ::google::protobuf::Closure* done) {
-    ClosureGuard done_guard(done);
-    Controller *cntl = static_cast<Controller*>(cntl_base);
-    cntl->http_response().set_content_type("text/plain");
-    if (DumpPrometheusMetricsToCordBuf(&cntl->response_attachment()) != 0) {
-        cntl->SetFailed("Fail to dump metrics");
-        return;
+    const PrometheusMetricsDumper::SummaryItems *
+    PrometheusMetricsDumper::ProcessLatencyRecorderSuffix(const std::string_view &name,
+                                                          const std::string_view &desc) {
+        static std::string latency_names[] = {
+                flare::string_printf("_latency_%d", (int) flare::variable::FLAGS_variable_latency_p1),
+                flare::string_printf("_latency_%d", (int) flare::variable::FLAGS_variable_latency_p2),
+                flare::string_printf("_latency_%d", (int) flare::variable::FLAGS_variable_latency_p3),
+                "_latency_999", "_latency_9999", "_max_latency"
+        };
+        CHECK(NPERCENTILES == FLARE_ARRAY_SIZE(latency_names));
+        const std::string desc_str(desc.data(), desc.size());
+        std::string_view metric_name(name);
+        for (int i = 0; i < NPERCENTILES; ++i) {
+            if (!flare::ends_with(metric_name, latency_names[i])) {
+                continue;
+            }
+            metric_name.remove_suffix(latency_names[i].size());
+            SummaryItems *si = &_m[flare::as_string(metric_name)];
+            si->latency_percentiles[i] = desc_str;
+            if (i == NPERCENTILES - 1) {
+                // '_max_latency' is the last suffix name that appear in the sorted variable
+                // list, which means all related percentiles have been gathered and we are
+                // ready to output a Summary.
+                si->metric_name = flare::as_string(metric_name);
+            }
+            return si;
+        }
+        // Get the average of latency in recent window size
+        if (flare::ends_with(metric_name, "_latency")) {
+            metric_name.remove_suffix(8);
+            SummaryItems *si = &_m[flare::as_string(metric_name)];
+            si->latency_avg = strtoll(desc_str.data(), NULL, 10);
+            return si;
+        }
+        if (flare::ends_with(metric_name, "_count")) {
+            metric_name.remove_suffix(6);
+            SummaryItems *si = &_m[flare::as_string(metric_name)];
+            si->count = strtoll(desc_str.data(), NULL, 10);
+            return si;
+        }
+        return NULL;
     }
-}
 
-int DumpPrometheusMetricsToCordBuf(flare::io::cord_buf* output) {
-    flare::io::cord_buf_builder os;
-    PrometheusMetricsDumper dumper(&os, g_server_info_prefix);
-    const int ndump = flare::variable::Variable::dump_exposed(&dumper, NULL);
-    if (ndump < 0) {
-        return -1;
+    bool PrometheusMetricsDumper::DumpLatencyRecorderSuffix(
+            const std::string_view &name,
+            const std::string_view &desc) {
+        if (!flare::starts_with(name, _server_prefix)) {
+            return false;
+        }
+        const SummaryItems *si = ProcessLatencyRecorderSuffix(name, desc);
+        if (!si) {
+            return false;
+        }
+        if (!si->IsComplete()) {
+            return true;
+        }
+        *_os << "# HELP " << si->metric_name << '\n'
+             << "# TYPE " << si->metric_name << " summary\n"
+             << si->metric_name << "{quantile=\""
+             << (double) (flare::variable::FLAGS_variable_latency_p1) / 100 << "\"} "
+             << si->latency_percentiles[0] << '\n'
+             << si->metric_name << "{quantile=\""
+             << (double) (flare::variable::FLAGS_variable_latency_p2) / 100 << "\"} "
+             << si->latency_percentiles[1] << '\n'
+             << si->metric_name << "{quantile=\""
+             << (double) (flare::variable::FLAGS_variable_latency_p3) / 100 << "\"} "
+             << si->latency_percentiles[2] << '\n'
+             << si->metric_name << "{quantile=\"0.999\"} "
+             << si->latency_percentiles[3] << '\n'
+             << si->metric_name << "{quantile=\"0.9999\"} "
+             << si->latency_percentiles[4] << '\n'
+             << si->metric_name << "{quantile=\"1\"} "
+             << si->latency_percentiles[5] << '\n'
+             << si->metric_name << "_sum "
+             // There is no sum of latency in variable output, just use
+             // average * count as approximation
+             << si->latency_avg * si->count << '\n'
+             << si->metric_name << "_count " << si->count << '\n';
+        return true;
     }
-    os.move_to(*output);
-    return 0;
-}
+
+    void PrometheusMetricsService::default_method(::google::protobuf::RpcController *cntl_base,
+                                                  const ::flare::rpc::MetricsRequest *,
+                                                  ::flare::rpc::MetricsResponse *,
+                                                  ::google::protobuf::Closure *done) {
+        ClosureGuard done_guard(done);
+        Controller *cntl = static_cast<Controller *>(cntl_base);
+        cntl->http_response().set_content_type("text/plain");
+        if (DumpPrometheusMetricsToCordBuf(&cntl->response_attachment()) != 0) {
+            cntl->SetFailed("Fail to dump metrics");
+            return;
+        }
+    }
+
+    int DumpPrometheusMetricsToCordBuf(flare::cord_buf *output) {
+        flare::cord_buf_builder os;
+        PrometheusMetricsDumper dumper(&os, g_server_info_prefix);
+        const int ndump = flare::variable::Variable::dump_exposed(&dumper, NULL);
+        if (ndump < 0) {
+            return -1;
+        }
+        os.move_to(*output);
+        return 0;
+    }
 
 } // namespace flare::rpc

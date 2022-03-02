@@ -124,7 +124,7 @@ namespace flare::fiber_internal {
         bool _init;  // false before first dump_and_destroy is called
         bool _first_write;      // true if buffer was not written to file yet.
         std::string _filename;  // the file storing profiling result.
-        flare::io::cord_buf _disk_buf;  // temp buf before saving the file.
+        flare::cord_buf _disk_buf;  // temp buf before saving the file.
         ContentionMap _dedup_map; // combining same samples to make result smaller.
     };
 
@@ -175,7 +175,7 @@ namespace flare::fiber_internal {
         // Serialize contentions in _dedup_map into _disk_buf.
         if (!_dedup_map.empty()) {
             BT_VLOG << "dedup_map=" << _dedup_map.size();
-            flare::io::cord_buf_builder os;
+            flare::cord_buf_builder os;
             for (ContentionMap::const_iterator
                          it = _dedup_map.begin(); it != _dedup_map.end(); ++it) {
                 SampledContention *c = it->second;
@@ -195,7 +195,7 @@ namespace flare::fiber_internal {
         if (ending) {
             BT_VLOG << "Append /proc/self/maps";
             // Failures are not critical, don't return directly.
-            flare::io::IOPortal mem_maps;
+            flare::IOPortal mem_maps;
             const flare::base::fd_guard fd(open("/proc/self/maps", O_RDONLY));
             if (fd >= 0) {
                 while (true) {
@@ -293,7 +293,7 @@ namespace flare::fiber_internal {
     }
 
     void SampledContention::destroy() {
-        flare::memory::return_object(this);
+        flare::return_object(this);
     }
 
 // Remember the conflict hashes for troubleshooting, should be 0 at most of time.
@@ -480,7 +480,7 @@ namespace flare::fiber_internal {
 // Submit the contention along with the callsite('s stacktrace)
     void submit_contention(const fiber_contention_site_t &csite, int64_t now_ns) {
         tls_inside_lock = true;
-        SampledContention *sc = flare::memory::get_object<SampledContention>();
+        SampledContention *sc = flare::get_object<SampledContention>();
         // Normalize duration_us and count so that they're addable in later
         // processings. Notice that sampling_range is adjusted periodically by
         // collecting thread.

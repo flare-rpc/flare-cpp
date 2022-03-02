@@ -55,7 +55,7 @@ namespace example {
                     static_cast<flare::rpc::Controller *>(cntl_base);
             // Fill response.
             cntl->http_response().set_content_type("text/plain");
-            flare::io::cord_buf_builder os;
+            flare::cord_buf_builder os;
             os << "queries:";
             for (flare::rpc::URI::QueryIterator it = cntl->http_request().uri().QueryBegin();
                  it != cntl->http_request().uri().QueryEnd(); ++it) {
@@ -89,7 +89,7 @@ namespace example {
                 args->pa->Write(buf, len);
 
                 // sleep a while to send another part.
-                flare::this_fiber::fiber_sleep_for(10000);
+                flare::fiber_sleep_for(10000);
             }
             return NULL;
         }
@@ -165,8 +165,8 @@ namespace example {
 
 int main(int argc, char *argv[]) {
 
-    flare::bootstrap::bootstrap_init(argc, argv);
-    flare::bootstrap::run_bootstrap();
+    flare::bootstrap_init(argc, argv);
+    flare::run_bootstrap();
     // Generally you only need one Server.
     flare::rpc::Server server;
 
@@ -209,6 +209,6 @@ int main(int argc, char *argv[]) {
 
     // Wait until Ctrl-C is pressed, then Stop() and Join() the server.
     server.RunUntilAskedToQuit();
-    flare::bootstrap::run_finalizers();
+    flare::run_finalizers();
     return 0;
 }

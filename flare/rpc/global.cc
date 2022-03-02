@@ -167,18 +167,18 @@ static long ReadPortOfDummyServer(const char* filename) {
     return port;
 }
 
-// Expose counters of flare::io::cord_buf
+// Expose counters of flare::cord_buf
 static size_t GetCordBufBlockCount(void*) {
-    return flare::io::cord_buf::block_count();
+    return flare::cord_buf::block_count();
 }
 static size_t GetCordBufBlockCountHitTLSThreshold(void*) {
-    return flare::io::cord_buf::block_count_hit_tls_threshold();
+    return flare::cord_buf::block_count_hit_tls_threshold();
 }
 static size_t GetCordBufNewBigViewCount(void*) {
-    return flare::io::cord_buf::new_bigview_count();
+    return flare::cord_buf::new_bigview_count();
 }
 static size_t GetCordBufBlockMemory(void*) {
-    return flare::io::cord_buf::block_memory();
+    return flare::cord_buf::block_memory();
 }
 
 // Defined in server.cpp
@@ -219,7 +219,7 @@ static void* GlobalUpdate(void*) {
     while (1) {
         const int64_t sleep_us = 1000000L + last_time_us - flare::base::gettimeofday_us();
         if (sleep_us > 0) {
-            if (flare::this_fiber::fiber_sleep_for(sleep_us) < 0) {
+            if (flare::fiber_sleep_for(sleep_us) < 0) {
                 PLOG_IF(FATAL, errno != ESTOP) << "Fail to sleep";
                 break;
             }

@@ -21,7 +21,7 @@
 
 #include <string>                      // std::string
 #include "flare/base/profile.h"
-#include "flare/io/cord_buf.h"               // flare::io::cord_buf
+#include "flare/io/cord_buf.h"               // flare::cord_buf
 #include "flare/base/scoped_lock.h"
 #include "flare/base/endpoint.h"
 #include "flare/rpc/details/http_parser.h"  // http_parser
@@ -49,17 +49,17 @@ public:
     HttpMessage(bool read_body_progressively = false);
     ~HttpMessage();
 
-    const flare::io::cord_buf &body() const { return _body; }
-    flare::io::cord_buf &body() { return _body; }
+    const flare::cord_buf &body() const { return _body; }
+    flare::cord_buf &body() { return _body; }
 
     // Parse from array, length=0 is treated as EOF.
     // Returns bytes parsed, -1 on failure.
     ssize_t ParseFromArray(const char *data, const size_t length);
     
-    // Parse from flare::io::cord_buf.
+    // Parse from flare::cord_buf.
     // Emtpy `buf' is sliently ignored, which is different from ParseFromArray.
     // Returns bytes parsed, -1 on failure.
-    ssize_t ParseFromCordBuf(const flare::io::cord_buf &buf);
+    ssize_t ParseFromCordBuf(const flare::cord_buf &buf);
 
     bool Completed() const { return _stage == HTTP_ON_MESSAGE_COMPLETE; }
     HttpParserStage stage() const { return _stage; }
@@ -104,7 +104,7 @@ private:
     flare::base::Mutex _body_mutex;
     // Read body progressively
     ProgressiveReader* _body_reader;
-    flare::io::cord_buf _body;
+    flare::cord_buf _body;
 
     // Parser related members
     struct http_parser _parser;
@@ -113,7 +113,7 @@ private:
 
 protected:
     // Only valid when -http_verbose is on
-    flare::io::cord_buf_builder* _vmsgbuilder;
+    flare::cord_buf_builder* _vmsgbuilder;
     size_t _vbodylen;
 };
 
@@ -123,17 +123,17 @@ std::ostream& operator<<(std::ostream& os, const http_parser& parser);
 // header: may be modified in some cases
 // remote_side: used when "Host" is absent
 // content: could be NULL.
-void MakeRawHttpRequest(flare::io::cord_buf* request,
+void MakeRawHttpRequest(flare::cord_buf* request,
                         HttpHeader* header,
                         const flare::base::end_point& remote_side,
-                        const flare::io::cord_buf* content);
+                        const flare::cord_buf* content);
 
 // Serialize a http response.
 // header: may be modified in some cases
 // content: cleared after usage. could be NULL. 
-void MakeRawHttpResponse(flare::io::cord_buf* response,
+void MakeRawHttpResponse(flare::cord_buf* response,
                          HttpHeader* header,
-                         flare::io::cord_buf* content);
+                         flare::cord_buf* content);
 
 } // namespace flare::rpc
 

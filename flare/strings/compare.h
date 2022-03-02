@@ -8,7 +8,7 @@
 #include <string_view>
 #include "flare/base/profile.h"
 
-namespace flare::strings {
+namespace flare {
 /**
  * @brief returns +1/0/-1 like strcmp(a, b) but without regard for letter case
  * @param a todo
@@ -21,6 +21,6 @@ FLARE_FORCE_INLINE bool equal_case(std::string_view a, std::string_view b) {
     return compare_case(a, b) == 0;
 }
 
-}  // namespace flare::strings
+}  // namespace flare
 
 #endif  // FLARE_STRINGS_COMPARE_H_

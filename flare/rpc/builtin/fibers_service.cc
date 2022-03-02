@@ -36,7 +36,7 @@ void FibersService::default_method(::google::protobuf::RpcController* cntl_base,
     ClosureGuard done_guard(done);
     Controller *cntl = static_cast<Controller*>(cntl_base);
     cntl->http_response().set_content_type("text/plain");
-    flare::io::cord_buf_builder os;
+    flare::cord_buf_builder os;
     const std::string& constraint = cntl->http_request().unresolved_path();
     
     if (constraint.empty()) {

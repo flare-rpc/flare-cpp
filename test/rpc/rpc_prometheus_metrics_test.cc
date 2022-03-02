@@ -21,7 +21,7 @@
 #include "flare/rpc/server.h"
 #include "flare/rpc/channel.h"
 #include "flare/rpc/controller.h"
-#include "flare/base/strings.h"
+#include "flare/strings/ends_with.h"
 #include "echo.pb.h"
 
 int main(int argc, char* argv[]) {
@@ -115,10 +115,10 @@ TEST(PrometheusMetrics, sanity) {
                     matched = sscanf(res.data() + start_pos, "%s %d", name_type, &gauge_num);
                     ASSERT_EQ(2, matched);
                     ASSERT_TRUE(strncmp(name_type, name_help, strlen(name_help)) == 0);
-                    if (flare::base::ends_with(name_type, "_sum")) {
+                    if (flare::ends_with(name_type, "_sum")) {
                         ASSERT_FALSE(summary_sum_gathered);
                         summary_sum_gathered = true;
-                    } else if (flare::base::ends_with(name_type, "_count")) {
+                    } else if (flare::ends_with(name_type, "_count")) {
                         ASSERT_FALSE(summary_count_gathered);
                         summary_count_gathered = true;
                     } else {

@@ -12,7 +12,7 @@
 // passing a range, a separator string to use between the elements joined, and
 // an optional Formatter responsible for converting each argument in the range
 // to a string. If omitted, a default `alpha_num_formatter()` is called on the
-// elements to be joined, using the same formatting that `flare::strings::string_cat()` uses.
+// elements to be joined, using the same formatting that `flare::string_cat()` uses.
 // This package defines a number of default formatters, and you can define your
 // own implementations.
 //
@@ -21,17 +21,17 @@
 // brace-initialized `std::initializer_list`, or a `std::tuple` of heterogeneous
 // objects. The separator string is specified as an `std::string_view`.
 //
-// Because the default formatter uses the `flare::strings::alpha_num` class,
-// `flare::strings::string_join()`, like `flare::strings::string_cat()`, will work out-of-the-box on
+// Because the default formatter uses the `flare::alpha_num` class,
+// `flare::string_join()`, like `flare::string_cat()`, will work out-of-the-box on
 // collections of strings, ints, floats, doubles, etc.
 //
 // Example:
 //
 //   std::vector<std::string> v = {"foo", "bar", "baz"};
-//   std::string s = flare::strings::string_join(v, "-");
+//   std::string s = flare::string_join(v, "-");
 //   EXPECT_EQ("foo-bar-baz", s);
 //
-// See comments on the `flare::strings::string_join()` function for more examples.
+// See comments on the `flare::string_join()` function for more examples.
 
 #ifndef FLARE_STRINGS_STR_JOIN_H_
 #define FLARE_STRINGS_STR_JOIN_H_
@@ -49,7 +49,7 @@
 #include "flare/strings/internal/str_join_internal.h"
 #include <string_view>
 
-namespace flare::strings {
+namespace flare {
 
 
 // -----------------------------------------------------------------------------
@@ -59,7 +59,7 @@ namespace flare::strings {
 // A Formatter is a function object that is responsible for formatting its
 // argument as a string and appending it to a given output std::string.
 // Formatters may be implemented as function objects, lambdas, or normal
-// functions. You may provide your own Formatter to enable `flare::strings::string_join()` to
+// functions. You may provide your own Formatter to enable `flare::string_join()` to
 // work with arbitrary types.
 //
 // The following is an example of a custom Formatter that simply uses
@@ -72,10 +72,10 @@ namespace flare::strings {
 //   };
 //
 // You would use the above formatter by passing an instance of it as the final
-// argument to `flare::strings::string_join()`:
+// argument to `flare::string_join()`:
 //
 //   std::vector<int> v = {1, 2, 3, 4};
-//   std::string s = flare::strings::string_join(v, "-", MyFormatter());
+//   std::string s = flare::string_join(v, "-", MyFormatter());
 //   EXPECT_EQ("1-2-3-4", s);
 //
 // The following standard formatters are provided within this file:
@@ -87,7 +87,7 @@ namespace flare::strings {
 
 // alpha_num_formatter()
 //
-// Default formatter used if none is specified. Uses `flare::strings::alpha_num` to convert
+// Default formatter used if none is specified. Uses `flare::alpha_num` to convert
 // numeric arguments to strings.
 FLARE_FORCE_INLINE strings_internal::alpha_num_formatter_impl alpha_num_formatter() {
     return strings_internal::alpha_num_formatter_impl();
@@ -148,7 +148,7 @@ dereference_formatter() {
 // -----------------------------------------------------------------------------
 //
 // Joins a range of elements and returns the result as a std::string.
-// `flare::strings::string_join()` takes a range, a separator string to use between the
+// `flare::string_join()` takes a range, a separator string to use between the
 // elements joined, and an optional Formatter responsible for converting each
 // argument in the range to a string.
 //
@@ -159,21 +159,21 @@ dereference_formatter() {
 //   // Joins a collection of strings. This pattern also works with a collection
 //   // of `std::string_view` or even `const char*`.
 //   std::vector<std::string> v = {"foo", "bar", "baz"};
-//   std::string s = flare::strings::string_join(v, "-");
+//   std::string s = flare::string_join(v, "-");
 //   EXPECT_EQ("foo-bar-baz", s);
 //
 // Example 2:
 //   // Joins the values in the given `std::initializer_list<>` specified using
 //   // brace initialization. This pattern also works with an initializer_list
 //   // of ints or `std::string_view` -- any `alpha_num`-compatible type.
-//   std::string s = flare::strings::string_join({"foo", "bar", "baz"}, "-");
+//   std::string s = flare::string_join({"foo", "bar", "baz"}, "-");
 //   EXPECT_EQ("foo-bar-baz", s);
 //
 // Example 3:
 //   // Joins a collection of ints. This pattern also works with floats,
 //   // doubles, int64s -- any `string_cat()`-compatible type.
 //   std::vector<int> v = {1, 2, 3, -4};
-//   std::string s = flare::strings::string_join(v, "-");
+//   std::string s = flare::string_join(v, "-");
 //   EXPECT_EQ("1-2-3--4", s);
 //
 // Example 4:
@@ -184,7 +184,7 @@ dereference_formatter() {
 //   // `std::vector<int*>`.
 //   int x = 1, y = 2, z = 3;
 //   std::vector<int*> v = {&x, &y, &z};
-//   std::string s = flare::strings::string_join(v, "-");
+//   std::string s = flare::string_join(v, "-");
 //   EXPECT_EQ("1-2-3", s);
 //
 // Example 5:
@@ -193,7 +193,7 @@ dereference_formatter() {
 //   v.emplace_back(new int(1));
 //   v.emplace_back(new int(2));
 //   v.emplace_back(new int(3));
-//   std::string s = flare::strings::string_join(v, "-");
+//   std::string s = flare::string_join(v, "-");
 //   EXPECT_EQ("1-2-3", s);
 //
 // Example 6:
@@ -204,31 +204,31 @@ dereference_formatter() {
 //       std::make_pair("a", 1),
 //       std::make_pair("b", 2),
 //       std::make_pair("c", 3)};
-//   std::string s = flare::strings::string_join(m, ",", flare::strings::pair_formatter("="));
+//   std::string s = flare::string_join(m, ",", flare::pair_formatter("="));
 //   EXPECT_EQ("a=1,b=2,c=3", s);
 //
 // Example 7:
-//   // These examples show how `flare::strings::string_join()` handles a few common edge
+//   // These examples show how `flare::string_join()` handles a few common edge
 //   // cases:
 //   std::vector<std::string> v_empty;
-//   EXPECT_EQ("", flare::strings::string_join(v_empty, "-"));
+//   EXPECT_EQ("", flare::string_join(v_empty, "-"));
 //
 //   std::vector<std::string> v_one_item = {"foo"};
-//   EXPECT_EQ("foo", flare::strings::string_join(v_one_item, "-"));
+//   EXPECT_EQ("foo", flare::string_join(v_one_item, "-"));
 //
 //   std::vector<std::string> v_empty_string = {""};
-//   EXPECT_EQ("", flare::strings::string_join(v_empty_string, "-"));
+//   EXPECT_EQ("", flare::string_join(v_empty_string, "-"));
 //
 //   std::vector<std::string> v_one_item_empty_string = {"a", ""};
-//   EXPECT_EQ("a-", flare::strings::string_join(v_one_item_empty_string, "-"));
+//   EXPECT_EQ("a-", flare::string_join(v_one_item_empty_string, "-"));
 //
 //   std::vector<std::string> v_two_empty_string = {"", ""};
-//   EXPECT_EQ("-", flare::strings::string_join(v_two_empty_string, "-"));
+//   EXPECT_EQ("-", flare::string_join(v_two_empty_string, "-"));
 //
 // Example 8:
 //   // Joins a `std::tuple<T...>` of heterogeneous types, converting each to
-//   // a std::string using the `flare::strings::alpha_num` class.
-//   std::string s = flare::strings::string_join(std::make_tuple(123, "abc", 0.456), "-");
+//   // a std::string using the `flare::alpha_num` class.
+//   std::string s = flare::string_join(std::make_tuple(123, "abc", 0.456), "-");
 //   EXPECT_EQ("123-abc-0.456", s);
 
 template<typename Iterator, typename Formatter>
@@ -278,6 +278,6 @@ std::string string_join(const std::tuple<T...> &value,
 }
 
 
-}  // namespace flare::strings
+}  // namespace flare
 
 #endif  // FLARE_STRINGS_STR_JOIN_H_

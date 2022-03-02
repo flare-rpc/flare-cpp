@@ -74,7 +74,7 @@ TEST(RecorderTest, sanity) {
         ASSERT_EQ("2", flare::variable::Variable::describe_exposed("var1"));
         std::vector<std::string> vars;
         flare::variable::Variable::list_exposed(&vars);
-        ASSERT_EQ(1UL, vars.size())<<flare::strings::string_join(vars, ",");
+        ASSERT_EQ(1UL, vars.size())<<flare::string_join(vars, ",");
         ASSERT_EQ("var1", vars[0]);
         ASSERT_EQ(1UL, flare::variable::Variable::count_exposed());
     }

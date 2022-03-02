@@ -15,34 +15,34 @@ namespace {
 
     TEST(OStringStream, IsOStream) {
         static_assert(
-                std::is_base_of<std::ostream, flare::strings::strings_internal::OStringStream>(),
+                std::is_base_of<std::ostream, flare::strings_internal::OStringStream>(),
                 "");
     }
 
     TEST(OStringStream, ConstructDestroy) {
         {
-            flare::strings::strings_internal::OStringStream strm(nullptr);
+            flare::strings_internal::OStringStream strm(nullptr);
             EXPECT_EQ(nullptr, strm.str());
         }
         {
             std::string s = "abc";
             {
-                flare::strings::strings_internal::OStringStream strm(&s);
+                flare::strings_internal::OStringStream strm(&s);
                 EXPECT_EQ(&s, strm.str());
             }
             EXPECT_EQ("abc", s);
         }
         {
             std::unique_ptr<std::string> s(new std::string);
-            flare::strings::strings_internal::OStringStream strm(s.get());
+            flare::strings_internal::OStringStream strm(s.get());
             s.reset();
         }
     }
 
     TEST(OStringStream, Str) {
         std::string s1;
-        flare::strings::strings_internal::OStringStream strm(&s1);
-        const flare::strings::strings_internal::OStringStream &c_strm(strm);
+        flare::strings_internal::OStringStream strm(&s1);
+        const flare::strings_internal::OStringStream &c_strm(strm);
 
         static_assert(std::is_same<decltype(strm.str()), std::string *>(), "");
         static_assert(std::is_same<decltype(c_strm.str()), const std::string *>(), "");
@@ -67,7 +67,7 @@ namespace {
     TEST(OStreamStream, WriteToLValue) {
         std::string s = "abc";
         {
-            flare::strings::strings_internal::OStringStream strm(&s);
+            flare::strings_internal::OStringStream strm(&s);
             EXPECT_EQ("abc", s);
             strm << "";
             EXPECT_EQ("abc", s);
@@ -81,11 +81,11 @@ namespace {
 
     TEST(OStreamStream, WriteToRValue) {
         std::string s = "abc";
-        flare::strings::strings_internal::OStringStream(&s) << "";
+        flare::strings_internal::OStringStream(&s) << "";
         EXPECT_EQ("abc", s);
-        flare::strings::strings_internal::OStringStream(&s) << 42;
+        flare::strings_internal::OStringStream(&s) << 42;
         EXPECT_EQ("abc42", s);
-        flare::strings::strings_internal::OStringStream(&s) << 'x' << 'y';
+        flare::strings_internal::OStringStream(&s) << 'x' << 'y';
         EXPECT_EQ("abc42xy", s);
     }
 

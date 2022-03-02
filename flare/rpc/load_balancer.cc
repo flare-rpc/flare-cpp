@@ -19,7 +19,7 @@
 #include <gflags/gflags.h>
 #include "flare/rpc/reloadable_flags.h"
 #include "flare/rpc/load_balancer.h"
-#include "flare/base/strings.h"
+#include "flare/strings/str_format.h"
 
 namespace flare::rpc {
 
@@ -108,7 +108,7 @@ namespace flare::rpc {
         } else {
             lb_name->append(lb_protocol.data(), pos);
             if (pos < lb_protocol.size() - sizeof(separator)) {
-                *lb_params =flare::strings::safe_substr(lb_protocol, pos + sizeof(separator));
+                *lb_params =flare::safe_substr(lb_protocol, pos + sizeof(separator));
             }
         }
 

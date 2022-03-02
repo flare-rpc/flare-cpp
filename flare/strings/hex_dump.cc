@@ -6,7 +6,7 @@
 #include <sstream>
 #include <stdexcept>
 
-namespace flare::strings {
+namespace flare {
 
 
 std::string hex_dump(const void *const data, size_t size) {
@@ -257,4 +257,4 @@ std::string parse_hex_dump(const std::string &str) {
 }
 
 
-}  // namespace flare::strings
+}  // namespace flare

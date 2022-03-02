@@ -12,7 +12,8 @@
 #include "flare/base/fd_guard.h"                    // fd_guard
 #include "flare/base/endpoint.h"                    // ip_t
 #include "flare/log/logging.h"
-#include "flare/base/strings.h"
+#include "flare/strings/str_format.h"
+#include "flare/strings/ends_with.h"
 #include "flare/base/singleton_on_pthread_once.h"
 #include <sys/socket.h>                        // SO_REUSEADDR SO_REUSEPORT
 
@@ -66,7 +67,7 @@ namespace flare::base {
         }
         // remove baidu-specific domain name (that every name has)
         std::string_view str(host);
-        if (flare::base::ends_with(host, ".baidu.com")) {
+        if (flare::ends_with(host, ".baidu.com")) {
             host[str.size() - 10] = '\0';
         }
         return 0;

@@ -18,7 +18,7 @@
 #include <stdio.h>
 #include <gtest/gtest.h>
 #include <vector>
-#include "flare/base/strings.h"
+#include "flare/strings/str_format.h"
 #include "flare/io/temp_file.h"
 #include "flare/fiber/internal/fiber.h"
 #include "flare/rpc/policy/consul_naming_service.h"
@@ -29,7 +29,7 @@
 #include "flare/rpc/policy/discovery_naming_service.h"
 #include "echo.pb.h"
 #include "flare/rpc/server.h"
-#include "flare/base/strings.h"
+#include "flare/strings/utility.h"
 
 
 namespace flare::rpc {
@@ -99,7 +99,7 @@ TEST(NamingServiceTest, sanity) {
         "localhost:1234",
         "baidu.com:1234"
     };
-    flare::io::temp_file tmp_file;
+    flare::temp_file tmp_file;
     {
         FILE* fp = fopen(tmp_file.fname(), "w");
         for (size_t i = 0; i < FLARE_ARRAY_SIZE(address_list); ++i) {
@@ -118,7 +118,7 @@ TEST(NamingServiceTest, sanity) {
 
     std::string s;
     for (size_t i = 0; i < FLARE_ARRAY_SIZE(address_list); ++i) {
-        ASSERT_EQ(0, flare::base::string_appendf(&s, "%s,", address_list[i]));
+        ASSERT_EQ(0, flare::string_appendf(&s, "%s,", address_list[i]));
     }
     flare::rpc::policy::ListNamingService lns;
     ASSERT_EQ(0, lns.GetServers(s.c_str(), &servers));
@@ -152,7 +152,7 @@ TEST(NamingServiceTest, wrong_name) {
         "baidu.com:1234",
         "LOCAL:1234"
     };
-    flare::io::temp_file tmp_file;
+    flare::temp_file tmp_file;
     {
         FILE *fp = fopen(tmp_file.fname(), "w");
         for (size_t i = 0; i < FLARE_ARRAY_SIZE(address_list); ++i) {
@@ -166,7 +166,7 @@ TEST(NamingServiceTest, wrong_name) {
 
     std::string s;
     for (size_t i = 0; i < FLARE_ARRAY_SIZE(address_list); ++i) {
-        ASSERT_EQ(0, flare::base::string_appendf(&s, ", %s", address_list[i]));
+        ASSERT_EQ(0, flare::string_appendf(&s, ", %s", address_list[i]));
     }
     flare::rpc::policy::ListNamingService lns;
     ASSERT_EQ(0, lns.GetServers(s.c_str(), &servers));
@@ -387,7 +387,7 @@ TEST(NamingServiceTest, consul_with_backup_file) {
         "10.128.0.1:1234",
         "10.129.0.1:1234",
     };
-    flare::io::temp_file tmp_file;
+    flare::temp_file tmp_file;
     const char * service_name = tmp_file.fname();
     {
         FILE* fp = fopen(tmp_file.fname(), "w");
@@ -419,7 +419,7 @@ TEST(NamingServiceTest, consul_with_backup_file) {
                                    restful_map.c_str()));
     ASSERT_EQ(0, server.Start("localhost:8500", NULL));
 
-    flare::this_fiber::fiber_sleep_for(5000000);
+    flare::fiber_sleep_for(5000000);
 
     flare::base::end_point n1;
     ASSERT_EQ(0, flare::base::str2endpoint("10.121.36.189:8003", &n1));
@@ -565,7 +565,7 @@ public:
         auto body = cntl->request_attachment().to_string();
         for (flare::rpc::QuerySplitter sp(body); sp; ++sp) {
             if (sp.key() == "addrs") {
-                _addrs.insert(flare::base::as_string(sp.value()));
+                _addrs.insert(flare::as_string(sp.value()));
             }
         }
         cntl->response_attachment().append(R"({
@@ -658,7 +658,7 @@ TEST(NamingServiceTest, discovery_sanity) {
         // svc.RenewCount() be one.
         ASSERT_EQ(0, dc.Register(dparam));
         ASSERT_EQ(0, dc.Register(dparam));
-        flare::this_fiber::fiber_sleep_for(100000);
+        flare::fiber_sleep_for(100000);
         ASSERT_TRUE(svc.HasAddr("grpc://10.0.0.1:8000"));
         ASSERT_FALSE(svc.HasAddr("http://10.0.0.1:8000"));
     }

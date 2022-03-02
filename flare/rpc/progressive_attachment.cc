@@ -48,7 +48,7 @@ ProgressiveAttachment::~ProgressiveAttachment() {
         if (!_before_http_1_1) {
             // note: _httpsock may already be failed.
             if (_rpc_state.load(std::memory_order_relaxed) == RPC_SUCCEED) {
-                flare::io::cord_buf tmpbuf;
+                flare::cord_buf tmpbuf;
                 tmpbuf.append("0\r\n\r\n", 5);
                 Socket::WriteOptions wopt;
                 wopt.ignore_eovercrowded = true;
@@ -72,7 +72,7 @@ static char s_hex_map[] = { '0', '1', '2', '3', '4', '5', '6', '7', '8',
                             '9', 'A', 'B', 'C', 'D', 'E', 'F' };
 inline char ToHex(uint32_t size/*0-15*/) { return s_hex_map[size]; }
 
-inline void AppendChunkHead(flare::io::cord_buf* buf, uint32_t size) {
+inline void AppendChunkHead(flare::cord_buf* buf, uint32_t size) {
     char tmp[32];
     int i = (int)sizeof(tmp);
     tmp[--i] = '\n';
@@ -93,7 +93,7 @@ inline void AppendChunkHead(flare::io::cord_buf* buf, uint32_t size) {
     buf->append(tmp + i + 1, sizeof(tmp) - i - 1);
 }
 
-inline void AppendAsChunk(flare::io::cord_buf* chunk_buf, const flare::io::cord_buf& data,
+inline void AppendAsChunk(flare::cord_buf* chunk_buf, const flare::cord_buf& data,
                           bool before_http_1_1) {
     if (!before_http_1_1) {
         AppendChunkHead(chunk_buf, data.size());
@@ -104,7 +104,7 @@ inline void AppendAsChunk(flare::io::cord_buf* chunk_buf, const flare::io::cord_
     }
 }
 
-inline void AppendAsChunk(flare::io::cord_buf* chunk_buf, const void* data,
+inline void AppendAsChunk(flare::cord_buf* chunk_buf, const void* data,
                           size_t length, bool before_http_1_1) {
     if (!before_http_1_1) {
         AppendChunkHead(chunk_buf, length);
@@ -115,7 +115,7 @@ inline void AppendAsChunk(flare::io::cord_buf* chunk_buf, const void* data,
     }
 }
 
-int ProgressiveAttachment::Write(const flare::io::cord_buf& data) {
+int ProgressiveAttachment::Write(const flare::cord_buf& data) {
     if (data.empty()) {
         LOG_EVERY_SECOND(WARNING)
             << "Write an empty chunk. To suppress this warning, check emptiness"
@@ -140,7 +140,7 @@ int ProgressiveAttachment::Write(const flare::io::cord_buf& data) {
     // The RPC is already done (http headers were written into the socket)
     // write into the socket directly.
     if (rpc_state == RPC_SUCCEED) {
-        flare::io::cord_buf tmpbuf;
+        flare::cord_buf tmpbuf;
         AppendAsChunk(&tmpbuf, data, _before_http_1_1);
         return _httpsock->Write(&tmpbuf);
     } else {
@@ -173,7 +173,7 @@ int ProgressiveAttachment::Write(const void* data, size_t n) {
     // The RPC is already done (http headers were written into the socket)
     // write into the socket directly.
     if (rpc_state == RPC_SUCCEED) {
-        flare::io::cord_buf tmpbuf;
+        flare::cord_buf tmpbuf;
         AppendAsChunk(&tmpbuf, data, n, _before_http_1_1);
         return _httpsock->Write(&tmpbuf);
     } else {
@@ -202,7 +202,7 @@ void ProgressiveAttachment::MarkRPCAsDone(bool rpc_failed) {
     do {
         std::unique_lock<flare::base::Mutex> mu(_mutex);
         if (_saved_buf.empty() || permanent_error || rpc_failed) {
-            flare::io::cord_buf tmp;
+            flare::cord_buf tmp;
             tmp.swap(_saved_buf); // Clear _saved_buf outside lock.
             _pause_from_mark_rpc_as_done = false;
             _rpc_state.store((rpc_failed? RPC_FAILED: RPC_SUCCEED),
@@ -213,7 +213,7 @@ void ProgressiveAttachment::MarkRPCAsDone(bool rpc_failed) {
         if (++ntry > MAX_TRY) {
             _pause_from_mark_rpc_as_done = true;
         }
-        flare::io::cord_buf copied;
+        flare::cord_buf copied;
         copied.swap(_saved_buf);
         mu.unlock();
         Socket::WriteOptions wopt;

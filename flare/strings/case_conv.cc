@@ -7,7 +7,7 @@
 #include <algorithm>
 #include "flare/strings/ascii.h"
 
-namespace flare::strings {
+namespace flare {
 
 std::string &string_to_lower(std::string *str) {
     std::transform(str->begin(), str->end(), str->begin(),

@@ -21,7 +21,7 @@
 #include <gflags/gflags.h>
 
 #include "flare/base/time.h"
-#include "flare/io/cord_buf.h"                        // flare::io::cord_buf
+#include "flare/io/cord_buf.h"                        // flare::cord_buf
 
 #include "flare/rpc/controller.h"               // Controller
 #include "flare/rpc/socket.h"                   // Socket
@@ -135,7 +135,7 @@ void ProcessNsheadMcpackResponse(InputMessageBase* msg_base) {
     accessor.OnResponse(cid, saved_error);
 } 
 
-void SerializeNsheadMcpackRequest(flare::io::cord_buf* buf, Controller* cntl,
+void SerializeNsheadMcpackRequest(flare::cord_buf* buf, Controller* cntl,
                           const google::protobuf::Message* pb_req) {
     CompressType type = cntl->request_compress_type();
     if (type != COMPRESS_TYPE_NONE) {
@@ -151,12 +151,12 @@ void SerializeNsheadMcpackRequest(flare::io::cord_buf* buf, Controller* cntl,
     }
 }
 
-void PackNsheadMcpackRequest(flare::io::cord_buf* buf,
+void PackNsheadMcpackRequest(flare::cord_buf* buf,
                              SocketMessage**,
                              uint64_t correlation_id,
                              const google::protobuf::MethodDescriptor*,
                              Controller* controller,
-                             const flare::io::cord_buf& request,
+                             const flare::cord_buf& request,
                              const Authenticator* /*not supported*/) {
     ControllerPrivateAccessor accessor(controller);
     if (controller->connection_type() == CONNECTION_TYPE_SINGLE) {

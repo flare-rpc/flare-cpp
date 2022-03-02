@@ -24,10 +24,10 @@
 #include <set>                                 // std::set
 #include "flare/base/static_atomic.h"                    // std::atomic
 #include "flare/fiber/internal/types.h"                      // fiber_token_t
-#include "flare/io/cord_buf.h"                        // flare::io::cord_buf, IOPortal
+#include "flare/io/cord_buf.h"                        // flare::cord_buf, IOPortal
 #include "flare/base/profile.h"                       // FLARE_DISALLOW_COPY_AND_ASSIGN
 #include "flare/base/endpoint.h"                     // flare::base::end_point
-#include "flare/memory/resource_pool.h"                // flare::memory::ResourceId
+#include "flare/memory/resource_pool.h"                // flare::ResourceId
 #include "flare/fiber/internal/waitable_event.h"                      // waitable_event_create_checked
 #include "flare/rpc/authenticator.h"           // Authenticator
 #include "flare/rpc/errno.pb.h"                // EFAILEDSOCKET
@@ -88,8 +88,8 @@ public:
                         int (*on_connect)(int, int, void*), void*) = 0;
 
     // Cut cord_buf into fd or SSL Channel
-    virtual ssize_t CutMessageIntoFileDescriptor(int, flare::io::cord_buf**, size_t) = 0;
-    virtual ssize_t CutMessageIntoSSLChannel(SSL*, flare::io::cord_buf**, size_t) = 0;
+    virtual ssize_t CutMessageIntoFileDescriptor(int, flare::cord_buf**, size_t) = 0;
+    virtual ssize_t CutMessageIntoSSLChannel(SSL*, flare::cord_buf**, size_t) = 0;
 };
 
 // Application-level connect. After TCP connected, the client sends some
@@ -268,7 +268,7 @@ public:
             , pipelined_count(0), with_auth(false)
             , ignore_eovercrowded(false) {}
     };
-    int Write(flare::io::cord_buf *msg, const WriteOptions* options = NULL);
+    int Write(flare::cord_buf *msg, const WriteOptions* options = NULL);
 
     // Write an user-defined message. `msg' is released when Write() is
     // successful and *may* remain unchanged otherwise.
@@ -732,7 +732,7 @@ private:
     uint32_t _avg_msg_size;
 
     // Storing data read from `_fd' but cut-off yet.
-    flare::io::IOPortal _read_buf;
+    flare::IOPortal _read_buf;
 
     // Set with cpuwide_time_us() at last read operation
     std::atomic<int64_t> _last_readtime_us;
@@ -838,7 +838,7 @@ private:
             }                                                           \
             sleep_time *= 2;                                            \
             if (sleep_time > 2000) { sleep_time = 2000; }               \
-            flare::this_fiber::fiber_sleep_for(sleep_time);                               \
+            flare::fiber_sleep_for(sleep_time);                               \
         }                                                               \
         __ret_code__;                                                   \
     })
@@ -856,7 +856,7 @@ private:
             }                                                           \
             sleep_time *= 2;                                            \
             if (sleep_time > 2000) { sleep_time = 2000; }               \
-            ::flare::this_fiber::fiber_sleep_for(sleep_time);                               \
+            ::flare::fiber_sleep_for(sleep_time);                               \
         }                                                               \
         __ret_code__;                                                   \
     })

@@ -8,7 +8,7 @@
 
 #include <cstdlib>
 
-namespace flare::strings {
+namespace flare {
 
 namespace strings_internal {
 
@@ -18,8 +18,8 @@ int char_case_cmp(const char *s1, const char *s2, size_t len) {
 
     for (size_t i = 0; i < len; i++) {
         const int diff =
-                int{static_cast<unsigned char>(flare::strings::ascii::to_lower(us1[i]))} -
-                int{static_cast<unsigned char>(flare::strings::ascii::to_lower(us2[i]))};
+                int{static_cast<unsigned char>(flare::ascii::to_lower(us1[i]))} -
+                int{static_cast<unsigned char>(flare::ascii::to_lower(us2[i]))};
         if (diff != 0) return diff;
     }
     return 0;
@@ -101,4 +101,4 @@ const char *char_match(const char *phaystack, size_t haylen, const char *pneedle
 
 }  // namespace strings_internal
 
-}  // namespace flare::strings
+}  // namespace flare

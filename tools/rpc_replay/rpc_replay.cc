@@ -117,7 +117,7 @@ static void handle_response(flare::rpc::Controller* cntl, int64_t start_time,
     } else {
         g_error_count << 1;
         if (sleep_on_error) {
-            flare::this_fiber::fiber_sleep_for(10000);
+            flare::fiber_sleep_for(10000);
         }
     }
     delete cntl;
@@ -191,7 +191,7 @@ static void* replay_thread(void* arg) {
                     expected_elp = (size_t)(1000000 * (timeq.size() - 1) / req_rate);
                 }
                 if (actual_elp < expected_elp) {
-                    flare::this_fiber::fiber_sleep_for(expected_elp - actual_elp);
+                    flare::fiber_sleep_for(expected_elp - actual_elp);
                 }
             }
         }

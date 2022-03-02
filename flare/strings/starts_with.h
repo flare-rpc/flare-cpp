@@ -11,7 +11,7 @@
 #include <cstring>
 #include "flare/base/profile.h"
 
-namespace flare::strings {
+namespace flare {
 
 /*!
  * Checks if the given match string is located at the start of this string.
@@ -28,6 +28,6 @@ FLARE_FORCE_INLINE bool starts_with(std::string_view text, std::string_view pref
  */
 bool starts_with_case(std::string_view text, std::string_view prefix);
 
-}  // namespace flare::strings
+}  // namespace flare
 
 #endif  // FLARE_BASE_STRING_START_WITH_H_

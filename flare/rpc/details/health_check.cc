@@ -136,10 +136,10 @@ void OnAppHealthCheckDone::Run() {
         last_check_time_ms + interval_s * 1000 - flare::base::gettimeofday_ms();
     if (sleep_time_ms > 0) {
         // TODO(zhujiashun): we need to handle the case when timer fails
-        // and flare::this_fiber::fiber_sleep_for returns immediately. In most situations,
+        // and flare::fiber_sleep_for returns immediately. In most situations,
         // the possibility of this case is quite small, so currently we
         // just keep sending the hc call.
-        flare::this_fiber::fiber_sleep_for(sleep_time_ms * 1000);
+        flare::fiber_sleep_for(sleep_time_ms * 1000);
     }
     HealthCheckManager::AppCheck(self_guard.release());
 }

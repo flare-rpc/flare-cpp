@@ -19,13 +19,13 @@ TEST(AsciiStrTo, Lower) {
     const std::string str2("MNOPQR");
     const std::string_view sp(str2);
 
-    EXPECT_EQ("abcdef", flare::strings::string_to_lower(buf));
-    EXPECT_EQ("ghijkl", flare::strings::string_to_lower(str));
-    EXPECT_EQ("mnopqr", flare::strings::string_to_lower(sp));
+    EXPECT_EQ("abcdef", flare::string_to_lower(buf));
+    EXPECT_EQ("ghijkl", flare::string_to_lower(str));
+    EXPECT_EQ("mnopqr", flare::string_to_lower(sp));
 
     char mutable_buf[] = "Mutable";
     std::transform(mutable_buf, mutable_buf + strlen(mutable_buf),
-                   mutable_buf, flare::strings::ascii::to_lower);
+                   mutable_buf, flare::ascii::to_lower);
     EXPECT_STREQ("mutable", mutable_buf);
 }
 
@@ -35,12 +35,12 @@ TEST(AsciiStrTo, Upper) {
     const std::string str2("mnopqr");
     const std::string_view sp(str2);
 
-    EXPECT_EQ("ABCDEF", flare::strings::string_to_upper(buf));
-    EXPECT_EQ("GHIJKL", flare::strings::string_to_upper(str));
-    EXPECT_EQ("MNOPQR", flare::strings::string_to_upper(sp));
+    EXPECT_EQ("ABCDEF", flare::string_to_upper(buf));
+    EXPECT_EQ("GHIJKL", flare::string_to_upper(str));
+    EXPECT_EQ("MNOPQR", flare::string_to_upper(sp));
 
     char mutable_buf[] = "Mutable";
     std::transform(mutable_buf, mutable_buf + strlen(mutable_buf),
-                   mutable_buf, flare::strings::ascii::to_upper);
+                   mutable_buf, flare::ascii::to_upper);
     EXPECT_STREQ("MUTABLE", mutable_buf);
 }

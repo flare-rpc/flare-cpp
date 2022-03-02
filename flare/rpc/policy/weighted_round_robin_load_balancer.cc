@@ -21,7 +21,7 @@
 #include "flare/base/fast_rand.h"
 #include "flare/rpc/socket.h"
 #include "flare/rpc/policy/weighted_round_robin_load_balancer.h"
-#include "flare/base/strings.h"
+#include "flare/strings/numbers.h"
 
 namespace {
 
@@ -78,9 +78,9 @@ namespace flare::rpc {
                 bg.server_list.reserve(128);
             }
             uint32_t weight = 0;
-            auto r = flare::base::try_parse<uint32_t>(id.tag);
-            if (r && *r > 0) {
-                weight = *r;
+            int64_t r;
+            if (flare::simple_atoi(id.tag, &r) && r > 0) {
+                weight = r;
                 bool insert_server =
                         bg.server_map.emplace(id.id, bg.server_list.size()).second;
                 if (insert_server) {
@@ -175,7 +175,7 @@ namespace flare::rpc {
                 tls.remain_server.weight = 0;
             }
             // The servers that can not be choosed.
-            std::unordered_set < SocketId > filter;
+            std::unordered_set<SocketId> filter;
             TLS tls_temp = tls;
             uint64_t remain_weight = s->weight_sum;
             size_t remain_servers = s->server_list.size();

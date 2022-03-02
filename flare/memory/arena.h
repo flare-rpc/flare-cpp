@@ -5,7 +5,7 @@
 #include <stdint.h>
 #include "flare/base/profile.h"
 
-namespace flare::memory {
+namespace flare {
 
     struct ArenaOptions {
         size_t initial_block_size;
@@ -66,6 +66,6 @@ namespace flare::memory {
         return allocate_in_other_blocks(n);
     }
 
-}  // namespace flare::memory
+}  // namespace flare
 
 #endif  // FLARE_MEMORY_ARENA_H_

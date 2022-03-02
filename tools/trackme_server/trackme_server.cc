@@ -193,7 +193,7 @@ void BugsLoader::load_bugs() {
         }
         // line format: 
         //   min_rev <sp> max_rev <sp> severity <sp> description
-        flare::strings::StringMultiSplitter sp(line, line + nr, " \t");
+        flare::StringMultiSplitter sp(line, line + nr, " \t");
         if (!sp) {
             continue;
         }

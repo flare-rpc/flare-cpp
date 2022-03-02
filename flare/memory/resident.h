@@ -10,7 +10,7 @@
 #include <type_traits>
 #include <utility>
 
-namespace flare::memory {
+namespace flare {
 
     namespace detail {
 

@@ -29,17 +29,17 @@ namespace policy {
 
 void ProcessUbrpcResponse(InputMessageBase* msg);
 
-void SerializeUbrpcCompackRequest(flare::io::cord_buf* buf, Controller* cntl,
+void SerializeUbrpcCompackRequest(flare::cord_buf* buf, Controller* cntl,
                                   const google::protobuf::Message* request);
-void SerializeUbrpcMcpack2Request(flare::io::cord_buf* buf, Controller* cntl,
+void SerializeUbrpcMcpack2Request(flare::cord_buf* buf, Controller* cntl,
                                   const google::protobuf::Message* request);
 
-void PackUbrpcRequest(flare::io::cord_buf* buf,
+void PackUbrpcRequest(flare::cord_buf* buf,
                       SocketMessage**,
                       uint64_t correlation_id,
                       const google::protobuf::MethodDescriptor* method,
                       Controller* controller,
-                      const flare::io::cord_buf& request,
+                      const flare::cord_buf& request,
                       const Authenticator* auth);
 
 class UbrpcAdaptor : public NsheadPbServiceAdaptor {

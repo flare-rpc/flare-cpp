@@ -13,7 +13,7 @@
 // Initializing array. Needs to be macro.
 #define BASE_FILES_TEMP_FILE_PATTERN "temp_file_XXXXXX"
 
-namespace flare::io {
+namespace flare {
 
     temp_file::temp_file() : _ever_opened(0) {
         char temp_name[] = BASE_FILES_TEMP_FILE_PATTERN;
@@ -135,4 +135,4 @@ namespace flare::io {
     }
 
 
-} // namespace flare::io
+} // namespace flare

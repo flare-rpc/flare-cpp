@@ -4,6 +4,6 @@
 
 #include "flare/fiber/fiber_cond.h"
 
-namespace flare::fiber {
+namespace flare {
 
 }

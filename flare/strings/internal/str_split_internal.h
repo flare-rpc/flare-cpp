@@ -32,7 +32,7 @@
 #include "flare/strings/internal/stl_type_traits.h"
 #endif  // _GLIBCXX_DEBUG
 
-namespace flare::strings {
+namespace flare {
 
     namespace strings_internal {
 
@@ -258,7 +258,7 @@ has_value_type<C>::value && has_const_iterator<C>::value,
                         has_mapped_type<C>::value> {
         };
 
-// This class implements the range that is returned by flare::strings:: string_split(). This
+// This class implements the range that is returned by flare:: string_split(). This
 // class has templated conversion operators that allow it to be implicitly
 // converted to a variety of types that the caller may have specified on the
 // left-hand side of an assignment.
@@ -459,6 +459,6 @@ has_value_type<C>::value && has_const_iterator<C>::value,
 
     }  // namespace strings_internal
 
-}  // namespace flare::strings
+}  // namespace flare
 
 #endif  // FLARE_STRINGS_INTERNAL_STR_SPLIT_INTERNAL_H_

@@ -68,10 +68,10 @@ int main(int argc, char* argv[]) {
     }
     
     while (!flare::rpc::IsAskedToQuit()) {
-        flare::io::cord_buf msg1;
+        flare::cord_buf msg1;
         msg1.append("abcdefghijklmnopqrstuvwxyz");
         CHECK_EQ(0, flare::rpc::StreamWrite(stream, msg1));
-        flare::io::cord_buf msg2;
+        flare::cord_buf msg2;
         msg2.append("0123456789");
         CHECK_EQ(0, flare::rpc::StreamWrite(stream, msg2));
         sleep(1);

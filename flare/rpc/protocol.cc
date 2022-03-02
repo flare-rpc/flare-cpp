@@ -121,7 +121,7 @@ void ListProtocols(std::vector<std::pair<ProtocolType, Protocol> >* vec) {
     }
 }
 
-void SerializeRequestDefault(flare::io::cord_buf* buf,
+void SerializeRequestDefault(flare::cord_buf* buf,
                              Controller* cntl,
                              const google::protobuf::Message* request) {
     // Check sanity of request.
@@ -214,8 +214,8 @@ bool ParsePbFromZeroCopyStream(
     return ParsePbFromZeroCopyStreamInlined(msg, input);
 }
 
-bool ParsePbFromCordBuf(google::protobuf::Message* msg, const flare::io::cord_buf& buf) {
-    flare::io::cord_buf_as_zero_copy_input_stream stream(buf);
+bool ParsePbFromCordBuf(google::protobuf::Message* msg, const flare::cord_buf& buf) {
+    flare::cord_buf_as_zero_copy_input_stream stream(buf);
     return ParsePbFromZeroCopyStreamInlined(msg, &stream);
 }
 

@@ -19,7 +19,7 @@
 
 #include "flare/base/base64.h"
 #include "flare/io/cord_buf.h"
-#include "flare/base/strings.h"
+#include "flare/strings/str_format.h"
 #include "flare/base/endian.h"
 #include "flare/rpc/redis_command.h"
 
@@ -27,7 +27,7 @@ namespace flare::rpc {
 namespace policy {
 
 int RedisAuthenticator::GenerateCredential(std::string* auth_str) const {
-    flare::io::cord_buf buf;
+    flare::cord_buf buf;
     flare::rpc::RedisCommandFormat(&buf, "AUTH %s", passwd_.c_str());
     *auth_str = buf.to_string();
     return 0;

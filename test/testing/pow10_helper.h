@@ -11,7 +11,7 @@
 
 #include "flare/base/profile.h"
 
-namespace flare::strings {
+namespace flare {
 
     namespace strings_internal {
 
@@ -22,6 +22,6 @@ namespace flare::strings {
 
     }  // namespace strings_internal
 
-}  // namespace flare::strings
+}  // namespace flare
 
 #endif  // TEST_TESTING_POW10_HELPER_H_

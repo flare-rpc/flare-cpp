@@ -16,7 +16,7 @@
 #include "flare/log/logging.h"
 #include "flare/base/errno.h"
 
-namespace flare::io {
+namespace flare {
 
     // Common flags defined for all posix open operations
 #if defined(FLARE_PLATFORM_LINUX)
@@ -41,12 +41,12 @@ namespace flare::io {
 
         flare_status read(uint64_t offset, size_t n, std::string *content) override;
 
-        flare_status read(uint64_t offset, size_t n, flare::io::cord_buf *buf) override;
+        flare_status read(uint64_t offset, size_t n, flare::cord_buf *buf) override;
 
         void close() override;
 
     private:
-        flare_status file_pread(uint64_t offset, size_t n, flare::io::IOPortal *portal);
+        flare_status file_pread(uint64_t offset, size_t n, flare::IOPortal *portal);
 
     private:
         int _fd;
@@ -73,7 +73,7 @@ namespace flare::io {
         return flare::base::flare_status();
     }
 
-    flare_status posix_random_access_file::file_pread(uint64_t offset, size_t n, flare::io::IOPortal *portal) {
+    flare_status posix_random_access_file::file_pread(uint64_t offset, size_t n, flare::IOPortal *portal) {
         off_t orig_offset = offset;
         flare_status s;
         ssize_t left = n;
@@ -99,7 +99,7 @@ namespace flare::io {
 
     flare_status posix_random_access_file::read(uint64_t offset, size_t n, std::string *content) {
         CHECK(_fd != -1) << "must open file before reading";
-        flare::io::IOPortal portal;
+        flare::IOPortal portal;
         auto s = file_pread(offset, n, &portal);
         if (s.ok()) {
             portal.append_to(content);
@@ -107,9 +107,9 @@ namespace flare::io {
         return s;
     }
 
-    flare_status posix_random_access_file::read(uint64_t offset, size_t n, flare::io::cord_buf *buf) {
+    flare_status posix_random_access_file::read(uint64_t offset, size_t n, flare::cord_buf *buf) {
         CHECK(_fd != -1) << "must open file before reading";
-        flare::io::IOPortal portal;
+        flare::IOPortal portal;
         auto s = file_pread(offset, n, &portal);
         if (s.ok()) {
             portal.append_to(buf);
@@ -138,12 +138,12 @@ namespace flare::io {
 
         flare_status read(size_t n, std::string *content) override;
 
-        flare_status read(size_t n, flare::io::cord_buf *buf) override;
+        flare_status read(size_t n, flare::cord_buf *buf) override;
 
         flare_status skip(size_t n) override;
 
     private:
-        flare_status file_read(size_t n, flare::io::IOPortal *portal);
+        flare_status file_read(size_t n, flare::IOPortal *portal);
 
     private:
         int _fd;
@@ -175,7 +175,7 @@ namespace flare::io {
         }
     }
 
-    flare_status posix_sequential_access_file::file_read(size_t n, flare::io::IOPortal *portal) {
+    flare_status posix_sequential_access_file::file_read(size_t n, flare::IOPortal *portal) {
         flare_status s;
         ssize_t left = n;
         while (left > 0) {
@@ -198,7 +198,7 @@ namespace flare::io {
 
     flare_status posix_sequential_access_file::read(size_t n, std::string *content) {
 
-        flare::io::IOPortal portal;
+        flare::IOPortal portal;
         auto r = file_read(n, &portal);
         if (FLARE_LIKELY(r.ok())) {
             portal.append_to(content);
@@ -206,8 +206,8 @@ namespace flare::io {
         return r;
     }
 
-    flare_status posix_sequential_access_file::read(size_t n, flare::io::cord_buf *buf) {
-        flare::io::IOPortal portal;
+    flare_status posix_sequential_access_file::read(size_t n, flare::cord_buf *buf) {
+        flare::IOPortal portal;
         auto r = file_read(n, &portal);
         if (FLARE_LIKELY(r.ok())) {
             portal.append_to(buf);
@@ -232,7 +232,7 @@ namespace flare::io {
 
         void close() override;
 
-        flare_status pos_write(uint64_t offset, flare::io::cord_buf *content) override;
+        flare_status pos_write(uint64_t offset, flare::cord_buf *content) override;
 
         flare_status pos_write(uint64_t offset, const std::string_view &content) override;
 
@@ -271,9 +271,9 @@ namespace flare::io {
         }
     }
 
-    flare_status posix_writeable_file::pos_write(uint64_t offset, flare::io::cord_buf *content) {
+    flare_status posix_writeable_file::pos_write(uint64_t offset, flare::cord_buf *content) {
         size_t size = content->size();
-        flare::io::cord_buf piece_data(*content);
+        flare::cord_buf piece_data(*content);
         off_t orig_offset = offset;
         ssize_t left = size;
         while (left > 0) {
@@ -332,7 +332,7 @@ namespace flare::io {
 
         void close() override;
 
-        flare_status append(flare::io::cord_buf *content) override;
+        flare_status append(flare::cord_buf *content) override;
 
         flare_status append(const std::string_view &content) override;
 
@@ -368,9 +368,9 @@ namespace flare::io {
         }
     }
 
-    flare_status posix_append_file::append(flare::io::cord_buf *content) {
+    flare_status posix_append_file::append(flare::cord_buf *content) {
         size_t size = content->size();
-        flare::io::cord_buf piece_data(*content);
+        flare::cord_buf piece_data(*content);
         ssize_t left = size;
         while (left > 0) {
             ssize_t written = piece_data.cut_into_file_descriptor(_fd, left);
@@ -448,6 +448,6 @@ namespace flare::io {
     fs_env *fs_env::default_disk_env() {
         return fs_ptr;
     }
-}  // namespace flare::io
+}  // namespace flare
 
 #endif  // defined(FLARE_PLATFORM_POSIX)

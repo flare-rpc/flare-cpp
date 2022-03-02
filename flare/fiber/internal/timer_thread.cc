@@ -98,13 +98,13 @@ private:
 
 // Utilies for making and extracting TaskId.
 inline TimerThread::TaskId make_task_id(
-    flare::memory::ResourceId<TimerThread::Task> slot, uint32_t version) {
+    flare::ResourceId<TimerThread::Task> slot, uint32_t version) {
     return TimerThread::TaskId((((uint64_t)version) << 32) | slot.value);
 }
 
 inline
-flare::memory::ResourceId<TimerThread::Task> slot_of_task_id(TimerThread::TaskId id) {
-    flare::memory::ResourceId<TimerThread::Task> slot = { (id & 0xFFFFFFFFul) };
+flare::ResourceId<TimerThread::Task> slot_of_task_id(TimerThread::TaskId id) {
+    flare::ResourceId<TimerThread::Task> slot = { (id & 0xFFFFFFFFul) };
     return slot;
 }
 
@@ -183,8 +183,8 @@ TimerThread::Task* TimerThread::Bucket::consume_tasks() {
 TimerThread::Bucket::ScheduleResult
 TimerThread::Bucket::schedule(void (*fn)(void*), void* arg,
                               const timespec& abstime) {
-    flare::memory::ResourceId<Task> slot_id;
-    Task* task = flare::memory::get_resource<Task>(&slot_id);
+    flare::ResourceId<Task> slot_id;
+    Task* task = flare::get_resource<Task>(&slot_id);
     if (task == NULL) {
         ScheduleResult result = { INVALID_TASK_ID, false };
         return result;
@@ -252,8 +252,8 @@ TimerThread::TaskId TimerThread::schedule(
 // between timeout and latency in most RPC scenarios, this is why we don't
 // try to reuse tasks right now inside unschedule() with more complicated code.
 int TimerThread::unschedule(TaskId task_id) {
-    const flare::memory::ResourceId<Task> slot_id = slot_of_task_id(task_id);
-    Task* const task = flare::memory::address_resource(slot_id);
+    const flare::ResourceId<Task> slot_id = slot_of_task_id(task_id);
+    Task* const task = flare::address_resource(slot_id);
     if (task == NULL) {
         LOG(ERROR) << "Invalid task_id=" << task_id;
         return -1;
@@ -281,11 +281,11 @@ bool TimerThread::Task::run_and_delete() {
         // The release fence is paired with acquire fence in
         // TimerThread::unschedule to make changes of fn(arg) visible.
         version.store(id_version + 2, std::memory_order_release);
-        flare::memory::return_resource(slot_of_task_id(task_id));
+        flare::return_resource(slot_of_task_id(task_id));
         return true;
     } else if (expected_version == id_version + 2) {
         // already unscheduled.
-        flare::memory::return_resource(slot_of_task_id(task_id));
+        flare::return_resource(slot_of_task_id(task_id));
         return false;
     } else {
         // Impossible.
@@ -299,7 +299,7 @@ bool TimerThread::Task::try_delete() {
     const uint32_t id_version = version_of_task_id(task_id);
     if (version.load(std::memory_order_relaxed) != id_version) {
         CHECK_EQ(version.load(std::memory_order_relaxed), id_version + 2);
-        flare::memory::return_resource(slot_of_task_id(task_id));
+        flare::return_resource(slot_of_task_id(task_id));
         return true;
     }
     return false;

@@ -20,7 +20,7 @@
 #include <google/protobuf/message.h>            // Message
 #include <gflags/gflags.h>
 #include "flare/base/time.h"
-#include "flare/io/cord_buf.h"                         // flare::io::cord_buf
+#include "flare/io/cord_buf.h"                         // flare::cord_buf
 #include "flare/rpc/log.h"
 #include "flare/rpc/controller.h"               // Controller
 #include "flare/rpc/socket.h"                   // Socket
@@ -106,7 +106,7 @@ void NsheadClosure::Run() {
             int response_size = sizeof(nshead_t) + _response.head.body_len;
             span->set_response_size(response_size);
         }
-        flare::io::cord_buf write_buf;
+        flare::cord_buf write_buf;
         write_buf.append(&_response.head, sizeof(nshead_t));
         write_buf.append(_response.body.movable());
         // Have the risk of unlimited pending responses, in which case, tell
@@ -137,7 +137,7 @@ void NsheadClosure::SetMethodName(const std::string& full_method_name) {
 
 namespace policy {
 
-ParseResult ParseNsheadMessage(flare::io::cord_buf* source,
+ParseResult ParseNsheadMessage(flare::cord_buf* source,
                                Socket*, bool /*read_eof*/, const void* /*arg*/) {
     char header_buf[sizeof(nshead_t)];
     const size_t n = source->copy_to(header_buf, sizeof(header_buf));
@@ -370,7 +370,7 @@ bool VerifyNsheadRequest(const InputMessageBase* msg_base) {
     return true;
 }
 
-void SerializeNsheadRequest(flare::io::cord_buf* request_buf, Controller* cntl,
+void SerializeNsheadRequest(flare::cord_buf* request_buf, Controller* cntl,
                             const google::protobuf::Message* req_base) {
     if (req_base == NULL) {
         return cntl->SetFailed(EREQUEST, "request is NULL");
@@ -394,12 +394,12 @@ void SerializeNsheadRequest(flare::io::cord_buf* request_buf, Controller* cntl,
 }
 
 void PackNsheadRequest(
-    flare::io::cord_buf* packet_buf,
+    flare::cord_buf* packet_buf,
     SocketMessage**,
     uint64_t correlation_id,
     const google::protobuf::MethodDescriptor*,
     Controller* cntl,
-    const flare::io::cord_buf& request,
+    const flare::cord_buf& request,
     const Authenticator*) {
     ControllerPrivateAccessor accessor(cntl);
     if (cntl->connection_type() == CONNECTION_TYPE_SINGLE) {

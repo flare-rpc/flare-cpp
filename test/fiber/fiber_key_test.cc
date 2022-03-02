@@ -92,7 +92,7 @@ namespace {
 
         }
         // Sleep a while to make some context switches. TLS should be unchanged.
-        flare::this_fiber::fiber_sleep_for(10000);
+        flare::fiber_sleep_for(10000);
 
         for (size_t i = 0; i < FLARE_ARRAY_SIZE(k); ++i) {
             ASSERT_EQ(ws[i], fiber_getspecific(k[i])) << "i=" << i;
@@ -317,7 +317,7 @@ namespace {
             ASSERT_EQ(0, fiber_join(bth, nullptr));
             ASSERT_EQ(1, data->ndestroy);
         } else {
-            flare::this_fiber::fiber_sleep_for(1000);
+            flare::fiber_sleep_for(1000);
         }
         ASSERT_EQ(tls, fiber_getspecific(data->key));
     }

@@ -7,7 +7,7 @@
 
 #include "flare/fiber/internal/mutex.h"
 
-namespace flare::fiber {
+namespace flare {
     // The C++ Wrapper of fiber_mutex
 
     // NOTE: Not aligned to cacheline as the container of fiber_mutex is practically aligned
@@ -42,6 +42,6 @@ namespace flare::fiber {
 
         fiber_mutex_t _mutex;
     };
-}  // namespace flare::fiber
+}  // namespace flare
 
 #endif // FLARE_FIBER_FIBER_MUTEX_H_

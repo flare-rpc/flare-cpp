@@ -25,7 +25,7 @@ namespace flare::rpc {
 namespace policy {
 
 // Parse binary format of baidu_std
-ParseResult ParseRpcMessage(flare::io::cord_buf* source, Socket *socket, bool read_eof,
+ParseResult ParseRpcMessage(flare::cord_buf* source, Socket *socket, bool read_eof,
                             const void *arg);
 
 // Actions to a (client) request in baidu_std format
@@ -38,12 +38,12 @@ void ProcessRpcResponse(InputMessageBase* msg);
 bool VerifyRpcRequest(const InputMessageBase* msg);
 
 // Pack `request' to `method' into `buf'.
-void PackRpcRequest(flare::io::cord_buf* buf,
+void PackRpcRequest(flare::cord_buf* buf,
                     SocketMessage**,
                     uint64_t correlation_id,
                     const google::protobuf::MethodDescriptor* method,
                     Controller* controller,
-                    const flare::io::cord_buf& request,
+                    const flare::cord_buf& request,
                     const Authenticator* auth);
 
 }  // namespace policy

@@ -48,7 +48,7 @@ int PeriodicNamingService::RunNamingService(
             actions->ResetServers(servers);
         }
 
-        if (flare::this_fiber::fiber_sleep_for(std::max(FLAGS_ns_access_interval, 1) * 1000000L) < 0) {
+        if (flare::fiber_sleep_for(std::max(FLAGS_ns_access_interval, 1) * 1000000L) < 0) {
             if (errno == ESTOP) {
                 RPC_VLOG << "Quit NamingServiceThread=" << fiber_self();
                 return 0;

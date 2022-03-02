@@ -116,7 +116,7 @@ namespace {
     }
 
     void *epoll_thread(void *arg) {
-        flare::this_fiber::fiber_sleep_for(1);
+        flare::fiber_sleep_for(1);
         EpollMeta *m = (EpollMeta *) arg;
         const int epfd = m->epfd;
 #if defined(FLARE_PLATFORM_LINUX)
@@ -347,7 +347,7 @@ namespace {
 #endif
         }
         //flare::fiber_internal::stop_and_join_epoll_threads();
-        flare::this_fiber::fiber_sleep_for(100000);
+        flare::fiber_sleep_for(100000);
 
 #ifndef NDEBUG
         std::cout << "break_nums=" << flare::fiber_internal::break_nums << std::endl;
@@ -431,10 +431,10 @@ namespace {
         pthread_t th, th2;
         ASSERT_EQ(0, pthread_create(&th, nullptr, epoll_waiter, (void *) (intptr_t) epfd));
         ASSERT_EQ(0, pthread_create(&th2, nullptr, epoll_waiter, (void *) (intptr_t) epfd));
-        flare::this_fiber::fiber_sleep_for(100000L);
+        flare::fiber_sleep_for(100000L);
         std::cout << "wake up " << th << std::endl;
         flare::fiber_internal::interrupt_pthread(th);
-        flare::this_fiber::fiber_sleep_for(100000L);
+        flare::fiber_sleep_for(100000L);
         std::cout << "wake up " << th2 << std::endl;
         flare::fiber_internal::interrupt_pthread(th2);
         pthread_join(th, nullptr);
@@ -442,7 +442,7 @@ namespace {
     }
 
     void *close_the_fd(void *arg) {
-        flare::this_fiber::fiber_sleep_for(10000/*10ms*/);
+        flare::fiber_sleep_for(10000/*10ms*/);
         EXPECT_EQ(0, fiber_fd_close(*(int *) arg));
         return nullptr;
     }

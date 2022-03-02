@@ -10,7 +10,7 @@
 #include <memory>
 #include "flare/log/logging.h"
 
-namespace flare::memory {
+namespace flare {
     
     constexpr struct ref_ptr_t {
         explicit ref_ptr_t() = default;
@@ -414,16 +414,16 @@ namespace flare::memory {
     constexpr bool operator==(std::nullptr_t, const ref_ptr<T> &ptr) noexcept {
         return ptr.get() == nullptr;
     }
-}  // namespace flare::memory
+}  // namespace flare
 
 namespace std {
 
-    // Specialization for `std::atomic<flare::memory::ref_ptr<T>>`.
+    // Specialization for `std::atomic<flare::ref_ptr<T>>`.
     //
     // @sa: https://en.cppreference.com/w/cpp/memory/shared_ptr/atomic2
     template <class T>
-    class atomic<flare::memory::ref_ptr<T>> {
-        using Traits = flare::memory::ref_traits<T>;
+    class atomic<flare::ref_ptr<T>> {
+        using Traits = flare::ref_traits<T>;
 
     public:
         constexpr atomic() noexcept : ptr_(nullptr) {}
@@ -438,9 +438,9 @@ namespace std {
         }
 
         // Receiving a pointer.
-        constexpr /* implicit */ atomic(flare::memory::ref_ptr<T> ptr) noexcept
+        constexpr /* implicit */ atomic(flare::ref_ptr<T> ptr) noexcept
                 : ptr_(ptr.leak()) {}
-        atomic& operator=(flare::memory::ref_ptr<T> ptr) noexcept {
+        atomic& operator=(flare::ref_ptr<T> ptr) noexcept {
             store(std::move(ptr));
             return *this;
         }
@@ -449,7 +449,7 @@ namespace std {
         bool is_lock_free() const noexcept { return ptr_.is_lock_free(); }
 
         // Stores to this atomic ref-ptr.
-        void store(flare::memory::ref_ptr<T> ptr,
+        void store(flare::ref_ptr<T> ptr,
                    std::memory_order order = std::memory_order_seq_cst) noexcept {
             // Promoted to `exchange`, otherwise we can't atomically load current
             // pointer (to release it) and store a new one.
@@ -457,47 +457,47 @@ namespace std {
         }
 
         // Loads from this atomic ref-ptr.
-        flare::memory::ref_ptr<T> load(
+        flare::ref_ptr<T> load(
                 std::memory_order order = std::memory_order_seq_cst) const noexcept {
-            return flare::memory::ref_ptr<T>(flare::memory::ref_ptr_v, ptr_.load(order));
+            return flare::ref_ptr<T>(flare::ref_ptr_v, ptr_.load(order));
         }
 
         // Same as `load()`.
-        operator flare::memory::ref_ptr<T>() const noexcept { return load(); }
+        operator flare::ref_ptr<T>() const noexcept { return load(); }
 
         // Exchanges with a (possibly) different ref-ptr.
-        flare::memory::ref_ptr<T> exchange(
-                flare::memory::ref_ptr<T> ptr,
+        flare::ref_ptr<T> exchange(
+                flare::ref_ptr<T> ptr,
                 std::memory_order order = std::memory_order_seq_cst) noexcept {
-            return flare::memory::ref_ptr(flare::memory::adopt_ptr_v, ptr_.exchange(ptr.leak(), order));
+            return flare::ref_ptr(flare::adopt_ptr_v, ptr_.exchange(ptr.leak(), order));
         }
 
         // Compares if this atomic holds the `expected` pointer, and exchanges it with
         // the new `desired` one if the comparsion holds.
         bool compare_exchange_strong(
-                flare::memory::ref_ptr<T>& expected, flare::memory::ref_ptr<T> desired,
+                flare::ref_ptr<T>& expected, flare::ref_ptr<T> desired,
                 std::memory_order order = std::memory_order_seq_cst) noexcept {
             return compare_exchange_impl(
                     [&](auto&&... args) { return ptr_.compare_exchange_strong(args...); },
                     expected, std::move(desired), order);
         }
         bool compare_exchange_weak(
-                flare::memory::ref_ptr<T>& expected, flare::memory::ref_ptr<T> desired,
+                flare::ref_ptr<T>& expected, flare::ref_ptr<T> desired,
                 std::memory_order order = std::memory_order_seq_cst) noexcept {
             return compare_exchange_impl(
                     [&](auto&&... args) { return ptr_.compare_exchange_weak(args...); },
                     expected, std::move(desired), order);
         }
-        bool compare_exchange_strong(flare::memory::ref_ptr<T>& expected,
-                                     flare::memory::ref_ptr<T> desired,
+        bool compare_exchange_strong(flare::ref_ptr<T>& expected,
+                                     flare::ref_ptr<T> desired,
                                      std::memory_order success,
                                      std::memory_order failure) noexcept {
             return compare_exchange_impl(
                     [&](auto&&... args) { return ptr_.compare_exchange_strong(args...); },
                     expected, std::move(desired), success, failure);
         }
-        bool compare_exchange_weak(flare::memory::ref_ptr<T>& expected,
-                                   flare::memory::ref_ptr<T> desired,
+        bool compare_exchange_weak(flare::ref_ptr<T>& expected,
+                                   flare::ref_ptr<T> desired,
                                    std::memory_order success,
                                    std::memory_order failure) noexcept {
             return compare_exchange_impl(
@@ -509,7 +509,7 @@ namespace std {
 
         // Wait on this atomic.
   void wait(
-      flare::memory::ref_ptr<T> old,
+      flare::ref_ptr<T> old,
       std::memory_order order = std::memory_order_seq_cst) const noexcept {
     return ptr_.wait(old.get(), order);
   }
@@ -527,13 +527,13 @@ namespace std {
 
     private:
         template <class F, class... Orders>
-        bool compare_exchange_impl(F&& f, flare::memory::ref_ptr<T>& expected,
-                                 flare::memory::ref_ptr<T> desired, Orders... orders) {
+        bool compare_exchange_impl(F&& f, flare::ref_ptr<T>& expected,
+                                 flare::ref_ptr<T> desired, Orders... orders) {
             auto current = expected.get();
             if (std::forward<F>(f)(current, desired.get(), orders...)) {
                 (void)desired.leak();  // Ownership transfer to `ptr_`.
                 // Ownership of the old pointer is transferred to us, release it.
-                flare::memory::ref_ptr(flare::memory::adopt_ptr_v, current);
+                flare::ref_ptr(flare::adopt_ptr_v, current);
                 return true;
             }
             expected = load();  // FIXME: Promoted to `seq_cst` unnecessarily.

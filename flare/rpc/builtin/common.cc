@@ -27,6 +27,7 @@
 #include "flare/base/process_util.h"              // read_command_line
 #include "flare/rpc/server.h"
 #include "flare/rpc/builtin/common.h"
+#include "flare/strings/utility.h"
 
 namespace flare::rpc {
 
@@ -151,20 +152,20 @@ namespace flare::rpc {
         }
         const size_t len = filename.size();
         if (len >= 3) {
-            if (flare::base::back_char(*dir) != '/') {
+            if (flare::back_char(*dir) != '/') {
                 dir->push_back('/');
             }
             dir->append(filename);
         } else if (len == 1) {
             if (filename[0] != '.') {
-                if (flare::base::back_char(*dir) != '/') {
+                if (flare::back_char(*dir) != '/') {
                     dir->push_back('/');
                 }
                 dir->append(filename);
             }
         } else if (len == 2) {
             if (filename[0] != '.' || filename[1] != '.') {
-                if (flare::base::back_char(*dir) != '/') {
+                if (flare::back_char(*dir) != '/') {
                     dir->push_back('/');
                 }
                 dir->append(filename);

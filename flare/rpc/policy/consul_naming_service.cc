@@ -19,7 +19,7 @@
 #include <gflags/gflags.h>
 #include <string>                                       // std::string
 #include <set>                                          // std::set
-#include "flare/base/strings.h"
+#include "flare/strings/str_format.h"
 #include "flare/rapidjson/document.h"
 #include "flare/rapidjson/stringbuffer.h"
 #include "flare/rapidjson/prettywriter.h"
@@ -97,7 +97,7 @@ int ConsulNamingService::GetServers(const char* service_name,
     servers->clear();
     std::string consul_url(_consul_url);
     if (!_consul_index.empty()) {
-        flare::base::string_appendf(&consul_url, "&index=%s&wait=%ds", _consul_index.c_str(),
+        flare::string_appendf(&consul_url, "&index=%s&wait=%ds", _consul_index.c_str(),
                               FLAGS_consul_blocking_query_wait_secs);
     }
 
@@ -231,7 +231,7 @@ int ConsulNamingService::RunNamingService(const char* service_name,
                 servers.clear();
                 actions->ResetServers(servers);
             }
-            if (flare::this_fiber::fiber_sleep_for(std::max(FLAGS_consul_retry_interval_ms, 1) * 1000) < 0) {
+            if (flare::fiber_sleep_for(std::max(FLAGS_consul_retry_interval_ms, 1) * 1000) < 0) {
                 if (errno == ESTOP) {
                     RPC_VLOG << "Quit NamingServiceThread=" << fiber_self();
                     return 0;

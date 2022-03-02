@@ -9,14 +9,14 @@
 #include <algorithm>
 #include <cstring>
 
-namespace flare::strings {
+namespace flare {
 
 
-bool ends_with_case(std::string_view text, std::string_view suffix) {
-    if (text.size() >= suffix.size()) {
-        return flare::strings::compare_case(text.substr(text.size() - suffix.size()), suffix) == 0;
+    bool ends_with_ignore_case(std::string_view text, std::string_view suffix) noexcept{
+        if (text.size() >= suffix.size())  {
+            return flare::compare_case(text.substr(text.size() - suffix.size()), suffix) == 0;
+        }
+        return false;
     }
-    return false;
-}
 
-}  // namespace flare::strings
+}  // namespace flare

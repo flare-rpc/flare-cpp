@@ -17,7 +17,9 @@
 
 #include <cstring>
 #include <strings.h>
-#include "flare/base/strings.h"
+#include "flare/strings/utility.h"
+#include "flare/strings/str_format.h"
+#include "flare/strings/numbers.h"
 #include "flare/log/logging.h"
 #include "flare/rpc/adaptive_max_concurrency.h"
 
@@ -33,7 +35,7 @@ namespace flare::rpc {
             _value = UNLIMITED();
             _max_concurrency = 0;
         } else {
-            _value = flare::base::string_printf("%d", max_concurrency);
+            _value = flare::string_printf("%d", max_concurrency);
             _max_concurrency = max_concurrency;
         }
     }
@@ -49,21 +51,21 @@ namespace flare::rpc {
 
     AdaptiveMaxConcurrency::AdaptiveMaxConcurrency(const std::string_view &value)
             : _max_concurrency(0) {
-        auto max_concurrency = flare::base::try_parse<int>(value);
-        if (max_concurrency) {
-            operator=(*max_concurrency);
+        int64_t max_concurrency ;
+        if (flare::simple_atoi(value, &max_concurrency)) {
+            operator=(max_concurrency);
         } else {
-            flare::base::copy_to_string(value, &_value);
+            flare::copy_to_string(value, &_value);
             _max_concurrency = -1;
         }
     }
 
     void AdaptiveMaxConcurrency::operator=(const std::string_view &value) {
-        auto max_concurrency = flare::base::try_parse<int>(value);
-        if (max_concurrency) {
-            return operator=(*max_concurrency);
+        int64_t max_concurrency;
+        if (flare::simple_atoi(value, &max_concurrency)) {
+            return operator=(max_concurrency);
         } else {
-            flare::base::copy_to_string(value, &_value);
+            flare::copy_to_string(value, &_value);
             _max_concurrency = -1;
         }
     }
@@ -73,7 +75,7 @@ namespace flare::rpc {
             _value = UNLIMITED();
             _max_concurrency = 0;
         } else {
-            _value = flare::base::string_printf("%d", max_concurrency);
+            _value = flare::string_printf("%d", max_concurrency);
             _max_concurrency = max_concurrency;
         }
     }

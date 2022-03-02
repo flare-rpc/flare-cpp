@@ -40,7 +40,7 @@
 #include <string_view>
 #include "flare/base/math.h"
 
-namespace flare::strings {
+namespace flare {
 
 
 // simple_atoi()
@@ -87,11 +87,11 @@ namespace flare::strings {
     FLARE_MUST_USE_RESULT bool simple_atob(std::string_view str, bool *out);
 
 
-}  // namespace flare::strings
+}  // namespace flare
 
 // End of public API.  Implementation details follow.
 
-namespace flare::strings {
+namespace flare {
 
     namespace numbers_internal {
 
@@ -233,7 +233,7 @@ namespace flare::strings {
         int i = 0;
         i < 8; ++i) {
         auto byte = (val >> (56 - 8 * i)) & 0xFF;
-        auto *hex = &flare::strings::numbers_internal::kHexTable[byte * 2];
+        auto *hex = &flare::numbers_internal::kHexTable[byte * 2];
         std::memcpy(out
         + 2 * i, hex, 2);
     }
@@ -265,6 +265,6 @@ bool simple_atoi(std::string_view str,
 }
 
 
-}  // namespace flare::strings
+}  // namespace flare
 
 #endif  // FLARE_STRINGS_NUMBERS_H_

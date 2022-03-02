@@ -21,7 +21,7 @@
 #include <gflags/gflags.h>
 #include "flare/log/logging.h"                       // LOG()
 #include "flare/base/time.h"
-#include "flare/io/cord_buf.h"                         // flare::io::cord_buf
+#include "flare/io/cord_buf.h"                         // flare::cord_buf
 #include "flare/base/endian.h"
 #include "flare/rpc/controller.h"               // Controller
 #include "flare/rpc/details/controller_private_accessor.h"
@@ -73,7 +73,7 @@ namespace flare::rpc {
             return flare::container::bit_array_get(supported_cmd_map, command);
         }
 
-        ParseResult ParseMemcacheMessage(flare::io::cord_buf *source,
+        ParseResult ParseMemcacheMessage(flare::cord_buf *source,
                                          Socket *socket, bool /*read_eof*/, const void */*arg*/) {
             while (1) {
                 const uint8_t *p_mcmagic = (const uint8_t *) source->fetch1();
@@ -191,7 +191,7 @@ namespace flare::rpc {
             accessor.OnResponse(cid, saved_error);
         }
 
-        void SerializeMemcacheRequest(flare::io::cord_buf *buf,
+        void SerializeMemcacheRequest(flare::cord_buf *buf,
                                       Controller *cntl,
                                       const google::protobuf::Message *request) {
             if (request == NULL) {
@@ -206,12 +206,12 @@ namespace flare::rpc {
             ControllerPrivateAccessor(cntl).set_pipelined_count(mr->pipelined_count());
         }
 
-        void PackMemcacheRequest(flare::io::cord_buf *buf,
+        void PackMemcacheRequest(flare::cord_buf *buf,
                                  SocketMessage **,
                                  uint64_t /*correlation_id*/,
                                  const google::protobuf::MethodDescriptor *,
                                  Controller *cntl,
-                                 const flare::io::cord_buf &request,
+                                 const flare::cord_buf &request,
                                  const Authenticator *auth) {
             if (auth) {
                 std::string auth_str;

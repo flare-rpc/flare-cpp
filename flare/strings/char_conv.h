@@ -8,7 +8,7 @@
 #include <system_error>
 #include "flare/base/profile.h"
 
-namespace flare::strings {
+namespace flare {
 
 enum class chars_format {
     scientific = 1,
@@ -22,11 +22,11 @@ struct from_chars_result {
     std::errc ec;
 };
 
-flare::strings::from_chars_result from_chars(const char *first, const char *last,
+flare::from_chars_result from_chars(const char *first, const char *last,
                                    double &value,  // NOLINT
                                    chars_format fmt = chars_format::general);
 
-flare::strings::from_chars_result from_chars(const char *first, const char *last,
+flare::from_chars_result from_chars(const char *first, const char *last,
                                    float &value,  // NOLINT
                                    chars_format fmt = chars_format::general);
 
@@ -66,6 +66,6 @@ FLARE_FORCE_INLINE chars_format &operator^=(chars_format &lhs, chars_format rhs)
     return lhs;
 }
 
-}  // namespace flare::strings
+}  // namespace flare
 
 #endif  // FLARE_STRINGS_CHAR_CONV_H_

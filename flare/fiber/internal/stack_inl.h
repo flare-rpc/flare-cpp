@@ -52,11 +52,11 @@ namespace flare::fiber_internal {
         };
 
         static fiber_contextual_stack *get_stack(void (*entry)(intptr_t)) {
-            return flare::memory::get_object<Wrapper>(entry);
+            return flare::get_object<Wrapper>(entry);
         }
 
         static void return_stack(fiber_contextual_stack *sc) {
-            flare::memory::return_object(static_cast<Wrapper *>(sc));
+            flare::return_object(static_cast<Wrapper *>(sc));
         }
     };
 
@@ -119,7 +119,7 @@ namespace flare::fiber_internal {
 
 }  // namespace flare::fiber_internal
 
-namespace flare::memory {
+namespace flare {
 
     template<>
     struct ObjectPoolBlockMaxItem<
@@ -187,6 +187,6 @@ namespace flare::memory {
         }
     };
 
-}  // namespace flare::memory
+}  // namespace flare
 
 #endif  // FLARE_FIBER_INTERNAL_STACK_INL_H_

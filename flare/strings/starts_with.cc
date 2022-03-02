@@ -6,13 +6,13 @@
 #include "flare/strings/compare.h"
 #include <algorithm>
 
-namespace flare::strings {
+namespace flare {
 
 bool starts_with_case(std::string_view text, std::string_view suffix) {
     if (text.size() >= suffix.size()) {
-        return flare::strings::compare_case(text.substr(0, suffix.size()), suffix) == 0;
+        return flare::compare_case(text.substr(0, suffix.size()), suffix) == 0;
     }
     return false;
 }
 
-}  // namespace flare::strings
+}  // namespace flare

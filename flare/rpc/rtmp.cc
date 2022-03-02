@@ -28,7 +28,8 @@
 #include "flare/rpc/policy/rtmp_protocol.h"       // policy::*
 #include "flare/rpc/rtmp.h"
 #include "flare/rpc/details/rtmp_utils.h"
-#include "flare/base/strings.h"
+#include "flare/strings/starts_with.h"
+#include "flare/strings/utility.h"
 
 
 namespace flare::rpc {
@@ -61,11 +62,11 @@ namespace flare::rpc {
         int WriteWithoutOvercrowded(Socket *, SocketMessagePtr<> &msg);
     }
 
-    FlvWriter::FlvWriter(flare::io::cord_buf *buf)
+    FlvWriter::FlvWriter(flare::cord_buf *buf)
             : _write_header(false), _buf(buf), _options() {
     }
 
-    FlvWriter::FlvWriter(flare::io::cord_buf *buf, const FlvWriterOptions &options)
+    FlvWriter::FlvWriter(flare::cord_buf *buf, const FlvWriterOptions &options)
             : _write_header(false), _buf(buf), _options(options) {
     }
 
@@ -128,7 +129,7 @@ namespace flare::rpc {
         return flare::base::flare_status::OK();
     }
 
-    flare::base::flare_status FlvWriter::WriteScriptData(const flare::io::cord_buf &req_buf, uint32_t timestamp) {
+    flare::base::flare_status FlvWriter::WriteScriptData(const flare::cord_buf &req_buf, uint32_t timestamp) {
         char buf[32];
         char *p = buf;
         if (!_write_header) {
@@ -155,9 +156,9 @@ namespace flare::rpc {
     }
 
     flare::base::flare_status FlvWriter::Write(const RtmpCuePoint &cuepoint) {
-        flare::io::cord_buf req_buf;
+        flare::cord_buf req_buf;
         {
-            flare::io::cord_buf_as_zero_copy_output_stream zc_stream(&req_buf);
+            flare::cord_buf_as_zero_copy_output_stream zc_stream(&req_buf);
             AMFOutputStream ostream(&zc_stream);
             WriteAMFString(RTMP_AMF0_SET_DATAFRAME, &ostream);
             WriteAMFString(RTMP_AMF0_ON_CUE_POINT, &ostream);
@@ -170,9 +171,9 @@ namespace flare::rpc {
     }
 
     flare::base::flare_status FlvWriter::Write(const RtmpMetaData &metadata) {
-        flare::io::cord_buf req_buf;
+        flare::cord_buf req_buf;
         {
-            flare::io::cord_buf_as_zero_copy_output_stream zc_stream(&req_buf);
+            flare::cord_buf_as_zero_copy_output_stream zc_stream(&req_buf);
             AMFOutputStream ostream(&zc_stream);
             WriteAMFString(RTMP_AMF0_ON_META_DATA, &ostream);
             WriteAMFObject(metadata.data, &ostream);
@@ -183,7 +184,7 @@ namespace flare::rpc {
         return WriteScriptData(req_buf, metadata.timestamp);
     }
 
-    FlvReader::FlvReader(flare::io::cord_buf *buf)
+    FlvReader::FlvReader(flare::cord_buf *buf)
             : _read_header(false), _buf(buf) {
     }
 
@@ -300,11 +301,11 @@ namespace flare::rpc {
             return flare::base::flare_status(EAGAIN, "Fail to read, not enough data");
         }
         _buf->pop_front(11);
-        flare::io::cord_buf req_buf;
+        flare::cord_buf req_buf;
         _buf->cutn(&req_buf, msg_size);
         _buf->pop_front(4/* PreviousTagSize0 */);
         {
-            flare::io::cord_buf_as_zero_copy_input_stream zc_stream(req_buf);
+            flare::cord_buf_as_zero_copy_input_stream zc_stream(req_buf);
             AMFInputStream istream(&zc_stream);
             if (!ReadAMFString(name, &istream)) {
                 return flare::base::flare_status(EINVAL, "Fail to read AMF string");
@@ -429,14 +430,14 @@ namespace flare::rpc {
                   << " rate=" << FlvSoundRate2Str(msg.rate)
                   << " bits=" << FlvSoundBits2Str(msg.bits)
                   << " type=" << FlvSoundType2Str(msg.type)
-                  << " data=" << flare::io::to_printable(msg.data) << '}';
+                  << " data=" << flare::to_printable(msg.data) << '}';
     }
 
     std::ostream &operator<<(std::ostream &os, const RtmpVideoMessage &msg) {
         return os << "VideoMessage{timestamp=" << msg.timestamp
                   << " type=" << FlvVideoFrameType2Str(msg.frame_type)
                   << " codec=" << FlvVideoCodec2Str(msg.codec)
-                  << " data=" << flare::io::to_printable(msg.data) << '}';
+                  << " data=" << flare::to_printable(msg.data) << '}';
     }
 
     flare::base::flare_status RtmpAACMessage::Create(const RtmpAudioMessage &msg) {
@@ -464,7 +465,7 @@ namespace flare::rpc {
             : aac_object(AAC_OBJECT_UNKNOWN), aac_sample_rate(0), aac_channels(0) {
     }
 
-    flare::base::flare_status AudioSpecificConfig::Create(const flare::io::cord_buf &buf) {
+    flare::base::flare_status AudioSpecificConfig::Create(const flare::cord_buf &buf) {
         if (buf.size() < 2u) {
             return flare::base::flare_status(EINVAL, "data_size=%" PRIu64 " is too short",
                                              (uint64_t) buf.size());
@@ -602,7 +603,7 @@ namespace flare::rpc {
         return os;
     }
 
-    flare::base::flare_status AVCDecoderConfigurationRecord::Create(const flare::io::cord_buf &buf) {
+    flare::base::flare_status AVCDecoderConfigurationRecord::Create(const flare::cord_buf &buf) {
         // the buf should be short generally, copy it out to continuous memory
         // to simplify parsing.
         DEFINE_SMALL_ARRAY(char, cont_buf, buf.size(), 64);
@@ -649,7 +650,7 @@ namespace flare::rpc {
                 if (!st.ok()) {
                     return st;
                 }
-                sps_list.push_back(flare::base::as_string(buf.substr(2, sps_length)));
+                sps_list.push_back(flare::as_string(buf.substr(2, sps_length)));
             }
             buf.remove_prefix(2 + sps_length);
         }
@@ -669,7 +670,7 @@ namespace flare::rpc {
                 return flare::base::flare_status(EINVAL, "Not enough data to decode PPS");
             }
             if (pps_length > 0) {
-                pps_list.push_back(flare::base::as_string(buf.substr(2, pps_length)));
+                pps_list.push_back(flare::as_string(buf.substr(2, pps_length)));
             }
             buf.remove_prefix(2 + pps_length);
         }
@@ -846,10 +847,10 @@ namespace flare::rpc {
         return flare::base::flare_status::OK();
     }
 
-    static bool find_avc_annexb_nalu_start_code(const flare::io::cord_buf &buf,
+    static bool find_avc_annexb_nalu_start_code(const flare::cord_buf &buf,
                                                 size_t *start_code_length) {
         size_t consecutive_zero_count = 0;
-        for (flare::io::cord_buf_bytes_iterator it(buf); it != NULL; ++it) {
+        for (flare::cord_buf_bytes_iterator it(buf); it != NULL; ++it) {
             char c = *it;
             if (c == 0) {
                 ++consecutive_zero_count;
@@ -868,12 +869,12 @@ namespace flare::rpc {
         return false;
     }
 
-    static void find_avc_annexb_nalu_stop_code(const flare::io::cord_buf &buf,
+    static void find_avc_annexb_nalu_stop_code(const flare::cord_buf &buf,
                                                size_t *nalu_length_out,
                                                size_t *stop_code_length) {
         size_t nalu_length = 0;
         size_t consecutive_zero_count = 0;
-        for (flare::io::cord_buf_bytes_iterator it(buf); it != NULL; ++it) {
+        for (flare::cord_buf_bytes_iterator it(buf); it != NULL; ++it) {
             unsigned char c = (unsigned char) *it;
             if (c > 1) { // most frequent
                 ++nalu_length;
@@ -904,7 +905,7 @@ namespace flare::rpc {
         }
     }
 
-    AVCNaluIterator::AVCNaluIterator(flare::io::cord_buf *data, uint32_t length_size_minus1,
+    AVCNaluIterator::AVCNaluIterator(flare::cord_buf *data, uint32_t length_size_minus1,
                                      AVCNaluFormat *format)
             : _data(data), _format(format), _length_size_minus1(length_size_minus1), _nalu_type(AVC_NALU_EMPTY) {
         if (_data) {
@@ -1293,7 +1294,7 @@ namespace flare::rpc {
 
     int RtmpStreamBase::SendMessage(uint32_t timestamp,
                                     uint8_t message_type,
-                                    const flare::io::cord_buf &body) {
+                                    const flare::cord_buf &body) {
         if (_rtmpsock == NULL) {
             errno = EPERM;
             return -1;
@@ -1325,9 +1326,9 @@ namespace flare::rpc {
     }
 
     int RtmpStreamBase::SendCuePoint(const RtmpCuePoint &cuepoint) {
-        flare::io::cord_buf req_buf;
+        flare::cord_buf req_buf;
         {
-            flare::io::cord_buf_as_zero_copy_output_stream zc_stream(&req_buf);
+            flare::cord_buf_as_zero_copy_output_stream zc_stream(&req_buf);
             AMFOutputStream ostream(&zc_stream);
             WriteAMFString(RTMP_AMF0_SET_DATAFRAME, &ostream);
             WriteAMFString(RTMP_AMF0_ON_CUE_POINT, &ostream);
@@ -1342,9 +1343,9 @@ namespace flare::rpc {
 
     int RtmpStreamBase::SendMetaData(const RtmpMetaData &metadata,
                                      const std::string_view &name) {
-        flare::io::cord_buf req_buf;
+        flare::cord_buf req_buf;
         {
-            flare::io::cord_buf_as_zero_copy_output_stream zc_stream(&req_buf);
+            flare::cord_buf_as_zero_copy_output_stream zc_stream(&req_buf);
             AMFOutputStream ostream(&zc_stream);
             WriteAMFString(name, &ostream);
             WriteAMFObject(metadata.data, &ostream);
@@ -1882,9 +1883,9 @@ namespace flare::rpc {
 
         if (!_rtmpsock->Failed() && _chunk_stream_id != 0) {
             // SRS requires closeStream which is sent over this stream.
-            flare::io::cord_buf req_buf1;
+            flare::cord_buf req_buf1;
             {
-                flare::io::cord_buf_as_zero_copy_output_stream zc_stream(&req_buf1);
+                flare::cord_buf_as_zero_copy_output_stream zc_stream(&req_buf1);
                 AMFOutputStream ostream(&zc_stream);
                 WriteAMFString(RTMP_AMF0_COMMAND_CLOSE_STREAM, &ostream);
                 WriteAMFUint32(0, &ostream);
@@ -1899,9 +1900,9 @@ namespace flare::rpc {
             msg1->body = req_buf1;
 
             // Send deleteStream over the control stream.
-            flare::io::cord_buf req_buf2;
+            flare::cord_buf req_buf2;
             {
-                flare::io::cord_buf_as_zero_copy_output_stream zc_stream(&req_buf2);
+                flare::cord_buf_as_zero_copy_output_stream zc_stream(&req_buf2);
                 AMFOutputStream ostream(&zc_stream);
                 WriteAMFString(RTMP_AMF0_COMMAND_DELETE_STREAM, &ostream);
                 WriteAMFUint32(0, &ostream);
@@ -1963,9 +1964,9 @@ namespace flare::rpc {
             errno = EPERM;
             return -1;
         }
-        flare::io::cord_buf req_buf;
+        flare::cord_buf req_buf;
         {
-            flare::io::cord_buf_as_zero_copy_output_stream zc_stream(&req_buf);
+            flare::cord_buf_as_zero_copy_output_stream zc_stream(&req_buf);
             AMFOutputStream ostream(&zc_stream);
             WriteAMFString(RTMP_AMF0_COMMAND_PLAY, &ostream);
             WriteAMFUint32(0, &ostream);
@@ -2004,9 +2005,9 @@ namespace flare::rpc {
     }
 
     int RtmpClientStream::Play2(const RtmpPlay2Options &opt) {
-        flare::io::cord_buf req_buf;
+        flare::cord_buf req_buf;
         {
-            flare::io::cord_buf_as_zero_copy_output_stream zc_stream(&req_buf);
+            flare::cord_buf_as_zero_copy_output_stream zc_stream(&req_buf);
             AMFOutputStream ostream(&zc_stream);
             WriteAMFString(RTMP_AMF0_COMMAND_PLAY2, &ostream);
             WriteAMFUint32(0, &ostream);
@@ -2049,9 +2050,9 @@ namespace flare::rpc {
 
     int RtmpClientStream::Publish(const std::string_view &name,
                                   RtmpPublishType type) {
-        flare::io::cord_buf req_buf;
+        flare::cord_buf req_buf;
         {
-            flare::io::cord_buf_as_zero_copy_output_stream zc_stream(&req_buf);
+            flare::cord_buf_as_zero_copy_output_stream zc_stream(&req_buf);
             AMFOutputStream ostream(&zc_stream);
             WriteAMFString(RTMP_AMF0_COMMAND_PUBLISH, &ostream);
             WriteAMFUint32(0, &ostream);
@@ -2064,9 +2065,9 @@ namespace flare::rpc {
     }
 
     int RtmpClientStream::Seek(double offset_ms) {
-        flare::io::cord_buf req_buf;
+        flare::cord_buf req_buf;
         {
-            flare::io::cord_buf_as_zero_copy_output_stream zc_stream(&req_buf);
+            flare::cord_buf_as_zero_copy_output_stream zc_stream(&req_buf);
             AMFOutputStream ostream(&zc_stream);
             WriteAMFString(RTMP_AMF0_COMMAND_SEEK, &ostream);
             WriteAMFUint32(0, &ostream);
@@ -2078,9 +2079,9 @@ namespace flare::rpc {
     }
 
     int RtmpClientStream::Pause(bool pause_or_unpause, double offset_ms) {
-        flare::io::cord_buf req_buf;
+        flare::cord_buf req_buf;
         {
-            flare::io::cord_buf_as_zero_copy_output_stream zc_stream(&req_buf);
+            flare::cord_buf_as_zero_copy_output_stream zc_stream(&req_buf);
             AMFOutputStream ostream(&zc_stream);
             WriteAMFString(RTMP_AMF0_COMMAND_PAUSE, &ostream);
             WriteAMFUint32(0, &ostream);
@@ -2458,8 +2459,8 @@ namespace flare::rpc {
             // Add a ref for OnRecreateTimer which does deref.
             flare::container::intrusive_ptr<RtmpRetryingClientStream>(this).detach();
             if (fiber_timer_add(&_create_timer_id,
-                                  flare::base::microseconds_from_now(wait_us),
-                                  OnRecreateTimer, this) != 0) {
+                                flare::base::microseconds_from_now(wait_us),
+                                OnRecreateTimer, this) != 0) {
                 LOG(ERROR) << "Fail to create timer";
                 return CallOnStopIfNeeded();
             }
@@ -2659,10 +2660,10 @@ namespace flare::rpc {
         // Send StreamNotFound error to make the client close connections.
         // Works for flashplayer and ffplay(not started playing), not work for SRS
         // and ffplay(started playing)
-        flare::io::cord_buf req_buf;
+        flare::cord_buf req_buf;
         RtmpInfo info;
         {
-            flare::io::cord_buf_as_zero_copy_output_stream zc_stream(&req_buf);
+            flare::cord_buf_as_zero_copy_output_stream zc_stream(&req_buf);
             AMFOutputStream ostream(&zc_stream);
             WriteAMFString(RTMP_AMF0_COMMAND_ON_STATUS, &ostream);
             WriteAMFUint32(0, &ostream);
@@ -2678,7 +2679,7 @@ namespace flare::rpc {
             }
             info.set_level(RTMP_INFO_LEVEL_ERROR);
             if (!error_desc.empty()) {
-                info.set_description(flare::base::as_string(error_desc));
+                info.set_description(flare::as_string(error_desc));
             }
             WriteAMFObject(info, &ostream);
         }
@@ -2737,7 +2738,7 @@ namespace flare::rpc {
     }
 
     std::string_view RemoveRtmpPrefix(const std::string_view &url_in) {
-        if (!flare::base::starts_with(url_in, "rtmp://")) {
+        if (!flare::starts_with(url_in, "rtmp://")) {
             return url_in;
         }
         std::string_view url = url_in;
@@ -2816,10 +2817,10 @@ namespace flare::rpc {
         }
         if (vhost) {
             std::string_view qstr = app_and_vhost.substr(q_pos + 1);
-            flare::strings::StringSplitter sp(qstr.data(), qstr.data() + qstr.size(), '&');
+            flare::StringSplitter sp(qstr.data(), qstr.data() + qstr.size(), '&');
             for (; sp; ++sp) {
                 std::string_view field(sp.field(), sp.length());
-                if (flare::base::starts_with(field, "vhost=")) {
+                if (flare::starts_with(field, "vhost=")) {
                     *vhost = field.substr(6);
                     // vhost cannot have port.
                     const size_t colon_pos = vhost->find_last_of(':');

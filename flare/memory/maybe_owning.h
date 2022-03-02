@@ -9,7 +9,7 @@
 #include <utility>
 #include "flare/log/logging.h"
 
-namespace flare::memory {
+namespace flare {
 
     inline constexpr struct owning_t {
         explicit owning_t() = default;
@@ -35,7 +35,7 @@ namespace flare::memory {
                  std::has_virtual_destructor_v<T>);
 
         // Construct an empty one.
-        constexpr maybe_owning() noexcept: owning_(false), ptr_(nullptr) {}
+        constexpr maybe_owning() noexcept: _owning(false), _ptr(nullptr) {}
 
         /* implicit */ maybe_owning(std::nullptr_t) noexcept: maybe_owning() {}
 
@@ -49,7 +49,7 @@ namespace flare::memory {
                 : maybe_owning(ptr, false) {}
 
         constexpr maybe_owning(T *ptr, bool owning) noexcept
-                : owning_(owning), ptr_(ptr) {}
+                : _owning(owning), _ptr(ptr) {}
 
         // Transferring ownership.
         //
@@ -57,7 +57,7 @@ namespace flare::memory {
         // convertible to `T*`.
         template<class U, class = std::enable_if_t<is_convertible_from_v<U>>>
         /* `explicit`? */ constexpr maybe_owning(std::unique_ptr<U> ptr) noexcept
-                : owning_(!!ptr), ptr_(ptr.release()) {}
+                : _owning(!!ptr), _ptr(ptr.release()) {}
 
         // Transferring ownership.
         //
@@ -65,23 +65,23 @@ namespace flare::memory {
         // convertible to `T*`.
         template<class U, class = std::enable_if_t<is_convertible_from_v<U>>>
         /* implicit */ constexpr maybe_owning(maybe_owning<U> &&ptr) noexcept
-                : owning_(ptr.owning_), ptr_(ptr.ptr_) {
-            ptr.owning_ = false;
-            ptr.ptr_ = nullptr;
+                : _owning(ptr._owning), _ptr(ptr._ptr) {
+            ptr._owning = false;
+            ptr._ptr = nullptr;
         }
 
         // Movable.
         constexpr maybe_owning(maybe_owning &&other) noexcept
-                : owning_(other.owning_), ptr_(other.ptr_) {
-            other.owning_ = false;
-            other.ptr_ = nullptr;
+                : _owning(other._owning), _ptr(other._ptr) {
+            other._owning = false;
+            other._ptr = nullptr;
         }
 
         maybe_owning &operator=(maybe_owning &&other) noexcept {
             if (&other != this) {
                 reset();
-                std::swap(owning_, other.owning_);
-                std::swap(ptr_, other.ptr_);
+                std::swap(_owning, other._owning);
+                std::swap(_ptr, other._ptr);
             }
             return *this;
         }
@@ -93,23 +93,23 @@ namespace flare::memory {
 
         // The pointer is freed (if we own it) on destruction.
         ~maybe_owning() {
-            if (owning_) {
-                delete ptr_;
+            if (_owning) {
+                delete _ptr;
             }
         }
 
         // Accessor.
-        constexpr T *get() const noexcept { return ptr_; }
+        constexpr T *get() const noexcept { return _ptr; }
 
         constexpr T *operator->() const noexcept { return get(); }
 
         constexpr T &operator*() const noexcept { return *get(); }
 
         // Test if we're holding a valid pointer.
-        constexpr explicit operator bool() const noexcept { return ptr_; }
+        constexpr explicit operator bool() const noexcept { return _ptr; }
 
         // Test if we own the pointer.
-        constexpr bool Owning() const noexcept { return owning_; }
+        constexpr bool owning() const noexcept { return _owning; }
 
         // Reset to empty pointer.
         constexpr maybe_owning &operator=(std::nullptr_t) noexcept {
@@ -122,10 +122,10 @@ namespace flare::memory {
         // If we're not owning the pointer, calling this method cause undefined
         // behavior. (Use `Get()` instead.)
         [[nodiscard]] constexpr T *leak() noexcept {
-            CHECK(owning_)<<
-                    "Calling `Leak()` on non-owning `maybe_owning<T>` is undefined.";
-            owning_ = false;
-            return std::exchange(ptr_, nullptr);
+            CHECK(_owning) <<
+                           "Calling `Leak()` on non-owning `maybe_owning<T>` is undefined.";
+            _owning = false;
+            return std::exchange(_ptr, nullptr);
         }
 
         // Release what we currently hold and hold a new pointer.
@@ -134,9 +134,10 @@ namespace flare::memory {
         constexpr void reset(non_owning_t, T *ptr) noexcept { reset(ptr, false); }
 
         // I'm not sure if we want to provide an `operator std::unique_ptr<T>() &&`.
-        // This is dangerous as we could not check for `Owning()` at compile time.
+        // This is dangerous as we could not check for `owning()` at compile time.
 
     private:
+
         // Reset the pointer we have.
         //
         // These two were public interfaces, but I think we'd better keep them private
@@ -145,27 +146,25 @@ namespace flare::memory {
         constexpr void reset() noexcept { return reset(nullptr, false); }
 
         constexpr void reset(T *ptr, bool owning) noexcept {
-            if (owning_) {
-                CHECK(ptr_);
-                delete ptr_;
+            if (_owning) {
+                CHECK(_ptr);
+                delete _ptr;
             }
-            CHECK(!owning_ || ptr_)<<
-                    "Passing a `nullptr` to `ptr` while specifying `owning` as `true` does "
-                    "not make much sense, I think.";
-            ptr_ = ptr;
-            owning_ = owning;
+            CHECK(!_owning || _ptr) <<
+                                    "Passing a `nullptr` to `ptr` while specifying `owning` as `true` does "
+                                    "not make much sense, I think.";
+            _ptr = ptr;
+            _owning = owning;
         }
 
     private:
+
         template<class U>
         friend
         class maybe_owning;
 
-        // TODO(luobogao): Optimize this. Use most significant bit for storing
-        // `owning_` instead. (But keep an eye on performance as doing this requires
-        // every pointer access to do arithmetic to mask out the highest bit.)
-        bool owning_;
-        T *ptr_;
+        bool _owning;
+        T *_ptr;
     };
 
     template<class T>
@@ -179,16 +178,16 @@ namespace flare::memory {
     class maybe_owning_argument {
     public:
         template<class U, class = decltype(maybe_owning<T>(std::declval<U &&>()))>
-        /* implicit */ maybe_owning_argument(U &&ptr) : ptr_(std::forward<U>(ptr)) {}
+        /* implicit */ maybe_owning_argument(U &&ptr) : _ptr(std::forward<U>(ptr)) {}
 
         template<class U, class = std::enable_if_t<
                 maybe_owning<T>::template is_convertible_from_v<U>>>
-        /* implicit */ maybe_owning_argument(U *ptr) : ptr_(non_owning, ptr) {}
+        /* implicit */ maybe_owning_argument(U *ptr) : _ptr(non_owning, ptr) {}
 
-        operator maybe_owning<T>() && noexcept { return std::move(ptr_); }
+        operator maybe_owning<T>() && noexcept { return std::move(_ptr); }
 
     private:
-        maybe_owning<T> ptr_;
+        maybe_owning<T> _ptr;
     };
 
 }

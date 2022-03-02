@@ -57,7 +57,7 @@ public:
 class ThriftFramedMessage : public ::google::protobuf::Message {
 friend class ThriftStub;
 public:
-    flare::io::cord_buf body; // ~= "{ raw_instance }"
+    flare::cord_buf body; // ~= "{ raw_instance }"
     int16_t field_id;  // must be set when body is set.
     
 private:
@@ -135,7 +135,7 @@ private:
 
 namespace policy {
 // Implemented in policy/thrift_protocol.cpp
-bool ReadThriftStruct(const flare::io::cord_buf& body,
+bool ReadThriftStruct(const flare::cord_buf& body,
                       ThriftMessageBase* raw_msg,
                       int16_t expected_fid);
 }

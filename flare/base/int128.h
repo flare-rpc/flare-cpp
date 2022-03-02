@@ -230,7 +230,7 @@ namespace flare::base {
 
         // Support for flare::base::hash.
         template<typename H>
-        friend H abel_hash_value(H h, uint128 v) {
+        friend H flare_hash_value(H h, uint128 v) {
             return H::combine(std::move(h), uint128_high64(v), uint128_low64(v));
         }
 
@@ -512,7 +512,7 @@ namespace flare::base {
 
         // Support for flare::base::hash.
         template<typename H>
-        friend H abel_hash_value(H h, int128 v) {
+        friend H flare_hash_value(H h, int128 v) {
             return H::combine(std::move(h), int128_high64(v), int128_low64(v));
         }
 

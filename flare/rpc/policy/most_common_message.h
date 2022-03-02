@@ -31,12 +31,12 @@ namespace policy {
 // you have to new the messages or use a separate ObjectPool (which is likely
 // to waste more memory)
 struct FLARE_CACHELINE_ALIGNMENT MostCommonMessage : public InputMessageBase {
-    flare::io::cord_buf meta;
-    flare::io::cord_buf payload;
+    flare::cord_buf meta;
+    flare::cord_buf payload;
     PipelinedInfo pi;
 
     inline static MostCommonMessage* Get() {
-        return flare::memory::get_object<MostCommonMessage>();
+        return flare::get_object<MostCommonMessage>();
     }
 
     // @InputMessageBase
@@ -44,7 +44,7 @@ struct FLARE_CACHELINE_ALIGNMENT MostCommonMessage : public InputMessageBase {
         meta.clear();
         payload.clear();
         pi.reset();
-        flare::memory::return_object(this);
+        flare::return_object(this);
     }
 };
 

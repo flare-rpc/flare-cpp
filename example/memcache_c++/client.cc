@@ -55,8 +55,8 @@ static void* sender(void* arg) {
     std::vector<std::pair<std::string, std::string> > kvs;
     kvs.resize(FLAGS_batch);
     for (int i = 0; i < FLAGS_batch; ++i) {
-        kvs[i].first = flare::base::string_printf("%s%d", FLAGS_key.c_str(), base_index + i);
-        kvs[i].second = flare::base::string_printf("%s%d", FLAGS_value.c_str(), base_index + i);
+        kvs[i].first = flare::string_printf("%s%d", FLAGS_key.c_str(), base_index + i);
+        kvs[i].second = flare::string_printf("%s%d", FLAGS_value.c_str(), base_index + i);
     }
     flare::rpc::MemcacheRequest request;
     for (int i = 0; i < FLAGS_batch; ++i) {
@@ -94,7 +94,7 @@ static void* sender(void* arg) {
             // is a specific sleeping to prevent this thread from spinning too
             // fast. You should continue the business logic in a production 
             // server rather than sleeping.
-            flare::this_fiber::fiber_sleep_for(50000);
+            flare::fiber_sleep_for(50000);
         }
     }
     return NULL;
@@ -135,8 +135,8 @@ int main(int argc, char* argv[]) {
     flare::rpc::MemcacheResponse response;
     flare::rpc::Controller cntl;
     for (int i = 0; i < FLAGS_batch * FLAGS_thread_num; ++i) {
-        if (!request.Set(flare::base::string_printf("%s%d", FLAGS_key.c_str(), i),
-                         flare::base::string_printf("%s%d", FLAGS_value.c_str(), i),
+        if (!request.Set(flare::string_printf("%s%d", FLAGS_key.c_str(), i),
+                         flare::string_printf("%s%d", FLAGS_value.c_str(), i),
                          0xdeadbeef + i, FLAGS_exptime, 0)) {
             LOG(ERROR) << "Fail to SET " << i << "th request";
             return -1;

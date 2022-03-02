@@ -30,15 +30,15 @@ namespace flare::rpc {
 
 // Format a redis command and append it to `buf'.
 // Returns flare::base::flare_status::OK() on success.
-flare::base::flare_status RedisCommandFormat(flare::io::cord_buf* buf, const char* fmt, ...);
-flare::base::flare_status RedisCommandFormatV(flare::io::cord_buf* buf, const char* fmt, va_list args);
+flare::base::flare_status RedisCommandFormat(flare::cord_buf* buf, const char* fmt, ...);
+flare::base::flare_status RedisCommandFormatV(flare::cord_buf* buf, const char* fmt, va_list args);
 
 // Just convert the command to the text format of redis without processing the
 // specifiers(%) inside.
-flare::base::flare_status RedisCommandNoFormat(flare::io::cord_buf* buf, const std::string_view& command);
+flare::base::flare_status RedisCommandNoFormat(flare::cord_buf* buf, const std::string_view& command);
 
 // Concatenate components to form a redis command.
-flare::base::flare_status RedisCommandByComponents(flare::io::cord_buf* buf,
+flare::base::flare_status RedisCommandByComponents(flare::cord_buf* buf,
                                       const std::string_view* components,
                                       size_t num_components);
 
@@ -50,8 +50,8 @@ public:
     // Parse raw message from `buf'. Return PARSE_OK and set the parsed command
     // to `args' and length to `len' if successful. Memory of args are allocated 
     // in `arena'.
-    ParseError Consume(flare::io::cord_buf& buf, std::vector<std::string_view>* args,
-                       flare::memory::Arena* arena);
+    ParseError Consume(flare::cord_buf& buf, std::vector<std::string_view>* args,
+                       flare::Arena* arena);
 
 private:
     // Reset parser to the initial state.

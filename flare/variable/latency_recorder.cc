@@ -20,7 +20,7 @@
 #include <gflags/gflags.h>
 #include <memory>
 #include "flare/variable/latency_recorder.h"
-#include "flare/base/strings.h"
+#include "flare/strings/ends_with.h"
 
 namespace flare::variable {
 
@@ -184,7 +184,7 @@ namespace flare::variable {
         }
         std::string_view prefix = prefix2;
         // User may add "_latency" as the suffix, remove it.
-        if (flare::base::ends_with_ignore_case(prefix, "latency")) {
+        if (flare::ends_with_ignore_case(prefix, "latency")) {
             prefix.remove_suffix(7);
             if (prefix.empty()) {
                 LOG(ERROR) << "Invalid prefix2=" << prefix2;

@@ -100,7 +100,7 @@
 #include "flare/base/type_traits.h"
 #include "flare/base/profile.h"
 
-namespace flare::memory {
+namespace flare {
 
     namespace subtle {
         class RefCountedBase;
@@ -178,7 +178,7 @@ namespace flare::memory {
 // Function object which invokes 'free' on its parameter, which must be
 // a pointer. Can be used to store malloc-allocated pointers in scoped_ptr:
 //
-// scoped_ptr<int, flare::memory::FreeDeleter> foo_ptr(
+// scoped_ptr<int, flare::FreeDeleter> foo_ptr(
 //     static_cast<int*>(malloc(sizeof(int))));
     struct FreeDeleter {
         inline void operator()(void *ptr) const {
@@ -191,8 +191,8 @@ namespace flare::memory {
         template<typename T>
         struct IsNotRefCounted {
             enum {
-                value = !std::is_convertible<T *, flare::memory::subtle::RefCountedBase *>::value &&
-                        !std::is_convertible<T *, flare::memory::subtle::RefCountedThreadSafeBase *>::
+                value = !std::is_convertible<T *, flare::subtle::RefCountedBase *>::value &&
+                        !std::is_convertible<T *, flare::subtle::RefCountedThreadSafeBase *>::
                         value
             };
         };
@@ -213,7 +213,7 @@ namespace flare::memory {
             scoped_ptr_impl(scoped_ptr_impl<U, V> *other)
                     : data_(other->release(), other->get_deleter()) {
                 // We do not support move-only deleters.  We could modify our move
-                // emulation to have flare::memory::subtle::move() and flare::memory::subtle::forward()
+                // emulation to have flare::subtle::move() and flare::subtle::forward()
                 // functions that are imperfect emulations of their C++11 equivalents,
                 // but until there's a requirement, just assume deleters are copyable.
             }
@@ -305,7 +305,7 @@ namespace flare::memory {
 
     }  // namespace internal
 
-}  // namespace flare::memory
+}  // namespace flare
 
 // A scoped_ptr<T> is like a T*, except that the destructor of scoped_ptr<T>
 // automatically deletes the pointer it holds (if any).
@@ -323,11 +323,11 @@ namespace flare::memory {
 // unique_ptr<> features. Known deficiencies include not supporting move-only
 // deleteres, function pointers as deleters, and deleters with reference
 // types.
-template<class T, class D = flare::memory::DefaultDeleter<T> >
+template<class T, class D = flare::DefaultDeleter<T> >
 class scoped_ptr {
 MOVE_ONLY_TYPE_FOR_CPP_03(scoped_ptr, RValue)
 
-    static_assert(flare::memory::internal::IsNotRefCounted<T>::value,
+    static_assert(flare::internal::IsNotRefCounted<T>::value,
                   "T_is_refcounted_type_and_needs_scoped_refptr");
 
 public:
@@ -410,7 +410,7 @@ public:
     // scoped_ptr2" will compile but do the wrong thing (i.e., convert
     // to Testable and then do the comparison).
 private:
-    typedef flare::memory::internal::scoped_ptr_impl<element_type, deleter_type>
+    typedef flare::internal::scoped_ptr_impl<element_type, deleter_type>
             scoped_ptr::*Testable;
 
 public:
@@ -455,7 +455,7 @@ private:
     template<typename U, typename V> friend
     class scoped_ptr;
 
-    flare::memory::internal::scoped_ptr_impl<element_type, deleter_type> impl_;
+    flare::internal::scoped_ptr_impl<element_type, deleter_type> impl_;
 
     // Forbidden for API compatibility with std::unique_ptr.
     explicit scoped_ptr(int disallow_construction_from_null);
@@ -530,7 +530,7 @@ public:
     // Allow scoped_ptr<element_type> to be used in boolean expressions, but not
     // implicitly convertible to a real bool (which is dangerous).
 private:
-    typedef flare::memory::internal::scoped_ptr_impl<element_type, deleter_type>
+    typedef flare::internal::scoped_ptr_impl<element_type, deleter_type>
             scoped_ptr::*Testable;
 
 public:
@@ -566,7 +566,7 @@ private:
     };
 
     // Actually hold the data.
-    flare::memory::internal::scoped_ptr_impl<element_type, deleter_type> impl_;
+    flare::internal::scoped_ptr_impl<element_type, deleter_type> impl_;
 
     // Disable initialization from any type other than element_type*, by
     // providing a constructor that matches such an initialization, but is

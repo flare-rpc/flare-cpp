@@ -8,7 +8,7 @@
 
 #define BASE_FILES_TEMP_DIR_PATTERN "temp_dir_XXXXXX"
 
-namespace flare::io {
+namespace flare {
 
     static bool create_temporary_dir_in_dir_impl(const flare::filesystem::path &base_dir,
                                                  const std::string &name_tmpl,
@@ -132,4 +132,4 @@ namespace flare::io {
         return !_path.empty() && flare::filesystem::exists(_path, ec) && flare::filesystem::is_directory(_path, ec);
     }
 
-}  // namespace flare::io
+}  // namespace flare

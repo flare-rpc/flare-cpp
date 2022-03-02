@@ -53,7 +53,7 @@ void StatusService::default_method(::google::protobuf::RpcController* cntl_base,
     // can load values more easily.
     cntl->http_response().set_content_type(
         use_html ? "text/html" : "text/plain");
-    flare::io::cord_buf_builder os;
+    flare::cord_buf_builder os;
     std::string str;
     if (use_html) {
         os << "<!DOCTYPE html><html><head>\n"

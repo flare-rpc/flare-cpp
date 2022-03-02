@@ -22,7 +22,7 @@
 #include "flare/base/filesystem.h"
 #include <sys/stat.h>
 #include <fcntl.h>                          // O_RDONLY
-#include "flare/base/strings.h"             // string_printf
+#include "flare/strings/str_format.h"             // string_printf
 #include "flare/strings/string_splitter.h"           // StringSplitter
 #include "flare/base/scoped_file.h"         // scoped_file
 #include "flare/base/time.h"
@@ -34,7 +34,7 @@
 #include "flare/rpc/builtin/pprof_service.h"
 #include "flare/rpc/builtin/common.h"
 #include "flare/rpc/details/tcmalloc_extension.h"
-#include "flare/fiber/internal/fiber.h"                // flare::this_fiber::fiber_sleep_for
+#include "flare/fiber/internal/fiber.h"                // flare::fiber_sleep_for
 #include "flare/base/fd_guard.h"
 #include "flare/fiber/this_fiber.h"
 
@@ -143,7 +143,7 @@ namespace flare::rpc {
             cntl->SetFailed(EAGAIN, "Another profiler is running, try again later");
             return;
         }
-        if (flare::this_fiber::fiber_sleep_for(sleep_sec * 1000000L) != 0) {
+        if (flare::fiber_sleep_for(sleep_sec * 1000000L) != 0) {
             PLOG(WARNING) << "Profiling has been interrupted";
         }
         ProfilerStop();
@@ -153,7 +153,7 @@ namespace flare::rpc {
             cntl->SetFailed(ENOENT, "Fail to open %s", prof_name);
             return;
         }
-        flare::io::IOPortal portal;
+        flare::IOPortal portal;
         portal.append_from_file_descriptor(fd, ULONG_MAX);
         cntl->response_attachment().swap(portal);
     }
@@ -194,7 +194,7 @@ namespace flare::rpc {
             cntl->SetFailed(EAGAIN, "Another profiler is running, try again later");
             return;
         }
-        if (flare::this_fiber::fiber_sleep_for(sleep_sec * 1000000L) != 0) {
+        if (flare::fiber_sleep_for(sleep_sec * 1000000L) != 0) {
             PLOG(WARNING) << "Profiling has been interrupted";
         }
         flare::fiber_internal::ContentionProfilerStop();
@@ -204,7 +204,7 @@ namespace flare::rpc {
             cntl->SetFailed(ENOENT, "Fail to open %s", prof_name);
             return;
         }
-        flare::io::IOPortal portal;
+        flare::IOPortal portal;
         portal.append_from_file_descriptor(fd, ULONG_MAX);
         cntl->response_attachment().swap(portal);
     }
@@ -305,7 +305,7 @@ namespace flare::rpc {
     }
     std::string line;
     while (std::getline(ss, line)) {
-        flare::strings::StringSplitter sp(line.c_str(), ' ');
+        flare::StringSplitter sp(line.c_str(), ' ');
         if (sp == NULL) {
             continue;
         }
@@ -401,7 +401,7 @@ static void LoadSymbols() {
     size_t line_len = 0;
     ssize_t nr = 0;
     while ((nr = getline(&line, &line_len, fp.get())) != -1) {
-        flare::strings::StringSplitter sp(line, line + nr, ' ');
+        flare::StringSplitter sp(line, line + nr, ' ');
         if (sp == NULL) {
             continue;
         }
@@ -490,7 +490,7 @@ static void LoadSymbols() {
     RPC_VLOG << "Loaded all symbols in " << tm.m_elapsed() << "ms";
 }
 
-static void FindSymbols(flare::io::cord_buf *out, std::vector<uintptr_t> &addr_list) {
+static void FindSymbols(flare::cord_buf *out, std::vector<uintptr_t> &addr_list) {
     char buf[32];
     for (size_t i = 0; i < addr_list.size(); ++i) {
         int len = snprintf(buf, sizeof(buf), "0x%08lx\t", addr_list[i]);
@@ -541,7 +541,7 @@ void PProfService::symbol(
         }
         std::vector<uintptr_t> addr_list;
         addr_list.reserve(32);
-        flare::strings::StringSplitter sp(addr_cstr, '+');
+        flare::StringSplitter sp(addr_cstr, '+');
         for (; sp != NULL; ++sp) {
             char *endptr;
             uintptr_t addr = strtoull(sp.field(), &endptr, 16);

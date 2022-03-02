@@ -5,7 +5,7 @@
 #include "flare/strings/compare.h"
 #include "flare/strings/ascii.h"
 
-namespace flare::strings {
+namespace flare {
 
 int compare_case(std::string_view a, std::string_view b) {
     std::string_view::const_iterator ai = a.begin();
@@ -34,4 +34,4 @@ int compare_case(std::string_view a, std::string_view b) {
     }
 }
 
-}  // namespace flare::strings
+}  // namespace flare

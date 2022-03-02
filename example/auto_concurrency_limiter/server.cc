@@ -47,7 +47,7 @@ DEFINE_string(case_file, "", "File path for test_cases");
 DEFINE_int32(latency_change_interval_us, 50000, "Intervalt for server side changes the latency");
 DEFINE_int32(server_max_concurrency, 0, "Echo Server's max_concurrency");
 DEFINE_bool(use_usleep, false,
-            "EchoServer uses ::usleep or flare::this_fiber::fiber_sleep_for to simulate latency "
+            "EchoServer uses ::usleep or flare::fiber_sleep_for to simulate latency "
             "when processing requests");
 
 
@@ -133,7 +133,7 @@ public:
         if (FLAGS_use_usleep) {
             ::usleep(_latency.load(std::memory_order_relaxed));
         } else {
-            flare::this_fiber::fiber_sleep_for(_latency.load(std::memory_order_relaxed));
+            flare::fiber_sleep_for(_latency.load(std::memory_order_relaxed));
         }
     }
 

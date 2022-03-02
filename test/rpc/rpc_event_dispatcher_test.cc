@@ -188,7 +188,7 @@ inline uint32_t fmix32(uint32_t h) {
 TEST_F(EventDispatcherTest, dispatch_tasks) {
 #ifdef FLARE_RESOURCE_POOL_NEED_FREE_ITEM_NUM
     const flare::base::ResourcePoolInfo old_info =
-        flare::memory::describe_resources<flare::rpc::Socket>();
+        flare::describe_resources<flare::rpc::Socket>();
 #endif
 
     client_stop = false;
@@ -262,8 +262,8 @@ TEST_F(EventDispatcherTest, dispatch_tasks) {
         ASSERT_EQ(copy1[i], copy2[i]) << i;
     }
     ASSERT_EQ(NCLIENT, copy1.size());
-    const flare::memory::ResourcePoolInfo info
-            = flare::memory::describe_resources<flare::rpc::Socket>();
+    const flare::ResourcePoolInfo info
+            = flare::describe_resources<flare::rpc::Socket>();
     LOG(INFO) << info;
 #ifdef FLARE_RESOURCE_POOL_NEED_FREE_ITEM_NUM
     ASSERT_EQ(NCLIENT, info.free_item_num - old_info.free_item_num);

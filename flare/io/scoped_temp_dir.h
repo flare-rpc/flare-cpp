@@ -15,7 +15,7 @@
 #include "flare/base/filesystem.h"
 #include "flare/base/profile.h"
 
-namespace flare::io {
+namespace flare {
 
     bool create_new_temp_directory(const flare::filesystem::path &prefix, flare::filesystem::path *newPath);
 
@@ -61,6 +61,6 @@ namespace flare::io {
         FLARE_DISALLOW_COPY_AND_ASSIGN(scoped_temp_dir);
     };
 
-}  // namespace flare::io
+}  // namespace flare
 
 #endif  // FLARE_IO_SCOPED_TEMP_DIR_H_

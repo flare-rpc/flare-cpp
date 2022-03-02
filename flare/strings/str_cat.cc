@@ -14,7 +14,7 @@
 #include "flare/strings/ascii.h"
 #include "flare/strings/numbers.h"
 
-namespace flare::strings {
+namespace flare {
 
 
 alpha_num::alpha_num(hex h) {
@@ -22,7 +22,7 @@ alpha_num::alpha_num(hex h) {
                   "This function only works when output buffer >= 32 bytes long");
     char *const end = &digits_[numbers_internal::kFastToBufferSize];
     auto real_width =
-            flare::strings::numbers_internal::fast_hex_to_buffer_zero_pad16(h.value, end - 16);
+            flare::numbers_internal::fast_hex_to_buffer_zero_pad16(h.value, end - 16);
     if (real_width >= h.width) {
         piece_ = std::string_view(end - real_width, real_width);
     } else {
@@ -233,4 +233,4 @@ void string_append(std::string *dest, const alpha_num &a, const alpha_num &b,
 }
 
 
-}  // namespace flare::strings
+}  // namespace flare

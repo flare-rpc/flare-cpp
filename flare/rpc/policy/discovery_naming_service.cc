@@ -20,7 +20,7 @@
 #include "flare/rapidjson/document.h"
 #include "flare/rapidjson/memorybuffer.h"
 #include "flare/rapidjson/writer.h"
-#include "flare/base/strings.h"
+#include "flare/strings/str_format.h"
 #include "flare/strings/str_split.h"
 #include "flare/base/fast_rand.h"
 #include "flare/fiber/internal/fiber.h"
@@ -149,7 +149,7 @@ DiscoveryClient::~DiscoveryClient() {
     }
 }
 
-static int ParseCommonResult(const flare::io::cord_buf& buf, std::string* error_text) {
+static int ParseCommonResult(const flare::cord_buf& buf, std::string* error_text) {
     const std::string s = buf.to_string();
     RAPIDJSON_NAMESPACE::Document d;
     d.Parse(s.c_str());
@@ -187,7 +187,7 @@ int DiscoveryClient::DoRenew() const {
     cntl.http_request().set_method(HTTP_METHOD_POST);
     cntl.http_request().uri() = "/discovery/renew";
     cntl.http_request().set_content_type("application/x-www-form-urlencoded");
-    flare::io::cord_buf_builder os;
+    flare::cord_buf_builder os;
     os << "appid=" << _params.appid
         << "&hostname=" << _params.hostname
         << "&env=" << _params.env
@@ -213,7 +213,7 @@ void* DiscoveryClient::PeriodicRenew(void* arg) {
     int consecutive_renew_error = 0;
     int64_t init_sleep_s = FLAGS_discovery_renew_interval_s / 2 +
         flare::base::fast_rand_less_than(FLAGS_discovery_renew_interval_s / 2);
-    if (flare::this_fiber::fiber_sleep_for(init_sleep_s * 1000000) != 0) {
+    if (flare::fiber_sleep_for(init_sleep_s * 1000000) != 0) {
         if (errno == ESTOP) {
             return NULL;
         }
@@ -227,7 +227,7 @@ void* DiscoveryClient::PeriodicRenew(void* arg) {
                 if (d->DoRegister() == 0) {
                     break;
                 }
-                flare::this_fiber::fiber_sleep_for(FLAGS_discovery_renew_interval_s * 1000000);
+                flare::fiber_sleep_for(FLAGS_discovery_renew_interval_s * 1000000);
             }
             consecutive_renew_error = 0;
         }
@@ -236,7 +236,7 @@ void* DiscoveryClient::PeriodicRenew(void* arg) {
             continue;
         }
         consecutive_renew_error = 0;
-        flare::this_fiber::fiber_sleep_for(FLAGS_discovery_renew_interval_s * 1000000);
+        flare::fiber_sleep_for(FLAGS_discovery_renew_interval_s * 1000000);
     }
     return NULL;
 }
@@ -271,11 +271,11 @@ int DiscoveryClient::DoRegister() {
     cntl.http_request().set_method(HTTP_METHOD_POST);
     cntl.http_request().uri() = "/discovery/register";
     cntl.http_request().set_content_type("application/x-www-form-urlencoded");
-    flare::io::cord_buf_builder os;
+    flare::cord_buf_builder os;
     os << "appid=" << _params.appid
         << "&hostname=" << _params.hostname;
 
-    std::vector<std::string_view> addrs = flare::strings::string_split(_params.addrs, ',');
+    std::vector<std::string_view> addrs = flare::string_split(_params.addrs, ',');
     for (size_t i = 0; i < addrs.size(); ++i) {
         if (!addrs[i].empty()) {
             os << "&addrs=" << addrs[i];
@@ -320,7 +320,7 @@ int DiscoveryClient::DoCancel() const {
     cntl.http_request().set_method(HTTP_METHOD_POST);
     cntl.http_request().uri() = "/discovery/cancel";
     cntl.http_request().set_content_type("application/x-www-form-urlencoded");
-    flare::io::cord_buf_builder os;
+    flare::cord_buf_builder os;
     os << "appid=" << _params.appid
         << "&hostname=" << _params.hostname
         << "&env=" << _params.env
@@ -357,7 +357,7 @@ int DiscoveryNamingService::GetServers(const char* service_name,
     }
     servers->clear();
     Controller cntl;
-    std::string uri_str = flare::base::string_printf(
+    std::string uri_str = flare::string_printf(
             "/discovery/fetchs?appid=%s&env=%s&status=%s", service_name,
             FLAGS_discovery_env.c_str(), FLAGS_discovery_status.c_str());
     if (!FLAGS_discovery_zone.empty()) {

@@ -30,7 +30,7 @@
 #include "flare/log/logging.h"                           // CHECK
 #include "flare/base/time.h"
 #include "flare/base/class_name.h"
-#include "flare/base/strings.h"
+#include "flare/strings/str_format.h"
 #include "flare/rpc/log.h"
 #include "flare/rpc/compress.h"
 #include "flare/rpc/policy/nova_pbrpc_protocol.h"
@@ -40,8 +40,10 @@
 #include "flare/rpc/details/ssl_helper.h"           // CreateServerSSLContext
 #include "flare/rpc/protocol.h"                     // ListProtocols
 #include "flare/rpc/nshead_service.h"               // NsheadService
-#include "flare/base/strings.h"
+#include "flare/strings/str_format.h"
 #include "flare/fiber/this_fiber.h"
+#include "flare/strings/utility.h"
+#include "flare/strings/trim.h"
 
 #ifdef ENABLE_THRIFT_FRAMED_PROTOCOL
 #include "flare/rpc/thrift_service.h"               // ThriftService
@@ -255,7 +257,7 @@ namespace flare::rpc {
     }
 
     std::string Server::ServerPrefix() const {
-        return flare::base::string_printf("%s_%d", g_server_info_prefix, listen_address().port);
+        return flare::string_printf("%s_%d", g_server_info_prefix, listen_address().port);
     }
 
     void *Server::UpdateDerivedVars(void *arg) {
@@ -322,7 +324,7 @@ namespace flare::rpc {
                 }
             } else {
                 consecutive_nosleep = 0;
-                if (flare::this_fiber::fiber_sleep_for(sleep_us) < 0) {
+                if (flare::fiber_sleep_for(sleep_us) < 0) {
                     PLOG_IF(ERROR, errno != ESTOP) << "Fail to sleep";
                     return nullptr;
                 }
@@ -518,7 +520,7 @@ namespace flare::rpc {
 
     Acceptor *Server::BuildAcceptor() {
         std::set < std::string > whitelist;
-        for (flare::strings::StringSplitter sp(_options.enabled_protocols.c_str(), ' ');
+        for (flare::StringSplitter sp(_options.enabled_protocols.c_str(), ' ');
              sp; ++sp) {
             std::string protocol(sp.field(), sp.length());
             whitelist.insert(protocol);
@@ -623,7 +625,7 @@ namespace flare::rpc {
         args->result = args->fiber_init_fn(args->fiber_init_args);
         args->done = true;
         while (!args->stop) {
-            flare::this_fiber::fiber_sleep_for(1000);
+            flare::fiber_sleep_for(1000);
         }
         return nullptr;
     }
@@ -799,7 +801,7 @@ namespace flare::rpc {
             // Wait until all created fibers finish the init function.
             for (size_t i = 0; i < ncreated; ++i) {
                 while (!init_args[i].done) {
-                    flare::this_fiber::fiber_sleep_for(1000);
+                    flare::fiber_sleep_for(1000);
                 }
             }
             // Stop and join created fibers.
@@ -1218,7 +1220,7 @@ namespace flare::rpc {
         }
 
         std::string_view restful_mappings = svc_opt.restful_mappings;
-        restful_mappings = flare::base::strip_ascii_whitespace(restful_mappings);
+        restful_mappings = flare::strip_ascii_whitespace(restful_mappings);
         if (!restful_mappings.empty()) {
             // Parse the mappings.
             std::vector<RestfulMapping> mappings;
@@ -1375,7 +1377,7 @@ namespace flare::rpc {
         ServiceOptions options;
         options.ownership = ownership;
         // TODO: This is weird
-        options.restful_mappings = flare::base::as_string(restful_mappings);
+        options.restful_mappings = flare::as_string(restful_mappings);
         options.allow_default_url = allow_default_url;
         return AddServiceInternal(service, false, options);
     }
@@ -1411,11 +1413,11 @@ namespace flare::rpc {
                 continue;
             }
             if (mp->http_url) {
-                flare::strings::StringSplitter at_sp(mp->http_url->c_str(), '@');
+                flare::StringSplitter at_sp(mp->http_url->c_str(), '@');
                 for (; at_sp; ++at_sp) {
                     std::string_view path(at_sp.field(), at_sp.length());
-                    path = flare::base::strip_ascii_whitespace(path);
-                    flare::strings::StringSplitter slash_sp(
+                    path = flare::strip_ascii_whitespace(path);
+                    flare::StringSplitter slash_sp(
                             path.data(), path.data() + path.size(), '/');
                     if (slash_sp == nullptr) {
                         LOG(ERROR) << "Invalid http_url=" << *mp->http_url;
@@ -1426,7 +1428,7 @@ namespace flare::rpc {
                     if (vsp == nullptr) {
                         if (_global_restful_map) {
                             std::string path_str;
-                            flare::base::copy_to_string(path, &path_str);
+                            flare::copy_to_string(path, &path_str);
                             if (_global_restful_map->RemoveByPathString(path_str)) {
                                 continue;
                             }
@@ -1436,7 +1438,7 @@ namespace flare::rpc {
                         break;
                     }
                     std::string path_str;
-                    flare::base::copy_to_string(path, &path_str);
+                    flare::copy_to_string(path, &path_str);
                     if (!vsp->restful_map->RemoveByPathString(path_str)) {
                         LOG(ERROR) << "Fail to find path=" << path
                                    << " in restful_map of service=" << v_svc_name;
@@ -1654,7 +1656,7 @@ namespace flare::rpc {
 
     void Server::RunUntilAskedToQuit() {
         while (!IsAskedToQuit()) {
-            flare::this_fiber::fiber_sleep_for(1000000L);
+            flare::fiber_sleep_for(1000000L);
         }
         Stop(0/*not used now*/);
         Join();
@@ -1716,7 +1718,7 @@ namespace flare::rpc {
             FLARE_SCOPED_LOCK(g_dummy_server_mutex);
             if (g_dummy_server == nullptr) {
                 Server *dummy_server = new Server;
-                dummy_server->set_version(flare::base::string_printf(
+                dummy_server->set_version(flare::string_printf(
                         "DummyServerOf(%s)", GetProgramName()));
                 ServerOptions options;
                 options.num_threads = 0;

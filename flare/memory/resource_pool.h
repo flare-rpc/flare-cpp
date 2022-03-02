@@ -28,10 +28,10 @@
 //   new<int>=170.6 delete<int>=292.8
 //   --------------------------------
 
-namespace flare::memory {
+namespace flare {
 
 // Specialize following classes to override default parameters for type T.
-//   namespace flare::memory {
+//   namespace flare {
 //     template <> struct ResourcePoolBlockMaxSize<Foo> {
 //       static const size_t value = 1024;
 //     };
@@ -68,11 +68,11 @@ namespace flare::memory {
         static bool validate(const T *) { return true; }
     };
 
-}  // namespace flare::memory
+}  // namespace flare
 
 #include "flare/memory/resource_pool_inl.h"
 
-namespace flare::memory {
+namespace flare {
 
     // Get an object typed |T| and write its identifier into |id|.
     // The object should be cleared before usage.
@@ -132,6 +132,6 @@ namespace flare::memory {
         return ResourcePool<T>::singleton()->describe_resources();
     }
 
-}  // namespace flare::memory
+}  // namespace flare
 
 #endif  // FLARE_MEMORY_RESOURCE_POOL_H_

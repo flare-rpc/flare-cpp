@@ -19,7 +19,7 @@
 #include <gtest/gtest.h>
 #include "flare/base/compat.h"
 #include "flare/base/time.h"
-#include "flare/base/strings.h"
+#include "flare/strings/str_format.h"
 #include "flare/log/logging.h"
 #include "flare/fiber/internal/fiber.h"
 #include "flare/fiber/internal/waitable_event.h"
@@ -41,7 +41,7 @@ namespace {
         fiber_mutex_lock(m);
         printf("[%" PRIu64 "] I'm here, %d, %" PRId64 "ms\n",
                pthread_numeric_id(), ++c, flare::base::cpuwide_time_ms() - start_time);
-        flare::this_fiber::fiber_sleep_for(10000);
+        flare::fiber_sleep_for(10000);
         fiber_mutex_unlock(m);
         return nullptr;
     }
@@ -105,7 +105,7 @@ namespace {
     }
 
     TEST(MutexTest, cpp_wrapper) {
-        flare::fiber::fiber_mutex mutex;
+        flare::fiber_mutex mutex;
         ASSERT_TRUE(mutex.try_lock());
         mutex.unlock();
         mutex.lock();
@@ -114,8 +114,8 @@ namespace {
             FLARE_SCOPED_LOCK(mutex);
         }
         {
-            std::unique_lock<flare::fiber::fiber_mutex> lck1;
-            std::unique_lock<flare::fiber::fiber_mutex> lck2(mutex);
+            std::unique_lock<flare::fiber_mutex> lck1;
+            std::unique_lock<flare::fiber_mutex> lck2(mutex);
             lck1.swap(lck2);
             lck1.unlock();
             lck1.lock();
@@ -158,7 +158,7 @@ namespace {
             if (g_started) {
                 break;
             }
-            flare::this_fiber::fiber_sleep_for(1000);
+            flare::fiber_sleep_for(1000);
         }
         t.start();
         while (!g_stopped) {
@@ -226,16 +226,16 @@ namespace {
         flare::base::Mutex base_mutex;
         PerfTest(&base_mutex, (pthread_t *) nullptr, thread_num, pthread_create, pthread_join);
         PerfTest(&base_mutex, (fiber_id_t *) nullptr, thread_num, fiber_start_background, fiber_join);
-        flare::fiber::fiber_mutex fbr_mutex;
+        flare::fiber_mutex fbr_mutex;
         PerfTest(&fbr_mutex, (pthread_t *) nullptr, thread_num, pthread_create, pthread_join);
         PerfTest(&fbr_mutex, (fiber_id_t *) nullptr, thread_num, fiber_start_background, fiber_join);
     }
 
     void *loop_until_stopped(void *arg) {
-        flare::fiber::fiber_mutex *m = (flare::fiber::fiber_mutex *) arg;
+        flare::fiber_mutex *m = (flare::fiber_mutex *) arg;
         while (!g_stopped) {
             FLARE_SCOPED_LOCK(*m);
-            flare::this_fiber::fiber_sleep_for(20);
+            flare::fiber_sleep_for(20);
         }
         return nullptr;
     }
@@ -244,7 +244,7 @@ namespace {
         g_stopped = false;
         const int N = 16;
         const int M = N * 2;
-        flare::fiber::fiber_mutex m;
+        flare::fiber_mutex m;
         pthread_t pthreads[N];
         fiber_id_t fibers[M];
         // reserve enough workers for test. This is a must since we have
@@ -259,7 +259,7 @@ namespace {
             const fiber_attribute *attr = i % 2 ? nullptr : &FIBER_ATTR_PTHREAD;
             ASSERT_EQ(0, fiber_start_urgent(&fibers[i], attr, loop_until_stopped, &m));
         }
-        flare::this_fiber::fiber_sleep_for(1000L * 1000);
+        flare::fiber_sleep_for(1000L * 1000);
         g_stopped = true;
         for (int i = 0; i < M; ++i) {
             fiber_join(fibers[i], nullptr);

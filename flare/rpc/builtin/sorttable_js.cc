@@ -23,12 +23,12 @@
 namespace flare::rpc {
 
 static pthread_once_t s_sorttable_buf_once = PTHREAD_ONCE_INIT; 
-static flare::io::cord_buf* s_sorttable_buf = NULL;
+static flare::cord_buf* s_sorttable_buf = NULL;
 static void InitSortTableBuf() {
-    s_sorttable_buf = new flare::io::cord_buf;
+    s_sorttable_buf = new flare::cord_buf;
     s_sorttable_buf->append(sorttable_js());
 }
-const flare::io::cord_buf& sorttable_js_iobuf() {
+const flare::cord_buf& sorttable_js_iobuf() {
     pthread_once(&s_sorttable_buf_once, InitSortTableBuf);
     return *s_sorttable_buf;
 }

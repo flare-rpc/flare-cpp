@@ -23,7 +23,7 @@
 #include <gflags/gflags.h>
 #include "flare/base/time.h"
 #include "flare/log/logging.h"
-#include <flare/base/strings.h>
+#include <flare/string/str_format.h>
 #include <flare/base/string_splitter.h>
 #include <flare/rpc/server.h>
 #include "echo.pb.h"
@@ -81,7 +81,7 @@ public:
                 int64_t end_time = flare::base::gettimeofday_us() + (int64_t) delay;
                 while (flare::base::gettimeofday_us() < end_time) {}
             } else {
-                flare::this_fiber::fiber_sleep_for((int64_t) delay);
+                flare::fiber_sleep_for((int64_t) delay);
             }
         }
 
@@ -117,7 +117,7 @@ int main(int argc, char *argv[]) {
     options.idle_timeout_sec = FLAGS_idle_timeout_s;
     options.max_concurrency = FLAGS_max_concurrency;
 
-    flare::strings::StringSplitter sp(FLAGS_sleep_us.c_str(), ',');
+    flare::StringSplitter sp(FLAGS_sleep_us.c_str(), ',');
     std::vector<int64_t> sleep_list;
     for (; sp; ++sp) {
         sleep_list.push_back(strtoll(sp.field(), NULL, 10));
@@ -135,7 +135,7 @@ int main(int argc, char *argv[]) {
         int64_t sleep_us = sleep_list[(size_t) i < sleep_list.size() ? i : (sleep_list.size() - 1)];
         echo_service_impls[i].set_index(i, sleep_us);
         // will be shown on /version page
-        servers[i].set_version(flare::base::string_printf(
+        servers[i].set_version(flare::string_printf(
                 "example/dynamic_partition_echo_c++[%d]", i));
         if (servers[i].AddService(&echo_service_impls[i],
                                   flare::rpc::SERVER_DOESNT_OWN_SERVICE) != 0) {

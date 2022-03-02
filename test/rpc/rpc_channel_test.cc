@@ -41,7 +41,7 @@
 #include "flare/rpc/controller.h"
 #include "echo.pb.h"
 #include "flare/rpc/options.pb.h"
-#include "flare/base/strings.h"
+#include "flare/strings/ends_with.h"
 #include "flare/fiber/this_fiber.h"
 
 namespace flare::rpc {
@@ -123,7 +123,7 @@ namespace {
         flare::rpc::Socket *ptr = msg->socket();
 
         flare::rpc::policy::RpcMeta meta;
-        flare::io::cord_buf_as_zero_copy_input_stream wrapper(msg->meta);
+        flare::cord_buf_as_zero_copy_input_stream wrapper(msg->meta);
         EXPECT_TRUE(meta.ParseFromZeroCopyStream(&wrapper));
 
         if (meta.has_authentication_data()) {
@@ -157,7 +157,7 @@ namespace {
             }
             if (req->sleep_us() > 0) {
                 LOG(INFO) << "sleep " << req->sleep_us() << "us...";
-                flare::this_fiber::fiber_sleep_for(req->sleep_us());
+                flare::fiber_sleep_for(req->sleep_us());
             }
             res->set_message("received " + req->message());
             if (req->code() != 0) {
@@ -225,7 +225,7 @@ namespace {
             }
 
             flare::rpc::policy::RpcMeta meta;
-            flare::io::cord_buf_as_zero_copy_input_stream wrapper(msg->meta);
+            flare::cord_buf_as_zero_copy_input_stream wrapper(msg->meta);
             EXPECT_TRUE(meta.ParseFromZeroCopyStream(&wrapper));
             const flare::rpc::policy::RpcRequestMeta &req_meta = meta.request();
             ASSERT_EQ(ts->_svc.descriptor()->full_name(), req_meta.service_name());
@@ -234,12 +234,12 @@ namespace {
             google::protobuf::Message *req =
                     ts->_svc.GetRequestPrototype(method).New();
             if (meta.attachment_size() != 0) {
-                flare::io::cord_buf req_buf;
+                flare::cord_buf req_buf;
                 msg->payload.cutn(&req_buf, msg->payload.size() - meta.attachment_size());
-                flare::io::cord_buf_as_zero_copy_input_stream wrapper2(req_buf);
+                flare::cord_buf_as_zero_copy_input_stream wrapper2(req_buf);
                 EXPECT_TRUE(req->ParseFromZeroCopyStream(&wrapper2));
             } else {
-                flare::io::cord_buf_as_zero_copy_input_stream wrapper2(msg->payload);
+                flare::cord_buf_as_zero_copy_input_stream wrapper2(msg->payload);
                 EXPECT_TRUE(req->ParseFromZeroCopyStream(&wrapper2));
             }
             flare::rpc::Controller *cntl = new flare::rpc::Controller();
@@ -266,7 +266,7 @@ namespace {
             int listening_fd = -1;
             while ((listening_fd = tcp_listen(ep)) < 0) {
                 if (errno == EADDRINUSE) {
-                    flare::this_fiber::fiber_sleep_for(1000);
+                    flare::fiber_sleep_for(1000);
                 } else {
                     return -1;
                 }
@@ -444,7 +444,7 @@ namespace {
                 const int64_t start_time = flare::base::gettimeofday_us();
                 while (_messenger.ConnectionCount() != 0) {
                     EXPECT_LT(flare::base::gettimeofday_us(), start_time + 100000L/*100ms*/);
-                    flare::this_fiber::fiber_sleep_for(1000);
+                    flare::fiber_sleep_for(1000);
                 }
             } else {
                 EXPECT_GE(1ul, _messenger.ConnectionCount());
@@ -586,7 +586,7 @@ namespace {
                 const int64_t start_time = flare::base::gettimeofday_us();
                 while (_messenger.ConnectionCount() != 0) {
                     EXPECT_LT(flare::base::gettimeofday_us(), start_time + 100000L/*100ms*/);
-                    flare::this_fiber::fiber_sleep_for(1000);
+                    flare::fiber_sleep_for(1000);
                 }
             } else {
                 EXPECT_GE(1ul, _messenger.ConnectionCount());
@@ -638,7 +638,7 @@ namespace {
                 const int64_t start_time = flare::base::gettimeofday_us();
                 while (_messenger.ConnectionCount() != 0) {
                     EXPECT_LT(flare::base::gettimeofday_us(), start_time + 100000L/*100ms*/);
-                    flare::this_fiber::fiber_sleep_for(1000);
+                    flare::fiber_sleep_for(1000);
                 }
             } else {
                 EXPECT_GE(1ul, _messenger.ConnectionCount());
@@ -682,7 +682,7 @@ namespace {
                 const int64_t start_time = flare::base::gettimeofday_us();
                 while (_messenger.ConnectionCount() != 0) {
                     EXPECT_LT(flare::base::gettimeofday_us(), start_time + 100000L/*100ms*/);
-                    flare::this_fiber::fiber_sleep_for(1000);
+                    flare::fiber_sleep_for(1000);
                 }
             } else {
                 EXPECT_GE(1ul, _messenger.ConnectionCount());
@@ -731,7 +731,7 @@ namespace {
                 const int64_t start_time = flare::base::gettimeofday_us();
                 while (_messenger.ConnectionCount() != 0) {
                     EXPECT_LT(flare::base::gettimeofday_us(), start_time + 100000L/*100ms*/);
-                    flare::this_fiber::fiber_sleep_for(1000);
+                    flare::fiber_sleep_for(1000);
                 }
             } else {
                 EXPECT_GE(1ul, _messenger.ConnectionCount());
@@ -763,7 +763,7 @@ namespace {
 
             for (size_t i = 0; i < NCHANS; ++i) {
                 ::test::EchoRequest *sub_req = req.add_requests();
-                sub_req->set_message(flare::base::string_printf("hello_%llu", (long long) i));
+                sub_req->set_message(flare::string_printf("hello_%llu", (long long) i));
                 sub_req->set_code(i + 1);
             }
 
@@ -772,7 +772,7 @@ namespace {
             CallMethod(&subchans[0], &cntl, &req, &res, false);
             ASSERT_TRUE(cntl.Failed());
             ASSERT_EQ(flare::rpc::EINTERNAL, cntl.ErrorCode()) << cntl.ErrorText();
-            ASSERT_TRUE(flare::base::ends_with(cntl.ErrorText(), "Method ComboEcho() not implemented."));
+            ASSERT_TRUE(flare::ends_with(cntl.ErrorText(), "Method ComboEcho() not implemented."));
 
             // do the rpc call.
             cntl.Reset();
@@ -782,7 +782,7 @@ namespace {
             ASSERT_GT(cntl.latency_us(), 0);
             ASSERT_EQ((int) NCHANS, res.responses_size());
             for (int i = 0; i < res.responses_size(); ++i) {
-                EXPECT_EQ(flare::base::string_printf("received hello_%d", i),
+                EXPECT_EQ(flare::string_printf("received hello_%d", i),
                           res.responses(i).message());
                 ASSERT_EQ(1, res.responses(i).code_list_size());
                 EXPECT_EQ(i + 1, res.responses(i).code_list(0));
@@ -792,7 +792,7 @@ namespace {
                 const int64_t start_time = flare::base::gettimeofday_us();
                 while (_messenger.ConnectionCount() != 0) {
                     EXPECT_LT(flare::base::gettimeofday_us(), start_time + 100000L/*100ms*/);
-                    flare::this_fiber::fiber_sleep_for(1000);
+                    flare::fiber_sleep_for(1000);
                 }
             } else {
                 EXPECT_GE(1ul, _messenger.ConnectionCount());
@@ -808,7 +808,7 @@ namespace {
         static void *Canceler(void *void_arg) {
             CancelerArg *arg = static_cast<CancelerArg *>(void_arg);
             if (arg->sleep_before_cancel_us > 0) {
-                flare::this_fiber::fiber_sleep_for(arg->sleep_before_cancel_us);
+                flare::fiber_sleep_for(arg->sleep_before_cancel_us);
             }
             LOG(INFO) << "Start to cancel cid=" << arg->cid.value;
             flare::rpc::StartCancel(arg->cid);
@@ -1093,7 +1093,7 @@ namespace {
                 const int64_t start_time = flare::base::gettimeofday_us();
                 while (_messenger.ConnectionCount() != 0) {
                     EXPECT_LT(flare::base::gettimeofday_us(), start_time + 100000L/*100ms*/);
-                    flare::this_fiber::fiber_sleep_for(1000);
+                    flare::fiber_sleep_for(1000);
                 }
             } else {
                 EXPECT_GE(1ul, _messenger.ConnectionCount());
@@ -1499,7 +1499,7 @@ namespace {
             const int64_t start_time = flare::base::gettimeofday_us();
             while (_messenger.ConnectionCount() != 0) {
                 EXPECT_LT(flare::base::gettimeofday_us(), start_time + 100000L/*100ms*/);
-                flare::this_fiber::fiber_sleep_for(1000);
+                flare::fiber_sleep_for(1000);
             }
 
             StopAndJoin();
@@ -1532,7 +1532,7 @@ namespace {
             const int64_t start_time = flare::base::gettimeofday_us();
             while (_messenger.ConnectionCount() != 0) {
                 EXPECT_LT(flare::base::gettimeofday_us(), start_time + 100000L/*100ms*/);
-                flare::this_fiber::fiber_sleep_for(1000);
+                flare::fiber_sleep_for(1000);
             }
             StopAndJoin();
         }
@@ -1568,7 +1568,7 @@ namespace {
             const int64_t start_time = flare::base::gettimeofday_us();
             while (_messenger.ConnectionCount() != 0) {
                 EXPECT_LT(flare::base::gettimeofday_us(), start_time + 100000L/*100ms*/);
-                flare::this_fiber::fiber_sleep_for(1000);
+                flare::fiber_sleep_for(1000);
             }
             StopAndJoin();
         }
@@ -1748,7 +1748,7 @@ namespace {
             CallMethod(&channel, &cntl, &req, &res, async);
             EXPECT_EQ(flare::rpc::ERPCTIMEDOUT, cntl.ErrorCode()) << cntl.ErrorText();
             EXPECT_EQ(0, cntl.retried_count());
-            flare::this_fiber::fiber_sleep_for(100000);  // wait for the sleep task to finish
+            flare::fiber_sleep_for(100000);  // wait for the sleep task to finish
 
             // Retry when connection broken
             cntl.Reset();
@@ -1765,7 +1765,7 @@ namespace {
                 const int64_t start_time = flare::base::gettimeofday_us();
                 while (_messenger.ConnectionCount() != 0) {
                     EXPECT_LT(flare::base::gettimeofday_us(), start_time + 100000L/*100ms*/);
-                    flare::this_fiber::fiber_sleep_for(1000);
+                    flare::fiber_sleep_for(1000);
                 }
             } else {
                 // May fail if health checker can't revive in time
@@ -1777,7 +1777,7 @@ namespace {
                 }
             }
             StopAndJoin();
-            flare::this_fiber::fiber_sleep_for(100000);  // wait for stop
+            flare::fiber_sleep_for(100000);  // wait for stop
 
             // Retry when connection failed
             cntl.Reset();
@@ -1795,7 +1795,7 @@ namespace {
             if (short_connection) {
                 opt.connection_type = flare::rpc::CONNECTION_TYPE_SHORT;
             }
-            flare::io::temp_file server_list;
+            flare::temp_file server_list;
             EXPECT_EQ(0, server_list.save_format(
                     "127.0.0.1:100\n"
                     "127.0.0.1:200\n"
@@ -1817,7 +1817,7 @@ namespace {
         }
 
         flare::base::end_point _ep;
-        flare::io::temp_file _server_list;
+        flare::temp_file _server_list;
         std::string _naming_url;
 
         flare::rpc::Acceptor _messenger;
@@ -1912,7 +1912,7 @@ namespace {
         flare::rpc::ChannelOptions opt;
         opt.succeed_without_server = false;
         flare::rpc::Channel channel;
-        flare::io::temp_file server_list;
+        flare::temp_file server_list;
         ASSERT_EQ(0, server_list.save(""));
         std::string naming_url = std::string("file://") + server_list.fname();
         // empty file list results in error.
@@ -1934,7 +1934,7 @@ namespace {
 
     TEST_F(ChannelTest, init_using_naming_service) {
         flare::rpc::Channel *channel = new flare::rpc::Channel();
-        flare::io::temp_file server_list;
+        flare::temp_file server_list;
         ASSERT_EQ(0, server_list.save("127.0.0.1:8888"));
         std::string naming_url = std::string("filE://") + server_list.fname();
         // Rr are intended to test case-insensitivity.
@@ -2031,7 +2031,7 @@ namespace {
                 "localhost:1234",
                 "github.com:1234"
         };
-        flare::io::temp_file tmp_file;
+        flare::temp_file tmp_file;
         {
             FILE *fp = fopen(tmp_file.fname(), "w");
             for (size_t i = 0; i < FLARE_ARRAY_SIZE(address_list); ++i) {

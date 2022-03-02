@@ -32,7 +32,7 @@
 #include "flare/container/doubly_buffered_data.h"
 #include "flare/rpc/describable.h"
 #include "flare/rpc/socket.h"
-#include "flare/base/strings.h"
+#include "flare/strings/numbers.h"
 #include "flare/rpc/excluded_servers.h"
 #include "flare/rpc/policy/weighted_round_robin_load_balancer.h"
 #include "flare/rpc/policy/round_robin_load_balancer.h"
@@ -477,9 +477,9 @@ namespace {
             for (size_t i = 0; i < FLARE_ARRAY_SIZE(th); ++i) {
                 ASSERT_EQ(0, pthread_create(&th[i], NULL, select_server, &sa));
             }
-            flare::this_fiber::fiber_sleep_for(10000);
+            flare::fiber_sleep_for(10000);
             ProfilerStart((lb_name + ".prof").c_str());
-            flare::this_fiber::fiber_sleep_for(300000);
+            flare::fiber_sleep_for(300000);
             ProfilerStop();
 
             global_stop = true;
@@ -668,9 +668,9 @@ namespace {
                 ptr->SetLogOff();
             }
             if (i < 4) {
-                std::optional<int> weight_num = flare::base::try_parse<int>(weight[i]);
-                ASSERT_TRUE(weight_num);
-                configed_weight[dummy] = *weight_num;
+                int weight_num;
+                ASSERT_TRUE(flare::simple_atoi(weight[i], &weight_num));
+                configed_weight[dummy] = weight_num;
                 EXPECT_TRUE(wrrlb.AddServer(id));
             } else {
                 EXPECT_FALSE(wrrlb.AddServer(id));
@@ -775,10 +775,10 @@ namespace {
             ASSERT_EQ(0, flare::rpc::Socket::Create(options, &id.id));
             id.tag = weight[i];
             if (i < valid_weight_num) {
-                auto weight_num = flare::base::try_parse<int>(weight[i]);
-                ASSERT_TRUE(weight_num);
-                configed_weight[dummy] = *weight_num;
-                configed_weight_sum += *weight_num;
+                int weight_num;
+                ASSERT_TRUE(flare::simple_atoi(weight[i], &weight_num));
+                configed_weight[dummy] = weight_num;
+                configed_weight_sum += weight_num;
                 EXPECT_TRUE(wrlb.AddServer(id));
             } else {
                 EXPECT_FALSE(wrlb.AddServer(id));
@@ -945,7 +945,7 @@ namespace {
             ASSERT_EQ(1, flare::rpc::Socket::AddressFailedAsWell(ptr[0]->id(), &dummy_ptr));
             dummy_ptr->Revive();
         }
-        flare::this_fiber::fiber_sleep_for(flare::rpc::FLAGS_detect_available_server_interval_ms * 1000);
+        flare::fiber_sleep_for(flare::rpc::FLAGS_detect_available_server_interval_ms * 1000);
         // After one server is revived, the reject rate should be 50%
         int num_ereject = 0;
         int num_ok = 0;
@@ -960,7 +960,7 @@ namespace {
             }
         }
         ASSERT_TRUE(abs(num_ereject - num_ok) < 30);
-        flare::this_fiber::fiber_sleep_for((2000 /* hold_seconds */ + 10) * 1000);
+        flare::fiber_sleep_for((2000 /* hold_seconds */ + 10) * 1000);
 
         // After enough waiting time, traffic should be sent to all available servers.
         for (int i = 0; i < 10; ++i) {
@@ -985,12 +985,12 @@ namespace {
             int p = _num_request.fetch_add(1, std::memory_order_relaxed);
             // concurrency in normal case is 50
             if (p < 70) {
-                flare::this_fiber::fiber_sleep_for(100 * 1000);
+                flare::fiber_sleep_for(100 * 1000);
                 _num_request.fetch_sub(1, std::memory_order_relaxed);
                 res->set_message("OK");
             } else {
                 _num_request.fetch_sub(1, std::memory_order_relaxed);
-                flare::this_fiber::fiber_sleep_for(1000 * 1000);
+                flare::fiber_sleep_for(1000 * 1000);
             }
             return;
         }
@@ -1059,7 +1059,7 @@ namespace {
         }
         // This sleep make one server revived 700ms earlier than the other server, which
         // can make the server down again if no request limit policy are applied here.
-        flare::this_fiber::fiber_sleep_for(700000);
+        flare::fiber_sleep_for(700000);
         {
             // trigger the other server to health check
             flare::rpc::Controller cntl;
@@ -1083,7 +1083,7 @@ namespace {
             Done *done = new Done;
             done->req.set_message("123");
             stub.Echo(&done->cntl, &done->req, &done->res, done);
-            flare::this_fiber::fiber_sleep_for(1000);
+            flare::fiber_sleep_for(1000);
         }
         // All error code should be equal to EREJECT, except when the situation
         // all servers are down, the very first call that trigger recovering would
@@ -1098,9 +1098,9 @@ namespace {
             Done *done = new Done;
             done->req.set_message("123");
             stub.Echo(&done->cntl, &done->req, &done->res, done);
-            flare::this_fiber::fiber_sleep_for(1000);
+            flare::fiber_sleep_for(1000);
         }
-        flare::this_fiber::fiber_sleep_for(500000 /* sleep longer than timeout of channel */);
+        flare::fiber_sleep_for(500000 /* sleep longer than timeout of channel */);
         ASSERT_EQ(0, num_failed.load(std::memory_order_relaxed));
     }
 

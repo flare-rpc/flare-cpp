@@ -17,7 +17,7 @@
 //
 //   // Splits the given string on commas. Returns the results in a
 //   // vector of strings.
-//   std::vector<std::string> v = flare::strings:: string_split("a,b,c", ',');
+//   std::vector<std::string> v = flare:: string_split("a,b,c", ',');
 //   // Can also use ","
 //   // v[0] == "a", v[1] == "b", v[2] == "c"
 //
@@ -39,7 +39,7 @@
 #include "flare/strings/strip.h"
 #include "flare/strings/trim.h"
 
-namespace flare::strings {
+namespace flare {
 
 
 //------------------------------------------------------------------------------
@@ -102,13 +102,13 @@ namespace flare::strings {
 //
 // Example:
 //
-//   // Because a string literal is converted to an `flare::strings::by_string`,
+//   // Because a string literal is converted to an `flare::by_string`,
 //   // the following two splits are equivalent.
 //
-//   std::vector<std::string> v1 = flare::strings:: string_split("a, b, c", ", ");
+//   std::vector<std::string> v1 = flare:: string_split("a, b, c", ", ");
 //
-//   using flare::strings::by_string;
-//   std::vector<std::string> v2 = flare::strings:: string_split("a, b, c",
+//   using flare::by_string;
+//   std::vector<std::string> v2 = flare:: string_split("a, b, c",
 //                                                by_string(", "));
 //   // v[0] == "a", v[1] == "b", v[2] == "c"
 class by_string {
@@ -128,21 +128,21 @@ class by_string {
 //
 // Example:
 //
-//   // Because a char literal is converted to a flare::strings::by_char,
+//   // Because a char literal is converted to a flare::by_char,
 //   // the following two splits are equivalent.
-//   std::vector<std::string> v1 = flare::strings:: string_split("a,b,c", ',');
-//   using flare::strings::by_char;
-//   std::vector<std::string> v2 = flare::strings:: string_split("a,b,c", by_char(','));
+//   std::vector<std::string> v1 = flare:: string_split("a,b,c", ',');
+//   using flare::by_char;
+//   std::vector<std::string> v2 = flare:: string_split("a,b,c", by_char(','));
 //   // v[0] == "a", v[1] == "b", v[2] == "c"
 //
 // `by_char` is also the default delimiter if a single character is given
 // as the delimiter to ` string_split()`. For example, the following calls are
 // equivalent:
 //
-//   std::vector<std::string> v = flare::strings:: string_split("a-b", '-');
+//   std::vector<std::string> v = flare:: string_split("a-b", '-');
 //
-//   using flare::strings::by_char;
-//   std::vector<std::string> v = flare::strings:: string_split("a-b", by_char('-'));
+//   using flare::by_char;
+//   std::vector<std::string> v = flare:: string_split("a-b", by_char('-'));
 //
 class by_char {
   public:
@@ -164,8 +164,8 @@ class by_char {
 //
 // Example:
 //
-//   using flare::strings::by_any_char;
-//   std::vector<std::string> v = flare::strings:: string_split("a,b=c", by_any_char(",="));
+//   using flare::by_any_char;
+//   std::vector<std::string> v = flare:: string_split("a,b=c", by_any_char(",="));
 //   // v[0] == "a", v[1] == "b", v[2] == "c"
 //
 // If `by_any_char` is given the empty string, it behaves exactly like
@@ -191,16 +191,16 @@ class by_any_char {
 //
 // Example:
 //
-//   using flare::strings:: by_length;
-//   std::vector<std::string> v = flare::strings:: string_split("123456789",  by_length(3));
+//   using flare:: by_length;
+//   std::vector<std::string> v = flare:: string_split("123456789",  by_length(3));
 
 //   // v[0] == "123", v[1] == "456", v[2] == "789"
 //
 // Note that the string does not have to be a multiple of the fixed split
 // length. In such a case, the last substring will be shorter.
 //
-//   using flare::strings:: by_length;
-//   std::vector<std::string> v = flare::strings:: string_split("12345",  by_length(2));
+//   using flare:: by_length;
+//   std::vector<std::string> v = flare:: string_split("12345",  by_length(2));
 //
 //   // v[0] == "12", v[1] == "34", v[2] == "5"
 class by_length {
@@ -219,7 +219,7 @@ namespace strings_internal {
 // for a particular Delimiter type. The base case simply exposes type Delimiter
 // itself as the delimiter's Type. However, there are specializations for
 // string-like objects that map them to the by_string delimiter object.
-// This allows functions like flare::strings:: string_split() and flare::strings:: max_splits() to accept
+// This allows functions like flare:: string_split() and flare:: max_splits() to accept
 // string-like objects (e.g., ',') as delimiter arguments but they will be
 // treated as if a by_string delimiter was given.
 template<typename Delimiter>
@@ -279,8 +279,8 @@ class max_splits_impl {
 // The collection will contain at most `limit` + 1 elements.
 // Example:
 //
-//   using flare::strings:: max_splits;
-//   std::vector<std::string> v = flare::strings:: string_split("a,b,c",  max_splits(',', 1));
+//   using flare:: max_splits;
+//   std::vector<std::string> v = flare:: string_split("a,b,c",  max_splits(',', 1));
 //
 //   // v[0] == "a", v[1] == "b,c"
 template<typename Delimiter>
@@ -318,7 +318,7 @@ max_splits(Delimiter delimiter, int limit) {
 //
 // Example:
 //
-//  std::vector<std::string> v = flare::strings:: string_split(" a , ,,b,", ',',  allow_empty());
+//  std::vector<std::string> v = flare:: string_split(" a , ,,b,", ',',  allow_empty());
 //
 //  // v[0] == " a ", v[1] == " ", v[2] == "", v[3] = "b", v[4] == ""
 struct allow_empty {
@@ -332,7 +332,7 @@ struct allow_empty {
 //
 // Example:
 //
-//   std::vector<std::string> v = flare::strings:: string_split(",a,,b,", ',',  skip_empty());
+//   std::vector<std::string> v = flare:: string_split(",a,,b,", ',',  skip_empty());
 //
 //   // v[0] == "a", v[1] == "b"
 //
@@ -350,16 +350,16 @@ struct skip_empty {
 //
 // Example:
 //
-//   std::vector<std::string> v = flare::strings:: string_split(" a , ,,b,",
+//   std::vector<std::string> v = flare:: string_split(" a , ,,b,",
 //                                               ',',  skip_whitespace());
 //   // v[0] == " a ", v[1] == "b"
 //
 //   //  skip_empty() would return whitespace elements
-//   std::vector<std::string> v = flare::strings:: string_split(" a , ,,b,", ',',  skip_empty());
+//   std::vector<std::string> v = flare:: string_split(" a , ,,b,", ',',  skip_empty());
 //   // v[0] == " a ", v[1] == " ", v[2] == "b"
 struct skip_whitespace {
     bool operator()(std::string_view sp) const {
-        sp = flare::strings::trim_all(sp);
+        sp = flare::trim_all(sp);
         return !sp.empty();
     }
 };
@@ -378,15 +378,15 @@ struct skip_whitespace {
 //
 // Example:
 //
-//   std::vector<std::string> v = flare::strings:: string_split("a,b,c,d", ',');
+//   std::vector<std::string> v = flare:: string_split("a,b,c,d", ',');
 //   // v[0] == "a", v[1] == "b", v[2] == "c", v[3] == "d"
 //
 // You can also provide an explicit `Delimiter` object:
 //
 // Example:
 //
-//   using flare::strings::by_any_char;
-//   std::vector<std::string> v = flare::strings:: string_split("a,b=c", by_any_char(",="));
+//   using flare::by_any_char;
+//   std::vector<std::string> v = flare:: string_split("a,b=c", by_any_char(",="));
 //   // v[0] == "a", v[1] == "b", v[2] == "c"
 //
 // See above for more information on delimiters.
@@ -397,7 +397,7 @@ struct skip_whitespace {
 //
 // Example:
 //
-//   std::vector<std::string> v = flare::strings:: string_split(" a , ,,b,",
+//   std::vector<std::string> v = flare:: string_split(" a , ,,b,",
 //                                               ',',  skip_whitespace());
 //   // v[0] == " a ", v[1] == "b"
 //
@@ -422,17 +422,17 @@ struct skip_whitespace {
 //
 //   // The results are returned as `std::string_view` objects. Note that we
 //   // have to ensure that the input string outlives any results.
-//   std::vector<std::string_view> v = flare::strings:: string_split("a,b,c", ',');
+//   std::vector<std::string_view> v = flare:: string_split("a,b,c", ',');
 //
 //   // Stores results in a std::set<std::string>, which also performs
 //   // de-duplication and orders the elements in ascending order.
-//   std::set<std::string> a = flare::strings:: string_split("b,a,c,a,b", ',');
+//   std::set<std::string> a = flare:: string_split("b,a,c,a,b", ',');
 //   // v[0] == "a", v[1] == "b", v[2] = "c"
 //
 //   // ` string_split()` can be used within a range-based for loop, in which case
 //   // each element will be of type `std::string_view`.
 //   std::vector<std::string> v;
-//   for (const auto sv : flare::strings:: string_split("a,b,c", ',')) {
+//   for (const auto sv : flare:: string_split("a,b,c", ',')) {
 //     if (sv != "b") v.emplace_back(sv);
 //   }
 //   // v[0] == "a", v[1] == "c"
@@ -442,7 +442,7 @@ struct skip_whitespace {
 //   // resulting from the split will be stored as a key to the 1st element. If
 //   // an odd number of elements are resolved, the last element is paired with
 //   // a default-constructed value (e.g., empty string).
-//   std::map<std::string, std::string> m = flare::strings:: string_split("a,b,c", ',');
+//   std::map<std::string, std::string> m = flare:: string_split("a,b,c", ',');
 //   // m["a"] == "b", m["c"] == ""     // last component value equals ""
 //
 // Splitting to `std::pair` is an interesting case because it can hold only two
@@ -456,7 +456,7 @@ struct skip_whitespace {
 // Example:
 //
 //   // Stores first two split strings as the members in a std::pair.
-//   std::pair<std::string, std::string> p = flare::strings:: string_split("a,b,c", ',');
+//   std::pair<std::string, std::string> p = flare:: string_split("a,b,c", ',');
 //   // p.first == "a", p.second == "b"       // "c" is omitted.
 //
 // The ` string_split()` function can be used multiple times to perform more
@@ -467,8 +467,8 @@ struct skip_whitespace {
 //   // The input string "a=b=c,d=e,f=,g" becomes
 //   // { "a" => "b=c", "d" => "e", "f" => "", "g" => "" }
 //   std::map<std::string, std::string> m;
-//   for (std::string_view sp : flare::strings:: string_split("a=b=c,d=e,f=,g", ',')) {
-//     m.insert(flare::strings:: string_split(sp, flare::strings:: max_splits('=', 1)));
+//   for (std::string_view sp : flare:: string_split("a=b=c,d=e,f=,g", ',')) {
+//     m.insert(flare:: string_split(sp, flare:: max_splits('=', 1)));
 //   }
 //   EXPECT_EQ("b=c", m.find("a")->second);
 //   EXPECT_EQ("e", m.find("d")->second);
@@ -478,8 +478,8 @@ struct skip_whitespace {
 // WARNING: Due to a legacy bug that is maintained for backward compatibility,
 // splitting the following empty string_views produces different results:
 //
-//   flare::strings:: string_split(std::string_view(""), '-');  // {""}
-//   flare::strings:: string_split(std::string_view(), '-');    // {}, but should be {""}
+//   flare:: string_split(std::string_view(""), '-');  // {""}
+//   flare:: string_split(std::string_view(), '-');    // {}, but should be {""}
 //
 // Try not to depend on this distinction because the bug may one day be fixed.
 template<typename Delimiter>
@@ -504,6 +504,6 @@ string_split(strings_internal::convertible_to_string_view text, Delimiter d,
 }
 
 
-}  // namespace flare::strings
+}  // namespace flare
 
 #endif  // FLARE_STRINGS_STR_SPLIT_H_

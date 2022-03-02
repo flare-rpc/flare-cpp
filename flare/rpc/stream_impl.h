@@ -35,20 +35,20 @@ public:
    
     int Connect(Socket* ptr, const timespec* due_time,
                 int (*on_connect)(int, int, void *), void *data);
-    ssize_t CutMessageIntoFileDescriptor(int, flare::io::cord_buf **data_list,
+    ssize_t CutMessageIntoFileDescriptor(int, flare::cord_buf **data_list,
                                          size_t size);
-    ssize_t CutMessageIntoSSLChannel(SSL*, flare::io::cord_buf**, size_t);
+    ssize_t CutMessageIntoSSLChannel(SSL*, flare::cord_buf**, size_t);
     void BeforeRecycle(Socket *);
 
     // --------------------- SocketConnection --------------
 
-    int AppendIfNotFull(const flare::io::cord_buf& msg);
+    int AppendIfNotFull(const flare::cord_buf& msg);
     static int Create(const StreamOptions& options,
                       const StreamSettings *remote_settings,
                       StreamId *id);
     StreamId id() { return _id; }
 
-    int OnReceived(const StreamFrameMeta& fm, flare::io::cord_buf *buf, Socket* sock);
+    int OnReceived(const StreamFrameMeta& fm, flare::cord_buf *buf, Socket* sock);
     void SetRemoteSettings(const StreamSettings& remote_settings) {
         _remote_settings.MergeFrom(remote_settings);
     }
@@ -77,10 +77,10 @@ friend class MessageBatcher;
     void SendFeedback();
     void StartIdleTimer();
     void StopIdleTimer();
-    void HandleRpcResponse(flare::io::cord_buf* response_buffer);
-    void WriteToHostSocket(flare::io::cord_buf* b);
+    void HandleRpcResponse(flare::cord_buf* response_buffer);
+    void WriteToHostSocket(flare::cord_buf* b);
 
-    static int Consume(void *meta, flare::fiber_internal::TaskIterator<flare::io::cord_buf*>& iter);
+    static int Consume(void *meta, flare::fiber_internal::TaskIterator<flare::cord_buf*>& iter);
     static int TriggerOnWritable(fiber_token_t id, void *data, int error_code);
     static void *RunOnWritable(void* arg);
     static void* RunOnConnect(void* arg);
@@ -120,8 +120,8 @@ friend class MessageBatcher;
     StreamSettings _remote_settings;   
 
     bool _parse_rpc_response;
-    flare::fiber_internal::ExecutionQueueId<flare::io::cord_buf*> _consumer_queue;
-    flare::io::cord_buf *_pending_buf;
+    flare::fiber_internal::ExecutionQueueId<flare::cord_buf*> _consumer_queue;
+    flare::cord_buf *_pending_buf;
     int64_t _start_idle_timer_us;
     fiber_timer_id _idle_timer;
 };

@@ -22,7 +22,7 @@
 #include "flare/strings/string_splitter.h"                     // StringSplitter
 #include "flare/rpc/log.h"
 #include "flare/rpc/policy/list_naming_service.h"
-#include "flare/base/strings.h"
+#include "flare/strings/utility.h"
 
 
 namespace flare::rpc {
@@ -46,7 +46,7 @@ int ParseServerList(const char* service_name,
         LOG(FATAL) << "Param[service_name] is NULL";
         return -1;
     }
-    for (flare::strings::StringSplitter sp(service_name, ','); sp != NULL; ++sp) {
+    for (flare::StringSplitter sp(service_name, ','); sp != NULL; ++sp) {
         line.assign(sp.field(), sp.length());
         std::string_view addr;
         std::string_view tag;
@@ -62,7 +62,7 @@ int ParseServerList(const char* service_name,
         }
         ServerNode node;
         node.addr = point;
-        flare::base::copy_to_string(tag, &node.tag);
+        flare::copy_to_string(tag, &node.tag);
         if (presence.insert(node).second) {
             servers->push_back(node);
         } else {

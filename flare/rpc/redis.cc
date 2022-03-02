@@ -19,10 +19,10 @@
 #include <google/protobuf/reflection_ops.h>     // ReflectionOps::Merge
 #include <gflags/gflags.h>
 #include "flare/base/status.h"
-#include "flare/base/strings.h"
+#include "flare/strings/case_conv.h"
 #include "flare/rpc/redis.h"
 #include "flare/rpc/redis_command.h"
-#include "flare/base/strings.h"
+#include "flare/strings/utility.h"
 
 namespace flare::rpc {
 
@@ -200,7 +200,7 @@ namespace flare::rpc {
         }
     }
 
-    bool RedisRequest::SerializeTo(flare::io::cord_buf *buf) const {
+    bool RedisRequest::SerializeTo(flare::cord_buf *buf) const {
         if (_has_error) {
             LOG(ERROR) << "Reject serialization due to error in AddCommand[V]";
             return false;
@@ -221,8 +221,8 @@ namespace flare::rpc {
     }
 
     void RedisRequest::Print(std::ostream &os) const {
-        flare::io::cord_buf cp = _buf;
-        flare::io::cord_buf seg;
+        flare::cord_buf cp = _buf;
+        flare::cord_buf seg;
         while (cp.cut_until(&seg, "\r\n") == 0) {
             os << seg;
             if (FLAGS_redis_verbose_crlf2space) {
@@ -391,7 +391,7 @@ namespace flare::rpc {
 
 // ===================================================================
 
-    ParseError RedisResponse::ConsumePartialCordBuf(flare::io::cord_buf &buf, int reply_count) {
+    ParseError RedisResponse::ConsumePartialCordBuf(flare::cord_buf &buf, int reply_count) {
         size_t oldsize = buf.size();
         if (reply_size() == 0) {
             ParseError err = _first_reply.ConsumePartialCordBuf(buf);
@@ -448,7 +448,7 @@ namespace flare::rpc {
     }
 
     bool RedisService::AddCommandHandler(const std::string &name, RedisCommandHandler *handler) {
-        std::string lcname = flare::base::string_to_lower(name);
+        std::string lcname = flare::string_to_lower(name);
         auto it = _command_map.find(lcname);
         if (it != _command_map.end()) {
             LOG(ERROR) << "redis command name=" << name << " exist";
@@ -459,7 +459,7 @@ namespace flare::rpc {
     }
 
     RedisCommandHandler *RedisService::FindCommandHandler(const std::string_view &name) const {
-        auto it = _command_map.find(flare::base::as_string(name));
+        auto it = _command_map.find(flare::as_string(name));
         if (it != _command_map.end()) {
             return it->second;
         }

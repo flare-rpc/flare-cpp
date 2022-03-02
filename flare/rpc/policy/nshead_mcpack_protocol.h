@@ -29,16 +29,16 @@ namespace policy {
 // Actions to a (server) response in nshead+mcpack format.
 void ProcessNsheadMcpackResponse(InputMessageBase* msg);
 
-void SerializeNsheadMcpackRequest(flare::io::cord_buf* buf, Controller* cntl,
+void SerializeNsheadMcpackRequest(flare::cord_buf* buf, Controller* cntl,
                                  const google::protobuf::Message* request);
 
 // Pack `request' to `method' into `buf'.
-void PackNsheadMcpackRequest(flare::io::cord_buf* buf,
+void PackNsheadMcpackRequest(flare::cord_buf* buf,
                              SocketMessage**,
                              uint64_t correlation_id,
                              const google::protobuf::MethodDescriptor* method,
                              Controller* controller,
-                             const flare::io::cord_buf& request,
+                             const flare::cord_buf& request,
                              const Authenticator* auth);
 
 class NsheadMcpackAdaptor : public NsheadPbServiceAdaptor {

@@ -69,7 +69,7 @@ public:
         if (request->sleep_us() > 0) {
             LOG(INFO) << "Sleep " << request->sleep_us() << " us, protocol="
                       << cntl->request_protocol();
-            flare::this_fiber::fiber_sleep_for(request->sleep_us());
+            flare::fiber_sleep_for(request->sleep_us());
         }
     }
 

@@ -12,7 +12,7 @@
 #include "flare/base/status.h"
 #include "flare/io/cord_buf.h"
 
-namespace flare::io {
+namespace flare {
 
     using flare_status = flare::base::flare_status;
 
@@ -28,7 +28,7 @@ namespace flare::io {
     namespace detail {
         template<typename T>
         struct auto_close_object {
-            static_assert(std::is_base_of<flare::io::open_close, T>::value, "must inherit from close_able");
+            static_assert(std::is_base_of<flare::open_close, T>::value, "must inherit from close_able");
 
             void operator()(T *obj) {
                 if (obj) {
@@ -53,7 +53,7 @@ namespace flare::io {
 
         virtual flare_status read(uint64_t offset, size_t n, std::string *content) = 0;
 
-        virtual flare_status read(uint64_t offset, size_t n, flare::io::cord_buf *buf) = 0;
+        virtual flare_status read(uint64_t offset, size_t n, flare::cord_buf *buf) = 0;
 
     private:
         FLARE_DISALLOW_COPY_AND_ASSIGN(random_access_file);
@@ -67,7 +67,7 @@ namespace flare::io {
 
         virtual flare_status read(size_t n, std::string *content) = 0;
 
-        virtual flare_status read(size_t n, flare::io::cord_buf *buf) = 0;
+        virtual flare_status read(size_t n, flare::cord_buf *buf) = 0;
 
         virtual flare_status skip(size_t n) = 0;
 
@@ -81,7 +81,7 @@ namespace flare::io {
 
         ~writeable_file() override = default;
 
-        virtual flare_status pos_write(uint64_t offset, flare::io::cord_buf *content) = 0;
+        virtual flare_status pos_write(uint64_t offset, flare::cord_buf *content) = 0;
 
         virtual flare_status pos_write(uint64_t offset, const std::string_view &content) = 0;
 
@@ -99,7 +99,7 @@ namespace flare::io {
 
         ~append_file() override = default;
 
-        virtual flare_status append(flare::io::cord_buf *content) = 0;
+        virtual flare_status append(flare::cord_buf *content) = 0;
 
         virtual flare_status append(const std::string_view &content) = 0;
 
@@ -136,6 +136,6 @@ namespace flare::io {
     };
 
 
-}  // namespace flare::io
+}  // namespace flare
 #endif // FLARE_IO_FS_ENV_H_
 

@@ -13,7 +13,7 @@
 #include "flare/strings/starts_with.h"
 #include <string_view>
 
-namespace flare::strings {
+namespace flare {
 
 
 //  consume_prefix()
@@ -24,10 +24,10 @@ namespace flare::strings {
 // Example:
 //
 //   std::string_view input("abc");
-//   EXPECT_TRUE(flare::strings:: consume_prefix(&input, "a"));
+//   EXPECT_TRUE(flare:: consume_prefix(&input, "a"));
 //   EXPECT_EQ(input, "bc");
 FLARE_FORCE_INLINE bool consume_prefix(std::string_view *str, std::string_view expected) {
-    if (!flare::strings::starts_with(*str, expected)) return false;
+    if (!flare::starts_with(*str, expected)) return false;
     str->remove_prefix(expected.size());
     return true;
 }
@@ -39,10 +39,10 @@ FLARE_FORCE_INLINE bool consume_prefix(std::string_view *str, std::string_view e
 // Example:
 //
 //   std::string_view input("abcdef");
-//   EXPECT_TRUE(flare::strings:: consume_suffix(&input, "def"));
+//   EXPECT_TRUE(flare:: consume_suffix(&input, "def"));
 //   EXPECT_EQ(input, "abc");
 FLARE_FORCE_INLINE bool consume_suffix(std::string_view *str, std::string_view expected) {
-    if (!flare::strings::ends_with(*str, expected)) return false;
+    if (!flare::ends_with(*str, expected)) return false;
     str->remove_suffix(expected.size());
     return true;
 }
@@ -54,7 +54,7 @@ FLARE_FORCE_INLINE bool consume_suffix(std::string_view *str, std::string_view e
 // start of the string, returns the original string instead.
 FLARE_MUST_USE_RESULT FLARE_FORCE_INLINE std::string_view strip_prefix(
         std::string_view str, std::string_view prefix) {
-    if (flare::strings::starts_with(str, prefix)) str.remove_prefix(prefix.size());
+    if (flare::starts_with(str, prefix)) str.remove_prefix(prefix.size());
     return str;
 }
 
@@ -65,11 +65,11 @@ FLARE_MUST_USE_RESULT FLARE_FORCE_INLINE std::string_view strip_prefix(
 // end of the string, returns the original string instead.
 FLARE_MUST_USE_RESULT FLARE_FORCE_INLINE std::string_view strip_suffix(
         std::string_view str, std::string_view suffix) {
-    if (flare::strings::ends_with(str, suffix)) str.remove_suffix(suffix.size());
+    if (flare::ends_with(str, suffix)) str.remove_suffix(suffix.size());
     return str;
 }
 
 
-}  // namespace flare::strings
+}  // namespace flare
 
 #endif  // FLARE_STRINGS_STRIP_H_

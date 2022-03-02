@@ -6,7 +6,7 @@
 #include "flare/base/profile.h"
 #include "flare/base/filesystem.h"
 
-namespace flare::io {
+namespace flare {
 
     // Create a temporary file in current directory, which will be deleted when
     // corresponding temp_file object destructs, typically for unit testing.
@@ -57,6 +57,6 @@ namespace flare::io {
         char _fname[24];        // name of the file
     };
 
-} // namespace flare::io
+} // namespace flare
 
 #endif  // FLARE_IO_TEMP_FILE_H_

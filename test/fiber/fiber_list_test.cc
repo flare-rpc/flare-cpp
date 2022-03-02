@@ -24,7 +24,7 @@
 
 namespace {
     void *sleeper(void *arg) {
-        flare::this_fiber::fiber_sleep_for((long) arg);
+        flare::fiber_sleep_for((long) arg);
         return nullptr;
     }
 

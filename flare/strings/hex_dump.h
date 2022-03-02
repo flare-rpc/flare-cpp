@@ -11,7 +11,7 @@
 #include <vector>
 
 
-namespace flare::strings {
+namespace flare {
 
 // Uppercase Hex_dump Methods
 
@@ -130,5 +130,5 @@ std::string hex_dump_lc(const std::vector<uint8_t> &data);
  */
 std::string parse_hex_dump(const std::string &str);
 
-}  // namespace flare::strings
+}  // namespace flare
 #endif  // FLARE_STRINGS_HEX_DUMP_H_

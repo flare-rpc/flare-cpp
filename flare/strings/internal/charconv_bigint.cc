@@ -9,7 +9,7 @@
 #include <cassert>
 #include <string>
 
-namespace flare::strings {
+namespace flare {
 
 namespace strings_internal {
 
@@ -350,4 +350,4 @@ class big_unsigned<84>;
 
 }  // namespace strings_internal
 
-}  // namespace flare::strings
+}  // namespace flare

@@ -12,7 +12,7 @@
 
 #include "flare/base/profile.h"
 
-namespace flare::strings {
+namespace flare {
 
 namespace strings_internal {
 
@@ -181,6 +181,6 @@ FLARE_FORCE_INLINE const std::array<uint64_test_case, 34> &strtouint64_test_case
 
 }  // namespace strings_internal
 
-}  // namespace flare::strings
+}  // namespace flare
 
 #endif  // TEST_TESTING_NUMBERS_TEST_COMMON_H_

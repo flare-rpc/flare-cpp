@@ -23,7 +23,9 @@
 #include <flare/fiber/this_fiber.h>
 #include <flare/fiber/internal/fiber.h>
 #include "flare/log/logging.h"
-#include "flare/base/strings.h"
+#include "flare/strings/starts_with.h"
+#include "flare/strings/trim.h"
+#include "flare/strings/utility.h"
 #include <flare/base/scoped_file.h>
 #include <flare/rpc/channel.h>
 
@@ -39,7 +41,7 @@ DEFINE_bool(only_show_host, false, "Print host name only");
 struct AccessThreadArgs {
     const std::deque<std::string> *url_list;
     size_t offset;
-    std::deque<std::pair<std::string, flare::io::cord_buf> > output_queue;
+    std::deque<std::pair<std::string, flare::cord_buf> > output_queue;
     flare::base::Mutex output_queue_mutex;
     std::atomic<int> current_concurrency;
 };
@@ -59,7 +61,7 @@ void OnHttpCallEnd::Run() {
     {
         FLARE_SCOPED_LOCK(args->output_queue_mutex);
         if (cntl.Failed()) {
-            args->output_queue.push_back(std::make_pair(url, flare::io::cord_buf()));
+            args->output_queue.push_back(std::make_pair(url, flare::cord_buf()));
         } else {
             args->output_queue.push_back(
                     std::make_pair(url, cntl.response_attachment()));
@@ -83,13 +85,13 @@ void *access_thread(void *void_args) {
         if (channel.Init(url.c_str(), &options) != 0) {
             LOG(ERROR) << "Fail to create channel to url=" << url;
             FLARE_SCOPED_LOCK(args->output_queue_mutex);
-            args->output_queue.push_back(std::make_pair(url, flare::io::cord_buf()));
+            args->output_queue.push_back(std::make_pair(url, flare::cord_buf()));
             continue;
         }
         while (args->current_concurrency.fetch_add(1, std::memory_order_relaxed)
                > concurrency_for_this_thread) {
             args->current_concurrency.fetch_sub(1, std::memory_order_relaxed);
-            flare::this_fiber::fiber_sleep_for(5000);
+            flare::fiber_sleep_for(5000);
         }
         OnHttpCallEnd *done = new OnHttpCallEnd;
         done->cntl.http_request().uri() = url;
@@ -130,9 +132,9 @@ int main(int argc, char **argv) {
             --nr;
         }
         std::string_view line(line_buf, nr);
-        line = flare::base::strip_ascii_whitespace(line);
+        line = flare::strip_ascii_whitespace(line);
         if (!line.empty()) {
-            url_list.push_back(flare::base::as_string(line));
+            url_list.push_back(flare::as_string(line));
         }
     }
     if (url_list.empty()) {
@@ -149,7 +151,7 @@ int main(int argc, char **argv) {
     for (int i = 0; i < FLAGS_thread_num; ++i) {
         CHECK_EQ(0, fiber_start_background(&tids[i], NULL, access_thread, &args[i]));
     }
-    std::deque<std::pair<std::string, flare::io::cord_buf> > output_queue;
+    std::deque<std::pair<std::string, flare::cord_buf> > output_queue;
     size_t nprinted = 0;
     while (nprinted != url_list.size()) {
         for (int i = 0; i < FLAGS_thread_num; ++i) {
@@ -160,7 +162,7 @@ int main(int argc, char **argv) {
             for (size_t i = 0; i < output_queue.size(); ++i) {
                 std::string_view url = output_queue[i].first;
                 std::string_view hostname;
-                if (flare::base::starts_with(url, "http://")) {
+                if (flare::starts_with(url, "http://")) {
                     url.remove_prefix(7);
                 }
                 size_t slash_pos = url.find('/');

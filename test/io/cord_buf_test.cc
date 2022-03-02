@@ -38,7 +38,7 @@
 
 #endif   // BAZEL_TEST
 
-namespace flare::io {
+namespace flare {
     namespace iobuf {
         extern void *(*blockmem_allocate)(size_t);
 
@@ -46,9 +46,9 @@ namespace flare::io {
 
         extern void reset_blockmem_allocate_and_deallocate();
 
-        extern int32_t block_shared_count(flare::io::cord_buf::Block const *b);
+        extern int32_t block_shared_count(flare::cord_buf::Block const *b);
 
-        extern uint32_t block_cap(flare::io::cord_buf::Block const *b);
+        extern uint32_t block_cap(flare::cord_buf::Block const *b);
 
         extern cord_buf::Block *get_tls_block_head();
 
@@ -73,11 +73,11 @@ namespace flare::io {
 namespace {
 
     const size_t BLOCK_OVERHEAD = 32; //impl dependent
-    const size_t DEFAULT_PAYLOAD = flare::io::cord_buf::DEFAULT_BLOCK_SIZE - BLOCK_OVERHEAD;
+    const size_t DEFAULT_PAYLOAD = flare::cord_buf::DEFAULT_BLOCK_SIZE - BLOCK_OVERHEAD;
 
     void check_tls_block() {
-        ASSERT_EQ((flare::io::cord_buf::Block *) NULL, flare::io::iobuf::get_tls_block_head());
-        printf("tls_block of flare::io::cord_buf was deleted\n");
+        ASSERT_EQ((flare::cord_buf::Block *) NULL, flare::iobuf::get_tls_block_head());
+        printf("tls_block of flare::cord_buf was deleted\n");
     }
 
     const int FLARE_ALLOW_UNUSED check_dummy = flare::base::thread_atexit(check_tls_block);
@@ -99,15 +99,15 @@ namespace {
     }
 
     inline bool is_debug_allocator_enabled() {
-        return (flare::io::iobuf::blockmem_allocate == debug_block_allocate);
+        return (flare::iobuf::blockmem_allocate == debug_block_allocate);
     }
 
     void install_debug_allocator() {
         if (!is_debug_allocator_enabled()) {
-            flare::io::iobuf::remove_tls_block_chain();
+            flare::iobuf::remove_tls_block_chain();
             s_set.init(1024);
-            flare::io::iobuf::blockmem_allocate = debug_block_allocate;
-            flare::io::iobuf::blockmem_deallocate = debug_block_deallocate;
+            flare::iobuf::blockmem_allocate = debug_block_allocate;
+            flare::iobuf::blockmem_deallocate = debug_block_deallocate;
             LOG(INFO) << "<Installed debug create/destroy>";
         }
     }
@@ -128,15 +128,15 @@ namespace {
 
     static void check_memory_leak() {
         if (is_debug_allocator_enabled()) {
-            flare::io::cord_buf::Block *p = flare::io::iobuf::get_tls_block_head();
+            flare::cord_buf::Block *p = flare::iobuf::get_tls_block_head();
             size_t n = 0;
             while (p) {
                 ASSERT_TRUE(s_set.seek(p)) << "Memory leak: " << p;
-                p = flare::io::iobuf::get_portal_next(p);
+                p = flare::iobuf::get_portal_next(p);
                 ++n;
             }
             ASSERT_EQ(n, s_set.size());
-            ASSERT_EQ(n, (size_t) flare::io::iobuf::get_tls_block_count());
+            ASSERT_EQ(n, (size_t) flare::iobuf::get_tls_block_count());
         }
     }
 
@@ -154,14 +154,14 @@ namespace {
         };
     };
 
-    std::string to_str(const flare::io::cord_buf &p) {
+    std::string to_str(const flare::cord_buf &p) {
         return p.to_string();
     }
 
     TEST_F(CordBufTest, append_zero) {
         int fds[2];
         ASSERT_EQ(0, pipe(fds));
-        flare::io::IOPortal p;
+        flare::IOPortal p;
         ASSERT_EQ(0, p.append_from_file_descriptor(fds[0], 0));
         ASSERT_EQ(0, close(fds[0]));
         ASSERT_EQ(0, close(fds[1]));
@@ -170,7 +170,7 @@ namespace {
     TEST_F(CordBufTest, pop_front) {
         install_debug_allocator();
 
-        flare::io::cord_buf buf;
+        flare::cord_buf buf;
         ASSERT_EQ(0UL, buf.pop_front(1));   // nothing happened
 
         std::string s = "hello";
@@ -211,7 +211,7 @@ namespace {
     TEST_F(CordBufTest, pop_back) {
         install_debug_allocator();
 
-        flare::io::cord_buf buf;
+        flare::cord_buf buf;
         ASSERT_EQ(0UL, buf.pop_back(1));   // nothing happened
 
         std::string s = "hello";
@@ -252,7 +252,7 @@ namespace {
     TEST_F(CordBufTest, append) {
         install_debug_allocator();
 
-        flare::io::cord_buf b;
+        flare::cord_buf b;
         ASSERT_EQ(0UL, b.length());
         ASSERT_TRUE(b.empty());
         ASSERT_EQ(-1, b.append(NULL));
@@ -276,7 +276,7 @@ namespace {
     TEST_F(CordBufTest, appendv) {
         install_debug_allocator();
 
-        flare::io::cord_buf b;
+        flare::cord_buf b;
         const_iovec vec[] = {{"hello1",  6},
                              {" world1", 7},
                              {"hello2",  6},
@@ -324,11 +324,11 @@ namespace {
     }
 
     TEST_F(CordBufTest, reserve) {
-        flare::io::cord_buf b;
-        ASSERT_EQ(flare::io::cord_buf::INVALID_AREA, b.reserve(0));
+        flare::cord_buf b;
+        ASSERT_EQ(flare::cord_buf::INVALID_AREA, b.reserve(0));
         const size_t NRESERVED1 = 5;
-        const flare::io::cord_buf::Area a1 = b.reserve(NRESERVED1);
-        ASSERT_TRUE(a1 != flare::io::cord_buf::INVALID_AREA);
+        const flare::cord_buf::Area a1 = b.reserve(NRESERVED1);
+        ASSERT_TRUE(a1 != flare::cord_buf::INVALID_AREA);
         ASSERT_EQ(NRESERVED1, b.size());
         b.append("hello world");
         ASSERT_EQ(0, b.unsafe_assign(a1, "prefix")); // `x' will not be copied
@@ -360,7 +360,7 @@ namespace {
         b.pop_back(b.size() - NRESERVED1);
         ASSERT_EQ(NRESERVED1, b.size());
         const size_t NRESERVED2 = DEFAULT_PAYLOAD * 3;
-        const flare::io::cord_buf::Area a2 = b.reserve(NRESERVED2);
+        const flare::cord_buf::Area a2 = b.reserve(NRESERVED2);
         ASSERT_EQ(NRESERVED1 + NRESERVED2, b.size());
         b.append(s1);
         ASSERT_EQ(NRESERVED1 + NRESERVED2 + s1.size(), b.size());
@@ -384,22 +384,22 @@ namespace {
     TEST_F(CordBufTest, iobuf_as_queue) {
         install_debug_allocator();
 
-        // If INITIAL_CAP gets bigger, creating flare::io::cord_buf::Block are very
-        // small. Since We don't access flare::io::cord_buf::Block::data in this case.
-        // We replace flare::io::cord_buf::Block with FakeBlock with only nshared (in
+        // If INITIAL_CAP gets bigger, creating flare::cord_buf::Block are very
+        // small. Since We don't access flare::cord_buf::Block::data in this case.
+        // We replace flare::cord_buf::Block with FakeBlock with only nshared (in
         // the same offset)
-        FakeBlock *blocks[flare::io::cord_buf::INITIAL_CAP + 16];
+        FakeBlock *blocks[flare::cord_buf::INITIAL_CAP + 16];
         const size_t NBLOCKS = FLARE_ARRAY_SIZE(blocks);
-        flare::io::cord_buf::BlockRef r[NBLOCKS];
+        flare::cord_buf::BlockRef r[NBLOCKS];
         const size_t LENGTH = 7UL;
         for (size_t i = 0; i < NBLOCKS; ++i) {
             ASSERT_TRUE((blocks[i] = new FakeBlock));
             r[i].offset = 1;
             r[i].length = LENGTH;
-            r[i].block = (flare::io::cord_buf::Block *) blocks[i];
+            r[i].block = (flare::cord_buf::Block *) blocks[i];
         }
 
-        flare::io::cord_buf p;
+        flare::cord_buf p;
 
         // Empty
         ASSERT_EQ(0UL, p._ref_num());
@@ -413,7 +413,7 @@ namespace {
         ASSERT_EQ(r[0], p._front_ref());
         ASSERT_EQ(r[0], p._back_ref());
         ASSERT_EQ(r[0], p._ref_at(0));
-        ASSERT_EQ(2, flare::io::iobuf::block_shared_count(r[0].block));
+        ASSERT_EQ(2, flare::iobuf::block_shared_count(r[0].block));
 
         // Add second ref
         p._push_back_ref(r[1]);
@@ -423,7 +423,7 @@ namespace {
         ASSERT_EQ(r[1], p._back_ref());
         ASSERT_EQ(r[0], p._ref_at(0));
         ASSERT_EQ(r[1], p._ref_at(1));
-        ASSERT_EQ(2, flare::io::iobuf::block_shared_count(r[1].block));
+        ASSERT_EQ(2, flare::iobuf::block_shared_count(r[1].block));
 
         // Pop a ref
         ASSERT_EQ(0, p._pop_front_ref());
@@ -433,7 +433,7 @@ namespace {
         ASSERT_EQ(r[1], p._front_ref());
         ASSERT_EQ(r[1], p._back_ref());
         ASSERT_EQ(r[1], p._ref_at(0));
-        //ASSERT_EQ(1, flare::io::iobuf::block_shared_count(r[0].block));
+        //ASSERT_EQ(1, flare::iobuf::block_shared_count(r[0].block));
 
         // Pop second
         ASSERT_EQ(0, p._pop_front_ref());
@@ -442,7 +442,7 @@ namespace {
         //ASSERT_EQ(1, r[1].block->nshared);
 
         // Add INITIAL_CAP+2 refs, r[0] and r[1] are used, don't use again
-        for (size_t i = 0; i < flare::io::cord_buf::INITIAL_CAP + 2; ++i) {
+        for (size_t i = 0; i < flare::cord_buf::INITIAL_CAP + 2; ++i) {
             p._push_back_ref(r[i + 2]);
             ASSERT_EQ(i + 1, p._ref_num());
             ASSERT_EQ(p._ref_num() * LENGTH, p.length());
@@ -451,7 +451,7 @@ namespace {
             for (size_t j = 0; j <= i; j += std::max(1UL, i / 20) /*not check all*/) {
                 ASSERT_EQ(r[j + 2], p._ref_at(j));
             }
-            ASSERT_EQ(2, flare::io::iobuf::block_shared_count(r[i + 2].block));
+            ASSERT_EQ(2, flare::iobuf::block_shared_count(r[i + 2].block));
         }
 
         // Pop them all
@@ -486,10 +486,10 @@ namespace {
     TEST_F(CordBufTest, iobuf_sanity) {
         install_debug_allocator();
 
-        LOG(INFO) << "sizeof(flare::io::cord_buf)=" << sizeof(flare::io::cord_buf)
-                  << " sizeof(IOPortal)=" << sizeof(flare::io::IOPortal);
+        LOG(INFO) << "sizeof(flare::cord_buf)=" << sizeof(flare::cord_buf)
+                  << " sizeof(IOPortal)=" << sizeof(flare::IOPortal);
 
-        flare::io::cord_buf b1;
+        flare::cord_buf b1;
         std::string s1 = "hello world";
         const char c1 = 'A';
         const std::string s2 = "too simple";
@@ -534,7 +534,7 @@ namespace {
         ASSERT_EQ(0, b1.append(s2));
 
         // Cut first char
-        flare::io::cord_buf p;
+        flare::cord_buf p;
         b1.cutn(&p, 0);
         b1.cutn(&p, 1);
         ASSERT_EQ(s1.substr(0, 1), to_str(p));
@@ -559,13 +559,13 @@ namespace {
     TEST_F(CordBufTest, copy_and_assign) {
         install_debug_allocator();
 
-        const size_t TARGET_SIZE = flare::io::cord_buf::DEFAULT_BLOCK_SIZE * 2;
-        flare::io::cord_buf buf0;
+        const size_t TARGET_SIZE = flare::cord_buf::DEFAULT_BLOCK_SIZE * 2;
+        flare::cord_buf buf0;
         buf0.append("hello");
         ASSERT_EQ(1u, buf0._ref_num());
 
         // Copy-construct from SmallView
-        flare::io::cord_buf buf1 = buf0;
+        flare::cord_buf buf1 = buf0;
         ASSERT_EQ(1u, buf1._ref_num());
         ASSERT_EQ(buf0, buf1);
 
@@ -574,16 +574,16 @@ namespace {
         ASSERT_EQ(TARGET_SIZE, buf1.size());
 
         // Copy-construct from BigView
-        flare::io::cord_buf buf2 = buf1;
+        flare::cord_buf buf2 = buf1;
         ASSERT_EQ(buf1, buf2);
 
         // assign BigView to SmallView
-        flare::io::cord_buf buf3;
+        flare::cord_buf buf3;
         buf3 = buf1;
         ASSERT_EQ(buf1, buf3);
 
         // assign BigView to BigView
-        flare::io::cord_buf buf4;
+        flare::cord_buf buf4;
         buf4.resize(TARGET_SIZE, 'w');
         ASSERT_NE(buf1, buf4);
         buf4 = buf1;
@@ -594,21 +594,21 @@ namespace {
         install_debug_allocator();
 
         const char *SEED = "abcdefghijklmnqopqrstuvwxyz";
-        flare::io::cord_buf seedbuf;
+        flare::cord_buf seedbuf;
         seedbuf.append(SEED);
         const int REP = 100;
-        flare::io::cord_buf b1;
+        flare::cord_buf b1;
         for (int i = 0; i < REP; ++i) {
             b1.append(seedbuf);
             b1.append(SEED);
         }
-        flare::io::cord_buf b2;
+        flare::cord_buf b2;
         for (int i = 0; i < REP * 2; ++i) {
             b2.append(SEED);
         }
         ASSERT_EQ(b1, b2);
 
-        flare::io::cord_buf b3 = b2;
+        flare::cord_buf b3 = b2;
 
         b2.push_back('0');
         ASSERT_NE(b1, b2);
@@ -620,20 +620,20 @@ namespace {
     }
 
     TEST_F(CordBufTest, append_and_cut_it_all) {
-        flare::io::cord_buf b;
+        flare::cord_buf b;
         const size_t N = 32768UL;
         for (size_t i = 0; i < N; ++i) {
             ASSERT_EQ(0, b.push_back(i));
         }
         ASSERT_EQ(N, b.length());
-        flare::io::cord_buf p;
+        flare::cord_buf p;
         b.cutn(&p, N);
         ASSERT_TRUE(b.empty());
         ASSERT_EQ(N, p.length());
     }
 
     TEST_F(CordBufTest, copy_to) {
-        flare::io::cord_buf b;
+        flare::cord_buf b;
         const std::string seed = "abcdefghijklmnopqrstuvwxyz";
         std::string src;
         for (size_t i = 0; i < 1000; ++i) {
@@ -657,15 +657,15 @@ namespace {
         ASSERT_EQ(33u, b.append_to(&s3, 33, DEFAULT_PAYLOAD - 1));
         ASSERT_EQ(expected + expected, s3);
 
-        flare::io::cord_buf b1;
+        flare::cord_buf b1;
         ASSERT_EQ(src.size(), b.append_to(&b1));
         ASSERT_EQ(src, b1.to_string());
 
-        flare::io::cord_buf b2;
+        flare::cord_buf b2;
         ASSERT_EQ(32u, b.append_to(&b2, 32));
         ASSERT_EQ(src.substr(0, 32), b2.to_string());
 
-        flare::io::cord_buf b3;
+        flare::cord_buf b3;
         ASSERT_EQ(33u, b.append_to(&b3, 33, DEFAULT_PAYLOAD - 1));
         ASSERT_EQ(expected, b3.to_string());
 
@@ -676,9 +676,9 @@ namespace {
     TEST_F(CordBufTest, cut_by_single_text_delim) {
         install_debug_allocator();
 
-        flare::io::cord_buf b;
-        flare::io::cord_buf p;
-        std::vector<flare::io::cord_buf> ps;
+        flare::cord_buf b;
+        flare::cord_buf p;
+        std::vector<flare::cord_buf> ps;
         std::string s1 = "1234567\n12\n\n2567";
         ASSERT_EQ(0, b.append(s1));
         ASSERT_EQ(s1.length(), b.length());
@@ -703,9 +703,9 @@ namespace {
     TEST_F(CordBufTest, cut_by_multiple_text_delim) {
         install_debug_allocator();
 
-        flare::io::cord_buf b;
-        flare::io::cord_buf p;
-        std::vector<flare::io::cord_buf> ps;
+        flare::cord_buf b;
+        flare::cord_buf p;
+        std::vector<flare::cord_buf> ps;
         std::string s1 = "\r\n1234567\r\n12\r\n\n\r2567";
         ASSERT_EQ(0, b.append(s1));
         ASSERT_EQ(s1.length(), b.length());
@@ -730,8 +730,8 @@ namespace {
     TEST_F(CordBufTest, append_a_lot_and_cut_them_all) {
         install_debug_allocator();
 
-        flare::io::cord_buf b;
-        flare::io::cord_buf p;
+        flare::cord_buf b;
+        flare::cord_buf p;
         std::string s1 = "12345678901234567";
         const size_t N = 10000;
         for (size_t i = 0; i < N; ++i) {
@@ -751,7 +751,7 @@ namespace {
     TEST_F(CordBufTest, cut_into_fd_tiny) {
         install_debug_allocator();
 
-        flare::io::IOPortal b1, b2;
+        flare::IOPortal b1, b2;
         std::string ref;
         int fds[2];
 
@@ -789,8 +789,8 @@ namespace {
     TEST_F(CordBufTest, cut_multiple_into_fd_tiny) {
         install_debug_allocator();
 
-        flare::io::cord_buf *b1[10];
-        flare::io::IOPortal b2;
+        flare::cord_buf *b1[10];
+        flare::IOPortal b2;
         std::string ref;
         int fds[2];
 
@@ -800,7 +800,7 @@ namespace {
                 s.push_back(j * 10 + i);
             }
             ref.append(s);
-            flare::io::IOPortal *b = new flare::io::IOPortal();
+            flare::IOPortal *b = new flare::IOPortal();
             b->append(s);
             b1[j] = b;
         }
@@ -810,11 +810,11 @@ namespace {
         flare::base::make_non_blocking(fds[1]);
 
         ASSERT_EQ((ssize_t) ref.length(),
-                  flare::io::cord_buf::cut_multiple_into_file_descriptor(
+                  flare::cord_buf::cut_multiple_into_file_descriptor(
                           fds[1], b1, FLARE_ARRAY_SIZE(b1)));
         for (size_t j = 0; j < FLARE_ARRAY_SIZE(b1); ++j) {
             ASSERT_TRUE(b1[j]->empty());
-            delete (flare::io::IOPortal *) b1[j];
+            delete (flare::IOPortal *) b1[j];
             b1[j] = NULL;
         }
         ASSERT_EQ((ssize_t) ref.length(),
@@ -828,7 +828,7 @@ namespace {
     TEST_F(CordBufTest, cut_into_fd_a_lot_of_data) {
         install_debug_allocator();
 
-        flare::io::IOPortal b0, b1, b2;
+        flare::IOPortal b0, b1, b2;
         std::string s, ref;
         int fds[2];
 
@@ -875,11 +875,11 @@ namespace {
     }
 
     TEST_F(CordBufTest, cut_by_delim_perf) {
-        flare::io::iobuf::reset_blockmem_allocate_and_deallocate();
+        flare::iobuf::reset_blockmem_allocate_and_deallocate();
 
-        flare::io::cord_buf b;
-        flare::io::cord_buf p;
-        std::vector<flare::io::cord_buf> ps;
+        flare::cord_buf b;
+        flare::cord_buf p;
+        std::vector<flare::cord_buf> ps;
         std::string s1 = "123456789012345678901234567890\n";
         const size_t N = 100000;
         for (size_t i = 0; i < N; ++i) {
@@ -902,10 +902,10 @@ namespace {
 
 
     TEST_F(CordBufTest, cut_perf) {
-        flare::io::iobuf::reset_blockmem_allocate_and_deallocate();
+        flare::iobuf::reset_blockmem_allocate_and_deallocate();
 
-        flare::io::cord_buf b;
-        flare::io::cord_buf p;
+        flare::cord_buf b;
+        flare::cord_buf p;
         const size_t length = 60000000UL;
         const size_t REP = 10;
         flare::base::stop_watcher t;
@@ -966,7 +966,7 @@ namespace {
             t.start();
             b.append(p);
             t.stop();
-            LOG(INFO) << "IOPortal::append(flare::io::cord_buf) takes "
+            LOG(INFO) << "IOPortal::append(flare::cord_buf) takes "
                       << t.n_elapsed() / p._ref_num() << "ns, tp="
                       << length * 1000.0 / t.n_elapsed() << "MB/s";
 
@@ -979,7 +979,7 @@ namespace {
     }
 
     TEST_F(CordBufTest, append_store_append_cut) {
-        flare::io::iobuf::reset_blockmem_allocate_and_deallocate();
+        flare::iobuf::reset_blockmem_allocate_and_deallocate();
 
         std::string ref;
         ref.resize(rand() % 376813 + 19777777);
@@ -987,8 +987,8 @@ namespace {
             ref[j] = j;
         }
 
-        flare::io::IOPortal b1, b2;
-        std::vector<flare::io::cord_buf> ps;
+        flare::IOPortal b1, b2;
+        std::vector<flare::cord_buf> ps;
         ssize_t nr;
         size_t HINT = 16 * 1024UL;
         flare::base::stop_watcher t;
@@ -999,7 +999,7 @@ namespace {
         bool write_to_dev_null = true;
         size_t nappend, ncut;
 
-        flare::io::temp_file f;
+        flare::temp_file f;
         ASSERT_EQ(0, f.save_bin(ref.data(), ref.length()));
 
         for (size_t i = 0; i < FLARE_ARRAY_SIZE(w); ++i) {
@@ -1025,7 +1025,7 @@ namespace {
             while ((nr = b1.append_from_file_descriptor(ifd, HINT)) > 0) {
                 ++nappend;
                 while (b1.length() >= w[i] + 12) {
-                    flare::io::cord_buf p;
+                    flare::cord_buf p;
                     b1.cutn(&p, 12);
                     b1.cutn(&p, w[i]);
                     ps.push_back(p);
@@ -1081,17 +1081,17 @@ namespace {
         m1.set_required_bool(true);
         m1.set_required_int32(0xbeefdead);
 
-        flare::io::cord_buf buf;
+        flare::cord_buf buf;
         const std::string header("just-make-sure-wrapper-does-not-clear-cord_buf");
         ASSERT_EQ(0, buf.append(header));
-        flare::io::cord_buf_as_zero_copy_output_stream out_wrapper(&buf);
+        flare::cord_buf_as_zero_copy_output_stream out_wrapper(&buf);
         ASSERT_EQ(0, out_wrapper.ByteCount());
         ASSERT_TRUE(m1.SerializeToZeroCopyStream(&out_wrapper));
         ASSERT_EQ((size_t) m1.ByteSize() + header.size(), buf.length());
         ASSERT_EQ(m1.ByteSize(), out_wrapper.ByteCount());
 
         ASSERT_EQ(header.size(), buf.pop_front(header.size()));
-        flare::io::cord_buf_as_zero_copy_input_stream in_wrapper(buf);
+        flare::cord_buf_as_zero_copy_input_stream in_wrapper(buf);
         ASSERT_EQ(0, in_wrapper.ByteCount());
         {
             const void *dummy_blk = NULL;
@@ -1136,13 +1136,13 @@ namespace {
         for (int i = 0; i < 2; ++i) {
             std::cout << "i=" << i << std::endl;
             // Consume the left TLS block so that cases are easier to check.
-            flare::io::iobuf::remove_tls_block_chain();
-            flare::io::cord_buf src;
-            const int BLKSIZE = (i == 0 ? 1024 : flare::io::cord_buf::DEFAULT_BLOCK_SIZE);
+            flare::iobuf::remove_tls_block_chain();
+            flare::cord_buf src;
+            const int BLKSIZE = (i == 0 ? 1024 : flare::cord_buf::DEFAULT_BLOCK_SIZE);
             const int PLDSIZE = BLKSIZE - BLOCK_OVERHEAD;
-            flare::io::cord_buf_as_zero_copy_output_stream out_stream1(&src, BLKSIZE);
-            flare::io::cord_buf_as_zero_copy_output_stream out_stream2(&src);
-            flare::io::cord_buf_as_zero_copy_output_stream &out_stream =
+            flare::cord_buf_as_zero_copy_output_stream out_stream1(&src, BLKSIZE);
+            flare::cord_buf_as_zero_copy_output_stream out_stream2(&src);
+            flare::cord_buf_as_zero_copy_output_stream &out_stream =
                     (i == 0 ? out_stream1 : out_stream2);
             void *blk1 = NULL;
             int size1 = 0;
@@ -1190,18 +1190,18 @@ namespace {
         {
             // Consume the left TLS block so that later cases are easier
             // to check.
-            flare::io::cord_buf dummy;
-            flare::io::cord_buf_as_zero_copy_output_stream dummy_stream(&dummy);
+            flare::cord_buf dummy;
+            flare::cord_buf_as_zero_copy_output_stream dummy_stream(&dummy);
             void *dummy_data = NULL;
             int dummy_size = 0;
             ASSERT_TRUE(dummy_stream.Next(&dummy_data, &dummy_size));
         }
-        flare::io::cord_buf src;
+        flare::cord_buf src;
         const size_t N = DEFAULT_PAYLOAD * 2;
         src.resize(N);
         ASSERT_EQ(2u, src.backing_block_num());
         ASSERT_EQ(N, src.size());
-        flare::io::cord_buf_as_zero_copy_output_stream out_stream(&src);
+        flare::cord_buf_as_zero_copy_output_stream out_stream(&src);
         out_stream.BackUp(1); // also succeed.
         ASSERT_EQ(-1, out_stream.ByteCount());
         ASSERT_EQ(DEFAULT_PAYLOAD * 2 - 1, src.size());
@@ -1236,15 +1236,15 @@ namespace {
     }
 
     void *backup_thread(void *arg) {
-        flare::io::cord_buf_as_zero_copy_output_stream *wrapper =
-                (flare::io::cord_buf_as_zero_copy_output_stream *) arg;
+        flare::cord_buf_as_zero_copy_output_stream *wrapper =
+                (flare::cord_buf_as_zero_copy_output_stream *) arg;
         wrapper->BackUp(1024);
         return NULL;
     }
 
     TEST_F(CordBufTest, backup_in_another_thread) {
-        flare::io::cord_buf buf;
-        flare::io::cord_buf_as_zero_copy_output_stream wrapper(&buf);
+        flare::cord_buf buf;
+        flare::cord_buf_as_zero_copy_output_stream wrapper(&buf);
         size_t alloc_size = 0;
         for (int i = 0; i < 10; ++i) {
             void *data;
@@ -1266,10 +1266,10 @@ namespace {
     }
 
     TEST_F(CordBufTest, own_block) {
-        flare::io::cord_buf buf;
+        flare::cord_buf buf;
         const ssize_t BLOCK_SIZE = 1024;
-        flare::io::cord_buf::Block *saved_tls_block = flare::io::iobuf::get_tls_block_head();
-        flare::io::cord_buf_as_zero_copy_output_stream wrapper(&buf, BLOCK_SIZE);
+        flare::cord_buf::Block *saved_tls_block = flare::iobuf::get_tls_block_head();
+        flare::cord_buf_as_zero_copy_output_stream wrapper(&buf, BLOCK_SIZE);
         int alloc_size = 0;
         for (int i = 0; i < 100; ++i) {
             void *data;
@@ -1282,8 +1282,8 @@ namespace {
             }
         }
         ASSERT_EQ(static_cast<size_t>(alloc_size), buf.length());
-        ASSERT_EQ(saved_tls_block, flare::io::iobuf::get_tls_block_head());
-        ASSERT_EQ(flare::io::iobuf::block_cap(buf._front_ref().block), BLOCK_SIZE - BLOCK_OVERHEAD);
+        ASSERT_EQ(saved_tls_block, flare::iobuf::get_tls_block_head());
+        ASSERT_EQ(flare::iobuf::block_cap(buf._front_ref().block), BLOCK_SIZE - BLOCK_OVERHEAD);
     }
 
     struct Foo1 {
@@ -1308,15 +1308,15 @@ namespace {
     }
 
     TEST_F(CordBufTest, as_ostream) {
-        flare::io::iobuf::reset_blockmem_allocate_and_deallocate();
+        flare::iobuf::reset_blockmem_allocate_and_deallocate();
 
-        flare::io::cord_buf_builder builder;
+        flare::cord_buf_builder builder;
         LOG(INFO) << "sizeof(cord_buf_builder)=" << sizeof(builder) << std::endl
-                  << "sizeof(cord_buf)=" << sizeof(flare::io::cord_buf) << std::endl
+                  << "sizeof(cord_buf)=" << sizeof(flare::cord_buf) << std::endl
                   << "sizeof(cord_buf_as_zero_copy_output_stream)="
-                  << sizeof(flare::io::cord_buf_as_zero_copy_output_stream) << std::endl
+                  << sizeof(flare::cord_buf_as_zero_copy_output_stream) << std::endl
                   << "sizeof(zero_copy_stream_as_stream_buf)="
-                  << sizeof(flare::io::zero_copy_stream_as_stream_buf) << std::endl
+                  << sizeof(flare::zero_copy_stream_as_stream_buf) << std::endl
                   << "sizeof(ostream)=" << sizeof(std::ostream);
         int x = -1;
         builder << 2 << " " << x << " " << 1.1 << " hello ";
@@ -1339,7 +1339,7 @@ namespace {
         oss << "<before>" << foo2 << "<after>";
         ASSERT_EQ(oss.str(), builder.buf().to_string());
 
-        flare::io::cord_buf target;
+        flare::cord_buf target;
         builder.move_to(target);
         ASSERT_TRUE(builder.buf().empty());
         ASSERT_EQ(oss.str(), target.to_string());
@@ -1350,16 +1350,16 @@ namespace {
     }
 
     TEST_F(CordBufTest, append_from_fd_with_offset) {
-        flare::io::temp_file file;
+        flare::temp_file file;
         file.save("dummy");
         flare::base::fd_guard fd(open(file.fname(), O_RDWR | O_TRUNC));
         ASSERT_TRUE(fd >= 0) << file.fname() << ' ' << flare_error();
-        flare::io::IOPortal buf;
+        flare::IOPortal buf;
         char dummy[10 * 1024];
         buf.append(dummy, sizeof(dummy));
         ASSERT_EQ((ssize_t) sizeof(dummy), buf.cut_into_file_descriptor(fd));
         for (size_t i = 0; i < sizeof(dummy); ++i) {
-            flare::io::IOPortal b0;
+            flare::IOPortal b0;
             ASSERT_EQ(sizeof(dummy) - i, (size_t) b0.pappend_from_file_descriptor(fd, i, sizeof(dummy)))
                                         << flare_error();
             char tmp[sizeof(dummy)];
@@ -1378,7 +1378,7 @@ namespace {
         off_t offset = start_num * sizeof(int);
         for (int i = 0; i < number_per_thread; ++i) {
             int to_write = start_num + i;
-            flare::io::cord_buf out;
+            flare::cord_buf out;
             out.append(&to_write, sizeof(int));
             CHECK_EQ(out.pcut_into_file_descriptor(fd, offset + sizeof(int) * i),
                      (ssize_t) sizeof(int));
@@ -1400,7 +1400,7 @@ namespace {
         }
         for (int i = 0; i < number_per_thread * (int) FLARE_ARRAY_SIZE(threads); ++i) {
             off_t offset = i * sizeof(int);
-            flare::io::IOPortal in;
+            flare::IOPortal in;
             ASSERT_EQ((ssize_t) sizeof(int), in.pappend_from_file_descriptor(fd, offset, sizeof(int)));
             int j;
             ASSERT_EQ(sizeof(j), in.cutn(&j, sizeof(j)));
@@ -1412,7 +1412,7 @@ namespace {
         size_t N = 100000;
         std::string expected;
         expected.reserve(N);
-        flare::io::cord_buf buf;
+        flare::cord_buf buf;
         for (size_t i = 0; i < N; ++i) {
             expected.push_back(i % 26 + 'a');
             buf.push_back(i % 26 + 'a');
@@ -1429,9 +1429,9 @@ namespace {
     }
 
     TEST_F(CordBufTest, swap) {
-        flare::io::cord_buf a;
+        flare::cord_buf a;
         a.append("I'am a");
-        flare::io::cord_buf b;
+        flare::cord_buf b;
         b.append("I'am b");
         std::swap(a, b);
         ASSERT_TRUE(a.equals("I'am b"));
@@ -1439,11 +1439,11 @@ namespace {
     }
 
     TEST_F(CordBufTest, resize) {
-        flare::io::cord_buf a;
+        flare::cord_buf a;
         a.resize(100);
         std::string as;
         as.resize(100);
-        flare::io::cord_buf b;
+        flare::cord_buf b;
         b.resize(100, 'b');
         std::string bs;
         bs.resize(100, 'b');
@@ -1454,11 +1454,11 @@ namespace {
     }
 
     TEST_F(CordBufTest, iterate_bytes) {
-        flare::io::cord_buf a;
+        flare::cord_buf a;
         a.append("hello world");
         std::string saved_a = a.to_string();
         size_t n = 0;
-        flare::io::cord_buf_bytes_iterator it(a);
+        flare::cord_buf_bytes_iterator it(a);
         for (; it != NULL; ++it, ++n) {
             ASSERT_EQ(saved_a[n], *it);
         }
@@ -1475,7 +1475,7 @@ namespace {
         }
         saved_a = a.to_string();
         n = 0;
-        for (flare::io::cord_buf_bytes_iterator it2(a); it2 != NULL; it2++/*intended post++*/, ++n) {
+        for (flare::cord_buf_bytes_iterator it2(a); it2 != NULL; it2++/*intended post++*/, ++n) {
             ASSERT_EQ(saved_a[n], *it2);
         }
         ASSERT_EQ(saved_a.size(), n);
@@ -1483,13 +1483,13 @@ namespace {
     }
 
     TEST_F(CordBufTest, appender) {
-        flare::io::cord_buf_appender appender;
+        flare::cord_buf_appender appender;
         ASSERT_EQ(0, appender.append("hello", 5));
         ASSERT_EQ("hello", appender.buf());
         ASSERT_EQ(0, appender.push_back(' '));
         ASSERT_EQ(0, appender.append("world", 5));
         ASSERT_EQ("hello world", appender.buf());
-        flare::io::cord_buf buf2;
+        flare::cord_buf buf2;
         appender.move_to(buf2);
         ASSERT_EQ("", appender.buf());
         ASSERT_EQ("hello world", buf2);
@@ -1501,7 +1501,7 @@ namespace {
             str.append(buf, len);
         }
         ASSERT_EQ(str, appender.buf());
-        flare::io::cord_buf buf3;
+        flare::cord_buf buf3;
         appender.move_to(buf3);
         ASSERT_EQ("", appender.buf());
         ASSERT_EQ(str, buf3);
@@ -1511,7 +1511,7 @@ namespace {
         const size_t N1 = 100000;
         flare::base::stop_watcher tm1;
         tm1.start();
-        flare::io::cord_buf buf1;
+        flare::cord_buf buf1;
         for (size_t i = 0; i < N1; ++i) {
             buf1.push_back(i);
         }
@@ -1519,7 +1519,7 @@ namespace {
 
         flare::base::stop_watcher tm2;
         tm2.start();
-        flare::io::cord_buf_appender appender1;
+        flare::cord_buf_appender appender1;
         for (size_t i = 0; i < N1; ++i) {
             appender1.push_back(i);
         }
@@ -1532,7 +1532,7 @@ namespace {
         const size_t N2 = 50000;
         const std::string s = "a repeatly appended string";
         std::string str2;
-        flare::io::cord_buf buf2;
+        flare::cord_buf buf2;
         tm1.start();
         for (size_t i = 0; i < N2; ++i) {
             buf2.append(s);
@@ -1540,7 +1540,7 @@ namespace {
         tm1.stop();
 
         tm2.start();
-        flare::io::cord_buf_appender appender2;
+        flare::cord_buf_appender appender2;
         for (size_t i = 0; i < N2; ++i) {
             appender2.append(s);
         }
@@ -1560,7 +1560,7 @@ namespace {
     }
 
     TEST_F(CordBufTest, printed_as_binary) {
-        flare::io::cord_buf buf;
+        flare::cord_buf buf;
         std::string str;
         for (int i = 0; i < 256; ++i) {
             buf.push_back((char) i);
@@ -1581,24 +1581,24 @@ namespace {
                 "\\EC\\ED\\EE\\EF\\F0\\F1\\F2\\F3\\F4\\F5\\F6\\F7\\F8\\F9\\FA"
                 "\\FB\\FC\\FD\\FE\\FF";
         std::ostringstream os;
-        os << flare::io::to_printable(buf, 256);
+        os << flare::to_printable(buf, 256);
         ASSERT_STREQ(OUTPUT, os.str().c_str());
         os.str("");
-        os << flare::io::to_printable(str, 256);
+        os << flare::to_printable(str, 256);
         ASSERT_STREQ(OUTPUT, os.str().c_str());
     }
 
     TEST_F(CordBufTest, copy_to_string_from_iterator) {
-        flare::io::cord_buf b0;
+        flare::cord_buf b0;
         for (size_t i = 0; i < 1 * 1024 * 1024lu; ++i) {
             b0.push_back(flare::base::fast_rand_in('a', 'z'));
         }
-        flare::io::cord_buf b1(b0);
-        flare::io::cord_buf_bytes_iterator iter(b0);
+        flare::cord_buf b1(b0);
+        flare::cord_buf_bytes_iterator iter(b0);
         size_t nc = 0;
         while (nc < b0.length()) {
             size_t to_copy = flare::base::fast_rand_in(1024lu, 64 * 1024lu);
-            flare::io::cord_buf b;
+            flare::cord_buf b;
             b1.cutn(&b, to_copy);
             std::string s;
             const size_t copied = iter.copy_and_forward(&s, to_copy);
@@ -1617,7 +1617,7 @@ namespace {
     }
 
     TEST_F(CordBufTest, append_user_data_and_consume) {
-        flare::io::cord_buf b0;
+        flare::cord_buf b0;
         const int REP = 16;
         const size_t len = REP * 256;
         char *data = (char *) malloc(len);
@@ -1629,8 +1629,8 @@ namespace {
         my_free_params = NULL;
         ASSERT_EQ(0, b0.append_user_data(data, len, my_free));
         ASSERT_EQ(1UL, b0._ref_num());
-        flare::io::cord_buf::BlockRef r = b0._front_ref();
-        ASSERT_EQ(1, flare::io::iobuf::block_shared_count(r.block));
+        flare::cord_buf::BlockRef r = b0._front_ref();
+        ASSERT_EQ(1, flare::iobuf::block_shared_count(r.block));
         ASSERT_EQ(len, b0.size());
         std::string out;
         ASSERT_EQ(len, b0.cutn(&out, len));
@@ -1647,7 +1647,7 @@ namespace {
     }
 
     TEST_F(CordBufTest, append_user_data_and_share) {
-        flare::io::cord_buf b0;
+        flare::cord_buf b0;
         const int REP = 16;
         const size_t len = REP * 256;
         char *data = (char *) malloc(len);
@@ -1659,19 +1659,19 @@ namespace {
         my_free_params = NULL;
         ASSERT_EQ(0, b0.append_user_data(data, len, my_free));
         ASSERT_EQ(1UL, b0._ref_num());
-        flare::io::cord_buf::BlockRef r = b0._front_ref();
-        ASSERT_EQ(1, flare::io::iobuf::block_shared_count(r.block));
+        flare::cord_buf::BlockRef r = b0._front_ref();
+        ASSERT_EQ(1, flare::iobuf::block_shared_count(r.block));
         ASSERT_EQ(len, b0.size());
 
         {
-            flare::io::cord_buf bufs[256];
+            flare::cord_buf bufs[256];
             for (int i = 0; i < 256; ++i) {
                 ASSERT_EQ((size_t) REP, b0.cutn(&bufs[i], REP));
                 ASSERT_EQ(len - (i + 1) * REP, b0.size());
                 if (i != 255) {
                     ASSERT_EQ(1UL, b0._ref_num());
-                    flare::io::cord_buf::BlockRef r = b0._front_ref();
-                    ASSERT_EQ(i + 2, flare::io::iobuf::block_shared_count(r.block));
+                    flare::cord_buf::BlockRef r = b0._front_ref();
+                    ASSERT_EQ(i + 2, flare::iobuf::block_shared_count(r.block));
                 } else {
                     ASSERT_EQ(0UL, b0._ref_num());
                     ASSERT_TRUE(b0.empty());
@@ -1690,52 +1690,52 @@ namespace {
     }
 
     TEST_F(CordBufTest, share_tls_block) {
-        flare::io::iobuf::remove_tls_block_chain();
-        flare::io::cord_buf::Block *b = flare::io::iobuf::acquire_tls_block();
-        ASSERT_EQ(0u, flare::io::iobuf::block_size(b));
+        flare::iobuf::remove_tls_block_chain();
+        flare::cord_buf::Block *b = flare::iobuf::acquire_tls_block();
+        ASSERT_EQ(0u, flare::iobuf::block_size(b));
 
-        flare::io::cord_buf::Block *b2 = flare::io::iobuf::share_tls_block();
-        flare::io::cord_buf buf;
-        for (size_t i = 0; i < flare::io::iobuf::block_cap(b2); i++) {
+        flare::cord_buf::Block *b2 = flare::iobuf::share_tls_block();
+        flare::cord_buf buf;
+        for (size_t i = 0; i < flare::iobuf::block_cap(b2); i++) {
             buf.push_back('x');
         }
         // after pushing to b2, b2 is full but it is still head of tls block.
         ASSERT_NE(b, b2);
-        flare::io::iobuf::release_tls_block_chain(b);
-        ASSERT_EQ(b, flare::io::iobuf::share_tls_block());
+        flare::iobuf::release_tls_block_chain(b);
+        ASSERT_EQ(b, flare::iobuf::share_tls_block());
         // After releasing b, now tls block is b(not full) -> b2(full) -> NULL
-        for (size_t i = 0; i < flare::io::iobuf::block_cap(b); i++) {
+        for (size_t i = 0; i < flare::iobuf::block_cap(b); i++) {
             buf.push_back('x');
         }
         // now tls block is b(full) -> b2(full) -> NULL
-        flare::io::cord_buf::Block *head_block = flare::io::iobuf::share_tls_block();
-        ASSERT_EQ(0u, flare::io::iobuf::block_size(head_block));
+        flare::cord_buf::Block *head_block = flare::iobuf::share_tls_block();
+        ASSERT_EQ(0u, flare::iobuf::block_size(head_block));
         ASSERT_NE(b, head_block);
         ASSERT_NE(b2, head_block);
     }
 
     TEST_F(CordBufTest, acquire_tls_block) {
-        flare::io::iobuf::remove_tls_block_chain();
-        flare::io::cord_buf::Block *b = flare::io::iobuf::acquire_tls_block();
-        const size_t block_cap = flare::io::iobuf::block_cap(b);
-        flare::io::cord_buf buf;
+        flare::iobuf::remove_tls_block_chain();
+        flare::cord_buf::Block *b = flare::iobuf::acquire_tls_block();
+        const size_t block_cap = flare::iobuf::block_cap(b);
+        flare::cord_buf buf;
         for (size_t i = 0; i < block_cap; i++) {
             buf.append("x");
         }
-        ASSERT_EQ(1, flare::io::iobuf::get_tls_block_count());
-        flare::io::cord_buf::Block *head = flare::io::iobuf::get_tls_block_head();
-        ASSERT_EQ(flare::io::iobuf::block_cap(head), flare::io::iobuf::block_size(head));
-        flare::io::iobuf::release_tls_block_chain(b);
-        ASSERT_EQ(2, flare::io::iobuf::get_tls_block_count());
+        ASSERT_EQ(1, flare::iobuf::get_tls_block_count());
+        flare::cord_buf::Block *head = flare::iobuf::get_tls_block_head();
+        ASSERT_EQ(flare::iobuf::block_cap(head), flare::iobuf::block_size(head));
+        flare::iobuf::release_tls_block_chain(b);
+        ASSERT_EQ(2, flare::iobuf::get_tls_block_count());
         for (size_t i = 0; i < block_cap; i++) {
             buf.append("x");
         }
-        ASSERT_EQ(2, flare::io::iobuf::get_tls_block_count());
-        head = flare::io::iobuf::get_tls_block_head();
-        ASSERT_EQ(flare::io::iobuf::block_cap(head), flare::io::iobuf::block_size(head));
-        b = flare::io::iobuf::acquire_tls_block();
-        ASSERT_EQ(0, flare::io::iobuf::get_tls_block_count());
-        ASSERT_NE(flare::io::iobuf::block_cap(b), flare::io::iobuf::block_size(b));
+        ASSERT_EQ(2, flare::iobuf::get_tls_block_count());
+        head = flare::iobuf::get_tls_block_head();
+        ASSERT_EQ(flare::iobuf::block_cap(head), flare::iobuf::block_size(head));
+        b = flare::iobuf::acquire_tls_block();
+        ASSERT_EQ(0, flare::iobuf::get_tls_block_count());
+        ASSERT_NE(flare::iobuf::block_cap(b), flare::iobuf::block_size(b));
     }
 
 } // namespace

@@ -14,7 +14,7 @@ namespace flare::base {
     // This class provides a facility similar to the CRT atexit(), except that
     // we control when the callbacks are executed. Under Windows for a DLL they
     // happen at a really bad time and under the loader lock. This facility is
-    // mostly used by flare::memory::Singleton.
+    // mostly used by flare::Singleton.
     //
     // The usage is simple. Early in the main() or WinMain() scope create an
     // at_exit_manager object on the stack:

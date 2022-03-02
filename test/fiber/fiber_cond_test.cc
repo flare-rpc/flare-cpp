@@ -44,7 +44,7 @@ namespace {
         Arg *a = (Arg *) void_arg;
         signal_start_time = flare::base::gettimeofday_us();
         while (!stop) {
-            flare::this_fiber::fiber_sleep_for(SIGNAL_INTERVAL_US);
+            flare::fiber_sleep_for(SIGNAL_INTERVAL_US);
             fiber_cond_signal(&a->c);
         }
         return nullptr;
@@ -86,7 +86,7 @@ namespace {
         fiber_id_t sth;
         ASSERT_EQ(0, fiber_start_urgent(&sth, nullptr, signaler, &a));
 
-        flare::this_fiber::fiber_sleep_for(SIGNAL_INTERVAL_US * 200);
+        flare::fiber_sleep_for(SIGNAL_INTERVAL_US * 200);
 
         pthread_mutex_lock(&wake_mutex);
         const size_t nbeforestop = wake_time.size();
@@ -137,15 +137,15 @@ namespace {
     }
 
     struct WrapperArg {
-        flare::fiber::fiber_mutex mutex;
-        flare::fiber::fiber_cond cond;
+        flare::fiber_mutex mutex;
+        flare::fiber_cond cond;
     };
 
     void *cv_signaler(void *void_arg) {
         WrapperArg *a = (WrapperArg *) void_arg;
         signal_start_time = flare::base::gettimeofday_us();
         while (!stop) {
-            flare::this_fiber::fiber_sleep_for(SIGNAL_INTERVAL_US);
+            flare::fiber_sleep_for(SIGNAL_INTERVAL_US);
             a->cond.notify_one();
         }
         return nullptr;
@@ -162,7 +162,7 @@ namespace {
 
     void *cv_mutex_waiter(void *void_arg) {
         WrapperArg *a = (WrapperArg *) void_arg;
-        std::unique_lock<flare::fiber::fiber_mutex> lck(a->mutex);
+        std::unique_lock<flare::fiber_mutex> lck(a->mutex);
         while (!stop) {
             a->cond.wait(lck);
         }
@@ -178,7 +178,7 @@ namespace {
 
     TEST(CondTest, cpp_wrapper) {
         stop = false;
-        flare::fiber::fiber_cond cond;
+        flare::fiber_cond cond;
         pthread_t bmutex_waiter_threads[8];
         pthread_t mutex_waiter_threads[8];
         pthread_t signal_thread;
@@ -190,7 +190,7 @@ namespace {
                                         cv_mutex_waiter, &a));
         }
         ASSERT_EQ(0, pthread_create(&signal_thread, nullptr, cv_signaler, &a));
-        flare::this_fiber::fiber_sleep_for(100L * 1000);
+        flare::fiber_sleep_for(100L * 1000);
         {
             FLARE_SCOPED_LOCK(a.mutex);
             stop = true;
@@ -220,7 +220,7 @@ namespace {
         }
 
         int wait(int old_signal) {
-            std::unique_lock<flare::fiber::fiber_mutex> lck(_m);
+            std::unique_lock<flare::fiber_mutex> lck(_m);
             while (_signal == old_signal) {
                 _c.wait(lck);
             }
@@ -228,8 +228,8 @@ namespace {
         }
 
     private:
-        flare::fiber::fiber_mutex _m;
-        flare::fiber::fiber_cond _c;
+        flare::fiber_mutex _m;
+        flare::fiber_cond _c;
         int _signal;
     };
 
@@ -281,9 +281,9 @@ namespace {
     }
 
     struct BroadcastArg {
-        flare::fiber::fiber_cond wait_cond;
-        flare::fiber::fiber_cond broadcast_cond;
-        flare::fiber::fiber_mutex mutex;
+        flare::fiber_cond wait_cond;
+        flare::fiber_cond broadcast_cond;
+        flare::fiber_mutex mutex;
         int nwaiter;
         int cur_waiter;
         int rounds;
@@ -292,7 +292,7 @@ namespace {
 
     void *wait_thread(void *arg) {
         BroadcastArg *ba = (BroadcastArg *) arg;
-        std::unique_lock<flare::fiber::fiber_mutex> lck(ba->mutex);
+        std::unique_lock<flare::fiber_mutex> lck(ba->mutex);
         while (ba->rounds > 0) {
             const int saved_round = ba->rounds;
             ++ba->cur_waiter;
@@ -310,7 +310,7 @@ namespace {
         BroadcastArg *ba = (BroadcastArg *) arg;
         //int local_round = 0;
         while (ba->rounds > 0) {
-            std::unique_lock<flare::fiber::fiber_mutex> lck(ba->mutex);
+            std::unique_lock<flare::fiber_mutex> lck(ba->mutex);
             while (ba->cur_waiter < ba->nwaiter) {
                 ba->broadcast_cond.wait(lck);
             }
@@ -323,7 +323,7 @@ namespace {
 
     void *disturb_thread(void *arg) {
         BroadcastArg *ba = (BroadcastArg *) arg;
-        std::unique_lock<flare::fiber::fiber_mutex> lck(ba->mutex);
+        std::unique_lock<flare::fiber_mutex> lck(ba->mutex);
         while (ba->rounds > 0) {
             lck.unlock();
             lck.lock();
@@ -408,7 +408,7 @@ namespace {
 
     void *usleep_thread(void *) {
         while (!g_stop) {
-            flare::this_fiber::fiber_sleep_for(1000L * 1000L);
+            flare::fiber_sleep_for(1000L * 1000L);
         }
         return nullptr;
     }

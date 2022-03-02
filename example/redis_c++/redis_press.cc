@@ -55,9 +55,9 @@ static void* sender(void* void_args) {
     std::vector<std::pair<std::string, std::string> > kvs;
     kvs.resize(FLAGS_batch);
     for (int i = 0; i < FLAGS_batch; ++i) {
-        kvs[i].first = flare::base::string_printf(
+        kvs[i].first = flare::string_printf(
             "%s_%04d", FLAGS_key.c_str(), args->base_index + i);
-        kvs[i].second = flare::base::string_printf(
+        kvs[i].second = flare::string_printf(
             "%s_%04d", FLAGS_value.c_str(), args->base_index + i);
     }
 
@@ -90,7 +90,7 @@ static void* sender(void* void_args) {
             // is a specific sleeping to prevent this thread from spinning too
             // fast. You should continue the business logic in a production 
             // server rather than sleeping.
-            flare::this_fiber::fiber_sleep_for(50000);
+            flare::fiber_sleep_for(50000);
         }
     }
     return NULL;

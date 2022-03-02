@@ -138,7 +138,7 @@ namespace flare::fiber_internal {
 
     static_assert(sizeof(token) % 64 == 0, "sizeof token must align");
 
-    typedef flare::memory::ResourceId<token> IdResourceId;
+    typedef flare::ResourceId<token> IdResourceId;
 
     inline fiber_token_t make_id(uint32_t version, IdResourceId slot) {
         const fiber_token_t tmp =
@@ -275,7 +275,7 @@ namespace flare::fiber_internal {
     }
 
     void token_pool_status(std::ostream &os) {
-        os << flare::memory::describe_resources<token>() << '\n';
+        os << flare::describe_resources<token>() << '\n';
     }
 
     struct token_traits {

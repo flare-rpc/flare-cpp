@@ -19,7 +19,7 @@
 
 #include "flare/variable/reducer.h"
 #include "flare/base/time.h"
-#include "flare/base/strings.h"
+#include "flare/strings/str_format.h"
 #include "flare/strings/string_splitter.h"
 #include "flare/container/hash_tables.h"
 #include <gtest/gtest.h>
@@ -258,7 +258,7 @@ struct StringAppenderResult {
 static void* string_appender(void* arg) {
     flare::variable::Adder<std::string>* cater = (flare::variable::Adder<std::string>*)arg;
     int count = 0;
-    std::string id = flare::base::string_printf("%lld", (long long)pthread_self());
+    std::string id = flare::string_printf("%lld", (long long)pthread_self());
     std::string tmp = "a";
     for (count = 0; !count || !g_stop; ++count) {
         *cater << id << ":";
@@ -292,7 +292,7 @@ TEST_F(ReducerTest, non_primitive_mt) {
     }
     flare::container::hash_map<pthread_t, int> got_count;
     std::string res = cater.get_value();
-    for (flare::strings::StringSplitter sp(res.c_str(), '.'); sp; ++sp) {
+    for (flare::StringSplitter sp(res.c_str(), '.'); sp; ++sp) {
         char* endptr = NULL;
         ++got_count[(pthread_t)strtoll(sp.field(), &endptr, 10)];
         ASSERT_EQ(27LL, sp.field() + sp.length() - endptr)
