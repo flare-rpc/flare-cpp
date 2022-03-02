@@ -183,7 +183,7 @@ namespace flare::rpc {
         // Normalize connection_group
         std::string &cg = _options.connection_group;
         if (!cg.empty() && (::isspace(cg.front()) || ::isspace(cg.back()))) {
-            flare::strip_ascii_whitespace(&cg);
+            flare::trim_inplace_all(&cg);
         }
         return 0;
     }

@@ -9,13 +9,14 @@
 
 namespace flare {
 
-    std::string &trim_all(std::string *str) {
-        trim_left(str);
-        trim_right(str);
+    // TODO this is not not very fast, need to fix
+    std::string &trim_inplace_all(std::string *str) {
+        trim_inplace_left(str);
+        trim_inplace_right(str);
         return *str;
     }
 
-    std::string &trim_all(std::string *str, std::string_view drop) {
+    std::string &trim_inplace_all(std::string *str, std::string_view drop) {
         std::string::size_type pos = str->find_last_not_of(drop.data(), drop.size());
         if (pos != std::string::npos) {
             str->erase(pos + 1);
@@ -48,13 +49,13 @@ namespace flare {
 
 /******************************************************************************/
 
-    std::string &trim_right(std::string *str) {
+    std::string &trim_inplace_right(std::string *str) {
         auto it = std::find_if_not(str->rbegin(), str->rend(), flare::ascii::is_space);
         str->erase(str->rend() - it);
         return *str;
     }
 
-    std::string &trim_right(std::string *str, std::string_view drop) {
+    std::string &trim_inplace_right(std::string *str, std::string_view drop) {
         str->erase(str->find_last_not_of(drop.data(), drop.size()) + 1, std::string::npos);
         return *str;
     }
@@ -69,13 +70,13 @@ namespace flare {
 
 /******************************************************************************/
 
-    std::string &trim_left(std::string *str) {
+    std::string &trim_inplace_left(std::string *str) {
         auto it = std::find_if_not(str->begin(), str->end(), flare::ascii::is_space);
         str->erase(str->begin(), it);
         return *str;
     }
 
-    std::string &trim_left(std::string *str, std::string_view drop) {
+    std::string &trim_inplace_left(std::string *str, std::string_view drop) {
         str->erase(0, str->find_first_not_of(drop.data(), drop.size()));
         return *str;
     }
@@ -88,7 +89,7 @@ namespace flare {
         return str.substr(pos, std::string::npos);
     }
 
-    void trim_complete(std::string *str) {
+    void trim_inplace_complete(std::string *str) {
         auto stripped = trim_all(*str);
 
         if (stripped.empty()) {
@@ -116,6 +117,17 @@ namespace flare {
         }
 
         str->erase(output_it - &(*str)[0]);
+    }
+
+    std::string trim_complete(std::string_view str) {
+        std::string result;
+        result.reserve(str.size());
+        for(auto it = str.begin(); it != str.end(); ++it) {
+            if(!flare::ascii::is_space(*it)) {
+                result.append(1,*it);
+            }
+        }
+        return result;
     }
 
 }  // namespace flare

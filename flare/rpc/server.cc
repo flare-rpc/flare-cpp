@@ -1220,7 +1220,7 @@ namespace flare::rpc {
         }
 
         std::string_view restful_mappings = svc_opt.restful_mappings;
-        restful_mappings = flare::strip_ascii_whitespace(restful_mappings);
+        restful_mappings = flare::trim_all(restful_mappings);
         if (!restful_mappings.empty()) {
             // Parse the mappings.
             std::vector<RestfulMapping> mappings;
@@ -1416,7 +1416,7 @@ namespace flare::rpc {
                 flare::StringSplitter at_sp(mp->http_url->c_str(), '@');
                 for (; at_sp; ++at_sp) {
                     std::string_view path(at_sp.field(), at_sp.length());
-                    path = flare::strip_ascii_whitespace(path);
+                    path = flare::trim_all(path);
                     flare::StringSplitter slash_sp(
                             path.data(), path.data() + path.size(), '/');
                     if (slash_sp == nullptr) {

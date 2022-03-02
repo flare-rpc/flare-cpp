@@ -132,7 +132,7 @@ int main(int argc, char **argv) {
             --nr;
         }
         std::string_view line(line_buf, nr);
-        line = flare::strip_ascii_whitespace(line);
+        line = flare::trim_all(line);
         if (!line.empty()) {
             url_list.push_back(flare::as_string(line));
         }
