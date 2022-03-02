@@ -18,10 +18,16 @@ requirements:
     - gflags =2.2.2
     - leveldb =1.22
     - protobuf =3.12.4
-
+    - gperftools =2.9
+  run:
+    - openssl =1.1.1
+    - gflags =2.2.2
+    - leveldb =1.22
+    - protobuf =3.12.4
+    - gperftools =2.9
 about:
   home: https://github.com/flare-rpc/flare-cpp
   license: Apache License 2
-  license_family: Apache License
+  license_family: APACHE
   license_file: LICENSE
   summary: A library for c++ based libraries and rpc libraries
