@@ -19,7 +19,7 @@
 #include <stdio.h>
 #include <thread>
 #include <gflags/gflags.h>
-#include "flare/base/filesystem.h"
+#include "flare/files/filesystem.h"
 #include "flare/base/popen.h"                         // flare::base::read_command_output
 #include "flare/base/fd_guard.h"                      // flare::base::fd_guard
 #include "flare/rpc/log.h"
@@ -172,8 +172,8 @@ namespace flare::rpc {
     static bool WriteSmallFile(const char *filepath_in,
                                const std::string_view &content) {
         std::error_code ec;
-        flare::filesystem::path dir = flare::filesystem::path(filepath_in).parent_path();
-        if (!flare::filesystem::create_directories(dir, ec)) {
+        flare::file_path dir = flare::file_path(filepath_in).parent_path();
+        if (!flare::create_directories(dir, ec)) {
             LOG(ERROR) << "Fail to create directory=`" << dir.c_str()
                        << "', " << ec.message();
             return false;
@@ -195,8 +195,8 @@ namespace flare::rpc {
     static bool WriteSmallFile(const char *filepath_in,
                                const flare::cord_buf &content) {
         std::error_code ec;
-        flare::filesystem::path dir = flare::filesystem::path(filepath_in).parent_path();
-        if (!flare::filesystem::create_directories(dir, ec)) {
+        flare::file_path dir = flare::file_path(filepath_in).parent_path();
+        if (!flare::create_directories(dir, ec)) {
             LOG(ERROR) << "Fail to create directory=`" << dir.c_str()
                        << "', " << ec.message();
             return false;
@@ -437,7 +437,7 @@ namespace flare::rpc {
             if (!ValidProfilePath(*base_name)) {
                 return cntl->SetFailed(EINVAL, "Invalid query `base'");
             }
-            if (!flare::filesystem::exists(*base_name)) {
+            if (!flare::exists(*base_name)) {
                 return cntl->SetFailed(
                         EINVAL, "The profile denoted by `base' does not exist");
             }
@@ -534,7 +534,7 @@ namespace flare::rpc {
             RPC_VLOG << "Running cmd=" << cmd;
             const int rc = flare::base::read_command_output(pprof_output, cmd.c_str());
             if (rc != 0) {
-                if (!flare::filesystem::exists(pprof_tool)) {
+                if (!flare::exists(pprof_tool)) {
                     // Write the script again.
                     g_written_pprof_perl = false;
                     // tell user.
@@ -591,7 +591,7 @@ namespace flare::rpc {
 
             if (!WriteSmallFile(result_name, prof_result)) {
                 LOG(ERROR) << "Fail to write " << result_name;
-                CHECK(flare::filesystem::remove(result_name));
+                CHECK(flare::remove(result_name));
             }
             break;
         }
@@ -636,7 +636,7 @@ namespace flare::rpc {
             if (!ValidProfilePath(*view)) {
                 return cntl->SetFailed(EINVAL, "Invalid query `view'");
             }
-            if (!flare::filesystem::exists(*view)) {
+            if (!flare::exists(*view)) {
                 return cntl->SetFailed(
                         EINVAL, "The profile denoted by `view' does not exist");
             }
@@ -744,9 +744,9 @@ namespace flare::rpc {
                 cntl->http_response().set_status_code(HTTP_STATUS_FORBIDDEN);
                 return NotifyWaiters(type, cntl, view);
             }
-            const flare::filesystem::path dir = flare::filesystem::path(prof_name).parent_path();
+            const flare::file_path dir = flare::file_path(prof_name).parent_path();
             std::error_code ec;
-            if (!flare::filesystem::create_directories(dir, ec)) {
+            if (!flare::create_directories(dir, ec)) {
                 os << "Fail to create directory=`" << dir.c_str() << ", "
                    << ec.message() << (use_html ? "</body></html>" : "\n");
                 os.move_to(resp);
@@ -1029,18 +1029,18 @@ namespace flare::rpc {
 
         TRACEPRINTF("Begin to enumerate profiles");
         std::vector<std::string> past_profs;
-        flare::filesystem::path prof_dir(FLAGS_rpc_profiling_dir);
+        flare::file_path prof_dir(FLAGS_rpc_profiling_dir);
         prof_dir /= GetProgramChecksum();
         std::error_code pec;
-        flare::filesystem::directory_iterator prof_enum(prof_dir, pec);
+        flare::directory_iterator prof_enum(prof_dir, pec);
         if (!pec) {
             for (auto &entry : prof_enum) {
                 // NOTE: name already includes dir.
                 if (past_profs.empty()) {
                     past_profs.reserve(16);
                 }
-                if (!entry.is_directory() && flare::ends_with(entry.path().c_str(), type_str)) {
-                    past_profs.push_back(entry.path().generic_string());
+                if (!entry.is_directory() && flare::ends_with(entry.file_path().c_str(), type_str)) {
+                    past_profs.push_back(entry.file_path().generic_string());
                 }
             }
         }
@@ -1055,12 +1055,12 @@ namespace flare::rpc {
                 TRACEPRINTF("Remove %lu profiles",
                             past_profs.size() - (size_t) max_profiles);
                 for (size_t i = max_profiles; i < past_profs.size(); ++i) {
-                    CHECK(flare::filesystem::remove(past_profs[i]));
+                    CHECK(flare::remove(past_profs[i]));
                     std::string cache_path;
                     cache_path.reserve(past_profs[i].size() + 7);
                     cache_path += past_profs[i];
                     cache_path += ".cache";
-                    CHECK(flare::filesystem::remove_all(cache_path));
+                    CHECK(flare::remove_all(cache_path));
                 }
                 past_profs.resize(max_profiles);
             }

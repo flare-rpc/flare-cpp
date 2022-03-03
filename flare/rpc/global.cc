@@ -80,7 +80,7 @@
 #include <malloc.h>                   // malloc_trim
 #endif
 #include "flare/base/fd_guard.h"
-#include "flare/base/file_watcher.h"
+#include "flare/files/file_watcher.h"
 
 extern "C" {
 // defined in gperftools/malloc_extension_c.h
@@ -204,7 +204,7 @@ static void* GlobalUpdate(void*) {
     flare::variable::PassiveStatus<int> var_running_server_count(
         "rpc_server_count", GetRunningServerCount, NULL);
 
-    flare::base::file_watcher fw;
+    flare::file_watcher fw;
     if (fw.init_from_not_exist(DUMMY_SERVER_PORT_FILE) < 0) {
         LOG(FATAL) << "Fail to init file_watcher on `" << DUMMY_SERVER_PORT_FILE << "'";
         return NULL;

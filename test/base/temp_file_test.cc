@@ -1,7 +1,7 @@
 
 #include <gtest/gtest.h>
 #include <errno.h>                     // errno
-#include "flare/io/temp_file.h"
+#include "flare/files/temp_file.h"
 
 namespace {
 

@@ -1,10 +1,10 @@
 
 
-#ifndef FLARE_IO_TEMP_FILE_H_
-#define FLARE_IO_TEMP_FILE_H_
+#ifndef FLARE_FILES_TEMP_FILE_H_
+#define FLARE_FILES_TEMP_FILE_H_
 
 #include "flare/base/profile.h"
-#include "flare/base/filesystem.h"
+#include "flare/files/filesystem.h"
 
 namespace flare {
 
@@ -59,4 +59,4 @@ namespace flare {
 
 } // namespace flare
 
-#endif  // FLARE_IO_TEMP_FILE_H_
+#endif  // FLARE_FILES_TEMP_FILE_H_

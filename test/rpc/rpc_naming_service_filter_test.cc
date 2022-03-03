@@ -19,7 +19,7 @@
 #include <gtest/gtest.h>
 #include <vector>
 #include "flare/strings/str_format.h"
-#include "flare/io/temp_file.h"
+#include "flare/files/temp_file.h"
 #include "flare/rpc/socket.h"
 #include "flare/rpc/channel.h"
 #include "flare/rpc/load_balancer.h"

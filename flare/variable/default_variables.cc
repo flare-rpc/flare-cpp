@@ -31,7 +31,7 @@
 #else
 #endif
 
-#include "flare/base/filesystem.h"
+#include "flare/files/filesystem.h"
 #include "flare/base/time.h"
 #include "flare/base/singleton_on_pthread_once.h"
 #include "flare/base/scoped_lock.h"
@@ -338,7 +338,7 @@ namespace flare::variable {
     static int get_fd_count(int limit) {
 #if defined(FLARE_PLATFORM_LINUX)
         std::error_code ec;
-        flare::filesystem::directory_iterator di("/proc/self/fd", ec);
+        flare::directory_iterator di("/proc/self/fd", ec);
         if (ec) {
             PLOG(WARNING) << "Fail to open /proc/self/fd";
             return -1;
@@ -347,7 +347,7 @@ namespace flare::variable {
         // Have to limit the scaning which consumes a lot of CPU when #fd
         // are huge (100k+)
         int count = 0;
-        flare::filesystem::directory_iterator endDi;
+        flare::directory_iterator endDi;
         for (; di != endDi && count <= limit + 3; ++count, ++di) {}
         return count - 3; /* skipped ., .. and the fd in di*/
 
@@ -883,7 +883,7 @@ namespace flare::variable {
 
     void get_work_dir(std::ostream &os, void *) {
         std::error_code ec;
-        flare::filesystem::path curr = flare::filesystem::current_path(ec);
+        flare::file_path curr = flare::current_path(ec);
         LOG_IF(WARNING, ec) << "Fail to GetCurrentDirectory";
         os << curr.c_str();
     }

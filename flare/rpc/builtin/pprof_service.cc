@@ -19,7 +19,7 @@
 #include <pthread.h>
 #include <map>
 #include <limits>
-#include "flare/base/filesystem.h"
+#include "flare/files/filesystem.h"
 #include <sys/stat.h>
 #include <fcntl.h>                          // O_RDONLY
 #include "flare/strings/str_format.h"             // string_printf
@@ -133,9 +133,9 @@ namespace flare::rpc {
             return;
         }
         std::error_code error;
-        const flare::filesystem::path dir = flare::filesystem::path(prof_name).parent_path();
+        const flare::file_path dir = flare::file_path(prof_name).parent_path();
 
-        if (!flare::filesystem::create_directories(dir, error)) {
+        if (!flare::create_directories(dir, error)) {
             cntl->SetFailed(EPERM, "Fail to create directory=`%s'", dir.c_str());
             return;
         }

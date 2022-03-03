@@ -22,7 +22,7 @@
 #include <memory>
 #include "flare/log/logging.h"
 #include <flare/rpc/server.h>
-#include <flare/base/file_watcher.h>
+#include <flare/files/file_watcher.h>
 #include <flare/base/scoped_file.h>
 #include <flare/rpc/trackme.pb.h>
 
@@ -153,7 +153,7 @@ void *BugsLoader::run_this(void *arg) {
 
 void BugsLoader::run() {
     // Check status of _bugs_files periodically.
-    flare::base::file_watcher fw;
+    flare::file_watcher fw;
     if (fw.init(_bugs_file.c_str()) < 0) {
         LOG(ERROR) << "Fail to init file_watcher on `" << _bugs_file << "'";
         return;
@@ -161,7 +161,7 @@ void BugsLoader::run() {
     while (!_stop) {
         load_bugs();
         while (!_stop) {
-            flare::base::file_watcher::Change change = fw.check_and_consume();
+            flare::file_watcher::Change change = fw.check_and_consume();
             if (change > 0) {
                 break;
             }
