@@ -51,7 +51,7 @@ namespace flare {
 #include "flare/times/internal/chrono_time.h"
 
 #else
-#include "flare/chrono/internal/chrono_posix_time.h"
+#include "flare/times/internal/chrono_posix_time.h"
 #endif
 
 // Allows override by test.
