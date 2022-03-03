@@ -192,8 +192,7 @@ FLARE_FORCE_INLINE bool operator>=(int128 lhs, int128 rhs) {
 
 // Unary operators.
 
-FLARE_FORCE_INLINE int128
-operator-(int128 v) {
+FLARE_FORCE_INLINE int128 operator-(int128 v) {
     int64_t hi = ~int128_high64(v);
     uint64_t lo = ~int128_low64(v) + 1;
     if (lo == 0)
@@ -205,78 +204,36 @@ FLARE_FORCE_INLINE bool operator!(int128v) {
     return !int128_low64(v) && !int128_high64(v);
 }
 
-FLARE_FORCE_INLINE int128
-operator~(int128
-val) {
-return
-
-make_int128(~int128_high64(val), ~int128_low64(val)
-
-);
+FLARE_FORCE_INLINE int128 operator~(int128 val) {
+    return make_int128(~int128_high64(val), ~int128_low64(val));
 }
 
 // Arithmetic operators.
 
-FLARE_FORCE_INLINE int128
-operator+(int128
-lhs,
-int128 rhs
-) {
-int128 result = make_int128(int128_high64(lhs) + int128_high64(rhs),
+FLARE_FORCE_INLINE int128 operator+(int128 lhs, int128 rhs) {
+    int128 result = make_int128(int128_high64(lhs) + int128_high64(rhs),
                             int128_low64(lhs) + int128_low64(rhs));
-if (
-int128_low64(result)
-<
-int128_low64(lhs)
-) {  // check for carry
-return
-make_int128(int128_high64(result)
-+ 1,
-int128_low64(result)
-);
-}
-return
-result;
+    if (int128_low64(result) < int128_low64(lhs)) {  // check for carry
+        return make_int128(int128_high64(result) + 1, int128_low64(result));
+    }
+    return result;
 }
 
-FLARE_FORCE_INLINE int128
-operator-(int128
-lhs,
-int128 rhs
-) {
-int128 result = make_int128(int128_high64(lhs) - int128_high64(rhs),
+FLARE_FORCE_INLINE int128 operator-(int128 lhs, int128 rhs) {
+    int128 result = make_int128(int128_high64(lhs) - int128_high64(rhs),
                             int128_low64(lhs) - int128_low64(rhs));
-if (
-int128_low64(lhs)
-<
-int128_low64(rhs)
-) {  // check for carry
-return
-make_int128(int128_high64(result)
-- 1,
-int128_low64(result)
-);
-}
-return
-result;
+    if (int128_low64(lhs) < int128_low64(rhs)) {  // check for carry
+        return make_int128(int128_high64(result) - 1, int128_low64(result));
+    }
+    return result;
 }
 
-FLARE_FORCE_INLINE int128
-operator*(int128
-lhs,
-int128 rhs
-) {
-uint128 result = uint128(lhs) * rhs;
-return
-
-make_int128(int128_internal::BitCastToSigned(uint128_high64(result)), uint128_low64(result)
-
-);
+FLARE_FORCE_INLINE int128 operator*(int128 lhs, int128 rhs) {
+    uint128 result = uint128(lhs) * rhs;
+    return make_int128(int128_internal::BitCastToSigned(uint128_high64(result)), uint128_low64(result));
 }
 
-FLARE_FORCE_INLINE int128
-
-int128::operator++(int) {
+FLARE_FORCE_INLINE int128 int128::operator++(int) {
     int128 tmp(*this);
     *this += 1;
     return tmp;
@@ -290,110 +247,54 @@ int128::operator--(int) {
     return tmp;
 }
 
-FLARE_FORCE_INLINE int128
-&
-
-int128::operator++() {
+FLARE_FORCE_INLINE int128 &int128::operator++() {
     *this += 1;
     return *this;
 }
 
-FLARE_FORCE_INLINE int128
-&
-
-int128::operator--() {
+FLARE_FORCE_INLINE int128 &int128::operator--() {
     *this -= 1;
     return *this;
 }
 
-inline int128 operator|(int128
-lhs,
-int128 rhs
-) {
-return
-make_int128(int128_high64(lhs)
-|
-int128_high64(rhs), int128_low64(lhs)
-|
-int128_low64(rhs)
-);
+inline int128 operator|(int128 lhs, int128 rhs) {
+    return make_int128(int128_high64(lhs) |
+            int128_high64(rhs), int128_low64(lhs) | int128_low64(rhs));
 }
 
-FLARE_FORCE_INLINE int128
-operator&(int128
-lhs,
-int128 rhs
-) {
-return
-make_int128(int128_high64(lhs)
-&
-int128_high64(rhs), int128_low64(lhs)
-&
-int128_low64(rhs)
-);
+FLARE_FORCE_INLINE int128 operator&(int128 lhs, int128 rhs) {
+    return make_int128(int128_high64(lhs) &
+        int128_high64(rhs), int128_low64(lhs) &
+        int128_low64(rhs));
 }
 
-FLARE_FORCE_INLINE int128
-operator^(int128
-lhs,
-int128 rhs
-) {
-return
-make_int128(int128_high64(lhs)
-^
-int128_high64(rhs), int128_low64(lhs)
-^
-int128_low64(rhs)
-);
+FLARE_FORCE_INLINE int128 operator^(int128 lhs, int128 rhs) {
+    return make_int128(int128_high64(lhs) ^
+            int128_high64(rhs), int128_low64(lhs) ^
+            int128_low64(rhs));
 }
 
-FLARE_FORCE_INLINE int128
-operator<<(int128
-lhs,
-int amount
-) {
-// uint64_t shifts of >= 64 are undefined, so we need some special-casing.
-if (amount < 64) {
-if (amount != 0) {
-return
-make_int128((int128_high64(lhs)
-<< amount) |
-static_cast
-<int64_t>(int128_low64(lhs)
->> (64 - amount)),
-int128_low64(lhs)
-<< amount);
-}
-return
-lhs;
+FLARE_FORCE_INLINE int128 operator<<(int128 lhs, int amount) {
+    // uint64_t shifts of >= 64 are undefined, so we need some special-casing.
+    if (amount < 64) {
+        if (amount != 0) {
+            return make_int128((int128_high64(lhs)<< amount) |
+                static_cast<int64_t>(int128_low64(lhs)>> (64 - amount)),int128_low64(lhs)<< amount);
+        }
+        return lhs;
+    }
+
+    return make_int128(static_cast<int64_t>(int128_low64(lhs)<< (amount - 64)), 0);
 }
 
-return make_int128(static_cast
-<int64_t>(int128_low64(lhs)
-<< (amount - 64)), 0);
-}
-
-FLARE_FORCE_INLINE int128
-operator>>(int128
-lhs,
-int amount
-) {
-// uint64_t shifts of >= 64 are undefined, so we need some special-casing.
-if (amount < 64) {
-if (amount != 0) {
-return
-make_int128(int128_high64(lhs)
->> amount,(
-int128_low64(lhs)
->> amount) |
-(static_cast
-<uint64_t>(int128_high64(lhs)
-) << (64 - amount)));
-}
-return
-lhs;
-}
-return make_int128(0,static_cast
-<uint64_t>(int128_high64(lhs)
->> (amount - 64)));
+FLARE_FORCE_INLINE int128 operator>>(int128 lhs, int amount) {
+    // uint64_t shifts of >= 64 are undefined, so we need some special-casing.
+    if (amount < 64) {
+        if (amount != 0) {
+            return make_int128(int128_high64(lhs) >> amount,(int128_low64(lhs)>> amount) |
+                (static_cast<uint64_t>(int128_high64(lhs)) << (64 - amount)));
+        }
+        return lhs;
+    }
+    return make_int128(0,static_cast<uint64_t>(int128_high64(lhs)>> (amount - 64)));
 }

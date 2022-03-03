@@ -120,7 +120,7 @@ namespace flare {
 
         bool safe_strtou64_base(std::string_view text, uint64_t *value, int base);
 
-        bool safe_strtou128_base(std::string_view text, flare::base::uint128 *value,
+        bool safe_strtou128_base(std::string_view text, flare::uint128 *value,
                                  int base);
 
         static const int kFastToBufferSize = 32;
@@ -260,7 +260,7 @@ FLARE_MUST_USE_RESULT bool simple_atoi(std::string_view str, int_type *out) {
 FLARE_MUST_USE_RESULT FLARE_FORCE_INLINE
 
 bool simple_atoi(std::string_view str,
-                 flare::base::uint128 *out) {
+                 flare::uint128 *out) {
     return numbers_internal::safe_strtou128_base(str, out, 10);
 }
 

@@ -541,10 +541,10 @@ namespace {
             for (int exponent = -300; exponent < 300; ++exponent) {
                 std::string candidate = flare::string_cat(mantissa, "e", exponent);
                 double strtod_value = strtod(candidate.c_str(), nullptr);
-                double abel_value = 0;
+                double flare_value = 0;
                 flare::from_chars(candidate.data(), candidate.data() + candidate.size(),
-                                 abel_value);
-                ASSERT_EQ(strtod_value, abel_value) << candidate;
+                                 flare_value);
+                ASSERT_EQ(strtod_value, flare_value) << candidate;
             }
         }
     }
@@ -559,10 +559,10 @@ namespace {
             for (int exponent = -43; exponent < 32; ++exponent) {
                 std::string candidate = flare::string_cat(mantissa, "e", exponent);
                 float strtod_value = strtof(candidate.c_str(), nullptr);
-                float abel_value = 0;
+                float flare_value = 0;
                 flare::from_chars(candidate.data(), candidate.data() + candidate.size(),
-                                 abel_value);
-                ASSERT_EQ(strtod_value, abel_value) << candidate;
+                                 flare_value);
+                ASSERT_EQ(strtod_value, flare_value) << candidate;
             }
         }
     }

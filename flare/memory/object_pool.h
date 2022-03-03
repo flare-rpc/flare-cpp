@@ -112,7 +112,7 @@ namespace flare {
     template<class T>
     using pool_ref_counted = flare::ref_counted<T, object_pool_deleter<T>>;
 
-    // Interface of `abel::object_pool::get` does not align very well with
+    // Interface of `flare::object_pool::get` does not align very well with
     // `ref_ptr`. It returns a `pooled_ptr`, which itself is a RAII wrapper. To
     // simplify the use of pooled `RefCounted`, we provide this method.
     template<class T,

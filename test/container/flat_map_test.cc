@@ -185,7 +185,7 @@ namespace {
 
     TEST_F(FlatMapTest, to_lower) {
         for (int c = -128; c < 128; ++c) {
-            ASSERT_EQ((char) ::tolower(c), flare::base::ascii_tolower(c)) << "c=" << c;
+            ASSERT_EQ((char) ::tolower(c), flare::ascii::to_lower(c)) << "c=" << c;
         }
 
         const size_t input_len = 102;
