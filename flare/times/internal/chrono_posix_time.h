@@ -16,8 +16,8 @@ namespace flare::times_internal {
     static inline int64_t get_current_time_nanos_from_system() {
         const int64_t kNanosPerSecond = 1000 * 1000 * 1000;
         struct timespec ts;
-        DCHECK(clock_gettime(CLOCK_REALTIME, &ts) == 0,
-               "Failed to read real-time clock.");
+        CHECK(clock_gettime(CLOCK_REALTIME, &ts) == 0)<<
+               "Failed to read real-time clock.";
         return (int64_t{ts.tv_sec} * kNanosPerSecond +
                 int64_t{ts.tv_nsec});
     }
