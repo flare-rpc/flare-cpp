@@ -19,8 +19,6 @@
 
 namespace flare::times_internal {
 
-    static double g_nominal_cpu_frequency = 1.0;  // 0.0 might be dangerous.
-
 #if defined(__i386__)
 
     int64_t unscaled_cycle_clock::now() {
