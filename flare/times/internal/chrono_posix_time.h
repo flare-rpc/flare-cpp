@@ -9,7 +9,6 @@
 #include <ctime>
 #include <cstdint>
 #include "flare/log/logging.h"
-#include "flare/times/clock.h"
 
 namespace flare::times_internal {
 

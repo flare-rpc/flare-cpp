@@ -37,6 +37,31 @@ struct timeval;
 
 namespace flare {
 
+    // fwd declare
+    class time_point;
+
+    // time_now()
+    //
+    // Returns the current time, expressed as an `flare::time_point` absolute time value.
+    time_point time_now();
+
+    // get_current_time_nanos()
+    //
+    // Returns the current time, expressed as a count of nanoseconds since the Unix
+    // Epoch (https://en.wikipedia.org/wiki/Unix_time). Prefer `flare::time_now()` instead
+    // for all but the most performance-sensitive cases (i.e. when you are calling
+    // this function hundreds of thousands of times per second).
+    int64_t get_current_time_nanos();
+
+    // sleep_for()
+    //
+    // Sleeps for the specified duration, expressed as an `flare::duration`.
+    //
+    // Notes:
+    // * signal interruptions will not reduce the sleep duration.
+    // * Returns immediately when passed a nonpositive duration.
+    void sleep_for(flare::duration duration);
+
     class time_zone;  // Defined below
 
     // time_point
@@ -936,4 +961,13 @@ namespace flare {
     }
 
 }  // namespace flare
+
+extern "C" {
+void flare_internal_sleep_for(flare::duration duration);
+}  // extern "C"
+
+FLARE_FORCE_INLINE void flare::sleep_for(flare::duration duration) {
+    flare_internal_sleep_for(duration);
+}
+
 #endif  // FLARE_TIMES_TIME_H_

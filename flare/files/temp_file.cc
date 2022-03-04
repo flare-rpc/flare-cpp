@@ -7,7 +7,7 @@
 #include <stdarg.h>                                 // va_list
 #include <errno.h>                                  // errno
 #include <new>                                      // placement new
-#include "flare/io/temp_file.h"                              // temp_file
+#include "flare/files/temp_file.h"                              // temp_file
 #include "flare/log/logging.h"
 
 // Initializing array. Needs to be macro.

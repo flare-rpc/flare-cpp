@@ -2,12 +2,11 @@
 // All rights reserved.
 // Created by liyinbin lijippy@163.com
 
-#include "flare/times/clock.h"
+#include "flare/times/time.h"
 #include "flare/base/profile.h"
 #include <signal.h>
 #include <unistd.h>
 #include "gtest/gtest.h"
-#include "flare/times/time.h"
 
 namespace {
 

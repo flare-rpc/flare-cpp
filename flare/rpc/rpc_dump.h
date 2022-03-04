@@ -19,7 +19,7 @@
 #ifndef FLARE_RPC_RPC_DUMP_H_
 #define FLARE_RPC_RPC_DUMP_H_
 
-#include "flare/base/filesystem.h"
+#include "flare/files/filesystem.h"
 #include <gflags/gflags_declare.h>
 #include "flare/io/cord_buf.h"                            // cord_buf
 #include "flare/variable/collector.h"
@@ -93,7 +93,7 @@ private:
     
     flare::IOPortal _cur_buf;
     int _cur_fd;
-    flare::filesystem::directory_iterator _enum;
+    flare::directory_iterator _enum;
     std::string _dir;
 };
 

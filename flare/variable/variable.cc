@@ -22,7 +22,7 @@
 #include <fstream>                              // std::ifstream
 #include <sstream>                              // std::ostringstream
 #include <gflags/gflags.h>
-#include "flare/base/filesystem.h"
+#include "flare/files/filesystem.h"
 #include "flare/container/flat_map.h"           // flare::container::FlatMap
 #include "flare/base/scoped_lock.h"                   // BAIDU_SCOPE_LOCK
 #include "flare/strings/string_splitter.h"               // flare::StringSplitter
@@ -579,8 +579,8 @@ namespace flare::variable {
         bool dump(const std::string &name, const std::string_view &desc) override {
             if (_fp == NULL) {
                 std::error_code ec;
-                flare::filesystem::path dirPath = flare::filesystem::path(_filename).parent_path();
-                if (!flare::filesystem::create_directories(dirPath, ec)) {
+                flare::file_path dirPath = flare::file_path(_filename).parent_path();
+                if (!flare::create_directories(dirPath, ec)) {
                     LOG(ERROR) << "Fail to create directory=`" << dirPath.c_str()
                                << "', " << ec.message();
                     return false;

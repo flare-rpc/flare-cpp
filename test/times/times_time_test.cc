@@ -18,7 +18,6 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "flare/base/int128.h"
-#include "flare/times/clock.h"
 #include "testing/time_util.h"
 
 namespace {

@@ -1,9 +1,9 @@
 
 #include <sys/stat.h>
 #include "flare/base/profile.h"              // FLARE_PLATFORM_OSX
-#include "flare/base/file_watcher.h"
+#include "flare/files/file_watcher.h"
 
-namespace flare::base {
+namespace flare {
 
     static const file_watcher::Timestamp NON_EXIST_TS =
             static_cast<file_watcher::Timestamp>(-1);
@@ -78,4 +78,4 @@ namespace flare::base {
         _last_ts = timestamp;
     }
 
-}  // namespace flare::base
+}  // namespace flare

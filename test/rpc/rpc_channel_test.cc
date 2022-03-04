@@ -26,7 +26,7 @@
 #include <google/protobuf/descriptor.h>
 #include "flare/base/time.h"
 #include "flare/log/logging.h"
-#include "flare/io/temp_file.h"
+#include "flare/files/temp_file.h"
 #include "flare/rpc/socket.h"
 #include "flare/rpc/acceptor.h"
 #include "flare/rpc/server.h"

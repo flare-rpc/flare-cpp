@@ -17,7 +17,7 @@
 
 
 #include <gflags/gflags.h>
-#include "flare/base/filesystem.h"
+#include "flare/files/filesystem.h"
 #include <fcntl.h>                    // O_CREAT
 #include "flare/io/raw_pack.h"
 #include <memory>
@@ -80,7 +80,7 @@ namespace flare::rpc {
             _command_name = flare::variable::read_command_name();
             SaveFlags();
             // Clean the directory at fist time.
-            flare::filesystem::remove_all(_dir);
+            flare::remove_all(_dir);
         }
 
         ~RpcDumpContext() {
@@ -172,14 +172,14 @@ namespace flare::rpc {
         // Open file if needed.
         if (_cur_fd < 0) {
             std::error_code ec;
-            if (!flare::filesystem::create_directories(_dir, ec)) {
+            if (!flare::create_directories(_dir, ec)) {
                 LOG(ERROR) << "Fail to create directory=`" << _dir
                            << "', " << ec.message();
                 return;
             }
             // Remove oldest files.
             while ((int) _filenames.size() >= _max_files && !_filenames.empty()) {
-                flare::filesystem::remove(_filenames.front());
+                flare::remove(_filenames.front());
                 _filenames.pop_front();
             }
             // Make current time as postfix.
@@ -296,19 +296,19 @@ namespace flare::rpc {
                 _cur_fd = -1;
             }
 
-            if (_enum == flare::filesystem::directory_iterator()) {
+            if (_enum == flare::directory_iterator()) {
                 std::error_code ec;
-                _enum = flare::filesystem::directory_iterator(_dir, ec);
+                _enum = flare::directory_iterator(_dir, ec);
             }
-            while (_enum != flare::filesystem::directory_iterator() &&
+            while (_enum != flare::directory_iterator() &&
                    _enum->is_directory()) {
                 ++_enum;
             }
-            if (_enum == flare::filesystem::directory_iterator()) {
+            if (_enum == flare::directory_iterator()) {
                 return NULL;
             }
 
-            auto filename = _enum->path();
+            auto filename = _enum->file_path();
             if (filename.empty()) {
                 return NULL;
             }

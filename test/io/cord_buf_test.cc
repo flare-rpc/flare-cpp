@@ -20,7 +20,7 @@
 #include <sys/socket.h>                // socketpair
 #include <errno.h>                     // errno
 #include <fcntl.h>                     // O_RDONLY
-#include <flare/io/temp_file.h>      // temp_file
+#include "flare/files/temp_file.h"      // temp_file
 #include <flare/container/flat_map.h>
 #include "flare/base/time.h"                 // Timer
 #include "flare/base/fd_utility.h"           // make_non_blocking

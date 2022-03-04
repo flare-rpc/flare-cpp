@@ -19,7 +19,7 @@
 #include <gtest/gtest.h>
 #include <vector>
 #include "flare/strings/str_format.h"
-#include "flare/io/temp_file.h"
+#include "flare/files/temp_file.h"
 #include "flare/fiber/internal/fiber.h"
 #include "flare/rpc/policy/consul_naming_service.h"
 #include "flare/rpc/policy/domain_naming_service.h"

@@ -15,7 +15,7 @@
 //       ......
 //   }
 
-namespace flare::base {
+namespace flare {
     class file_watcher {
     public:
         enum Change {
@@ -61,6 +61,6 @@ namespace flare::base {
         std::string _file_path;
         Timestamp _last_ts;
     };
-}  // namespace flare::base
+}  // namespace flare
 
 #endif  // FLARE_BASE_FILE_WATCHER_H_
