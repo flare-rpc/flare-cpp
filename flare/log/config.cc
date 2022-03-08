@@ -75,6 +75,8 @@ static const char *DefaultLogDir() {
     return "";
 }
 
+DEFINE_int32(log_save_days, 7, "log keep days, default is 7 days");
+
 FLARE_LOG_DEFINE_int32(logfile_mode, 0664, "Log file mode/permissions.");
 
 FLARE_LOG_DEFINE_string(log_dir, DefaultLogDir(),

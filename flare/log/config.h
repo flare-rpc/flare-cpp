@@ -79,6 +79,9 @@ DECLARE_string(log_dir);
 // Set the log file mode.
 DECLARE_int32(logfile_mode);
 
+// days to save log
+DECLARE_int32(log_save_days);
+
 DECLARE_int32(logemaillevel);
 
 // Sets the path of the directory into which to put additional links
