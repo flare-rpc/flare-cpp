@@ -16,6 +16,7 @@ namespace flare {
 
     namespace {
 
+        void log_config_init();
         // The below two registries are filled by `prepare_for_running_callbacks()` (by
         // moving callbacks from the registry above.)
         std::vector<std::function<void()>> initializer_registry;
@@ -31,6 +32,16 @@ namespace flare {
             return registry.get();
         }
 
+        void log_config_init(char* argv0) {
+            flare::log::init_logging(argv0);
+            //distable info level single file
+            if(!FLAGS_logtostderr) {
+                flare::log::set_log_destination(flare::log::FLARE_INFO, "");
+                //distable debug level single file
+                flare::log::set_log_destination(flare::log::FLARE_DEBUG, "");
+                flare::log::enable_log_cleaner(FLAGS_log_save_days);
+            }
+        }
     }  // namespace
 
 }  // namespace flare
@@ -127,7 +138,7 @@ namespace flare {
     void bootstrap_init(int argc, char **argv) {
         GFLAGS_NS::ParseCommandLineFlags(&argc, &argv, true);
         flare::detail::apply_flags_overrider();
-        flare::log::init_logging(argv[0]);
+        log_config_init(argv[0]);
     }
 
 }  // namespace flare

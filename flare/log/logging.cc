@@ -278,7 +278,7 @@ namespace flare::log {
             bool create_logfile(const string &time_pid_string);
         };
 
-// Encapsulate all log cleaner related states
+        // Encapsulate all log cleaner related states
         class log_cleaner {
         public:
             log_cleaner();
