@@ -28,10 +28,22 @@ namespace flare {
 
         flare_status skip(size_t n);
 
+        bool is_eof(flare_status *frs);
+
+        size_t has_read() const {
+            return _has_read;
+        }
+
+        const flare::file_path &path() const {
+            return _path;
+        }
+
     private:
         FLARE_DISALLOW_COPY_AND_ASSIGN(sequential_read_file);
 
         int _fd{-1};
+        flare::file_path _path;
+        size_t _has_read{0};
     };
 
 }  // namespace flare

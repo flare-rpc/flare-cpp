@@ -29,8 +29,13 @@ namespace flare {
 
         void flush();
 
+        const flare::file_path &path() const {
+            return _path;
+        }
+
     private:
         int _fd{-1};
+        flare::file_path _path;
     };
 
 }  // namespace flare

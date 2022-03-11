@@ -27,9 +27,16 @@ namespace flare {
 
         flare_status read(size_t n, off_t offset, flare::cord_buf *buf);
 
+        bool is_eof(off_t off, size_t has_read, flare_status *frs);
+
+
+        const flare::file_path &path() const {
+            return _path;
+        }
+
     private:
         FLARE_DISALLOW_COPY_AND_ASSIGN(random_access_file);
-
+        flare::file_path _path;
         int _fd{-1};
     };
 

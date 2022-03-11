@@ -20,7 +20,9 @@ namespace flare {
     }
 
     flare_status sequential_write_file::open(const flare::file_path &path, bool truncate) noexcept {
+        CHECK(_fd == -1)<<"do not reopen";
         flare_status rs;
+        _path = path;
         if(truncate) {
             _fd = ::open(path.c_str(), O_RDWR | O_CREAT | O_TRUNC | O_CLOEXEC, 0644);
         } else {
