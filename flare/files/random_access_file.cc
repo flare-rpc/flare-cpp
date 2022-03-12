@@ -77,7 +77,7 @@ namespace flare {
             }
             return false;
         }
-        return off + has_read == size;
+        return off + has_read >= size;
     }
 
 }  // namespace flare
