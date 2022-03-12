@@ -21,7 +21,7 @@ namespace flare {
     }
 
     flare_status random_write_file::open(const flare::file_path &path, bool truncate) noexcept {
-        CHECK(_fd == -1)<<"do not reopen";
+        CHECK(_fd == -1) << "do not reopen";
         flare_status rs;
         _path = path;
         if (truncate) {
@@ -41,7 +41,7 @@ namespace flare {
         off_t orig_offset = offset;
         flare_status frs;
         ssize_t left = size;
-        const char* data = content.data();
+        const char *data = content.data();
         while (left > 0) {
             ssize_t written = ::pwrite(_fd, data, left, offset);
             if (written >= 0) {
@@ -85,6 +85,14 @@ namespace flare {
         return frs;
     }
 
-    void flush();
+    void random_write_file::flush() {
+#ifdef FLARE_PLATFORM_OSX
+        ::fsync(_fd);
+#elif FLARE_PLATFORM_LINUX
+        ::fdatasync(_fd);
+#else
+#error unkown how to work
+#endif
+    }
 
 }  // namespace flare
