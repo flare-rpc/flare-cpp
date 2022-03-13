@@ -27,7 +27,6 @@ namespace flare {
         _path = path;
         _fd = ::open(path.c_str(), O_RDONLY | O_CLOEXEC, 0644);
         if (_fd < 0) {
-            LOG(ERROR) << "open file: " << path << "error: " << errno << " " << strerror(errno);
             rs.set_error(errno, "%s", strerror(errno));
         }
         return rs;
@@ -58,7 +57,7 @@ namespace flare {
             } else if (errno == EINTR) {
                 continue;
             } else {
-                LOG(WARNING) << "read failed, err: " << flare_error()
+                LOG(WARNING) << "read failed, errno: " <<errno<<" "<<flare_error()
                              << " fd: " << _fd << " size: " << n;
                 frs.set_error(errno, "%s", flare_error());
                 return frs;

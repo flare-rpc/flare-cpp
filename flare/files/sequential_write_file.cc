@@ -80,9 +80,13 @@ namespace flare {
 
     void sequential_write_file::flush() {
 #ifdef FLARE_PLATFORM_OSX
-        ::fsync(_fd);
+        if(_fd > 0) {
+            ::fsync(_fd);
+        }
 #elif FLARE_PLATFORM_LINUX
-        ::fdatasync(_fd);
+        if(_fd > 0) {
+            ::fdatasync(_fd);
+        }
 #else
 #error unkown how to work
 #endif
