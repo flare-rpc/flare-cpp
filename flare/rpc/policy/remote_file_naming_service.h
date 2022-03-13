@@ -16,8 +16,8 @@
 // under the License.
 
 
-#ifndef  BRPC_POLICY_HTTP_FILE_NAMING_SERVICE
-#define  BRPC_POLICY_HTTP_FILE_NAMING_SERVICE
+#ifndef  FLARE_RPC_POLICY_REMOTE_FILE_NAMING_SERVICE_H_
+#define  FLARE_RPC_POLICY_REMOTE_FILE_NAMING_SERVICE_H_
 
 #include "flare/rpc/periodic_naming_service.h"
 #include "flare/rpc/channel.h"
@@ -25,28 +25,28 @@
 
 
 namespace flare::rpc {
-class Channel;
-namespace policy {
+    class Channel;
+    namespace policy {
 
-class RemoteFileNamingService : public PeriodicNamingService {
-private:
-    int GetServers(const char* service_name,
-                   std::vector<ServerNode>* servers) override;
+        class RemoteFileNamingService : public PeriodicNamingService {
+        private:
+            int GetServers(const char *service_name,
+                           std::vector<ServerNode> *servers) override;
 
-    void Describe(std::ostream& os, const DescribeOptions&) const override;
+            void Describe(std::ostream &os, const DescribeOptions &) const override;
 
-    NamingService* New() const override;
-    
-    void Destroy() override;
-    
-private:
-    std::unique_ptr<Channel> _channel;
-    std::string _server_addr;
-    std::string _path;
-};
+            NamingService *New() const override;
 
-}  // namespace policy
+            void Destroy() override;
+
+        private:
+            std::unique_ptr<Channel> _channel;
+            std::string _server_addr;
+            std::string _path;
+        };
+
+    }  // namespace policy
 } // namespace flare::rpc
 
 
-#endif  //BRPC_POLICY_HTTP_FILE_NAMING_SERVICE
+#endif  //FLARE_RPC_POLICY_REMOTE_FILE_NAMING_SERVICE_H_

@@ -91,4 +91,4 @@ private:
 
 }  // namespace flare::rpc
 
-#endif // BRPC_CIRCUIT_BREAKER_H_
+#endif // FLARE_RPC_CIRCUIT_BREAKER_H_
