@@ -1,0 +1,95 @@
+//
+// Created by liyinbin on 2022/3/11.
+//
+
+#include "flare/files/sequential_write_file.h"
+#include "flare/log/logging.h"
+#include "flare/base/errno.h"
+#include <cstdio>
+#include <unistd.h>
+#include <fcntl.h>
+#include <errno.h>
+#include <string.h>
+
+namespace flare {
+
+    sequential_write_file::~sequential_write_file() {
+        if (_fd > 0) {
+            ::close(_fd);
+        }
+    }
+
+    flare_status sequential_write_file::open(const flare::file_path &path, bool truncate) noexcept {
+        CHECK(_fd == -1)<<"do not reopen";
+        flare_status rs;
+        _path = path;
+        if(truncate) {
+            _fd = ::open(path.c_str(), O_RDWR | O_CREAT | O_TRUNC | O_CLOEXEC, 0644);
+        } else {
+            _fd = ::open(path.c_str(), O_RDWR | O_CREAT | O_APPEND | O_CLOEXEC, 0644);
+        }
+        if(_fd < 0) {
+            LOG(ERROR)<<"open file to append : "<<path<<"error: "<<errno<<" "<<strerror(errno);
+            rs.set_error(errno, "%s", strerror(errno));
+        }
+        return rs;
+    }
+
+    flare_status sequential_write_file::write(std::string_view content) {
+        flare_status frs;
+        size_t size = content.size();
+        ssize_t has_write = 0;
+        while (has_write != content.size()) {
+            ssize_t written = ::write(_fd,  content.data() + has_write, content.size() - has_write);
+            if (written >= 0) {
+                has_write += written;
+            } else if (errno == EINTR) {
+                continue;
+            } else {
+                LOG(WARNING) << "write falied, err: " << flare_error()
+                             << " fd: " << _fd <<" size: " << size;
+                frs.set_error(errno, "%s", flare_error());
+                return frs;
+            }
+        }
+
+        return frs;
+    }
+
+    flare_status sequential_write_file::write(const flare::cord_buf &data) {
+        flare_status frs;
+        size_t size = data.size();
+        flare::cord_buf piece_data(data);
+        ssize_t left = size;
+        while (left > 0) {
+            ssize_t written = piece_data.cut_into_file_descriptor(_fd,  left);
+            if (written >= 0) {
+                left -= written;
+            } else if (errno == EINTR) {
+                continue;
+            } else {
+                LOG(WARNING) << "write falied, err: " << flare_error()
+                             << " fd: " << _fd <<" size: " << size;
+                frs.set_error(errno, "%s", flare_error());
+                return frs;
+            }
+        }
+
+        return frs;
+    }
+
+    void sequential_write_file::flush() {
+#ifdef FLARE_PLATFORM_OSX
+        if(_fd > 0) {
+            ::fsync(_fd);
+        }
+#elif FLARE_PLATFORM_LINUX
+        if(_fd > 0) {
+            ::fdatasync(_fd);
+        }
+#else
+#error unkown how to work
+#endif
+    }
+
+}  // namespace flare
