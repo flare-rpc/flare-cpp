@@ -11,7 +11,7 @@
 #include "gmock/gmock-matchers.h"
 #include "gtest/gtest.h"
 
-namespace foreign_ns {
+namespace test_ns {
 
     struct AwesomeLogSink : public flare::log::log_sink {
         void send(flare::log::log_severity severity, const char *full_filename,
@@ -64,10 +64,10 @@ namespace foreign_ns {
         FLARE_LOG_ERROR("something");
     }
 
-}  // namespace foreign_ns
+}  // namespace test_ns
 
 FLARE_INTERNAL_LOGGING_REGISTER_PREFIX_PROVIDER(0,
-                                                foreign_ns::WriteLoggingPrefix)
+                                                test_ns::WriteLoggingPrefix)
 
 FLARE_INTERNAL_LOGGING_REGISTER_PREFIX_PROVIDER(1,
-                                                foreign_ns::WriteLoggingPrefix2)
+                                                test_ns::WriteLoggingPrefix2)
