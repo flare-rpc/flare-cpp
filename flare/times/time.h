@@ -645,14 +645,14 @@ namespace flare {
         return ti.pre;
     }
 
-// time_conversion
-//
-// An `flare::time_conversion` represents the conversion of year, month, day,
-// hour, minute, and second values (i.e., a civil time), in a particular
-// `flare::time_zone`, to a time instant (an absolute time), as returned by
-// `flare::convert_date_time()`. Legacy version of `flare::time_zone::time_info`.
-//
-// Deprecated. Use `flare::time_zone::time_info`.
+    // time_conversion
+    //
+    // An `flare::time_conversion` represents the conversion of year, month, day,
+    // hour, minute, and second values (i.e., a civil time), in a particular
+    // `flare::time_zone`, to a time instant (an absolute time), as returned by
+    // `flare::convert_date_time()`. Legacy version of `flare::time_zone::time_info`.
+    //
+    // Deprecated. Use `flare::time_zone::time_info`.
     struct
     time_conversion {
         time_point pre;    // time calculated using the pre-transition offset
@@ -804,9 +804,9 @@ namespace flare {
     //
     std::string format_time(const std::string &format, time_point t, time_zone tz);
 
-// Convenience functions that format the given time using the RFC3339_full
-// format.  The first overload uses the provided time_zone, while the second
-// uses local_time_zone().
+    // Convenience functions that format the given time using the RFC3339_full
+    // format.  The first overload uses the provided time_zone, while the second
+    // uses local_time_zone().
     std::string format_time(time_point t, time_zone tz);
 
     std::string format_time(time_point t);

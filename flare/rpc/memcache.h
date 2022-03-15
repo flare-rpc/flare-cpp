@@ -28,18 +28,18 @@
 
 namespace flare::rpc {
 
-// Request to memcache.
-// Notice that you can pipeline multiple operations in one request and sent
-// them to memcached server together.
-// Example:
-//   MemcacheRequest request;
-//   request.get("my_key1");
-//   request.get("my_key2");
-//   request.set("my_key3", "some_value", 0, 10);
-//   ...
-//   MemcacheResponse response;
-//   // 2 GET and 1 SET are sent to the server together.
-//   channel.CallMethod(&controller, &request, &response, NULL/*done*/);
+    // Request to memcache.
+    // Notice that you can pipeline multiple operations in one request and sent
+    // them to memcached server together.
+    // Example:
+    //   MemcacheRequest request;
+    //   request.get("my_key1");
+    //   request.get("my_key2");
+    //   request.set("my_key3", "some_value", 0, 10);
+    //   ...
+    //   MemcacheResponse response;
+    //   // 2 GET and 1 SET are sent to the server together.
+    //   channel.CallMethod(&controller, &request, &response, NULL/*done*/);
     class MemcacheRequest : public ::google::protobuf::Message {
     public:
         MemcacheRequest();
@@ -96,7 +96,7 @@ namespace flare::rpc {
         const flare::cord_buf &raw_buffer() const { return _buf; }
 
         // Protobuf methods.
-        MemcacheRequest *New() const;
+        MemcacheRequest *New() const override;
 
 #if GOOGLE_PROTOBUF_VERSION >= 3006000
 
@@ -104,17 +104,17 @@ namespace flare::rpc {
 
 #endif
 
-        void CopyFrom(const ::google::protobuf::Message &from);
+        void CopyFrom(const ::google::protobuf::Message &from) override;
 
-        void MergeFrom(const ::google::protobuf::Message &from);
+        void MergeFrom(const ::google::protobuf::Message &from) override;
 
         void CopyFrom(const MemcacheRequest &from);
 
         void MergeFrom(const MemcacheRequest &from);
 
-        void Clear();
+        void Clear() override;
 
-        bool IsInitialized() const;
+        bool IsInitialized() const override;
 
         int ByteSize() const;
 
@@ -126,7 +126,7 @@ namespace flare::rpc {
 
         ::google::protobuf::uint8 *SerializeWithCachedSizesToArray(::google::protobuf::uint8 *output) const;
 
-        int GetCachedSize() const { return _cached_size_; }
+        int GetCachedSize() const override { return _cached_size_; }
 
         static const ::google::protobuf::Descriptor *descriptor();
 
@@ -149,36 +149,36 @@ namespace flare::rpc {
 
         void SharedDtor();
 
-        void SetCachedSize(int size) const;
+        void SetCachedSize(int size) const override;
 
         int _pipelined_count;
         flare::cord_buf _buf;
         mutable int _cached_size_;
     };
 
-// Response from Memcache.
-// Notice that a MemcacheResponse instance may contain multiple operations
-// due to pipelining. You can call pop_xxx according to your calling sequence
-// of operations in corresponding MemcacheRequest.
-// Example:
-//   MemcacheResponse response;
-//   channel.CallMethod(&controller, &request, &response, NULL/*done*/);
-//   ...
-//   if (!response.PopGet(&my_value1, &flags1, &cas1)) {
-//       LOG(FATAL) << "Fail to pop GET: " << response.LastError();
-//   } else {
-//       // Use my_value1, flags1, cas1
-//   }
-//   if (!response.PopGet(&my_value2, &flags2, &cas2)) {
-//       LOG(FATAL) << "Fail to pop GET: " << response.LastError();
-//   } else {
-//       // Use my_value2, flags2, cas2
-//   }
-//   if (!response.PopSet(&cas3)) {
-//       LOG(FATAL) << "Fail to pop SET: " << response.LastError();
-//   } else {
-//       // the SET was successful.
-//   }
+    // Response from Memcache.
+    // Notice that a MemcacheResponse instance may contain multiple operations
+    // due to pipelining. You can call pop_xxx according to your calling sequence
+    // of operations in corresponding MemcacheRequest.
+    // Example:
+    //   MemcacheResponse response;
+    //   channel.CallMethod(&controller, &request, &response, NULL/*done*/);
+    //   ...
+    //   if (!response.PopGet(&my_value1, &flags1, &cas1)) {
+    //       LOG(FATAL) << "Fail to pop GET: " << response.LastError();
+    //   } else {
+    //       // Use my_value1, flags1, cas1
+    //   }
+    //   if (!response.PopGet(&my_value2, &flags2, &cas2)) {
+    //       LOG(FATAL) << "Fail to pop GET: " << response.LastError();
+    //   } else {
+    //       // Use my_value2, flags2, cas2
+    //   }
+    //   if (!response.PopSet(&cas3)) {
+    //       LOG(FATAL) << "Fail to pop SET: " << response.LastError();
+    //   } else {
+    //       // the SET was successful.
+    //   }
     class MemcacheResponse : public ::google::protobuf::Message {
     public:
         // Definition of the valid response status numbers.
@@ -246,7 +246,7 @@ namespace flare::rpc {
 
         // implements Message ----------------------------------------------
 
-        MemcacheResponse *New() const;
+        MemcacheResponse *New() const override;
 
 #if GOOGLE_PROTOBUF_VERSION >= 3006000
 
@@ -254,17 +254,17 @@ namespace flare::rpc {
 
 #endif
 
-        void CopyFrom(const ::google::protobuf::Message &from);
+        void CopyFrom(const ::google::protobuf::Message &from) override;
 
-        void MergeFrom(const ::google::protobuf::Message &from);
+        void MergeFrom(const ::google::protobuf::Message &from) override;
 
         void CopyFrom(const MemcacheResponse &from);
 
         void MergeFrom(const MemcacheResponse &from);
 
-        void Clear();
+        void Clear() override;
 
-        bool IsInitialized() const;
+        bool IsInitialized() const override;
 
         int ByteSize() const;
 
@@ -276,13 +276,13 @@ namespace flare::rpc {
 
         ::google::protobuf::uint8 *SerializeWithCachedSizesToArray(::google::protobuf::uint8 *output) const;
 
-        int GetCachedSize() const { return _cached_size_; }
+        int GetCachedSize() const override { return _cached_size_; }
 
         static const ::google::protobuf::Descriptor *descriptor();
 
     protected:
 
-        ::google::protobuf::Metadata GetMetadata() const;
+        ::google::protobuf::Metadata GetMetadata() const override;
 
     private:
 
@@ -294,7 +294,7 @@ namespace flare::rpc {
 
         void SharedDtor();
 
-        void SetCachedSize(int size) const;
+        void SetCachedSize(int size) const override;
 
         std::string _err;
         flare::cord_buf _buf;

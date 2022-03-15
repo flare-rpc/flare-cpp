@@ -22,6 +22,7 @@
 #include "flare/fiber/internal/sys_futex.h"
 #include "flare/base/scoped_lock.h"
 #include "flare/base/static_atomic.h"
+#include "flare/base/time.h"
 #include <pthread.h>
 #include <unordered_map>
 

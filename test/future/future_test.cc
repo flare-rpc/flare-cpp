@@ -664,7 +664,7 @@ namespace flare {
     }
 
     TEST(FutureV2Test, RepeatIfReturnsVoid) {
-        std::vector<int> v;
+        std::vector<size_t> v;
         int ct = 0;
         bool f = false;
 
@@ -700,7 +700,7 @@ namespace flare {
     }
 
     TEST(FutureV2Test, RepeatIfReturnsMultipleValue) {
-        std::vector<int> v;
+        std::vector<size_t> v;
         int ct = 0;
 
         auto&&[vv, s] = blocking_get(future_internal::repeat_if(

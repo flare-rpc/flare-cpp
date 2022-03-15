@@ -25,59 +25,75 @@
 
 namespace flare::rpc {
 
-class SerializedRequest : public ::google::protobuf::Message {
-public:
-    SerializedRequest();
-    virtual ~SerializedRequest();
-  
-    SerializedRequest(const SerializedRequest& from);
-  
-    inline SerializedRequest& operator=(const SerializedRequest& from) {
-        CopyFrom(from);
-        return *this;
-    }
-  
-    static const ::google::protobuf::Descriptor* descriptor();
-  
-    void Swap(SerializedRequest* other);
-  
-    // implements Message ----------------------------------------------
-  
-    SerializedRequest* New() const;
+    class SerializedRequest : public ::google::protobuf::Message {
+    public:
+        SerializedRequest();
+
+        virtual ~SerializedRequest();
+
+        SerializedRequest(const SerializedRequest &from);
+
+        inline SerializedRequest &operator=(const SerializedRequest &from) {
+            CopyFrom(from);
+            return *this;
+        }
+
+        static const ::google::protobuf::Descriptor *descriptor();
+
+        void Swap(SerializedRequest *other);
+
+        // implements Message ----------------------------------------------
+
+        SerializedRequest *New() const override;
 
 #if GOOGLE_PROTOBUF_VERSION >= 3006000
 
         SerializedRequest *New(::google::protobuf::Arena *arena) const override;
 
 #endif
-    void CopyFrom(const ::google::protobuf::Message& from);
-    void CopyFrom(const SerializedRequest& from);
-    void Clear();
-    bool IsInitialized() const;
-    int ByteSize() const;
-    int GetCachedSize() const { return (int)_serialized.size(); }
-    flare::cord_buf& serialized_data() { return _serialized; }
-    const flare::cord_buf& serialized_data() const { return _serialized; }
 
-protected:
-    ::google::protobuf::Metadata GetMetadata() const;
-    
-private:
-    bool MergePartialFromCodedStream(
-        ::google::protobuf::io::CodedInputStream* input);
-    void SerializeWithCachedSizes(
-        ::google::protobuf::io::CodedOutputStream* output) const;
-    ::google::protobuf::uint8* SerializeWithCachedSizesToArray(
-        ::google::protobuf::uint8* output) const;
-    void MergeFrom(const ::google::protobuf::Message& from);
-    void MergeFrom(const SerializedRequest& from);
-    void SharedCtor();
-    void SharedDtor();
-    void SetCachedSize(int size) const;
-  
-private:
-    flare::cord_buf _serialized;
-};
+        void CopyFrom(const ::google::protobuf::Message &from) override;
+
+        void CopyFrom(const SerializedRequest &from);
+
+        void Clear() override;
+
+        bool IsInitialized() const override;
+
+        int ByteSize() const;
+
+        int GetCachedSize() const override { return (int) _serialized.size(); }
+
+        flare::cord_buf &serialized_data() { return _serialized; }
+
+        const flare::cord_buf &serialized_data() const { return _serialized; }
+
+    protected:
+        ::google::protobuf::Metadata GetMetadata() const override;
+
+    private:
+        bool MergePartialFromCodedStream(
+                ::google::protobuf::io::CodedInputStream *input);
+
+        void SerializeWithCachedSizes(
+                ::google::protobuf::io::CodedOutputStream *output) const;
+
+        ::google::protobuf::uint8 *SerializeWithCachedSizesToArray(
+                ::google::protobuf::uint8 *output) const;
+
+        void MergeFrom(const ::google::protobuf::Message &from);
+
+        void MergeFrom(const SerializedRequest &from);
+
+        void SharedCtor();
+
+        void SharedDtor();
+
+        void SetCachedSize(int size) const;
+
+    private:
+        flare::cord_buf _serialized;
+    };
 
 } // namespace flare::rpc
 

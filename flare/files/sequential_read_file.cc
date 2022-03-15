@@ -69,6 +69,7 @@ namespace flare {
         if (_fd > 0) {
             ::lseek(_fd, n, SEEK_CUR);
         }
+        return flare_status();
     }
 
     bool sequential_read_file::is_eof(flare_status *frs) {

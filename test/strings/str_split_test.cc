@@ -197,7 +197,7 @@ namespace {
             // Results stored in a std::multimap.
             std::multimap<std::string, std::string> m =
                     flare::string_split("a,1,b,2,a,3", ',');
-            EXPECT_EQ(3, m.size());
+            EXPECT_EQ(3ul, m.size());
             auto it = m.find("a");
             EXPECT_EQ("1", it->second);
             ++it;

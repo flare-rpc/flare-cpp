@@ -23,15 +23,15 @@ namespace flare {
     resident<int> test_compilation2;
 
     TEST(resident, All) {
-        ASSERT_EQ(0, C::instances);
+        ASSERT_EQ(0ul, C::instances);
         {
             C c1;
-            ASSERT_EQ(1, C::instances);
+            ASSERT_EQ(1ul, C::instances);
             [[maybe_unused]] resident<C> c2;
-            ASSERT_EQ(2, C::instances);
+            ASSERT_EQ(2ul, C::instances);
         }
         // Not 0, as `resident<C>` is not destroyed.
-        ASSERT_EQ(1, C::instances);
+        ASSERT_EQ(1ul, C::instances);
     }
 
 }  // namespace flare
