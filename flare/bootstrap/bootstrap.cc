@@ -16,7 +16,7 @@ namespace flare {
 
     namespace {
 
-        void log_config_init();
+        void log_config_init(char* argv0);
         // The below two registries are filled by `prepare_for_running_callbacks()` (by
         // moving callbacks from the registry above.)
         std::vector<std::function<void()>> initializer_registry;

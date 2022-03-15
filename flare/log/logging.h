@@ -167,11 +167,11 @@ namespace flare::log {
 
     // They need the definitions of integer types.
 
-    // Initialize google's logging library. You will see the program name
+    // Initialize flare::log's logging library. You will see the program name
     // specified by argv0 in log outputs.
     FLARE_EXPORT void init_logging(const char *argv0);
 
-    // Shutdown google's logging library.
+    // Shutdown flare::log's logging library.
     FLARE_EXPORT void shutdown_logging();
 
     // Install a function which will be called after LOG(FATAL).
@@ -330,13 +330,13 @@ namespace flare::log {
     FLARE_EXPORT
     void make_check_op_value_string(std::ostream *os, const unsigned char &v);
 
-// This is required because nullptr is only present in c++ 11 and later.
-// Provide printable value for nullptr_t
+    // This is required because nullptr is only present in c++ 11 and later.
+    // Provide printable value for nullptr_t
     template<>
     FLARE_EXPORT
     void make_check_op_value_string(std::ostream *os, const std::nullptr_t &v);
 
-// Build the error message string. Specify no inlining for code size.
+    // Build the error message string. Specify no inlining for code size.
     template<typename T1, typename T2>
     FLARE_NO_INLINE std::string *MakeCheckOpString(const T1 &v1, const T2 &v2, const char *exprtext);
 
@@ -1610,39 +1610,46 @@ enum {
 
 #define FLARE_VLOG(n, ...)                                         \
   LOG_IF(INFO, FLARE_UNLIKELY(VLOG_IS_ON(n)))                      \
-      << ::flare::internal::logging::FormatLog(__FILE__, __LINE__, \
+      << ::flare::internal::logging::format_log(__FILE__, __LINE__, \
                                                __VA_ARGS__)
 
+#define FLARE_LOG_TRACE(...)                                              \
+  LOG(TRACE) << ::flare::internal::logging::format_log(__FILE__, __LINE__, \
+                                                     __VA_ARGS__)
+#define FLARE_LOG_DEBUG(...)                                              \
+  LOG(DEBUG) << ::flare::internal::logging::format_log(__FILE__, __LINE__, \
+                                                     __VA_ARGS__)
+
 #define FLARE_LOG_INFO(...)                                              \
-  LOG(INFO) << ::flare::internal::logging::FormatLog(__FILE__, __LINE__, \
+  LOG(INFO) << ::flare::internal::logging::format_log(__FILE__, __LINE__, \
                                                      __VA_ARGS__)
 #define FLARE_LOG_WARNING(...)                                              \
-  LOG(WARNING) << ::flare::internal::logging::FormatLog(__FILE__, __LINE__, \
+  LOG(WARNING) << ::flare::internal::logging::format_log(__FILE__, __LINE__, \
                                                         __VA_ARGS__)
 #define FLARE_LOG_ERROR(...)                                              \
-  LOG(ERROR) << ::flare::internal::logging::FormatLog(__FILE__, __LINE__, \
+  LOG(ERROR) << ::flare::internal::logging::format_log(__FILE__, __LINE__, \
                                                       __VA_ARGS__)
 #define FLARE_LOG_FATAL(...)                                                \
   do {                                                                      \
-    LOG(FATAL) << ::flare::internal::logging::FormatLog(__FILE__, __LINE__, \
+    LOG(FATAL) << ::flare::internal::logging::format_log(__FILE__, __LINE__, \
                                                         __VA_ARGS__);       \
   } while (0);                                                              \
   FLARE_UNREACHABLE()
 
 #define FLARE_LOG_INFO_IF(expr, ...)                           \
-  LOG_IF(INFO, expr) << ::flare::internal::logging::FormatLog( \
+  LOG_IF(INFO, expr) << ::flare::internal::logging::format_log( \
       __FILE__, __LINE__, __VA_ARGS__)
 #define FLARE_LOG_WARNING_IF(expr, ...)                            \
   LOG_IF(WARNING, FLARE_UNLIKELY(expr))                            \
-      << ::flare::internal::logging::FormatLog(__FILE__, __LINE__, \
+      << ::flare::internal::logging::format_log(__FILE__, __LINE__, \
                                                __VA_ARGS__)
 #define FLARE_LOG_ERROR_IF(expr, ...)                              \
   LOG_IF(ERROR, FLARE_UNLIKELY(expr))                              \
-      << ::flare::internal::logging::FormatLog(__FILE__, __LINE__, \
+      << ::flare::internal::logging::format_log(__FILE__, __LINE__, \
                                                __VA_ARGS__)
 #define FLARE_LOG_FATAL_IF(expr, ...)                              \
   LOG_IF(FATAL, FLARE_UNLIKELY(expr))                              \
-      << ::flare::internal::logging::FormatLog(__FILE__, __LINE__, \
+      << ::flare::internal::logging::format_log(__FILE__, __LINE__, \
                                                __VA_ARGS__)
 
 #define FLARE_LOG_INFO_EVERY_N(N, ...) \
@@ -1699,45 +1706,45 @@ enum {
   } while (0)
 
 #define FLARE_DLOG_INFO(...)                                              \
-  DLOG(INFO) << ::flare::internal::logging::FormatLog(__FILE__, __LINE__, \
+  DLOG(INFO) << ::flare::internal::logging::format_log(__FILE__, __LINE__, \
                                                       __VA_ARGS__)
 #define FLARE_DLOG_WARNING(...)                                              \
-  DLOG(WARNING) << ::flare::internal::logging::FormatLog(__FILE__, __LINE__, \
+  DLOG(WARNING) << ::flare::internal::logging::format_log(__FILE__, __LINE__, \
                                                          __VA_ARGS__)
 #define FLARE_DLOG_ERROR(...)                                              \
-  DLOG(ERROR) << ::flare::internal::logging::FormatLog(__FILE__, __LINE__, \
+  DLOG(ERROR) << ::flare::internal::logging::format_log(__FILE__, __LINE__, \
                                                        __VA_ARGS__)
 #define FLARE_DLOG_FATAL(...)                                              \
-  DLOG(FATAL) << ::flare::internal::logging::FormatLog(__FILE__, __LINE__, \
+  DLOG(FATAL) << ::flare::internal::logging::format_log(__FILE__, __LINE__, \
                                                        __VA_ARGS__)
 
 #define FLARE_DLOG_INFO_IF(expr, ...)                           \
-  DLOG_IF(INFO, expr) << ::flare::internal::logging::FormatLog( \
+  DLOG_IF(INFO, expr) << ::flare::internal::logging::format_log( \
       __FILE__, __LINE__, __VA_ARGS__)
 #define FLARE_DLOG_WARNING_IF(expr, ...)                           \
   DLOG_IF(WARNING, FLARE_UNLIKELY(expr))                           \
-      << ::flare::internal::logging::FormatLog(__FILE__, __LINE__, \
+      << ::flare::internal::logging::format_log(__FILE__, __LINE__, \
                                                __VA_ARGS__)
 #define FLARE_DLOG_ERROR_IF(expr, ...)                             \
   DLOG_IF(ERROR, FLARE_UNLIKELY(expr))                             \
-      << ::flare::internal::logging::FormatLog(__FILE__, __LINE__, \
+      << ::flare::internal::logging::format_log(__FILE__, __LINE__, \
                                                __VA_ARGS__)
 #define FLARE_DLOG_FATAL_IF(expr, ...)                             \
   DLOG_IF(FATAL, FLARE_UNLIKELY(expr))                             \
-      << ::flare::internal::logging::FormatLog(__FILE__, __LINE__, \
+      << ::flare::internal::logging::format_log(__FILE__, __LINE__, \
                                                __VA_ARGS__)
 
 #define FLARE_DLOG_INFO_EVERY_N(N, ...)                           \
-  DLOG_EVERY_N(INFO, N) << ::flare::internal::logging::FormatLog( \
+  DLOG_EVERY_N(INFO, N) << ::flare::internal::logging::format_log( \
       __FILE__, __LINE__, __VA_ARGS__)
 #define FLARE_DLOG_WARNING_EVERY_N(N, ...)                           \
-  DLOG_EVERY_N(WARNING, N) << ::flare::internal::logging::FormatLog( \
+  DLOG_EVERY_N(WARNING, N) << ::flare::internal::logging::format_log( \
       __FILE__, __LINE__, __VA_ARGS__)
 #define FLARE_DLOG_ERROR_EVERY_N(N, ...)                           \
-  DLOG_EVERY_N(ERROR, N) << ::flare::internal::logging::FormatLog( \
+  DLOG_EVERY_N(ERROR, N) << ::flare::internal::logging::format_log( \
       __FILE__, __LINE__, __VA_ARGS__)
 #define FLARE_DLOG_FATAL_EVERY_N(N, ...)                           \
-  DLOG_EVERY_N(FATAL, N) << ::flare::internal::logging::FormatLog( \
+  DLOG_EVERY_N(FATAL, N) << ::flare::internal::logging::format_log( \
       __FILE__, __LINE__, __VA_ARGS__)
 
 #ifndef NDEBUG
@@ -1767,51 +1774,51 @@ enum {
 #endif
 
 #define FLARE_PLOG_INFO(...)                                              \
-  PLOG(INFO) << ::flare::internal::logging::FormatLog(__FILE__, __LINE__, \
+  PLOG(INFO) << ::flare::internal::logging::format_log(__FILE__, __LINE__, \
                                                       __VA_ARGS__)
 #define FLARE_PLOG_WARNING(...)                                              \
-  PLOG(WARNING) << ::flare::internal::logging::FormatLog(__FILE__, __LINE__, \
+  PLOG(WARNING) << ::flare::internal::logging::format_log(__FILE__, __LINE__, \
                                                          __VA_ARGS__)
 #define FLARE_PLOG_ERROR(...)                                              \
-  PLOG(ERROR) << ::flare::internal::logging::FormatLog(__FILE__, __LINE__, \
+  PLOG(ERROR) << ::flare::internal::logging::format_log(__FILE__, __LINE__, \
                                                        __VA_ARGS__)
 #define FLARE_PLOG_FATAL(...)                                              \
-  PLOG(FATAL) << ::flare::internal::logging::FormatLog(__FILE__, __LINE__, \
+  PLOG(FATAL) << ::flare::internal::logging::format_log(__FILE__, __LINE__, \
                                                        __VA_ARGS__)
 
 #define FLARE_PLOG_INFO_IF(expr, ...)                           \
-  PLOG_IF(INFO, expr) << ::flare::internal::logging::FormatLog( \
+  PLOG_IF(INFO, expr) << ::flare::internal::logging::format_log( \
       __FILE__, __LINE__, __VA_ARGS__)
 #define FLARE_PLOG_WARNING_IF(expr, ...)                           \
   PLOG_IF(WARNING, FLARE_UNLIKELY(expr))                           \
-      << ::flare::internal::logging::FormatLog(__FILE__, __LINE__, \
+      << ::flare::internal::logging::format_log(__FILE__, __LINE__, \
                                                __VA_ARGS__)
 #define FLARE_PLOG_ERROR_IF(expr, ...)                             \
   PLOG_IF(ERROR, FLARE_UNLIKELY(expr))                             \
-      << ::flare::internal::logging::FormatLog(__FILE__, __LINE__, \
+      << ::flare::internal::logging::format_log(__FILE__, __LINE__, \
                                                __VA_ARGS__)
 #define FLARE_PLOG_FATAL_IF(expr, ...)                             \
   PLOG_IF(FATAL, FLARE_UNLIKELY(expr))                             \
-      << ::flare::internal::logging::FormatLog(__FILE__, __LINE__, \
+      << ::flare::internal::logging::format_log(__FILE__, __LINE__, \
                                                __VA_ARGS__)
 
 #ifdef _MSC_VER
 #define FLARE_UNREACHABLE(...)                                              \
   do {                                                                      \
     LOG(FATAL) << "UNREACHABLE. "                                           \
-               << ::flare::internal::logging::FormatLog(__FILE__, __LINE__, \
+               << ::flare::internal::logging::format_log(__FILE__, __LINE__, \
                                                         ##__VA_ARGS__);     \
   } while (0)
 #define FLARE_NOT_IMPLEMENTED(...)                                          \
   do {                                                                      \
     LOG(FATAL) << "Not implemented. "                                       \
-               << ::flare::internal::logging::FormatLog(__FILE__, __LINE__, \
+               << ::flare::internal::logging::format_log(__FILE__, __LINE__, \
                                                         ##__VA_ARGS__);     \
   } while (0)
 #define FLARE_UNEXPECTED(...)                                               \
   do {                                                                      \
     LOG(FATAL) << "UNEXPECTED. "                                            \
-               << ::flare::internal::logging::FormatLog(__FILE__, __LINE__, \
+               << ::flare::internal::logging::format_log(__FILE__, __LINE__, \
                                                         ##__VA_ARGS__);     \
   } while (0)
 #else
@@ -1819,7 +1826,7 @@ enum {
   do {                                                                        \
     [&]() __attribute__((noreturn, noinline, cold)) {                         \
       LOG(FATAL) << "UNREACHABLE. "                                           \
-                 << ::flare::internal::logging::FormatLog(__FILE__, __LINE__, \
+                 << ::flare::internal::logging::format_log(__FILE__, __LINE__, \
                                                           ##__VA_ARGS__);     \
       __builtin_unreachable();                                                \
     }                                                                         \
@@ -1829,7 +1836,7 @@ enum {
   do {                                                                        \
     [&]() __attribute__((noreturn, noinline, cold)) {                         \
       LOG(FATAL) << "Not implemented. "                                       \
-                 << ::flare::internal::logging::FormatLog(__FILE__, __LINE__, \
+                 << ::flare::internal::logging::format_log(__FILE__, __LINE__, \
                                                           ##__VA_ARGS__);     \
       __builtin_unreachable();                                                \
     }                                                                         \
@@ -1839,7 +1846,7 @@ enum {
   do {                                                                        \
     [&]() __attribute__((noreturn, noinline, cold)) {                         \
       LOG(FATAL) << "UNEXPECTED. "                                            \
-                 << ::flare::internal::logging::FormatLog(__FILE__, __LINE__, \
+                 << ::flare::internal::logging::format_log(__FILE__, __LINE__, \
                                                           ##__VA_ARGS__);     \
       __builtin_unreachable();                                                \
     }                                                                         \
@@ -1863,19 +1870,19 @@ namespace flare {
 
     namespace internal::logging {
 
-// Prefix writer.
-//
-// Note that the implementation MAY NOT touch whatever has been in `to`. The
-// implementation may only append its own prefix to `to`.
-//
-// Surely using `Function<...>` is superior here, but given that logging is a
-// low level facility, bring in too many dependencies is unlikely a good idea.
+        // Prefix writer.
+        //
+        // Note that the implementation MAY NOT touch whatever has been in `to`. The
+        // implementation may only append its own prefix to `to`.
+        //
+        // Surely using `Function<...>` is superior here, but given that logging is a
+        // low level facility, bring in too many dependencies is unlikely a good idea.
         using PrefixAppender = void(std::string* to);
 
-// Install a new logging prefix provider.
+        // Install a new logging prefix provider.
         void InstallPrefixProvider(PrefixAppender* writer);
 
-// Call logging prefix providers to generate the prefix for log.
+        // Call logging prefix providers to generate the prefix for log.
         void WritePrefixTo(std::string* to);
 
     // FOR INTERNAL USE ONLY.
@@ -1894,7 +1901,7 @@ namespace flare {
     // Forwarding-ref does not get along well with packed field, so we use
     // const-ref here.
         template <class... Ts>
-        std::string FormatLog([[maybe_unused]] const char* file,
+        std::string format_log([[maybe_unused]] const char* file,
                               [[maybe_unused]] int line, const Ts&... args) noexcept {
             std::string result;
 
@@ -1922,9 +1929,9 @@ namespace flare {
 #define FLARE_INTERNAL_DETAIL_LOGGING_CHECK(expr, ...)                        \
   do {                                                                        \
     if (FLARE_UNLIKELY(!(expr))) {                                            \
-      ::google::LogMessage(__FILE__, __LINE__, ::google::GLOG_FATAL).stream() \
+      ::flare::log::log_message(__FILE__, __LINE__, ::flare::LOG_FATAL).stream() \
           << "Check failed: " #expr " "                                       \
-          << ::flare::internal::logging::FormatLog(__FILE__, __LINE__,        \
+          << ::flare::internal::logging::format_log(__FILE__, __LINE__,        \
                                                    ##__VA_ARGS__);            \
       FLARE_UNREACHABLE();                                                    \
     }                                                                         \
@@ -1932,17 +1939,17 @@ namespace flare {
 
 #define FLARE_INTERNAL_DETAIL_LOGGING_CHECK_OP(name, op, val1, val2, ...)      \
   do {                                                                         \
-    /* `google::GetReferenceableValue` triggers `-Wmaybe-uninitialized`, */    \
+    /* `flare::log::GetReferenceableValue` triggers `-Wmaybe-uninitialized`, */    \
     /* Not sure about the reason though. */                                    \
     auto&& flare_anonymous_x = (val1);                                         \
     auto&& flare_anonymous_y = (val2);                                         \
     if (FLARE_UNLIKELY(!(flare_anonymous_x op flare_anonymous_y))) {           \
-      ::google::LogMessageFatal(                                               \
+      ::flare::log::log_message_fatal(                                               \
           __FILE__, __LINE__,                                                  \
-          ::google::CheckOpString(::google::MakeCheckOpString(                 \
+          ::flare::log::CheckOpString(::flare::log::MakeCheckOpString(                 \
               flare_anonymous_x, flare_anonymous_y, #val1 " " #op " " #val2))) \
               .stream()                                                        \
-          << ::flare::internal::logging::FormatLog(__FILE__, __LINE__,         \
+          << ::flare::internal::logging::format_log(__FILE__, __LINE__,         \
                                                    ##__VA_ARGS__);             \
       FLARE_UNREACHABLE();                                                     \
     }                                                                          \
@@ -1951,11 +1958,11 @@ namespace flare {
 #define FLARE_INTERNAL_DETAIL_LOGGING_PCHECK(expr, ...)                      \
   do {                                                                       \
     if (FLARE_UNLIKELY(!(expr))) {                                           \
-      ::google::ErrnoLogMessage(__FILE__, __LINE__, ::google::GLOG_FATAL, 0, \
-                                &::google::LogMessage::SendToLog)            \
+      ::flare::log::errno_log_message(__FILE__, __LINE__, ::flare::log::FLARE_FATAL, 0, \
+                                &::flare::log_message::SendToLog)            \
               .stream()                                                      \
           << "Check failed: " #expr " "                                      \
-          << ::flare::internal::logging::FormatLog(__FILE__, __LINE__,       \
+          << ::flare::internal::logging::format_log(__FILE__, __LINE__,       \
                                                    ##__VA_ARGS__);           \
       FLARE_UNREACHABLE();                                                   \
     }                                                                        \
@@ -1967,7 +1974,7 @@ namespace flare {
     if (FLARE_UNLIKELY(                                                 \
             !flare_anonymous_logged.load(std::memory_order_relaxed))) { \
       if (!flare_anonymous_logged.exchange(true)) {                     \
-        LOG(Level) << ::flare::internal::logging::FormatLog(            \
+        LOG(Level) << ::flare::internal::logging::format_log(            \
             __FILE__, __LINE__, __VA_ARGS__);                           \
       }                                                                 \
     }                                                                   \
@@ -1981,10 +1988,10 @@ namespace flare {
     if (FLARE_UNLIKELY(++flare_anonymous_logged_counter_mod_n > N)) {     \
       flare_anonymous_logged_counter_mod_n -= N;                          \
       if (flare_anonymous_logged_counter_mod_n == 1)                      \
-        google::LogMessage(__FILE__, __LINE__, google::GLOG_##Level, 0,   \
-                           &google::LogMessage::SendToLog)                \
+        flare::log::log_message(__FILE__, __LINE__, flare::log::FLARE_##Level, 0,   \
+                           &flare::log::log_message::SendToLog)                \
                 .stream()                                                 \
-            << ::flare::internal::logging::FormatLog(__FILE__, __LINE__,  \
+            << ::flare::internal::logging::format_log(__FILE__, __LINE__,  \
                                                      __VA_ARGS__);        \
     }                                                                     \
   } while (0)
@@ -1996,10 +2003,10 @@ namespace flare {
     if (FLARE_UNLIKELY(!(expr))) {                                           \
       /* Attribute `noreturn` is not applicable to lambda, unfortunately. */ \
       [&]() FLARE_INTERNAL_DETAIL_LOGGING_ATTRIBUTE_NORETURN_NOINLINE_COLD { \
-        ::google::LogMessage(__FILE__, __LINE__, ::google::GLOG_FATAL)       \
+        ::flare::log::log_message(__FILE__, __LINE__, ::flare::log::FLARE_FATAL)       \
                 .stream()                                                    \
             << "Check failed: " #expr " "                                    \
-            << ::flare::internal::logging::FormatLog(__FILE__, __LINE__,     \
+            << ::flare::internal::logging::format_log(__FILE__, __LINE__,     \
                                                      ##__VA_ARGS__);         \
         FLARE_UNREACHABLE();                                                 \
       }();                                                                   \
@@ -2008,19 +2015,19 @@ namespace flare {
 
 #define FLARE_INTERNAL_DETAIL_LOGGING_CHECK_OP(name, op, val1, val2, ...)    \
   do {                                                                       \
-    /* `google::GetReferenceableValue` triggers `-Wmaybe-uninitialized`, */  \
+    /* `flare::log::GetReferenceableValue` triggers `-Wmaybe-uninitialized`, */  \
     /* Not sure about the reason though. */                                  \
     auto&& flare_anonymous_x = (val1);                                       \
     auto&& flare_anonymous_y = (val2);                                       \
     if (FLARE_UNLIKELY(!(flare_anonymous_x op flare_anonymous_y))) {         \
       [&]() FLARE_INTERNAL_DETAIL_LOGGING_ATTRIBUTE_NORETURN_NOINLINE_COLD { \
-        ::google::LogMessageFatal(                                           \
+        ::flare::log::log_message_fatal(                                           \
             __FILE__, __LINE__,                                              \
-            ::google::CheckOpString(::google::MakeCheckOpString(             \
+            ::flare::log::CheckOpString(::flare::log::MakeCheckOpString(             \
                 flare_anonymous_x, flare_anonymous_y,                        \
                 #val1 " " #op " " #val2)))                                   \
                 .stream()                                                    \
-            << ::flare::internal::logging::FormatLog(__FILE__, __LINE__,     \
+            << ::flare::internal::logging::format_log(__FILE__, __LINE__,     \
                                                      ##__VA_ARGS__);         \
         FLARE_UNREACHABLE();                                                 \
       }();                                                                   \
@@ -2031,11 +2038,11 @@ namespace flare {
   do {                                                                         \
     if (FLARE_UNLIKELY(!(expr))) {                                             \
       [&]() FLARE_INTERNAL_DETAIL_LOGGING_ATTRIBUTE_NORETURN_NOINLINE_COLD {   \
-        ::google::ErrnoLogMessage(__FILE__, __LINE__, ::google::GLOG_FATAL, 0, \
-                                  &::google::LogMessage::SendToLog)            \
+        ::flare::log::errno_log_message(__FILE__, __LINE__, ::flare::log::FLARE_FATAL, 0, \
+                                  &::flare::log::log_message::SendToLog)            \
                 .stream()                                                      \
             << "Check failed: " #expr " "                                      \
-            << ::flare::internal::logging::FormatLog(__FILE__, __LINE__,       \
+            << ::flare::internal::logging::format_log(__FILE__, __LINE__,       \
                                                      ##__VA_ARGS__);           \
         FLARE_UNREACHABLE();                                                   \
       }();                                                                     \
@@ -2049,7 +2056,7 @@ namespace flare {
             !flare_anonymous_logged.load(std::memory_order_relaxed))) { \
       [&]() FLARE_INTERNAL_DETAIL_LOGGING_ATTRIBUTE_NOINLINE_COLD {     \
         if (!flare_anonymous_logged.exchange(true)) {                   \
-          LOG(Level) << ::flare::internal::logging::FormatLog(          \
+          LOG(Level) << ::flare::internal::logging::format_log(          \
               __FILE__, __LINE__, __VA_ARGS__);                         \
         }                                                               \
       }();                                                              \
@@ -2065,10 +2072,10 @@ namespace flare {
       [&]() FLARE_INTERNAL_DETAIL_LOGGING_ATTRIBUTE_NOINLINE_COLD {        \
         flare_anonymous_logged_counter_mod_n -= N;                         \
         if (flare_anonymous_logged_counter_mod_n == 1)                     \
-          google::LogMessage(__FILE__, __LINE__, google::GLOG_##Level, 0,  \
-                             &google::LogMessage::SendToLog)               \
+          flare::log::log_message(__FILE__, __LINE__, flare::log::FLARE_##Level, 0,  \
+                             &flare::log::log_message::SendToLog)               \
                   .stream()                                                \
-              << ::flare::internal::logging::FormatLog(__FILE__, __LINE__, \
+              << ::flare::internal::logging::format_log(__FILE__, __LINE__, \
                                                        __VA_ARGS__);       \
       }();                                                                 \
     }                                                                      \

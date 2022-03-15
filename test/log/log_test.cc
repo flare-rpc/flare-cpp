@@ -44,11 +44,24 @@ namespace foreign_ns {
         my_prefix2 = "[prefix2]";
         FLARE_LOG_INFO("something");
 
+
         ASSERT_THAT(sink.msgs,
                     ::testing::ElementsAre("something", "[prefix] something",
                                            "[prefix1] something",
                                            "[prefix1] [prefix2] something"));
         flare::log::remove_log_sink(&sink);
+
+        FLARE_LOG_TRACE("this should not display");
+        FLARE_LOG_DEBUG("this should not display");
+        FLARE_LOG_WARNING("something");
+        FLARE_LOG_ERROR("something");
+
+        /// flare::log::FLARE_TRACE set log level to trace
+        GFLAGS_NS::SetCommandLineOption("minloglevel", "0");
+        FLARE_LOG_TRACE("this should display");
+        FLARE_LOG_DEBUG("this should display");
+        FLARE_LOG_WARNING("something");
+        FLARE_LOG_ERROR("something");
     }
 
 }  // namespace foreign_ns
