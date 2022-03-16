@@ -45,6 +45,7 @@
 #include "flare/rpc/progressive_reader.h"           // ProgressiveReader
 #include "flare/rpc/grpc.h"
 #include "flare/rpc/kvmap.h"
+#include "flare/base/time.h"
 
 // EAUTH is defined in MAC
 #ifndef EAUTH

@@ -39,7 +39,7 @@ namespace flare {
         flare_status frs;
         size_t size = content.size();
         ssize_t has_write = 0;
-        while (has_write != content.size()) {
+        while (static_cast<size_t>(has_write) != content.size()) {
             ssize_t written = ::write(_fd,  content.data() + has_write, content.size() - has_write);
             if (written >= 0) {
                 has_write += written;

@@ -30,7 +30,6 @@
 #include "flare/log/raw_logging.h"
 #include "flare/log/init.h"
 #include "flare/log/utility.h"
-#include "flare/base/time.h"
 #include "flare/base/thread.h"
 #include "flare/base/sysinfo.h"
 
@@ -269,8 +268,8 @@ namespace flare::log {
             uint32_t dropped_mem_length_;
             uint32_t file_length_;
             unsigned int rollover_attempt_;
-            int64_t next_flush_time_;         // cycle count at which to flush log
-            int64_t start_time_;
+            flare::time_point next_flush_time_;         // cycle count at which to flush log
+            flare::time_point start_time_;
 
             // Actually create a logfile using the value of base_filename_ and the
             // optional argument time_pid_string
@@ -708,15 +707,8 @@ namespace flare::log {
 
     namespace {
 
-        string PrettyDuration(int secs) {
-            std::stringstream result;
-            int mins = secs / 60;
-            int hours = mins / 60;
-            mins = mins % 60;
-            secs = secs % 60;
-            result.fill('0');
-            result << hours << ':' << setw(2) << mins << ':' << setw(2) << secs;
-            return result.str();
+        string pretty_duration(const flare::duration &d) {
+            return fmt::format("{:02}:{:02}:{:02}", d.to_int64_hours(), d.to_int64_minutes(), d.to_int64_seconds());
         }
 
 
@@ -732,8 +724,8 @@ namespace flare::log {
                   dropped_mem_length_(0),
                   file_length_(0),
                   rollover_attempt_(kRolloverAttemptFrequency - 1),
-                  next_flush_time_(0),
-                  start_time_(flare::base::gettimeofday_us()) {
+                  next_flush_time_(),
+                  start_time_(flare::time_now()) {
             assert(severity >= 0);
             assert(severity < NUM_SEVERITIES);
         }
@@ -789,9 +781,8 @@ namespace flare::log {
                 bytes_since_flush_ = 0;
             }
             // Figure out when we are due for another flush.
-            const int64_t next = (FLAGS_logbufsecs
-                                  * static_cast<int64_t>(1000000));  // in usec
-            next_flush_time_ = flare::base::gettimeofday_us() + next;
+            const flare::duration next = flare::duration::seconds(FLAGS_logbufsecs);  // in usec
+            next_flush_time_ = flare::time_now() + next;
         }
 
         bool log_file_object::create_logfile(const string &time_pid_string) {
@@ -1006,7 +997,7 @@ namespace flare::log {
                 }
 
                 file_header_stream << "Running duration (h:mm:ss): "
-                                   << PrettyDuration(static_cast<int>(flare::base::gettimeofday_us() - start_time_))
+                                   << pretty_duration(flare::time_now() - start_time_)
                                    << '\n'
                                    << "Log line format: [IWEF]yyyymmdd hh:mm:ss.uuuuuu "
                                    << "threadid file:line] msg" << '\n';
@@ -1036,7 +1027,7 @@ namespace flare::log {
                     bytes_since_flush_ += message_len;
                 }
             } else {
-                if (flare::base::gettimeofday_us() >= next_flush_time_)
+                if (flare::time_now() >= next_flush_time_)
                     stop_writing = false;  // check to see if disk has free space.
                 return;  // no need to flush
             }
@@ -1045,7 +1036,7 @@ namespace flare::log {
             // or every "FLAGS_logbufsecs" seconds.
             if (force_flush ||
                 (bytes_since_flush_ >= 1000000) ||
-                (flare::base::gettimeofday_us() >= next_flush_time_)) {
+                (flare::time_now() >= next_flush_time_)) {
                 flush_unlocked();
 #ifdef FLARE_PLATFORM_LINUX
                 // Only consider files >= 3MiB
@@ -1351,8 +1342,7 @@ namespace flare::log {
         data_->send_method_ = send_method;
         data_->sink_ = NULL;
         data_->outvec_ = NULL;
-        int64_t now = flare::base::gettimeofday_us();
-        auto tv = flare::base::microseconds_to_timeval(now);
+        auto tv = flare::time_now().to_timeval();
         data_->timestamp_ = static_cast<time_t>(tv.tv_sec);
         if (FLAGS_log_utc_time)
             gmtime_r(&data_->timestamp_, &data_->tm_time_);
@@ -1632,7 +1622,7 @@ namespace flare::log {
     static void logging_fail() ATTRIBUTE_NORETURN;
 
     static void logging_fail() {
-        if(FLAGS_crash_on_fatal_log) {
+        if (FLAGS_crash_on_fatal_log) {
             abort();
         }
     }
@@ -2220,9 +2210,9 @@ namespace flare::log {
         }
     }
 
-    template <>
-    void make_check_op_value_string(std::ostream* os, const std::nullptr_t& v) {
-      (*os) << "nullptr";
+    template<>
+    void make_check_op_value_string(std::ostream *os, const std::nullptr_t &v) {
+        (*os) << "nullptr";
     }
 
     void init_logging(const char *argv0) {
@@ -2245,3 +2235,37 @@ namespace flare::log {
     }
 
 }  // namespace flare::log
+
+
+#include <string>
+#include <vector>
+
+namespace flare::internal::logging {
+
+    namespace {
+
+        std::vector<PrefixAppender *> *GetProviders() {
+            // Not using `NeverDestroyed` as we're "low-level" utility and therefore
+            // should not bring in too many dependencies..
+            static std::vector<PrefixAppender *> providers;
+            return &providers;
+        }
+
+    }  // namespace
+
+    void InstallPrefixProvider(PrefixAppender *cb) {
+        GetProviders()->push_back(cb);
+    }
+
+    void WritePrefixTo(std::string *to) {
+        for (auto &&e : *GetProviders()) {
+            auto was = to->size();
+            e(to);
+            if (to->size() != was) {
+                to->push_back(' ');
+            }
+        }
+    }
+
+}  // namespace flare::internal::logging
+

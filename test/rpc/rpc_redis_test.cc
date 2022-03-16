@@ -1072,7 +1072,7 @@ namespace {
 
         flare::rpc::RedisCommandHandlerResult Run(const std::vector<std::string_view> &args,
                                                   flare::rpc::RedisReply *output,
-                                                  bool flush_batched) {
+                                                  bool flush_batched) override {
             output->SetStatus("OK");
             return flare::rpc::REDIS_CMD_CONTINUE;
         }

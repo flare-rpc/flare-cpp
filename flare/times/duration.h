@@ -39,15 +39,15 @@ namespace flare {
         using enable_if_float =
         typename std::enable_if<std::is_floating_point<T>::value, int>::type;
 
-// Returns (-n)-1 (equivalently -(n+1)) without avoidable overflow.
+        // Returns (-n)-1 (equivalently -(n+1)) without avoidable overflow.
         constexpr int64_t negate_and_subtract_one(int64_t n) {
             // Note: Good compilers will optimize this expression to ~n when using
             // a two's-complement representation (which is required for int64_t).
             return (n < 0) ? -(n + 1) : (-n) - 1;
         }
 
-// is_valid_rep64<T>(0) is true if the expression `int64_t{std::declval<T>()}` is
-// valid. That is, if a T can be assigned to an int64_t without narrowing.
+        // is_valid_rep64<T>(0) is true if the expression `int64_t{std::declval<T>()}` is
+        // valid. That is, if a T can be assigned to an int64_t without narrowing.
         template<typename T>
         constexpr auto is_valid_rep64(int) -> decltype(int64_t{std::declval<T>()} == 0) {
             return true;
@@ -62,44 +62,44 @@ namespace flare {
 // Additive Operators
     constexpr duration operator-(duration d);
 
-// duration
-//
-// The `flare::duration` class represents a signed, fixed-length span of time.
-// A `duration` is generated using a unit-specific factory function, or is
-// the result of subtracting one `flare::time_point` from another. Durations behave
-// like unit-safe integers and they support all the natural integer-like
-// arithmetic operations. Arithmetic overflows and saturates at +/- infinity.
-// `duration` should be passed by value rather than const reference.
-//
-// Factory functions `nanoseconds()`, `microseconds()`, `milliseconds()`,
-// `seconds()`, `minutes()`, `hours()` and `infinite_duration()` allow for
-// creation of constexpr `duration` values
-//
-// Examples:
-//
-//   constexpr flare::duration ten_ns = flare::nanoseconds(10);
-//   constexpr flare::duration min = flare::minutes(1);
-//   constexpr flare::duration hour = flare::hours(1);
-//   flare::duration dur = 60 * min;  // dur == hour
-//   flare::duration half_sec = flare::milliseconds(500);
-//   flare::duration quarter_sec = 0.25 * flare::seconds(1);
-//
-// `duration` values can be easily converted to an integral number of units
-// using the division operator.
-//
-// Example:
-//
-//   constexpr flare::duration dur = flare::milliseconds(1500);
-//   int64_t ns = dur / flare::nanoseconds(1);   // ns == 1500000000
-//   int64_t ms = dur / flare::milliseconds(1);  // ms == 1500
-//   int64_t sec = dur / flare::seconds(1);    // sec == 1 (subseconds truncated)
-//   int64_t min = dur / flare::minutes(1);    // min == 0
-//
-// See the `integer_div_duration()` and `float_div_duration()` functions below for details on
-// how to access the fractional parts of the quotient.
-//
-// Alternatively, conversions can be performed using helpers such as
-// `to_int64_microseconds()` and `to_double_seconds()`.
+    // duration
+    //
+    // The `flare::duration` class represents a signed, fixed-length span of time.
+    // A `duration` is generated using a unit-specific factory function, or is
+    // the result of subtracting one `flare::time_point` from another. Durations behave
+    // like unit-safe integers and they support all the natural integer-like
+    // arithmetic operations. Arithmetic overflows and saturates at +/- infinity.
+    // `duration` should be passed by value rather than const reference.
+    //
+    // Factory functions `nanoseconds()`, `microseconds()`, `milliseconds()`,
+    // `seconds()`, `minutes()`, `hours()` and `infinite_duration()` allow for
+    // creation of constexpr `duration` values
+    //
+    // Examples:
+    //
+    //   constexpr flare::duration ten_ns = flare::nanoseconds(10);
+    //   constexpr flare::duration min = flare::minutes(1);
+    //   constexpr flare::duration hour = flare::hours(1);
+    //   flare::duration dur = 60 * min;  // dur == hour
+    //   flare::duration half_sec = flare::milliseconds(500);
+    //   flare::duration quarter_sec = 0.25 * flare::seconds(1);
+    //
+    // `duration` values can be easily converted to an integral number of units
+    // using the division operator.
+    //
+    // Example:
+    //
+    //   constexpr flare::duration dur = flare::milliseconds(1500);
+    //   int64_t ns = dur / flare::nanoseconds(1);   // ns == 1500000000
+    //   int64_t ms = dur / flare::milliseconds(1);  // ms == 1500
+    //   int64_t sec = dur / flare::seconds(1);    // sec == 1 (subseconds truncated)
+    //   int64_t min = dur / flare::minutes(1);    // min == 0
+    //
+    // See the `integer_div_duration()` and `float_div_duration()` functions below for details on
+    // how to access the fractional parts of the quotient.
+    //
+    // Alternatively, conversions can be performed using helpers such as
+    // `to_int64_microseconds()` and `to_double_seconds()`.
     class duration {
     public:
         // Value semantics.
@@ -474,13 +474,13 @@ namespace flare {
 
         friend constexpr duration operator-(duration d);
 
-        uint128 make_uint128_ticks() const;
+        [[nodiscard]] uint128 make_uint128_ticks() const;
 
         template<template<typename> class Operation>
-        duration scale_fixed(int64_t r);
+        [[nodiscard]] duration scale_fixed(int64_t r);
 
         template<template<typename> class Operation>
-        duration scale_double(double r) const;
+        [[nodiscard]] duration scale_double(double r) const;
 
         bool safe_add_rep_hi(double a_hi, double b_hi);
 
@@ -491,17 +491,17 @@ namespace flare {
         int64_t to_int64(Ratio) const;
 
         // Fastpath implementations for the 6 common duration units.
-        int64_t to_int64(std::nano) const;
+        [[nodiscard]] int64_t to_int64(std::nano) const;
 
-        int64_t to_int64(std::micro) const;
+        [[nodiscard]] int64_t to_int64(std::micro) const;
 
-        int64_t to_int64(std::milli) const;
+        [[nodiscard]] int64_t to_int64(std::milli) const;
 
-        int64_t to_int64(std::ratio<1>) const;
+        [[nodiscard]] int64_t to_int64(std::ratio<1>) const;
 
-        int64_t to_int64(std::ratio<60>) const;
+        [[nodiscard]] int64_t to_int64(std::ratio<60>) const;
 
-        int64_t to_int64(std::ratio<3600>) const;
+        [[nodiscard]] int64_t to_int64(std::ratio<3600>) const;
 
     private:
         int64_t _rep_hi;
@@ -514,9 +514,9 @@ namespace flare {
             return d != 0.0;
         }
 
-// *sec may be positive or negative.  *ticks must be in the range
-// -kTicksPerSecond < *ticks < kTicksPerSecond.  If *ticks is negative it
-// will be normalized to a positive value by adjusting *sec accordingly.
+        // *sec may be positive or negative.  *ticks must be in the range
+        // -kTicksPerSecond < *ticks < kTicksPerSecond.  If *ticks is negative it
+        // will be normalized to a positive value by adjusting *sec accordingly.
         FLARE_FORCE_INLINE void normalize_ticks(int64_t *sec, int64_t *ticks) {
             if (*ticks < 0) {
                 --*sec;
@@ -524,14 +524,14 @@ namespace flare {
             }
         }
 
-// Convert between int64_t and uint64_t, preserving representation. This
-// allows us to do arithmetic in the unsigned domain, where overflow has
-// well-defined behavior. See operator+=() and operator-=().
-//
-// C99 7.20.1.1.1, as referenced by C++11 18.4.1.2, says, "The typedef
-// name intN_t designates a signed integer type with width N, no padding
-// bits, and a two's complement representation." So, we can convert to
-// and from the corresponding uint64_t value using a bit cast.
+        // Convert between int64_t and uint64_t, preserving representation. This
+        // allows us to do arithmetic in the unsigned domain, where overflow has
+        // well-defined behavior. See operator+=() and operator-=().
+        //
+        // C99 7.20.1.1.1, as referenced by C++11 18.4.1.2, says, "The typedef
+        // name intN_t designates a signed integer type with width N, no padding
+        // bits, and a two's complement representation." So, we can convert to
+        // and from the corresponding uint64_t value using a bit cast.
         FLARE_FORCE_INLINE uint64_t encode_twos_comp(int64_t v) {
             return flare::base::bit_cast<uint64_t>(v);
         }
@@ -540,7 +540,7 @@ namespace flare {
 
     }
 
-// Relational Operators
+    // Relational Operators
     constexpr bool operator<(duration lhs, duration rhs);
 
     constexpr bool operator>(duration lhs, duration rhs) { return rhs < lhs; }
@@ -558,8 +558,8 @@ namespace flare {
     FLARE_FORCE_INLINE duration operator-(duration lhs, duration rhs) { return lhs -= rhs; }
 
 
-// Multiplicative Operators
-// Integer operands must be representable as int64_t.
+    // Multiplicative Operators
+    // Integer operands must be representable as int64_t.
     template<typename T>
     duration operator*(duration lhs, T rhs) {
         return lhs *= rhs;
@@ -598,94 +598,94 @@ namespace flare {
                duration::get_rep_lo(lhs) == duration::get_rep_lo(rhs);
     }
 
-// integer_div_duration()
-//
-// Divides a numerator `duration` by a denominator `duration`, returning the
-// quotient and remainder. The remainder always has the same sign as the
-// numerator. The returned quotient and remainder respect the identity:
-//
-//   numerator = denominator * quotient + remainder
-//
-// Returned quotients are capped to the range of `int64_t`, with the difference
-// spilling into the remainder to uphold the above identity. This means that the
-// remainder returned could differ from the remainder returned by
-// `duration::operator%` for huge quotients.
-//
-// See also the notes on `infinite_duration()` below regarding the behavior of
-// division involving zero and infinite durations.
-//
-// Example:
-//
-//   constexpr flare::duration a =
-//       flare::seconds(std::numeric_limits<int64_t>::max());  // big
-//   constexpr flare::duration b = flare::nanoseconds(1);       // small
-//
-//   flare::duration rem = a % b;
-//   // rem == flare::zero_duration()
-//
-//   // Here, q would overflow int64_t, so rem accounts for the difference.
-//   int64_t q = flare::integer_div_duration(a, b, &rem);
-//   // q == std::numeric_limits<int64_t>::max(), rem == a - b * q
+    // integer_div_duration()
+    //
+    // Divides a numerator `duration` by a denominator `duration`, returning the
+    // quotient and remainder. The remainder always has the same sign as the
+    // numerator. The returned quotient and remainder respect the identity:
+    //
+    //   numerator = denominator * quotient + remainder
+    //
+    // Returned quotients are capped to the range of `int64_t`, with the difference
+    // spilling into the remainder to uphold the above identity. This means that the
+    // remainder returned could differ from the remainder returned by
+    // `duration::operator%` for huge quotients.
+    //
+    // See also the notes on `infinite_duration()` below regarding the behavior of
+    // division involving zero and infinite durations.
+    //
+    // Example:
+    //
+    //   constexpr flare::duration a =
+    //       flare::seconds(std::numeric_limits<int64_t>::max());  // big
+    //   constexpr flare::duration b = flare::nanoseconds(1);       // small
+    //
+    //   flare::duration rem = a % b;
+    //   // rem == flare::zero_duration()
+    //
+    //   // Here, q would overflow int64_t, so rem accounts for the difference.
+    //   int64_t q = flare::integer_div_duration(a, b, &rem);
+    //   // q == std::numeric_limits<int64_t>::max(), rem == a - b * q
     FLARE_FORCE_INLINE int64_t duration::integer_div_duration(duration num, duration den, duration *rem) {
         return duration::integer_div_duration(true, num, den,
                                               rem);  // trunc towards zero
     }
 
 
-// zero_duration()
-//
-// Returns a zero-length duration. This function behaves just like the default
-// constructor, but the name helps make the semantics clear at call sites.
+    // zero_duration()
+    //
+    // Returns a zero-length duration. This function behaves just like the default
+    // constructor, but the name helps make the semantics clear at call sites.
     constexpr duration zero_duration() { return duration(); }
 
-// abs_duration()
-//
-// Returns the absolute value of a duration.
+    // abs_duration()
+    //
+    // Returns the absolute value of a duration.
     FLARE_FORCE_INLINE duration abs_duration(duration d) {
         return (d < zero_duration()) ? -d : d;
     }
 
 
-// infinite_duration()
-//
-// Returns an infinite `duration`.  To get a `duration` representing negative
-// infinity, use `-infinite_duration()`.
-//
-// duration arithmetic overflows to +/- infinity and saturates. In general,
-// arithmetic with `duration` infinities is similar to IEEE 754 infinities
-// except where IEEE 754 NaN would be involved, in which case +/-
-// `infinite_duration()` is used in place of a "nan" duration.
-//
-// Examples:
-//
-//   constexpr flare::duration inf = flare::infinite_duration();
-//   const flare::duration d = ... any finite duration ...
-//
-//   inf == inf + inf
-//   inf == inf + d
-//   inf == inf - inf
-//   -inf == d - inf
-//
-//   inf == d * 1e100
-//   inf == inf / 2
-//   0 == d / inf
-//   INT64_MAX == inf / d
-//
-//   d < inf
-//   -inf < d
-//
-//   // Division by zero returns infinity, or INT64_MIN/MAX where appropriate.
-//   inf == d / 0
-//   INT64_MAX == d / flare::zero_duration()
-//
-// The examples involving the `/` operator above also apply to `integer_div_duration()`
-// and `float_div_duration()`.
+    // infinite_duration()
+    //
+    // Returns an infinite `duration`.  To get a `duration` representing negative
+    // infinity, use `-infinite_duration()`.
+    //
+    // duration arithmetic overflows to +/- infinity and saturates. In general,
+    // arithmetic with `duration` infinities is similar to IEEE 754 infinities
+    // except where IEEE 754 NaN would be involved, in which case +/-
+    // `infinite_duration()` is used in place of a "nan" duration.
+    //
+    // Examples:
+    //
+    //   constexpr flare::duration inf = flare::infinite_duration();
+    //   const flare::duration d = ... any finite duration ...
+    //
+    //   inf == inf + inf
+    //   inf == inf + d
+    //   inf == inf - inf
+    //   -inf == d - inf
+    //
+    //   inf == d * 1e100
+    //   inf == inf / 2
+    //   0 == d / inf
+    //   INT64_MAX == inf / d
+    //
+    //   d < inf
+    //   -inf < d
+    //
+    //   // Division by zero returns infinity, or INT64_MIN/MAX where appropriate.
+    //   inf == d / 0
+    //   INT64_MAX == d / flare::zero_duration()
+    //
+    // The examples involving the `/` operator above also apply to `integer_div_duration()`
+    // and `float_div_duration()`.
     constexpr duration infinite_duration() {
         return duration::infinite_future();
     }
 
 
-// Output stream operator.
+    // Output stream operator.
     FLARE_FORCE_INLINE std::ostream &operator<<(std::ostream &os, duration d) {
         return os << d.format_duration();
     }
@@ -726,7 +726,7 @@ namespace flare {
     }
 
 
-// private static member functions
+    // private static member functions
     constexpr duration duration::make_duration(int64_t hi, uint32_t lo) {
         return duration(hi, lo);
     }
@@ -878,12 +878,12 @@ namespace flare {
     }
 
 
-// Note: The overflow detection in this function is done using greater/less *or
-// equal* because kint64max/min is too large to be represented exactly in a
-// double (which only has 53 bits of precision). In order to avoid assigning to
-// rep->hi a double value that is too large for an int64_t (and therefore is
-// undefined), we must consider computations that equal kint64max/min as a
-// double as overflow cases.
+    // Note: The overflow detection in this function is done using greater/less *or
+    // equal* because kint64max/min is too large to be represented exactly in a
+    // double (which only has 53 bits of precision). In order to avoid assigning to
+    // rep->hi a double value that is too large for an int64_t (and therefore is
+    // undefined), we must consider computations that equal kint64max/min as a
+    // double as overflow cases.
     FLARE_FORCE_INLINE bool duration::safe_add_rep_hi(double a_hi, double b_hi) {
         double c = a_hi + b_hi;
         if (c >= static_cast<double>(times_internal::kint64max)) {
@@ -942,9 +942,9 @@ namespace flare {
         return make_duration(hi64, lo64);
     }
 
-// Tries to divide num by den as fast as possible by looking for common, easy
-// cases. If the division was done, the quotient is in *q and the remainder is
-// in *rem and true will be returned.
+    // Tries to divide num by den as fast as possible by looking for common, easy
+    // cases. If the division was done, the quotient is in *q and the remainder is
+    // in *rem and true will be returned.
     FLARE_FORCE_INLINE bool duration::i_div_fast_path(const duration den, int64_t *q,
                                                       duration *rem) const {
         // Bail if num or den is an infinity.
