@@ -9,3 +9,5 @@ dependencies:
   - gflags =2.2.2
   - leveldb =1.22
   - protobuf=3.12.4 # includes Protobuf compiler, C++ headers, Python libraries
+  - openssl=1.1.1
+  - gperftools=2.9.1
