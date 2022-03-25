@@ -82,13 +82,13 @@ public:
         const std::string* newtarget =
             server_cntl->http_request().uri().GetQuery("changetarget");
         if (newtarget) {
-            if (GFLAGS_NS::SetCommandLineOption("target", newtarget->c_str()).empty()) {
+            if (google::SetCommandLineOption("target", newtarget->c_str()).empty()) {
                 server_cntl->SetFailed("Fail to change value of -target");
                 return;
             }
             target = *newtarget;
         } else {
-            if (!GFLAGS_NS::GetCommandLineOption("target", &target)) {
+            if (!google::GetCommandLineOption("target", &target)) {
                 server_cntl->SetFailed("Fail to get value of -target");
                 return;
             }
@@ -153,15 +153,15 @@ public:
 };
 
 int main(int argc, char* argv[]) {
-    GFLAGS_NS::ParseCommandLineFlags(&argc, &argv, true);
+    google::ParseCommandLineFlags(&argc, &argv, true);
     if (FLAGS_target.empty() &&
         (argc != 2 || 
-         GFLAGS_NS::SetCommandLineOption("target", argv[1]).empty())) {
+         google::SetCommandLineOption("target", argv[1]).empty())) {
         LOG(ERROR) << "Usage: ./rpc_view <ip>:<port>";
         return -1;
     }
     // This keeps ad-hoc creation of channels reuse previous connections.
-    GFLAGS_NS::SetCommandLineOption("defer_close_seconds", "10");
+    google::SetCommandLineOption("defer_close_seconds", "10");
 
     flare::rpc::Server server;
     server.set_version("rpc_view_server");

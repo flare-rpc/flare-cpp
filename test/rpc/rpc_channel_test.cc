@@ -63,7 +63,7 @@ int main(int argc, char *argv[]) {
     flare::rpc::FLAGS_idle_timeout_second = 0;
     flare::rpc::FLAGS_max_connection_pool_size = 0;
     testing::InitGoogleTest(&argc, argv);
-    GFLAGS_NS::ParseCommandLineFlags(&argc, &argv, true);
+    google::ParseCommandLineFlags(&argc, &argv, true);
     return RUN_ALL_TESTS();
 }
 

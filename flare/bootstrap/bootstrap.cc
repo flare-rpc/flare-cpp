@@ -136,7 +136,7 @@ namespace flare {
     }
 
     void bootstrap_init(int argc, char **argv) {
-        GFLAGS_NS::ParseCommandLineFlags(&argc, &argv, true);
+        google::ParseCommandLineFlags(&argc, &argv, true);
         flare::detail::apply_flags_overrider();
         log_config_init(argv[0]);
     }

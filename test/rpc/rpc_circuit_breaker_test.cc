@@ -63,7 +63,7 @@ int main(int argc, char* argv[]) {
     flare::rpc::FLAGS_circuit_breaker_min_isolation_duration_ms = kMinIsolationDurationMs;
     flare::rpc::FLAGS_circuit_breaker_max_isolation_duration_ms = kMaxIsolationDurationMs;
     testing::InitGoogleTest(&argc, argv);
-    GFLAGS_NS::ParseCommandLineFlags(&argc, &argv, true);
+    google::ParseCommandLineFlags(&argc, &argv, true);
     return RUN_ALL_TESTS();
 }
 

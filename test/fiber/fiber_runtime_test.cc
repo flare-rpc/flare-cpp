@@ -140,13 +140,13 @@ namespace {
     bool set_min_concurrency(int num) {
         std::stringstream ss;
         ss << num;
-        std::string ret = GFLAGS_NS::SetCommandLineOption("fiber_min_concurrency", ss.str().c_str());
+        std::string ret = google::SetCommandLineOption("fiber_min_concurrency", ss.str().c_str());
         return !ret.empty();
     }
 
     int get_min_concurrency() {
         std::string ret;
-        GFLAGS_NS::GetCommandLineOption("fiber_min_concurrency", &ret);
+        google::GetCommandLineOption("fiber_min_concurrency", &ret);
         return atoi(ret.c_str());
     }
 

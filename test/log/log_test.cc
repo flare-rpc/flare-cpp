@@ -57,7 +57,7 @@ namespace test_ns {
         FLARE_LOG_ERROR("something");
 
         /// flare::log::FLARE_TRACE set log level to trace
-        GFLAGS_NS::SetCommandLineOption("minloglevel", "0");
+        google::SetCommandLineOption("minloglevel", "0");
         FLARE_LOG_TRACE("this should display");
         FLARE_LOG_DEBUG("this should display");
         FLARE_LOG_WARNING("something");

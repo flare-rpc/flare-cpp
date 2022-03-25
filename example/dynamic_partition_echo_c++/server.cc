@@ -103,7 +103,7 @@ private:
 
 int main(int argc, char *argv[]) {
     // Parse gflags. We recommend you to use gflags as well.
-    GFLAGS_NS::ParseCommandLineFlags(&argc, &argv, true);
+    google::ParseCommandLineFlags(&argc, &argv, true);
 
     if (FLAGS_server_num <= 0) {
         LOG(ERROR) << "server_num must be positive";
