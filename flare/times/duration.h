@@ -504,8 +504,9 @@ namespace flare {
         [[nodiscard]] int64_t to_int64(std::ratio<3600>) const;
 
     private:
-        int64_t _rep_hi;
-        uint32_t _rep_lo;
+        int64_t _rep_hi{0};
+        uint32_t _rep_lo{0};
+        int32_t  _padding{0};
     };
 
     namespace times_internal {
