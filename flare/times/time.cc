@@ -29,7 +29,6 @@
 #include <winsock2.h>  // for timeval
 #endif
 
-#include <cstring>
 #include <ctime>
 #include <limits>
 #ifdef _WIN32
@@ -54,7 +53,7 @@ namespace flare {
                     std::chrono::system_clock::from_time_t(0));
         }
 
-// Floors d to the next unit boundary closer to negative infinity.
+        // Floors d to the next unit boundary closer to negative infinity.
         FLARE_FORCE_INLINE int64_t FloorToUnit(flare::duration d, flare::duration unit) {
             flare::duration rem;
             int64_t q = duration::integer_div_duration(d, unit, &rem);
@@ -295,7 +294,7 @@ namespace flare {
     }
 
     timespec time_point::to_timespec() const {
-        timespec ts;
+        timespec ts{0, 0};
         flare::duration d = to_unix_duration(*this);
         if (!d.is_infinite_duration()) {
             ts.tv_sec = duration::get_rep_hi(d);
@@ -315,7 +314,7 @@ namespace flare {
     }
 
     timeval time_point::to_timeval() const {
-        timeval tv;
+        timeval tv{0, 0};
         timespec ts = to_timespec();
         tv.tv_sec = ts.tv_sec;
         if (tv.tv_sec != ts.tv_sec) {  // narrowing
@@ -571,23 +570,23 @@ static int64_t stats_fast_slow_paths;
 
 namespace flare {
 
-// This is a friend wrapper around unscaled_cycle_clock::now()
-// (needed to access unscaled_cycle_clock).
+    // This is a friend wrapper around unscaled_cycle_clock::now()
+    // (needed to access unscaled_cycle_clock).
     class unscaled_cycle_clock_wrapper_for_get_current_time {
     public:
         static int64_t now() { return times_internal::unscaled_cycle_clock::now(); }
     };
 
-// uint64_t is used in this module to provide an extra bit in multiplications
-
-// Return the time in ns as told by the kernel interface.  Place in *cycleclock
-// the value of the cycleclock at about the time of the syscall.
-// This call represents the time base that this module synchronizes to.
-// Ensures that *cycleclock does not step back by up to (1 << 16) from
-// last_cycleclock, to discard small backward counter steps.  (Larger steps are
-// assumed to be complete resyncs, which shouldn't happen.  If they do, a full
-// reinitialization of the outer algorithm should occur.)
-    static int64_t GetCurrentTimeNanosFromKernel(uint64_t last_cycleclock,
+    // uint64_t is used in this module to provide an extra bit in multiplications
+        
+    // Return the time in ns as told by the kernel interface.  Place in *cycleclock
+    // the value of the cycleclock at about the time of the syscall.
+    // This call represents the time base that this module synchronizes to.
+    // Ensures that *cycleclock does not step back by up to (1 << 16) from
+    // last_cycleclock, to discard small backward counter steps.  (Larger steps are
+    // assumed to be complete resyncs, which shouldn't happen.  If they do, a full
+    // reinitialization of the outer algorithm should occur.)
+    static int64_t get_current_time_nanos_from_kernel(uint64_t last_cycleclock,
                                                  uint64_t *cycleclock) {
         // We try to read clock values at about the same time as the kernel clock.
         // This value gets adjusted up or down as estimate of how long that should
@@ -705,7 +704,7 @@ namespace flare {
     static std::atomic<uint64_t> seq(0);
 
 // data from a sample of the kernel's time value
-    struct TimeSampleAtomic {
+    struct time_sample_atomic {
         std::atomic<uint64_t> raw_ns;              // raw kernel time
         std::atomic<uint64_t> base_ns;             // our estimate of time
         std::atomic<uint64_t> base_cycles;         // cycle counter reading
@@ -715,23 +714,23 @@ namespace flare {
         std::atomic<uint64_t> min_cycles_per_sample;
     };
 // Same again, but with non-atomic types
-    struct TimeSample {
-        uint64_t raw_ns;                 // raw kernel time
-        uint64_t base_ns;                // our estimate of time
-        uint64_t base_cycles;            // cycle counter reading
-        uint64_t nsscaled_per_cycle;     // cycle period
-        uint64_t min_cycles_per_sample;  // approx cycles before next sample
+    struct time_sample {
+        uint64_t raw_ns{0};                 // raw kernel time
+        uint64_t base_ns{0};                // our estimate of time
+        uint64_t base_cycles{0};            // cycle counter reading
+        uint64_t nsscaled_per_cycle{0};     // cycle period
+        uint64_t min_cycles_per_sample{0};  // approx cycles before next sample
     };
 
-    static struct TimeSampleAtomic last_sample;   // the last sample; under seq
+    static struct time_sample_atomic last_sample;   // the last sample; under seq
 
-    static int64_t GetCurrentTimeNanosSlowPath() FLARE_COLD;
+    static int64_t get_current_time_nanos_slow_path() FLARE_COLD;
 
 // Read the contents of *atomic into *sample.
 // Each field is read atomically, but to maintain atomicity between fields,
 // the access must be done under a lock.
-    static void ReadTimeSampleAtomic(const struct TimeSampleAtomic *atomic,
-                                     struct TimeSample *sample) {
+    static void read_time_sample_atomic(const struct time_sample_atomic *atomic,
+                                     struct time_sample *sample) {
         sample->base_ns = atomic->base_ns.load(std::memory_order_relaxed);
         sample->base_cycles = atomic->base_cycles.load(std::memory_order_relaxed);
         sample->nsscaled_per_cycle =
@@ -827,7 +826,7 @@ namespace flare {
             delta_cycles < min_cycles_per_sample) {
             return base_ns + ((delta_cycles * nsscaled_per_cycle) >> kScale);
         }
-        return GetCurrentTimeNanosSlowPath();
+        return get_current_time_nanos_slow_path();
     }
 
 // Return (a << kScale)/b.
@@ -848,25 +847,25 @@ namespace flare {
         return quotient;
     }
 
-    static uint64_t UpdateLastSample(
+    static uint64_t update_last_sample(
             uint64_t now_cycles, uint64_t now_ns, uint64_t delta_cycles,
-            const struct TimeSample *sample)
+            const struct time_sample *sample)
 
     FLARE_COLD;
 
-// The slow path of get_current_time_nanos().  This is taken while gathering
-// initial samples, when enough time has elapsed since the last sample, and if
-// any other thread is writing to last_sample.
-//
-// Manually mark this 'noinline' to minimize stack frame size of the fast
-// path.  Without this, sometimes a compiler may inline this big block of code
-// into the fast path.  That causes lots of register spills and reloads that
-// are unnecessary unless the slow path is taken.
-//
-// TODO(flare-team): Remove this attribute when our compiler is smart enough
-// to do the right thing.
+    // The slow path of get_current_time_nanos().  This is taken while gathering
+    // initial samples, when enough time has elapsed since the last sample, and if
+    // any other thread is writing to last_sample.
+    //
+    // Manually mark this 'noinline' to minimize stack frame size of the fast
+    // path.  Without this, sometimes a compiler may inline this big block of code
+    // into the fast path.  That causes lots of register spills and reloads that
+    // are unnecessary unless the slow path is taken.
+    //
+    // TODO(flare-team): Remove this attribute when our compiler is smart enough
+    // to do the right thing.
     FLARE_NO_INLINE
-    static int64_t GetCurrentTimeNanosSlowPath() LOCKS_EXCLUDED(lock) {
+    static int64_t get_current_time_nanos_slow_path() LOCKS_EXCLUDED(lock) {
         // Serialize access to slow-path.  Fast-path readers are not blocked yet, and
         // code below must not modify last_sample until the seqlock is acquired.
         lock.lock();
@@ -875,15 +874,15 @@ namespace flare {
         // "now" if we take the slow path.
         static uint64_t last_now_cycles;  // protected by lock
         uint64_t now_cycles;
-        uint64_t now_ns = GetCurrentTimeNanosFromKernel(last_now_cycles, &now_cycles);
+        uint64_t now_ns = get_current_time_nanos_from_kernel(last_now_cycles, &now_cycles);
         last_now_cycles = now_cycles;
 
         uint64_t estimated_base_ns;
 
         // ----------
         // Read the "last_sample" values again; this time holding the write lock.
-        struct TimeSample sample;
-        ReadTimeSampleAtomic(&last_sample, &sample);
+        struct time_sample sample;
+        read_time_sample_atomic(&last_sample, &sample);
 
         // ----------
         // Try running the fast path again; another thread may have updated the
@@ -897,7 +896,7 @@ namespace flare {
             stats_fast_slow_paths++;
         } else {
             estimated_base_ns =
-                    UpdateLastSample(now_cycles, now_ns, delta_cycles, &sample);
+                    update_last_sample(now_cycles, now_ns, delta_cycles, &sample);
         }
 
         lock.unlock();
@@ -908,9 +907,9 @@ namespace flare {
     // Main part of the algorithm.  Locks out readers, updates the approximation
     // using the new sample from the kernel, and stores the result in last_sample
     // for readers.  Returns the new estimated time.
-    static uint64_t UpdateLastSample(uint64_t now_cycles, uint64_t now_ns,
+    static uint64_t update_last_sample(uint64_t now_cycles, uint64_t now_ns,
                                      uint64_t delta_cycles,
-                                     const struct TimeSample *sample)
+                                     const struct time_sample *sample)
     EXCLUSIVE_LOCKS_REQUIRED(lock) {
         uint64_t estimated_base_ns = now_ns;
         uint64_t lock_value = SeqAcquire(&seq);  // acquire seqlock to block readers
@@ -1005,7 +1004,7 @@ namespace flare {
     namespace {
 
 // Returns the maximum duration that SleepOnce() can sleep for.
-        constexpr flare::duration MaxSleep() {
+        constexpr flare::duration max_sleep() {
 #ifdef _WIN32
             // Windows Sleep() takes unsigned long argument in milliseconds.
             return flare::milliseconds(
@@ -1016,7 +1015,7 @@ namespace flare {
         }
 
 // Sleeps for the given duration.
-// REQUIRES: to_sleep <= MaxSleep().
+// REQUIRES: to_sleep <= max_sleep().
         void sleep_once(flare::duration to_sleep) {
 #ifdef _WIN32
             Sleep(to_sleep / flare::milliseconds(1));
@@ -1036,7 +1035,7 @@ extern "C" {
 
 FLARE_WEAK void flare_internal_sleep_for(flare::duration duration) {
     while (duration > flare::zero_duration()) {
-        flare::duration to_sleep = std::min(duration, flare::MaxSleep());
+        flare::duration to_sleep = std::min(duration, flare::max_sleep());
         flare::sleep_once(to_sleep);
         duration -= to_sleep;
     }

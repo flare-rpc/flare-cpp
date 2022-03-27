@@ -300,12 +300,6 @@ namespace flare {
 
         friend duration operator-(time_point lhs, time_point rhs);
 
-        friend constexpr time_point universal_epoch();
-
-        friend constexpr time_point infinite_future();
-
-        friend constexpr time_point infinite_past();
-
         constexpr explicit time_point(duration rep) : rep_(rep) {}
 
         duration rep_;
