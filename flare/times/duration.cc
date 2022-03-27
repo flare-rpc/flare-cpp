@@ -68,7 +68,7 @@ namespace flare {
 // A functor that's similar to std::multiplies<T>, except this returns the max
 // T value instead of overflowing. This is only defined for uint128.
         template<typename Ignored>
-        struct SafeMultiply {
+        struct safe_multiply {
             uint128 operator()(uint128 a, uint128 b) const {
                 // b hi is always zero because it originated as an int64_t.
                 assert(uint128_high64(b) == 0);
@@ -178,15 +178,15 @@ namespace flare {
         return *this;
     }
 
-//
-// Multiplicative operators.
-//
+    //
+    // Multiplicative operators.
+    //
     duration &duration::operator*=(int64_t r) {
         if (is_infinite_duration()) {
             const bool is_neg = (r < 0) != (_rep_hi < 0);
             return *this = is_neg ? -infinite_duration() : infinite_duration();
         }
-        return *this = scale_fixed<SafeMultiply>(r);
+        return *this = scale_fixed<safe_multiply>(r);
     }
 
     duration &duration::operator*=(double r) {
@@ -234,9 +234,9 @@ namespace flare {
         return a / b;
     }
 
-//
-// trunc/floor/ceil.
-//
+    //
+    // trunc/floor/ceil.
+    //
 
     duration duration::trunc(duration unit) const {
         return *this - (*this % unit);
@@ -252,9 +252,9 @@ namespace flare {
         return td >= *this ? td : td + abs_duration(unit);
     }
 
-//
-// Factory functions.
-//
+    //
+    // Factory functions.
+    //
 
     duration duration::from_timespec(timespec ts) {
         if (static_cast<uint64_t>(ts.tv_nsec) < 1000 * 1000 * 1000) {
@@ -272,9 +272,9 @@ namespace flare {
         return seconds(tv.tv_sec) + microseconds(tv.tv_usec);
     }
 
-//
-// Conversion to other duration types.
-//
+    //
+    // Conversion to other duration types.
+    //
 
     int64_t duration::to_int64_nanoseconds() const {
         if (_rep_hi >= 0 &&
@@ -453,19 +453,19 @@ namespace flare {
             return ep;
         }
 
-// Helpers for format_duration() that format 'n' and append it to 'out'
-// followed by the given 'unit'.  If 'n' formats to "0", nothing is
-// appended (not even the unit).
+        // Helpers for format_duration() that format 'n' and append it to 'out'
+        // followed by the given 'unit'.  If 'n' formats to "0", nothing is
+        // appended (not even the unit).
 
-// A type that encapsulates how to display a value of a particular unit. For
-// values that are displayed with fractional parts, the precision indicates
-// where to round the value. The precision varies with the display unit because
-// a duration can hold only quarters of a nanosecond, so displaying information
-// beyond that is just noise.
-//
-// For example, a microsecond value of 42.00025xxxxx should not display beyond 5
-// fractional digits, because it is in the noise of what a duration can
-// represent.
+        // A type that encapsulates how to display a value of a particular unit. For
+        // values that are displayed with fractional parts, the precision indicates
+        // where to round the value. The precision varies with the display unit because
+        // a duration can hold only quarters of a nanosecond, so displaying information
+        // beyond that is just noise.
+        //
+        // For example, a microsecond value of 42.00025xxxxx should not display beyond 5
+        // fractional digits, because it is in the noise of what a duration can
+        // represent.
         struct DisplayUnit {
             const char *abbr;
             int prec;
@@ -488,8 +488,8 @@ namespace flare {
             }
         }
 
-// Note: unit.prec is limited to double's digits10 value (typically 15) so it
-// always fits in buf[].
+        // Note: unit.prec is limited to double's digits10 value (typically 15) so it
+        // always fits in buf[].
         void AppendNumberUnit(std::string *out, double n, DisplayUnit unit) {
             const int buf_size = std::numeric_limits<double>::digits10;
             const int prec = std::min(buf_size, unit.prec);
@@ -513,12 +513,12 @@ namespace flare {
 
     }  // namespace
 
-// From Go's doc at https://golang.org/pkg/time/#duration.String
-//   [format_duration] returns a string representing the duration in the
-//   form "72h3m0.5s". Leading zero units are omitted.  As a special
-//   case, durations less than one second format use a smaller unit
-//   (milli-, micro-, or nanoseconds) to ensure that the leading digit
-//   is non-zero.  The zero duration formats as 0, with no unit.
+    // From Go's doc at https://golang.org/pkg/time/#duration.String
+    //   [format_duration] returns a string representing the duration in the
+    //   form "72h3m0.5s". Leading zero units are omitted.  As a special
+    //   case, durations less than one second format use a smaller unit
+    //   (milli-, micro-, or nanoseconds) to ensure that the leading digit
+    //   is non-zero.  The zero duration formats as 0, with no unit.
     std::string duration::format_duration() const {
         const duration min_duration = seconds(times_internal::kint64min);
         auto d = *this;
@@ -557,9 +557,9 @@ namespace flare {
 
     namespace {
 
-// A helper for parse_duration() that parses a leading number from the given
-// string and stores the result in *int_part/*frac_part/*frac_scale.  The
-// given string pointer is modified to point to the first unconsumed char.
+        // A helper for parse_duration() that parses a leading number from the given
+        // string and stores the result in *int_part/*frac_part/*frac_scale.  The
+        // given string pointer is modified to point to the first unconsumed char.
         bool ConsumeDurationNumber(const char **dpp, int64_t *int_part,
                                    int64_t *frac_part, int64_t *frac_scale) {
             *int_part = 0;
@@ -586,10 +586,10 @@ namespace flare {
             return !int_part_empty || *frac_scale != 1;
         }
 
-// A helper for parse_duration() that parses a leading unit designator (e.g.,
-// ns, us, ms, s, m, h) from the given string and stores the resulting unit
-// in "*unit".  The given string pointer is modified to point to the first
-// unconsumed char.
+        // A helper for parse_duration() that parses a leading unit designator (e.g.,
+        // ns, us, ms, s, m, h) from the given string and stores the resulting unit
+        // in "*unit".  The given string pointer is modified to point to the first
+        // unconsumed char.
         bool ConsumeDurationUnit(const char **start, duration *unit) {
             const char *s = *start;
             bool ok = true;
@@ -620,11 +620,11 @@ namespace flare {
 
     }  // namespace
 
-// From Go's doc at https://golang.org/pkg/time/#parse_duration
-//   [parse_duration] parses a duration string. A duration string is
-//   a possibly signed sequence of decimal numbers, each with optional
-//   fraction and a unit suffix, such as "300ms", "-1.5h" or "2h45m".
-//   Valid time units are "ns", "us" "ms", "s", "m", "h".
+    // From Go's doc at https://golang.org/pkg/time/#parse_duration
+    //   [parse_duration] parses a duration string. A duration string is
+    //   a possibly signed sequence of decimal numbers, each with optional
+    //   fraction and a unit suffix, such as "300ms", "-1.5h" or "2h45m".
+    //   Valid time units are "ns", "us" "ms", "s", "m", "h".
     bool parse_duration(const std::string &dur_string, duration *d) {
         const char *start = dur_string.c_str();
         int sign = 1;
