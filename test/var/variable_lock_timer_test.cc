@@ -109,7 +109,7 @@ TEST_F(LockTimerTest, pthread_mutex_and_cond) {
     {
         std::unique_lock<MutexWithLatencyRecorder<pthread_mutex_t> > lck(mutex);
         ASSERT_EQ(1u, recorder.count());
-        timespec due_time = (flare::time_now() + flare::duration::milliseconds(10)).to_timespec();
+        timespec due_time = flare::time_point::future_unix_millis(10).to_timespec();
         pthread_cond_t cond;
         ASSERT_EQ(0, pthread_cond_init(&cond, NULL));
         pthread_cond_timedwait(&cond, &(pthread_mutex_t&)mutex, &due_time);

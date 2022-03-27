@@ -2,7 +2,7 @@
 #ifndef FLARE_FIBER_INTERNAL_FIBER_WORKER_H_
 #define FLARE_FIBER_INTERNAL_FIBER_WORKER_H_
 
-#include "flare/times/time.h"                             // cpuwide_time_ns
+#include "flare/times/time.h"
 #include "flare/fiber/internal/schedule_group.h"
 #include "flare/fiber/internal/fiber_entity.h"                     // fiber_id_t, fiber_entity
 #include "flare/fiber/internal/work_stealing_queue.h"           // WorkStealingQueue

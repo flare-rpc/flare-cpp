@@ -714,7 +714,7 @@ namespace flare::fiber_internal {
         TimerThread::TaskId sleep_id;
         sleep_id = get_global_timer_thread()->schedule(
                 ready_to_run_from_timer_thread, void_args,
-                (flare::time_now() + flare::duration::microseconds(e.timeout_us)).to_timespec());
+                flare::time_point::future_unix_micros(e.timeout_us).to_timespec());
 
         if (!sleep_id) {
             // fail to schedule timer, go back to previous thread.

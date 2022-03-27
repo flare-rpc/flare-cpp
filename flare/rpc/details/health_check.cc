@@ -226,7 +226,7 @@ namespace flare::rpc {
             return false;
         }
         ++ptr->_hc_count;
-        *next_abstime = (flare::time_now() + flare::duration::seconds(ptr->_health_check_interval_s)).to_timespec();
+        *next_abstime = flare::time_point::future_unix_seconds(ptr->_health_check_interval_s).to_timespec();
         return true;
     }
 
@@ -236,7 +236,7 @@ namespace flare::rpc {
 
     void StartHealthCheck(SocketId id, int64_t delay_ms) {
         PeriodicTaskManager::StartTaskAt(new HealthCheckTask(id),
-                                         (flare::time_now() + flare::duration::milliseconds(delay_ms)).to_timespec());
+                                         flare::time_point::future_unix_millis(delay_ms).to_timespec());
     }
 
 } // namespace flare::rpc

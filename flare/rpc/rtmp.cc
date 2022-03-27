@@ -2459,7 +2459,7 @@ namespace flare::rpc {
             // Add a ref for OnRecreateTimer which does deref.
             flare::container::intrusive_ptr<RtmpRetryingClientStream>(this).detach();
             if (fiber_timer_add(&_create_timer_id,
-                                (flare::time_now() + flare::duration::microseconds(wait_us)).to_timespec(),
+                                flare::time_point::future_unix_micros(wait_us).to_timespec(),
                                 OnRecreateTimer, this) != 0) {
                 LOG(ERROR) << "Fail to create timer";
                 return CallOnStopIfNeeded();

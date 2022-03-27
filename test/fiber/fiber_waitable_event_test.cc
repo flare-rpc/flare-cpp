@@ -157,7 +157,7 @@ namespace {
         fiber_id_t th;
         ASSERT_EQ(0, fiber_start_urgent(&th, nullptr, waiter, unmatched_arg));
 
-        const timespec abstime = (flare::time_now() + flare::duration::seconds(1)).to_timespec();
+        const timespec abstime = flare::time_point::future_unix_seconds(1).to_timespec();
         for (size_t i = 0; i < 4 * N; ++i) {
             args[i].expected_value = *b1;
             args[i].event = b1;
@@ -194,7 +194,7 @@ namespace {
 
     void *wait_event(void *void_arg) {
         event_wait_arg *arg = static_cast<event_wait_arg *>(void_arg);
-        const timespec ts = (flare::time_now() + flare::duration::milliseconds(arg->wait_msec)).to_timespec();
+        const timespec ts = flare::time_point::future_unix_millis(arg->wait_msec).to_timespec();
         int rc = flare::fiber_internal::waitable_event_wait(arg->event, arg->expected_val, &ts);
         int saved_errno = errno;
         if (arg->error_code) {

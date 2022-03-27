@@ -78,7 +78,7 @@ namespace flare::fiber_internal {
             if (static_cast<std::atomic<int> *>(addr1)->load() == expected) {
                 ++simu_futex.counts;
                 if (timeout) {
-                    timespec timeout_abs = (flare::time_now() + flare::duration::from_timespec(*timeout)).to_timespec();
+                    timespec timeout_abs = flare::time_point::future_timespec(*timeout).to_timespec();
                     if ((rc = pthread_cond_timedwait(&simu_futex.cond, &simu_futex.lock, &timeout_abs)) != 0) {
                         errno = rc;
                         rc = -1;

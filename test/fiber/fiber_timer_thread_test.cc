@@ -106,18 +106,18 @@ namespace {
         flare::fiber_internal::TimerThread timer_thread;
         ASSERT_EQ(0, timer_thread.start(nullptr));
 
-        timespec _2s_later = (flare::time_now() + flare::duration::seconds(2)).to_timespec();
+        timespec _2s_later = flare::time_point::future_unix_seconds(2).to_timespec();
         TimeKeeper keeper1(_2s_later, "keeper1");
         keeper1.schedule(&timer_thread);
 
         TimeKeeper keeper2(_2s_later, "keeper2");  // same time with keeper1
         keeper2.schedule(&timer_thread);
 
-        timespec _1s_later = (flare::time_now() + flare::duration::seconds(1)).to_timespec();
+        timespec _1s_later = flare::time_point::future_unix_seconds(1).to_timespec();
         TimeKeeper keeper3(_1s_later, "keeper3");
         keeper3.schedule(&timer_thread);
 
-        timespec _10s_later = (flare::time_now() + flare::duration::seconds(10)).to_timespec();
+        timespec _10s_later = flare::time_point::future_unix_seconds(10).to_timespec();
         TimeKeeper keeper4(_10s_later, "keeper4");
         keeper4.schedule(&timer_thread);
 
@@ -133,7 +133,7 @@ namespace {
         timespec old_time = {0, 0};
         TimeKeeper keeper6(old_time, "keeper6");
         keeper6.schedule(&timer_thread);
-        const timespec keeper6_addtime = (flare::time_now() + flare::duration::seconds(0)).to_timespec();
+        const timespec keeper6_addtime = flare::time_point::future_unix_seconds(0).to_timespec();
 
         // sleep 10 seconds and stop.
         LOG(INFO) << "Sleep 2s";
@@ -165,7 +165,7 @@ namespace {
         ASSERT_EQ(0, timer_thread.start(nullptr));
         keeper.schedule(&timer_thread);
         ASSERT_NE(flare::fiber_internal::TimerThread::INVALID_TASK_ID, keeper._task_id);
-        timespec current_time = (flare::time_now() + flare::duration::seconds(0)).to_timespec();
+        timespec current_time = flare::time_point::future_unix_seconds(0).to_timespec();
         sleep(1);  // make sure timer thread start and run
         timer_thread.stop_and_join();
         keeper.expect_first_run(current_time);
@@ -205,7 +205,7 @@ namespace {
         flare::fiber_internal::TimerThread timer_thread;
         timespec past_time = {0, 0};
         timespec future_time = {std::numeric_limits<int>::max(), 0};
-        const timespec _500ms_after = (flare::time_now() + flare::duration::milliseconds(500)).to_timespec();
+        const timespec _500ms_after = flare::time_point::future_unix_millis(500).to_timespec();
 
         TimeKeeper keeper1(future_time, "keeper1");
         TimeKeeper keeper2(past_time, "keeper2");
@@ -216,7 +216,7 @@ namespace {
         ASSERT_EQ(0, timer_thread.start(nullptr));
         keeper1.schedule(&timer_thread);  // start keeper1
         keeper3.schedule(&timer_thread);  // start keeper3
-        timespec keeper3_addtime = (flare::time_now() + flare::duration::seconds(0)).to_timespec();
+        timespec keeper3_addtime = flare::time_point::future_unix_seconds(0).to_timespec();
         keeper5.schedule(&timer_thread);  // start keeper5
         sleep(1);  // let keeper1/3/5 run
 

@@ -37,13 +37,13 @@ namespace flare {
         // rather than std::timeout
         int wait_for(std::unique_lock<flare::fiber_mutex> &lock,
                      long timeout_us) {
-            auto ts = (flare::time_now() + flare::duration::microseconds(timeout_us)).to_timespec();
+            auto ts = flare::time_point::future_unix_micros(timeout_us).to_timespec();
             return wait_until(lock, ts);
         }
 
         int wait_for(std::unique_lock<fiber_mutex_t> &lock,
                      long timeout_us) {
-            auto ts = (flare::time_now() + flare::duration::microseconds(timeout_us)).to_timespec();
+            auto ts = flare::time_point::future_unix_micros(timeout_us).to_timespec();
             return wait_until(lock, ts);
         }
 

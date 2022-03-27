@@ -485,7 +485,7 @@ namespace {
     }
 
     void *wait_for_the_fd(void *arg) {
-        timespec ts = (flare::time_now() + flare::duration::milliseconds(50)).to_timespec();
+        timespec ts = flare::time_point::future_unix_millis(50).to_timespec();
 #if defined(FLARE_PLATFORM_LINUX)
         fiber_fd_timedwait(*(int*)arg, EPOLLIN, &ts);
 #elif defined(FLARE_PLATFORM_OSX)

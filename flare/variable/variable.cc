@@ -755,7 +755,7 @@ namespace flare::variable {
                 LOG(ERROR) << "Bad cond_sleep_ms=" << cond_sleep_ms;
                 cond_sleep_ms = 10000;
             }
-            timespec deadline = (flare::time_now() + flare::duration::milliseconds(cond_sleep_ms)).to_timespec();
+            timespec deadline = flare::time_point::future_unix_millis(cond_sleep_ms).to_timespec();
             pthread_mutex_lock(&dump_mutex);
             pthread_cond_timedwait(&dump_cond, &dump_mutex, &deadline);
             pthread_mutex_unlock(&dump_mutex);

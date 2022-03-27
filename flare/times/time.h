@@ -177,7 +177,7 @@ namespace flare {
         // Returns the breakdown of this instant in the given time_zone.
         //
         // Deprecated. Use `flare::time_zone::At(time_point)`.
-        breakdown in(time_zone tz) const;
+        [[nodiscard]] breakdown in(time_zone tz) const;
 
     public:
         // to_unix_nanos()
@@ -192,25 +192,25 @@ namespace flare {
         // these operations round down toward negative infinity where necessary to
         // adjust to the resolution of the result type.  Beware of possible time_t
         // over/underflow in ToTime{T,val,spec}() on 32-bit platforms.
-        int64_t to_unix_nanos() const;
+        [[nodiscard]] int64_t to_unix_nanos() const;
 
-        int64_t to_unix_micros() const;
+        [[nodiscard]] int64_t to_unix_micros() const;
 
-        int64_t to_unix_millis() const;
+        [[nodiscard]] int64_t to_unix_millis() const;
 
-        int64_t to_unix_seconds() const;
+        [[nodiscard]] int64_t to_unix_seconds() const;
 
-        time_t to_time_t() const;
+        [[nodiscard]] time_t to_time_t() const;
 
-        double to_date() const;
+        [[nodiscard]] double to_date() const;
 
-        int64_t to_universal() const;
+        [[nodiscard]] int64_t to_universal() const;
 
-        timespec to_timespec() const;
+        [[nodiscard]] timespec to_timespec() const;
 
-        timeval to_timeval() const;
+        [[nodiscard]] timeval to_timeval() const;
 
-        duration to_duration() const;
+        [[nodiscard]] duration to_duration() const;
 
         // to_chrono_time()
         //
@@ -223,7 +223,7 @@ namespace flare {
         //   flare::time_point t = flare::from_time_t(123);
         //   auto tp = flare::to_chrono_time(t);
         //   // tp == std::chrono::system_clock::from_time_t(123);
-        std::chrono::system_clock::time_point to_chrono_time() const;
+        [[nodiscard]] std::chrono::system_clock::time_point to_chrono_time() const;
 
 
     public:
@@ -275,6 +275,24 @@ namespace flare {
         static time_point from_timespec(timespec ts);
 
         static time_point from_timeval(timeval tv);
+
+        // future_xx
+        // make time_point for future from now
+        static inline time_point future_timeval(timeval tv);
+
+        static inline time_point future_timespec(timespec ts);
+
+        static inline time_point future_unix_duration(duration d);
+
+        static inline time_point future_unix_nanos(int64_t ns);
+
+        static inline time_point future_unix_micros(int64_t us);
+
+        static inline time_point future_unix_millis(int64_t ms);
+
+        static inline time_point future_unix_seconds(int64_t s);
+
+        static inline time_point future_time_t(time_t t);
 
         // from_chrono()
         //
@@ -894,6 +912,38 @@ namespace flare {
 
     constexpr time_point time_point::from_time_t(time_t t) {
         return time_point::from_unix_duration(duration::seconds(t));
+    }
+
+    inline time_point time_point::future_timeval(timeval tv) {
+        return time_now() + duration::from_timeval(tv);
+    }
+
+    inline time_point time_point::future_timespec(timespec ts) {
+        return time_now() + duration::from_timespec(ts);
+    }
+
+    inline time_point time_point::future_unix_duration(duration d) {
+        return time_now() + d;
+    }
+
+    inline time_point time_point::future_unix_nanos(int64_t ns) {
+        return time_now() + duration::nanoseconds(ns);
+    }
+
+    inline time_point time_point::future_unix_micros(int64_t us) {
+        return time_now() + duration::microseconds(us);
+    }
+
+    inline time_point time_point::future_unix_millis(int64_t ms) {
+        return time_now() + duration::milliseconds(ms);
+    }
+
+    inline time_point time_point::future_unix_seconds(int64_t s) {
+        return time_now() + duration::seconds(s);
+    }
+
+    inline time_point time_point::future_time_t(time_t t) {
+        return time_now() + duration::seconds(t);
     }
 
     inline int utc_minutes_offset(const std::tm &tm) {
