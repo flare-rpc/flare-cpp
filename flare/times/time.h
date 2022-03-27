@@ -827,7 +827,7 @@ namespace flare {
 
     std::string format_time(time_point t);
 
-// Output stream operator.
+    // Output stream operator.
     FLARE_FORCE_INLINE std::ostream &operator<<(std::ostream &os, time_point t) {
         return os << format_time(t);
     }
