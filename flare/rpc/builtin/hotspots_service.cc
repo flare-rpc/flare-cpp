@@ -699,7 +699,7 @@ namespace flare::rpc {
             }
             CHECK(nullptr == g_env[type].client);
             g_env[type].client = new ProfilingClient;
-            g_env[type].client->end_us = flare::base::cpuwide_time_us() + seconds * 1000000L;
+            g_env[type].client->end_us = flare::get_current_time_micros() + seconds * 1000000L;
             g_env[type].client->seconds = seconds;
             // This id work arounds an issue of chrome (or jquery under chrome) that
             // the ajax call in another tab may be delayed until ajax call in
@@ -1136,7 +1136,7 @@ namespace flare::rpc {
         os << "<div id=\"profiling-result\">";
         if (profiling_client.seconds != 0) {
             const int wait_seconds =
-                    (int) ceil((profiling_client.end_us - flare::base::cpuwide_time_us())
+                    (int) ceil((profiling_client.end_us - flare::get_current_time_micros())
                                / 1000000.0);
             os << "Your request is merged with the request from "
                << profiling_client.point;

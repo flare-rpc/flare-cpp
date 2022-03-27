@@ -26,7 +26,7 @@
 #include <gflags/gflags.h>
 #include <unordered_map>
 
-#include "flare/base/time.h"
+#include "flare/times/time.h"
 
 DEFINE_int32(port, 6379, "TCP Port of this server");
 

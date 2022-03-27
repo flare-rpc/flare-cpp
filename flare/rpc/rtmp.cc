@@ -1281,7 +1281,7 @@ namespace flare::rpc {
 
     RtmpStreamBase::RtmpStreamBase(bool is_client)
             : _is_client(is_client), _paused(false), _stopped(false), _processing_msg(false), _has_data_ever(false),
-              _message_stream_id(0), _chunk_stream_id(0), _create_realtime_us(flare::base::gettimeofday_us()),
+              _message_stream_id(0), _chunk_stream_id(0), _create_realtime_us(flare::get_current_time_micros()),
               _is_server_accepted(false) {
     }
 
@@ -2313,7 +2313,7 @@ namespace flare::rpc {
         _options = options;
         // retrying stream does not support this option.
         _options.wait_until_play_or_publish_is_sent = false;
-        _last_retry_start_time_us = flare::base::gettimeofday_us();
+        _last_retry_start_time_us = flare::get_current_time_micros();
         Recreate();
     }
 
@@ -2378,7 +2378,7 @@ namespace flare::rpc {
             sub_stream->Destroy();
             return;
         }
-        _last_creation_time_us = flare::base::gettimeofday_us();
+        _last_creation_time_us = flare::get_current_time_micros();
         // If Init() of sub_stream is called before setting _using_sub_stream,
         // OnStop() may happen before _using_sub_stream is set and the stopped
         // stream is wrongly left in the variable.
@@ -2421,7 +2421,7 @@ namespace flare::rpc {
         // of RtmpRetryingClientStreamOptions.max_retry_duration_ms.
         if ((!_options.play_name.empty() && sub_stream->has_data_ever()) ||
             (!_options.publish_name.empty() && sub_stream->is_server_accepted())) {
-            const int64_t now = flare::base::gettimeofday_us();
+            const int64_t now = flare::get_current_time_micros();
             if (now >= _last_retry_start_time_us +
                        3 * _options.retry_interval_ms * 1000L) {
                 // re-enable fast retries when the interval is long enough.
@@ -2433,7 +2433,7 @@ namespace flare::rpc {
         // Check max duration. Notice that this branch cannot be moved forward
         // above branch which may update _last_retry_start_time_us
         if (_options.max_retry_duration_ms > 0 &&
-            flare::base::gettimeofday_us() >
+            flare::get_current_time_micros() >
             (_last_retry_start_time_us + _options.max_retry_duration_ms * 1000L)) {
             // exceed the duration, stop retrying.
             return CallOnStopIfNeeded();
@@ -2453,13 +2453,13 @@ namespace flare::rpc {
             return CallOnStopIfNeeded();
         }
         const int64_t wait_us = _last_creation_time_us +
-                                _options.retry_interval_ms * 1000L - flare::base::gettimeofday_us();
+                                _options.retry_interval_ms * 1000L - flare::get_current_time_micros();
         if (wait_us > 0) {
             // retry is too frequent, schedule the retry.
             // Add a ref for OnRecreateTimer which does deref.
             flare::container::intrusive_ptr<RtmpRetryingClientStream>(this).detach();
             if (fiber_timer_add(&_create_timer_id,
-                                flare::base::microseconds_from_now(wait_us),
+                                (flare::time_now() + flare::duration::microseconds(wait_us)).to_timespec(),
                                 OnRecreateTimer, this) != 0) {
                 LOG(ERROR) << "Fail to create timer";
                 return CallOnStopIfNeeded();

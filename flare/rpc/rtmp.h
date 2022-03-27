@@ -593,7 +593,7 @@ public:
     // True iff OnStop() was called.
     bool is_stopped() const { return _stopped; }
 
-    // When this stream is created, got from flare::base::gettimeofday_us().
+    // When this stream is created, got from flare::get_current_time_micros().
     int64_t create_realtime_us() const { return _create_realtime_us; }
     
     bool is_paused() const { return _paused; }

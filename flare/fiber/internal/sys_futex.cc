@@ -22,7 +22,7 @@
 #include "flare/fiber/internal/sys_futex.h"
 #include "flare/base/scoped_lock.h"
 #include "flare/base/static_atomic.h"
-#include "flare/base/time.h"
+#include "flare/times/time.h"
 #include <pthread.h>
 #include <unordered_map>
 
@@ -78,7 +78,7 @@ namespace flare::fiber_internal {
             if (static_cast<std::atomic<int> *>(addr1)->load() == expected) {
                 ++simu_futex.counts;
                 if (timeout) {
-                    timespec timeout_abs = flare::base::timespec_from_now(*timeout);
+                    timespec timeout_abs = (flare::time_now() + flare::duration::from_timespec(*timeout)).to_timespec();
                     if ((rc = pthread_cond_timedwait(&simu_futex.cond, &simu_futex.lock, &timeout_abs)) != 0) {
                         errno = rc;
                         rc = -1;

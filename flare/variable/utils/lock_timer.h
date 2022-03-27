@@ -20,7 +20,7 @@
 #ifndef  FLARE_VARIABLE_LOCK_TIMER_H_
 #define  FLARE_VARIABLE_LOCK_TIMER_H_
 
-#include "flare/base/time.h"             // flare::base::stop_watcher
+#include "flare/times/time.h"             // flare::stop_watcher
 #include "flare/base/scoped_lock.h"      // std::lock_guard std::unique_lock
 #include "flare/variable/recorder.h"         // IntRecorder
 #include "flare/variable/latency_recorder.h" // LatencyRecorder
@@ -203,13 +203,13 @@ namespace flare::variable {
             // This trick makes the recoding happens after the destructor of _lock_guard
             struct TimerAndMutex {
                 TimerAndMutex(Mutex &m)
-                        : timer(flare::base::stop_watcher::STARTED), mutex(&m) {}
+                        : timer(flare::stop_watcher::STARTED), mutex(&m) {}
 
                 ~TimerAndMutex() {
                     *mutex << timer.u_elapsed();
                 }
 
-                flare::base::stop_watcher timer;
+                flare::stop_watcher timer;
                 Mutex *mutex;
             };
 
@@ -227,7 +227,7 @@ namespace flare::variable {
             typedef Mutex mutex_type;
 
             explicit UniqueLockBase(mutex_type &mutex)
-                    : _timer(flare::base::stop_watcher::STARTED), _lock(mutex.mutex()),
+                    : _timer(flare::stop_watcher::STARTED), _lock(mutex.mutex()),
                       _mutex(&mutex) {
                 _timer.stop();
             }
@@ -237,7 +237,7 @@ namespace flare::variable {
             }
 
             UniqueLockBase(mutex_type &mutex, std::try_to_lock_t try_to_lock)
-                    : _timer(flare::base::stop_watcher::STARTED), _lock(mutex.mutex(), try_to_lock), _mutex(&mutex) {
+                    : _timer(flare::stop_watcher::STARTED), _lock(mutex.mutex(), try_to_lock), _mutex(&mutex) {
 
                 _timer.stop();
                 if (!owns_lock()) {
@@ -325,7 +325,7 @@ namespace flare::variable {
 
         private:
             // Don't change the order or timer and _lck;
-            flare::base::stop_watcher _timer;
+            flare::stop_watcher _timer;
             std::unique_lock<typename Mutex::mutex_type> _lock;
             mutex_type *_mutex;
         };

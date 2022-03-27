@@ -18,7 +18,7 @@
 
 #include <iostream>
 #include <unordered_map>
-#include "flare/base/time.h"
+#include "flare/times/time.h"
 #include "flare/log/logging.h"
 #include <flare/rpc/redis.h>
 #include <flare/rpc/channel.h>

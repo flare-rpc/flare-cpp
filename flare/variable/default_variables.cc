@@ -32,7 +32,7 @@
 #endif
 
 #include "flare/files/filesystem.h"
-#include "flare/base/time.h"
+#include "flare/times/time.h"
 #include "flare/base/singleton_on_pthread_once.h"
 #include "flare/base/scoped_lock.h"
 #include "flare/base/scoped_file.h"
@@ -147,7 +147,7 @@ namespace flare::variable {
         template<typename ReadFn>
         static const T &get_value(const ReadFn &fn) {
             CachedReader *p = flare::base::get_leaky_singleton<CachedReader>();
-            const int64_t now = flare::base::gettimeofday_us();
+            const int64_t now = flare::get_current_time_micros();
             if (now > p->_mtime_us + CACHED_INTERVAL_US) {
                 pthread_mutex_lock(&p->_mutex);
                 if (now > p->_mtime_us + CACHED_INTERVAL_US) {
@@ -637,10 +637,10 @@ namespace flare::variable {
 
 // ======================================
 
-    static int64_t g_starting_time = flare::base::gettimeofday_us();
+    static int64_t g_starting_time = flare::get_current_time_micros();
 
     static timeval get_uptime(void *) {
-        int64_t uptime_us = flare::base::gettimeofday_us() - g_starting_time;
+        int64_t uptime_us = flare::get_current_time_micros() - g_starting_time;
         timeval tm;
         tm.tv_sec = uptime_us / 1000000L;
         tm.tv_usec = uptime_us - tm.tv_sec * 1000000L;
@@ -774,9 +774,9 @@ namespace flare::variable {
     }
 
     static TimePercent get_cputime_percent(void *) {
-        TimePercent tp = {flare::base::timeval_to_microseconds(g_ru_stime.get_value()) +
-                          flare::base::timeval_to_microseconds(g_ru_utime.get_value()),
-                          flare::base::timeval_to_microseconds(g_uptime.get_value())};
+        TimePercent tp = {flare::time_point::from_timeval(g_ru_stime.get_value()).to_unix_micros() +
+                                  flare::time_point::from_timeval(g_ru_utime.get_value()).to_unix_micros(),
+                          flare::time_point::from_timeval(g_uptime.get_value()).to_unix_micros()};
         return tp;
     }
 
@@ -785,8 +785,8 @@ namespace flare::variable {
             "process_cpu_usage", &g_cputime_percent, FLAGS_variable_dump_interval);
 
     static TimePercent get_stime_percent(void *) {
-        TimePercent tp = {flare::base::timeval_to_microseconds(g_ru_stime.get_value()),
-                          flare::base::timeval_to_microseconds(g_uptime.get_value())};
+        TimePercent tp = {flare::time_point::from_timeval(g_ru_stime.get_value()).to_unix_micros(),
+                          flare::time_point::from_timeval(g_uptime.get_value()).to_unix_micros()};
         return tp;
     }
 
@@ -795,8 +795,8 @@ namespace flare::variable {
             "process_cpu_usage_system", &g_stime_percent, FLAGS_variable_dump_interval);
 
     static TimePercent get_utime_percent(void *) {
-        TimePercent tp = {flare::base::timeval_to_microseconds(g_ru_utime.get_value()),
-                          flare::base::timeval_to_microseconds(g_uptime.get_value())};
+        TimePercent tp = {flare::time_point::from_timeval(g_ru_utime.get_value()).to_unix_micros(),
+                          flare::time_point::from_timeval(g_uptime.get_value()).to_unix_micros()};
         return tp;
     }
 
@@ -804,13 +804,13 @@ namespace flare::variable {
     Window<PassiveStatus<TimePercent>, SERIES_IN_SECOND> g_utime_percent_second(
             "process_cpu_usage_user", &g_utime_percent, FLAGS_variable_dump_interval);
 
-// According to http://man7.org/linux/man-pages/man2/getrusage.2.html
-// Unsupported fields in linux:
-//   ru_ixrss
-//   ru_idrss
-//   ru_isrss 
-//   ru_nswap 
-//   ru_nsignals 
+    // According to http://man7.org/linux/man-pages/man2/getrusage.2.html
+    // Unsupported fields in linux:
+    //   ru_ixrss
+    //   ru_idrss
+    //   ru_isrss
+    //   ru_nswap
+    //   ru_nsignals
     VARIABLE_DEFINE_RUSAGE_FIELD(ru_inblock);
     VARIABLE_DEFINE_RUSAGE_FIELD(ru_oublock);
     VARIABLE_DEFINE_RUSAGE_FIELD(ru_nvcsw);

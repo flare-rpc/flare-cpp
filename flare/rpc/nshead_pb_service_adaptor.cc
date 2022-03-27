@@ -19,7 +19,7 @@
 #include <google/protobuf/descriptor.h>         // MethodDescriptor
 #include <google/protobuf/message.h>            // Message
 
-#include "flare/base/time.h"
+#include "flare/times/time.h"
 #include "flare/io/cord_buf.h"                         // flare::cord_buf
 
 #include "flare/rpc/controller.h"               // Controller
@@ -87,7 +87,7 @@ void SendNsheadPbResponse::Run() {
     // back response.
     if (saved_status) {
         saved_status->OnResponded(
-            !saved_failed, flare::base::cpuwide_time_us() - received_us);
+            !saved_failed, flare::get_current_time_micros() - received_us);
     }
     saved_done->Run();
 }

@@ -24,7 +24,7 @@
 #include "flare/fiber/internal/unstable.h"                    // fiber_timer_del
 #include "flare/base/fd_utility.h"                     // make_non_blocking
 #include "flare/base/fd_guard.h"                       // fd_guard
-#include "flare/base/time.h"                           // cpuwide_time_us
+#include "flare/times/time.h"                           // cpuwide_time_us
 #include "flare/memory/object_pool.h"                    // get_object
 #include "flare/log/logging.h"                        // CHECK
 #include "flare/base/profile.h"
@@ -519,7 +519,7 @@ int Socket::ResetFileDescriptor(int fd) {
     // MUST store `_fd' before adding itself into epoll device to avoid
     // race conditions with the callback function inside epoll
     _fd.store(fd, std::memory_order_release);
-    _reset_fd_real_us = flare::base::gettimeofday_us();
+    _reset_fd_real_us = flare::get_current_time_micros();
     if (!ValidFileDescriptor(fd)) {
         return 0;
     }
@@ -605,7 +605,7 @@ int Socket::Create(const SocketOptions& options, SocketId* id) {
     m->_preferred_index = -1;
     m->_hc_count = 0;
     CHECK(m->_read_buf.empty());
-    const int64_t cpuwide_now = flare::base::cpuwide_time_us();
+    const int64_t cpuwide_now = flare::get_current_time_micros();
     m->_last_readtime_us.store(cpuwide_now, std::memory_order_relaxed);
     m->reset_parsing_context(options.initial_parsing_context);
     m->_correlation_id = 0;
@@ -715,7 +715,7 @@ int Socket::WaitAndReset(int32_t expected_nref) {
         return -1;
     }
 
-    const int64_t cpuwide_now = flare::base::cpuwide_time_us();
+    const int64_t cpuwide_now = flare::get_current_time_micros();
     _last_readtime_us.store(cpuwide_now, std::memory_order_relaxed);
     _last_writetime_us.store(cpuwide_now, std::memory_order_relaxed);
     _logoff_flag.store(false, std::memory_order_relaxed);
@@ -881,7 +881,7 @@ void Socket::FeedbackCircuitBreaker(int error_code, int64_t latency_us) {
 
 int Socket::ReleaseReferenceIfIdle(int idle_seconds) {
     const int64_t last_active_us = last_active_time_us();
-    if (flare::base::cpuwide_time_us() - last_active_us <= idle_seconds * 1000000L) {
+    if (flare::get_current_time_micros() - last_active_us <= idle_seconds * 1000000L) {
         return 0;
     }
     LOG_IF(WARNING, FLAGS_log_idle_connection_close)
@@ -1637,7 +1637,7 @@ void* Socket::KeepWrite(void* void_arg) {
             // which may turn on _overcrowded to stop pending requests from
             // growing infinitely.
             const timespec duetime =
-                flare::base::milliseconds_from_now(WAIT_EPOLLOUT_TIMEOUT_MS);
+                    (flare::time_now() +flare::duration::milliseconds(WAIT_EPOLLOUT_TIMEOUT_MS)).to_timespec();
             const int rc = s->WaitEpollOut(s->fd(), pollin, &duetime);
             if (rc < 0 && errno != ETIMEDOUT) {
                 const int saved_errno = errno;
@@ -2062,7 +2062,7 @@ void Socket::DebugSocket(std::ostream& os, SocketId id) {
        << "\nnevent=" << ptr->_nevent.load(std::memory_order_relaxed)
        << "\nfd=" << fd
        << "\ntos=" << ptr->_tos
-       << "\nreset_fd_to_now=" << flare::base::gettimeofday_us() - ptr->_reset_fd_real_us << "us"
+       << "\nreset_fd_to_now=" << flare::get_current_time_micros() - ptr->_reset_fd_real_us << "us"
        << "\nremote_side=" << ptr->_remote_side
        << "\nlocal_side=" << ptr->_local_side
        << "\non_et_events=" << (void*)ptr->_on_edge_triggered_events
@@ -2073,7 +2073,7 @@ void Socket::DebugSocket(std::ostream& os, SocketId id) {
     if (messenger != NULL) {
         os << " (" << messenger->NameOfProtocol(preferred_index) << ')';
     }
-    const int64_t cpuwide_now = flare::base::cpuwide_time_us();
+    const int64_t cpuwide_now = flare::get_current_time_micros();
     os << "\nhc_count=" << ptr->_hc_count
        << "\navg_input_msg_size=" << ptr->_avg_msg_size
         // NOTE: We're assuming that flare::cord_buf.size() is thread-safe, it is now
@@ -2198,7 +2198,7 @@ int Socket::CheckHealth() {
         LOG(INFO) << "Checking " << *this;
     }
     const timespec duetime =
-        flare::base::milliseconds_from_now(FLAGS_health_check_timeout_ms);
+            (flare::time_now() + flare::duration::milliseconds(FLAGS_health_check_timeout_ms)).to_timespec();
     const int connected_fd = Connect(&duetime, NULL, NULL);
     if (connected_fd >= 0) {
         ::close(connected_fd);
@@ -2585,7 +2585,7 @@ void Socket::CancelUnwrittenBytes(size_t bytes) {
 }
 void Socket::AddOutputBytes(size_t bytes) {
     GetOrNewSharedPart()->out_size.fetch_add(bytes, std::memory_order_relaxed);
-    _last_writetime_us.store(flare::base::cpuwide_time_us(),
+    _last_writetime_us.store(flare::get_current_time_micros(),
                              std::memory_order_relaxed);
     CancelUnwrittenBytes(bytes);
 }

@@ -25,7 +25,7 @@
 #include <memory>                       // std::unique_ptr
 #include "flare/strings/string_splitter.h"                  // StringMultiSplitter
 #include "flare/strings/starts_with.h"
-#include "flare/base/time.h"
+#include "flare/times/time.h"
 #include "flare/base/endian.h"
 #include "flare/rpc/compress.h"
 #include "flare/rpc/errno.pb.h"                     // ENOSERVICE, ENOMETHOD
@@ -239,7 +239,7 @@ namespace flare::rpc {
         }
 
         void ProcessHttpResponse(InputMessageBase *msg) {
-            const int64_t start_parse_us = flare::base::cpuwide_time_us();
+            const int64_t start_parse_us = flare::get_current_time_micros();
             DestroyingPtr<HttpContext> imsg_guard(static_cast<HttpContext *>(msg));
             Socket *socket = imsg_guard->socket();
             uint64_t cid_value;
@@ -700,7 +700,7 @@ namespace flare::rpc {
             ControllerPrivateAccessor accessor(cntl);
             Span *span = accessor.span();
             if (span) {
-                span->set_start_send_us(flare::base::cpuwide_time_us());
+                span->set_start_send_us(flare::get_current_time_micros());
             }
             ConcurrencyRemover concurrency_remover(_method_status, cntl, _received_us);
             Socket *socket = accessor.get_sending_socket();
@@ -903,7 +903,7 @@ namespace flare::rpc {
             }
             if (span) {
                 // TODO: this is not sent
-                span->set_sent_us(flare::base::cpuwide_time_us());
+                span->set_sent_us(flare::get_current_time_micros());
             }
         }
 
@@ -1200,7 +1200,7 @@ namespace flare::rpc {
                 ::google::protobuf::Closure *done);
 
         void ProcessHttpRequest(InputMessageBase *msg) {
-            const int64_t start_parse_us = flare::base::cpuwide_time_us();
+            const int64_t start_parse_us = flare::get_current_time_micros();
             DestroyingPtr<HttpContext> imsg_guard(static_cast<HttpContext *>(msg));
             SocketUniquePtr socket_guard(imsg_guard->ReleaseSocket());
             Socket *socket = socket_guard.get();
@@ -1318,7 +1318,7 @@ namespace flare::rpc {
                 google::protobuf::Closure *done = new HttpResponseSenderAsDone(&resp_sender);
                 if (span) {
                     span->ResetServerSpanName(md->full_name());
-                    span->set_start_callback_us(flare::base::cpuwide_time_us());
+                    span->set_start_callback_us(flare::get_current_time_micros());
                     span->AsParent();
                 }
                 // `cntl', `req' and `res' will be deleted inside `done'
@@ -1437,7 +1437,7 @@ namespace flare::rpc {
                                     ConvertGrpcTimeoutToUS(req_header.GetHeader(common->GRPC_TIMEOUT));
                             if (timeout_value_us >= 0) {
                                 accessor.set_deadline_us(
-                                        flare::base::gettimeofday_us() + timeout_value_us);
+                                        flare::get_current_time_micros() + timeout_value_us);
                             }
                         }
                     } else {
@@ -1481,7 +1481,7 @@ namespace flare::rpc {
             imsg_guard.reset();  // optional, just release resourse ASAP
 
             if (span) {
-                span->set_start_callback_us(flare::base::cpuwide_time_us());
+                span->set_start_callback_us(flare::get_current_time_micros());
                 span->AsParent();
             }
             if (!FLAGS_usercode_in_pthread) {

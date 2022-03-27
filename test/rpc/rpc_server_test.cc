@@ -24,7 +24,7 @@
 #include <fstream>
 #include <gtest/gtest.h>
 #include <google/protobuf/descriptor.h>
-#include "flare/base/time.h"
+#include "flare/times/time.h"
 #include "flare/base/fd_guard.h"
 #include "flare/base/scoped_file.h"
 #include "flare/rpc/socket.h"
@@ -1069,7 +1069,7 @@ TEST_F(ServerTest, close_idle_connections) {
 }
 
 TEST_F(ServerTest, logoff_and_multiple_start) {
-    flare::base::stop_watcher timer;
+    flare::stop_watcher timer;
     flare::base::end_point ep;
     EchoServiceImpl echo_svc;
     flare::rpc::Server server;

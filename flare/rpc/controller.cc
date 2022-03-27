@@ -24,7 +24,7 @@
 #include "flare/fiber/internal/fiber.h"
 #include "flare/strings/str_format.h"
 #include "flare/log/logging.h"
-#include "flare/base/time.h"
+#include "flare/times/time.h"
 #include "flare/fiber/internal/fiber.h"
 #include "flare/fiber/internal/unstable.h"
 #include "flare/variable/all.h"
@@ -177,7 +177,7 @@ namespace flare::rpc {
 // they'll be set uniformly after this method is called.
     void Controller::ResetNonPods() {
         if (_span) {
-            Span::Submit(_span, flare::base::cpuwide_time_us());
+            Span::Submit(_span, flare::get_current_time_micros());
         }
         _error_text.clear();
         _remote_side = flare::base::end_point();
@@ -592,7 +592,7 @@ namespace flare::rpc {
             if (timeout_ms() >= 0) {
                 rc = fiber_timer_add(
                         &_timeout_id,
-                        flare::base::microseconds_to_timespec(_deadline_us),
+                        flare::time_point::from_unix_micros(_deadline_us).to_timespec(),
                         HandleTimeout, (void *) _correlation_id.value);
             }
             if (rc != 0) {
@@ -619,7 +619,7 @@ namespace flare::rpc {
             }
             ++_current_call.nretry;
             add_flag(FLAGS_BACKUP_REQUEST);
-            return IssueRPC(flare::base::gettimeofday_us());
+            return IssueRPC(flare::get_current_time_micros());
         } else if (_retry_policy ? _retry_policy->DoRetry(this)
                                  : DefaultRetryPolicy()->DoRetry(this)) {
             // The error must come from _current_call because:
@@ -646,7 +646,7 @@ namespace flare::rpc {
                 _http_response->Clear();
             }
             response_attachment().clear();
-            return IssueRPC(flare::base::gettimeofday_us());
+            return IssueRPC(flare::get_current_time_micros());
         }
 
         END_OF_RPC:
@@ -732,7 +732,7 @@ namespace flare::rpc {
 
             if (enable_circuit_breaker) {
                 sending_sock->FeedbackCircuitBreaker(error_code,
-                                                     flare::base::gettimeofday_us() - begin_time_us);
+                                                     flare::get_current_time_micros() - begin_time_us);
             }
         }
 
@@ -909,7 +909,7 @@ namespace flare::rpc {
                 // Join is not signalled when the done does not Run() and the done
                 // can't Run() because all backup threads are blocked by Join().
 
-                OnRPCEnd(flare::base::gettimeofday_us());
+                OnRPCEnd(flare::get_current_time_micros());
                 const bool destroy_cid_in_done = has_flag(FLAGS_DESTROY_CID_IN_DONE);
                 _done->Run();
                 // NOTE: Don't touch this Controller anymore, because it's likely to be
@@ -941,7 +941,7 @@ namespace flare::rpc {
     void Controller::DoneInBackupThread() {
         // OnRPCEnd for sync RPC is called in Channel::CallMethod to count in
         // latency of the context-switch.
-        OnRPCEnd(flare::base::gettimeofday_us());
+        OnRPCEnd(flare::get_current_time_micros());
         const CallId saved_cid = _correlation_id;
         const bool destroy_cid_in_done = has_flag(FLAGS_DESTROY_CID_IN_DONE);
         _done->Run();
@@ -952,7 +952,7 @@ namespace flare::rpc {
     }
 
     void Controller::SubmitSpan() {
-        const int64_t now = flare::base::cpuwide_time_us();
+        const int64_t now = flare::get_current_time_micros();
         _span->set_start_callback_us(now);
         if (_span->local_parent()) {
             _span->local_parent()->AsParent();
@@ -1144,12 +1144,12 @@ namespace flare::rpc {
         timespec *pabstime = NULL;
         if (_connect_timeout_ms > 0) {
             if (_deadline_us >= 0) {
-                connect_abstime = flare::base::microseconds_to_timespec(
+                connect_abstime = flare::time_point::from_unix_micros(
                         std::min(_connect_timeout_ms * 1000L + start_realtime_us,
-                                 _deadline_us));
+                                 _deadline_us)).to_timespec();
             } else {
-                connect_abstime = flare::base::microseconds_to_timespec(
-                        _connect_timeout_ms * 1000L + start_realtime_us);
+                connect_abstime = flare::time_point::from_unix_micros(
+                        _connect_timeout_ms * 1000L + start_realtime_us).to_timespec();
             }
             pabstime = &connect_abstime;
         }
@@ -1172,7 +1172,7 @@ namespace flare::rpc {
         }
         if (span) {
             if (_current_call.nretry == 0) {
-                span->set_sent_us(flare::base::cpuwide_time_us());
+                span->set_sent_us(flare::get_current_time_micros());
                 span->set_request_size(packet_size);
             } else {
                 span->Annotate("Requested(%lld) [%d]",

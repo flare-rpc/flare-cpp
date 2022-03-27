@@ -22,7 +22,7 @@
 
 #include "flare/container/linked_list.h"
 #include "flare/base/fast_rand.h"
-#include "flare/base/time.h"
+#include "flare/times/time.h"
 #include "flare/base/static_atomic.h"
 #include "flare/variable/passive_status.h"
 
@@ -64,13 +64,13 @@ namespace flare::variable {
         // interleaving status of threads even in highly contended situations.
         // You should also create the sample using a malloc() impl. that are
         // unlikely to contend, keeping interruptions minimal.
-        // `cpuwide_us' should be got from flare::base::cpuwide_time_us(). If it's far
+        // `cpuwide_us' should be got from flare::get_current_time_micros(). If it's far
         // from the timestamp updated by collecting thread(which basically means
         // the thread is not scheduled by OS in time), this sample is directly
         // destroy()-ed to avoid memory explosion.
         void submit(int64_t cpuwide_us);
 
-        void submit() { submit(flare::base::cpuwide_time_us()); }
+        void submit() { submit(flare::get_current_time_micros()); }
 
         // Implement this method to dump the sample into files and destroy it.
         // This method is called in a separate thread and can be blocked

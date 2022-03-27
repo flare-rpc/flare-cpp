@@ -20,7 +20,7 @@
 #include <google/protobuf/message.h>            // Message
 #include <gflags/gflags.h>
 
-#include "flare/base/time.h"
+#include "flare/times/time.h"
 #include "flare/io/cord_buf.h"                         // flare::cord_buf
 #include "flare/rpc/controller.h"               // Controller
 #include "flare/rpc/socket.h"                   // Socket
@@ -438,7 +438,7 @@ static void ParseResponse(Controller* cntl, flare::cord_buf& buf,
 }
 
 void ProcessUbrpcResponse(InputMessageBase* msg_base) {
-    const int64_t start_parse_us = flare::base::cpuwide_time_us();
+    const int64_t start_parse_us = flare::get_current_time_micros();
     DestroyingPtr<MostCommonMessage> msg(static_cast<MostCommonMessage*>(msg_base));
     Socket* socket = msg->socket();
     

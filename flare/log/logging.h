@@ -1469,7 +1469,7 @@ PLOG_IF(FATAL, FLARE_UNLIKELY((invocation) == -1))    \
 
 // Helper macro included by all *_EVERY_SECOND macros.
 #define FLARE_LOG_IF_EVERY_SECOND_IMPL(logifmacro, severity, condition) \
-    static ::flare::base::EveryManyUS FLARE_CONCAT(logeverys_, __LINE__)(1000); \
+    static ::flare::every_duration FLARE_CONCAT(logeverys_, __LINE__)(flare::duration::seconds(1)); \
     logifmacro(severity, (condition) && FLARE_CONCAT(logeverys_, __LINE__))
 
 // ===============================================================

@@ -25,7 +25,7 @@
 #include <gtest/gtest.h>
 #include <gflags/gflags.h>
 #include "flare/base/gperftools_profiler.h"
-#include "flare/base/time.h"
+#include "flare/times/time.h"
 #include "flare/base/fd_utility.h"
 #include "flare/strings/starts_with.h"
 #include "flare/fiber/internal/unstable.h"
@@ -405,10 +405,10 @@ TEST_F(SocketTest, single_threaded_connect_and_write) {
                 my_connect->MakeConnectDone();
                 ASSERT_LT(0, called); // serialized
             }
-            int64_t start_time = flare::base::gettimeofday_us();
+            int64_t start_time = flare::get_current_time_micros();
             while (s->fd() < 0) {
                 flare::fiber_sleep_for(1000);
-                ASSERT_LT(flare::base::gettimeofday_us(), start_time + 1000000L) << "Too long!";
+                ASSERT_LT(flare::get_current_time_micros(), start_time + 1000000L) << "Too long!";
             }
 #if defined(FLARE_PLATFORM_LINUX)
             ASSERT_EQ(0, fiber_fd_wait(s->fd(), EPOLLIN));
@@ -497,10 +497,10 @@ TEST_F(SocketTest, fail_to_connect) {
         ASSERT_EQ(-1, s->fd());
     }
     // KeepWrite is possibly still running.
-    int64_t start_time = flare::base::gettimeofday_us();
+    int64_t start_time = flare::get_current_time_micros();
     while (global_sock != NULL) {
         flare::fiber_sleep_for(1000);
-        ASSERT_LT(flare::base::gettimeofday_us(), start_time + 1000000L) << "Too long!";
+        ASSERT_LT(flare::get_current_time_micros(), start_time + 1000000L) << "Too long!";
     }
     ASSERT_EQ(-1, flare::rpc::Socket::Status(id));
     // The id is invalid.
@@ -561,10 +561,10 @@ TEST_F(SocketTest, not_health_check_when_nref_hits_0) {
     // is NULL(set in CheckRecycle::BeforeRecycle). Notice that you should
     // not spin until Socket::Status(id) becomes -1 and assert global_sock
     // to be NULL because invalidating id happens before calling BeforeRecycle.
-    const int64_t start_time = flare::base::gettimeofday_us();
+    const int64_t start_time = flare::get_current_time_micros();
     while (global_sock != NULL) {
         flare::fiber_sleep_for(1000);
-        ASSERT_LT(flare::base::gettimeofday_us(), start_time + 1000000L);
+        ASSERT_LT(flare::get_current_time_micros(), start_time + 1000000L);
     }
     ASSERT_EQ(-1, flare::rpc::Socket::Status(id));
 }
@@ -743,11 +743,11 @@ TEST_F(SocketTest, health_check) {
     ASSERT_EQ(0, messenger->AddHandler(pairs[0]));
     ASSERT_EQ(0, messenger->StartAccept(listening_fd, -1, NULL));
 
-    int64_t start_time = flare::base::gettimeofday_us();
+    int64_t start_time = flare::get_current_time_micros();
     nref = -1;
     while (flare::rpc::Socket::Status(id, &nref) != 0) {
         flare::fiber_sleep_for(1000);
-        ASSERT_LT(flare::base::gettimeofday_us(),
+        ASSERT_LT(flare::get_current_time_micros(),
                   start_time + kCheckInteval * 1000000L + 100000L/*100ms*/);
     }
     //ASSERT_EQ(2, nref);
@@ -764,10 +764,10 @@ TEST_F(SocketTest, health_check) {
     // SetFailed again, should reconnect and succeed soon.
     ASSERT_EQ(0, s->SetFailed());
     ASSERT_EQ(fd, s->fd());
-    start_time = flare::base::gettimeofday_us();
+    start_time = flare::get_current_time_micros();
     while (flare::rpc::Socket::Status(id) != 0) {
         flare::fiber_sleep_for(1000);
-        ASSERT_LT(flare::base::gettimeofday_us(), start_time + 1000000L);
+        ASSERT_LT(flare::get_current_time_micros(), start_time + 1000000L);
     }
     ASSERT_TRUE(global_sock);
 
@@ -788,10 +788,10 @@ TEST_F(SocketTest, health_check) {
 
     ASSERT_EQ(0, flare::rpc::Socket::SetFailed(id));
     // HealthCheckThread is possibly still addressing the Socket.
-    start_time = flare::base::gettimeofday_us();
+    start_time = flare::get_current_time_micros();
     while (global_sock != NULL) {
         flare::fiber_sleep_for(1000);
-        ASSERT_LT(flare::base::gettimeofday_us(), start_time + 1000000L);
+        ASSERT_LT(flare::get_current_time_micros(), start_time + 1000000L);
     }
     ASSERT_EQ(-1, flare::rpc::Socket::Status(id));
     // The id is invalid.
@@ -869,7 +869,7 @@ TEST_F(SocketTest, multi_threaded_write) {
         }
 
         flare::IOPortal dest;
-        const int64_t start_time = flare::base::gettimeofday_us();
+        const int64_t start_time = flare::get_current_time_micros();
         for (;;) {
             ssize_t nr = dest.append_from_file_descriptor(fds[0], 32768);
             if (nr < 0) {
@@ -880,7 +880,7 @@ TEST_F(SocketTest, multi_threaded_write) {
                     ASSERT_EQ(EAGAIN, errno) << flare_error();
                 }
                 flare::fiber_sleep_for(1000);
-                if (flare::base::gettimeofday_us() >= start_time + 2000000L) {
+                if (flare::get_current_time_micros() >= start_time + 2000000L) {
                     LOG(FATAL) << "Wait too long!";
                     break;
                 }
@@ -928,7 +928,7 @@ void *FastWriter(void *void_arg) {
         return NULL;
     }
     char buf[] = "hello reader side!";
-    int64_t begin_ts = flare::base::cpuwide_time_us();
+    int64_t begin_ts = flare::get_current_time_micros();
     int64_t nretry = 0;
     size_t c = 0;
     for (; c < arg->times; ++c) {
@@ -947,7 +947,7 @@ void *FastWriter(void *void_arg) {
             break;
         }
     }
-    int64_t end_ts = flare::base::cpuwide_time_us();
+    int64_t end_ts = flare::get_current_time_micros();
     int64_t total_time = end_ts - begin_ts;
     printf("total=%ld count=%ld nretry=%ld\n",
            (long) total_time * 1000 / c, (long) c, (long) nretry);
@@ -1013,7 +1013,7 @@ TEST_F(SocketTest, multi_threaded_write_perf) {
     ReaderArg reader_arg = {fds[0], 0};
     pthread_create(&rth, NULL, reader, &reader_arg);
 
-    flare::base::stop_watcher tm;
+    flare::stop_watcher tm;
     ProfilerStart("write.prof");
     const uint64_t old_nread = reader_arg.nread;
     tm.start();

@@ -27,7 +27,7 @@
 #include <gtest/gtest.h>
 #include "flare/fiber/internal/fiber.h"
 #include "flare/base/gperftools_profiler.h"
-#include "flare/base/time.h"
+#include "flare/times/time.h"
 #include "flare/base/fast_rand.h"
 #include "flare/container/doubly_buffered_data.h"
 #include "flare/rpc/describable.h"
@@ -336,7 +336,7 @@ namespace {
                 }
             }
             std::cout << "Time " << flare::base::class_name_str(*lb) << " ..." << std::endl;
-            flare::base::stop_watcher tm;
+            flare::stop_watcher tm;
             tm.start();
             for (size_t i = 0; i < FLARE_ARRAY_SIZE(th); ++i) {
                 ASSERT_EQ(0, pthread_create(&th[i], NULL, select_server, &sa));
@@ -1078,8 +1078,8 @@ namespace {
         ASSERT_EQ(0, server2.AddService(&service2, flare::rpc::SERVER_DOESNT_OWN_SERVICE));
         ASSERT_EQ(0, server2.Start(point2, NULL));
 
-        int64_t start_ms = flare::base::gettimeofday_ms();
-        while ((flare::base::gettimeofday_ms() - start_ms) < 3500) {
+        int64_t start_ms = flare::time_now().to_unix_millis();
+        while ((flare::time_now().to_unix_millis() - start_ms) < 3500) {
             Done *done = new Done;
             done->req.set_message("123");
             stub.Echo(&done->cntl, &done->req, &done->res, done);

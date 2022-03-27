@@ -150,7 +150,7 @@ namespace flare::fiber_internal {
             }
         }
         // Don't forget to add elapse of last wait_task.
-        current_task()->stat.cputime_ns += flare::base::cpuwide_time_ns() - _last_run_ns;
+        current_task()->stat.cputime_ns += flare::get_current_time_nanos() - _last_run_ns;
     }
 
     fiber_worker::fiber_worker(schedule_group *c)
@@ -159,7 +159,7 @@ namespace flare::fiber_internal {
             _sched_recursive_guard(0),
 #endif
             _cur_meta(nullptr), _control(c), _num_nosignal(0), _nsignaled(0),
-            _last_run_ns(flare::base::cpuwide_time_ns()),
+            _last_run_ns(flare::get_current_time_nanos()),
             _cumulated_cputime_ns(0), _nswitch(0), _last_context_remained(nullptr), _last_context_remained_arg(nullptr),
             _pl(nullptr), _main_stack(nullptr), _main_tid(0), _remote_num_nosignal(0), _remote_nsignaled(0) {
         _steal_seed = flare::base::fast_rand();
@@ -204,7 +204,7 @@ namespace flare::fiber_internal {
         m->fn = nullptr;
         m->arg = nullptr;
         m->local_storage = LOCAL_STORAGE_INIT;
-        m->cpuwide_start_ns = flare::base::cpuwide_time_ns();
+        m->cpuwide_start_ns = flare::get_current_time_nanos();
         m->stat = EMPTY_STAT;
         m->attr = FIBER_ATTR_TASKGROUP;
         m->tid = make_tid(*m->version_butex, slot);
@@ -213,7 +213,7 @@ namespace flare::fiber_internal {
         _cur_meta = m;
         _main_tid = m->tid;
         _main_stack = stk;
-        _last_run_ns = flare::base::cpuwide_time_ns();
+        _last_run_ns = flare::get_current_time_nanos();
         return 0;
     }
 
@@ -252,7 +252,7 @@ namespace flare::fiber_internal {
                 // considerable time because a single flare::variable::LatencyRecorder
                 // contains many variable.
                 g->_control->exposed_pending_time() <<
-                                                    (flare::base::cpuwide_time_ns() - m->cpuwide_start_ns) / 1000L;
+                                                    (flare::get_current_time_nanos() - m->cpuwide_start_ns) / 1000L;
             }
 
             // Not catch exceptions except ExitException which is for implementing
@@ -332,7 +332,7 @@ namespace flare::fiber_internal {
         if (__builtin_expect(!fn, 0)) {
             return EINVAL;
         }
-        const int64_t start_ns = flare::base::cpuwide_time_ns();
+        const int64_t start_ns = flare::get_current_time_nanos();
         const fiber_attribute using_attr = (attr ? *attr : FIBER_ATTR_NORMAL);
         flare::ResourceId<fiber_entity> slot;
         fiber_entity *m = flare::get_resource(&slot);
@@ -387,7 +387,7 @@ namespace flare::fiber_internal {
         if (__builtin_expect(!fn, 0)) {
             return EINVAL;
         }
-        const int64_t start_ns = flare::base::cpuwide_time_ns();
+        const int64_t start_ns = flare::get_current_time_nanos();
         const fiber_attribute using_attr = (attr ? *attr : FIBER_ATTR_NORMAL);
         flare::ResourceId<fiber_entity> slot;
         fiber_entity *m = flare::get_resource(&slot);
@@ -544,7 +544,7 @@ namespace flare::fiber_internal {
         void *saved_unique_user_ptr = tls_unique_user_ptr;
 
         fiber_entity *const cur_meta = g->_cur_meta;
-        const int64_t now = flare::base::cpuwide_time_ns();
+        const int64_t now = flare::get_current_time_nanos();
         const int64_t elp_ns = now - g->_last_run_ns;
         g->_last_run_ns = now;
         cur_meta->stat.cputime_ns += elp_ns;
@@ -714,7 +714,7 @@ namespace flare::fiber_internal {
         TimerThread::TaskId sleep_id;
         sleep_id = get_global_timer_thread()->schedule(
                 ready_to_run_from_timer_thread, void_args,
-                flare::base::microseconds_from_now(e.timeout_us));
+                (flare::time_now() + flare::duration::microseconds(e.timeout_us)).to_timespec());
 
         if (!sleep_id) {
             // fail to schedule timer, go back to previous thread.
@@ -902,7 +902,7 @@ namespace flare::fiber_internal {
                << " flags=" << attr.flags
                << " keytable_pool=" << attr.keytable_pool
                << "}\nhas_tls=" << has_tls
-               << "\nuptime_ns=" << flare::base::cpuwide_time_ns() - cpuwide_start_ns
+               << "\nuptime_ns=" << flare::get_current_time_nanos() - cpuwide_start_ns
                << "\ncputime_ns=" << stat.cputime_ns
                << "\nnswitch=" << stat.nswitch;
         }

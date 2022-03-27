@@ -111,7 +111,7 @@ namespace flare::variable {
     };
 
     Collector::Collector()
-            : _last_active_cpuwide_us(flare::base::cpuwide_time_us()), _created(false), _stop(false), _grab_thread(0),
+            : _last_active_cpuwide_us(flare::get_current_time_micros()), _created(false), _stop(false), _grab_thread(0),
               _dump_thread(0), _ngrab(0), _ndrop(0), _ndump(0) {
         pthread_mutex_init(&_dump_thread_mutex, NULL);
         pthread_cond_init(&_dump_thread_cond, NULL);
@@ -146,7 +146,7 @@ namespace flare::variable {
     static CollectorSpeedLimit g_null_speed_limit = VARIABLE_COLLECTOR_SPEED_LIMIT_INITIALIZER;
 
     void Collector::grab_thread() {
-        _last_active_cpuwide_us = flare::base::cpuwide_time_us();
+        _last_active_cpuwide_us = flare::get_current_time_micros();
         int64_t last_before_update_sl = _last_active_cpuwide_us;
 
         // This is the thread for collecting TLS submissions. User's callbacks are
@@ -243,7 +243,7 @@ namespace flare::variable {
                     pthread_cond_signal(&_dump_thread_cond);
                 }
             }
-            int64_t now = flare::base::cpuwide_time_us();
+            int64_t now = flare::get_current_time_micros();
             int64_t interval = now - last_before_update_sl;
             last_before_update_sl = now;
             for (GrapMap::iterator it = ngrab_map.begin();
@@ -252,19 +252,19 @@ namespace flare::variable {
                                    it->second, interval);
             }
 
-            now = flare::base::cpuwide_time_us();
+            now = flare::get_current_time_micros();
             // calcuate thread usage.
             busy_seconds += (now - _last_active_cpuwide_us) / 1000000.0;
             _last_active_cpuwide_us = now;
 
             // sleep for the next round.
             if (!_stop && abstime > now) {
-                timespec abstimespec = flare::base::microseconds_from_now(abstime - now);
+                timespec abstimespec = flare::time_point::from_unix_micros(abstime).to_timespec();
                 pthread_mutex_lock(&_sleep_mutex);
                 pthread_cond_timedwait(&_sleep_cond, &_sleep_mutex, &abstimespec);
                 pthread_mutex_unlock(&_sleep_mutex);
             }
-            _last_active_cpuwide_us = flare::base::cpuwide_time_us();
+            _last_active_cpuwide_us = flare::get_current_time_micros();
         }
         // make sure _stop is true, we may have other reasons to quit above loop
         {
@@ -298,7 +298,7 @@ namespace flare::variable {
         const size_t old_sampling_range = sl->sampling_range;
         if (!sl->ever_grabbed) {
             if (sl->first_sample_real_us) {
-                interval_us = flare::base::gettimeofday_us() - sl->first_sample_real_us;
+                interval_us = flare::get_current_time_micros() - sl->first_sample_real_us;
                 if (interval_us < 0) {
                     interval_us = 0;
                 }
@@ -342,7 +342,7 @@ namespace flare::variable {
             int before_add = sl->count_before_grabbed.fetch_add(
                     1, std::memory_order_relaxed);
             if (before_add == 0) {
-                sl->first_sample_real_us = flare::base::gettimeofday_us();
+                sl->first_sample_real_us = flare::get_current_time_micros();
             } else if (before_add >= FLAGS_variable_collector_expected_per_second) {
                 flare::base::get_leaky_singleton<Collector>()->wakeup_grab_thread();
             }
@@ -352,7 +352,7 @@ namespace flare::variable {
 
 // Call user's callbacks in this thread.
     void Collector::dump_thread() {
-        int64_t last_ns = flare::base::cpuwide_time_ns();
+        int64_t last_ns = flare::get_current_time_nanos();
 
         // vars
         double busy_seconds = 0;
@@ -375,10 +375,10 @@ namespace flare::variable {
             {
                 FLARE_SCOPED_LOCK(_dump_thread_mutex);
                 while (!_stop && _dump_root.next() == &_dump_root) {
-                    const int64_t now_ns = flare::base::cpuwide_time_ns();
+                    const int64_t now_ns = flare::get_current_time_nanos();
                     busy_seconds += (now_ns - last_ns) / 1000000000.0;
                     pthread_cond_wait(&_dump_thread_cond, &_dump_thread_mutex);
-                    last_ns = flare::base::cpuwide_time_ns();
+                    last_ns = flare::get_current_time_nanos();
                 }
                 if (_stop) {
                     break;

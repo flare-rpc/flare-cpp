@@ -2,7 +2,7 @@
 #include <gtest/gtest.h>
 #include <flare/fiber/fiber_latch.h>
 #include "flare/base/static_atomic.h"
-#include "flare/base/time.h"
+#include "flare/times/time.h"
 
 namespace {
     struct Arg {
@@ -33,16 +33,16 @@ namespace {
 
     TEST(FiberLatchTest, timed_wait) {
         flare::fiber_latch latcher;
-        auto ts = flare::base::milliseconds_from_now(100);
+        auto ts = (flare::time_now() + flare::duration::milliseconds(100)).to_timespec();
         int rc = latcher.timed_wait(&ts);
         ASSERT_EQ(rc, ETIMEDOUT);
         latcher.signal();
-        auto ts1 = flare::base::milliseconds_from_now(100);
+        auto ts1 = (flare::time_now() + flare::duration::milliseconds(100)).to_timespec();
         rc = latcher.timed_wait(&ts1);
         ASSERT_EQ(rc, 0);
         flare::fiber_latch latcher1;
         latcher1.signal();
-        auto ts2 = flare::base::milliseconds_from_now(1);
+        auto ts2 = (flare::time_now() + flare::duration::milliseconds(1)).to_timespec();
         rc = latcher.timed_wait(&ts2);
         ASSERT_EQ(rc, 0);
     }

@@ -24,7 +24,7 @@
 #include <gtest/gtest.h>
 #include <gflags/gflags.h>
 #include <google/protobuf/descriptor.h>
-#include "flare/base/time.h"
+#include "flare/times/time.h"
 #include "flare/log/logging.h"
 #include "flare/files/temp_file.h"
 #include "flare/rpc/socket.h"
@@ -441,9 +441,9 @@ namespace {
             EXPECT_EQ("received " + std::string(__FUNCTION__), res.message());
             if (short_connection) {
                 // Sleep to let `_messenger' detect `Socket' being `SetFailed'
-                const int64_t start_time = flare::base::gettimeofday_us();
+                const int64_t start_time = flare::get_current_time_micros();
                 while (_messenger.ConnectionCount() != 0) {
-                    EXPECT_LT(flare::base::gettimeofday_us(), start_time + 100000L/*100ms*/);
+                    EXPECT_LT(flare::get_current_time_micros(), start_time + 100000L/*100ms*/);
                     flare::fiber_sleep_for(1000);
                 }
             } else {
@@ -583,9 +583,9 @@ namespace {
             }
             if (short_connection) {
                 // Sleep to let `_messenger' detect `Socket' being `SetFailed'
-                const int64_t start_time = flare::base::gettimeofday_us();
+                const int64_t start_time = flare::get_current_time_micros();
                 while (_messenger.ConnectionCount() != 0) {
-                    EXPECT_LT(flare::base::gettimeofday_us(), start_time + 100000L/*100ms*/);
+                    EXPECT_LT(flare::get_current_time_micros(), start_time + 100000L/*100ms*/);
                     flare::fiber_sleep_for(1000);
                 }
             } else {
@@ -635,9 +635,9 @@ namespace {
             }
             if (short_connection) {
                 // Sleep to let `_messenger' detect `Socket' being `SetFailed'
-                const int64_t start_time = flare::base::gettimeofday_us();
+                const int64_t start_time = flare::get_current_time_micros();
                 while (_messenger.ConnectionCount() != 0) {
-                    EXPECT_LT(flare::base::gettimeofday_us(), start_time + 100000L/*100ms*/);
+                    EXPECT_LT(flare::get_current_time_micros(), start_time + 100000L/*100ms*/);
                     flare::fiber_sleep_for(1000);
                 }
             } else {
@@ -679,9 +679,9 @@ namespace {
 
             if (short_connection) {
                 // Sleep to let `_messenger' detect `Socket' being `SetFailed'
-                const int64_t start_time = flare::base::gettimeofday_us();
+                const int64_t start_time = flare::get_current_time_micros();
                 while (_messenger.ConnectionCount() != 0) {
-                    EXPECT_LT(flare::base::gettimeofday_us(), start_time + 100000L/*100ms*/);
+                    EXPECT_LT(flare::get_current_time_micros(), start_time + 100000L/*100ms*/);
                     flare::fiber_sleep_for(1000);
                 }
             } else {
@@ -728,9 +728,9 @@ namespace {
             }
             if (short_connection) {
                 // Sleep to let `_messenger' detect `Socket' being `SetFailed'
-                const int64_t start_time = flare::base::gettimeofday_us();
+                const int64_t start_time = flare::get_current_time_micros();
                 while (_messenger.ConnectionCount() != 0) {
-                    EXPECT_LT(flare::base::gettimeofday_us(), start_time + 100000L/*100ms*/);
+                    EXPECT_LT(flare::get_current_time_micros(), start_time + 100000L/*100ms*/);
                     flare::fiber_sleep_for(1000);
                 }
             } else {
@@ -789,9 +789,9 @@ namespace {
             }
             if (short_connection) {
                 // Sleep to let `_messenger' detect `Socket' being `SetFailed'
-                const int64_t start_time = flare::base::gettimeofday_us();
+                const int64_t start_time = flare::get_current_time_micros();
                 while (_messenger.ConnectionCount() != 0) {
-                    EXPECT_LT(flare::base::gettimeofday_us(), start_time + 100000L/*100ms*/);
+                    EXPECT_LT(flare::get_current_time_micros(), start_time + 100000L/*100ms*/);
                     flare::fiber_sleep_for(1000);
                 }
             } else {
@@ -920,7 +920,7 @@ namespace {
             CancelerArg carg = {10000, cid};
             ASSERT_EQ(0, pthread_create(&th, NULL, Canceler, &carg));
             req.set_sleep_us(carg.sleep_before_cancel_us * 2);
-            flare::base::stop_watcher tm;
+            flare::stop_watcher tm;
             tm.start();
             CallMethod(&channel, &cntl, &req, &res, async);
             tm.stop();
@@ -961,7 +961,7 @@ namespace {
             CancelerArg carg = {10000, cid};
             ASSERT_EQ(0, pthread_create(&th, NULL, Canceler, &carg));
             req.set_sleep_us(carg.sleep_before_cancel_us * 2);
-            flare::base::stop_watcher tm;
+            flare::stop_watcher tm;
             tm.start();
             CallMethod(&channel, &cntl, &req, &res, async);
             tm.stop();
@@ -1003,7 +1003,7 @@ namespace {
             CancelerArg carg = {10000, cid};
             ASSERT_EQ(0, pthread_create(&th, NULL, Canceler, &carg));
             req.set_sleep_us(carg.sleep_before_cancel_us * 2);
-            flare::base::stop_watcher tm;
+            flare::stop_watcher tm;
             tm.start();
             CallMethod(&channel, &cntl, &req, &res, async);
             tm.stop();
@@ -1090,9 +1090,9 @@ namespace {
             EXPECT_EQ("received " + std::string(__FUNCTION__), res.message());
             if (short_connection) {
                 // Sleep to let `_messenger' detect `Socket' being `SetFailed'
-                const int64_t start_time = flare::base::gettimeofday_us();
+                const int64_t start_time = flare::get_current_time_micros();
                 while (_messenger.ConnectionCount() != 0) {
-                    EXPECT_LT(flare::base::gettimeofday_us(), start_time + 100000L/*100ms*/);
+                    EXPECT_LT(flare::get_current_time_micros(), start_time + 100000L/*100ms*/);
                     flare::fiber_sleep_for(1000);
                 }
             } else {
@@ -1185,7 +1185,7 @@ namespace {
             req.set_message(__FUNCTION__);
             req.set_sleep_us(70000); // 70ms
             cntl.set_timeout_ms(17);
-            flare::base::stop_watcher tm;
+            flare::stop_watcher tm;
             tm.start();
             CallMethod(&channel, &cntl, &req, &res, async);
             tm.stop();
@@ -1217,7 +1217,7 @@ namespace {
             req.set_message(__FUNCTION__);
             cntl.set_timeout_ms(17);
             req.set_sleep_us(70000); // 70ms
-            flare::base::stop_watcher tm;
+            flare::stop_watcher tm;
             tm.start();
             CallMethod(&channel, &cntl, &req, &res, async);
             tm.stop();
@@ -1266,7 +1266,7 @@ namespace {
             test::EchoResponse res;
             req.set_message(__FUNCTION__);
             cntl.set_timeout_ms(30);
-            flare::base::stop_watcher tm;
+            flare::stop_watcher tm;
             tm.start();
             CallMethod(&channel, &cntl, &req, &res, async);
             tm.stop();
@@ -1305,7 +1305,7 @@ namespace {
             req.set_message(__FUNCTION__);
             cntl.set_timeout_ms(17);
             req.set_sleep_us(70000); // 70ms
-            flare::base::stop_watcher tm;
+            flare::stop_watcher tm;
             tm.start();
             CallMethod(&channel, &cntl, &req, &res, async);
             tm.stop();
@@ -1496,9 +1496,9 @@ namespace {
             EXPECT_EQ(0, cntl.ErrorCode()) << cntl.ErrorText();
             EXPECT_EQ("received " + std::string(__FUNCTION__), res.message());
             // Sleep to let `_messenger' detect `Socket' being `SetFailed'
-            const int64_t start_time = flare::base::gettimeofday_us();
+            const int64_t start_time = flare::get_current_time_micros();
             while (_messenger.ConnectionCount() != 0) {
-                EXPECT_LT(flare::base::gettimeofday_us(), start_time + 100000L/*100ms*/);
+                EXPECT_LT(flare::get_current_time_micros(), start_time + 100000L/*100ms*/);
                 flare::fiber_sleep_for(1000);
             }
 
@@ -1529,9 +1529,9 @@ namespace {
             EXPECT_EQ(0, cntl.ErrorCode()) << cntl.ErrorText();
             EXPECT_EQ("received " + std::string(__FUNCTION__), res.message());
             // Sleep to let `_messenger' detect `Socket' being `SetFailed'
-            const int64_t start_time = flare::base::gettimeofday_us();
+            const int64_t start_time = flare::get_current_time_micros();
             while (_messenger.ConnectionCount() != 0) {
-                EXPECT_LT(flare::base::gettimeofday_us(), start_time + 100000L/*100ms*/);
+                EXPECT_LT(flare::get_current_time_micros(), start_time + 100000L/*100ms*/);
                 flare::fiber_sleep_for(1000);
             }
             StopAndJoin();
@@ -1565,9 +1565,9 @@ namespace {
             ASSERT_EQ(0, cntl.sub(0)->ErrorCode());
 
             // Sleep to let `_messenger' detect `Socket' being `SetFailed'
-            const int64_t start_time = flare::base::gettimeofday_us();
+            const int64_t start_time = flare::get_current_time_micros();
             while (_messenger.ConnectionCount() != 0) {
-                EXPECT_LT(flare::base::gettimeofday_us(), start_time + 100000L/*100ms*/);
+                EXPECT_LT(flare::get_current_time_micros(), start_time + 100000L/*100ms*/);
                 flare::fiber_sleep_for(1000);
             }
             StopAndJoin();
@@ -1762,9 +1762,9 @@ namespace {
                 EXPECT_EQ(0, cntl.ErrorCode()) << cntl.ErrorText();
                 EXPECT_EQ(1, cntl.retried_count());
 
-                const int64_t start_time = flare::base::gettimeofday_us();
+                const int64_t start_time = flare::get_current_time_micros();
                 while (_messenger.ConnectionCount() != 0) {
-                    EXPECT_LT(flare::base::gettimeofday_us(), start_time + 100000L/*100ms*/);
+                    EXPECT_LT(flare::get_current_time_micros(), start_time + 100000L/*100ms*/);
                     flare::fiber_sleep_for(1000);
                 }
             } else {

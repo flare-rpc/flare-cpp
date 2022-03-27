@@ -20,7 +20,7 @@
 #include <google/protobuf/message.h>            // Message
 #include <gflags/gflags.h>
 
-#include "flare/base/time.h"
+#include "flare/times/time.h"
 #include "flare/io/cord_buf.h"                        // flare::cord_buf
 #include "flare/rpc/log.h"
 #include "flare/rpc/controller.h"                    // Controller
@@ -236,7 +236,7 @@ void ThriftClosure::DoRun() {
     ControllerPrivateAccessor accessor(&_controller);
     Span* span = accessor.span();
     if (span) {
-        span->set_start_send_us(flare::base::cpuwide_time_us());
+        span->set_start_send_us(flare::get_current_time_micros());
     }
     Socket* sock = accessor.get_sending_socket();
     MethodStatus* method_status = (server->options().thrift_service ? 
@@ -353,7 +353,7 @@ void ThriftClosure::DoRun() {
 
     if (span) {
         // TODO: this is not sent
-        span->set_sent_us(flare::base::cpuwide_time_us());
+        span->set_sent_us(flare::get_current_time_micros());
     }
 }
 
@@ -442,7 +442,7 @@ static void EndRunningCallMethodInPool(ThriftService* service,
 };
 
 void ProcessThriftRequest(InputMessageBase* msg_base) {
-    const int64_t start_parse_us = flare::base::cpuwide_time_us();
+    const int64_t start_parse_us = flare::get_current_time_micros();
 
     DestroyingPtr<MostCommonMessage> msg(static_cast<MostCommonMessage*>(msg_base));
     SocketUniquePtr socket_guard(msg->ReleaseSocket());
@@ -537,7 +537,7 @@ void ProcessThriftRequest(InputMessageBase* msg_base) {
 
     if (span) {
         span->ResetServerSpanName(cntl->thrift_method_name());
-        span->set_start_callback_us(flare::base::cpuwide_time_us());
+        span->set_start_callback_us(flare::get_current_time_micros());
         span->AsParent();
     }
 
@@ -556,7 +556,7 @@ void ProcessThriftRequest(InputMessageBase* msg_base) {
 }
 
 void ProcessThriftResponse(InputMessageBase* msg_base) {
-    const int64_t start_parse_us = flare::base::cpuwide_time_us();
+    const int64_t start_parse_us = flare::get_current_time_micros();
     DestroyingPtr<MostCommonMessage> msg(static_cast<MostCommonMessage*>(msg_base));
     
     // Fetch correlation id that we saved before in `PacThriftRequest'

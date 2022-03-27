@@ -18,7 +18,7 @@
 #include <gtest/gtest.h>
 #include <gflags/gflags.h>
 #include "flare/base/static_atomic.h"
-#include "flare/base/time.h"
+#include "flare/times/time.h"
 #include "flare/log/logging.h"
 #include "flare/base/thread.h"
 #include <flare/fiber/internal/waitable_event.h>

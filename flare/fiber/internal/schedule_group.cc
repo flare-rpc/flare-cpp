@@ -324,7 +324,7 @@ int schedule_group::_destroy_group(fiber_worker* g) {
     if (erased) {
         get_global_timer_thread()->schedule(
             delete_task_group, g,
-            flare::base::microseconds_from_now(FLAGS_task_group_delete_delay * 1000000L));
+            (flare::time_now() + flare::duration::seconds(FLAGS_task_group_delete_delay )).to_timespec());
     }
     return 0;
 }

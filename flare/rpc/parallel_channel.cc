@@ -19,7 +19,7 @@
 #include "flare/fiber/internal/fiber.h"                  // fiber_token_xx
 #include "flare/fiber/internal/unstable.h"                 // fiber_timer_add
 #include "flare/base/static_atomic.h"
-#include "flare/base/time.h"
+#include "flare/times/time.h"
 #include "flare/base/profile.h"
 #include "flare/rpc/details/controller_private_accessor.h"
 #include "flare/rpc/parallel_channel.h"
@@ -386,7 +386,7 @@ public:
         // NOTE: we don't destroy self here, controller destroys this done in
         // Reset() so that user can access sub controllers before Reset().
         if (user_done) {
-            _cntl->OnRPCEnd(flare::base::gettimeofday_us());
+            _cntl->OnRPCEnd(flare::get_current_time_micros());
             user_done->Run();
         }
         CHECK_EQ(0, fiber_token_unlock_and_destroy(saved_cid));
@@ -555,7 +555,7 @@ void ParallelChannel::CallMethod(
     google::protobuf::Message* response,
     google::protobuf::Closure* done) {
     Controller* cntl = static_cast<Controller*>(cntl_base);
-    cntl->OnRPCBegin(flare::base::gettimeofday_us());
+    cntl->OnRPCBegin(flare::get_current_time_micros());
     // Make sure cntl->sub_count() always equal #sub-channels
     const int nchan = _chans.size();
     cntl->_pchan_sub_count = nchan;
@@ -664,7 +664,7 @@ void ParallelChannel::CallMethod(
         // Setup timer for RPC timetout
         const int rc = fiber_timer_add(
             &cntl->_timeout_id,
-            flare::base::microseconds_to_timespec(cntl->_deadline_us),
+            flare::duration::microseconds(cntl->_deadline_us).to_timespec(),
             HandleTimeout, (void*)cid.value);
         if (rc != 0) {
             cntl->SetFailed(rc, "Fail to add timer");
@@ -692,7 +692,7 @@ void ParallelChannel::CallMethod(
     }
     if (done == NULL) {
         Join(cid);
-        cntl->OnRPCEnd(flare::base::gettimeofday_us());
+        cntl->OnRPCEnd(flare::get_current_time_micros());
     }
     return;
 

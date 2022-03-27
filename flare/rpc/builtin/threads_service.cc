@@ -16,7 +16,7 @@
 // under the License.
 
 #include <inttypes.h>
-#include "flare/base/time.h"
+#include "flare/times/time.h"
 #include "flare/log/logging.h"
 #include "flare/base/popen.h"
 #include "flare/rpc/controller.h"           // Controller
@@ -37,7 +37,7 @@ void ThreadsService::default_method(::google::protobuf::RpcController* cntl_base
     flare::cord_buf& resp = cntl->response_attachment();
 
     std::string cmd = flare::string_printf("pstack %lld", (long long)getpid());
-    flare::base::stop_watcher tm;
+    flare::stop_watcher tm;
     tm.start();
     flare::cord_buf_builder pstack_output;
     const int rc = flare::base::read_command_output(pstack_output, cmd.c_str());

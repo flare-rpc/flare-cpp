@@ -19,7 +19,7 @@
 #include <inttypes.h>
 #include <google/protobuf/descriptor.h>
 #include <gflags/gflags.h>
-#include "flare/base/time.h"                              // milliseconds_from_now
+#include "flare/times/time.h"                              // milliseconds_from_now
 #include "flare/log/logging.h"
 #include "flare/strings/trim.h"
 #include "flare/hash/murmurhash3.h"
@@ -365,7 +365,7 @@ namespace flare::rpc {
                              const google::protobuf::Message *request,
                              google::protobuf::Message *response,
                              google::protobuf::Closure *done) {
-        const int64_t start_send_real_us = flare::base::gettimeofday_us();
+        const int64_t start_send_real_us = flare::get_current_time_micros();
         Controller *cntl = static_cast<Controller *>(controller_base);
         cntl->OnRPCBegin(start_send_real_us);
         // Override max_retry first to reset the range of correlation_id
@@ -421,7 +421,7 @@ namespace flare::rpc {
         cntl->set_used_by_rpc();
 
         if (cntl->_sender == NULL && IsTraceable(Span::tls_parent())) {
-            const int64_t start_send_us = flare::base::cpuwide_time_us();
+            const int64_t start_send_us = flare::get_current_time_micros();
             const std::string *method_name = NULL;
             if (_get_method_name) {
                 method_name = &_get_method_name(method, cntl);
@@ -505,8 +505,7 @@ namespace flare::rpc {
             }
             const int rc = fiber_timer_add(
                     &cntl->_timeout_id,
-                    flare::base::microseconds_to_timespec(
-                            cntl->backup_request_ms() * 1000L + start_send_real_us),
+                    (flare::duration::milliseconds(cntl->backup_request_ms())  + flare::duration::microseconds(start_send_real_us)).to_timespec(),
                     HandleBackupRequest, (void *) correlation_id.value);
             if (FLARE_UNLIKELY(rc != 0)) {
                 cntl->SetFailed(rc, "Fail to add timer for backup request");
@@ -519,7 +518,7 @@ namespace flare::rpc {
             cntl->_deadline_us = cntl->timeout_ms() * 1000L + start_send_real_us;
             const int rc = fiber_timer_add(
                     &cntl->_timeout_id,
-                    flare::base::microseconds_to_timespec(cntl->_deadline_us),
+                    flare::duration::microseconds(cntl->_deadline_us).to_timespec(),
                     HandleTimeout, (void *) correlation_id.value);
             if (FLARE_UNLIKELY(rc != 0)) {
                 cntl->SetFailed(rc, "Fail to add timer for timeout");
@@ -538,7 +537,7 @@ namespace flare::rpc {
             if (cntl->_span) {
                 cntl->SubmitSpan();
             }
-            cntl->OnRPCEnd(flare::base::gettimeofday_us());
+            cntl->OnRPCEnd(flare::get_current_time_micros());
         }
     }
 

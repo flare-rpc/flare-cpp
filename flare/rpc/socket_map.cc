@@ -19,7 +19,7 @@
 #include <gflags/gflags.h>
 #include <map>
 #include "flare/fiber/internal/fiber.h"
-#include "flare/base/time.h"
+#include "flare/times/time.h"
 #include "flare/base/scoped_lock.h"
 #include "flare/log/logging.h"
 #include "flare/rpc/log.h"
@@ -286,7 +286,7 @@ void SocketMap::RemoveInternal(const SocketMapKey& key,
             : _options.defer_close_second;
         if (!remove_orphan && defer_close_second > 0) {
             // Start count down on this Socket 
-            sc->no_ref_us = flare::base::cpuwide_time_us();
+            sc->no_ref_us = flare::get_current_time_micros();
         } else {
             Socket* const s = sc->socket;
             _map.erase(key);
@@ -336,7 +336,7 @@ void SocketMap::List(std::vector<flare::base::end_point>* pts) {
 
 void SocketMap::ListOrphans(int64_t defer_us, std::vector<SocketMapKey>* out) {
     out->clear();
-    const int64_t now = flare::base::cpuwide_time_us();
+    const int64_t now = flare::get_current_time_micros();
     FLARE_SCOPED_LOCK(_mutex);
     for (Map::iterator it = _map.begin(); it != _map.end(); ++it) {
         SingleConnection& sc = it->second;

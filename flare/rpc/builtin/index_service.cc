@@ -18,7 +18,7 @@
 
 #include <gflags/gflags.h>                  // DECLARE_xxx
 #include <google/protobuf/descriptor.h>
-#include "flare/base/time.h"                      // gettimeofday_us
+#include "flare/times/time.h"                      // gettimeofday_us
 #include "flare/rpc/server.h"                    // Server
 #include "flare/rpc/builtin/index_service.h"
 #include "flare/rpc/builtin/status_service.h"
@@ -117,7 +117,7 @@ void IndexService::default_method(::google::protobuf::RpcController* controller,
            << SP << Path("/rpcz/stats", html_addr) << " : Statistics of rpcz" << NL;
 
         std::ostringstream tmp_oss;
-        const int64_t seconds_before = flare::base::gettimeofday_us() - 30 * 1000000L;
+        const int64_t seconds_before = flare::get_current_time_micros() - 30 * 1000000L;
         tmp_oss << "/rpcz?" << TIME_STR << '=';
         PrintRealDateTime(tmp_oss, seconds_before, true);
         os << SP << Path(tmp_oss.str().c_str(), html_addr)

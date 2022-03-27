@@ -23,7 +23,7 @@
 #include <gtest/gtest.h>
 #include <pthread.h>
 #include "flare/base/gperftools_profiler.h"
-#include "flare/base/time.h"
+#include "flare/times/time.h"
 #include "flare/base/fd_utility.h"
 #include "flare/log/logging.h"
 #include "flare/fiber/internal/schedule_group.h"
@@ -306,7 +306,7 @@ namespace {
         }
 
         ProfilerStart("ping_pong.prof");
-        flare::base::stop_watcher tm;
+        flare::stop_watcher tm;
         tm.start();
 
         for (size_t i = 0; i < NEPOLL; ++i) {
@@ -471,7 +471,7 @@ namespace {
 #endif
         fiber_id_t th;
         ASSERT_EQ(0, fiber_start_urgent(&th, nullptr, close_the_fd, &fds[1]));
-        flare::base::stop_watcher tm;
+        flare::stop_watcher tm;
         tm.start();
 #if defined(FLARE_PLATFORM_LINUX)
         ASSERT_EQ(0, fiber_fd_wait(fds[0], EPOLLIN | EPOLLET));
@@ -485,7 +485,7 @@ namespace {
     }
 
     void *wait_for_the_fd(void *arg) {
-        timespec ts = flare::base::milliseconds_from_now(50);
+        timespec ts = (flare::time_now() + flare::duration::milliseconds(50)).to_timespec();
 #if defined(FLARE_PLATFORM_LINUX)
         fiber_fd_timedwait(*(int*)arg, EPOLLIN, &ts);
 #elif defined(FLARE_PLATFORM_OSX)
@@ -501,7 +501,7 @@ namespace {
         ASSERT_EQ(0, pthread_create(&th, nullptr, wait_for_the_fd, &fds[0]));
         fiber_id_t bth;
         ASSERT_EQ(0, fiber_start_urgent(&bth, nullptr, wait_for_the_fd, &fds[0]));
-        flare::base::stop_watcher tm;
+        flare::stop_watcher tm;
         tm.start();
         ASSERT_EQ(0, pthread_join(th, nullptr));
         ASSERT_EQ(0, fiber_join(bth, nullptr));
@@ -516,7 +516,7 @@ namespace {
         ASSERT_EQ(0, pipe(fds));
         fiber_id_t bth;
         ASSERT_EQ(0, fiber_start_urgent(&bth, nullptr, wait_for_the_fd, &fds[0]));
-        flare::base::stop_watcher tm;
+        flare::stop_watcher tm;
         tm.start();
         ASSERT_EQ(0, fiber_fd_close(fds[0]));
         ASSERT_EQ(0, fiber_join(bth, nullptr));

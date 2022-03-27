@@ -28,7 +28,7 @@
 #include "flare/base/profile.h"                            // FLARE_ARRAY_SIZE
 #include "flare/base/fd_guard.h"                          // fd_guard
 #include "flare/log/logging.h"                           // CHECK
-#include "flare/base/time.h"
+#include "flare/times/time.h"
 #include "flare/base/class_name.h"
 #include "flare/strings/str_format.h"
 #include "flare/rpc/log.h"
@@ -157,7 +157,7 @@ namespace flare::rpc {
     }
 
     static timeval GetUptime(void *arg/*start_time*/) {
-        return flare::base::microseconds_to_timeval(flare::base::cpuwide_time_us() - (intptr_t) arg);
+        return flare::duration::microseconds(flare::get_current_time_micros() - (intptr_t) arg).to_timeval();
     }
 
     static void PrintStartTime(std::ostream &os, void *arg) {
@@ -261,7 +261,7 @@ namespace flare::rpc {
     }
 
     void *Server::UpdateDerivedVars(void *arg) {
-        const int64_t start_us = flare::base::cpuwide_time_us();
+        const int64_t start_us = flare::get_current_time_micros();
 
         Server *server = static_cast<Server *>(arg);
         const std::string prefix = server->ServerPrefix();
@@ -313,10 +313,10 @@ namespace flare::rpc {
         }
 #endif
 
-        int64_t last_time = flare::base::gettimeofday_us();
+        int64_t last_time = flare::get_current_time_micros();
         int consecutive_nosleep = 0;
         while (1) {
-            const int64_t sleep_us = 1000000L + last_time - flare::base::gettimeofday_us();
+            const int64_t sleep_us = 1000000L + last_time - flare::get_current_time_micros();
             if (sleep_us < 1000L) {
                 if (++consecutive_nosleep >= 2) {
                     consecutive_nosleep = 0;
@@ -329,7 +329,7 @@ namespace flare::rpc {
                     return nullptr;
                 }
             }
-            last_time = flare::base::gettimeofday_us();
+            last_time = flare::get_current_time_micros();
 
             // Update stats of accepted sockets.
             if (server->_am) {
@@ -338,7 +338,7 @@ namespace flare::rpc {
             if (server->_internal_am) {
                 server->_internal_am->ListConnections(&internal_conns);
             }
-            const int64_t now_ms = flare::base::cpuwide_time_ms();
+            const int64_t now_ms = flare::time_now().to_unix_millis();
             for (size_t i = 0; i < conns.size(); ++i) {
                 SocketUniquePtr ptr;
                 if (Socket::Address(conns[i], &ptr) == 0) {

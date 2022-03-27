@@ -20,7 +20,7 @@
 #include <algorithm>                         // std::sort
 #include "flare/base/static_atomic.h"
 #include <gtest/gtest.h>
-#include "flare/base/time.h"
+#include "flare/times/time.h"
 #include "flare/base/scoped_lock.h"
 #include "flare/log/logging.h"
 #include "flare/fiber/internal/fiber.h"

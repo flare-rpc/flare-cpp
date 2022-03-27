@@ -22,7 +22,7 @@
 #ifndef  FLARE_FIBER_INTERNAL_FIBER_COND_H_
 #define  FLARE_FIBER_INTERNAL_FIBER_COND_H_
 
-#include "flare/base/time.h"
+#include "flare/times/time.h"
 #include "flare/fiber/internal/mutex.h"
 
 __BEGIN_DECLS

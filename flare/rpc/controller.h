@@ -45,7 +45,7 @@
 #include "flare/rpc/progressive_reader.h"           // ProgressiveReader
 #include "flare/rpc/grpc.h"
 #include "flare/rpc/kvmap.h"
-#include "flare/base/time.h"
+#include "flare/times/time.h"
 
 // EAUTH is defined in MAC
 #ifndef EAUTH
@@ -197,7 +197,7 @@ public:
     // it gets queue time before server processes the RPC call.
     int64_t latency_us() const {
         if (_end_time_us == UNSET_MAGIC_NUM) {
-            return flare::base::cpuwide_time_us() - _begin_time_us;
+            return flare::get_current_time_micros() - _begin_time_us;
         }
         return _end_time_us - _begin_time_us;
     }

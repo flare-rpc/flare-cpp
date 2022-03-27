@@ -25,7 +25,7 @@
 #include "flare/base/scoped_lock.h"
 #include "flare/base/thread.h"
 #include "flare/strings/str_format.h"
-#include "flare/base/time.h"
+#include "flare/times/time.h"
 #include "flare/log/logging.h"
 #include "flare/memory/object_pool.h"
 #include "flare/base/fast_rand.h"
@@ -207,7 +207,7 @@ namespace flare::rpc {
     }
 
     void Span::Annotate(const char *fmt, ...) {
-        const int64_t anno_time = flare::base::cpuwide_time_us() + _base_real_us;
+        const int64_t anno_time = flare::get_current_time_micros() + _base_real_us;
         flare::string_appendf(&_info, FLARE_RPC_SPAN_INFO_SEP "%lld ",
                                     (long long) anno_time);
         va_list ap;
@@ -217,21 +217,21 @@ namespace flare::rpc {
     }
 
     void Span::Annotate(const char *fmt, va_list args) {
-        const int64_t anno_time = flare::base::cpuwide_time_us() + _base_real_us;
+        const int64_t anno_time = flare::get_current_time_micros() + _base_real_us;
         flare::string_appendf(&_info, FLARE_RPC_SPAN_INFO_SEP "%lld ",
                                     (long long) anno_time);
         flare::string_vappendf(&_info, fmt, args);
     }
 
     void Span::Annotate(const std::string &info) {
-        const int64_t anno_time = flare::base::cpuwide_time_us() + _base_real_us;
+        const int64_t anno_time = flare::get_current_time_micros() + _base_real_us;
         flare::string_appendf(&_info, FLARE_RPC_SPAN_INFO_SEP "%lld ",
                                     (long long) anno_time);
         _info.append(info);
     }
 
     void Span::AnnotateCStr(const char *info, size_t length) {
-        const int64_t anno_time = flare::base::cpuwide_time_us() + _base_real_us;
+        const int64_t anno_time = flare::get_current_time_micros() + _base_real_us;
         flare::string_appendf(&_info, FLARE_RPC_SPAN_INFO_SEP "%lld ",
                                     (long long) anno_time);
         if (length <= 0) {
@@ -672,7 +672,7 @@ namespace flare::rpc {
         }
 
         // Remove old spans
-        const int64_t now = flare::base::gettimeofday_us();
+        const int64_t now = flare::get_current_time_micros();
         if (now > g_last_delete_tm + SPAN_DELETE_INTERVAL_US) {
             g_last_delete_tm = now;
             leveldb::Status st = db->RemoveSpansBefore(

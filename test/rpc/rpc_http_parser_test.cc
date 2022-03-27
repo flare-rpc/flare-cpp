@@ -18,7 +18,7 @@
 #include <gtest/gtest.h>
 #include <iostream>
 
-#include "flare/base/time.h"
+#include "flare/times/time.h"
 #include "flare/log/logging.h"
 #include "flare/rpc/details/http_parser.h"
 #include "flare/rpc/builtin/common.h"  // AppendFileName
@@ -35,7 +35,7 @@ protected:
 
 TEST_F(HttpParserTest, init_perf) {
     const size_t loops = 10000000;
-    flare::base::stop_watcher timer;
+    flare::stop_watcher timer;
     timer.start();
     for (size_t i = 0; i < loops; ++i) {
         http_parser parser;

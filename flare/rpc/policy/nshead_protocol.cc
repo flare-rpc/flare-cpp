@@ -19,7 +19,7 @@
 #include <google/protobuf/descriptor.h>         // MethodDescriptor
 #include <google/protobuf/message.h>            // Message
 #include <gflags/gflags.h>
-#include "flare/base/time.h"
+#include "flare/times/time.h"
 #include "flare/io/cord_buf.h"                         // flare::cord_buf
 #include "flare/rpc/log.h"
 #include "flare/rpc/controller.h"               // Controller
@@ -70,7 +70,7 @@ void NsheadClosure::Run() {
     ControllerPrivateAccessor accessor(&_controller);
     Span* span = accessor.span();
     if (span) {
-        span->set_start_send_us(flare::base::cpuwide_time_us());
+        span->set_start_send_us(flare::get_current_time_micros());
     }
     Socket* sock = accessor.get_sending_socket();
     MethodStatus* method_status = _server->options().nshead_service->_status;
@@ -123,7 +123,7 @@ void NsheadClosure::Run() {
     }
     if (span) {
         // TODO: this is not sent
-        span->set_sent_us(flare::base::cpuwide_time_us());
+        span->set_sent_us(flare::get_current_time_micros());
     }
 }
 
@@ -202,7 +202,7 @@ static void EndRunningCallMethodInPool(NsheadService* service,
 };
 
 void ProcessNsheadRequest(InputMessageBase* msg_base) {
-    const int64_t start_parse_us = flare::base::cpuwide_time_us();
+    const int64_t start_parse_us = flare::get_current_time_micros();
 
     DestroyingPtr<MostCommonMessage> msg(static_cast<MostCommonMessage*>(msg_base));
     SocketUniquePtr socket_guard(msg->ReleaseSocket());
@@ -310,7 +310,7 @@ void ProcessNsheadRequest(InputMessageBase* msg_base) {
     msg.reset();  // optional, just release resourse ASAP
     if (span) {
         span->ResetServerSpanName(service->_cached_name);
-        span->set_start_callback_us(flare::base::cpuwide_time_us());
+        span->set_start_callback_us(flare::get_current_time_micros());
         span->AsParent();
     }
     if (!FLAGS_usercode_in_pthread) {
@@ -326,7 +326,7 @@ void ProcessNsheadRequest(InputMessageBase* msg_base) {
 }
 
 void ProcessNsheadResponse(InputMessageBase* msg_base) {
-    const int64_t start_parse_us = flare::base::cpuwide_time_us();
+    const int64_t start_parse_us = flare::get_current_time_micros();
     DestroyingPtr<MostCommonMessage> msg(static_cast<MostCommonMessage*>(msg_base));
     
     // Fetch correlation id that we saved before in `PackNsheadRequest'

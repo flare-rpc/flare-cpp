@@ -22,7 +22,7 @@
 #include "flare/strings/utility.h"
 #include "flare/strings/string_splitter.h"
 #include "flare/base/profile.h"
-#include "flare/base/time.h"
+#include "flare/times/time.h"
 #include "flare/rpc/closure_guard.h"        // ClosureGuard
 #include "flare/rpc/controller.h"           // Controller
 #include "flare/rpc/builtin/common.h"
@@ -562,7 +562,7 @@ namespace flare::rpc {
                     cntl->http_request().uri().GetQuery(TIME_STR);
             int64_t start_tm;
             if (time_str == NULL) {
-                start_tm = flare::base::gettimeofday_us();
+                start_tm = flare::get_current_time_micros();
             } else {
                 start_tm = ParseDateTime(*time_str);
                 if (start_tm < 0) {

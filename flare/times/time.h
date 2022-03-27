@@ -53,6 +53,10 @@ namespace flare {
     // this function hundreds of thousands of times per second).
     int64_t get_current_time_nanos();
 
+    inline int64_t get_current_time_micros() {
+        return get_current_time_nanos() / 1000;
+    }
+
     // sleep_for()
     //
     // Sleeps for the specified duration, expressed as an `flare::duration`.
@@ -953,6 +957,87 @@ namespace flare {
         return static_cast<int>(offset_seconds / 60);
 #endif
     }
+
+    // ----------------------------------------
+    // Control frequency of operations.
+    // ----------------------------------------
+    // Example:
+    //   EveryManyUS every_1s(1000000L);
+    //   while (1) {
+    //       ...
+    //       if (every_1s) {
+    //           // be here at most once per second
+    //       }
+    //   }
+    class every_duration {
+    public:
+        explicit every_duration(duration d)
+                : _last_time(time_now()), _interval(d) {}
+
+        operator bool() {
+            const auto now = time_now();
+            if (now < _last_time + _interval) {
+                return false;
+            }
+            _last_time = now;
+            return true;
+        }
+
+    private:
+        time_point _last_time;
+        const duration _interval;
+    };
+
+    // ---------------
+    //  Count elapses
+    // ---------------
+    class stop_watcher {
+    public:
+
+        enum TimerType {
+            STARTED,
+        };
+
+        stop_watcher() : _stop(0), _start(0) {}
+
+        explicit stop_watcher(const TimerType) {
+            start();
+        }
+
+        // Start this timer
+        void start() {
+            _start = get_current_time_nanos();
+            _stop = _start;
+        }
+
+        // Stop this timer
+        void stop() {
+            _stop = get_current_time_nanos();
+        }
+
+        // Get the elapse from start() to stop(), in various units.
+        [[nodiscard]] constexpr duration elapsed() const { return duration::nanoseconds(_stop - _start); }
+
+        [[nodiscard]] constexpr int64_t n_elapsed() const { return _stop - _start; }
+
+        [[nodiscard]] constexpr int64_t u_elapsed() const { return n_elapsed() / 1000L; }
+
+        [[nodiscard]] constexpr int64_t m_elapsed() const { return u_elapsed() / 1000L; }
+
+        [[nodiscard]] constexpr int64_t s_elapsed() const { return m_elapsed() / 1000L; }
+
+        [[nodiscard]] constexpr double n_elapsed(double) const { return (double) (_stop - _start); }
+
+        [[nodiscard]] constexpr double u_elapsed(double) const { return (double) n_elapsed() / 1000.0; }
+
+        [[nodiscard]] constexpr double m_elapsed(double) const { return (double) u_elapsed() / 1000.0; }
+
+        [[nodiscard]] constexpr double s_elapsed(double) const { return (double) m_elapsed() / 1000.0; }
+
+    private:
+        int64_t _stop;
+        int64_t _start;
+    };
 
 }  // namespace flare
 

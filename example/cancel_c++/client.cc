@@ -19,7 +19,7 @@
 
 #include <gflags/gflags.h>
 #include "flare/log/logging.h"
-#include "flare/base/time.h"
+#include "flare/times/time.h"
 #include <flare/rpc/channel.h>
 #include "echo.pb.h"
 
@@ -88,7 +88,7 @@ int main(int argc, char* argv[]) {
         CancelRPC done1(id2);
         CancelRPC done2(id1);
         
-        flare::base::stop_watcher tm;
+        flare::stop_watcher tm;
         tm.start();
         // Send 2 async calls and join them. They will cancel each other in
         // their done which is run before the RPC being Join()-ed. Canceling

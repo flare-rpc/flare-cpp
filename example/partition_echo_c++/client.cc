@@ -22,7 +22,7 @@
 #include <flare/fiber/internal/fiber.h>
 #include "flare/log/logging.h"
 #include <flare/base/strings.h>
-#include "flare/base/time.h"
+#include "flare/times/time.h"
 #include <flare/rpc/partition_channel.h>
 #include <deque>
 #include "echo.pb.h"
