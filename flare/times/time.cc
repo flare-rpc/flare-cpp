@@ -473,7 +473,7 @@ namespace flare {
             tm.tm_year = static_cast<int>(cs.year() - 1900);
         }
 
-        switch (GetWeekday(cs)) {
+        switch (get_weekday(cs)) {
             case chrono_weekday::sunday:
                 tm.tm_wday = 0;
                 break;
