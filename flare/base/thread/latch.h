@@ -7,7 +7,7 @@
 
 #include <condition_variable>
 #include <mutex>
-#include <chrono>
+#include "flare/times/time.h"
 #include "flare/log/logging.h"
 
 namespace flare::base {
@@ -25,18 +25,18 @@ namespace flare::base {
         // Wait until `latch`'s internal counter reached zero.
         void wait() const;
 
-        bool wait_for(const int64_t &timeout_us) {
-            std::chrono::microseconds timeout(timeout_us);
+        bool wait_for(const flare::duration &d) {
+            std::chrono::microseconds timeout = d.to_chrono_microseconds();
             std::unique_lock lk(m_);
             CHECK_GE(count_, 0);
             return cv_.wait_for(lk, timeout, [this] { return count_ == 0; });
         }
 
-        bool wait_until(const int64_t &timeout_us) {
-            std::chrono::steady_clock::time_point deadline(std::chrono::nanoseconds(timeout_us * 1000L));
+        bool wait_until(const flare::time_point &deadline) {
+            auto d = deadline.to_chrono_time();
             std::unique_lock lk(m_);
             CHECK_GE(count_, 0);
-            return cv_.wait_until(lk, deadline, [this] { return count_ == 0; });
+            return cv_.wait_until(lk, d, [this] { return count_ == 0; });
         }
 
         // Shorthand for `count_down(); wait();`
