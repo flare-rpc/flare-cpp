@@ -23,8 +23,8 @@
 #include <gflags/gflags.h>
 #include "flare/times/time.h"
 #include "flare/log/logging.h"
-#include <flare/string/str_format.h>
-#include <flare/base/string_splitter.h>
+#include <flare/strings/str_format.h>
+#include <flare/strings/string_splitter.h>
 #include <flare/rpc/server.h>
 #include "echo.pb.h"
 

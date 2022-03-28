@@ -19,7 +19,6 @@
 
 #include <gflags/gflags.h>
 #include "flare/log/logging.h"
-#include <flare/base/strings.h>
 #include <flare/rpc/server.h>
 #include "echo.pb.h"
 

@@ -119,13 +119,13 @@ struct TestCaseContext {
         , stage_index(0)
         , test_case(tc)
         , next_stage_sec(test_case.qps_stage_list(0).duration_sec() + 
-                         flare::base::gettimeofday_s()) {
+                         flare::time_now().to_unix_seconds()) {
         DisplayStage(test_case.qps_stage_list(stage_index));
         Update();
     }
 
     bool Update() {
-        if (flare::base::gettimeofday_s() >= next_stage_sec) {
+        if ( flare::time_now().to_unix_seconds() >= next_stage_sec) {
             ++stage_index;
             if (stage_index < test_case.qps_stage_list_size()) {
                 next_stage_sec += test_case.qps_stage_list(stage_index).duration_sec(); 
@@ -144,7 +144,7 @@ struct TestCaseContext {
         } else if (qps_stage.type() == test::SMOOTH) {
             qps = lower_bound + (upper_bound - lower_bound) / 
                 double(qps_stage.duration_sec()) * (qps_stage.duration_sec() - next_stage_sec
-                + flare::base::gettimeofday_s());
+                +  flare::time_now().to_unix_seconds());
         }
         interval_us.store(1.0 / qps * 1000000, std::memory_order_relaxed);
         return true;
@@ -162,7 +162,7 @@ void RunUpdateTask(void* data) {
     bool should_continue = context->Update();
     if (should_continue) {
         flare::fiber_internal::get_global_timer_thread()->schedule(RunUpdateTask, data,
-            flare::base::microseconds_from_now(FLAGS_client_qps_change_interval_us));
+            flare::time_point::future_unix_micros(FLAGS_client_qps_change_interval_us).to_timespec());
     } else {
         context->running.store(false, std::memory_order_release);
     }
@@ -191,7 +191,7 @@ void RunCase(test::ControlService_Stub &cntl_stub,
 
     TestCaseContext context(test_case);
     flare::fiber_internal::get_global_timer_thread()->schedule(RunUpdateTask, &context,
-        flare::base::microseconds_from_now(FLAGS_client_qps_change_interval_us));
+        flare::time_point::future_unix_micros(FLAGS_client_qps_change_interval_us).to_timespec());
 
     while (context.running.load(std::memory_order_acquire)) {
         test::NotifyRequest echo_req;

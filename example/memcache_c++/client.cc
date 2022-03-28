@@ -21,7 +21,6 @@
 #include <flare/fiber/this_fiber.h>
 #include <flare/fiber/internal/fiber.h>
 #include "flare/log/logging.h"
-#include <flare/base/strings.h>
 #include <flare/rpc/channel.h>
 #include <flare/rpc/memcache.h>
 #include <flare/rpc/policy/couchbase_authenticator.h>

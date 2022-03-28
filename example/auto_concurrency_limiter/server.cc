@@ -97,8 +97,7 @@ public:
 
     void SetTestCase(const test::TestCase &test_case) {
         _test_case = test_case;
-        _next_stage_start = _test_case.latency_stage_list(0).duration_sec() +
-                            flare::base::gettimeofday_s();
+        _next_stage_start = _test_case.latency_stage_list(0).duration_sec() + flare::time_now().to_unix_seconds();
         _stage_index = 0;
         _running_case = false;
         DisplayStage(_test_case.latency_stage_list(_stage_index));
@@ -120,7 +119,7 @@ public:
         }
         ComputeLatency();
         g_timer_thread.schedule(TimerTask, (void *) this,
-                                flare::base::microseconds_from_now(FLAGS_latency_change_interval_us));
+                                flare::time_point::future_unix_micros(FLAGS_latency_change_interval_us).to_timespec());
     }
 
     virtual void Echo(google::protobuf::RpcController *cntl_base,
@@ -139,7 +138,7 @@ public:
 
     void ComputeLatency() {
         if (_stage_index < _test_case.latency_stage_list_size() &&
-            flare::base::gettimeofday_s() > _next_stage_start) {
+            flare::time_now().to_unix_seconds() > _next_stage_start) {
             ++_stage_index;
             if (_stage_index < _test_case.latency_stage_list_size()) {
                 _next_stage_start += _test_case.latency_stage_list(_stage_index).duration_sec();
@@ -169,7 +168,7 @@ public:
             int latency = lower_bound + (upper_bound - lower_bound) /
                                         double(latency_stage.duration_sec()) *
                                         (latency_stage.duration_sec() - _next_stage_start +
-                                         flare::base::gettimeofday_s());
+                                         flare::time_now().to_unix_seconds());
             _latency.store(latency, std::memory_order_relaxed);
         } else {
             LOG(FATAL) << "Wrong Type:" << latency_stage.type();
