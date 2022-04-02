@@ -72,7 +72,7 @@ namespace flare::fiber_internal {
 
         // User function and argument
         //void *(*fn)(void *);
-        flare::base::function<void*(void*)> fn;
+        flare::function<void*(void*)> fn;
         void *arg;
 
         // Stack of this task.

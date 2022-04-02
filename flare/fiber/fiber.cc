@@ -10,7 +10,7 @@ namespace flare {
 
     }
 
-    fiber::fiber(const attribute &attr, flare::base::function<void *(void *)> &&fn, void *args)
+    fiber::fiber(const attribute &attr, flare::function<void *(void *)> &&fn, void *args)
             : _save_error(0),
               _fid(INVALID_FIBER_ID), _detached(false) {
         fiber_attribute tmp;

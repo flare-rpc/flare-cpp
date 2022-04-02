@@ -45,7 +45,6 @@ namespace flare::base {
         delete static_cast<T *>(arg);
     }
 
-    int32_t flare_tid();
 }  // namespace flare::base
 
 #include "flare/base/thread/thread_local_inl.h"

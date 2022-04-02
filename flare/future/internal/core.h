@@ -37,7 +37,7 @@ namespace flare {
         class future_core {
         public:
             using value_type = boxed<Ts...>;
-            using action_type = flare::base::function<void(value_type &&) noexcept>;
+            using action_type = flare::function<void(value_type &&) noexcept>;
 
             // Construct a `future_core` using `executor`.
             explicit future_core(executor executor) : executor_(std::move(executor)) {}

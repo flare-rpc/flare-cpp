@@ -21,9 +21,7 @@ namespace flare::base {
                 return value;
             }
 
-            static FLARE_THREAD_LOCAL T
-                    *
-                    value;
+            static FLARE_THREAD_LOCAL T*value;
         };
 
         template<typename T> FLARE_THREAD_LOCAL T *ThreadLocalHelper<T>::value = nullptr;

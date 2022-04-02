@@ -15,7 +15,7 @@
 #include <utility>
 #include "flare/base/profile.h"
 
-namespace flare::base {
+namespace flare {
 
     // Note that although some of the implementation of `std::function<...>`
     // (including libstdc++, but not libc++, as of 20181126) is
@@ -396,6 +396,6 @@ struct FunctionTypeDeducer<R (Class::*)(Args...) const&> {
     };
 
 
-}  // namespace flare::base
+}  // namespace flare
 
 #endif  // FLARE_CONTAINER_FUNCTIONAL_H_

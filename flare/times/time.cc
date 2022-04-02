@@ -31,6 +31,7 @@
 
 #include <ctime>
 #include <limits>
+
 #ifdef _WIN32
 #include <windows.h>
 #endif
@@ -40,9 +41,9 @@
 #include <cerrno>
 #include <cstdint>
 #include "flare/base/profile.h"
-#include "flare/base/thread/spin_lock.h"
+#include "flare/thread/spinlock.h"
 #include "flare/times/internal/unscaled_cycle_clock.h"
-#include "flare/base/thread_annotations.h"
+#include "flare/thread/thread_annotations.h"
 
 namespace flare {
 
@@ -402,7 +403,7 @@ namespace flare {
 //
 
     flare::time_conversion convert_date_time(int64_t year, int mon, int day, int hour,
-                                            int min, int sec, time_zone tz) {
+                                             int min, int sec, time_zone tz) {
         // Avoids years that are too extreme for chrono_second to normalize.
         if (year > 300000000000)
             return InfiniteFutureTimeConversion();
@@ -578,7 +579,7 @@ namespace flare {
     };
 
     // uint64_t is used in this module to provide an extra bit in multiplications
-        
+
     // Return the time in ns as told by the kernel interface.  Place in *cycleclock
     // the value of the cycleclock at about the time of the syscall.
     // This call represents the time base that this module synchronizes to.
@@ -587,7 +588,7 @@ namespace flare {
     // assumed to be complete resyncs, which shouldn't happen.  If they do, a full
     // reinitialization of the outer algorithm should occur.)
     static int64_t get_current_time_nanos_from_kernel(uint64_t last_cycleclock,
-                                                 uint64_t *cycleclock) {
+                                                      uint64_t *cycleclock) {
         // We try to read clock values at about the same time as the kernel clock.
         // This value gets adjusted up or down as estimate of how long that should
         // take, so we can reject attempts that take unusually long.
@@ -698,12 +699,12 @@ namespace flare {
                   kMinNSBetweenSamples,
                   "cannot represent kMaxBetweenSamplesNSScaled");
 
-// A reader-writer lock protecting the static locations below.
-// See SeqAcquire() and SeqRelease() above.
-    static flare::base_internal::spinlock lock;
+    // A reader-writer lock protecting the static locations below.
+    // See SeqAcquire() and SeqRelease() above.
+    static flare::spinlock lock;
     static std::atomic<uint64_t> seq(0);
 
-// data from a sample of the kernel's time value
+    // data from a sample of the kernel's time value
     struct time_sample_atomic {
         std::atomic<uint64_t> raw_ns;              // raw kernel time
         std::atomic<uint64_t> base_ns;             // our estimate of time
@@ -713,7 +714,7 @@ namespace flare {
         // to avoid a division on the fast path).
         std::atomic<uint64_t> min_cycles_per_sample;
     };
-// Same again, but with non-atomic types
+    // Same again, but with non-atomic types
     struct time_sample {
         uint64_t raw_ns{0};                 // raw kernel time
         uint64_t base_ns{0};                // our estimate of time
@@ -726,11 +727,11 @@ namespace flare {
 
     static int64_t get_current_time_nanos_slow_path() FLARE_COLD;
 
-// Read the contents of *atomic into *sample.
-// Each field is read atomically, but to maintain atomicity between fields,
-// the access must be done under a lock.
+    // Read the contents of *atomic into *sample.
+    // Each field is read atomically, but to maintain atomicity between fields,
+    // the access must be done under a lock.
     static void read_time_sample_atomic(const struct time_sample_atomic *atomic,
-                                     struct time_sample *sample) {
+                                        struct time_sample *sample) {
         sample->base_ns = atomic->base_ns.load(std::memory_order_relaxed);
         sample->base_cycles = atomic->base_cycles.load(std::memory_order_relaxed);
         sample->nsscaled_per_cycle =
@@ -865,7 +866,7 @@ namespace flare {
     // TODO(flare-team): Remove this attribute when our compiler is smart enough
     // to do the right thing.
     FLARE_NO_INLINE
-    static int64_t get_current_time_nanos_slow_path() LOCKS_EXCLUDED(lock) {
+    static int64_t get_current_time_nanos_slow_path() FLARE_LOCKS_EXCLUDED(lock) {
         // Serialize access to slow-path.  Fast-path readers are not blocked yet, and
         // code below must not modify last_sample until the seqlock is acquired.
         lock.lock();
@@ -908,9 +909,8 @@ namespace flare {
     // using the new sample from the kernel, and stores the result in last_sample
     // for readers.  Returns the new estimated time.
     static uint64_t update_last_sample(uint64_t now_cycles, uint64_t now_ns,
-                                     uint64_t delta_cycles,
-                                     const struct time_sample *sample)
-    EXCLUSIVE_LOCKS_REQUIRED(lock) {
+                                       uint64_t delta_cycles,
+                                       const struct time_sample *sample) FLARE_EXCLUSIVE_LOCKS_REQUIRED(lock) {
         uint64_t estimated_base_ns = now_ns;
         uint64_t lock_value = SeqAcquire(&seq);  // acquire seqlock to block readers
 

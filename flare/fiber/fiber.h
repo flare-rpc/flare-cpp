@@ -51,16 +51,16 @@ namespace flare {
         // Create an empty (invalid) fiber.
         fiber();
 
-        explicit fiber(flare::base::function<void *(void *)> &&fn, void *args = nullptr)
+        explicit fiber(flare::function<void *(void *)> &&fn, void *args = nullptr)
                 : fiber(kAttrNormal, std::move(fn), args) {
         }
 
-        fiber(const attribute &attr, flare::base::function<void *(void *)> &&fn, void *args = nullptr);
+        fiber(const attribute &attr, flare::function<void *(void *)> &&fn, void *args = nullptr);
 
-        fiber(launch_policy policy, flare::base::function<void *(void *)> &&fn, void *args = nullptr)
+        fiber(launch_policy policy, flare::function<void *(void *)> &&fn, void *args = nullptr)
                 : fiber(
                 attribute{.policy = policy, .stack_type = FIBER_STACKTYPE_NORMAL, .flags = 0, .keytable_pool = nullptr},
-                std::forward<flare::base::function<void *(void *)>>(fn),
+                std::forward<flare::function<void *(void *)>>(fn),
                 args) {}
 
         // If a `fiber` object which owns a fiber is destructed with no prior call to

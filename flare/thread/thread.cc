@@ -30,7 +30,9 @@
 
 namespace flare {
 
-    class thread::thread_impl :public ref_counted<thread::thread_impl>{
+    __thread thread_impl *local_impl = nullptr;
+
+    class thread_impl {
     public:
         explicit thread_impl(thread_option &&option)
                 : option(std::move(option)), thread_id(0), start_latch(1) {}
@@ -51,7 +53,7 @@ namespace flare {
                 pthread_attr_setstacksize(&attr, option.stack_size);
             }
 
-            auto ret = ::pthread_create(&thread_id, &attr, &thread::thread_impl::thread_func, this);
+            auto ret = ::pthread_create(&thread_id, &attr, &thread_impl::thread_func, this);
             pthread_attr_destroy(&attr);
             if (ret != 0) {
                 return false;
@@ -61,12 +63,15 @@ namespace flare {
         }
 
         static void *thread_func(void *arg) {
-            auto impl = ref_ptr<thread::thread_impl>(ref_ptr_v, (thread::thread_impl *) arg);
+            auto impl = (thread_impl *) arg;
+            local_impl = impl;
             auto i = thread::thread_index();
             thread::set_name("%s#%d", impl->option.prefix.c_str(), i);
             impl->set_affinity();
             impl->start_latch.count_down();
             impl->option.func();
+            delete local_impl;
+            local_impl = nullptr;
             return nullptr;
         }
 
@@ -135,7 +140,7 @@ namespace flare {
     }
 
     void thread::init_by_option(thread_option &&option) {
-        _impl = ref_ptr(ref_ptr_v, new thread::thread_impl(std::move(option)));
+        _impl = new thread_impl(std::move(option));
     }
 
 
@@ -157,5 +162,121 @@ namespace flare {
             local_thread_id = g_thread_id.fetch_add(1, std::memory_order_relaxed);
         }
         return local_thread_id;
+    }
+
+    namespace detail {
+
+        class thread_exit_helper {
+        public:
+            ~thread_exit_helper() {
+                // Call function reversely.
+                while (!_fns.empty()) {
+                    auto back = std::move(_fns.back());
+                    _fns.pop_back();
+                    // Notice that _fns may be changed after calling Fn.
+                    if (back) {
+                        back();
+                    }
+                }
+            }
+
+            size_t add(flare::function<void()> &&fn) {
+                try {
+                    if (_fns.capacity() < 16) {
+                        _fns.reserve(16);
+                    }
+                    _fns.emplace_back(std::move(fn));
+                } catch (...) {
+                    errno = ENOMEM;
+                    return -1;
+                }
+                return _fns.size() - 1;
+            }
+
+            void remove(size_t index) {
+                if (index >= _fns.size()) {
+                    return;
+                }
+                _fns[index] = std::move([] {});
+            }
+
+        private:
+            std::vector<flare::function<void()>> _fns;
+        };
+
+        static pthread_key_t thread_atexit_key;
+        static pthread_once_t thread_atexit_once = PTHREAD_ONCE_INIT;
+
+        static void delete_thread_exit_helper(void *arg) {
+            delete static_cast<thread_exit_helper *>(arg);
+        }
+
+        static void helper_exit_global() {
+            detail::thread_exit_helper *h =
+                    (detail::thread_exit_helper *) pthread_getspecific(detail::thread_atexit_key);
+            if (h) {
+                pthread_setspecific(detail::thread_atexit_key, nullptr);
+                delete h;
+            }
+        }
+
+        static void make_thread_atexit_key() {
+            if (pthread_key_create(&thread_atexit_key, delete_thread_exit_helper) != 0) {
+                fprintf(stderr, "Fail to create thread_atexit_key, abort\n");
+                abort();
+            }
+            // If caller is not pthread, delete_thread_exit_helper will not be called.
+            // We have to rely on atexit().
+            atexit(helper_exit_global);
+        }
+
+        detail::thread_exit_helper *get_or_new_thread_exit_helper() {
+            pthread_once(&detail::thread_atexit_once, detail::make_thread_atexit_key);
+
+            auto *h = (detail::thread_exit_helper *) pthread_getspecific(detail::thread_atexit_key);
+            if (nullptr == h) {
+                h = new(std::nothrow) detail::thread_exit_helper;
+                if (nullptr != h) {
+                    pthread_setspecific(detail::thread_atexit_key, h);
+                }
+            }
+            return h;
+        }
+
+        detail::thread_exit_helper *get_thread_exit_helper() {
+            pthread_once(&detail::thread_atexit_once, detail::make_thread_atexit_key);
+            return (detail::thread_exit_helper *) pthread_getspecific(detail::thread_atexit_key);
+        }
+
+    }  // namespace detail
+
+
+    size_t thread::atexit(flare::function<void()> &&fn) {
+        if (nullptr == fn) {
+            errno = EINVAL;
+            return -1;
+        }
+        detail::thread_exit_helper *h = detail::get_or_new_thread_exit_helper();
+        if (h) {
+            return h->add(std::move(fn));
+        }
+        errno = ENOMEM;
+        return -1;
+    }
+
+    void thread::atexit_cancel(size_t index) {
+        detail::thread_exit_helper *h = detail::get_thread_exit_helper();
+        if (h) {
+            h->remove(index);
+        }
+    }
+
+    thread::native_handler_type thread::native_handler() {
+        if (local_impl) {
+            return local_impl->thread_id;
+        }
+        // in main thread or create not by flare thread
+        pthread_t mid = pthread_self();
+        return mid;
     }
 }  // namespace flare

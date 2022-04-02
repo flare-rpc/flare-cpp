@@ -21,12 +21,10 @@
 // you want to refer to is not in scope, you may use a member pointer
 // (e.g. &MyClass::mutex_) to refer to a mutex in some (unknown) object.
 
-#ifndef FLARE_BASE_THREAD_ANNOTATIONS_H_
-#define FLARE_BASE_THREAD_ANNOTATIONS_H_
+#ifndef FLARE_THREAD_THREAD_ANNOTATIONS_H_
+#define FLARE_THREAD_THREAD_ANNOTATIONS_H_
 
 #include "flare/base/profile.h"
-// TODO(mbonadei): Remove after the backward compatibility period.
-#include "flare/base/thread/thread.h"  // IWYU pragma: export
 
 #if defined(__clang__)
 #define FLARE_INTERNAL_THREAD_ANNOTATION_ATTRIBUTE(x) __attribute__((x))
@@ -262,4 +260,4 @@ namespace flare::thread_internal {
 
 }  // namespace flare::thread_internal
 
-#endif  // FLARE_BASE_THREAD_ANNOTATIONS_H_
+#endif  // FLARE_THREAD_THREAD_ANNOTATIONS_H_

@@ -3,7 +3,7 @@
 //
 
 
-#include "flare/base/thread/spinlock.h"
+#include "flare/thread/spinlock.h"
 
 #if defined(__x86_64__)
 #define FLARE_CPU_RELAX() asm volatile("pause" ::: "memory")
@@ -11,7 +11,7 @@
 #define FLARE_CPU_RELAX() sched_yield()
 #endif
 
-namespace flare::base {
+namespace flare {
 
     void spinlock::lock_slow() noexcept {
         do {
@@ -23,4 +23,4 @@ namespace flare::base {
             // ... and set.
         } while (locked_.exchange(true, std::memory_order_acquire));
     }
-}  // namespace flare::base
+}  // namespace flare

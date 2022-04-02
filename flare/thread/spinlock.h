@@ -2,17 +2,16 @@
 // Created by liyinbin on 2022/2/15.
 //
 
-#ifndef FLARE_BASE_THREAD_SPINLOCK_H_
-#define FLARE_BASE_THREAD_SPINLOCK_H_
+#ifndef FLARE_THREAD_SPINLOCK_H_
+#define FLARE_THREAD_SPINLOCK_H_
 
 #include <atomic>
 #include <mutex>
-#include "flare/base/thread/spinlock.h"
 #include "flare/base/profile.h"
 #include "flare/log/logging.h"
 
 
-namespace flare::base {
+namespace flare {
 
     // TODO:tsan
     class spinlock {
@@ -51,9 +50,9 @@ namespace flare::base {
 namespace std {
 
     template<>
-    class lock_guard<flare::base::spinlock> {
+    class lock_guard<flare::spinlock> {
     public:
-        explicit lock_guard(flare::base::spinlock &mutex) : _pmutex(&mutex) {
+        explicit lock_guard(flare::spinlock &mutex) : _pmutex(&mutex) {
             _pmutex->lock();
         }
 
@@ -64,15 +63,15 @@ namespace std {
     private:
         FLARE_DISALLOW_COPY_AND_ASSIGN(lock_guard);
 
-        flare::base::spinlock *_pmutex;
+        flare::spinlock *_pmutex;
     };
 
     template<>
-    class unique_lock<flare::base::spinlock> {
+    class unique_lock<flare::spinlock> {
         FLARE_DISALLOW_COPY_AND_ASSIGN(unique_lock);
 
     public:
-        typedef flare::base::spinlock mutex_type;
+        typedef flare::spinlock mutex_type;
 
         unique_lock() : _mutex(nullptr), _owns_lock(false) {}
 

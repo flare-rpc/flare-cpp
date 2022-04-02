@@ -22,7 +22,7 @@ namespace flare {
         // Both this wrapper and the wrappee is (required) to be CopyConstructible.
         //
         // Our design follows how p0443r7 declares `std::executor`: Exactly the same
-        // way as how `flare::base::function` wraps `Callable`.
+        // way as how `flare::function` wraps `Callable`.
         //
         // This design suffers from slightly bad copy performance (if it's critical
         // at all), but provide us (as well as the users) the advantages that all
@@ -54,7 +54,7 @@ namespace flare {
             template<
                     class T,
                     class = std::enable_if_t<!std::is_same_v<executor, std::decay_t<T>>>,
-                    class = decltype(std::declval<T &&>().execute(flare::base::function<void()>()))>
+                    class = decltype(std::declval<T &&>().execute(flare::function<void()>()))>
             /* implicit */ executor(T &&executor) {
                 impl_ = erase_executor_type(std::forward<T>(executor));
             }
@@ -77,19 +77,19 @@ namespace flare {
                 // following in addition:
                 //
                 //  - It requires the functor to be MoveConstructible.
-                //  - It's possible to move-construct a `flare::base::function<void()>` from the
+                //  - It's possible to move-construct a `flare::function<void()>` from the
                 //    wrapper when needed.
                 //
                 // By doing this, `concrete_executor` itself does not have to require
                 // a move. This can be helpful for things like `inline_executor`.
                 //
                 // In case it's indeed desired, the derived class could move construct
-                // a `flare::base::function<...>` itself.
+                // a `flare::function<...>` itself.
                 //
                 // For now we don't do this, as there's little sense in using an
                 // inline_executor too much. For the asynchronous executors, a move is
                 // inevitable.
-                virtual void execute(flare::base::function<void()> job) = 0;
+                virtual void execute(flare::function<void()> job) = 0;
 
                 // Clone the executor.
                 //
@@ -108,7 +108,7 @@ namespace flare {
                 template<class U>
                 explicit concrete_executor_impl(U &&e) : impl_(std::forward<U>(e)) {}
 
-                void execute(flare::base::function<void()> job) override {
+                void execute(flare::function<void()> job) override {
                     return impl_.execute(std::move(job));
                 }
 
@@ -137,7 +137,7 @@ namespace flare {
         // Be careful not to overflow the stack if you're calling `execute` in `job`.
         class inline_executor {
         public:
-            void execute(flare::base::function<void()> job) { job(); }  // Too simple, sometimes naive.
+            void execute(flare::function<void()> job) { job(); }  // Too simple, sometimes naive.
         };
 
         namespace detail {

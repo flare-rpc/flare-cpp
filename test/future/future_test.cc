@@ -725,7 +725,7 @@ namespace flare {
 
     class FancyExecutor {
     public:
-        void execute(flare::base::function<void()> job) {
+        void execute(flare::function<void()> job) {
             ++posted_jobs;
             std::thread([job = std::move(job)] { job(); }).detach();
         }

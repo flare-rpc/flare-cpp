@@ -30,7 +30,7 @@
 #include "flare/log/raw_logging.h"
 #include "flare/log/init.h"
 #include "flare/log/utility.h"
-#include "flare/base/thread.h"
+#include "flare/thread/thread.h"
 #include "flare/base/sysinfo.h"
 
 #ifdef FLARE_PLATFORM_LINUX
@@ -1372,7 +1372,7 @@ namespace flare::log {
                      << setw(6) << data_->usecs_
                      << ' '
                      << setfill(' ') << setw(5)
-                     << static_cast<unsigned int>(flare::base::flare_tid()) << setfill('0')
+                     << static_cast<unsigned int>(flare::thread::thread_index()) << setfill('0')
                      << ' '
                      << data_->basename_ << ':' << data_->line_ << "] ";
         }

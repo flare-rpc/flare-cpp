@@ -5,13 +5,16 @@
 #include <functional>
 #include <vector>
 #include <string>
+#include <pthread.h>
 #include "flare/thread/affinity.h"
-#include "flare/memory/ref_ptr.h"
+#include "flare/base/functional.h"
 
 namespace flare {
 
     // thread provides an OS abstraction for threads of execution.
     using thread_func = std::function<void()>;
+
+    class thread_impl;
 
     struct thread_option {
         size_t stack_size{0};
@@ -23,6 +26,7 @@ namespace flare {
 
     class thread {
     public:
+        typedef pthread_t native_handler_type;
         thread() = default;
 
         thread(thread &&) noexcept;
@@ -34,21 +38,22 @@ namespace flare {
             thread_option tmp = option;
             init_by_option(std::move(tmp));
         }
-        thread(const core_affinity &affinity, const thread_func & func) {
+
+        thread(const core_affinity &affinity, const thread_func &func) {
             thread_option option;
             option.affinity = affinity;
             option.func = func;
             init_by_option(std::move(option));
         }
 
-        thread(const std::string &prefix, const thread_func & func) {
+        thread(const std::string &prefix, const thread_func &func) {
             thread_option option;
             option.prefix = prefix;
             option.func = func;
             init_by_option(std::move(option));
         }
 
-        thread(const std::string &prefix, const core_affinity &affinity, const thread_func & func) {
+        thread(const std::string &prefix, const core_affinity &affinity, const thread_func &func) {
             thread_option option;
             option.prefix = prefix;
             option.affinity = affinity;
@@ -69,15 +74,27 @@ namespace flare {
 
         static int32_t thread_index();
 
+        static size_t atexit(flare::function<void()>&&);
+
+        template<typename F, class ...Args>
+        static size_t atexit(F&&f, Args && ...args) {
+            atexit([&](){
+                f(std::forward<Args>(args)...);
+            });
+        }
+
+        static void atexit_cancel(size_t index);
+
+        static native_handler_type native_handler();
+
     private:
         void init_by_option(thread_option &&option);
+
         thread(const thread &) = delete;
 
         thread &operator=(const thread &) = delete;
 
-        class thread_impl;
-
-        ref_ptr<thread_impl> _impl;
+        thread_impl *_impl{nullptr};
     };
 
 
