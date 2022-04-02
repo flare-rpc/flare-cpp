@@ -4,7 +4,7 @@
 
 #include "flare/base/thread/spinlock.h"
 #include <thread>
-#include "flare/base/thread/latch.h"
+#include "flare/thread/latch.h"
 #include "gtest/gtest.h"
 
 namespace flare::base {
@@ -16,7 +16,7 @@ namespace flare::base {
         constexpr auto T = 100;
         constexpr auto N = 100000;
         std::thread ts[100];
-        latch latch(1);
+        flare::latch latch(1);
         spinlock splk;
 
         for (auto &&t : ts) {

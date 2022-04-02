@@ -1929,7 +1929,7 @@ namespace flare {
 #define FLARE_INTERNAL_DETAIL_LOGGING_CHECK(expr, ...)                        \
   do {                                                                        \
     if (FLARE_UNLIKELY(!(expr))) {                                            \
-      ::flare::log::log_message(__FILE__, __LINE__, ::flare::LOG_FATAL).stream() \
+      ::flare::log::log_message(__FILE__, __LINE__, ::flare::log::FLARE_FATAL).stream() \
           << "Check failed: " #expr " "                                       \
           << ::flare::internal::logging::format_log(__FILE__, __LINE__,        \
                                                    ##__VA_ARGS__);            \

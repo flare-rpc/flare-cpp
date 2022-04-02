@@ -87,7 +87,7 @@ namespace flare::log {
     }
 
     static void DumpStackTraceAndExit() {
-        DumpStackTrace(1, DebugWriteToStderr, NULL);
+        DumpStackTrace(1, DebugWriteToStderr, nullptr);
 
         // TODO(hamaji): Use signal instead of sigaction?
         if (IsFailureSignalHandlerInstalled()) {
@@ -98,7 +98,7 @@ namespace flare::log {
         memset(&sig_action, 0, sizeof(sig_action));
         sigemptyset(&sig_action.sa_mask);
         sig_action.sa_handler = SIG_DFL;
-        sigaction(SIGABRT, &sig_action, NULL);
+        sigaction(SIGABRT, &sig_action, nullptr);
 #endif  // HAVE_SIGACTION
         }
 
@@ -119,10 +119,10 @@ namespace flare::log {
         }
 
 #endif
-        static const char *g_program_invocation_short_name = NULL;
+        static const char *g_program_invocation_short_name = nullptr;
 
         const char *ProgramInvocationShortName() {
-            if (g_program_invocation_short_name != NULL) {
+            if (g_program_invocation_short_name != nullptr) {
                 return g_program_invocation_short_name;
             } else {
                 // TODO(hamaji): Use /proc/self/cmdline and so?
@@ -131,7 +131,7 @@ namespace flare::log {
         }
 
         bool IsGoogleLoggingInitialized() {
-            return g_program_invocation_short_name != NULL;
+            return g_program_invocation_short_name != nullptr;
         }
 
         void InitGoogleLoggingUtilities(const char *argv0) {
@@ -148,7 +148,7 @@ namespace flare::log {
         void ShutdownGoogleLoggingUtilities() {
             CHECK(IsGoogleLoggingInitialized())
                             << "You called shutdown_logging() without calling init_logging() first!";
-            g_program_invocation_short_name = NULL;
+            g_program_invocation_short_name = nullptr;
             closelog();
         }
 

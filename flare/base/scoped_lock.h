@@ -24,14 +24,15 @@ namespace std {
 
 #if defined(FLARE_PLATFORM_POSIX)
 
-    template<> class lock_guard<pthread_mutex_t> {
+    template<>
+    class lock_guard<pthread_mutex_t> {
     public:
-        explicit lock_guard(pthread_mutex_t & mutex) : _pmutex(&mutex) {
+        explicit lock_guard(pthread_mutex_t &mutex) : _pmutex(&mutex) {
 #if !defined(NDEBUG)
             const int rc = pthread_mutex_lock(_pmutex);
             if (rc) {
                 LOG(FATAL) << "Fail to lock pthread_mutex_t=" << _pmutex << ", " << flare_error(rc);
-                _pmutex = NULL;
+                _pmutex = nullptr;
             }
 #else
             pthread_mutex_lock(_pmutex);
@@ -50,17 +51,19 @@ namespace std {
 
     private:
         FLARE_DISALLOW_COPY_AND_ASSIGN(lock_guard);
-        pthread_mutex_t* _pmutex;
+
+        pthread_mutex_t *_pmutex;
     };
 
-    template<> class lock_guard<pthread_spinlock_t> {
+    template<>
+    class lock_guard<pthread_spinlock_t> {
     public:
-        explicit lock_guard(pthread_spinlock_t & spin) : _pspin(&spin) {
+        explicit lock_guard(pthread_spinlock_t &spin) : _pspin(&spin) {
 #if !defined(NDEBUG)
             const int rc = pthread_spin_lock(_pspin);
             if (rc) {
                 LOG(FATAL) << "Fail to lock pthread_spinlock_t=" << _pspin << ", " << flare_error(rc);
-                _pspin = NULL;
+                _pspin = nullptr;
             }
 #else
             pthread_spin_lock(_pspin);
@@ -79,27 +82,32 @@ namespace std {
 
     private:
         FLARE_DISALLOW_COPY_AND_ASSIGN(lock_guard);
-        pthread_spinlock_t* _pspin;
+
+        pthread_spinlock_t *_pspin;
     };
 
-    template<> class unique_lock<pthread_mutex_t> {
+    template<>
+    class unique_lock<pthread_mutex_t> {
         FLARE_DISALLOW_COPY_AND_ASSIGN(unique_lock);
+
     public:
-        typedef pthread_mutex_t         mutex_type;
-        unique_lock() : _mutex(NULL), _owns_lock(false) {}
-        explicit unique_lock(mutex_type& mutex)
-            : _mutex(&mutex), _owns_lock(true) {
+        typedef pthread_mutex_t mutex_type;
+
+        unique_lock() : _mutex(nullptr), _owns_lock(false) {}
+
+        explicit unique_lock(mutex_type &mutex)
+                : _mutex(&mutex), _owns_lock(true) {
             pthread_mutex_lock(_mutex);
         }
-        unique_lock(mutex_type& mutex, defer_lock_t)
-            : _mutex(&mutex), _owns_lock(false)
-        {}
-        unique_lock(mutex_type& mutex, try_to_lock_t)
-            : _mutex(&mutex), _owns_lock(pthread_mutex_trylock(&mutex) == 0)
-        {}
-        unique_lock(mutex_type& mutex, adopt_lock_t)
-            : _mutex(&mutex), _owns_lock(true)
-        {}
+
+        unique_lock(mutex_type &mutex, defer_lock_t)
+                : _mutex(&mutex), _owns_lock(false) {}
+
+        unique_lock(mutex_type &mutex, try_to_lock_t)
+                : _mutex(&mutex), _owns_lock(pthread_mutex_trylock(&mutex) == 0) {}
+
+        unique_lock(mutex_type &mutex, adopt_lock_t)
+                : _mutex(&mutex), _owns_lock(true) {}
 
         ~unique_lock() {
             if (_owns_lock) {
@@ -143,34 +151,40 @@ namespace std {
             _owns_lock = false;
         }
 
-        void swap(unique_lock& rhs) {
+        void swap(unique_lock &rhs) {
             std::swap(_mutex, rhs._mutex);
             std::swap(_owns_lock, rhs._owns_lock);
         }
 
-        mutex_type* release() {
-            mutex_type* saved_mutex = _mutex;
-            _mutex = NULL;
+        mutex_type *release() {
+            mutex_type *saved_mutex = _mutex;
+            _mutex = nullptr;
             _owns_lock = false;
             return saved_mutex;
         }
 
-        mutex_type* mutex() { return _mutex; }
+        mutex_type *mutex() { return _mutex; }
+
         bool owns_lock() const { return _owns_lock; }
+
         operator bool() const { return owns_lock(); }
 
     private:
-        mutex_type*                     _mutex;
-        bool                            _owns_lock;
+        mutex_type *_mutex;
+        bool _owns_lock;
     };
 
-    template<> class unique_lock<pthread_spinlock_t> {
+    template<>
+    class unique_lock<pthread_spinlock_t> {
         FLARE_DISALLOW_COPY_AND_ASSIGN(unique_lock);
+
     public:
-        typedef pthread_spinlock_t  mutex_type;
-        unique_lock() : _mutex(NULL), _owns_lock(false) {}
-        explicit unique_lock(mutex_type& mutex)
-            : _mutex(&mutex), _owns_lock(true) {
+        typedef pthread_spinlock_t mutex_type;
+
+        unique_lock() : _mutex(nullptr), _owns_lock(false) {}
+
+        explicit unique_lock(mutex_type &mutex)
+                : _mutex(&mutex), _owns_lock(true) {
             pthread_spin_lock(_mutex);
         }
 
@@ -179,15 +193,15 @@ namespace std {
                 pthread_spin_unlock(_mutex);
             }
         }
-        unique_lock(mutex_type& mutex, defer_lock_t)
-            : _mutex(&mutex), _owns_lock(false)
-        {}
-        unique_lock(mutex_type& mutex, try_to_lock_t)
-            : _mutex(&mutex), _owns_lock(pthread_spin_trylock(&mutex) == 0)
-        {}
-        unique_lock(mutex_type& mutex, adopt_lock_t)
-            : _mutex(&mutex), _owns_lock(true)
-        {}
+
+        unique_lock(mutex_type &mutex, defer_lock_t)
+                : _mutex(&mutex), _owns_lock(false) {}
+
+        unique_lock(mutex_type &mutex, try_to_lock_t)
+                : _mutex(&mutex), _owns_lock(pthread_spin_trylock(&mutex) == 0) {}
+
+        unique_lock(mutex_type &mutex, adopt_lock_t)
+                : _mutex(&mutex), _owns_lock(true) {}
 
         void lock() {
             if (_owns_lock) {
@@ -225,25 +239,27 @@ namespace std {
             _owns_lock = false;
         }
 
-        void swap(unique_lock& rhs) {
+        void swap(unique_lock &rhs) {
             std::swap(_mutex, rhs._mutex);
             std::swap(_owns_lock, rhs._owns_lock);
         }
 
-        mutex_type* release() {
-            mutex_type* saved_mutex = _mutex;
-            _mutex = NULL;
+        mutex_type *release() {
+            mutex_type *saved_mutex = _mutex;
+            _mutex = nullptr;
             _owns_lock = false;
             return saved_mutex;
         }
 
-        mutex_type* mutex() { return _mutex; }
+        mutex_type *mutex() { return _mutex; }
+
         bool owns_lock() const { return _owns_lock; }
+
         operator bool() const { return owns_lock(); }
 
     private:
-        mutex_type*                     _mutex;
-        bool                            _owns_lock;
+        mutex_type *_mutex;
+        bool _owns_lock;
     };
 
 #endif  // defined(FLARE_PLATFORM_POSIX)

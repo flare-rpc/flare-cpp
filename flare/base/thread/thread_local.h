@@ -4,7 +4,7 @@
 #define FLARE_BASE_THREAD_THREAD_LOCAL_H_
 
 #include <new>                      // std::nothrow
-#include <cstddef>                  // NULL
+#include <cstddef>                  // nullptr
 #include <cstdint>
 #include "flare/base/profile.h"
 

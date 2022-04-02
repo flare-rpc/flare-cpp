@@ -2,9 +2,9 @@
 // Created by liyinbin on 2022/2/15.
 //
 
-#include "flare/base/thread/latch.h"
+#include "flare/thread/latch.h"
 
-namespace flare::base {
+namespace flare {
 
     latch::latch(std::ptrdiff_t count) : count_(count) {}
 
@@ -34,4 +34,4 @@ namespace flare::base {
         wait();
     }
 
-}  // namespace flare::base
+}  // namespace flare

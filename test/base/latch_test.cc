@@ -6,7 +6,7 @@
 #include <chrono>
 #include <memory>
 #include <thread>
-#include "flare/base/thread/latch.h"
+#include "flare/thread/latch.h"
 #include "gtest/gtest.h"
 #include "flare/times/time.h"
 
@@ -19,7 +19,7 @@ namespace flare::base {
         while (!exiting) {
             auto called = std::make_shared<std::atomic<bool>>(false);
             std::this_thread::yield();  // Wait for thread pool to start.
-            latch l(1);
+            flare::latch l(1);
             auto t = std::thread([&] {
                 if (!called->exchange(true)) {
                     std::this_thread::yield();  // Something costly.
@@ -51,20 +51,20 @@ namespace flare::base {
     }
 
     TEST(Latch, CountDownTwo) {
-        latch l(2);
+        flare::latch l(2);
         l.arrive_and_wait(2);
         ASSERT_TRUE(1);
     }
 
     TEST(Latch, WaitFor) {
-        latch l(1);
+        flare::latch l(1);
         ASSERT_FALSE(l.wait_for(flare::duration::milliseconds(100)));
         l.count_down();
         ASSERT_TRUE(l.wait_for(flare::duration::milliseconds(100)));
     }
 
     TEST(Latch, WaitUntil) {
-        latch l(1);
+        flare::latch l(1);
         ASSERT_FALSE(l.wait_until(flare::time_point::future_unix_millis(100)));
         l.count_down();
         ASSERT_TRUE(l.wait_until(flare::time_now()));

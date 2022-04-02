@@ -2,15 +2,15 @@
 // Created by liyinbin on 2022/2/15.
 //
 
-#ifndef FLARE_BASE_THREAD_LATCHER_H_
-#define FLARE_BASE_THREAD_LATCHER_H_
+#ifndef FLARE_THREAD_LATCH_H_
+#define FLARE_THREAD_LATCH_H_
 
 #include <condition_variable>
 #include <mutex>
 #include "flare/times/time.h"
 #include "flare/log/logging.h"
 
-namespace flare::base {
+namespace flare {
 
     class latch {
     public:
@@ -48,5 +48,5 @@ namespace flare::base {
         std::ptrdiff_t count_;
     };
 
-}  // namespace flare::base
-#endif  // FLARE_BASE_THREAD_LATCHER_H_
+}  // namespace flare
+#endif  // FLARE_THREAD_LATCH_H_

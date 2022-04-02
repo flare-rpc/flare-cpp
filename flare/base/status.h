@@ -33,7 +33,7 @@ namespace flare::base {
         };
 
         // Create a success status.
-        flare_status() : _state(NULL) {}
+        flare_status() : _state(nullptr) {}
 
         // Return a success status.
         static flare_status OK() { return flare_status(); }
@@ -44,14 +44,14 @@ namespace flare::base {
         // error_text is formatted from `fmt' and following arguments.
         flare_status(int code, const char *fmt, ...)
         __attribute__ ((__format__ (__printf__, 3, 4)))
-                : _state(NULL) {
+                : _state(nullptr) {
             va_list ap;
             va_start(ap, fmt);
             set_errorv(code, fmt, ap);
             va_end(ap);
         }
 
-        flare_status(int code, const std::string_view &error_msg) : _state(NULL) {
+        flare_status(int code, const std::string_view &error_msg) : _state(nullptr) {
             set_error(code, error_msg);
         }
 
@@ -73,11 +73,11 @@ namespace flare::base {
         int set_errorv(int code, const char *error_format, va_list args);
 
         // Returns true iff the status indicates success.
-        bool ok() const { return (_state == NULL); }
+        bool ok() const { return (_state == nullptr); }
 
         // Get the error code
         int error_code() const {
-            return (_state == NULL) ? 0 : _state->code;
+            return (_state == nullptr) ? 0 : _state->code;
         }
 
         // Return a string representation of the status.
@@ -86,12 +86,12 @@ namespace flare::base {
         //   * You can print a flare_status to std::ostream directly
         //   * if message contains '\0', error_cstr() will not be shown fully.
         const char *error_cstr() const {
-            return (_state == NULL ? "OK" : _state->message);
+            return (_state == nullptr ? "OK" : _state->message);
         }
 
         std::string_view error_data() const {
-            return (_state == NULL ? std::string_view("OK", 2)
-                                   : std::string_view(_state->message, _state->size));
+            return (_state == nullptr ? std::string_view("OK", 2)
+                                      : std::string_view(_state->message, _state->size));
         }
 
         std::string error_str() const;
@@ -99,7 +99,7 @@ namespace flare::base {
         void swap(flare_status &other) { std::swap(_state, other._state); }
 
     private:
-        // OK status has a NULL _state.  Otherwise, _state is a State object
+        // OK status has a nullptr _state.  Otherwise, _state is a State object
         // converted from malloc().
         State *_state;
 
@@ -107,7 +107,7 @@ namespace flare::base {
     };
 
     inline flare_status::flare_status(const flare_status &s) {
-        _state = (s._state == NULL) ? NULL : copy_state(s._state);
+        _state = (s._state == nullptr) ? nullptr : copy_state(s._state);
     }
 
     inline int flare_status::set_error(int code, const char *msg, ...) {
@@ -120,7 +120,7 @@ namespace flare::base {
 
     inline void flare_status::reset() {
         free(_state);
-        _state = NULL;
+        _state = nullptr;
     }
 
     inline void flare_status::operator=(const flare_status &s) {
@@ -129,9 +129,9 @@ namespace flare::base {
         if (_state == s._state) {
             return;
         }
-        if (s._state == NULL) {
+        if (s._state == nullptr) {
             free(_state);
-            _state = NULL;
+            _state = nullptr;
         } else {
             set_error(s._state->code,
                       std::string_view(s._state->message, s._state->size));

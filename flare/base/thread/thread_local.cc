@@ -67,7 +67,7 @@ namespace flare::base {
             detail::ThreadExitHelper *h =
                     (detail::ThreadExitHelper *) pthread_getspecific(detail::thread_atexit_key);
             if (h) {
-                pthread_setspecific(detail::thread_atexit_key, NULL);
+                pthread_setspecific(detail::thread_atexit_key, nullptr);
                 delete h;
             }
         }
@@ -87,9 +87,9 @@ namespace flare::base {
 
             detail::ThreadExitHelper *h =
                     (detail::ThreadExitHelper *) pthread_getspecific(detail::thread_atexit_key);
-            if (NULL == h) {
+            if (nullptr == h) {
                 h = new(std::nothrow) detail::ThreadExitHelper;
-                if (NULL != h) {
+                if (nullptr != h) {
                     pthread_setspecific(detail::thread_atexit_key, h);
                 }
             }
@@ -108,7 +108,7 @@ namespace flare::base {
     }  // namespace detail
 
     int thread_atexit(void (*fn)(void *), void *arg) {
-        if (NULL == fn) {
+        if (nullptr == fn) {
             errno = EINVAL;
             return -1;
         }
@@ -121,7 +121,7 @@ namespace flare::base {
     }
 
     int thread_atexit(void (*fn)()) {
-        if (NULL == fn) {
+        if (nullptr == fn) {
             errno = EINVAL;
             return -1;
         }
@@ -129,7 +129,7 @@ namespace flare::base {
     }
 
     void thread_atexit_cancel(void (*fn)(void *), void *arg) {
-        if (fn != NULL) {
+        if (fn != nullptr) {
             detail::ThreadExitHelper *h = detail::get_thread_exit_helper();
             if (h) {
                 h->remove(fn, arg);
@@ -138,15 +138,16 @@ namespace flare::base {
     }
 
     void thread_atexit_cancel(void (*fn)()) {
-        if (NULL != fn) {
+        if (nullptr != fn) {
             thread_atexit_cancel(detail::call_single_arg_fn, (void *) fn);
         }
     }
 
     std::atomic<int32_t> g_thread_id{0};
     __thread int32_t local_thread_id = -1;
+
     int32_t flare_tid() {
-        if(FLARE_UNLIKELY(local_thread_id == -1)) {
+        if (FLARE_UNLIKELY(local_thread_id == -1)) {
             local_thread_id = g_thread_id.fetch_add(1, std::memory_order_relaxed);
         }
         return local_thread_id;

@@ -160,11 +160,11 @@ void SendRpcResponse(int64_t correlation_id,
     }
     bool append_body = false;
     flare::cord_buf res_body;
-    // `res' can be NULL here, in which case we don't serialize it
+    // `res' can be nullptr here, in which case we don't serialize it
     // If user calls `SetFailed' on Controller, we don't serialize
     // response either
     CompressType type = cntl->response_compress_type();
-    if (res != NULL && !cntl->Failed()) {
+    if (res != nullptr && !cntl->Failed()) {
         if (!res->IsInitialized()) {
             cntl->SetFailed(
                 ERESPONSE, "Missing required fields in response: %s", 
@@ -229,7 +229,7 @@ void SendRpcResponse(int64_t correlation_id,
         span->set_response_size(res_buf.size());
     }
     if (stream_ptr) {
-        CHECK(accessor.remote_stream_settings() != NULL);
+        CHECK(accessor.remote_stream_settings() != nullptr);
         // Send the response over stream to notify that this stream connection
         // is successfully built.
         if (SendStreamData(sock, &res_buf,
@@ -329,7 +329,7 @@ void ProcessRpcRequest(InputMessageBase* msg_base) {
     }
 
     std::unique_ptr<Controller> cntl(new (std::nothrow) Controller);
-    if (NULL == cntl.get()) {
+    if (nullptr == cntl.get()) {
         LOG(WARNING) << "Fail to new Controller";
         return;
     }
@@ -366,7 +366,7 @@ void ProcessRpcRequest(InputMessageBase* msg_base) {
         fiber_assign_data((void*)&server->thread_local_options());
     }
 
-    Span* span = NULL;
+    Span* span = nullptr;
     if (IsTraceable(request_meta.has_trace_id())) {
         span = Span::CreateServerSpan(
             request_meta.trace_id(), request_meta.span_id(),
@@ -380,7 +380,7 @@ void ProcessRpcRequest(InputMessageBase* msg_base) {
         span->set_request_size(msg->payload.size() + msg->meta.size() + 12);
     }
 
-    MethodStatus* method_status = NULL;
+    MethodStatus* method_status = nullptr;
     do {
         if (!server->IsRunning()) {
             cntl->SetFailed(ELOGOFF, "Server is stopping");
@@ -412,7 +412,7 @@ void ProcessRpcRequest(InputMessageBase* msg_base) {
         if (svc_name.find('.') == std::string_view::npos) {
             const Server::ServiceProperty* sp =
                 server_accessor.FindServicePropertyByName(svc_name);
-            if (NULL == sp) {
+            if (nullptr == sp) {
                 cntl->SetFailed(ENOSERVICE, "Fail to find service=%s",
                                 request_meta.service_name().c_str());
                 break;
@@ -422,7 +422,7 @@ void ProcessRpcRequest(InputMessageBase* msg_base) {
         const Server::MethodProperty* mp =
             server_accessor.FindMethodPropertyByFullName(
                 svc_name, request_meta.method_name());
-        if (NULL == mp) {
+        if (nullptr == mp) {
             cntl->SetFailed(ENOMETHOD, "Fail to find method=%s/%s",
                             request_meta.service_name().c_str(),
                             request_meta.method_name().c_str());
@@ -432,7 +432,7 @@ void ProcessRpcRequest(InputMessageBase* msg_base) {
             BadMethodRequest breq;
             BadMethodResponse bres;
             breq.set_service_name(request_meta.service_name());
-            mp->service->CallMethod(mp->method, cntl.get(), &breq, &bres, NULL);
+            mp->service->CallMethod(mp->method, cntl.get(), &breq, &bres, nullptr);
             break;
         }
         // Switch to service-specific error.
@@ -529,7 +529,7 @@ bool VerifyRpcRequest(const InputMessageBase* msg_base) {
         return false;
     }
     const Authenticator* auth = server->options().auth;
-    if (NULL == auth) {
+    if (nullptr == auth) {
         // Fast pass (no authentication)
         return true;
     }    
@@ -551,7 +551,7 @@ void ProcessRpcResponse(InputMessageBase* msg_base) {
     }
 
     const fiber_token_t cid = { static_cast<uint64_t>(meta.correlation_id()) };
-    Controller* cntl = NULL;
+    Controller* cntl = nullptr;
     const int rc = fiber_token_lock(cid, (void**)&cntl);
     if (rc != 0) {
         LOG_IF(ERROR, rc != EINVAL && rc != EPERM)
@@ -646,7 +646,7 @@ void PackRpcRequest(flare::cord_buf* req_buf,
         request_meta->set_method_name(cntl->sampled_request()->meta.method_name());
         meta.set_compress_type(cntl->sampled_request()->meta.compress_type());
     } else {
-        return cntl->SetFailed(ENOMETHOD, "%s.method is NULL", __FUNCTION__);
+        return cntl->SetFailed(ENOMETHOD, "%s.method is nullptr", __FUNCTION__);
     }
     if (cntl->has_log_id()) {
         request_meta->set_log_id(cntl->log_id());
