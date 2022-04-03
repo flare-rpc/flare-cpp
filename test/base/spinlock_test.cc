@@ -2,7 +2,7 @@
 // Created by liyinbin on 2022/2/15.
 //
 
-#include "flare/base/thread/spinlock.h"
+#include "flare/thread/spinlock.h"
 #include <thread>
 #include "flare/thread/latch.h"
 #include "gtest/gtest.h"
@@ -17,7 +17,7 @@ namespace flare::base {
         constexpr auto N = 100000;
         std::thread ts[100];
         flare::latch latch(1);
-        spinlock splk;
+        flare::spinlock splk;
 
         for (auto &&t : ts) {
             t = std::thread([&] {

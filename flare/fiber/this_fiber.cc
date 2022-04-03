@@ -8,7 +8,7 @@
 
 
 namespace flare::fiber_internal {
-    extern FLARE_THREAD_LOCAL fiber_worker *tls_task_group;
+    extern __thread fiber_worker *tls_task_group;
 }  // namespace flare::fiber_internal
 
 namespace flare {

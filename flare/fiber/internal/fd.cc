@@ -43,7 +43,7 @@
 
 namespace flare::fiber_internal {
 
-    extern FLARE_THREAD_LOCAL fiber_worker *tls_task_group;
+    extern __thread fiber_worker *tls_task_group;
 
     template<typename T, size_t NBLOCK, size_t BLOCK_SIZE>
     class LazyArray {

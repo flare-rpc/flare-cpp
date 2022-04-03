@@ -150,10 +150,10 @@ namespace flare::fiber_internal {
         }
     }
 
-    extern FLARE_THREAD_LOCAL fiber_worker *tls_task_group;
+    extern __thread fiber_worker *tls_task_group;
 
-// Returns 0 when no need to unschedule or successfully unscheduled,
-// -1 otherwise.
+    // Returns 0 when no need to unschedule or successfully unscheduled,
+    // -1 otherwise.
     inline int unsleep_if_necessary(event_fiber_waiter *w,
                                     TimerThread *timer_thread) {
         if (!w->sleep_id) {

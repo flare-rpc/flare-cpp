@@ -28,7 +28,7 @@
 #include <vector>
 #include "flare/base/static_atomic.h"              // std::atomic
 #include "flare/base/scoped_lock.h"            // FLARE_SCOPED_LOCK
-#include "flare/base/thread.h"           // FLARE_THREAD_LOCAL
+#include "flare/thread/thread.h"           // FLARE_THREAD_LOCAL
 #include "flare/base/profile.h"
 
 #ifdef FLARE_OBJECT_POOL_NEED_FREE_ITEM_NUM
@@ -113,7 +113,7 @@ namespace flare {
             BlockGroup() : nblock(0) {
                 // We fetch_add nblock in add_block() before setting the entry,
                 // thus address_resource() may sees the unset entry. Initialize
-                // all entries to NULL makes such address_resource() return NULL.
+                // all entries to nullptr makes such address_resource() return nullptr.
                 memset(static_cast<void *>(blocks), 0, sizeof(std::atomic<Block *>) * OP_GROUP_NBLOCK);
             }
         };
@@ -122,7 +122,7 @@ namespace flare {
         class FLARE_CACHELINE_ALIGNMENT LocalPool {
         public:
             explicit LocalPool(ObjectPool *pool)
-                    : _pool(pool), _cur_block(NULL), _cur_block_index(0) {
+                    : _pool(pool), _cur_block(nullptr), _cur_block_index(0) {
                 _cur_free.nfree = 0;
             }
 
@@ -161,23 +161,23 @@ namespace flare {
             T* obj = new ((T*)_cur_block->items + _cur_block->nitem) T CTOR_ARGS; \
             if (!ObjectPoolValidator<T>::validate(obj)) {               \
                 obj->~T();                                              \
-                return NULL;                                            \
+                return nullptr;                                            \
             }                                                           \
             ++_cur_block->nitem;                                        \
             return obj;                                                 \
         }                                                               \
         /* Fetch a Block from global */                                 \
         _cur_block = add_block(&_cur_block_index);                      \
-        if (_cur_block != NULL) {                                       \
+        if (_cur_block != nullptr) {                                       \
             T* obj = new ((T*)_cur_block->items + _cur_block->nitem) T CTOR_ARGS; \
             if (!ObjectPoolValidator<T>::validate(obj)) {               \
                 obj->~T();                                              \
-                return NULL;                                            \
+                return nullptr;                                            \
             }                                                           \
             ++_cur_block->nitem;                                        \
             return obj;                                                 \
         }                                                               \
-        return NULL;                                                    \
+        return nullptr;                                                    \
 
 
             inline T *get() {
@@ -223,33 +223,33 @@ namespace flare {
 
         inline T *get_object() {
             LocalPool *lp = get_or_new_local_pool();
-            if (FLARE_LIKELY(lp != NULL)) {
+            if (FLARE_LIKELY(lp != nullptr)) {
                 return lp->get();
             }
-            return NULL;
+            return nullptr;
         }
 
         template<typename A1>
         inline T *get_object(const A1 &arg1) {
             LocalPool *lp = get_or_new_local_pool();
-            if (FLARE_LIKELY(lp != NULL)) {
+            if (FLARE_LIKELY(lp != nullptr)) {
                 return lp->get(arg1);
             }
-            return NULL;
+            return nullptr;
         }
 
         template<typename A1, typename A2>
         inline T *get_object(const A1 &arg1, const A2 &arg2) {
             LocalPool *lp = get_or_new_local_pool();
-            if (FLARE_LIKELY(lp != NULL)) {
+            if (FLARE_LIKELY(lp != nullptr)) {
                 return lp->get(arg1, arg2);
             }
-            return NULL;
+            return nullptr;
         }
 
         inline int return_object(T *ptr) {
             LocalPool *lp = get_or_new_local_pool();
-            if (FLARE_LIKELY(lp != NULL)) {
+            if (FLARE_LIKELY(lp != nullptr)) {
                 return lp->return_object(ptr);
             }
             return -1;
@@ -258,8 +258,8 @@ namespace flare {
         void clear_objects() {
             LocalPool *lp = _local_pool;
             if (lp) {
-                _local_pool = NULL;
-                flare::base::thread_atexit_cancel(LocalPool::delete_local_pool, lp);
+                _local_pool = nullptr;
+                flare::thread::atexit_cancel(_local_index);
                 delete lp;
             }
         }
@@ -284,7 +284,7 @@ namespace flare {
 
             for (size_t i = 0; i < info.block_group_num; ++i) {
                 BlockGroup *bg = _block_groups[i].load(std::memory_order_consume);
-                if (NULL == bg) {
+                if (nullptr == bg) {
                     break;
                 }
                 size_t nblock = std::min(bg->nblock.load(std::memory_order_relaxed),
@@ -292,7 +292,7 @@ namespace flare {
                 info.block_num += nblock;
                 for (size_t j = 0; j < nblock; ++j) {
                     Block *b = bg->blocks[j].load(std::memory_order_consume);
-                    if (NULL != b) {
+                    if (nullptr != b) {
                         info.item_num += b->nitem;
                     }
                 }
@@ -319,7 +319,7 @@ namespace flare {
     private:
         ObjectPool() {
             _free_chunks.reserve(OP_INITIAL_FREE_LIST_SIZE);
-            pthread_mutex_init(&_free_chunks_mutex, NULL);
+            pthread_mutex_init(&_free_chunks_mutex, nullptr);
         }
 
         ~ObjectPool() {
@@ -329,8 +329,8 @@ namespace flare {
         // Create a Block and append it to right-most BlockGroup.
         static Block *add_block(size_t *index) {
             Block *const new_block = new(std::nothrow) Block;
-            if (NULL == new_block) {
-                return NULL;
+            if (nullptr == new_block) {
+                return nullptr;
             }
             size_t ngroup;
             do {
@@ -352,13 +352,13 @@ namespace flare {
 
             // Fail to add_block_group.
             delete new_block;
-            return NULL;
+            return nullptr;
         }
 
         // Create a BlockGroup and append it to _block_groups.
         // Shall be called infrequently because a BlockGroup is pretty big.
         static bool add_block_group(size_t old_ngroup) {
-            BlockGroup *bg = NULL;
+            BlockGroup *bg = nullptr;
             FLARE_SCOPED_LOCK(_block_group_mutex);
             const size_t ngroup = _ngroup.load(std::memory_order_acquire);
             if (ngroup != old_ngroup) {
@@ -367,35 +367,35 @@ namespace flare {
             }
             if (ngroup < OP_MAX_BLOCK_NGROUP) {
                 bg = new(std::nothrow) BlockGroup;
-                if (NULL != bg) {
+                if (nullptr != bg) {
                     // Release fence is paired with consume fence in add_block()
                     // to avoid un-constructed bg to be seen by other threads.
                     _block_groups[ngroup].store(bg, std::memory_order_release);
                     _ngroup.store(ngroup + 1, std::memory_order_release);
                 }
             }
-            return bg != NULL;
+            return bg != nullptr;
         }
 
         inline LocalPool *get_or_new_local_pool() {
             LocalPool *lp = _local_pool;
-            if (FLARE_LIKELY(lp != NULL)) {
+            if (FLARE_LIKELY(lp != nullptr)) {
                 return lp;
             }
             lp = new(std::nothrow) LocalPool(this);
-            if (NULL == lp) {
-                return NULL;
+            if (nullptr == lp) {
+                return nullptr;
             }
             FLARE_SCOPED_LOCK(_change_thread_mutex); //avoid race with clear()
             _local_pool = lp;
-            flare::base::thread_atexit(LocalPool::delete_local_pool, lp);
+            _local_index = flare::thread::atexit(LocalPool::delete_local_pool, lp);
             _nlocal.fetch_add(1, std::memory_order_relaxed);
             return lp;
         }
 
         void clear_from_destructor_of_local_pool() {
             // Remove tls
-            _local_pool = NULL;
+            _local_pool = nullptr;
 
             // Do nothing if there're active threads.
             if (_nlocal.fetch_sub(1, std::memory_order_relaxed) != 1) {
@@ -424,14 +424,14 @@ namespace flare {
             const size_t ngroup = _ngroup.exchange(0, std::memory_order_relaxed);
             for (size_t i = 0; i < ngroup; ++i) {
                 BlockGroup* bg = _block_groups[i].load(std::memory_order_relaxed);
-                if (NULL == bg) {
+                if (nullptr == bg) {
                     break;
                 }
                 size_t nblock = std::min(bg->nblock.load(std::memory_order_relaxed),
                                          OP_GROUP_NBLOCK);
                 for (size_t j = 0; j < nblock; ++j) {
                     Block* b = bg->blocks[j].load(std::memory_order_relaxed);
-                    if (NULL == b) {
+                    if (nullptr == b) {
                         continue;
                     }
                     for (size_t k = 0; k < b->nitem; ++k) {
@@ -484,7 +484,8 @@ namespace flare {
 
         static flare::static_atomic<ObjectPool *> _singleton;
         static pthread_mutex_t _singleton_mutex;
-        static FLARE_THREAD_LOCAL LocalPool *_local_pool;
+        static thread_local LocalPool *_local_pool;
+        static thread_local size_t _local_index;
         static flare::static_atomic<long> _nlocal;
         static flare::static_atomic<size_t> _ngroup;
         static pthread_mutex_t _block_group_mutex;
@@ -505,11 +506,14 @@ namespace flare {
     const size_t ObjectPool<T>::FREE_CHUNK_NITEM;
 
     template<typename T>
-    FLARE_THREAD_LOCAL typename ObjectPool<T>::LocalPool *
-            ObjectPool<T>::_local_pool = NULL;
+    thread_local typename ObjectPool<T>::LocalPool *
+            ObjectPool<T>::_local_pool = nullptr;
 
     template<typename T>
-    flare::static_atomic<ObjectPool<T> *> ObjectPool<T>::_singleton = FLARE_STATIC_ATOMIC_INIT(NULL);
+    thread_local size_t ObjectPool<T>::_local_index = std::numeric_limits<size_t>::max();
+
+    template<typename T>
+    flare::static_atomic<ObjectPool<T> *> ObjectPool<T>::_singleton = FLARE_STATIC_ATOMIC_INIT(nullptr);
 
     template<typename T>
     pthread_mutex_t ObjectPool<T>::_singleton_mutex = PTHREAD_MUTEX_INITIALIZER;

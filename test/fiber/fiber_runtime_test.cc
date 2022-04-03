@@ -20,7 +20,7 @@
 #include "flare/base/static_atomic.h"
 #include "flare/times/time.h"
 #include "flare/log/logging.h"
-#include "flare/base/thread.h"
+#include "flare/thread/thread.h"
 #include <flare/fiber/internal/waitable_event.h>
 #include "flare/log/logging.h"
 #include "flare/fiber/runtime.h"
@@ -61,7 +61,7 @@ namespace {
 
     static std::atomic<int> nfibers(0);
     static std::atomic<int> npthreads(0);
-    static FLARE_THREAD_LOCAL bool counted = false;
+    static __thread bool counted = false;
     static std::atomic<bool> stop(false);
 
     static void *odd_thread(void *) {

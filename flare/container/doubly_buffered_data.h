@@ -6,7 +6,7 @@
 #include <vector>                                       // std::vector
 #include <pthread.h>
 #include "flare/base/scoped_lock.h"
-#include "flare/base/thread.h"
+#include "flare/thread/thread.h"
 #include "flare/log/logging.h"
 #include "flare/base/type_traits.h"
 #include "flare/base/errno.h"
@@ -30,6 +30,12 @@ namespace flare::container {
     // foreground and background, lock thread-local mutexes one by one to make
     // sure all existing Read() finish and later Read() see new foreground,
     // then modify background(foreground before flip) again.
+    template<typename T>
+    void delete_object(void *obj) {
+        if (obj) {
+            delete static_cast<T*>(obj);;
+        }
+    }
 
     class Void {
     };
@@ -43,7 +49,7 @@ namespace flare::container {
             friend class DoublyBufferedData;
 
         public:
-            ScopedPtr() : _data(NULL), _w(NULL) {}
+            ScopedPtr() : _data(nullptr), _w(nullptr) {}
 
             ~ScopedPtr() {
                 if (_w) {
@@ -219,11 +225,11 @@ namespace flare::container {
 
     public:
         explicit Wrapper(DoublyBufferedData *c) : _control(c) {
-            pthread_mutex_init(&_mutex, NULL);
+            pthread_mutex_init(&_mutex, nullptr);
         }
 
         ~Wrapper() {
-            if (_control != NULL) {
+            if (_control != nullptr) {
                 _control->RemoveWrapper(this);
             }
             pthread_mutex_destroy(&_mutex);
@@ -254,14 +260,14 @@ namespace flare::container {
     typename DoublyBufferedData<T, TLS>::Wrapper *
     DoublyBufferedData<T, TLS>::AddWrapper() {
         std::unique_ptr<Wrapper> w(new(std::nothrow) Wrapper(this));
-        if (NULL == w) {
-            return NULL;
+        if (nullptr == w) {
+            return nullptr;
         }
         try {
             FLARE_SCOPED_LOCK(_wrappers_mutex);
             _wrappers.push_back(w.get());
         } catch (std::exception &e) {
-            return NULL;
+            return nullptr;
         }
         return w.release();
     }
@@ -270,7 +276,7 @@ namespace flare::container {
     template<typename T, typename TLS>
     void DoublyBufferedData<T, TLS>::RemoveWrapper(
             typename DoublyBufferedData<T, TLS>::Wrapper *w) {
-        if (NULL == w) {
+        if (nullptr == w) {
             return;
         }
         FLARE_SCOPED_LOCK(_wrappers_mutex);
@@ -287,17 +293,16 @@ namespace flare::container {
     DoublyBufferedData<T, TLS>::DoublyBufferedData()
             : _index(0), _created_key(false), _wrapper_key(0) {
         _wrappers.reserve(64);
-        pthread_mutex_init(&_modify_mutex, NULL);
-        pthread_mutex_init(&_wrappers_mutex, NULL);
-        const int rc = pthread_key_create(&_wrapper_key,
-                                          flare::base::delete_object<Wrapper>);
+        pthread_mutex_init(&_modify_mutex, nullptr);
+        pthread_mutex_init(&_wrappers_mutex, nullptr);
+        const int rc = pthread_key_create(&_wrapper_key, delete_object<Wrapper>);
         if (rc != 0) {
             LOG(FATAL) << "Fail to pthread_key_create: " << flare_error(rc);
         } else {
             _created_key = true;
         }
         // Initialize _data for some POD types. This is essential for pointer
-        // types because they should be Read() as NULL before any Modify().
+        // types because they should be Read() as nullptr before any Modify().
         if (std::is_integral<T>::value || std::is_floating_point<T>::value ||
             std::is_pointer<T>::value || std::is_member_function_pointer<T>::value) {
             _data[0] = T();
@@ -316,7 +321,7 @@ namespace flare::container {
         {
             FLARE_SCOPED_LOCK(_wrappers_mutex);
             for (size_t i = 0; i < _wrappers.size(); ++i) {
-                _wrappers[i]->_control = NULL;  // hack: disable removal.
+                _wrappers[i]->_control = nullptr;  // hack: disable removal.
                 delete _wrappers[i];
             }
             _wrappers.clear();
@@ -332,14 +337,14 @@ namespace flare::container {
             return -1;
         }
         Wrapper *w = static_cast<Wrapper *>(pthread_getspecific(_wrapper_key));
-        if (FLARE_LIKELY(w != NULL)) {
+        if (FLARE_LIKELY(w != nullptr)) {
             w->BeginRead();
             ptr->_data = UnsafeRead();
             ptr->_w = w;
             return 0;
         }
         w = AddWrapper();
-        if (FLARE_LIKELY(w != NULL)) {
+        if (FLARE_LIKELY(w != nullptr)) {
             const int rc = pthread_setspecific(_wrapper_key, w);
             if (rc == 0) {
                 w->BeginRead();

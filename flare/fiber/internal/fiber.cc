@@ -48,13 +48,13 @@ namespace flare::fiber_internal {
 
     const int FLARE_ALLOW_UNUSED register_FLAGS_fiber_concurrency =
             ::google::RegisterFlagValidator(&FLAGS_fiber_concurrency,
-                                               validate_fiber_concurrency);
+                                            validate_fiber_concurrency);
 
     static bool validate_fiber_min_concurrency(const char *, int32_t val);
 
     const int FLARE_ALLOW_UNUSED register_FLAGS_fiber_min_concurrency =
             ::google::RegisterFlagValidator(&FLAGS_fiber_min_concurrency,
-                                               validate_fiber_min_concurrency);
+                                            validate_fiber_min_concurrency);
 
     static_assert(sizeof(schedule_group *) == sizeof(std::atomic<schedule_group *>), "atomic_size_match");
 
@@ -64,7 +64,7 @@ namespace flare::fiber_internal {
     // are not constructed before main().
     schedule_group *g_task_control = NULL;
 
-    extern FLARE_THREAD_LOCAL fiber_worker *tls_task_group;
+    extern __thread fiber_worker *tls_task_group;
 
     extern void (*g_worker_startfn)();
 

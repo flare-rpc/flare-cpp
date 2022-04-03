@@ -45,7 +45,7 @@ namespace flare::fiber_internal {
     DECLARE_int32(fiber_min_concurrency);
 
     extern pthread_mutex_t g_task_control_mutex;
-    extern FLARE_THREAD_LOCAL fiber_worker *tls_task_group;
+    extern __thread fiber_worker *tls_task_group;
 
     void (*g_worker_startfn)() = NULL;
 

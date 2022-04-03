@@ -34,7 +34,7 @@ namespace flare::fiber_internal {
 
 // defined in task_group.cpp
     extern __thread fiber_worker *tls_task_group;
-    extern thread_local fiber_local_storage tls_bls;
+    extern __thread fiber_local_storage tls_bls;
     static __thread bool tls_ever_created_keytable = false;
 
 // We keep thread specific data in a two-level array. The top-level array
@@ -456,7 +456,7 @@ int fiber_setspecific(fiber_local_key key, void *data) {
         }
         if (!flare::fiber_internal::tls_ever_created_keytable) {
             flare::fiber_internal::tls_ever_created_keytable = true;
-            CHECK_EQ(0, flare::base::thread_atexit(flare::fiber_internal::cleanup_pthread, kt));
+            auto index = flare::thread::atexit(flare::fiber_internal::cleanup_pthread, kt);
         }
     }
     return kt->set_data(key, data);

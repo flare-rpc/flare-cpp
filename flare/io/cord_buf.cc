@@ -26,7 +26,7 @@
 #include <limits.h>                        // CHAR_BIT
 #include <stdexcept>                       // std::invalid_argument
 #include "flare/base/static_atomic.h"                // std::atomic
-#include "flare/base/thread.h"             // thread_atexit
+#include "flare/thread/thread.h"             // thread_atexit
 #include "flare/log/logging.h"                  // CHECK, LOG
 #include "flare/base/fd_guard.h"                 // flare::base::fd_guard
 #include "flare/io/cord_buf.h"
@@ -345,8 +345,8 @@ namespace flare {
             tls_data.num_blocks = 0;
         }
 
-// Get a (non-full) block from TLS.
-// Notice that the block is not removed from TLS.
+        // Get a (non-full) block from TLS.
+        // Notice that the block is not removed from TLS.
         cord_buf::Block *share_tls_block() {
             TLSData &tls_data = g_tls_data;
             cord_buf::Block *const b = tls_data.block_head;
@@ -365,7 +365,7 @@ namespace flare {
             } else if (!tls_data.registered) {
                 tls_data.registered = true;
                 // Only register atexit at the first time
-                flare::base::thread_atexit(remove_tls_block_chain);
+                flare::thread::atexit(remove_tls_block_chain);
             }
             if (!new_block) {
                 new_block = create_block(); // may be nullptr
@@ -394,7 +394,7 @@ namespace flare {
                 ++tls_data.num_blocks;
                 if (!tls_data.registered) {
                     tls_data.registered = true;
-                    flare::base::thread_atexit(remove_tls_block_chain);
+                    flare::thread::atexit(remove_tls_block_chain);
                 }
             }
         }
@@ -430,7 +430,7 @@ namespace flare {
             tls_data.num_blocks += n;
             if (!tls_data.registered) {
                 tls_data.registered = true;
-                flare::base::thread_atexit(remove_tls_block_chain);
+                flare::thread::atexit(remove_tls_block_chain);
             }
         }
 

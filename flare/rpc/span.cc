@@ -23,7 +23,7 @@
 #include <leveldb/comparator.h>
 #include "flare/fiber/internal/fiber.h"
 #include "flare/base/scoped_lock.h"
-#include "flare/base/thread.h"
+#include "flare/thread/thread.h"
 #include "flare/strings/str_format.h"
 #include "flare/times/time.h"
 #include "flare/log/logging.h"
