@@ -197,7 +197,7 @@ namespace flare {
                 if (index >= _fns.size()) {
                     return;
                 }
-                _fns[index] = std::move([] {});
+                _fns[index] = nullptr;
             }
 
         private:

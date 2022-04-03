@@ -47,8 +47,8 @@ namespace {
         std::atomic<size_t> nleavethread;
     };
 
-// Wrap same counters into different objects to make sure that different key
-// returns different objects as well as aggregate the usages.
+    // Wrap same counters into different objects to make sure that different key
+    // returns different objects as well as aggregate the usages.
     struct CountersWrapper {
         CountersWrapper(Counters *c, fiber_local_key key) : _c(c), _key(key) {}
 
