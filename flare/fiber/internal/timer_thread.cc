@@ -122,8 +122,8 @@ namespace flare::fiber_internal {
 
     TimerThread::TimerThread()
             : _started(false), _stop(false), _buckets(nullptr), _nearest_run_time(std::numeric_limits<int64_t>::max()),
-              _nsignals(0), _thread("ftimer", [arg = this](){
-                TimerThread::run_this(arg);
+              _nsignals(0), _thread("ftimer", [&](){
+                TimerThread::run_this(this);
               }) {
     }
 
@@ -239,15 +239,15 @@ namespace flare::fiber_internal {
         return result.task_id;
     }
 
-// Notice that we don't recycle the Task in this function, let TimerThread::run
-// do it. The side effect is that we may allocated many unscheduled tasks before
-// TimerThread wakes up. The number is approximately qps * timeout_s. Under the
-// precondition that ResourcePool<Task> caches 128K for each thread, with some
-// further calculations, we can conclude that in a RPC scenario:
-//   when timeout / latency < 2730 (128K / sizeof(Task))
-// unscheduled tasks do not occupy additional memory. 2730 is a large ratio
-// between timeout and latency in most RPC scenarios, this is why we don't
-// try to reuse tasks right now inside unschedule() with more complicated code.
+    // Notice that we don't recycle the Task in this function, let TimerThread::run
+    // do it. The side effect is that we may allocated many unscheduled tasks before
+    // TimerThread wakes up. The number is approximately qps * timeout_s. Under the
+    // precondition that ResourcePool<Task> caches 128K for each thread, with some
+    // further calculations, we can conclude that in a RPC scenario:
+    //   when timeout / latency < 2730 (128K / sizeof(Task))
+    // unscheduled tasks do not occupy additional memory. 2730 is a large ratio
+    // between timeout and latency in most RPC scenarios, this is why we don't
+    // try to reuse tasks right now inside unschedule() with more complicated code.
     int TimerThread::unschedule(TaskId task_id) {
         const flare::ResourceId<Task> slot_id = slot_of_task_id(task_id);
         Task *const task = flare::address_resource(slot_id);

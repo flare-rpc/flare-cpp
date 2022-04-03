@@ -59,10 +59,12 @@ namespace flare {
         local_impl = impl.get();
         auto i = thread::thread_index();
         thread::set_name("%s#%d", impl->option.prefix.c_str(), i);
+        LOG(INFO) << "start thread: " << impl->option.prefix << "#" << i;
         impl->set_affinity();
         impl->start_latch.count_down();
         impl->option.func();
         local_impl = nullptr;
+        LOG(INFO) << "exit thread: " << impl->option.prefix << "#" << i;
         return nullptr;
     }
 
@@ -102,11 +104,7 @@ namespace flare {
         if (!_impl) {
             return;
         }
-        bool old;
-        auto r = _impl->detached.compare_exchange_weak(old, true, std::memory_order_acquire);
-        if (r && !old) {
-            ::pthread_join(_impl->thread_id, nullptr);
-        }
+        ::pthread_join(_impl->thread_id, nullptr);
         _impl = nullptr;
     }
 

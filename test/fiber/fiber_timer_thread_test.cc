@@ -126,7 +126,7 @@ namespace {
 
         // sleep 1 second, and unschedule task2
         LOG(INFO) << "Sleep 1s";
-        sleep(1);
+        flare::sleep_for(flare::duration::seconds(1));
         timer_thread.unschedule(keeper2._task_id);
         timer_thread.unschedule(keeper4._task_id);
 
@@ -137,7 +137,7 @@ namespace {
 
         // sleep 10 seconds and stop.
         LOG(INFO) << "Sleep 2s";
-        sleep(2);
+        flare::sleep_for(flare::duration::seconds(2));
         LOG(INFO) << "Stop timer_thread";
         flare::stop_watcher tm;
         tm.start();
@@ -166,7 +166,7 @@ namespace {
         keeper.schedule(&timer_thread);
         ASSERT_NE(flare::fiber_internal::TimerThread::INVALID_TASK_ID, keeper._task_id);
         timespec current_time = flare::time_point::future_unix_seconds(0).to_timespec();
-        sleep(1);  // make sure timer thread start and run
+        flare::sleep_for(flare::duration::seconds(1));  // make sure timer thread start and run
         timer_thread.stop_and_join();
         keeper.expect_first_run(current_time);
     }
@@ -218,7 +218,8 @@ namespace {
         keeper3.schedule(&timer_thread);  // start keeper3
         timespec keeper3_addtime = flare::time_point::future_unix_seconds(0).to_timespec();
         keeper5.schedule(&timer_thread);  // start keeper5
-        sleep(1);  // let keeper1/3/5 run
+        LOG(INFO)<<"sleep 1s";
+        flare::sleep_for(flare::duration::seconds(1));  // let keeper1/3/5 run
 
         TestTask test_task1(&timer_thread, &keeper1, &keeper2, 0);
         timer_thread.schedule(TestTask::routine, &test_task1, past_time);
@@ -226,7 +227,8 @@ namespace {
         TestTask test_task2(&timer_thread, &keeper3, &keeper4, -1);
         timer_thread.schedule(TestTask::routine, &test_task2, past_time);
 
-        sleep(1);
+        LOG(INFO)<<"sleep 1s";
+        flare::sleep_for(flare::duration::seconds(1));
         // test_task1/2 should be both blocked by keeper5.
         keeper2.expect_not_run();
         keeper4.expect_not_run();
@@ -236,7 +238,8 @@ namespace {
 
         // wake up keeper5 to let test_task1/2 run.
         keeper5.wakeup();
-        sleep(1);
+        LOG(INFO)<<"sleep 1s";
+        flare::sleep_for(flare::duration::seconds(1));
 
         timer_thread.stop_and_join();
         timespec finish_time;

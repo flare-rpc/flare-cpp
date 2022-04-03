@@ -28,9 +28,9 @@ namespace flare::fiber_internal {
         TimerThreadOptions();
     };
 
-// TimerThread is a separate thread to run scheduled tasks at specific time.
-// At most one task runs at any time, don't put time-consuming code in the
-// callback otherwise the task may delay other tasks significantly.
+    // TimerThread is a separate thread to run scheduled tasks at specific time.
+    // At most one task runs at any time, don't put time-consuming code in the
+    // callback otherwise the task may delay other tasks significantly.
     class TimerThread {
     public:
         struct Task;

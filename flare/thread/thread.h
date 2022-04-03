@@ -14,9 +14,9 @@
 namespace flare {
 
     // thread provides an OS abstraction for threads of execution.
-    using thread_func = std::function<void()>;
+    using thread_func = flare::function<void()>;
     struct thread_option {
-        size_t stack_size{0};
+        size_t stack_size{8 * 1024 * 1024};
         bool join_able{true};
         thread_func func;
         core_affinity affinity;
@@ -55,30 +55,30 @@ namespace flare {
         thread &operator=(thread &&);
 
         // Start a new thread using the given affinity that calls func.
-        explicit thread(const thread_option &option) {
-            thread_option tmp = option;
+        explicit thread(thread_option &&option) {
+            thread_option tmp = std::forward<thread_option>(option);
             init_by_option(std::move(tmp));
         }
 
-        thread(const core_affinity &affinity, const thread_func &func) {
+        thread(const core_affinity &affinity, thread_func &&func) {
             thread_option option;
             option.affinity = affinity;
-            option.func = func;
+            option.func = std::forward<thread_func>(func);
             init_by_option(std::move(option));
         }
 
-        thread(const std::string &prefix, const thread_func &func) {
+        thread(const std::string &prefix, thread_func &&func) {
             thread_option option;
             option.prefix = prefix;
-            option.func = func;
+            option.func = std::forward<thread_func>(func);
             init_by_option(std::move(option));
         }
 
-        thread(const std::string &prefix, const core_affinity &affinity, const thread_func &func) {
+        thread(const std::string &prefix, const core_affinity &affinity, thread_func &&func) {
             thread_option option;
             option.prefix = prefix;
             option.affinity = affinity;
-            option.func = func;
+            option.func = std::forward<thread_func>(func);
             init_by_option(std::move(option));
         }
 
