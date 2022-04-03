@@ -27,9 +27,15 @@ namespace flare {
     class thread {
     public:
         typedef pthread_t native_handler_type;
+
         thread() = default;
 
+        thread(const thread &) = delete;
+
+        thread &operator=(const thread &) = delete;
+
         thread(thread &&) noexcept;
+
 
         thread &operator=(thread &&);
 
@@ -68,17 +74,19 @@ namespace flare {
         // join() blocks until the thread completes.
         void join();
 
+        bool run_in_thread() const;
+
         // set_name() sets the name of the currently executing thread for displaying
         // in a debugger.
         static void set_name(const char *fmt, ...);
 
         static int32_t thread_index();
 
-        static size_t atexit(flare::function<void()>&&);
+        static size_t atexit(flare::function<void()> &&);
 
         template<typename F, class T>
-        static size_t atexit(F&&f, T && t) {
-            return atexit([lf=std::forward<F>(f), lt = std::forward<T>(t)](){
+        static size_t atexit(F &&f, T &&t) {
+            return atexit([lf = std::forward<F>(f), lt = std::forward<T>(t)]() {
                 lf(lt);
             });
         }
@@ -90,10 +98,6 @@ namespace flare {
 
     private:
         void init_by_option(thread_option &&option);
-
-        thread(const thread &) = delete;
-
-        thread &operator=(const thread &) = delete;
 
         thread_impl *_impl{nullptr};
     };

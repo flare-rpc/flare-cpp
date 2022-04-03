@@ -109,6 +109,9 @@ namespace flare {
     }
 
     void thread::join() {
+        if(!_impl) {
+            return;
+        }
         bool old;
         auto r = _impl->detached.compare_exchange_weak(old, true, std::memory_order_acquire);
         if (r && !old) {
@@ -136,7 +139,11 @@ namespace flare {
 
     bool thread::start() {
         FLARE_CHECK(_impl);
-        return _impl->start();
+        auto r =  _impl->start();
+        if(!_impl->option.join_able) {
+            _impl= nullptr;
+        }
+        return r;
     }
 
     void thread::init_by_option(thread_option &&option) {
@@ -251,6 +258,12 @@ namespace flare {
     }  // namespace detail
 
 
+    bool thread::run_in_thread() const {
+        if(_impl) {
+            return pthread_self() == _impl->thread_id;
+        }
+        return false;
+    }
     size_t thread::atexit(flare::function<void()> &&fn) {
         if (nullptr == fn) {
             errno = EINVAL;

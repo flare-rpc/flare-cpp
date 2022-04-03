@@ -72,7 +72,7 @@ namespace flare::variable {
 
     class VarEntry {
     public:
-        VarEntry() : var(NULL), display_filter(DISPLAY_ON_ALL) {}
+        VarEntry() : var(nullptr), display_filter(DISPLAY_ON_ALL) {}
 
         Variable *var;
         DisplayFilter display_filter;
@@ -96,7 +96,7 @@ namespace flare::variable {
 // We have to initialize global map on need because variable is possibly used
 // before main().
     static pthread_once_t s_var_maps_once = PTHREAD_ONCE_INIT;
-    static VarMapWithLock *s_var_maps = NULL;
+    static VarMapWithLock *s_var_maps = nullptr;
 
     static void init_var_maps() {
         // It's probably slow to initialize all sub maps, but rpc often expose
@@ -163,7 +163,7 @@ namespace flare::variable {
         {
             FLARE_SCOPED_LOCK(m.mutex);
             VarEntry *entry = m.seek(_name);
-            if (entry == NULL) {
+            if (entry == nullptr) {
                 entry = &m[_name];
                 entry->var = this;
                 entry->display_filter = display_filter;
@@ -204,7 +204,7 @@ namespace flare::variable {
 
     void Variable::list_exposed(std::vector<std::string> *names,
                                 DisplayFilter display_filter) {
-        if (names == NULL) {
+        if (names == nullptr) {
             return;
         }
         names->clear();
@@ -253,7 +253,7 @@ namespace flare::variable {
         VarMapWithLock &m = get_var_map(name);
         FLARE_SCOPED_LOCK(m.mutex);
         VarEntry *p = m.seek(name);
-        if (p == NULL) {
+        if (p == nullptr) {
             return -1;
         }
         if (!(display_filter & p->display_filter)) {
@@ -286,7 +286,7 @@ namespace flare::variable {
         VarMapWithLock &m = get_var_map(name);
         FLARE_SCOPED_LOCK(m.mutex);
         VarEntry *p = m.seek(name);
-        if (p == NULL) {
+        if (p == nullptr) {
             return -1;
         }
         return p->var->describe_series(os, options);
@@ -299,7 +299,7 @@ namespace flare::variable {
 // creation of std::string which allocates memory internally.
     class CharArrayStreamBuf : public std::streambuf {
     public:
-        explicit CharArrayStreamBuf() : _data(NULL), _size(0) {}
+        explicit CharArrayStreamBuf() : _data(nullptr), _size(0) {}
 
         ~CharArrayStreamBuf();
 
@@ -328,8 +328,8 @@ namespace flare::variable {
         }
         size_t new_size = std::max(_size * 3 / 2, (size_t) 64);
         char *new_data = (char *) malloc(new_size);
-        if (FLARE_UNLIKELY(new_data == NULL)) {
-            setp(NULL, NULL);
+        if (FLARE_UNLIKELY(new_data == nullptr)) {
+            setp(nullptr, nullptr);
             return std::streambuf::traits_type::eof();
         }
         memcpy(new_data, _data, _size);
@@ -356,8 +356,8 @@ namespace flare::variable {
 // Written by Jack Handy
 // <A href="mailto:jakkhandy@hotmail.com">jakkhandy@hotmail.com</A>
     inline bool wildcmp(const char *wild, const char *str, char question_mark) {
-        const char *cp = NULL;
-        const char *mp = NULL;
+        const char *cp = nullptr;
+        const char *mp = nullptr;
 
         while (*str && *wild != '*') {
             if (*wild != *str && *wild != question_mark) {
@@ -401,7 +401,7 @@ namespace flare::variable {
             std::string name;
             const char wc_pattern[3] = {'*', question_mark, '\0'};
             for (flare::StringMultiSplitter sp(wildcards.c_str(), ",;");
-                 sp != NULL; ++sp) {
+                 sp != nullptr; ++sp) {
                 name.assign(sp.field(), sp.length());
                 if (name.find_first_of(wc_pattern) != std::string::npos) {
                     if (_wcs.empty()) {
@@ -445,8 +445,8 @@ namespace flare::variable {
             : quote_string(true), question_mark('?'), display_filter(DISPLAY_ON_PLAIN_TEXT) {}
 
     int Variable::dump_exposed(Dumper *dumper, const DumpOptions *poptions) {
-        if (NULL == dumper) {
-            LOG(ERROR) << "Parameter[dumper] is NULL";
+        if (nullptr == dumper) {
+            LOG(ERROR) << "Parameter[dumper] is nullptr";
             return -1;
         }
         DumpOptions opt;
@@ -550,7 +550,7 @@ namespace flare::variable {
     class FileDumper : public Dumper {
     public:
         FileDumper(const std::string &filename, std::string_view s/*prefix*/)
-                : _filename(filename), _fp(NULL) {
+                : _filename(filename), _fp(nullptr) {
             // setting prefix.
             // remove trailing spaces.
             const char *p = s.data() + s.size();
@@ -572,12 +572,12 @@ namespace flare::variable {
         void close() {
             if (_fp) {
                 fclose(_fp);
-                _fp = NULL;
+                _fp = nullptr;
             }
         }
 
         bool dump(const std::string &name, const std::string_view &desc) override {
-            if (_fp == NULL) {
+            if (_fp == nullptr) {
                 std::error_code ec;
                 flare::file_path dirPath = flare::file_path(_filename).parent_path();
                 if (!flare::create_directories(dirPath, ec)) {
@@ -586,7 +586,7 @@ namespace flare::variable {
                     return false;
                 }
                 _fp = fopen(_filename.c_str(), "w");
-                if (NULL == _fp) {
+                if (nullptr == _fp) {
                     LOG(ERROR) << "Fail to open " << _filename;
                     return false;
                 }
@@ -631,7 +631,7 @@ namespace flare::variable {
             pathString += ".data";
             dumpers.emplace_back(
                     new FileDumper(pathString, s),
-                    (WildcardMatcher *) NULL);
+                    (WildcardMatcher *) nullptr);
         }
 
         ~FileDumperGroup() {
@@ -698,25 +698,25 @@ namespace flare::variable {
             std::string tabs;
             if (!google::GetCommandLineOption("variable_dump_file", &filename)) {
                 LOG(ERROR) << "Fail to get gflag variable_dump_file";
-                return NULL;
+                return nullptr;
             }
             if (!google::GetCommandLineOption("variable_dump_include",
                                                  &options.white_wildcards)) {
                 LOG(ERROR) << "Fail to get gflag variable_dump_include";
-                return NULL;
+                return nullptr;
             }
             if (!google::GetCommandLineOption("variable_dump_exclude",
                                                  &options.black_wildcards)) {
                 LOG(ERROR) << "Fail to get gflag variable_dump_exclude";
-                return NULL;
+                return nullptr;
             }
             if (!google::GetCommandLineOption("variable_dump_prefix", &prefix)) {
                 LOG(ERROR) << "Fail to get gflag variable_dump_prefix";
-                return NULL;
+                return nullptr;
             }
             if (!google::GetCommandLineOption("variable_dump_tabs", &tabs)) {
                 LOG(ERROR) << "Fail to get gflags variable_dump_tabs";
-                return NULL;
+                return nullptr;
             }
 
             if (FLAGS_variable_dump && !filename.empty()) {
@@ -765,7 +765,7 @@ namespace flare::variable {
 
     static void launch_dumping_thread() {
         pthread_t thread_id;
-        int rc = pthread_create(&thread_id, NULL, dumping_thread, NULL);
+        int rc = pthread_create(&thread_id, nullptr, dumping_thread, nullptr);
         if (rc != 0) {
             LOG(FATAL) << "Fail to launch dumping thread: " << flare_error(rc);
             return;
