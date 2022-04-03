@@ -16,7 +16,7 @@
 // under the License.
 
 #include "flare/log/logging.h"
-#include "flare/base/singleton_on_pthread_once.h"
+#include "flare/memory/leaky_singleton.h"
 #include "flare/rpc/policy/esp_authenticator.h"
 
 
@@ -42,7 +42,7 @@ int EspAuthenticator::VerifyCredential(
 }
 
 const Authenticator* global_esp_authenticator() {
-    return flare::base::get_leaky_singleton<EspAuthenticator>();
+    return flare::get_leaky_singleton<EspAuthenticator>();
 }
 
 }  // namespace policy

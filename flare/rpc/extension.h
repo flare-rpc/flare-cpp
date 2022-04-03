@@ -23,37 +23,44 @@
 #include "flare/base/scoped_lock.h"
 #include "flare/log/logging.h"
 #include "flare/container/case_ignored_flat_map.h"
-#include "flare/base/singleton_on_pthread_once.h"
+#include "flare/memory/leaky_singleton.h"
 
 namespace flare::base {
-template <typename T> class GetLeakySingleton;
+    template<typename T>
+    class get_leaky_singleton;
 }
 
 
 namespace flare::rpc {
 
-// A global map from string to user-extended instances (typed T).
-// It's used by NamingService and LoadBalancer to maintain globally
-// available instances.
-// All names are case-insensitive. Names are printed in lowercases.
+    // A global map from string to user-extended instances (typed T).
+    // It's used by NamingService and LoadBalancer to maintain globally
+    // available instances.
+    // All names are case-insensitive. Names are printed in lowercases.
 
-template <typename T>
-class Extension {
-public:
-    static Extension<T>* instance();
+    template<typename T>
+    class Extension {
+    public:
+        static Extension<T> *instance();
 
-    int Register(const std::string& name, T* instance);
-    int RegisterOrDie(const std::string& name, T* instance);
-    T* Find(const char* name);
-    void List(std::ostream& os, char separator);
+        int Register(const std::string &name, T *instance);
 
-private:
-friend class flare::base::GetLeakySingleton<Extension<T> >;
-    Extension();
-    ~Extension();
-    flare::container::CaseIgnoredFlatMap<T*> _instance_map;
-    flare::base::Mutex _map_mutex;
-};
+        int RegisterOrDie(const std::string &name, T *instance);
+
+        T *Find(const char *name);
+
+        void List(std::ostream &os, char separator);
+
+    private:
+        friend class flare::get_leaky_singleton_helper<Extension<T> >;
+
+        Extension();
+
+        ~Extension();
+
+        flare::container::CaseIgnoredFlatMap<T *> _instance_map;
+        flare::base::Mutex _map_mutex;
+    };
 
 } // namespace flare::rpc
 

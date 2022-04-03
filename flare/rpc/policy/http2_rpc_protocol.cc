@@ -1850,7 +1850,7 @@ DECLARE_bool(usercode_in_pthread);
         }
 
         StreamCreator *get_h2_global_stream_creator() {
-            return flare::base::get_leaky_singleton<H2GlobalStreamCreator>();
+            return flare::get_leaky_singleton<H2GlobalStreamCreator>();
         }
 
     }  // namespace policy

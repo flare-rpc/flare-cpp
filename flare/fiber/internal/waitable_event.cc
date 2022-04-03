@@ -5,7 +5,7 @@
 #include "flare/container/linked_list.h"   // link_node
 
 #ifdef SHOW_FIBER_EVENT_WAITER_COUNT_IN_VARS
-#include "flare/base/singleton_on_pthread_once.h"
+#include "flare/memory/leaky_singleton.h"
 #endif
 
 #include "flare/log/logging.h"
@@ -45,7 +45,7 @@ namespace flare::fiber_internal {
         waitable_event_count() : flare::variable::Adder<int64_t>("fiber_waitable_event_count") {}
     };
     inline flare::variable::Adder<int64_t>& get_waitable_event_count() {
-        return *flare::base::get_leaky_singleton<waitable_event_count>();
+        return *flare::get_leaky_singleton<waitable_event_count>();
     }
 #endif
 

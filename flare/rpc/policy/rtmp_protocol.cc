@@ -1458,7 +1458,7 @@ namespace flare::rpc {
         };
 
         inline void AddChunk() {
-            flare::base::get_leaky_singleton<ChunkStatus>()->count << 1;
+            flare::get_leaky_singleton<ChunkStatus>()->count << 1;
         }
 
         ParseResult RtmpChunkStream::Feed(const RtmpBasicHeader &bh,

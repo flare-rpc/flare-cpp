@@ -21,7 +21,7 @@
 
 #include "flare/fiber/internal/execution_queue.h"
 #include "flare/fiber/this_fiber.h"
-#include "flare/base/singleton_on_pthread_once.h"
+#include "flare/memory/leaky_singleton.h"
 #include "flare/memory/object_pool.h"           // flare::get_object
 #include "flare/memory/resource_pool.h"         // flare::get_resource
 
@@ -59,7 +59,7 @@ namespace flare::fiber_internal {
     }
 
     inline ExecutionQueueVars *get_execq_vars() {
-        return flare::base::get_leaky_singleton<ExecutionQueueVars>();
+        return flare::get_leaky_singleton<ExecutionQueueVars>();
     }
 
     void ExecutionQueueBase::start_execute(TaskNode *node) {

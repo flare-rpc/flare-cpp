@@ -1520,7 +1520,7 @@ namespace flare::rpc {
     };
 
     google::protobuf::Closure *DoNothing() {
-        return flare::base::get_leaky_singleton<DoNothingClosure>();
+        return flare::get_leaky_singleton<DoNothingClosure>();
     }
 
     KVMap &Controller::SessionKV() {

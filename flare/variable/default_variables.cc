@@ -33,7 +33,7 @@
 
 #include "flare/files/filesystem.h"
 #include "flare/times/time.h"
-#include "flare/base/singleton_on_pthread_once.h"
+#include "flare/memory/leaky_singleton.h"
 #include "flare/base/scoped_lock.h"
 #include "flare/base/scoped_file.h"
 #include "flare/base/process_util.h"            // read_command_line
@@ -146,7 +146,7 @@ namespace flare::variable {
         // and 64-bit numbers.
         template<typename ReadFn>
         static const T &get_value(const ReadFn &fn) {
-            CachedReader *p = flare::base::get_leaky_singleton<CachedReader>();
+            CachedReader *p = flare::get_leaky_singleton<CachedReader>();
             const int64_t now = flare::get_current_time_micros();
             if (now > p->_mtime_us + CACHED_INTERVAL_US) {
                 pthread_mutex_lock(&p->_mutex);
@@ -615,7 +615,7 @@ namespace flare::variable {
     };
 
     static void get_cmdline(std::ostream &os, void *) {
-        os << flare::base::get_leaky_singleton<ReadSelfCmdline>()->content;
+        os << flare::get_leaky_singleton<ReadSelfCmdline>()->content;
     }
 
     struct ReadVersion {
@@ -632,7 +632,7 @@ namespace flare::variable {
     };
 
     static void get_kernel_version(std::ostream &os, void *) {
-        os << flare::base::get_leaky_singleton<ReadVersion>()->content;
+        os << flare::get_leaky_singleton<ReadVersion>()->content;
     }
 
 // ======================================

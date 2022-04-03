@@ -53,7 +53,7 @@ namespace flare::rpc {
     };
 
     inline rtmp_variables *get_rtmp_variables() {
-        return flare::base::get_leaky_singleton<rtmp_variables>();
+        return flare::get_leaky_singleton<rtmp_variables>();
     }
 
     namespace policy {

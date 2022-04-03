@@ -14,7 +14,7 @@
 #include "flare/log/logging.h"
 #include "flare/strings/str_format.h"
 #include "flare/strings/ends_with.h"
-#include "flare/base/singleton_on_pthread_once.h"
+#include "flare/memory/leaky_singleton.h"
 #include <sys/socket.h>                        // SO_REUSEADDR SO_REUSEPORT
 
 //supported since Linux 3.9.

@@ -1,7 +1,6 @@
 
 
 #include "flare/thread/thread.h"
-#include "flare/thread/latch.h"
 #include "flare/base/profile.h"
 #include "flare/log/logging.h"
 #include <algorithm>  // std::sort
@@ -32,84 +31,75 @@ namespace flare {
 
     __thread thread_impl *local_impl = nullptr;
 
-    class thread_impl {
-    public:
-        explicit thread_impl(thread_option &&option)
-                : option(std::move(option)), thread_id(0), start_latch(1) {}
+    thread_impl::thread_impl(thread_option &&option)
+            : option(std::move(option)), thread_id(0), start_latch(1) {}
 
-        thread_option option;
-        pthread_t thread_id;
-        latch start_latch;
-        std::atomic<bool> detached{false};
-
-        bool start() {
-            pthread_attr_t attr;
-            pthread_attr_init(&attr);
-            if (!option.join_able) {
-                pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
-                detached = true;
-            }
-            if (option.stack_size > 0) {
-                pthread_attr_setstacksize(&attr, option.stack_size);
-            }
-
-            auto ret = ::pthread_create(&thread_id, &attr, &thread_impl::thread_func, this);
-            pthread_attr_destroy(&attr);
-            if (ret != 0) {
-                return false;
-            }
-            start_latch.wait();
-            return true;
+    bool thread_impl::start() {
+        pthread_attr_t attr;
+        pthread_attr_init(&attr);
+        if (!option.join_able) {
+            pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
+            detached = true;
+        }
+        if (option.stack_size > 0) {
+            pthread_attr_setstacksize(&attr, option.stack_size);
         }
 
-        static void *thread_func(void *arg) {
-            auto impl = (thread_impl *) arg;
-            local_impl = impl;
-            auto i = thread::thread_index();
-            thread::set_name("%s#%d", impl->option.prefix.c_str(), i);
-            impl->set_affinity();
-            impl->start_latch.count_down();
-            impl->option.func();
-            delete local_impl;
-            local_impl = nullptr;
-            return nullptr;
+        auto ret = ::pthread_create(&thread_id, &attr, &thread_impl::thread_func, this);
+        pthread_attr_destroy(&attr);
+        if (ret != 0) {
+            return false;
         }
+        start_latch.wait();
+        return true;
+    }
 
-        void set_affinity() const {
-            auto count = option.affinity.count();
-            if (count == 0) {
-                return;
-            }
+    void *thread_impl::thread_func(void *arg) {
+        auto impl = ref_ptr(ref_ptr_v, (thread_impl *) arg);
+        local_impl = impl.get();
+        auto i = thread::thread_index();
+        thread::set_name("%s#%d", impl->option.prefix.c_str(), i);
+        impl->set_affinity();
+        impl->start_latch.count_down();
+        impl->option.func();
+        local_impl = nullptr;
+        return nullptr;
+    }
+
+    void thread_impl::set_affinity() const {
+        auto count = option.affinity.count();
+        if (count == 0) {
+            return;
+        }
 
 #if defined(__linux__) && !defined(__ANDROID__)
-                cpu_set_t cpuset;
-                CPU_ZERO(&cpuset);
-                for (size_t i = 0; i < count; i++) {
-                  CPU_SET(affinity[i].index, &cpuset);
-                }
-                auto thread = pthread_self();
-                pthread_setaffinity_np(thread, sizeof(cpu_set_t), &cpuset);
+            cpu_set_t cpuset;
+            CPU_ZERO(&cpuset);
+            for (size_t i = 0; i < count; i++) {
+              CPU_SET(affinity[i].index, &cpuset);
+            }
+            auto thread = pthread_self();
+            pthread_setaffinity_np(thread, sizeof(cpu_set_t), &cpuset);
 #elif defined(__FreeBSD__)
-                cpuset_t cpuset;
-                CPU_ZERO(&cpuset);
-                for (size_t i = 0; i < count; i++) {
-                  CPU_SET(affinity[i].index, &cpuset);
-                }
-                auto thread = pthread_self();
-                pthread_setaffinity_np(thread, sizeof(cpuset_t), &cpuset);
+            cpuset_t cpuset;
+            CPU_ZERO(&cpuset);
+            for (size_t i = 0; i < count; i++) {
+              CPU_SET(affinity[i].index, &cpuset);
+            }
+            auto thread = pthread_self();
+            pthread_setaffinity_np(thread, sizeof(cpuset_t), &cpuset);
 #else
-            FLARE_CHECK(!flare::core_affinity::supported,
-                        "Attempting to use thread affinity on a unsupported platform");
+        FLARE_CHECK(!flare::core_affinity::supported,
+                    "Attempting to use thread affinity on a unsupported platform");
 #endif
-        }
-    };
+    }
 
     thread::~thread() {
         FLARE_CHECK(!_impl, "thread::join() was not called before destruction");
     }
 
     void thread::join() {
-        if(!_impl) {
+        if (!_impl) {
             return;
         }
         bool old;
@@ -139,15 +129,15 @@ namespace flare {
 
     bool thread::start() {
         FLARE_CHECK(_impl);
-        auto r =  _impl->start();
-        if(!_impl->option.join_able) {
-            _impl= nullptr;
+        auto r = _impl->start();
+        if (!_impl->option.join_able) {
+            _impl = nullptr;
         }
         return r;
     }
 
     void thread::init_by_option(thread_option &&option) {
-        _impl = new thread_impl(std::move(option));
+        _impl = ref_ptr(ref_ptr_v, new thread_impl(std::move(option)));
     }
 
 
@@ -259,11 +249,12 @@ namespace flare {
 
 
     bool thread::run_in_thread() const {
-        if(_impl) {
+        if (_impl) {
             return pthread_self() == _impl->thread_id;
         }
         return false;
     }
+
     size_t thread::atexit(flare::function<void()> &&fn) {
         if (nullptr == fn) {
             errno = EINVAL;

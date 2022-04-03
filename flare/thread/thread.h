@@ -8,20 +8,35 @@
 #include <pthread.h>
 #include "flare/thread/affinity.h"
 #include "flare/base/functional.h"
+#include "flare/thread/latch.h"
+#include "flare/memory/ref_ptr.h"
 
 namespace flare {
 
     // thread provides an OS abstraction for threads of execution.
     using thread_func = std::function<void()>;
-
-    class thread_impl;
-
     struct thread_option {
         size_t stack_size{0};
         bool join_able{true};
         thread_func func;
         core_affinity affinity;
         std::string prefix;
+    };
+
+    class thread_impl : public ref_counted<thread_impl> {
+    public:
+        explicit thread_impl(thread_option &&option);
+
+        thread_option option;
+        pthread_t thread_id;
+        latch start_latch;
+        std::atomic<bool> detached{false};
+
+        bool start();
+
+        static void *thread_func(void *arg);
+
+        void set_affinity() const;
     };
 
     class thread {
@@ -99,7 +114,7 @@ namespace flare {
     private:
         void init_by_option(thread_option &&option);
 
-        thread_impl *_impl{nullptr};
+        flare::ref_ptr<thread_impl> _impl = nullptr;
     };
 
 

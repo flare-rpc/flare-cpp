@@ -130,7 +130,7 @@ namespace flare::rpc {
             }
         };
         inline h2_variables* get_h2_variables() {
-            return flare::base::get_leaky_singleton<h2_variables>();
+            return flare::get_leaky_singleton<h2_variables>();
         }
 #endif
 

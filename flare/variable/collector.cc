@@ -19,7 +19,7 @@
 
 #include <map>
 #include <gflags/gflags.h>
-#include "flare/base/singleton_on_pthread_once.h"
+#include "flare/memory/leaky_singleton.h"
 #include "flare/variable/all.h"
 #include "flare/variable/collector.h"
 
@@ -344,7 +344,7 @@ namespace flare::variable {
             if (before_add == 0) {
                 sl->first_sample_real_us = flare::get_current_time_micros();
             } else if (before_add >= FLAGS_variable_collector_expected_per_second) {
-                flare::base::get_leaky_singleton<Collector>()->wakeup_grab_thread();
+                flare::get_leaky_singleton<Collector>()->wakeup_grab_thread();
             }
         }
         return sl->sampling_range;
@@ -403,7 +403,7 @@ namespace flare::variable {
     }
 
     void Collected::submit(int64_t cpuwide_us) {
-        Collector *d = flare::base::get_leaky_singleton<Collector>();
+        Collector *d = flare::get_leaky_singleton<Collector>();
         // Destroy the sample in-place if the grab_thread did not run for twice
         // of the normal interval. This also applies to the situation that
         // grab_thread aborts due to severe errors.
