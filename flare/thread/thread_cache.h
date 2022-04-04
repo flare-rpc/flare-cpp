@@ -18,16 +18,11 @@ namespace flare {
 
     // This class helps you optimizing read-mostly shared data access by caching
     // data locally in TLS.
-    //
-    // Note that this class can cause excessive memory usage (as it caches the data
-    // one per thread). If you need to optimize large object access (for read-mostly
-    // scenario), consider using `Hazptr` instead (albeit with a slightly higher
-    // perf. overhead.). (Space/time tradeoff.)
-    template <class T>
+    template<class T>
     class thread_cache {
     public:
-        template <class... Us>
-        explicit thread_cache(Us&&... args) : value_(std::forward<Us>(args)...) {}
+        template<class... Us>
+        explicit thread_cache(Us &&... args) : value_(std::forward<Us>(args)...) {}
 
         // `Get` tests if thread-local cached object is up-to-date, and uses
         // thread-local only if it is, avoiding touching internally shared mutex or
@@ -39,7 +34,7 @@ namespace flare {
         // CAUTION: TWO CONSECUTIVE CALLS TO `get()` CAN RETURN REF. TO DIFFERENT
         // OBJECTS. BESIDES, IF THIS IS THE CASE, THE FIRST REF. IS INVALIDATED BEFORE
         // THE SECOND CALL RETURNS.
-        const T& non_idempotent_get() const {
+        const T &non_idempotent_get() const {
             auto p = tls_cache_.get();
             if (FLARE_UNLIKELY(p->version !=
                                version_.load(std::memory_order_relaxed))) {
@@ -55,8 +50,8 @@ namespace flare {
         // the value is indeed changed.
         //
         // Calls to `Emplace` acquire internal mutex, it's slow.
-        template <class... Us>
-        void emplace(Us&&... args) {
+        template<class... Us>
+        void emplace(Us &&... args) {
             std::scoped_lock _(lock_);
             value_ = T(std::forward<Us>(args)...);
             // `value_` is always accessed with `lock_` held, so we don't need extra
@@ -68,7 +63,8 @@ namespace flare {
         // value, with internally lock held.
 
     private:
-        const T& get_slow() const;
+
+        const T &get_slow() const;
 
     private:
         struct cache_entry {
@@ -87,8 +83,8 @@ namespace flare {
     };
 
     // NOT inlined (to keep fast-path `get()` small.).
-    template <class T>
-    const T& thread_cache<T>::get_slow() const {
+    template<class T>
+    const T &thread_cache<T>::get_slow() const {
         std::shared_lock _(lock_);
         auto p = tls_cache_.get();
         p->version = version_.load(std::memory_order_relaxed);
