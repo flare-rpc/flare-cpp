@@ -8,33 +8,64 @@
 #include <cstddef>
 #include <mutex>
 #include <vector>
+#include <type_traits>
 #include "flare/memory/resident.h"
 
 namespace flare {
 
+    template<typename T, typename Tag, T Max = std::numeric_limits<T>::max()/2>
     class reuse_id {
     public:
-        template<class Tag>
+        static_assert(std::is_integral<T>::value, "T must be integral");
         static reuse_id *instance() {
             static resident_singleton<reuse_id> ia;
             return ia.get();
         }
 
-        std::size_t next();
+        T next() {
+            std::scoped_lock lk(_mutex);
+            if (!_recycled.empty()) {
+                auto rc = _recycled.back();
+                _recycled.pop_back();
+                return rc;
+            }
+            if(_current >= _max) {
+                return _max;
+            }
+            return _current++;
+        }
 
-        void free(std::size_t id);
+        bool free(T index) {
+            std::scoped_lock lk(_mutex);
+            if(index >= _current) {
+                return false;
+            }
+            if (index + 1 == _current) {
+                _current--;
+                return true;
+            }
+            _recycled.push_back(index);
+            return true;
+        }
 
     private:
         reuse_id() = default;
 
         ~reuse_id() = default;
 
-        void do_shrink();
+        void do_shrink() {
+            std::sort(_recycled.begin(), _recycled.end());
+            while (_recycled.back() + 1 == _current) {
+                _recycled.pop_back();
+                _current--;
+            }
+        }
 
     private:
         std::mutex _mutex;
-        std::size_t _current{0};
-        std::vector<std::size_t> _recycled;
+        T _current{0};
+        T _max{Max};
+        std::vector<T> _recycled;
 
     };
 }  // namespace flare
