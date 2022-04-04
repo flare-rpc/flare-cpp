@@ -87,13 +87,19 @@ namespace flare {
         bool start();
 
         // join() blocks until the thread completes.
-        void join();
+        void join(void**ptr = nullptr);
+
+        void detach();
+
+        void kill();
 
         bool run_in_thread() const;
 
         // set_name() sets the name of the currently executing thread for displaying
         // in a debugger.
         static void set_name(const char *fmt, ...);
+
+        static void kill(pthread_t th);
 
         static int32_t thread_index();
 

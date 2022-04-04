@@ -100,12 +100,41 @@ namespace flare {
         FLARE_CHECK(!_impl, "thread::join() was not called before destruction");
     }
 
-    void thread::join() {
+    void thread::join(void**ptr) {
         if (!_impl) {
             return;
         }
-        ::pthread_join(_impl->thread_id, nullptr);
+        ::pthread_join(_impl->thread_id, ptr);
         _impl = nullptr;
+    }
+
+    void thread::detach() {
+        if (!_impl) {
+            return;
+        }
+        ::pthread_detach(_impl->thread_id);
+        _impl = nullptr;
+    }
+
+    void do_nothing_handler(int) {}
+
+    static pthread_once_t register_sigurg_once = PTHREAD_ONCE_INIT;
+
+    static void register_sigurg() {
+        signal(SIGURG, do_nothing_handler);
+    }
+
+    void thread::kill() {
+        if (!_impl) {
+            return;
+        }
+        pthread_once(&register_sigurg_once, register_sigurg);
+        kill(_impl->thread_id);
+    }
+
+    void thread::kill(pthread_t th) {
+        pthread_once(&register_sigurg_once, register_sigurg);
+        ::pthread_kill(th, SIGURG);
     }
 
     void thread::set_name(const char *fmt, ...) {

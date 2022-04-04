@@ -23,6 +23,7 @@
 #include "flare/variable/detail/sampler.h"
 #include "flare/variable/passive_status.h"
 #include "flare/variable/window.h"
+#include "flare/thread/thread.h"
 
 namespace flare::variable {
     namespace detail {
@@ -68,7 +69,7 @@ namespace flare::variable {
             ~SamplerCollector() {
                 if (_created) {
                     _stop = true;
-                    pthread_join(_tid, nullptr);
+                    _tid.join();
                     _created = false;
                 }
             }
@@ -86,8 +87,12 @@ namespace flare::variable {
             }
 
             void create_sampling_thread() {
-                const int rc = pthread_create(&_tid, nullptr, sampling_thread, this);
-                if (rc != 0) {
+                flare::thread th("sampler", [&]{
+                    sampling_thread(this);
+                });
+                _tid = std::move(th);
+                const auto rc = _tid.start();
+                if (!rc) {
                     LOG(FATAL) << "Fail to create sampling_thread, " << flare_error(rc);
                 } else {
                     _created = true;
@@ -118,7 +123,7 @@ namespace flare::variable {
             bool _created;
             bool _stop;
             int64_t _cumulated_time_us;
-            pthread_t _tid;
+            flare::thread _tid;
         };
 
 #ifndef UNIT_TEST

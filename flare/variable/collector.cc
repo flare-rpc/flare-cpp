@@ -22,6 +22,7 @@
 #include "flare/memory/leaky_singleton.h"
 #include "flare/variable/all.h"
 #include "flare/variable/collector.h"
+#include "flare/thread/thread.h"
 
 namespace flare::variable {
 
@@ -98,8 +99,8 @@ namespace flare::variable {
 
         bool _created;      // Mark validness of _grab_thread.
         bool _stop;         // Set to true in dtor.
-        pthread_t _grab_thread;     // For joining.
-        pthread_t _dump_thread;
+        flare::thread _grab_thread;     // For joining.
+        flare::thread _dump_thread;
         int64_t _ngrab FLARE_CACHELINE_ALIGNMENT;
         int64_t _ndrop;
         int64_t _ndump;
@@ -111,14 +112,18 @@ namespace flare::variable {
     };
 
     Collector::Collector()
-            : _last_active_cpuwide_us(flare::get_current_time_micros()), _created(false), _stop(false), _grab_thread(0),
-              _dump_thread(0), _ngrab(0), _ndrop(0), _ndump(0) {
+            : _last_active_cpuwide_us(flare::get_current_time_micros()), _created(false), _stop(false), _grab_thread(),
+              _dump_thread(), _ngrab(0), _ndrop(0), _ndump(0) {
         pthread_mutex_init(&_dump_thread_mutex, NULL);
         pthread_cond_init(&_dump_thread_cond, NULL);
         pthread_mutex_init(&_sleep_mutex, NULL);
         pthread_cond_init(&_sleep_cond, NULL);
-        int rc = pthread_create(&_grab_thread, NULL, run_grab_thread, this);
-        if (rc != 0) {
+        flare::thread th("grab", [&]{
+            run_grab_thread(this);
+        });
+        _grab_thread =std::move(th);
+        auto rc = _grab_thread.start();
+        if (!rc) {
             LOG(ERROR) << "Fail to create Collector, " << flare_error(rc);
         } else {
             _created = true;
@@ -128,7 +133,7 @@ namespace flare::variable {
     Collector::~Collector() {
         if (_created) {
             _stop = true;
-            pthread_join(_grab_thread, NULL);
+            _grab_thread.join();
             _created = false;
         }
         pthread_mutex_destroy(&_dump_thread_mutex);
@@ -153,7 +158,11 @@ namespace flare::variable {
         // called inside the separate _dump_thread to prevent a slow callback
         // (caused by busy disk generally) from blocking collecting code too long
         // that pending requests may explode memory.
-        CHECK_EQ(0, pthread_create(&_dump_thread, NULL, run_dump_thread, this));
+        flare::thread th("dump", [&]{
+            run_dump_thread(this);
+        });
+        _dump_thread = std::move(th);
+        CHECK_EQ(true,_dump_thread.start());
 
         // vars
         flare::variable::PassiveStatus<int64_t> pending_sampled_data(
@@ -272,7 +281,7 @@ namespace flare::variable {
             _stop = true;
             pthread_cond_signal(&_dump_thread_cond);
         }
-        CHECK_EQ(0, pthread_join(_dump_thread, NULL));
+        _dump_thread.join();
     }
 
     void Collector::wakeup_grab_thread() {

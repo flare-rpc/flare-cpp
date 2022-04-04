@@ -701,12 +701,12 @@ namespace flare::variable {
                 return nullptr;
             }
             if (!google::GetCommandLineOption("variable_dump_include",
-                                                 &options.white_wildcards)) {
+                                              &options.white_wildcards)) {
                 LOG(ERROR) << "Fail to get gflag variable_dump_include";
                 return nullptr;
             }
             if (!google::GetCommandLineOption("variable_dump_exclude",
-                                                 &options.black_wildcards)) {
+                                              &options.black_wildcards)) {
                 LOG(ERROR) << "Fail to get gflag variable_dump_exclude";
                 return nullptr;
             }
@@ -764,14 +764,23 @@ namespace flare::variable {
     }
 
     static void launch_dumping_thread() {
-        pthread_t thread_id;
-        int rc = pthread_create(&thread_id, nullptr, dumping_thread, nullptr);
-        if (rc != 0) {
-            LOG(FATAL) << "Fail to launch dumping thread: " << flare_error(rc);
+        flare::thread_option option;
+        option.func = [] {
+            dumping_thread(nullptr);
+        };
+        option.join_able = false;
+
+        flare::thread th(std::move(option));
+
+        auto rc = th.start();
+        if (!rc) {
+            LOG(FATAL)
+
+                    << "Fail to launch dumping thread: " <<
+                    flare_error(rc);
             return;
         }
         // Detach the thread because no one would join it.
-        CHECK_EQ(0, pthread_detach(thread_id));
         created_dumping_thread = true;
     }
 

@@ -28,7 +28,7 @@
 #include "flare/log/logging.h"
 #include "flare/fiber/internal/schedule_group.h"
 #include "flare/fiber/internal/fiber_worker.h"
-#include "flare/fiber/internal/interrupt_pthread.h"
+#include "flare/thread/thread.h"
 #include "flare/fiber/internal/fiber.h"
 #include "flare/fiber/internal/unstable.h"
 #include "flare/fiber/this_fiber.h"
@@ -433,10 +433,10 @@ namespace {
         ASSERT_EQ(0, pthread_create(&th2, nullptr, epoll_waiter, (void *) (intptr_t) epfd));
         flare::fiber_sleep_for(100000L);
         std::cout << "wake up " << th << std::endl;
-        flare::fiber_internal::interrupt_pthread(th);
+        flare::thread::kill(th);
         flare::fiber_sleep_for(100000L);
         std::cout << "wake up " << th2 << std::endl;
-        flare::fiber_internal::interrupt_pthread(th2);
+        flare::thread::kill(th2);
         pthread_join(th, nullptr);
         pthread_join(th2, nullptr);
     }

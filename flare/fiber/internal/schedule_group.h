@@ -16,6 +16,7 @@
 #include "flare/memory/resource_pool.h"                 // ResourcePool
 #include "flare/fiber/internal/work_stealing_queue.h"        // WorkStealingQueue
 #include "flare/fiber/internal/parking_lot.h"
+#include "flare/thread/thread.h"
 
 namespace flare::fiber_internal {
 
@@ -86,7 +87,7 @@ namespace flare::fiber_internal {
 
         bool _stop;
         std::atomic<int> _concurrency;
-        std::vector<pthread_t> _workers;
+        std::vector<flare::thread> _workers;
 
         flare::variable::Adder<int64_t> _nworkers;
         flare::base::Mutex _pending_time_mutex;

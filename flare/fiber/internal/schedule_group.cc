@@ -24,7 +24,6 @@
 #include "flare/log/logging.h"
 #include "flare/hash/murmurhash3.h"
 #include "flare/fiber/internal/sys_futex.h"            // futex_wake_private
-#include "flare/fiber/internal/interrupt_pthread.h"
 #include "flare/fiber/internal/processor.h"            // cpu_relax
 #include "flare/fiber/internal/fiber_worker.h"           // fiber_worker
 #include "flare/fiber/internal/schedule_group.h"
@@ -154,9 +153,13 @@ namespace flare::fiber_internal {
 
         _workers.resize(_concurrency);
         for (int i = 0; i < _concurrency; ++i) {
-            const int rc = pthread_create(&_workers[i], nullptr, worker_thread, this);
-            if (rc) {
-                LOG(ERROR) << "Fail to create _workers[" << i << "], " << flare_error(rc);
+            flare::thread th("sg", [&] {
+                schedule_group::worker_thread(this);
+            });
+            _workers[i] = std::move(th);
+            const auto rc = _workers[i].start();
+            if (!rc) {
+                LOG(ERROR) << "Fail to create _workers[" << i << "], " << flare_error();
                 return -1;
             }
         }
@@ -188,11 +191,14 @@ namespace flare::fiber_internal {
             // Worker will add itself to _idle_workers, so we have to add
             // _concurrency before create a worker.
             _concurrency.fetch_add(1);
-            const int rc = pthread_create(
-                    &_workers[i + old_concurency], nullptr, worker_thread, this);
-            if (rc) {
+            flare::thread th("sg", [&] {
+                schedule_group::worker_thread(this);
+            });
+            _workers[i + old_concurency] = std::move(th);
+            const auto rc = _workers[i + old_concurency].start();
+            if (!rc) {
                 LOG(WARNING) << "Fail to create _workers[" << i + old_concurency
-                             << "], " << flare_error(rc);
+                             << "], " << flare_error();
                 _concurrency.fetch_sub(1, std::memory_order_release);
                 break;
             }
@@ -229,11 +235,11 @@ namespace flare::fiber_internal {
         }
         // Interrupt blocking operations.
         for (size_t i = 0; i < _workers.size(); ++i) {
-            interrupt_pthread(_workers[i]);
+            _workers[i].kill();
         }
         // Join workers
         for (size_t i = 0; i < _workers.size(); ++i) {
-            pthread_join(_workers[i], nullptr);
+            _workers[i].join();
         }
     }
 
