@@ -104,8 +104,8 @@ namespace flare::base::base_internal {
 // namely kylin already has the macro.
 #if defined(FLARE_COMPILER_GNUC) || defined(FLARE_COMPILER_CLANG)
 #  if defined(__cplusplus)
-#    define FLARE_LIKELY(expr) (__builtin_expect((bool)(expr), true))
-#    define FLARE_UNLIKELY(expr) (__builtin_expect((bool)(expr), false))
+#    define FLARE_LIKELY(expr) (__builtin_expect(!!(expr), true))
+#    define FLARE_UNLIKELY(expr) (__builtin_expect(!!(expr), false))
 #  else
 #    define FLARE_LIKELY(expr) (__builtin_expect(!!(expr), 1))
 #    define FLARE_UNLIKELY(expr) (__builtin_expect(!!(expr), 0))

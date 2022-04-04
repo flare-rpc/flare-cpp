@@ -43,6 +43,7 @@
 #include "flare/rpc/options.pb.h"
 #include "flare/strings/ends_with.h"
 #include "flare/fiber/this_fiber.h"
+#include "flare/thread/thread.h"
 
 namespace flare::rpc {
     DECLARE_int32(idle_timeout_second);
@@ -916,16 +917,19 @@ namespace {
             req.set_message(__FUNCTION__);
             const flare::rpc::CallId cid = cntl.call_id();
             ASSERT_TRUE(cid.value != 0);
-            pthread_t th;
             CancelerArg carg = {10000, cid};
-            ASSERT_EQ(0, pthread_create(&th, NULL, Canceler, &carg));
+            flare::thread th("", [&] {
+                Canceler(&carg);
+            });
+
+            ASSERT_EQ(true, th.start());
             req.set_sleep_us(carg.sleep_before_cancel_us * 2);
             flare::stop_watcher tm;
             tm.start();
             CallMethod(&channel, &cntl, &req, &res, async);
             tm.stop();
             EXPECT_LT(labs(tm.u_elapsed() - carg.sleep_before_cancel_us), 10000);
-            ASSERT_EQ(0, pthread_join(th, NULL));
+            th.join();
             EXPECT_EQ(ECANCELED, cntl.ErrorCode());
             EXPECT_EQ(0, cntl.sub_count());
             EXPECT_TRUE(NULL == cntl.sub(1));
@@ -957,16 +961,19 @@ namespace {
             req.set_message(__FUNCTION__);
             const flare::rpc::CallId cid = cntl.call_id();
             ASSERT_TRUE(cid.value != 0);
-            pthread_t th;
             CancelerArg carg = {10000, cid};
-            ASSERT_EQ(0, pthread_create(&th, NULL, Canceler, &carg));
+            flare::thread th("", [&] {
+                Canceler(&carg);
+            });
+
+            ASSERT_EQ(true, th.start());
             req.set_sleep_us(carg.sleep_before_cancel_us * 2);
             flare::stop_watcher tm;
             tm.start();
             CallMethod(&channel, &cntl, &req, &res, async);
             tm.stop();
             EXPECT_LT(labs(tm.u_elapsed() - carg.sleep_before_cancel_us), 10000);
-            ASSERT_EQ(0, pthread_join(th, NULL));
+            th.join();
             EXPECT_EQ(ECANCELED, cntl.ErrorCode());
             EXPECT_EQ(NCHANS, (size_t) cntl.sub_count());
             for (int i = 0; i < cntl.sub_count(); ++i) {
@@ -999,16 +1006,19 @@ namespace {
             req.set_message(__FUNCTION__);
             const flare::rpc::CallId cid = cntl.call_id();
             ASSERT_TRUE(cid.value != 0);
-            pthread_t th;
             CancelerArg carg = {10000, cid};
-            ASSERT_EQ(0, pthread_create(&th, NULL, Canceler, &carg));
+            flare::thread th("", [&] {
+                Canceler(&carg);
+            });
+
+            ASSERT_EQ(true, th.start());
             req.set_sleep_us(carg.sleep_before_cancel_us * 2);
             flare::stop_watcher tm;
             tm.start();
             CallMethod(&channel, &cntl, &req, &res, async);
             tm.stop();
             EXPECT_LT(labs(tm.u_elapsed() - carg.sleep_before_cancel_us), 10000);
-            ASSERT_EQ(0, pthread_join(th, NULL));
+            th.join();
             EXPECT_EQ(ECANCELED, cntl.ErrorCode());
             EXPECT_EQ(1, cntl.sub_count());
             EXPECT_EQ(ECANCELED, cntl.sub(0)->ErrorCode());
@@ -1627,16 +1637,19 @@ namespace {
             SetUpChannel(&channel, single_server, short_connection, &auth);
 
             const int NUM = 10;
-            pthread_t tids[NUM];
+            flare::thread tids[NUM];
             for (int i = 0; i < NUM; ++i) {
                 google::protobuf::Closure *thrd_func =
                         flare::rpc::NewCallback(
                                 this, &ChannelTest::RPCThread, (flare::rpc::ChannelBase *) &channel, async);
-                EXPECT_EQ(0, pthread_create(&tids[i], NULL,
-                                            RunClosure, thrd_func));
+                flare::thread th("", [&] {
+                    RunClosure(thrd_func);
+                });
+                tids[i] = std::move(th);
+                EXPECT_EQ(true, tids[i].start());
             }
             for (int i = 0; i < NUM; ++i) {
-                pthread_join(tids[i], NULL);
+                tids[i].join();
             }
 
             if (short_connection) {
@@ -1667,16 +1680,19 @@ namespace {
             }
 
             const int NUM = 10;
-            pthread_t tids[NUM];
+            flare::thread tids[NUM];
             for (int i = 0; i < NUM; ++i) {
                 google::protobuf::Closure *thrd_func =
                         flare::rpc::NewCallback(
                                 this, &ChannelTest::RPCThread, (flare::rpc::ChannelBase *) &channel, async);
-                EXPECT_EQ(0, pthread_create(&tids[i], NULL,
-                                            RunClosure, thrd_func));
+                flare::thread th("", [&] {
+                    RunClosure(thrd_func);
+                });
+                tids[i] = std::move(th);
+                EXPECT_EQ(true, tids[i].start());
             }
             for (int i = 0; i < NUM; ++i) {
-                pthread_join(tids[i], NULL);
+                tids[i].join();
             }
 
             if (short_connection) {
@@ -1706,16 +1722,19 @@ namespace {
             }
 
             const int NUM = 10;
-            pthread_t tids[NUM];
+            flare::thread tids[NUM];
             for (int i = 0; i < NUM; ++i) {
                 google::protobuf::Closure *thrd_func =
                         flare::rpc::NewCallback(
                                 this, &ChannelTest::RPCThread, (flare::rpc::ChannelBase *) &channel, async);
-                EXPECT_EQ(0, pthread_create(&tids[i], NULL,
-                                            RunClosure, thrd_func));
+                flare::thread th("", [&] {
+                    RunClosure(thrd_func);
+                });
+                tids[i] = std::move(th);
+                EXPECT_EQ(true, tids[i].start());
             }
             for (int i = 0; i < NUM; ++i) {
-                pthread_join(tids[i], NULL);
+                tids[i].join();
             }
 
             if (short_connection) {
@@ -2481,7 +2500,7 @@ namespace {
         MyAuthenticator auth;
         const int NUM = 10;
         const int COUNT = 10000;
-        pthread_t tids[NUM];
+        flare::thread tids[NUM];
 
         // Cause massive connect/close log if setting to true
         bool short_connection = false;
@@ -2501,11 +2520,14 @@ namespace {
                                         this, &ChannelTest::RPCThread,
                                         (flare::rpc::ChannelBase *) &channel,
                                         (bool) async, COUNT);
-                        EXPECT_EQ(0, pthread_create(&tids[i], NULL,
-                                                    RunClosure, thrd_func));
+                        flare::thread th("", [&] {
+                            RunClosure(thrd_func);
+                        });
+                        tids[i] = std::move(th);
+                        EXPECT_EQ(true, tids[i].start());
                     }
                     for (int i = 0; i < NUM; ++i) {
-                        pthread_join(tids[i], NULL);
+                        tids[i].join();
                     }
                 }
             }
@@ -2518,7 +2540,7 @@ namespace {
         MyAuthenticator auth;
         const int NUM = 10;
         const int COUNT = 10000;
-        pthread_t tids[NUM];
+        flare::thread tids[NUM];
 
         // Cause massive connect/close log if setting to true
         bool short_connection = false;
@@ -2537,11 +2559,14 @@ namespace {
                                         bool, bool, bool, const flare::rpc::Authenticator *, int>
                                         (this, &ChannelTest::RPCThread, single_server,
                                          async, short_connection, (need_auth ? &auth : NULL), COUNT);
-                        EXPECT_EQ(0, pthread_create(&tids[i], NULL,
-                                                    RunClosure, thrd_func));
+                        flare::thread th("", [&] {
+                            RunClosure(thrd_func);
+                        });
+                        tids[i] = std::move(th);
+                        EXPECT_EQ(true, tids[i].start());
                     }
                     for (int i = 0; i < NUM; ++i) {
-                        pthread_join(tids[i], NULL);
+                        tids[i].join();
                     }
                 }
             }

@@ -482,16 +482,20 @@ TEST_F(SocketTest, fail_to_connect) {
         ASSERT_EQ(-1, s->fd());
         ASSERT_EQ(point, s->remote_side());
         ASSERT_EQ(id, s->id());
-        pthread_t th[8];
+        flare::thread th[8];
         WriterArg args[FLARE_ARRAY_SIZE(th)];
         for (size_t i = 0; i < FLARE_ARRAY_SIZE(th); ++i) {
             args[i].times = REP;
             args[i].offset = i * REP;
             args[i].socket_id = id;
-            ASSERT_EQ(0, pthread_create(&th[i], NULL, FailedWriter, &args[i]));
+            flare::thread t("", [&] {
+                FailedWriter(&args[i]);
+            });
+            th[i] = std::move(t);
+            ASSERT_EQ(true, th[i].start());
         }
         for (size_t i = 0; i < FLARE_ARRAY_SIZE(th); ++i) {
-            ASSERT_EQ(0, pthread_join(th[i], NULL));
+            th[i].join();
         }
         ASSERT_EQ(-1, s->SetFailed());  // already SetFailed
         ASSERT_EQ(-1, s->fd());
@@ -833,7 +837,7 @@ TEST_F(SocketTest, multi_threaded_write) {
     for (int k = 0; k < 2; ++k) {
         printf("Round %d\n", k + 1);
         ASSERT_EQ(0, socketpair(AF_UNIX, SOCK_STREAM, 0, fds));
-        pthread_t th[8];
+        flare::thread th[8];
         WriterArg args[FLARE_ARRAY_SIZE(th)];
         std::vector<size_t> result;
         result.reserve(FLARE_ARRAY_SIZE(th) * REP);
@@ -860,7 +864,12 @@ TEST_F(SocketTest, multi_threaded_write) {
             args[i].times = REP;
             args[i].offset = i * REP;
             args[i].socket_id = id;
-            ASSERT_EQ(0, pthread_create(&th[i], NULL, Writer, &args[i]));
+            flare::thread t("", [&] {
+                Writer(&args[i]);
+            });
+            th[i] = std::move(t);
+
+            ASSERT_EQ(true, th[i].start());
         }
 
         if (k == 1) {
@@ -898,7 +907,7 @@ TEST_F(SocketTest, multi_threaded_write) {
             }
         }
         for (size_t i = 0; i < FLARE_ARRAY_SIZE(th); ++i) {
-            ASSERT_EQ(0, pthread_join(th[i], NULL));
+            th[i].join();
         }
         ASSERT_TRUE(dest.empty());
         flare::fiber_internal::g_task_control->print_rq_sizes(std::cout);
@@ -1009,9 +1018,12 @@ TEST_F(SocketTest, multi_threaded_write_perf) {
         fiber_start_background(&th[i], NULL, FastWriter, &args[i]);
     }
 
-    pthread_t rth;
+
     ReaderArg reader_arg = {fds[0], 0};
-    pthread_create(&rth, NULL, reader, &reader_arg);
+    flare::thread rth("", [&] {
+        reader(&reader_arg);
+    });
+    rth.start();
 
     flare::stop_watcher tm;
     ProfilerStart("write.prof");
@@ -1032,7 +1044,7 @@ TEST_F(SocketTest, multi_threaded_write_perf) {
     }
     ASSERT_EQ(0, s->SetFailed());
     s.release()->Dereference();
-    pthread_join(rth, NULL);
+    rth.join();
     ASSERT_EQ((flare::rpc::Socket *) NULL, global_sock);
     close(fds[0]);
 }

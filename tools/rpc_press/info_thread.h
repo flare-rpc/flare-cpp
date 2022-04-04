@@ -47,7 +47,7 @@ private:
     InfoThreadOptions _options;
     pthread_mutex_t _mutex;
     pthread_cond_t _cond;
-    pthread_t _tid;
+    flare::thread _tid;
 };
 
 } // namespace flare::rpc

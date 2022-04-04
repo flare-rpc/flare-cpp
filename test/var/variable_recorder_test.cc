@@ -191,14 +191,18 @@ static void *thread_counter(void *arg) {
 TEST(RecorderTest, perf) {
     flare::variable::IntRecorder recorder;
     ASSERT_TRUE(recorder.valid());
-    pthread_t threads[8];
+    flare::thread threads[8];
     for (size_t i = 0; i < FLARE_ARRAY_SIZE(threads); ++i) {
-        pthread_create(&threads[i], NULL, &thread_counter, (void *)&recorder);
+        flare::thread th("", [&]{
+            thread_counter((void *)&recorder);
+        });
+        threads[i] = std::move(th);
+        threads[i].start();
     }
     long totol_time = 0;
     for (size_t i = 0; i < FLARE_ARRAY_SIZE(threads); ++i) {
-        void *ret; 
-        pthread_join(threads[i], &ret);
+        void *ret;
+        threads[i].join(&ret);
         totol_time += (long)ret;
     }
     ASSERT_EQ(((int64_t)OPS_PER_THREAD - 1) / 2, recorder.average());

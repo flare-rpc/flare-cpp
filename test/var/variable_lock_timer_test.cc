@@ -147,24 +147,30 @@ namespace {
     TEST_F(LockTimerTest, signal_lock_time) {
         IntRecorder r0;
         MutexWithRecorder<pthread_mutex_t> m0(r0);
-        pthread_t threads[4];
+        flare::thread threads[4];
         for (size_t i = 0; i < FLARE_ARRAY_SIZE(threads); ++i) {
-            ASSERT_EQ(0, pthread_create(&threads[i], nullptr,
-                                        signal_lock_thread<MutexWithRecorder<pthread_mutex_t> >, &m0));
+            flare::thread th("", [&] {
+                signal_lock_thread<MutexWithRecorder<pthread_mutex_t> >(&m0);
+            });
+            threads[i] = std::move(th);
+            ASSERT_EQ(true, threads[i].start());
         }
         for (size_t i = 0; i < FLARE_ARRAY_SIZE(threads); ++i) {
-            pthread_join(threads[i], nullptr);
+            threads[i].join();
         }
         LOG(INFO) << r0;
         ASSERT_EQ(OPS_PER_THREAD * FLARE_ARRAY_SIZE(threads), (size_t) r0.get_value().num);
         LatencyRecorder r1;
         MutexWithLatencyRecorder<pthread_mutex_t> m1(r1);
         for (size_t i = 0; i < FLARE_ARRAY_SIZE(threads); ++i) {
-            ASSERT_EQ(0, pthread_create(&threads[i], nullptr,
-                                        signal_lock_thread<MutexWithLatencyRecorder<pthread_mutex_t> >, &m1));
+            flare::thread th("", [&] {
+                signal_lock_thread<MutexWithLatencyRecorder<pthread_mutex_t> >(&m1);
+            });
+            threads[i] = std::move(th);
+            ASSERT_EQ(true, threads[i].start());
         }
         for (size_t i = 0; i < FLARE_ARRAY_SIZE(threads); ++i) {
-            pthread_join(threads[i], nullptr);
+            threads[i].join();
         }
         LOG(INFO) << r1._latency;
         ASSERT_EQ(OPS_PER_THREAD * FLARE_ARRAY_SIZE(threads), (size_t) r1.count());
@@ -196,13 +202,16 @@ namespace {
         LatencyRecorder r1;
         arg.m0.set_recorder(r0);
         arg.m1.set_recorder(r1);
-        pthread_t threads[4];
+        flare::thread threads[4];
         for (size_t i = 0; i < FLARE_ARRAY_SIZE(threads); ++i) {
-            ASSERT_EQ(0, pthread_create(&threads[i], nullptr,
-                                        double_lock_thread<M0, M1>, &arg));
+            flare::thread th("", [&] {
+                double_lock_thread<M0, M1>(&arg);
+            });
+            threads[i] = std::move(th);
+            ASSERT_EQ(true, threads[i].start());
         }
         for (size_t i = 0; i < FLARE_ARRAY_SIZE(threads); ++i) {
-            pthread_join(threads[i], nullptr);
+            threads[i].join();
         }
         ASSERT_EQ(OPS_PER_THREAD * FLARE_ARRAY_SIZE(threads), (size_t) r0.get_value().num);
         ASSERT_EQ(OPS_PER_THREAD * FLARE_ARRAY_SIZE(threads), (size_t) r1.count());
@@ -214,11 +223,14 @@ namespace {
         arg1.m0.set_recorder(r1);
         arg1.m1.set_recorder(r0);
         for (size_t i = 0; i < FLARE_ARRAY_SIZE(threads); ++i) {
-            ASSERT_EQ(0, pthread_create(&threads[i], nullptr,
-                                        double_lock_thread<M1, M0>, &arg1));
+            flare::thread th("", [&] {
+                double_lock_thread<M1, M0>(&arg1);
+            });
+            threads[i] = std::move(th);
+            ASSERT_EQ(true, threads[i].start());
         }
         for (size_t i = 0; i < FLARE_ARRAY_SIZE(threads); ++i) {
-            pthread_join(threads[i], nullptr);
+            threads[i].join();
         }
         ASSERT_EQ(OPS_PER_THREAD * FLARE_ARRAY_SIZE(threads), (size_t) r0.get_value().num);
         ASSERT_EQ(OPS_PER_THREAD * FLARE_ARRAY_SIZE(threads), (size_t) r1.count());

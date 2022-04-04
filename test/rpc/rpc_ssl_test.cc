@@ -31,6 +31,7 @@
 #include "flare/rpc/channel.h"
 #include "flare/rpc/socket_map.h"
 #include "flare/rpc/controller.h"
+#include "flare/thread/thread.h"
 #include "echo.pb.h"
 
 namespace flare::rpc {
@@ -141,7 +142,7 @@ TEST_F(SSLTest, sanity) {
     // stress test
     const int NUM = 5;
     const int COUNT = 3000;
-    pthread_t tids[NUM];
+    flare::thread tids[NUM];
     {
         flare::rpc::Channel channel;
         flare::rpc::ChannelOptions coptions;
@@ -151,10 +152,14 @@ TEST_F(SSLTest, sanity) {
         for (int i = 0; i < NUM; ++i) {
             google::protobuf::Closure *thrd_func =
                     flare::rpc::NewCallback(SendMultipleRPC, &channel, COUNT);
-            EXPECT_EQ(0, pthread_create(&tids[i], NULL, RunClosure, thrd_func));
+            flare::thread th("", [&]{
+                RunClosure(thrd_func);
+            });
+            tids[i] = std::move(th);
+            EXPECT_EQ(tids[i].start(), true);
         }
         for (int i = 0; i < NUM; ++i) {
-            pthread_join(tids[i], NULL);
+            tids[i].join();
         }
     }
     {
@@ -168,10 +173,14 @@ TEST_F(SSLTest, sanity) {
         for (int i = 0; i < NUM; ++i) {
             google::protobuf::Closure *thrd_func =
                     flare::rpc::NewCallback(SendMultipleRPC, &channel, COUNT);
-            EXPECT_EQ(0, pthread_create(&tids[i], NULL, RunClosure, thrd_func));
+            flare::thread th("", [&]{
+                RunClosure(thrd_func);
+            });
+            tids[i] = std::move(th);
+            EXPECT_EQ(tids[i].start(), true);
         }
         for (int i = 0; i < NUM; ++i) {
-            pthread_join(tids[i], NULL);
+            tids[i].join();
         }
     }
 
@@ -349,12 +358,16 @@ TEST_F(SSLTest, ssl_perf) {
     SSL_set_tlsext_host_name(cli_ssl, "localhost");
 #endif
     SSL *serv_ssl = flare::rpc::CreateSSLSession(serv_ctx, 0, servfd, true);
-    pthread_t cpid;
-    pthread_t spid;
-    ASSERT_EQ(0, pthread_create(&cpid, NULL, ssl_perf_client, cli_ssl));
-    ASSERT_EQ(0, pthread_create(&spid, NULL, ssl_perf_server, serv_ssl));
-    ASSERT_EQ(0, pthread_join(cpid, NULL));
-    ASSERT_EQ(0, pthread_join(spid, NULL));
+    flare::thread cpid("", [&]{
+        ssl_perf_client(cli_ssl);
+    });
+    flare::thread spid("", [&]{
+        ssl_perf_server(serv_ssl);
+    });
+    ASSERT_EQ(true, cpid.start());
+    ASSERT_EQ(true, spid.start());
+    cpid.join();
+    spid.join();
     close(clifd);
     close(servfd);
 }

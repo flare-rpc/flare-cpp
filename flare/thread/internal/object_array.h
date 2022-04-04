@@ -302,7 +302,7 @@ namespace flare {
         template<class T>
         [[gnu::noinline]] T *reload_local_object_array_cache(std::ptrdiff_t offset,
                                                              object_array_cache<T> *cache) {
-            FLARE_CHECK_EQ(offset % sizeof(T), 0);
+            FLARE_CHECK_EQ(offset % sizeof(T), 0UL);
             auto &&obj_array = get_newest_local_object_array<T>();
             cache->objects = obj_array->objects.get_objects_maybe_uninitialized();
             cache->limit = obj_array->objects.size() * sizeof(T);

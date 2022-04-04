@@ -59,7 +59,7 @@ private:
     std::string _bugs_file;
     bool _started;
     bool _stop;
-    pthread_t _tid;
+    flare::thread _tid;
     std::shared_ptr<BugList> _bug_list;
 };
 
@@ -126,11 +126,14 @@ int main(int argc, char *argv[]) {
 }
 
 BugsLoader::BugsLoader()
-        : _started(false), _stop(false), _tid(0) {}
+        : _started(false), _stop(false), _tid("trme", [&] {
+    run_this(this);
+}) {}
 
 bool BugsLoader::start(const std::string &bugs_file) {
     _bugs_file = bugs_file;
-    if (pthread_create(&_tid, NULL, run_this, this) != 0) {
+
+    if (!_tid.start()) {
         LOG(ERROR) << "Fail to create loading thread";
         return false;
     }
@@ -143,12 +146,12 @@ void BugsLoader::stop() {
         return;
     }
     _stop = true;
-    pthread_join(_tid, NULL);
+    _tid.join();
 }
 
 void *BugsLoader::run_this(void *arg) {
     ((BugsLoader *) arg)->run();
-    return NULL;
+    return nullptr;
 }
 
 void BugsLoader::run() {
@@ -181,7 +184,7 @@ void BugsLoader::load_bugs() {
         return;
     }
 
-    char *line = NULL;
+    char *line = nullptr;
     size_t line_len = 0;
     ssize_t nr = 0;
     int nline = 0;
@@ -254,7 +257,7 @@ void BugsLoader::load_bugs() {
 bool BugsLoader::find(int64_t revision, flare::rpc::TrackMeResponse *response) {
     // Add reference to make sure the bug list is not deleted.
     std::shared_ptr<BugList> local_list = _bug_list;
-    if (local_list.get() == NULL) {
+    if (local_list.get() == nullptr) {
         return false;
     }
     // Reading the list in this function is always safe because a BugList

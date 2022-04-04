@@ -143,7 +143,7 @@ namespace pbrpcframework {
         FILE *_output_json;
         google::protobuf::compiler::Importer *_importer;
         google::protobuf::DynamicMessageFactory _factory;
-        std::vector<pthread_t> _ttid;
+        std::vector<flare::thread> _ttid;
         flare::rpc::InfoThread _info_thr;
     };
 }

@@ -19,99 +19,109 @@
 #include "flare/variable/detail/sampler.h"
 #include "flare/times/time.h"
 #include "flare/log/logging.h"
+#include "flare/thread/thread.h"
 #include <gtest/gtest.h>
 
 namespace {
 
-TEST(SamplerTest, linked_list) {
-    flare::container::link_node<flare::variable::detail::Sampler> n1, n2;
-    n1.insert_before_as_list(&n2);
-    ASSERT_EQ(n1.next(), &n2);
-    ASSERT_EQ(n1.previous(), &n2);
-    ASSERT_EQ(n2.next(), &n1);
-    ASSERT_EQ(n2.previous(), &n1);
+    TEST(SamplerTest, linked_list) {
+        flare::container::link_node<flare::variable::detail::Sampler> n1, n2;
+        n1.insert_before_as_list(&n2);
+        ASSERT_EQ(n1.next(), &n2);
+        ASSERT_EQ(n1.previous(), &n2);
+        ASSERT_EQ(n2.next(), &n1);
+        ASSERT_EQ(n2.previous(), &n1);
 
-    flare::container::link_node<flare::variable::detail::Sampler> n3, n4;
-    n3.insert_before_as_list(&n4);
-    ASSERT_EQ(n3.next(), &n4);
-    ASSERT_EQ(n3.previous(), &n4);
-    ASSERT_EQ(n4.next(), &n3);
-    ASSERT_EQ(n4.previous(), &n3);
+        flare::container::link_node<flare::variable::detail::Sampler> n3, n4;
+        n3.insert_before_as_list(&n4);
+        ASSERT_EQ(n3.next(), &n4);
+        ASSERT_EQ(n3.previous(), &n4);
+        ASSERT_EQ(n4.next(), &n3);
+        ASSERT_EQ(n4.previous(), &n3);
 
-    n1.insert_before_as_list(&n3);
-    ASSERT_EQ(n1.next(), &n2);
-    ASSERT_EQ(n2.next(), &n3);
-    ASSERT_EQ(n3.next(), &n4);
-    ASSERT_EQ(n4.next(), &n1);
-    ASSERT_EQ(&n1, n2.previous());
-    ASSERT_EQ(&n2, n3.previous());
-    ASSERT_EQ(&n3, n4.previous());
-    ASSERT_EQ(&n4, n1.previous());
-}
+        n1.insert_before_as_list(&n3);
+        ASSERT_EQ(n1.next(), &n2);
+        ASSERT_EQ(n2.next(), &n3);
+        ASSERT_EQ(n3.next(), &n4);
+        ASSERT_EQ(n4.next(), &n1);
+        ASSERT_EQ(&n1, n2.previous());
+        ASSERT_EQ(&n2, n3.previous());
+        ASSERT_EQ(&n3, n4.previous());
+        ASSERT_EQ(&n4, n1.previous());
+    }
 
-class DebugSampler : public flare::variable::detail::Sampler {
-public:
-    DebugSampler() : _ncalled(0) {}
-    ~DebugSampler() {
-        ++_s_ndestroy;
-    }
-    void take_sample() {
-        ++_ncalled;
-    }
-    int called_count() const { return _ncalled; }
-private:
-    int _ncalled;
-    static int _s_ndestroy;
-};
-int DebugSampler::_s_ndestroy = 0;
+    class DebugSampler : public flare::variable::detail::Sampler {
+    public:
+        DebugSampler() : _ncalled(0) {}
 
-TEST(SamplerTest, single_threaded) {
-    const int N = 100;
-    DebugSampler* s[N];
-    for (int i = 0; i < N; ++i) {
-        s[i] = new DebugSampler;
-        s[i]->schedule();
-    }
-    usleep(1010000);
-    for (int i = 0; i < N; ++i) {
-        // LE: called once every second, may be called more than once
-        ASSERT_LE(1, s[i]->called_count()) << "i=" << i;
-    }
-    EXPECT_EQ(0, DebugSampler::_s_ndestroy);
-    for (int i = 0; i < N; ++i) {
-        s[i]->destroy();
-    }
-    usleep(1010000);
-    EXPECT_EQ(N, DebugSampler::_s_ndestroy);
-}
+        ~DebugSampler() {
+            ++_s_ndestroy;
+        }
 
-static void* check(void*) {
-    const int N = 100;
-    DebugSampler* s[N];
-    for (int i = 0; i < N; ++i) {
-        s[i] = new DebugSampler;
-        s[i]->schedule();
-    }
-    usleep(1010000);
-    for (int i = 0; i < N; ++i) {
-        EXPECT_LE(1, s[i]->called_count()) << "i=" << i;
-    }
-    for (int i = 0; i < N; ++i) {
-        s[i]->destroy();
-    }
-    return NULL;
-}
+        void take_sample() {
+            ++_ncalled;
+        }
 
-TEST(SamplerTest, multi_threaded) {
-    pthread_t th[10];
-    DebugSampler::_s_ndestroy = 0;
-    for (size_t i = 0; i < FLARE_ARRAY_SIZE(th); ++i) {
-        ASSERT_EQ(0, pthread_create(&th[i], NULL, check, NULL));
+        int called_count() const { return _ncalled; }
+
+    private:
+        int _ncalled;
+        static int _s_ndestroy;
+    };
+
+    int DebugSampler::_s_ndestroy = 0;
+
+    TEST(SamplerTest, single_threaded) {
+        const int N = 100;
+        DebugSampler *s[N];
+        for (int i = 0; i < N; ++i) {
+            s[i] = new DebugSampler;
+            s[i]->schedule();
+        }
+        usleep(1010000);
+        for (int i = 0; i < N; ++i) {
+            // LE: called once every second, may be called more than once
+            ASSERT_LE(1, s[i]->called_count()) << "i=" << i;
+        }
+        EXPECT_EQ(0, DebugSampler::_s_ndestroy);
+        for (int i = 0; i < N; ++i) {
+            s[i]->destroy();
+        }
+        usleep(1010000);
+        EXPECT_EQ(N, DebugSampler::_s_ndestroy);
     }
-    for (size_t i = 0; i < FLARE_ARRAY_SIZE(th); ++i) {
-        ASSERT_EQ(0, pthread_join(th[i], NULL));
+
+    static void *check(void *) {
+        const int N = 100;
+        DebugSampler *s[N];
+        for (int i = 0; i < N; ++i) {
+            s[i] = new DebugSampler;
+            s[i]->schedule();
+        }
+        usleep(1010000);
+        for (int i = 0; i < N; ++i) {
+            EXPECT_LE(1, s[i]->called_count()) << "i=" << i;
+        }
+        for (int i = 0; i < N; ++i) {
+            s[i]->destroy();
+        }
+        return NULL;
     }
-    sleep(1);
-    EXPECT_EQ(100 * FLARE_ARRAY_SIZE(th), (size_t)DebugSampler::_s_ndestroy);
-}
+
+    TEST(SamplerTest, multi_threaded) {
+        flare::thread th[10];
+        DebugSampler::_s_ndestroy = 0;
+        for (size_t i = 0; i < FLARE_ARRAY_SIZE(th); ++i) {
+            flare::thread t("", [&]{
+                check(nullptr);
+            });
+            th[i]= std::move(t);
+            ASSERT_EQ(true, th[i].start());
+        }
+        for (size_t i = 0; i < FLARE_ARRAY_SIZE(th); ++i) {
+            th[i].join();
+        }
+        sleep(1);
+        EXPECT_EQ(100 * FLARE_ARRAY_SIZE(th), (size_t) DebugSampler::_s_ndestroy);
+    }
 } // namespace

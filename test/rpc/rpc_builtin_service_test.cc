@@ -111,7 +111,7 @@ void MyVLogSite() {
 void CheckContent(const flare::rpc::Controller &cntl, const char *name) {
     const std::string &content = cntl.response_attachment().to_string();
     std::size_t pos = content.find(name);
-    ASSERT_TRUE(pos != std::string::npos) << "name=" << name<<"\n content="<<content;
+    ASSERT_TRUE(pos != std::string::npos) << "name=" << name << "\n content=" << content;
 }
 
 void CheckErrorText(const flare::rpc::Controller &cntl, const char *error) {
@@ -212,7 +212,7 @@ protected:
         SetUpController(&cntl, use_html);
         flare::base::end_point ep;
         ASSERT_EQ(0, str2endpoint("127.0.0.1:9798", &ep));
-        ASSERT_EQ(0, _server.Start(ep, NULL));
+        ASSERT_EQ(0, _server.Start(ep, nullptr));
         int self_port = -1;
         const int cfd = tcp_connect(ep, &self_port);
         ASSERT_GT(cfd, 0);
@@ -364,9 +364,9 @@ protected:
                                         flare::rpc::SERVER_OWNS_SERVICE));
         flare::base::end_point ep;
         ASSERT_EQ(0, str2endpoint("127.0.0.1:9748", &ep));
-        ASSERT_EQ(0, _server.Start(ep, NULL));
+        ASSERT_EQ(0, _server.Start(ep, nullptr));
         flare::rpc::Channel channel;
-        ASSERT_EQ(0, channel.Init(ep, NULL));
+        ASSERT_EQ(0, channel.Init(ep, nullptr));
         test::EchoService_Stub stub(&channel);
         int64_t log_id = 1234567890;
         char querystr_buf[128];
@@ -378,7 +378,7 @@ protected:
             flare::rpc::Controller echo_cntl;
             echo_req.set_message("hello");
             echo_cntl.set_log_id(++log_id);
-            stub.Echo(&echo_cntl, &echo_req, &echo_res, NULL);
+            stub.Echo(&echo_cntl, &echo_req, &echo_res, nullptr);
             EXPECT_FALSE(echo_cntl.Failed());
 
             // Wait for level db to commit span information
@@ -402,7 +402,7 @@ protected:
             echo_req.set_message("hello");
             echo_req.set_sleep_us(150000);
             echo_cntl.set_log_id(++log_id);
-            stub.Echo(&echo_cntl, &echo_req, &echo_res, NULL);
+            stub.Echo(&echo_cntl, &echo_req, &echo_res, nullptr);
             EXPECT_FALSE(echo_cntl.Failed());
 
             // Wait for level db to commit span information
@@ -426,7 +426,7 @@ protected:
             std::string request_str(1500, 'a');
             echo_req.set_message(request_str);
             echo_cntl.set_log_id(++log_id);
-            stub.Echo(&echo_cntl, &echo_req, &echo_res, NULL);
+            stub.Echo(&echo_cntl, &echo_req, &echo_res, nullptr);
             EXPECT_FALSE(echo_cntl.Failed());
 
             // Wait for level db to commit span information
@@ -449,7 +449,7 @@ protected:
             flare::rpc::Controller echo_cntl;
             echo_req.set_message("hello");
             echo_cntl.set_log_id(++log_id);
-            stub.Echo(&echo_cntl, &echo_req, &echo_res, NULL);
+            stub.Echo(&echo_cntl, &echo_req, &echo_res, nullptr);
             EXPECT_FALSE(echo_cntl.Failed());
 
             // Wait for level db to commit span information
@@ -536,7 +536,7 @@ TEST_F(BuiltinServiceTest, customized_health) {
     ASSERT_EQ(0, chan.Init("127.0.0.1:9798", &copt));
     flare::rpc::Controller cntl;
     cntl.http_request().uri() = "/health";
-    chan.CallMethod(NULL, &cntl, &req, &res, NULL);
+    chan.CallMethod(nullptr, &cntl, &req, &res, nullptr);
     EXPECT_FALSE(cntl.Failed()) << cntl.ErrorText();
     EXPECT_EQ("i'm ok", cntl.response_attachment());
 }
@@ -562,7 +562,7 @@ TEST_F(BuiltinServiceTest, list) {
 
 void *sleep_thread(void *) {
     sleep(1);
-    return NULL;
+    return nullptr;
 }
 
 TEST_F(BuiltinServiceTest, threads) {
@@ -571,13 +571,15 @@ TEST_F(BuiltinServiceTest, threads) {
     flare::rpc::ThreadsResponse res;
     flare::rpc::Controller cntl;
     ClosureChecker done;
-    pthread_t tid;
-    ASSERT_EQ(0, pthread_create(&tid, NULL, sleep_thread, NULL));
+    flare::thread tid("", [&] {
+        sleep_thread(nullptr);
+    });
+    ASSERT_EQ(true, tid.start());
     service.default_method(&cntl, &req, &res, &done);
     EXPECT_FALSE(cntl.Failed());
     // Doesn't work under gcc 4.8.2
     // CheckContent(cntl, "sleep_thread");
-    pthread_join(tid, NULL);
+    tid.join();
 }
 
 
@@ -598,7 +600,7 @@ TEST_F(BuiltinServiceTest, bad_method) {
 
 TEST_F(BuiltinServiceTest, vars) {
     // Start server to show variables inside
-    ASSERT_EQ(0, _server.Start("127.0.0.1:9798", NULL));
+    ASSERT_EQ(0, _server.Start("127.0.0.1:9798", nullptr));
     flare::rpc::VarsService service;
     flare::rpc::VarsRequest req;
     flare::rpc::VarsResponse res;
@@ -638,7 +640,7 @@ TEST_F(BuiltinServiceTest, pprof) {
         ClosureChecker done;
         flare::rpc::Controller cntl;
         cntl.http_request().uri().SetQuery("seconds", "1");
-        service.profile(&cntl, NULL, NULL, &done);
+        service.profile(&cntl, nullptr, nullptr, &done);
         // Just for loading symbols in gperftools/profiler.h
         ProfilerFlush();
         EXPECT_FALSE(cntl.Failed()) << cntl.ErrorText();
@@ -647,28 +649,28 @@ TEST_F(BuiltinServiceTest, pprof) {
     {
         ClosureChecker done;
         flare::rpc::Controller cntl;
-        service.heap(&cntl, NULL, NULL, &done);
+        service.heap(&cntl, nullptr, nullptr, &done);
         const int rc = getenv("TCMALLOC_SAMPLE_PARAMETER") != nullptr ? 0 : flare::rpc::ENOMETHOD;
         EXPECT_EQ(rc, cntl.ErrorCode()) << cntl.ErrorText();
     }
     {
         ClosureChecker done;
         flare::rpc::Controller cntl;
-        service.growth(&cntl, NULL, NULL, &done);
+        service.growth(&cntl, nullptr, nullptr, &done);
         // linked tcmalloc in UT
         EXPECT_EQ(0, cntl.ErrorCode()) << cntl.ErrorText();
     }
     {
         ClosureChecker done;
         flare::rpc::Controller cntl;
-        service.symbol(&cntl, NULL, NULL, &done);
+        service.symbol(&cntl, nullptr, nullptr, &done);
         EXPECT_FALSE(cntl.Failed());
         CheckContent(cntl, "num_symbols");
     }
     {
         ClosureChecker done;
         flare::rpc::Controller cntl;
-        service.cmdline(&cntl, NULL, NULL, &done);
+        service.cmdline(&cntl, nullptr, nullptr, &done);
         EXPECT_FALSE(cntl.Failed());
         CheckContent(cntl, "rpc_builtin_service_test");
     }
@@ -735,7 +737,7 @@ TEST_F(BuiltinServiceTest, token) {
     }
     {
         fiber_token_t id;
-        EXPECT_EQ(0, fiber_token_create(&id, NULL, NULL));
+        EXPECT_EQ(0, fiber_token_create(&id, nullptr, nullptr));
         ClosureChecker done;
         flare::rpc::Controller cntl;
         std::string id_string;
@@ -749,7 +751,7 @@ TEST_F(BuiltinServiceTest, token) {
 
 void *dummy_fiber(void *) {
     flare::fiber_sleep_for(1000000);
-    return NULL;
+    return nullptr;
 }
 
 TEST_F(BuiltinServiceTest, fibers) {
@@ -773,7 +775,7 @@ TEST_F(BuiltinServiceTest, fibers) {
     }
     {
         fiber_id_t th;
-        EXPECT_EQ(0, fiber_start_background(&th, NULL, dummy_fiber, NULL));
+        EXPECT_EQ(0, fiber_start_background(&th, nullptr, dummy_fiber, nullptr));
         ClosureChecker done;
         flare::rpc::Controller cntl;
         std::string id_string;

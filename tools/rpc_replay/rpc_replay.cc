@@ -34,7 +34,7 @@ DEFINE_int32(qps, 0, "Limit QPS if this flag is positive");
 DEFINE_int32(thread_num, 0, "Number of threads for replaying");
 DEFINE_bool(use_fiber, true, "Use fiber to replay");
 DEFINE_string(connection_type, "", "Connection type, choose automatically "
-              "according to protocol by default");
+                                   "according to protocol by default");
 DEFINE_string(server, "0.0.0.0:8002", "IP Address of server");
 DEFINE_string(load_balancer, "", "The algorithm for load balancing");
 DEFINE_int32(timeout_ms, 100, "RPC timeout in milliseconds");
@@ -53,15 +53,15 @@ public:
     ~ChannelGroup();
 
     // Get channel by protocol type.
-    flare::rpc::Channel* channel(flare::rpc::ProtocolType type) {
-        if ((size_t)type < _chans.size()) {
-            return _chans[(size_t)type];
+    flare::rpc::Channel *channel(flare::rpc::ProtocolType type) {
+        if ((size_t) type < _chans.size()) {
+            return _chans[(size_t) type];
         }
         return nullptr;
     }
-    
+
 private:
-    std::vector<flare::rpc::Channel*> _chans;
+    std::vector<flare::rpc::Channel *> _chans;
 };
 
 int ChannelGroup::Init() {
@@ -74,21 +74,21 @@ int ChannelGroup::Init() {
     size_t max_protocol_size = 0;
     for (size_t i = 0; i < protocols.size(); ++i) {
         max_protocol_size = std::max(max_protocol_size,
-                                     (size_t)protocols[i].first);
+                                     (size_t) protocols[i].first);
     }
     _chans.resize(max_protocol_size + 1);
     for (size_t i = 0; i < protocols.size(); ++i) {
         if (protocols[i].second.support_client() &&
             protocols[i].second.support_server()) {
             const flare::rpc::ProtocolType prot = protocols[i].first;
-            flare::rpc::Channel* chan = new flare::rpc::Channel;
+            flare::rpc::Channel *chan = new flare::rpc::Channel;
             flare::rpc::ChannelOptions options;
             options.protocol = prot;
             options.connection_type = FLAGS_connection_type;
             options.timeout_ms = FLAGS_timeout_ms/*milliseconds*/;
             options.max_retry = FLAGS_max_retry;
             if (chan->Init(FLAGS_server.c_str(), FLAGS_load_balancer.c_str(),
-                        &options) != 0) {
+                           &options) != 0) {
                 LOG(ERROR) << "Fail to initialize channel";
                 return -1;
             }
@@ -105,7 +105,7 @@ ChannelGroup::~ChannelGroup() {
     _chans.clear();
 }
 
-static void handle_response(flare::rpc::Controller* cntl, int64_t start_time,
+static void handle_response(flare::rpc::Controller *cntl, int64_t start_time,
                             bool sleep_on_error/*note*/) {
     // TODO(jeff): some fibers are starved when new fibers are created
     // continuously, which happens when server is down and RPC keeps failing.
@@ -125,13 +125,13 @@ static void handle_response(flare::rpc::Controller* cntl, int64_t start_time,
 
 std::atomic<int> g_thread_offset(0);
 
-static void* replay_thread(void* arg) {
-    ChannelGroup* chan_group = static_cast<ChannelGroup*>(arg);
+static void *replay_thread(void *arg) {
+    ChannelGroup *chan_group = static_cast<ChannelGroup *>(arg);
     const int thread_offset = g_thread_offset.fetch_add(1, std::memory_order_relaxed);
-    double req_rate = FLAGS_qps / (double)FLAGS_thread_num;
+    double req_rate = FLAGS_qps / (double) FLAGS_thread_num;
     flare::rpc::SerializedRequest req;
     std::deque<int64_t> timeq;
-    size_t MAX_QUEUE_SIZE = (size_t)req_rate;
+    size_t MAX_QUEUE_SIZE = (size_t) req_rate;
     if (MAX_QUEUE_SIZE < 100) {
         MAX_QUEUE_SIZE = 100;
     } else if (MAX_QUEUE_SIZE > 2000) {
@@ -141,28 +141,28 @@ static void* replay_thread(void* arg) {
     for (int i = 0; !flare::rpc::IsAskedToQuit() && i < FLAGS_times; ++i) {
         flare::rpc::SampleIterator it(FLAGS_dir);
         int j = 0;
-        for (flare::rpc::SampledRequest* sample = it.Next();
+        for (flare::rpc::SampledRequest *sample = it.Next();
              !flare::rpc::IsAskedToQuit() && sample != nullptr; sample = it.Next(), ++j) {
             std::unique_ptr<flare::rpc::SampledRequest> sample_guard(sample);
             if ((j % FLAGS_thread_num) != thread_offset) {
                 continue;
             }
-            flare::rpc::Channel* chan =
-                chan_group->channel(sample->meta.protocol_type());
+            flare::rpc::Channel *chan =
+                    chan_group->channel(sample->meta.protocol_type());
             if (chan == nullptr) {
                 LOG(ERROR) << "No channel on protocol="
                            << sample->meta.protocol_type();
                 continue;
             }
-            
-            flare::rpc::Controller* cntl = new flare::rpc::Controller;
+
+            flare::rpc::Controller *cntl = new flare::rpc::Controller;
             req.Clear();
-            
+
             cntl->reset_sampled_request(sample_guard.release());
             if (sample->meta.attachment_size() > 0) {
                 sample->request.cutn(
-                    &req.serialized_data(),
-                    sample->request.size() - sample->meta.attachment_size());
+                        &req.serialized_data(),
+                        sample->request.size() - sample->meta.attachment_size());
                 cntl->request_attachment() = sample->request.movable();
             } else {
                 req.serialized_data() = sample->request.movable();
@@ -171,13 +171,13 @@ static void* replay_thread(void* arg) {
             const int64_t start_time = flare::get_current_time_micros();
             if (FLAGS_qps <= 0) {
                 chan->CallMethod(nullptr/*use rpc_dump_context in cntl instead*/,
-                        cntl, &req, nullptr/*ignore response*/, nullptr);
+                                 cntl, &req, nullptr/*ignore response*/, nullptr);
                 handle_response(cntl, start_time, true);
             } else {
-                google::protobuf::Closure* done =
-                    flare::rpc::NewCallback(handle_response, cntl, start_time, false);
+                google::protobuf::Closure *done =
+                        flare::rpc::NewCallback(handle_response, cntl, start_time, false);
                 chan->CallMethod(nullptr/*use rpc_dump_context in cntl instead*/,
-                        cntl, &req, nullptr/*ignore response*/, done);
+                                 cntl, &req, nullptr/*ignore response*/, done);
                 const int64_t end_time = flare::get_current_time_micros();
                 int64_t expected_elp = 0;
                 int64_t actual_elp = 0;
@@ -185,10 +185,10 @@ static void* replay_thread(void* arg) {
                 if (timeq.size() > MAX_QUEUE_SIZE) {
                     actual_elp = end_time - timeq.front();
                     timeq.pop_front();
-                    expected_elp = (size_t)(1000000 * timeq.size() / req_rate);
+                    expected_elp = (size_t) (1000000 * timeq.size() / req_rate);
                 } else {
                     actual_elp = end_time - timeq.front();
-                    expected_elp = (size_t)(1000000 * (timeq.size() - 1) / req_rate);
+                    expected_elp = (size_t) (1000000 * (timeq.size() - 1) / req_rate);
                 }
                 if (actual_elp < expected_elp) {
                     flare::fiber_sleep_for(expected_elp - actual_elp);
@@ -199,7 +199,7 @@ static void* replay_thread(void* arg) {
     return nullptr;
 }
 
-int main(int argc, char* argv[]) {
+int main(int argc, char *argv[]) {
     // Parse gflags. We recommend you to use gflags as well.
     google::ParseCommandLineFlags(&argc, &argv, true);
 
@@ -212,7 +212,7 @@ int main(int argc, char* argv[]) {
     if (FLAGS_dummy_port >= 0) {
         flare::rpc::StartDummyServerAt(FLAGS_dummy_port);
     }
-    
+
     ChannelGroup chan_group;
     if (chan_group.Init() != 0) {
         LOG(ERROR) << "Fail to init ChannelGroup";
@@ -234,11 +234,15 @@ int main(int argc, char* argv[]) {
     }
 
     std::vector<fiber_id_t> bids;
-    std::vector<pthread_t> pids;
+    std::vector<flare::thread> pids;
     if (!FLAGS_use_fiber) {
         pids.resize(FLAGS_thread_num);
         for (int i = 0; i < FLAGS_thread_num; ++i) {
-            if (pthread_create(&pids[i], nullptr, replay_thread, &chan_group) != 0) {
+            flare::thread th("", [&] {
+                replay_thread(&chan_group);
+            });
+            pids[i] = std::move(th);
+            if (!pids[i].start()) {
                 LOG(ERROR) << "Fail to create pthread";
                 return -1;
             }
@@ -258,7 +262,7 @@ int main(int argc, char* argv[]) {
     info_thr_opt.latency_recorder = &g_latency_recorder;
     info_thr_opt.error_count = &g_error_count;
     info_thr_opt.sent_count = &g_sent_count;
-    
+
     if (!info_thr.start(info_thr_opt)) {
         LOG(ERROR) << "Fail to create info_thread";
         return -1;
@@ -266,7 +270,7 @@ int main(int argc, char* argv[]) {
 
     for (int i = 0; i < FLAGS_thread_num; ++i) {
         if (!FLAGS_use_fiber) {
-            pthread_join(pids[i], nullptr);
+            pids[i].join();
         } else {
             fiber_join(bids[i], nullptr);
         }
