@@ -741,10 +741,10 @@ namespace flare {
 
     constexpr uint128::uint128(unsigned int v) : lo_{v}, hi_{0} {}
 
-// NOLINTNEXTLINE(runtime/int)
+    // NOLINTNEXTLINE(runtime/int)
     constexpr uint128::uint128(unsigned long v) : lo_{v}, hi_{0} {}
 
-// NOLINTNEXTLINE(runtime/int)
+    // NOLINTNEXTLINE(runtime/int)
     constexpr uint128::uint128(unsigned long long v) : lo_{v}, hi_{0} {}
 
 #ifdef FLARE_HAVE_INTRINSIC_INT128
@@ -865,7 +865,7 @@ namespace flare {
 
 #endif  // FLARE_HAVE_INTRINSIC_INT128
 
-// Conversion operators to floating point types.
+    // Conversion operators to floating point types.
 
     FLARE_FORCE_INLINE uint128::operator float() const {
         return static_cast<float>(lo_) + std::ldexp(static_cast<float>(hi_), 64);
@@ -880,7 +880,7 @@ namespace flare {
                std::ldexp(static_cast<long double>(hi_), 64);
     }
 
-// Comparison operators.
+    // Comparison operators.
 
     FLARE_FORCE_INLINE bool operator==(uint128 lhs, uint128 rhs) {
         return (uint128_low64(lhs) == uint128_low64(rhs) &&
@@ -1084,22 +1084,22 @@ namespace flare {
         return *this = int128(v);
     }
 
-// NOLINTNEXTLINE(runtime/int)
+    // NOLINTNEXTLINE(runtime/int)
     FLARE_FORCE_INLINE int128 &int128::operator=(unsigned long v) {
         return *this = int128(v);
     }
 
-// NOLINTNEXTLINE(runtime/int)
+    // NOLINTNEXTLINE(runtime/int)
     FLARE_FORCE_INLINE int128 &int128::operator=(long long v) {
         return *this = int128(v);
     }
 
-// NOLINTNEXTLINE(runtime/int)
+    // NOLINTNEXTLINE(runtime/int)
     FLARE_FORCE_INLINE int128 &int128::operator=(unsigned long long v) {
         return *this = int128(v);
     }
 
-// Arithmetic operators.
+    // Arithmetic operators.
 
     int128 operator+(int128 lhs, int128 rhs);
 
