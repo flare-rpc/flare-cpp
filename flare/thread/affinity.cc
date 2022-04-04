@@ -74,7 +74,7 @@ namespace flare {
         }
 #else
         static_assert(!supported,
-                      "abel::thread::core_affinity::supported is true, but "
+                      "flare::thread::core_affinity::supported is true, but "
                       "thread::core_affinity::all() is not implemented for this platform");
 #endif
 
