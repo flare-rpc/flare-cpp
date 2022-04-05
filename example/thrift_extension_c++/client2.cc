@@ -22,6 +22,7 @@
 #include <gflags/gflags.h>
 #include <flare/fiber/this_fiber.h>
 #include <flare/fiber/internal/fiber.h>
+#include <flare/thread/thread.h>
 #include "flare/log/logging.h"
 #include <flare/rpc/server.h>
 #include <flare/rpc/channel.h>
@@ -35,7 +36,7 @@ DEFINE_string(connection_type, "", "Connection type. Available values: single, p
 DEFINE_string(server, "0.0.0.0:8019", "IP Address of server");
 DEFINE_string(load_balancer, "", "The algorithm for load balancing");
 DEFINE_int32(timeout_ms, 100, "RPC timeout in milliseconds");
-DEFINE_int32(max_retry, 3, "Max retries(not including the first RPC)"); 
+DEFINE_int32(max_retry, 3, "Max retries(not including the first RPC)");
 DEFINE_bool(dont_fail, false, "Print fatal when some call failed");
 DEFINE_int32(dummy_port, -1, "Launch dummy server at this port");
 
@@ -44,10 +45,10 @@ std::string g_request;
 flare::variable::LatencyRecorder g_latency_recorder("client");
 flare::variable::Adder<int> g_error_count("client_error_count");
 
-static void* sender(void* arg) {
+static void *sender(void *arg) {
     // Normally, you should not call a Channel directly, but instead construct
     // a stub Service wrapping it. stub can be shared by all threads as well.
-    flare::rpc::ThriftStub stub(static_cast<flare::rpc::Channel*>(arg));
+    flare::rpc::ThriftStub stub(static_cast<flare::rpc::Channel *>(arg));
 
     while (!flare::rpc::IsAskedToQuit()) {
         // We will receive response synchronously, safe to put variables
@@ -55,19 +56,19 @@ static void* sender(void* arg) {
         example::EchoRequest req;
         example::EchoResponse res;
         flare::rpc::Controller cntl;
-        
+
         req.__set_data(g_request);
         req.__set_need_by_proxy(10);
-        
+
         // Because `done'(last parameter) is NULL, this function waits until
         // the response comes back or error occurs(including timedout).
         stub.CallMethod("Echo", &cntl, &req, &res, NULL);
         if (!cntl.Failed()) {
             g_latency_recorder << cntl.latency_us();
         } else {
-            g_error_count << 1; 
+            g_error_count << 1;
             CHECK(flare::rpc::IsAskedToQuit() || !FLAGS_dont_fail)
-                << "error=" << cntl.ErrorText() << " latency=" << cntl.latency_us();
+                            << "error=" << cntl.ErrorText() << " latency=" << cntl.latency_us();
             // We can't connect to the server, sleep a while. Notice that this
             // is a specific sleeping to prevent this thread from spinning too
             // fast. You should continue the business logic in a production 
@@ -78,14 +79,14 @@ static void* sender(void* arg) {
     return NULL;
 }
 
-int main(int argc, char* argv[]) {
+int main(int argc, char *argv[]) {
     // Parse gflags. We recommend you to use gflags as well.
     google::ParseCommandLineFlags(&argc, &argv, true);
 
     // A Channel represents a communication line to a Server. Notice that 
     // Channel is thread-safe and can be shared by all threads in your program.
     flare::rpc::Channel channel;
-    
+
     // Initialize the channel, NULL means using default options.
     flare::rpc::ChannelOptions options;
     options.protocol = flare::rpc::PROTOCOL_THRIFT;
@@ -109,11 +110,15 @@ int main(int argc, char* argv[]) {
     }
 
     std::vector<fiber_id_t> bids;
-    std::vector<pthread_t> pids;
+    std::vector<flare::thread> pids;
     if (!FLAGS_use_fiber) {
         pids.resize(FLAGS_thread_num);
         for (int i = 0; i < FLAGS_thread_num; ++i) {
-            if (pthread_create(&pids[i], NULL, sender, &channel) != 0) {
+            flare::thread th("", [&] {
+                sender(&channel);
+            });
+            pids[i] = std::move(th);
+            if (!pids[i].start()) {
                 LOG(ERROR) << "Fail to create pthread";
                 return -1;
             }
@@ -138,7 +143,7 @@ int main(int argc, char* argv[]) {
     LOG(INFO) << "EchoClient is going to quit";
     for (int i = 0; i < FLAGS_thread_num; ++i) {
         if (!FLAGS_use_fiber) {
-            pthread_join(pids[i], NULL);
+            pids[i].join();
         } else {
             fiber_join(bids[i], NULL);
         }

@@ -20,6 +20,7 @@
 #include <gflags/gflags.h>
 #include <flare/fiber/this_fiber.h>
 #include <flare/fiber/internal/fiber.h>
+#include <flare/thread/thread.h>
 #include "flare/log/logging.h"
 #include <flare/rpc/channel.h>
 #include <flare/rpc/server.h>
@@ -92,11 +93,15 @@ int main(int argc, char* argv[]) {
     }
 
     std::vector<fiber_id_t> bids;
-    std::vector<pthread_t> pids;
+    std::vector<flare::thread> pids;
     if (!FLAGS_use_fiber) {
         pids.resize(FLAGS_thread_num);
         for (int i = 0; i < FLAGS_thread_num; ++i) {
-            if (pthread_create(&pids[i], NULL, sender, &channel) != 0) {
+            flare::thread th("", [&]{
+                sender(&channel);
+            });
+            pids[i] = std::move(th);
+            if (!pids[i].start()) {
                 LOG(ERROR) << "Fail to create pthread";
                 return -1;
             }
@@ -126,7 +131,7 @@ int main(int argc, char* argv[]) {
     LOG(INFO) << "benchmark_http is going to quit";
     for (int i = 0; i < FLAGS_thread_num; ++i) {
         if (!FLAGS_use_fiber) {
-            pthread_join(pids[i], NULL);
+            pids[i].join();
         } else {
             fiber_join(bids[i], NULL);
         }

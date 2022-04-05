@@ -148,7 +148,7 @@ int main(int argc, char* argv[]) {
     }
 
     std::vector<fiber_id_t> bids;
-    std::vector<pthread_t> pids;
+    std::vector<flare::thread> pids;
     bids.resize(FLAGS_thread_num);
     pids.resize(FLAGS_thread_num);
     std::vector<SenderArgs> args;
@@ -157,7 +157,11 @@ int main(int argc, char* argv[]) {
         args[i].base_index = i * FLAGS_batch;
         args[i].redis_channel = &channel;
         if (!FLAGS_use_fiber) {
-            if (pthread_create(&pids[i], NULL, sender, &args[i]) != 0) {
+            flare::thread th("", [&]{
+                sender(&channel);
+            });
+            pids[i] = std::move(th;
+            if (!pids[i].start()) { {
                 LOG(ERROR) << "Fail to create pthread";
                 return -1;
             }
@@ -180,7 +184,7 @@ int main(int argc, char* argv[]) {
     LOG(INFO) << "redis_client is going to quit";
     for (int i = 0; i < FLAGS_thread_num; ++i) {
         if (!FLAGS_use_fiber) {
-            pthread_join(pids[i], NULL);
+            pids[i].join();
         } else {
             fiber_join(bids[i], NULL);
         }
