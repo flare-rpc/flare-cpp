@@ -38,11 +38,10 @@ namespace {
     };
 
     const size_t OPS_PER_THREAD = 2000000;
-
+    std::atomic<long>  totol_time{0};
     class AgentGroupTest : public testing::Test {
     protected:
         typedef std::atomic<uint64_t> agent_type;
-
         void SetUp() {}
 
         void TearDown() {}
@@ -70,7 +69,8 @@ namespace {
                 //element->fetch_add(2, std::memory_order_relaxed);
             }
             timer.stop();
-            return (void *) (timer.n_elapsed());
+            totol_time.fetch_add(timer.n_elapsed());
+            return nullptr;
         }
     };
 
@@ -83,7 +83,7 @@ namespace {
     }
 
     std::atomic<uint64_t> g_counter(0);
-
+    std::atomic<uint64_t> total_time(0);
     void *global_add(void *) {
         flare::stop_watcher timer;
         timer.start();
@@ -91,7 +91,8 @@ namespace {
             g_counter.fetch_add(2, std::memory_order_relaxed);
         }
         timer.stop();
-        return (void *) (timer.n_elapsed());
+        total_time.fetch_add(timer.n_elapsed());
+        return nullptr;
     }
 
     TEST_F(AgentGroupTest, test_perf) {
@@ -131,11 +132,8 @@ namespace {
             threads[i] = std::move(th);
             threads[i].start();
         }
-        long totol_time = 0;
         for (size_t i = 0; i < FLARE_ARRAY_SIZE(threads); ++i) {
-            void *ret;
-            threads[i].join(&ret);
-            totol_time += (long) ret;
+            threads[i].join();
         }
         LOG(INFO) << "ThreadAgent takes "
                   << totol_time / (OPS_PER_THREAD * FLARE_ARRAY_SIZE(threads));
@@ -149,12 +147,10 @@ namespace {
             threads[i].start();
         }
         for (size_t i = 0; i < FLARE_ARRAY_SIZE(threads); ++i) {
-            void *ret;
-            threads[i].join(&ret);
-            totol_time += (long) ret;
+            threads[i].join();
         }
         LOG(INFO) << "Global Atomic takes "
-                  << totol_time / (OPS_PER_THREAD * FLARE_ARRAY_SIZE(threads));
+                  << total_time / (OPS_PER_THREAD * FLARE_ARRAY_SIZE(threads));
         AgentGroup<agent_type>::destroy_agent(id);
         //sleep(1000);
     }

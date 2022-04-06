@@ -59,6 +59,7 @@ namespace {
 
     const size_t OPS_PER_THREAD = 500000;
 
+    std::atomic<long> total_time{0};
     static void *thread_counter(void *arg) {
         flare::variable::Adder<uint64_t> *reducer = (flare::variable::Adder<uint64_t> *) arg;
         flare::stop_watcher timer;
@@ -67,9 +68,11 @@ namespace {
             (*reducer) << 2;
         }
         timer.stop();
-        return (void *) (timer.n_elapsed());
+        total_time.fetch_add(timer.n_elapsed());
+        return nullptr;
     }
 
+    std::atomic<long> totol_time{0};
     void *add_atomic(void *arg) {
         std::atomic<uint64_t> *counter = (std::atomic<uint64_t> *) arg;
         flare::stop_watcher timer;
@@ -78,7 +81,8 @@ namespace {
             counter->fetch_add(2, std::memory_order_relaxed);
         }
         timer.stop();
-        return (void *) (timer.n_elapsed());
+        totol_time.fetch_add(timer.n_elapsed());
+        return nullptr;
     }
 
     static long start_perf_test_with_atomic(size_t num_thread) {
@@ -91,11 +95,8 @@ namespace {
             threads[i] = std::move(th);
             threads[i].start();
         }
-        long totol_time = 0;
         for (size_t i = 0; i < num_thread; ++i) {
-            void *ret;
-            threads[i].join(&ret);
-            totol_time += (long) ret;
+            threads[i].join();
         }
         long avg_time = totol_time / (OPS_PER_THREAD / 100 * num_thread);
         EXPECT_EQ(2ul * num_thread * OPS_PER_THREAD / 100, counter.load());
@@ -113,13 +114,10 @@ namespace {
             threads[i] = std::move(th);
             threads[i].start();
         }
-        long totol_time = 0;
         for (size_t i = 0; i < num_thread; ++i) {
-            void *ret = nullptr;
-            threads[i].join(&ret);
-            totol_time += (long) ret;
+            threads[i].join();
         }
-        long avg_time = totol_time / (OPS_PER_THREAD * num_thread);
+        long avg_time = total_time / (OPS_PER_THREAD * num_thread);
         EXPECT_EQ(2ul * num_thread * OPS_PER_THREAD, reducer.get_value());
         return avg_time;
     }
@@ -267,6 +265,8 @@ namespace {
     struct StringAppenderResult {
         int count;
     };
+    std::mutex m;
+    flare::container::hash_map<pthread_t, int> appended_count;
 
     static void *string_appender(void *arg) {
         flare::variable::Adder<std::string> *cater = (flare::variable::Adder<std::string> *) arg;
@@ -281,10 +281,12 @@ namespace {
             }
             *cater << ".";
         }
-        StringAppenderResult *res = new StringAppenderResult;
-        res->count = count;
         LOG(INFO) << "Appended " << count;
-        return res;
+        {
+            std::scoped_lock l(m);
+            appended_count[pthread_self()] = count;
+        }
+        return nullptr;
     }
 
     TEST_F(ReducerTest, non_primitive_mt) {
@@ -300,12 +302,8 @@ namespace {
         }
         usleep(50000);
         g_stop = true;
-        flare::container::hash_map<pthread_t, int> appended_count;
         for (size_t i = 0; i < FLARE_ARRAY_SIZE(th); ++i) {
-            StringAppenderResult *res = nullptr;
-            th[i].join((void **) &res);
-            appended_count[th[i].native_handler()] = res->count;
-            delete res;
+            th[i].join();
         }
         flare::container::hash_map<pthread_t, int> got_count;
         std::string res = cater.get_value();
