@@ -8,6 +8,7 @@
 #include <cstddef>
 #include <mutex>
 #include <vector>
+#include <algorithm>
 #include <type_traits>
 #include "flare/memory/resident.h"
 
