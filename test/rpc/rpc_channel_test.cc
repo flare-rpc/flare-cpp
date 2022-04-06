@@ -918,7 +918,7 @@ namespace {
             const flare::rpc::CallId cid = cntl.call_id();
             ASSERT_TRUE(cid.value != 0);
             CancelerArg carg = {10000, cid};
-            flare::thread th("", [&] {
+            flare::thread th("Cancel", [&] {
                 Canceler(&carg);
             });
 
@@ -962,7 +962,7 @@ namespace {
             const flare::rpc::CallId cid = cntl.call_id();
             ASSERT_TRUE(cid.value != 0);
             CancelerArg carg = {10000, cid};
-            flare::thread th("", [&] {
+            flare::thread th("Parallel", [&] {
                 Canceler(&carg);
             });
 
@@ -1007,7 +1007,7 @@ namespace {
             const flare::rpc::CallId cid = cntl.call_id();
             ASSERT_TRUE(cid.value != 0);
             CancelerArg carg = {10000, cid};
-            flare::thread th("", [&] {
+            flare::thread th("Selective", [&] {
                 Canceler(&carg);
             });
 
@@ -1642,7 +1642,7 @@ namespace {
                 google::protobuf::Closure *thrd_func =
                         flare::rpc::NewCallback(
                                 this, &ChannelTest::RPCThread, (flare::rpc::ChannelBase *) &channel, async);
-                flare::thread th("", [&] {
+                flare::thread th("Authen", [&] {
                     RunClosure(thrd_func);
                 });
                 tids[i] = std::move(th);
@@ -1685,7 +1685,7 @@ namespace {
                 google::protobuf::Closure *thrd_func =
                         flare::rpc::NewCallback(
                                 this, &ChannelTest::RPCThread, (flare::rpc::ChannelBase *) &channel, async);
-                flare::thread th("", [&] {
+                flare::thread th("ap", [&] {
                     RunClosure(thrd_func);
                 });
                 tids[i] = std::move(th);
@@ -1727,7 +1727,7 @@ namespace {
                 google::protobuf::Closure *thrd_func =
                         flare::rpc::NewCallback(
                                 this, &ChannelTest::RPCThread, (flare::rpc::ChannelBase *) &channel, async);
-                flare::thread th("", [&] {
+                flare::thread th("as", [&] {
                     RunClosure(thrd_func);
                 });
                 tids[i] = std::move(th);
@@ -2520,7 +2520,7 @@ namespace {
                                         this, &ChannelTest::RPCThread,
                                         (flare::rpc::ChannelBase *) &channel,
                                         (bool) async, COUNT);
-                        flare::thread th("", [&] {
+                        flare::thread th("mtsc", [&] {
                             RunClosure(thrd_func);
                         });
                         tids[i] = std::move(th);
@@ -2559,7 +2559,7 @@ namespace {
                                         bool, bool, bool, const flare::rpc::Authenticator *, int>
                                         (this, &ChannelTest::RPCThread, single_server,
                                          async, short_connection, (need_auth ? &auth : NULL), COUNT);
-                        flare::thread th("", [&] {
+                        flare::thread th("mtmc", [&] {
                             RunClosure(thrd_func);
                         });
                         tids[i] = std::move(th);

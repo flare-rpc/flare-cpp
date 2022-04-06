@@ -491,13 +491,13 @@ namespace flare::variable {
         ProcIOReader::get_field<VARIABLE_MEMBER_TYPE(&ProcIO::field),       \
         offsetof(ProcIO, field)>, NULL);
 
-// ==================================================
-// Refs:
-//   https://www.kernel.org/doc/Documentation/ABI/testing/procfs-diskstats
-//   https://www.kernel.org/doc/Documentation/iostats.txt
-// 
-// The /proc/diskstats file displays the I/O statistics of block devices.
-// Each line contains the following 14 fields:
+    // ==================================================
+    // Refs:
+    //   https://www.kernel.org/doc/Documentation/ABI/testing/procfs-diskstats
+    //   https://www.kernel.org/doc/Documentation/iostats.txt
+    //
+    // The /proc/diskstats file displays the I/O statistics of block devices.
+    // Each line contains the following 14 fields:
     struct DiskStat {
         long long major_number;
         long long minor_mumber;
