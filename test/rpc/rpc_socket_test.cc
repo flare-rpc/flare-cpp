@@ -69,7 +69,7 @@ int main(int argc, char *argv[]) {
              flare::rpc::SerializeRequestDefault,
              flare::rpc::policy::PackHuluRequest,
              EchoProcessHuluRequest, EchoProcessHuluRequest,
-             NULL, NULL, NULL,
+             nullptr, nullptr, nullptr,
              flare::rpc::CONNECTION_TYPE_ALL, "dummy_hulu"};
     EXPECT_EQ(0, RegisterProtocol((flare::rpc::ProtocolType) 30, dummy_protocol));
     return RUN_ALL_TESTS();
@@ -106,13 +106,13 @@ protected:
     };
 };
 
-flare::rpc::Socket *global_sock = NULL;
+flare::rpc::Socket *global_sock = nullptr;
 
 class CheckRecycle : public flare::rpc::SocketUser {
     void BeforeRecycle(flare::rpc::Socket *s) {
         ASSERT_TRUE(global_sock);
         ASSERT_EQ(global_sock, s);
-        global_sock = NULL;
+        global_sock = nullptr;
         delete this;
     }
 };
@@ -140,7 +140,7 @@ TEST_F(SocketTest, not_recycle_until_zero_nref) {
         ASSERT_EQ(0, s->SetFailed());
         ASSERT_EQ(s.get(), global_sock);
     }
-    ASSERT_EQ((flare::rpc::Socket *) NULL, global_sock);
+    ASSERT_EQ((flare::rpc::Socket *) nullptr, global_sock);
     close(fds[0]);
 
     flare::rpc::SocketUniquePtr ptr;
@@ -160,7 +160,7 @@ void *auth_fighter(void *arg) {
     } else {
         EXPECT_EQ(AUTH_ERR, auth_error);
     }
-    return NULL;
+    return nullptr;
 }
 
 TEST_F(SocketTest, authentication) {
@@ -172,10 +172,10 @@ TEST_F(SocketTest, authentication) {
 
     fiber_id_t th[64];
     for (size_t i = 0; i < FLARE_ARRAY_SIZE(th); ++i) {
-        ASSERT_EQ(0, fiber_start_urgent(&th[i], NULL, auth_fighter, s.get()));
+        ASSERT_EQ(0, fiber_start_urgent(&th[i], nullptr, auth_fighter, s.get()));
     }
     for (size_t i = 0; i < FLARE_ARRAY_SIZE(th); ++i) {
-        ASSERT_EQ(0, fiber_join(th[i], NULL));
+        ASSERT_EQ(0, fiber_join(th[i], nullptr));
     }
     // Only one fighter wins
     ASSERT_EQ(1, winner_count.load());
@@ -185,14 +185,14 @@ TEST_F(SocketTest, authentication) {
     ASSERT_NE(0, s->FightAuthentication(&auth_error));
     ASSERT_EQ(AUTH_ERR, auth_error);
     // Socket has been `SetFailed' when authentication failed
-    ASSERT_TRUE(flare::rpc::Socket::Address(s->id(), NULL));
+    ASSERT_TRUE(flare::rpc::Socket::Address(s->id(), nullptr));
 }
 
 static std::atomic<int> g_called_seq(1);
 
 class MyMessage : public flare::rpc::SocketMessage {
 public:
-    MyMessage(const char *str, size_t len, int *called = NULL)
+    MyMessage(const char *str, size_t len, int *called = nullptr)
             : _str(str), _len(len), _called(called) {}
 
 private:
@@ -297,7 +297,7 @@ TEST_F(SocketTest, single_threaded_write) {
         }
         ASSERT_EQ(0, s->SetFailed());
     }
-    ASSERT_EQ((flare::rpc::Socket *) NULL, global_sock);
+    ASSERT_EQ((flare::rpc::Socket *) nullptr, global_sock);
     close(fds[0]);
 }
 
@@ -312,7 +312,7 @@ void EchoProcessHuluRequest(flare::rpc::InputMessageBase *msg_base) {
 
 class MyConnect : public flare::rpc::AppConnect {
 public:
-    MyConnect() : _done(NULL), _data(NULL), _called_start_connect(false) {}
+    MyConnect() : _done(nullptr), _data(nullptr), _called_start_connect(false) {}
 
     void StartConnect(const flare::rpc::Socket *,
                       void (*done)(int err, void *data),
@@ -346,7 +346,7 @@ TEST_F(SocketTest, single_threaded_connect_and_write) {
     flare::rpc::Acceptor *messenger = new flare::rpc::Acceptor;
     const flare::rpc::InputMessageHandler pairs[] = {
             {flare::rpc::policy::ParseHuluMessage,
-                    EchoProcessHuluRequest, NULL, NULL, "dummy_hulu"}
+                    EchoProcessHuluRequest, nullptr, nullptr, "dummy_hulu"}
     };
 
     flare::base::end_point point(flare::base::IP_ANY, 7878);
@@ -354,7 +354,7 @@ TEST_F(SocketTest, single_threaded_connect_and_write) {
     ASSERT_TRUE(listening_fd > 0);
     flare::base::make_non_blocking(listening_fd);
     ASSERT_EQ(0, messenger->AddHandler(pairs[0]));
-    ASSERT_EQ(0, messenger->StartAccept(listening_fd, -1, NULL));
+    ASSERT_EQ(0, messenger->StartAccept(listening_fd, -1, nullptr));
 
     flare::rpc::SocketId id = 8888;
     flare::rpc::SocketOptions options;
@@ -421,7 +421,7 @@ TEST_F(SocketTest, single_threaded_connect_and_write) {
         }
         ASSERT_EQ(0, s->SetFailed());
     }
-    ASSERT_EQ((flare::rpc::Socket *) NULL, global_sock);
+    ASSERT_EQ((flare::rpc::Socket *) nullptr, global_sock);
     // The id is invalid.
     flare::rpc::SocketUniquePtr ptr;
     ASSERT_EQ(-1, flare::rpc::Socket::Address(id, &ptr));
@@ -445,12 +445,12 @@ void *FailedWriter(void *void_arg) {
     flare::rpc::SocketUniquePtr sock;
     if (flare::rpc::Socket::Address(arg->socket_id, &sock) < 0) {
         printf("Fail to address SocketId=%" PRIu64 "\n", arg->socket_id);
-        return NULL;
+        return nullptr;
     }
     char buf[32];
     for (size_t i = 0; i < arg->times; ++i) {
         fiber_token_t id;
-        EXPECT_EQ(0, fiber_token_create(&id, NULL, NULL));
+        EXPECT_EQ(0, fiber_token_create(&id, nullptr, nullptr));
         snprintf(buf, sizeof(buf), "%0" FLARE_SYMBOLSTR(NUMBER_WIDTH) "lu",
                  i + arg->offset);
         flare::cord_buf src;
@@ -463,7 +463,7 @@ void *FailedWriter(void *void_arg) {
         // calls `SetFailed' making others' error_code=EINVAL
         //EXPECT_EQ(ECONNREFUSED, error_code);
     }
-    return NULL;
+    return nullptr;
 }
 
 TEST_F(SocketTest, fail_to_connect) {
@@ -502,7 +502,7 @@ TEST_F(SocketTest, fail_to_connect) {
     }
     // KeepWrite is possibly still running.
     int64_t start_time = flare::get_current_time_micros();
-    while (global_sock != NULL) {
+    while (global_sock != nullptr) {
         flare::fiber_sleep_for(1000);
         ASSERT_LT(flare::get_current_time_micros(), start_time + 1000000L) << "Too long!";
     }
@@ -562,11 +562,11 @@ TEST_F(SocketTest, not_health_check_when_nref_hits_0) {
         ASSERT_EQ(-1, s->fd());
     }
     // HealthCheckThread is possibly still running. Spin until global_sock
-    // is NULL(set in CheckRecycle::BeforeRecycle). Notice that you should
+    // is nullptr(set in CheckRecycle::BeforeRecycle). Notice that you should
     // not spin until Socket::Status(id) becomes -1 and assert global_sock
-    // to be NULL because invalidating id happens before calling BeforeRecycle.
+    // to be nullptr because invalidating id happens before calling BeforeRecycle.
     const int64_t start_time = flare::get_current_time_micros();
-    while (global_sock != NULL) {
+    while (global_sock != nullptr) {
         flare::fiber_sleep_for(1000);
         ASSERT_LT(flare::get_current_time_micros(), start_time + 1000000L);
     }
@@ -610,7 +610,7 @@ TEST_F(SocketTest, app_level_health_check) {
     {
         flare::rpc::Controller cntl;
         cntl.http_request().uri() = "/";
-        channel.CallMethod(NULL, &cntl, NULL, NULL, NULL);
+        channel.CallMethod(nullptr, &cntl, nullptr, nullptr, nullptr);
         EXPECT_TRUE(cntl.Failed());
         ASSERT_EQ(ECONNREFUSED, cntl.ErrorCode());
     }
@@ -629,14 +629,14 @@ TEST_F(SocketTest, app_level_health_check) {
     flare::rpc::Server server;
     HealthCheckTestServiceImpl hc_service;
     ASSERT_EQ(0, server.AddService(&hc_service, flare::rpc::SERVER_DOESNT_OWN_SERVICE));
-    ASSERT_EQ(0, server.Start(point, NULL));
+    ASSERT_EQ(0, server.Start(point, nullptr));
 
     for (int i = 0; i < 4; ++i) {
         // although ::connect would succeed, the stall in hc_service makes
         // the health check rpc fail.
         flare::rpc::Controller cntl;
         cntl.http_request().uri() = "/";
-        channel.CallMethod(NULL, &cntl, NULL, NULL, NULL);
+        channel.CallMethod(nullptr, &cntl, nullptr, nullptr, nullptr);
         ASSERT_EQ(EHOSTDOWN, cntl.ErrorCode());
         flare::fiber_sleep_for(1000000 /*1s*/);
     }
@@ -646,7 +646,7 @@ TEST_F(SocketTest, app_level_health_check) {
     {
         flare::rpc::Controller cntl;
         cntl.http_request().uri() = "/";
-        channel.CallMethod(NULL, &cntl, NULL, NULL, NULL);
+        channel.CallMethod(nullptr, &cntl, nullptr, nullptr, nullptr);
         ASSERT_FALSE(cntl.Failed());
         ASSERT_GT(cntl.response_attachment().size(), (size_t) 0);
     }
@@ -738,14 +738,14 @@ TEST_F(SocketTest, health_check) {
 
     const flare::rpc::InputMessageHandler pairs[] = {
             {flare::rpc::policy::ParseHuluMessage,
-                    EchoProcessHuluRequest, NULL, NULL, "dummy_hulu"}
+                    EchoProcessHuluRequest, nullptr, nullptr, "dummy_hulu"}
     };
 
     int listening_fd = tcp_listen(point);
     ASSERT_TRUE(listening_fd > 0);
     flare::base::make_non_blocking(listening_fd);
     ASSERT_EQ(0, messenger->AddHandler(pairs[0]));
-    ASSERT_EQ(0, messenger->StartAccept(listening_fd, -1, NULL));
+    ASSERT_EQ(0, messenger->StartAccept(listening_fd, -1, nullptr));
 
     int64_t start_time = flare::get_current_time_micros();
     nref = -1;
@@ -793,7 +793,7 @@ TEST_F(SocketTest, health_check) {
     ASSERT_EQ(0, flare::rpc::Socket::SetFailed(id));
     // HealthCheckThread is possibly still addressing the Socket.
     start_time = flare::get_current_time_micros();
-    while (global_sock != NULL) {
+    while (global_sock != nullptr) {
         flare::fiber_sleep_for(1000);
         ASSERT_LT(flare::get_current_time_micros(), start_time + 1000000L);
     }
@@ -808,7 +808,7 @@ void *Writer(void *void_arg) {
     flare::rpc::SocketUniquePtr sock;
     if (flare::rpc::Socket::Address(arg->socket_id, &sock) < 0) {
         printf("Fail to address SocketId=%" PRIu64 "\n", arg->socket_id);
-        return NULL;
+        return nullptr;
     }
     char buf[32];
     for (size_t i = 0; i < arg->times; ++i) {
@@ -828,7 +828,7 @@ void *Writer(void *void_arg) {
             break;
         }
     }
-    return NULL;
+    return nullptr;
 }
 
 TEST_F(SocketTest, multi_threaded_write) {
@@ -899,7 +899,7 @@ TEST_F(SocketTest, multi_threaded_write) {
                 char buf[NUMBER_WIDTH + 1];
                 dest.copy_to(buf, NUMBER_WIDTH);
                 buf[sizeof(buf) - 1] = 0;
-                result.push_back(strtol(buf, NULL, 10));
+                result.push_back(strtol(buf, nullptr, 10));
                 dest.pop_front(NUMBER_WIDTH);
             }
             if (result.size() >= REP * FLARE_ARRAY_SIZE(th)) {
@@ -916,15 +916,17 @@ TEST_F(SocketTest, multi_threaded_write) {
         ASSERT_EQ(REP * FLARE_ARRAY_SIZE(th), result.size())
                                     << "write_head=" << s->_write_head;
         std::sort(result.begin(), result.end());
+        LOG(INFO)<<"before std::unique: "<<result.size();
         result.resize(std::unique(result.begin(),
                                   result.end()) - result.begin());
+        LOG(INFO)<<"after std::unique: "<<result.size();
         ASSERT_EQ(REP * FLARE_ARRAY_SIZE(th), result.size());
         ASSERT_EQ(0UL, *result.begin());
         ASSERT_EQ(REP * FLARE_ARRAY_SIZE(th) - 1, *(result.end() - 1));
 
         ASSERT_EQ(0, s->SetFailed());
         s.release()->Dereference();
-        ASSERT_EQ((flare::rpc::Socket *) NULL, global_sock);
+        ASSERT_EQ((flare::rpc::Socket *) nullptr, global_sock);
         close(fds[0]);
     }
 }
@@ -934,7 +936,7 @@ void *FastWriter(void *void_arg) {
     flare::rpc::SocketUniquePtr sock;
     if (flare::rpc::Socket::Address(arg->socket_id, &sock) < 0) {
         printf("Fail to address SocketId=%" PRIu64 "\n", arg->socket_id);
-        return NULL;
+        return nullptr;
     }
     char buf[] = "hello reader side!";
     int64_t begin_ts = flare::get_current_time_micros();
@@ -960,7 +962,7 @@ void *FastWriter(void *void_arg) {
     int64_t total_time = end_ts - begin_ts;
     printf("total=%ld count=%ld nretry=%ld\n",
            (long) total_time * 1000 / c, (long) c, (long) nretry);
-    return NULL;
+    return nullptr;
 }
 
 struct ReaderArg {
@@ -976,14 +978,14 @@ void *reader(void *void_arg) {
         ssize_t nr = read(arg->fd, buf, LEN);
         if (nr < 0) {
             printf("Fail to read, %m\n");
-            return NULL;
+            return nullptr;
         } else if (nr == 0) {
             printf("Far end closed\n");
-            return NULL;
+            return nullptr;
         }
         arg->nread += nr;
     }
-    return NULL;
+    return nullptr;
 }
 
 TEST_F(SocketTest, multi_threaded_write_perf) {
@@ -1015,7 +1017,7 @@ TEST_F(SocketTest, multi_threaded_write_perf) {
         args[i].times = REP;
         args[i].offset = i * REP;
         args[i].socket_id = id;
-        fiber_start_background(&th[i], NULL, FastWriter, &args[i]);
+        fiber_start_background(&th[i], nullptr, FastWriter, &args[i]);
     }
 
 
@@ -1040,11 +1042,11 @@ TEST_F(SocketTest, multi_threaded_write_perf) {
         args[i].times = 0;
     }
     for (size_t i = 0; i < FLARE_ARRAY_SIZE(th); ++i) {
-        ASSERT_EQ(0, fiber_join(th[i], NULL));
+        ASSERT_EQ(0, fiber_join(th[i], nullptr));
     }
     ASSERT_EQ(0, s->SetFailed());
     s.release()->Dereference();
     rth.join();
-    ASSERT_EQ((flare::rpc::Socket *) NULL, global_sock);
+    ASSERT_EQ((flare::rpc::Socket *) nullptr, global_sock);
     close(fds[0]);
 }
