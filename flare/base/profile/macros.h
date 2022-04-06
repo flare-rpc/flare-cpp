@@ -230,5 +230,53 @@ namespace flare::base {
 #define FLARE_BLOCK_TAIL_CALL_OPTIMIZATION() if (volatile int x = 0) { (void)x; }
 #endif
 
+// FLARE_COMPILER_NO_FALLTHROUGH
+//
+// Refers to C++17 declaration attribute: fallthrough.
+// http://en.cppreference.com/w/cpp/language/attributes
+//
+#if !defined(FLARE_COMPILER_NO_FALLTHROUGH)
+#if defined(FLARE_COMPILER_CPP17_ENABLED)
+// supported.
+#else
+#define FLARE_COMPILER_NO_FALLTHROUGH 1
+#endif
+#endif
+
+// ------------------------------------------------------------------------
+// FLARE_FALLTHROUGH
+//
+// [[fallthrough] is a C++17 standard attribute that appears in switch
+// statements to indicate that the fallthrough from the previous case in the
+// switch statement is intentially and not a bug.
+//
+// http://en.cppreference.com/w/cpp/language/attributes
+//
+// Example usage:
+// 		void f(int n)
+// 		{
+// 			switch(n)
+// 			{
+// 				case 1:
+// 				DoCase1();
+// 				// Compiler may generate a warning for fallthrough behaviour
+//
+// 				case 2:
+// 				DoCase2();
+//
+// 				FLARE_FALLTHROUGH;
+// 				case 3:
+// 				DoCase3();
+// 			}
+// 		}
+//
+#if !defined(FLARE_FALLTHROUGH)
+#if defined(FLARE_COMPILER_NO_FALLTHROUGH)
+#define FLARE_FALLTHROUGH
+#else
+#define FLARE_FALLTHROUGH [[fallthrough]]
+#endif
+#endif
+
 
 #endif  // FLARE_BASE_PROFILE_MACROS_H_

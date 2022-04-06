@@ -3,10 +3,12 @@
 #include "flare/thread/thread.h"
 #include "flare/base/profile.h"
 #include "flare/log/logging.h"
+#include <signal.h>
 #include <algorithm>  // std::sort
 #include <unordered_set>
 #include <cstdarg>
 #include <cstdio>
+#include <pthread.h>
 
 #if defined(__APPLE__)
 
@@ -78,7 +80,7 @@ namespace flare {
             cpu_set_t cpuset;
             CPU_ZERO(&cpuset);
             for (size_t i = 0; i < count; i++) {
-              CPU_SET(affinity[i].index, &cpuset);
+              CPU_SET(option.affinity[i].index, &cpuset);
             }
             auto thread = pthread_self();
             pthread_setaffinity_np(thread, sizeof(cpu_set_t), &cpuset);
@@ -86,7 +88,7 @@ namespace flare {
             cpuset_t cpuset;
             CPU_ZERO(&cpuset);
             for (size_t i = 0; i < count; i++) {
-              CPU_SET(affinity[i].index, &cpuset);
+              CPU_SET(option.affinity[i].index, &cpuset);
             }
             auto thread = pthread_self();
             pthread_setaffinity_np(thread, sizeof(cpuset_t), &cpuset);

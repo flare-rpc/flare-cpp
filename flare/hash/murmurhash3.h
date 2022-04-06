@@ -66,17 +66,17 @@ namespace flare::hash {
         return k;
     }
 
-// ========= Original version ===========
+    // ========= Original version ===========
     void MurmurHash3_x86_32(const void *key, int len, uint32_t seed, void *out);
 
     void MurmurHash3_x86_128(const void *key, int len, uint32_t seed, void *out);
 
     void MurmurHash3_x64_128(const void *key, int len, uint32_t seed, void *out);
 
-// ========= Iterative version ==========
-// for computing hashcode for very large inputs, say file contents. The API are
-// similar with iterative MD5 API.
-// Notice: |ctx| must be non-NULL and valid, otherwise the behavior is undefined.
+    // ========= Iterative version ==========
+    // for computing hashcode for very large inputs, say file contents. The API are
+    // similar with iterative MD5 API.
+    // Notice: |ctx| must be non-NULL and valid, otherwise the behavior is undefined.
     struct MurmurHash3_x86_32_Context {
         uint32_t h1;
         int total_len;
