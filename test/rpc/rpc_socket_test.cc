@@ -873,7 +873,7 @@ TEST_F(SocketTest, multi_threaded_write) {
         }
 
         if (k == 1) {
-            printf("sleep 100ms to block writers\n");
+            LOG(INFO)<<"sleep 100ms to block writers\n";
             flare::fiber_sleep_for(100000);
         }
 
