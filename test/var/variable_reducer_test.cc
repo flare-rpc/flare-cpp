@@ -292,9 +292,10 @@ namespace {
         flare::thread th[8];
         g_stop = false;
         for (size_t i = 0; i < FLARE_ARRAY_SIZE(th); ++i) {
-            flare::thread t("", [&]{
+            flare::thread t("", [&] {
                 string_appender(&cater);
             });
+            th[i] = std::move(t);
             th[i].start();
         }
         usleep(50000);
