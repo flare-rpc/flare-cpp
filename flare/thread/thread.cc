@@ -3,6 +3,7 @@
 #include "flare/thread/thread.h"
 #include "flare/base/profile.h"
 #include "flare/log/logging.h"
+#include "flare/bootstrap/bootstrap.h"
 #include <signal.h>
 #include <algorithm>  // std::sort
 #include <unordered_set>
@@ -99,13 +100,13 @@ namespace flare {
     }
 
     thread::~thread() {
-        if(_impl) {
+        if (_impl) {
             LOG(WARNING) << "thread: " << _impl->option.prefix << "was not called before destruction, detach instead.";
             detach();
         }
     }
 
-    void thread::join(void**ptr) {
+    void thread::join(void **ptr) {
         if (!_impl) {
             return;
         }
@@ -315,4 +316,7 @@ namespace flare {
         pthread_t mid = pthread_self();
         return mid;
     }
+    // for main thread will index '0'
+    FLARE_BOOTSTRAP(0, [] { thread::thread_index(); });
+
 }  // namespace flare

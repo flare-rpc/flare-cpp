@@ -812,8 +812,7 @@ void *Writer(void *void_arg) {
     }
     char buf[32];
     for (size_t i = 0; i < arg->times; ++i) {
-        snprintf(buf, sizeof(buf), "%0" FLARE_SYMBOLSTR(NUMBER_WIDTH) "lu",
-                 i + arg->offset);
+        snprintf(buf, sizeof(buf), "%0" FLARE_SYMBOLSTR(NUMBER_WIDTH) "lu", i + arg->offset);
         flare::cord_buf src;
         src.append(buf);
         if (sock->Write(&src) != 0) {
@@ -873,7 +872,7 @@ TEST_F(SocketTest, multi_threaded_write) {
         }
 
         if (k == 1) {
-            LOG(INFO)<<"sleep 100ms to block writers\n";
+            LOG(INFO) << "sleep 100ms to block writers\n";
             flare::fiber_sleep_for(100000);
         }
 
@@ -916,10 +915,10 @@ TEST_F(SocketTest, multi_threaded_write) {
         ASSERT_EQ(REP * FLARE_ARRAY_SIZE(th), result.size())
                                     << "write_head=" << s->_write_head;
         std::sort(result.begin(), result.end());
-        LOG(INFO)<<"before std::unique: "<<result.size();
+        LOG(INFO) << "before std::unique: " << result.size();
         result.resize(std::unique(result.begin(),
                                   result.end()) - result.begin());
-        LOG(INFO)<<"after std::unique: "<<result.size();
+        LOG(INFO) << "after std::unique: " << result.size();
         ASSERT_EQ(REP * FLARE_ARRAY_SIZE(th), result.size());
         ASSERT_EQ(0UL, *result.begin());
         ASSERT_EQ(REP * FLARE_ARRAY_SIZE(th) - 1, *(result.end() - 1));
