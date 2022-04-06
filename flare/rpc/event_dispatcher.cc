@@ -362,7 +362,7 @@ namespace flare::rpc {
         g_edisp = new EventDispatcher[FLAGS_event_dispatcher_num];
         for (int i = 0; i < FLAGS_event_dispatcher_num; ++i) {
             const fiber_attribute attr = FLAGS_usercode_in_pthread ?
-                                        FIBER_ATTR_PTHREAD : FIBER_ATTR_NORMAL;
+                                         FIBER_ATTR_PTHREAD : FIBER_ATTR_NORMAL;
             CHECK_EQ(0, g_edisp[i].Start(&attr));
         }
         // This atexit is will be run before g_task_control.stop() because above

@@ -26,82 +26,83 @@
 
 namespace flare::rpc {
 
-// Dispatch edge-triggered events of file descriptors to consumers
-// running in separate fibers.
-class EventDispatcher {
-friend class Socket;
-public:
-    EventDispatcher();
-    
-    virtual ~EventDispatcher();
+    // Dispatch edge-triggered events of file descriptors to consumers
+    // running in separate fibers.
+    class EventDispatcher {
+        friend class Socket;
 
-    // Start this dispatcher in a fiber.
-    // Use |*consumer_thread_attr| (if it's not NULL) as the attribute to
-    // create fibers running user callbacks.
-    // Returns 0 on success, -1 otherwise.
-    virtual int Start(const fiber_attribute* consumer_thread_attr);
+    public:
+        EventDispatcher();
 
-    // True iff this dispatcher is running in a fiber
-    bool Running() const;
+        virtual ~EventDispatcher();
 
-    // Stop fiber of this dispatcher.
-    void Stop();
+        // Start this dispatcher in a fiber.
+        // Use |*consumer_thread_attr| (if it's not NULL) as the attribute to
+        // create fibers running user callbacks.
+        // Returns 0 on success, -1 otherwise.
+        virtual int Start(const fiber_attribute *consumer_thread_attr);
 
-    // Suspend calling thread until fiber of this dispatcher stops.
-    void Join();
+        // True iff this dispatcher is running in a fiber
+        bool Running() const;
 
-    // When edge-triggered events happen on `fd', call
-    // `on_edge_triggered_events' of `socket_id'.
-    // Notice that this function also transfers ownership of `socket_id',
-    // When the file descriptor is removed from internal epoll, the Socket
-    // will be dereferenced once additionally.
-    // Returns 0 on success, -1 otherwise.
-    int AddConsumer(SocketId socket_id, int fd);
+        // Stop fiber of this dispatcher.
+        void Stop();
 
-    // Watch EPOLLOUT event on `fd' into epoll device. If `pollin' is
-    // true, EPOLLIN event will also be included and EPOLL_CTL_MOD will
-    // be used instead of EPOLL_CTL_ADD. When event arrives,
-    // `Socket::HandleEpollOut' will be called with `socket_id'
-    // Returns 0 on success, -1 otherwise and errno is set
-    int AddEpollOut(SocketId socket_id, int fd, bool pollin);
-    
-    // Remove EPOLLOUT event on `fd'. If `pollin' is true, EPOLLIN event
-    // will be kept and EPOLL_CTL_MOD will be used instead of EPOLL_CTL_DEL
-    // Returns 0 on success, -1 otherwise and errno is set
-    int RemoveEpollOut(SocketId socket_id, int fd, bool pollin);
+        // Suspend calling thread until fiber of this dispatcher stops.
+        void Join();
 
-private:
-    FLARE_DISALLOW_COPY_AND_ASSIGN(EventDispatcher);
+        // When edge-triggered events happen on `fd', call
+        // `on_edge_triggered_events' of `socket_id'.
+        // Notice that this function also transfers ownership of `socket_id',
+        // When the file descriptor is removed from internal epoll, the Socket
+        // will be dereferenced once additionally.
+        // Returns 0 on success, -1 otherwise.
+        int AddConsumer(SocketId socket_id, int fd);
 
-    // Calls Run()
-    static void* RunThis(void* arg);
+        // Watch EPOLLOUT event on `fd' into epoll device. If `pollin' is
+        // true, EPOLLIN event will also be included and EPOLL_CTL_MOD will
+        // be used instead of EPOLL_CTL_ADD. When event arrives,
+        // `Socket::HandleEpollOut' will be called with `socket_id'
+        // Returns 0 on success, -1 otherwise and errno is set
+        int AddEpollOut(SocketId socket_id, int fd, bool pollin);
 
-    // Thread entry.
-    void Run();
+        // Remove EPOLLOUT event on `fd'. If `pollin' is true, EPOLLIN event
+        // will be kept and EPOLL_CTL_MOD will be used instead of EPOLL_CTL_DEL
+        // Returns 0 on success, -1 otherwise and errno is set
+        int RemoveEpollOut(SocketId socket_id, int fd, bool pollin);
 
-    // Remove the file descriptor `fd' from epoll.
-    int RemoveConsumer(int fd);
+    private:
+        FLARE_DISALLOW_COPY_AND_ASSIGN(EventDispatcher);
 
-    // The epoll to watch events.
-    int _epfd;
+        // Calls Run()
+        static void *RunThis(void *arg);
 
-    // false unless Stop() is called.
-    volatile bool _stop;
+        // Thread entry.
+        void Run();
 
-    // identifier of hosting fiber
-    fiber_id_t _tid;
+        // Remove the file descriptor `fd' from epoll.
+        int RemoveConsumer(int fd);
 
-    // The attribute of fibers calling user callbacks.
-    fiber_attribute _consumer_thread_attr;
+        // The epoll to watch events.
+        int _epfd;
 
-    // The attribute of fiber epoll_wait.
-    fiber_attribute _epoll_thread_attr;
+        // false unless Stop() is called.
+        volatile bool _stop;
 
-    // Pipe fds to wakeup EventDispatcher from `epoll_wait' in order to quit
-    int _wakeup_fds[2];
-};
+        // identifier of hosting fiber
+        fiber_id_t _tid;
 
-EventDispatcher& GetGlobalEventDispatcher(int fd);
+        // The attribute of fibers calling user callbacks.
+        fiber_attribute _consumer_thread_attr;
+
+        // The attribute of fiber epoll_wait.
+        fiber_attribute _epoll_thread_attr;
+
+        // Pipe fds to wakeup EventDispatcher from `epoll_wait' in order to quit
+        int _wakeup_fds[2];
+    };
+
+    EventDispatcher &GetGlobalEventDispatcher(int fd);
 
 } // namespace flare::rpc
 

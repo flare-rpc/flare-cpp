@@ -218,7 +218,7 @@ TEST_F(EventDispatcherTest, dispatch_tasks) {
         cm[i]->fd = fds[i * 2 + 1];
         cm[i]->times = 0;
         cm[i]->bytes = 0;
-        flare::thread th("", [&] {
+        flare::thread th("dtasks", [&] {
             client_thread(cm[i]);
         });
         cth[i] = std::move(th);
