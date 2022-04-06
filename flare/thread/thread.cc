@@ -99,7 +99,10 @@ namespace flare {
     }
 
     thread::~thread() {
-        FLARE_CHECK(!_impl, "thread::join() was not called before destruction");
+        if(_impl) {
+            LOG(WARNING) << "thread: " << _impl->option.prefix << "was not called before destruction, detach instead.";
+            detach();
+        }
     }
 
     void thread::join(void**ptr) {
