@@ -488,7 +488,7 @@ TEST_F(SocketTest, fail_to_connect) {
             args[i].times = REP;
             args[i].offset = i * REP;
             args[i].socket_id = id;
-            flare::thread t("", [&] {
+            flare::thread t("failcon", [&] {
                 FailedWriter(&args[i]);
             });
             th[i] = std::move(t);
@@ -864,7 +864,7 @@ TEST_F(SocketTest, multi_threaded_write) {
             args[i].times = REP;
             args[i].offset = i * REP;
             args[i].socket_id = id;
-            flare::thread t("", [&] {
+            flare::thread t("mtw", [&] {
                 Writer(&args[i]);
             });
             th[i] = std::move(t);
@@ -1020,7 +1020,7 @@ TEST_F(SocketTest, multi_threaded_write_perf) {
 
 
     ReaderArg reader_arg = {fds[0], 0};
-    flare::thread rth("", [&] {
+    flare::thread rth("mtwp", [&] {
         reader(&reader_arg);
     });
     rth.start();
