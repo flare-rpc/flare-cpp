@@ -14,6 +14,7 @@
 namespace flare {
 
     // TODO:tsan
+    // TODO: using pthread_spinlock_t?
     class spinlock {
     public:
         void lock() noexcept {

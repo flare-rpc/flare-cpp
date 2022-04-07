@@ -212,4 +212,34 @@ namespace flare::base::base_internal {
 #define FLARE_COLD
 #endif
 
+
+
+// ------------------------------------------------------------------------
+// FLARE_UNUSED
+//
+// Makes compiler warnings about unused variables go away.
+//
+// Example usage:
+//    void Function(int x)
+//    {
+//        int y;
+//        FLARE_UNUSED(x);
+//        FLARE_UNUSED(y);
+//    }
+//
+#ifndef FLARE_UNUSED
+// The EDG solution below is pretty weak and needs to be augmented or replaced.
+// It can't handle the C language, is limited to places where template declarations
+// can be used, and requires the type x to be usable as a functions reference argument.
+#if defined(__cplusplus) && defined(__EDG__)
+namespace flare:: base_internal {
+template <typename T>
+inline void flare_macro_unused(T const volatile & x) { (void)x; }
+}
+#define FLARE_UNUSED(x) flare:: base_internal::flare_macro_unused(x)
+#else
+#define FLARE_UNUSED(x) (void)x
+#endif
+#endif
+
 #endif // FLARE_BASE_PROFILE_ATTRIBUTE_H_
