@@ -29,7 +29,7 @@ namespace flare::base {
 #if defined(__GNUC__) || defined(__clang__)
 
     template<class R, class... Args, bool kNoexcept>
-    class alignas(flare::base::max_align_v) function<R(Args...) noexcept(kNoexcept)> {
+    class alignas(flare::max_align_v) function<R(Args...) noexcept(kNoexcept)> {
 #else
         template <class R, class... Args>
 class alignas(max_align_v) function<R(Args...)> {

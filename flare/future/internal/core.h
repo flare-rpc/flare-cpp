@@ -12,7 +12,7 @@
 #include <utility>
 #include <variant>
 #include <memory>
-#include  "flare/base/functional.h"
+#include "flare/base/functional.h"
 #include "flare/future/internal/boxed.h"
 #include "flare/future/internal/executor.h"
 #include "flare/log/logging.h"

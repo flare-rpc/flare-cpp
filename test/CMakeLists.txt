@@ -146,4 +146,5 @@ add_subdirectory(strings)
 add_subdirectory(io)
 add_subdirectory(debugging)
 add_subdirectory(times)
+add_subdirectory(thread)
 
