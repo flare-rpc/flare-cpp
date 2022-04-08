@@ -268,7 +268,7 @@ namespace flare {
 
         template<class T>
         inline T *add_to_ptr(T *ptr, std::ptrdiff_t offset) {
-            FLARE_CHECK_EQ(offset % sizeof(T), 0);
+            FLARE_CHECK_EQ(offset % sizeof(T), 0ul);
             return reinterpret_cast<T *>(reinterpret_cast<std::uintptr_t>(ptr) + offset);
         }
 
@@ -335,8 +335,8 @@ namespace flare {
 #endif
             FLARE_INTERNAL_TLS_MODEL
             thread_local object_array_cache<T> cache;
-            FLARE_CHECK_EQ(offset % sizeof(T), 0);
-            FLARE_CHECK_GE(offset, 0);
+            FLARE_CHECK_EQ(offset % sizeof(T), 0ul);
+            FLARE_CHECK_GE(offset, 0ul);
             if (FLARE_LIKELY(offset < cache.limit)) {
                 // Pairs with the heavy barrier in `BroadcastingForEachLocked` above.
                 asymmetric_barrier_light();
