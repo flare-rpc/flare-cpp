@@ -65,9 +65,9 @@ static void* sender(void* arg) {
 
         // Because `done'(last parameter) is NULL, this function waits until
         // the response comes back or error occurs(including timedout).
-        const int64_t start_time = flare::base::cpuwide_time_us();
+        const int64_t start_time = flare::get_current_time_micros();
         stub.Echo(&cntl, &request, &response, NULL);
-        const int64_t end_time = flare::base::cpuwide_time_us();
+        const int64_t end_time = flare::get_current_time_micros();
         const int64_t elp = end_time - start_time;
         if (!cntl.Failed()) {
             g_latency_recorder << elp;

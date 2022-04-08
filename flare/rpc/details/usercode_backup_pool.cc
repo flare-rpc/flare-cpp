@@ -108,7 +108,7 @@ int UserCodeBackupPool::Init() {
 // Entry of backup thread for running user code.
 void UserCodeBackupPool::UserCodeRunningLoop() {
     flare::fiber_internal::run_worker_startfn();
-    int64_t last_time = flare::base::cpuwide_time_us();
+    int64_t last_time = flare::get_current_time_micros();
     while (true) {
         bool blocked = false;
         UserCode usercode = { NULL, NULL };
@@ -125,9 +125,9 @@ void UserCodeBackupPool::UserCodeRunningLoop() {
                 g_too_many_usercode = false;
             }
         }
-        const int64_t begin_time = (blocked ? flare::base::cpuwide_time_us() : last_time);
+        const int64_t begin_time = (blocked ? flare::get_current_time_micros() : last_time);
         usercode.fn(usercode.arg);
-        const int64_t end_time = flare::base::cpuwide_time_us();
+        const int64_t end_time = flare::get_current_time_micros();
         inpool_count << 1;
         inpool_elapse_us << (end_time - begin_time);
         last_time = end_time;

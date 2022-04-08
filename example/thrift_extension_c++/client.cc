@@ -22,7 +22,7 @@
 #include "gen-cpp/echo_types.h"
 
 #include "flare/log/logging.h"
-#include "flare/base/time.h"
+#include "flare/times/time.h"
 #include <flare/rpc/channel.h>
 #include <flare/rpc/thrift_message.h>
 #include <flare/variable/all.h>

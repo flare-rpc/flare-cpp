@@ -80,7 +80,7 @@ DEFINE_int32(auto_cl_latency_fluctuation_correction_factor, 1,
 
 AutoConcurrencyLimiter::AutoConcurrencyLimiter()
     : _max_concurrency(FLAGS_auto_cl_initial_max_concurrency)
-    , _remeasure_start_us(NextResetTime(flare::base::gettimeofday_us()))
+    , _remeasure_start_us(NextResetTime(flare::get_current_time_micros()))
     , _reset_latency_us(0)
     , _min_latency_us(-1)
     , _ema_max_qps(-1)
@@ -104,7 +104,7 @@ void AutoConcurrencyLimiter::OnResponded(int error_code, int64_t latency_us) {
         return;
     }
 
-    const int64_t now_time_us = flare::base::gettimeofday_us();
+    const int64_t now_time_us = flare::get_current_time_micros();
     int64_t last_sampling_time_us = 
         _last_sampling_time_us.load(std::memory_order_relaxed);
 

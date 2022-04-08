@@ -27,7 +27,7 @@
 #include "flare/base/scoped_lock.h"                   // BAIDU_SCOPE_LOCK
 #include "flare/strings/string_splitter.h"               // flare::StringSplitter
 #include "flare/base/errno.h"                          // flare_error
-#include "flare/base/time.h"                          // milliseconds_from_now
+#include "flare/times/time.h"                          // milliseconds_from_now
 #include "flare/variable/gflag.h"
 #include "flare/variable/variable.h"
 #include "flare/strings/utility.h"
@@ -755,7 +755,7 @@ namespace flare::variable {
                 LOG(ERROR) << "Bad cond_sleep_ms=" << cond_sleep_ms;
                 cond_sleep_ms = 10000;
             }
-            timespec deadline = flare::base::milliseconds_from_now(cond_sleep_ms);
+            timespec deadline = flare::time_point::future_unix_millis(cond_sleep_ms).to_timespec();
             pthread_mutex_lock(&dump_mutex);
             pthread_cond_timedwait(&dump_cond, &dump_mutex, &deadline);
             pthread_mutex_unlock(&dump_mutex);

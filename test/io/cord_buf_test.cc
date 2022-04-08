@@ -22,7 +22,7 @@
 #include <fcntl.h>                     // O_RDONLY
 #include "flare/files/temp_file.h"      // temp_file
 #include <flare/container/flat_map.h>
-#include "flare/base/time.h"                 // Timer
+#include "flare/times/time.h"                 // Timer
 #include "flare/base/fd_utility.h"           // make_non_blocking
 #include <flare/io/cord_buf.h>
 #include "flare/log/logging.h"
@@ -887,7 +887,7 @@ namespace {
         }
         ASSERT_EQ(N * s1.length(), b.length());
 
-        flare::base::stop_watcher t;
+        flare::stop_watcher t;
         //ProfilerStart("cutd.prof");
         t.start();
         for (; b.cut_until(&p, "\n") == 0;) {}
@@ -908,7 +908,7 @@ namespace {
         flare::cord_buf p;
         const size_t length = 60000000UL;
         const size_t REP = 10;
-        flare::base::stop_watcher t;
+        flare::stop_watcher t;
         std::string s = "1234567890";
         const bool push_char = false;
 
@@ -991,7 +991,7 @@ namespace {
         std::vector<flare::cord_buf> ps;
         ssize_t nr;
         size_t HINT = 16 * 1024UL;
-        flare::base::stop_watcher t;
+        flare::stop_watcher t;
         size_t w[3] = {16, 128, 1024};
         char name[64];
         char profname[64];
@@ -1509,7 +1509,7 @@ namespace {
 
     TEST_F(CordBufTest, appender_perf) {
         const size_t N1 = 100000;
-        flare::base::stop_watcher tm1;
+        flare::stop_watcher tm1;
         tm1.start();
         flare::cord_buf buf1;
         for (size_t i = 0; i < N1; ++i) {
@@ -1517,7 +1517,7 @@ namespace {
         }
         tm1.stop();
 
-        flare::base::stop_watcher tm2;
+        flare::stop_watcher tm2;
         tm2.start();
         flare::cord_buf_appender appender1;
         for (size_t i = 0; i < N1; ++i) {
@@ -1546,7 +1546,7 @@ namespace {
         }
         tm2.stop();
 
-        flare::base::stop_watcher tm3;
+        flare::stop_watcher tm3;
         tm3.start();
         for (size_t i = 0; i < N2; ++i) {
             str2.append(s);

@@ -16,7 +16,7 @@
 // under the License.
 
 #include <gtest/gtest.h>
-#include "flare/base/time.h"
+#include "flare/times/time.h"
 #include "flare/log/logging.h"
 #include "flare/fiber/internal/fiber_worker.h"
 #include "flare/fiber/internal/fiber.h"

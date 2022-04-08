@@ -24,7 +24,7 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <flare/fiber/internal/fiber.h>
-#include "flare/base/time.h"
+#include "flare/times/time.h"
 #include <flare/rpc/channel.h>
 #include <flare/rpc/controller.h>
 #include "flare/log/logging.h"
@@ -186,7 +186,7 @@ namespace pbrpcframework {
                                    Message *response,
                                    int64_t start_time) {
         if (!cntl->Failed()) {
-            int64_t rpc_call_time_us = flare::base::gettimeofday_us() - start_time;
+            int64_t rpc_call_time_us = flare::get_current_time_micros() - start_time;
             _latency_recorder << rpc_call_time_us;
 
             if (_output_json) {
@@ -224,13 +224,13 @@ namespace pbrpcframework {
         } else if (MAX_QUEUE_SIZE > 2000) {
             MAX_QUEUE_SIZE = 2000;
         }
-        timeq.push_back(flare::base::gettimeofday_us());
+        timeq.push_back(flare::get_current_time_micros());
         while (!_stop) {
             flare::rpc::Controller *cntl = new flare::rpc::Controller;
             msg_index = (msg_index + _options.test_thread_num) % _msgs.size();
             Message *request = _msgs[msg_index];
             Message *response = _pbrpc_client->get_output_message();
-            const int64_t start_time = flare::base::gettimeofday_us();
+            const int64_t start_time = flare::get_current_time_micros();
             google::protobuf::Closure *done = flare::rpc::NewCallback<
                     RpcPress,
                     RpcPress *,
@@ -245,7 +245,7 @@ namespace pbrpcframework {
             if (_options.test_req_rate <= 0) {
                 flare::rpc::Join(cid1);
             } else {
-                int64_t end_time = flare::base::gettimeofday_us();
+                int64_t end_time = flare::get_current_time_micros();
                 int64_t expected_elp = 0;
                 int64_t actual_elp = 0;
                 timeq.push_back(end_time);

@@ -20,7 +20,7 @@
 #ifndef  FLARE_VARIABLE_SCOPED_TIMER_H_
 #define  FLARE_VARIABLE_SCOPED_TIMER_H_
 
-#include "flare/base/time.h"
+#include "flare/times/time.h"
 
 // Accumulate microseconds spent by scopes into variable, useful for debugging.
 // Example:
@@ -41,13 +41,13 @@ namespace flare::variable {
     class ScopedTimer {
     public:
         explicit ScopedTimer(T &variable)
-                : _start_time(flare::base::cpuwide_time_us()), _var(&variable) {}
+                : _start_time(flare::get_current_time_micros()), _var(&variable) {}
 
         ~ScopedTimer() {
-            *_var << (flare::base::cpuwide_time_us() - _start_time);
+            *_var << (flare::get_current_time_micros() - _start_time);
         }
 
-        void reset() { _start_time = flare::base::cpuwide_time_us(); }
+        void reset() { _start_time = flare::get_current_time_micros(); }
 
     private:
         FLARE_DISALLOW_COPY_AND_ASSIGN(ScopedTimer);

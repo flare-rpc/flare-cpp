@@ -23,7 +23,7 @@
 #include <google/protobuf/text_format.h>
 #include "flare/io/cord_buf.h"
 #include "flare/rapidjson/rapidjson.h"
-#include "flare/base/time.h"
+#include "flare/times/time.h"
 #include "flare/base/gperftools_profiler.h"
 #include "flare/json2pb/pb_to_json.h"
 #include "flare/json2pb/json_to_pb.h"
@@ -505,7 +505,7 @@ TEST_F(ProtobufJsonTest, json_to_pb_perf_case) {
     std::string error; 
   
     ProfilerStart("json_to_pb_perf.prof");
-    flare::base::stop_watcher timer;
+    flare::stop_watcher timer;
     bool res;
     float avg_time1 = 0;
     float avg_time2 = 0;
@@ -542,7 +542,7 @@ TEST_F(ProtobufJsonTest, json_to_pb_encode_decode_perf_case) {
     std::string error; 
     
     ProfilerStart("json_to_pb_encode_decode_perf.prof");
-    flare::base::stop_watcher timer;
+    flare::stop_watcher timer;
     bool res;
     float avg_time1 = 0;
     float avg_time2 = 0;
@@ -582,7 +582,7 @@ TEST_F(ProtobufJsonTest, json_to_pb_complex_perf_case) {
 
     std::string error; 
   
-    flare::base::stop_watcher timer;
+    flare::stop_watcher timer;
 
     bool res;
     float avg_time1 = 0;
@@ -615,7 +615,7 @@ TEST_F(ProtobufJsonTest, json_to_pb_to_string_complex_perf_case) {
 
     std::string error; 
   
-    flare::base::stop_watcher timer;
+    flare::stop_watcher timer;
     bool res;
     float avg_time1 = 0;
     const int times = 10000;
@@ -1221,7 +1221,7 @@ TEST_F(ProtobufJsonTest, pb_to_json_perf_case) {
 
     printf("----------test pb to json performance------------\n\n");
     ProfilerStart("pb_to_json_perf.prof");
-    flare::base::stop_watcher timer;
+    flare::stop_watcher timer;
     bool res;
     float avg_time1 = 0;
     float avg_time2 = 0;
@@ -1280,7 +1280,7 @@ TEST_F(ProtobufJsonTest, pb_to_json_encode_decode_perf_case) {
 
     printf("----------test pb to json encode decode performance------------\n\n");
     ProfilerStart("pb_to_json_encode_decode_perf.prof");
-    flare::base::stop_watcher timer;
+    flare::stop_watcher timer;
     bool res;
     float avg_time1 = 0;
     float avg_time2 = 0;
@@ -1319,7 +1319,7 @@ TEST_F(ProtobufJsonTest, pb_to_json_complex_perf_case) {
 
     std::string error;
 
-    flare::base::stop_watcher timer;
+    flare::stop_watcher timer;
     bool res;
     float avg_time1 = 0;
     float avg_time2 = 0;
@@ -1359,7 +1359,7 @@ TEST_F(ProtobufJsonTest, pb_to_json_to_string_complex_perf_case) {
 
     std::string error; 
   
-    flare::base::stop_watcher timer;
+    flare::stop_watcher timer;
     bool res;
     float avg_time1 = 0;
     float avg_time2 = 0;

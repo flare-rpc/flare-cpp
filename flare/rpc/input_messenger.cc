@@ -19,7 +19,7 @@
 #include <gflags/gflags.h>
 #include "flare/base/fd_guard.h"                      // fd_guard
 #include "flare/log/logging.h"                       // CHECK
-#include "flare/base/time.h"                          // cpuwide_time_us
+#include "flare/times/time.h"                          // cpuwide_time_us
 #include "flare/base/fd_utility.h"                    // make_non_blocking
 #include "flare/fiber/internal/fiber.h"                     // fiber_start_background
 #include "flare/fiber/internal/unstable.h"                   // fiber_flush
@@ -186,8 +186,8 @@ void InputMessenger::OnNewMessages(Socket* m) {
     std::unique_ptr<InputMessageBase, RunLastMessage> last_msg;
     bool read_eof = false;
     while (!read_eof) {
-        const int64_t received_us = flare::base::cpuwide_time_us();
-        const int64_t base_realtime = flare::base::gettimeofday_us() - received_us;
+        const int64_t received_us = flare::get_current_time_micros();
+        const int64_t base_realtime = flare::get_current_time_micros() - received_us;
 
         // Calculate bytes to be read.
         size_t once_read = m->_avg_msg_size * 16;

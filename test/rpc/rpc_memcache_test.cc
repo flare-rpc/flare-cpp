@@ -16,7 +16,7 @@
 // under the License.
 
 #include <iostream>
-#include "flare/base/time.h"
+#include "flare/times/time.h"
 #include "flare/log/logging.h"
 #include <flare/rpc/memcache.h>
 #include <flare/rpc/channel.h>

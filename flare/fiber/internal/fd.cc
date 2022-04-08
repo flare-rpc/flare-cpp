@@ -31,7 +31,7 @@
 #endif
 
 #include "flare/base/static_atomic.h"
-#include "flare/base/time.h"
+#include "flare/times/time.h"
 #include "flare/base/fd_utility.h"                     // make_non_blocking
 #include "flare/log/logging.h"
 #include "flare/hash/murmurhash3.h"   // fmix32
@@ -457,10 +457,8 @@ namespace flare::fiber_internal {
                         const timespec *abstime) {
         int diff_ms = -1;
         if (abstime) {
-            timespec now;
-            clock_gettime(CLOCK_REALTIME, &now);
-            int64_t now_us = flare::base::timespec_to_microseconds(now);
-            int64_t abstime_us = flare::base::timespec_to_microseconds(*abstime);
+            int64_t now_us = flare::time_now().to_unix_micros();
+            int64_t abstime_us = flare::time_point::from_timespec(*abstime).to_unix_micros();
             if (abstime_us <= now_us) {
                 errno = ETIMEDOUT;
                 return -1;

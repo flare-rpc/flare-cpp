@@ -3,7 +3,7 @@
 #include <random>
 #include <gtest/gtest.h>
 #include "flare/container/find_cstr.h"
-#include "flare/base/time.h"
+#include "flare/times/time.h"
 #include "flare/log/logging.h"
 
 namespace {
@@ -67,7 +67,7 @@ namespace {
         std::mt19937 g(rd());
         std::shuffle(all_keys.begin(), all_keys.end(), g);
         int sum = 0;
-        flare::base::stop_watcher tm;
+        flare::stop_watcher tm;
         tm.start();
         for (size_t i = 0; i < all_keys.size(); ++i) {
             sum += flare::container::find_cstr(t1, all_keys[i])->second;

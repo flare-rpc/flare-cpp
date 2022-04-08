@@ -17,7 +17,7 @@
 
 #include <iostream>
 #include <gtest/gtest.h>
-#include "flare/base/time.h"
+#include "flare/times/time.h"
 #include "flare/fiber/internal/fiber.h"
 #include "flare/fiber/internal/fiber_worker.h"
 #include "flare/fiber/internal/waitable_event.h"
@@ -215,7 +215,7 @@ namespace {
 
     static void *locker(void *arg) {
         fiber_token_t id = {(uintptr_t) arg};
-        flare::base::stop_watcher tm;
+        flare::stop_watcher tm;
         tm.start();
         EXPECT_EQ(0, fiber_token_lock(id, nullptr));
         flare::fiber_sleep_for(2000);
@@ -427,7 +427,7 @@ namespace {
 
     static void *fail_to_lock_id(void *args_in) {
         FailToLockIdArgs *args = (FailToLockIdArgs *) args_in;
-        flare::base::stop_watcher tm;
+        flare::stop_watcher tm;
         EXPECT_EQ(args->expected_return, fiber_token_lock(args->id, nullptr));
         any_thread_quit = true;
         return nullptr;

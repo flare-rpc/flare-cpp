@@ -45,7 +45,7 @@ namespace flare {
             flare::fiber_sleep_for(1000000);
             f = true;
         });
-        auto ts = flare::base::microseconds_to_timespec(flare::base::cpuwide_time_us() + 1000000);
+        auto ts = flare::time_point::from_unix_micros(flare::get_current_time_micros() + 1000000).to_timespec();
         ASSERT_FALSE(fiber_future_try_get_until(std::move(future), &ts));
         ASSERT_FALSE(f);
         flare::fiber_sleep_for(2000000);

@@ -21,7 +21,7 @@
 #include <random>
 #include <chrono>
 #include <gflags/gflags.h>
-#include "flare/base/time.h"
+#include "flare/times/time.h"
 #include "flare/log/logging.h"
 #include <flare/string/str_format.h>
 #include <flare/base/string_splitter.h>
@@ -78,8 +78,8 @@ public:
                 }
             }
             if (FLAGS_spin) {
-                int64_t end_time = flare::base::gettimeofday_us() + (int64_t) delay;
-                while (flare::base::gettimeofday_us() < end_time) {}
+                int64_t end_time = flare::get_current_time_micros() + (int64_t) delay;
+                while (flare::get_current_time_micros() < end_time) {}
             } else {
                 flare::fiber_sleep_for((int64_t) delay);
             }

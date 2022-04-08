@@ -2,7 +2,7 @@
 #ifndef FLARE_FIBER_INTERNAL_FIBER_WORKER_H_
 #define FLARE_FIBER_INTERNAL_FIBER_WORKER_H_
 
-#include "flare/base/time.h"                             // cpuwide_time_ns
+#include "flare/times/time.h"                             // cpuwide_time_ns
 #include "flare/fiber/internal/schedule_group.h"
 #include "flare/fiber/internal/fiber_entity.h"                     // fiber_id_t, fiber_entity
 #include "flare/fiber/internal/work_stealing_queue.h"           // WorkStealingQueue
@@ -132,7 +132,7 @@ namespace flare::fiber_internal {
         fiber_id_t current_fid() const { return _cur_meta->tid; }
 
         // Uptime of current task in nanoseconds.
-        int64_t current_uptime_ns() const { return flare::base::cpuwide_time_ns() - _cur_meta->cpuwide_start_ns; }
+        int64_t current_uptime_ns() const { return flare::get_current_time_nanos() - _cur_meta->cpuwide_start_ns; }
 
         // True iff current task is the one running run_main_task()
         bool is_current_main_task() const { return current_fid() == _main_tid; }

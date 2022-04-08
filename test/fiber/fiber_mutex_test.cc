@@ -18,7 +18,7 @@
 #include <inttypes.h>
 #include <gtest/gtest.h>
 #include "flare/base/compat.h"
-#include "flare/base/time.h"
+#include "flare/times/time.h"
 #include "flare/strings/str_format.h"
 #include "flare/log/logging.h"
 #include "flare/fiber/internal/fiber.h"
@@ -33,14 +33,14 @@ namespace {
         return m.event;
     }
 
-    long start_time = flare::base::cpuwide_time_ms();
+    long start_time = flare::time_now().to_unix_millis();
     int c = 0;
 
     void *locker(void *arg) {
         fiber_mutex_t *m = (fiber_mutex_t *) arg;
         fiber_mutex_lock(m);
         printf("[%" PRIu64 "] I'm here, %d, %" PRId64 "ms\n",
-               pthread_numeric_id(), ++c, flare::base::cpuwide_time_ms() - start_time);
+               pthread_numeric_id(), ++c, flare::time_now().to_unix_millis() - start_time);
         flare::fiber_sleep_for(10000);
         fiber_mutex_unlock(m);
         return nullptr;
@@ -153,7 +153,7 @@ namespace {
     void *add_with_mutex(void *void_arg) {
         PerfArgs<fiber_mutex> *args = (PerfArgs<fiber_mutex> *) void_arg;
         args->ready = true;
-        flare::base::stop_watcher t;
+        flare::stop_watcher t;
         while (!g_stopped) {
             if (g_started) {
                 break;

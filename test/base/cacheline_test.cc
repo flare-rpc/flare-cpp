@@ -19,7 +19,7 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <gtest/gtest.h>
-#include "flare/base/time.h"
+#include "flare/times/time.h"
 #include "flare/base/profile.h"
 
 namespace {

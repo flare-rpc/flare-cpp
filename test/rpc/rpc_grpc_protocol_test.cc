@@ -22,7 +22,7 @@
 #include "flare/rpc/server.h"
 #include "flare/rpc/channel.h"
 #include "flare/rpc/grpc.h"
-#include "flare/base/time.h"
+#include "flare/times/time.h"
 #include "flare/strings/ends_with.h"
 #include "flare/fiber/this_fiber.h"
 #include "grpc.pb.h"
@@ -74,7 +74,7 @@ public:
                 EXPECT_EQ(-1, cntl->deadline_us());
             } else {
                 EXPECT_NEAR(cntl->deadline_us(),
-                    flare::base::gettimeofday_us() + req->timeout_us(), 5000);
+                    flare::get_current_time_micros() + req->timeout_us(), 5000);
             }
         }
     }

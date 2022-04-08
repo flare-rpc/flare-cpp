@@ -220,7 +220,7 @@ void TrackMe() {
     if (FLAGS_trackme_server.empty()) {
         return;
     }
-    int64_t now = flare::base::gettimeofday_us();
+    int64_t now = flare::get_current_time_micros();
     std::unique_lock<pthread_mutex_t> mu(s_trackme_mutex);
     if (s_trackme_last_time == 0) {
         // Delay the first ping randomly within s_trackme_interval. This

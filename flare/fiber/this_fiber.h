@@ -11,7 +11,7 @@ namespace flare {
 
     int fiber_yield();
 
-    // expires_at_us should based microseconds flare::base::cpuwide_time_us();
+    // expires_at_us should based microseconds flare::get_current_time_micros();
     int fiber_sleep_until(const int64_t& expires_at_us);
 
     int fiber_sleep_for(const int64_t& expires_in_us);

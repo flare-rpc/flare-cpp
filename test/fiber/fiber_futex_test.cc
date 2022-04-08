@@ -21,7 +21,7 @@
 #include <stdio.h>
 #include <signal.h>
 #include <gtest/gtest.h>
-#include "flare/base/time.h"
+#include "flare/times/time.h"
 #include "flare/base/errno.h"
 #include <limits.h>                            // INT_MAX
 #include "flare/base/static_atomic.h"
@@ -44,8 +44,8 @@ namespace {
                 if (x > 0) {
                     while ((x = m->fetch_sub(1)) > 0) {
                         ++njob;
-                        const long start = flare::base::cpuwide_time_ns();
-                        while (flare::base::cpuwide_time_ns() < start + 10000) {
+                        const long start = flare::get_current_time_nanos();
+                        while (flare::get_current_time_nanos() < start + 10000) {
                         }
                         if (stop) {
                             return new int(njob);
@@ -72,7 +72,7 @@ namespace {
             ASSERT_EQ(0, pthread_create(&rth[i], nullptr, read_thread, &lock1));
         }
 
-        const int64_t t1 = flare::base::cpuwide_time_ns();
+        const int64_t t1 = flare::get_current_time_nanos();
         for (size_t i = 0; i < N; ++i) {
             if (nthread) {
                 lock1.fetch_add(1);
@@ -84,7 +84,7 @@ namespace {
                 }
             }
         }
-        const int64_t t2 = flare::base::cpuwide_time_ns();
+        const int64_t t2 = flare::get_current_time_nanos();
 
         flare::fiber_sleep_for(3000000);
         stop = true;
@@ -127,7 +127,7 @@ namespace {
 
         sleep(1);
         int nwakeup = 0;
-        flare::base::stop_watcher tm;
+        flare::stop_watcher tm;
         tm.start();
         for (size_t i = 0; i < N; ++i) {
             nwakeup += flare::fiber_internal::futex_wake_private(&lock1, 1);
@@ -154,7 +154,7 @@ namespace {
         flare::fiber_sleep_for(10000);
         const size_t REP = 100000;
         int nwakeup = 0;
-        flare::base::stop_watcher tm;
+        flare::stop_watcher tm;
         tm.start();
         for (size_t i = 0; i < REP; ++i) {
             nwakeup += flare::fiber_internal::futex_wake_private(lock, 1);
@@ -169,7 +169,7 @@ namespace {
         flare::fiber_sleep_for(10000);
         const size_t REP = 100000;
         int nwakeup = 0;
-        flare::base::stop_watcher tm;
+        flare::stop_watcher tm;
         tm.start();
         for (size_t i = 0; i < REP; ++i) {
             if (nevent.fetch_add(1, std::memory_order_relaxed) == 0) {

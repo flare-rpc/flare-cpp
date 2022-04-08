@@ -5,7 +5,7 @@
 #include <vector>                     // std::vector
 #include <pthread.h>                  // pthread_*
 #include "flare/base/static_atomic.h"
-#include "flare/base/time.h"                // time utilities
+#include "flare/times/time.h"                // time utilities
 #include "flare/fiber/internal/mutex.h"
 
 namespace flare::fiber_internal {

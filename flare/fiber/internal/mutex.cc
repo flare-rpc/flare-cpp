@@ -529,7 +529,7 @@ namespace flare::fiber_internal {
             return sys_pthread_mutex_lock(mutex);
         }
         // Lock and monitor the waiting time.
-        const int64_t start_ns = flare::base::cpuwide_time_ns();
+        const int64_t start_ns = flare::get_current_time_nanos();
         rc = sys_pthread_mutex_lock(mutex);
         if (!rc) { // Inside lock
             if (!csite) {
@@ -538,7 +538,7 @@ namespace flare::fiber_internal {
                     return rc;
                 }
             }
-            csite->duration_ns = flare::base::cpuwide_time_ns() - start_ns;
+            csite->duration_ns = flare::get_current_time_nanos() - start_ns;
             csite->sampling_range = sampling_range;
         } // else rare
         return rc;
@@ -561,7 +561,7 @@ namespace flare::fiber_internal {
             if (fast_alt.list[i].mutex == mutex) {
                 if (is_contention_site_valid(fast_alt.list[i].csite)) {
                     saved_csite = fast_alt.list[i].csite;
-                    unlock_start_ns = flare::base::cpuwide_time_ns();
+                    unlock_start_ns = flare::get_current_time_nanos();
                 }
                 fast_alt.list[i] = fast_alt.list[--fast_alt.count];
                 miss_in_tls = false;
@@ -573,13 +573,13 @@ namespace flare::fiber_internal {
         // inside critical section.
         if (miss_in_tls) {
             if (remove_pthread_contention_site(mutex, &saved_csite)) {
-                unlock_start_ns = flare::base::cpuwide_time_ns();
+                unlock_start_ns = flare::get_current_time_nanos();
             }
         }
         const int rc = sys_pthread_mutex_unlock(mutex);
         // [Outside lock]
         if (unlock_start_ns) {
-            const int64_t unlock_end_ns = flare::base::cpuwide_time_ns();
+            const int64_t unlock_end_ns = flare::get_current_time_nanos();
             saved_csite.duration_ns += unlock_end_ns - unlock_start_ns;
             submit_contention(saved_csite, unlock_end_ns);
         }
@@ -715,12 +715,12 @@ int fiber_mutex_lock(fiber_mutex_t *m) {
         return flare::fiber_internal::mutex_lock_contended(m);
     }
     // Start sampling.
-    const int64_t start_ns = flare::base::cpuwide_time_ns();
+    const int64_t start_ns = flare::get_current_time_nanos();
     // NOTE: Don't modify m->csite outside lock since multiple threads are
     // still contending with each other.
     const int rc = flare::fiber_internal::mutex_lock_contended(m);
     if (!rc) { // Inside lock
-        m->csite.duration_ns = flare::base::cpuwide_time_ns() - start_ns;
+        m->csite.duration_ns = flare::get_current_time_nanos() - start_ns;
         m->csite.sampling_range = sampling_range;
     } // else rare
     return rc;
@@ -742,16 +742,16 @@ int fiber_mutex_timedlock(fiber_mutex_t *__restrict m,
         return flare::fiber_internal::mutex_timedlock_contended(m, abstime);
     }
     // Start sampling.
-    const int64_t start_ns = flare::base::cpuwide_time_ns();
+    const int64_t start_ns = flare::get_current_time_nanos();
     // NOTE: Don't modify m->csite outside lock since multiple threads are
     // still contending with each other.
     const int rc = flare::fiber_internal::mutex_timedlock_contended(m, abstime);
     if (!rc) { // Inside lock
-        m->csite.duration_ns = flare::base::cpuwide_time_ns() - start_ns;
+        m->csite.duration_ns = flare::get_current_time_nanos() - start_ns;
         m->csite.sampling_range = sampling_range;
     } else if (rc == ETIMEDOUT) {
         // Failed to lock due to ETIMEDOUT, submit the elapse directly.
-        const int64_t end_ns = flare::base::cpuwide_time_ns();
+        const int64_t end_ns = flare::get_current_time_nanos();
         const fiber_contention_site_t csite = {end_ns - start_ns, sampling_range};
         flare::fiber_internal::submit_contention(csite, end_ns);
     }
@@ -775,9 +775,9 @@ int fiber_mutex_unlock(fiber_mutex_t *m) {
         flare::fiber_internal::waitable_event_wake(whole);
         return 0;
     }
-    const int64_t unlock_start_ns = flare::base::cpuwide_time_ns();
+    const int64_t unlock_start_ns = flare::get_current_time_nanos();
     flare::fiber_internal::waitable_event_wake(whole);
-    const int64_t unlock_end_ns = flare::base::cpuwide_time_ns();
+    const int64_t unlock_end_ns = flare::get_current_time_nanos();
     saved_csite.duration_ns += unlock_end_ns - unlock_start_ns;
     flare::fiber_internal::submit_contention(saved_csite, unlock_end_ns);
     return 0;

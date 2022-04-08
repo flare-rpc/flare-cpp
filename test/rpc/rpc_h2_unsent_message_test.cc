@@ -57,12 +57,12 @@ TEST(H2UnsentMessage, request_throughput) {
     // calc H2UnsentRequest throughput
     flare::cord_buf dummy_buf;
     ProfilerStart("h2_unsent_req.prof");
-    int64_t start_us = flare::base::gettimeofday_us();
+    int64_t start_us = flare::get_current_time_micros();
     for (int i = 0; i < ntotal; ++i) {
         flare::rpc::policy::H2UnsentRequest* req = flare::rpc::policy::H2UnsentRequest::New(&cntl);
         req->AppendAndDestroySelf(&dummy_buf, h2_client_sock.get());
     }
-    int64_t end_us = flare::base::gettimeofday_us();
+    int64_t end_us = flare::get_current_time_micros();
     ProfilerStop();
     int64_t elapsed = end_us - start_us;
     LOG(INFO) << "H2UnsentRequest average qps="
@@ -71,7 +71,7 @@ TEST(H2UnsentMessage, request_throughput) {
 
     // calc H2UnsentResponse throughput
     dummy_buf.clear();
-    start_us = flare::base::gettimeofday_us();
+    start_us = flare::get_current_time_micros();
     for (int i = 0; i < ntotal; ++i) {
         // H2UnsentResponse::New would release cntl.http_response() and swap
         // cntl.response_attachment()
@@ -80,7 +80,7 @@ TEST(H2UnsentMessage, request_throughput) {
         flare::rpc::policy::H2UnsentResponse* res = flare::rpc::policy::H2UnsentResponse::New(&cntl, 0, false);
         res->AppendAndDestroySelf(&dummy_buf, h2_client_sock.get());
     }
-    end_us = flare::base::gettimeofday_us();
+    end_us = flare::get_current_time_micros();
     elapsed = end_us - start_us;
     LOG(INFO) << "H2UnsentResponse average qps="
         << (ntotal * 1000000L) / elapsed << "/s, data throughput="

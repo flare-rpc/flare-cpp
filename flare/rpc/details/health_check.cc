@@ -106,7 +106,7 @@ void* HealthCheckManager::AppCheck(void* arg) {
     done->cntl.Reset();
     done->cntl.http_request().uri() = FLAGS_health_check_path;
     ControllerPrivateAccessor(&done->cntl).set_health_check_call();
-    done->last_check_time_ms = flare::base::gettimeofday_ms();
+    done->last_check_time_ms = flare::time_now().to_unix_millis();
     done->channel.CallMethod(NULL, &done->cntl, NULL, NULL, done);
     return NULL;
 }
@@ -133,7 +133,7 @@ void OnAppHealthCheckDone::Run() {
         << ", " << cntl.ErrorText();
 
     int64_t sleep_time_ms =
-        last_check_time_ms + interval_s * 1000 - flare::base::gettimeofday_ms();
+        last_check_time_ms + interval_s * 1000 - flare::time_now().to_unix_millis();
     if (sleep_time_ms > 0) {
         // TODO(zhujiashun): we need to handle the case when timer fails
         // and flare::fiber_sleep_for returns immediately. In most situations,
@@ -223,7 +223,7 @@ bool HealthCheckTask::OnTriggeringTask(timespec* next_abstime) {
         return false;
     }
     ++ ptr->_hc_count;
-    *next_abstime = flare::base::seconds_from_now(ptr->_health_check_interval_s);
+    *next_abstime = flare::time_point::future_unix_seconds(ptr->_health_check_interval_s).to_timespec();
     return true;
 }
 
@@ -233,7 +233,7 @@ void HealthCheckTask::OnDestroyingTask() {
 
 void StartHealthCheck(SocketId id, int64_t delay_ms) {
     PeriodicTaskManager::StartTaskAt(new HealthCheckTask(id),
-            flare::base::milliseconds_from_now(delay_ms));
+                                     flare::time_point::future_unix_millis(delay_ms).to_timespec());
 }
 
 } // namespace flare::rpc

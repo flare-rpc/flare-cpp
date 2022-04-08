@@ -24,7 +24,7 @@
 #include <sys/socket.h>
 #include <gtest/gtest.h>
 #include "flare/base/gperftools_profiler.h"
-#include "flare/base/time.h"
+#include "flare/times/time.h"
 #include "flare/base/fd_utility.h"
 #include "flare/rpc/event_dispatcher.h"
 #include "flare/rpc/details/has_epollrdhup.h"
@@ -222,7 +222,7 @@ TEST_F(EventDispatcherTest, dispatch_tasks) {
 
     LOG(INFO) << "Begin to profile... (5 seconds)";
     ProfilerStart("event_dispatcher.prof");
-    flare::base::stop_watcher tm;
+    flare::stop_watcher tm;
     tm.start();
 
     sleep(5);

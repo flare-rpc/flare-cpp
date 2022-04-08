@@ -25,7 +25,7 @@
 #include "flare/strings/str_format.h"             // string_printf
 #include "flare/strings/string_splitter.h"           // StringSplitter
 #include "flare/base/scoped_file.h"         // scoped_file
-#include "flare/base/time.h"
+#include "flare/times/time.h"
 #include "flare/base/popen.h"                    // flare::base::read_command_output
 #include "flare/base/process_util.h"             // flare::base::read_command_line
 #include "flare/rpc/log.h"
@@ -293,7 +293,7 @@ namespace flare::rpc {
     }
 
     static int ExtractSymbolsFromBinary(std::map < uintptr_t, std::string > &addr_map, const LibInfo &lib_info) {
-        flare::base::stop_watcher tm;
+        flare::stop_watcher tm;
         tm.start();
         std::string cmd = "nm -C -p ";
         cmd.append(lib_info.path);
@@ -391,7 +391,7 @@ namespace flare::rpc {
 }
 
 static void LoadSymbols() {
-    flare::base::stop_watcher tm;
+    flare::stop_watcher tm;
     tm.start();
     flare::base::scoped_file fp(fopen("/proc/self/maps", "r"));
     if (fp == NULL) {
@@ -464,7 +464,7 @@ static void LoadSymbols() {
 #endif
     ExtractSymbolsFromBinary(symbol_map, info);
 
-    flare::base::stop_watcher tm2;
+    flare::stop_watcher tm2;
     tm2.start();
     size_t num_removed = 0;
     bool last_is_empty = false;

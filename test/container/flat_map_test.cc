@@ -5,7 +5,7 @@
 #include <map>
 #include <random>
 #include <vector>
-#include "flare/base/time.h"
+#include "flare/times/time.h"
 #include "flare/strings/str_format.h"
 #include "flare/log/logging.h"
 #include "flare/container/hash_tables.h"
@@ -203,9 +203,9 @@ namespace {
         }
         input[input_len] = '\0';
         input2[input_len] = '\0';
-        flare::base::stop_watcher tm1;
-        flare::base::stop_watcher tm2;
-        flare::base::stop_watcher tm3;
+        flare::stop_watcher tm1;
+        flare::stop_watcher tm2;
+        flare::stop_watcher tm3;
         int sum = 0;
         tm1.start();
         sum += strcasecmp(input, input2);
@@ -224,7 +224,7 @@ namespace {
     TEST_F(FlatMapTest, __builtin_ctzl_perf) {
         int s = 0;
         const size_t N = 10000;
-        flare::base::stop_watcher tm1;
+        flare::stop_watcher tm1;
         tm1.start();
         for (size_t i = 1; i <= N; ++i) {
             s += __builtin_ctzl(i);
@@ -331,7 +331,7 @@ namespace {
         flare::container::hash_map<std::string, size_t> m3;
         const size_t N = 10000;
         ASSERT_EQ(0, m1.init(N));
-        flare::base::stop_watcher tm1, tm1_2, tm2, tm3;
+        flare::stop_watcher tm1, tm1_2, tm2, tm3;
         size_t sum = 0;
         keys.reserve(N);
         for (size_t i = 0; i < N; ++i) {
@@ -428,14 +428,14 @@ namespace {
             keys.push_back(rand());
         }
 
-        flare::base::stop_watcher tm2;
+        flare::stop_watcher tm2;
         tm2.start();
         for (size_t i = 0; i < N; ++i) {
             m2[keys[i]] = i;
         }
         tm2.stop();
 
-        flare::base::stop_watcher tm1;
+        flare::stop_watcher tm1;
         tm1.start();
         for (size_t i = 0; i < N; ++i) {
             m1[keys[i]] = i;
@@ -752,7 +752,7 @@ namespace {
 
         std::vector<int *> r;
         int sum;
-        flare::base::stop_watcher tm;
+        flare::stop_watcher tm;
 
         r.reserve(FLARE_ARRAY_SIZE(ptr) * REP);
         ASSERT_EQ(0, m2.init(FLARE_ARRAY_SIZE(ptr)));
@@ -886,10 +886,10 @@ namespace {
     }
 
     TEST_F(FlatMapTest, perf_small_string_map) {
-        flare::base::stop_watcher tm1;
-        flare::base::stop_watcher tm2;
-        flare::base::stop_watcher tm3;
-        flare::base::stop_watcher tm4;
+        flare::stop_watcher tm1;
+        flare::stop_watcher tm2;
+        flare::stop_watcher tm3;
+        flare::stop_watcher tm4;
 
         for (int i = 0; i < 10; ++i) {
             tm3.start();
@@ -1089,7 +1089,7 @@ namespace {
         std::map < uint64_t, T > std_map;
         flare::container::PooledMap<uint64_t, T> pooled_map;
         flare::container::hash_map<uint64_t, T> hash_map;
-        flare::base::stop_watcher id_tm, std_tm, pooled_tm, hash_tm;
+        flare::stop_watcher id_tm, std_tm, pooled_tm, hash_tm;
 
         size_t max_nkeys = 0;
         for (size_t i = 0; i < NPASS; ++i) {
@@ -1206,7 +1206,7 @@ namespace {
         flare::container::PooledMap<uint64_t, T> pooled_map;
         flare::container::hash_map<uint64_t, T> hash_map;
 
-        flare::base::stop_watcher id_tm, std_tm, pooled_tm, hash_tm;
+        flare::stop_watcher id_tm, std_tm, pooled_tm, hash_tm;
 
         id_map.init((size_t) (nkeys[NPASS - 1] * 1.5));
         LOG(INFO) << "[ value = " << sizeof(T) << " bytes ]";

@@ -24,7 +24,7 @@
 #include <netdb.h>                   //
 #include <gtest/gtest.h>
 #include "flare/base/gperftools_profiler.h"
-#include "flare/base/time.h"
+#include "flare/times/time.h"
 #include "flare/base/fd_utility.h"
 #include "flare/base/unix_socket.h"
 #include "flare/base/fd_guard.h"
@@ -190,7 +190,7 @@ TEST_F(MessengerTest, dispatch_tasks) {
     for (size_t i = 0; i < NCLIENT; ++i) {
         start_client_bytes += cm[i]->bytes;
     }
-    flare::base::stop_watcher tm;
+    flare::stop_watcher tm;
     tm.start();
 
     sleep(5);

@@ -23,7 +23,7 @@
 #include <memory>
 #include <iostream>
 #include <sstream>
-#include "flare/base/time.h"
+#include "flare/times/time.h"
 #include "flare/variable/all.h"
 #include <gtest/gtest.h>
 

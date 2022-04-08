@@ -22,7 +22,7 @@
 #include <fstream>
 #include <gtest/gtest.h>
 #include <google/protobuf/descriptor.h>
-#include "flare/base/time.h"
+#include "flare/times/time.h"
 #include "flare/base/fd_guard.h"
 #include <flare/base/scoped_file.h>
 #include "flare/rpc/global.h"
@@ -302,7 +302,7 @@ void *ssl_perf_client(void *arg) {
     EXPECT_EQ(1, SSL_do_handshake(ssl));
 
     char buf[4096];
-    flare::base::stop_watcher tm;
+    flare::stop_watcher tm;
     for (size_t i = 0; i < FLARE_ARRAY_SIZE(BUFSIZE); ++i) {
         int size = BUFSIZE[i];
         tm.start();

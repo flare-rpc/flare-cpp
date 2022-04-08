@@ -20,7 +20,7 @@
 #include <gflags/gflags.h>
 #include "flare/base/fd_guard.h"                 // fd_guard
 #include "flare/base/fd_utility.h"               // make_close_on_exec
-#include "flare/base/time.h"                     // gettimeofday_us
+#include "flare/times/time.h"                     // gettimeofday_us
 #include "flare/rpc/acceptor.h"
 #include "flare/fiber/this_fiber.h"
 
