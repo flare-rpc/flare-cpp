@@ -104,8 +104,8 @@ namespace flare::base::base_internal {
 // namely kylin already has the macro.
 #if defined(FLARE_COMPILER_GNUC) || defined(FLARE_COMPILER_CLANG)
 #  if defined(__cplusplus)
-#    define FLARE_LIKELY(expr) (__builtin_expect((bool)(expr), true))
-#    define FLARE_UNLIKELY(expr) (__builtin_expect((bool)(expr), false))
+#    define FLARE_LIKELY(expr) (__builtin_expect(!!(expr), true))
+#    define FLARE_UNLIKELY(expr) (__builtin_expect(!!(expr), false))
 #  else
 #    define FLARE_LIKELY(expr) (__builtin_expect(!!(expr), 1))
 #    define FLARE_UNLIKELY(expr) (__builtin_expect(!!(expr), 0))
@@ -210,6 +210,36 @@ namespace flare::base::base_internal {
 #define FLARE_COLD __attribute__((cold))
 #else
 #define FLARE_COLD
+#endif
+
+
+
+// ------------------------------------------------------------------------
+// FLARE_UNUSED
+//
+// Makes compiler warnings about unused variables go away.
+//
+// Example usage:
+//    void Function(int x)
+//    {
+//        int y;
+//        FLARE_UNUSED(x);
+//        FLARE_UNUSED(y);
+//    }
+//
+#ifndef FLARE_UNUSED
+// The EDG solution below is pretty weak and needs to be augmented or replaced.
+// It can't handle the C language, is limited to places where template declarations
+// can be used, and requires the type x to be usable as a functions reference argument.
+#if defined(__cplusplus) && defined(__EDG__)
+namespace flare:: base_internal {
+template <typename T>
+inline void flare_macro_unused(T const volatile & x) { (void)x; }
+}
+#define FLARE_UNUSED(x) flare:: base_internal::flare_macro_unused(x)
+#else
+#define FLARE_UNUSED(x) (void)x
+#endif
 #endif
 
 #endif // FLARE_BASE_PROFILE_ATTRIBUTE_H_
