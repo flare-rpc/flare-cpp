@@ -21,7 +21,7 @@
 #include <google/protobuf/message.h>            // Message
 #include <gflags/gflags.h>
 #include "flare/log/logging.h"                       // LOG()
-#include "flare/base/time.h"
+#include "flare/times/time.h"
 #include "flare/io/cord_buf.h"                         // flare::cord_buf
 #include "flare/rpc/controller.h"               // Controller
 #include "flare/rpc/details/controller_private_accessor.h"
@@ -249,7 +249,7 @@ ParseResult ParseRedisMessage(flare::cord_buf* source, Socket* socket,
 }
 
 void ProcessRedisResponse(InputMessageBase* msg_base) {
-    const int64_t start_parse_us = flare::base::cpuwide_time_us();
+    const int64_t start_parse_us = flare::get_current_time_micros();
     DestroyingPtr<InputResponse> msg(static_cast<InputResponse*>(msg_base));
 
     const fiber_token_t cid = msg->id_wait;

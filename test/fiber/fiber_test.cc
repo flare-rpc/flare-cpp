@@ -17,7 +17,7 @@
 
 #include <execinfo.h>
 #include <gtest/gtest.h>
-#include "flare/base/time.h"
+#include "flare/times/time.h"
 #include "flare/log/logging.h"
 #include "flare/base/gperftools_profiler.h"
 #include "flare/fiber/internal/fiber.h"
@@ -127,7 +127,7 @@ namespace {
 
     void *spin_and_log(void *arg) {
         // This thread never yields CPU.
-        flare::base::EveryManyUS every_1s(1000000L);
+        flare::every_duration every_1s(flare::duration::seconds(1));
         size_t i = 0;
         while (!stop) {
             if (every_1s) {
@@ -285,11 +285,11 @@ namespace {
         if (sleep_in_adding_func > 0) {
             long t1 = 0;
             if (10000 == s->fetch_add(1)) {
-                t1 = flare::base::cpuwide_time_us();
+                t1 = flare::get_current_time_micros();
             }
             flare::fiber_sleep_for(sleep_in_adding_func);
             if (t1) {
-                LOG(INFO) << "elapse is " << flare::base::cpuwide_time_us() - t1 << "ns";
+                LOG(INFO) << "elapse is " << flare::get_current_time_micros() - t1 << "ns";
             }
         } else {
             s->fetch_add(1);
@@ -311,7 +311,7 @@ namespace {
             size_t N = (sleep_in_adding_func ? 40000 : 100000);
             std::vector<fiber_id_t> th;
             th.reserve(N);
-            flare::base::stop_watcher tm;
+            flare::stop_watcher tm;
             for (size_t j = 0; j < 3; ++j) {
                 th.clear();
                 if (j == 1) {
@@ -374,7 +374,7 @@ namespace {
                 ASSERT_EQ(0, fiber_start_urgent(
                         &th[i], nullptr, fiber_starter, &counters[i].value));
             }
-            flare::base::stop_watcher tm;
+            flare::stop_watcher tm;
             tm.start();
             flare::fiber_sleep_for(200000L);
             stop = true;
@@ -394,7 +394,7 @@ namespace {
     }
 
     void *log_start_latency(void *void_arg) {
-        flare::base::stop_watcher *tm = static_cast<flare::base::stop_watcher *>(void_arg);
+        flare::stop_watcher *tm = static_cast<flare::stop_watcher *>(void_arg);
         tm->stop();
         return nullptr;
     }
@@ -405,13 +405,13 @@ namespace {
         long elp2 = 0;
         int REP = 0;
         for (int i = 0; i < 10000; ++i) {
-            flare::base::stop_watcher tm;
+            flare::stop_watcher tm;
             tm.start();
             fiber_id_t th;
             fiber_start_urgent(&th, nullptr, log_start_latency, &tm);
             fiber_join(th, nullptr);
             fiber_id_t th2;
-            flare::base::stop_watcher tm2;
+            flare::stop_watcher tm2;
             tm2.start();
             fiber_start_background(&th2, nullptr, log_start_latency, &tm2);
             fiber_join(th2, nullptr);
@@ -436,7 +436,7 @@ namespace {
         fiber_id_t th;
         ASSERT_EQ(0, fiber_start_urgent(
                 &th, nullptr, sleep_for_awhile_with_sleep, (void *) 1000000L));
-        flare::base::stop_watcher tm;
+        flare::stop_watcher tm;
         tm.start();
         flare::fiber_sleep_for(10000);
         ASSERT_EQ(0, fiber_stop(th));

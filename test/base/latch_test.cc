@@ -8,7 +8,7 @@
 #include <thread>
 #include "flare/base/thread/latch.h"
 #include "gtest/gtest.h"
-#include "flare/base/time.h"
+#include "flare/times/time.h"
 
 namespace flare::base {
 
@@ -65,8 +65,8 @@ namespace flare::base {
 
     TEST(Latch, WaitUntil) {
         latch l(1);
-        ASSERT_FALSE(l.wait_until(flare::base::cpuwide_time_us() + 100 * 1000));
+        ASSERT_FALSE(l.wait_until(flare::get_current_time_micros() + 100 * 1000));
         l.count_down();
-        ASSERT_TRUE(l.wait_until(flare::base::cpuwide_time_us()));
+        ASSERT_TRUE(l.wait_until(flare::get_current_time_micros()));
     }
 }

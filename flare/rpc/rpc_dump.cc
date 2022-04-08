@@ -76,7 +76,7 @@ namespace flare::rpc {
 
         RpcDumpContext()
                 : _cur_req_count(0), _cur_fd(-1), _last_round(0), _max_requests_in_one_file(0), _max_files(0),
-                  _sched_write_time(flare::base::gettimeofday_us() + FLUSH_TIMEOUT), _last_file_time(0) {
+                  _sched_write_time(flare::get_current_time_micros() + FLUSH_TIMEOUT), _last_file_time(0) {
             _command_name = flare::variable::read_command_name();
             SaveFlags();
             // Clean the directory at fist time.
@@ -162,7 +162,7 @@ namespace flare::rpc {
         } else if (_unwritten_buf.size() >= UNWRITTEN_BUFSIZE) {
             // Too much unwritten data
             RPC_VLOG << "Write because _unwritten_buf=" << _unwritten_buf.size();
-        } else if (flare::base::gettimeofday_us() >= _sched_write_time) {
+        } else if (flare::get_current_time_micros() >= _sched_write_time) {
             // Not write for a while.
             RPC_VLOG << "Write because timeout";
         } else {
@@ -183,7 +183,7 @@ namespace flare::rpc {
                 _filenames.pop_front();
             }
             // Make current time as postfix.
-            int64_t cur_file_time = flare::base::gettimeofday_us();
+            int64_t cur_file_time = flare::get_current_time_micros();
             // Make postfix monotonic.
             if (cur_file_time <= _last_file_time) {
                 cur_file_time = _last_file_time + 1;
@@ -216,7 +216,7 @@ namespace flare::rpc {
             }
         }
         _unwritten_buf.clear();
-        _sched_write_time = flare::base::gettimeofday_us() + FLUSH_TIMEOUT;
+        _sched_write_time = flare::get_current_time_micros() + FLUSH_TIMEOUT;
         if (fail_to_write || _cur_req_count >= _max_requests_in_one_file) {
             // clean up
             if (_cur_fd >= 0) {

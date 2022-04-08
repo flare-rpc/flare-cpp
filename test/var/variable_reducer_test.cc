@@ -18,7 +18,7 @@
 #include <limits>                           //std::numeric_limits
 
 #include "flare/variable/reducer.h"
-#include "flare/base/time.h"
+#include "flare/times/time.h"
 #include "flare/strings/str_format.h"
 #include "flare/strings/string_splitter.h"
 #include "flare/container/hash_tables.h"
@@ -59,7 +59,7 @@ const size_t OPS_PER_THREAD = 500000;
 
 static void *thread_counter(void *arg) {
     flare::variable::Adder<uint64_t> *reducer = (flare::variable::Adder<uint64_t> *)arg;
-    flare::base::stop_watcher timer;
+    flare::stop_watcher timer;
     timer.start();
     for (size_t i = 0; i < OPS_PER_THREAD; ++i) {
         (*reducer) << 2;
@@ -70,7 +70,7 @@ static void *thread_counter(void *arg) {
 
 void *add_atomic(void *arg) {
     std::atomic<uint64_t> *counter = (std::atomic<uint64_t> *)arg;
-    flare::base::stop_watcher timer;
+    flare::stop_watcher timer;
     timer.start();
     for (size_t i = 0; i < OPS_PER_THREAD / 100; ++i) {
         counter->fetch_add(2, std::memory_order_relaxed);
@@ -201,14 +201,14 @@ void ReducerTest_window() {
     const int N = 6000;
     int count = 0;
     int total_count = 0;
-    int64_t last_time = flare::base::gettimeofday_us();
+    int64_t last_time = flare::get_current_time_micros();
     for (int i = 1; i <= N; ++i) {
         c1 << 1;
         c2 << N - i;
         c3 << i;
         ++count;
         ++total_count;
-        int64_t now = flare::base::gettimeofday_us();
+        int64_t now = flare::get_current_time_micros();
         if (now - last_time >= 1000000L) {
             last_time = now;
             ASSERT_EQ(total_count, c1.get_value());

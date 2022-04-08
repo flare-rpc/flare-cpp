@@ -17,7 +17,7 @@
 
 #include <gtest/gtest.h>
 #include "flare/base/static_atomic.h"
-#include "flare/base/time.h"
+#include "flare/times/time.h"
 #include "flare/log/logging.h"
 #include "flare/fiber/internal/waitable_event.h"
 #include "flare/fiber/internal/schedule_group.h"
@@ -51,12 +51,12 @@ namespace {
     }
 
     void *joiner(void *arg) {
-        const long t1 = flare::base::gettimeofday_us();
+        const long t1 = flare::get_current_time_micros();
         for (fiber_id_t *th = (fiber_id_t *) arg; *th; ++th) {
             if (0 != fiber_join(*th, nullptr)) {
                 LOG(FATAL) << "fail to join thread_" << th - (fiber_id_t *) arg;
             }
-            long elp = flare::base::gettimeofday_us() - t1;
+            long elp = flare::get_current_time_micros() - t1;
             EXPECT_LE(labs(elp - (th - (fiber_id_t *) arg + 1) * 100000L), 15000L)
                                 << "timeout when joining thread_" << th - (fiber_id_t *) arg;
             LOG(INFO) << "Joined thread " << *th << " at " << elp << "us ["
@@ -122,10 +122,10 @@ namespace {
 
     void *waiter(void *arg) {
         WaiterArg *wa = (WaiterArg *) arg;
-        const long t1 = flare::base::gettimeofday_us();
+        const long t1 = flare::get_current_time_micros();
         const int rc = flare::fiber_internal::waitable_event_wait(
                 wa->event, wa->expected_value, wa->ptimeout);
-        const long t2 = flare::base::gettimeofday_us();
+        const long t2 = flare::get_current_time_micros();
         if (rc == 0) {
             EXPECT_EQ(wa->expected_result, 0) << fiber_self();
         } else {
@@ -157,7 +157,7 @@ namespace {
         fiber_id_t th;
         ASSERT_EQ(0, fiber_start_urgent(&th, nullptr, waiter, unmatched_arg));
 
-        const timespec abstime = flare::base::seconds_from_now(1);
+        const timespec abstime = flare::time_point::future_unix_seconds(1).to_timespec();
         for (size_t i = 0; i < 4 * N; ++i) {
             args[i].expected_value = *b1;
             args[i].event = b1;
@@ -194,7 +194,7 @@ namespace {
 
     void *wait_event(void *void_arg) {
         event_wait_arg *arg = static_cast<event_wait_arg *>(void_arg);
-        const timespec ts = flare::base::milliseconds_from_now(arg->wait_msec);
+        const timespec ts = flare::time_point::future_unix_millis(arg->wait_msec).to_timespec();
         int rc = flare::fiber_internal::waitable_event_wait(arg->event, arg->expected_val, &ts);
         int saved_errno = errno;
         if (arg->error_code) {
@@ -209,7 +209,7 @@ namespace {
     TEST(WaitableEventTest, wait_without_stop) {
         int *event = flare::fiber_internal::waitable_event_create_checked<int>();
         *event = 7;
-        flare::base::stop_watcher tm;
+        flare::stop_watcher tm;
         const long WAIT_MSEC = 500;
         for (int i = 0; i < 2; ++i) {
             const fiber_attribute attr =
@@ -230,7 +230,7 @@ namespace {
     TEST(WaitableEventTest, stop_after_running) {
         int *event = flare::fiber_internal::waitable_event_create_checked<int>();
         *event = 7;
-        flare::base::stop_watcher tm;
+        flare::stop_watcher tm;
         const long WAIT_MSEC = 500;
         const long SLEEP_MSEC = 10;
         for (int i = 0; i < 2; ++i) {
@@ -257,7 +257,7 @@ namespace {
     TEST(WaitableEventTest, stop_before_running) {
         int *event = flare::fiber_internal::waitable_event_create_checked<int>();
         *event = 7;
-        flare::base::stop_watcher tm;
+        flare::stop_watcher tm;
         const long WAIT_MSEC = 500;
 
         for (int i = 0; i < 2; ++i) {
@@ -290,7 +290,7 @@ namespace {
         const long WAIT_MSEC = 100;
         int *event = flare::fiber_internal::waitable_event_create_checked<int>();
         *event = 7;
-        flare::base::stop_watcher tm;
+        flare::stop_watcher tm;
         event_wait_arg arg = {event, *event, 1000, EINTR};
 
         for (int i = 0; i < 2; ++i) {
@@ -317,7 +317,7 @@ namespace {
     }
 
     TEST(WaitableEventTest, stop_after_slept) {
-        flare::base::stop_watcher tm;
+        flare::stop_watcher tm;
         const long SLEEP_MSEC = 100;
         const long WAIT_MSEC = 10;
 
@@ -344,7 +344,7 @@ namespace {
     }
 
     TEST(WaitableEventTest, stop_just_when_sleeping) {
-        flare::base::stop_watcher tm;
+        flare::stop_watcher tm;
         const long SLEEP_MSEC = 100;
 
         for (int i = 0; i < 2; ++i) {
@@ -369,7 +369,7 @@ namespace {
     }
 
     TEST(WaitableEventTest, stop_before_sleeping) {
-        flare::base::stop_watcher tm;
+        flare::stop_watcher tm;
         const long SLEEP_MSEC = 100;
 
         for (int i = 0; i < 2; ++i) {

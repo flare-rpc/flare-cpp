@@ -1670,7 +1670,7 @@ namespace flare::rpc {
                     st = g_client_msg_status;
                 }
                 if (st) {
-                    flare::base::stop_watcher tm;
+                    flare::stop_watcher tm;
                     tm.start();
                     CHECK(st->OnRequested());
                     const bool ret = OnMessage(bh, mh, &_r.msg_body, socket);
@@ -3536,10 +3536,10 @@ namespace flare::rpc {
                 LOG(FATAL) << "RtmpContext must be created";
                 return;
             }
-            const int64_t start_parse_us = flare::base::cpuwide_time_us();
+            const int64_t start_parse_us = flare::get_current_time_micros();
             // TODO(gejun): Don't have received time right now.
             const int64_t received_us = start_parse_us;
-            const int64_t base_realtime = flare::base::gettimeofday_us() - received_us;
+            const int64_t base_realtime = flare::get_current_time_micros() - received_us;
             const fiber_token_t cid = _call_id;
             Controller *cntl = NULL;
             const int rc = fiber_token_lock(cid, (void **) &cntl);

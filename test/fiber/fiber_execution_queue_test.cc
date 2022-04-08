@@ -5,7 +5,7 @@
 #include <flare/fiber/internal/execution_queue.h>
 #include <flare/fiber/internal/sys_futex.h>
 #include <flare/fiber/fiber_latch.h>
-#include "flare/base/time.h"
+#include "flare/times/time.h"
 #include "flare/base/fast_rand.h"
 #include "flare/base/gperftools_profiler.h"
 #include "flare/fiber/this_fiber.h"
@@ -80,7 +80,7 @@ namespace {
     void *push_thread(void *arg) {
         PushArg *pa = (PushArg *) arg;
         int64_t sum = 0;
-        flare::base::stop_watcher timer;
+        flare::stop_watcher timer;
         timer.start();
         int num = 0;
         flare::fiber_latch e;
@@ -106,7 +106,7 @@ namespace {
     void *push_thread_which_addresses_execq(void *arg) {
         PushArg *pa = (PushArg *) arg;
         int64_t sum = 0;
-        flare::base::stop_watcher timer;
+        flare::stop_watcher timer;
         timer.start();
         int num = 0;
         flare::fiber_internal::ExecutionQueue<LongIntTask>::scoped_ptr_t ptr

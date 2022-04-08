@@ -19,7 +19,7 @@
 #include "flare/rpc/stream.h"
 
 #include <gflags/gflags.h>
-#include "flare/base/time.h"
+#include "flare/times/time.h"
 #include "flare/memory/object_pool.h"
 #include <memory>
 #include "flare/fiber/internal/unstable.h"
@@ -564,9 +564,9 @@ namespace flare::rpc {
         if (_options.idle_timeout_ms < 0) {
             return;
         }
-        _start_idle_timer_us = flare::base::gettimeofday_us();
-        timespec due_time = flare::base::microseconds_to_timespec(
-                _start_idle_timer_us + _options.idle_timeout_ms * 1000);
+        _start_idle_timer_us = flare::get_current_time_micros();
+        timespec due_time = flare::time_point::from_unix_micros(
+                _start_idle_timer_us + _options.idle_timeout_ms * 1000).to_timespec();
         const int rc = fiber_timer_add(&_idle_timer, due_time, OnIdleTimeout,
                                        (void *) (_consumer_queue.value));
         LOG_IF(WARNING, rc != 0) << "Fail to add timer";
@@ -627,8 +627,8 @@ namespace flare::rpc {
         }
         _host_socket->PostponeEOF();
         _host_socket->ReAddress(&msg->_socket);
-        msg->_received_us = flare::base::gettimeofday_us();
-        msg->_base_real_us = flare::base::gettimeofday_us();
+        msg->_received_us = flare::get_current_time_micros();
+        msg->_base_real_us = flare::get_current_time_micros();
         msg->_arg = NULL; // ProcessRpcResponse() don't need arg
         policy::ProcessRpcResponse(msg);
     }

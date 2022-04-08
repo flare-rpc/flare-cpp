@@ -4,7 +4,7 @@
 #include <gtest/gtest.h>
 #include <algorithm>
 #include <random>
-#include "flare/base/time.h"
+#include "flare/times/time.h"
 #include "flare/base/fast_rand.h"
 
 #define BAIDU_CLEAR_RESOURCE_POOL_AFTER_ALL_THREADS_QUIT
@@ -197,7 +197,7 @@ namespace {
         // Perf of this test is affected by previous case.
         const size_t N = 100000;
 
-        flare::base::stop_watcher tm;
+        flare::stop_watcher tm;
         flare::ResourceId<int> id;
 
         // warm up
@@ -253,7 +253,7 @@ namespace {
         new_list.reserve(N);
         flare::ResourceId<SilentObj> id;
 
-        flare::base::stop_watcher tm1, tm2;
+        flare::stop_watcher tm1, tm2;
 
         // warm up
         if (flare::get_resource(&id)) {
@@ -296,7 +296,7 @@ namespace {
         const size_t N = 100000;
         std::vector<ResourceId<D> > v;
         v.reserve(N);
-        flare::base::stop_watcher tm0, tm1, tm2;
+        flare::stop_watcher tm0, tm1, tm2;
         ResourceId<D> id = {0};
         D tmp = D();
         int sr = 0;
@@ -346,7 +346,7 @@ namespace {
         const size_t N = 100000;
         std::vector<D *> v2;
         v2.reserve(N);
-        flare::base::stop_watcher tm0, tm1, tm2;
+        flare::stop_watcher tm0, tm1, tm2;
         D tmp = D();
 
         std::random_device rd;

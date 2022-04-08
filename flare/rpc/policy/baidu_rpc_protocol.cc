@@ -21,7 +21,7 @@
 #include <google/protobuf/io/zero_copy_stream_impl_lite.h>
 #include <google/protobuf/io/coded_stream.h>
 #include "flare/log/logging.h"                       // LOG()
-#include "flare/base/time.h"
+#include "flare/times/time.h"
 #include "flare/io/cord_buf.h"                         // flare::cord_buf
 #include "flare/io/raw_pack.h"                      // raw_packer raw_unpacker
 #include "flare/rpc/controller.h"                    // Controller
@@ -143,7 +143,7 @@ void SendRpcResponse(int64_t correlation_id,
     ControllerPrivateAccessor accessor(cntl);
     Span* span = accessor.span();
     if (span) {
-        span->set_start_send_us(flare::base::cpuwide_time_us());
+        span->set_start_send_us(flare::get_current_time_micros());
     }
     Socket* sock = accessor.get_sending_socket();
     std::unique_ptr<Controller, LogErrorTextAndDelete> recycle_cntl(cntl);
@@ -261,7 +261,7 @@ void SendRpcResponse(int64_t correlation_id,
 
     if (span) {
         // TODO: this is not sent
-        span->set_sent_us(flare::base::cpuwide_time_us());
+        span->set_sent_us(flare::get_current_time_micros());
     }
 }
 
@@ -300,7 +300,7 @@ void EndRunningCallMethodInPool(
 };
 
 void ProcessRpcRequest(InputMessageBase* msg_base) {
-    const int64_t start_parse_us = flare::base::cpuwide_time_us();
+    const int64_t start_parse_us = flare::get_current_time_micros();
     DestroyingPtr<MostCommonMessage> msg(static_cast<MostCommonMessage*>(msg_base));
     SocketUniquePtr socket_guard(msg->ReleaseSocket());
     Socket* socket = socket_guard.get();
@@ -492,7 +492,7 @@ void ProcessRpcRequest(InputMessageBase* msg_base) {
         req_buf.clear();
 
         if (span) {
-            span->set_start_callback_us(flare::base::cpuwide_time_us());
+            span->set_start_callback_us(flare::get_current_time_micros());
             span->AsParent();
         }
         if (!FLAGS_usercode_in_pthread) {
@@ -542,7 +542,7 @@ bool VerifyRpcRequest(const InputMessageBase* msg_base) {
 }
 
 void ProcessRpcResponse(InputMessageBase* msg_base) {
-    const int64_t start_parse_us = flare::base::cpuwide_time_us();
+    const int64_t start_parse_us = flare::get_current_time_micros();
     DestroyingPtr<MostCommonMessage> msg(static_cast<MostCommonMessage*>(msg_base));
     RpcMeta meta;
     if (!ParsePbFromCordBuf(&meta, msg->meta)) {

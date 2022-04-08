@@ -20,7 +20,7 @@
 #include <google/protobuf/message.h>               // Message
 #include <gflags/gflags.h>
 #include "flare/io/snappy/snappy.h"        // snappy::Compress
-#include "flare/base/time.h"
+#include "flare/times/time.h"
 #include "flare/rpc/controller.h"                       // Controller
 #include "flare/rpc/socket.h"                           // Socket
 #include "flare/rpc/server.h"                           // Server
@@ -150,7 +150,7 @@ void PublicPbrpcServiceAdaptor::SerializeResponseToCordBuf(
 }
 
 void ProcessPublicPbrpcResponse(InputMessageBase* msg_base) {
-    const int64_t start_parse_us = flare::base::cpuwide_time_us();
+    const int64_t start_parse_us = flare::get_current_time_micros();
     DestroyingPtr<MostCommonMessage> msg(static_cast<MostCommonMessage*>(msg_base));
     
     PublicPbrpcResponse pbres;

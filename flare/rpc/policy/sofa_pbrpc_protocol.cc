@@ -20,7 +20,7 @@
 #include <google/protobuf/message.h>             // Message
 #include <google/protobuf/io/zero_copy_stream_impl_lite.h>
 #include <google/protobuf/io/coded_stream.h>
-#include "flare/base/time.h"
+#include "flare/times/time.h"
 #include "flare/rpc/controller.h"                // Controller
 #include "flare/rpc/socket.h"                    // Socket
 #include "flare/rpc/server.h"                    // Server
@@ -214,7 +214,7 @@ static void SendSofaResponse(int64_t correlation_id,
     ControllerPrivateAccessor accessor(cntl);
     Span* span = accessor.span();
     if (span) {
-        span->set_start_send_us(flare::base::cpuwide_time_us());
+        span->set_start_send_us(flare::get_current_time_micros());
     }
     Socket* sock = accessor.get_sending_socket();
     std::unique_ptr<Controller, LogErrorTextAndDelete> recycle_cntl(cntl);
@@ -292,7 +292,7 @@ static void SendSofaResponse(int64_t correlation_id,
     }
     if (span) {
         // TODO: this is not sent
-        span->set_sent_us(flare::base::cpuwide_time_us());
+        span->set_sent_us(flare::get_current_time_micros());
     }
 }
 
@@ -306,7 +306,7 @@ void EndRunningCallMethodInPool(
     ::google::protobuf::Closure* done);
 
 void ProcessSofaRequest(InputMessageBase* msg_base) {
-    const int64_t start_parse_us = flare::base::cpuwide_time_us();
+    const int64_t start_parse_us = flare::get_current_time_micros();
     DestroyingPtr<MostCommonMessage> msg(static_cast<MostCommonMessage*>(msg_base));
     SocketUniquePtr socket_guard(msg->ReleaseSocket());
     Socket* socket = socket_guard.get();
@@ -445,7 +445,7 @@ void ProcessSofaRequest(InputMessageBase* msg_base) {
 
         // `cntl', `req' and `res' will be deleted inside `done'
         if (span) {
-            span->set_start_callback_us(flare::base::cpuwide_time_us());
+            span->set_start_callback_us(flare::get_current_time_micros());
             span->AsParent();
         }
         if (!FLAGS_usercode_in_pthread) {
@@ -480,7 +480,7 @@ bool VerifySofaRequest(const InputMessageBase* msg_base) {
 }
 
 void ProcessSofaResponse(InputMessageBase* msg_base) {
-    const int64_t start_parse_us = flare::base::cpuwide_time_us();
+    const int64_t start_parse_us = flare::get_current_time_micros();
     DestroyingPtr<MostCommonMessage> msg(static_cast<MostCommonMessage*>(msg_base));
     SofaRpcMeta meta;
     if (!ParsePbFromCordBuf(&meta, msg->meta)) {

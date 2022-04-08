@@ -530,13 +530,13 @@ namespace flare::fiber_internal {
         timespec *ptimeout = NULL;
         timespec timeout;
         if (abstime != NULL) {
-            const int64_t timeout_us = flare::base::timespec_to_microseconds(*abstime) -
-                                       flare::base::gettimeofday_us();
+            const int64_t timeout_us =  flare::time_point::from_timespec(*abstime).to_unix_micros() -
+                                       flare::get_current_time_micros();
             if (timeout_us < MIN_SLEEP_US) {
                 errno = ETIMEDOUT;
                 return -1;
             }
-            timeout = flare::base::microseconds_to_timespec(timeout_us);
+            timeout = flare::time_point::from_unix_micros(timeout_us).to_timespec();
             ptimeout = &timeout;
         }
 
@@ -619,8 +619,8 @@ namespace flare::fiber_internal {
         if (abstime != NULL) {
             // Schedule timer before queueing. If the timer is triggered before
             // queueing, cancel queueing. This is a kind of optimistic locking.
-            if (flare::base::timespec_to_microseconds(*abstime) <
-                (flare::base::gettimeofday_us() + MIN_SLEEP_US)) {
+            if ( flare::time_point::from_timespec(*abstime).to_unix_micros() <
+                (flare::get_current_time_micros() + MIN_SLEEP_US)) {
                 // Already timed out.
                 errno = ETIMEDOUT;
                 return -1;

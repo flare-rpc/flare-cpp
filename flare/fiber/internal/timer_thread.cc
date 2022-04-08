@@ -192,7 +192,7 @@ TimerThread::Bucket::schedule(void (*fn)(void*), void* arg,
     task->next = NULL;
     task->fn = fn;
     task->arg = arg;
-    task->run_time = flare::base::timespec_to_microseconds(abstime);
+    task->run_time = flare::time_point::from_timespec(abstime).to_unix_micros();
     uint32_t version = task->version.load(std::memory_order_relaxed);
     if (version == 0) {  // skip 0.
         task->version.fetch_add(2, std::memory_order_relaxed);
@@ -226,7 +226,7 @@ TimerThread::TaskId TimerThread::schedule(
         .schedule(fn, arg, abstime);
     if (result.earlier) {
         bool earlier = false;
-        const int64_t run_time = flare::base::timespec_to_microseconds(abstime);
+        const int64_t run_time =  flare::time_point::from_timespec(abstime).to_unix_micros();
         {
             FLARE_SCOPED_LOCK(_mutex);
             if (run_time < _nearest_run_time) {
@@ -312,7 +312,7 @@ static T deref_value(void* arg) {
 
 void TimerThread::run() {
     run_worker_startfn();
-    int64_t last_sleep_time = flare::base::gettimeofday_us();
+    int64_t last_sleep_time = flare::get_current_time_micros();
     BT_VLOG << "Started TimerThread=" << pthread_self();
 
     // min heap of tasks (ordered by run_time)
@@ -363,7 +363,7 @@ void TimerThread::run() {
         bool pull_again = false;
         while (!tasks.empty()) {
             Task* task1 = tasks[0];  // the about-to-run task
-            if (flare::base::gettimeofday_us() < task1->run_time) {  // not ready yet.
+            if (flare::get_current_time_micros() < task1->run_time) {  // not ready yet.
                 break;
             }
             // Each time before we run the earliest task (that we think), 
@@ -418,14 +418,14 @@ void TimerThread::run() {
         }
         timespec* ptimeout = NULL;
         timespec next_timeout = { 0, 0 };
-        const int64_t now = flare::base::gettimeofday_us();
+        const int64_t now = flare::get_current_time_micros();
         if (next_run_time != std::numeric_limits<int64_t>::max()) {
-            next_timeout = flare::base::microseconds_to_timespec(next_run_time - now);
+            next_timeout = flare::duration::microseconds(next_run_time - now).to_timespec();
             ptimeout = &next_timeout;
         }
         busy_seconds += (now - last_sleep_time) / 1000000.0;
         futex_wait_private(&_nsignals, expected_nsignals, ptimeout);
-        last_sleep_time = flare::base::gettimeofday_us();
+        last_sleep_time = flare::get_current_time_micros();
     }
     BT_VLOG << "Ended TimerThread=" << pthread_self();
 }

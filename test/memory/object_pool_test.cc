@@ -1,7 +1,7 @@
 
 #include <inttypes.h>
 #include <gtest/gtest.h>
-#include "flare/base/time.h"
+#include "flare/times/time.h"
 #include "flare/base/profile.h"
 #include <random>
 
@@ -173,7 +173,7 @@ namespace {
         // Perf of this test is affected by previous case.
         const size_t N = 100000;
 
-        flare::base::stop_watcher tm;
+        flare::stop_watcher tm;
 
         // warm up
         int *p = get_object<int>();
@@ -210,7 +210,7 @@ namespace {
         std::vector<SilentObj *> new_list;
         new_list.reserve(N);
 
-        flare::base::stop_watcher tm1, tm2;
+        flare::stop_watcher tm1, tm2;
 
         // warm up
         return_object(get_object<SilentObj>());
@@ -251,7 +251,7 @@ namespace {
         const size_t N = 100000;
         std::vector<D *> v;
         v.reserve(N);
-        flare::base::stop_watcher tm0, tm1, tm2;
+        flare::stop_watcher tm0, tm1, tm2;
         D tmp = D();
         int sr = 0;
 
@@ -297,7 +297,7 @@ namespace {
         const size_t N = 100000;
         std::vector<D *> v2;
         v2.reserve(N);
-        flare::base::stop_watcher tm0, tm1, tm2;
+        flare::stop_watcher tm0, tm1, tm2;
         D tmp = D();
 
         for (int j = 0; j < 3; ++j) {

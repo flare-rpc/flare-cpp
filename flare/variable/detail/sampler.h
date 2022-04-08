@@ -26,7 +26,7 @@
 #include "flare/log/logging.h"               // LOG()
 #include "flare/container/bounded_queue.h"// bounded_queue
 #include "flare/base/type_traits.h"           // is_same
-#include "flare/base/time.h"                  // gettimeofday_us
+#include "flare/times/time.h"                  // gettimeofday_us
 #include "flare/base/class_name.h"
 
 namespace flare::variable {
@@ -136,7 +136,7 @@ public:
             // get_value() of _reducer can still be called.
             latest.data = _reducer->get_value();
         }
-        latest.time_us = flare::base::gettimeofday_us();
+        latest.time_us = flare::get_current_time_micros();
         _q.elim_push(latest);
     }
 

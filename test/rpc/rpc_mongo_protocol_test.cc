@@ -25,7 +25,7 @@
 #include <gtest/gtest.h>
 #include <gflags/gflags.h>
 #include <google/protobuf/descriptor.h>
-#include "flare/base/time.h"
+#include "flare/times/time.h"
 #include "flare/rpc/socket.h"
 #include "flare/rpc/acceptor.h"
 #include "flare/rpc/server.h"

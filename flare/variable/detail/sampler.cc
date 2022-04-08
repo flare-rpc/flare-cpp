@@ -17,7 +17,7 @@
 
 // Date: Tue Jul 28 18:14:40 CST 2015
 
-#include "flare/base/time.h"
+#include "flare/times/time.h"
 #include "flare/base/singleton_on_pthread_once.h"
 #include "flare/variable/reducer.h"
 #include "flare/variable/detail/sampler.h"
@@ -148,7 +148,7 @@ void SamplerCollector::run() {
     flare::container::link_node<Sampler> root;
     int consecutive_nosleep = 0;
     while (!_stop) {
-        int64_t abstime = flare::base::gettimeofday_us();
+        int64_t abstime = flare::get_current_time_micros();
         Sampler* s = this->reset();
         if (s) {
             s->insert_before_as_list(&root);
@@ -173,13 +173,13 @@ void SamplerCollector::run() {
             p = saved_next;
         }
         bool slept = false;
-        int64_t now = flare::base::gettimeofday_us();
+        int64_t now = flare::get_current_time_micros();
         _cumulated_time_us += now - abstime;
         abstime += 1000000L;
         while (abstime > now) {
             ::usleep(abstime - now);
             slept = true;
-            now = flare::base::gettimeofday_us();
+            now = flare::get_current_time_micros();
         }
         if (slept) {
             consecutive_nosleep = 0;

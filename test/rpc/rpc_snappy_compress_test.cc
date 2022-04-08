@@ -23,7 +23,7 @@
 #include "flare/base/gperftools_profiler.h"
 #include "flare/io/snappy/snappy.h"
 #include "flare/io/cord_buf.h"
-#include "flare/base/time.h"
+#include "flare/times/time.h"
 #include "snappy_message.pb.h"
 #include "flare/rpc/policy/snappy_compress.h"
 #include "flare/rpc/policy/gzip_compress.h"
@@ -36,7 +36,7 @@ typedef bool (*Decompress)(const flare::cord_buf &, google::protobuf::Message *)
 inline void CompressMessage(const char *method_name,
                             int num, snappy_message::SnappyMessageProto &msg,
                             int len, Compress compress, Decompress decompress) {
-    flare::base::stop_watcher timer;
+    flare::stop_watcher timer;
     size_t compression_length = 0;
     int64_t total_compress_time = 0;
     int64_t total_decompress_time = 0;
@@ -168,7 +168,7 @@ TEST_F(test_compress_method, snappy_test) {
 TEST_F(test_compress_method, throughput_compare) {
     int len = 0;
     int len_subs[] = {128, 1024, 16 * 1024, 32 * 1024, 512 * 1024};
-    flare::base::stop_watcher timer;
+    flare::stop_watcher timer;
     printf("%20s%20s%20s%20s%30s%30s%30s\n", "Compress method", "Compress size(B)",
            "Compress time(us)", "Decompress time(us)", "Compress throughput(MB/s)",
            "Decompress throughput(MB/s)", "Compress ratio");
@@ -206,7 +206,7 @@ TEST_F(test_compress_method, throughput_compare_complete_random) {
     int rand_num = 0;
     int len = 0;
     int len_subs[] = {128, 1024, 16 * 1024, 32 * 1024, 512 * 1024};
-    flare::base::stop_watcher timer;
+    flare::stop_watcher timer;
     printf("%20s%20s%20s%20s%30s%30s%30s\n", "Compress method", "Compress size(B)",
            "Compress time(us)", "Decompress time(us)", "Compress throughput(MB/s)",
            "Decompress throughput(MB/s)", "Compress ratio");

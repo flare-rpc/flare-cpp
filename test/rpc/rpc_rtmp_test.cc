@@ -26,7 +26,7 @@
 #include <gflags/gflags.h>
 #include <google/protobuf/descriptor.h>
 #include <google/protobuf/io/zero_copy_stream_impl_lite.h>
-#include "flare/base/time.h"
+#include "flare/times/time.h"
 #include "flare/rpc/socket.h"
 #include "flare/rpc/acceptor.h"
 #include "flare/rpc/server.h"

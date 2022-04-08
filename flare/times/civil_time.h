@@ -365,21 +365,21 @@ namespace flare {
     //
     using chrono_weekday = flare::times_internal::weekday;
 
-    // GetWeekday()
+    // get_weekday()
     //
     // Returns the flare::chrono_weekday for the given (realigned) civil-time value.
     //
     // Example:
     //
     //   flare::chrono_day a(2015, 8, 13);
-    //   flare::chrono_weekday wd = flare::GetWeekday(a);  // wd == flare::chrono_weekday::thursday
+    //   flare::chrono_weekday wd = flare::get_weekday(a);  // wd == flare::chrono_weekday::thursday
     //
-    FLARE_FORCE_INLINE chrono_weekday GetWeekday(chrono_second cs) {
+    FLARE_FORCE_INLINE chrono_weekday get_weekday(chrono_second cs) {
         return flare::times_internal::get_weekday(cs);
     }
 
-    // NextWeekday()
-    // PrevWeekday()
+    // next_weekday()
+    // prev_weekday()
     //
     // Returns the flare::chrono_day that strictly follows or precedes a given
     // flare::chrono_day, and that falls on the given flare::chrono_weekday.
@@ -396,23 +396,23 @@ namespace flare {
     //   30 31
     //
     //   flare::chrono_day a(2015, 8, 13);
-    //   // flare::GetWeekday(a) == flare::chrono_weekday::thursday
-    //   flare::chrono_day b = flare::NextWeekday(a, flare::chrono_weekday::thursday);
+    //   // flare::get_weekday(a) == flare::chrono_weekday::thursday
+    //   flare::chrono_day b = flare::next_weekday(a, flare::chrono_weekday::thursday);
     //   // b = 2015-08-20
-    //   flare::chrono_day c = flare::PrevWeekday(a, flare::chrono_weekday::thursday);
+    //   flare::chrono_day c = flare::prev_weekday(a, flare::chrono_weekday::thursday);
     //   // c = 2015-08-06
     //
     //   flare::chrono_day d = ...
     //   // Gets the following Thursday if d is not already Thursday
-    //   flare::chrono_day thurs1 = flare::NextWeekday(d - 1, flare::chrono_weekday::thursday);
+    //   flare::chrono_day thurs1 = flare::next_weekday(d - 1, flare::chrono_weekday::thursday);
     //   // Gets the previous Thursday if d is not already Thursday
-    //   flare::chrono_day thurs2 = flare::PrevWeekday(d + 1, flare::chrono_weekday::thursday);
+    //   flare::chrono_day thurs2 = flare::prev_weekday(d + 1, flare::chrono_weekday::thursday);
     //
-    FLARE_FORCE_INLINE chrono_day NextWeekday(chrono_day cd, chrono_weekday wd) {
+    FLARE_FORCE_INLINE chrono_day next_weekday(chrono_day cd, chrono_weekday wd) {
         return chrono_day(flare::times_internal::next_weekday(cd, wd));
     }
 
-    FLARE_FORCE_INLINE chrono_day PrevWeekday(chrono_day cd, chrono_weekday wd) {
+    FLARE_FORCE_INLINE chrono_day prev_weekday(chrono_day cd, chrono_weekday wd) {
         return chrono_day(flare::times_internal::prev_weekday(cd, wd));
     }
 

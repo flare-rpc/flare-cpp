@@ -19,7 +19,7 @@
 
 #include <limits>          // numeric_limits
 #include <math.h>
-#include "flare/base/time.h"     // gettimeofday_us()
+#include "flare/times/time.h"     // gettimeofday_us()
 #include "flare/base/fast_rand.h"
 #include "flare/base/profile.h"
 
@@ -37,8 +37,8 @@ namespace flare::base {
         return z ^ (z >> 31);
     }
 
-// xorshift128+ is the fastest generator passing BigCrush without systematic
-// failures
+    // xorshift128+ is the fastest generator passing BigCrush without systematic
+    // failures
     inline uint64_t xorshift128_next(FastRandSeed *seed) {
         uint64_t s1 = seed->s[0];
         const uint64_t s0 = seed->s[1];
@@ -48,9 +48,9 @@ namespace flare::base {
         return seed->s[1] + s0;
     }
 
-// seed xorshift128+ with splitmix64.
+    // seed xorshift128+ with splitmix64.
     void init_fast_rand_seed(FastRandSeed *seed) {
-        SplitMix64Seed seed4seed = flare::base::gettimeofday_us();
+        SplitMix64Seed seed4seed = flare::get_current_time_micros();
         seed->s[0] = splitmix64_next(&seed4seed);
         seed->s[1] = splitmix64_next(&seed4seed);
     }

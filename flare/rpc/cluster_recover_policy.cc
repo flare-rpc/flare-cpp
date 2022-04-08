@@ -24,7 +24,7 @@
 #include "flare/rpc/server_id.h"
 #include "flare/rpc/socket.h"
 #include "flare/base/fast_rand.h"
-#include "flare/base/time.h"
+#include "flare/times/time.h"
 #include "flare/strings/string_splitter.h"
 #include "flare/strings/numbers.h"
 
@@ -52,7 +52,7 @@ bool DefaultClusterRecoverPolicy::StopRecoverIfNecessary() {
     if (!_recovering) {
         return false;
     }
-    int64_t now_ms = flare::base::gettimeofday_ms();
+    int64_t now_ms = flare::time_now().to_unix_millis();
     std::unique_lock<flare::base::Mutex> mu(_mutex);
     if (_last_usable_change_time_ms != 0 && _last_usable != 0 &&
             (now_ms - _last_usable_change_time_ms > _hold_seconds * 1000)) {
@@ -93,7 +93,7 @@ bool DefaultClusterRecoverPolicy::DoReject(const std::vector<ServerId>& server_l
     if (!_recovering) {
         return false;
     }
-    int64_t now_ms = flare::base::gettimeofday_ms();
+    int64_t now_ms = flare::time_now().to_unix_millis();
     uint64_t usable = GetUsableServerCount(now_ms, server_list);
     if (_last_usable != usable) {
         std::unique_lock<flare::base::Mutex> mu(_mutex);

@@ -19,7 +19,7 @@
 #include <map>
 #include <gtest/gtest.h>
 #include "flare/base/static_atomic.h"
-#include "flare/base/time.h"
+#include "flare/times/time.h"
 #include "flare/base/scoped_lock.h"
 #include "flare/base/gperftools_profiler.h"
 #include "flare/fiber/internal/fiber.h"
@@ -42,7 +42,7 @@ namespace {
 
     void *signaler(void *void_arg) {
         Arg *a = (Arg *) void_arg;
-        signal_start_time = flare::base::gettimeofday_us();
+        signal_start_time = flare::get_current_time_micros();
         while (!stop) {
             flare::fiber_sleep_for(SIGNAL_INTERVAL_US);
             fiber_cond_signal(&a->c);
@@ -58,7 +58,7 @@ namespace {
 
             FLARE_SCOPED_LOCK(wake_mutex);
             wake_tid.push_back(fiber_self());
-            wake_time.push_back(flare::base::gettimeofday_us());
+            wake_time.push_back(flare::get_current_time_micros());
         }
         fiber_mutex_unlock(&a->m);
         return nullptr;
@@ -143,7 +143,7 @@ namespace {
 
     void *cv_signaler(void *void_arg) {
         WrapperArg *a = (WrapperArg *) void_arg;
-        signal_start_time = flare::base::gettimeofday_us();
+        signal_start_time = flare::get_current_time_micros();
         while (!stop) {
             flare::fiber_sleep_for(SIGNAL_INTERVAL_US);
             a->cond.notify_one();
@@ -426,7 +426,7 @@ namespace {
         fiber_id_t tid;
         FiberCond c;
         c.Init();
-        flare::base::stop_watcher tm;
+        flare::stop_watcher tm;
         fiber_start_urgent(&tid, &FIBER_ATTR_PTHREAD, wait_cond_thread, &c);
         std::vector<fiber_id_t> tids;
         tids.reserve(32768);

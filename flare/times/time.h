@@ -53,6 +53,10 @@ namespace flare {
     // this function hundreds of thousands of times per second).
     int64_t get_current_time_nanos();
 
+    inline int64_t get_current_time_micros() {
+        return get_current_time_nanos() / 1000;
+    }
+
     // sleep_for()
     //
     // Sleeps for the specified duration, expressed as an `flare::duration`.
@@ -173,7 +177,7 @@ namespace flare {
         // Returns the breakdown of this instant in the given time_zone.
         //
         // Deprecated. Use `flare::time_zone::At(time_point)`.
-        breakdown in(time_zone tz) const;
+        [[nodiscard]] breakdown in(time_zone tz) const;
 
     public:
         // to_unix_nanos()
@@ -188,25 +192,25 @@ namespace flare {
         // these operations round down toward negative infinity where necessary to
         // adjust to the resolution of the result type.  Beware of possible time_t
         // over/underflow in ToTime{T,val,spec}() on 32-bit platforms.
-        int64_t to_unix_nanos() const;
+        [[nodiscard]] int64_t to_unix_nanos() const;
 
-        int64_t to_unix_micros() const;
+        [[nodiscard]] int64_t to_unix_micros() const;
 
-        int64_t to_unix_millis() const;
+        [[nodiscard]] int64_t to_unix_millis() const;
 
-        int64_t to_unix_seconds() const;
+        [[nodiscard]] int64_t to_unix_seconds() const;
 
-        time_t to_time_t() const;
+        [[nodiscard]] time_t to_time_t() const;
 
-        double to_date() const;
+        [[nodiscard]] double to_date() const;
 
-        int64_t to_universal() const;
+        [[nodiscard]] int64_t to_universal() const;
 
-        timespec to_timespec() const;
+        [[nodiscard]] timespec to_timespec() const;
 
-        timeval to_timeval() const;
+        [[nodiscard]] timeval to_timeval() const;
 
-        duration to_duration() const;
+        [[nodiscard]] duration to_duration() const;
 
         // to_chrono_time()
         //
@@ -219,7 +223,7 @@ namespace flare {
         //   flare::time_point t = flare::from_time_t(123);
         //   auto tp = flare::to_chrono_time(t);
         //   // tp == std::chrono::system_clock::from_time_t(123);
-        std::chrono::system_clock::time_point to_chrono_time() const;
+        [[nodiscard]] std::chrono::system_clock::time_point to_chrono_time() const;
 
 
     public:
@@ -272,6 +276,24 @@ namespace flare {
 
         static time_point from_timeval(timeval tv);
 
+        // future_xx
+        // make time_point for future from now
+        static inline time_point future_timeval(timeval tv);
+
+        static inline time_point future_timespec(timespec ts);
+
+        static inline time_point future_unix_duration(duration d);
+
+        static inline time_point future_unix_nanos(int64_t ns);
+
+        static inline time_point future_unix_micros(int64_t us);
+
+        static inline time_point future_unix_millis(int64_t ms);
+
+        static inline time_point future_unix_seconds(int64_t s);
+
+        static inline time_point future_time_t(time_t t);
+
         // from_chrono()
         //
         // Converts a std::chrono::system_clock::time_point to an flare::time_point.
@@ -299,12 +321,6 @@ namespace flare {
         friend constexpr bool operator==(time_point lhs, time_point rhs);
 
         friend duration operator-(time_point lhs, time_point rhs);
-
-        friend constexpr time_point universal_epoch();
-
-        friend constexpr time_point infinite_future();
-
-        friend constexpr time_point infinite_past();
 
         constexpr explicit time_point(duration rep) : rep_(rep) {}
 
@@ -811,7 +827,7 @@ namespace flare {
 
     std::string format_time(time_point t);
 
-// Output stream operator.
+    // Output stream operator.
     FLARE_FORCE_INLINE std::ostream &operator<<(std::ostream &os, time_point t) {
         return os << format_time(t);
     }
@@ -898,6 +914,38 @@ namespace flare {
         return time_point::from_unix_duration(duration::seconds(t));
     }
 
+    inline time_point time_point::future_timeval(timeval tv) {
+        return time_now() + duration::from_timeval(tv);
+    }
+
+    inline time_point time_point::future_timespec(timespec ts) {
+        return time_now() + duration::from_timespec(ts);
+    }
+
+    inline time_point time_point::future_unix_duration(duration d) {
+        return time_now() + d;
+    }
+
+    inline time_point time_point::future_unix_nanos(int64_t ns) {
+        return time_now() + duration::nanoseconds(ns);
+    }
+
+    inline time_point time_point::future_unix_micros(int64_t us) {
+        return time_now() + duration::microseconds(us);
+    }
+
+    inline time_point time_point::future_unix_millis(int64_t ms) {
+        return time_now() + duration::milliseconds(ms);
+    }
+
+    inline time_point time_point::future_unix_seconds(int64_t s) {
+        return time_now() + duration::seconds(s);
+    }
+
+    inline time_point time_point::future_time_t(time_t t) {
+        return time_now() + duration::seconds(t);
+    }
+
     inline int utc_minutes_offset(const std::tm &tm) {
 
 #ifdef _WIN32
@@ -959,6 +1007,87 @@ namespace flare {
         return static_cast<int>(offset_seconds / 60);
 #endif
     }
+
+    // ----------------------------------------
+    // Control frequency of operations.
+    // ----------------------------------------
+    // Example:
+    //   EveryManyUS every_1s(1000000L);
+    //   while (1) {
+    //       ...
+    //       if (every_1s) {
+    //           // be here at most once per second
+    //       }
+    //   }
+    class every_duration {
+    public:
+        explicit every_duration(duration d)
+                : _last_time(time_now()), _interval(d) {}
+
+        operator bool() {
+            const auto now = time_now();
+            if (now < _last_time + _interval) {
+                return false;
+            }
+            _last_time = now;
+            return true;
+        }
+
+    private:
+        time_point _last_time;
+        const duration _interval;
+    };
+
+    // ---------------
+    //  Count elapses
+    // ---------------
+    class stop_watcher {
+    public:
+
+        enum TimerType {
+            STARTED,
+        };
+
+        stop_watcher() : _stop(0), _start(0) {}
+
+        explicit stop_watcher(const TimerType) {
+            start();
+        }
+
+        // Start this timer
+        void start() {
+            _start = get_current_time_nanos();
+            _stop = _start;
+        }
+
+        // Stop this timer
+        void stop() {
+            _stop = get_current_time_nanos();
+        }
+
+        // Get the elapse from start() to stop(), in various units.
+        [[nodiscard]] constexpr duration elapsed() const { return duration::nanoseconds(_stop - _start); }
+
+        [[nodiscard]] constexpr int64_t n_elapsed() const { return _stop - _start; }
+
+        [[nodiscard]] constexpr int64_t u_elapsed() const { return n_elapsed() / 1000L; }
+
+        [[nodiscard]] constexpr int64_t m_elapsed() const { return u_elapsed() / 1000L; }
+
+        [[nodiscard]] constexpr int64_t s_elapsed() const { return m_elapsed() / 1000L; }
+
+        [[nodiscard]] constexpr double n_elapsed(double) const { return (double) (_stop - _start); }
+
+        [[nodiscard]] constexpr double u_elapsed(double) const { return (double) n_elapsed() / 1000.0; }
+
+        [[nodiscard]] constexpr double m_elapsed(double) const { return (double) u_elapsed() / 1000.0; }
+
+        [[nodiscard]] constexpr double s_elapsed(double) const { return (double) m_elapsed() / 1000.0; }
+
+    private:
+        int64_t _stop;
+        int64_t _start;
+    };
 
 }  // namespace flare
 

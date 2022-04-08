@@ -23,7 +23,7 @@
 #include <memory>
 #include <iostream>
 #include <sstream>
-#include "flare/base/time.h"
+#include "flare/times/time.h"
 #include "flare/strings/utility.h"
 #include "flare/variable/all.h"
 
@@ -361,7 +361,7 @@ TEST_F(VariableTest, recursive_mutex) {
     pthread_mutex_t mutex;
     pthread_mutex_init(&mutex, &attr);
     pthread_mutexattr_destroy(&attr);
-    flare::base::stop_watcher timer;
+    flare::stop_watcher timer;
     const size_t N = 1000000;
     timer.start();
     for (size_t i = 0; i < N; ++i) {

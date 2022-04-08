@@ -102,7 +102,7 @@ namespace {
         const auto ci = flare::utc_time_zone().at(flare::time_point::unix_epoch());
         EXPECT_EQ(flare::chrono_second(1970, 1, 1, 0, 0, 0), ci.cs);
         EXPECT_EQ(flare::zero_duration(), ci.subsecond);
-        EXPECT_EQ(flare::chrono_weekday::thursday, flare::GetWeekday(ci.cs));
+        EXPECT_EQ(flare::chrono_weekday::thursday, flare::get_weekday(ci.cs));
     }
 
     TEST(time_point, breakdown) {
@@ -113,14 +113,14 @@ namespace {
         auto ci = tz.at(t);
         EXPECT_CIVIL_INFO(ci, 1969, 12, 31, 19, 0, 0, -18000, false);
         EXPECT_EQ(flare::zero_duration(), ci.subsecond);
-        EXPECT_EQ(flare::chrono_weekday::wednesday, flare::GetWeekday(ci.cs));
+        EXPECT_EQ(flare::chrono_weekday::wednesday, flare::get_weekday(ci.cs));
 
         // Just before the epoch.
         t -= flare::duration::nanoseconds(1);
         ci = tz.at(t);
         EXPECT_CIVIL_INFO(ci, 1969, 12, 31, 18, 59, 59, -18000, false);
         EXPECT_EQ(flare::duration::nanoseconds(999999999), ci.subsecond);
-        EXPECT_EQ(flare::chrono_weekday::wednesday, flare::GetWeekday(ci.cs));
+        EXPECT_EQ(flare::chrono_weekday::wednesday, flare::get_weekday(ci.cs));
 
         // Some time later.
         t += flare::duration::hours(24) * 2735;
@@ -129,7 +129,7 @@ namespace {
         ci = tz.at(t);
         EXPECT_CIVIL_INFO(ci, 1977, 6, 28, 14, 30, 15, -14400, true);
         EXPECT_EQ(8, ci.subsecond / flare::duration::nanoseconds(1));
-        EXPECT_EQ(flare::chrono_weekday::tuesday, flare::GetWeekday(ci.cs));
+        EXPECT_EQ(flare::chrono_weekday::tuesday, flare::get_weekday(ci.cs));
     }
 
     TEST(time_point, AdditiveOperators) {
@@ -1039,14 +1039,14 @@ namespace {
         EXPECT_CIVIL_INFO(ci, std::numeric_limits<int64_t>::max(), 12, 31, 23,
                           59, 59, 0, false);
         EXPECT_EQ(flare::infinite_duration(), ci.subsecond);
-        EXPECT_EQ(flare::chrono_weekday::thursday, flare::GetWeekday(ci.cs));
+        EXPECT_EQ(flare::chrono_weekday::thursday, flare::get_weekday(ci.cs));
         EXPECT_EQ(365, flare::get_yearday(ci.cs));
         EXPECT_STREQ("-00", ci.zone_abbr);  // artifact of time_zone::At()
         ci = utc.at(flare::time_point::infinite_past());
         EXPECT_CIVIL_INFO(ci, std::numeric_limits<int64_t>::min(), 1, 1, 0, 0,
                           0, 0, false);
         EXPECT_EQ(-flare::infinite_duration(), ci.subsecond);
-        EXPECT_EQ(flare::chrono_weekday::sunday, flare::GetWeekday(ci.cs));
+        EXPECT_EQ(flare::chrono_weekday::sunday, flare::get_weekday(ci.cs));
         EXPECT_EQ(1, flare::get_yearday(ci.cs));
         EXPECT_STREQ("-00", ci.zone_abbr);  // artifact of time_zone::At()
 

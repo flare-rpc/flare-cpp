@@ -22,7 +22,7 @@
 #include <cstddef>
 #include <memory>
 #include <iostream>
-#include "flare/base/time.h"
+#include "flare/times/time.h"
 #include "flare/variable/recorder.h"
 #include "flare/variable/latency_recorder.h"
 #include "flare/strings/str_join.h"
@@ -89,10 +89,10 @@ TEST(RecorderTest, window) {
     flare::variable::Window<flare::variable::IntRecorder> w3(&c1, 3);
 
     const int N = 10000;
-    int64_t last_time = flare::base::gettimeofday_us();
+    int64_t last_time = flare::get_current_time_micros();
     for (int i = 1; i <= N; ++i) {
         c1 << i;
-        int64_t now = flare::base::gettimeofday_us();
+        int64_t now = flare::get_current_time_micros();
         if (now - last_time >= 1000000L) {
             last_time = now;
             LOG(INFO) << "c1=" << c1 << " w1=" << w1 << " w2=" << w2 << " w3=" << w3;
@@ -179,7 +179,7 @@ const size_t OPS_PER_THREAD = 20000000;
 
 static void *thread_counter(void *arg) {
     flare::variable::IntRecorder *recorder = (flare::variable::IntRecorder *)arg;
-    flare::base::stop_watcher timer;
+    flare::stop_watcher timer;
     timer.start();
     for (int i = 0; i < (int)OPS_PER_THREAD; ++i) {
         *recorder << i;

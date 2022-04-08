@@ -21,7 +21,7 @@
 #include <memory>
 #include <iostream>
 
-#include "flare/base/time.h"
+#include "flare/times/time.h"
 #include "flare/variable/detail/agent_group.h"
 #include "flare/base/static_atomic.h"
 
@@ -51,7 +51,7 @@ protected:
             EXPECT_TRUE(false);
             return NULL;
         }
-        flare::base::stop_watcher timer;
+        flare::stop_watcher timer;
         timer.start();
         for (size_t i = 0; i < OPS_PER_THREAD; ++i) {
             agent_type *element = AgentGroup<agent_type>::get_or_create_tls_agent(id);
@@ -82,7 +82,7 @@ TEST_F(AgentGroupTest, test_sanity) {
 std::atomic<uint64_t> g_counter(0);
 
 void *global_add(void *) {
-    flare::base::stop_watcher timer;
+    flare::stop_watcher timer;
     timer.start();
     for (size_t i = 0; i < OPS_PER_THREAD; ++i) {
         g_counter.fetch_add(2, std::memory_order_relaxed);
@@ -99,7 +99,7 @@ TEST_F(AgentGroupTest, test_perf) {
         ids[i] = AgentGroup<agent_type>::create_new_agent();
         ASSERT_TRUE(ids[i] >= 0);
     }
-    flare::base::stop_watcher timer;
+    flare::stop_watcher timer;
     timer.start();
     for (size_t i = 0; i < loops; ++i) {
         for (size_t j = 0; j < id_num; ++j) {

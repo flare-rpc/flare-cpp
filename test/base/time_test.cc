@@ -17,22 +17,22 @@
 #include <inttypes.h>
 #include <gtest/gtest.h>
 #include "flare/base/profile.h"
-
+/*
 #if defined(FLARE_PLATFORM_LINUX)
 #include <syscall.h>                         // SYS_clock_gettime
 #include <unistd.h>                          // syscall
 #endif
 
-#include "flare/base/time.h"
+#include "flare/times/time.h"
 #include "flare/log/logging.h"
 
 namespace {
 
     TEST(BaiduTimeTest, diff_between_gettimeofday_and_REALTIME) {
-        long t1 = flare::base::gettimeofday_us();
+        long t1 = flare::get_current_time_micros();
         timespec time;
         clock_gettime(CLOCK_REALTIME, &time);
-        long t2 = flare::base::timespec_to_microseconds(time);
+        long t2 =  flare::time_point::from_timespec(time).to_unix_micros();
         LOG(INFO) << "t1=" << t1 << " t2=" << t2;
     }
 
@@ -54,7 +54,7 @@ namespace {
     TEST(BaiduTimeTest, cost_of_timer) {
         printf("sizeof(time_t)=%lu\n", sizeof(time_t));
 
-        flare::base::stop_watcher t1, t2;
+        flare::stop_watcher t1, t2;
         timespec ts;
         const size_t N = 200000;
         t1.start();
@@ -74,14 +74,14 @@ namespace {
         long s = 0;
         t1.start();
         for (size_t i = 0; i < N; ++i) {
-            s += flare::base::cpuwide_time_ns();
+            s += flare::get_current_time_nanos();
         }
         t1.stop();
         printf("cpuwide_time() takes %" PRId64 "ns\n", t1.n_elapsed() / N);
 
         t1.start();
         for (size_t i = 0; i < N; ++i) {
-            s += flare::base::gettimeofday_us();
+            s += flare::get_current_time_micros();
         }
         t1.stop();
         printf("gettimeofday_us takes %" PRId64 "ns\n", t1.n_elapsed() / N);
@@ -95,7 +95,7 @@ namespace {
 
         t1.start();
         for (size_t i = 0; i < N; ++i) {
-            s += flare::base::monotonic_time_ns();
+            s += flare::get_current_time_nanos();
         }
         t1.stop();
         printf("monotonic_time_ns takes %" PRId64 "ns\n", t1.n_elapsed() / N);
@@ -191,11 +191,11 @@ namespace {
     TEST(BaiduTimeTest, every_many_us) {
         flare::base::EveryManyUS every_10ms(10000L);
         size_t i = 0;
-        const long start_time = flare::base::gettimeofday_ms();
+        const long start_time = flare::time_now().to_unix_millis();
         while (1) {
             if (every_10ms) {
                 printf("enter this branch at %" PRId64 "ms\n",
-                       flare::base::gettimeofday_ms() - start_time);
+                       flare::time_now().to_unix_millis() - start_time);
                 if (++i >= 10) {
                     break;
                 }
@@ -204,10 +204,11 @@ namespace {
     }
 
     TEST(BaiduTimeTest, timer_auto_start) {
-        flare::base::stop_watcher t(flare::base::stop_watcher::STARTED);
+        flare::stop_watcher t(flare::stop_watcher::STARTED);
         usleep(100);
         t.stop();
         printf("Cost %" PRId64 "us\n", t.u_elapsed());
     }
 
 } // namespace
+*/

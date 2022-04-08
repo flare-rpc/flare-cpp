@@ -211,13 +211,13 @@ static void* GlobalUpdate(void*) {
     }
 
     std::vector<SocketId> conns;
-    const int64_t start_time_us = flare::base::gettimeofday_us();
+    const int64_t start_time_us = flare::get_current_time_micros();
     const int WARN_NOSLEEP_THRESHOLD = 2;
     int64_t last_time_us = start_time_us;
     int consecutive_nosleep = 0;
     int64_t last_return_free_memory_time = start_time_us;
     while (1) {
-        const int64_t sleep_us = 1000000L + last_time_us - flare::base::gettimeofday_us();
+        const int64_t sleep_us = 1000000L + last_time_us - flare::get_current_time_micros();
         if (sleep_us > 0) {
             if (flare::fiber_sleep_for(sleep_us) < 0) {
                 PLOG_IF(FATAL, errno != ESTOP) << "Fail to sleep";
@@ -230,7 +230,7 @@ static void* GlobalUpdate(void*) {
                 LOG(WARNING) << __FUNCTION__ << " is too busy!";
             }
         }
-        last_time_us = flare::base::gettimeofday_us();
+        last_time_us = flare::get_current_time_micros();
 
         TrackMe();
 
@@ -244,7 +244,7 @@ static void* GlobalUpdate(void*) {
         }
 
         SocketMapList(&conns);
-        const int64_t now_ms = flare::base::cpuwide_time_ms();
+        const int64_t now_ms = flare::time_now().to_unix_millis();
         for (size_t i = 0; i < conns.size(); ++i) {
             SocketUniquePtr ptr;
             if (Socket::Address(conns[i], &ptr) == 0) {

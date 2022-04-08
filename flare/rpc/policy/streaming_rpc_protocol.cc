@@ -23,7 +23,7 @@
 #include <gflags/gflags.h>
 #include "flare/base/profile.h"
 #include "flare/log/logging.h"                       // LOG()
-#include "flare/base/time.h"
+#include "flare/times/time.h"
 #include "flare/io/cord_buf.h"                         // flare::cord_buf
 #include "flare/io/raw_pack.h"                      // raw_packer raw_unpacker
 #include "flare/rpc/log.h"

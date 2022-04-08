@@ -557,7 +557,7 @@ void SelectiveChannel::CallMethod(
     _chan.CallMethod(method, cntl, request, response, sndr);
     if (user_done == NULL) {
         Join(cid);
-        cntl->OnRPCEnd(flare::base::gettimeofday_us());
+        cntl->OnRPCEnd(flare::get_current_time_micros());
     }
 }
 

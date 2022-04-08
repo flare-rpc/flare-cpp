@@ -23,7 +23,7 @@
 #include <gflags/gflags.h>
 #include <gtest/gtest.h>
 #include "flare/base/compat.h"
-#include "flare/base/time.h"
+#include "flare/times/time.h"
 #include "flare/base/errno.h"
 #include <flare/fiber/internal/sys_futex.h>
 #include <flare/fiber/internal/waitable_event.h>
@@ -191,7 +191,7 @@ TEST(PingPongTest, ping_pong) {
     long last_counter = 0;
     long last_wakeup = 0;
     while (!stop) {
-        flare::base::stop_watcher tm;
+        flare::stop_watcher tm;
         tm.start();
         sleep(1);
         tm.stop();

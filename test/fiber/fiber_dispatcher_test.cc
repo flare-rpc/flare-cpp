@@ -20,7 +20,7 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <gtest/gtest.h>
-#include "flare/base/time.h"
+#include "flare/times/time.h"
 #include "flare/base/scoped_lock.h"
 #include "flare/base/fd_utility.h"
 #include "flare/log/logging.h"
@@ -262,7 +262,7 @@ namespace {
         }
 
         ProfilerStart("dispatcher.prof");
-        flare::base::stop_watcher tm;
+        flare::stop_watcher tm;
         tm.start();
 
         for (size_t i = 0; i < NEPOLL; ++i) {
