@@ -2,12 +2,12 @@
 // Created by liyinbin on 2022/2/15.
 //
 
-#include "flare/base/thread/spinlock.h"
+#include "flare/thread/spinlock.h"
 #include <thread>
-#include "flare/base/thread/latch.h"
+#include "flare/thread/latch.h"
 #include "gtest/gtest.h"
 
-namespace flare::base {
+namespace flare {
 
 
     std::uint64_t counter{};
@@ -34,4 +34,4 @@ namespace flare::base {
         }
         ASSERT_EQ(T * N, counter);
     }
-}
+}  // namespace flare

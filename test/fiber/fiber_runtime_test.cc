@@ -20,7 +20,7 @@
 #include "flare/base/static_atomic.h"
 #include "flare/times/time.h"
 #include "flare/log/logging.h"
-#include "flare/base/thread.h"
+#include "flare/thread/thread.h"
 #include <flare/fiber/internal/waitable_event.h>
 #include "flare/log/logging.h"
 #include "flare/fiber/runtime.h"

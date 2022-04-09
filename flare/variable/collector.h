@@ -77,7 +77,7 @@ namespace flare::variable {
         // indefinitely long(not recommended). If too many samples wait for
         // this funcion due to previous sample's blocking, they'll be destroy()-ed.
         // If you need to run destruction code upon thread's exit, use
-        // flare::base::thread_atexit. Dumping thread run this function in batch, each
+        // flare::thread::atexit. Dumping thread run this function in batch, each
         // batch is counted as one "round", `round_index' is the round that
         // dumping thread is currently at, counting from 1.
         virtual void dump_and_destroy(size_t round_index) = 0;

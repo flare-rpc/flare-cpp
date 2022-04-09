@@ -6,7 +6,7 @@
 #include <string>
 #include <map>
 #include <algorithm>
-#include "flare/base/thread.h"
+#include "flare/thread/thread.h"
 
 // Find c-string in maps with std::string as keys without memory allocations.
 // Example:
@@ -43,7 +43,7 @@ struct StringMapThreadLocalTemp {
         if (!initialized) {
             initialized = true;
             std::string* tmp = new (buf) std::string(key);
-            flare::base::thread_atexit(delete_tls, this);
+            flare::thread::atexit(delete_tls, this);
             return tmp;
         } else {
             std::string* tmp = (std::string*)buf;
@@ -56,7 +56,7 @@ struct StringMapThreadLocalTemp {
         if (!initialized) {
             initialized = true;
             std::string* tmp = new (buf) std::string(key, length);
-            flare::base::thread_atexit(delete_tls, this);
+            flare::thread::atexit(delete_tls, this);
             return tmp;
         } else {
             std::string* tmp = (std::string*)buf;

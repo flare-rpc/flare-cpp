@@ -6,7 +6,7 @@
 #include <vector>                                       // std::vector
 #include <pthread.h>
 #include "flare/base/scoped_lock.h"
-#include "flare/base/thread.h"
+#include "flare/thread/thread.h"
 #include "flare/log/logging.h"
 #include "flare/base/type_traits.h"
 #include "flare/base/errno.h"
@@ -102,6 +102,7 @@ namespace flare::container {
         size_t ModifyWithForeground(Fn &fn, const Arg1 &, const Arg2 &);
 
     private:
+
         template<typename Fn>
         struct WithFG0 {
             WithFG0(Fn &fn, T *data) : _fn(fn), _data(data) {}
@@ -283,6 +284,13 @@ namespace flare::container {
         }
     }
 
+    namespace detail {
+        template<typename T>
+        void delete_object(void *arg) {
+            delete static_cast<T *>(arg);
+        }
+    }
+
     template<typename T, typename TLS>
     DoublyBufferedData<T, TLS>::DoublyBufferedData()
             : _index(0), _created_key(false), _wrapper_key(0) {
@@ -290,7 +298,7 @@ namespace flare::container {
         pthread_mutex_init(&_modify_mutex, NULL);
         pthread_mutex_init(&_wrappers_mutex, NULL);
         const int rc = pthread_key_create(&_wrapper_key,
-                                          flare::base::delete_object<Wrapper>);
+                                          detail::delete_object < Wrapper > );
         if (rc != 0) {
             LOG(FATAL) << "Fail to pthread_key_create: " << flare_error(rc);
         } else {

@@ -80,7 +80,7 @@ namespace {
         printf("tls_block of flare::cord_buf was deleted\n");
     }
 
-    const int FLARE_ALLOW_UNUSED check_dummy = flare::base::thread_atexit(check_tls_block);
+    const int FLARE_ALLOW_UNUSED check_dummy = flare::thread::atexit(check_tls_block);
 
     static flare::container::FlatSet<void *> s_set;
 

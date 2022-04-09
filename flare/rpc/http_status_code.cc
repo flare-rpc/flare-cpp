@@ -20,7 +20,7 @@
 
 #include "flare/log/logging.h"                           // BAIDU_*
 #include "flare/base/profile.h"                            // FLARE_ARRAY_SIZE
-#include "flare/base/thread.h"                      // thread_local
+#include "flare/thread/thread.h"                      // thread_local
 #include "flare/rpc/errno.pb.h"
 #include "flare/rpc/http_status_code.h"
 
