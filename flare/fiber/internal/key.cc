@@ -456,7 +456,7 @@ int fiber_setspecific(fiber_local_key key, void *data) {
         }
         if (!flare::fiber_internal::tls_ever_created_keytable) {
             flare::fiber_internal::tls_ever_created_keytable = true;
-            CHECK_EQ(0, flare::base::thread_atexit(flare::fiber_internal::cleanup_pthread, kt));
+            CHECK_EQ(0, flare::thread::atexit(flare::fiber_internal::cleanup_pthread, kt));
         }
     }
     return kt->set_data(key, data);

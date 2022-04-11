@@ -28,7 +28,7 @@
 #include <vector>                           // std::vector
 
 #include "flare/base/errno.h"                      // errno
-#include "flare/base/thread.h"              // thread_atexit
+#include "flare/thread/thread.h"              // thread_atexit
 #include "flare/base/scoped_lock.h"
 #include "flare/log/logging.h"
 
@@ -137,7 +137,7 @@ namespace flare::variable {
                         LOG(FATAL) << "Fail to create vector, " << flare_error();
                         return NULL;
                     }
-                    flare::base::thread_atexit(_destroy_tls_blocks);
+                    flare::thread::atexit(_destroy_tls_blocks);
                 }
                 const size_t block_id = (size_t) id / ELEMENTS_PER_BLOCK;
                 if (block_id >= _s_tls_blocks->size()) {

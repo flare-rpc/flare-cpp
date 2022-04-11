@@ -6,11 +6,11 @@
 #include <chrono>
 #include <memory>
 #include <thread>
-#include "flare/base/thread/latch.h"
+#include "flare/thread/latch.h"
 #include "gtest/gtest.h"
 #include "flare/times/time.h"
 
-namespace flare::base {
+namespace flare {
 
     std::atomic<bool> exiting{false};
 

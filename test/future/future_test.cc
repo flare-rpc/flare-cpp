@@ -691,8 +691,8 @@ namespace flare {
                     f = true;
                 });
 
-        ASSERT_EQ(100, ct);
-        ASSERT_EQ(100, v.size());
+        ASSERT_EQ(100ul, ct);
+        ASSERT_EQ(100ul, v.size());
 
         for (size_t i = 0; i != v.size(); ++i) {
             ASSERT_EQ(i + 1, v[i]);

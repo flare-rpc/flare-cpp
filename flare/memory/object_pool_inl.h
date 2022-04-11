@@ -28,7 +28,7 @@
 #include <vector>
 #include "flare/base/static_atomic.h"              // std::atomic
 #include "flare/base/scoped_lock.h"            // FLARE_SCOPED_LOCK
-#include "flare/base/thread.h"           // FLARE_THREAD_LOCAL
+#include "flare/thread/thread.h"           // FLARE_THREAD_LOCAL
 #include "flare/base/profile.h"
 
 #ifdef FLARE_OBJECT_POOL_NEED_FREE_ITEM_NUM
@@ -259,7 +259,7 @@ namespace flare {
             LocalPool *lp = _local_pool;
             if (lp) {
                 _local_pool = NULL;
-                flare::base::thread_atexit_cancel(LocalPool::delete_local_pool, lp);
+                flare::thread::atexit_cancel(LocalPool::delete_local_pool, lp);
                 delete lp;
             }
         }
@@ -388,7 +388,7 @@ namespace flare {
             }
             FLARE_SCOPED_LOCK(_change_thread_mutex); //avoid race with clear()
             _local_pool = lp;
-            flare::base::thread_atexit(LocalPool::delete_local_pool, lp);
+            flare::thread::atexit(LocalPool::delete_local_pool, lp);
             _nlocal.fetch_add(1, std::memory_order_relaxed);
             return lp;
         }

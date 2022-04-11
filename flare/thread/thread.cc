@@ -198,40 +198,46 @@ namespace flare {
 
         class thread_exit_helper {
         public:
+            typedef void (*Fn)(void *);
+
+            typedef std::pair<Fn, void *> Pair;
+
             ~thread_exit_helper() {
                 // Call function reversely.
                 while (!_fns.empty()) {
-                    auto back = std::move(_fns.back());
+                    Pair back = _fns.back();
                     _fns.pop_back();
                     // Notice that _fns may be changed after calling Fn.
-                    if (back) {
-                        back();
-                    }
+                    back.first(back.second);
                 }
             }
 
-            size_t add(flare::base::function<void()> &&fn) {
+            int add(Fn fn, void *arg) {
                 try {
                     if (_fns.capacity() < 16) {
                         _fns.reserve(16);
                     }
-                    _fns.emplace_back(std::move(fn));
+                    _fns.emplace_back(fn, arg);
                 } catch (...) {
                     errno = ENOMEM;
                     return -1;
                 }
-                return _fns.size() - 1;
+                return 0;
             }
 
-            void remove(size_t index) {
-                if (index >= _fns.size()) {
-                    return;
+            void remove(Fn fn, void *arg) {
+                std::vector<Pair>::iterator
+                        it = std::find(_fns.begin(), _fns.end(), std::make_pair(fn, arg));
+                if (it != _fns.end()) {
+                    std::vector<Pair>::iterator ite = it + 1;
+                    for (; ite != _fns.end() && ite->first == fn && ite->second == arg;
+                           ++ite) {}
+                    _fns.erase(it, ite);
                 }
-                _fns[index] = nullptr;
             }
 
         private:
-            std::vector<flare::base::function<void()>> _fns;
+            std::vector<Pair> _fns;
         };
 
         static pthread_key_t thread_atexit_key;
@@ -245,7 +251,7 @@ namespace flare {
             detail::thread_exit_helper *h =
                     (detail::thread_exit_helper *) pthread_getspecific(detail::thread_atexit_key);
             if (h) {
-                pthread_setspecific(detail::thread_atexit_key, nullptr);
+                pthread_setspecific(detail::thread_atexit_key, NULL);
                 delete h;
             }
         }
@@ -263,10 +269,11 @@ namespace flare {
         detail::thread_exit_helper *get_or_new_thread_exit_helper() {
             pthread_once(&detail::thread_atexit_once, detail::make_thread_atexit_key);
 
-            auto *h = (detail::thread_exit_helper *) pthread_getspecific(detail::thread_atexit_key);
-            if (nullptr == h) {
+            detail::thread_exit_helper *h =
+                    (detail::thread_exit_helper *) pthread_getspecific(detail::thread_atexit_key);
+            if (NULL == h) {
                 h = new(std::nothrow) detail::thread_exit_helper;
-                if (nullptr != h) {
+                if (NULL != h) {
                     pthread_setspecific(detail::thread_atexit_key, h);
                 }
             }
@@ -276,6 +283,10 @@ namespace flare {
         detail::thread_exit_helper *get_thread_exit_helper() {
             pthread_once(&detail::thread_atexit_once, detail::make_thread_atexit_key);
             return (detail::thread_exit_helper *) pthread_getspecific(detail::thread_atexit_key);
+        }
+
+        static void call_single_arg_fn(void *fn) {
+            ((void (*)()) fn)();
         }
 
     }  // namespace detail
@@ -288,23 +299,40 @@ namespace flare {
         return false;
     }
 
-    size_t thread::atexit(flare::base::function<void()> &&fn) {
-        if (nullptr == fn) {
+    int thread::atexit(void (*fn)()) {
+        if (NULL == fn) {
+            errno = EINVAL;
+            return -1;
+        }
+        return atexit(detail::call_single_arg_fn, (void *) fn);
+    }
+
+
+    int thread::atexit(void (*fn)(void *), void *arg) {
+        if (NULL == fn) {
             errno = EINVAL;
             return -1;
         }
         detail::thread_exit_helper *h = detail::get_or_new_thread_exit_helper();
         if (h) {
-            return h->add(std::move(fn));
+            return h->add(fn, arg);
         }
         errno = ENOMEM;
         return -1;
     }
 
-    void thread::atexit_cancel(size_t index) {
-        detail::thread_exit_helper *h = detail::get_thread_exit_helper();
-        if (h) {
-            h->remove(index);
+    void thread::atexit_cancel(void (*fn)()) {
+        if (NULL != fn) {
+            atexit_cancel(detail::call_single_arg_fn, (void *) fn);
+        }
+    }
+
+    void thread::atexit_cancel(void (*fn)(void *), void *arg) {
+        if (fn != NULL) {
+            detail::thread_exit_helper *h = detail::get_thread_exit_helper();
+            if (h) {
+                h->remove(fn, arg);
+            }
         }
     }
 

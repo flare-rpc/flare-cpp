@@ -38,16 +38,16 @@ namespace flare::fiber_internal {
                                                pass_bool);
 
     __thread fiber_worker *tls_task_group = nullptr;
-// Sync with fiber_entity::local_storage when a fiber is created or destroyed.
-// During running, the two fields may be inconsistent, use tls_bls as the
-// groundtruth.
+    // Sync with fiber_entity::local_storage when a fiber is created or destroyed.
+    // During running, the two fields may be inconsistent, use tls_bls as the
+    // groundtruth.
     thread_local fiber_local_storage tls_bls = FIBER_LOCAL_STORAGE_INITIALIZER;
 
-// defined in fiber/key.cpp
+    // defined in fiber/key.cpp
     extern void return_keytable(fiber_keytable_pool_t *, KeyTable *);
 
-// [Hacky] This is a special TLS set by fiber-rpc privately... to save
-// overhead of creation keytable, may be removed later.
+    // [Hacky] This is a special TLS set by fiber-rpc privately... to save
+    // overhead of creation keytable, may be removed later.
     FLARE_THREAD_LOCAL void *tls_unique_user_ptr = nullptr;
 
     const fiber_statistics EMPTY_STAT = {0, 0};

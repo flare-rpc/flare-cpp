@@ -103,17 +103,13 @@ namespace flare {
 
         static int32_t thread_index();
 
-        static size_t atexit(flare::base::function<void()> &&);
+        static int atexit(void (*fn)(void *), void *arg);
 
-        template<typename F, class T>
-        static size_t atexit(F &&f, T &&t) {
-            return atexit([lf = std::forward<F>(f), lt = std::forward<T>(t)]() {
-                lf(lt);
-            });
-        }
+        static int atexit(void (*fn)());
 
+        static void atexit_cancel(void (*fn)());
 
-        static void atexit_cancel(size_t index);
+        static void atexit_cancel(void (*fn)(void *), void *arg);
 
         static native_handler_type native_handler();
 

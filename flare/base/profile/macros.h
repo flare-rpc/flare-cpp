@@ -230,5 +230,10 @@ namespace flare::base {
 #define FLARE_BLOCK_TAIL_CALL_OPTIMIZATION() if (volatile int x = 0) { (void)x; }
 #endif
 
+#ifdef _MSC_VER
+#define FLARE_THREAD_LOCAL __declspec(thread)
+#else
+#define FLARE_THREAD_LOCAL __thread
+#endif  // _MSC_VER
 
 #endif  // FLARE_BASE_PROFILE_MACROS_H_

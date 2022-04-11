@@ -6,7 +6,7 @@
 
 #include "flare/debugging/failure_signal_handler.h"
 #include "flare/base/profile.h"
-#include "flare/base/thread.h"
+#include "flare/thread/thread.h"
 
 #ifdef _WIN32
 #include <windows.h>
@@ -282,7 +282,7 @@ namespace flare::debugging {
                 depth, min_dropped_frames, symbolize_stacktrace, writerfn, writerfn_arg);
     }
 
-// Called by AbelFailureSignalHandler() to write the failure info. It is
+// Called by flare_failure_signal_handler() to write the failure info. It is
 // called once with writerfn set to write_to_stderr() and then possibly
 // with writerfn set to the user provided function.
     static void WriteFailureInfo(int signo, void *ucontext,
@@ -306,9 +306,9 @@ namespace flare::debugging {
 
 #ifdef FLARE_HAVE_ALARM
 
-    // AbelFailureSignalHandler() installs this as a signal handler for
+    // flare_failure_signal_handler() installs this as a signal handler for
     // SIGALRM, then sets an alarm to be delivered to the program after a
-    // set amount of time. If AbelFailureSignalHandler() hangs for more than
+    // set amount of time. If flare_failure_signal_handler() hangs for more than
     // the alarm timeout, ImmediateAbortSignalHandler() will abort the
     // program.
     static void ImmediateAbortSignalHandler(int) {
@@ -319,19 +319,19 @@ namespace flare::debugging {
 
 // flare::debugging::get_tid() returns pid_t on most platforms, but
 // returns flare::debugging::base_internal::pid_t on Windows.
-    using GetTidType = decltype(flare::base::flare_tid());
+    using GetTidType = decltype(flare::thread::thread_index());
 
     static std::atomic<GetTidType> failed_tid(0);
 
 #ifndef FLARE_HAVE_SIGACTION
-    static void AbelFailureSignalHandler(int signo) {
+    static void flare_failure_signal_handler(int signo) {
       void* ucontext = nullptr;
 #else
 
-    static void AbelFailureSignalHandler(int signo, siginfo_t *, void *ucontext) {
+    static void flare_failure_signal_handler(int signo, siginfo_t *, void *ucontext) {
 #endif
 
-        const GetTidType this_tid = flare::base::flare_tid();
+        const GetTidType this_tid = flare::thread::thread_index();
         GetTidType previous_failed_tid = 0;
         if (!failed_tid.compare_exchange_strong(
                 previous_failed_tid, static_cast<intptr_t>(this_tid),
@@ -339,10 +339,10 @@ namespace flare::debugging {
             DLOG(ERROR) <<
                         "signal " << signo << " raised at PC="
                         << flare::debugging::debugging_internal::GetProgramCounter(ucontext)
-                        << " while already in AbelFailureSignalHandler()";
+                        << " while already in flare_failure_signal_handler()";
 
             if (this_tid != previous_failed_tid) {
-                // Another thread is already in AbelFailureSignalHandler(), so wait
+                // Another thread is already in flare_failure_signal_handler(), so wait
                 // a bit for it to finish. If the other thread doesn't kill us,
                 // we do so after sleeping.
                 PortableSleepForSeconds(3);
@@ -380,7 +380,7 @@ namespace flare::debugging {
     void install_failure_signal_handler(const failure_signal_handler_options &options) {
         fsh_options = options;
         for (auto &it : failure_signal_data) {
-            InstallOneFailureHandler(&it, AbelFailureSignalHandler);
+            InstallOneFailureHandler(&it, flare_failure_signal_handler);
         }
     }
 
