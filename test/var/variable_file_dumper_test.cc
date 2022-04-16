@@ -34,7 +34,7 @@ TEST_F(FileDumperTest, filters) {
     flare::variable::Adder<int> a3("a_error");
     flare::variable::Adder<int> a4("process_*");
     flare::variable::Adder<int> a5("default");
-    GFLAGS_NS::SetCommandLineOption("variable_dump_interval", "1");
-    GFLAGS_NS::SetCommandLineOption("variable_dump", "true");
+    google::SetCommandLineOption("variable_dump_interval", "1");
+    google::SetCommandLineOption("variable_dump", "true");
     sleep(2);
 }

@@ -40,7 +40,7 @@ namespace flare::rpc {
 
 int main(int argc, char *argv[]) {
     testing::InitGoogleTest(&argc, argv);
-    GFLAGS_NS::ParseCommandLineFlags(&argc, &argv, true);
+    google::ParseCommandLineFlags(&argc, &argv, true);
     flare::rpc::GlobalInitializeOrDie();
     return RUN_ALL_TESTS();
 }

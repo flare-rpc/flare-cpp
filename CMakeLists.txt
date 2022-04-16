@@ -15,39 +15,67 @@
 # specific language governing permissions and limitations
 # under the License.
 
-cmake_minimum_required(VERSION 3.1.3)
+cmake_minimum_required(VERSION 3.15)
+
+
+if (NOT $ENV{CONDA_PREFIX} STREQUAL "")
+    if (APPLE)
+        set(CMAKE_CXX_COMPILER $ENV{CONDA_PREFIX}/bin/clang++)
+        set(CMAKE_C_COMPILER $ENV{CONDA_PREFIX}/bin/clang)
+    else ()
+        set(CMAKE_CXX_COMPILER $ENV{CONDA_PREFIX}/bin/g++)
+        set(CMAKE_C_COMPILER $ENV{CONDA_PREFIX}/bin/gcc)
+    endif ()
+endif ()
 project(flare C CXX)
 
-option(DEBUG "Print debug logs" OFF)
-option(WITH_DEBUG_SYMBOLS "With debug symbols" ON)
-option(WITH_THRIFT "With thrift framed protocol supported" OFF)
-option(BUILD_UNIT_TESTS "Whether to build unit tests" ON)
-option(DOWNLOAD_GTEST "Download and build a fresh copy of googletest. Requires Internet access." ON)
+list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
+list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/copts)
+list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake/modules)
+list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake/recipes)
+
+include(carbin_print)
+
+include(carbin_module)
+
+# Compiler id for Apple Clang is now AppleClang.
+cmake_policy(SET CMP0025 NEW)
+
+# if command can use IN_LIST
+cmake_policy(SET CMP0057 NEW)
+
+# Project version variables are the empty string if version is unspecified
+cmake_policy(SET CMP0048 NEW)
 
 # Enable MACOSX_RPATH. Run "cmake --help-policy CMP0042" for policy details.
 if (POLICY CMP0042)
     cmake_policy(SET CMP0042 NEW)
 endif ()
 
-set(FLARE_VERSION 0.9.0)
+set(CMAKE_MACOSX_RPATH 1)
 
-SET(CPACK_GENERATOR "DEB")
-SET(CPACK_DEBIAN_PACKAGE_MAINTAINER "flare authors")
-INCLUDE(CPack)
 
-if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    # require at least gcc 4.8
-    if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 4.8)
-        message(FATAL_ERROR "GCC is too old, please install a newer version supporting C++11")
-    endif ()
-elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    # require at least clang 3.3
-    if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 3.3)
-        message(FATAL_ERROR "Clang is too old, please install a newer version supporting C++11")
-    endif ()
-else ()
-    message(WARNING "You are using an unsupported compiler! Compilation has only been tested with Clang and GCC.")
-endif ()
+set(PROJECT_DESCRIPTION "carbin c++ lib")
+set(PROJECT_VERSION ${CARBIN_PROJECT_REVISION})
+
+# TODO modyify this for "-std=c++[x]"
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+option(CARBIN_STATUS_PRINT "cmake toolchain print" ON)
+option(CARBIN_STATUS_DEBUG "cmake toolchain debug info" ON)
+
+set(CMAKE_VERBOSE_MAKEFILE ON)
+
+option(DEBUG "Print debug logs" OFF)
+option(WITH_DEBUG_SYMBOLS "With debug symbols" ON)
+option(WITH_THRIFT "With thrift framed protocol supported" OFF)
+option(BUILD_UNIT_TESTS "Whether to build unit tests" OFF)
+option(DOWNLOAD_GTEST "Download and build a fresh copy of googletest. Requires Internet access." ON)
+
+
+set(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin)
+set(LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/lib)
 
 
 if (WITH_DEBUG_SYMBOLS)
@@ -61,32 +89,7 @@ endif ()
 
 include(GNUInstallDirs)
 
-set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
-
-
 find_package(GFLAGS REQUIRED)
-
-
-execute_process(
-        COMMAND bash -c "grep \"namespace [_A-Za-z0-9]\\+ {\" ${GFLAGS_INCLUDE_PATH}/gflags/gflags_declare.h | head -1 | awk '{print $2}' | tr -d '\n'"
-        OUTPUT_VARIABLE GFLAGS_NS
-)
-if (${GFLAGS_NS} STREQUAL "GFLAGS_NAMESPACE")
-    execute_process(
-            COMMAND bash -c "grep \"#define GFLAGS_NAMESPACE [_A-Za-z0-9]\\+\" ${GFLAGS_INCLUDE_PATH}/gflags/gflags_declare.h | head -1 | awk '{print $3}' | tr -d '\n'"
-            OUTPUT_VARIABLE GFLAGS_NS
-    )
-endif ()
-
-include_directories(
-        ${PROJECT_SOURCE_DIR}
-        ${CMAKE_CURRENT_BINARY_DIR}
-)
-
-execute_process(
-        COMMAND bash -c "${PROJECT_SOURCE_DIR}/tools/get_flare_revision.sh ${PROJECT_SOURCE_DIR} | tr -d '\n'"
-        OUTPUT_VARIABLE FLARE_RPC_REVISION
-)
 
 if (CMAKE_SYSTEM_NAME STREQUAL "Darwin")
     include(CheckFunctionExists)
@@ -97,18 +100,12 @@ if (CMAKE_SYSTEM_NAME STREQUAL "Darwin")
     set(CMAKE_CPP_FLAGS "${CMAKE_CPP_FLAGS} -Wno-deprecated-declarations -Wno-inconsistent-missing-override")
 endif ()
 
-set(CMAKE_CPP_FLAGS "${CMAKE_CPP_FLAGS} ${DEFINE_CLOCK_GETTIME}  -DGFLAGS_NS=${GFLAGS_NS}")
-set(CMAKE_CPP_FLAGS "${CMAKE_CPP_FLAGS} -DFIBER_USE_FAST_PTHREAD_MUTEX -D__const__= -D_GNU_SOURCE -DUSE_SYMBOLIZE -DNO_TCMALLOC -D__STDC_FORMAT_MACROS -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -DFLARE_RPC_REVISION=\\\"${FLARE_RPC_REVISION}\\\" -D__STRICT_ANSI__")
+set(CMAKE_CPP_FLAGS "${CMAKE_CPP_FLAGS} ${DEFINE_CLOCK_GETTIME}")
+set(CMAKE_CPP_FLAGS "${CMAKE_CPP_FLAGS} -DFIBER_USE_FAST_PTHREAD_MUTEX -D__const__= -D_GNU_SOURCE -DUSE_SYMBOLIZE -DNO_TCMALLOC -D__STDC_FORMAT_MACROS -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -DFLARE_RPC_REVISION=\\\"${CARBIN_PROJECT_REVISION}\\\" -D__STRICT_ANSI__")
 set(CMAKE_CPP_FLAGS "${CMAKE_CPP_FLAGS} ${DEBUG_SYMBOL} ${THRIFT_CPP_FLAG}")
 set(CMAKE_CXX_FLAGS "${CMAKE_CPP_FLAGS} -O2 -pipe -Wall -W -fPIC -fstrict-aliasing -Wno-invalid-offsetof -Wno-unused-parameter -fno-omit-frame-pointer")
 set(CMAKE_C_FLAGS "${CMAKE_CPP_FLAGS} -O2 -pipe -Wall -W -fPIC -fstrict-aliasing -Wno-unused-parameter -fno-omit-frame-pointer")
 
-macro(use_cxx17)
-    set(CMAKE_CXX_STANDARD 17)
-    set(CMAKE_CXX_STANDARD_REQUIRED ON)
-endmacro(use_cxx17)
-
-use_cxx17()
 
 if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     if ((CMAKE_SYSTEM_PROCESSOR MATCHES "(x86)|(X86)|(amd64)|(AMD64)") AND NOT (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 4.4))
@@ -125,37 +122,23 @@ endif ()
 find_package(Protobuf REQUIRED)
 find_package(Threads REQUIRED)
 
-find_path(LEVELDB_INCLUDE_PATH NAMES leveldb/db.h)
-find_library(LEVELDB_LIB NAMES leveldb)
-if ((NOT LEVELDB_INCLUDE_PATH) OR (NOT LEVELDB_LIB))
-    message(FATAL_ERROR "Fail to find leveldb")
-endif ()
+find_package(Leveldb REQUIRED)
+find_package(Protobuf REQUIRED)
 
-find_library(PROTOC_LIB NAMES protoc)
-if (NOT PROTOC_LIB)
-    message(FATAL_ERROR "Fail to find protoc lib")
-endif ()
-
-if (CMAKE_SYSTEM_NAME STREQUAL "Darwin")
-    set(OPENSSL_ROOT_DIR
-            "/usr/local/opt/openssl"    # Homebrew installed OpenSSL
-            )
-endif ()
-
-find_package(OpenSSL)
+find_package(OpenSSL REQUIRED)
 
 include_directories(
         ${GFLAGS_INCLUDE_PATH}
         ${PROTOBUF_INCLUDE_DIRS}
-        ${LEVELDB_INCLUDE_PATH}
+        ${LEVELDB_INCLUDE_DIRS}
         ${OPENSSL_INCLUDE_DIR}
 )
 
 set(DYNAMIC_LIB
         ${GFLAGS_LIBRARY}
         ${PROTOBUF_LIBRARIES}
-        ${LEVELDB_LIB}
-        ${PROTOC_LIB}
+        ${LEVELDB_SHARED_LIBRARIES}
+        ${PROTOBUF_PROTOC_LIBRARIES}
         ${CMAKE_THREAD_LIBS_INIT}
         ${THRIFT_LIB}
         ${THRIFTNB_LIB}

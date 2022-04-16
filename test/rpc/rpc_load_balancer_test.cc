@@ -1030,11 +1030,11 @@ namespace {
     }
 
     TEST_F(LoadBalancerTest, revived_from_all_failed_intergrated) {
-        GFLAGS_NS::SetCommandLineOption("circuit_breaker_short_window_size", "20");
-        GFLAGS_NS::SetCommandLineOption("circuit_breaker_short_window_error_percent", "30");
+        google::SetCommandLineOption("circuit_breaker_short_window_size", "20");
+        google::SetCommandLineOption("circuit_breaker_short_window_error_percent", "30");
         // Those two lines force the interval of first hc to 3s
-        GFLAGS_NS::SetCommandLineOption("circuit_breaker_max_isolation_duration_ms", "3000");
-        GFLAGS_NS::SetCommandLineOption("circuit_breaker_min_isolation_duration_ms", "3000");
+        google::SetCommandLineOption("circuit_breaker_max_isolation_duration_ms", "3000");
+        google::SetCommandLineOption("circuit_breaker_min_isolation_duration_ms", "3000");
 
         const char *lb_algo[] = {"random:min_working_instances=2 hold_seconds=2",
                                  "rr:min_working_instances=2 hold_seconds=2"};

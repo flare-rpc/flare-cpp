@@ -66,7 +66,7 @@ namespace flare::rpc {
         const bool use_html = UseHTML(cntl->http_request());
         cntl->http_response().set_content_type(
                 use_html ? "text/html" : "text/plain");
-        if (!GFLAGS_NS::SetCommandLineOption("enable_rpcz", "true").empty()) {
+        if (!google::SetCommandLineOption("enable_rpcz", "true").empty()) {
             if (use_html) {
                 // Redirect to /rpcz
                 cntl->response_attachment().append(
@@ -95,7 +95,7 @@ namespace flare::rpc {
         const bool use_html = UseHTML(cntl->http_request());
         cntl->http_response().set_content_type(
                 use_html ? "text/html" : "text/plain");
-        if (!GFLAGS_NS::SetCommandLineOption("enable_rpcz", "false").empty()) {
+        if (!google::SetCommandLineOption("enable_rpcz", "false").empty()) {
             if (use_html) {
                 // Redirect to /rpcz
                 cntl->response_attachment().append(
