@@ -67,7 +67,7 @@ int main(int argc, char* argv[]) {
 
     cntl.http_request().uri() = url;
     if (!FLAGS_d.empty()) {
-        cntl.x().set_method(flare::rpc::HTTP_METHOD_POST);
+        cntl.set_method(flare::rpc::HTTP_METHOD_POST);
         cntl.request_attachment().append(FLAGS_d);
     }
 
