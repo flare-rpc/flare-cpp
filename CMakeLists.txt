@@ -91,16 +91,6 @@ include(GNUInstallDirs)
 
 find_package(GFLAGS REQUIRED)
 
-if (CMAKE_SYSTEM_NAME STREQUAL "Darwin")
-    include(CheckFunctionExists)
-    CHECK_FUNCTION_EXISTS(clock_gettime HAVE_CLOCK_GETTIME)
-    if (NOT HAVE_CLOCK_GETTIME)
-        set(DEFINE_CLOCK_GETTIME "-DNO_CLOCK_GETTIME_IN_MAC")
-    endif ()
-    set(CMAKE_CPP_FLAGS "${CMAKE_CPP_FLAGS} -Wno-deprecated-declarations -Wno-inconsistent-missing-override")
-endif ()
-
-set(CMAKE_CPP_FLAGS "${CMAKE_CPP_FLAGS} ${DEFINE_CLOCK_GETTIME}")
 set(CMAKE_CPP_FLAGS "${CMAKE_CPP_FLAGS} -DFIBER_USE_FAST_PTHREAD_MUTEX -D__const__= -D_GNU_SOURCE -DUSE_SYMBOLIZE -DNO_TCMALLOC -D__STDC_FORMAT_MACROS -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -DFLARE_RPC_REVISION=\\\"${CARBIN_PROJECT_REVISION}\\\" -D__STRICT_ANSI__")
 set(CMAKE_CPP_FLAGS "${CMAKE_CPP_FLAGS} ${DEBUG_SYMBOL} ${THRIFT_CPP_FLAG}")
 set(CMAKE_CXX_FLAGS "${CMAKE_CPP_FLAGS} -O2 -pipe -Wall -W -fPIC -fstrict-aliasing -Wno-invalid-offsetof -Wno-unused-parameter -fno-omit-frame-pointer")
@@ -150,22 +140,9 @@ set(DYNAMIC_LIB
 
 set(FLARE_PRIVATE_LIBS "-lgflags -lprotobuf -lleveldb -lprotoc -lssl -lcrypto -ldl -lz")
 
-if (CMAKE_SYSTEM_NAME STREQUAL "Linux")
-    set(DYNAMIC_LIB ${DYNAMIC_LIB} rt)
-    set(FLARE_PRIVATE_LIBS "${FLARE_PRIVATE_LIBS} -lrt")
-elseif (CMAKE_SYSTEM_NAME STREQUAL "Darwin")
-    set(DYNAMIC_LIB ${DYNAMIC_LIB}
-            pthread
-            "-framework CoreFoundation"
-            "-framework CoreGraphics"
-            "-framework CoreData"
-            "-framework CoreText"
-            "-framework Security"
-            "-framework Foundation"
-            "-Wl,-U,_MallocExtension_ReleaseFreeMemory"
-            "-Wl,-U,_ProfilerStart"
-            "-Wl,-U,_ProfilerStop")
-endif ()
+include(carbin_system_dylib)
+
+set(DYNAMIC_LIB ${DYNAMIC_LIB} ${CARBIN_DYNAMIC_LIB})
 
 # for *.so
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/output/lib)
