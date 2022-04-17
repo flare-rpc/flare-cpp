@@ -13,7 +13,7 @@
 
 namespace flare::thread_internal {
 
-    // Same as `ThreadLocal<T>` except that objects are initialized eagerly (also
+    // Same as `thread_local_store<T>` except that objects are initialized eagerly (also
     // nondeterministically.). Note that `T`'s constructor may not touch other TLS
     // variables, otherwise the behavior is undefined.
     //
@@ -86,9 +86,7 @@ namespace flare::thread_internal {
         };
 
         // Allocate a slot.
-        offset_ = object_array_layout<T>::instance()->create_entry(
-                &initializer_, slot_initializer) *
-                  sizeof(T);
+        offset_ = object_array_layout<T>::instance()->create_entry(&initializer_, slot_initializer) *sizeof(T);
     }
 
     template<class T>

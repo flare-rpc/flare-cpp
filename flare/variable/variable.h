@@ -48,7 +48,7 @@ namespace flare::variable {
                           const std::string_view &description) = 0;
     };
 
-// Options for Variable::dump_exposed().
+    // Options for Variable::dump_exposed().
     struct DumpOptions {
         // Constructed with default options.
         DumpOptions();

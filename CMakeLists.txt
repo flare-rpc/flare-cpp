@@ -205,6 +205,7 @@ file(GLOB_RECURSE FLARE_BOOTSTRAP_SRC "${PROJECT_SOURCE_DIR}/flare/bootstrap/*.c
 file(GLOB_RECURSE FLARE_TIMES_SRC "${PROJECT_SOURCE_DIR}/flare/times/*.cc")
 file(GLOB_RECURSE FLARE_FILES_SRC "${PROJECT_SOURCE_DIR}/flare/files/*.cc")
 file(GLOB_RECURSE FLARE_THREAD_SRC "${PROJECT_SOURCE_DIR}/flare/thread/*.cc")
+file(GLOB_RECURSE FLARE_METRICS_SRC "${PROJECT_SOURCE_DIR}/flare/metrics/*.cc")
 
 set(FLARE_SRC
         "${PROJECT_SOURCE_DIR}/flare/base/dynamic_annotations/dynamic_annotations.c"
@@ -221,6 +222,7 @@ set(FLARE_SRC
         ${FLARE_TIMES_SRC}
         ${FLARE_FILES_SRC}
         ${FLARE_THREAD_SRC}
+        ${FLARE_METRICS_SRC}
         )
 
 file(GLOB_RECURSE VARIABLE_SOURCES "${PROJECT_SOURCE_DIR}/flare/variable/*.cc")
