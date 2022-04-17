@@ -10,6 +10,7 @@ namespace flare {
     class expose_metrics {
     public:
 
+    private:
     };
 }  // namespace flare
 

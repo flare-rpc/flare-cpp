@@ -13,6 +13,7 @@ namespace flare {
     class scope_group {
     public:
 
+
     private:
     };
 }  // namespace flare
