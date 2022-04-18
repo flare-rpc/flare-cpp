@@ -11,6 +11,11 @@
 
 namespace flare {
 
+    struct metrics_family {
+        std::unordered_map<std::string, std::string> tags;
+        std::string prefix;
+    };
+
     class expose_metrics {
     public:
         typedef std::unordered_map<std::string, std::string> tag_type;
@@ -20,22 +25,21 @@ namespace flare {
         virtual ~expose_metrics() = default;
 
         const std::string &prefix() const {
-            return _prefix;
+            return _family.prefix;
         }
 
         const tag_type &tags() const {
-            return _tags;
+            return _family.tags;
         }
 
         bool expose();
 
         bool hide();
 
-        virtual void dump(std::ostream &out) const;
+        virtual void dump(std::ostream &out) const = 0;
 
     private:
-        std::unordered_map<std::string, std::string> _tags;
-        std::string _prefix;
+        metrics_family _family;
     };
 }  // namespace flare
 

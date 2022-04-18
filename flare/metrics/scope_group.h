@@ -10,9 +10,19 @@
 
 namespace flare {
 
+    class expose_metrics;
+
     class scope_group {
     public:
 
+        scope_group *instance() {
+            static scope_group inc;
+            return &ins;
+        }
+
+        bool add(const std::string &prefix, std::unordered_map<std::string, std::string> &tag, expose_metrics* ptr);
+
+        void list_metrics(std::vector<std::string> & res);
 
     private:
     };
