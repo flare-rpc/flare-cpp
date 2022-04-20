@@ -21,7 +21,8 @@ project(flare C CXX)
 option(DEBUG "Print debug logs" OFF)
 option(WITH_DEBUG_SYMBOLS "With debug symbols" ON)
 option(WITH_THRIFT "With thrift framed protocol supported" OFF)
-option(BUILD_UNIT_TESTS "Whether to build unit tests" ON)
+option(BUILD_UNIT_TESTS "Whether to build unit tests" OFF)
+option(INSTALL_STATIC_LIBS "Whether to install static libraries" OFF)
 option(DOWNLOAD_GTEST "Download and build a fresh copy of googletest. Requires Internet access." ON)
 
 # Enable MACOSX_RPATH. Run "cmake --help-policy CMP0042" for policy details.
@@ -204,6 +205,7 @@ file(GLOB_RECURSE FLARE_BOOTSTRAP_SRC "${PROJECT_SOURCE_DIR}/flare/bootstrap/*.c
 file(GLOB_RECURSE FLARE_TIMES_SRC "${PROJECT_SOURCE_DIR}/flare/times/*.cc")
 file(GLOB_RECURSE FLARE_FILES_SRC "${PROJECT_SOURCE_DIR}/flare/files/*.cc")
 file(GLOB_RECURSE FLARE_THREAD_SRC "${PROJECT_SOURCE_DIR}/flare/thread/*.cc")
+file(GLOB_RECURSE FLARE_METRICS_SRC "${PROJECT_SOURCE_DIR}/flare/metrics/*.cc")
 
 set(FLARE_SRC
         "${PROJECT_SOURCE_DIR}/flare/base/dynamic_annotations/dynamic_annotations.c"
@@ -220,6 +222,7 @@ set(FLARE_SRC
         ${FLARE_TIMES_SRC}
         ${FLARE_FILES_SRC}
         ${FLARE_THREAD_SRC}
+        ${FLARE_METRICS_SRC}
         )
 
 file(GLOB_RECURSE VARIABLE_SOURCES "${PROJECT_SOURCE_DIR}/flare/variable/*.cc")

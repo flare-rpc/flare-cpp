@@ -19,7 +19,7 @@ namespace flare {
     // these "atomic" pointer types.
     //
     // They're not intended for general use. The only reason they're here is for
-    // `ThreadLocal` to implement `ForEach` in a thread-safe manner.
+    // `ThreadLocal` to implement `for_each` in a thread-safe manner.
 
     // `ref_ptr`, with assignment and read being implemented by `CopyableAtomic`.
     template<class T>

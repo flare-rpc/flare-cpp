@@ -71,7 +71,7 @@ namespace flare {
             raw_tls_->set(std::move(ptr));
         }
 
-        // `ForEach` calls `f` with pointer (i.e. `T*`) to each thread-local
+        // `for_each` calls `f` with pointer (i.e. `T*`) to each thread-local
         // instances.
         //
         // CAUTION: Called with internal lock held. You may not touch TLS in `f`.

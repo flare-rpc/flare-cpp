@@ -38,16 +38,16 @@ namespace flare::variable {
 
 namespace flare::rpc {
 
-// Defined in server.cpp
+    // Defined in server.cpp
     extern const char *const g_server_info_prefix;
 
-// This is a class that convert variable result to prometheus output.
-// Currently the output only includes gauge and summary for two
-// reasons:
-// 1) We cannot tell gauge and counter just from name and what's
-// more counter is just another gauge.
-// 2) Histogram and summary is equivalent except that histogram
-// calculates quantiles in the server side.
+    // This is a class that convert variable result to prometheus output.
+    // Currently the output only includes gauge and summary for two
+    // reasons:
+    // 1) We cannot tell gauge and counter just from name and what's
+    // more counter is just another gauge.
+    // 2) Histogram and summary is equivalent except that histogram
+    // calculates quantiles in the server side.
     class PrometheusMetricsDumper : public flare::variable::Dumper {
     public:
         explicit PrometheusMetricsDumper(flare::cord_buf_builder *os,
