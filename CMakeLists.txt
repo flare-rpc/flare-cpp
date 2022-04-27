@@ -17,8 +17,6 @@
 
 cmake_minimum_required(VERSION 3.1.3)
 
-set(CMAKE_PREFIX_PATH $ENV{CONDA_PREFIX})
-
 project(flare C CXX)
 
 option(DEBUG "Print debug logs" OFF)
