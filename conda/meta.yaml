@@ -29,8 +29,6 @@ outputs:
         - {{ pin_compatible('libflare', exact=True) }}
     requirements:
       build:
-        - clang # [osx]
-        - clangxx #   [osx]
         - gcc =8.5 # [linux]
         - gxx =8.5 # [linux]
         - sysroot_linux-64=2.17 # [linux]
