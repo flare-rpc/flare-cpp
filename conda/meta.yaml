@@ -17,7 +17,7 @@ about:
   summary: A library for c++ based libraries and rpc libraries
 
 source:
-  git_url: ../../
+  git_url: ../
 
 outputs:
   - name: libflare
