@@ -21,14 +21,12 @@ source:
 
 outputs:
   - name: libflare
-    script: build-lib.sh   # [not win]
-    script: build-lib.bat  # [win]
+    script: build.sh   # [not win]
+    script: bld.bat  # [win]
     build:
-      string: "h{{ PKG_HASH }}_{{ number }}_cpu"
+      string: "h{{ PKG_HASH }}_{{ number }}"
       run_exports:
         - {{ pin_compatible('libflare', exact=True) }}
-      ignore_run_exports:
-        - mkl  # [osx]
     requirements:
       build:
         - clang # [osx]
