@@ -21,7 +21,7 @@ source:
 
 outputs:
   - name: libflare
-    script: build.sh   # [not win]
+    script: bld.sh   # [not win]
     script: bld.bat  # [win]
     build:
       string: "h{{ PKG_HASH }}_{{ number }}"
@@ -29,6 +29,8 @@ outputs:
         - {{ pin_compatible('libflare', exact=True) }}
     requirements:
       build:
+        - clang # [osx]
+        - clangxx #   [osx]
         - gcc =8.5 # [linux]
         - gxx =8.5 # [linux]
         - sysroot_linux-64=2.17 # [linux]
@@ -43,6 +45,7 @@ outputs:
         - protobuf =3.12.4
         - gperftools =2.9.1
       run:
+        - __osx >={{ MACOSX_DEPLOYMENT_TARGET|default("10.15") }}  # [osx and x86_64]
         - zlib
         - sysroot_linux-64=2.17 # [linux]
         - openssl =1.1.1
