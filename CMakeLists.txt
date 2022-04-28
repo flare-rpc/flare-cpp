@@ -16,6 +16,7 @@
 # under the License.
 
 cmake_minimum_required(VERSION 3.1.3)
+
 project(flare C CXX)
 
 option(DEBUG "Print debug logs" OFF)
@@ -315,4 +316,4 @@ install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/output/include/
 
 # Install pkgconfig
 configure_file(cmake/flare.pc.in ${PROJECT_BINARY_DIR}/flare.pc @ONLY)
-install(FILES ${PROJECT_BINARY_DIR}/flare.pc DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig)
+install(FILES ${PROJECT_BINARY_DIR}/flare.pc DESTINATION lib/pkgconfig)
