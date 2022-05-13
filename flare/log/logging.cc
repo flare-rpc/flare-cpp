@@ -2241,7 +2241,7 @@ namespace flare::log {
 #include <vector>
 
 namespace flare::internal::logging {
-
+/*
     namespace {
 
         std::vector<PrefixAppender *> *GetProviders() {
@@ -2266,6 +2266,6 @@ namespace flare::internal::logging {
             }
         }
     }
-
+*/
 }  // namespace flare::internal::logging
 

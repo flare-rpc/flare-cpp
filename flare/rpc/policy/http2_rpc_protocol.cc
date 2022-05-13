@@ -588,8 +588,8 @@ DECLARE_bool(usercode_in_pthread);
                 --frag_size;
             }
             if (has_priority) {
-                const uint32_t FLARE_ALLOW_UNUSED stream_dep = LoadUint32(it);
-                const uint32_t FLARE_ALLOW_UNUSED weight = LoadUint8(it);
+               // const uint32_t FLARE_ALLOW_UNUSED stream_dep = LoadUint32(it);
+               // const uint32_t FLARE_ALLOW_UNUSED weight = LoadUint8(it);
                 frag_size -= 5;
             }
             if (frag_size < pad_length) {
@@ -991,7 +991,7 @@ DECLARE_bool(usercode_in_pthread);
             // Skip Additional Debug Data
             it.forward(h.payload_size - 8);
             const int last_stream_id = static_cast<int>(LoadUint32(it));
-            const H2Error FLARE_ALLOW_UNUSED h2_error = static_cast<H2Error>(LoadUint32(it));
+            // const H2Error FLARE_ALLOW_UNUSED h2_error = static_cast<H2Error>(LoadUint32(it));
             // TODO(zhujiashun): client and server should unify the code.
             // Server Push is not supported so it works fine now.
             if (is_client_side()) {

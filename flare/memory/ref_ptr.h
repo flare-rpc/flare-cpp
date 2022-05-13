@@ -301,8 +301,8 @@ namespace flare {
 
     template<class T, class Deleter>
     constexpr void ref_counted<T, Deleter>::add_ref() noexcept {
-        auto was = ref_count_.fetch_add(1, std::memory_order_relaxed);
-        FLARE_CHECK_GT(was, 0u);
+        ref_count_.fetch_add(1, std::memory_order_relaxed);
+        //FLARE_CHECK_GT(was, 0u);
     }
 
     template<class T, class Deleter>

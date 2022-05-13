@@ -94,8 +94,7 @@ namespace flare {
             auto thread = pthread_self();
             pthread_setaffinity_np(thread, sizeof(cpuset_t), &cpuset);
 #else
-        FLARE_CHECK(!flare::core_affinity::supported,
-                    "Attempting to use thread affinity on a unsupported platform");
+        CHECK(!flare::core_affinity::supported)<<"Attempting to use thread affinity on a unsupported platform";
 #endif
     }
 
@@ -161,7 +160,7 @@ namespace flare {
     }
 
     bool thread::start() {
-        FLARE_CHECK(_impl);
+        CHECK(_impl);
         auto r = _impl->start();
         if (!_impl->option.join_able) {
             _impl = nullptr;

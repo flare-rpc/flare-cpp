@@ -17,7 +17,7 @@ namespace flare::thread_internal {
 
         void *create_one_byte_dummy_page() {
             auto ptr = mmap(nullptr, 1, PROT_READ, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
-            FLARE_CHECK(ptr, "Cannot create dummy page for asymmetric memory barrier.");
+            CHECK(ptr) << "Cannot create dummy page for asymmetric memory barrier.";
             (void) mlock(ptr, 1);
             return ptr;
         }
@@ -42,10 +42,10 @@ namespace flare::thread_internal {
 
             // Upgrading protection does not always result in fence in each core (as it
             // can be delayed until #PF).
-            FLARE_CHECK(mprotect(dummy_page, 1, PROT_READ | PROT_WRITE) == 0);
+            CHECK(mprotect(dummy_page, 1, PROT_READ | PROT_WRITE) == 0);
             *static_cast<char *>(dummy_page) = 0;  // Make sure the page is present.
             // This time a barrier should be issued to every cores.
-            FLARE_CHECK(mprotect(dummy_page, 1, PROT_READ) == 0);
+            CHECK(mprotect(dummy_page, 1, PROT_READ) == 0);
 
             // Subsequent memory accesses may not be reordered before syscalls above. (Not
             // sure if it's already implied by `mprotect`?)

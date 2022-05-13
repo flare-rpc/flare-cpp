@@ -1547,7 +1547,7 @@ enum {
 };
 
 /// flare logs
-
+/*
 #define FLARE_CHECK(expr, ...) \
   FLARE_INTERNAL_DETAIL_LOGGING_CHECK(expr, ##__VA_ARGS__)
 #define FLARE_CHECK_EQ(val1, val2, ...)   \
@@ -1677,7 +1677,6 @@ enum {
 #define FLARE_LOG_ERROR_ONCE(...) \
   FLARE_INTERNAL_DETAIL_LOG_ONCE(ERROR, __VA_ARGS__)
 #define FLARE_LOG_FATAL_ONCE(...)                        \
-  /* You're unlikely to have a second chance anyway.. */ \
   FLARE_INTERNAL_DETAIL_LOG_ONCE(FATAL, __VA_ARGS__)
 
 #define FLARE_LOG_INFO_IF_ONCE(expr, ...)                \
@@ -1939,8 +1938,6 @@ namespace flare {
 
 #define FLARE_INTERNAL_DETAIL_LOGGING_CHECK_OP(name, op, val1, val2, ...)      \
   do {                                                                         \
-    /* `flare::log::GetReferenceableValue` triggers `-Wmaybe-uninitialized`, */    \
-    /* Not sure about the reason though. */                                    \
     auto&& flare_anonymous_x = (val1);                                         \
     auto&& flare_anonymous_y = (val2);                                         \
     if (FLARE_UNLIKELY(!(flare_anonymous_x op flare_anonymous_y))) {           \
@@ -1982,8 +1979,6 @@ namespace flare {
 
 #define FLARE_INTERNAL_DETAIL_LOG_EVERY_N(Level, N, ...)                  \
   do {                                                                    \
-    /* Race here, as obvious. This is how glog has done, and I haven't */ \
-    /* come up with a better idea yet (unless in trade of perf.). */      \
     static int flare_anonymous_logged_counter_mod_n = 0;                  \
     if (FLARE_UNLIKELY(++flare_anonymous_logged_counter_mod_n > N)) {     \
       flare_anonymous_logged_counter_mod_n -= N;                          \
@@ -2001,7 +1996,6 @@ namespace flare {
 #define FLARE_INTERNAL_DETAIL_LOGGING_CHECK(expr, ...)                       \
   do {                                                                       \
     if (FLARE_UNLIKELY(!(expr))) {                                           \
-      /* Attribute `noreturn` is not applicable to lambda, unfortunately. */ \
       [&]() FLARE_INTERNAL_DETAIL_LOGGING_ATTRIBUTE_NORETURN_NOINLINE_COLD { \
         ::flare::log::log_message(__FILE__, __LINE__, ::flare::log::FLARE_FATAL)       \
                 .stream()                                                    \
@@ -2015,8 +2009,6 @@ namespace flare {
 
 #define FLARE_INTERNAL_DETAIL_LOGGING_CHECK_OP(name, op, val1, val2, ...)    \
   do {                                                                       \
-    /* `flare::log::GetReferenceableValue` triggers `-Wmaybe-uninitialized`, */  \
-    /* Not sure about the reason though. */                                  \
     auto&& flare_anonymous_x = (val1);                                       \
     auto&& flare_anonymous_y = (val2);                                       \
     if (FLARE_UNLIKELY(!(flare_anonymous_x op flare_anonymous_y))) {         \
@@ -2065,8 +2057,6 @@ namespace flare {
 
 #define FLARE_INTERNAL_DETAIL_LOG_EVERY_N(Level, N, ...)                   \
   do {                                                                     \
-    /* Race here, as obvious. This is how glog has done, and I haven't */  \
-    /* come up with a better idea yet (unless in trade of perf.). */       \
     static int flare_anonymous_logged_counter_mod_n = 0;                   \
     if (FLARE_UNLIKELY(++flare_anonymous_logged_counter_mod_n > N)) {      \
       [&]() FLARE_INTERNAL_DETAIL_LOGGING_ATTRIBUTE_NOINLINE_COLD {        \
@@ -2092,5 +2082,5 @@ namespace flare {
 
 
 
-
+*/
 #endif  // FLARE_LOG_LOGGING_H_
