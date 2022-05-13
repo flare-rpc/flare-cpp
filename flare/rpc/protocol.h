@@ -242,7 +242,7 @@ namespace flare::rpc {
             if (_size < N) {
                 return _arr[_size++];
             } else {
-                CHECK(false) << "push to a full array, cap=" << N;
+                FLARE_CHECK(false) << "push to a full array, cap=" << N;
                 static T dummy;
                 return dummy;
             }

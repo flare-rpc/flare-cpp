@@ -11,23 +11,23 @@
 namespace flare {
 
     flare::base::flare_status readline_file::open(const flare::file_path &path,  readline_option option) {
-        CHECK(_path.empty()) << "do not reopen";
+        FLARE_CHECK(_path.empty()) << "do not reopen";
         sequential_read_file file;
         _path = path;
         _status = file.open(_path);
         if (!_status.ok()) {
-            LOG(ERROR) << "open file :"<<_path<<" eroor "<< flare_error();
+            FLARE_LOG(ERROR) << "open file :"<<_path<<" eroor "<< flare_error();
             return _status;
         }
         std::error_code ec;
         auto file_size = flare::file_size(path, ec);
         if (ec) {
-            LOG(ERROR) << "get file size :"<<_path<<" eroor "<< flare_error();
+            FLARE_LOG(ERROR) << "get file size :"<<_path<<" eroor "<< flare_error();
             _status.set_error(errno, "%s", flare_error());
         }
         _status = file.read(file_size, &_content);
         if (!_status.ok()) {
-            LOG(ERROR) << "read file :"<<_path<<" eroor "<< flare_error();
+            FLARE_LOG(ERROR) << "read file :"<<_path<<" eroor "<< flare_error();
             return _status;
         }
         if(option == readline_option::eSkipEmptyLine) {

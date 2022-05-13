@@ -49,7 +49,7 @@ namespace {
             puts("[Stopping redis-server]");
             char cmd[256];
             snprintf(cmd, sizeof(cmd), "kill %d", g_redis_pid);
-            CHECK(0 == system(cmd));
+            FLARE_CHECK(0 == system(cmd));
             // Wait for redis to stop
             usleep(50000);
         }
@@ -101,7 +101,7 @@ namespace {
         if (&reply1 == &reply2) {
             return;
         }
-        CHECK_EQ(reply1.type(), reply2.type());
+        FLARE_CHECK_EQ(reply1.type(), reply2.type());
         switch (reply1.type()) {
             case flare::rpc::REDIS_REPLY_ARRAY:
                 ASSERT_EQ(reply1.size(), reply2.size());
@@ -364,7 +364,7 @@ namespace {
         // generate a random password
         const std::string passwd1 = GeneratePassword();
         const std::string passwd2 = GeneratePassword();
-        LOG(INFO) << "Generated passwd1=" << passwd1 << " passwd2=" << passwd2;
+        FLARE_LOG(INFO) << "Generated passwd1=" << passwd1 << " passwd2=" << passwd2;
 
         // config auth
         {

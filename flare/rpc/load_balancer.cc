@@ -65,17 +65,17 @@ namespace flare::rpc {
         std::string lb_name;
         std::string_view lb_params;
         if (!ParseParameters(lb_protocol, &lb_name, &lb_params)) {
-            LOG(FATAL) << "Fail to parse this load balancer protocol '" << lb_protocol << '\'';
+            FLARE_LOG(FATAL) << "Fail to parse this load balancer protocol '" << lb_protocol << '\'';
             return -1;
         }
         const LoadBalancer *lb = LoadBalancerExtension()->Find(lb_name.c_str());
         if (lb == NULL) {
-            LOG(FATAL) << "Fail to find LoadBalancer by `" << lb_name << "'";
+            FLARE_LOG(FATAL) << "Fail to find LoadBalancer by `" << lb_name << "'";
             return -1;
         }
         _lb = lb->New(lb_params);
         if (_lb == NULL) {
-            LOG(FATAL) << "Fail to new LoadBalancer";
+            FLARE_LOG(FATAL) << "Fail to new LoadBalancer";
             return -1;
         }
         if (FLAGS_show_lb_in_vars && !_exposed) {

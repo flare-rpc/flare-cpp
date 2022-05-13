@@ -98,7 +98,7 @@ namespace std {
 
         void lock() {
             if (_owns_lock) {
-                CHECK(false) << "Detected deadlock issue";
+                FLARE_CHECK(false) << "Detected deadlock issue";
                 return;
             }
             _owns_lock = true;
@@ -107,7 +107,7 @@ namespace std {
 
         bool try_lock() {
             if (_owns_lock) {
-                CHECK(false) << "Detected deadlock issue";
+                FLARE_CHECK(false) << "Detected deadlock issue";
                 return false;
             }
             _owns_lock = _mutex->try_lock();
@@ -116,7 +116,7 @@ namespace std {
 
         void unlock() {
             if (!_owns_lock) {
-                CHECK(false) << "Invalid operation";
+                FLARE_CHECK(false) << "Invalid operation";
                 return;
             }
             _mutex->unlock();

@@ -230,7 +230,7 @@ public:
 template <typename T, typename Op>
 void Series<T, Op>::describe(std::ostream& os,
                              const std::string* vector_names) const {
-    CHECK(vector_names == NULL);
+    FLARE_CHECK(vector_names == NULL);
     pthread_mutex_lock(&this->_mutex);
     const int second_begin = this->_nsecond;
     const int minute_begin = this->_nminute;

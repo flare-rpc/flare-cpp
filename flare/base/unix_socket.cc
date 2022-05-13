@@ -32,19 +32,19 @@ namespace flare::base {
 
         fd_guard fd(socket(AF_LOCAL, SOCK_STREAM, 0));
         if (fd < 0) {
-            PLOG(ERROR) << "Fail to create unix socket";
+            FLARE_PLOG(ERROR) << "Fail to create unix socket";
             return -1;
         }
         if (remove_previous_file) {
             remove(sockname);
         }
         if (bind(fd, (struct sockaddr *) &addr, sizeof(addr)) != 0) {
-            PLOG(ERROR) << "Fail to bind sockfd=" << fd << " as unix socket="
+            FLARE_PLOG(ERROR) << "Fail to bind sockfd=" << fd << " as unix socket="
                         << sockname;
             return -1;
         }
         if (listen(fd, SOMAXCONN) != 0) {
-            PLOG(ERROR) << "Fail to listen to sockfd=" << fd;
+            FLARE_PLOG(ERROR) << "Fail to listen to sockfd=" << fd;
             return -1;
         }
         return fd.release();
@@ -61,11 +61,11 @@ namespace flare::base {
 
         fd_guard fd(socket(AF_LOCAL, SOCK_STREAM, 0));
         if (fd < 0) {
-            PLOG(ERROR) << "Fail to create unix socket";
+            FLARE_PLOG(ERROR) << "Fail to create unix socket";
             return -1;
         }
         if (connect(fd, (struct sockaddr *) &addr, sizeof(addr)) != 0) {
-            PLOG(ERROR) << "Fail to connect to unix socket=" << sockname
+            FLARE_PLOG(ERROR) << "Fail to connect to unix socket=" << sockname
                         << " via sockfd=" << fd;
             return -1;
         }

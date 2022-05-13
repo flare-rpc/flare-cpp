@@ -123,7 +123,7 @@ namespace flare::debugging {
                 if (symbolize_stacktrace) {
                     // Pass the previous address of pc as the symbol address because pc is a
                     // return address, and an overrun may occur when the function ends with a
-                    // call to a function annotated noreturn (e.g. CHECK). Note that we don't
+                    // call to a function annotated noreturn (e.g. FLARE_CHECK). Note that we don't
                     // do this for pc above, as the adjustment is only correct for return
                     // addresses.
                     DumpPCAndFrameSizeAndSymbol(writerfn, writerfn_arg, stack[i],

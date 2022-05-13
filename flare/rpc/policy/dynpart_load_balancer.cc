@@ -86,7 +86,7 @@ namespace flare::rpc {
         size_t DynPartLoadBalancer::AddServersInBatch(
                 const std::vector<ServerId> &servers) {
             const size_t n = _db_servers.Modify(BatchAdd, servers);
-            LOG_IF(ERROR, n != servers.size())
+            FLARE_LOG_IF(ERROR, n != servers.size())
                             << "Fail to AddServersInBatch, expected " << servers.size()
                             << " actually " << n;
             return n;
@@ -95,7 +95,7 @@ namespace flare::rpc {
         size_t DynPartLoadBalancer::RemoveServersInBatch(
                 const std::vector<ServerId> &servers) {
             const size_t n = _db_servers.Modify(BatchRemove, servers);
-            LOG_IF(ERROR, n != servers.size())
+            FLARE_LOG_IF(ERROR, n != servers.size())
                             << "Fail to RemoveServersInBatch, expected " << servers.size()
                             << " actually " << n;
             return n;
@@ -131,7 +131,7 @@ namespace flare::rpc {
                             ptrs[nptr].second = total_weight;
                             ++nptr;
                         } else {
-                            CHECK(false) << "Not supported yet";
+                            FLARE_CHECK(false) << "Not supported yet";
                             abort();
                         }
                     }
@@ -143,7 +143,7 @@ namespace flare::rpc {
                     return EHOSTDOWN;
                 }
                 exclusion = false;
-                CHECK_EQ(0, total_weight);
+                FLARE_CHECK_EQ(0, total_weight);
                 total_weight = 0;
             } while (1);
 

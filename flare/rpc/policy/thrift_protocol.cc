@@ -345,7 +345,7 @@ void ThriftClosure::DoRun() {
     wopt.ignore_eovercrowded = true;
     if (sock->Write(&write_buf, &wopt) != 0) {
         const int errcode = errno;
-        PLOG_IF(WARNING, errcode != EPIPE) << "Fail to write into " << *sock;
+        FLARE_PLOG_IF(WARNING, errcode != EPIPE) << "Fail to write into " << *sock;
         _controller.SetFailed(errcode, "Fail to write into %s",
                               sock->description().c_str());
         return;
@@ -483,7 +483,7 @@ void ProcessThriftRequest(InputMessageBase* msg_base) {
 
     ThriftService* service = server->options().thrift_service;
     if (service == NULL) {
-        LOG_EVERY_SECOND(ERROR)
+        FLARE_LOG_EVERY_SECOND(ERROR)
             << "Received thrift request however the server does not set"
             " ServerOptions.thrift_service, close the connection.";
         return cntl->SetFailed(EINTERNAL, "ServerOptions.thrift_service is NULL");
@@ -564,7 +564,7 @@ void ProcessThriftResponse(InputMessageBase* msg_base) {
     Controller* cntl = NULL;
     const int rc = fiber_token_lock(cid, (void**)&cntl);
     if (rc != 0) {
-        LOG_IF(ERROR, rc != EINVAL && rc != EPERM)
+        FLARE_LOG_IF(ERROR, rc != EINVAL && rc != EPERM)
             << "Fail to lock correlation_id=" << cid << ": " << flare_error(rc);
         return;
     }
@@ -635,7 +635,7 @@ void ProcessThriftResponse(InputMessageBase* msg_base) {
 bool VerifyThriftRequest(const InputMessageBase* msg_base) {
     Server* server = (Server*)msg_base->arg();
     if (server->options().auth) {
-        LOG(WARNING) << "thrift does not support authentication";
+        FLARE_LOG(WARNING) << "thrift does not support authentication";
         return false;
     }
     return true;

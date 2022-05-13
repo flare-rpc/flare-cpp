@@ -51,9 +51,9 @@ namespace {
             timespec current_time;
             clock_gettime(CLOCK_REALTIME, &current_time);
             if (_name) {
-                LOG(INFO) << "Run `" << _name << "' task_id=" << _task_id;
+                FLARE_LOG(INFO) << "Run `" << _name << "' task_id=" << _task_id;
             } else {
-                LOG(INFO) << "Run task_id=" << _task_id;
+                FLARE_LOG(INFO) << "Run task_id=" << _task_id;
             }
             _run_times.push_back(current_time);
             const int saved_sleep_ms = _sleep_ms;
@@ -68,7 +68,7 @@ namespace {
                 _sleep_ms = 0;
                 flare::fiber_internal::futex_wake_private(&_sleep_ms, 1);
             } else {
-                LOG(ERROR) << "No need to wakeup "
+                FLARE_LOG(ERROR) << "No need to wakeup "
                            << (_name ? _name : "") << " task_id=" << _task_id;
             }
         }
@@ -125,7 +125,7 @@ namespace {
         keeper5.schedule(&timer_thread);
 
         // sleep 1 second, and unschedule task2
-        LOG(INFO) << "Sleep 1s";
+        FLARE_LOG(INFO) << "Sleep 1s";
         sleep(1);
         timer_thread.unschedule(keeper2._task_id);
         timer_thread.unschedule(keeper4._task_id);
@@ -136,9 +136,9 @@ namespace {
         const timespec keeper6_addtime = flare::time_point::future_unix_seconds(0).to_timespec();
 
         // sleep 10 seconds and stop.
-        LOG(INFO) << "Sleep 2s";
+        FLARE_LOG(INFO) << "Sleep 2s";
         sleep(2);
-        LOG(INFO) << "Stop timer_thread";
+        FLARE_LOG(INFO) << "Stop timer_thread";
         flare::stop_watcher tm;
         tm.start();
         timer_thread.stop_and_join();

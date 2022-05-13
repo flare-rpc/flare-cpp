@@ -97,7 +97,7 @@ void DirService::default_method(::google::protobuf::RpcController* cntl_base,
 #endif
             files.push_back(p->d_name);
         }
-        CHECK_EQ(0, closedir(dir));
+        FLARE_CHECK_EQ(0, closedir(dir));
         
         std::sort(files.begin(), files.end());
         flare::cord_buf_builder os;

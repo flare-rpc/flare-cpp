@@ -92,7 +92,7 @@ static void InitReasonPhrases() {
             status_pairs[i].status_code < (int)FLARE_ARRAY_SIZE(phrases)) {
             phrases[status_pairs[i].status_code] = status_pairs[i].reason_phrase;
         } else {
-            LOG(FATAL) << "The status_pairs[" << i << "] is invalid" 
+            FLARE_LOG(FATAL) << "The status_pairs[" << i << "] is invalid"
                         << " status_code=" << status_pairs[i].status_code
                         << " reason_phrase=`" << status_pairs[i].reason_phrase
                         << '\'';

@@ -80,7 +80,7 @@ namespace example {
         static void *SendLargeFile(void *raw_args) {
             std::unique_ptr<Args> args(static_cast<Args *>(raw_args));
             if (args->pa == NULL) {
-                LOG(ERROR) << "ProgressiveAttachment is NULL";
+                FLARE_LOG(ERROR) << "ProgressiveAttachment is NULL";
                 return NULL;
             }
             for (int i = 0; i < 100; ++i) {
@@ -179,12 +179,12 @@ int main(int argc, char *argv[]) {
     // use flare::rpc::SERVER_OWNS_SERVICE.
     if (server.AddService(&http_svc,
                           flare::rpc::SERVER_DOESNT_OWN_SERVICE) != 0) {
-        LOG(ERROR) << "Fail to add http_svc";
+        FLARE_LOG(ERROR) << "Fail to add http_svc";
         return -1;
     }
     if (server.AddService(&file_svc,
                           flare::rpc::SERVER_DOESNT_OWN_SERVICE) != 0) {
-        LOG(ERROR) << "Fail to add file_svc";
+        FLARE_LOG(ERROR) << "Fail to add file_svc";
         return -1;
     }
     if (server.AddService(&queue_svc,
@@ -192,7 +192,7 @@ int main(int argc, char *argv[]) {
                           "/v1/queue/start   => start,"
                           "/v1/queue/stop    => stop,"
                           "/v1/queue/stats/* => getstats") != 0) {
-        LOG(ERROR) << "Fail to add queue_svc";
+        FLARE_LOG(ERROR) << "Fail to add queue_svc";
         return -1;
     }
 
@@ -203,7 +203,7 @@ int main(int argc, char *argv[]) {
     options.mutable_ssl_options()->default_cert.private_key = FLAGS_private_key;
     options.mutable_ssl_options()->ciphers = FLAGS_ciphers;
     if (server.Start(FLAGS_port, &options) != 0) {
-        LOG(ERROR) << "Fail to start HttpServer";
+        FLARE_LOG(ERROR) << "Fail to start HttpServer";
         return -1;
     }
 

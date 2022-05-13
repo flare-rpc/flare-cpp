@@ -48,7 +48,7 @@ namespace flare::log {
         const char *symbol = "(unknown)";
         // Symbolizes the previous address of pc because pc may be in the
         // next function.  The overrun happens when the function ends with
-        // a call to a function annotated noreturn (e.g. CHECK).
+        // a call to a function annotated noreturn (e.g. FLARE_CHECK).
         if (flare::debugging::symbolize(reinterpret_cast<char *>(pc) - 1, tmp, sizeof(tmp))) {
             symbol = tmp;
         }
@@ -114,14 +114,14 @@ namespace flare::log {
     namespace log_internal {
 #ifdef HAVE_STACKTRACE
 
-        void DumpStackTraceToString(std::string *stacktrace) {
+        void dump_stack_trace_to_string(std::string *stacktrace) {
             DumpStackTrace(1, DebugWriteToString, stacktrace);
         }
 
 #endif
         static const char *g_program_invocation_short_name = NULL;
 
-        const char *ProgramInvocationShortName() {
+        const char *program_invocation_short_name() {
             if (g_program_invocation_short_name != NULL) {
                 return g_program_invocation_short_name;
             } else {
@@ -130,12 +130,12 @@ namespace flare::log {
             }
         }
 
-        bool IsGoogleLoggingInitialized() {
+        bool is_logging_initialized() {
             return g_program_invocation_short_name != NULL;
         }
 
-        void InitGoogleLoggingUtilities(const char *argv0) {
-            CHECK(!IsGoogleLoggingInitialized())
+        void init_logging_utilities(const char *argv0) {
+            FLARE_CHECK(!is_logging_initialized())
                             << "You called init_logging() twice!";
             const char *slash = strrchr(argv0, '/');
             g_program_invocation_short_name = slash ? slash + 1 : argv0;
@@ -145,8 +145,8 @@ namespace flare::log {
 #endif
         }
 
-        void ShutdownGoogleLoggingUtilities() {
-            CHECK(IsGoogleLoggingInitialized())
+        void shutdown_logging_utilities() {
+            FLARE_CHECK(is_logging_initialized())
                             << "You called shutdown_logging() without calling init_logging() first!";
             g_program_invocation_short_name = NULL;
             closelog();
@@ -154,7 +154,7 @@ namespace flare::log {
 
         static std::atomic<const crash_reason*> g_reason{nullptr};
 
-        void SetCrashReason(const crash_reason *r) {
+        void set_crash_reason(const crash_reason *r) {
             const crash_reason* old = nullptr;
             g_reason.compare_exchange_weak(old,r);
         }

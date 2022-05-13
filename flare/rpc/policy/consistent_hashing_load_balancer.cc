@@ -100,7 +100,7 @@ namespace flare::rpc {
             }
             replicas->clear();
             const size_t points_per_hash = 4;
-            CHECK(num_replicas % points_per_hash == 0)
+            FLARE_CHECK(num_replicas % points_per_hash == 0)
                             << "Ketam hash replicas number(" << num_replicas << ") should be n*4";
             for (size_t i = 0; i < num_replicas / points_per_hash; ++i) {
                 char host[32];
@@ -147,7 +147,7 @@ namespace flare::rpc {
         ConsistentHashingLoadBalancer::ConsistentHashingLoadBalancer(
                 ConsistentHashingLoadBalancerType type)
                 : _num_replicas(FLAGS_chash_num_replicas), _type(type) {
-            CHECK(GetReplicaPolicy(_type))
+            FLARE_CHECK(GetReplicaPolicy(_type))
                             << "Fail to find replica policy for consistency lb type: '" << _type << '\'';
         }
 
@@ -189,7 +189,7 @@ namespace flare::rpc {
             } else {
                 use_set = false;
             }
-            CHECK(use_set) << "Fail to construct id_set, " << flare_error();
+            FLARE_CHECK(use_set) << "Fail to construct id_set, " << flare_error();
             bg.clear();
             for (size_t i = 0; i < fg.size(); ++i) {
                 const bool removed =
@@ -229,7 +229,7 @@ namespace flare::rpc {
             bool executed = false;
             const size_t ret = _db_hash_ring.ModifyWithForeground(
                     AddBatch, add_nodes, &executed);
-            CHECK(ret == 0 || ret == _num_replicas) << ret;
+            FLARE_CHECK(ret == 0 || ret == _num_replicas) << ret;
             return ret != 0;
         }
 
@@ -248,9 +248,9 @@ namespace flare::rpc {
             std::sort(add_nodes.begin(), add_nodes.end());
             bool executed = false;
             const size_t ret = _db_hash_ring.ModifyWithForeground(AddBatch, add_nodes, &executed);
-            CHECK(ret % _num_replicas == 0);
+            FLARE_CHECK(ret % _num_replicas == 0);
             const size_t n = ret / _num_replicas;
-            LOG_IF(ERROR, n != servers.size())
+            FLARE_LOG_IF(ERROR, n != servers.size())
                             << "Fail to AddServersInBatch, expected " << servers.size()
                             << " actually " << n;
             return n;
@@ -259,7 +259,7 @@ namespace flare::rpc {
         bool ConsistentHashingLoadBalancer::RemoveServer(const ServerId &server) {
             bool executed = false;
             const size_t ret = _db_hash_ring.ModifyWithForeground(Remove, server, &executed);
-            CHECK(ret == 0 || ret == _num_replicas);
+            FLARE_CHECK(ret == 0 || ret == _num_replicas);
             return ret != 0;
         }
 
@@ -267,9 +267,9 @@ namespace flare::rpc {
                 const std::vector<ServerId> &servers) {
             bool executed = false;
             const size_t ret = _db_hash_ring.ModifyWithForeground(RemoveBatch, servers, &executed);
-            CHECK(ret % _num_replicas == 0);
+            FLARE_CHECK(ret % _num_replicas == 0);
             const size_t n = ret / _num_replicas;
-            LOG_IF(ERROR, n != servers.size())
+            FLARE_LOG_IF(ERROR, n != servers.size())
                             << "Fail to RemoveServersInBatch, expected " << servers.size()
                             << " actually " << n;
             return n;
@@ -292,11 +292,11 @@ namespace flare::rpc {
         int ConsistentHashingLoadBalancer::SelectServer(
                 const SelectIn &in, SelectOut *out) {
             if (!in.has_request_code) {
-                LOG(ERROR) << "Controller.set_request_code() is required";
+                FLARE_LOG(ERROR) << "Controller.set_request_code() is required";
                 return EINVAL;
             }
             if (in.request_code > UINT_MAX) {
-                LOG(ERROR) << "request_code must be 32-bit currently";
+                FLARE_LOG(ERROR) << "request_code must be 32-bit currently";
                 return EINVAL;
             }
             flare::container::DoublyBufferedData<std::vector<Node> >::ScopedPtr s;
@@ -385,7 +385,7 @@ namespace flare::rpc {
             for (flare::KeyValuePairsSplitter sp(params.begin(), params.end(), ' ', '=');
                  sp; ++sp) {
                 if (sp.value().empty()) {
-                    LOG(ERROR) << "Empty value for " << sp.key() << " in lb parameter";
+                    FLARE_LOG(ERROR) << "Empty value for " << sp.key() << " in lb parameter";
                     return false;
                 }
                 if (sp.key() == "replicas") {
@@ -396,7 +396,7 @@ namespace flare::rpc {
                     _num_replicas = r;
                     continue;
                 }
-                LOG(ERROR) << "Failed to set this unknown parameters " << sp.key_and_value();
+                FLARE_LOG(ERROR) << "Failed to set this unknown parameters " << sp.key_and_value();
             }
             return true;
         }

@@ -221,7 +221,7 @@ namespace {
         flare::fiber_sleep_for(2000);
         EXPECT_EQ(0, fiber_token_unlock(id));
         tm.stop();
-        LOG(INFO) << "Unlocked, tm=" << tm.u_elapsed();
+        FLARE_LOG(INFO) << "Unlocked, tm=" << tm.u_elapsed();
         return nullptr;
     }
 

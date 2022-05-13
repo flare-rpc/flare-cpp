@@ -262,7 +262,7 @@ namespace {
             }
             ++(*selected_count)[ptr->id()];
         }
-        LOG_IF(INFO, ret != 0) << "select_server[" << pthread_self()
+        FLARE_LOG_IF(INFO, ret != 0) << "select_server[" << pthread_self()
                                << "] quits before of " << flare_error(ret);
         return selected_count;
     }
@@ -370,7 +370,7 @@ namespace {
                 }
             }
             global_stop = true;
-            LOG(INFO) << "Stop all...";
+            FLARE_LOG(INFO) << "Stop all...";
 
             void *retval[FLARE_ARRAY_SIZE(th)];
             for (size_t i = 0; i < FLARE_ARRAY_SIZE(th); ++i) {

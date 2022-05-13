@@ -44,7 +44,7 @@ protected:
 };
 
 TEST_F(EventDispatcherTest, has_epollrdhup) {
-    LOG(INFO) << flare::rpc::has_epollrdhup;
+    FLARE_LOG(INFO) << flare::rpc::has_epollrdhup;
 }
 
 TEST_F(EventDispatcherTest, versioned_ref) {
@@ -101,7 +101,7 @@ struct FLARE_CACHELINE_ALIGNMENT SocketExtra : public flare::rpc::SocketUser {
                 pthread_mutex_lock(&err_fd_mutex);
                 err_fd.push_back(m->fd());
                 pthread_mutex_unlock(&err_fd_mutex);
-                LOG(WARNING) << "Another end closed fd=" << m->fd();
+                FLARE_LOG(WARNING) << "Another end closed fd=" << m->fd();
                 return -1;
             } else if (n > 0) {
                 e->bytes += n;
@@ -117,7 +117,7 @@ struct FLARE_CACHELINE_ALIGNMENT SocketExtra : public flare::rpc::SocketUser {
                 } else if (errno == EINTR) {
                     continue;
                 } else {
-                    PLOG(WARNING) << "Fail to read fd=" << m->fd();
+                    FLARE_PLOG(WARNING) << "Fail to read fd=" << m->fd();
                     return -1;
                 }
             }
@@ -160,7 +160,7 @@ void *client_thread(void *arg) {
         }
         if (n < 0) {
             if (errno != EINTR) {
-                PLOG(WARNING) << "Fail to write fd=" << m->fd;
+                FLARE_PLOG(WARNING) << "Fail to write fd=" << m->fd;
                 break;
             }
         } else {
@@ -220,7 +220,7 @@ TEST_F(EventDispatcherTest, dispatch_tasks) {
         ASSERT_EQ(0, pthread_create(&cth[i], NULL, client_thread, cm[i]));
     }
 
-    LOG(INFO) << "Begin to profile... (5 seconds)";
+    FLARE_LOG(INFO) << "Begin to profile... (5 seconds)";
     ProfilerStart("event_dispatcher.prof");
     flare::stop_watcher tm;
     tm.start();
@@ -229,7 +229,7 @@ TEST_F(EventDispatcherTest, dispatch_tasks) {
 
     tm.stop();
     ProfilerStop();
-    LOG(INFO) << "End profiling";
+    FLARE_LOG(INFO) << "End profiling";
 
     size_t client_bytes = 0;
     size_t server_bytes = 0;
@@ -237,7 +237,7 @@ TEST_F(EventDispatcherTest, dispatch_tasks) {
         client_bytes += cm[i]->bytes;
         server_bytes += sm[i]->bytes;
     }
-    LOG(INFO) << "client_tp=" << client_bytes / (double) tm.u_elapsed()
+    FLARE_LOG(INFO) << "client_tp=" << client_bytes / (double) tm.u_elapsed()
               << "MB/s server_tp=" << server_bytes / (double) tm.u_elapsed()
               << "MB/s";
 
@@ -264,7 +264,7 @@ TEST_F(EventDispatcherTest, dispatch_tasks) {
     ASSERT_EQ(NCLIENT, copy1.size());
     const flare::ResourcePoolInfo info
             = flare::describe_resources<flare::rpc::Socket>();
-    LOG(INFO) << info;
+    FLARE_LOG(INFO) << info;
 #ifdef FLARE_RESOURCE_POOL_NEED_FREE_ITEM_NUM
     ASSERT_EQ(NCLIENT, info.free_item_num - old_info.free_item_num);
 #endif

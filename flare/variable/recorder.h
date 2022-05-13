@@ -21,7 +21,7 @@
 #define  FLARE_VARIABLE_RECORDER_H_
 
 #include <stdint.h>                              // int64_t uint64_t
-#include "flare/log/logging.h"                        // LOG
+#include "flare/log/logging.h"                        // FLARE_LOG
 #include "flare/variable/detail/combiner.h"                // detail::AgentCombiner
 #include "flare/variable/variable.h"
 #include "flare/variable/window.h"
@@ -79,7 +79,7 @@ inline std::ostream& operator<<(std::ostream& os, const Stat& s) {
 // Example:
 //   IntRecorder latency;
 //   latency << 1 << 3 << 5;
-//   CHECK_EQ(3, latency.average());
+//   FLARE_CHECK_EQ(3, latency.average());
 class IntRecorder : public Variable {
 public:
     // Compressing format:
@@ -247,19 +247,19 @@ inline IntRecorder& IntRecorder::operator<<(int64_t sample) {
         // Truncate to be max or min of int. We're using 44 bits to store the
         // sum thus following aggregations are not likely to be over/underflow.
         if (!name().empty()) {
-            LOG(WARNING) << "Input=" << sample << " to `" << name()
+            FLARE_LOG(WARNING) << "Input=" << sample << " to `" << name()
                        << "\' " << reason;
         } else if (!_debug_name.empty()) {
-            LOG(WARNING) << "Input=" << sample << " to `" << _debug_name
+            FLARE_LOG(WARNING) << "Input=" << sample << " to `" << _debug_name
                        << "\' " << reason;
         } else {
-            LOG(WARNING) << "Input=" << sample << " to IntRecorder("
+            FLARE_LOG(WARNING) << "Input=" << sample << " to IntRecorder("
                        << (void*)this << ") " << reason;
         }
     }
     agent_type* agent = _combiner.get_or_create_tls_agent();
     if (FLARE_UNLIKELY(!agent)) {
-        LOG(FATAL) << "Fail to create agent";
+        FLARE_LOG(FATAL) << "Fail to create agent";
         return *this;
     }
     uint64_t n;

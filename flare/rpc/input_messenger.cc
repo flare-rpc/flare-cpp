@@ -18,7 +18,7 @@
 
 #include <gflags/gflags.h>
 #include "flare/base/fd_guard.h"                      // fd_guard
-#include "flare/log/logging.h"                       // CHECK
+#include "flare/log/logging.h"                       // FLARE_CHECK
 #include "flare/times/time.h"                          // cpuwide_time_us
 #include "flare/base/fd_utility.h"                    // make_non_blocking
 #include "flare/fiber/internal/fiber.h"                     // fiber_start_background
@@ -75,7 +75,7 @@ ParseResult InputMessenger::CutInputMessage(
             return result;
         } else if (result.error() != PARSE_ERROR_TRY_OTHERS) {
             // Critical error, return directly.
-            LOG_IF(ERROR, result.error() == PARSE_ERROR_TOO_BIG_DATA)
+            FLARE_LOG_IF(ERROR, result.error() == PARSE_ERROR_TOO_BIG_DATA)
                 << "A message from " << m->remote_side()
                 << "(protocol=" << _handlers[preferred].name
                 << ") is bigger than " << FLAGS_max_body_size
@@ -87,7 +87,7 @@ ParseResult InputMessenger::CutInputMessage(
             // baidu_std may fall to streaming_rpc
             (ProtocolType)preferred != PROTOCOL_BAIDU_STD) {
             // The protocol is fixed at client-side, no need to try others.
-            LOG(ERROR) << "Fail to parse response from " << m->remote_side()
+            FLARE_LOG(ERROR) << "Fail to parse response from " << m->remote_side()
                        << " by " << _handlers[preferred].name 
                        << " at client-side";
             return MakeParseError(PARSE_ERROR_ABSOLUTELY_WRONG);
@@ -112,7 +112,7 @@ ParseResult InputMessenger::CutInputMessage(
             return result;
         } else if (result.error() != PARSE_ERROR_TRY_OTHERS) {
             // Critical error, return directly.
-            LOG_IF(ERROR, result.error() == PARSE_ERROR_TOO_BIG_DATA)
+            FLARE_LOG_IF(ERROR, result.error() == PARSE_ERROR_TOO_BIG_DATA)
                 << "A message from " << m->remote_side()
                 << "(protocol=" << _handlers[i].name
                 << ") is bigger than " << FLAGS_max_body_size
@@ -204,14 +204,14 @@ void InputMessenger::OnNewMessages(Socket* m) {
                 // Set `read_eof' flag and proceed to feed EOF into `Protocol'
                 // (implied by m->_read_buf.empty), which may produce a new
                 // `InputMessageBase' under some protocols such as HTTP
-                LOG_IF(WARNING, FLAGS_log_connection_close) << *m << " was closed by remote side";
+                FLARE_LOG_IF(WARNING, FLAGS_log_connection_close) << *m << " was closed by remote side";
                 read_eof = true;                
             } else if (errno != EAGAIN) {
                 if (errno == EINTR) {
                     continue;  // just retry
                 }
                 const int saved_errno = errno;
-                PLOG(WARNING) << "Fail to read from " << *m;
+                FLARE_PLOG(WARNING) << "Fail to read from " << *m;
                 m->SetFailed(saved_errno, "Fail to read from %s: %s",
                              m->description().c_str(), flare_error(saved_errno));
                 return;
@@ -240,14 +240,14 @@ void InputMessenger::OnNewMessages(Socket* m) {
                     m->_last_msg_size += (last_size - m->_read_buf.length());
                     break;
                 } else if (pr.error() == PARSE_ERROR_TRY_OTHERS) {
-                    LOG(WARNING)
+                    FLARE_LOG(WARNING)
                         << "Close " << *m << " due to unknown message: "
                         << flare::to_printable(m->_read_buf);
                     m->SetFailed(EINVAL, "Close %s due to unknown message",
                                  m->description().c_str());
                     return;
                 } else {
-                    LOG(WARNING) << "Close " << *m << ": " << pr.error_str();
+                    FLARE_LOG(WARNING) << "Close " << *m << ": " << pr.error_str();
                     m->SetFailed(EINVAL, "Close %s: %s",
                                  m->description().c_str(), pr.error_str());
                     return;
@@ -287,7 +287,7 @@ void InputMessenger::OnNewMessages(Socket* m) {
             QueueMessage(last_msg.release(), &num_fiber_created,
                              m->_keytable_pool);
             if (handlers[index].process == NULL) {
-                LOG(ERROR) << "process of index=" << index << " is NULL";
+                FLARE_LOG(ERROR) << "process of index=" << index << " is NULL";
                 continue;
             }
             m->ReAddress(&msg->_socket);
@@ -303,13 +303,13 @@ void InputMessenger::OnNewMessages(Socket* m) {
                         m->SetAuthentication(0);
                     } else {
                         m->SetAuthentication(ERPCAUTH);
-                        LOG(WARNING) << "Fail to authenticate " << *m;
+                        FLARE_LOG(WARNING) << "Fail to authenticate " << *m;
                         m->SetFailed(ERPCAUTH, "Fail to authenticate %s",
                                      m->description().c_str());
                         return;
                     }
                 } else {
-                    LOG_IF(FATAL, auth_error != 0) <<
+                    FLARE_LOG_IF(FATAL, auth_error != 0) <<
                       "Impossible! Socket should have been "
                       "destroyed when authentication failed";
                 }
@@ -351,31 +351,31 @@ InputMessenger::~InputMessenger() {
 int InputMessenger::AddHandler(const InputMessageHandler& handler) {
     if (handler.parse == NULL || handler.process == NULL 
             || handler.name == NULL) {
-        CHECK(false) << "Invalid argument";
+        FLARE_CHECK(false) << "Invalid argument";
         return -1;
     }
     FLARE_SCOPED_LOCK(_add_handler_mutex);
     if (NULL == _handlers) {
         _handlers = new (std::nothrow) InputMessageHandler[_capacity];
         if (NULL == _handlers) {
-            LOG(FATAL) << "Fail to new array of InputMessageHandler";
+            FLARE_LOG(FATAL) << "Fail to new array of InputMessageHandler";
             return -1;
         }
         memset(_handlers, 0, sizeof(*_handlers) * _capacity);
         _non_protocol = false;
     }
     if (_non_protocol) {
-        CHECK(false) << "AddNonProtocolHandler was invoked";
+        FLARE_CHECK(false) << "AddNonProtocolHandler was invoked";
         return -1;
     }
     ProtocolType type = FindProtocolOfHandler(handler);
     if (type == PROTOCOL_UNKNOWN) {
-        CHECK(false) << "Adding a handler which doesn't belong to any protocol";
+        FLARE_CHECK(false) << "Adding a handler which doesn't belong to any protocol";
         return -1;
     }
     const int index = type;
     if (index >= (int)_capacity) {
-        LOG(FATAL) << "Can't add more handlers than " << _capacity;
+        FLARE_LOG(FATAL) << "Can't add more handlers than " << _capacity;
         return -1;
     }
     if (_handlers[index].parse == NULL) {
@@ -383,8 +383,8 @@ int InputMessenger::AddHandler(const InputMessageHandler& handler) {
         _handlers[index] = handler;
     } else if (_handlers[index].parse != handler.parse 
                || _handlers[index].process != handler.process) {
-        CHECK(_handlers[index].parse == handler.parse);
-        CHECK(_handlers[index].process == handler.process);
+        FLARE_CHECK(_handlers[index].parse == handler.parse);
+        FLARE_CHECK(_handlers[index].process == handler.process);
         return -1;
     }
     if (index > _max_index.load(std::memory_order_relaxed)) {
@@ -396,21 +396,21 @@ int InputMessenger::AddHandler(const InputMessageHandler& handler) {
 int InputMessenger::AddNonProtocolHandler(const InputMessageHandler& handler) {
     if (handler.parse == NULL || handler.process == NULL 
             || handler.name == NULL) {
-        CHECK(false) << "Invalid argument";
+        FLARE_CHECK(false) << "Invalid argument";
         return -1;
     }
     FLARE_SCOPED_LOCK(_add_handler_mutex);
     if (NULL == _handlers) {
         _handlers = new (std::nothrow) InputMessageHandler[_capacity];
         if (NULL == _handlers) {
-            LOG(FATAL) << "Fail to new array of InputMessageHandler";
+            FLARE_LOG(FATAL) << "Fail to new array of InputMessageHandler";
             return -1;
         }
         memset(_handlers, 0, sizeof(*_handlers) * _capacity);
         _non_protocol = true;
     }
     if (!_non_protocol) {
-        CHECK(false) << "AddHandler was invoked";
+        FLARE_CHECK(false) << "AddHandler was invoked";
         return -1;
     }
     const int index = _max_index.load(std::memory_order_relaxed) + 1;

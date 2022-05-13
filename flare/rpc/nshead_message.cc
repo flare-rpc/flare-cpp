@@ -98,7 +98,7 @@ namespace flare::rpc {
         GOOGLE_CHECK_NE(&from, this);
         const NsheadMessage *source = dynamic_cast<const NsheadMessage *>(&from);
         if (source == NULL) {
-            LOG(ERROR) << "Can only merge from NsheadMessage";
+            FLARE_LOG(ERROR) << "Can only merge from NsheadMessage";
             return;
         } else {
             MergeFrom(*source);

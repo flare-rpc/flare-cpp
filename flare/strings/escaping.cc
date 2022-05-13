@@ -662,7 +662,7 @@ bool Base64UnescapeInternal(const char *src_param, size_t szsrc, char *dest,
 
         default:
             // state should have no other values at this point.
-            LOG(FATAL)<<"This can't happen; base64 decoder state = "<<state;
+            FLARE_LOG(FATAL)<<"This can't happen; base64 decoder state = "<<state;
     }
 
     // The remainder of the std::string should be all whitespace, mixed with
@@ -932,7 +932,7 @@ size_t Base64EscapeInternal(const unsigned char *src, size_t szsrc, char *dest,
         default:
             // Should not be reached: blocks of 4 bytes are handled
             // in the while loop before this switch statement.
-            LOG(FATAL)<<"Logic problem? szsrc = "<< szsrc;
+            FLARE_LOG(FATAL)<<"Logic problem? szsrc = "<< szsrc;
             break;
     }
     return (cur_dest - dest);

@@ -183,12 +183,12 @@ namespace flare {
     template<class T, class Deleter>
     struct ref_traits<ref_counted<T, Deleter>> {
         static void reference(ref_counted<T, Deleter> *ptr) noexcept {
-            //DCHECK_GT(ptr->unsafe_ref_count(), 0);
+            //FLARE_DCHECK_GT(ptr->unsafe_ref_count(), 0);
             ptr->add_ref();
         }
 
         static void dereference(ref_counted<T, Deleter> *ptr) noexcept {
-            //DCHECK_GT(ptr->unsafe_ref_count(), 0);
+            //FLARE_DCHECK_GT(ptr->unsafe_ref_count(), 0);
             ptr->sub_ref();
         }
     };
@@ -314,7 +314,7 @@ namespace flare {
         if (auto was = ref_count_.fetch_sub(1, std::memory_order_acq_rel); was == 1) {
             Deleter()(static_cast<T *>(this));  // Hmmm.
         } else {
-            //CHECK_GT(was, 1);
+            //FLARE_CHECK_GT(was, 1);
         }
     }
 

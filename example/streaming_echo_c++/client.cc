@@ -44,7 +44,7 @@ int main(int argc, char* argv[]) {
     options.timeout_ms = FLAGS_timeout_ms/*milliseconds*/;
     options.max_retry = FLAGS_max_retry;
     if (channel.Init(FLAGS_server.c_str(), NULL) != 0) {
-        LOG(ERROR) << "Fail to initialize channel";
+        FLARE_LOG(ERROR) << "Fail to initialize channel";
         return -1;
     }
 
@@ -54,30 +54,30 @@ int main(int argc, char* argv[]) {
     flare::rpc::Controller cntl;
     flare::rpc::StreamId stream;
     if (flare::rpc::StreamCreate(&stream, cntl, NULL) != 0) {
-        LOG(ERROR) << "Fail to create stream";
+        FLARE_LOG(ERROR) << "Fail to create stream";
         return -1;
     }
-    LOG(INFO) << "Created Stream=" << stream;
+    FLARE_LOG(INFO) << "Created Stream=" << stream;
     example::EchoRequest request;
     example::EchoResponse response;
     request.set_message("I'm a RPC to connect stream");
     stub.Echo(&cntl, &request, &response, NULL);
     if (cntl.Failed()) {
-        LOG(ERROR) << "Fail to connect stream, " << cntl.ErrorText();
+        FLARE_LOG(ERROR) << "Fail to connect stream, " << cntl.ErrorText();
         return -1;
     }
     
     while (!flare::rpc::IsAskedToQuit()) {
         flare::cord_buf msg1;
         msg1.append("abcdefghijklmnopqrstuvwxyz");
-        CHECK_EQ(0, flare::rpc::StreamWrite(stream, msg1));
+        FLARE_CHECK_EQ(0, flare::rpc::StreamWrite(stream, msg1));
         flare::cord_buf msg2;
         msg2.append("0123456789");
-        CHECK_EQ(0, flare::rpc::StreamWrite(stream, msg2));
+        FLARE_CHECK_EQ(0, flare::rpc::StreamWrite(stream, msg2));
         sleep(1);
     }
 
-    CHECK_EQ(0, flare::rpc::StreamClose(stream));
-    LOG(INFO) << "EchoClient is going to quit";
+    FLARE_CHECK_EQ(0, flare::rpc::StreamClose(stream));
+    FLARE_LOG(INFO) << "EchoClient is going to quit";
     return 0;
 }

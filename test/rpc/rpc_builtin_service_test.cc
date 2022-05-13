@@ -105,7 +105,7 @@ private:
 };
 
 void MyVLogSite() {
-    VLOG(3) << "This is a VLOG!";
+    FLARE_VLOG(3) << "This is a FLARE_VLOG!";
 }
 
 void CheckContent(const flare::rpc::Controller &cntl, const char *name) {

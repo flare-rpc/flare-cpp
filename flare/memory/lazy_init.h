@@ -24,22 +24,22 @@ namespace flare {
         void destroy() { value_ = std::nullopt; }
 
         T *operator->() {
-            DCHECK(value_);
+            FLARE_DCHECK(value_);
             return &*value_;
         }
 
         const T *operator->() const {
-            DCHECK(value_);
+            FLARE_DCHECK(value_);
             return &*value_;
         }
 
         T &operator*() {
-            DCHECK(value_);
+            FLARE_DCHECK(value_);
             return *value_;
         }
 
         const T &operator*() const {
-            DCHECK(value_);
+            FLARE_DCHECK(value_);
             return *value_;
         }
 

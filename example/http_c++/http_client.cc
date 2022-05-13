@@ -41,7 +41,7 @@ int main(int argc, char* argv[]) {
     GFLAGS_NS::ParseCommandLineFlags(&argc, &argv, true);
 
     if (argc != 2) {
-        LOG(ERROR) << "Usage: ./http_client \"http(s)://www.foo.com\"";
+        FLARE_LOG(ERROR) << "Usage: ./http_client \"http(s)://www.foo.com\"";
         return -1;
     }
     char* url = argv[1];
@@ -57,7 +57,7 @@ int main(int argc, char* argv[]) {
     // Initialize the channel, NULL means using default options. 
     // options, see `flare/rpc/channel.h'.
     if (channel.Init(url, FLAGS_load_balancer.c_str(), &options) != 0) {
-        LOG(ERROR) << "Fail to initialize channel";
+        FLARE_LOG(ERROR) << "Fail to initialize channel";
         return -1;
     }
 

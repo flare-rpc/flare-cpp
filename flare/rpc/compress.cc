@@ -29,16 +29,16 @@ static CompressHandler s_handler_map[MAX_HANDLER_SIZE] = { { NULL, NULL, NULL } 
 int RegisterCompressHandler(CompressType type, 
                             CompressHandler handler) {
     if (NULL == handler.Compress || NULL == handler.Decompress) {
-        LOG(FATAL) << "Invalid parameter: handler function is NULL";
+        FLARE_LOG(FATAL) << "Invalid parameter: handler function is NULL";
         return -1;
     }
     int index = type;
     if (index < 0 || index >= MAX_HANDLER_SIZE) {
-        LOG(FATAL) << "CompressType=" << type << " is out of range";
+        FLARE_LOG(FATAL) << "CompressType=" << type << " is out of range";
         return -1;
     }
     if (s_handler_map[index].Compress != NULL) {
-        LOG(FATAL) << "CompressType=" << type << " was registered";
+        FLARE_LOG(FATAL) << "CompressType=" << type << " was registered";
         return -1;
     }
     s_handler_map[index] = handler;
@@ -50,7 +50,7 @@ int RegisterCompressHandler(CompressType type,
 inline const CompressHandler* FindCompressHandler(CompressType type) {
     int index = type;
     if (index < 0 || index >= MAX_HANDLER_SIZE) {
-        LOG(ERROR) << "CompressType=" << type << " is out of range";
+        FLARE_LOG(ERROR) << "CompressType=" << type << " is out of range";
         return NULL;
     }
     if (NULL == s_handler_map[index].Compress) {

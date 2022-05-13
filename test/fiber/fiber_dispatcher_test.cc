@@ -89,11 +89,11 @@ namespace {
                     } else if (errno == EINTR) {
                         continue;
                     } else {
-                        PLOG(FATAL) << "Fail to read fd=" << m->fd;
+                        FLARE_PLOG(FATAL) << "Fail to read fd=" << m->fd;
                         return nullptr;
                     }
                 } else {
-                    LOG(FATAL) << "Another end closed fd=" << m->fd;
+                    FLARE_LOG(FATAL) << "Another end closed fd=" << m->fd;
                     return nullptr;
                 }
             } while (1);
@@ -134,9 +134,9 @@ namespace {
                     continue;
                 }
 #if defined(FLARE_PLATFORM_LINUX)
-                    PLOG(FATAL) << "Fail to epoll_wait";
+                    FLARE_PLOG(FATAL) << "Fail to epoll_wait";
 #elif defined(FLARE_PLATFORM_OSX)
-                PLOG(FATAL) << "Fail to kevent";
+                FLARE_PLOG(FATAL) << "Fail to kevent";
 #endif
                 break;
             }
@@ -184,7 +184,7 @@ namespace {
             }
             if (n < 0) {
                 if (errno != EINTR) {
-                    PLOG(FATAL) << "Fail to write fd=" << m->fd;
+                    FLARE_PLOG(FATAL) << "Fail to write fd=" << m->fd;
                     return nullptr;
                 }
             } else {
@@ -292,7 +292,7 @@ namespace {
             all_nfold += em[i]->nfold;
         }
 
-        LOG(INFO) << "client_tp=" << client_bytes / (double) tm.u_elapsed()
+        FLARE_LOG(INFO) << "client_tp=" << client_bytes / (double) tm.u_elapsed()
                   << "MB/s server_tp=" << server_bytes / (double) tm.u_elapsed()
                   << "MB/s nthread=" << all_nthread << " nfold=" << all_nfold;
 

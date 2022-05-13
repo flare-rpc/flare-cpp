@@ -74,13 +74,13 @@ namespace flare::rpc {
 
     bool RedisRequest::MergePartialFromCodedStream(
             ::google::protobuf::io::CodedInputStream *) {
-        LOG(WARNING) << "You're not supposed to parse a RedisRequest";
+        FLARE_LOG(WARNING) << "You're not supposed to parse a RedisRequest";
         return true;
     }
 
     void RedisRequest::SerializeWithCachedSizes(
             ::google::protobuf::io::CodedOutputStream *) const {
-        LOG(WARNING) << "You're not supposed to serialize a RedisRequest";
+        FLARE_LOG(WARNING) << "You're not supposed to serialize a RedisRequest";
     }
 
     ::google::protobuf::uint8 *RedisRequest::SerializeWithCachedSizesToArray(
@@ -145,7 +145,7 @@ namespace flare::rpc {
             ++_ncommand;
             return true;
         } else {
-            CHECK(st.ok()) << st;
+            FLARE_CHECK(st.ok()) << st;
             _has_error = true;
             return false;
         }
@@ -161,7 +161,7 @@ namespace flare::rpc {
             ++_ncommand;
             return true;
         } else {
-            CHECK(st.ok()) << st;
+            FLARE_CHECK(st.ok()) << st;
             _has_error = true;
             return false;
         }
@@ -179,7 +179,7 @@ namespace flare::rpc {
             ++_ncommand;
             return true;
         } else {
-            CHECK(st.ok()) << st;
+            FLARE_CHECK(st.ok()) << st;
             _has_error = true;
             return false;
         }
@@ -194,7 +194,7 @@ namespace flare::rpc {
             ++_ncommand;
             return true;
         } else {
-            CHECK(st.ok()) << st;
+            FLARE_CHECK(st.ok()) << st;
             _has_error = true;
             return false;
         }
@@ -202,7 +202,7 @@ namespace flare::rpc {
 
     bool RedisRequest::SerializeTo(flare::cord_buf *buf) const {
         if (_has_error) {
-            LOG(ERROR) << "Reject serialization due to error in AddCommand[V]";
+            FLARE_LOG(ERROR) << "Reject serialization due to error in AddCommand[V]";
             return false;
         }
         *buf = _buf;
@@ -292,13 +292,13 @@ namespace flare::rpc {
 
     bool RedisResponse::MergePartialFromCodedStream(
             ::google::protobuf::io::CodedInputStream *) {
-        LOG(WARNING) << "You're not supposed to parse a RedisResponse";
+        FLARE_LOG(WARNING) << "You're not supposed to parse a RedisResponse";
         return true;
     }
 
     void RedisResponse::SerializeWithCachedSizes(
             ::google::protobuf::io::CodedOutputStream *) const {
-        LOG(WARNING) << "You're not supposed to serialize a RedisResponse";
+        FLARE_LOG(WARNING) << "You're not supposed to serialize a RedisResponse";
     }
 
     ::google::protobuf::uint8 *RedisResponse::SerializeWithCachedSizesToArray(
@@ -347,7 +347,7 @@ namespace flare::rpc {
         for (int i = !_nreply; i < from._nreply; ++i) {
             new_others[new_other_index++].CopyFromDifferentArena(from.reply(i));
         }
-        DCHECK_EQ(new_nreply - 1, new_other_index);
+        FLARE_DCHECK_EQ(new_nreply - 1, new_other_index);
         _other_replies = new_others;
         _nreply = new_nreply;
     }
@@ -408,7 +408,7 @@ namespace flare::rpc {
                 _other_replies = (RedisReply *) _arena.allocate(
                         sizeof(RedisReply) * (reply_count - 1));
                 if (_other_replies == NULL) {
-                    LOG(ERROR) << "Fail to allocate RedisReply[" << reply_count - 1 << "]";
+                    FLARE_LOG(ERROR) << "Fail to allocate RedisReply[" << reply_count - 1 << "]";
                     return PARSE_ERROR_ABSOLUTELY_WRONG;
                 }
                 for (int i = 0; i < reply_count - 1; ++i) {
@@ -451,7 +451,7 @@ namespace flare::rpc {
         std::string lcname = flare::string_to_lower(name);
         auto it = _command_map.find(lcname);
         if (it != _command_map.end()) {
-            LOG(ERROR) << "redis command name=" << name << " exist";
+            FLARE_LOG(ERROR) << "redis command name=" << name << " exist";
             return false;
         }
         _command_map[lcname] = handler;
@@ -467,7 +467,7 @@ namespace flare::rpc {
     }
 
     RedisCommandHandler *RedisCommandHandler::NewTransactionHandler() {
-        LOG(ERROR) << "NewTransactionHandler is not implemented";
+        FLARE_LOG(ERROR) << "NewTransactionHandler is not implemented";
         return NULL;
     }
 

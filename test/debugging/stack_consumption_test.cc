@@ -22,7 +22,7 @@ static void SimpleSignalHandler(int signo) {
 
   // Never true, but prevents compiler from optimizing buf out.
   if (signo == 0) {
-      LOG(INFO)<<static_cast<void*>(buf);
+      FLARE_LOG(INFO)<<static_cast<void*>(buf);
   }
 }
 

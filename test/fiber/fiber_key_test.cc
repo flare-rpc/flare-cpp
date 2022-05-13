@@ -15,7 +15,7 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#define DCHECK_IS_ON() 0
+#define FLARE_DCHECK_IS_ON() 0
 
 #include <algorithm>                         // std::sort
 #include "flare/base/static_atomic.h"
@@ -56,7 +56,7 @@ namespace {
             if (_c) {
                 _c->ndestroy.fetch_add(1, std::memory_order_relaxed);
             }
-            CHECK_EQ(0, fiber_key_delete(_key));
+            FLARE_CHECK_EQ(0, fiber_key_delete(_key));
         }
 
     private:

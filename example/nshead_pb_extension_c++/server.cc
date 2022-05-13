@@ -107,7 +107,7 @@ int main(int argc, char* argv[]) {
     // use flare::rpc::SERVER_OWNS_SERVICE.
     if (server.AddService(&echo_service_impl, 
                           flare::rpc::SERVER_DOESNT_OWN_SERVICE) != 0) {
-        LOG(ERROR) << "Fail to add service";
+        FLARE_LOG(ERROR) << "Fail to add service";
         return -1;
     }
 
@@ -116,7 +116,7 @@ int main(int argc, char* argv[]) {
     options.nshead_service = new MyNsheadProtocol;  // the adaptor
     options.idle_timeout_sec = FLAGS_idle_timeout_s;
     if (server.Start(FLAGS_port, &options) != 0) {
-        LOG(ERROR) << "Fail to start EchoServer";
+        FLARE_LOG(ERROR) << "Fail to start EchoServer";
         return -1;
     }
 

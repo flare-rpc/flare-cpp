@@ -259,7 +259,7 @@ namespace flare::debugging {
                 char *CopyString(const char *s) {
                     int len = strlen(s);
                     char *dst = static_cast<char *>( new char[len+1]);
-                    CHECK(dst != nullptr) << "out of memory";
+                    FLARE_CHECK(dst != nullptr) << "out of memory";
                     memcpy(dst, s, len + 1);
                     return dst;
                 }
@@ -374,7 +374,7 @@ namespace flare::debugging {
                 ssize_t len;
                 NO_INTR(len = read(fd, buf0 + num_bytes, count - num_bytes));
                 if (len < 0) {  // There was an error other than EINTR.
-                    LOG(WARNING) << "read failed: errno=" << errno;
+                    FLARE_LOG(WARNING) << "read failed: errno=" << errno;
                     return -1;
                 }
                 if (len == 0) {  // Reached EOF.
@@ -393,7 +393,7 @@ namespace flare::debugging {
                                       const off_t offset) {
             off_t off = lseek(fd, offset, SEEK_SET);
             if (off == (off_t) -1) {
-                LOG(WARNING) << "lseek(" << fd << "), " << static_cast<uintmax_t>(offset)
+                FLARE_LOG(WARNING) << "lseek(" << fd << "), " << static_cast<uintmax_t>(offset)
                              << ", SEEK_SET) failed: errno=" << errno;
                 return -1;
             }
@@ -452,7 +452,7 @@ namespace flare::debugging {
         const off_t offset = sh_offset + i * sizeof(buf[0]);
         const ssize_t len = ReadFromOffset(fd, buf, num_bytes_to_read, offset);
         if (len % sizeof(buf[0]) != 0) {
-        LOG(WARNING)
+        FLARE_LOG(WARNING)
 
         <<"Reading "<<num_bytes_to_read<<" bytes from offset "<<static_cast
         <uintmax_t>(offset)
@@ -541,7 +541,7 @@ return true;
 bool GetSectionHeaderByName(int fd, const char *name, size_t name_len, ElfW(Shdr)* out) {
     char header_name[kMaxSectionNameLen];
     if (sizeof(header_name) < name_len) {
-        LOG(WARNING)<<"Section name "<<name<<" is too long ("<<name_len<<"); ""section will not be found (even if present).";
+        FLARE_LOG(WARNING)<<"Section name "<<name<<" is too long ("<<name_len<<"); ""section will not be found (even if present).";
         // No point in even trying.
         return false;
     }
@@ -758,7 +758,7 @@ const size_t off = strtab->sh_offset + best_match.st_name;
 const ssize_t n_read = ReadFromOffset(fd, out, out_size, off);
 if (n_read <= 0) {
 // This should never happen.
-LOG(WARNING)
+FLARE_LOG(WARNING)
 
 <<
 "Unable to read from fd %d at offset "<<off<<": n_read = "<<
@@ -766,7 +766,7 @@ n_read;
 return
 SYMBOL_NOT_FOUND;
 }
-CHECK(n_read <= out_size)<< "ReadFromOffset read too much data.";
+FLARE_CHECK(n_read <= out_size)<< "ReadFromOffset read too much data.";
 
 // strtab->sh_offset points into .strtab-like section that contains
 // NUL-terminated strings: '\0foo\0barbaz\0...".
@@ -1001,7 +1001,7 @@ static FLARE_NO_INLINE bool ReadAddrMap(
     NO_INTR(maps_fd = open(maps_path, O_RDONLY));
     FileDescriptor wrapped_maps_fd(maps_fd);
     if (wrapped_maps_fd.get() < 0) {
-        LOG(WARNING) << maps_path << "error: " << errno;
+        FLARE_LOG(WARNING) << maps_path << "error: " << errno;
         return false;
     }
 
@@ -1028,7 +1028,7 @@ static FLARE_NO_INLINE bool ReadAddrMap(
         // Read start address.
         cursor = GetHex(cursor, eol, &start_address);
         if (cursor == eol || *cursor != '-') {
-            LOG(WARNING) << "Corrupt /proc/self/maps line: " << line;
+            FLARE_LOG(WARNING) << "Corrupt /proc/self/maps line: " << line;
             return false;
         }
         ++cursor;  // Skip '-'.
@@ -1037,7 +1037,7 @@ static FLARE_NO_INLINE bool ReadAddrMap(
         const void *end_address;
         cursor = GetHex(cursor, eol, &end_address);
         if (cursor == eol || *cursor != ' ') {
-            LOG(WARNING) << "Corrupt /proc/self/maps line: " << line;
+            FLARE_LOG(WARNING) << "Corrupt /proc/self/maps line: " << line;
             return false;
         }
         ++cursor;  // Skip ' '.
@@ -1049,7 +1049,7 @@ static FLARE_NO_INLINE bool ReadAddrMap(
         }
         // We expect at least four letters for flags (ex. "r-xp").
         if (cursor == eol || cursor < flags_start + 4) {
-            LOG(WARNING) << "Corrupt /proc/self/maps: " << line;
+            FLARE_LOG(WARNING) << "Corrupt /proc/self/maps: " << line;
             return false;
         }
 
@@ -1156,14 +1156,14 @@ bool Symbolizer::RegisterObjFile(const char *filename,
     if (addr_map_size != 0) {
         ObjFile *old = impl->addr_map_.At(addr_map_size - 1);
         if (old->end_addr > end_addr) {
-            LOG(ERROR)<<"Unsorted addr map entry: 0x"<<reinterpret_cast<uintptr_t>(end_addr)<<": "<<filename
+            FLARE_LOG(ERROR)<<"Unsorted addr map entry: 0x"<<reinterpret_cast<uintptr_t>(end_addr)<<": "<<filename
                     <<" <-> 0x"<< reinterpret_cast<uintptr_t>(old->end_addr)<<": "<<old->filename;
             return true;
         } else if (old->end_addr == end_addr) {
             // The same entry appears twice. This sometimes happens for [vdso].
             if (old->start_addr != start_addr ||
                 strcmp(old->filename, filename) != 0) {
-                LOG(ERROR)<<"Duplicate addr 0x"<<reinterpret_cast<uintptr_t>(end_addr)<<": "<<filename
+                FLARE_LOG(ERROR)<<"Duplicate addr 0x"<<reinterpret_cast<uintptr_t>(end_addr)<<": "<<filename
                           <<" <-> 0x"<< reinterpret_cast<uintptr_t>(old->end_addr)<<": "<<old->filename;
             }
             return true;
@@ -1248,7 +1248,7 @@ const char *Symbolizer::InsertSymbolInCache(const void *const pc,
     }
 
     AgeSymbols(line);
-    CHECK(oldest_index >= 0) << "Corrupt cache";
+    FLARE_CHECK(oldest_index >= 0) << "Corrupt cache";
     delete [] line->name[oldest_index];
     line->pc[oldest_index] = pc;
     line->name[oldest_index] = CopyString(name);
@@ -1300,18 +1300,18 @@ static bool MaybeInitializeObjFile(ObjFile *obj) {
         }
 
         if (obj->fd < 0) {
-            LOG(WARNING) << obj->filename << "open failed: errno=" << errno;
+            FLARE_LOG(WARNING) << obj->filename << "open failed: errno=" << errno;
             return false;
         }
         obj->elf_type = FileGetElfType(obj->fd);
         if (obj->elf_type < 0) {
-            LOG(WARNING) << obj->filename << ": wrong elf type: " << obj->elf_type;
+            FLARE_LOG(WARNING) << obj->filename << ": wrong elf type: " << obj->elf_type;
             return false;
         }
 
         if (!ReadFromOffsetExact(obj->fd, &obj->elf_header, sizeof(obj->elf_header),
                                  0)) {
-            LOG(WARNING) << obj->filename << ": failed to read elf header";
+            FLARE_LOG(WARNING) << obj->filename << ": failed to read elf header";
             return false;
         }
     }
@@ -1363,7 +1363,7 @@ const char *Symbolizer::GetSymbol(const void *const pc) {
           if (vdso.LookupSymbolByAddress(pc, &symbol_info)) {
             // All VDSO symbols are known to be short.
             size_t len = strlen(symbol_info.name);
-            CHECK(len + 1 < sizeof(symbol_buf_))<<
+            FLARE_CHECK(len + 1 < sizeof(symbol_buf_))<<
                            "VDSO symbol unexpectedly long";
             memcpy(symbol_buf_, symbol_info.name, len + 1);
           }
@@ -1452,7 +1452,7 @@ bool RegisterFileMappingHint(const void *start, const void *end, uint64_t offset
         // TODO(ckennelly): Move this into a std::string copy routine.
         int len = strlen(filename);
         char *dst = static_cast<char *>(new char[len +1]);
-        CHECK(dst != nullptr) << "out of memory";
+        FLARE_CHECK(dst != nullptr) << "out of memory";
         memcpy(dst, filename, len + 1);
 
         auto &hint = g_file_mapping_hints[g_num_file_mapping_hints++];

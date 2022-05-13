@@ -60,8 +60,8 @@ namespace flare::log {
 
     void RawLog__(log_severity severity, const char *file, int line,
                   const char *format, ...) {
-        if (!(FLAGS_logtostderr || severity >= FLAGS_stderrthreshold ||
-              FLAGS_alsologtostderr || !IsGoogleLoggingInitialized())) {
+        if (!(FLAGS_flare_logtostderr || severity >= FLAGS_flare_stderrthreshold ||
+              FLAGS_flare_also_logtostderr || !is_logging_initialized())) {
             return;  // this stderr log message is suppressed
         }
         // can't call localtime_r here: it can allocate
@@ -86,7 +86,7 @@ namespace flare::log {
         if (no_chop) {
             DoRawLog(&buf, &size, "\n");
         } else {
-            DoRawLog(&buf, &size, "RAW_LOG ERROR: The Message was too long!\n");
+            DoRawLog(&buf, &size, "FLARE_RAW_LOG ERROR: The Message was too long!\n");
         }
         // We make a raw syscall to write directly to the stderr file descriptor,
         // avoiding FILE buffering (to avoid invoking malloc()), and bypassing
@@ -106,7 +106,7 @@ namespace flare::log {
 #else
                 crash_reason.depth = 0;
 #endif
-                SetCrashReason(&crash_reason);
+                set_crash_reason(&crash_reason);
             }
             log_message::fail();  // abort()
         }

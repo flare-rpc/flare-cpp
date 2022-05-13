@@ -33,7 +33,7 @@
 
 // For printing logs with useful prefixes.
 #define RTMP_LOG(level, socket, mh)                                     \
-    LOG(level) << (socket)->remote_side() << '[' << (mh).stream_id << "] "
+    FLARE_LOG(level) << (socket)->remote_side() << '[' << (mh).stream_id << "] "
 #define RTMP_ERROR(socket, mh) RTMP_LOG(ERROR, (socket), (mh))
 #define RTMP_WARNING(socket, mh) RTMP_LOG(WARNING, (socket), (mh))
 
@@ -169,7 +169,7 @@ namespace flare::rpc {
             int openssl_HMACsha256(const void *key, int key_size,
                                    const void *data, int data_size, void *digest) {
                 if (NULL == EVP_sha256) {
-                    LOG_ONCE(ERROR) << "Fail to find EVP_sha256, fall back to simple handshaking";
+                    FLARE_LOG_ONCE(ERROR) << "Fail to find EVP_sha256, fall back to simple handshaking";
                     return -1;
                 }
                 unsigned int digest_size = 0;
@@ -178,7 +178,7 @@ namespace flare::rpc {
                     // NOTE: first parameter of EVP_Digest in older openssl is void*.
                     if (EVP_Digest(const_cast<void *>(data), data_size, temp_digest,
                                    &digest_size, EVP_sha256(), NULL) < 0) {
-                        LOG(ERROR) << "Fail to EVP_Digest";
+                        FLARE_LOG(ERROR) << "Fail to EVP_Digest";
                         return -1;
                     }
                 } else {
@@ -187,12 +187,12 @@ namespace flare::rpc {
                     if (HMAC(EVP_sha256(), key, key_size,
                              (const unsigned char *) data, data_size,
                              temp_digest, &digest_size) == NULL) {
-                        LOG(ERROR) << "Fail to HMAC";
+                        FLARE_LOG(ERROR) << "Fail to HMAC";
                         return -1;
                     }
                 }
                 if (digest_size != 32) {
-                    LOG(ERROR) << "digest_size=" << digest_size << " of sha256 is not 32";
+                    FLARE_LOG(ERROR) << "digest_size=" << digest_size << " of sha256 is not 32";
                     return -1;
                 }
                 return 0;
@@ -448,7 +448,7 @@ namespace flare::rpc {
                     key_blk.Save(p + DigestBlock::SIZE);
                     return true;
                 } else {
-                    CHECK(false) << "Invalid schema=" << (int) _schema;
+                    FLARE_CHECK(false) << "Invalid schema=" << (int) _schema;
                     return false;
                 }
             }
@@ -466,12 +466,12 @@ namespace flare::rpc {
                     digest_blk.SaveWithoutDigest(p);
                     key_blk.Save(p + DigestBlock::SIZE - DigestBlock::DIGEST_SIZE);
                 } else {
-                    LOG(ERROR) << "Invalid schema=" << (int) _schema;
+                    FLARE_LOG(ERROR) << "Invalid schema=" << (int) _schema;
                     return false;
                 }
                 char tmp_digest[EVP_MAX_MD_SIZE];
                 if (openssl_HMACsha256(key, key_size, buf, sizeof(buf), tmp_digest) != 0) {
-                    LOG(WARNING) << "Fail to compute digest of C1/S1";
+                    FLARE_LOG(WARNING) << "Fail to compute digest of C1/S1";
                     return false;
                 }
                 memcpy(digest, tmp_digest, DigestBlock::DIGEST_SIZE);
@@ -497,7 +497,7 @@ namespace flare::rpc {
                 digest_blk.Load(p + 8 + KeyBlock::SIZE);
                 char tmp_digest[DigestBlock::DIGEST_SIZE];
                 if (!ComputeDigest(tmp_digest)) {
-                    LOG(WARNING) << "Fail to compute digest of C1 (schema0)";
+                    FLARE_LOG(WARNING) << "Fail to compute digest of C1 (schema0)";
                     return false;
                 }
                 if (memcmp(tmp_digest, digest_blk.digest(),
@@ -509,7 +509,7 @@ namespace flare::rpc {
                 digest_blk.Load(p + 8);
                 key_blk.Load(p + 8 + DigestBlock::SIZE);
                 if (!ComputeDigest(tmp_digest)) {
-                    LOG(WARNING) << "Fail to compute digest of C1 (schema1)";
+                    FLARE_LOG(WARNING) << "Fail to compute digest of C1 (schema1)";
                     return false;
                 }
                 if (memcmp(tmp_digest, digest_blk.digest(),
@@ -534,7 +534,7 @@ namespace flare::rpc {
                 int pkey_size = 128;
                 if (dh.copy_shared_key(c1.key_blk.key(), 128,
                                        key_blk.key(), &pkey_size) != 0) { // took ~0.9ms
-                    LOG(ERROR) << "Fail to compute key of S1";
+                    FLARE_LOG(ERROR) << "Fail to compute key of S1";
                     return false;
                 }
                 return ComputeDigest(digest_blk.digest());
@@ -554,7 +554,7 @@ namespace flare::rpc {
                 }
                 char tmp_digest[DigestBlock::DIGEST_SIZE];
                 if (!ComputeDigest(tmp_digest)) {
-                    LOG(WARNING) << "Fail to compute digest of S1";
+                    FLARE_LOG(WARNING) << "Fail to compute digest of S1";
                     return false;
                 }
                 if (memcmp(tmp_digest, digest_blk.digest(),
@@ -569,13 +569,13 @@ namespace flare::rpc {
                 char temp_key[EVP_MAX_MD_SIZE];
                 if (openssl_HMACsha256(key, key_size, c1s1_digest, DigestBlock::DIGEST_SIZE,
                                        temp_key) != 0) {
-                    LOG(WARNING) << "Fail to create temp key";
+                    FLARE_LOG(WARNING) << "Fail to create temp key";
                     return false;
                 }
                 char tmp_digest[EVP_MAX_MD_SIZE];
                 if (openssl_HMACsha256(temp_key, 32, random, SIZE - DIGEST_SIZE,
                                        tmp_digest) != 0) {
-                    LOG(WARNING) << "Fail to create temp digest";
+                    FLARE_LOG(WARNING) << "Fail to create temp digest";
                     return false;
                 }
                 memcpy(digest, tmp_digest, 32);
@@ -596,7 +596,7 @@ namespace flare::rpc {
                 memcpy(digest, (const char *) buf + SIZE - DIGEST_SIZE, DIGEST_SIZE);
                 char tmp_digest[DIGEST_SIZE];
                 if (!ComputeDigest(key, key_size, c1s1_digest, tmp_digest)) {
-                    LOG(WARNING) << "Fail to compute digest of C2/S2";
+                    FLARE_LOG(WARNING) << "Fail to compute digest of C2/S2";
                     return false;
                 }
                 return memcmp(tmp_digest, digest, DIGEST_SIZE) == 0;
@@ -629,7 +629,7 @@ namespace flare::rpc {
         WriteBasicHeader(char **buf, RtmpChunkType chunk_type, uint32_t cs_id) {
             char *out = *buf;
             if (cs_id < 2) {
-                CHECK(false) << "Reserved chunk_stream_id=" << cs_id;
+                FLARE_CHECK(false) << "Reserved chunk_stream_id=" << cs_id;
             } else if (cs_id <= 63) {
                 *out++ = (((uint32_t) chunk_type << 6) | cs_id);
             } else if (cs_id <= 319) {
@@ -640,7 +640,7 @@ namespace flare::rpc {
                 *out++ = (cs_id - 64) & 0xFF;
                 *out++ = ((cs_id - 64) >> 8);
             } else {
-                CHECK(false) << "Invalid chunk_stream_id=" << cs_id;
+                FLARE_CHECK(false) << "Invalid chunk_stream_id=" << cs_id;
             }
             *buf = out;
         }
@@ -662,7 +662,7 @@ namespace flare::rpc {
                         // write is less than buffer size of the fd. If the
                         // impossible really happens, just spin until the fd becomes
                         // writable.
-                        LOG_EVERY_SECOND(ERROR) << "Impossible: meet EAGAIN!";
+                        FLARE_LOG_EVERY_SECOND(ERROR) << "Impossible: meet EAGAIN!";
                         flare::fiber_sleep_for(1000);
                         continue;
                     }
@@ -686,7 +686,7 @@ namespace flare::rpc {
                     tmp.append(buf, sizeof(buf));
                     done_adobe_hs = true;
                 } else {
-                    LOG(WARNING) << "Fail to generate C1, use simple handshaking";
+                    FLARE_LOG(WARNING) << "Fail to generate C1, use simple handshaking";
                 }
             }
             if (is_simple_handshake) {
@@ -773,8 +773,8 @@ namespace flare::rpc {
                 _service = server->options().rtmp_service;
             }
             _free_ms_ids.reserve(32);
-            CHECK_EQ(0, _mstream_map.init(1024, 70));
-            CHECK_EQ(0, _trans_map.init(1024, 70));
+            FLARE_CHECK_EQ(0, _mstream_map.init(1024, 70));
+            FLARE_CHECK_EQ(0, _trans_map.init(1024, 70));
             memset(static_cast<void *>(_cstream_ctx), 0, sizeof(_cstream_ctx));
         }
 
@@ -791,9 +791,10 @@ namespace flare::rpc {
                     }
                 }
                 _mstream_map.clear();
-                LOG(FATAL) << "RtmpContext=" << this << " is deallocated"
-                                                        " before all streams(" << ncstream << " client, " << nsstream
-                           << "server) on the connection quit";
+                FLARE_LOG(FATAL) << "RtmpContext=" << this << " is deallocated"
+                                                              " before all streams(" << ncstream << " client, "
+                                 << nsstream
+                                 << "server) on the connection quit";
             }
 
             // cancel incomplete transactions
@@ -866,7 +867,7 @@ namespace flare::rpc {
 
         RtmpChunkStream *RtmpContext::GetChunkStream(uint32_t cs_id) {
             if (cs_id > RTMP_MAX_CHUNK_STREAM_ID) {
-                LOG(ERROR) << "Invalid chunk_stream_id=" << cs_id;
+                FLARE_LOG(ERROR) << "Invalid chunk_stream_id=" << cs_id;
                 return NULL;
             }
             const uint32_t index1 = cs_id / RTMP_CHUNK_ARRAY_2ND_SIZE;
@@ -900,21 +901,21 @@ namespace flare::rpc {
 
         void RtmpContext::ClearChunkStream(uint32_t cs_id) {
             if (cs_id > RTMP_MAX_CHUNK_STREAM_ID) {
-                LOG(ERROR) << "Invalid chunk_stream_id=" << cs_id;
+                FLARE_LOG(ERROR) << "Invalid chunk_stream_id=" << cs_id;
                 return;
             }
             const uint32_t index1 = cs_id / RTMP_CHUNK_ARRAY_2ND_SIZE;
             SubChunkArray *sub_array =
                     _cstream_ctx[index1].load(std::memory_order_consume);
             if (sub_array == NULL) {
-                LOG(ERROR) << "chunk_stream_id=" << cs_id << " does not exist";
+                FLARE_LOG(ERROR) << "chunk_stream_id=" << cs_id << " does not exist";
                 return;
             }
             const uint32_t index2 = cs_id - index1 * RTMP_CHUNK_ARRAY_2ND_SIZE;
             RtmpChunkStream *cstream =
                     sub_array->ptrs[index2].load(std::memory_order_consume);
             if (cstream == NULL) {
-                LOG(ERROR) << "chunk_stream_id=" << cs_id << " does not exist";
+                FLARE_LOG(ERROR) << "chunk_stream_id=" << cs_id << " does not exist";
                 return;
             }
             delete sub_array->ptrs[index2].exchange(
@@ -969,8 +970,8 @@ namespace flare::rpc {
         bool RtmpContext::AddClientStream(RtmpStreamBase *stream) {
             const uint32_t stream_id = stream->stream_id();
             if (stream_id == RTMP_CONTROL_MESSAGE_STREAM_ID) {
-                LOG(ERROR) << "stream_id=" << RTMP_CONTROL_MESSAGE_STREAM_ID
-                           << " is reserved for control stream";
+                FLARE_LOG(ERROR) << "stream_id=" << RTMP_CONTROL_MESSAGE_STREAM_ID
+                                 << " is reserved for control stream";
                 return false;
             }
             uint32_t chunk_stream_id = 0;
@@ -979,7 +980,7 @@ namespace flare::rpc {
                 MessageStreamInfo &info = _mstream_map[stream_id];
                 if (info.stream != NULL) {
                     mu.unlock();
-                    LOG(ERROR) << "stream_id=" << stream_id << " is already used";
+                    FLARE_LOG(ERROR) << "stream_id=" << stream_id << " is already used";
                     return false;
                 }
                 AllocateChunkStreamId(&chunk_stream_id);
@@ -999,7 +1000,7 @@ namespace flare::rpc {
                 MessageStreamInfo &info = _mstream_map[stream_id];
                 if (info.stream != NULL) {
                     mu.unlock();
-                    LOG(ERROR) << "stream_id=" << stream_id << " is already used";
+                    FLARE_LOG(ERROR) << "stream_id=" << stream_id << " is already used";
                     return false;
                 }
                 info.stream.reset(stream);
@@ -1011,13 +1012,13 @@ namespace flare::rpc {
 
         bool RtmpContext::RemoveMessageStream(RtmpStreamBase *stream) {
             if (stream == NULL) {
-                LOG(FATAL) << "Param[stream] is NULL";
+                FLARE_LOG(FATAL) << "Param[stream] is NULL";
                 return false;
             }
             const uint32_t stream_id = stream->stream_id();
             if (stream_id == RTMP_CONTROL_MESSAGE_STREAM_ID) {
-                LOG(FATAL) << "stream_id=" << RTMP_CONTROL_MESSAGE_STREAM_ID
-                           << " is reserved for control stream";
+                FLARE_LOG(FATAL) << "stream_id=" << RTMP_CONTROL_MESSAGE_STREAM_ID
+                                 << " is reserved for control stream";
                 return false;
             }
             // for deref the stream outside _stream_mutex.
@@ -1031,9 +1032,9 @@ namespace flare::rpc {
                 }
                 if (stream != info->stream) {
                     mu.unlock();
-                    LOG(FATAL) << "Unmatched "
-                               << (stream->is_client_stream() ? "client" : "server")
-                               << " stream of stream_id=" << stream_id;
+                    FLARE_LOG(FATAL) << "Unmatched "
+                                     << (stream->is_client_stream() ? "client" : "server")
+                                     << " stream of stream_id=" << stream_id;
                     return false;
                 }
                 if (stream->is_client_stream()) {
@@ -1096,7 +1097,7 @@ namespace flare::rpc {
                 WriteAMFUint32(1, &ostream);
                 RtmpConnectRequest req;
                 if (_client_options->app.empty()) {
-                    LOG(ERROR) << "RtmpClientOptions.app must be set";
+                    FLARE_LOG(ERROR) << "RtmpClientOptions.app must be set";
                     return -1;
                 }
                 req.set_app(_client_options->app);
@@ -1129,7 +1130,7 @@ namespace flare::rpc {
                 req.set_stream_multiplexing(true);
                 WriteAMFObject(req, &ostream);
                 if (!ostream.good()) {
-                    LOG(ERROR) << "Fail to serialize connect request";
+                    FLARE_LOG(ERROR) << "Fail to serialize connect request";
                     return -1;
                 }
             }
@@ -1148,7 +1149,7 @@ namespace flare::rpc {
             }
             RtmpChunkStream *cstream = GetChunkStream(RTMP_CONTROL_CHUNK_STREAM_ID);
             if (cstream->SerializeMessage(&msg_buf, header, &req_buf) != 0) {
-                LOG(ERROR) << "Fail to serialize connect message";
+                FLARE_LOG(ERROR) << "Fail to serialize connect message";
                 return -1;
             }
 
@@ -1164,7 +1165,7 @@ namespace flare::rpc {
                 flare::cord_buf tmp;
                 tmp.append(cntl_buf, sizeof(cntl_buf));
                 if (cstream->SerializeMessage(&msg_buf, header2, &tmp) != 0) {
-                    LOG(ERROR) << "Fail to serialize WindowAckSize message";
+                    FLARE_LOG(ERROR) << "Fail to serialize WindowAckSize message";
                     return -1;
                 }
             }
@@ -1181,7 +1182,7 @@ namespace flare::rpc {
                 flare::cord_buf tmp;
                 tmp.append(cntl_buf, sizeof(cntl_buf));
                 if (cstream->SerializeMessage(&msg_buf, header3, &tmp) != 0) {
-                    LOG(ERROR) << "Fail to serialize SetChunkSize message";
+                    FLARE_LOG(ERROR) << "Fail to serialize SetChunkSize message";
                     return -1;
                 }
                 _chunk_size_out = _client_options->chunk_size;
@@ -1206,7 +1207,7 @@ namespace flare::rpc {
                 case STATE_RECEIVED_C2:
                     return OnChunks(source, socket);
             }
-            CHECK(false) << "Never here!";
+            FLARE_CHECK(false) << "Never here!";
             return MakeParseError(PARSE_ERROR_NO_RESOURCE);
         }
 
@@ -1240,7 +1241,7 @@ namespace flare::rpc {
                 {
                     adobe_hs::S1 s1;
                     if (!s1.Generate(c1)) {
-                        LOG(WARNING) << socket->remote_side() << ": Fail to generate s1";
+                        FLARE_LOG(WARNING) << socket->remote_side() << ": Fail to generate s1";
                         return MakeParseError(PARSE_ERROR_NO_RESOURCE);
                     }
                     char buf[RTMP_HANDSHAKE_SIZE1];
@@ -1248,7 +1249,7 @@ namespace flare::rpc {
                     tmp.append(buf, RTMP_HANDSHAKE_SIZE1);
                     _s1_digest = malloc(adobe_hs::DigestBlock::DIGEST_SIZE);
                     if (_s1_digest == NULL) {
-                        LOG(ERROR) << "Fail to malloc";
+                        FLARE_LOG(ERROR) << "Fail to malloc";
                         return MakeParseError(PARSE_ERROR_NO_RESOURCE);
                     }
                     memcpy(_s1_digest, s1.digest_blk.digest(),
@@ -1257,7 +1258,7 @@ namespace flare::rpc {
                 {
                     adobe_hs::S2 s2;
                     if (!s2.Generate(c1.digest_blk.digest())) {
-                        LOG(ERROR) << socket->remote_side() << ": Fail to generate s2";
+                        FLARE_LOG(ERROR) << socket->remote_side() << ": Fail to generate s2";
                         return MakeParseError(PARSE_ERROR_NO_RESOURCE);
                     }
                     char buf[RTMP_HANDSHAKE_SIZE2];
@@ -1282,7 +1283,7 @@ namespace flare::rpc {
                 tmp.append(s2, RTMP_HANDSHAKE_SIZE2);
             }
             if (WriteAll(socket->fd(), &tmp) != 0) {
-                LOG(WARNING) << socket->remote_side() << ": Fail to write S0 S1 S2";
+                FLARE_LOG(WARNING) << socket->remote_side() << ": Fail to write S0 S1 S2";
                 return MakeParseError(PARSE_ERROR_NO_RESOURCE);
             }
             return WaitForC2(source, socket);
@@ -1300,7 +1301,7 @@ namespace flare::rpc {
             // if (_s1_digest) {
             //     adobe_hs::C2 c2;
             //     if (!c2.Load(_s1_digest, c2_buf)) {
-            //         LOG(WARNING) << socket->remote_side() << ": Fail to load C2";
+            //         FLARE_LOG(WARNING) << socket->remote_side() << ": Fail to load C2";
             //     }
             // }
             SetState(socket->remote_side(), STATE_RECEIVED_C2);
@@ -1324,7 +1325,7 @@ namespace flare::rpc {
                     RPC_VLOG << socket->remote_side() << ": Loaded S1 with schema1";
                     adobe_hs::C2 c2;
                     if (!c2.Generate(s1.digest_blk.digest())) {
-                        LOG(ERROR) << socket->remote_side() << ": Fail to generate c2";
+                        FLARE_LOG(ERROR) << socket->remote_side() << ": Fail to generate c2";
                         return MakeParseError(PARSE_ERROR_NO_RESOURCE);
                     }
                     c2.Save(s0s1_buf + RTMP_HANDSHAKE_SIZE0);
@@ -1343,7 +1344,7 @@ namespace flare::rpc {
                 tmp.append(c2, RTMP_HANDSHAKE_SIZE2);
             }
             if (WriteAll(socket->fd(), &tmp) != 0) {
-                LOG(WARNING) << socket->remote_side() << ": Fail to write C2";
+                FLARE_LOG(WARNING) << socket->remote_side() << ": Fail to write C2";
                 return MakeParseError(PARSE_ERROR_NO_RESOURCE);
             }
             return WaitForS2(source, socket);
@@ -1358,7 +1359,7 @@ namespace flare::rpc {
             SetState(socket->remote_side(), STATE_RECEIVED_S2);
 
             if (SendConnectRequest(socket->remote_side(), socket->fd(), false) != 0) {
-                LOG(ERROR) << "Fail to send connect request to " << socket->remote_side();
+                FLARE_LOG(ERROR) << "Fail to send connect request to " << socket->remote_side();
                 return MakeParseError(PARSE_ERROR_NO_RESOURCE);
             }
             return OnChunks(source, socket);
@@ -1396,7 +1397,7 @@ namespace flare::rpc {
             RtmpBasicHeader bh = {cs_id, fmt, basic_header_len};
             RtmpChunkStream *cstream = GetChunkStream(cs_id);
             if (cstream == NULL) {
-                LOG(ERROR) << "Invalid chunk_stream_id=" << cs_id;
+                FLARE_LOG(ERROR) << "Invalid chunk_stream_id=" << cs_id;
                 return MakeParseError(PARSE_ERROR_NO_RESOURCE);
             }
             return cstream->Feed(bh, source, socket);
@@ -1414,7 +1415,7 @@ namespace flare::rpc {
             _nonack_bytes += sz;
             if (_nonack_bytes > _window_ack_size) {
                 _nonack_bytes -= _window_ack_size;
-                PLOG_IF(WARNING, SendAck(socket, _received_bytes) != 0)
+                FLARE_PLOG_IF(WARNING, SendAck(socket, _received_bytes) != 0)
                                 << socket->remote_side() << ": Fail to send ack";
             }
         }
@@ -1540,8 +1541,8 @@ namespace flare::rpc {
                         has_extended_ts = true;
                     }
                     if (!_r.last_msg_header.is_valid()) {
-                        LOG(ERROR) << "No last message in chunk_stream=" << _cs_id
-                                   << " for ChunkType1";
+                        FLARE_LOG(ERROR) << "No last message in chunk_stream=" << _cs_id
+                                         << " for ChunkType1";
                         return MakeParseError(PARSE_ERROR_ABSOLUTELY_WRONG);
                     }
                     mh.timestamp = _r.last_msg_header.timestamp + timestamp_delta;
@@ -1583,8 +1584,8 @@ namespace flare::rpc {
                         has_extended_ts = true;
                     }
                     if (!_r.last_msg_header.is_valid()) {
-                        LOG(ERROR) << "No last message in chunk_stream=" << _cs_id
-                                   << " for ChunkType2";
+                        FLARE_LOG(ERROR) << "No last message in chunk_stream=" << _cs_id
+                                         << " for ChunkType2";
                         return MakeParseError(PARSE_ERROR_ABSOLUTELY_WRONG);
                     }
                     mh.timestamp = _r.last_msg_header.timestamp + timestamp_delta;
@@ -1625,8 +1626,8 @@ namespace flare::rpc {
                         }
                     }
                     if (!_r.last_msg_header.is_valid()) {
-                        LOG(ERROR) << "No last message in chunk_stream=" << _cs_id
-                                   << " for ChunkType3";
+                        FLARE_LOG(ERROR) << "No last message in chunk_stream=" << _cs_id
+                                         << " for ChunkType3";
                         return MakeParseError(PARSE_ERROR_ABSOLUTELY_WRONG);
                     }
                     mh.timestamp = _r.last_msg_header.timestamp;
@@ -1650,10 +1651,10 @@ namespace flare::rpc {
             source->cutn(&_r.msg_body, cur_chunk_size);
             ctx->AddReceivedBytes(socket, header_len + cur_chunk_size);
             const int vlvl = RPC_VLOG_LEVEL + 2;
-            VLOG(vlvl) << socket->remote_side()
-                       << ": Chunk{chunk_stream_id=" << bh.chunk_stream_id
-                       << " fmt=" << bh.fmt
-                       << " body_size=" << cur_chunk_size << '}';
+            FLARE_VLOG(vlvl) << socket->remote_side()
+                             << ": Chunk{chunk_stream_id=" << bh.chunk_stream_id
+                             << " fmt=" << bh.fmt
+                             << " body_size=" << cur_chunk_size << '}';
             _r.last_has_extended_ts = has_extended_ts;
             _r.last_timestamp_delta = timestamp_delta;
             _r.last_msg_header = mh;
@@ -1672,7 +1673,7 @@ namespace flare::rpc {
                 if (st) {
                     flare::stop_watcher tm;
                     tm.start();
-                    CHECK(st->OnRequested());
+                    FLARE_CHECK(st->OnRequested());
                     const bool ret = OnMessage(bh, mh, &_r.msg_body, socket);
                     tm.stop();
                     st->OnResponded(ret, tm.u_elapsed());
@@ -1693,12 +1694,12 @@ namespace flare::rpc {
                                               flare::cord_buf *body) {
             const size_t bh_size = GetBasicHeaderLength(_cs_id);
             if (bh_size == 0) {
-                CHECK(false) << "Invalid chunk_stream_id=" << _cs_id;
+                FLARE_CHECK(false) << "Invalid chunk_stream_id=" << _cs_id;
                 return -1;
             }
             // NOTE: body->size() may be longer than mh.message_length;
             uint32_t left_size = mh.message_length;
-            CHECK_LE((size_t) left_size, body->size());
+            FLARE_CHECK_LE((size_t) left_size, body->size());
             bool has_extended_ts = false;
             uint32_t timestamp_delta = 0;
             const uint32_t chunk_size_out = connection_context()->_chunk_size_out;
@@ -1813,7 +1814,7 @@ namespace flare::rpc {
         static void InitCommandHandlers() {
             // Dispatch commands based on "Command Name".
             s_cmd_handlers = new CommandHandlerMap;
-            CHECK_EQ(0, s_cmd_handlers->init(64, 70));
+            FLARE_CHECK_EQ(0, s_cmd_handlers->init(64, 70));
             (*s_cmd_handlers)[RTMP_AMF0_COMMAND_CONNECT] = &RtmpChunkStream::OnConnect;
             (*s_cmd_handlers)[RTMP_AMF0_COMMAND_ON_BW_DONE] = &RtmpChunkStream::OnBWDone;
             (*s_cmd_handlers)[RTMP_AMF0_COMMAND_RESULT] = &RtmpChunkStream::OnResult;
@@ -1840,7 +1841,7 @@ namespace flare::rpc {
                                         Socket *socket) {
             // Make sure msg_body is consistent with the header. Previous code
             // forgot to clear msg_body before appending new message.
-            CHECK_EQ((size_t) mh.message_length, msg_body->size());
+            FLARE_CHECK_EQ((size_t) mh.message_length, msg_body->size());
 
             if (mh.message_type >= 1 && mh.message_type <= 6) {
                 // protocol/user control messages MUST/SHOULD have message stream ID 0
@@ -1867,10 +1868,10 @@ namespace flare::rpc {
                                mh.message_type != RTMP_MESSAGE_VIDEO &&
                                mh.message_type != RTMP_MESSAGE_ACK) ?
                               (RPC_VLOG_LEVEL + 1) : (RPC_VLOG_LEVEL + 2));
-            VLOG(vlvl) << socket->remote_side() << "[" << mh.stream_id
-                       << "] Message{timestamp=" << mh.timestamp
-                       << " type=" << messagetype2str(mh.message_type)
-                       << " body_size=" << mh.message_length << '}';
+            FLARE_VLOG(vlvl) << socket->remote_side() << "[" << mh.stream_id
+                             << "] Message{timestamp=" << mh.timestamp
+                             << " type=" << messagetype2str(mh.message_type)
+                             << " body_size=" << mh.message_length << '}';
             return (this->*handler)(mh, msg_body, socket);
         }
 
@@ -2119,7 +2120,7 @@ namespace flare::rpc {
             SocketMessagePtr<RtmpUnsentMessage> msg(
                     MakeUnsentControlMessage(RTMP_MESSAGE_USER_CONTROL, data, sizeof(data)));
             if (socket->Write(msg) != 0) {
-                PLOG(WARNING) << "Fail to send back PingResponse";
+                FLARE_PLOG(WARNING) << "Fail to send back PingResponse";
                 return false;
             }
             return true;
@@ -2156,8 +2157,8 @@ namespace flare::rpc {
             }
             const uint32_t tmp = ReadBigEndian4Bytes(event_data.data());
             const int vlvl = RPC_VLOG_LEVEL + 1;
-            VLOG(vlvl) << socket->remote_side() << "[" << mh.stream_id
-                       << "] BufferEmpty(" << tmp << ')';
+            FLARE_VLOG(vlvl) << socket->remote_side() << "[" << mh.stream_id
+                             << "] BufferEmpty(" << tmp << ')';
             return true;
         }
 
@@ -2171,8 +2172,8 @@ namespace flare::rpc {
             }
             const uint32_t tmp = ReadBigEndian4Bytes(event_data.data());
             const int vlvl = RPC_VLOG_LEVEL + 1;
-            VLOG(vlvl) << socket->remote_side() << "[" << mh.stream_id
-                       << "] BufferReady(" << tmp << ')';
+            FLARE_VLOG(vlvl) << socket->remote_side() << "[" << mh.stream_id
+                             << "] BufferReady(" << tmp << ')';
             return true;
         }
 
@@ -2193,10 +2194,10 @@ namespace flare::rpc {
             msg_body->swap(msg.data);
 
             const int vlvl = RPC_VLOG_LEVEL + 1;
-            VLOG(vlvl) << socket->remote_side() << "[" << mh.stream_id << "] " << msg;
+            FLARE_VLOG(vlvl) << socket->remote_side() << "[" << mh.stream_id << "] " << msg;
             flare::container::intrusive_ptr<RtmpStreamBase> stream;
             if (!connection_context()->FindMessageStream(mh.stream_id, &stream)) {
-                LOG_EVERY_SECOND(WARNING) << socket->remote_side()
+                FLARE_LOG_EVERY_SECOND(WARNING) << socket->remote_side()
                                           << ": Fail to find stream_id=" << mh.stream_id;
                 return false;
             }
@@ -2225,10 +2226,10 @@ namespace flare::rpc {
             msg_body->swap(msg.data);
 
             const int vlvl = RPC_VLOG_LEVEL + 1;
-            VLOG(vlvl) << socket->remote_side() << "[" << mh.stream_id << "] " << msg;
+            FLARE_VLOG(vlvl) << socket->remote_side() << "[" << mh.stream_id << "] " << msg;
             flare::container::intrusive_ptr<RtmpStreamBase> stream;
             if (!connection_context()->FindMessageStream(mh.stream_id, &stream)) {
-                LOG_EVERY_SECOND(WARNING) << socket->remote_side()
+                FLARE_LOG_EVERY_SECOND(WARNING) << socket->remote_side()
                                           << ": Fail to find stream_id=" << mh.stream_id;
                 return false;
             }
@@ -2269,7 +2270,7 @@ namespace flare::rpc {
                 // TODO: execq?
                 flare::container::intrusive_ptr<RtmpStreamBase> stream;
                 if (!connection_context()->FindMessageStream(mh.stream_id, &stream)) {
-                    LOG_EVERY_SECOND(WARNING) << socket->remote_side()
+                    FLARE_LOG_EVERY_SECOND(WARNING) << socket->remote_side()
                                               << ": Fail to find stream_id=" << mh.stream_id;
                     return false;
                 }
@@ -2288,7 +2289,7 @@ namespace flare::rpc {
                 // TODO: execq?
                 flare::container::intrusive_ptr<RtmpStreamBase> stream;
                 if (!connection_context()->FindMessageStream(mh.stream_id, &stream)) {
-                    LOG_EVERY_SECOND(WARNING) << socket->remote_side()
+                    FLARE_LOG_EVERY_SECOND(WARNING) << socket->remote_side()
                                               << ": Fail to find stream_id=" << mh.stream_id;
                     return false;
                 }
@@ -2304,7 +2305,7 @@ namespace flare::rpc {
 
         bool RtmpChunkStream::OnSharedObjectMessageAMF0(
                 const RtmpMessageHeader &, flare::cord_buf *, Socket *socket) {
-            LOG_EVERY_SECOND(ERROR) << socket->remote_side() << ": Not implemented";
+            FLARE_LOG_EVERY_SECOND(ERROR) << socket->remote_side() << ": Not implemented";
             return false;
         }
 
@@ -2338,7 +2339,7 @@ namespace flare::rpc {
 
         bool RtmpChunkStream::OnSharedObjectMessageAMF3(
                 const RtmpMessageHeader &, flare::cord_buf *, Socket *) {
-            LOG(ERROR) << "Not implemented";
+            FLARE_LOG(ERROR) << "Not implemented";
             return false;
         }
 
@@ -2350,7 +2351,7 @@ namespace flare::rpc {
 
         bool RtmpChunkStream::OnAggregateMessage(
                 const RtmpMessageHeader &, flare::cord_buf *, Socket *) {
-            LOG(ERROR) << "Not implemented";
+            FLARE_LOG(ERROR) << "Not implemented";
             return false;
         }
 
@@ -2459,7 +2460,7 @@ namespace flare::rpc {
                     info.set_description(error_text);
                 }
                 WriteAMFObject(info, &ostream);
-                CHECK(ostream.good());
+                FLARE_CHECK(ostream.good());
             }
             msgs.push().reset(MakeUnsentControlMessage(
                     RTMP_MESSAGE_COMMAND_AMF0, chunk_stream_id(), req_buf));
@@ -2472,7 +2473,7 @@ namespace flare::rpc {
                 WriteAMFString(RTMP_AMF0_COMMAND_ON_BW_DONE, &ostream);
                 WriteAMFUint32(0, &ostream);
                 WriteAMFNull(&ostream);
-                CHECK(ostream.good());
+                FLARE_CHECK(ostream.good());
             }
             // chunk_stream_id is same with _result to connect, confirmed in SRS.
             msgs.push().reset(MakeUnsentControlMessage(
@@ -2482,7 +2483,7 @@ namespace flare::rpc {
                 msgs[i - 2]->next.reset(msgs[i - 1].release());
             }
             if (socket->Write(msgs[0]) != 0) {
-                PLOG(WARNING) << socket->remote_side() << ": Fail to respond connect";
+                FLARE_PLOG(WARNING) << socket->remote_side() << ": Fail to respond connect";
                 socket->SetFailed(EFAILEDSOCKET, "Fail to respond connect");
                 return false;
             }
@@ -2532,7 +2533,7 @@ namespace flare::rpc {
                         }
                         connection_context()->OnConnected(0);
                     } else {
-                        CHECK(connect_res.create_stream_with_play_or_publish());
+                        FLARE_CHECK(connect_res.create_stream_with_play_or_publish());
                     }
                 } // else nothing to do with transaction_id=0
                 return true;
@@ -2660,18 +2661,18 @@ namespace flare::rpc {
             }
             if (NULL == stream) {
                 error_text = "Fail to create stream";
-                LOG(ERROR) << error_text;
+                FLARE_LOG(ERROR) << error_text;
             } else {
                 socket->ReAddress(&stream->_rtmpsock);
                 if (!connection_context()->AddServerStream(stream.get())) {
                     error_text = "Fail to add stream";
-                    LOG(ERROR) << error_text;
+                    FLARE_LOG(ERROR) << error_text;
                 } else {
                     const int rc = fiber_token_create(&stream->_onfail_id, stream.get(),
                                                       RtmpServerStream::RunOnFailed);
                     if (rc) {
-                        LOG(ERROR) << "Fail to create RtmpServerStream._onfail_id: "
-                                   << flare_error(rc);
+                        FLARE_LOG(ERROR) << "Fail to create RtmpServerStream._onfail_id: "
+                                         << flare_error(rc);
                         stream->OnStopInternal();
                         return false;
                     }
@@ -2707,14 +2708,14 @@ namespace flare::rpc {
                     info.set_description(error_text);
                     WriteAMFObject(info, &ostream);
                 }
-                CHECK(ostream.good());
+                FLARE_CHECK(ostream.good());
             }
             SocketMessagePtr<RtmpUnsentMessage> msg(
                     MakeUnsentControlMessage(
                             RTMP_MESSAGE_COMMAND_AMF0, chunk_stream_id(), req_buf));
             if (WriteWithoutOvercrowded(socket, msg) != 0) {
-                PLOG(WARNING) << socket->remote_side() << '[' << mh.stream_id
-                              << "] Fail to respond createStream";
+                FLARE_PLOG(WARNING) << socket->remote_side() << '[' << mh.stream_id
+                                    << "] Fail to respond createStream";
                 // End the stream at server-side.
                 const fiber_token_t id = stream->_onfail_id;
                 if (id != INVALID_FIBER_TOKEN) {
@@ -2775,12 +2776,12 @@ namespace flare::rpc {
             }
 
             if (player_stream->SendStopMessage(status.error_cstr()) != 0) {
-                PLOG(WARNING) << "Fail to send StreamNotFound to "
-                              << player_stream->remote_side();
+                FLARE_PLOG(WARNING) << "Fail to send StreamNotFound to "
+                                    << player_stream->remote_side();
             }
             if (FLAGS_log_error_text) {
-                LOG(WARNING) << "Error to " << player_stream->remote_side() << '['
-                             << player_stream->stream_id() << "]: " << status;
+                FLARE_LOG(WARNING) << "Error to " << player_stream->remote_side() << '['
+                                   << player_stream->stream_id() << "]: " << status;
             }
         }
 
@@ -2945,8 +2946,8 @@ namespace flare::rpc {
                 msgs[i - 2]->next.reset(msgs[i - 1].release());
             }
             if (WriteWithoutOvercrowded(socket, msgs[0]) != 0) {
-                PLOG(WARNING) << socket->remote_side() << '[' << mh.stream_id
-                              << "] Fail to respond play";
+                FLARE_PLOG(WARNING) << socket->remote_side() << '[' << mh.stream_id
+                                    << "] Fail to respond play";
                 return false;
             }
             // cyberplayer sends play instead of unpause (and send closeStream instead
@@ -3072,13 +3073,13 @@ namespace flare::rpc {
             std::unique_ptr<OnPublishContinuation> delete_self(this);
             if (!status.ok()) {
                 if (publish_stream->SendStopMessage(status.error_cstr()) != 0) {
-                    PLOG(WARNING) << "Fail to send StreamNotFound to "
-                                  << publish_stream->remote_side();
+                    FLARE_PLOG(WARNING) << "Fail to send StreamNotFound to "
+                                        << publish_stream->remote_side();
                 }
                 if (FLAGS_log_error_text) {
-                    LOG(WARNING) << "Error to " << publish_stream->remote_side()
-                                 << '[' << publish_stream->stream_id() << "]: "
-                                 << status;
+                    FLARE_LOG(WARNING) << "Error to " << publish_stream->remote_side()
+                                       << '[' << publish_stream->stream_id() << "]: "
+                                       << status;
                 }
                 return;
             }
@@ -3094,7 +3095,7 @@ namespace flare::rpc {
                 info.set_level(RTMP_INFO_LEVEL_STATUS);
                 info.set_description("Started publishing " + publish_name);
                 WriteAMFObject(info, &ostream);
-                CHECK(ostream.good());
+                FLARE_CHECK(ostream.good());
             }
             SocketMessagePtr<RtmpUnsentMessage> msg(new RtmpUnsentMessage);
             msg->header.message_length = req_buf.size();
@@ -3104,8 +3105,8 @@ namespace flare::rpc {
             msg->body = req_buf;
 
             if (WriteWithoutOvercrowded(publish_stream->socket(), msg) != 0) {
-                PLOG(WARNING) << publish_stream->remote_side() << '['
-                              << publish_stream->stream_id() << "] Fail to respond publish";
+                FLARE_PLOG(WARNING) << publish_stream->remote_side() << '['
+                                    << publish_stream->stream_id() << "] Fail to respond publish";
             }
         }
 
@@ -3173,12 +3174,12 @@ namespace flare::rpc {
                 WriteAMFNumber(transaction_id, &ostream);
                 WriteAMFNull(&ostream);
                 WriteAMFUndefined(&ostream);
-                CHECK(ostream.good());
+                FLARE_CHECK(ostream.good());
             }
             SocketMessagePtr<RtmpUnsentMessage> msg(
                     MakeUnsentControlMessage(RTMP_MESSAGE_COMMAND_AMF0, req_buf));
             if (sock->Write(msg) != 0) {
-                PLOG(WARNING) << sock->remote_side() << ": Fail to respond FMLEStart";
+                FLARE_PLOG(WARNING) << sock->remote_side() << ": Fail to respond FMLEStart";
                 return false;
             }
             return true;
@@ -3315,7 +3316,7 @@ namespace flare::rpc {
                     info.set_level(RTMP_INFO_LEVEL_STATUS);
                     info.set_description("Seek successfully.");
                     WriteAMFObject(info, &ostream);
-                    CHECK(ostream.good());
+                    FLARE_CHECK(ostream.good());
                 } else {
                     WriteAMFString(RTMP_AMF0_COMMAND_ERROR, &ostream);
                     WriteAMFNumber(0, &ostream);
@@ -3325,7 +3326,7 @@ namespace flare::rpc {
                     info.set_code(RTMP_STATUS_CODE_STREAM_SEEK); // TODO
                     info.set_description("Fail to seek");
                     WriteAMFObject(info, &ostream);
-                    CHECK(ostream.good());
+                    FLARE_CHECK(ostream.good());
                 }
             }
             SocketMessagePtr<RtmpUnsentMessage> msg(new RtmpUnsentMessage);
@@ -3336,7 +3337,7 @@ namespace flare::rpc {
             msg->body = req_buf;
 
             if (socket->Write(msg) != 0) {
-                PLOG(WARNING) << socket->remote_side() << ": Fail to respond seek";
+                FLARE_PLOG(WARNING) << socket->remote_side() << ": Fail to respond seek";
                 return false;
             }
             return (rc == 0);
@@ -3403,7 +3404,7 @@ namespace flare::rpc {
                     info.set_level(RTMP_INFO_LEVEL_STATUS);
                     info.set_description("Paused stream.");
                     WriteAMFObject(info, &ostream);
-                    CHECK(ostream.good());
+                    FLARE_CHECK(ostream.good());
                 } else {
                     WriteAMFString(RTMP_AMF0_COMMAND_ERROR, &ostream);
                     WriteAMFNumber(0, &ostream);
@@ -3418,7 +3419,7 @@ namespace flare::rpc {
                     info.set_description(pause_or_unpause ? "Fail to pause" :
                                          "Fail to unpause");
                     WriteAMFObject(info, &ostream);
-                    CHECK(ostream.good());
+                    FLARE_CHECK(ostream.good());
                 }
             }
             SocketMessagePtr<RtmpUnsentMessage> msg1(new RtmpUnsentMessage);
@@ -3442,8 +3443,8 @@ namespace flare::rpc {
             msg1->next.reset(msg2);
 
             if (WriteWithoutOvercrowded(socket, msg1) != 0) {
-                PLOG(WARNING) << socket->remote_side() << '[' << mh.stream_id
-                              << "] Fail to respond " << (pause_or_unpause ? "pause" : "unpause");
+                FLARE_PLOG(WARNING) << socket->remote_side() << '[' << mh.stream_id
+                                    << "] Fail to respond " << (pause_or_unpause ? "pause" : "unpause");
                 return false;
             }
             if (rc == 0) {
@@ -3494,7 +3495,7 @@ namespace flare::rpc {
                 }
                 rtmp_ctx = new(std::nothrow) RtmpContext(NULL, server);
                 if (rtmp_ctx == NULL) {
-                    LOG(FATAL) << "Fail to new RtmpContext";
+                    FLARE_LOG(FATAL) << "Fail to new RtmpContext";
                     return MakeParseError(PARSE_ERROR_NO_RESOURCE);
                 }
                 socket->reset_parsing_context(rtmp_ctx);
@@ -3504,7 +3505,7 @@ namespace flare::rpc {
         }
 
         void ProcessRtmpMessage(InputMessageBase *) {
-            CHECK(false) << "Should never be called";
+            FLARE_CHECK(false) << "Should never be called";
         }
 
         class OnServerStreamCreated : public RtmpTransactionHandler {
@@ -3533,7 +3534,7 @@ namespace flare::rpc {
             // End the createStream call.
             RtmpContext *ctx = static_cast<RtmpContext *>(socket->parsing_context());
             if (ctx == NULL) {
-                LOG(FATAL) << "RtmpContext must be created";
+                FLARE_LOG(FATAL) << "RtmpContext must be created";
                 return;
             }
             const int64_t start_parse_us = flare::get_current_time_micros();
@@ -3544,7 +3545,7 @@ namespace flare::rpc {
             Controller *cntl = NULL;
             const int rc = fiber_token_lock(cid, (void **) &cntl);
             if (rc != 0) {
-                LOG_IF(ERROR, rc != EINVAL && rc != EPERM)
+                FLARE_LOG_IF(ERROR, rc != EINVAL && rc != EPERM)
                                 << "Fail to lock correlation_id=" << cid << ": " << flare_error(rc);
                 return;
             }
@@ -3650,7 +3651,7 @@ namespace flare::rpc {
                 } else {
                     WriteAMFNull(&ostream);
                 }
-                CHECK(ostream.good());
+                FLARE_CHECK(ostream.good());
             }
             RtmpChunkStream *cstream = ctx->GetChunkStream(RTMP_CONTROL_CHUNK_STREAM_ID);
             if (cstream == NULL) {
@@ -3692,7 +3693,7 @@ namespace flare::rpc {
             // Hack: save last transaction_id into log_id(useless here) so that we
             // can get it back and cancel the transaction before creating new one
             // (for retrying).
-            CHECK_LT(cntl->log_id(), (uint64_t) std::numeric_limits<uint32_t>::max());
+            FLARE_CHECK_LT(cntl->log_id(), (uint64_t) std::numeric_limits<uint32_t>::max());
             uint32_t transaction_id = cntl->log_id();
             if (transaction_id != 0) {
                 RtmpTransactionHandler *last_handler =

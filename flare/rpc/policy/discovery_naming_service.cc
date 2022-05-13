@@ -57,14 +57,14 @@ static int ListDiscoveryNodes(const char* discovery_api_addr, std::string* serve
     channel_options.timeout_ms = FLAGS_discovery_timeout_ms;
     channel_options.connect_timeout_ms = FLAGS_discovery_timeout_ms / 3;
     if (api_channel.Init(discovery_api_addr, "", &channel_options) != 0) {
-        LOG(FATAL) << "Fail to init channel to " << discovery_api_addr;
+        FLARE_LOG(FATAL) << "Fail to init channel to " << discovery_api_addr;
         return -1;
     }
     Controller cntl;
     cntl.http_request().uri() = discovery_api_addr;
     api_channel.CallMethod(NULL, &cntl, NULL, NULL, NULL);
     if (cntl.Failed()) {
-        LOG(FATAL) << "Fail to access " << cntl.http_request().uri()
+        FLARE_LOG(FATAL) << "Fail to access " << cntl.http_request().uri()
                    << ": " << cntl.ErrorText();
         return -1;
     }
@@ -75,17 +75,17 @@ static int ListDiscoveryNodes(const char* discovery_api_addr, std::string* serve
     RAPIDJSON_NAMESPACE::Document d;
     d.Parse(response.c_str());
     if (!d.IsObject()) {
-        LOG(ERROR) << "Fail to parse " << response << " as json object";
+        FLARE_LOG(ERROR) << "Fail to parse " << response << " as json object";
         return -1;
     }
     auto itr = d.FindMember("data");
     if (itr == d.MemberEnd()) {
-        LOG(ERROR) << "No data field in discovery nodes response";
+        FLARE_LOG(ERROR) << "No data field in discovery nodes response";
         return -1;
     }
     const RAPIDJSON_NAMESPACE::Value& data = itr->value;
     if (!data.IsArray()) {
-        LOG(ERROR) << "data field is not an array";
+        FLARE_LOG(ERROR) << "data field is not an array";
         return -1;
     }
     for (RAPIDJSON_NAMESPACE::SizeType i = 0; i < data.Size(); ++i) {
@@ -113,7 +113,7 @@ static void NewDiscoveryChannel() {
     // a NamingService, however which is too heavy for solving such a rare case.
     std::string discovery_servers;
     if (ListDiscoveryNodes(FLAGS_discovery_api_addr.c_str(), &discovery_servers) != 0) {
-        LOG(ERROR) << "Fail to get discovery nodes from " << FLAGS_discovery_api_addr;
+        FLARE_LOG(ERROR) << "Fail to get discovery nodes from " << FLAGS_discovery_api_addr;
         return;
     }
     ChannelOptions channel_options;
@@ -122,7 +122,7 @@ static void NewDiscoveryChannel() {
     channel_options.connect_timeout_ms = FLAGS_discovery_timeout_ms / 3;
     s_discovery_channel = new Channel;
     if (s_discovery_channel->Init(discovery_servers.c_str(), "rr", &channel_options) != 0) {
-        LOG(ERROR) << "Fail to init channel to " << discovery_servers;
+        FLARE_LOG(ERROR) << "Fail to init channel to " << discovery_servers;
         return;
     }
 }
@@ -154,12 +154,12 @@ static int ParseCommonResult(const flare::cord_buf& buf, std::string* error_text
     RAPIDJSON_NAMESPACE::Document d;
     d.Parse(s.c_str());
     if (!d.IsObject()) {
-        LOG(ERROR) << "Fail to parse " << buf << " as json object";
+        FLARE_LOG(ERROR) << "Fail to parse " << buf << " as json object";
         return -1;
     }
     auto itr_code = d.FindMember("code");
     if (itr_code == d.MemberEnd() || !itr_code->value.IsInt()) {
-        LOG(ERROR) << "Invalid `code' field in " << buf;
+        FLARE_LOG(ERROR) << "Invalid `code' field in " << buf;
         return -1;
     }
     int code = itr_code->value.GetInt();
@@ -179,7 +179,7 @@ int DiscoveryClient::DoRenew() const {
     channel_options.connect_timeout_ms = FLAGS_discovery_timeout_ms / 3;
     Channel chan;
     if (chan.Init(_current_discovery_server, &channel_options) != 0) {
-        LOG(FATAL) << "Fail to init channel to " << _current_discovery_server;
+        FLARE_LOG(FATAL) << "Fail to init channel to " << _current_discovery_server;
         return -1;
     }
 
@@ -196,12 +196,12 @@ int DiscoveryClient::DoRenew() const {
     os.move_to(cntl.request_attachment());
     chan.CallMethod(NULL, &cntl, NULL, NULL, NULL);
     if (cntl.Failed()) {
-        LOG(ERROR) << "Fail to post /discovery/renew: " << cntl.ErrorText();
+        FLARE_LOG(ERROR) << "Fail to post /discovery/renew: " << cntl.ErrorText();
         return -1;
     }
     std::string error_text;
     if (ParseCommonResult(cntl.response_attachment(), &error_text) != 0) {
-        LOG(ERROR) << "Fail to renew " << _params.hostname << " to " << _params.appid
+        FLARE_LOG(ERROR) << "Fail to renew " << _params.hostname << " to " << _params.appid
             << ": " << error_text;
         return -1;
     }
@@ -221,7 +221,7 @@ void* DiscoveryClient::PeriodicRenew(void* arg) {
 
     while (!fiber_stopped(fiber_self())) {
         if (consecutive_renew_error == FLAGS_discovery_reregister_threshold) {
-            LOG(WARNING) << "Re-register since discovery renew error threshold reached";
+            FLARE_LOG(WARNING) << "Re-register since discovery renew error threshold reached";
             // Do register until succeed or Cancel is called
             while (!fiber_stopped(fiber_self())) {
                 if (d->DoRegister() == 0) {
@@ -255,7 +255,7 @@ int DiscoveryClient::Register(const DiscoveryRegisterParam& params) {
         return -1;
     }
     if (fiber_start_background(&_th, NULL, PeriodicRenew, this) != 0) {
-        LOG(ERROR) << "Fail to start background PeriodicRenew";
+        FLARE_LOG(ERROR) << "Fail to start background PeriodicRenew";
         return -1;
     }
     return 0;
@@ -264,7 +264,7 @@ int DiscoveryClient::Register(const DiscoveryRegisterParam& params) {
 int DiscoveryClient::DoRegister() {
     Channel* chan = GetOrNewDiscoveryChannel();
     if (NULL == chan) {
-        LOG(ERROR) << "Fail to create discovery channel";
+        FLARE_LOG(ERROR) << "Fail to create discovery channel";
         return -1;
     }
     Controller cntl;
@@ -291,12 +291,12 @@ int DiscoveryClient::DoRegister() {
     os.move_to(cntl.request_attachment());
     chan->CallMethod(NULL, &cntl, NULL, NULL, NULL);
     if (cntl.Failed()) {
-        LOG(ERROR) << "Fail to register " << _params.appid << ": " << cntl.ErrorText();
+        FLARE_LOG(ERROR) << "Fail to register " << _params.appid << ": " << cntl.ErrorText();
         return -1;
     }
     std::string error_text;
     if (ParseCommonResult(cntl.response_attachment(), &error_text) != 0) {
-        LOG(ERROR) << "Fail to register " << _params.hostname << " to " << _params.appid
+        FLARE_LOG(ERROR) << "Fail to register " << _params.hostname << " to " << _params.appid
                 << ": " << error_text;
         return -1;
     }
@@ -312,7 +312,7 @@ int DiscoveryClient::DoCancel() const {
     channel_options.connect_timeout_ms = FLAGS_discovery_timeout_ms / 3;
     Channel chan;
     if (chan.Init(_current_discovery_server, &channel_options) != 0) {
-        LOG(FATAL) << "Fail to init channel to " << _current_discovery_server;
+        FLARE_LOG(FATAL) << "Fail to init channel to " << _current_discovery_server;
         return -1;
     }
 
@@ -329,12 +329,12 @@ int DiscoveryClient::DoCancel() const {
     os.move_to(cntl.request_attachment());
     chan.CallMethod(NULL, &cntl, NULL, NULL, NULL);
     if (cntl.Failed()) {
-        LOG(ERROR) << "Fail to post /discovery/cancel: " << cntl.ErrorText();
+        FLARE_LOG(ERROR) << "Fail to post /discovery/cancel: " << cntl.ErrorText();
         return -1;
     }
     std::string error_text;
     if (ParseCommonResult(cntl.response_attachment(), &error_text) != 0) {
-        LOG(ERROR) << "Fail to cancel " << _params.hostname << " in " << _params.appid
+        FLARE_LOG(ERROR) << "Fail to cancel " << _params.hostname << " in " << _params.appid
             << ": " << error_text;
         return -1;
     }
@@ -348,12 +348,12 @@ int DiscoveryNamingService::GetServers(const char* service_name,
     if (service_name == NULL || *service_name == '\0' ||
         FLAGS_discovery_env.empty() ||
         FLAGS_discovery_status.empty()) {
-        LOG_ONCE(ERROR) << "Invalid parameters";
+        FLARE_LOG_ONCE(ERROR) << "Invalid parameters";
         return -1;
     }
     Channel* chan = GetOrNewDiscoveryChannel();
     if (NULL == chan) {
-        LOG(ERROR) << "Fail to create discovery channel";
+        FLARE_LOG(ERROR) << "Fail to create discovery channel";
     }
     servers->clear();
     Controller cntl;
@@ -367,7 +367,7 @@ int DiscoveryNamingService::GetServers(const char* service_name,
     cntl.http_request().uri() = uri_str;
     chan->CallMethod(NULL, &cntl, NULL, NULL, NULL);
     if (cntl.Failed()) {
-        LOG(ERROR) << "Fail to get /discovery/fetchs: " << cntl.ErrorText();
+        FLARE_LOG(ERROR) << "Fail to get /discovery/fetchs: " << cntl.ErrorText();
         return -1;
     }
 
@@ -375,29 +375,29 @@ int DiscoveryNamingService::GetServers(const char* service_name,
     RAPIDJSON_NAMESPACE::Document d;
     d.Parse(response.c_str());
     if (!d.IsObject()) {
-        LOG(ERROR) << "Fail to parse " << response << " as json object";
+        FLARE_LOG(ERROR) << "Fail to parse " << response << " as json object";
         return -1;
     }
     auto itr_data = d.FindMember("data");
     if (itr_data == d.MemberEnd()) {
-        LOG(ERROR) << "No data field in discovery/fetchs response";
+        FLARE_LOG(ERROR) << "No data field in discovery/fetchs response";
         return -1;
     }
     const RAPIDJSON_NAMESPACE::Value& data = itr_data->value;
     auto itr_service = data.FindMember(service_name);
     if (itr_service == data.MemberEnd()) {
-        LOG(ERROR) << "No " << service_name << " field in discovery response";
+        FLARE_LOG(ERROR) << "No " << service_name << " field in discovery response";
         return -1;
     }
     const RAPIDJSON_NAMESPACE::Value& services = itr_service->value;
     auto itr_instances = services.FindMember("instances");
     if (itr_instances == services.MemberEnd()) {
-        LOG(ERROR) << "Fail to find instances";
+        FLARE_LOG(ERROR) << "Fail to find instances";
         return -1;
     }
     const RAPIDJSON_NAMESPACE::Value& instances = itr_instances->value;
     if (!instances.IsArray()) {
-        LOG(ERROR) << "Fail to parse instances as an array";
+        FLARE_LOG(ERROR) << "Fail to parse instances as an array";
         return -1;
     }
 
@@ -414,7 +414,7 @@ int DiscoveryNamingService::GetServers(const char* service_name,
 
         auto itr = instances[i].FindMember("addrs");
         if (itr == instances[i].MemberEnd() || !itr->value.IsArray()) {
-            LOG(ERROR) << "Fail to find addrs or addrs is not an array";
+            FLARE_LOG(ERROR) << "Fail to find addrs or addrs is not an array";
             return -1;
         }
         const RAPIDJSON_NAMESPACE::Value& addrs = itr->value;
@@ -440,7 +440,7 @@ int DiscoveryNamingService::GetServers(const char* service_name,
             // null-terminated string, so it is safe to pass addr.data() as the
             // first parameter to str2endpoint.
             if (str2endpoint(addr.data(), &node.addr) != 0) {
-                LOG(ERROR) << "Invalid address=`" << addr << '\'';
+                FLARE_LOG(ERROR) << "Invalid address=`" << addr << '\'';
                 continue;
             }
             servers->push_back(node);

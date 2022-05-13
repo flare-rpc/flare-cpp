@@ -22,7 +22,7 @@
 #include <iostream>
 #include <gflags/gflags.h>
 #include "flare/base/profile.h"
-#include "flare/log/logging.h"                       // LOG
+#include "flare/log/logging.h"                       // FLARE_LOG
 #include "flare/base/scoped_lock.h"
 #include "flare/base/endpoint.h"
 #include "flare/base/base64.h"
@@ -95,7 +95,7 @@ int HttpMessage::on_header_value(http_parser *parser,
         http_message->_stage = HTTP_ON_HEADER_VALUE;
         first_entry = true;
         if (http_message->_cur_header.empty()) {
-            LOG(ERROR) << "Header name is empty";
+            FLARE_LOG(ERROR) << "Header name is empty";
             return -1;
         }
         http_message->_cur_value =
@@ -145,7 +145,7 @@ int HttpMessage::on_headers_complete(http_parser *parser) {
     if (parser->http_major > 1) {
         // NOTE: this checking is a MUST because ProcessHttpResponse relies
         // on it to cast InputMessageBase* into different types.
-        LOG(WARNING) << "Invalid major_version=" << parser->http_major;
+        FLARE_LOG(WARNING) << "Invalid major_version=" << parser->http_major;
         parser->http_major = 1;
     }
     http_message->header().set_version(parser->http_major, parser->http_minor);
@@ -161,7 +161,7 @@ int HttpMessage::on_headers_complete(http_parser *parser) {
     http_message->header().set_method(static_cast<HttpMethod>(parser->method));
     if (parser->type == HTTP_REQUEST &&
         http_message->header().uri().SetHttpURL(http_message->_url) != 0) {
-        LOG(ERROR) << "Fail to parse url=`" << http_message->_url << '\'';
+        FLARE_LOG(ERROR) << "Fail to parse url=`" << http_message->_url << '\'';
         return -1;
     }
     //rfc2616-sec5.2
@@ -223,7 +223,7 @@ int HttpMessage::OnBody(const char *at, const size_t length) {
             // description which is very helpful for debugging. Otherwise
             // the body is probably streaming data which is too long to print.
             header().status_code() == HTTP_STATUS_OK) {
-            LOG(INFO) << '\n' << _vmsgbuilder->buf();
+            FLARE_LOG(INFO) << '\n' << _vmsgbuilder->buf();
             delete _vmsgbuilder;
             _vmsgbuilder = NULL;
         } else {
@@ -288,7 +288,7 @@ int HttpMessage::OnMessageComplete() {
             *_vmsgbuilder << "\n<skipped " << _vbodylen
                 - (size_t)FLAGS_http_verbose_max_body_length << " bytes>";
         }
-        LOG(INFO) << '\n' << _vmsgbuilder->buf();
+        FLARE_LOG(INFO) << '\n' << _vmsgbuilder->buf();
         delete _vmsgbuilder;
         _vmsgbuilder = NULL;
     }
@@ -423,7 +423,7 @@ ssize_t HttpMessage::ParseFromArray(const char *data, const size_t length) {
         if (length == 0) {
             return 0;
         }
-        LOG(ERROR) << "Append data(len=" << length
+        FLARE_LOG(ERROR) << "Append data(len=" << length
                    << ") to already-completed message";
         return -1;
     }
@@ -444,7 +444,7 @@ ssize_t HttpMessage::ParseFromCordBuf(const flare::cord_buf &buf) {
         if (buf.empty()) {
             return 0;
         }
-        LOG(ERROR) << "Append data(len=" << buf.size()
+        FLARE_LOG(ERROR) << "Append data(len=" << buf.size()
                    << ") to already-completed message";
         return -1;
     }

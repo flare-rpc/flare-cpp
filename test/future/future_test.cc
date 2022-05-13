@@ -812,7 +812,7 @@ namespace flare {
     }
 
     TEST(FutureV2DeathTest, WhenAnyCollectionEmpty) {
-        FLAGS_crash_on_fatal_log = true;
+        FLAGS_flare_crash_on_fatal_log = true;
         std::vector<future<>> vfs;
         ASSERT_DEATH(when_any(std::move(vfs)), "on an empty collection is undefined");
 

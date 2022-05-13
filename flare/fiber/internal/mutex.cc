@@ -145,7 +145,7 @@ namespace flare::fiber_internal {
         if (!_init) {
             // Already output nanoseconds, always set cycles/second to 1000000000.
             _disk_buf.append("--- contention\ncycles/second=1000000000\n");
-            CHECK_EQ(0, _dedup_map.init(1024, 60));
+            FLARE_CHECK_EQ(0, _dedup_map.init(1024, 60));
             _init = true;
         }
     }
@@ -204,7 +204,7 @@ namespace flare::fiber_internal {
                         if (errno == EINTR) {
                             continue;
                         }
-                        PLOG(ERROR) << "Fail to read /proc/self/maps";
+                        FLARE_PLOG(ERROR) << "Fail to read /proc/self/maps";
                         break;
                     }
                     if (nr == 0) {
@@ -213,7 +213,7 @@ namespace flare::fiber_internal {
                     }
                 }
             } else {
-                PLOG(ERROR) << "Fail to open /proc/self/maps";
+                FLARE_PLOG(ERROR) << "Fail to open /proc/self/maps";
             }
         }
         // Write _disk_buf into _filename
@@ -221,7 +221,7 @@ namespace flare::fiber_internal {
         flare::file_path path(_filename);
         auto dir = path.parent_path();
         if (!flare::create_directories(dir, ec)) {
-            LOG(ERROR) << "Fail to create directory=`" << dir.c_str()
+            FLARE_LOG(ERROR) << "Fail to create directory=`" << dir.c_str()
                        << "', " << ec.message();
             return;
         }
@@ -233,7 +233,7 @@ namespace flare::fiber_internal {
         }
         flare::base::fd_guard fd(open(_filename.c_str(), O_WRONLY | O_CREAT | flag, 0666));
         if (fd < 0) {
-            PLOG(ERROR) << "Fail to open " << _filename;
+            FLARE_PLOG(ERROR) << "Fail to open " << _filename;
             return;
         }
         // Write once normally, write until empty in the end.
@@ -243,7 +243,7 @@ namespace flare::fiber_internal {
                 if (errno == EINTR) {
                     continue;
                 }
-                PLOG(ERROR) << "Fail to write into " << _filename;
+                FLARE_PLOG(ERROR) << "Fail to write into " << _filename;
                 return;
             }
             BT_VLOG << "Write " << nw << " bytes into " << _filename;
@@ -306,7 +306,7 @@ namespace flare::fiber_internal {
 // Start profiling contention.
     bool ContentionProfilerStart(const char *filename) {
         if (filename == NULL) {
-            LOG(ERROR) << "Parameter [filename] is NULL";
+            FLARE_LOG(ERROR) << "Parameter [filename] is NULL";
             return false;
         }
         // g_cp is also the flag marking start/stop.
@@ -351,7 +351,7 @@ namespace flare::fiber_internal {
                 return;
             }
         }
-        LOG(ERROR) << "Contention profiler is not started!";
+        FLARE_LOG(ERROR) << "Contention profiler is not started!";
     }
 
     FLARE_FORCE_INLINE bool

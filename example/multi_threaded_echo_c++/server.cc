@@ -79,7 +79,7 @@ int main(int argc, char* argv[]) {
     // use flare::rpc::SERVER_OWNS_SERVICE.
     if (server.AddService(&echo_service_impl, 
                           flare::rpc::SERVER_DOESNT_OWN_SERVICE) != 0) {
-        LOG(ERROR) << "Fail to add service";
+        FLARE_LOG(ERROR) << "Fail to add service";
         return -1;
     }
 
@@ -91,7 +91,7 @@ int main(int argc, char* argv[]) {
     options.max_concurrency = FLAGS_max_concurrency;
     options.internal_port = FLAGS_internal_port;
     if (server.Start(FLAGS_port, &options) != 0) {
-        LOG(ERROR) << "Fail to start EchoServer";
+        FLARE_LOG(ERROR) << "Fail to start EchoServer";
         return -1;
     }
 

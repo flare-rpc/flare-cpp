@@ -210,7 +210,7 @@ namespace mcpack2pb {
         _zc_stream->BackUp(n + _size);
         const int64_t nbackup = saved_bytecount - _zc_stream->ByteCount();
         if (nbackup != n + _size) {
-            CHECK(false) << "Expect output stream backward for " << n + _size
+            FLARE_CHECK(false) << "Expect output stream backward for " << n + _size
                          << " bytes, actually " << nbackup << " bytes";
         }
         _size = 0;

@@ -23,7 +23,7 @@
 #include <limits>                                 // std::numeric_limits
 #include <math.h>                                 // round
 #include <gflags/gflags_declare.h>
-#include "flare/log/logging.h"                         // LOG
+#include "flare/log/logging.h"                         // FLARE_LOG
 #include "flare/variable/detail/sampler.h"
 #include "flare/variable/detail/series.h"
 #include "flare/variable/variable.h"
@@ -81,7 +81,7 @@ public:
         , _window_size(window_size > 0 ? window_size : FLAGS_variable_dump_interval)
         , _sampler(var->get_sampler())
         , _series_sampler(NULL) {
-        CHECK_EQ(0, _sampler->set_window_size(_window_size));
+        FLARE_CHECK_EQ(0, _sampler->set_window_size(_window_size));
     }
     
     ~WindowBase() {

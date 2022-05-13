@@ -48,7 +48,7 @@ int main(int argc, char* argv[]) {
     options.timeout_ms = FLAGS_timeout_ms/*milliseconds*/;
     options.max_retry = FLAGS_max_retry;
     if (channel.Init(FLAGS_server.c_str(), FLAGS_load_balancer.c_str(), &options) != 0) {
-        LOG(ERROR) << "Fail to initialize channel";
+        FLARE_LOG(ERROR) << "Fail to initialize channel";
         return -1;
     }
 
@@ -66,14 +66,14 @@ int main(int argc, char* argv[]) {
         stub.CallMethod("Echo", &cntl, &req, &res, NULL);
 
         if (cntl.Failed()) {
-            LOG(ERROR) << "Fail to send thrift request, " << cntl.ErrorText();
+            FLARE_LOG(ERROR) << "Fail to send thrift request, " << cntl.ErrorText();
             sleep(1); // Remove this sleep in production code.
         } else {
             g_latency_recorder << cntl.latency_us();
-            LOG(INFO) << "Thrift Response: " << res;
+            FLARE_LOG(INFO) << "Thrift Response: " << res;
         }
 
-        LOG_EVERY_SECOND(INFO)
+        FLARE_LOG_EVERY_SECOND(INFO)
             << "Sending thrift requests at qps=" << g_latency_recorder.qps(1)
             << " latency=" << g_latency_recorder.latency(1);
 
@@ -81,7 +81,7 @@ int main(int argc, char* argv[]) {
 
     }
 
-    LOG(INFO) << "EchoClient is going to quit";
+    FLARE_LOG(INFO) << "EchoClient is going to quit";
     return 0;
 }
 

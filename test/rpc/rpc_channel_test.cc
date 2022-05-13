@@ -81,7 +81,7 @@ namespace {
 
         ~DeleteOnlyOnceChannel() {
             if (_c.fetch_sub(1) != 1) {
-                LOG(ERROR) << "Delete more than once!";
+                FLARE_LOG(ERROR) << "Delete more than once!";
                 abort();
             }
         }
@@ -151,12 +151,12 @@ namespace {
                 return;
             }
             if (req->close_fd()) {
-                LOG(INFO) << "close fd...";
+                FLARE_LOG(INFO) << "close fd...";
                 cntl->CloseConnection("Close connection according to request");
                 return;
             }
             if (req->sleep_us() > 0) {
-                LOG(INFO) << "sleep " << req->sleep_us() << "us...";
+                FLARE_LOG(INFO) << "sleep " << req->sleep_us() << "us...";
                 flare::fiber_sleep_for(req->sleep_us());
             }
             res->set_message("received " + req->message());
@@ -383,7 +383,7 @@ namespace {
 
             EXPECT_TRUE(flare::rpc::ETOOMANYFAILS == cntl.ErrorCode() ||
                         ECONNREFUSED == cntl.ErrorCode()) << cntl.ErrorText();
-            LOG(INFO) << cntl.ErrorText();
+            FLARE_LOG(INFO) << cntl.ErrorText();
         }
 
         void TestConnectionFailedSelective(bool single_server, bool async,
@@ -413,7 +413,7 @@ namespace {
             ASSERT_EQ(1, cntl.sub_count());
             EXPECT_EQ(ECONNREFUSED, cntl.sub(0)->ErrorCode())
                                 << cntl.sub(0)->ErrorText();
-            LOG(INFO) << cntl.ErrorText();
+            FLARE_LOG(INFO) << cntl.ErrorText();
         }
 
         void TestSuccess(bool single_server, bool async, bool short_connection) {
@@ -810,7 +810,7 @@ namespace {
             if (arg->sleep_before_cancel_us > 0) {
                 flare::fiber_sleep_for(arg->sleep_before_cancel_us);
             }
-            LOG(INFO) << "Start to cancel cid=" << arg->cid.value;
+            FLARE_LOG(INFO) << "Start to cancel cid=" << arg->cid.value;
             flare::rpc::StartCancel(arg->cid);
             return NULL;
         }
@@ -1140,7 +1140,7 @@ namespace {
             test::EchoResponse res;
             CallMethod(&channel, &cntl, &req, &res, async);
             EXPECT_EQ(flare::rpc::EREQUEST, cntl.ErrorCode()) << cntl.ErrorText();
-            LOG(WARNING) << cntl.ErrorText();
+            FLARE_LOG(WARNING) << cntl.ErrorText();
             StopAndJoin();
         }
 
@@ -1165,7 +1165,7 @@ namespace {
             test::EchoResponse res;
             CallMethod(&channel, &cntl, &req, &res, async);
             EXPECT_EQ(flare::rpc::EREQUEST, cntl.ErrorCode()) << cntl.ErrorText();
-            LOG(WARNING) << cntl.ErrorText();
+            FLARE_LOG(WARNING) << cntl.ErrorText();
             ASSERT_EQ(1, cntl.sub_count());
             ASSERT_EQ(flare::rpc::EREQUEST, cntl.sub(0)->ErrorCode());
             StopAndJoin();
@@ -1443,7 +1443,7 @@ namespace {
             CallMethod(&channel, &cntl, &req, &res, async);
 
             EXPECT_EQ(flare::rpc::EINTERNAL, cntl.ErrorCode()) << cntl.ErrorText();
-            LOG(INFO) << cntl.ErrorText();
+            FLARE_LOG(INFO) << cntl.ErrorText();
             StopAndJoin();
         }
 
@@ -1474,7 +1474,7 @@ namespace {
             ASSERT_EQ(1, cntl.sub_count());
             ASSERT_EQ(flare::rpc::EINTERNAL, cntl.sub(0)->ErrorCode());
 
-            LOG(INFO) << cntl.ErrorText();
+            FLARE_LOG(INFO) << cntl.ErrorText();
             StopAndJoin();
         }
 
@@ -2581,7 +2581,7 @@ namespace {
     }
 
     TEST_F(ChannelTest, sizeof) {
-        LOG(INFO) << "Size of Channel is " << sizeof(flare::rpc::Channel)
+        FLARE_LOG(INFO) << "Size of Channel is " << sizeof(flare::rpc::Channel)
                   << ", Size of ParallelChannel is " << sizeof(flare::rpc::ParallelChannel)
                   << ", Size of Controller is " << sizeof(flare::rpc::Controller)
                   << ", Size of vector is " << sizeof(std::vector<flare::rpc::Controller>);

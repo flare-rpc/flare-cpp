@@ -521,7 +521,7 @@ namespace flare {
         // I do want to return a ready future on empty `futures`, but this
         // additionally requires `Ts...` to be DefaultConstructible, which
         // IMO is an overkill.
-        CHECK(!futures.empty())<<
+        FLARE_CHECK(!futures.empty())<<
                 "Calling `when_any(PreservingErrors)` on an empty "
                "collection is undefined. We simply couldn't "
                "define what does 'wait for a single object in an "

@@ -35,7 +35,7 @@ namespace flare::rpc {
                                             std::vector<ServerNode> *servers) {
             servers->clear();
             if (!dns_name) {
-                LOG(ERROR) << "dns_name is NULL";
+                FLARE_LOG(ERROR) << "dns_name is NULL";
                 return -1;
             }
 
@@ -47,7 +47,7 @@ namespace flare::rpc {
                 buf[i] = dns_name[i];
             }
             if (i == sizeof(buf) - 1) {
-                LOG(ERROR) << "dns_name=`" << dns_name << "' is too long";
+                FLARE_LOG(ERROR) << "dns_name=`" << dns_name << "' is too long";
                 return -1;
             }
 
@@ -58,11 +58,11 @@ namespace flare::rpc {
                 char *end = NULL;
                 port = strtol(dns_name + i, &end, 10);
                 if (end == dns_name + i) {
-                    LOG(ERROR) << "No port after colon in `" << dns_name << '\'';
+                    FLARE_LOG(ERROR) << "No port after colon in `" << dns_name << '\'';
                     return -1;
                 } else if (*end != '\0') {
                     if (*end != '/') {
-                        LOG(ERROR) << "Invalid content=`" << end << "' after port="
+                        FLARE_LOG(ERROR) << "Invalid content=`" << end << "' after port="
                                    << port << " in `" << dns_name << '\'';
                         return -1;
                     }
@@ -73,7 +73,7 @@ namespace flare::rpc {
                 }
             }
             if (port < 0 || port > 65535) {
-                LOG(ERROR) << "Invalid port=" << port << " in `" << dns_name << '\'';
+                FLARE_LOG(ERROR) << "Invalid port=" << port << " in `" << dns_name << '\'';
                 return -1;
             }
 
@@ -84,7 +84,7 @@ namespace flare::rpc {
             // https://lists.apple.com/archives/darwin-dev/2006/May/msg00008.html
             struct hostent *result = gethostbyname(buf);
             if (result == NULL) {
-                LOG(WARNING) << "result of gethostbyname is NULL";
+                FLARE_LOG(WARNING) << "result of gethostbyname is NULL";
                 return -1;
             }
 #else
@@ -111,12 +111,12 @@ namespace flare::rpc {
             } while (1);
             if (ret != 0) {
                 // `hstrerror' is thread safe under linux
-                LOG(WARNING) << "Can't resolve `" << buf << "', return=`" << flare_error(ret)
+                FLARE_LOG(WARNING) << "Can't resolve `" << buf << "', return=`" << flare_error(ret)
                              << "' herror=`" << hstrerror(error) << '\'';
                 return -1;
             }
             if (result == NULL) {
-                LOG(WARNING) << "result of gethostbyname_r is NULL";
+                FLARE_LOG(WARNING) << "result of gethostbyname_r is NULL";
                 return -1;
             }
 #endif
@@ -129,7 +129,7 @@ namespace flare::rpc {
                     bcopy(result->h_addr_list[i], &point.ip, result->h_length);
                     servers->push_back(ServerNode(point, std::string()));
                 } else {
-                    LOG(WARNING) << "Found address of unsupported protocol="
+                    FLARE_LOG(WARNING) << "Found address of unsupported protocol="
                                  << result->h_addrtype;
                 }
             }

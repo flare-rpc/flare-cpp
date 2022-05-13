@@ -53,7 +53,7 @@ namespace flare::variable {
         if (v && s_var_may_abort) {
             // Name conflict happens before handling args of main(), this is
             // generally caused by global variable.
-            LOG(FATAL) << "Abort due to name conflict";
+            FLARE_LOG(FATAL) << "Abort due to name conflict";
             abort();
         }
         return true;
@@ -84,7 +84,7 @@ namespace flare::variable {
         pthread_mutex_t mutex;
 
         VarMapWithLock() {
-            CHECK_EQ(0, init(1024, 80));
+            FLARE_CHECK_EQ(0, init(1024, 80));
             pthread_mutexattr_t attr;
             pthread_mutexattr_init(&attr);
             pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE);
@@ -127,7 +127,7 @@ namespace flare::variable {
     }
 
     Variable::~Variable() {
-        CHECK(!hide()) << "Subclass of Variable MUST call hide() manually in their"
+        FLARE_CHECK(!hide()) << "Subclass of Variable MUST call hide() manually in their"
                           " dtors to avoid displaying a variable that is just destructing";
     }
 
@@ -135,7 +135,7 @@ namespace flare::variable {
                               const std::string_view &name,
                               DisplayFilter display_filter) {
         if (name.empty()) {
-            LOG(ERROR) << "Parameter[name] is empty";
+            FLARE_LOG(ERROR) << "Parameter[name] is empty";
             return -1;
         }
         // NOTE: It's impossible to atomically erase from a submap and insert into
@@ -171,7 +171,7 @@ namespace flare::variable {
             }
         }
         if (FLAGS_variable_abort_on_same_name) {
-            LOG(FATAL) << "Abort due to name conflict";
+            FLARE_LOG(FATAL) << "Abort due to name conflict";
             abort();
         } else if (!s_var_may_abort) {
             // Mark name conflict occurs, If this conflict happens before
@@ -180,7 +180,7 @@ namespace flare::variable {
             s_var_may_abort = true;
         }
 
-        LOG(ERROR) << "Already exposed `" << _name << "' whose value is `"
+        FLARE_LOG(ERROR) << "Already exposed `" << _name << "' whose value is `"
                    << describe_exposed(_name) << '\'';
         _name.clear();
         return -1;
@@ -194,9 +194,9 @@ namespace flare::variable {
         FLARE_SCOPED_LOCK(m.mutex);
         VarEntry *entry = m.seek(_name);
         if (entry) {
-            CHECK_EQ(1UL, m.erase(_name));
+            FLARE_CHECK_EQ(1UL, m.erase(_name));
         } else {
-            CHECK(false) << "`" << _name << "' must exist";
+            FLARE_CHECK(false) << "`" << _name << "' must exist";
         }
         _name.clear();
         return true;
@@ -446,7 +446,7 @@ namespace flare::variable {
 
     int Variable::dump_exposed(Dumper *dumper, const DumpOptions *poptions) {
         if (NULL == dumper) {
-            LOG(ERROR) << "Parameter[dumper] is NULL";
+            FLARE_LOG(ERROR) << "Parameter[dumper] is NULL";
             return -1;
         }
         DumpOptions opt;
@@ -513,7 +513,7 @@ namespace flare::variable {
             }
         }
         if (log_dummped) {
-            LOG(INFO) << "Dumpped variables:" << dumpped_info.str();
+            FLARE_LOG(INFO) << "Dumpped variables:" << dumpped_info.str();
         }
         return count;
     }
@@ -581,13 +581,13 @@ namespace flare::variable {
                 std::error_code ec;
                 flare::file_path dirPath = flare::file_path(_filename).parent_path();
                 if (!flare::create_directories(dirPath, ec)) {
-                    LOG(ERROR) << "Fail to create directory=`" << dirPath.c_str()
+                    FLARE_LOG(ERROR) << "Fail to create directory=`" << dirPath.c_str()
                                << "', " << ec.message();
                     return false;
                 }
                 _fp = fopen(_filename.c_str(), "w");
                 if (NULL == _fp) {
-                    LOG(ERROR) << "Fail to open " << _filename;
+                    FLARE_LOG(ERROR) << "Fail to open " << _filename;
                     return false;
                 }
             }
@@ -595,7 +595,7 @@ namespace flare::variable {
                         (int) _prefix.size(), _prefix.data(),
                         (int) name.size(), name.data(),
                         (int) desc.size(), desc.data()) < 0) {
-                PLOG(ERROR) << "Fail to write into " << _filename;
+                FLARE_PLOG(ERROR) << "Fail to write into " << _filename;
                 return false;
             }
             return true;
@@ -697,25 +697,25 @@ namespace flare::variable {
             std::string prefix;
             std::string tabs;
             if (!GFLAGS_NS::GetCommandLineOption("variable_dump_file", &filename)) {
-                LOG(ERROR) << "Fail to get gflag variable_dump_file";
+                FLARE_LOG(ERROR) << "Fail to get gflag variable_dump_file";
                 return NULL;
             }
             if (!GFLAGS_NS::GetCommandLineOption("variable_dump_include",
                                                  &options.white_wildcards)) {
-                LOG(ERROR) << "Fail to get gflag variable_dump_include";
+                FLARE_LOG(ERROR) << "Fail to get gflag variable_dump_include";
                 return NULL;
             }
             if (!GFLAGS_NS::GetCommandLineOption("variable_dump_exclude",
                                                  &options.black_wildcards)) {
-                LOG(ERROR) << "Fail to get gflag variable_dump_exclude";
+                FLARE_LOG(ERROR) << "Fail to get gflag variable_dump_exclude";
                 return NULL;
             }
             if (!GFLAGS_NS::GetCommandLineOption("variable_dump_prefix", &prefix)) {
-                LOG(ERROR) << "Fail to get gflag variable_dump_prefix";
+                FLARE_LOG(ERROR) << "Fail to get gflag variable_dump_prefix";
                 return NULL;
             }
             if (!GFLAGS_NS::GetCommandLineOption("variable_dump_tabs", &tabs)) {
-                LOG(ERROR) << "Fail to get gflags variable_dump_tabs";
+                FLARE_LOG(ERROR) << "Fail to get gflags variable_dump_tabs";
                 return NULL;
             }
 
@@ -731,7 +731,7 @@ namespace flare::variable {
                 }
                 if (last_filename != filename) {
                     last_filename = filename;
-                    LOG(INFO) << "Write all variable to " << filename << " every "
+                    FLARE_LOG(INFO) << "Write all variable to " << filename << " every "
                               << FLAGS_variable_dump_interval << " seconds.";
                 }
                 const size_t pos2 = prefix.find("<app>");
@@ -741,7 +741,7 @@ namespace flare::variable {
                 FileDumperGroup dumper(tabs, filename, prefix);
                 int nline = Variable::dump_exposed(&dumper, &options);
                 if (nline < 0) {
-                    LOG(ERROR) << "Fail to dump vars into " << filename;
+                    FLARE_LOG(ERROR) << "Fail to dump vars into " << filename;
                 }
             }
 
@@ -752,7 +752,7 @@ namespace flare::variable {
             const int post_sleep_ms = 50;
             int cond_sleep_ms = FLAGS_variable_dump_interval * 1000 - post_sleep_ms;
             if (cond_sleep_ms < 0) {
-                LOG(ERROR) << "Bad cond_sleep_ms=" << cond_sleep_ms;
+                FLARE_LOG(ERROR) << "Bad cond_sleep_ms=" << cond_sleep_ms;
                 cond_sleep_ms = 10000;
             }
             timespec deadline = flare::time_point::future_unix_millis(cond_sleep_ms).to_timespec();
@@ -767,11 +767,11 @@ namespace flare::variable {
         pthread_t thread_id;
         int rc = pthread_create(&thread_id, NULL, dumping_thread, NULL);
         if (rc != 0) {
-            LOG(FATAL) << "Fail to launch dumping thread: " << flare_error(rc);
+            FLARE_LOG(FATAL) << "Fail to launch dumping thread: " << flare_error(rc);
             return;
         }
         // Detach the thread because no one would join it.
-        CHECK_EQ(0, pthread_detach(thread_id));
+        FLARE_CHECK_EQ(0, pthread_detach(thread_id));
         created_dumping_thread = true;
     }
 
@@ -798,7 +798,7 @@ namespace flare::variable {
         // this is just fine since people rarely have the intention of modifying
         // this flag at runtime.
         if (v < 1) {
-            LOG(ERROR) << "Invalid variable_dump_interval=" << v;
+            FLARE_LOG(ERROR) << "Invalid variable_dump_interval=" << v;
             return false;
         }
         return true;

@@ -63,7 +63,7 @@ namespace flare::fiber_internal {
         fiber_worker *g = c->create_group();
         fiber_statistics stat;
         if (NULL == g) {
-            LOG(ERROR) << "Fail to create fiber_worker in pthread=" << pthread_self();
+            FLARE_LOG(ERROR) << "Fail to create fiber_worker in pthread=" << pthread_self();
             return NULL;
         }
         BT_VLOG << "Created worker=" << pthread_self()
@@ -86,11 +86,11 @@ namespace flare::fiber_internal {
     fiber_worker *schedule_group::create_group() {
         fiber_worker *g = new(std::nothrow) fiber_worker(this);
         if (NULL == g) {
-            LOG(FATAL) << "Fail to new fiber_worker";
+            FLARE_LOG(FATAL) << "Fail to new fiber_worker";
             return NULL;
         }
         if (g->init(FLAGS_task_group_runqueue_capacity) != 0) {
-            LOG(ERROR) << "Fail to init fiber_worker";
+            FLARE_LOG(ERROR) << "Fail to init fiber_worker";
             delete g;
             return NULL;
         }
@@ -132,23 +132,23 @@ namespace flare::fiber_internal {
               _signal_per_second(&_cumulated_signal_count), _status(print_rq_sizes_in_the_tc, this),
               _nfibers("fiber_count") {
         // calloc shall set memory to zero
-        CHECK(_groups) << "Fail to create array of groups";
+        FLARE_CHECK(_groups) << "Fail to create array of groups";
     }
 
     int schedule_group::init(int concurrency) {
         if (_concurrency != 0) {
-            LOG(ERROR) << "Already initialized";
+            FLARE_LOG(ERROR) << "Already initialized";
             return -1;
         }
         if (concurrency <= 0) {
-            LOG(ERROR) << "Invalid concurrency=" << concurrency;
+            FLARE_LOG(ERROR) << "Invalid concurrency=" << concurrency;
             return -1;
         }
         _concurrency = concurrency;
 
         // Make sure TimerThread is ready.
         if (get_or_create_global_timer_thread() == NULL) {
-            LOG(ERROR) << "Fail to get global_timer_thread";
+            FLARE_LOG(ERROR) << "Fail to get global_timer_thread";
             return -1;
         }
 
@@ -156,7 +156,7 @@ namespace flare::fiber_internal {
         for (int i = 0; i < _concurrency; ++i) {
             const int rc = pthread_create(&_workers[i], NULL, worker_thread, this);
             if (rc) {
-                LOG(ERROR) << "Fail to create _workers[" << i << "], " << flare_error(rc);
+                FLARE_LOG(ERROR) << "Fail to create _workers[" << i << "], " << flare_error(rc);
                 return -1;
             }
         }
@@ -191,7 +191,7 @@ namespace flare::fiber_internal {
             const int rc = pthread_create(
                     &_workers[i + old_concurency], NULL, worker_thread, this);
             if (rc) {
-                LOG(WARNING) << "Fail to create _workers[" << i + old_concurency
+                FLARE_LOG(WARNING) << "Fail to create _workers[" << i + old_concurency
                              << "], " << flare_error(rc);
                 _concurrency.fetch_sub(1, std::memory_order_release);
                 break;
@@ -207,7 +207,7 @@ namespace flare::fiber_internal {
         if (ngroup != 0) {
             return _groups[flare::base::fast_rand_less_than(ngroup)];
         }
-        CHECK(false) << "Impossible: ngroup is 0";
+        FLARE_CHECK(false) << "Impossible: ngroup is 0";
         return NULL;
     }
 
@@ -216,7 +216,7 @@ namespace flare::fiber_internal {
     void schedule_group::stop_and_join() {
         // Close epoll threads so that worker threads are not waiting on epoll(
         // which cannot be woken up by signal_task below)
-        CHECK_EQ(0, stop_and_join_epoll_threads());
+        FLARE_CHECK_EQ(0, stop_and_join_epoll_threads());
 
         // Stop workers
         {
@@ -278,11 +278,11 @@ namespace flare::fiber_internal {
 
     int schedule_group::_destroy_group(fiber_worker *g) {
         if (NULL == g) {
-            LOG(ERROR) << "Param[g] is NULL";
+            FLARE_LOG(ERROR) << "Param[g] is NULL";
             return -1;
         }
         if (g->_control != this) {
-            LOG(ERROR) << "fiber_worker=" << g
+            FLARE_LOG(ERROR) << "fiber_worker=" << g
                        << " does not belong to this schedule_group=" << this;
             return -1;
         }

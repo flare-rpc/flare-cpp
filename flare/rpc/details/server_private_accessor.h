@@ -32,7 +32,7 @@ namespace flare::rpc {
     class ServerPrivateAccessor {
     public:
         explicit ServerPrivateAccessor(const Server *svr) {
-            CHECK(svr);
+            FLARE_CHECK(svr);
             _server = svr;
         }
 

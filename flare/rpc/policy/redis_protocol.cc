@@ -20,7 +20,7 @@
 #include <google/protobuf/descriptor.h>         // MethodDescriptor
 #include <google/protobuf/message.h>            // Message
 #include <gflags/gflags.h>
-#include "flare/log/logging.h"                       // LOG()
+#include "flare/log/logging.h"                       // FLARE_LOG()
 #include "flare/times/time.h"
 #include "flare/io/cord_buf.h"                         // flare::cord_buf
 #include "flare/rpc/controller.h"               // Controller
@@ -87,7 +87,7 @@ int ConsumeCommand(RedisConnContext* ctx,
         if (result == REDIS_CMD_HANDLED) {
             ctx->transaction_handler.reset(NULL);
         } else if (result == REDIS_CMD_BATCHED) {
-            LOG(ERROR) << "BATCHED should not be returned by a transaction handler.";
+            FLARE_LOG(ERROR) << "BATCHED should not be returned by a transaction handler.";
             return -1;
         }
     } else {
@@ -100,7 +100,7 @@ int ConsumeCommand(RedisConnContext* ctx,
             result = ch->Run(args, &output, flush_batched);
             if (result == REDIS_CMD_CONTINUE) {
                 if (ctx->batched_size != 0) {
-                    LOG(ERROR) << "CONTINUE should not be returned in a batched process.";
+                    FLARE_LOG(ERROR) << "CONTINUE should not be returned in a batched process.";
                     return -1;
                 }
                 ctx->transaction_handler.reset(ch->NewTransactionHandler());
@@ -112,7 +112,7 @@ int ConsumeCommand(RedisConnContext* ctx,
     if (result == REDIS_CMD_HANDLED) {
         if (ctx->batched_size) {
             if ((int)output.size() != (ctx->batched_size + 1)) {
-                LOG(ERROR) << "reply array size can't be matched with batched size, "
+                FLARE_LOG(ERROR) << "reply array size can't be matched with batched size, "
                     << " expected=" << ctx->batched_size + 1 << " actual=" << output.size();
                 return -1;
             }
@@ -128,7 +128,7 @@ int ConsumeCommand(RedisConnContext* ctx,
     } else if (result == REDIS_CMD_BATCHED) {
         // just do nothing and wait handler to return OK.
     } else {
-        LOG(ERROR) << "unknown status=" << result;
+        FLARE_LOG(ERROR) << "unknown status=" << result;
         return -1;
     }
     return 0;
@@ -185,10 +185,10 @@ ParseResult ParseRedisMessage(flare::cord_buf* source, Socket* socket,
         }
         flare::cord_buf sendbuf;
         appender.move_to(sendbuf);
-        CHECK(!sendbuf.empty());
+        FLARE_CHECK(!sendbuf.empty());
         Socket::WriteOptions wopt;
         wopt.ignore_eovercrowded = true;
-        LOG_IF(WARNING, socket->Write(&sendbuf, &wopt) != 0)
+        FLARE_LOG_IF(WARNING, socket->Write(&sendbuf, &wopt) != 0)
             << "Fail to send redis reply";
         ctx->arena.clear();
         return MakeParseError(err);
@@ -204,7 +204,7 @@ ParseResult ParseRedisMessage(flare::cord_buf* source, Socket* socket,
         // in most cases, and the time decreases to ~0.14s.
         PipelinedInfo pi;
         if (!socket->PopPipelinedInfo(&pi)) {
-            LOG(WARNING) << "No corresponding PipelinedInfo in socket";
+            FLARE_LOG(WARNING) << "No corresponding PipelinedInfo in socket";
             return MakeParseError(PARSE_ERROR_TRY_OTHERS);
         }
 
@@ -227,7 +227,7 @@ ParseResult ParseRedisMessage(flare::cord_buf* source, Socket* socket,
                 if (msg->response.reply_size() != 1 ||
                     !(msg->response.reply(0).type() == flare::rpc::REDIS_REPLY_STATUS &&
                       msg->response.reply(0).data().compare("OK") == 0)) {
-                    LOG(ERROR) << "Redis Auth failed: " << msg->response;
+                    FLARE_LOG(ERROR) << "Redis Auth failed: " << msg->response;
                     return MakeParseError(PARSE_ERROR_NO_RESOURCE,
                                           "Fail to authenticate with Redis");
                 }
@@ -238,7 +238,7 @@ ParseResult ParseRedisMessage(flare::cord_buf* source, Socket* socket,
                 continue;
             }
 
-            CHECK_EQ((uint32_t)msg->response.reply_size(), pi.count);
+            FLARE_CHECK_EQ((uint32_t)msg->response.reply_size(), pi.count);
             msg->id_wait = pi.id_wait;
             socket->release_parsing_context();
             return MakeMessage(msg);
@@ -256,7 +256,7 @@ void ProcessRedisResponse(InputMessageBase* msg_base) {
     Controller* cntl = NULL;
     const int rc = fiber_token_lock(cid, (void**)&cntl);
     if (rc != 0) {
-        LOG_IF(ERROR, rc != EINVAL && rc != EPERM)
+        FLARE_LOG_IF(ERROR, rc != EINVAL && rc != EPERM)
             << "Fail to lock correlation_id=" << cid << ": " << flare_error(rc);
         return;
     }
@@ -282,7 +282,7 @@ void ProcessRedisResponse(InputMessageBase* msg_base) {
             }
             ((RedisResponse*)cntl->response())->Swap(&msg->response);
             if (FLAGS_redis_verbose) {
-                LOG(INFO) << "\n[REDIS RESPONSE] "
+                FLARE_LOG(INFO) << "\n[REDIS RESPONSE] "
                           << *((RedisResponse*)cntl->response());
             }
         }
@@ -312,7 +312,7 @@ void SerializeRedisRequest(flare::cord_buf* buf,
     }
     ControllerPrivateAccessor(cntl).set_pipelined_count(rr->command_size());
     if (FLAGS_redis_verbose) {
-        LOG(INFO) << "\n[REDIS REQUEST] " << *rr;
+        FLARE_LOG(INFO) << "\n[REDIS REQUEST] " << *rr;
     }
 }
 

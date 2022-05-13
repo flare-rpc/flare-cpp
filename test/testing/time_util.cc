@@ -15,7 +15,7 @@ namespace flare {
 
         flare::time_zone load_time_zone(const std::string &name) {
             flare::time_zone tz;
-            DCHECK(load_time_zone(name, &tz))<< name;
+            FLARE_DCHECK(load_time_zone(name, &tz))<< name;
             return tz;
         }
 
@@ -100,7 +100,7 @@ namespace flare {
                                 new TestZoneInfoSource(zoneinfo.data, zoneinfo.length));
                     }
                 }
-                LOG(FATAL)<<"Unexpected time zone"<<name<<" in test";
+                FLARE_LOG(FATAL)<<"Unexpected time zone"<<name<<" in test";
                 return nullptr;
             }
 

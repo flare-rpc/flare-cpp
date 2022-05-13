@@ -125,7 +125,7 @@ void ProcessEspResponse(InputMessageBase* msg_base) {
     Controller* cntl = NULL;
     const int rc = fiber_token_lock(cid, (void**)&cntl);
     if (rc != 0) {
-        LOG_IF(ERROR, rc != EINVAL && rc != EPERM)
+        FLARE_LOG_IF(ERROR, rc != EINVAL && rc != EPERM)
             << "Fail to lock correlation_id=" << cid << ", " << flare_error(rc);
         return;
     }
@@ -147,7 +147,7 @@ void ProcessEspResponse(InputMessageBase* msg_base) {
         msg->payload.swap(response->body);
         if (response->head.msg != 0) {
             cntl->SetFailed(ENOENT, "esp response head msg != 0");
-            LOG(WARNING) << "Server " << msg->socket()->remote_side()
+            FLARE_LOG(WARNING) << "Server " << msg->socket()->remote_side()
                 << " doesn't contain the right data";
         }
     } // else just ignore the response.

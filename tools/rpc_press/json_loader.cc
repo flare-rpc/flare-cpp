@@ -63,7 +63,7 @@ bool JsonLoader::Reader::read_some() {
         if (errno == EINTR) {
             return read_some();
         }
-        PLOG(ERROR) << "Fail to read fd=" << _fd;
+        FLARE_PLOG(ERROR) << "Fail to read fd=" << _fd;
         return false;
     } else if (nr == 0) {
         return false;
@@ -118,7 +118,7 @@ bool JsonLoader::Reader::get_next_json(flare::cord_buf* json1) {
                     if (!_quoted) {
                         ++_brace_depth;
                     } else {
-                        VLOG(1) << "Quoted left brace";
+                        FLARE_VLOG(1) << "Quoted left brace";
                     }                        
                     break;
                 case '}':
@@ -130,11 +130,11 @@ bool JsonLoader::Reader::get_next_json(flare::cord_buf* json1) {
                             json1->pop_front(skipped);
                             return possibly_valid_json(*json1);
                         } else if (_brace_depth < 0) {
-                            LOG(ERROR) << "More right braces than left braces";
+                            FLARE_LOG(ERROR) << "More right braces than left braces";
                             return false;
                         }
                     } else {
-                        VLOG(1) << "Quoted right brace";
+                        FLARE_VLOG(1) << "Quoted right brace";
                     }
                     break;
                 case '"':
@@ -197,19 +197,19 @@ void JsonLoader::load_messages(
     out_msgs->clear();
     flare::cord_buf request_json;
     while (ctx->get_next_json(&request_json)) {
-        VLOG(1) << "Load " << out_msgs->size() + 1 << "-th json=`"
+        FLARE_VLOG(1) << "Load " << out_msgs->size() + 1 << "-th json=`"
                 << request_json << '\'';
         std::string error;
         google::protobuf::Message* request = _request_prototype->New();
         flare::cord_buf_as_zero_copy_input_stream wrapper(request_json);
         if (!json2pb::JsonToProtoMessage(&wrapper, request, &error)) {
-            LOG(WARNING) << "Fail to convert to pb: " << error << ", json=`"
+            FLARE_LOG(WARNING) << "Fail to convert to pb: " << error << ", json=`"
                          << request_json << '\'';
             delete request;
             continue;
         }
         out_msgs->push_back(request);
-        LOG_IF(INFO, (out_msgs->size() % 10000) == 0)
+        FLARE_LOG_IF(INFO, (out_msgs->size() % 10000) == 0)
             << "Loaded " << out_msgs->size() << " jsons";
     }
 }

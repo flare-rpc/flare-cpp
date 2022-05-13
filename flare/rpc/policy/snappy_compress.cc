@@ -33,7 +33,7 @@ bool SnappyCompress(const google::protobuf::Message& res, flare::cord_buf* buf) 
         flare::cord_buf_as_snappy_sink sink(*buf);
         return flare::snappy::Compress(&source, &sink);
     }
-    LOG(WARNING) << "Fail to serialize input pb=" << &res;
+    FLARE_LOG(WARNING) << "Fail to serialize input pb=" << &res;
     return false;
 }
 
@@ -44,7 +44,7 @@ bool SnappyDecompress(const flare::cord_buf& data, google::protobuf::Message* re
     if (flare::snappy::Uncompress(&source, &sink)) {
         return ParsePbFromCordBuf(req, binary_pb);
     }
-    LOG(WARNING) << "Fail to snappy::Uncompress, size=" << data.size();
+    FLARE_LOG(WARNING) << "Fail to snappy::Uncompress, size=" << data.size();
     return false;
 }
 

@@ -108,7 +108,7 @@ namespace {
             s_set.init(1024);
             flare::iobuf::blockmem_allocate = debug_block_allocate;
             flare::iobuf::blockmem_deallocate = debug_block_deallocate;
-            LOG(INFO) << "<Installed debug create/destroy>";
+            FLARE_LOG(INFO) << "<Installed debug create/destroy>";
         }
     }
 
@@ -486,7 +486,7 @@ namespace {
     TEST_F(CordBufTest, iobuf_sanity) {
         install_debug_allocator();
 
-        LOG(INFO) << "sizeof(flare::cord_buf)=" << sizeof(flare::cord_buf)
+        FLARE_LOG(INFO) << "sizeof(flare::cord_buf)=" << sizeof(flare::cord_buf)
                   << " sizeof(IOPortal)=" << sizeof(flare::IOPortal);
 
         flare::cord_buf b1;
@@ -762,7 +762,7 @@ namespace {
         ASSERT_EQ(1UL, b1.pop_front(1));
         ref.erase(0, 1);
         ASSERT_EQ(ref, to_str(b1));
-        LOG(INFO) << "ref.size=" << ref.size();
+        FLARE_LOG(INFO) << "ref.size=" << ref.size();
 
         //ASSERT_EQ(0, pipe(fds));
         ASSERT_EQ(0, socketpair(AF_UNIX, SOCK_STREAM, 0, fds));
@@ -848,7 +848,7 @@ namespace {
         ASSERT_EQ(ref.length(), b1.length());
         ASSERT_EQ(ref, to_str(b1));
         ASSERT_TRUE(b0.empty());
-        LOG(INFO) << "ref.size=" << ref.size();
+        FLARE_LOG(INFO) << "ref.size=" << ref.size();
 
         //ASSERT_EQ(0, pipe(fds));
         ASSERT_EQ(0, socketpair(AF_UNIX, SOCK_STREAM, 0, fds));
@@ -894,7 +894,7 @@ namespace {
         t.stop();
         //ProfilerStop();
 
-        LOG(INFO) << "IOPortal::cut_by_delim takes "
+        FLARE_LOG(INFO) << "IOPortal::cut_by_delim takes "
                   << t.n_elapsed() / N << "ns, tp="
                   << s1.length() * N * 1000.0 / t.n_elapsed() << "MB/s";
         show_prof_and_rm("test_iobuf", "cutd.prof", 10);
@@ -923,7 +923,7 @@ namespace {
             }
             t.stop();
             //ProfilerStop();
-            LOG(INFO) << "IOPortal::append(std::string_" << s.length() << ") takes "
+            FLARE_LOG(INFO) << "IOPortal::append(std::string_" << s.length() << ") takes "
                       << t.n_elapsed() * s.length() / length / REP << "ns, tp="
                       << REP * length * 1000.0 / t.n_elapsed() << "MB/s";
         } else {
@@ -934,7 +934,7 @@ namespace {
             }
             t.stop();
             //ProfilerStop();
-            LOG(INFO) << "IOPortal::push_back(char) takes "
+            FLARE_LOG(INFO) << "IOPortal::push_back(char) takes "
                       << t.n_elapsed() / length << "ns, tp="
                       << length * 1000.0 / t.n_elapsed() << "MB/s";
         }
@@ -957,7 +957,7 @@ namespace {
 
             //ProfilerStop();
 
-            LOG(INFO) << "IOPortal::cutn(12+" << w[i] << ") takes "
+            FLARE_LOG(INFO) << "IOPortal::cutn(12+" << w[i] << ") takes "
                       << t.n_elapsed() * (w[i] + 12) / length << "ns, tp="
                       << length * 1000.0 / t.n_elapsed() << "MB/s";
 
@@ -966,7 +966,7 @@ namespace {
             t.start();
             b.append(p);
             t.stop();
-            LOG(INFO) << "IOPortal::append(flare::cord_buf) takes "
+            FLARE_LOG(INFO) << "IOPortal::append(flare::cord_buf) takes "
                       << t.n_elapsed() / p._ref_num() << "ns, tp="
                       << length * 1000.0 / t.n_elapsed() << "MB/s";
 
@@ -1004,7 +1004,7 @@ namespace {
 
         for (size_t i = 0; i < FLARE_ARRAY_SIZE(w); ++i) {
             ps.reserve(ref.size() / (w[i] + 12) + 1);
-            // LOG(INFO) << "ps.cap=" << ps.capacity();
+            // FLARE_LOG(INFO) << "ps.cap=" << ps.capacity();
 
             const int ifd = open(f.fname(), O_RDONLY);
             ASSERT_TRUE(ifd > 0);
@@ -1047,9 +1047,9 @@ namespace {
 
             ASSERT_TRUE(b1.empty());
             ASSERT_TRUE(b2.empty());
-            //LOG(INFO) << "ps.size=" << ps.size();
+            //FLARE_LOG(INFO) << "ps.size=" << ps.size();
             ps.clear();
-            LOG(INFO) << "Bandwidth of append(" << f.fname() << ")->cut(12+" << w[i]
+            FLARE_LOG(INFO) << "Bandwidth of append(" << f.fname() << ")->cut(12+" << w[i]
                       << ")->store->append->cut(" << name << ") is "
                       << ref.length() * 1000.0 / t.n_elapsed() << "MB/s";
 
@@ -1224,12 +1224,12 @@ namespace {
         ASSERT_EQ(size1 + size2, out_stream.ByteCount());
         ASSERT_EQ(4u, src.backing_block_num());
         ASSERT_EQ(N + size1 + size2, src.size());
-        LOG(INFO) << "Backup1";
+        FLARE_LOG(INFO) << "Backup1";
         out_stream.BackUp(size1); // intended size1, not size2 to make this BackUp
         // to cross boundary of blocks.
         ASSERT_EQ(size2, out_stream.ByteCount());
         ASSERT_EQ(N + size2, src.size());
-        LOG(INFO) << "Backup2";
+        FLARE_LOG(INFO) << "Backup2";
         out_stream.BackUp(size2);
         ASSERT_EQ(0, out_stream.ByteCount());
         ASSERT_EQ(N, src.size());
@@ -1311,7 +1311,7 @@ namespace {
         flare::iobuf::reset_blockmem_allocate_and_deallocate();
 
         flare::cord_buf_builder builder;
-        LOG(INFO) << "sizeof(cord_buf_builder)=" << sizeof(builder) << std::endl
+        FLARE_LOG(INFO) << "sizeof(cord_buf_builder)=" << sizeof(builder) << std::endl
                   << "sizeof(cord_buf)=" << sizeof(flare::cord_buf) << std::endl
                   << "sizeof(cord_buf_as_zero_copy_output_stream)="
                   << sizeof(flare::cord_buf_as_zero_copy_output_stream) << std::endl
@@ -1380,7 +1380,7 @@ namespace {
             int to_write = start_num + i;
             flare::cord_buf out;
             out.append(&to_write, sizeof(int));
-            CHECK_EQ(out.pcut_into_file_descriptor(fd, offset + sizeof(int) * i),
+            FLARE_CHECK_EQ(out.pcut_into_file_descriptor(fd, offset + sizeof(int) * i),
                      (ssize_t) sizeof(int));
         }
         return NULL;
@@ -1525,7 +1525,7 @@ namespace {
         }
         tm2.stop();
 
-        LOG(INFO) << "cord_buf.push_back=" << tm1.n_elapsed() / N1
+        FLARE_LOG(INFO) << "cord_buf.push_back=" << tm1.n_elapsed() / N1
                   << "ns cord_buf_appender.push_back=" << tm2.n_elapsed() / N1
                   << "ns";
 
@@ -1553,7 +1553,7 @@ namespace {
         }
         tm3.stop();
 
-        LOG(INFO) << "cord_buf.append=" << tm1.n_elapsed() / N2
+        FLARE_LOG(INFO) << "cord_buf.append=" << tm1.n_elapsed() / N2
                   << "ns cord_buf_appender.append=" << tm2.n_elapsed() / N2
                   << "ns string.append=" << tm3.n_elapsed() / N2
                   << "ns (string-length=" << s.size() << ')';

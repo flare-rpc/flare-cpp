@@ -106,7 +106,7 @@ int main(int argc, char* argv[]) {
     GFLAGS_NS::ParseCommandLineFlags(&argc, &argv, true);
 
     if (FLAGS_server_num <= 0) {
-        LOG(ERROR) << "server_num must be positive";
+        FLARE_LOG(ERROR) << "server_num must be positive";
         return -1;
     }
 
@@ -135,7 +135,7 @@ int main(int argc, char* argv[]) {
                     "example/multi_threaded_echo_fns_c++[%d]", i));
         if (servers[i].AddService(&echo_service_impls[i], 
                                   flare::rpc::SERVER_DOESNT_OWN_SERVICE) != 0) {
-            LOG(ERROR) << "Fail to add service";
+            FLARE_LOG(ERROR) << "Fail to add service";
             return -1;
         }
         // Start the server.
@@ -144,20 +144,20 @@ int main(int argc, char* argv[]) {
         options.max_concurrency = FLAGS_max_concurrency;
         const int port = FLAGS_port + i;
         if (servers[i].Start(port, &options) != 0) {
-            LOG(ERROR) << "Fail to start EchoServer";
+            FLARE_LOG(ERROR) << "Fail to start EchoServer";
             return -1;
         }
 
         // Intended no truncate so that multiple servers can be added to list
         int fd = open("./server_list", O_APPEND | O_WRONLY | O_CREAT, 0666);
         if (fd < 0) {
-            PLOG(ERROR) << "Fail to open server_list";
+            FLARE_PLOG(ERROR) << "Fail to open server_list";
             return -1;
         }
         char buf[64];
         int nw = snprintf(buf, sizeof(buf), "%s:%d\n", flare::base::my_ip_cstr(), port);
         if (write(fd, buf, nw) != nw) {
-            LOG(ERROR) << "Fail to fully write int fd=" << fd;
+            FLARE_LOG(ERROR) << "Fail to fully write int fd=" << fd;
         }
         close(fd);
     }
@@ -175,9 +175,9 @@ int main(int argc, char* argv[]) {
             size_t diff = current_num_requests - last_num_requests[i];
             cur_total += diff;
             last_num_requests[i] = current_num_requests;
-            LOG(INFO) << "S[" << i << "]=" << diff << ' ' << noflush;
+            FLARE_LOG(INFO) << "S[" << i << "]=" << diff << ' ' << noflush;
         }
-        LOG(INFO) << "[total=" << cur_total << ']';
+        FLARE_LOG(INFO) << "[total=" << cur_total << ']';
     }
 
     // Don't forget to stop and join the server otherwise still-running

@@ -258,14 +258,14 @@ namespace flare::container {
             // note: need an extra bucket to let iterator know where buckets end
             _buckets = (Bucket *) malloc(sizeof(Bucket) * (_nbucket + 1/*note*/));
             if (NULL == _buckets) {
-                LOG(ERROR) << "Fail to new _buckets";
+                FLARE_LOG(ERROR) << "Fail to new _buckets";
                 return;
             }
             if (_S) {
                 free(_thumbnail);
                 _thumbnail = bit_array_malloc(_nbucket);
                 if (NULL == _thumbnail) {
-                    LOG(ERROR) << "Fail to new _thumbnail";
+                    FLARE_LOG(ERROR) << "Fail to new _thumbnail";
                     return;
                 }
                 bit_array_clear(_thumbnail, _nbucket);
@@ -304,11 +304,11 @@ namespace flare::container {
     template<typename _K, typename _T, typename _H, typename _E, bool _S>
     int FlatMap<_K, _T, _H, _E, _S>::init(size_t nbucket, u_int load_factor) {
         if (initialized()) {
-            LOG(ERROR) << "Already initialized";
+            FLARE_LOG(ERROR) << "Already initialized";
             return -1;
         }
         if (load_factor < 10 || load_factor > 100) {
-            LOG(ERROR) << "Invalid load_factor=" << load_factor;
+            FLARE_LOG(ERROR) << "Invalid load_factor=" << load_factor;
             return -1;
         }
         _size = 0;
@@ -317,7 +317,7 @@ namespace flare::container {
 
         _buckets = (Bucket *) malloc(sizeof(Bucket) * (_nbucket + 1));
         if (NULL == _buckets) {
-            LOG(ERROR) << "Fail to new _buckets";
+            FLARE_LOG(ERROR) << "Fail to new _buckets";
             return -1;
         }
         for (size_t i = 0; i < _nbucket; ++i) {
@@ -328,7 +328,7 @@ namespace flare::container {
         if (_S) {
             _thumbnail = bit_array_malloc(_nbucket);
             if (NULL == _thumbnail) {
-                LOG(ERROR) << "Fail to new _thumbnail";
+                FLARE_LOG(ERROR) << "Fail to new _thumbnail";
                 return -1;
             }
             bit_array_clear(_thumbnail, _nbucket);
@@ -581,7 +581,7 @@ namespace flare::container {
 
         FlatMap new_map;
         if (new_map.init(nbucket2, _load_factor) != 0) {
-            LOG(ERROR) << "Fail to init new_map, nbucket=" << nbucket2;
+            FLARE_LOG(ERROR) << "Fail to init new_map, nbucket=" << nbucket2;
             return false;
         }
         for (iterator it = begin(); it != end(); ++it) {

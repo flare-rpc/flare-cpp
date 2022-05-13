@@ -167,7 +167,7 @@ namespace flare::fiber_internal {
                     return;
                 }
             }
-            LOG(ERROR) << "Fail to destroy all objects in KeyTable[" << this << ']';
+            FLARE_LOG(ERROR) << "Fail to destroy all objects in KeyTable[" << this << ']';
         }
 
         inline void *get_data(fiber_local_key key) const {
@@ -199,7 +199,7 @@ namespace flare::fiber_internal {
                 return 0;
             }
             // TODO nocheck for testing
-            //CHECK(false) << "fiber_setspecific is called on invalid " << key;
+            //FLARE_CHECK(false) << "fiber_setspecific is called on invalid " << key;
             return EINVAL;
         }
 
@@ -283,7 +283,7 @@ extern "C" {
 
 int fiber_keytable_pool_init(fiber_keytable_pool_t *pool) {
     if (pool == nullptr) {
-        LOG(ERROR) << "Param[pool] is nullptr";
+        FLARE_LOG(ERROR) << "Param[pool] is nullptr";
         return EINVAL;
     }
     pthread_mutex_init(&pool->mutex, nullptr);
@@ -294,7 +294,7 @@ int fiber_keytable_pool_init(fiber_keytable_pool_t *pool) {
 
 int fiber_keytable_pool_destroy(fiber_keytable_pool_t *pool) {
     if (pool == nullptr) {
-        LOG(ERROR) << "Param[pool] is nullptr";
+        FLARE_LOG(ERROR) << "Param[pool] is nullptr";
         return EINVAL;
     }
     flare::fiber_internal::KeyTable *saved_free_keytables = nullptr;
@@ -334,7 +334,7 @@ int fiber_keytable_pool_destroy(fiber_keytable_pool_t *pool) {
 int fiber_keytable_pool_getstat(fiber_keytable_pool_t *pool,
                                 fiber_keytable_pool_stat_t *stat) {
     if (pool == nullptr || stat == nullptr) {
-        LOG(ERROR) << "Param[pool] or Param[stat] is nullptr";
+        FLARE_LOG(ERROR) << "Param[pool] or Param[stat] is nullptr";
         return EINVAL;
     }
     std::unique_lock<pthread_mutex_t> mu(pool->mutex);
@@ -354,12 +354,12 @@ void fiber_keytable_pool_reserve(fiber_keytable_pool_t *pool,
                                  void *ctor(const void *),
                                  const void *ctor_args) {
     if (pool == nullptr) {
-        LOG(ERROR) << "Param[pool] is nullptr";
+        FLARE_LOG(ERROR) << "Param[pool] is nullptr";
         return;
     }
     fiber_keytable_pool_stat_t stat;
     if (fiber_keytable_pool_getstat(pool, &stat) != 0) {
-        LOG(ERROR) << "Fail to getstat of pool=" << pool;
+        FLARE_LOG(ERROR) << "Fail to getstat of pool=" << pool;
         return;
     }
     for (size_t i = stat.nfree; i < nfree; ++i) {
@@ -433,7 +433,7 @@ int fiber_key_delete(fiber_local_key key) {
             return 0;
         }
     }
-    CHECK(false) << "fiber_key_delete is called on invalid " << key;
+    FLARE_CHECK(false) << "fiber_key_delete is called on invalid " << key;
     return EINVAL;
 }
 
@@ -456,7 +456,7 @@ int fiber_setspecific(fiber_local_key key, void *data) {
         }
         if (!flare::fiber_internal::tls_ever_created_keytable) {
             flare::fiber_internal::tls_ever_created_keytable = true;
-            CHECK_EQ(0, flare::thread::atexit(flare::fiber_internal::cleanup_pthread, kt));
+            FLARE_CHECK_EQ(0, flare::thread::atexit(flare::fiber_internal::cleanup_pthread, kt));
         }
     }
     return kt->set_data(key, data);

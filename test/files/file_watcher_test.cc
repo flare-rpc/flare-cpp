@@ -29,16 +29,16 @@ namespace {
                 const flare::file_watcher::Change ret = fw.check_and_consume();
                 switch (ret) {
                     case flare::file_watcher::UPDATED:
-                        LOG(INFO) << fw.filepath() << " is updated";
+                        FLARE_LOG(INFO) << fw.filepath() << " is updated";
                         break;
                     case flare::file_watcher::CREATED:
-                        LOG(INFO) << fw.filepath() << " is created";
+                        FLARE_LOG(INFO) << fw.filepath() << " is created";
                         break;
                     case flare::file_watcher::DELETED:
-                        LOG(INFO) << fw.filepath() << " is deleted";
+                        FLARE_LOG(INFO) << fw.filepath() << " is deleted";
                         break;
                     case flare::file_watcher::UNCHANGED:
-                        LOG(INFO) << fw.filepath() << " does not change or still not exist";
+                        FLARE_LOG(INFO) << fw.filepath() << " does not change or still not exist";
                         break;
                 }
             }
@@ -46,14 +46,14 @@ namespace {
             switch (rand() % 2) {
                 case 0:
                     ASSERT_EQ(0, system("touch dummy_file"));
-                    LOG(INFO) << "action: touch dummy_file";
+                    FLARE_LOG(INFO) << "action: touch dummy_file";
                     break;
                 case 1:
                     ASSERT_EQ(0, system("rm -f dummy_file"));
-                    LOG(INFO) << "action: rm -f dummy_file";
+                    FLARE_LOG(INFO) << "action: rm -f dummy_file";
                     break;
                 case 2:
-                    LOG(INFO) << "action: (nothing)";
+                    FLARE_LOG(INFO) << "action: (nothing)";
                     break;
             }
 

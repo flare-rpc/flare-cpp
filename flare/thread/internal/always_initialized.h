@@ -113,7 +113,7 @@ namespace flare::thread_internal {
     template<class T>
     template<class F>
     void thread_local_always_initialized<T>::for_each(F &&f) const {
-        DCHECK_EQ(offset_ % sizeof(T), 0);
+        FLARE_DCHECK_EQ(offset_ % sizeof(T), 0);
         auto index = offset_ / sizeof(T);
 
         object_array_registry<T>::instance()->for_each_locked(

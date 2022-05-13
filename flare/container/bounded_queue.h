@@ -22,7 +22,7 @@ namespace flare::container {
     //   int Foo::init() {
     //     bounded_queue<int> tmp(capacity);
     //     if (!tmp.initialized()) {
-    //       LOG(ERROR) << "Fail to create _queue";
+    //       FLARE_LOG(ERROR) << "Fail to create _queue";
     //       return -1;
     //     }
     //     tmp.swap(_queue);
@@ -39,7 +39,7 @@ namespace flare::container {
         // The queue contains at most memsize/sizeof(T) items.
         bounded_queue(void *mem, size_t memsize, StorageOwnership ownership)
                 : _count(0), _cap(memsize / sizeof(T)), _start(0), _ownership(ownership), _items(mem) {
-            DCHECK(_items);
+            FLARE_DCHECK(_items);
         };
 
         // Construct a queue with the given capacity.
@@ -47,7 +47,7 @@ namespace flare::container {
         // of the queue.
         explicit bounded_queue(size_t capacity)
                 : _count(0), _cap(capacity), _start(0), _ownership(OWNS_STORAGE), _items(malloc(capacity * sizeof(T))) {
-            DCHECK(_items);
+            FLARE_DCHECK(_items);
         };
 
         bounded_queue()

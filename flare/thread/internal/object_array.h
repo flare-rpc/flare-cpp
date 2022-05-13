@@ -320,7 +320,7 @@ namespace flare {
 //
 // In unfortunate cases, if different isntantiations (i.e., different shared
 // object) of us are called, except for the first call, all subsequent calls
-// would fail the `CHECK` in `reload_local_object_array_cache`, due to inconsistency
+// would fail the `FLARE_CHECK` in `reload_local_object_array_cache`, due to inconsistency
 // in our `cache` and our callee's `array`.
 //
 // To workaround this issue, if we're using the slow TLS mode, even if this

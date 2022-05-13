@@ -37,7 +37,7 @@ namespace flare::rpc {
 
         ConstantConcurrencyLimiter *
         ConstantConcurrencyLimiter::New(const AdaptiveMaxConcurrency &amc) const {
-            CHECK_EQ(amc.type(), AdaptiveMaxConcurrency::CONSTANT());
+            FLARE_CHECK_EQ(amc.type(), AdaptiveMaxConcurrency::CONSTANT());
             return new ConstantConcurrencyLimiter(static_cast<int>(amc));
         }
 

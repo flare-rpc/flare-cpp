@@ -60,11 +60,11 @@ namespace flare {
     }
 
     posix_random_access_file::~posix_random_access_file() {
-        CHECK(_fd == -1) << "fd leak, must close it";
+        FLARE_CHECK(_fd == -1) << "fd leak, must close it";
     }
 
     flare::base::flare_status posix_random_access_file::open() {
-        CHECK(_fd == -1) << "do not open file once more";
+        FLARE_CHECK(_fd == -1) << "do not open file once more";
 
         _fd = ::open(_file_name.c_str(), O_RDONLY | kOpenBaseFlags);
         if (FLARE_UNLIKELY(_fd < 0)) {
@@ -88,7 +88,7 @@ namespace flare {
             } else if (errno == EINTR) {
                 continue;
             } else {
-                LOG(WARNING) << "read failed, err: " << flare_error()
+                FLARE_LOG(WARNING) << "read failed, err: " << flare_error()
                              << " fd: " << _fd << " offset: " << orig_offset << " size: " << n;
                 return posix_file_error(_file_name, errno);
             }
@@ -98,7 +98,7 @@ namespace flare {
 
 
     flare_status posix_random_access_file::read(uint64_t offset, size_t n, std::string *content) {
-        CHECK(_fd != -1) << "must open file before reading";
+        FLARE_CHECK(_fd != -1) << "must open file before reading";
         flare::IOPortal portal;
         auto s = file_pread(offset, n, &portal);
         if (s.ok()) {
@@ -108,7 +108,7 @@ namespace flare {
     }
 
     flare_status posix_random_access_file::read(uint64_t offset, size_t n, flare::cord_buf *buf) {
-        CHECK(_fd != -1) << "must open file before reading";
+        FLARE_CHECK(_fd != -1) << "must open file before reading";
         flare::IOPortal portal;
         auto s = file_pread(offset, n, &portal);
         if (s.ok()) {
@@ -156,11 +156,11 @@ namespace flare {
     }
 
     posix_sequential_access_file::~posix_sequential_access_file() {
-        CHECK(_fd == -1) << "must close it before dtor";
+        FLARE_CHECK(_fd == -1) << "must close it before dtor";
     }
 
     flare_status posix_sequential_access_file::open() {
-        CHECK(_fd == -1) << "do not open file once more";
+        FLARE_CHECK(_fd == -1) << "do not open file once more";
         _fd = ::open(_file_name.c_str(), O_RDONLY | kOpenBaseFlags);
         if (FLARE_UNLIKELY(_fd < 0)) {
             return posix_file_error(_file_name, errno);
@@ -187,7 +187,7 @@ namespace flare {
             } else if (errno == EINTR) {
                 continue;
             } else {
-                LOG(WARNING) << "read failed, err: " << flare_error()
+                FLARE_LOG(WARNING) << "read failed, err: " << flare_error()
                              << " fd: " << _fd << " size: " << n;
                 return posix_file_error(_file_name, errno);
             }
@@ -252,11 +252,11 @@ namespace flare {
     }
 
     posix_writeable_file::~posix_writeable_file() {
-        CHECK(_fd == -1);
+        FLARE_CHECK(_fd == -1);
     }
 
     flare_status posix_writeable_file::open() {
-        CHECK(_fd == -1) << "do not open file once more";
+        FLARE_CHECK(_fd == -1) << "do not open file once more";
         _fd = ::open(_file_name.c_str(), O_TRUNC | O_WRONLY | O_CREAT | kOpenBaseFlags, 0644);
         if (FLARE_UNLIKELY(_fd < 0)) {
             return posix_file_error(_file_name, errno);
@@ -284,7 +284,7 @@ namespace flare {
             } else if (errno == EINTR) {
                 continue;
             } else {
-                LOG(WARNING) << "write falied, err: " << flare_error()
+                FLARE_LOG(WARNING) << "write falied, err: " << flare_error()
                              << " fd: " << _fd << " offset: " << orig_offset << " size: " << size;
                 return posix_file_error(_file_name, errno);
             }
@@ -306,7 +306,7 @@ namespace flare {
             } else if (errno == EINTR) {
                 continue;
             } else {
-                LOG(WARNING) << "write falied, err: " << flare_error()
+                FLARE_LOG(WARNING) << "write falied, err: " << flare_error()
                              << " fd: " << _fd << " offset: " << orig_offset << " size: " << content.size();
                 return posix_file_error(_file_name, errno);
             }
@@ -349,11 +349,11 @@ namespace flare {
 
 
     posix_append_file::~posix_append_file() {
-        CHECK(_fd == -1);
+        FLARE_CHECK(_fd == -1);
     }
 
     flare_status posix_append_file::open() {
-        CHECK(_fd == -1) << "do not open file once more";
+        FLARE_CHECK(_fd == -1) << "do not open file once more";
         _fd = ::open(_file_name.c_str(), O_TRUNC | O_WRONLY | O_CREAT | kOpenBaseFlags, 0644);
         if (FLARE_UNLIKELY(_fd < 0)) {
             return posix_file_error(_file_name, errno);
@@ -379,7 +379,7 @@ namespace flare {
             } else if (errno == EINTR) {
                 continue;
             } else {
-                LOG(WARNING) << "write falied, err: " << flare_error()
+                FLARE_LOG(WARNING) << "write falied, err: " << flare_error()
                              << " fd: " << _fd << " size: " << size;
                 return posix_file_error(_file_name, errno);
             }
@@ -399,7 +399,7 @@ namespace flare {
             } else if (errno == EINTR) {
                 continue;
             } else {
-                LOG(WARNING) << "write falied, err: " << flare_error()
+                FLARE_LOG(WARNING) << "write falied, err: " << flare_error()
                              << " fd: " << _fd << " size: " << content.size();
                 return posix_file_error(_file_name, errno);
             }

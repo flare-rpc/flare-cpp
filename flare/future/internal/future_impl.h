@@ -56,7 +56,7 @@ namespace flare {
         template<class... Ts>
         template<class F, class R>
         R future<Ts...>::then(F &&continuation) &&{
-           CHECK(core_ != nullptr)<<
+           FLARE_CHECK(core_ != nullptr)<<
                         "Calling `then` on uninitialized `future` is undefined.";
 
             // Evaluates to `true` if `F` can be called with `Ts...`.

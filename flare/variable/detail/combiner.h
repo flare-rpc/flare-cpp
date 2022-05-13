@@ -298,7 +298,7 @@ namespace flare::variable {
                     // Create the agent
                     agent = AgentGroup::get_or_create_tls_agent(_id);
                     if (NULL == agent) {
-                        LOG(FATAL) << "Fail to create agent";
+                        FLARE_LOG(FATAL) << "Fail to create agent";
                         return NULL;
                     }
                 }

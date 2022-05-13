@@ -62,12 +62,12 @@ namespace flare {
         local_impl = impl.get();
         auto i = thread::thread_index();
         thread::set_name("%s#%d", impl->option.prefix.c_str(), i);
-        LOG(INFO) << "start thread: " << impl->option.prefix << "#" << i;
+        FLARE_LOG(INFO) << "start thread: " << impl->option.prefix << "#" << i;
         impl->set_affinity();
         impl->start_latch.count_down();
         impl->option.func();
         local_impl = nullptr;
-        LOG(INFO) << "exit thread: " << impl->option.prefix << "#" << i;
+        FLARE_LOG(INFO) << "exit thread: " << impl->option.prefix << "#" << i;
         return nullptr;
     }
 
@@ -94,13 +94,13 @@ namespace flare {
             auto thread = pthread_self();
             pthread_setaffinity_np(thread, sizeof(cpuset_t), &cpuset);
 #else
-        CHECK(!flare::core_affinity::supported)<<"Attempting to use thread affinity on a unsupported platform";
+        FLARE_CHECK(!flare::core_affinity::supported)<<"Attempting to use thread affinity on a unsupported platform";
 #endif
     }
 
     thread::~thread() {
         if (_impl) {
-            LOG(WARNING) << "thread: " << _impl->option.prefix << "was not called before destruction, detach instead.";
+            FLARE_LOG(WARNING) << "thread: " << _impl->option.prefix << "was not called before destruction, detach instead.";
             detach();
         }
     }
@@ -160,7 +160,7 @@ namespace flare {
     }
 
     bool thread::start() {
-        CHECK(_impl);
+        FLARE_CHECK(_impl);
         auto r = _impl->start();
         if (!_impl->option.join_able) {
             _impl = nullptr;

@@ -16,11 +16,11 @@ namespace flare {
         typedef fiber_cond_t *native_handler_type;
 
         fiber_cond() {
-            CHECK_EQ(0, fiber_cond_init(&_cond, NULL));
+            FLARE_CHECK_EQ(0, fiber_cond_init(&_cond, NULL));
         }
 
         ~fiber_cond() {
-            CHECK_EQ(0, fiber_cond_destroy(&_cond));
+            FLARE_CHECK_EQ(0, fiber_cond_destroy(&_cond));
         }
 
         native_handler_type native_handler() { return &_cond; }

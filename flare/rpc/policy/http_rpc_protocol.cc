@@ -88,13 +88,13 @@ namespace flare::rpc {
             }
             if (user_addr_str->find(':') == std::string::npos) {
                 if (flare::base::str2ip(user_addr_str->c_str(), &user_addr->ip) != 0) {
-                    LOG(WARNING) << "Fail to parse ip from " << *user_addr_str;
+                    FLARE_LOG(WARNING) << "Fail to parse ip from " << *user_addr_str;
                     return false;
                 }
                 user_addr->port = 0;
             } else {
                 if (flare::base::str2endpoint(user_addr_str->c_str(), user_addr) != 0) {
-                    LOG(WARNING) << "Fail to parse ip:port from " << *user_addr_str;
+                    FLARE_LOG(WARNING) << "Fail to parse ip:port from " << *user_addr_str;
                     return false;
                 }
             }
@@ -206,9 +206,9 @@ namespace flare::rpc {
                 buf2.pop_back(2);  // remove "> "
             }
             if (!has_content) {
-                LOG(INFO) << '\n' << buf2 << buf1;
+                FLARE_LOG(INFO) << '\n' << buf2 << buf1;
             } else {
-                LOG(INFO) << '\n' << buf2 << flare::to_printable_string(buf1, FLAGS_http_verbose_max_body_length);
+                FLARE_LOG(INFO) << '\n' << buf2 << flare::to_printable_string(buf1, FLAGS_http_verbose_max_body_length);
             }
         }
 
@@ -251,14 +251,14 @@ namespace flare::rpc {
                 cid_value = socket->correlation_id();
             }
             if (cid_value == 0) {
-                LOG(WARNING) << "Fail to find correlation_id from " << *socket;
+                FLARE_LOG(WARNING) << "Fail to find correlation_id from " << *socket;
                 return;
             }
             const fiber_token_t cid = {cid_value};
             Controller *cntl = NULL;
             const int rc = fiber_token_lock(cid, (void **) &cntl);
             if (rc != 0) {
-                LOG_IF(ERROR, rc != EINVAL && rc != EPERM)
+                FLARE_LOG_IF(ERROR, rc != EINVAL && rc != EPERM)
                                 << "Fail to lock correlation_id=" << cid << ": " << flare_error(rc);
                 return;
             }
@@ -277,7 +277,7 @@ namespace flare::rpc {
             HttpHeader *res_header = &cntl->http_response();
             res_header->Swap(imsg_guard->header());
             flare::cord_buf &res_body = imsg_guard->body();
-            CHECK(cntl->response_attachment().empty());
+            FLARE_CHECK(cntl->response_attachment().empty());
             const int saved_error = cntl->ErrorCode();
 
             bool is_grpc_ct = false;
@@ -823,7 +823,7 @@ namespace flare::rpc {
                     res_header->SetHeader("Transfer-Encoding", "chunked");
                 }
                 if (!cntl->response_attachment().empty()) {
-                    LOG(ERROR) << "response_attachment(size="
+                    FLARE_LOG(ERROR) << "response_attachment(size="
                                << cntl->response_attachment().size() << ") will be"
                                                                         " ignored when CreateProgressiveAttachment() was called";
                 }
@@ -843,12 +843,12 @@ namespace flare::rpc {
                             res_header->SetHeader(common->CONTENT_ENCODING, common->GZIP);
                         }
                     } else {
-                        LOG(ERROR) << "Fail to gzip the http response, skip compression.";
+                        FLARE_LOG(ERROR) << "Fail to gzip the http response, skip compression.";
                     }
                 }
             } else {
                 // TODO(gejun): Support snappy (grpc)
-                LOG_IF(ERROR, cntl->response_compress_type() != COMPRESS_TYPE_NONE)
+                FLARE_LOG_IF(ERROR, cntl->response_compress_type() != COMPRESS_TYPE_NONE)
                                 << "Unknown compress_type=" << cntl->response_compress_type()
                                 << ", skip compression.";
             }
@@ -866,12 +866,12 @@ namespace flare::rpc {
                 SocketMessagePtr<H2UnsentResponse> h2_response(
                         H2UnsentResponse::New(cntl, _h2_stream_id, is_grpc));
                 if (h2_response == NULL) {
-                    LOG(ERROR) << "Fail to make http2 response";
+                    FLARE_LOG(ERROR) << "Fail to make http2 response";
                     errno = EINVAL;
                     rc = -1;
                 } else {
                     if (FLAGS_http_verbose) {
-                        LOG(INFO) << '\n' << *h2_response;
+                        FLARE_LOG(INFO) << '\n' << *h2_response;
                     }
                     if (span) {
                         span->set_response_size(h2_response->EstimatedByteSize());
@@ -897,7 +897,7 @@ namespace flare::rpc {
             if (rc != 0) {
                 // EPIPE is common in pooled connections + backup requests.
                 const int errcode = errno;
-                PLOG_IF(WARNING, errcode != EPIPE) << "Fail to write into " << *socket;
+                FLARE_PLOG_IF(WARNING, errcode != EPIPE) << "Fail to write into " << *socket;
                 cntl->SetFailed(errcode, "Fail to write into %s", socket->description().c_str());
                 return;
             }
@@ -1045,7 +1045,7 @@ namespace flare::rpc {
                 }
                 http_imsg = new(std::nothrow) HttpContext(socket->is_read_progressive());
                 if (http_imsg == NULL) {
-                    LOG(FATAL) << "Fail to new HttpContext";
+                    FLARE_LOG(FATAL) << "Fail to new HttpContext";
                     return MakeParseError(PARSE_ERROR_NO_RESOURCE);
                 }
                 // Parsing http is costly, parsing an incomplete http message from the
@@ -1071,7 +1071,7 @@ namespace flare::rpc {
                     source->pop_front(rc);
                     if (http_imsg->Completed()) {
                         // Already returned the message before, don't return again.
-                        CHECK_EQ(http_imsg, socket->release_parsing_context());
+                        FLARE_CHECK_EQ(http_imsg, socket->release_parsing_context());
                         // NOTE: calling http_imsg->Destroy() is wrong which can only
                         // be called from ProcessHttpXXX
                         http_imsg->RemoveOneRefForStage2();
@@ -1091,7 +1091,7 @@ namespace flare::rpc {
                 // Normal or stage1 of progressive-read http message.
                 source->pop_front(rc);
                 if (http_imsg->Completed()) {
-                    CHECK_EQ(http_imsg, socket->release_parsing_context());
+                    FLARE_CHECK_EQ(http_imsg, socket->release_parsing_context());
                     const ParseResult result = MakeMessage(http_imsg);
                     if (socket->is_read_progressive()) {
                         socket->OnProgressiveReadCompleted();
@@ -1131,7 +1131,7 @@ namespace flare::rpc {
                         // by itself.
                         return MakeParseError(PARSE_ERROR_NOT_ENOUGH_DATA);
                     } else if (rc > 0) {
-                        LOG(ERROR) << "Impossible: Recycled!";
+                        FLARE_LOG(ERROR) << "Impossible: Recycled!";
                         return MakeParseError(PARSE_ERROR_NOT_ENOUGH_DATA);
                     }
                     // Send 400 back.
@@ -1209,7 +1209,7 @@ namespace flare::rpc {
 
             Controller *cntl = new(std::nothrow) Controller;
             if (NULL == cntl) {
-                LOG(FATAL) << "Fail to new Controller";
+                FLARE_LOG(FATAL) << "Fail to new Controller";
                 return;
             }
             HttpResponseSender resp_sender(cntl);
@@ -1251,7 +1251,7 @@ namespace flare::rpc {
                 errno = 0;
                 uint64_t logid = strtoull(log_id_str->c_str(), &logid_end, 10);
                 if (*logid_end || errno) {
-                    LOG(ERROR) << "Invalid " << common->LOG_ID << '='
+                    FLARE_LOG(ERROR) << "Invalid " << common->LOG_ID << '='
                                << *log_id_str << " in http request";
                 } else {
                     cntl->set_log_id(logid);
@@ -1394,7 +1394,7 @@ namespace flare::rpc {
             resp_sender.own_response(res);
 
             if (__builtin_expect(!req || !res, 0)) {
-                PLOG(FATAL) << "Fail to new req or res";
+                FLARE_PLOG(FATAL) << "Fail to new req or res";
                 cntl->SetFailed("Fail to new req or res");
                 return;
             }
@@ -1500,7 +1500,7 @@ namespace flare::rpc {
             std::string host;
             int port = -1;
             if (ParseURL(server_addr_and_port, &scheme, &host, &port) != 0) {
-                LOG(ERROR) << "Invalid address=`" << server_addr_and_port << '\'';
+                FLARE_LOG(ERROR) << "Invalid address=`" << server_addr_and_port << '\'';
                 return false;
             }
             if (scheme.empty() || scheme == "http") {
@@ -1512,12 +1512,12 @@ namespace flare::rpc {
                     port = 443;
                 }
             } else {
-                LOG(ERROR) << "Invalid scheme=`" << scheme << '\'';
+                FLARE_LOG(ERROR) << "Invalid scheme=`" << scheme << '\'';
                 return false;
             }
             if (str2endpoint(host.c_str(), port, point) != 0 &&
                 hostname2endpoint(host.c_str(), port, point) != 0) {
-                LOG(ERROR) << "Invalid host=" << host << " port=" << port;
+                FLARE_LOG(ERROR) << "Invalid host=" << host << " port=" << port;
                 return false;
             }
             return true;

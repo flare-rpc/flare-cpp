@@ -24,7 +24,7 @@ namespace flare::base {
             // Chrome relies on being able to "drop" such access.
             // It's especially problematic on Linux with the setuid sandbox, where
             // a single open directory would bypass the entire security model.
-            PCHECK(0 == IGNORE_EINTR(close(fd)));
+            FLARE_PCHECK(0 == IGNORE_EINTR(close(fd)));
         }
 
 #endif  // FLARE_PLATFORM_POSIX

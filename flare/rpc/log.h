@@ -22,10 +22,10 @@
 #include "flare/fiber/internal/errno.h"
 
 #define RPC_VLOG_LEVEL     99
-#define RPC_VLOG_IS_ON     VLOG_IS_ON(RPC_VLOG_LEVEL)
-#define RPC_VLOG           VLOG(RPC_VLOG_LEVEL)
+#define RPC_VLOG_IS_ON     FLARE_VLOG_IS_ON(RPC_VLOG_LEVEL)
+#define RPC_VLOG           FLARE_VLOG(RPC_VLOG_LEVEL)
 #define RPC_VPLOG          VPLOG(RPC_VLOG_LEVEL)
-#define RPC_VLOG_IF(cond)  VLOG_IF(RPC_VLOG_LEVEL, (cond))
+#define RPC_VLOG_IF(cond)  FLARE_VLOG_IF(RPC_VLOG_LEVEL, (cond))
 #define RPC_VPLOG_IF(cond) VPLOG_IF(RPC_VLOG_LEVEL, (cond))
 
 #endif  // FLARE_RPC_LOG_H_

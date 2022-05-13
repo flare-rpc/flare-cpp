@@ -95,7 +95,7 @@ void NovaServiceAdaptor::SerializeResponseToCordBuf(
     if (type == COMPRESS_TYPE_SNAPPY) {
         raw_res->head.version = NOVA_SNAPPY_COMPRESS_FLAG;
     } else if (type != COMPRESS_TYPE_NONE) {
-        LOG(WARNING) << "nova_pbrpc protocol doesn't support "
+        FLARE_LOG(WARNING) << "nova_pbrpc protocol doesn't support "
                      << "compress_type=" << type;
         type = COMPRESS_TYPE_NONE;
     }
@@ -115,7 +115,7 @@ void ProcessNovaResponse(InputMessageBase* msg_base) {
     Controller* cntl = NULL;
     const int rc = fiber_token_lock(cid, (void**)&cntl);
     if (rc != 0) {
-        LOG_IF(ERROR, rc != EINVAL && rc != EPERM)
+        FLARE_LOG_IF(ERROR, rc != EINVAL && rc != EPERM)
             << "Fail to lock correlation_id=" << cid << ": " << flare_error(rc);
         return;
     }
@@ -133,7 +133,7 @@ void ProcessNovaResponse(InputMessageBase* msg_base) {
     char buf[sizeof(nshead_t)];
     const char *p = (const char *)msg->meta.fetch(buf, sizeof(buf));
     if (NULL == p) {
-        LOG(WARNING) << "Fail to fetch nshead from client="
+        FLARE_LOG(WARNING) << "Fail to fetch nshead from client="
                      << socket->remote_side();
         return;
     }

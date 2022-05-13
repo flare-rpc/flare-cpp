@@ -48,7 +48,7 @@ namespace flare {
 
 
     FLARE_FORCE_INLINE uuid::uuid(const std::string_view &from) {
-        CHECK_EQ(from.size(), 36ul);  // 8-4-4-4-12
+        FLARE_CHECK_EQ(from.size(), 36ul);  // 8-4-4-4-12
         auto p = from.data();
 
         _bytes[0] = to_uint8(p);
@@ -56,22 +56,22 @@ namespace flare {
         _bytes[2] = to_uint8(p + 4);
         _bytes[3] = to_uint8(p + 6);
         p += 8;
-        CHECK_EQ(*p++, '-');
+        FLARE_CHECK_EQ(*p++, '-');
 
         _bytes[4] = to_uint8(p);
         _bytes[5] = to_uint8(p + 2);
         p += 4;
-        CHECK_EQ(*p++, '-');
+        FLARE_CHECK_EQ(*p++, '-');
 
         _bytes[6] = to_uint8(p);
         _bytes[7] = to_uint8(p + 2);
         p += 4;
-        CHECK_EQ(*p++, '-');
+        FLARE_CHECK_EQ(*p++, '-');
 
         _bytes[8] = to_uint8(p);
         _bytes[9] = to_uint8(p + 2);
         p += 4;
-        CHECK_EQ(*p++, '-');
+        FLARE_CHECK_EQ(*p++, '-');
 
         _bytes[10] = to_uint8(p);
         _bytes[11] = to_uint8(p + 2);
@@ -112,7 +112,7 @@ namespace flare {
         } else if (x >= 'A' && x <= 'F') {
             return x - 'A' + 10;
         } else {
-            CHECK(0)<<"Invalid hex digit ["<<x<<"].";
+            FLARE_CHECK(0)<<"Invalid hex digit ["<<x<<"].";
         }
         return 0;
     }

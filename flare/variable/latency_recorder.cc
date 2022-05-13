@@ -79,7 +79,7 @@ namespace flare::variable {
             }
             values[n++] = std::make_pair(100, cb->get_number(0.999));
             values[n++] = std::make_pair(101, cb->get_number(0.9999));
-            CHECK_EQ(n, FLARE_ARRAY_SIZE(values));
+            FLARE_CHECK_EQ(n, FLARE_ARRAY_SIZE(values));
             os << "{\"label\":\"cdf\",\"data\":[";
             for (size_t i = 0; i < n; ++i) {
                 if (i) {
@@ -179,7 +179,7 @@ namespace flare::variable {
     int LatencyRecorder::expose(const std::string_view &prefix1,
                                 const std::string_view &prefix2) {
         if (prefix2.empty()) {
-            LOG(ERROR) << "Parameter[prefix2] is empty";
+            FLARE_LOG(ERROR) << "Parameter[prefix2] is empty";
             return -1;
         }
         std::string_view prefix = prefix2;
@@ -187,7 +187,7 @@ namespace flare::variable {
         if (flare::ends_with_ignore_case(prefix, "latency")) {
             prefix.remove_suffix(7);
             if (prefix.empty()) {
-                LOG(ERROR) << "Invalid prefix2=" << prefix2;
+                FLARE_LOG(ERROR) << "Invalid prefix2=" << prefix2;
                 return -1;
             }
         }
@@ -244,7 +244,7 @@ namespace flare::variable {
         snprintf(namebuf, sizeof(namebuf), "%d%%,%d%%,%d%%,99.9%%",
                  (int) FLAGS_variable_latency_p1, (int) FLAGS_variable_latency_p2,
                  (int) FLAGS_variable_latency_p3);
-        CHECK_EQ(0, _latency_percentiles.set_vector_names(namebuf));
+        FLARE_CHECK_EQ(0, _latency_percentiles.set_vector_names(namebuf));
         return 0;
     }
 

@@ -174,21 +174,21 @@ namespace flare::rpc {
         std::error_code ec;
         flare::file_path dir = flare::file_path(filepath_in).parent_path();
         if (!flare::create_directories(dir, ec)) {
-            LOG(ERROR) << "Fail to create directory=`" << dir.c_str()
+            FLARE_LOG(ERROR) << "Fail to create directory=`" << dir.c_str()
                        << "', " << ec.message();
             return false;
         }
         FILE *fp = fopen(filepath_in, "w");
         if (nullptr == fp) {
-            LOG(ERROR) << "Fail to open `" << filepath_in << '\'';
+            FLARE_LOG(ERROR) << "Fail to open `" << filepath_in << '\'';
             return false;
         }
         bool ret = true;
         if (fwrite(content.data(), content.size(), 1UL, fp) != 1UL) {
-            LOG(ERROR) << "Fail to write into " << filepath_in;
+            FLARE_LOG(ERROR) << "Fail to write into " << filepath_in;
             ret = false;
         }
-        CHECK_EQ(0, fclose(fp));
+        FLARE_CHECK_EQ(0, fclose(fp));
         return ret;
     }
 
@@ -197,13 +197,13 @@ namespace flare::rpc {
         std::error_code ec;
         flare::file_path dir = flare::file_path(filepath_in).parent_path();
         if (!flare::create_directories(dir, ec)) {
-            LOG(ERROR) << "Fail to create directory=`" << dir.c_str()
+            FLARE_LOG(ERROR) << "Fail to create directory=`" << dir.c_str()
                        << "', " << ec.message();
             return false;
         }
         FILE *fp = fopen(filepath_in, "w");
         if (nullptr == fp) {
-            LOG(ERROR) << "Fail to open `" << filepath_in << '\'';
+            FLARE_LOG(ERROR) << "Fail to open `" << filepath_in << '\'';
             return false;
         }
         flare::cord_buf_as_zero_copy_input_stream iter(content);
@@ -211,7 +211,7 @@ namespace flare::rpc {
         int size = 0;
         while (iter.Next(&data, &size)) {
             if (fwrite(data, size, 1UL, fp) != 1UL) {
-                LOG(ERROR) << "Fail to write into " << filepath_in;
+                FLARE_LOG(ERROR) << "Fail to write into " << filepath_in;
                 fclose(fp);
                 return false;
             }
@@ -335,7 +335,7 @@ namespace flare::rpc {
                                std::vector<ProfilingWaiter> *waiters) {
         waiters->clear();
         if ((int) type >= (int) FLARE_ARRAY_SIZE(g_env)) {
-            LOG(ERROR) << "Invalid type=" << type;
+            FLARE_LOG(ERROR) << "Invalid type=" << type;
             return;
         }
         ProfilingEnvironment &env = g_env[type];
@@ -367,7 +367,7 @@ namespace flare::rpc {
             return;
         }
         std::vector<ProfilingWaiter> saved_waiters;
-        CHECK(g_env[type].client);
+        FLARE_CHECK(g_env[type].client);
         ConsumeWaiters(type, cur_cntl, &saved_waiters);
         for (size_t i = 0; i < saved_waiters.size(); ++i) {
             Controller *cntl = saved_waiters[i].cntl;
@@ -463,14 +463,14 @@ namespace flare::rpc {
                         succ = true;
                         break;
                     } else if (ferror(fp)) {
-                        LOG(ERROR) << "Encountered error while reading for "
+                        FLARE_LOG(ERROR) << "Encountered error while reading for "
                                    << expected_result_name;
                         break;
                     }
                     // retry;
                 }
             }
-            PLOG_IF(ERROR, fclose(fp) != 0) << "Fail to close fp";
+            FLARE_PLOG_IF(ERROR, fclose(fp) != 0) << "Fail to close fp";
             if (succ) {
                 RPC_VLOG << "Hit cache=" << expected_result_name;
                 os.move_to(resp);
@@ -590,12 +590,12 @@ namespace flare::rpc {
             }
 
             if (!WriteSmallFile(result_name, prof_result)) {
-                LOG(ERROR) << "Fail to write " << result_name;
-                CHECK(flare::remove(result_name));
+                FLARE_LOG(ERROR) << "Fail to write " << result_name;
+                FLARE_CHECK(flare::remove(result_name));
             }
             break;
         }
-        CHECK(!use_html);
+        FLARE_CHECK(!use_html);
         // NOTE: not send prof_result to os first which does copying.
         os.move_to(resp);
         if (use_html) {
@@ -664,9 +664,9 @@ namespace flare::rpc {
         }
         client_info << " requests for profiling " << ProfilingType2String(type);
         if (type == PROFILING_CPU || type == PROFILING_CONTENTION) {
-            LOG(INFO) << client_info.str() << " for " << seconds << " seconds";
+            FLARE_LOG(INFO) << client_info.str() << " for " << seconds << " seconds";
         } else {
-            LOG(INFO) << client_info.str();
+            FLARE_LOG(INFO) << client_info.str();
         }
         int64_t prof_id = 0;
         const std::string *prof_id_str =
@@ -674,7 +674,7 @@ namespace flare::rpc {
         if (prof_id_str != nullptr) {
             char *endptr = nullptr;
             prof_id = strtoll(prof_id_str->c_str(), &endptr, 10);
-            LOG_IF(ERROR, *endptr != '\0') << "Invalid profiling_id=" << prof_id;
+            FLARE_LOG_IF(ERROR, *endptr != '\0') << "Invalid profiling_id=" << prof_id;
         }
 
         {
@@ -697,7 +697,7 @@ namespace flare::rpc {
                 RPC_VLOG << "Hit cached result, id=" << prof_id;
                 return;
             }
-            CHECK(nullptr == g_env[type].client);
+            FLARE_CHECK(nullptr == g_env[type].client);
             g_env[type].client = new ProfilingClient;
             g_env[type].client->end_us = flare::get_current_time_micros() + seconds * 1000000L;
             g_env[type].client->seconds = seconds;
@@ -762,7 +762,7 @@ namespace flare::rpc {
                 return NotifyWaiters(type, cntl, view);
             }
             if (flare::fiber_sleep_for(seconds * 1000000L) != 0) {
-                PLOG(WARNING) << "Profiling has been interrupted";
+                FLARE_PLOG(WARNING) << "Profiling has been interrupted";
             }
             ProfilerStop();
         } else if (type == PROFILING_CONTENTION) {
@@ -774,7 +774,7 @@ namespace flare::rpc {
                 return NotifyWaiters(type, cntl, view);
             }
             if (flare::fiber_sleep_for(seconds * 1000000L) != 0) {
-                PLOG(WARNING) << "Profiling has been interrupted";
+                FLARE_PLOG(WARNING) << "Profiling has been interrupted";
             }
             flare::fiber_internal::ContentionProfilerStop();
         } else if (type == PROFILING_HEAP) {
@@ -1055,12 +1055,12 @@ namespace flare::rpc {
                 TRACEPRINTF("Remove %lu profiles",
                             past_profs.size() - (size_t) max_profiles);
                 for (size_t i = max_profiles; i < past_profs.size(); ++i) {
-                    CHECK(flare::remove(past_profs[i]));
+                    FLARE_CHECK(flare::remove(past_profs[i]));
                     std::string cache_path;
                     cache_path.reserve(past_profs[i].size() + 7);
                     cache_path += past_profs[i];
                     cache_path += ".cache";
-                    CHECK(flare::remove_all(cache_path));
+                    FLARE_CHECK(flare::remove_all(cache_path));
                 }
                 past_profs.resize(max_profiles);
             }

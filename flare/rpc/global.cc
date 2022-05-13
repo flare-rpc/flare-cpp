@@ -144,13 +144,13 @@ static GlobalExtensions* g_ext = NULL;
 static long ReadPortOfDummyServer(const char* filename) {
     flare::base::fd_guard fd(open(filename, O_RDONLY));
     if (fd < 0) {
-        LOG(ERROR) << "Fail to open `" << DUMMY_SERVER_PORT_FILE << "'";
+        FLARE_LOG(ERROR) << "Fail to open `" << DUMMY_SERVER_PORT_FILE << "'";
         return -1;
     }
     char port_str[32];
     const ssize_t nr = read(fd, port_str, sizeof(port_str));
     if (nr <= 0) {
-        LOG(ERROR) << "Fail to read `" << DUMMY_SERVER_PORT_FILE << "': "
+        FLARE_LOG(ERROR) << "Fail to read `" << DUMMY_SERVER_PORT_FILE << "': "
                    << (nr == 0 ? "nothing to read" : flare_error());
         return -1;
     }
@@ -161,7 +161,7 @@ static long ReadPortOfDummyServer(const char* filename) {
     const long port = strtol(p, &endptr, 10);
     for (; isspace(*endptr); ++endptr) {}
     if (*endptr != '\0') {
-        LOG(ERROR) << "Invalid port=`" << port_str << "'";
+        FLARE_LOG(ERROR) << "Invalid port=`" << port_str << "'";
         return -1;
     }
     return port;
@@ -206,7 +206,7 @@ static void* GlobalUpdate(void*) {
 
     flare::file_watcher fw;
     if (fw.init_from_not_exist(DUMMY_SERVER_PORT_FILE) < 0) {
-        LOG(FATAL) << "Fail to init file_watcher on `" << DUMMY_SERVER_PORT_FILE << "'";
+        FLARE_LOG(FATAL) << "Fail to init file_watcher on `" << DUMMY_SERVER_PORT_FILE << "'";
         return NULL;
     }
 
@@ -220,14 +220,14 @@ static void* GlobalUpdate(void*) {
         const int64_t sleep_us = 1000000L + last_time_us - flare::get_current_time_micros();
         if (sleep_us > 0) {
             if (flare::fiber_sleep_for(sleep_us) < 0) {
-                PLOG_IF(FATAL, errno != ESTOP) << "Fail to sleep";
+                FLARE_PLOG_IF(FATAL, errno != ESTOP) << "Fail to sleep";
                 break;
             }
             consecutive_nosleep = 0;
         } else {
             if (++consecutive_nosleep >= WARN_NOSLEEP_THRESHOLD) {
                 consecutive_nosleep = 0;
-                LOG(WARNING) << __FUNCTION__ << " is too busy!";
+                FLARE_LOG(WARNING) << __FUNCTION__ << " is too busy!";
             }
         }
         last_time_us = flare::get_current_time_micros();
@@ -281,19 +281,19 @@ static void flare_streaming_log_handler(google::protobuf::LogLevel level,
                                      const std::string& message) {
     switch (level) {
     case google::protobuf::LOGLEVEL_INFO:
-        LOG(INFO) << filename << ':' << line << ' ' << message;
+        FLARE_LOG(INFO) << filename << ':' << line << ' ' << message;
         return;
     case google::protobuf::LOGLEVEL_WARNING:
-        LOG(WARNING) << filename << ':' << line << ' ' << message;
+        FLARE_LOG(WARNING) << filename << ':' << line << ' ' << message;
         return;
     case google::protobuf::LOGLEVEL_ERROR:
-        LOG(ERROR) << filename << ':' << line << ' ' << message;
+        FLARE_LOG(ERROR) << filename << ':' << line << ' ' << message;
         return;
     case google::protobuf::LOGLEVEL_FATAL:
-        LOG(FATAL) << filename << ':' << line << ' ' << message;
+        FLARE_LOG(FATAL) << filename << ':' << line << ' ' << message;
         return;
     }
-    CHECK(false) << filename << ':' << line << ' ' << message;
+    FLARE_CHECK(false) << filename << ':' << line << ' ' << message;
 }
 
 static void GlobalInitializeOrDieImpl() {
@@ -307,7 +307,7 @@ static void GlobalInitializeOrDieImpl() {
     struct sigaction oldact;
     if (sigaction(SIGPIPE, NULL, &oldact) != 0 ||
             (oldact.sa_handler == NULL && oldact.sa_sigaction == NULL)) {
-        CHECK(NULL == signal(SIGPIPE, SIG_IGN));
+        FLARE_CHECK(NULL == signal(SIGPIPE, SIG_IGN));
     }
 
     // Make GOOGLE_LOG print to comlog device
@@ -594,14 +594,14 @@ static void GlobalInitializeOrDieImpl() {
 
     // We never join GlobalUpdate, let it quit with the process.
     fiber_id_t th;
-    CHECK(fiber_start_background(&th, NULL, GlobalUpdate, NULL) == 0)
+    FLARE_CHECK(fiber_start_background(&th, NULL, GlobalUpdate, NULL) == 0)
         << "Fail to start GlobalUpdate";
 }
 
 void GlobalInitializeOrDie() {
     if (pthread_once(&register_extensions_once,
                      GlobalInitializeOrDieImpl) != 0) {
-        LOG(FATAL) << "Fail to pthread_once";
+        FLARE_LOG(FATAL) << "Fail to pthread_once";
         exit(1);
     }
 }

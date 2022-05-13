@@ -12,15 +12,15 @@ namespace flare::log {
 
     namespace log_internal {
 
-        const char *ProgramInvocationShortName();
+        const char *program_invocation_short_name();
 
-        bool IsGoogleLoggingInitialized();
+        bool is_logging_initialized();
 
         // Get the part of filepath after the last path separator.
         // (Doesn't modify filepath, contrary to basename() in libgen.h.)
         const char *const_basename(const char *filepath);
 
-        void DumpStackTraceToString(std::string *stacktrace);
+        void dump_stack_trace_to_string(std::string *stacktrace);
 
         struct crash_reason {
             crash_reason() : filename(0), line_number(0), message(0), depth(0) {}
@@ -35,11 +35,11 @@ namespace flare::log {
             int depth;
         };
 
-        void SetCrashReason(const crash_reason *r);
+        void set_crash_reason(const crash_reason *r);
 
-        void InitGoogleLoggingUtilities(const char *argv0);
+        void init_logging_utilities(const char *argv0);
 
-        void ShutdownGoogleLoggingUtilities();
+        void shutdown_logging_utilities();
 
     }  // namespace log_internal
 }  // namespace flare::log

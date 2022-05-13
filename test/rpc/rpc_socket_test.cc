@@ -317,14 +317,14 @@ public:
     void StartConnect(const flare::rpc::Socket *,
                       void (*done)(int err, void *data),
                       void *data) {
-        LOG(INFO) << "Start application-level connect";
+        FLARE_LOG(INFO) << "Start application-level connect";
         _done = done;
         _data = data;
         _called_start_connect = true;
     }
 
     void StopConnect(flare::rpc::Socket *) {
-        LOG(INFO) << "Stop application-level connect";
+        FLARE_LOG(INFO) << "Stop application-level connect";
     }
 
     void MakeConnectDone() {
@@ -692,7 +692,7 @@ TEST_F(SocketTest, health_check) {
     int appended_msg = 0;
     flare::cord_buf src;
     if (use_my_message) {
-        LOG(INFO) << "Use MyMessage";
+        FLARE_LOG(INFO) << "Use MyMessage";
         msg.reset(new MyMessage(buf, 12 + meta_len + len, &appended_msg));
     } else {
         src.append(buf, 12 + meta_len + len);
@@ -881,7 +881,7 @@ TEST_F(SocketTest, multi_threaded_write) {
                 }
                 flare::fiber_sleep_for(1000);
                 if (flare::get_current_time_micros() >= start_time + 2000000L) {
-                    LOG(FATAL) << "Wait too long!";
+                    FLARE_LOG(FATAL) << "Wait too long!";
                     break;
                 }
                 continue;

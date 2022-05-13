@@ -118,7 +118,7 @@ int main(int argc, char* argv[]) {
     flare::rpc::ServerOptions server_options;
     server_options.redis_service = rsimpl;
     if (server.Start(FLAGS_port, &server_options) != 0) {
-        LOG(ERROR) << "Fail to start server";
+        FLARE_LOG(ERROR) << "Fail to start server";
         return -1;
     }
     server.RunUntilAskedToQuit();

@@ -17,7 +17,7 @@ namespace flare {
     bool create_temporary_dir_in_dir_impl(const flare::file_path &base_dir,
                                           const std::string &name_tmpl,
                                           flare::file_path *new_dir) {
-        DCHECK(name_tmpl.find("XXXXXX") != std::string::npos)
+        FLARE_DCHECK(name_tmpl.find("XXXXXX") != std::string::npos)
                             << "Directory name template must contain \"XXXXXX\".";
 
         flare::file_path sub_dir = base_dir;
@@ -34,7 +34,7 @@ namespace flare {
         }
         char *dtemp = mkdtemp(buffer);
         if (!dtemp) {
-            DPLOG(ERROR) << "mkdtemp";
+            FLARE_DPLOG(ERROR) << "mkdtemp";
             return false;
         }
         *new_dir = flare::file_path(dtemp);
@@ -70,7 +70,7 @@ namespace flare {
 
     scoped_temp_dir::~scoped_temp_dir() {
         if (!_path.empty() && !remove())
-            DLOG(WARNING) << "Could not delete temp dir in dtor.";
+            FLARE_DLOG(WARNING) << "Could not delete temp dir in dtor.";
     }
 
     bool scoped_temp_dir::create_unique_temp_dir() {

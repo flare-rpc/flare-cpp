@@ -46,13 +46,13 @@ namespace {
             begin_subrange = static_cast<int>(open_bracket_pos);
             s.replace(open_bracket_pos, 1, "");
             std::string::size_type close_bracket_pos = s.find(']');
-            CHECK(close_bracket_pos != std::string_view::npos)<<
+            FLARE_CHECK(close_bracket_pos != std::string_view::npos)<<
                            "Test input contains [ without matching ]";
             end_subrange = static_cast<int>(close_bracket_pos);
             s.replace(close_bracket_pos, 1, "");
         }
         const std::string::size_type expected_characters_matched = s.find('$');
-        CHECK(expected_characters_matched != std::string::npos)<<
+        FLARE_CHECK(expected_characters_matched != std::string::npos)<<
                        "Input std::string must contain $";
         s.replace(expected_characters_matched, 1, "");
 

@@ -44,55 +44,55 @@ namespace flare::debugging {
 
     static failure_signal_handler_options fsh_options;
 
-// Resets the signal handler for signo to the default action for that
-// signal, then raises the signal.
-    static void RaiseToDefaultHandler(int signo) {
+    // Resets the signal handler for signo to the default action for that
+    // signal, then raises the signal.
+    static void raise_to_default_handler(int signo) {
         signal(signo, SIG_DFL);
         raise(signo);
     }
 
-    struct FailureSignalData {
+    struct failure_signal_data {
         const int signo;
         const char *const as_string;
 #ifdef FLARE_HAVE_SIGACTION
         struct sigaction previous_action;
         // StructSigaction is used to silence -Wmissing-field-initializers.
         using StructSigaction = struct sigaction;
-#define FSD_PREVIOUS_INIT FailureSignalData::StructSigaction()
+#define FSD_PREVIOUS_INIT failure_signal_data::StructSigaction()
 #else
         void (*previous_handler)(int);
 #define FSD_PREVIOUS_INIT SIG_DFL
 #endif
     };
 
-    static FailureSignalData failure_signal_data[] = {{
-                                                              SIGSEGV, "SIGSEGV", FSD_PREVIOUS_INIT
-                                                      },
-                                                      {
-                                                              SIGILL, "SIGILL", FSD_PREVIOUS_INIT
+    static failure_signal_data failure_signal_array[] = {{
+                                                                 SIGSEGV, "SIGSEGV", FSD_PREVIOUS_INIT
+                                                         },
+                                                         {
+                                                                 SIGILL, "SIGILL", FSD_PREVIOUS_INIT
 
-                                                      },
-                                                      {
-                                                              SIGFPE, "SIGFPE", FSD_PREVIOUS_INIT
+                                                         },
+                                                         {
+                                                                 SIGFPE, "SIGFPE", FSD_PREVIOUS_INIT
 
-                                                      },
-                                                      {
-                                                              SIGABRT, "SIGABRT", FSD_PREVIOUS_INIT
+                                                         },
+                                                         {
+                                                                 SIGABRT, "SIGABRT", FSD_PREVIOUS_INIT
 
-                                                      },
-                                                      {
-                                                              SIGTERM, "SIGTERM", FSD_PREVIOUS_INIT
+                                                         },
+                                                         {
+                                                                 SIGTERM, "SIGTERM", FSD_PREVIOUS_INIT
 
-                                                      },
+                                                         },
 #ifndef _WIN32
-                                                      {
-                                                              SIGBUS, "SIGBUS", FSD_PREVIOUS_INIT
+                                                         {
+                                                                 SIGBUS, "SIGBUS", FSD_PREVIOUS_INIT
 
-                                                      },
-                                                      {
-                                                              SIGTRAP, "SIGTRAP", FSD_PREVIOUS_INIT
+                                                         },
+                                                         {
+                                                                 SIGTRAP, "SIGTRAP", FSD_PREVIOUS_INIT
 
-                                                      },
+                                                         },
 #endif
     };
 
@@ -100,7 +100,7 @@ namespace flare::debugging {
 
     static void RaiseToPreviousHandler(int signo) {
         // Search for the previous handler.
-        for (const auto &it : failure_signal_data) {
+        for (const auto &it : failure_signal_array) {
             if (it.signo == signo) {
 #ifdef FLARE_HAVE_SIGACTION
                 sigaction(signo, &it.previous_action, nullptr);
@@ -113,13 +113,13 @@ namespace flare::debugging {
         }
 
         // Not found, use the default handler.
-        RaiseToDefaultHandler(signo);
+        raise_to_default_handler(signo);
     }
 
     namespace debugging_internal {
 
         const char *failure_signal_to_string(int signo) {
-            for (const auto &it : failure_signal_data) {
+            for (const auto &it : failure_signal_array) {
                 if (it.signo == signo) {
                     return it.as_string;
                 }
@@ -131,7 +131,7 @@ namespace flare::debugging {
 
 #ifndef _WIN32
 
-    static bool SetupAlternateStackOnce() {
+    static bool setup_alternate_stack_once() {
 #if defined(__wasm__) || defined (__asjms__)
         const size_t page_mask = getpagesize() - 1;
 #else
@@ -158,17 +158,17 @@ namespace flare::debugging {
         sigstk.ss_sp = mmap(nullptr, sigstk.ss_size, PROT_READ | PROT_WRITE,
                             MAP_PRIVATE | MAP_ANONYMOUS | MAP_STACK, -1, 0);
         if (sigstk.ss_sp == MAP_FAILED) {
-             DLOG(FATAL)<<"mmap() for alternate signal stack failed";
+             FLARE_DLOG(FATAL)<<"mmap() for alternate signal stack failed";
         }
 #else
         sigstk.ss_sp = malloc(sigstk.ss_size);
         if (sigstk.ss_sp == nullptr) {
-            DLOG(FATAL) << "malloc() for alternate signal stack failed";
+            FLARE_DLOG(FATAL) << "malloc() for alternate signal stack failed";
         }
 #endif
 
         if (sigaltstack(&sigstk, nullptr) != 0) {
-            DLOG(FATAL) << "sigaltstack() failed with errno={}" << errno;
+            FLARE_DLOG(FATAL) << "sigaltstack() failed with errno={}" << errno;
         }
         return true;
     }
@@ -180,17 +180,17 @@ namespace flare::debugging {
 // Sets up an alternate stack for signal handlers once.
 // Returns the appropriate flag for sig_action.sa_flags
 // if the system supports using an alternate stack.
-    static int MaybeSetupAlternateStack() {
+    static int maybe_setup_alternate_stack() {
 #ifndef _WIN32
-        FLARE_ALLOW_UNUSED static const bool kOnce = SetupAlternateStackOnce();
+        setup_alternate_stack_once();
         return SA_ONSTACK;
 #else
         return 0;
 #endif
     }
 
-    static void InstallOneFailureHandler(FailureSignalData *data,
-                                         void (*handler)(int, siginfo_t *, void *)) {
+    static void install_one_failure_handler(failure_signal_data *data,
+                                            void (*handler)(int, siginfo_t *, void *)) {
         struct sigaction act;
         memset(&act, 0, sizeof(act));
         sigemptyset(&act.sa_mask);
@@ -199,23 +199,23 @@ namespace flare::debugging {
         // ImmediateAbortSignalHandler().
         act.sa_flags |= SA_NODEFER;
         if (fsh_options.use_alternate_stack) {
-            act.sa_flags |= MaybeSetupAlternateStack();
+            act.sa_flags |= maybe_setup_alternate_stack();
         }
         act.sa_sigaction = handler;
-        DCHECK(sigaction(data->signo, &act, &data->previous_action) == 0) << "sigaction() failed";
+        FLARE_DCHECK(sigaction(data->signo, &act, &data->previous_action) == 0) << "sigaction() failed";
     }
 
 #else
 
-    static void InstallOneFailureHandler(FailureSignalData* data,
+    static void install_one_failure_handler(failure_signal_data* data,
                                          void (*handler)(int)) {
       data->previous_handler = signal(data->signo, handler);
-      CHECK(data->previous_handler != SIG_ERR)<< "signal() failed";
+      FLARE_CHECK(data->previous_handler != SIG_ERR)<< "signal() failed";
     }
 
 #endif
 
-    static void SafeWriteToStderr(const char *s, size_t len) {
+    static void safe_write_to_stderr(const char *s, size_t len) {
 #if defined(FLARE_HAVE_SYSCALL_WRITE)
         syscall(SYS_write, STDERR_FILENO, s, len);
 #elif defined(FLARE_HAVE_POSIX_WRITE)
@@ -231,11 +231,11 @@ namespace flare::debugging {
 
     static void write_to_stderr(const char *data) {
         int old_errno = errno;
-        SafeWriteToStderr(data, strlen(data));
+        safe_write_to_stderr(data, strlen(data));
         errno = old_errno;
     }
 
-    static void WriteSignalMessage(int signo, void (*writerfn)(const char *)) {
+    static void write_signal_message(int signo, void (*writerfn)(const char *)) {
         char buf[64];
         const char *const signal_string =
                 debugging_internal::failure_signal_to_string(signo);
@@ -251,7 +251,7 @@ namespace flare::debugging {
     }
 
 // `void*` might not be big enough to store `void(*)(const char*)`.
-    struct WriterFnStruct {
+    struct writer_fn_struct {
         void (*writerfn)(const char *);
     };
 
@@ -259,14 +259,14 @@ namespace flare::debugging {
     // examine_stack.h take a writer function pointer that has a void* arg
     // for historical reasons. failure_signal_handler_writer only takes a
     // data pointer. This function converts between these types.
-    static void WriterFnWrapper(const char *data, void *arg) {
-        static_cast<WriterFnStruct *>(arg)->writerfn(data);
+    static void writer_fn_wrapper(const char *data, void *arg) {
+        static_cast<writer_fn_struct *>(arg)->writerfn(data);
     }
 
     // Convenient wrapper around DumpPCAndFrameSizesAndStackTrace() for signal
     // handlers. "noinline" so that get_stack_frames() skips the top-most stack
     // frame for this function.
-    FLARE_NO_INLINE static void WriteStackTrace(
+    FLARE_NO_INLINE static void write_stack_trace(
             void *ucontext, bool symbolize_stacktrace,
             void (*writerfn)(const char *, void *), void *writerfn_arg) {
         constexpr int kNumStackFrames = 32;
@@ -285,15 +285,15 @@ namespace flare::debugging {
 // Called by flare_failure_signal_handler() to write the failure info. It is
 // called once with writerfn set to write_to_stderr() and then possibly
 // with writerfn set to the user provided function.
-    static void WriteFailureInfo(int signo, void *ucontext,
-                                 void (*writerfn)(const char *)) {
-        WriterFnStruct writerfn_struct{writerfn};
-        WriteSignalMessage(signo, writerfn);
-        WriteStackTrace(ucontext, fsh_options.symbolize_stacktrace, WriterFnWrapper,
-                        &writerfn_struct);
+    static void write_failure_info(int signo, void *ucontext,
+                                   void (*writerfn)(const char *)) {
+        writer_fn_struct writerfn_struct{writerfn};
+        write_signal_message(signo, writerfn);
+        write_stack_trace(ucontext, fsh_options.symbolize_stacktrace, writer_fn_wrapper,
+                          &writerfn_struct);
     }
 
-    static void PortableSleepForSeconds(int seconds) {
+    static void portable_sleep_for_seconds(int seconds) {
 #ifdef _WIN32
         Sleep(seconds * 1000);
 #else
@@ -312,7 +312,7 @@ namespace flare::debugging {
     // the alarm timeout, ImmediateAbortSignalHandler() will abort the
     // program.
     static void ImmediateAbortSignalHandler(int) {
-        RaiseToDefaultHandler(SIGABRT);
+        raise_to_default_handler(SIGABRT);
     }
 
 #endif
@@ -336,17 +336,17 @@ namespace flare::debugging {
         if (!failed_tid.compare_exchange_strong(
                 previous_failed_tid, static_cast<intptr_t>(this_tid),
                 std::memory_order_acq_rel, std::memory_order_relaxed)) {
-            DLOG(ERROR) <<
-                        "signal " << signo << " raised at PC="
-                        << flare::debugging::debugging_internal::GetProgramCounter(ucontext)
-                        << " while already in flare_failure_signal_handler()";
+            FLARE_DLOG(ERROR) <<
+                              "signal " << signo << " raised at PC="
+                              << flare::debugging::debugging_internal::GetProgramCounter(ucontext)
+                              << " while already in flare_failure_signal_handler()";
 
             if (this_tid != previous_failed_tid) {
                 // Another thread is already in flare_failure_signal_handler(), so wait
                 // a bit for it to finish. If the other thread doesn't kill us,
                 // we do so after sleeping.
-                PortableSleepForSeconds(3);
-                RaiseToDefaultHandler(signo);
+                portable_sleep_for_seconds(3);
+                raise_to_default_handler(signo);
                 // The recursively raised signal may be blocked until we return.
                 return;
             }
@@ -362,25 +362,25 @@ namespace flare::debugging {
 #endif
 
         // First write to stderr.
-        WriteFailureInfo(signo, ucontext, write_to_stderr);
+        write_failure_info(signo, ucontext, write_to_stderr);
 
         // Riskier code (because it is less likely to be async-signal-safe)
         // goes after this point.
         if (fsh_options.writerfn != nullptr) {
-            WriteFailureInfo(signo, ucontext, fsh_options.writerfn);
+            write_failure_info(signo, ucontext, fsh_options.writerfn);
         }
 
         if (fsh_options.call_previous_handler) {
             RaiseToPreviousHandler(signo);
         } else {
-            RaiseToDefaultHandler(signo);
+            raise_to_default_handler(signo);
         }
     }
 
     void install_failure_signal_handler(const failure_signal_handler_options &options) {
         fsh_options = options;
-        for (auto &it : failure_signal_data) {
-            InstallOneFailureHandler(&it, flare_failure_signal_handler);
+        for (auto &it : failure_signal_array) {
+            install_one_failure_handler(&it, flare_failure_signal_handler);
         }
     }
 

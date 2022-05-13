@@ -58,7 +58,7 @@ int main(int argc, char* argv[]) {
     options.timeout_ms = FLAGS_timeout_ms/*milliseconds*/;
     options.max_retry = FLAGS_max_retry;
     if (channel.Init(FLAGS_server.c_str(), FLAGS_load_balancer.c_str(), &options) != 0) {
-        LOG(ERROR) << "Fail to initialize channel";
+        FLARE_LOG(ERROR) << "Fail to initialize channel";
         return -1;
     }
 
@@ -106,16 +106,16 @@ int main(int argc, char* argv[]) {
         flare::rpc::Join(id2);
         tm.stop();
         if (cntl1.Failed() && cntl2.Failed()) {
-            LOG(WARNING) << "Both failed. rpc1:" << cntl1.ErrorText()
+            FLARE_LOG(WARNING) << "Both failed. rpc1:" << cntl1.ErrorText()
                          << ", rpc2: " << cntl2.ErrorText();
         } else if (!cntl1.Failed()) {
-            LOG(INFO) << "Received `" << response1.message() << "' from rpc1="
+            FLARE_LOG(INFO) << "Received `" << response1.message() << "' from rpc1="
                       << id1.value << '@' << cntl1.remote_side()
                       << " latency=" << tm.u_elapsed() << "us"
                       << " rpc1_latency=" << cntl1.latency_us() << "us"
                       << " rpc2_latency=" << cntl2.latency_us() << "us";
         } else {
-            LOG(INFO) << "Received `" << response2.message() << "' from rpc2="
+            FLARE_LOG(INFO) << "Received `" << response2.message() << "' from rpc2="
                       << id2.value << '@' << cntl2.remote_side()
                       << " latency=" << tm.u_elapsed() << "us"
                       << " rpc1_latency=" << cntl1.latency_us() << "us"
@@ -124,6 +124,6 @@ int main(int argc, char* argv[]) {
         sleep(1);
     }
 
-    LOG(INFO) << "EchoClient is going to quit";
+    FLARE_LOG(INFO) << "EchoClient is going to quit";
     return 0;
 }

@@ -288,7 +288,7 @@ namespace flare::base {
             if (get_local_side(sockfd, &pt) == 0) {
                 *self_port = pt.port;
             } else {
-                CHECK(false) << "Fail to get the local port of sockfd=" << sockfd;
+                FLARE_CHECK(false) << "Fail to get the local port of sockfd=" << sockfd;
             }
         }
         return sockfd.release();
@@ -308,7 +308,7 @@ namespace flare::base {
                 return -1;
             }
 #else
-            LOG(ERROR) << "Missing def of SO_REUSEADDR while -reuse_addr is on";
+            FLARE_LOG(ERROR) << "Missing def of SO_REUSEADDR while -reuse_addr is on";
             return -1;
 #endif
         }
@@ -318,10 +318,10 @@ namespace flare::base {
             const int on = 1;
             if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEPORT,
                            &on, sizeof(on)) != 0) {
-                LOG(WARNING) << "Fail to setsockopt SO_REUSEPORT of sockfd=" << sockfd;
+                FLARE_LOG(WARNING) << "Fail to setsockopt SO_REUSEPORT of sockfd=" << sockfd;
             }
 #else
-            LOG(ERROR) << "Missing def of SO_REUSEPORT while -reuse_port is on";
+            FLARE_LOG(ERROR) << "Missing def of SO_REUSEPORT while -reuse_port is on";
             return -1;
 #endif
         }

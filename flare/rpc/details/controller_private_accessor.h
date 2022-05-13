@@ -58,7 +58,7 @@ public:
     }
 
     void move_in_server_receiving_sock(SocketUniquePtr& ptr) {
-        CHECK(_cntl->_current_call.sending_sock == NULL);
+        FLARE_CHECK(_cntl->_current_call.sending_sock == NULL);
         _cntl->_current_call.sending_sock.reset(ptr.release());
     }
 

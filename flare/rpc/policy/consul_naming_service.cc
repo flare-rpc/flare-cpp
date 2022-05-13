@@ -67,7 +67,7 @@ int ConsulNamingService::DegradeToOtherServiceIfNeeded(const char* service_name,
     if (FLAGS_consul_enable_degrade_to_file_naming_service && !_backup_file_loaded) {
         _backup_file_loaded = true;
         const std::string file(FLAGS_consul_file_naming_service_dir + service_name);
-        LOG(INFO) << "Load server list from " << file;
+        FLARE_LOG(INFO) << "Load server list from " << file;
         FileNamingService fns;
         return fns.GetServers(file.c_str(), servers);
     }
@@ -82,7 +82,7 @@ int ConsulNamingService::GetServers(const char* service_name,
         opt.connect_timeout_ms = FLAGS_consul_connect_timeout_ms;
         opt.timeout_ms = (FLAGS_consul_blocking_query_wait_secs + 10) * 1000;
         if (_channel.Init(FLAGS_consul_agent_addr.c_str(), "rr", &opt) != 0) {
-            LOG(ERROR) << "Fail to init channel to consul at " << FLAGS_consul_agent_addr;
+            FLARE_LOG(ERROR) << "Fail to init channel to consul at " << FLAGS_consul_agent_addr;
             return DegradeToOtherServiceIfNeeded(service_name, servers);
         }
         _consul_connected = true;
@@ -105,7 +105,7 @@ int ConsulNamingService::GetServers(const char* service_name,
     cntl.http_request().uri() = consul_url;
     _channel.CallMethod(NULL, &cntl, NULL, NULL, NULL);
     if (cntl.Failed()) {
-        LOG(ERROR) << "Fail to access " << consul_url << ": "
+        FLARE_LOG(ERROR) << "Fail to access " << consul_url << ": "
                    << cntl.ErrorText();
         return DegradeToOtherServiceIfNeeded(service_name, servers);
     }
@@ -113,13 +113,13 @@ int ConsulNamingService::GetServers(const char* service_name,
     const std::string* index = cntl.http_response().GetHeader(kConsulIndex);
     if (index != nullptr) {
         if (*index == _consul_index) {
-            LOG_EVERY_N(INFO, 100) << "There is no service changed for the list of "
+            FLARE_LOG_EVERY_N(INFO, 100) << "There is no service changed for the list of "
                                     << service_name
                                     << ", consul_index: " << _consul_index;
             return -1;
         }
     } else {
-        LOG(ERROR) << "Failed to parse consul index of " << service_name << ".";
+        FLARE_LOG(ERROR) << "Failed to parse consul index of " << service_name << ".";
         return -1;
     }
 
@@ -131,7 +131,7 @@ int ConsulNamingService::GetServers(const char* service_name,
     RAPIDJSON_NAMESPACE::Document services;
     services.Parse(cntl.response_attachment().to_string().c_str());
     if (!services.IsArray()) {
-        LOG(ERROR) << "The consul's response for "
+        FLARE_LOG(ERROR) << "The consul's response for "
                    << service_name << " is not a json array";
         return -1;
     }
@@ -139,7 +139,7 @@ int ConsulNamingService::GetServers(const char* service_name,
     for (RAPIDJSON_NAMESPACE::SizeType i = 0; i < services.Size(); ++i) {
         auto itr_service = services[i].FindMember("Service");
         if (itr_service == services[i].MemberEnd()) {
-            LOG(ERROR) << "No service info in node: "
+            FLARE_LOG(ERROR) << "No service info in node: "
                        << RapidjsonValueToString(services[i]);
             continue;
         }
@@ -151,7 +151,7 @@ int ConsulNamingService::GetServers(const char* service_name,
             !itr_address->value.IsString() ||
             itr_port == service.MemberEnd() ||
             !itr_port->value.IsUint()) {
-            LOG(ERROR) << "Service with no valid address or port: "
+            FLARE_LOG(ERROR) << "Service with no valid address or port: "
                        << RapidjsonValueToString(service);
             continue;
         }
@@ -160,7 +160,7 @@ int ConsulNamingService::GetServers(const char* service_name,
         if (str2endpoint(service["Address"].GetString(),
                          service["Port"].GetUint(),
                          &end_point) != 0) {
-            LOG(ERROR) << "Service with illegal address or port: "
+            FLARE_LOG(ERROR) << "Service with illegal address or port: "
                        << RapidjsonValueToString(service);
             continue;
         }
@@ -176,13 +176,13 @@ int ConsulNamingService::GetServers(const char* service_name,
                     if (tag.IsString()) {
                         node.tag = tag.GetString();
                     } else {
-                        LOG(ERROR) << "First tag returned by consul is not string, service: "
+                        FLARE_LOG(ERROR) << "First tag returned by consul is not string, service: "
                                    << RapidjsonValueToString(service);
                         continue;
                     }
                 }
             } else {
-                LOG(ERROR) << "Service tags returned by consul is not json array, service: "
+                FLARE_LOG(ERROR) << "Service tags returned by consul is not json array, service: "
                            << RapidjsonValueToString(service);
                 continue;
             }
@@ -198,7 +198,7 @@ int ConsulNamingService::GetServers(const char* service_name,
     _consul_index = *index;
 
     if (servers->empty() && !services.Empty()) {
-        LOG(ERROR) << "All service about " << service_name
+        FLARE_LOG(ERROR) << "All service about " << service_name
                    << " from consul is invalid, refuse to update servers";
           return -1;
     }
@@ -236,12 +236,12 @@ int ConsulNamingService::RunNamingService(const char* service_name,
                     RPC_VLOG << "Quit NamingServiceThread=" << fiber_self();
                     return 0;
                 }
-                PLOG(FATAL) << "Fail to sleep";
+                FLARE_PLOG(FATAL) << "Fail to sleep";
                 return -1;
             }
         }
     }
-    CHECK(false);
+    FLARE_CHECK(false);
     return -1;
 }
 

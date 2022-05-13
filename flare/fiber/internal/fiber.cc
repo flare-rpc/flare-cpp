@@ -91,7 +91,7 @@ namespace flare::fiber_internal {
                           FLAGS_fiber_min_concurrency :
                           FLAGS_fiber_concurrency;
         if (c->init(concurrency) != 0) {
-            LOG(ERROR) << "Fail to init g_task_control";
+            FLARE_LOG(ERROR) << "Fail to init g_task_control";
             delete c;
             return NULL;
         }
@@ -271,7 +271,7 @@ int fiber_getconcurrency(void) {
 
 int fiber_setconcurrency(int num) {
     if (num < FIBER_MIN_CONCURRENCY || num > FIBER_MAX_CONCURRENCY) {
-        LOG(ERROR) << "Invalid concurrency=" << num;
+        FLARE_LOG(ERROR) << "Invalid concurrency=" << num;
         return EINVAL;
     }
     if (flare::fiber_internal::FLAGS_fiber_min_concurrency > 0) {
@@ -304,7 +304,7 @@ int fiber_setconcurrency(int num) {
         return 0;
     }
     if (flare::fiber_internal::FLAGS_fiber_concurrency != c->concurrency()) {
-        LOG(ERROR) << "CHECK failed: fiber_concurrency="
+        FLARE_LOG(ERROR) << "FLARE_CHECK failed: fiber_concurrency="
                    << flare::fiber_internal::FLAGS_fiber_concurrency
                    << " != tc_concurrency=" << c->concurrency();
         flare::fiber_internal::FLAGS_fiber_concurrency = c->concurrency();

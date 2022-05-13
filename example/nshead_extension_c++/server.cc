@@ -61,7 +61,7 @@ int main(int argc, char* argv[]) {
 
     // Start the server.
     if (server.Start(FLAGS_port, &options) != 0) {
-        LOG(ERROR) << "Fail to start EchoServer";
+        FLARE_LOG(ERROR) << "Fail to start EchoServer";
         return -1;
     }
 

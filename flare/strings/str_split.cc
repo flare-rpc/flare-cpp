@@ -113,7 +113,7 @@ std::string_view by_any_char::find(std::string_view text, size_t pos) const {
 //  by_length
 //
 by_length::by_length(ptrdiff_t length) : _length(length) {
-    DCHECK(length > 0);
+    FLARE_DCHECK(length > 0);
 }
 
 std::string_view by_length::find(std::string_view text,

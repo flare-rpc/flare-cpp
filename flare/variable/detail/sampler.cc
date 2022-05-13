@@ -89,7 +89,7 @@ private:
     void create_sampling_thread() {
         const int rc = pthread_create(&_tid, NULL, sampling_thread, this);
         if (rc != 0) {
-            LOG(FATAL) << "Fail to create sampling_thread, " << flare_error(rc);
+            FLARE_LOG(FATAL) << "Fail to create sampling_thread, " << flare_error(rc);
         } else {
             _created = true;
             if (!registered_atfork) {
@@ -186,7 +186,7 @@ void SamplerCollector::run() {
         } else {            
             if (++consecutive_nosleep >= WARN_NOSLEEP_THRESHOLD) {
                 consecutive_nosleep = 0;
-                LOG(WARNING) << "variable is busy at sampling for "
+                FLARE_LOG(WARNING) << "variable is busy at sampling for "
                              << WARN_NOSLEEP_THRESHOLD << " seconds!";
             }
         }

@@ -135,7 +135,7 @@ namespace flare {
         std::add_lvalue_reference_t<unboxed_type_t < Ts...>>
 
         boxed<Ts...>::get() & {
-            DCHECK_NE(holding_.index(), kEmpty);
+            FLARE_DCHECK_NE(holding_.index(), kEmpty);
             if constexpr (sizeof...(Ts) == 0) {
                 return (void) get_raw();
             } else if constexpr (sizeof...(Ts) == 1) {
@@ -158,7 +158,7 @@ namespace flare {
 
         template<class... Ts>
         typename boxed<Ts...>::value_type &boxed<Ts...>::get_raw() &{
-            DCHECK_NE(holding_.index(), kEmpty);
+            FLARE_DCHECK_NE(holding_.index(), kEmpty);
             return std::get<kValue>(holding_);
         }
 

@@ -136,14 +136,14 @@ static char try_symbolize_buffer[4096];
 // the result of flare::debugging::symbolize().
 
 static const char *TrySymbolizeWithLimit(void *pc, int limit) {
-    CHECK(static_cast<size_t>(limit) <= sizeof(try_symbolize_buffer)) <<
+    FLARE_CHECK(static_cast<size_t>(limit) <= sizeof(try_symbolize_buffer)) <<
                                                                       "try_symbolize_buffer is too small";
 
     // Use the heap to facilitate heap and buffer sanitizer tools.
     auto heap_buffer = std::make_unique<char[]>(sizeof(try_symbolize_buffer));
     bool found = flare::debugging::symbolize(pc, heap_buffer.get(), limit);
     if (found) {
-        CHECK(strnlen(heap_buffer.get(), static_cast<size_t>(limit)) < static_cast<size_t>(limit)) <<
+        FLARE_CHECK(strnlen(heap_buffer.get(), static_cast<size_t>(limit)) < static_cast<size_t>(limit)) <<
                                                                                                    "flare::debugging::symbolize() did not properly terminate the string";
         strncpy(try_symbolize_buffer, heap_buffer.get(),
                 sizeof(try_symbolize_buffer) - 1);
@@ -309,8 +309,8 @@ static int FilterElfHeader(struct dl_phdr_info *info, size_t size, void *data) {
 TEST(symbolize, SymbolizeWithMultipleMaps) {
   // Force kPadding0 and kPadding1 to be linked in.
   if (volatile_bool) {
-    LOG(INFO)<<kPadding0;
-    LOG(INFO)<< kPadding1;
+    FLARE_LOG(INFO)<<kPadding0;
+    FLARE_LOG(INFO)<< kPadding1;
   }
 
   // Verify we can symbolize everything.
@@ -454,8 +454,8 @@ void FLARE_NO_INLINE TestWithPCInsideNonInlineFunction() {
     (defined(__i386__) || defined(__x86_64__))
   void *pc = non_inline_func();
   const char *symbol = TrySymbolize(pc);
-  CHECK(symbol != nullptr)"TestWithPCInsideNonInlineFunction failed";
-  CHECK(strcmp(symbol, "non_inline_func") == 0)<<
+  FLARE_CHECK(symbol != nullptr)"TestWithPCInsideNonInlineFunction failed";
+  FLARE_CHECK(strcmp(symbol, "non_inline_func") == 0)<<
                  "TestWithPCInsideNonInlineFunction failed";
   std::cout << "TestWithPCInsideNonInlineFunction passed" << std::endl;
 #endif
@@ -466,8 +466,8 @@ void FLARE_NO_INLINE TestWithPCInsideInlineFunction() {
     (defined(__i386__) || defined(__x86_64__))
   void *pc = inline_func();  // Must be inlined.
   const char *symbol = TrySymbolize(pc);
-  CHECK(symbol != nullptr)<<"TestWithPCInsideInlineFunction failed";
-  CHECK(strcmp(symbol, __FUNCTION__) == 0)<<
+  FLARE_CHECK(symbol != nullptr)<<"TestWithPCInsideInlineFunction failed";
+  FLARE_CHECK(strcmp(symbol, __FUNCTION__) == 0)<<
                  "TestWithPCInsideInlineFunction failed";
   std::cout << "TestWithPCInsideInlineFunction passed" << std::endl;
 #endif
@@ -479,8 +479,8 @@ void FLARE_NO_INLINE TestWithReturnAddress() {
 #if defined(FLARE_COMPILER_CLANG) || defined(FLARE_COMPILER_GNUC)
   void *return_address = __builtin_return_address(0);
   const char *symbol = TrySymbolize(return_address);
-  CHECK(symbol != nullptr)"TestWithReturnAddress failed";
-  CHECK(strcmp(symbol, "main") == 0)<<"TestWithReturnAddress failed";
+  FLARE_CHECK(symbol != nullptr)"TestWithReturnAddress failed";
+  FLARE_CHECK(strcmp(symbol, "main") == 0)<<"TestWithReturnAddress failed";
   std::cout << "TestWithReturnAddress passed" << std::endl;
 #endif
 }
@@ -539,7 +539,7 @@ int main(int argc, char **argv) {
 #if !defined(__EMSCRIPTEN__)
     // Make sure kHpageTextPadding is linked into the binary.
     if (volatile_bool) {
-        LOG(INFO) << kHpageTextPadding;
+        FLARE_LOG(INFO) << kHpageTextPadding;
     }
 #endif  // !defined(__EMSCRIPTEN__)
 

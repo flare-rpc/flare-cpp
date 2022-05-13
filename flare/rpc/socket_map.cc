@@ -70,7 +70,7 @@ static void CreateClientSideSocketMap() {
     options.idle_timeout_second_dynamic = &FLAGS_idle_timeout_second;
     options.defer_close_second_dynamic = &FLAGS_defer_close_second;
     if (socket_map->Init(options) != 0) {
-        LOG(FATAL) << "Fail to init SocketMap";
+        FLARE_LOG(FATAL) << "Fail to init SocketMap";
         exit(1);
     }
     g_socket_map.store(socket_map, std::memory_order_release);
@@ -159,7 +159,7 @@ SocketMap::~SocketMap() {
             }
         }
         if (nleft) {
-            LOG(ERROR) << err.str();
+            FLARE_LOG(ERROR) << err.str();
         }
     }
 
@@ -172,23 +172,23 @@ SocketMap::~SocketMap() {
 
 int SocketMap::Init(const SocketMapOptions& options) {
     if (_options.socket_creator != NULL) {
-        LOG(ERROR) << "Already initialized";
+        FLARE_LOG(ERROR) << "Already initialized";
         return -1;
     }
     _options = options;
     if (_options.socket_creator == NULL) {
-        LOG(ERROR) << "SocketOptions.socket_creator must be set";
+        FLARE_LOG(ERROR) << "SocketOptions.socket_creator must be set";
         return -1;
     }
     if (_map.init(_options.suggested_map_size, 70) != 0) {
-        LOG(ERROR) << "Fail to init _map";
+        FLARE_LOG(ERROR) << "Fail to init _map";
         return -1;
     }
     if (_options.idle_timeout_second_dynamic != NULL ||
         _options.idle_timeout_second > 0) {
         if (fiber_start_background(&_close_idle_thread, NULL,
                                      RunWatchConnections, this) != 0) {
-            LOG(FATAL) << "Fail to start fiber";
+            FLARE_LOG(FATAL) << "Fail to start fiber";
             return -1;
         }
         _has_close_idle_thread = true;
@@ -234,7 +234,7 @@ int SocketMap::Insert(const SocketMapKey& key, SocketId* id,
     opt.remote_side = key.peer.addr;
     opt.initial_ssl_ctx = ssl_ctx;
     if (_options.socket_creator->CreateSocket(opt, &tmp_id) != 0) {
-        PLOG(FATAL) << "Fail to create socket to " << key.peer;
+        FLARE_PLOG(FATAL) << "Fail to create socket to " << key.peer;
         return -1;
     }
     // Add a reference to make sure that sc->socket is always accessible. Not
@@ -242,7 +242,7 @@ int SocketMap::Insert(const SocketMapKey& key, SocketId* id,
     // The ref will be removed at entry's removal.
     SocketUniquePtr ptr;
     if (Socket::Address(tmp_id, &ptr) != 0) {
-        LOG(FATAL) << "Fail to address SocketId=" << tmp_id;
+        FLARE_LOG(FATAL) << "Fail to address SocketId=" << tmp_id;
         return -1;
     }
     SingleConnection new_sc = { 1, ptr.release(), 0 };

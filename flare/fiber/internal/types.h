@@ -26,7 +26,7 @@
 
 #if defined(__cplusplus)
 
-#include "flare/log/logging.h"                      // CHECK
+#include "flare/log/logging.h"                      // FLARE_CHECK
 
 #endif
 
@@ -110,7 +110,7 @@ typedef struct fiber_attribute {
     }
 
     fiber_attribute operator|(unsigned other_flags) const {
-        CHECK(!(other_flags & 7)) << "flags=" << other_flags;
+        FLARE_CHECK(!(other_flags & 7)) << "flags=" << other_flags;
         fiber_attribute tmp = *this;
         tmp.flags |= (other_flags & ~(unsigned) 7u);
         return tmp;

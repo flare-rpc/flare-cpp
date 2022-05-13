@@ -20,12 +20,12 @@ namespace flare {
     }
 
     flare_status sequential_read_file::open(const flare::file_path &path) noexcept {
-        CHECK(_fd == -1)<<"do not reopen";
+        FLARE_CHECK(_fd == -1)<<"do not reopen";
         flare_status rs;
         _path = path;
         _fd = ::open(path.c_str(), O_RDONLY | O_CLOEXEC, 0644);
         if (_fd < 0) {
-            LOG(ERROR) << "open file: " << path << "error: " << errno << " " << strerror(errno);
+            FLARE_LOG(ERROR) << "open file: " << path << "error: " << errno << " " << strerror(errno);
             rs.set_error(errno, "%s", strerror(errno));
         }
         return rs;
@@ -54,7 +54,7 @@ namespace flare {
             } else if (errno == EINTR) {
                 continue;
             } else {
-                LOG(WARNING) << "read failed, err: " << flare_error()
+                FLARE_LOG(WARNING) << "read failed, err: " << flare_error()
                              << " fd: " << _fd << " size: " << n;
                 frs.set_error(errno, "%s", flare_error());
                 return frs;

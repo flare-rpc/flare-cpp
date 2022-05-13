@@ -22,7 +22,7 @@ namespace flare {
     }
 
     flare_status random_access_file::open(const flare::file_path &path) noexcept {
-        CHECK(_fd == -1)<<"do not reopen";
+        FLARE_CHECK(_fd == -1)<<"do not reopen";
         flare_status rs;
         _path = path;
         _fd = ::open(path.c_str(), O_RDONLY | O_CLOEXEC, 0644);
@@ -57,7 +57,7 @@ namespace flare {
             } else if (errno == EINTR) {
                 continue;
             } else {
-                LOG(WARNING) << "read failed, errno: " <<errno<<" "<<flare_error()
+                FLARE_LOG(WARNING) << "read failed, errno: " <<errno<<" "<<flare_error()
                              << " fd: " << _fd << " size: " << n;
                 frs.set_error(errno, "%s", flare_error());
                 return frs;

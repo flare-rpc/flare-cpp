@@ -46,7 +46,7 @@ int main(int argc, char* argv[]) {
     options.timeout_ms = FLAGS_timeout_ms/*milliseconds*/;
     options.max_retry = FLAGS_max_retry;
     if (channel.Init(FLAGS_server.c_str(), FLAGS_load_balancer.c_str(), &options) != 0) {
-        LOG(ERROR) << "Fail to initialize channel";
+        FLARE_LOG(ERROR) << "Fail to initialize channel";
         return -1;
     }
 
@@ -66,16 +66,16 @@ int main(int argc, char* argv[]) {
         // the response comes back or error occurs(including timedout).
         channel.CallMethod(NULL, &cntl, &request, &response, NULL);
         if (cntl.Failed()) {
-            LOG(ERROR) << "Fail to send nshead request, " << cntl.ErrorText();
+            FLARE_LOG(ERROR) << "Fail to send nshead request, " << cntl.ErrorText();
             sleep(1); // Remove this sleep in production code.
         } else {
             g_latency_recorder << cntl.latency_us();
         }
-        LOG_EVERY_SECOND(INFO)
+        FLARE_LOG_EVERY_SECOND(INFO)
             << "Sending nshead requests at qps=" << g_latency_recorder.qps(1)
             << " latency=" << g_latency_recorder.latency(1);
     }
 
-    LOG(INFO) << "EchoClient is going to quit";
+    FLARE_LOG(INFO) << "EchoClient is going to quit";
     return 0;
 }

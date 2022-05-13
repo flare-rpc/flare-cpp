@@ -60,7 +60,7 @@ CompressType Sofa2CompressType(SofaCompressType type) {
     case SOFA_COMPRESS_TYPE_ZLIB:
         return COMPRESS_TYPE_ZLIB;
     default:
-        LOG(ERROR) << "Unknown SofaCompressType=" << type;
+        FLARE_LOG(ERROR) << "Unknown SofaCompressType=" << type;
         return COMPRESS_TYPE_NONE;
     }
 }
@@ -76,10 +76,10 @@ SofaCompressType CompressType2Sofa(CompressType type) {
     case COMPRESS_TYPE_ZLIB:
         return SOFA_COMPRESS_TYPE_ZLIB;
     case COMPRESS_TYPE_LZ4:
-        LOG(ERROR) << "sofa-pbrpc does not support LZ4";
+        FLARE_LOG(ERROR) << "sofa-pbrpc does not support LZ4";
         return SOFA_COMPRESS_TYPE_NONE;
     default:
-        LOG(ERROR) << "Unknown SofaCompressType=" << type;
+        FLARE_LOG(ERROR) << "Unknown SofaCompressType=" << type;
         return SOFA_COMPRESS_TYPE_NONE;
     }
 }
@@ -146,7 +146,7 @@ static void SerializeSofaHeaderAndMeta(
         ::google::protobuf::io::ArrayOutputStream arr_out(header_and_meta + 24, meta_size);
         ::google::protobuf::io::CodedOutputStream coded_out(&arr_out);
         meta.SerializeWithCachedSizes(&coded_out); // not calling ByteSize again
-        CHECK(!coded_out.HadError());
+        FLARE_CHECK(!coded_out.HadError());
         out->append(header_and_meta, sizeof(header_and_meta));
     } else {
         char header[24];
@@ -155,7 +155,7 @@ static void SerializeSofaHeaderAndMeta(
         flare::cord_buf_as_zero_copy_output_stream buf_stream(out);
         ::google::protobuf::io::CodedOutputStream coded_out(&buf_stream);
         meta.SerializeWithCachedSizes(&coded_out);
-        CHECK(!coded_out.HadError());
+        FLARE_CHECK(!coded_out.HadError());
     }
 }
 
@@ -182,14 +182,14 @@ ParseResult ParseSofaMessage(flare::cord_buf* source, Socket* socket,
     SofaRawUnpacker ru(header_buf + 4);
     ru.unpack32(meta_size).unpack64(body_size).unpack64(msg_size);
     if (msg_size != meta_size + body_size) {
-        LOG(ERROR) << "msg_size=" << msg_size << " != meta_size=" << meta_size
+        FLARE_LOG(ERROR) << "msg_size=" << msg_size << " != meta_size=" << meta_size
                    << " + body_size=" << body_size;
         return MakeParseError(PARSE_ERROR_TRY_OTHERS);
     }
     if (body_size > FLAGS_max_body_size) {
         // We need this log to report the body_size to give users some clues
         // which is not printed in InputMessenger.
-        LOG(ERROR) << "body_size=" << body_size << " from "
+        FLARE_LOG(ERROR) << "body_size=" << body_size << " from "
                    << socket->remote_side() << " is too large";
         return MakeParseError(PARSE_ERROR_TOO_BIG_DATA);
     } else if (source->length() < sizeof(header_buf) + msg_size) {
@@ -227,7 +227,7 @@ static void SendSofaResponse(int64_t correlation_id,
         return;
     }
 
-    LOG_IF(WARNING, !cntl->response_attachment().empty())
+    FLARE_LOG_IF(WARNING, !cntl->response_attachment().empty())
         << "sofa-pbrpc does not support attachment, "
         "your response_attachment will not be sent";
 
@@ -285,7 +285,7 @@ static void SendSofaResponse(int64_t correlation_id,
     wopt.ignore_eovercrowded = true;
     if (sock->Write(&res_buf, &wopt) != 0) {
         const int errcode = errno;
-        PLOG_IF(WARNING, errcode != EPIPE) << "Fail to write into " << *sock;
+        FLARE_PLOG_IF(WARNING, errcode != EPIPE) << "Fail to write into " << *sock;
         cntl->SetFailed(errcode, "Fail to write into %s",
                         sock->description().c_str());
         return;
@@ -315,7 +315,7 @@ void ProcessSofaRequest(InputMessageBase* msg_base) {
 
     SofaRpcMeta meta;
     if (!ParsePbFromCordBuf(&meta, msg->meta)) {
-        LOG(WARNING) << "Fail to parse SofaRpcMeta from " << *socket;
+        FLARE_LOG(WARNING) << "Fail to parse SofaRpcMeta from " << *socket;
         socket->SetFailed(EREQUEST, "Fail to parse SofaRpcMeta from %s",
                           socket->description().c_str());
         return;
@@ -333,7 +333,7 @@ void ProcessSofaRequest(InputMessageBase* msg_base) {
 
     std::unique_ptr<Controller> cntl(new (std::nothrow) Controller);
     if (NULL == cntl.get()) {
-        LOG(WARNING) << "Fail to new Controller";
+        FLARE_LOG(WARNING) << "Fail to new Controller";
         return;
     }
     std::unique_ptr<google::protobuf::Message> req;
@@ -473,7 +473,7 @@ void ProcessSofaRequest(InputMessageBase* msg_base) {
 bool VerifySofaRequest(const InputMessageBase* msg_base) {
     const Server* server = static_cast<const Server*>(msg_base->arg());
     if (server->options().auth) {
-        LOG(WARNING) << "sofa-pbrpc does not support authentication";
+        FLARE_LOG(WARNING) << "sofa-pbrpc does not support authentication";
         return false;
     }
     return true;
@@ -484,7 +484,7 @@ void ProcessSofaResponse(InputMessageBase* msg_base) {
     DestroyingPtr<MostCommonMessage> msg(static_cast<MostCommonMessage*>(msg_base));
     SofaRpcMeta meta;
     if (!ParsePbFromCordBuf(&meta, msg->meta)) {
-        LOG(WARNING) << "Fail to parse response meta";
+        FLARE_LOG(WARNING) << "Fail to parse response meta";
         return;
     }
 
@@ -492,7 +492,7 @@ void ProcessSofaResponse(InputMessageBase* msg_base) {
     Controller* cntl = NULL;
     const int rc = fiber_token_lock(cid, (void**)&cntl);
     if (rc != 0) {
-        LOG_IF(ERROR, rc != EINVAL && rc != EPERM)
+        FLARE_LOG_IF(ERROR, rc != EINVAL && rc != EPERM)
             << "Fail to lock correlation_id=" << cid << ": " << flare_error(rc);
         return;
     }
@@ -538,7 +538,7 @@ void PackSofaRequest(flare::cord_buf* req_buf,
                      const flare::cord_buf& req_body,
                      const Authenticator* /*not supported*/) {
     if (!cntl->request_attachment().empty()) {
-        LOG(WARNING) << "sofa-pbrpc does not support attachment, "
+        FLARE_LOG(WARNING) << "sofa-pbrpc does not support attachment, "
             "your request_attachment will not be sent";
     }
     SofaRpcMeta meta;

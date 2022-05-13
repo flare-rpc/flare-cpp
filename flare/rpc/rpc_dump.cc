@@ -133,7 +133,7 @@ namespace flare::rpc {
 // Save gflags which could be reloaded at anytime.
     void RpcDumpContext::SaveFlags() {
         std::string dir;
-        CHECK(GFLAGS_NS::GetCommandLineOption("rpc_dump_dir", &dir));
+        FLARE_CHECK(GFLAGS_NS::GetCommandLineOption("rpc_dump_dir", &dir));
 
         const size_t pos = dir.find("<app>");
         if (pos != std::string::npos) {
@@ -173,7 +173,7 @@ namespace flare::rpc {
         if (_cur_fd < 0) {
             std::error_code ec;
             if (!flare::create_directories(_dir, ec)) {
-                LOG(ERROR) << "Fail to create directory=`" << _dir
+                FLARE_LOG(ERROR) << "Fail to create directory=`" << _dir
                            << "', " << ec.message();
                 return;
             }
@@ -197,7 +197,7 @@ namespace flare::rpc {
                                        (unsigned) (cur_file_time - rawtime * 1000000L));
             _cur_fd = open(_cur_filename.c_str(), O_CREAT | O_WRONLY | O_TRUNC, 0666);
             if (_cur_fd < 0) {
-                PLOG(ERROR) << "Fail to open " << _cur_filename;
+                FLARE_PLOG(ERROR) << "Fail to open " << _cur_filename;
                 return;
             }
             _last_file_time = cur_file_time;
@@ -209,7 +209,7 @@ namespace flare::rpc {
         while (!_unwritten_buf.empty()) {
             if (_unwritten_buf.cut_into_file_descriptor(_cur_fd) < 0) {
                 if (errno != EINTR && errno != EAGAIN) {
-                    PLOG(ERROR) << "Fail to write into " << _cur_filename;
+                    FLARE_PLOG(ERROR) << "Fail to write into " << _cur_filename;
                     fail_to_write = true;
                     break;
                 }
@@ -235,7 +235,7 @@ namespace flare::rpc {
         const size_t starting_size = buf.size();
         flare::cord_buf_as_zero_copy_output_stream buf_stream(&buf);
         if (!sample->meta.SerializeToZeroCopyStream(&buf_stream)) {
-            LOG(ERROR) << "Fail to serialize";
+            FLARE_LOG(ERROR) << "Fail to serialize";
             return false;
         }
         const size_t meta_size = buf.size() - starting_size;
@@ -246,7 +246,7 @@ namespace flare::rpc {
         flare::raw_packer(rpc_header + 4)
                 .pack32(meta_size + sample->request.size())
                 .pack32(meta_size);
-        CHECK_EQ(0, buf.unsafe_assign(header_area, rpc_header));
+        FLARE_CHECK_EQ(0, buf.unsafe_assign(header_area, rpc_header));
         return true;
     }
 
@@ -281,7 +281,7 @@ namespace flare::rpc {
                 ssize_t nr = _cur_buf.append_from_file_descriptor(_cur_fd, 524288);
                 if (nr < 0) {
                     if (errno != EAGAIN && errno != EINTR) {
-                        PLOG(ERROR) << "Fail to read fd=" << _cur_fd;
+                        FLARE_PLOG(ERROR) << "Fail to read fd=" << _cur_fd;
                         break;
                     }
                 } else if (nr == 0) {  // EOF
@@ -323,7 +323,7 @@ namespace flare::rpc {
             return NULL;
         }
         if (*(const uint32_t *) p != *(const uint32_t *) "PRPC") {
-            LOG(ERROR) << "Unmatched magic string";
+            FLARE_LOG(ERROR) << "Unmatched magic string";
             *format_error = true;
             return NULL;
         }
@@ -331,14 +331,14 @@ namespace flare::rpc {
         uint32_t meta_size;
         flare::raw_unpacker(p + 4).unpack32(body_size).unpack32(meta_size);
         if (body_size > FLAGS_max_body_size) {
-            LOG(ERROR) << "Too big body=" << body_size;
+            FLARE_LOG(ERROR) << "Too big body=" << body_size;
             *format_error = true;
             return NULL;
         } else if (buf.length() < sizeof(backing_buf) + body_size) {
             return NULL;
         }
         if (meta_size > body_size) {
-            LOG(ERROR) << "meta_size=" << meta_size << " is bigger than body_size="
+            FLARE_LOG(ERROR) << "meta_size=" << meta_size << " is bigger than body_size="
                        << body_size;
             *format_error = true;
             return NULL;
@@ -348,7 +348,7 @@ namespace flare::rpc {
         buf.cutn(&meta_buf, meta_size);
         std::unique_ptr<SampledRequest> req(new SampledRequest);
         if (!ParsePbFromCordBuf(&req->meta, meta_buf)) {
-            LOG(ERROR) << "Fail to parse RpcDumpMeta";
+            FLARE_LOG(ERROR) << "Fail to parse RpcDumpMeta";
             *format_error = true;
             return NULL;
         }

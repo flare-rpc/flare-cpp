@@ -23,7 +23,7 @@ namespace {
     }
 
     TEST(EndPointTest, ip_t) {
-        LOG(INFO) << "INET_ADDRSTRLEN = " << INET_ADDRSTRLEN;
+        FLARE_LOG(INFO) << "INET_ADDRSTRLEN = " << INET_ADDRSTRLEN;
 
         flare::base::ip_t ip0;
         ASSERT_EQ(0, flare::base::str2ip("1.1.1.1", &ip0));
@@ -48,7 +48,7 @@ namespace {
     }
 
     TEST(EndPointTest, show_local_info) {
-        LOG(INFO) << "my_ip is " << flare::base::my_ip() << std::endl
+        FLARE_LOG(INFO) << "my_ip is " << flare::base::my_ip() << std::endl
                   << "my_ip_cstr is " << flare::base::my_ip_cstr() << std::endl
                   << "my_hostname is " << flare::base::my_hostname();
     }
@@ -122,7 +122,7 @@ namespace {
         }
 
         flare::container::BucketInfo info = m.bucket_info();
-        LOG(INFO) << "bucket info max long=" << info.longest_length
+        FLARE_LOG(INFO) << "bucket info max long=" << info.longest_length
                   << " avg=" << info.average_length << std::endl;
         ASSERT_LT(info.longest_length, 32ul) << "detect hash collision and it's too large.";
     }

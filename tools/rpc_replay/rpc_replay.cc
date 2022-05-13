@@ -89,7 +89,7 @@ int ChannelGroup::Init() {
             options.max_retry = FLAGS_max_retry;
             if (chan->Init(FLAGS_server.c_str(), FLAGS_load_balancer.c_str(),
                         &options) != 0) {
-                LOG(ERROR) << "Fail to initialize channel";
+                FLARE_LOG(ERROR) << "Fail to initialize channel";
                 return -1;
             }
             _chans[prot] = chan;
@@ -150,7 +150,7 @@ static void* replay_thread(void* arg) {
             flare::rpc::Channel* chan =
                 chan_group->channel(sample->meta.protocol_type());
             if (chan == NULL) {
-                LOG(ERROR) << "No channel on protocol="
+                FLARE_LOG(ERROR) << "No channel on protocol="
                            << sample->meta.protocol_type();
                 continue;
             }
@@ -205,7 +205,7 @@ int main(int argc, char* argv[]) {
 
     if (FLAGS_dir.empty() ||
         !flare::exists(FLAGS_dir)) {
-        LOG(ERROR) << "--dir=<dir-of-dumped-files> is required";
+        FLARE_LOG(ERROR) << "--dir=<dir-of-dumped-files> is required";
         return -1;
     }
 
@@ -215,7 +215,7 @@ int main(int argc, char* argv[]) {
     
     ChannelGroup chan_group;
     if (chan_group.Init() != 0) {
-        LOG(ERROR) << "Fail to init ChannelGroup";
+        FLARE_LOG(ERROR) << "Fail to init ChannelGroup";
         return -1;
     }
 
@@ -239,7 +239,7 @@ int main(int argc, char* argv[]) {
         pids.resize(FLAGS_thread_num);
         for (int i = 0; i < FLAGS_thread_num; ++i) {
             if (pthread_create(&pids[i], NULL, replay_thread, &chan_group) != 0) {
-                LOG(ERROR) << "Fail to create pthread";
+                FLARE_LOG(ERROR) << "Fail to create pthread";
                 return -1;
             }
         }
@@ -248,7 +248,7 @@ int main(int argc, char* argv[]) {
         for (int i = 0; i < FLAGS_thread_num; ++i) {
             if (fiber_start_background(
                     &bids[i], NULL, replay_thread, &chan_group) != 0) {
-                LOG(ERROR) << "Fail to create fiber";
+                FLARE_LOG(ERROR) << "Fail to create fiber";
                 return -1;
             }
         }
@@ -260,7 +260,7 @@ int main(int argc, char* argv[]) {
     info_thr_opt.sent_count = &g_sent_count;
     
     if (!info_thr.start(info_thr_opt)) {
-        LOG(ERROR) << "Fail to create info_thread";
+        FLARE_LOG(ERROR) << "Fail to create info_thread";
         return -1;
     }
 

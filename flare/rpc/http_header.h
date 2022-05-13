@@ -74,7 +74,7 @@ public:
     
     // Get value of a header which is case-insensitive according to:
     //   https://www.w3.org/Protocols/rfc2616/rfc2616-sec4.html#sec4.2
-    // Namely, GetHeader("log-id"), GetHeader("Log-Id"), GetHeader("LOG-ID")
+    // Namely, GetHeader("log-id"), GetHeader("Log-Id"), GetHeader("FLARE_LOG-ID")
     // point to the same value.
     // Return pointer to the value, NULL on not found.
     // NOTE: Not work for "Content-Type", call content_type() instead.

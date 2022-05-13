@@ -218,7 +218,7 @@ namespace mcpack2pb {
             for (; _ndepth > 0; --_ndepth) {
                 oss << ' ' << peek_group_info();
             }
-            CHECK(false) << oss.str();
+            FLARE_CHECK(false) << oss.str();
         }
         free(_group_info_more);
         _group_info_more = NULL;
@@ -230,11 +230,11 @@ namespace mcpack2pb {
     inline bool object_add_item(Serializer::GroupInfo &group_info,
                                 const StringWrapper &name) {
         if (name.size() > 254) {
-            CHECK(false) << "Too long name=`" << name << '\'';
+            FLARE_CHECK(false) << "Too long name=`" << name << '\'';
             return false;
         }
         if (group_info.type != FIELD_OBJECT) {
-            CHECK(false) << "Cannot add `" << name << "' to " << group_info;
+            FLARE_CHECK(false) << "Cannot add `" << name << "' to " << group_info;
             return false;
         }
         ++group_info.item_count;
@@ -254,7 +254,7 @@ namespace mcpack2pb {
             return true;
         }
         if (group_info.type == FIELD_ARRAY) {
-            CHECK(false) << "Different item_type=" << type2str(item_type)
+            FLARE_CHECK(false) << "Different item_type=" << type2str(item_type)
                          << " from " << group_info;
             return false;
         }
@@ -263,7 +263,7 @@ namespace mcpack2pb {
             group_info.item_count += n;
             return true;
         } else {
-            CHECK(false) << "Cannot add field without name to " << group_info;
+            FLARE_CHECK(false) << "Cannot add field without name to " << group_info;
             return false;
         }
     }
@@ -600,11 +600,11 @@ namespace mcpack2pb {
             return;
         }
         if (group_info.type != FIELD_ARRAY) {
-            CHECK(false) << "Cannot add nulls without name to " << group_info;
+            FLARE_CHECK(false) << "Cannot add nulls without name to " << group_info;
             return stream->set_bad();
         }
         if (group_info.isomorphic) {
-            CHECK(false) << "Cannot add nulls to isomorphic " << group_info;
+            FLARE_CHECK(false) << "Cannot add nulls to isomorphic " << group_info;
             return stream->set_bad();
         }
         int n = group_info.pending_null_count;
@@ -718,7 +718,7 @@ namespace mcpack2pb {
         }
         GroupInfo *info = push_group_info();
         if (info == NULL) {
-            CHECK(false) << "Fail to push object";
+            FLARE_CHECK(false) << "Fail to push object";
             return _stream->set_bad();
         }
         info->item_count = 0;
@@ -744,7 +744,7 @@ namespace mcpack2pb {
         }
         GroupInfo *info = push_group_info();
         if (info == NULL) {
-            CHECK(false) << "Fail to push object=" << name;
+            FLARE_CHECK(false) << "Fail to push object=" << name;
             return _stream->set_bad();
         }
         info->item_count = 0;
@@ -763,7 +763,7 @@ namespace mcpack2pb {
         if (ndepth > 0) {
             --ndepth;
         } else {
-            CHECK(false) << "Nothing to pop";
+            FLARE_CHECK(false) << "Nothing to pop";
         }
     }
 
@@ -773,7 +773,7 @@ namespace mcpack2pb {
         }
         GroupInfo &group_info = peek_group_info();
         if (FIELD_OBJECT != group_info.type) {
-            CHECK(false) << "end_object() is called on " << group_info;
+            FLARE_CHECK(false) << "end_object() is called on " << group_info;
             return _stream->set_bad();
         }
         if (group_info.name_size == 0) {
@@ -807,7 +807,7 @@ namespace mcpack2pb {
         }
         GroupInfo *info = push_group_info();
         if (info == NULL) {
-            CHECK(false) << "Fail to push array";
+            FLARE_CHECK(false) << "Fail to push array";
             return _stream->set_bad();
         }
         info->item_count = 0;
@@ -841,7 +841,7 @@ namespace mcpack2pb {
         }
         GroupInfo *info = push_group_info();
         if (info == NULL) {
-            CHECK(false) << "Fail to push array";
+            FLARE_CHECK(false) << "Fail to push array";
             return _stream->set_bad();
         }
         info->item_count = 0;
@@ -868,7 +868,7 @@ namespace mcpack2pb {
         }
         GroupInfo &group_info = peek_group_info();
         if (FIELD_ARRAY != group_info.type) {
-            CHECK(false) << "end_array() is called on " << group_info;
+            FLARE_CHECK(false) << "end_array() is called on " << group_info;
             return _stream->set_bad();
         }
         if (group_info.item_count == 0 && group_info.pending_null_count == 0) {

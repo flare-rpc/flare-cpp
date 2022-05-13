@@ -44,7 +44,7 @@ namespace pbrpcframework {
         // an error with the entire file (e.g. "not found").
         virtual void AddError(const std::string &filename, int line,
                               int /*column*/, const std::string &message) {
-            LOG_AT(ERROR, filename.c_str(), line) << message;
+            FLARE_LOG_AT(ERROR, filename.c_str(), line) << message;
         }
     };
 
@@ -61,13 +61,13 @@ namespace pbrpcframework {
         }
         if (_rpc_client.Init(_options->host.c_str(), _options->lb_policy.c_str(),
                              &rpc_options) != 0) {
-            LOG(ERROR) << "Fail to initialize channel";
+            FLARE_LOG(ERROR) << "Fail to initialize channel";
             return -1;
         }
         _method_descriptor = find_method_by_name(
                 _options->service, _options->method, _importer);
         if (NULL == _method_descriptor) {
-            LOG(ERROR) << "Fail to find method=" << _options->service << '.'
+            FLARE_LOG(ERROR) << "Fail to find method=" << _options->service << '.'
                        << _options->method;
             return -1;
         }
@@ -98,14 +98,14 @@ namespace pbrpcframework {
 
     int RpcPress::init(const PressOptions *options) {
         if (NULL == options) {
-            LOG(ERROR) << "Param[options] is NULL";
+            FLARE_LOG(ERROR) << "Param[options] is NULL";
             return -1;
         }
         _options = *options;
 
         // Import protos.
         if (_options.proto_file.empty()) {
-            LOG(ERROR) << "-proto is required";
+            FLARE_LOG(ERROR) << "-proto is required";
             return -1;
         }
         int pos = _options.proto_file.find_last_of('/');
@@ -124,7 +124,7 @@ namespace pbrpcframework {
         ImportErrorPrinter error_printer;
         _importer = new google::protobuf::compiler::Importer(&sourceTree, &error_printer);
         if (_importer->Import(proto_file.c_str()) == NULL) {
-            LOG(ERROR) << "Fail to import " << proto_file;
+            FLARE_LOG(ERROR) << "Fail to import " << proto_file;
             return -1;
         }
 
@@ -136,22 +136,22 @@ namespace pbrpcframework {
             std::error_code ec;
 
             if (!flare::create_directories(dir, ec)) {
-                LOG(ERROR) << "Fail to create directory=`" << dir.c_str()
+                FLARE_LOG(ERROR) << "Fail to create directory=`" << dir.c_str()
                            << "', " << ec.message();
                 return -1;
             }
             _output_json = fopen(_options.output.c_str(), "w");
-            LOG_IF(ERROR, !_output_json) << "Fail to open " << _options.output;
+            FLARE_LOG_IF(ERROR, !_output_json) << "Fail to open " << _options.output;
         }
 
         int ret = _pbrpc_client->init();
         if (0 != ret) {
-            LOG(ERROR) << "Fail to initialize rpc client";
+            FLARE_LOG(ERROR) << "Fail to initialize rpc client";
             return ret;
         }
 
         if (_options.input.empty()) {
-            LOG(ERROR) << "-input is empty";
+            FLARE_LOG(ERROR) << "-input is empty";
             return -1;
         }
         flare::rpc::JsonLoader json_util(_importer, &_factory,
@@ -159,7 +159,7 @@ namespace pbrpcframework {
         if (flare::exists(_options.input)) {
             int fd = open(_options.input.c_str(), O_RDONLY);
             if (fd < 0) {
-                PLOG(ERROR) << "Fail to open " << _options.input;
+                FLARE_PLOG(ERROR) << "Fail to open " << _options.input;
                 return -1;
             }
             json_util.load_messages(fd, &_msgs);
@@ -167,10 +167,10 @@ namespace pbrpcframework {
             json_util.load_messages(_options.input, &_msgs);
         }
         if (_msgs.empty()) {
-            LOG(ERROR) << "Fail to load requests";
+            FLARE_LOG(ERROR) << "Fail to load requests";
             return -1;
         }
-        LOG(INFO) << "Loaded " << _msgs.size() << " requests";
+        FLARE_LOG(INFO) << "Loaded " << _msgs.size() << " requests";
         _latency_recorder.expose("rpc_press");
         _error_count.expose("rpc_press_error_count");
         return 0;
@@ -193,12 +193,12 @@ namespace pbrpcframework {
                 std::string response_json;
                 std::string error;
                 if (!json2pb::ProtoMessageToJson(*response, &response_json, &error)) {
-                    LOG(WARNING) << "Fail to convert to json: " << error;
+                    FLARE_LOG(WARNING) << "Fail to convert to json: " << error;
                 }
                 fprintf(_output_json, "%s\n", response_json.c_str());
             }
         } else {
-            LOG(WARNING) << "error_code=" << cntl->ErrorCode() << ", "
+            FLARE_LOG(WARNING) << "error_code=" << cntl->ErrorCode() << ", "
                          << cntl->ErrorText();
             _error_count << 1;
         }
@@ -212,7 +212,7 @@ namespace pbrpcframework {
         double req_rate = _options.test_req_rate / _options.test_thread_num;
         //max make up time is 5 s
         if (_msgs.empty()) {
-            LOG(ERROR) << "nothing to send!";
+            FLARE_LOG(ERROR) << "nothing to send!";
             return;
         }
         const int thread_index = g_thread_count.fetch_add(1, std::memory_order_relaxed);
@@ -269,7 +269,7 @@ namespace pbrpcframework {
         int ret = 0;
         for (int i = 0; i < _options.test_thread_num; i++) {
             if ((ret = pthread_create(&_ttid[i], NULL, sync_call_thread, this)) != 0) {
-                LOG(ERROR) << "Fail to create sending threads";
+                FLARE_LOG(ERROR) << "Fail to create sending threads";
                 return -1;
             }
         }
@@ -278,7 +278,7 @@ namespace pbrpcframework {
         info_thr_opt.error_count = &_error_count;
         info_thr_opt.sent_count = &_sent_count;
         if (!_info_thr.start(info_thr_opt)) {
-            LOG(ERROR) << "Fail to create stats thread";
+            FLARE_LOG(ERROR) << "Fail to create stats thread";
             return -1;
         }
         _started = true;

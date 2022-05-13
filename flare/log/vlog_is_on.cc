@@ -18,11 +18,11 @@
 
 using std::string;
 
-FLARE_LOG_DEFINE_int32(v,
-                       0, "Show all VLOG(m) messages for m <= this."
+FLARE_LOG_DEFINE_int32(flare_v,
+                       0, "Show all FLARE_VLOG(m) messages for m <= this."
                           " Overridable by --vmodule.");
 
-FLARE_LOG_DEFINE_string(vmodule,
+FLARE_LOG_DEFINE_string(flare_vmodule,
                         "", "per-module verbose level."
                             " Argument is a comma-separated list of <module name>=<log level>."
                             " <module name> is a glob pattern, matched against the filename base"
@@ -76,10 +76,10 @@ namespace flare::log {
 
     using log_internal::SafeFNMatch_;
 
-    // List of per-module log levels from FLAGS_vmodule.
+    // List of per-module log levels from FLAGS_flare_vmodule.
     // Once created each element is never deleted/modified
     // except for the vlog_level: other threads will read VModuleInfo blobs
-    // w/o locks and we'll store pointers to vlog_level at VLOG locations
+    // w/o locks and we'll store pointers to vlog_level at FLARE_VLOG locations
     // that will never go away.
     // We can't use an STL struct here as we wouldn't know
     // when it's safe to delete/update it: other threads need to use it w/o locks.
@@ -104,7 +104,7 @@ namespace flare::log {
         // Can now parse --vmodule flag and initialize mapping of module-specific
         // logging levels.
         inited_vmodule = false;
-        const char *vmodule = FLAGS_vmodule.c_str();
+        const char *vmodule = FLAGS_flare_vmodule.c_str();
         const char *sep;
         VModuleInfo *head = NULL;
         VModuleInfo *tail = NULL;
@@ -131,9 +131,9 @@ namespace flare::log {
         inited_vmodule = true;
     }
 
-    // This can be called very early, so we use SpinLock and RAW_VLOG here.
+    // This can be called very early, so we use SpinLock and FLARE_RAW_VLOG here.
     int SetVLOGLevel(const char *module_pattern, int log_level) {
-        int result = FLAGS_v;
+        int result = FLAGS_flare_v;
         int const pattern_len = strlen(module_pattern);
         bool found = false;
         {
@@ -162,11 +162,11 @@ namespace flare::log {
                 vmodule_list = info;
             }
         }
-        RAW_VLOG(1, "Set VLOG level for \"%s\" to %d", module_pattern, log_level);
+        FLARE_RAW_VLOG(1, "Set FLARE_VLOG level for \"%s\" to %d", module_pattern, log_level);
         return result;
     }
 
-    // NOTE: Individual VLOG statements cache the integer log level pointers.
+    // NOTE: Individual FLARE_VLOG statements cache the integer log level pointers.
     // NOTE: This function must not allocate memory or require any locks.
     bool init_vlog(int32_t **site_flag, int32_t *site_default,
                    const char *fname, int32_t verbose_level) {
@@ -177,10 +177,10 @@ namespace flare::log {
         }
 
         // protect the errno global in case someone writes:
-        // VLOG(..) << "The last error was " << strerror(errno)
+        // FLARE_VLOG(..) << "The last error was " << strerror(errno)
         int old_errno = errno;
 
-        // site_default normally points to FLAGS_v
+        // site_default normally points to FLAGS_flare_v
         int32_t *site_flag_value = site_default;
 
         // Get basename for file
@@ -205,7 +205,7 @@ namespace flare::log {
                              base, base_length)) {
                 site_flag_value = &info->vlog_level;
                 // value at info->vlog_level is now what controls
-                // the VLOG at the caller site forever
+                // the FLARE_VLOG at the caller site forever
                 break;
             }
         }
@@ -217,7 +217,7 @@ namespace flare::log {
         if (read_vmodule_flag) *site_flag = site_flag_value;
 
         // restore the errno in case something recoverable went wrong during
-        // the initialization of the VLOG mechanism (see above note "protect the..")
+        // the initialization of the FLARE_VLOG mechanism (see above note "protect the..")
         errno = old_errno;
         return *site_flag_value >= verbose_level;
     }

@@ -53,7 +53,7 @@ int PeriodicNamingService::RunNamingService(
                 RPC_VLOG << "Quit NamingServiceThread=" << fiber_self();
                 return 0;
             }
-            PLOG(FATAL) << "Fail to sleep";
+            FLARE_PLOG(FATAL) << "Fail to sleep";
             return -1;
         }
     }

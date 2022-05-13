@@ -241,7 +241,7 @@ namespace flare::rpc {
         }
         extr[num_extr++] = &client_extr;
         // start_send_us is always set for client spans.
-        CHECK(PrintAnnotationsAndRealTimeSpan(os, span.start_send_real_us(),
+        FLARE_CHECK(PrintAnnotationsAndRealTimeSpan(os, span.start_send_real_us(),
                                               last_time, extr, num_extr));
         const Protocol *protocol = FindProtocol(span.protocol());
         const char *protocol_name = (protocol ? protocol->name : "Unknown");

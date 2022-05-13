@@ -118,7 +118,7 @@ namespace flare::variable {
         bool operator()(pthread_mutex_t *mutex) const {
 #ifndef NDEBUG
             const int rc = pthread_mutex_init(mutex, NULL);
-            CHECK_EQ(0, rc) << "Fail to init pthread_mutex, " << flare_error(rc);
+            FLARE_CHECK_EQ(0, rc) << "Fail to init pthread_mutex, " << flare_error(rc);
             return rc == 0;
 #else
             return pthread_mutex_init(mutex, NULL) == 0;
@@ -131,7 +131,7 @@ namespace flare::variable {
         bool operator()(pthread_mutex_t *mutex) const {
 #ifndef NDEBUG
             const int rc = pthread_mutex_destroy(mutex);
-            CHECK_EQ(0, rc) << "Fail to destroy pthread_mutex, " << flare_error(rc);
+            FLARE_CHECK_EQ(0, rc) << "Fail to destroy pthread_mutex, " << flare_error(rc);
             return rc == 0;
 #else
             return pthread_mutex_destroy(mutex) == 0;

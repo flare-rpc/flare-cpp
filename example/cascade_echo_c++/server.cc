@@ -99,12 +99,12 @@ int main(int argc, char* argv[]) {
     // options, see `flare/rpc/channel.h'.
     if (FLAGS_server.empty()) {
         if (channel.Init("localhost", FLAGS_port, &coption) != 0) {
-            LOG(ERROR) << "Fail to initialize channel";
+            FLARE_LOG(ERROR) << "Fail to initialize channel";
             return -1;
         }
     } else {
         if (channel.Init(FLAGS_server.c_str(), FLAGS_load_balancer.c_str(), &coption) != 0) {
-            LOG(ERROR) << "Fail to initialize channel";
+            FLARE_LOG(ERROR) << "Fail to initialize channel";
             return -1;
         }
     }
@@ -123,13 +123,13 @@ int main(int argc, char* argv[]) {
     // use flare::rpc::SERVER_OWNS_SERVICE.
     if (server.AddService(&echo_service_impl, 
                           flare::rpc::SERVER_DOESNT_OWN_SERVICE) != 0) {
-        LOG(ERROR) << "Fail to add service";
+        FLARE_LOG(ERROR) << "Fail to add service";
         return -1;
     }
 
     // Start the server.
     if (server.Start(FLAGS_port, &options) != 0) {
-        LOG(ERROR) << "Fail to start EchoServer";
+        FLARE_LOG(ERROR) << "Fail to start EchoServer";
         return -1;
     }
     

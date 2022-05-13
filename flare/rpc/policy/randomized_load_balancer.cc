@@ -88,7 +88,7 @@ namespace flare::rpc {
         size_t RandomizedLoadBalancer::AddServersInBatch(
                 const std::vector<ServerId> &servers) {
             const size_t n = _db_servers.Modify(BatchAdd, servers);
-            LOG_IF(ERROR, n != servers.size())
+            FLARE_LOG_IF(ERROR, n != servers.size())
                             << "Fail to AddServersInBatch, expected " << servers.size()
                             << " actually " << n;
             return n;
@@ -97,7 +97,7 @@ namespace flare::rpc {
         size_t RandomizedLoadBalancer::RemoveServersInBatch(
                 const std::vector<ServerId> &servers) {
             const size_t n = _db_servers.Modify(BatchRemove, servers);
-            LOG_IF(ERROR, n != servers.size())
+            FLARE_LOG_IF(ERROR, n != servers.size())
                             << "Fail to RemoveServersInBatch, expected " << servers.size()
                             << " actually " << n;
             return n;

@@ -17,12 +17,12 @@ ssize_t read_command_line(char* buf, size_t len, bool with_args) {
 #if defined(FLARE_PLATFORM_LINUX)
     flare::base::fd_guard fd(open("/proc/self/cmdline", O_RDONLY));
     if (fd < 0) {
-        LOG(ERROR) << "Fail to open /proc/self/cmdline";
+        FLARE_LOG(ERROR) << "Fail to open /proc/self/cmdline";
         return -1;
     }
     ssize_t nr = read(fd, buf, len);
     if (nr <= 0) {
-        LOG(ERROR) << "Fail to read /proc/self/cmdline";
+        FLARE_LOG(ERROR) << "Fail to read /proc/self/cmdline";
         return -1;
     }
 #elif defined(FLARE_PLATFORM_OSX)
@@ -31,7 +31,7 @@ ssize_t read_command_line(char* buf, size_t len, bool with_args) {
     char cmdbuf[32];
     snprintf(cmdbuf, sizeof(cmdbuf), "ps -p %ld -o command=", (long)pid);
     if (flare::base::read_command_output(oss, cmdbuf) != 0) {
-        LOG(ERROR) << "Fail to read cmdline";
+        FLARE_LOG(ERROR) << "Fail to read cmdline";
         return -1;
     }
     const std::string& result = oss.str();
@@ -59,7 +59,7 @@ ssize_t read_command_line(char* buf, size_t len, bool with_args) {
             }
         }
         if ((size_t)nr == len) {
-            LOG(ERROR) << "buf is not big enough";
+            FLARE_LOG(ERROR) << "buf is not big enough";
             return -1;
         }
         return nr;

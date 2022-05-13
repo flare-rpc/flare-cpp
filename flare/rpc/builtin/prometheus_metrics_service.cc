@@ -111,7 +111,7 @@ namespace flare::rpc {
                 flare::string_printf("_latency_%d", (int) flare::variable::FLAGS_variable_latency_p3),
                 "_latency_999", "_latency_9999", "_max_latency"
         };
-        CHECK(NPERCENTILES == FLARE_ARRAY_SIZE(latency_names));
+        FLARE_CHECK(NPERCENTILES == FLARE_ARRAY_SIZE(latency_names));
         const std::string desc_str(desc.data(), desc.size());
         std::string_view metric_name(name);
         for (int i = 0; i < NPERCENTILES; ++i) {

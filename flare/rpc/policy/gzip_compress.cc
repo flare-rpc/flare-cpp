@@ -27,17 +27,17 @@ namespace policy {
 
 static void LogError(const google::protobuf::io::GzipOutputStream& gzip) {
     if (gzip.ZlibErrorMessage()) {
-        LOG(WARNING) << "Fail to decompress: " << gzip.ZlibErrorMessage();
+        FLARE_LOG(WARNING) << "Fail to decompress: " << gzip.ZlibErrorMessage();
     } else {
-        LOG(WARNING) << "Fail to decompress.";
+        FLARE_LOG(WARNING) << "Fail to decompress.";
     }
 }
 
 static void LogError(const google::protobuf::io::GzipInputStream& gzip) {
     if (gzip.ZlibErrorMessage()) {
-        LOG(WARNING) << "Fail to decompress: " << gzip.ZlibErrorMessage();
+        FLARE_LOG(WARNING) << "Fail to decompress: " << gzip.ZlibErrorMessage();
     } else {
-        LOG(WARNING) << "Fail to decompress.";
+        FLARE_LOG(WARNING) << "Fail to decompress.";
     }
 }
 

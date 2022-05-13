@@ -39,14 +39,14 @@ public:
         for (size_t i = 0; i < size; ++i) {
             os << "msg[" << i << "]=" << *messages[i];
         }
-        LOG(INFO) << "Received from Stream=" << id << ": " << os.str();
+        FLARE_LOG(INFO) << "Received from Stream=" << id << ": " << os.str();
         return 0;
     }
     virtual void on_idle_timeout(flare::rpc::StreamId id) {
-        LOG(INFO) << "Stream=" << id << " has no data transmission for a while";
+        FLARE_LOG(INFO) << "Stream=" << id << " has no data transmission for a while";
     }
     virtual void on_closed(flare::rpc::StreamId id) {
-        LOG(INFO) << "Stream=" << id << " is closed";
+        FLARE_LOG(INFO) << "Stream=" << id << " is closed";
     }
 
 };
@@ -97,7 +97,7 @@ int main(int argc, char* argv[]) {
     // use flare::rpc::SERVER_OWNS_SERVICE.
     if (server.AddService(&echo_service_impl, 
                           flare::rpc::SERVER_DOESNT_OWN_SERVICE) != 0) {
-        LOG(ERROR) << "Fail to add service";
+        FLARE_LOG(ERROR) << "Fail to add service";
         return -1;
     }
 
@@ -105,7 +105,7 @@ int main(int argc, char* argv[]) {
     flare::rpc::ServerOptions options;
     options.idle_timeout_sec = FLAGS_idle_timeout_s;
     if (server.Start(FLAGS_port, &options) != 0) {
-        LOG(ERROR) << "Fail to start EchoServer";
+        FLARE_LOG(ERROR) << "Fail to start EchoServer";
         return -1;
     }
 

@@ -120,7 +120,7 @@ namespace flare {
     ref_ptr<T> get_ref_counted() {
 #ifndef NDEBUG
         auto ptr = ref_ptr(adopt_ptr_v, get_object<T>());
-        DCHECK_EQ(1, ptr->unsafe_ref_count());
+        FLARE_DCHECK_EQ(1, ptr->unsafe_ref_count());
         return ptr;
 #else
         return ref_ptr(adopt_ptr_v, get_object<T>());
@@ -129,7 +129,7 @@ namespace flare {
 
     template<class T>
     void object_pool_deleter<T>::operator()(T *p) const noexcept {
-        DCHECK_EQ(p->ref_count_.load(std::memory_order_relaxed), 0);
+        FLARE_DCHECK_EQ(p->ref_count_.load(std::memory_order_relaxed), 0);
 
         // Keep ref-count as 1 for reuse.
         //

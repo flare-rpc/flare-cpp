@@ -323,7 +323,7 @@ namespace flare::rpc {
     int FileChecksum(const char *file_path, unsigned char *checksum) {
         flare::base::fd_guard fd(open(file_path, O_RDONLY));
         if (fd < 0) {
-            PLOG(ERROR) << "Fail to open `" << file_path << "'";
+            FLARE_PLOG(ERROR) << "Fail to open `" << file_path << "'";
             return -1;
         }
         char block[16 * 1024];   // 16k each time

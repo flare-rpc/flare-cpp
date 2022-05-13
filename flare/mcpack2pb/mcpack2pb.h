@@ -112,7 +112,7 @@ MessageHandler find_message_handler(const std::string& full_name);
 inline size_t MessageHandler::parse_from_iobuf_prefix(
     ::google::protobuf::Message* msg, const ::flare::cord_buf& buf) {
     if (parse == NULL) {
-        LOG(ERROR) << "`parse' is NULL";
+        FLARE_LOG(ERROR) << "`parse' is NULL";
         return 0;
     }
     ::flare::cord_buf_as_zero_copy_input_stream zc_stream(buf);
@@ -122,7 +122,7 @@ inline size_t MessageHandler::parse_from_iobuf_prefix(
 inline bool MessageHandler::parse_from_iobuf(
     ::google::protobuf::Message* msg, const ::flare::cord_buf& buf) {
     if (parse == NULL) {
-        LOG(ERROR) << "`parse' is NULL";
+        FLARE_LOG(ERROR) << "`parse' is NULL";
         return 0;
     }
     ::flare::cord_buf_as_zero_copy_input_stream zc_stream(buf);
@@ -132,7 +132,7 @@ inline bool MessageHandler::parse_from_iobuf(
 inline size_t MessageHandler::parse_from_array_prefix(
     ::google::protobuf::Message* msg, const void* data, int size) {
     if (parse == NULL) {
-        LOG(ERROR) << "`parse' is NULL";
+        FLARE_LOG(ERROR) << "`parse' is NULL";
         return 0;
     }
     ::google::protobuf::io::ArrayInputStream zc_stream(data, size);
@@ -142,7 +142,7 @@ inline size_t MessageHandler::parse_from_array_prefix(
 inline bool MessageHandler::parse_from_array(
     ::google::protobuf::Message* msg, const void* data, int size) {
     if (parse == NULL) {
-        LOG(ERROR) << "`parse' is NULL";
+        FLARE_LOG(ERROR) << "`parse' is NULL";
         return 0;
     }
     ::google::protobuf::io::ArrayInputStream zc_stream(data, size);
@@ -153,7 +153,7 @@ inline bool MessageHandler::serialize_to_iobuf(
     const ::google::protobuf::Message& msg,
     ::flare::cord_buf* buf, SerializationFormat format) {
     if (serialize == NULL) {
-        LOG(ERROR) << "`serialize' is NULL";
+        FLARE_LOG(ERROR) << "`serialize' is NULL";
         return false;
     }
     ::flare::cord_buf_as_zero_copy_output_stream zc_stream(buf);
