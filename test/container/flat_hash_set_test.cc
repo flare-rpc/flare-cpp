@@ -4,8 +4,9 @@
 #define THIS_TEST_NAME  FlatHashSet
 #endif
 
-#include "flare/container/flat_hash_map.h"
-
+#include "flare/container/flat_hash_set.h"
+#include "flare/container/parallel_flat_hash_set.h"
+#include "flare/container/parallel_node_hash_set.h"
 #include <vector>
 
 #include "hash_generator_testing.h"

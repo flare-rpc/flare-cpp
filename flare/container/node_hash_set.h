@@ -2,43 +2,39 @@
 // Created by liyinbin on 2022/5/15.
 //
 
-#ifndef FLARE_CONTAINER_FLAT_HASH_MAP_H_
-#define FLARE_CONTAINER_FLAT_HASH_MAP_H_
+#ifndef FLARE_CONTAINER_NODE_HASH_SET_H_
+#define FLARE_CONTAINER_NODE_HASH_SET_H_
 
 #include "flare/container/internal/raw_hash_set.h"
 
 namespace flare {
 
-
     // -----------------------------------------------------------------------------
-    // flare::flat_hash_map
+    // flare::node_hash_set
     // -----------------------------------------------------------------------------
-    //
-    // An `flare::flat_hash_map<K, V>` is an unordered associative container which
+    // An `flare::node_hash_set<T>` is an unordered associative container which
     // has been optimized for both speed and memory footprint in most common use
-    // cases. Its interface is similar to that of `std::unordered_map<K, V>` with
-    // the following notable differences:
+    // cases. Its interface is similar to that of `std::unordered_set<T>` with the
+    // following notable differences:
     //
     // * Supports heterogeneous lookup, through `find()`, `operator[]()` and
     //   `insert()`, provided that the map is provided a compatible heterogeneous
     //   hashing function and equality operator.
-    // * Invalidates any references and pointers to elements within the table after
-    //   `rehash()`.
     // * Contains a `capacity()` member function indicating the number of element
-    //   slots (open, deleted, and empty) within the hash map.
-    // * Returns `void` from the `_erase(iterator)` overload.
+    //   slots (open, deleted, and empty) within the hash set.
+    // * Returns `void` from the `erase(iterator)` overload.
     // -----------------------------------------------------------------------------
-    template<class K, class V, class Hash, class Eq, class Alloc> // default values in map_fwd_decl.h
-    class flat_hash_map : public flare::priv::raw_hash_map<
-            flare::priv::flat_hash_map_policy<K, V>,
-            Hash, Eq, Alloc> {
-        using Base = typename flat_hash_map::raw_hash_map;
+    template<class T, class Hash, class Eq, class Alloc> // default values in map_fwd_decl.h
+    class node_hash_set
+            : public flare::priv::raw_hash_set<
+                    flare::priv::node_hash_set_policy<T>, Hash, Eq, Alloc> {
+        using Base = typename node_hash_set::raw_hash_set;
 
     public:
-        flat_hash_map() {}
+        node_hash_set() {}
 
 #ifdef __INTEL_COMPILER
-        using Base::raw_hash_map;
+        using Base::raw_hash_set;
 #else
         using Base::Base;
 #endif
@@ -53,21 +49,19 @@ namespace flare {
         using Base::clear;
         using Base::erase;
         using Base::insert;
-        using Base::insert_or_assign;
         using Base::emplace;
         using Base::emplace_hint;
-        using Base::try_emplace;
+        using Base::emplace_with_hash;
+        using Base::emplace_hint_with_hash;
         using Base::extract;
         using Base::merge;
         using Base::swap;
         using Base::rehash;
         using Base::reserve;
-        using Base::at;
         using Base::contains;
         using Base::count;
         using Base::equal_range;
         using Base::find;
-        using Base::operator[];
         using Base::bucket_count;
         using Base::load_factor;
         using Base::max_load_factor;
@@ -75,19 +69,24 @@ namespace flare {
         using Base::hash_function;
         using Base::hash;
         using Base::key_eq;
+
+        typename Base::hasher hash_funct() { return this->hash_function(); }
+
+        void resize(typename Base::size_type hint) { this->rehash(hint); }
     };
 
-    template<class K, class V, class Hash, class Eq, class Alloc> // default values in map_fwd_decl.h
-    class case_ignored_flat_hash_map : public flare::priv::raw_hash_map<
-            flare::priv::flat_hash_map_policy<K, V>,
-            Hash, Eq, Alloc> {
-        using Base = typename case_ignored_flat_hash_map::raw_hash_map;
+
+    template<class T, class Hash, class Eq, class Alloc> // default values in map_fwd_decl.h
+    class case_ignored_node_hash_set
+            : public flare::priv::raw_hash_set<
+                    flare::priv::node_hash_set_policy<T>, Hash, Eq, Alloc> {
+        using Base = typename case_ignored_node_hash_set::raw_hash_set;
 
     public:
-        case_ignored_flat_hash_map() {}
+        case_ignored_node_hash_set() {}
 
 #ifdef __INTEL_COMPILER
-        using Base::raw_hash_map;
+        using Base::raw_hash_set;
 #else
         using Base::Base;
 #endif
@@ -102,21 +101,19 @@ namespace flare {
         using Base::clear;
         using Base::erase;
         using Base::insert;
-        using Base::insert_or_assign;
         using Base::emplace;
         using Base::emplace_hint;
-        using Base::try_emplace;
+        using Base::emplace_with_hash;
+        using Base::emplace_hint_with_hash;
         using Base::extract;
         using Base::merge;
         using Base::swap;
         using Base::rehash;
         using Base::reserve;
-        using Base::at;
         using Base::contains;
         using Base::count;
         using Base::equal_range;
         using Base::find;
-        using Base::operator[];
         using Base::bucket_count;
         using Base::load_factor;
         using Base::max_load_factor;
@@ -124,8 +121,12 @@ namespace flare {
         using Base::hash_function;
         using Base::hash;
         using Base::key_eq;
+
+        typename Base::hasher hash_funct() { return this->hash_function(); }
+
+        void resize(typename Base::size_type hint) { this->rehash(hint); }
     };
+
 
 }  // namespace flare
-
-#endif  // FLARE_CONTAINER_FLAT_HASH_MAP_H_
+#endif  // FLARE_CONTAINER_NODE_HASH_SET_H_

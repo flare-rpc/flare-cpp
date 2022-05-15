@@ -743,7 +743,7 @@ namespace flare {
             // Compatibility constructor.
             StringBtreeDefaultLess(std::less<std::string>) {}       // NOLINT
             StringBtreeDefaultLess(std::less<std::string_view>) {}  // NOLINT
-            StringBtreeDefaultLess(flare::Less<std::string_view>) {}  // NOLINT
+            StringBtreeDefaultLess(flare::less<std::string_view>) {}  // NOLINT
 
             flare::weak_ordering operator()(std::string_view lhs,
                                             std::string_view rhs) const {
@@ -790,7 +790,7 @@ namespace flare {
         };
 
         template<>
-        struct key_compare_to_adapter<flare::Less<std::string>> {
+        struct key_compare_to_adapter<flare::less<std::string>> {
             using type = StringBtreeDefaultLess;
         };
 
@@ -805,7 +805,7 @@ namespace flare {
         };
 
         template<>
-        struct key_compare_to_adapter<flare::Less<std::string_view>> {
+        struct key_compare_to_adapter<flare::less<std::string_view>> {
             using type = StringBtreeDefaultLess;
         };
 
@@ -1079,7 +1079,7 @@ namespace flare {
             using use_linear_search = std::integral_constant<
                     bool,
                     std::is_arithmetic<key_type>::value &&
-                    (std::is_same<flare::Less<key_type>, key_compare>::value ||
+                    (std::is_same<flare::less<key_type>, key_compare>::value ||
                      std::is_same<std::less<key_type>, key_compare>::value ||
                      std::is_same<std::greater<key_type>, key_compare>::value)>;
 
@@ -3999,6 +3999,63 @@ namespace flare {
     }
 
     // ----------------------------------------------------------------------
+    //  case_ignored_btree_set - default values in map_fwd_decl.h
+    // ----------------------------------------------------------------------
+    template<typename Key, typename Compare, typename Alloc>
+    class case_ignored_btree_set : public priv::btree_set_container<
+            priv::btree<priv::set_params<
+                    Key, Compare, Alloc, /*TargetNodeSize=*/ 256, /*Multi=*/ false>>> {
+        using Base = typename case_ignored_btree_set::btree_set_container;
+
+    public:
+        case_ignored_btree_set() {}
+
+        using Base::Base;
+        using Base::begin;
+        using Base::cbegin;
+        using Base::end;
+        using Base::cend;
+        using Base::empty;
+        using Base::max_size;
+        using Base::size;
+        using Base::clear;
+        using Base::erase;
+        using Base::insert;
+        using Base::emplace;
+        using Base::emplace_hint;
+        using Base::extract;
+        using Base::merge;
+        using Base::swap;
+        using Base::contains;
+        using Base::count;
+        using Base::equal_range;
+        using Base::find;
+        using Base::get_allocator;
+        using Base::key_comp;
+        using Base::value_comp;
+    };
+
+    // Swaps the contents of two `flare::btree_set` containers.
+    // -------------------------------------------------------
+    template<typename K, typename C, typename A>
+    void swap(case_ignored_btree_set<K, C, A> &x, case_ignored_btree_set<K, C, A> &y) {
+        return x.swap(y);
+    }
+
+    // Erases all elements that satisfy the predicate pred from the container.
+    // ----------------------------------------------------------------------
+    template<typename K, typename C, typename A, typename Pred>
+    void erase_if(case_ignored_btree_set<K, C, A> &set, Pred pred) {
+        for (auto it = set.begin(); it != set.end();) {
+            if (pred(*it)) {
+                it = set.erase(it);
+            } else {
+                ++it;
+            }
+        }
+    }
+
+    // ----------------------------------------------------------------------
     //  btree_multiset - default values in map_fwd_decl.h
     // ----------------------------------------------------------------------
     template<typename Key, typename Compare, typename Alloc>
@@ -4055,6 +4112,62 @@ namespace flare {
         }
     }
 
+    // ----------------------------------------------------------------------
+    //  case_ignored_btree_multiset - default values in map_fwd_decl.h
+    // ----------------------------------------------------------------------
+    template<typename Key, typename Compare, typename Alloc>
+    class case_ignored_btree_multiset : public priv::btree_multiset_container<
+            priv::btree<priv::set_params<
+                    Key, Compare, Alloc, /*TargetNodeSize=*/ 256, /*Multi=*/ true>>> {
+        using Base = typename case_ignored_btree_multiset::btree_multiset_container;
+
+    public:
+        case_ignored_btree_multiset() {}
+
+        using Base::Base;
+        using Base::begin;
+        using Base::cbegin;
+        using Base::end;
+        using Base::cend;
+        using Base::empty;
+        using Base::max_size;
+        using Base::size;
+        using Base::clear;
+        using Base::erase;
+        using Base::insert;
+        using Base::emplace;
+        using Base::emplace_hint;
+        using Base::extract;
+        using Base::merge;
+        using Base::swap;
+        using Base::contains;
+        using Base::count;
+        using Base::equal_range;
+        using Base::find;
+        using Base::get_allocator;
+        using Base::key_comp;
+        using Base::value_comp;
+    };
+
+    // Swaps the contents of two `flare::btree_multiset` containers.
+    // ------------------------------------------------------------
+    template<typename K, typename C, typename A>
+    void swap(case_ignored_btree_multiset<K, C, A> &x, case_ignored_btree_multiset<K, C, A> &y) {
+        return x.swap(y);
+    }
+
+    // Erases all elements that satisfy the predicate pred from the container.
+    // ----------------------------------------------------------------------
+    template<typename K, typename C, typename A, typename Pred>
+    void erase_if(case_ignored_btree_multiset<K, C, A> &set, Pred pred) {
+        for (auto it = set.begin(); it != set.end();) {
+            if (pred(*it)) {
+                it = set.erase(it);
+            } else {
+                ++it;
+            }
+        }
+    }
 
     // ----------------------------------------------------------------------
     //  btree_map - default values in map_fwd_decl.h
@@ -4106,6 +4219,65 @@ namespace flare {
     // ----------------------------------------------------------------------
     template<typename K, typename V, typename C, typename A, typename Pred>
     void erase_if(btree_map<K, V, C, A> &map, Pred pred) {
+        for (auto it = map.begin(); it != map.end();) {
+            if (pred(*it)) {
+                it = map.erase(it);
+            } else {
+                ++it;
+            }
+        }
+    }
+
+    // ----------------------------------------------------------------------
+    //  case_ignored_btree_map - default values in map_fwd_decl.h
+    // ----------------------------------------------------------------------
+    template<typename Key, typename Value, typename Compare, typename Alloc>
+    class case_ignored_btree_map : public priv::btree_map_container<
+            priv::btree<priv::map_params<
+                    Key, Value, Compare, Alloc, /*TargetNodeSize=*/ 256, /*Multi=*/ false>>> {
+        using Base = typename case_ignored_btree_map::btree_map_container;
+
+    public:
+        case_ignored_btree_map() {}
+
+        using Base::Base;
+        using Base::begin;
+        using Base::cbegin;
+        using Base::end;
+        using Base::cend;
+        using Base::empty;
+        using Base::max_size;
+        using Base::size;
+        using Base::clear;
+        using Base::erase;
+        using Base::insert;
+        using Base::emplace;
+        using Base::emplace_hint;
+        using Base::try_emplace;
+        using Base::extract;
+        using Base::merge;
+        using Base::swap;
+        using Base::at;
+        using Base::contains;
+        using Base::count;
+        using Base::equal_range;
+        using Base::find;
+        using Base::operator[];
+        using Base::get_allocator;
+        using Base::key_comp;
+        using Base::value_comp;
+    };
+
+    // Swaps the contents of two `flare::btree_map` containers.
+    // -------------------------------------------------------
+    template<typename K, typename V, typename C, typename A>
+    void swap(case_ignored_btree_map<K, V, C, A> &x, case_ignored_btree_map<K, V, C, A> &y) {
+        return x.swap(y);
+    }
+
+    // ----------------------------------------------------------------------
+    template<typename K, typename V, typename C, typename A, typename Pred>
+    void erase_if(case_ignored_btree_map<K, V, C, A> &map, Pred pred) {
         for (auto it = map.begin(); it != map.end();) {
             if (pred(*it)) {
                 it = map.erase(it);
@@ -4171,6 +4343,64 @@ namespace flare {
             }
         }
     }
+
+    // ----------------------------------------------------------------------
+    //  case_ignored_btree_multimap - default values in map_fwd_decl.h
+    // ----------------------------------------------------------------------
+    template<typename Key, typename Value, typename Compare, typename Alloc>
+    class case_ignored_btree_multimap : public priv::btree_multimap_container<
+            priv::btree<priv::map_params<
+                    Key, Value, Compare, Alloc, /*TargetNodeSize=*/ 256, /*Multi=*/ true>>> {
+        using Base = typename case_ignored_btree_multimap::btree_multimap_container;
+
+    public:
+        case_ignored_btree_multimap() {}
+
+        using Base::Base;
+        using Base::begin;
+        using Base::cbegin;
+        using Base::end;
+        using Base::cend;
+        using Base::empty;
+        using Base::max_size;
+        using Base::size;
+        using Base::clear;
+        using Base::erase;
+        using Base::insert;
+        using Base::emplace;
+        using Base::emplace_hint;
+        using Base::extract;
+        using Base::merge;
+        using Base::swap;
+        using Base::contains;
+        using Base::count;
+        using Base::equal_range;
+        using Base::find;
+        using Base::get_allocator;
+        using Base::key_comp;
+        using Base::value_comp;
+    };
+
+    // Swaps the contents of two `flare::btree_multimap` containers.
+    // ------------------------------------------------------------
+    template<typename K, typename V, typename C, typename A>
+    void swap(case_ignored_btree_multimap<K, V, C, A> &x, case_ignored_btree_multimap<K, V, C, A> &y) {
+        return x.swap(y);
+    }
+
+    // Erases all elements that satisfy the predicate pred from the container.
+    // ----------------------------------------------------------------------
+    template<typename K, typename V, typename C, typename A, typename Pred>
+    void erase_if(case_ignored_btree_multimap<K, V, C, A> &map, Pred pred) {
+        for (auto it = map.begin(); it != map.end();) {
+            if (pred(*it)) {
+                it = map.erase(it);
+            } else {
+                ++it;
+            }
+        }
+    }
+
 
 
 }  // namespace btree

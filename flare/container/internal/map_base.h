@@ -34,9 +34,23 @@ namespace flare {
     };
 
     template<class T>
-    struct Less {
+    struct less {
         inline bool operator()(const T &a, const T &b) const {
             return std::less<T>()(a, b);
+        }
+    };
+
+    template<>
+    struct case_ignored_less<std::string> {
+        inline bool operator()(const std::string_view &a, const std::string_view &b) const {
+            return flare::compare_case(a, b) < 0;
+        }
+    };
+
+    template<>
+    struct case_ignored_less<std::string_view> {
+        inline bool operator()(const std::string_view &a, const std::string_view &b) const {
+            return flare::compare_case(a, b) < 0;
         }
     };
 
@@ -888,7 +902,7 @@ namespace flare {
         template<typename Seq, size_t SeqSize, size_t Rem>
         struct Extend;
 
-// Note that SeqSize == sizeof...(Ints). It's passed explicitly for efficiency.
+        // Note that SeqSize == sizeof...(Ints). It's passed explicitly for efficiency.
         template<typename T, T... Ints, size_t SeqSize>
         struct Extend<integer_sequence<T, Ints...>, SeqSize, 0> {
             using type = integer_sequence<T, Ints..., (Ints + SeqSize)...>;
@@ -899,8 +913,8 @@ namespace flare {
             using type = integer_sequence<T, Ints..., (Ints + SeqSize)..., 2 * SeqSize>;
         };
 
-// Recursion helper for 'make_integer_sequence<T, N>'.
-// 'Gen<T, N>::type' is an alias for 'integer_sequence<T, 0, 1, ... N-1>'.
+        // Recursion helper for 'make_integer_sequence<T, N>'.
+        // 'Gen<T, N>::type' is an alias for 'integer_sequence<T, 0, 1, ... N-1>'.
         template<typename T, size_t N>
         struct Gen {
             using type =
@@ -1839,90 +1853,90 @@ namespace flare {
         struct IsConvertible : IsConvertibleHelper<From, To>::type {
         };
 
-// TODO(zhangxy): replace `IsConvertible` with `std::is_convertible` once the
-// older version of libcxx is not supported.
+        // TODO(zhangxy): replace `IsConvertible` with `std::is_convertible` once the
+        // older version of libcxx is not supported.
         template<typename From, typename To>
         using EnableIfConvertibleToSpanConst =
         typename std::enable_if<IsConvertible<From, Span<const To>>::value>::type;
     }  // namespace span_internal
 
-//------------------------------------------------------------------------------
-// Span
-//------------------------------------------------------------------------------
-//
-// A `Span` is an "array view" type for holding a view of a contiguous data
-// array; the `Span` object does not and cannot own such data itself. A span
-// provides an easy way to provide overloads for anything operating on
-// contiguous sequences without needing to manage pointers and array lengths
-// manually.
+    //------------------------------------------------------------------------------
+    // Span
+    //------------------------------------------------------------------------------
+    //
+    // A `Span` is an "array view" type for holding a view of a contiguous data
+    // array; the `Span` object does not and cannot own such data itself. A span
+    // provides an easy way to provide overloads for anything operating on
+    // contiguous sequences without needing to manage pointers and array lengths
+    // manually.
 
-// A span is conceptually a pointer (ptr) and a length (size) into an already
-// existing array of contiguous memory; the array it represents references the
-// elements "ptr[0] .. ptr[size-1]". Passing a properly-constructed `Span`
-// instead of raw pointers avoids many issues related to index out of bounds
-// errors.
-//
-// Spans may also be constructed from containers holding contiguous sequences.
-// Such containers must supply `data()` and `size() const` methods (e.g
-// `std::vector<T>`, `flare::InlinedVector<T, N>`). All implicit conversions to
-// `flare::Span` from such containers will create spans of type `const T`;
-// spans which can mutate their values (of type `T`) must use explicit
-// constructors.
-//
-// A `Span<T>` is somewhat analogous to an `flare::string_view`, but for an array
-// of elements of type `T`. A user of `Span` must ensure that the data being
-// pointed to outlives the `Span` itself.
-//
-// You can construct a `Span<T>` in several ways:
-//
-//   * Explicitly from a reference to a container type
-//   * Explicitly from a pointer and size
-//   * Implicitly from a container type (but only for spans of type `const T`)
-//   * Using the `MakeSpan()` or `MakeConstSpan()` factory functions.
-//
-// Examples:
-//
-//   // Construct a Span explicitly from a container:
-//   std::vector<int> v = {1, 2, 3, 4, 5};
-//   auto span = flare::Span<const int>(v);
-//
-//   // Construct a Span explicitly from a C-style array:
-//   int a[5] =  {1, 2, 3, 4, 5};
-//   auto span = flare::Span<const int>(a);
-//
-//   // Construct a Span implicitly from a container
-//   void MyRoutine(flare::Span<const int> a) {
-//     ...
-//   }
-//   std::vector v = {1,2,3,4,5};
-//   MyRoutine(v)                     // convert to Span<const T>
-//
-// Note that `Span` objects, in addition to requiring that the memory they
-// point to remains alive, must also ensure that such memory does not get
-// reallocated. Therefore, to avoid undefined behavior, containers with
-// associated span views should not invoke operations that may reallocate memory
-// (such as resizing) or invalidate iterators into the container.
-//
-// One common use for a `Span` is when passing arguments to a routine that can
-// accept a variety of array types (e.g. a `std::vector`, `flare::InlinedVector`,
-// a C-style array, etc.). Instead of creating overloads for each case, you
-// can simply specify a `Span` as the argument to such a routine.
-//
-// Example:
-//
-//   void MyRoutine(flare::Span<const int> a) {
-//     ...
-//   }
-//
-//   std::vector v = {1,2,3,4,5};
-//   MyRoutine(v);
-//
-//   flare::InlinedVector<int, 4> my_inline_vector;
-//   MyRoutine(my_inline_vector);
-//
-//   // Explicit constructor from pointer,size
-//   int* my_array = new int[10];
-//   MyRoutine(flare::Span<const int>(my_array, 10));
+    // A span is conceptually a pointer (ptr) and a length (size) into an already
+    // existing array of contiguous memory; the array it represents references the
+    // elements "ptr[0] .. ptr[size-1]". Passing a properly-constructed `Span`
+    // instead of raw pointers avoids many issues related to index out of bounds
+    // errors.
+    //
+    // Spans may also be constructed from containers holding contiguous sequences.
+    // Such containers must supply `data()` and `size() const` methods (e.g
+    // `std::vector<T>`, `flare::InlinedVector<T, N>`). All implicit conversions to
+    // `flare::Span` from such containers will create spans of type `const T`;
+    // spans which can mutate their values (of type `T`) must use explicit
+    // constructors.
+    //
+    // A `Span<T>` is somewhat analogous to an `flare::string_view`, but for an array
+    // of elements of type `T`. A user of `Span` must ensure that the data being
+    // pointed to outlives the `Span` itself.
+    //
+    // You can construct a `Span<T>` in several ways:
+    //
+    //   * Explicitly from a reference to a container type
+    //   * Explicitly from a pointer and size
+    //   * Implicitly from a container type (but only for spans of type `const T`)
+    //   * Using the `MakeSpan()` or `MakeConstSpan()` factory functions.
+    //
+    // Examples:
+    //
+    //   // Construct a Span explicitly from a container:
+    //   std::vector<int> v = {1, 2, 3, 4, 5};
+    //   auto span = flare::Span<const int>(v);
+    //
+    //   // Construct a Span explicitly from a C-style array:
+    //   int a[5] =  {1, 2, 3, 4, 5};
+    //   auto span = flare::Span<const int>(a);
+    //
+    //   // Construct a Span implicitly from a container
+    //   void MyRoutine(flare::Span<const int> a) {
+    //     ...
+    //   }
+    //   std::vector v = {1,2,3,4,5};
+    //   MyRoutine(v)                     // convert to Span<const T>
+    //
+    // Note that `Span` objects, in addition to requiring that the memory they
+    // point to remains alive, must also ensure that such memory does not get
+    // reallocated. Therefore, to avoid undefined behavior, containers with
+    // associated span views should not invoke operations that may reallocate memory
+    // (such as resizing) or invalidate iterators into the container.
+    //
+    // One common use for a `Span` is when passing arguments to a routine that can
+    // accept a variety of array types (e.g. a `std::vector`, `flare::InlinedVector`,
+    // a C-style array, etc.). Instead of creating overloads for each case, you
+    // can simply specify a `Span` as the argument to such a routine.
+    //
+    // Example:
+    //
+    //   void MyRoutine(flare::Span<const int> a) {
+    //     ...
+    //   }
+    //
+    //   std::vector v = {1,2,3,4,5};
+    //   MyRoutine(v);
+    //
+    //   flare::InlinedVector<int, 4> my_inline_vector;
+    //   MyRoutine(my_inline_vector);
+    //
+    //   // Explicit constructor from pointer,size
+    //   int* my_array = new int[10];
+    //   MyRoutine(flare::Span<const int>(my_array, 10));
     template<typename T>
     class Span {
     private:
@@ -3491,17 +3505,17 @@ namespace flare {
 #endif
 
     // -----------------------------------------------------------------------------
-    // NullMutex
+    // null_mutex
     // -----------------------------------------------------------------------------
     // A class that implements the Mutex interface, but does nothing. This is to be
     // used as a default template parameters for classes who provide optional
     // internal locking (like flare::parallel_flat_hash_map).
     // -----------------------------------------------------------------------------
-    class NullMutex {
+    class null_mutex {
     public:
-        NullMutex() {}
+        null_mutex() {}
 
-        ~NullMutex() {}
+        ~null_mutex() {}
 
         void lock() {}
 
@@ -3790,10 +3804,10 @@ namespace flare {
     //          Null mutex (no-op) - when we don't want internal synchronization
     // ---------------------------------------------------------------------------
     template<>
-    class LockableImpl<flare::NullMutex> : public flare::NullMutex {
+    class LockableImpl<flare::null_mutex> : public flare::null_mutex {
     public:
-        using mutex_type = flare::NullMutex;
-        using Base = LockableBaseImpl<flare::NullMutex>;
+        using mutex_type = flare::null_mutex;
+        using Base = LockableBaseImpl<flare::null_mutex>;
         using SharedLock = typename Base::DoNothing;
         using UpgradeLock = typename Base::DoNothing;
         using UniqueLock = typename Base::DoNothing;

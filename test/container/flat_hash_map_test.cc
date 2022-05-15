@@ -10,6 +10,8 @@
 #endif
 
 #include "flare/container/flat_hash_map.h"
+#include "flare/container/parallel_node_hash_map.h"
+#include "flare/container/parallel_flat_hash_map.h"
 #include <any>
 #include "hash_generator_testing.h"
 #include "unordered_map_constructor_test.h"
@@ -89,7 +91,7 @@ namespace flare {
                 }
             }
 
-// gcc becomes unhappy if this is inside the method, so pull it out here.
+            // gcc becomes unhappy if this is inside the method, so pull it out here.
             struct balast {
             };
 
@@ -107,9 +109,9 @@ namespace flare {
                 }
             }
 
-// Demonstration of the "Lazy Key" pattern.  This uses heterogeneous insert to
-// avoid creating expensive key elements when the item is already present in the
-// map.
+            // Demonstration of the "Lazy Key" pattern.  This uses heterogeneous insert to
+            // avoid creating expensive key elements when the item is already present in the
+            // map.
             struct LazyInt {
                 explicit LazyInt(size_t val, int *tracker_)
                         : value(val), tracker(tracker_) {}

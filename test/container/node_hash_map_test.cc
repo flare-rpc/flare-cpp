@@ -4,8 +4,8 @@
 #define THIS_TEST_NAME  NodeHashMap
 #endif
 
-#include "flare/container/flat_hash_map.h"
-
+#include "flare/container/node_hash_map.h"
+#include "flare/container/parallel_node_hash_map.h"
 #include "tracked.h"
 #include "unordered_map_constructor_test.h"
 #include "unordered_map_lookup_test.h"

@@ -17,7 +17,7 @@ namespace flare::container {
     // [Initialize a class-member queue]
     //   class Foo {
     //     ...
-    //     BoundQueue<int> _queue;
+    //     bound_queue<int> _queue;
     //   };
     //   int Foo::init() {
     //     bounded_queue<int> tmp(capacity);
@@ -28,7 +28,7 @@ namespace flare::container {
     //     tmp.swap(_queue);
     //   }
 
-    enum StorageOwnership {
+    enum storage_owner_ship {
         OWNS_STORAGE, NOT_OWN_STORAGE
     };
 
@@ -37,7 +37,7 @@ namespace flare::container {
     public:
         // You have to pass the memory for storing items at creation.
         // The queue contains at most memsize/sizeof(T) items.
-        bounded_queue(void *mem, size_t memsize, StorageOwnership ownership)
+        bounded_queue(void *mem, size_t memsize, storage_owner_ship ownership)
                 : _count(0), _cap(memsize / sizeof(T)), _start(0), _ownership(ownership), _items(mem) {
             FLARE_DCHECK(_items);
         };
@@ -270,7 +270,7 @@ namespace flare::container {
         uint32_t _count;
         uint32_t _cap;
         uint32_t _start;
-        StorageOwnership _ownership;
+        storage_owner_ship _ownership;
         void *_items;
     };
 

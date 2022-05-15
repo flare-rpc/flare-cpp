@@ -4,8 +4,9 @@
 #define THIS_TEST_NAME  NodeHashSet
 #endif
 
-#include "flare/container/flat_hash_map.h"
-
+#include "flare/container/node_hash_set.h"
+#include "flare/container/flat_hash_set.h"
+#include "flare/container/parallel_node_hash_set.h"
 #include "unordered_set_constructor_test.h"
 #include "unordered_set_lookup_test.h"
 #include "unordered_set_members_test.h"

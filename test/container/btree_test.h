@@ -23,6 +23,7 @@
 
 #include "flare/container/btree.h"
 #include "flare/container/flat_hash_map.h"
+#include "flare/container/flat_hash_set.h"
 
 namespace flare {
 

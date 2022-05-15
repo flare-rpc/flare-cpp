@@ -3,6 +3,8 @@
 #include "gtest/gtest.h"
 
 #include "flare/container/flat_hash_map_dump.h"
+#include "flare/container/flat_hash_set.h"
+#include "flare/container/parallel_flat_hash_map.h"
 
 namespace flare {
     namespace priv {
