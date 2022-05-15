@@ -20,13 +20,13 @@ namespace {
 
     TEST(LeakCheckTest, IgnoreLeakSuppressesLeakedMemoryErrors) {
         auto foo = flare::debugging::ignore_leak(new std::string("some ignored leaked string"));
-        LOG(INFO)<<"Ignoring leaked std::string "<< foo->c_str();
+        FLARE_LOG(INFO)<<"Ignoring leaked std::string "<< foo->c_str();
     }
 
     TEST(LeakCheckTest, LeakCheckDisablerIgnoresLeak) {
         flare::debugging::leak_check_disabler disabler;
         auto foo = new std::string("some std::string leaked while checks are disabled");
-        LOG(INFO)<<"Ignoring leaked std::string "<< foo->c_str();
+        FLARE_LOG(INFO)<<"Ignoring leaked std::string "<< foo->c_str();
     }
 
 }  // namespace

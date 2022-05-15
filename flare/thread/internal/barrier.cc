@@ -17,7 +17,7 @@ namespace flare::thread_internal {
 
         void *create_one_byte_dummy_page() {
             auto ptr = mmap(nullptr, 1, PROT_READ, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
-            FLARE_CHECK(ptr, "Cannot create dummy page for asymmetric memory barrier.");
+            FLARE_CHECK(ptr) << "Cannot create dummy page for asymmetric memory barrier.";
             (void) mlock(ptr, 1);
             return ptr;
         }

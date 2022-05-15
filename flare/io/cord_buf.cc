@@ -27,7 +27,7 @@
 #include <stdexcept>                       // std::invalid_argument
 #include "flare/base/static_atomic.h"                // std::atomic
 #include "flare/thread/thread.h"             // thread_atexit
-#include "flare/log/logging.h"                  // CHECK, LOG
+#include "flare/log/logging.h"                  // FLARE_CHECK, FLARE_LOG
 #include "flare/base/fd_guard.h"                 // flare::base::fd_guard
 #include "flare/io/cord_buf.h"
 #include "flare/base/profile.h"
@@ -98,7 +98,7 @@ namespace flare {
         inline iov_function get_preadv_func() {
             flare::base::fd_guard fd(open("/dev/zero", O_RDONLY));
             if (fd < 0) {
-                PLOG(WARNING) << "Fail to open /dev/zero";
+                FLARE_PLOG(WARNING) << "Fail to open /dev/zero";
                 return user_preadv;
             }
 #if defined(FLARE_PLATFORM_OSX)
@@ -108,7 +108,7 @@ namespace flare {
             iovec vec = {dummy, sizeof(dummy)};
             const int rc = syscall(SYS_preadv, (int) fd, &vec, 1, 0);
             if (rc < 0) {
-                PLOG(WARNING) << "The kernel doesn't support SYS_preadv, "
+                FLARE_PLOG(WARNING) << "The kernel doesn't support SYS_preadv, "
                                  " use user_preadv instead";
                 return user_preadv;
             }
@@ -118,7 +118,7 @@ namespace flare {
         inline iov_function get_pwritev_func() {
             flare::base::fd_guard fd(open("/dev/null", O_WRONLY));
             if (fd < 0) {
-                PLOG(ERROR) << "Fail to open /dev/null";
+                FLARE_PLOG(ERROR) << "Fail to open /dev/null";
                 return user_pwritev;
             }
 #if defined(FLARE_PLATFORM_OSX)
@@ -128,7 +128,7 @@ namespace flare {
             iovec vec = {dummy, sizeof(dummy)};
             const int rc = syscall(SYS_pwritev, (int) fd, &vec, 1, 0);
             if (rc < 0) {
-                PLOG(WARNING) << "The kernel doesn't support SYS_pwritev, "
+                FLARE_PLOG(WARNING) << "The kernel doesn't support SYS_pwritev, "
                                  " use user_pwritev instead";
                 return user_pwritev;
             }
@@ -226,7 +226,7 @@ namespace flare {
         inline void check_abi() {
 #ifndef NDEBUG
             if (abi_check != 0) {
-                LOG(FATAL) << "Your program seems to wrongly contain two "
+                FLARE_LOG(FATAL) << "Your program seems to wrongly contain two "
                     "ABI-incompatible implementations of cord_buf";
             }
 #endif
@@ -283,7 +283,7 @@ namespace flare {
 
         inline cord_buf::Block *create_block(const size_t block_size) {
             if (block_size > 0xFFFFFFFFULL) {
-                LOG(FATAL) << "block_size=" << block_size << " is too large";
+                FLARE_LOG(FATAL) << "block_size=" << block_size << " is too large";
                 return NULL;
             }
             char *mem = (char *) iobuf::blockmem_allocate(block_size);
@@ -341,7 +341,7 @@ namespace flare {
                 b = saved_next;
                 ++n;
             } while (b);
-            CHECK_EQ(n, tls_data.num_blocks);
+            FLARE_CHECK_EQ(n, tls_data.num_blocks);
             tls_data.num_blocks = 0;
         }
 
@@ -418,7 +418,7 @@ namespace flare {
             cord_buf::Block *last_b = NULL;
             do {
                 ++n;
-                CHECK(!b->full());
+                FLARE_CHECK(!b->full());
                 if (b->portal_next == NULL) {
                     last_b = b;
                     break;
@@ -1196,7 +1196,7 @@ namespace flare {
 
     int cord_buf::append_user_data(void *data, size_t size, void (*deleter)(void *)) {
         if (size > 0xFFFFFFFFULL - 100) {
-            LOG(FATAL) << "data_size=" << size << " is too large";
+            FLARE_LOG(FATAL) << "data_size=" << size << " is too large";
             return -1;
         }
         char *mem = (char *) malloc(sizeof(cord_buf::Block) + sizeof(UserDataExtension));
@@ -1249,7 +1249,7 @@ namespace flare {
         if (ref_index > MAX_REF_INDEX ||
             ref_offset > MAX_REF_OFFSET ||
             size > MAX_AREA_SIZE) {
-            LOG(ERROR) << "Too big parameters!";
+            FLARE_LOG(ERROR) << "Too big parameters!";
             return cord_buf::INVALID_AREA;
         }
         return (((uint64_t) ref_index) << (REF_OFFSET_BITS + AREA_SIZE_BITS))
@@ -1293,7 +1293,7 @@ namespace flare {
 
     int cord_buf::unsafe_assign(Area area, const void *data) {
         if (area == INVALID_AREA || data == NULL) {
-            LOG(ERROR) << "Invalid parameters";
+            FLARE_LOG(ERROR) << "Invalid parameters";
             return -1;
         }
         const uint32_t ref_index = get_area_ref_index(area);
@@ -1317,7 +1317,7 @@ namespace flare {
         }
 
         // Use check because we need to see the stack here.
-        CHECK(false) << "cord_buf(" << size() << ", nref=" << _ref_num()
+        FLARE_CHECK(false) << "cord_buf(" << size() << ", nref=" << _ref_num()
                      << ") is shorter than what we reserved("
                      << "ref=" << get_area_ref_index(area)
                      << " off=" << get_area_ref_offset(area)
@@ -1714,7 +1714,7 @@ namespace flare {
         if (_block) {
             if (_data != _data_end) {
                 cord_buf::BlockRef &fr = _buf->_front_ref();
-                CHECK_EQ(fr.block, _block);
+                FLARE_CHECK_EQ(fr.block, _block);
                 fr.offset = (uint32_t) ((char *) _data - _block->data);
                 fr.length = (uint32_t) ((char *) _data_end - (char *) _data);
             } else {
@@ -1852,12 +1852,12 @@ namespace flare {
     void cord_buf_as_zero_copy_input_stream::BackUp(int count) {
         if (_ref_index > 0) {
             const cord_buf::BlockRef *cur_ref = _buf->_pref_at(--_ref_index);
-            CHECK(_add_offset == 0 && cur_ref->length >= (uint32_t) count)
+            FLARE_CHECK(_add_offset == 0 && cur_ref->length >= (uint32_t) count)
                             << "BackUp() is not after a Next()";
             _add_offset = cur_ref->length - count;
             _byte_count -= count;
         } else {
-            LOG(FATAL) << "BackUp an empty ZeroCopyInputStream";
+            FLARE_LOG(FATAL) << "BackUp an empty ZeroCopyInputStream";
         }
     }
 
@@ -1933,12 +1933,12 @@ namespace flare {
                 // A ordinary BackUp that should be supported by all ZeroCopyOutputStream
                 // _cur_block must match end of the cord_buf
                 if (r.block != _cur_block) {
-                    LOG(FATAL) << "r.block=" << r.block
+                    FLARE_LOG(FATAL) << "r.block=" << r.block
                                << " does not match _cur_block=" << _cur_block;
                     return;
                 }
                 if (r.offset + r.length != _cur_block->size) {
-                    LOG(FATAL) << "r.offset(" << r.offset << ") + r.length("
+                    FLARE_LOG(FATAL) << "r.offset(" << r.offset << ") + r.length("
                                << r.length << ") != _cur_block->size("
                                << _cur_block->size << ")";
                     return;
@@ -1951,7 +1951,7 @@ namespace flare {
                     // A special case: the block is only referenced by last
                     // BlockRef of _buf. Safe to allocate more on the block.
                     if (r.offset + r.length != r.block->size) {
-                        LOG(FATAL) << "r.offset(" << r.offset << ") + r.length("
+                        FLARE_LOG(FATAL) << "r.offset(" << r.offset << ") + r.length("
                                    << r.length << ") != r.block->size("
                                    << r.block->size << ")";
                         return;
@@ -1997,7 +1997,7 @@ namespace flare {
                 return;
             }
         }
-        LOG_IF(FATAL, count != 0) << "BackUp an empty cord_buf";
+        FLARE_LOG_IF(FATAL, count != 0) << "BackUp an empty cord_buf";
     }
 
     google::protobuf::int64 cord_buf_as_zero_copy_output_stream::ByteCount() const {
@@ -2021,7 +2021,7 @@ namespace flare {
 
     void cord_buf_as_snappy_sink::Append(const char *bytes, size_t n) {
         if (_cur_len > 0) {
-            CHECK(bytes == _cur_buf && static_cast<int>(n) <= _cur_len)
+            FLARE_CHECK(bytes == _cur_buf && static_cast<int>(n) <= _cur_len)
                             << "bytes must be _cur_buf";
             _buf_stream.BackUp(_cur_len - n);
             _cur_len = 0;
@@ -2040,7 +2040,7 @@ namespace flare {
                     _buf_stream.BackUp(_cur_len);
                 }
             } else {
-                LOG(FATAL) << "Fail to alloc buffer";
+                FLARE_LOG(FATAL) << "Fail to alloc buffer";
             }
         } // else no need to try.
         _cur_buf = NULL;

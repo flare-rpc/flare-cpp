@@ -90,23 +90,23 @@ public:
     };
 
     int GetIndexOfHeader(const HeaderAndHashCode& h) {
-        DCHECK(_need_indexes);
+        FLARE_DCHECK(_need_indexes);
         const uint64_t* v = _header_index.seek(h);
         if (!v) {
             return 0;
         }
-        DCHECK_LE(_add_times - *v, _header_queue.size());
+        FLARE_DCHECK_LE(_add_times - *v, _header_queue.size());
         // The latest added entry has the smallest index
         return _start_index + (_add_times - *v) - 1;
     }
 
     int GetIndexOfName(const std::string& name) {
-        DCHECK(_need_indexes);
+        FLARE_DCHECK(_need_indexes);
         const uint64_t* v = _name_index.seek(name);
         if (!v) {
             return 0;
         }
-        DCHECK_LE(_add_times - *v, _header_queue.size());
+        FLARE_DCHECK_LE(_add_times - *v, _header_queue.size());
         // The latest added entry has the smallest index
         return _start_index + (_add_times - *v) - 1;
     }
@@ -121,10 +121,10 @@ public:
     }
 
     void PopHeader() {
-        DCHECK(!empty());
+        FLARE_DCHECK(!empty());
         const Header* h = _header_queue.top();
         const size_t entry_size = HeaderSize(*h);
-        DCHECK_LE(entry_size, _size);
+        FLARE_DCHECK_LE(entry_size, _size);
         const uint64_t id = _add_times - _header_queue.size();
         if (_need_indexes) {
             RemoveHeaderFromIndexes(*h, id);
@@ -136,20 +136,20 @@ public:
     void RemoveHeaderFromIndexes(const Header& h, uint64_t expected_id) {
         if (!h.value.empty()) {
             const uint64_t* v = _header_index.seek(h);
-            DCHECK(v);
+            FLARE_DCHECK(v);
             if (*v == expected_id) {
                 _header_index.erase(h);
             }
         }
         const uint64_t* v = _name_index.seek(h.name);
-        DCHECK(v);
+        FLARE_DCHECK(v);
         if (*v == expected_id) {
             _name_index.erase(h.name);
         }
     }
 
     void AddHeader(const Header& h) {
-        CHECK(!h.name.empty());
+        FLARE_CHECK(!h.name.empty());
         const size_t entry_size = HeaderSize(h);
 
         while (!empty() && (_size + entry_size) > _max_size) {
@@ -159,12 +159,12 @@ public:
         if (entry_size > _max_size) {
             // https://tools.ietf.org/html/rfc7541#section-4.1
             // If this header is larger than the max size, clear the table only.
-            DCHECK(empty());
+            FLARE_DCHECK(empty());
             return;
         }
 
         _size += entry_size;
-        CHECK(!_header_queue.full());
+        FLARE_CHECK(!_header_queue.full());
         _header_queue.push(h);
 
         const int id = _add_times++;
@@ -178,10 +178,10 @@ public:
     }
 
     void ResetMaxSize(size_t new_max_size) {
-        LOG(INFO) << this << ".size=" << _size << " new_max_size=" << new_max_size
+        FLARE_LOG(INFO) << this << ".size=" << _size << " new_max_size=" << new_max_size
                   << " max_size=" << _max_size;
         if (new_max_size > _max_size) {
-            //LOG(ERROR) << "Invalid new_max_size=" << new_max_size;
+            //FLARE_LOG(ERROR) << "Invalid new_max_size=" << new_max_size;
             //return -1;
             _max_size = new_max_size;
             return;
@@ -231,7 +231,7 @@ int IndexTable::Init(const IndexTableOptions& options) {
     }
     void *header_queue_storage = malloc(num_headers * sizeof(Header));
     if (!header_queue_storage) {
-        LOG(ERROR) << "Fail to malloc space for " << num_headers << " headers";
+        FLARE_LOG(ERROR) << "Fail to malloc space for " << num_headers << " headers";
         return -1;
     }
     flare::container::bounded_queue<Header> tmp(
@@ -242,11 +242,11 @@ int IndexTable::Init(const IndexTableOptions& options) {
     _need_indexes = options.need_indexes;
     if (_need_indexes) {
         if (_name_index.init(num_headers * 2) != 0) {
-            LOG(ERROR) << "Fail to init _name_index";
+            FLARE_LOG(ERROR) << "Fail to init _name_index";
             return -1;
         }
         if (_header_index.init(num_headers * 2) != 0) {
-            LOG(ERROR) << "Fail to init _name_index";
+            FLARE_LOG(ERROR) << "Fail to init _name_index";
             return -1;
         }
     }
@@ -299,7 +299,7 @@ public:
     void AddLeafNode(int32_t value, const HuffmanCode& code) {
         NodeId cur = ROOT_NODE;
         for (int i = code.bit_len; i > 0; i--) {
-            CHECK_EQ(node(cur).value, INVALID_VALUE) << "value=" << value << "cur=" << cur;
+            FLARE_CHECK_EQ(node(cur).value, INVALID_VALUE) << "value=" << value << "cur=" << cur;
             if (code.code & (1u << (i - 1))) {
                 if (node(cur).right_child == NULL_NODE) {
                     NodeId new_id = AllocNode();
@@ -314,9 +314,9 @@ public:
                 cur = node(cur).left_child;
             }
         }
-        CHECK_EQ(INVALID_VALUE, node(cur).value) << "value=" << value << " cur=" << cur;
-        CHECK_EQ(NULL_NODE, node(cur).left_child);
-        CHECK_EQ(NULL_NODE, node(cur).right_child);
+        FLARE_CHECK_EQ(INVALID_VALUE, node(cur).value) << "value=" << value << " cur=" << cur;
+        FLARE_CHECK_EQ(NULL_NODE, node(cur).left_child);
+        FLARE_CHECK_EQ(NULL_NODE, node(cur).right_child);
         node(cur).value = value;
     }
 
@@ -381,7 +381,7 @@ public:
         if (_remain_bit == 8u) {
             return;
         }
-        DCHECK_LT(_remain_bit, 8u);
+        FLARE_DCHECK_LT(_remain_bit, 8u);
         // Add padding `1's to lsb to make _out aligned
         _partial_byte |= (1 << _remain_bit) - 1;
         // TODO: push_back is probably costly since it acquires tls everytime it
@@ -419,12 +419,12 @@ public:
             if (byte & (1u << i)) {
                 _cur_node = _tree->node(_cur_node->right_child);
                 if (FLARE_UNLIKELY(!_cur_node)) {
-                    LOG(ERROR) << "Decoder stream reaches NULL_NODE";
+                    FLARE_LOG(ERROR) << "Decoder stream reaches NULL_NODE";
                     return -1;
                 }
                 if (_cur_node->value != HuffmanTree::INVALID_VALUE) {
                     if (FLARE_UNLIKELY(_cur_node->value == HPACK_HUFFMAN_EOS)) {
-                        LOG(ERROR) << "Decoder stream reaches EOS";
+                        FLARE_LOG(ERROR) << "Decoder stream reaches EOS";
                         return -1;
                     }
                     _out->push_back(static_cast<uint8_t>(_cur_node->value));
@@ -437,12 +437,12 @@ public:
             } else {
                 _cur_node = _tree->node(_cur_node->left_child);
                 if (FLARE_UNLIKELY(!_cur_node)) {
-                    LOG(ERROR) << "Decoder stream reaches NULL_NODE";
+                    FLARE_LOG(ERROR) << "Decoder stream reaches NULL_NODE";
                     return -1;
                 }
                 if (_cur_node->value != HuffmanTree::INVALID_VALUE) {
                     if (FLARE_UNLIKELY(_cur_node->value == HPACK_HUFFMAN_EOS)) {
-                        LOG(ERROR) << "Decoder stream reaches EOS";
+                        FLARE_LOG(ERROR) << "Decoder stream reaches EOS";
                         return -1;
                     }
                     _out->push_back(static_cast<uint8_t>(_cur_node->value));
@@ -517,14 +517,14 @@ static void CreateStaticTableOrDie() {
     options.need_indexes = true;
     s_static_table = new IndexTable;
     if (s_static_table->Init(options) != 0) {
-        LOG(ERROR) << "Fail to init static table";
+        FLARE_LOG(ERROR) << "Fail to init static table";
         exit(1);
     }
 }
 
 static void CreateStaticTableOnceOrDie() {
     if (pthread_once(&s_create_once, CreateStaticTableOrDie) != 0) {
-        PLOG(ERROR) << "Fail to pthread_once";
+        FLARE_PLOG(ERROR) << "Fail to pthread_once";
         exit(1);
     }
 }
@@ -559,7 +559,7 @@ inline ssize_t DecodeInteger(flare::cord_buf_bytes_iterator& iter,
     } while ((cur_byte & 0x80) && (tmp < MAX_HPACK_INTEGER));
 
     if (tmp >= MAX_HPACK_INTEGER) {
-        LOG(ERROR) << "Source stream is likely malformed";
+        FLARE_LOG(ERROR) << "Source stream is likely malformed";
         return -1;
     }
 
@@ -656,15 +656,15 @@ HPacker::~HPacker() {
 }
 
 int HPacker::Init(size_t max_table_size) {
-    CHECK(!_encode_table);
-    CHECK(!_decode_table);
+    FLARE_CHECK(!_encode_table);
+    FLARE_CHECK(!_decode_table);
     IndexTableOptions encode_table_options;
     encode_table_options.max_size = max_table_size;
     encode_table_options.start_index = s_static_table->end_index();
     encode_table_options.need_indexes = true;
     _encode_table = new IndexTable;
     if (_encode_table->Init(encode_table_options) != 0) {
-        LOG(ERROR) << "Fail to init encode table";
+        FLARE_LOG(ERROR) << "Fail to init encode table";
         return -1;
     }
     IndexTableOptions decode_table_options;
@@ -673,7 +673,7 @@ int HPacker::Init(size_t max_table_size) {
     decode_table_options.need_indexes = false;
     _decode_table = new IndexTable;
     if (_decode_table->Init(decode_table_options) != 0) {
-        LOG(ERROR) << "Fail to init decode table";
+        FLARE_LOG(ERROR) << "Fail to init decode table";
         return -1;
     }
     return 0;
@@ -740,27 +740,27 @@ inline ssize_t HPacker::DecodeWithKnownPrefix(
     ssize_t index_bytes = DecodeInteger(iter, prefix_size, (uint32_t*)&index);
     ssize_t name_bytes = 0;
     if (index_bytes <= 0) {
-        LOG(ERROR) << "Fail to decode index";
+        FLARE_LOG(ERROR) << "Fail to decode index";
         return -1;
     }
     if (index != 0) {
         const Header* indexed_header = HeaderAt(index);
         if (indexed_header == NULL) {
-            LOG(ERROR) << "No header at index=" << index;
+            FLARE_LOG(ERROR) << "No header at index=" << index;
             return -1;
         }
         h->name = indexed_header->name;
     } else {
         name_bytes = DecodeString(iter, &h->name);
         if (name_bytes <= 0) {
-            LOG(ERROR) << "Fail to decode name";
+            FLARE_LOG(ERROR) << "Fail to decode name";
             return -1;
         }
         tolower(&h->name);
     }
     ssize_t value_bytes = DecodeString(iter, &h->value);
     if (value_bytes <= 0) {
-        LOG(ERROR) << "Fail to decode value";
+        FLARE_LOG(ERROR) << "Fail to decode value";
         return -1;
     }
     return index_bytes + name_bytes + value_bytes;
@@ -791,7 +791,7 @@ ssize_t HPacker::Decode(flare::cord_buf_bytes_iterator& iter, Header* h) {
             }
             const Header* indexed_header = HeaderAt(index);
             if (indexed_header == NULL) {
-                LOG(ERROR) << "No header at index=" << index;
+                FLARE_LOG(ERROR) << "No header at index=" << index;
                 return -1;
             }
             *h = *indexed_header;
@@ -824,7 +824,7 @@ ssize_t HPacker::Decode(flare::cord_buf_bytes_iterator& iter, Header* h) {
                 return read_bytes;
             }
             if (max_size > H2Settings::DEFAULT_HEADER_TABLE_SIZE) {
-                LOG(ERROR) << "Invalid max_size=" << max_size;
+                FLARE_LOG(ERROR) << "Invalid max_size=" << max_size;
                 return -1;
             }
             _decode_table->ResetMaxSize(max_size);
@@ -841,7 +841,7 @@ ssize_t HPacker::Decode(flare::cord_buf_bytes_iterator& iter, Header* h) {
         return DecodeWithKnownPrefix(iter, h, 4);
         // TODO: Expose NeverIndex to the caller.
     default:
-        CHECK(false) << "Can't reach here";
+        FLARE_CHECK(false) << "Can't reach here";
         return -1;
     }
 }

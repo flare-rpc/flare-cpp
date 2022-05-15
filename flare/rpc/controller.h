@@ -498,7 +498,7 @@ public:
     const flare::cord_buf& response_attachment() const { return _response_attachment; }
 
     // Get the object to write key/value which will be flushed into
-    // LOG(INFO) when this controller is deleted.
+    // FLARE_LOG(INFO) when this controller is deleted.
     KVMap& SessionKV();
     
     // Flush SessionKV() into `os'
@@ -832,7 +832,7 @@ std::ostream& operator<<(std::ostream& os, const Controller::LogPrefixDummy& p);
 // and eases debugging. The REQUEST_ID is carried in http/rpc request or 
 // inherited from another controller.
 // As a server:
-//   Call CLOG*(cntl) << ... to log instead of LOG(*) << ..
+//   Call CLOG*(cntl) << ... to log instead of FLARE_LOG(*) << ..
 // As a client:
 //   Inside a service:
 //     Use Controller(service_cntl->inheritable()) to create controllers which 
@@ -841,11 +841,11 @@ std::ostream& operator<<(std::ostream& os, const Controller::LogPrefixDummy& p);
 //     Set cntl->set_request_id(REQUEST_ID);
 //   Standalone http client:
 //     Set header 'X-REQUEST-ID'
-#define CLOGD(cntl) LOG(DEBUG) << (cntl)->LogPrefix()
-#define CLOGI(cntl) LOG(INFO) << (cntl)->LogPrefix()
-#define CLOGW(cntl) LOG(WARNING) << (cntl)->LogPrefix()
-#define CLOGE(cntl) LOG(ERROR) << (cntl)->LogPrefix()
-#define CLOGF(cntl) LOG(FATAL) << (cntl)->LogPrefix()
-#define CVLOG(v, cntl) VLOG(v) << (cntl)->LogPrefix()
+#define CLOGD(cntl) FLARE_LOG(DEBUG) << (cntl)->LogPrefix()
+#define CLOGI(cntl) FLARE_LOG(INFO) << (cntl)->LogPrefix()
+#define CLOGW(cntl) FLARE_LOG(WARNING) << (cntl)->LogPrefix()
+#define CLOGE(cntl) FLARE_LOG(ERROR) << (cntl)->LogPrefix()
+#define CLOGF(cntl) FLARE_LOG(FATAL) << (cntl)->LogPrefix()
+#define CVLOG(v, cntl) FLARE_VLOG(v) << (cntl)->LogPrefix()
 
 #endif  // FLARE_RPC_CONTROLLER_H_

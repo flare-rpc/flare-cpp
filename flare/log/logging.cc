@@ -149,9 +149,9 @@ namespace flare::log {
     }
 
 
-    // Safely get max_log_size, overriding to 1 if it somehow gets defined as 0
+    // Safely get flare_max_log_size, overriding to 1 if it somehow gets defined as 0
     static int32_t MaxLogSize() {
-        return (FLAGS_max_log_size > 0 && FLAGS_max_log_size < 4096 ? FLAGS_max_log_size : 1);
+        return (FLAGS_flare_max_log_size > 0 && FLAGS_flare_max_log_size < 4096 ? FLAGS_flare_max_log_size : 1);
     }
 
     // An arbitrary limit on the length of a single log message.  This
@@ -179,8 +179,8 @@ namespace flare::log {
         size_t num_prefix_chars_;     // # of chars of prefix in this message
         size_t num_chars_to_log_;     // # of chars of msg to send to log
         size_t num_chars_to_syslog_;  // # of chars of msg to send to syslog
-        const char *basename_;        // basename of file that called LOG
-        const char *fullname_;        // fullname of file that called LOG
+        const char *basename_;        // basename of file that called FLARE_LOG
+        const char *fullname_;        // fullname of file that called FLARE_LOG
         bool has_been_flushed_;       // false => data has not been flushed
         bool first_fatal_;            // true => this was first fatal msg
 
@@ -498,8 +498,8 @@ namespace flare::log {
 
     inline void log_destination::set_log_symlink(log_severity severity,
                                                  const char *symlink_basename) {
-        CHECK_GE(severity, 0);
-        CHECK_LT(severity, NUM_SEVERITIES);
+        FLARE_CHECK_GE(severity, 0);
+        FLARE_CHECK_LT(severity, NUM_SEVERITIES);
         std::unique_lock<std::mutex> l(log_mutex);
         get_log_destination(severity)->fileobject_.set_symlink_basename(symlink_basename);
     }
@@ -542,7 +542,7 @@ namespace flare::log {
         // Prevent any subtle race conditions by wrapping a mutex lock around
         // all this stuff.
         std::unique_lock<std::mutex> l(log_mutex);
-        FLAGS_stderrthreshold = min_severity;
+        FLAGS_flare_stderrthreshold = min_severity;
     }
 
     inline void log_destination::log_to_stderr() {
@@ -567,7 +567,7 @@ namespace flare::log {
     static void colored_write_to_stderr(log_severity severity,
                                         const char *message, size_t len) {
         const log_color color =
-                (log_destination::terminal_supports_color() && FLAGS_colorlogtostderr) ?
+                (log_destination::terminal_supports_color() && FLAGS_flare_colorlogtostderr) ?
                 SeverityToColor(severity) : COLOR_DEFAULT;
 
         // Avoid using cerr from this module since we may get called during
@@ -589,7 +589,7 @@ namespace flare::log {
 
     inline void log_destination::maybe_log_to_stderr(log_severity severity,
                                                      const char *message, size_t message_len, size_t prefix_len) {
-        if ((severity >= FLAGS_stderrthreshold) || FLAGS_alsologtostderr) {
+        if ((severity >= FLAGS_flare_stderrthreshold) || FLAGS_flare_also_logtostderr) {
             colored_write_to_stderr(severity, message, message_len);
         }
     }
@@ -598,22 +598,22 @@ namespace flare::log {
     inline void log_destination::maybe_log_to_email(log_severity severity,
                                                     const char *message, size_t len) {
         if (severity >= email_logging_severity_ ||
-            severity >= FLAGS_logemaillevel) {
-            std::string to(FLAGS_alsologtoemail);
+            severity >= FLAGS_flare_log_email_level) {
+            std::string to(FLAGS_flare_also_log_to_email);
             if (!addresses_.empty()) {
                 if (!to.empty()) {
                     to += ",";
                 }
                 to += addresses_;
             }
-            const string subject(string("[LOG] ") + log_severity_names[severity] + ": " +
-                                 log_internal::ProgramInvocationShortName());
+            const string subject(string("[FLARE_LOG] ") + log_severity_names[severity] + ": " +
+                                 log_internal::program_invocation_short_name());
             string body(hostname());
             body += "\n\n";
             body.append(message, len);
 
             // should NOT use SendEmail().  The caller of this function holds the
-            // log_mutex and SendEmail() calls LOG/VLOG which will block trying to
+            // log_mutex and SendEmail() calls FLARE_LOG/FLARE_VLOG which will block trying to
             // acquire the log_mutex object.  Use SendEmailInternal() and set
             // use_logging to false.
             SendEmailInternal(to.c_str(), subject.c_str(), body.c_str(), false);
@@ -625,7 +625,7 @@ namespace flare::log {
                                                       time_t timestamp,
                                                       const char *message,
                                                       size_t len) {
-        const bool should_flush = severity > FLAGS_logbuflevel;
+        const bool should_flush = severity > FLAGS_flare_logbuflevel;
         log_destination *destination = get_log_destination(severity);
         destination->logger_->write(should_flush, timestamp, message, len);
     }
@@ -635,7 +635,7 @@ namespace flare::log {
                                                      const char *message,
                                                      size_t len) {
 
-        if (FLAGS_logtostderr) {           // global flag: never log to file
+        if (FLAGS_flare_logtostderr) {           // global flag: never log to file
             colored_write_to_stderr(severity, message, len);
         } else {
             for (int i = severity; i >= 0; --i)
@@ -716,7 +716,7 @@ namespace flare::log {
                                          const char *base_filename)
                 : base_filename_selected_(base_filename != NULL),
                   base_filename_((base_filename != NULL) ? base_filename : ""),
-                  symlink_basename_(log_internal::ProgramInvocationShortName()),
+                  symlink_basename_(log_internal::program_invocation_short_name()),
                   filename_extension_(),
                   file_(NULL),
                   severity_(severity),
@@ -781,31 +781,31 @@ namespace flare::log {
                 bytes_since_flush_ = 0;
             }
             // Figure out when we are due for another flush.
-            const flare::duration next = flare::duration::seconds(FLAGS_logbufsecs);  // in usec
+            const flare::duration next = flare::duration::seconds(FLAGS_flare_logbufsecs);  // in usec
             next_flush_time_ = flare::time_now() + next;
         }
 
         bool log_file_object::create_logfile(const string &time_pid_string) {
             string string_filename = base_filename_;
-            if (FLAGS_timestamp_in_logfile_name) {
+            if (FLAGS_flare_timestamp_in_logfile_name) {
                 string_filename += time_pid_string;
             }
             string_filename += filename_extension_;
             const char *filename = string_filename.c_str();
             //only write to files, create if non-existant.
             int flags = O_WRONLY | O_CREAT;
-            if (FLAGS_timestamp_in_logfile_name) {
+            if (FLAGS_flare_timestamp_in_logfile_name) {
                 //demand that the file is unique for our timestamp (fail if it exists).
                 flags = flags | O_EXCL;
             }
-            int fd = open(filename, flags, FLAGS_logfile_mode);
+            int fd = open(filename, flags, FLAGS_flare_logfile_mode);
             if (fd == -1) return false;
 #ifdef HAVE_FCNTL
             // Mark the file close-on-exec. We don't really care if this fails
       fcntl(fd, F_SETFD, FD_CLOEXEC);
 
       // Mark the file as exclusive write access to avoid two clients logging to the
-      // same file. This applies particularly when !FLAGS_timestamp_in_logfile_name
+      // same file. This applies particularly when !FLAGS_flare_timestamp_in_logfile_name
       // (otherwise open would fail because the O_EXCL flag on similar filename).
       // locks are released on unlock or close() automatically, only after log is
       // released.
@@ -831,7 +831,7 @@ namespace flare::log {
             file_ = fdopen(fd, "a");  // Make a FILE*.
             if (file_ == NULL) {  // Man, we're screwed!
                 close(fd);
-                if (FLAGS_timestamp_in_logfile_name) {
+                if (FLAGS_flare_timestamp_in_logfile_name) {
                     unlink(filename);  // Erase the half-baked evidence: an unusable log file, only if we just created it.
                 }
                 return false;
@@ -861,9 +861,9 @@ namespace flare::log {
                 }
 
                 // Make an additional link to the log file in a place specified by
-                // FLAGS_log_link, if indicated
-                if (!FLAGS_log_link.empty()) {
-                    linkpath = FLAGS_log_link + "/" + linkname;
+                // FLAGS_flare_log_link, if indicated
+                if (!FLAGS_flare_log_link.empty()) {
+                    linkpath = FLAGS_flare_log_link + "/" + linkname;
                     unlink(linkpath.c_str());                  // delete old one if it exists
                     if (symlink(filename, linkpath.c_str()) != 0) {
                         // silently ignore failures
@@ -902,7 +902,7 @@ namespace flare::log {
                 rollover_attempt_ = 0;
 
                 struct ::tm tm_time;
-                if (FLAGS_log_utc_time)
+                if (FLAGS_flare_log_utc_time)
                     gmtime_r(&timestamp, &tm_time);
                 else
                     localtime_r(&timestamp, &tm_time);
@@ -941,11 +941,11 @@ namespace flare::log {
                     // Where does the file get put?  Successively try the directories
                     // "/tmp", and "."
                     string stripped_filename(
-                            log_internal::ProgramInvocationShortName());
+                            log_internal::program_invocation_short_name());
                     string hostname = flare::base::get_host_name();
 
                     string uidname = flare::base::user_name();
-                    // We should not call CHECK() here because this function can be
+                    // We should not call FLARE_CHECK() here because this function can be
                     // called after holding on to log_mutex. We don't want to
                     // attempt to hold on to the same mutex, and get into a
                     // deadlock. Simply use a name like invalid-user.
@@ -988,7 +988,7 @@ namespace flare::log {
                                    << ' '
                                    << setw(2) << tm_time.tm_hour << ':'
                                    << setw(2) << tm_time.tm_min << ':'
-                                   << setw(2) << tm_time.tm_sec << (FLAGS_log_utc_time ? " UTC\n" : "\n")
+                                   << setw(2) << tm_time.tm_sec << (FLAGS_flare_log_utc_time ? " UTC\n" : "\n")
                                    << "Running on machine: "
                                    << log_destination::hostname() << '\n';
 
@@ -1009,7 +1009,7 @@ namespace flare::log {
                 bytes_since_flush_ += header_len;
             }
 
-            // Write to LOG file
+            // Write to FLARE_LOG file
             if (!stop_writing) {
                 // fwrite() doesn't return an error when the disk is full, for
                 // messages that are less than 4096 bytes. When the disk is full,
@@ -1018,7 +1018,7 @@ namespace flare::log {
                 // greater than 4096, thereby indicating an error.
                 errno = 0;
                 fwrite(message, 1, message_len, file_);
-                if (FLAGS_stop_logging_if_full_disk &&
+                if (FLAGS_flare_stop_logging_if_full_disk &&
                     errno == ENOSPC) {  // disk full, stop writing to disk
                     stop_writing = true;  // until the disk is
                     return;
@@ -1033,7 +1033,7 @@ namespace flare::log {
             }
 
             // See important msgs *now*.  Also, flush logs at least every 10^6 chars,
-            // or every "FLAGS_logbufsecs" seconds.
+            // or every "FLAGS_flare_logbufsecs" seconds.
             if (force_flush ||
                 (bytes_since_flush_ >= 1000000) ||
                 (flare::time_now() >= next_flush_time_)) {
@@ -1237,9 +1237,9 @@ namespace flare::log {
 
     }  // namespace
 
-// Static log data space to avoid alloc failures in a LOG(FATAL)
+// Static log data space to avoid alloc failures in a FLARE_LOG(FATAL)
 //
-// Since multiple threads may call LOG(FATAL), and we want to preserve
+// Since multiple threads may call FLARE_LOG(FATAL), and we want to preserve
 // the data from the first call, we allocate two sets of space.  One
 // for exclusive use by the first thread, and one for shared use by
 // all other threads.
@@ -1313,7 +1313,7 @@ namespace flare::log {
                            log_severity severity,
                            void (log_message::*send_method)()) {
         allocated_ = NULL;
-        if (severity != FLARE_FATAL || !FLAGS_crash_on_fatal_log) {
+        if (severity != FLARE_FATAL || !FLAGS_flare_crash_on_fatal_log) {
             // No need for locking, because this is thread local.
             if (thread_data_available) {
                 thread_data_available = false;
@@ -1344,7 +1344,7 @@ namespace flare::log {
         data_->outvec_ = NULL;
         auto tv = flare::time_now().to_timeval();
         data_->timestamp_ = static_cast<time_t>(tv.tv_sec);
-        if (FLAGS_log_utc_time)
+        if (FLAGS_flare_log_utc_time)
             gmtime_r(&data_->timestamp_, &data_->tm_time_);
         else
             localtime_r(&data_->timestamp_, &data_->tm_time_);
@@ -1360,7 +1360,7 @@ namespace flare::log {
         //    I20201018 160715 f5d4fbb0 logging.cc:1153]
         //    (log level, GMT year, month, date, time, thread_id, file basename, line)
         // We exclude the thread_id for the default thread.
-        if (FLAGS_log_prefix && (line != kNoLogPrefix)) {
+        if (FLAGS_flare_log_prefix && (line != kNoLogPrefix)) {
             stream() << log_severity_names[severity][0]
                      << setw(4) << 1900 + data_->tm_time_.tm_year
                      << setw(2) << 1 + data_->tm_time_.tm_mon
@@ -1378,13 +1378,13 @@ namespace flare::log {
         }
         data_->num_prefix_chars_ = data_->stream_.pcount();
 
-        if (!FLAGS_log_backtrace_at.empty()) {
+        if (!FLAGS_flarelog_backtrace_at.empty()) {
             char fileline[128];
             snprintf(fileline, sizeof(fileline), "%s:%d", data_->basename_, line);
 #ifdef HAVE_STACKTRACE
-            if (!strcmp(FLAGS_log_backtrace_at.c_str(), fileline)) {
+            if (!strcmp(FLAGS_flarelog_backtrace_at.c_str(), fileline)) {
                 string stacktrace;
-                DumpStackTraceToString(&stacktrace);
+                dump_stack_trace_to_string(&stacktrace);
                 stream() << " (stacktrace:\n" << stacktrace << ") ";
             }
 #endif
@@ -1429,7 +1429,7 @@ namespace flare::log {
     // Flush buffered message, called by the destructor, or any other function
     // that needs to synchronize the log.
     void log_message::flush() {
-        if (data_->has_been_flushed_ || data_->severity_ < FLAGS_minloglevel)
+        if (data_->has_been_flushed_ || data_->severity_ < FLAGS_flare_minloglevel)
             return;
 
         data_->num_chars_to_log_ = data_->stream_.pcount();
@@ -1496,7 +1496,7 @@ namespace flare::log {
     void reprint_fatal_message() {
         if (fatal_message[0]) {
             const int n = strlen(fatal_message);
-            if (!FLAGS_logtostderr) {
+            if (!FLAGS_flare_logtostderr) {
                 // Also write to stderr (don't color to avoid terminal checks)
                 write_to_stderr(fatal_message, n);
             }
@@ -1508,12 +1508,12 @@ namespace flare::log {
     void log_message::send_to_log() EXCLUSIVE_LOCKS_REQUIRED(log_mutex) {
         static bool already_warned_before_initgoogle = false;
 
-        RAW_DCHECK(data_->num_chars_to_log_ > 0 &&
+        FLARE_RAW_DCHECK(data_->num_chars_to_log_ > 0 &&
                    data_->message_text_[data_->num_chars_to_log_ - 1] == '\n', "");
 
         // Messages of a given severity get logged to lower severity logs, too
 
-        if (!already_warned_before_initgoogle && !IsGoogleLoggingInitialized()) {
+        if (!already_warned_before_initgoogle && !is_logging_initialized()) {
             const char w[] = "WARNING: Logging before init_logging() is "
                              "written to STDERR\n";
             write_to_stderr(w, strlen(w));
@@ -1523,7 +1523,7 @@ namespace flare::log {
         // global flag: never log to file if set.  Also -- don't log to a
         // file if we haven't parsed the command line flags to get the
         // program name.
-        if (FLAGS_logtostderr || !IsGoogleLoggingInitialized()) {
+        if (FLAGS_flare_logtostderr || !is_logging_initialized()) {
             colored_write_to_stderr(data_->severity_,
                                     data_->message_text_, data_->num_chars_to_log_);
 
@@ -1560,12 +1560,12 @@ namespace flare::log {
         // If we log a FATAL message, flush all the log destinations, then toss
         // a signal for others to catch. We leave the logs in a state that
         // someone else can use them (as long as they flush afterwards)
-        if (data_->severity_ == FLARE_FATAL && FLAGS_crash_on_fatal_log) {
+        if (data_->severity_ == FLARE_FATAL && FLAGS_flare_crash_on_fatal_log) {
             if (data_->first_fatal_) {
                 // Store crash information so that it is accessible from within signal
                 // handlers that may be invoked later.
                 record_crash_reason(&crash_reason);
-                SetCrashReason(&crash_reason);
+                set_crash_reason(&crash_reason);
 
                 // Store shortened fatal message for other logs and GWQ status
                 const int copy = min<int>(data_->num_chars_to_log_,
@@ -1575,7 +1575,7 @@ namespace flare::log {
                 fatal_time = data_->timestamp_;
             }
 
-            if (!FLAGS_logtostderr) {
+            if (!FLAGS_flare_logtostderr) {
                 for (int i = 0; i < NUM_SEVERITIES; ++i) {
                     if (log_destination::log_destinations_[i])
                         log_destination::log_destinations_[i]->logger_->write(true, 0, "", 0);
@@ -1622,7 +1622,7 @@ namespace flare::log {
     static void logging_fail() ATTRIBUTE_NORETURN;
 
     static void logging_fail() {
-        if (FLAGS_crash_on_fatal_log) {
+        if (FLAGS_flare_crash_on_fatal_log) {
             abort();
         }
     }
@@ -1642,7 +1642,7 @@ namespace flare::log {
 // L >= log_mutex (callers must hold the log_mutex).
     void log_message::send_to_sink() EXCLUSIVE_LOCKS_REQUIRED(log_mutex) {
         if (data_->sink_ != NULL) {
-            RAW_DCHECK(data_->num_chars_to_log_ > 0 &&
+            FLARE_RAW_DCHECK(data_->num_chars_to_log_ > 0 &&
                        data_->message_text_[data_->num_chars_to_log_ - 1] == '\n', "");
             data_->sink_->send(data_->severity_, data_->fullname_, data_->basename_,
                                data_->line_, &data_->tm_time_,
@@ -1662,7 +1662,7 @@ namespace flare::log {
 // L >= log_mutex (callers must hold the log_mutex).
     void log_message::save_or_send_to_log() EXCLUSIVE_LOCKS_REQUIRED(log_mutex) {
         if (data_->outvec_ != NULL) {
-            RAW_DCHECK(data_->num_chars_to_log_ > 0 &&
+            FLARE_RAW_DCHECK(data_->num_chars_to_log_ > 0 &&
                        data_->message_text_[data_->num_chars_to_log_ - 1] == '\n', "");
             // Omit prefix of message and trailing newline when recording in outvec_.
             const char *start = data_->message_text_ + data_->num_prefix_chars_;
@@ -1675,7 +1675,7 @@ namespace flare::log {
 
     void log_message::write_to_string_and_log() EXCLUSIVE_LOCKS_REQUIRED(log_mutex) {
         if (data_->message_ != NULL) {
-            RAW_DCHECK(data_->num_chars_to_log_ > 0 &&
+            FLARE_RAW_DCHECK(data_->num_chars_to_log_ > 0 &&
                        data_->message_text_[data_->num_chars_to_log_ - 1] == '\n', "");
             // Omit prefix of message and trailing newline when writing to message_.
             const char *start = data_->message_text_ + data_->num_prefix_chars_;
@@ -1690,7 +1690,7 @@ namespace flare::log {
         // Before any calls to syslog(), make a single call to openlog()
         static bool openlog_already_called = false;
         if (!openlog_already_called) {
-            openlog(log_internal::ProgramInvocationShortName(),
+            openlog(log_internal::program_invocation_short_name(),
                     LOG_CONS | LOG_NDELAY | LOG_PID,
                     LOG_USER);
             openlog_already_called = true;
@@ -1728,7 +1728,7 @@ namespace flare::log {
 #else
         log_message::log_stream *log = dynamic_cast<log_message::log_stream *>(&os);
 #endif
-        CHECK(log && log == log->self())
+        FLARE_CHECK(log && log == log->self())
                         << "You must not use COUNTER with non-log ostream";
         os << log->ctr();
         return os;
@@ -1854,28 +1854,28 @@ namespace flare::log {
     }
 
 
-    // use_logging controls whether the logging functions LOG/VLOG are used
+    // use_logging controls whether the logging functions FLARE_LOG/FLARE_VLOG are used
     // to log errors.  It should be set to false when the caller holds the
     // log_mutex.
     static bool SendEmailInternal(const char *dest, const char *subject,
                                   const char *body, bool use_logging) {
         if (dest && *dest) {
             if (use_logging) {
-                VLOG(1) << "Trying to send TITLE:" << subject
+                FLARE_VLOG(1) << "Trying to send TITLE:" << subject
                         << " BODY:" << body << " to " << dest;
             } else {
                 fprintf(stderr, "Trying to send TITLE: %s BODY: %s to %s\n",
                         subject, body, dest);
             }
 
-            std::string logmailer = FLAGS_logmailer;
-            if (logmailer.empty()) {
-                logmailer = "/bin/mail";
+            std::string flare_log_mailer = FLAGS_flare_log_mailer;
+            if (flare_log_mailer.empty()) {
+                flare_log_mailer = "/bin/mail";
             }
             std::string cmd =
-                    logmailer + " -s" +
+                    flare_log_mailer + " -s" +
                     ShellEscape(subject) + " " + ShellEscape(dest);
-            VLOG(4) << "Mailing command: " << cmd;
+            FLARE_VLOG(4) << "Mailing command: " << cmd;
 
             FILE *pipe = popen(cmd.c_str(), "w");
             if (pipe != NULL) {
@@ -1885,7 +1885,7 @@ namespace flare::log {
                 bool ok = pclose(pipe) != -1;
                 if (!ok) {
                     if (use_logging) {
-                        LOG(ERROR) << "Problems sending mail to " << dest << ": "
+                        FLARE_LOG(ERROR) << "Problems sending mail to " << dest << ": "
                                    << StrError(errno);
                     } else {
                         fprintf(stderr, "Problems sending mail to %s: %s\n",
@@ -1895,7 +1895,7 @@ namespace flare::log {
                 return ok;
             } else {
                 if (use_logging) {
-                    LOG(ERROR) << "Unable to send mail to " << dest;
+                    FLARE_LOG(ERROR) << "Unable to send mail to " << dest;
                 } else {
                     fprintf(stderr, "Unable to send mail to %s\n", dest);
                 }
@@ -1949,9 +1949,9 @@ namespace flare::log {
         if (logging_directories_list == NULL) {
             logging_directories_list = new vector<string>;
 
-            if (!FLAGS_log_dir.empty()) {
+            if (!FLAGS_flare_log_dir.empty()) {
                 // A dir was specified, we should use it
-                logging_directories_list->push_back(FLAGS_log_dir.c_str());
+                logging_directories_list->push_back(FLAGS_flare_log_dir.c_str());
             } else {
                 GetTempDirectories(logging_directories_list);
                 logging_directories_list->push_back("./");
@@ -2004,18 +2004,18 @@ namespace flare::log {
                 // rather scary.
                 // Instead just truncate the file to something we can manage
                 if (truncate(path, 0) == -1) {
-                    PLOG(ERROR) << "Unable to truncate " << path;
+                    FLARE_PLOG(ERROR) << "Unable to truncate " << path;
                 } else {
-                    LOG(ERROR) << "Truncated " << path << " due to EFBIG error";
+                    FLARE_LOG(ERROR) << "Truncated " << path << " due to EFBIG error";
                 }
             } else {
-                PLOG(ERROR) << "Unable to open " << path;
+                FLARE_PLOG(ERROR) << "Unable to open " << path;
             }
             return;
         }
 
         if (fstat(fd, &statbuf) == -1) {
-            PLOG(ERROR) << "Unable to fstat()";
+            FLARE_PLOG(ERROR) << "Unable to fstat()";
             goto out_close_fd;
         }
 
@@ -2026,7 +2026,7 @@ namespace flare::log {
         if (statbuf.st_size <= keep) goto out_close_fd;
 
         // This log file is too large - we need to truncate it
-        LOG(INFO) << "Truncating " << path << " to " << keep << " bytes";
+        FLARE_LOG(INFO) << "Truncating " << path << " to " << keep << " bytes";
 
         // Copy the last "keep" bytes of the file to the beginning of the file
         read_offset = statbuf.st_size - keep;
@@ -2035,21 +2035,21 @@ namespace flare::log {
         while ((bytesin = ::pread(fd, copybuf, sizeof(copybuf), read_offset)) > 0) {
             bytesout = pwrite(fd, copybuf, bytesin, write_offset);
             if (bytesout == -1) {
-                PLOG(ERROR) << "Unable to write to " << path;
+                FLARE_PLOG(ERROR) << "Unable to write to " << path;
                 break;
             } else if (bytesout != bytesin) {
-                LOG(ERROR) << "Expected to write " << bytesin << ", wrote " << bytesout;
+                FLARE_LOG(ERROR) << "Expected to write " << bytesin << ", wrote " << bytesout;
             }
             read_offset += bytesin;
             write_offset += bytesout;
         }
-        if (bytesin == -1) PLOG(ERROR) << "Unable to read from " << path;
+        if (bytesin == -1) FLARE_PLOG(ERROR) << "Unable to read from " << path;
 
         // Truncate the remainder of the file. If someone else writes to the
         // end of the file after our last read() above, we lose their latest
         // data. Too bad ...
         if (ftruncate(fd, write_offset) == -1) {
-            PLOG(ERROR) << "Unable to truncate " << path;
+            FLARE_PLOG(ERROR) << "Unable to truncate " << path;
         }
 
         out_close_fd:
@@ -2216,11 +2216,11 @@ namespace flare::log {
     }
 
     void init_logging(const char *argv0) {
-        log_internal::InitGoogleLoggingUtilities(argv0);
+        log_internal::init_logging_utilities(argv0);
     }
 
     void shutdown_logging() {
-        log_internal::ShutdownGoogleLoggingUtilities();
+        log_internal::shutdown_logging_utilities();
         log_destination::delete_log_destinations();
         delete logging_directories_list;
         logging_directories_list = NULL;
@@ -2241,7 +2241,7 @@ namespace flare::log {
 #include <vector>
 
 namespace flare::internal::logging {
-
+/*
     namespace {
 
         std::vector<PrefixAppender *> *GetProviders() {
@@ -2266,6 +2266,6 @@ namespace flare::internal::logging {
             }
         }
     }
-
+*/
 }  // namespace flare::internal::logging
 

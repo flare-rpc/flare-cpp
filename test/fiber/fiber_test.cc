@@ -46,11 +46,11 @@ namespace {
     };
 
     TEST_F(FiberTest, sizeof_task_meta) {
-        LOG(INFO) << "sizeof(fiber_entity)=" << sizeof(flare::fiber_internal::fiber_entity);
+        FLARE_LOG(INFO) << "sizeof(fiber_entity)=" << sizeof(flare::fiber_internal::fiber_entity);
     }
 
     void *unrelated_pthread(void *) {
-        LOG(INFO) << "I did not call any fiber function, "
+        FLARE_LOG(INFO) << "I did not call any fiber function, "
                      "I should begin and end without any problem";
         return (void *) (intptr_t) 1;
     }
@@ -104,14 +104,14 @@ namespace {
     std::atomic<bool> stop(false);
 
     void *sleep_for_awhile(void *arg) {
-        LOG(INFO) << "sleep_for_awhile(" << arg << ")";
+        FLARE_LOG(INFO) << "sleep_for_awhile(" << arg << ")";
         flare::fiber_sleep_for(100000L);
-        LOG(INFO) << "sleep_for_awhile(" << arg << ") wakes up";
+        FLARE_LOG(INFO) << "sleep_for_awhile(" << arg << ") wakes up";
         return nullptr;
     }
 
     void *just_exit(void *arg) {
-        LOG(INFO) << "just_exit(" << arg << ")";
+        FLARE_LOG(INFO) << "just_exit(" << arg << ")";
         fiber_exit(nullptr);
         EXPECT_TRUE(false) << "just_exit(" << arg << ") should never be here";
         return nullptr;
@@ -119,7 +119,7 @@ namespace {
 
     void *repeated_sleep(void *arg) {
         for (size_t i = 0; !stop; ++i) {
-            LOG(INFO) << "repeated_sleep(" << arg << ") i=" << i;
+            FLARE_LOG(INFO) << "repeated_sleep(" << arg << ") i=" << i;
             flare::fiber_sleep_for(1000000L);
         }
         return nullptr;
@@ -131,19 +131,19 @@ namespace {
         size_t i = 0;
         while (!stop) {
             if (every_1s) {
-                LOG(INFO) << "spin_and_log(" << arg << ")=" << i++;
+                FLARE_LOG(INFO) << "spin_and_log(" << arg << ")=" << i++;
             }
         }
         return nullptr;
     }
 
     void *do_nothing(void *arg) {
-        LOG(INFO) << "do_nothing(" << arg << ")";
+        FLARE_LOG(INFO) << "do_nothing(" << arg << ")";
         return nullptr;
     }
 
     void *launcher(void *arg) {
-        LOG(INFO) << "launcher(" << arg << ")";
+        FLARE_LOG(INFO) << "launcher(" << arg << ")";
         for (size_t i = 0; !stop; ++i) {
             fiber_id_t th;
             fiber_start_urgent(&th, nullptr, do_nothing, (void *) i);
@@ -157,13 +157,13 @@ namespace {
         // never yields CPU) is scheduled to main thread, main thread cannot get
         // to run again.
         flare::fiber_sleep_for(5 * 1000000L);
-        LOG(INFO) << "about to stop";
+        FLARE_LOG(INFO) << "about to stop";
         stop = true;
         return nullptr;
     }
 
     void *misc(void *arg) {
-        LOG(INFO) << "misc(" << arg << ")";
+        FLARE_LOG(INFO) << "misc(" << arg << ")";
         fiber_id_t th[8];
         EXPECT_EQ(0, fiber_start_urgent(&th[0], nullptr, sleep_for_awhile, (void *) 2));
         EXPECT_EQ(0, fiber_start_urgent(&th[1], nullptr, just_exit, (void *) 3));
@@ -180,10 +180,10 @@ namespace {
     }
 
     TEST_F(FiberTest, sanity) {
-        LOG(INFO) << "main thread " << pthread_self();
+        FLARE_LOG(INFO) << "main thread " << pthread_self();
         fiber_id_t th1;
         ASSERT_EQ(0, fiber_start_urgent(&th1, nullptr, misc, (void *) 1));
-        LOG(INFO) << "back to main thread " << th1 << " " << pthread_self();
+        FLARE_LOG(INFO) << "back to main thread " << th1 << " " << pthread_self();
         ASSERT_EQ(0, fiber_join(th1, nullptr));
     }
 
@@ -238,7 +238,7 @@ namespace {
 
     void *show_self(void *) {
         EXPECT_NE(0ul, fiber_self());
-        LOG(INFO) << "fiber_self=" << fiber_self();
+        FLARE_LOG(INFO) << "fiber_self=" << fiber_self();
         return nullptr;
     }
 
@@ -289,7 +289,7 @@ namespace {
             }
             flare::fiber_sleep_for(sleep_in_adding_func);
             if (t1) {
-                LOG(INFO) << "elapse is " << flare::get_current_time_micros() - t1 << "ns";
+                FLARE_LOG(INFO) << "elapse is " << flare::get_current_time_micros() - t1 << "ns";
             }
         } else {
             s->fetch_add(1);
@@ -331,7 +331,7 @@ namespace {
                 for (size_t i = 0; i < N; ++i) {
                     fiber_join(th[i], nullptr);
                 }
-                LOG(INFO) << "[Round " << j + 1 << "] fiber_start_urgent takes "
+                FLARE_LOG(INFO) << "[Round " << j + 1 << "] fiber_start_urgent takes "
                           << tm.n_elapsed() / N << "ns, sum=" << s;
                 ASSERT_EQ(N * (j + 1), (size_t) s);
 
@@ -423,7 +423,7 @@ namespace {
                 warmup = false;
             }
         }
-        LOG(INFO) << "start_urgent=" << elp1 / REP << "ns start_background="
+        FLARE_LOG(INFO) << "start_urgent=" << elp1 / REP << "ns start_background="
                   << elp2 / REP << "ns";
     }
 

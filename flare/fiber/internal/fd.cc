@@ -135,14 +135,14 @@ namespace flare::fiber_internal {
 #endif
             _start_mutex.unlock();
             if (_epfd < 0) {
-                PLOG(FATAL) << "Fail to epoll_create/kqueue";
+                FLARE_PLOG(FATAL) << "Fail to epoll_create/kqueue";
                 return -1;
             }
             if (fiber_start_background(
                     &_tid, NULL, EpollThread::run_this, this) != 0) {
                 close(_epfd);
                 _epfd = -1;
-                LOG(FATAL) << "Fail to create epoll fiber";
+                FLARE_LOG(FATAL) << "Fail to create epoll fiber";
                 return -1;
             }
             return 0;
@@ -169,7 +169,7 @@ namespace flare::fiber_internal {
             _stop = true;
             int closing_epoll_pipe[2];
             if (pipe(closing_epoll_pipe)) {
-                PLOG(FATAL) << "Fail to create closing_epoll_pipe";
+                FLARE_PLOG(FATAL) << "Fail to create closing_epoll_pipe";
                 return -1;
             }
 #if defined(FLARE_PLATFORM_LINUX)
@@ -182,14 +182,14 @@ namespace flare::fiber_internal {
                    0, 0, NULL);
             if (kevent(saved_epfd, &kqueue_event, 1, NULL, 0, NULL) < 0) {
 #endif
-                PLOG(FATAL) << "Fail to add closing_epoll_pipe into epfd="
+                FLARE_PLOG(FATAL) << "Fail to add closing_epoll_pipe into epfd="
                             << saved_epfd;
                 return -1;
             }
 
             const int rc = fiber_join(_tid, NULL);
             if (rc) {
-                LOG(FATAL) << "Fail to join EpollThread, " << flare_error(rc);
+                FLARE_LOG(FATAL) << "Fail to join EpollThread, " << flare_error(rc);
                 return -1;
             }
             close(closing_epoll_pipe[0]);
@@ -238,7 +238,7 @@ namespace flare::fiber_internal {
             if (epoll_ctl(_epfd, EPOLL_CTL_MOD, fd, &evt) < 0) {
                 if (epoll_ctl(_epfd, EPOLL_CTL_ADD, fd, &evt) < 0 &&
                         errno != EEXIST) {
-                    PLOG(FATAL) << "Fail to add fd=" << fd << " into epfd=" << _epfd;
+                    FLARE_PLOG(FATAL) << "Fail to add fd=" << fd << " into epfd=" << _epfd;
                     return -1;
                 }
             }
@@ -248,7 +248,7 @@ namespace flare::fiber_internal {
             evt.data.fd = fd;
             if (epoll_ctl(_epfd, EPOLL_CTL_ADD, fd, &evt) < 0 &&
                 errno != EEXIST) {
-                PLOG(FATAL) << "Fail to add fd=" << fd << " into epfd=" << _epfd;
+                FLARE_PLOG(FATAL) << "Fail to add fd=" << fd << " into epfd=" << _epfd;
                 return -1;
             }
 # endif
@@ -257,7 +257,7 @@ namespace flare::fiber_internal {
             EV_SET(&kqueue_event, fd, events, EV_ADD | EV_ENABLE | EV_ONESHOT,
                    0, 0, butex);
             if (kevent(_epfd, &kqueue_event, 1, NULL, 0, NULL) < 0) {
-                PLOG(FATAL) << "Fail to add fd=" << fd << " into kqueuefd=" << _epfd;
+                FLARE_PLOG(FATAL) << "Fail to add fd=" << fd << " into kqueuefd=" << _epfd;
                 return -1;
             }
 #endif
@@ -323,13 +323,13 @@ namespace flare::fiber_internal {
             struct kevent *e = new(std::nothrow) KEVENT[MAX_EVENTS];
 #endif
             if (NULL == e) {
-                LOG(FATAL) << "Fail to new epoll_event";
+                FLARE_LOG(FATAL) << "Fail to new epoll_event";
                 return NULL;
             }
 
 #if defined(FLARE_PLATFORM_LINUX)
 # ifndef BAIDU_KERNEL_FIXED_EPOLLONESHOT_BUG
-            DLOG(INFO) << "Use DEL+ADD instead of EPOLLONESHOT+MOD due to kernel bug. Performance will be much lower.";
+            FLARE_DLOG(INFO) << "Use DEL+ADD instead of EPOLLONESHOT+MOD due to kernel bug. Performance will be much lower.";
 # endif
 #endif
             while (!_stop) {
@@ -350,13 +350,13 @@ namespace flare::fiber_internal {
                         int* p = &errno;
                         const char* b = flare_error();
                         const char* b2 = flare_error(errno);
-                        DLOG(FATAL) << "Fail to epoll epfd=" << epfd << ", "
+                        FLARE_DLOG(FATAL) << "Fail to epoll epfd=" << epfd << ", "
                                     << errno << " " << p << " " <<  b << " " <<  b2;
 #endif
                         continue;
                     }
 
-                    PLOG(INFO) << "Fail to epoll epfd=" << epfd;
+                    FLARE_PLOG(INFO) << "Fail to epoll epfd=" << epfd;
                     break;
                 }
 
@@ -387,7 +387,7 @@ namespace flare::fiber_internal {
             }
 
             delete[] e;
-            DLOG(INFO) << "EpollThread=" << _tid << "(epfd="
+            FLARE_DLOG(INFO) << "EpollThread=" << _tid << "(epfd="
                        << initial_epfd << ") is about to stop";
             return NULL;
         }
@@ -433,7 +433,7 @@ namespace flare::fiber_internal {
                               EPOLLWRNORM | EPOLLWRBAND |
                               EPOLLMSG | EPOLLERR | EPOLLHUP));
         // nocheck always not equal
-      //  CHECK_EQ((uint32_t)poll_events, epoll_events);
+      //  FLARE_CHECK_EQ((uint32_t)poll_events, epoll_events);
         return poll_events;
     }
 #elif defined(FLARE_PLATFORM_OSX)
@@ -546,11 +546,11 @@ int fiber_connect(int sockfd, const sockaddr *serv_addr,
     int err;
     socklen_t errlen = sizeof(err);
     if (getsockopt(sockfd, SOL_SOCKET, SO_ERROR, &err, &errlen) < 0) {
-        PLOG(FATAL) << "Fail to getsockopt";
+        FLARE_PLOG(FATAL) << "Fail to getsockopt";
         return -1;
     }
     if (err != 0) {
-        CHECK(err != EINPROGRESS);
+        FLARE_CHECK(err != EINPROGRESS);
         errno = err;
         return -1;
     }

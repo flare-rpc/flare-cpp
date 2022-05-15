@@ -84,7 +84,7 @@ static void BuildHttpMethodMaps() {
     for (size_t i = 0; i < FLARE_ARRAY_SIZE(g_method_pairs); ++i) {
         char fc = g_method_pairs[i].str[0];
         if (fc < 'A' || fc > 'Z') {
-            LOG(ERROR) << "Invalid method_name=" << g_method_pairs[i].str;
+            FLARE_LOG(ERROR) << "Invalid method_name=" << g_method_pairs[i].str;
             abort();
         }
         if (fc != last_fc) {

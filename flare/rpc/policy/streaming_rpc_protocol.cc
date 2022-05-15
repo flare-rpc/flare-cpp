@@ -22,7 +22,7 @@
 #include <google/protobuf/message.h>            // Message
 #include <gflags/gflags.h>
 #include "flare/base/profile.h"
-#include "flare/log/logging.h"                       // LOG()
+#include "flare/log/logging.h"                       // FLARE_LOG()
 #include "flare/times/time.h"
 #include "flare/io/cord_buf.h"                         // flare::cord_buf
 #include "flare/io/raw_pack.h"                      // raw_packer raw_unpacker
@@ -52,7 +52,7 @@ void PackStreamMessage(flare::cord_buf* out,
         .pack32(meta_length);
     out->append(head, FLARE_ARRAY_SIZE(head));
     flare::cord_buf_as_zero_copy_output_stream wrapper(out);
-    CHECK(fm.SerializeToZeroCopyStream(&wrapper));
+    FLARE_CHECK(fm.SerializeToZeroCopyStream(&wrapper));
     if (data != NULL) {
         out->append(*data);
     }
@@ -84,7 +84,7 @@ ParseResult ParseStreamingMessage(flare::cord_buf* source,
         return MakeParseError(PARSE_ERROR_NOT_ENOUGH_DATA);
     }
     if (FLARE_UNLIKELY(meta_size > body_size)) {
-        LOG(ERROR) << "meta_size=" << meta_size << " is bigger than body_size="
+        FLARE_LOG(ERROR) << "meta_size=" << meta_size << " is bigger than body_size="
                    << body_size;
         // Pop the message
         source->pop_front(sizeof(header_buf) + body_size);
@@ -99,7 +99,7 @@ ParseResult ParseStreamingMessage(flare::cord_buf* source,
     do {
         StreamFrameMeta fm;
         if (!ParsePbFromCordBuf(&fm, meta_buf)) {
-            LOG(WARNING) << "Fail to Parse StreamFrameMeta from " << *socket;
+            FLARE_LOG(WARNING) << "Fail to Parse StreamFrameMeta from " << *socket;
             break;
         }
         SocketUniquePtr ptr;
@@ -122,11 +122,11 @@ ParseResult ParseStreamingMessage(flare::cord_buf* source,
 }
 
 void ProcessStreamingMessage(InputMessageBase* /*msg*/) {
-    CHECK(false) << "Should never be called";
+    FLARE_CHECK(false) << "Should never be called";
 }
 
 void SendStreamRst(Socket *sock, int64_t remote_stream_id) {
-    CHECK(sock != NULL);
+    FLARE_CHECK(sock != NULL);
     StreamFrameMeta fm;
     fm.set_stream_id(remote_stream_id);
     fm.set_frame_type(FRAME_TYPE_RST);
@@ -137,7 +137,7 @@ void SendStreamRst(Socket *sock, int64_t remote_stream_id) {
 
 void SendStreamClose(Socket *sock, int64_t remote_stream_id,
                      int64_t source_stream_id) {
-    CHECK(sock != NULL);
+    FLARE_CHECK(sock != NULL);
     StreamFrameMeta fm;
     fm.set_stream_id(remote_stream_id);
     fm.set_source_stream_id(source_stream_id);

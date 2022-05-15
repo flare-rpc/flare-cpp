@@ -150,7 +150,7 @@ void IndexService::default_method(::google::protobuf::RpcController* controller,
        << Path("/version", html_addr)
        << " : Version of this server, set by Server::set_version()" << NL
        << Path("/health", html_addr) << " : Test healthy" << NL
-       << Path("/vlog", html_addr) << " : List all VLOG callsites" << NL
+       << Path("/vlog", html_addr) << " : List all FLARE_VLOG callsites" << NL
        << Path("/sockets", html_addr) << " : Check status of a Socket" << NL
        << Path("/fibers", html_addr) << " : Check status of a fiber" << NL
        << Path("/token", html_addr) << " : Check status of a fiber_id" << NL

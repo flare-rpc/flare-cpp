@@ -391,7 +391,7 @@ TEST(HttpMessageTest, serialize_http_response) {
     MakeRawHttpResponse(&response, &header, &content);
     ASSERT_EQ("HTTP/1.1 200 OK\r\nContent-Length: 4\r\nFoo: Bar\r\n\r\ndata", response);
     // content is cleared.
-    CHECK(content.empty());
+    FLARE_CHECK(content.empty());
 
     // user-set content-length is ignored.
     content.append("data2");

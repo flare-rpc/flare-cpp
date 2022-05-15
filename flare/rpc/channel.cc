@@ -134,7 +134,7 @@ namespace flare::rpc {
         }
         const Protocol *protocol = FindProtocol(_options.protocol);
         if (NULL == protocol || !protocol->support_client()) {
-            LOG(ERROR) << "Channel does not support the protocol";
+            FLARE_LOG(ERROR) << "Channel does not support the protocol";
             return -1;
         }
         _serialize_request = protocol->serialize_request;
@@ -155,13 +155,13 @@ namespace flare::rpc {
                 _options.connection_type = CONNECTION_TYPE_SHORT;
             }
             if (has_error) {
-                LOG(ERROR) << "Channel=" << this << " chose connection_type="
+                FLARE_LOG(ERROR) << "Channel=" << this << " chose connection_type="
                            << _options.connection_type.name() << " for protocol="
                            << _options.protocol.name();
             }
         } else {
             if (!(_options.connection_type & protocol->supported_connection_type)) {
-                LOG(ERROR) << protocol->name << " does not support connection_type="
+                FLARE_LOG(ERROR) << protocol->name << " does not support connection_type="
                            << ConnectionTypeToString(_options.connection_type);
                 return -1;
             }
@@ -169,7 +169,7 @@ namespace flare::rpc {
 
         _preferred_index = get_client_side_messenger()->FindProtocolIndex(_options.protocol);
         if (_preferred_index < 0) {
-            LOG(ERROR) << "Fail to get index for protocol="
+            FLARE_LOG(ERROR) << "Fail to get index for protocol="
                        << _options.protocol.name();
             return -1;
         }
@@ -195,12 +195,12 @@ namespace flare::rpc {
         const AdaptiveProtocolType &ptype = (options ? options->protocol : _options.protocol);
         const Protocol *protocol = FindProtocol(ptype);
         if (protocol == NULL || !protocol->support_client()) {
-            LOG(ERROR) << "Channel does not support the protocol";
+            FLARE_LOG(ERROR) << "Channel does not support the protocol";
             return -1;
         }
         if (protocol->parse_server_address != NULL) {
             if (!protocol->parse_server_address(&point, server_addr_and_port)) {
-                LOG(ERROR) << "Fail to parse address=`" << server_addr_and_port << '\'';
+                FLARE_LOG(ERROR) << "Fail to parse address=`" << server_addr_and_port << '\'';
                 return -1;
             }
         } else {
@@ -209,11 +209,11 @@ namespace flare::rpc {
                 // Many users called the wrong Init(). Print some log to save
                 // our troubleshooting time.
                 if (strstr(server_addr_and_port, "://")) {
-                    LOG(ERROR) << "Invalid address=`" << server_addr_and_port
+                    FLARE_LOG(ERROR) << "Invalid address=`" << server_addr_and_port
                                << "'. Use Init(naming_service_name, "
                                   "load_balancer_name, options) instead.";
                 } else {
-                    LOG(ERROR) << "Invalid address=`" << server_addr_and_port << '\'';
+                    FLARE_LOG(ERROR) << "Invalid address=`" << server_addr_and_port << '\'';
                 }
                 return -1;
             }
@@ -228,19 +228,19 @@ namespace flare::rpc {
         const AdaptiveProtocolType &ptype = (options ? options->protocol : _options.protocol);
         const Protocol *protocol = FindProtocol(ptype);
         if (protocol == NULL || !protocol->support_client()) {
-            LOG(ERROR) << "Channel does not support the protocol";
+            FLARE_LOG(ERROR) << "Channel does not support the protocol";
             return -1;
         }
         if (protocol->parse_server_address != NULL) {
             if (!protocol->parse_server_address(&point, server_addr)) {
-                LOG(ERROR) << "Fail to parse address=`" << server_addr << '\'';
+                FLARE_LOG(ERROR) << "Fail to parse address=`" << server_addr << '\'';
                 return -1;
             }
             point.port = port;
         } else {
             if (str2endpoint(server_addr, port, &point) != 0 &&
                 hostname2endpoint(server_addr, port, &point) != 0) {
-                LOG(ERROR) << "Invalid address=`" << server_addr << '\'';
+                FLARE_LOG(ERROR) << "Invalid address=`" << server_addr << '\'';
                 return -1;
             }
         }
@@ -252,7 +252,7 @@ namespace flare::rpc {
         if (options.has_ssl_options()) {
             SSL_CTX *raw_ctx = CreateClientSSLContext(options.ssl_options());
             if (!raw_ctx) {
-                LOG(ERROR) << "Fail to CreateClientSSLContext";
+                FLARE_LOG(ERROR) << "Fail to CreateClientSSLContext";
                 return -1;
             }
             *ssl_ctx = std::make_shared<SocketSSLContext>();
@@ -290,7 +290,7 @@ namespace flare::rpc {
         }
         const int port = server_addr_and_port.port;
         if (port < 0 || port > 65535) {
-            LOG(ERROR) << "Invalid port=" << port;
+            FLARE_LOG(ERROR) << "Invalid port=" << port;
             return -1;
         }
         _server_address = server_addr_and_port;
@@ -301,7 +301,7 @@ namespace flare::rpc {
         }
         if (SocketMapInsert(SocketMapKey(server_addr_and_port, sig),
                             &_server_id, ssl_ctx) != 0) {
-            LOG(ERROR) << "Fail to insert into SocketMap";
+            FLARE_LOG(ERROR) << "Fail to insert into SocketMap";
             return -1;
         }
         return 0;
@@ -331,7 +331,7 @@ namespace flare::rpc {
         }
         LoadBalancerWithNaming *lb = new(std::nothrow) LoadBalancerWithNaming;
         if (NULL == lb) {
-            LOG(FATAL) << "Fail to new LoadBalancerWithNaming";
+            FLARE_LOG(FATAL) << "Fail to new LoadBalancerWithNaming";
             return -1;
         }
         GetNamingServiceThreadOptions ns_opt;
@@ -342,7 +342,7 @@ namespace flare::rpc {
             return -1;
         }
         if (lb->Init(ns_url, lb_name, _options.ns_filter, &ns_opt) != 0) {
-            LOG(ERROR) << "Fail to initialize LoadBalancerWithNaming";
+            FLARE_LOG(ERROR) << "Fail to initialize LoadBalancerWithNaming";
             delete lb;
             return -1;
         }
@@ -380,7 +380,7 @@ namespace flare::rpc {
         // HTTP needs this field to be set before any SetFailed()
         cntl->_request_protocol = _options.protocol;
         if (_options.protocol.has_param()) {
-            CHECK(cntl->protocol_param().empty());
+            FLARE_CHECK(cntl->protocol_param().empty());
             cntl->protocol_param() = _options.protocol.param();
         }
         if (_options.protocol == flare::rpc::PROTOCOL_HTTP) {
@@ -398,12 +398,12 @@ namespace flare::rpc {
         const int rc = fiber_token_lock_and_reset_range(
                 correlation_id, NULL, 2 + cntl->max_retry());
         if (rc != 0) {
-            CHECK_EQ(EINVAL, rc);
+            FLARE_CHECK_EQ(EINVAL, rc);
             if (!cntl->FailedInline()) {
                 cntl->SetFailed(EINVAL, "Fail to lock call_id=%" PRId64,
                                 correlation_id.value);
             }
-            LOG_IF(ERROR, cntl->is_used_by_rpc())
+            FLARE_LOG_IF(ERROR, cntl->is_used_by_rpc())
                             << "Controller=" << cntl << " was used by another RPC before. "
                                                         "Did you forget to Reset() it before reuse?";
             // Have to run done in-place. If the done runs in another thread,

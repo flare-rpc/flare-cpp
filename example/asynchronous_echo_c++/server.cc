@@ -48,7 +48,7 @@ public:
         // The purpose of following logs is to help you to understand
         // how clients interact with servers more intuitively. You should 
         // remove these logs in performance-sensitive servers.
-        LOG(INFO) << "Received request[log_id=" << cntl->log_id() 
+        FLARE_LOG(INFO) << "Received request[log_id=" << cntl->log_id()
                   << "] from " << cntl->remote_side()
                   << ": " << request->message()
                   << " (attached=" << cntl->request_attachment() << ")";
@@ -83,7 +83,7 @@ int main(int argc, char* argv[]) {
     // use flare::rpc::SERVER_OWNS_SERVICE.
     if (server.AddService(&echo_service_impl, 
                           flare::rpc::SERVER_DOESNT_OWN_SERVICE) != 0) {
-        LOG(ERROR) << "Fail to add service";
+        FLARE_LOG(ERROR) << "Fail to add service";
         return -1;
     }
 
@@ -91,7 +91,7 @@ int main(int argc, char* argv[]) {
     flare::rpc::ServerOptions options;
     options.idle_timeout_sec = FLAGS_idle_timeout_s;
     if (server.Start(FLAGS_port, &options) != 0) {
-        LOG(ERROR) << "Fail to start EchoServer";
+        FLARE_LOG(ERROR) << "Fail to start EchoServer";
         return -1;
     }
 

@@ -64,7 +64,7 @@ namespace flare::variable {
                     std::sort(_samples, _samples + saved_num);
                     _sorted = true;
                 }
-                CHECK_EQ(saved_num, _num_samples) << "You must call get_number() on"
+                FLARE_CHECK_EQ(saved_num, _num_samples) << "You must call get_number() on"
                                                      " a unchanging PercentileInterval";
                 return _samples[index];
             }
@@ -81,7 +81,7 @@ namespace flare::variable {
                 }
                 static_assert(SAMPLE_SIZE >= size2,
                               "must merge small interval into larger one currently");
-                CHECK_EQ(rhs._num_samples, rhs._num_added);
+                FLARE_CHECK_EQ(rhs._num_samples, rhs._num_added);
                 // Assume that the probability of each sample in |this| is a0/b0 and
                 // the probability of each sample in |rhs| is a1/b1.
                 // We are going to randomly pick some samples from |this| and |rhs| to
@@ -94,7 +94,7 @@ namespace flare::variable {
                 // |b1*SAMPLE_SIZE/(b0+b1)| from |rhs|.
                 if (_num_added + rhs._num_added <= SAMPLE_SIZE) {
                     // No sample should be dropped
-                    CHECK_EQ(_num_samples, _num_added)
+                    FLARE_CHECK_EQ(_num_samples, _num_added)
                         << "_num_added=" << _num_added
                         << " rhs._num_added" << rhs._num_added
                         << " _num_samples=" << _num_samples
@@ -115,13 +115,13 @@ namespace flare::variable {
                     //    num_remain < SAMPLE_SIZE = _num_added
                     size_t num_remain = round_of_expectation(
                             _num_added * SAMPLE_SIZE, _num_added + rhs._num_added);
-                    CHECK_LE(num_remain, _num_samples);
+                    FLARE_CHECK_LE(num_remain, _num_samples);
                     // Randomly drop samples of this
                     for (size_t i = _num_samples; i > num_remain; --i) {
                         _samples[flare::base::fast_rand_less_than(i)] = _samples[i - 1];
                     }
                     const size_t num_remain_from_rhs = SAMPLE_SIZE - num_remain;
-                    CHECK_LE(num_remain_from_rhs, rhs._num_samples);
+                    FLARE_CHECK_LE(num_remain_from_rhs, rhs._num_samples);
                     // Have to copy data from rhs to shuffle since it's const
                     DEFINE_SMALL_ARRAY(uint32_t, tmp, rhs._num_samples, 64);
                     memcpy(tmp, rhs._samples, sizeof(uint32_t) * rhs._num_samples);
@@ -131,7 +131,7 @@ namespace flare::variable {
                         tmp[index] = tmp[rhs._num_samples - i - 1];
                     }
                     _num_samples = num_remain;
-                    CHECK_EQ(_num_samples, SAMPLE_SIZE);
+                    FLARE_CHECK_EQ(_num_samples, SAMPLE_SIZE);
                 }
                 _num_added += rhs._num_added;
             }
@@ -139,7 +139,7 @@ namespace flare::variable {
             // Randomly pick n samples from mutable_rhs to |this|
             template<size_t size2>
             void merge_with_expectation(PercentileInterval<size2> &mutable_rhs, size_t n) {
-                CHECK(n <= mutable_rhs._num_samples);
+                FLARE_CHECK(n <= mutable_rhs._num_samples);
                 _num_added += mutable_rhs._num_added;
                 if (_num_samples + n <= SAMPLE_SIZE && n == mutable_rhs._num_samples) {
                     memcpy(_samples + _num_samples, mutable_rhs._samples, sizeof(_samples[0]) * n);
@@ -165,7 +165,7 @@ namespace flare::variable {
             // Returns true if the input was stored.
             bool add32(uint32_t x) {
                 if (FLARE_UNLIKELY(_num_samples >= SAMPLE_SIZE)) {
-                    LOG(ERROR) << "This interval was full";
+                    FLARE_LOG(ERROR) << "This interval was full";
                     return false;
                 }
                 ++_num_added;
@@ -308,7 +308,7 @@ namespace flare::variable {
                     }
                     n -= invl.added_count();
                 }
-                CHECK(false) << "Can't reach here";
+                FLARE_CHECK(false) << "Can't reach here";
                 return std::numeric_limits<uint32_t>::max();
             }
 

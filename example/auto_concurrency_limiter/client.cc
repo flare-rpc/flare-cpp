@@ -56,7 +56,7 @@ void DisplayStage(const test::Stage& stage) {
         << "Stage:[" << stage.lower_bound() << ':' 
         << stage.upper_bound() <<  "]"
         << " , Type:" << type;
-    LOG(INFO) << ss.str();
+    FLARE_LOG(INFO) << ss.str();
 }
 
 uint32_t cast_func(void* arg) {
@@ -74,13 +74,13 @@ flare::variable::LatencyRecorder g_latency_rec;
 void LoadCaseSet(test::TestCaseSet* case_set, const std::string& file_path) {
     std::ifstream ifs(file_path.c_str(), std::ios::in);  
     if (!ifs) {
-        LOG(FATAL) << "Fail to open case set file: " << file_path;
+        FLARE_LOG(FATAL) << "Fail to open case set file: " << file_path;
     }
     std::string case_set_json((std::istreambuf_iterator<char>(ifs)),  
                               std::istreambuf_iterator<char>()); 
     std::string err;
     if (!json2pb::JsonToProtoMessage(case_set_json, case_set, &err)) {
-        LOG(FATAL) 
+        FLARE_LOG(FATAL)
             << "Fail to trans case_set from json to protobuf message: "
             << err;
     }
@@ -95,10 +95,10 @@ void HandleEchoResponse(
 
     if (cntl->Failed() && cntl->ErrorCode() == flare::rpc::ERPCTIMEDOUT) {
         g_timeout.fetch_add(1, std::memory_order_relaxed);
-        LOG_EVERY_N(INFO, 1000) << cntl->ErrorText();
+        FLARE_LOG_EVERY_N(INFO, 1000) << cntl->ErrorText();
     } else if (cntl->Failed()) {
         g_error.fetch_add(1, std::memory_order_relaxed);
-        LOG_EVERY_N(INFO, 1000) << cntl->ErrorText();
+        FLARE_LOG_EVERY_N(INFO, 1000) << cntl->ErrorText();
     } else {
         g_succ.fetch_add(1, std::memory_order_relaxed);
         g_latency_rec << cntl->latency_us();
@@ -170,7 +170,7 @@ void RunUpdateTask(void* data) {
 
 void RunCase(test::ControlService_Stub &cntl_stub, 
              const test::TestCase& test_case) {
-    LOG(INFO) << "Running case:`" << test_case.case_name() << '\'';
+    FLARE_LOG(INFO) << "Running case:`" << test_case.case_name() << '\'';
     flare::rpc::Channel channel;
     flare::rpc::ChannelOptions options;
     options.protocol = FLAGS_protocol;
@@ -178,7 +178,7 @@ void RunCase(test::ControlService_Stub &cntl_stub,
     options.timeout_ms = FLAGS_timeout_ms;
     options.max_retry = FLAGS_max_retry;
     if (channel.Init(FLAGS_echo_server.c_str(), &options) != 0) {
-        LOG(FATAL) << "Fail to initialize channel";
+        FLARE_LOG(FATAL) << "Fail to initialize channel";
     }
     test::EchoService_Stub echo_stub(&channel);
 
@@ -187,7 +187,7 @@ void RunCase(test::ControlService_Stub &cntl_stub,
     flare::rpc::Controller cntl;
     cntl_req.set_message("StartCase");
     cntl_stub.Notify(&cntl, &cntl_req, &cntl_rsp, NULL);
-    CHECK(!cntl.Failed()) << "control failed";
+    FLARE_CHECK(!cntl.Failed()) << "control failed";
 
     TestCaseContext context(test_case);
     flare::fiber_internal::get_global_timer_thread()->schedule(RunUpdateTask, &context,
@@ -204,13 +204,13 @@ void RunCase(test::ControlService_Stub &cntl_stub,
         ::usleep(context.interval_us.load(std::memory_order_relaxed));
     }
 
-    LOG(INFO) << "Waiting to stop case: `" << test_case.case_name() << '\'';
+    FLARE_LOG(INFO) << "Waiting to stop case: `" << test_case.case_name() << '\'';
     ::sleep(FLAGS_case_interval);
     cntl.Reset();
     cntl_req.set_message("StopCase");
     cntl_stub.Notify(&cntl, &cntl_req, &cntl_rsp, NULL);
-    CHECK(!cntl.Failed()) << "control failed";
-    LOG(INFO) << "Case `" << test_case.case_name() << "' finshed:";
+    FLARE_CHECK(!cntl.Failed()) << "control failed";
+    FLARE_LOG(INFO) << "Case `" << test_case.case_name() << "' finshed:";
 }
 
 int main(int argc, char* argv[]) {
@@ -225,7 +225,7 @@ int main(int argc, char* argv[]) {
     options.timeout_ms = FLAGS_timeout_ms;
 
     if (channel.Init(FLAGS_cntl_server.c_str(), &options) != 0) {
-        LOG(ERROR) << "Fail to initialize channel";
+        FLARE_LOG(ERROR) << "Fail to initialize channel";
         return -1;
     }
     test::ControlService_Stub cntl_stub(&channel);
@@ -238,10 +238,10 @@ int main(int argc, char* argv[]) {
     test::NotifyResponse cntl_rsp;
     cntl_req.set_message("ResetCaseSet");
     cntl_stub.Notify(&cntl, &cntl_req, &cntl_rsp, NULL);
-    CHECK(!cntl.Failed()) << "Cntl Failed";
+    FLARE_CHECK(!cntl.Failed()) << "Cntl Failed";
     for (int i = 0; i < case_set.test_case_size(); ++i) {
         RunCase(cntl_stub, case_set.test_case(i));
     }
-    LOG(INFO) << "EchoClient is going to quit";
+    FLARE_LOG(INFO) << "EchoClient is going to quit";
     return 0;
 }

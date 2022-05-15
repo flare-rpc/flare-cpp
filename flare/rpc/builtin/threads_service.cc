@@ -42,7 +42,7 @@ void ThreadsService::default_method(::google::protobuf::RpcController* cntl_base
     flare::cord_buf_builder pstack_output;
     const int rc = flare::base::read_command_output(pstack_output, cmd.c_str());
     if (rc < 0) {
-        LOG(ERROR) << "Fail to popen `" << cmd << "'";
+        FLARE_LOG(ERROR) << "Fail to popen `" << cmd << "'";
         return;
     }
     pstack_output.move_to(resp);

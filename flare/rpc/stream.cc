@@ -43,12 +43,12 @@ namespace flare::rpc {
               _remote_consumed(0), _local_consumed(0), _parse_rpc_response(false), _pending_buf(NULL),
               _start_idle_timer_us(0), _idle_timer(0) {
         _connect_meta.on_connect = NULL;
-        CHECK_EQ(0, fiber_mutex_init(&_connect_mutex, NULL));
-        CHECK_EQ(0, fiber_mutex_init(&_congestion_control_mutex, NULL));
+        FLARE_CHECK_EQ(0, fiber_mutex_init(&_connect_mutex, NULL));
+        FLARE_CHECK_EQ(0, fiber_mutex_init(&_congestion_control_mutex, NULL));
     }
 
     Stream::~Stream() {
-        CHECK(_host_socket == NULL);
+        FLARE_CHECK(_host_socket == NULL);
         fiber_mutex_destroy(&_connect_mutex);
         fiber_mutex_destroy(&_congestion_control_mutex);
         fiber_token_list_destroy(&_writable_wait_list);
@@ -77,7 +77,7 @@ namespace flare::rpc {
         q_opt.fiber_attr
                 = FLAGS_usercode_in_pthread ? FIBER_ATTR_PTHREAD : FIBER_ATTR_NORMAL;
         if (flare::fiber_internal::execution_queue_start(&s->_consumer_queue, &q_opt, Consume, s) != 0) {
-            LOG(FATAL) << "Fail to create ExecutionQueue";
+            FLARE_LOG(FATAL) << "Fail to create ExecutionQueue";
             delete s;
             return -1;
         }
@@ -89,7 +89,7 @@ namespace flare::rpc {
             return -1;
         }
         SocketUniquePtr ptr;
-        CHECK_EQ(0, Socket::Address(fake_sock_id, &ptr));
+        FLARE_CHECK_EQ(0, Socket::Address(fake_sock_id, &ptr));
         s->_fake_socket_weak_ref = ptr.get();
         s->_id = fake_sock_id;
         *id = s->id();
@@ -102,7 +102,7 @@ namespace flare::rpc {
         if (_connected) {
             // Send CLOSE frame
             RPC_VLOG << "Send close frame";
-            CHECK(_host_socket != NULL);
+            FLARE_CHECK(_host_socket != NULL);
             policy::SendStreamClose(_host_socket,
                                     _remote_settings.stream_id(), id());
         }
@@ -119,12 +119,12 @@ namespace flare::rpc {
                                                  flare::cord_buf **data_list,
                                                  size_t size) {
         if (_host_socket == NULL) {
-            CHECK(false) << "Not connected";
+            FLARE_CHECK(false) << "Not connected";
             errno = EBADF;
             return -1;
         }
         if (!_remote_settings.writable()) {
-            LOG(WARNING) << "The remote side of Stream=" << id()
+            FLARE_LOG(WARNING) << "The remote side of Stream=" << id()
                          << "->" << _remote_settings.stream_id()
                          << "@" << _host_socket->remote_side()
                          << " doesn't have a handler";
@@ -153,7 +153,7 @@ namespace flare::rpc {
     }
 
     ssize_t Stream::CutMessageIntoSSLChannel(SSL *, flare::cord_buf **, size_t) {
-        CHECK(false) << "Stream does support SSL";
+        FLARE_CHECK(false) << "Stream does support SSL";
         errno = EINVAL;
         return -1;
     }
@@ -171,10 +171,10 @@ namespace flare::rpc {
 
     int Stream::Connect(Socket *ptr, const timespec *,
                         int (*on_connect)(int, int, void *), void *data) {
-        CHECK_EQ(ptr->id(), _id);
+        FLARE_CHECK_EQ(ptr->id(), _id);
         fiber_mutex_lock(&_connect_mutex);
         if (_connect_meta.on_connect != NULL) {
-            CHECK(false) << "Connect is supposed to be called once";
+            FLARE_CHECK(false) << "Connect is supposed to be called once";
             fiber_mutex_unlock(&_connect_mutex);
             return -1;
         }
@@ -188,7 +188,7 @@ namespace flare::rpc {
             fiber_mutex_unlock(&_connect_mutex);
             fiber_id_t tid;
             if (fiber_start_urgent(&tid, &FIBER_ATTR_NORMAL, RunOnConnect, meta) != 0) {
-                LOG(FATAL) << "Fail to start fiber, " << flare_error();
+                FLARE_LOG(FATAL) << "Fail to start fiber, " << flare_error();
                 RunOnConnect(meta);
             }
             return 0;
@@ -208,18 +208,18 @@ namespace flare::rpc {
             return;
         }
         if (_connected) {
-            CHECK(false);
+            FLARE_CHECK(false);
             fiber_mutex_unlock(&_connect_mutex);
             return;
         }
-        CHECK(_host_socket != NULL);
+        FLARE_CHECK(_host_socket != NULL);
         if (remote_settings != NULL) {
-            CHECK(!_remote_settings.IsInitialized());
+            FLARE_CHECK(!_remote_settings.IsInitialized());
             _remote_settings.MergeFrom(*remote_settings);
         } else {
-            CHECK(_remote_settings.IsInitialized());
+            FLARE_CHECK(_remote_settings.IsInitialized());
         }
-        CHECK(_host_socket != NULL);
+        FLARE_CHECK(_host_socket != NULL);
         RPC_VLOG << "stream=" << id() << " is connected to stream_id="
                  << _remote_settings.stream_id() << " at host_socket=" << *_host_socket;
         _connected = true;
@@ -242,7 +242,7 @@ namespace flare::rpc {
             fiber_mutex_unlock(&_connect_mutex);
             fiber_id_t tid;
             if (fiber_start_urgent(&tid, &FIBER_ATTR_NORMAL, RunOnConnect, meta) != 0) {
-                LOG(FATAL) << "Fail to start fiber, " << flare_error();
+                FLARE_LOG(FATAL) << "Fail to start fiber, " << flare_error();
                 RunOnConnect(meta);
             }
             return;
@@ -270,7 +270,7 @@ namespace flare::rpc {
         const int rc = _fake_socket_weak_ref->Write(&copied_data);
         if (rc != 0) {
             // Stream may be closed by peer before
-            LOG(WARNING) << "Fail to write to _fake_socket, " << flare_error();
+            FLARE_LOG(WARNING) << "Fail to write to _fake_socket, " << flare_error();
             FLARE_SCOPED_LOCK(_congestion_control_mutex);
             _produced -= data.length();
             return -1;
@@ -279,7 +279,7 @@ namespace flare::rpc {
     }
 
     void Stream::SetRemoteConsumed(size_t new_remote_consumed) {
-        CHECK(_options.max_buf_size > 0);
+        FLARE_CHECK(_options.max_buf_size > 0);
         fiber_token_list_t tmplist;
         fiber_token_list_init(&tmplist, 0, 0);
         fiber_mutex_lock(&_congestion_control_mutex);
@@ -320,7 +320,7 @@ namespace flare::rpc {
                                               : &FIBER_ATTR_NORMAL;
             fiber_id_t tid;
             if (fiber_start_background(&tid, attr, RunOnWritable, wm) != 0) {
-                LOG(FATAL) << "Fail to start fiber" << flare_error();
+                FLARE_LOG(FATAL) << "Fail to start fiber" << flare_error();
                 RunOnWritable(wm);
             }
         } else {
@@ -345,7 +345,7 @@ namespace flare::rpc {
         fiber_token_t wait_id;
         const int rc = fiber_token_create(&wait_id, wm, TriggerOnWritable);
         if (rc != 0) {
-            CHECK(false) << "Fail to create fiber_token, " << flare_error(rc);
+            FLARE_CHECK(false) << "Fail to create fiber_token, " << flare_error(rc);
             wm->error_code = rc;
             RunOnWritable(wm);
             return;
@@ -353,28 +353,28 @@ namespace flare::rpc {
         if (join_id) {
             *join_id = wait_id;
         }
-        CHECK_EQ(0, fiber_token_lock(wait_id, NULL));
+        FLARE_CHECK_EQ(0, fiber_token_lock(wait_id, NULL));
         if (due_time != NULL) {
             wm->has_timer = true;
             const int rc = fiber_timer_add(&wm->timer, *due_time,
                                            OnTimedOut,
                                            reinterpret_cast<void *>(wait_id.value));
             if (rc != 0) {
-                LOG(ERROR) << "Fail to add timer, " << flare_error(rc);
-                CHECK_EQ(0, TriggerOnWritable(wait_id, wm, rc));
+                FLARE_LOG(ERROR) << "Fail to add timer, " << flare_error(rc);
+                FLARE_CHECK_EQ(0, TriggerOnWritable(wait_id, wm, rc));
             }
         }
         fiber_mutex_lock(&_congestion_control_mutex);
         if (_options.max_buf_size <= 0
             || _produced < _remote_consumed + (size_t) _options.max_buf_size) {
             fiber_mutex_unlock(&_congestion_control_mutex);
-            CHECK_EQ(0, TriggerOnWritable(wait_id, wm, 0));
+            FLARE_CHECK_EQ(0, TriggerOnWritable(wait_id, wm, 0));
             return;
         } else {
             fiber_token_list_add(&_writable_wait_list, wait_id);
             fiber_mutex_unlock(&_congestion_control_mutex);
         }
-        CHECK_EQ(0, fiber_token_unlock(wait_id));
+        FLARE_CHECK_EQ(0, fiber_token_unlock(wait_id));
     }
 
     void Stream::Wait(void (*on_writable)(StreamId, void *, int), void *arg,
@@ -405,7 +405,7 @@ namespace flare::rpc {
         switch (fm.frame_type()) {
             case FRAME_TYPE_FEEDBACK:
                 SetRemoteConsumed(fm.feedback().consumed_size());
-                CHECK(buf->empty());
+                FLARE_CHECK(buf->empty());
                 break;
             case FRAME_TYPE_DATA:
                 if (_pending_buf != NULL) {
@@ -419,7 +419,7 @@ namespace flare::rpc {
                     flare::cord_buf *tmp = _pending_buf;
                     _pending_buf = NULL;
                     if (flare::fiber_internal::execution_queue_execute(_consumer_queue, tmp) != 0) {
-                        CHECK(false) << "Fail to push into channel";
+                        FLARE_CHECK(false) << "Fail to push into channel";
                         delete tmp;
                         Close();
                     }
@@ -536,7 +536,7 @@ namespace flare::rpc {
 
     int Stream::SetHostSocket(Socket *host_socket) {
         if (_host_socket != NULL) {
-            CHECK(false) << "SetHostSocket has already been called";
+            FLARE_CHECK(false) << "SetHostSocket has already been called";
             return -1;
         }
         SocketUniquePtr ptr;
@@ -569,7 +569,7 @@ namespace flare::rpc {
                 _start_idle_timer_us + _options.idle_timeout_ms * 1000).to_timespec();
         const int rc = fiber_timer_add(&_idle_timer, due_time, OnIdleTimeout,
                                        (void *) (_consumer_queue.value));
-        LOG_IF(WARNING, rc != 0) << "Fail to add timer";
+        FLARE_LOG_IF(WARNING, rc != 0) << "Fail to add timer";
     }
 
     void Stream::StopIdleTimer() {
@@ -610,18 +610,18 @@ namespace flare::rpc {
     }
 
     void Stream::HandleRpcResponse(flare::cord_buf *response_buffer) {
-        CHECK(!_remote_settings.IsInitialized());
-        CHECK(_host_socket != NULL);
+        FLARE_CHECK(!_remote_settings.IsInitialized());
+        FLARE_CHECK(_host_socket != NULL);
         std::unique_ptr<flare::cord_buf> buf_guard(response_buffer);
         ParseResult pr = policy::ParseRpcMessage(response_buffer, NULL, true, NULL);
         if (!pr.is_ok()) {
-            CHECK(false);
+            FLARE_CHECK(false);
             Close();
             return;
         }
         InputMessageBase *msg = pr.message();
         if (msg == NULL) {
-            CHECK(false);
+            FLARE_CHECK(false);
             Close();
             return;
         }
@@ -661,7 +661,7 @@ namespace flare::rpc {
                                               : &FIBER_ATTR_NORMAL;
             fiber_id_t tid;
             if (fiber_start_background(&tid, attr, Stream::RunOnWritable, wm) != 0) {
-                PLOG(FATAL) << "Fail to start fiber";
+                FLARE_PLOG(FATAL) << "Fail to start fiber";
                 Stream::RunOnWritable(wm);
             }
             return;
@@ -686,11 +686,11 @@ namespace flare::rpc {
     int StreamCreate(StreamId *request_stream, Controller &cntl,
                      const StreamOptions *options) {
         if (cntl._request_stream != INVALID_STREAM_ID) {
-            LOG(ERROR) << "Can't create request stream more than once";
+            FLARE_LOG(ERROR) << "Can't create request stream more than once";
             return -1;
         }
         if (request_stream == NULL) {
-            LOG(ERROR) << "request_stream is NULL";
+            FLARE_LOG(ERROR) << "request_stream is NULL";
             return -1;
         }
         StreamId stream_id;
@@ -699,7 +699,7 @@ namespace flare::rpc {
             opt = *options;
         }
         if (Stream::Create(opt, NULL, &stream_id) != 0) {
-            LOG(ERROR) << "Fail to create stream";
+            FLARE_LOG(ERROR) << "Fail to create stream";
             return -1;
         }
         cntl._request_stream = stream_id;
@@ -711,15 +711,15 @@ namespace flare::rpc {
                      const StreamOptions *options) {
 
         if (cntl._response_stream != INVALID_STREAM_ID) {
-            LOG(ERROR) << "Can't create reponse stream more than once";
+            FLARE_LOG(ERROR) << "Can't create reponse stream more than once";
             return -1;
         }
         if (response_stream == NULL) {
-            LOG(ERROR) << "response_stream is NULL";
+            FLARE_LOG(ERROR) << "response_stream is NULL";
             return -1;
         }
         if (!cntl.has_remote_stream()) {
-            LOG(ERROR) << "No stream along with this request";
+            FLARE_LOG(ERROR) << "No stream along with this request";
             return -1;
         }
         StreamOptions opt;
@@ -728,7 +728,7 @@ namespace flare::rpc {
         }
         StreamId stream_id;
         if (Stream::Create(opt, cntl._remote_stream_settings, &stream_id) != 0) {
-            LOG(ERROR) << "Fail to create stream";
+            FLARE_LOG(ERROR) << "Fail to create stream";
             return -1;
         }
         cntl._response_stream = stream_id;

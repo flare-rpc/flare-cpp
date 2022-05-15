@@ -43,7 +43,7 @@ static void InitVizMinBufGzip() {
     flare::cord_buf viz_min;
     viz_min.append(viz_min_js());
     s_viz_min_buf_gzip = new flare::cord_buf;
-    CHECK(policy::GzipCompress(viz_min, s_viz_min_buf_gzip, NULL));
+    FLARE_CHECK(policy::GzipCompress(viz_min, s_viz_min_buf_gzip, NULL));
 }
 const flare::cord_buf& viz_min_js_iobuf_gzip() {
     pthread_once(&s_viz_min_buf_gzip_once, InitVizMinBufGzip);

@@ -115,7 +115,7 @@ void NsheadClosure::Run() {
         wopt.ignore_eovercrowded = true;
         if (sock->Write(&write_buf, &wopt) != 0) {
             const int errcode = errno;
-            PLOG_IF(WARNING, errcode != EPIPE) << "Fail to write into " << *sock;
+            FLARE_PLOG_IF(WARNING, errcode != EPIPE) << "Fail to write into " << *sock;
             _controller.SetFailed(errcode, "Fail to write into %s",
                                   sock->description().c_str());
             return;
@@ -216,7 +216,7 @@ void ProcessNsheadRequest(InputMessageBase* msg_base) {
 
     NsheadService* service = server->options().nshead_service;
     if (service == NULL) {
-        LOG_EVERY_SECOND(WARNING) 
+        FLARE_LOG_EVERY_SECOND(WARNING)
             << "Received nshead request however the server does not set"
             " ServerOptions.nshead_service, close the connection.";
         socket->SetFailed();
@@ -224,7 +224,7 @@ void ProcessNsheadRequest(InputMessageBase* msg_base) {
     }
     void* space = malloc(sizeof(NsheadClosure) + service->_additional_space);
     if (!space) {
-        LOG(FATAL) << "Fail to new NsheadClosure";
+        FLARE_LOG(FATAL) << "Fail to new NsheadClosure";
         socket->SetFailed();
         return;
     }
@@ -233,7 +233,7 @@ void ProcessNsheadRequest(InputMessageBase* msg_base) {
     non_service_error.release();
     MethodStatus* method_status = service->_status;
     if (method_status) {
-        CHECK(method_status->OnRequested());
+        FLARE_CHECK(method_status->OnRequested());
     }
     
     void* sub_space = NULL;
@@ -334,7 +334,7 @@ void ProcessNsheadResponse(InputMessageBase* msg_base) {
     Controller* cntl = NULL;
     const int rc = fiber_token_lock(cid, (void**)&cntl);
     if (rc != 0) {
-        LOG_IF(ERROR, rc != EINVAL && rc != EPERM)
+        FLARE_LOG_IF(ERROR, rc != EINVAL && rc != EPERM)
             << "Fail to lock correlation_id=" << cid << ": " << flare_error(rc);
         return;
     }
@@ -364,7 +364,7 @@ void ProcessNsheadResponse(InputMessageBase* msg_base) {
 bool VerifyNsheadRequest(const InputMessageBase* msg_base) {
     Server* server = (Server*)msg_base->arg();
     if (server->options().auth) {
-        LOG(WARNING) << "nshead does not support authentication";
+        FLARE_LOG(WARNING) << "nshead does not support authentication";
         return false;
     }
     return true;

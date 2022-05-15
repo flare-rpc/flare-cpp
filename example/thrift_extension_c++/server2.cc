@@ -38,7 +38,7 @@ public:
         flare::rpc::ChannelOptions options;
         options.protocol = flare::rpc::PROTOCOL_THRIFT;
         if (_channel.Init("0.0.0.0", FLAGS_port , &options) != 0) {
-            LOG(ERROR) << "Fail to initialize channel";
+            FLARE_LOG(ERROR) << "Fail to initialize channel";
         }
     }
 
@@ -54,7 +54,7 @@ public:
             flare::rpc::ThriftStub stub(&_channel);
             // TODO: Following Cast<> drops data field from ProxyRequest which
             // does not recognize the field, should be debugged further.
-            // LOG(INFO) << "req=" << *req->Cast<example::ProxyRequest>();
+            // FLARE_LOG(INFO) << "req=" << *req->Cast<example::ProxyRequest>();
             stub.CallMethod("RealEcho", &cntl, req, res, NULL);
             done->Run();
         } else if (cntl->thrift_method_name() == "RealEcho") {
@@ -94,7 +94,7 @@ int main(int argc, char* argv[]) {
 
     // Start the server.
     if (server.Start(FLAGS_port, &options) != 0) {
-        LOG(ERROR) << "Fail to start EchoServer";
+        FLARE_LOG(ERROR) << "Fail to start EchoServer";
         return -1;
     }
 

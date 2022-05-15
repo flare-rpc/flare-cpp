@@ -24,7 +24,7 @@ namespace flare::detail {
                                bool forcibly) {
         auto &&value = (*get_registry())[name];
         if (!value.first.empty()) {
-            LOG(FATAL)<<"Duplicate override for flag "<<name<<", was ["<<value.first<<"], now ["<<to<<"]";
+            FLARE_LOG(FATAL)<<"Duplicate override for flag "<<name<<", was ["<<value.first<<"], now ["<<to<<"]";
         }
         value = std::pair(to, forcibly);
     }
@@ -35,7 +35,7 @@ namespace flare::detail {
             auto current = GFLAGS_NS::GetCommandLineFlagInfoOrDie(k.c_str());
             if (current.is_default || v.second) {
                 GFLAGS_NS::SetCommandLineOption(k.c_str(), v.first.c_str());
-                VLOG(10)<<"Overriding flag ["<<k<<"] with ["<<v.first<<"].";
+                FLARE_VLOG(10)<<"Overriding flag ["<<k<<"] with ["<<v.first<<"].";
             }
         }
     }

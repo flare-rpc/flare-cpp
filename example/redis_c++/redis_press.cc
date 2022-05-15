@@ -63,7 +63,7 @@ static void* sender(void* void_args) {
 
     flare::rpc::RedisRequest request;
     for (int i = 0; i < FLAGS_batch; ++i) {
-        CHECK(request.AddCommand("GET %s", kvs[i].first.c_str()));
+        FLARE_CHECK(request.AddCommand("GET %s", kvs[i].first.c_str()));
     }
     while (!flare::rpc::IsAskedToQuit()) {
         // We will receive response synchronously, safe to put variables
@@ -77,14 +77,14 @@ static void* sender(void* void_args) {
         const int64_t elp = cntl.latency_us();
         if (!cntl.Failed()) {
             g_latency_recorder << elp;
-            CHECK_EQ(response.reply_size(), FLAGS_batch);
+            FLARE_CHECK_EQ(response.reply_size(), FLAGS_batch);
             for (int i = 0; i < FLAGS_batch; ++i) {
-                CHECK_EQ(kvs[i].second.c_str(), response.reply(i).data())
+                FLARE_CHECK_EQ(kvs[i].second.c_str(), response.reply(i).data())
                     << "base=" << args->base_index << " i=" << i;
             }
         } else {
             g_error_count << 1;
-            CHECK(flare::rpc::IsAskedToQuit() || !FLAGS_dont_fail)
+            FLARE_CHECK(flare::rpc::IsAskedToQuit() || !FLAGS_dont_fail)
                 << "error=" << cntl.ErrorText() << " latency=" << elp;
             // We can't connect to the server, sleep a while. Notice that this
             // is a specific sleeping to prevent this thread from spinning too
@@ -112,7 +112,7 @@ int main(int argc, char* argv[]) {
     options.max_retry = FLAGS_max_retry;
     options.backup_request_ms = FLAGS_backup_request_ms;
     if (channel.Init(FLAGS_server.c_str(), &options) != 0) {
-        LOG(ERROR) << "Fail to initialize channel";
+        FLARE_LOG(ERROR) << "Fail to initialize channel";
         return -1;
     }
 
@@ -125,23 +125,23 @@ int main(int argc, char* argv[]) {
         if (!request.AddCommand("SET %s_%04d %s_%04d", 
                     FLAGS_key.c_str(), i,
                     FLAGS_value.c_str(), i)) {
-            LOG(ERROR) << "Fail to SET " << i << "th request";
+            FLARE_LOG(ERROR) << "Fail to SET " << i << "th request";
             return -1;
         }
     }
     channel.CallMethod(NULL, &cntl, &request, &response, NULL);
     if (cntl.Failed()) {
-        LOG(ERROR) << "Fail to access redis, " << cntl.ErrorText();
+        FLARE_LOG(ERROR) << "Fail to access redis, " << cntl.ErrorText();
         return -1;
     }
     if (FLAGS_batch * FLAGS_thread_num != response.reply_size()) {
-        LOG(ERROR) << "Fail to set";
+        FLARE_LOG(ERROR) << "Fail to set";
         return -1;
     }
     for (int i = 0; i < FLAGS_batch * FLAGS_thread_num; ++i) {
-        CHECK_EQ("OK", response.reply(i).data());
+        FLARE_CHECK_EQ("OK", response.reply(i).data());
     }
-    LOG(INFO) << "Set " << FLAGS_batch * FLAGS_thread_num << " values";
+    FLARE_LOG(INFO) << "Set " << FLAGS_batch * FLAGS_thread_num << " values";
 
     if (FLAGS_dummy_port >= 0) {
         flare::rpc::StartDummyServerAt(FLAGS_dummy_port);
@@ -158,13 +158,13 @@ int main(int argc, char* argv[]) {
         args[i].redis_channel = &channel;
         if (!FLAGS_use_fiber) {
             if (pthread_create(&pids[i], NULL, sender, &args[i]) != 0) {
-                LOG(ERROR) << "Fail to create pthread";
+                FLARE_LOG(ERROR) << "Fail to create pthread";
                 return -1;
             }
         } else {
             if (fiber_start_background(
                     &bids[i], NULL, sender, &args[i]) != 0) {
-                LOG(ERROR) << "Fail to create fiber";
+                FLARE_LOG(ERROR) << "Fail to create fiber";
                 return -1;
             }
         }
@@ -173,11 +173,11 @@ int main(int argc, char* argv[]) {
     while (!flare::rpc::IsAskedToQuit()) {
         sleep(1);
         
-        LOG(INFO) << "Accessing redis-server at qps=" << g_latency_recorder.qps(1)
+        FLARE_LOG(INFO) << "Accessing redis-server at qps=" << g_latency_recorder.qps(1)
                   << " latency=" << g_latency_recorder.latency(1);
     }
 
-    LOG(INFO) << "redis_client is going to quit";
+    FLARE_LOG(INFO) << "redis_client is going to quit";
     for (int i = 0; i < FLAGS_thread_num; ++i) {
         if (!FLAGS_use_fiber) {
             pthread_join(pids[i], NULL);

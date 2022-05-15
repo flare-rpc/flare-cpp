@@ -155,11 +155,11 @@ void ProcessPublicPbrpcResponse(InputMessageBase* msg_base) {
     
     PublicPbrpcResponse pbres;
     if (!ParsePbFromCordBuf(&pbres, msg->payload)) {
-        LOG(WARNING) << "Fail to parse from PublicPbrpcResponse";
+        FLARE_LOG(WARNING) << "Fail to parse from PublicPbrpcResponse";
         return;
     }
     if (pbres.responsebody_size() == 0) {
-        LOG(WARNING) << "Missing response body inside PublicPbrpcResponse";
+        FLARE_LOG(WARNING) << "Missing response body inside PublicPbrpcResponse";
         return;
     }
     const ResponseHead& head = pbres.responsehead();
@@ -168,7 +168,7 @@ void ProcessPublicPbrpcResponse(InputMessageBase* msg_base) {
     Controller* cntl = NULL;
     const int rc = fiber_token_lock(cid, (void**)&cntl);
     if (rc != 0) {
-        LOG_IF(ERROR, rc != EINVAL && rc != EPERM)
+        FLARE_LOG_IF(ERROR, rc != EINVAL && rc != EPERM)
             << "Fail to lock correlation_id=" << cid << ": " << flare_error(rc);
         return;
     }

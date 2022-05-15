@@ -152,7 +152,7 @@ public:
     }
 
     Tp reset() {
-        CHECK(false) << "PassiveStatus::reset() should never be called, abort";
+        FLARE_CHECK(false) << "PassiveStatus::reset() should never be called, abort";
         abort();
     }
 

@@ -112,7 +112,7 @@ TEST_F(StatusTest, status) {
     ASSERT_EQ("var2_again", vars[3]);
 
     flare::variable::Status<void*> st5((void*)19UL);
-    LOG(INFO) << st5;
+    FLARE_LOG(INFO) << st5;
     ASSERT_EQ("0x13", st5.get_description());
 }
 
@@ -126,7 +126,7 @@ int64_t print2(void* arg) {
 
 TEST_F(StatusTest, passive_status) {
     flare::variable::BasicPassiveStatus<std::string> st1("var11", print1, (void*)9UL);
-    LOG(INFO) << st1;
+    FLARE_LOG(INFO) << st1;
     std::ostringstream ss;
     ASSERT_EQ(0, flare::variable::Variable::describe_exposed("var11", ss));
     ASSERT_EQ("0x9", ss.str());

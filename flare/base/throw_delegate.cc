@@ -18,7 +18,7 @@ namespace flare::base {
 #ifdef FLARFE_HAVE_EXCEPTIONS
             throw error;
 #else
-            DLOG(FATAL) << error.what();
+            FLARE_DLOG(FATAL) << error.what();
             std::abort();
 #endif
         }

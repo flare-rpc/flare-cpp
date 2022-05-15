@@ -81,7 +81,7 @@ int FileNamingService::GetServers(const char *service_name,
 
     flare::base::scoped_file fp(fopen(service_name, "r"));
     if (!fp) {
-        PLOG(ERROR) << "Fail to open `" << service_name << "'";
+        FLARE_PLOG(ERROR) << "Fail to open `" << service_name << "'";
         return errno;
     }
     while ((nr = getline(&line, &line_len, fp.get())) != -1) {
@@ -98,7 +98,7 @@ int FileNamingService::GetServers(const char *service_name,
         flare::base::end_point point;
         if (str2endpoint(addr.data(), &point) != 0 &&
             hostname2endpoint(addr.data(), &point) != 0) {
-            LOG(ERROR) << "Invalid address=`" << addr << '\'';
+            FLARE_LOG(ERROR) << "Invalid address=`" << addr << '\'';
             continue;
         }
         ServerNode node;
@@ -121,7 +121,7 @@ int FileNamingService::RunNamingService(const char* service_name,
     std::vector<ServerNode> servers;
     flare::file_watcher fw;
     if (fw.init(service_name) < 0) {
-        LOG(ERROR) << "Fail to init file_watcher on `" << service_name << "'";
+        FLARE_LOG(ERROR) << "Fail to init file_watcher on `" << service_name << "'";
         return -1;
     }
     for (;;) {
@@ -137,18 +137,18 @@ int FileNamingService::RunNamingService(const char* service_name,
                 break;
             }
             if (change < 0) {
-                LOG(ERROR) << "`" << service_name << "' was deleted";
+                FLARE_LOG(ERROR) << "`" << service_name << "' was deleted";
             }
             if (flare::fiber_sleep_for(100000L/*100ms*/) < 0) {
                 if (errno == ESTOP) {
                     return 0;
                 }
-                PLOG(ERROR) << "Fail to sleep";
+                FLARE_PLOG(ERROR) << "Fail to sleep";
                 return -1;
             }
         }
     }
-    CHECK(false);
+    FLARE_CHECK(false);
     return -1;
 }
 

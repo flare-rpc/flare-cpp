@@ -77,7 +77,7 @@ void NsheadMcpackAdaptor::SerializeResponseToCordBuf(
     }
     CompressType type = cntl->response_compress_type();
     if (type != COMPRESS_TYPE_NONE) {
-        LOG(WARNING) << "nshead_mcpack protocol doesn't support compression";
+        FLARE_LOG(WARNING) << "nshead_mcpack protocol doesn't support compression";
         type = COMPRESS_TYPE_NONE;
     }
     
@@ -105,7 +105,7 @@ void ProcessNsheadMcpackResponse(InputMessageBase* msg_base) {
     Controller* cntl = NULL;
     const int rc = fiber_token_lock(cid, (void**)&cntl);
     if (rc != 0) {
-        LOG_IF(ERROR, rc != EINVAL && rc != EPERM)
+        FLARE_LOG_IF(ERROR, rc != EINVAL && rc != EPERM)
             << "Fail to lock correlation_id=" << cid << ": " << flare_error(rc);
         return;
     }

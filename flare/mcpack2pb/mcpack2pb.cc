@@ -32,7 +32,7 @@ static flare::container::FlatMap<std::string, MessageHandler>* s_handler_map = N
 static void init_handler_map() {
     s_handler_map = new flare::container::FlatMap<std::string, MessageHandler>;
     if (s_handler_map->init(64, 50) != 0) {
-        LOG(ERROR) << "Fail to init s_handler_map";
+        FLARE_LOG(ERROR) << "Fail to init s_handler_map";
         exit(1);
     }
 }
@@ -40,7 +40,7 @@ void register_message_handler_or_die(const std::string& full_name,
                                      const MessageHandler& handler) {
     pthread_once(&s_init_handler_map_once, init_handler_map);
     if (s_handler_map->seek(full_name) != NULL) {
-        LOG(ERROR) << full_name << " was registered before!";
+        FLARE_LOG(ERROR) << full_name << " was registered before!";
         exit(1);
     } else {
         (*s_handler_map)[full_name] = handler;

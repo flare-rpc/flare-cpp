@@ -35,11 +35,11 @@ namespace flare {
         void log_config_init(char* argv0) {
             flare::log::init_logging(argv0);
             //distable info level single file
-            if(!FLAGS_logtostderr) {
+            if(!FLAGS_flare_logtostderr) {
                 flare::log::set_log_destination(flare::log::FLARE_INFO, "");
                 //distable debug level single file
                 flare::log::set_log_destination(flare::log::FLARE_DEBUG, "");
-                flare::log::enable_log_cleaner(FLAGS_log_save_days);
+                flare::log::enable_log_cleaner(FLAGS_flare_log_save_days);
             }
         }
     }  // namespace
@@ -119,7 +119,7 @@ namespace flare {
 
     void register_bootstrap_callback(std::int32_t priority, const std::function<void()> &init,
                                      const std::function<void()> &fini) {
-        CHECK(!registry_prepared.load(std::memory_order_relaxed)) <<
+        FLARE_CHECK(!registry_prepared.load(std::memory_order_relaxed)) <<
                                                                   "Callbacks may only be registered before `flare::Start` is called.";
 
         auto &&registry = *get_staging_registry();
@@ -128,7 +128,7 @@ namespace flare {
 
     void register_bootstrap_callback(std::int32_t priority, std::function<void()> &&init,
                                      std::function<void()> &&fini) {
-        CHECK(!registry_prepared.load(std::memory_order_relaxed)) <<
+        FLARE_CHECK(!registry_prepared.load(std::memory_order_relaxed)) <<
                                                                   "Callbacks may only be registered before `flare::Start` is called.";
 
         auto &&registry = *get_staging_registry();

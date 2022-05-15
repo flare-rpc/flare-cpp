@@ -48,37 +48,37 @@ TEST_F(HttpParserTest, init_perf) {
 }
 
 int on_message_begin(http_parser *) {
-    LOG(INFO) << "Start parsing message";
+    FLARE_LOG(INFO) << "Start parsing message";
     return 0;
 }
 
 int on_url(http_parser *, const char *at, const size_t length) {
-    LOG(INFO) << "Get url " << std::string(at, length);
+    FLARE_LOG(INFO) << "Get url " << std::string(at, length);
     return 0;
 }
 
 int on_headers_complete(http_parser *) {
-    LOG(INFO) << "Header complete";
+    FLARE_LOG(INFO) << "Header complete";
     return 0;
 }
 
 int on_message_complete(http_parser *) {
-    LOG(INFO) << "Message complete";
+    FLARE_LOG(INFO) << "Message complete";
     return 0;
 }
 
 int on_header_field(http_parser *, const char *at, const size_t length) {
-    LOG(INFO) << "Get header field " << std::string(at, length);
+    FLARE_LOG(INFO) << "Get header field " << std::string(at, length);
     return 0;
 }
 
 int on_header_value(http_parser *, const char *at, const size_t length) {
-    LOG(INFO) << "Get header value " << std::string(at, length);
+    FLARE_LOG(INFO) << "Get header value " << std::string(at, length);
     return 0;
 }
 
 int on_body(http_parser *, const char *at, const size_t length) {
-    LOG(INFO) << "Get body " << std::string(at, length);
+    FLARE_LOG(INFO) << "Get body " << std::string(at, length);
     return 0;
 }
 
@@ -107,7 +107,7 @@ TEST_F(HttpParserTest, http_example) {
     settings.on_header_field = on_header_field;
     settings.on_header_value = on_header_value;
     settings.on_body = on_body;
-    LOG(INFO) << http_parser_execute(&parser, &settings, http_request, strlen(http_request));
+    FLARE_LOG(INFO) << http_parser_execute(&parser, &settings, http_request, strlen(http_request));
 }
 
 TEST_F(HttpParserTest, append_filename) {

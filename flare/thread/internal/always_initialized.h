@@ -86,12 +86,12 @@ namespace flare::thread_internal {
         };
 
         // Allocate a slot.
-        offset_ = object_array_layout<T>::instance()->create_entry(&initializer_, slot_initializer) *sizeof(T);
+        offset_ = object_array_layout<T>::instance()->create_entry(&initializer_, slot_initializer) * sizeof(T);
     }
 
     template<class T>
     thread_local_always_initialized<T>::~thread_local_always_initialized() {
-        FLARE_CHECK_EQ(offset_ % sizeof(T), 0);
+        FLARE_CHECK_EQ(static_cast<size_t>(offset_) % sizeof(T), 0ul);
         auto index = offset_ / sizeof(T);
 
         // The slot is freed after we have destroyed all instances.
@@ -113,7 +113,7 @@ namespace flare::thread_internal {
     template<class T>
     template<class F>
     void thread_local_always_initialized<T>::for_each(F &&f) const {
-        DCHECK_EQ(offset_ % sizeof(T), 0);
+        FLARE_DCHECK_EQ(static_cast<size_t>(offset_) % sizeof(T), 0ul);
         auto index = offset_ / sizeof(T);
 
         object_array_registry<T>::instance()->for_each_locked(

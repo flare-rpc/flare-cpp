@@ -324,7 +324,7 @@ namespace flare::fiber_internal {
             meta->data = data;
             meta->on_error = on_error;
             meta->on_error2 = on_error2;
-            CHECK(meta->pending_q.empty());
+            FLARE_CHECK(meta->pending_q.empty());
             uint32_t *event = meta->event;
             if (0 == *event || *event + TOKEN_MAX_RANGE + 2 < *event) {
                 // Skip 0 so that fiber_token_t is never 0
@@ -346,8 +346,8 @@ namespace flare::fiber_internal {
             int (*on_error2)(fiber_token_t, void *, int, const std::string &),
             int range) {
         if (range < 1 || range > TOKEN_MAX_RANGE) {
-            LOG_IF(FATAL, range < 1) << "range must be positive, actually " << range;
-            LOG_IF(FATAL, range > TOKEN_MAX_RANGE) << "max of range is "
+            FLARE_LOG_IF(FATAL, range < 1) << "range must be positive, actually " << range;
+            FLARE_LOG_IF(FATAL, range > TOKEN_MAX_RANGE) << "max of range is "
                                                    << TOKEN_MAX_RANGE << ", actually " << range;
             return EINVAL;
         }
@@ -357,7 +357,7 @@ namespace flare::fiber_internal {
             meta->data = data;
             meta->on_error = on_error;
             meta->on_error2 = on_error2;
-            CHECK(meta->pending_q.empty());
+            FLARE_CHECK(meta->pending_q.empty());
             uint32_t *event = meta->event;
             if (0 == *event || *event + TOKEN_MAX_RANGE + 2 < *event) {
                 // Skip 0 so that fiber_token_t is never 0
@@ -413,9 +413,9 @@ int fiber_token_lock_and_reset_range_verbose(
             } else if (range < 0 ||
                        range > flare::fiber_internal::TOKEN_MAX_RANGE ||
                        range + meta->first_ver <= meta->locked_ver) {
-                LOG_IF(FATAL, range < 0) << "range must be positive, actually "
+                FLARE_LOG_IF(FATAL, range < 0) << "range must be positive, actually "
                                          << range;
-                LOG_IF(FATAL, range > flare::fiber_internal::TOKEN_MAX_RANGE)
+                FLARE_LOG_IF(FATAL, range > flare::fiber_internal::TOKEN_MAX_RANGE)
                                 << "max range is " << flare::fiber_internal::TOKEN_MAX_RANGE
                                 << ", actually " << range;
             } else {
@@ -465,7 +465,7 @@ int fiber_token_about_to_destroy(fiber_token_t tn) {
     }
     if (*event == meta->first_ver) {
         meta->mutex.unlock();
-        LOG(FATAL) << "fiber_token=" << tn.value << " is not locked!";
+        FLARE_LOG(FATAL) << "fiber_token=" << tn.value << " is not locked!";
         return EPERM;
     }
     const bool contended = (*event == meta->contended_ver());
@@ -568,12 +568,12 @@ int fiber_token_unlock(fiber_token_t tn) {
     meta->mutex.lock();
     if (!meta->has_version(token_ver)) {
         meta->mutex.unlock();
-        LOG(FATAL) << "Invalid fiber_token=" << tn.value;
+        FLARE_LOG(FATAL) << "Invalid fiber_token=" << tn.value;
         return EINVAL;
     }
     if (*event == meta->first_ver) {
         meta->mutex.unlock();
-        LOG(FATAL) << "fiber_token=" << tn.value << " is not locked!";
+        FLARE_LOG(FATAL) << "fiber_token=" << tn.value << " is not locked!";
         return EPERM;
     }
     flare::fiber_internal::PendingError front;
@@ -609,12 +609,12 @@ int fiber_token_unlock_and_destroy(fiber_token_t tn) {
     meta->mutex.lock();
     if (!meta->has_version(token_ver)) {
         meta->mutex.unlock();
-        LOG(FATAL) << "Invalid fiber_token=" << tn.value;
+        FLARE_LOG(FATAL) << "Invalid fiber_token=" << tn.value;
         return EINVAL;
     }
     if (*event == meta->first_ver) {
         meta->mutex.unlock();
-        LOG(FATAL) << "fiber_token=" << tn.value << " is not locked!";
+        FLARE_LOG(FATAL) << "fiber_token=" << tn.value << " is not locked!";
         return EPERM;
     }
     const uint32_t next_ver = meta->end_ver();

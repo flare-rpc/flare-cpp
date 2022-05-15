@@ -19,7 +19,7 @@
 #include <google/protobuf/descriptor.h>         // MethodDescriptor
 #include <google/protobuf/message.h>            // Message
 #include <gflags/gflags.h>
-#include "flare/log/logging.h"                       // LOG()
+#include "flare/log/logging.h"                       // FLARE_LOG()
 #include "flare/times/time.h"
 #include "flare/io/cord_buf.h"                         // flare::cord_buf
 #include "flare/base/endian.h"
@@ -95,14 +95,14 @@ namespace flare::rpc {
                 }
 
                 if (!IsSupportedCommand(header->command)) {
-                    LOG(WARNING) << "Not support command=" << header->command;
+                    FLARE_LOG(WARNING) << "Not support command=" << header->command;
                     source->pop_front(sizeof(*header) + total_body_length);
                     return MakeParseError(PARSE_ERROR_NOT_ENOUGH_DATA);
                 }
 
                 PipelinedInfo pi;
                 if (!socket->PopPipelinedInfo(&pi)) {
-                    LOG(WARNING) << "No corresponding PipelinedInfo in socket, drop";
+                    FLARE_LOG(WARNING) << "No corresponding PipelinedInfo in socket, drop";
                     source->pop_front(sizeof(*header) + total_body_length);
                     return MakeParseError(PARSE_ERROR_NOT_ENOUGH_DATA);
                 }
@@ -130,7 +130,7 @@ namespace flare::rpc {
                 source->cutn(&msg->meta, total_body_length);
                 if (header->command == MC_BINARY_SASL_AUTH) {
                     if (header->status != 0) {
-                        LOG(ERROR) << "Failed to authenticate the couchbase bucket.";
+                        FLARE_LOG(ERROR) << "Failed to authenticate the couchbase bucket.";
                         return MakeParseError(PARSE_ERROR_NO_RESOURCE,
                                               "Fail to authenticate with the couchbase bucket");
                     }
@@ -139,7 +139,7 @@ namespace flare::rpc {
                     socket->GivebackPipelinedInfo(pi);
                 } else {
                     if (++msg->pi.count >= pi.count) {
-                        CHECK_EQ(msg->pi.count, pi.count);
+                        FLARE_CHECK_EQ(msg->pi.count, pi.count);
                         msg = static_cast<MostCommonMessage *>(socket->release_parsing_context());
                         msg->pi = pi;
                         return MakeMessage(msg);
@@ -158,7 +158,7 @@ namespace flare::rpc {
             Controller *cntl = NULL;
             const int rc = fiber_token_lock(cid, (void **) &cntl);
             if (rc != 0) {
-                LOG_IF(ERROR, rc != EINVAL && rc != EPERM)
+                FLARE_LOG_IF(ERROR, rc != EINVAL && rc != EPERM)
                                 << "Fail to lock correlation_id=" << cid << ": " << flare_error(rc);
                 return;
             }

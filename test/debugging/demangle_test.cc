@@ -94,7 +94,7 @@ namespace flare::debugging {
                                                         int *stack_consumed) {
               g_mangled = mangled;
               *stack_consumed = GetSignalHandlerStackConsumption(DemangleSignalHandler);
-              LOG(INFO)<<"Stack consumption of Demangle: "<< *stack_consumed;
+              FLARE_LOG(INFO)<<"Stack consumption of Demangle: "<< *stack_consumed;
               return g_demangle_result;
             }
 

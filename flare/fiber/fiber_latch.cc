@@ -7,7 +7,7 @@ namespace flare {
 
     fiber_latch::fiber_latch(int initial_count) {
         if (initial_count < 0) {
-            LOG(FATAL) << "Invalid initial_count=" << initial_count;
+            FLARE_LOG(FATAL) << "Invalid initial_count=" << initial_count;
             abort();
         }
         _event = flare::fiber_internal::waitable_event_create_checked<int>();
@@ -29,7 +29,7 @@ namespace flare {
         if (prev > sig) {
             return;
         }
-        LOG_IF(ERROR, prev < sig) << "Counter is over decreased";
+        FLARE_LOG_IF(ERROR, prev < sig) << "Counter is over decreased";
         flare::fiber_internal::waitable_event_wake_all(saved_event);
     }
 
@@ -50,23 +50,23 @@ namespace flare {
 
     void fiber_latch::add_count(int v) {
         if (v <= 0) {
-            LOG_IF(ERROR, v < 0) << "Invalid count=" << v;
+            FLARE_LOG_IF(ERROR, v < 0) << "Invalid count=" << v;
             return;
         }
-        LOG_IF(ERROR, _wait_was_invoked)
+        FLARE_LOG_IF(ERROR, _wait_was_invoked)
                         << "Invoking add_count() after wait() was invoked";
         ((std::atomic<int> *) _event)->fetch_add(v, std::memory_order_release);
     }
 
     void fiber_latch::reset(int v) {
         if (v < 0) {
-            LOG(ERROR) << "Invalid count=" << v;
+            FLARE_LOG(ERROR) << "Invalid count=" << v;
             return;
         }
         const int prev_counter =
                 ((std::atomic<int> *) _event)
                         ->exchange(v, std::memory_order_release);
-        LOG_IF(ERROR, _wait_was_invoked && prev_counter)
+        FLARE_LOG_IF(ERROR, _wait_was_invoked && prev_counter)
                         << "Invoking reset() while count=" << prev_counter;
         _wait_was_invoked = false;
     }

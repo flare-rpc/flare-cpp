@@ -19,7 +19,7 @@
 #include <gflags/gflags.h>                            // DEFINE_int32
 #include "flare/base/compat.h"
 #include "flare/base/fd_utility.h"                         // make_close_on_exec
-#include "flare/log/logging.h"                            // LOG
+#include "flare/log/logging.h"                            // FLARE_LOG
 #include "flare/hash/murmurhash3.h"// fmix32
 #include "flare/fiber/internal/fiber.h"                          // fiber_start_background
 #include "flare/rpc/event_dispatcher.h"
@@ -50,24 +50,24 @@ namespace flare::rpc {
 #if defined(FLARE_PLATFORM_LINUX)
         _epfd = epoll_create(1024 * 1024);
         if (_epfd < 0) {
-            PLOG(FATAL) << "Fail to create epoll";
+            FLARE_PLOG(FATAL) << "Fail to create epoll";
             return;
         }
 #elif defined(FLARE_PLATFORM_OSX)
         _epfd = kqueue();
         if (_epfd < 0) {
-            PLOG(FATAL) << "Fail to create kqueue";
+            FLARE_PLOG(FATAL) << "Fail to create kqueue";
             return;
         }
 #else
 #error Not implemented
 #endif
-        CHECK_EQ(0, flare::base::make_close_on_exec(_epfd));
+        FLARE_CHECK_EQ(0, flare::base::make_close_on_exec(_epfd));
 
         _wakeup_fds[0] = -1;
         _wakeup_fds[1] = -1;
         if (pipe(_wakeup_fds) != 0) {
-            PLOG(FATAL) << "Fail to create pipe";
+            FLARE_PLOG(FATAL) << "Fail to create pipe";
             return;
         }
     }
@@ -88,15 +88,15 @@ namespace flare::rpc {
     int EventDispatcher::Start(const fiber_attribute *consumer_thread_attr) {
         if (_epfd < 0) {
 #if defined(FLARE_PLATFORM_LINUX)
-            LOG(FATAL) << "epoll was not created";
+            FLARE_LOG(FATAL) << "epoll was not created";
 #elif defined(FLARE_PLATFORM_OSX)
-            LOG(FATAL) << "kqueue was not created";
+            FLARE_LOG(FATAL) << "kqueue was not created";
 #endif
             return -1;
         }
 
         if (_tid != 0) {
-            LOG(FATAL) << "Already started this dispatcher(" << this
+            FLARE_LOG(FATAL) << "Already started this dispatcher(" << this
                        << ") in fiber=" << _tid;
             return -1;
         }
@@ -118,7 +118,7 @@ namespace flare::rpc {
         int rc = fiber_start_background(
                 &_tid, &_epoll_thread_attr, RunThis, this);
         if (rc) {
-            LOG(FATAL) << "Fail to create epoll/kqueue thread: " << flare_error(rc);
+            FLARE_LOG(FATAL) << "Fail to create epoll/kqueue thread: " << flare_error(rc);
             return -1;
         }
         return 0;
@@ -260,7 +260,7 @@ namespace flare::rpc {
         // program abnormal.
 #if defined(FLARE_PLATFORM_LINUX)
         if (epoll_ctl(_epfd, EPOLL_CTL_DEL, fd, NULL) < 0) {
-            PLOG(WARNING) << "Fail to remove fd=" << fd << " from epfd=" << _epfd;
+            FLARE_PLOG(WARNING) << "Fail to remove fd=" << fd << " from epfd=" << _epfd;
             return -1;
         }
 #elif defined(FLARE_PLATFORM_OSX)
@@ -307,9 +307,9 @@ namespace flare::rpc {
                     continue;
                 }
 #if defined(FLARE_PLATFORM_LINUX)
-                    PLOG(FATAL) << "Fail to epoll_wait epfd=" << _epfd;
+                    FLARE_PLOG(FATAL) << "Fail to epoll_wait epfd=" << _epfd;
 #elif defined(FLARE_PLATFORM_OSX)
-                PLOG(FATAL) << "Fail to kqueue epfd=" << _epfd;
+                FLARE_PLOG(FATAL) << "Fail to kqueue epfd=" << _epfd;
 #endif
                 break;
             }
@@ -363,11 +363,11 @@ namespace flare::rpc {
         for (int i = 0; i < FLAGS_event_dispatcher_num; ++i) {
             const fiber_attribute attr = FLAGS_usercode_in_pthread ?
                                         FIBER_ATTR_PTHREAD : FIBER_ATTR_NORMAL;
-            CHECK_EQ(0, g_edisp[i].Start(&attr));
+            FLARE_CHECK_EQ(0, g_edisp[i].Start(&attr));
         }
         // This atexit is will be run before g_task_control.stop() because above
         // Start() initializes g_task_control by creating fiber (to run epoll/kqueue).
-        CHECK_EQ(0, atexit(StopAndJoinGlobalDispatchers));
+        FLARE_CHECK_EQ(0, atexit(StopAndJoinGlobalDispatchers));
     }
 
     EventDispatcher &GetGlobalEventDispatcher(int fd) {

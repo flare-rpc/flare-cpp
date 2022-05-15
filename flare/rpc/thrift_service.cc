@@ -24,7 +24,7 @@ namespace flare::rpc {
 
 ThriftService::ThriftService() {
     _status = new (std::nothrow) MethodStatus;
-    LOG_IF(FATAL, _status == NULL) << "Fail to new MethodStatus";
+    FLARE_LOG_IF(FATAL, _status == NULL) << "Fail to new MethodStatus";
 }
 
 ThriftService::~ThriftService() {

@@ -203,7 +203,7 @@ T* ThriftFramedMessage::Cast() {
 
     if (!body.empty()) {
         if (!policy::ReadThriftStruct(body, _raw_instance, field_id)) {
-            LOG(ERROR) << "Fail to parse " << flare::base::class_name<T>();
+            FLARE_LOG(ERROR) << "Fail to parse " << flare::base::class_name<T>();
         }
     }
     return raw_msg;

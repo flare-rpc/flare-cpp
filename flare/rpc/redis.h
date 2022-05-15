@@ -43,7 +43,7 @@ namespace flare::rpc {
 //   RedisResponse response;
 //   channel.CallMethod(&controller, &request, &response, NULL/*done*/);
 //   if (!cntl.Failed()) {
-//       LOG(INFO) << response.reply(0);
+//       FLARE_LOG(INFO) << response.reply(0);
 //   }
     class RedisRequest : public ::google::protobuf::Message {
     public:

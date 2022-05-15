@@ -42,7 +42,7 @@ namespace flare::rpc {
 
     inline bool CompareStringPieceWithoutCase(
             const std::string_view &s1, const char *s2) {
-        DCHECK(s2 != NULL);
+        FLARE_DCHECK(s2 != NULL);
         if (std::strlen(s2) != s1.size()) {
             return false;
         }

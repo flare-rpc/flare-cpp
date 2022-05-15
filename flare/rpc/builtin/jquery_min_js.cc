@@ -31,7 +31,7 @@ static void InitJQueryMinBuf() {
     s_jquery_min_buf = new flare::cord_buf;
     s_jquery_min_buf->append(jquery_min_js());
     s_jquery_min_buf_gzip = new flare::cord_buf;
-    CHECK(policy::GzipCompress(*s_jquery_min_buf, s_jquery_min_buf_gzip, NULL));
+    FLARE_CHECK(policy::GzipCompress(*s_jquery_min_buf, s_jquery_min_buf_gzip, NULL));
 }
 const flare::cord_buf& jquery_min_js_iobuf() {
     pthread_once(&s_jquery_min_buf_once, InitJQueryMinBuf);

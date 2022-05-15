@@ -119,7 +119,7 @@ namespace flare::variable {
         pthread_cond_init(&_sleep_cond, NULL);
         int rc = pthread_create(&_grab_thread, NULL, run_grab_thread, this);
         if (rc != 0) {
-            LOG(ERROR) << "Fail to create Collector, " << flare_error(rc);
+            FLARE_LOG(ERROR) << "Fail to create Collector, " << flare_error(rc);
         } else {
             _created = true;
         }
@@ -153,7 +153,7 @@ namespace flare::variable {
         // called inside the separate _dump_thread to prevent a slow callback
         // (caused by busy disk generally) from blocking collecting code too long
         // that pending requests may explode memory.
-        CHECK_EQ(0, pthread_create(&_dump_thread, NULL, run_dump_thread, this));
+        FLARE_CHECK_EQ(0, pthread_create(&_dump_thread, NULL, run_dump_thread, this));
 
         // vars
         flare::variable::PassiveStatus<int64_t> pending_sampled_data(
@@ -272,7 +272,7 @@ namespace flare::variable {
             _stop = true;
             pthread_cond_signal(&_dump_thread_cond);
         }
-        CHECK_EQ(0, pthread_join(_dump_thread, NULL));
+        FLARE_CHECK_EQ(0, pthread_join(_dump_thread, NULL));
     }
 
     void Collector::wakeup_grab_thread() {
@@ -386,7 +386,7 @@ namespace flare::variable {
                 newhead = _dump_root.next();
                 _dump_root.remove_from_list();
             }
-            CHECK(newhead != &_dump_root);
+            FLARE_CHECK(newhead != &_dump_root);
             newhead->insert_before_as_list(&root);
 
             // Call callbacks.

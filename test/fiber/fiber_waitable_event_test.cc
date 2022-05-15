@@ -54,12 +54,12 @@ namespace {
         const long t1 = flare::get_current_time_micros();
         for (fiber_id_t *th = (fiber_id_t *) arg; *th; ++th) {
             if (0 != fiber_join(*th, nullptr)) {
-                LOG(FATAL) << "fail to join thread_" << th - (fiber_id_t *) arg;
+                FLARE_LOG(FATAL) << "fail to join thread_" << th - (fiber_id_t *) arg;
             }
             long elp = flare::get_current_time_micros() - t1;
             EXPECT_LE(labs(elp - (th - (fiber_id_t *) arg + 1) * 100000L), 15000L)
                                 << "timeout when joining thread_" << th - (fiber_id_t *) arg;
-            LOG(INFO) << "Joined thread " << *th << " at " << elp << "us ["
+            FLARE_LOG(INFO) << "Joined thread " << *th << " at " << elp << "us ["
                       << fiber_self() << "]";
         }
         for (fiber_id_t *th = (fiber_id_t *) arg; *th; ++th) {
@@ -131,7 +131,7 @@ namespace {
         } else {
             EXPECT_EQ(wa->expected_result, errno) << fiber_self();
         }
-        LOG(INFO) << "after wait, time=" << (t2 - t1) << "us";
+        FLARE_LOG(INFO) << "after wait, time=" << (t2 - t1) << "us";
         return nullptr;
     }
 

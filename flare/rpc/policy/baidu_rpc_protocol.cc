@@ -20,7 +20,7 @@
 #include <google/protobuf/message.h>            // Message
 #include <google/protobuf/io/zero_copy_stream_impl_lite.h>
 #include <google/protobuf/io/coded_stream.h>
-#include "flare/log/logging.h"                       // LOG()
+#include "flare/log/logging.h"                       // FLARE_LOG()
 #include "flare/times/time.h"
 #include "flare/io/cord_buf.h"                         // flare::cord_buf
 #include "flare/io/raw_pack.h"                      // raw_packer raw_unpacker
@@ -76,7 +76,7 @@ static void SerializeRpcHeaderAndMeta(
         ::google::protobuf::io::ArrayOutputStream arr_out(header_and_meta + 12, meta_size);
         ::google::protobuf::io::CodedOutputStream coded_out(&arr_out);
         meta.SerializeWithCachedSizes(&coded_out); // not calling ByteSize again
-        CHECK(!coded_out.HadError());
+        FLARE_CHECK(!coded_out.HadError());
         out->append(header_and_meta, sizeof(header_and_meta));
     } else {
         char header[12];
@@ -85,7 +85,7 @@ static void SerializeRpcHeaderAndMeta(
         flare::cord_buf_as_zero_copy_output_stream buf_stream(out);
         ::google::protobuf::io::CodedOutputStream coded_out(&buf_stream);
         meta.SerializeWithCachedSizes(&coded_out);
-        CHECK(!coded_out.HadError());
+        FLARE_CHECK(!coded_out.HadError());
     }
 }
 
@@ -112,14 +112,14 @@ ParseResult ParseRpcMessage(flare::cord_buf* source, Socket* socket,
     if (body_size > FLAGS_max_body_size) {
         // We need this log to report the body_size to give users some clues
         // which is not printed in InputMessenger.
-        LOG(ERROR) << "body_size=" << body_size << " from "
+        FLARE_LOG(ERROR) << "body_size=" << body_size << " from "
                    << socket->remote_side() << " is too large";
         return MakeParseError(PARSE_ERROR_TOO_BIG_DATA);
     } else if (source->length() < sizeof(header_buf) + body_size) {
         return MakeParseError(PARSE_ERROR_NOT_ENOUGH_DATA);
     }
     if (meta_size > body_size) {
-        LOG(ERROR) << "meta_size=" << meta_size << " is bigger than body_size="
+        FLARE_LOG(ERROR) << "meta_size=" << meta_size << " is bigger than body_size="
                    << body_size;
         // Pop the message
         source->pop_front(sizeof(header_buf) + body_size);
@@ -211,7 +211,7 @@ void SendRpcResponse(int64_t correlation_id,
             s->FillSettings(meta.mutable_stream_settings());
             s->SetHostSocket(sock);
         } else {
-            LOG(WARNING) << "Stream=" << response_stream_id 
+            FLARE_LOG(WARNING) << "Stream=" << response_stream_id
                          << " was closed before sending response";
         }
     }
@@ -229,14 +229,14 @@ void SendRpcResponse(int64_t correlation_id,
         span->set_response_size(res_buf.size());
     }
     if (stream_ptr) {
-        CHECK(accessor.remote_stream_settings() != NULL);
+        FLARE_CHECK(accessor.remote_stream_settings() != NULL);
         // Send the response over stream to notify that this stream connection
         // is successfully built.
         if (SendStreamData(sock, &res_buf,
                            accessor.remote_stream_settings()->stream_id(),
                            accessor.response_stream()) != 0) {
             const int errcode = errno;
-            PLOG_IF(WARNING, errcode != EPIPE) << "Fail to write into " << *sock;
+            FLARE_PLOG_IF(WARNING, errcode != EPIPE) << "Fail to write into " << *sock;
             cntl->SetFailed(errcode, "Fail to write into %s",
                             sock->description().c_str());
             ((Stream*)stream_ptr->conn())->Close();
@@ -252,7 +252,7 @@ void SendRpcResponse(int64_t correlation_id,
         wopt.ignore_eovercrowded = true;
         if (sock->Write(&res_buf, &wopt) != 0) {
             const int errcode = errno;
-            PLOG_IF(WARNING, errcode != EPIPE) << "Fail to write into " << *sock;
+            FLARE_PLOG_IF(WARNING, errcode != EPIPE) << "Fail to write into " << *sock;
             cntl->SetFailed(errcode, "Fail to write into %s",
                             sock->description().c_str());
             return;
@@ -309,7 +309,7 @@ void ProcessRpcRequest(InputMessageBase* msg_base) {
 
     RpcMeta meta;
     if (!ParsePbFromCordBuf(&meta, msg->meta)) {
-        LOG(WARNING) << "Fail to parse RpcMeta from " << *socket;
+        FLARE_LOG(WARNING) << "Fail to parse RpcMeta from " << *socket;
         socket->SetFailed(EREQUEST, "Fail to parse RpcMeta from %s",
                           socket->description().c_str());
         return;
@@ -330,7 +330,7 @@ void ProcessRpcRequest(InputMessageBase* msg_base) {
 
     std::unique_ptr<Controller> cntl(new (std::nothrow) Controller);
     if (NULL == cntl.get()) {
-        LOG(WARNING) << "Fail to new Controller";
+        FLARE_LOG(WARNING) << "Fail to new Controller";
         return;
     }
     std::unique_ptr<google::protobuf::Message> req;
@@ -525,7 +525,7 @@ bool VerifyRpcRequest(const InputMessageBase* msg_base) {
     
     RpcMeta meta;
     if (!ParsePbFromCordBuf(&meta, msg->meta)) {
-        LOG(WARNING) << "Fail to parse RpcRequestMeta";
+        FLARE_LOG(WARNING) << "Fail to parse RpcRequestMeta";
         return false;
     }
     const Authenticator* auth = server->options().auth;
@@ -546,7 +546,7 @@ void ProcessRpcResponse(InputMessageBase* msg_base) {
     DestroyingPtr<MostCommonMessage> msg(static_cast<MostCommonMessage*>(msg_base));
     RpcMeta meta;
     if (!ParsePbFromCordBuf(&meta, msg->meta)) {
-        LOG(WARNING) << "Fail to parse from response meta";
+        FLARE_LOG(WARNING) << "Fail to parse from response meta";
         return;
     }
 
@@ -554,7 +554,7 @@ void ProcessRpcResponse(InputMessageBase* msg_base) {
     Controller* cntl = NULL;
     const int rc = fiber_token_lock(cid, (void**)&cntl);
     if (rc != 0) {
-        LOG_IF(ERROR, rc != EINVAL && rc != EPERM)
+        FLARE_LOG_IF(ERROR, rc != EINVAL && rc != EPERM)
             << "Fail to lock correlation_id=" << cid << ": " << flare_error(rc);
         if (meta.has_stream_settings()) {
             SendStreamRst(msg->socket(), meta.stream_settings().stream_id());

@@ -40,7 +40,7 @@ namespace {
         int array[32];
         ASSERT_EQ("int [32]", flare::base::class_name_str(array));
 
-        LOG(INFO) << flare::base::class_name_str(this);
-        LOG(INFO) << flare::base::class_name_str(*this);
+        FLARE_LOG(INFO) << flare::base::class_name_str(this);
+        FLARE_LOG(INFO) << flare::base::class_name_str(*this);
     }
 }

@@ -10,7 +10,7 @@ namespace flare {
 
     void latch::count_down(std::ptrdiff_t update) {
         std::unique_lock lk(m_);
-        CHECK_GE(count_, update);
+        FLARE_CHECK_GE(count_, update);
         count_ -= update;
         if (!count_) {
             cv_.notify_all();
@@ -19,13 +19,13 @@ namespace flare {
 
     bool latch::try_wait() const noexcept {
         std::scoped_lock _(m_);
-        CHECK_GE(count_, 0);
+        FLARE_CHECK_GE(count_, 0);
         return !count_;
     }
 
     void latch::wait() const {
         std::unique_lock lk(m_);
-        CHECK_GE(count_, 0);
+        FLARE_CHECK_GE(count_, 0);
         return cv_.wait(lk, [this] { return count_ == 0; });
     }
 

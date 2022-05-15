@@ -41,12 +41,12 @@ Extension<T>::~Extension() {
 template <typename T>
 int Extension<T>::Register(const std::string& name, T* instance) {
     if (NULL == instance) {
-        LOG(ERROR) << "instance to \"" << name << "\" is NULL";
+        FLARE_LOG(ERROR) << "instance to \"" << name << "\" is NULL";
         return -1;
     }
     FLARE_SCOPED_LOCK(_map_mutex);
     if (_instance_map.seek(name) != NULL) {
-        LOG(ERROR) << "\"" << name << "\" was registered";
+        FLARE_LOG(ERROR) << "\"" << name << "\" was registered";
         return -1;
     }
     _instance_map[name] = instance;

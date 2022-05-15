@@ -61,7 +61,7 @@ int main(int argc, char* argv[]) {
     // use flare::rpc::SERVER_OWNS_SERVICE.
     if (server.AddService(&http_svc,
                           flare::rpc::SERVER_DOESNT_OWN_SERVICE) != 0) {
-        LOG(ERROR) << "Fail to add http_svc";
+        FLARE_LOG(ERROR) << "Fail to add http_svc";
         return -1;
     }
 
@@ -69,7 +69,7 @@ int main(int argc, char* argv[]) {
     flare::rpc::ServerOptions options;
     options.idle_timeout_sec = FLAGS_idle_timeout_s;
     if (server.Start(FLAGS_port, &options) != 0) {
-        LOG(ERROR) << "Fail to start HttpServer";
+        FLARE_LOG(ERROR) << "Fail to start HttpServer";
         return -1;
     }
 

@@ -154,7 +154,7 @@ public:
                     d->sub_done_map(i) = done_index++;
                 }
             }
-            CHECK_EQ(ndone, done_index);
+            FLARE_CHECK_EQ(ndone, done_index);
         }
         return d;
     }
@@ -191,7 +191,7 @@ public:
             _cntl->_error_code = 0;
             _cntl->_error_text.clear();
         } else {
-            CHECK(ECANCELED == ec || ERPCTIMEDOUT == ec) << "ec=" << ec;
+            FLARE_CHECK(ECANCELED == ec || ERPCTIMEDOUT == ec) << "ec=" << ec;
         }
         OnSubDoneRun(NULL);
     }
@@ -289,7 +289,7 @@ public:
             fiber_attribute attr = (FLAGS_usercode_in_pthread ?
                                    FIBER_ATTR_PTHREAD : FIBER_ATTR_NORMAL);
             if (fiber_start_background(&bh, &attr, RunOnComplete, this) != 0) {
-                LOG(FATAL) << "Fail to start fiber";
+                FLARE_LOG(FATAL) << "Fail to start fiber";
                 OnComplete();
             }
         } else {
@@ -389,7 +389,7 @@ public:
             _cntl->OnRPCEnd(flare::get_current_time_micros());
             user_done->Run();
         }
-        CHECK_EQ(0, fiber_token_unlock_and_destroy(saved_cid));
+        FLARE_CHECK_EQ(0, fiber_token_unlock_and_destroy(saved_cid));
     }
 
     int sub_done_size() const { return _ndone; }
@@ -462,7 +462,7 @@ int ParallelChannel::AddChannel(ChannelBase* sub_channel,
                                 CallMapper* call_mapper,
                                 ResponseMerger* merger) {
     if (NULL == sub_channel) {
-        LOG(ERROR) << "Param[sub_channel] is NULL";
+        FLARE_LOG(ERROR) << "Param[sub_channel] is NULL";
         return -1;
     }
     if (_chans.capacity() == 0) {
@@ -521,7 +521,7 @@ void ParallelChannel::Reset() {
         std::unique(_chans.begin(), _chans.end(), EqualChannelPtr())
         - _chans.begin();
     for (size_t i = 0; i < uniq_size; ++i) {
-        CHECK_EQ(_chans[i].ownership, OWNS_CHANNEL);
+        FLARE_CHECK_EQ(_chans[i].ownership, OWNS_CHANNEL);
         delete _chans[i].chan;
     }
     _chans.clear();
@@ -544,7 +544,7 @@ void* ParallelChannel::RunDoneAndDestroy(void* arg) {
     // Save call_id from the controller which may be deleted after Run().
     const fiber_token_t cid = c->call_id();
     done->Run();
-    CHECK_EQ(0, fiber_token_unlock_and_destroy(cid));
+    FLARE_CHECK_EQ(0, fiber_token_unlock_and_destroy(cid));
     return NULL;
 }
 
@@ -563,11 +563,11 @@ void ParallelChannel::CallMethod(
     const CallId cid = cntl->call_id();
     const int rc = fiber_token_lock(cid, NULL);
     if (rc != 0) {
-        CHECK_EQ(EINVAL, rc);
+        FLARE_CHECK_EQ(EINVAL, rc);
         if (!cntl->FailedInline()) {
             cntl->SetFailed(EINVAL, "Fail to lock call_id=%" PRId64, cid.value);
         }
-        LOG_IF(ERROR, cntl->is_used_by_rpc())
+        FLARE_LOG_IF(ERROR, cntl->is_used_by_rpc())
             << "Controller=" << cntl << " was used by another RPC before. "
             "Did you forget to Reset() it before reuse?";
         // Have to run done in-place.
@@ -674,7 +674,7 @@ void ParallelChannel::CallMethod(
         cntl->_deadline_us = -1;
     }
     d->SaveThreadInfoOfCallsite();
-    CHECK_EQ(0, fiber_token_unlock(cid));
+    FLARE_CHECK_EQ(0, fiber_token_unlock(cid));
     // Don't touch `cntl' and `d' again (for async RPC)
     
     for (int i = 0, j = 0; i < nchan; ++i) {
@@ -714,11 +714,11 @@ FAIL:
                 return;
             }
             cntl->_done = NULL;
-            LOG(FATAL) << "Fail to start fiber";
+            FLARE_LOG(FATAL) << "Fail to start fiber";
         }
         done->Run();
     }
-    CHECK_EQ(0, fiber_token_unlock_and_destroy(cid));
+    FLARE_CHECK_EQ(0, fiber_token_unlock_and_destroy(cid));
 }
 
 int ParallelChannel::Weight() {

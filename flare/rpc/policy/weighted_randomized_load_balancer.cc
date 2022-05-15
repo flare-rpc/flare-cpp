@@ -48,7 +48,7 @@ namespace flare::rpc {
                     return true;
                 }
             } else {
-                LOG(ERROR) << "Invalid weight is set: " << id.tag;
+                FLARE_LOG(ERROR) << "Invalid weight is set: " << id.tag;
             }
             return false;
         }

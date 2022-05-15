@@ -63,9 +63,9 @@ int main(int argc, char **argv) {
     while (1) {
         try {
             client.Echo(res, req);
-            LOG(INFO) << "Req=" << req << " Res=" << res;
+            FLARE_LOG(INFO) << "Req=" << req << " Res=" << res;
         } catch (std::exception& e) {
-            LOG(ERROR) << "Fail to rpc, " << e.what();
+            FLARE_LOG(ERROR) << "Fail to rpc, " << e.what();
         }
         sleep(1);
     }

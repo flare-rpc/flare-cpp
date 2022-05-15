@@ -83,7 +83,7 @@ void *access_thread(void *void_args) {
         std::string const &url = (*args->url_list)[i];
         flare::rpc::Channel channel;
         if (channel.Init(url.c_str(), &options) != 0) {
-            LOG(ERROR) << "Fail to create channel to url=" << url;
+            FLARE_LOG(ERROR) << "Fail to create channel to url=" << url;
             FLARE_SCOPED_LOCK(args->output_queue_mutex);
             args->output_queue.push_back(std::make_pair(url, flare::cord_buf()));
             continue;
@@ -115,7 +115,7 @@ int main(int argc, char **argv) {
     if (!FLAGS_url_file.empty()) {
         fp_guard.reset(fopen(FLAGS_url_file.c_str(), "r"));
         if (!fp_guard) {
-            PLOG(ERROR) << "Fail to open `" << FLAGS_url_file << '\'';
+            FLARE_PLOG(ERROR) << "Fail to open `" << FLAGS_url_file << '\'';
             return -1;
         }
         fp = fp_guard.get();
@@ -149,7 +149,7 @@ int main(int argc, char **argv) {
     std::vector<fiber_id_t> tids;
     tids.resize(FLAGS_thread_num);
     for (int i = 0; i < FLAGS_thread_num; ++i) {
-        CHECK_EQ(0, fiber_start_background(&tids[i], NULL, access_thread, &args[i]));
+        FLARE_CHECK_EQ(0, fiber_start_background(&tids[i], NULL, access_thread, &args[i]));
     }
     std::deque<std::pair<std::string, flare::cord_buf> > output_queue;
     size_t nprinted = 0;

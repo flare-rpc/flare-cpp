@@ -103,13 +103,13 @@ bool InfoThread::start(const InfoThreadOptions& options) {
     if (options.latency_recorder == NULL ||
         options.error_count == NULL ||
         options.sent_count == NULL) {
-        LOG(ERROR) << "Some required options are NULL";
+        FLARE_LOG(ERROR) << "Some required options are NULL";
         return false;
     }
     _options = options;
     _stop = false;
     if (pthread_create(&_tid, NULL, run_info_thread, this) != 0) {
-        LOG(ERROR) << "Fail to create info_thread";
+        FLARE_LOG(ERROR) << "Fail to create info_thread";
         return false;
     }
     return true;

@@ -157,7 +157,7 @@ int main(int argc, char* argv[]) {
     if (FLAGS_target.empty() &&
         (argc != 2 || 
          GFLAGS_NS::SetCommandLineOption("target", argv[1]).empty())) {
-        LOG(ERROR) << "Usage: ./rpc_view <ip>:<port>";
+        FLARE_LOG(ERROR) << "Usage: ./rpc_view <ip>:<port>";
         return -1;
     }
     // This keeps ad-hoc creation of channels reuse previous connections.
@@ -168,7 +168,7 @@ int main(int argc, char* argv[]) {
     flare::rpc::ServerOptions server_opt;
     server_opt.http_master_service = new ViewServiceImpl;
     if (server.Start(FLAGS_port, &server_opt) != 0) {
-        LOG(ERROR) << "Fail to start ViewServer";
+        FLARE_LOG(ERROR) << "Fail to start ViewServer";
         return -1;
     }
     server.RunUntilAskedToQuit();

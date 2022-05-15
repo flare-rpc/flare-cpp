@@ -81,14 +81,14 @@ int GetStackConsumption(const void* const altstack) {
 
   for (int usage_count = kAlternateStackSize; usage_count > 0; --usage_count) {
     if (*begin != kAlternateStackFillValue) {
-      CHECK(usage_count <= kAlternateStackSize - kSafetyMargin)<<
+      FLARE_CHECK(usage_count <= kAlternateStackSize - kSafetyMargin)<<
                      "Buffer has overflowed or is about to overflow";
       return usage_count;
     }
     begin += increment;
   }
 
-  LOG(FATAL)<<"Unreachable code";
+  FLARE_LOG(FATAL)<<"Unreachable code";
   return -1;
 }
 
@@ -102,7 +102,7 @@ int GetSignalHandlerStackConsumption(void (*signal_handler)(int)) {
   // itself.
   void* altstack = mmap(nullptr, kAlternateStackSize, PROT_READ | PROT_WRITE,
                         MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
-  CHECK(altstack != MAP_FAILED)<<"mmap() failed";
+  FLARE_CHECK(altstack != MAP_FAILED)<<"mmap() failed";
 
   // Set up the alt-signal-stack (and save the older one).
   stack_t sigstk;
@@ -112,7 +112,7 @@ int GetSignalHandlerStackConsumption(void (*signal_handler)(int)) {
   sigstk.ss_flags = 0;
   stack_t old_sigstk;
   memset(&old_sigstk, 0, sizeof(old_sigstk));
-  CHECK(sigaltstack(&sigstk, &old_sigstk) == 0)<<"sigaltstack() failed";
+  FLARE_CHECK(sigaltstack(&sigstk, &old_sigstk) == 0)<<"sigaltstack() failed";
 
   // Set up SIGUSR1 and SIGUSR2 signal handlers (and save the older ones).
   struct sigaction sa;
@@ -123,24 +123,24 @@ int GetSignalHandlerStackConsumption(void (*signal_handler)(int)) {
 
   // SIGUSR1 maps to EmptySignalHandler.
   sa.sa_handler = EmptySignalHandler;
-  CHECK(sigaction(SIGUSR1, &sa, &old_sa1) == 0)<< "sigaction() failed";
+  FLARE_CHECK(sigaction(SIGUSR1, &sa, &old_sa1) == 0)<< "sigaction() failed";
 
   // SIGUSR2 maps to signal_handler.
   sa.sa_handler = signal_handler;
-  CHECK(sigaction(SIGUSR2, &sa, &old_sa2) == 0) "sigaction() failed";
+  FLARE_CHECK(sigaction(SIGUSR2, &sa, &old_sa2) == 0) "sigaction() failed";
 
   // Send SIGUSR1 signal and measure the stack consumption of the empty
   // signal handler.
   // The first signal might use more stack space. Run once and ignore the
   // results to get that out of the way.
-  CHECK(kill(getpid(), SIGUSR1) == 0)<< "kill() failed";
+  FLARE_CHECK(kill(getpid(), SIGUSR1) == 0)<< "kill() failed";
 
   memset(altstack, kAlternateStackFillValue, kAlternateStackSize);
-  CHECK(kill(getpid(), SIGUSR1) == 0)<< "kill() failed";
+  FLARE_CHECK(kill(getpid(), SIGUSR1) == 0)<< "kill() failed";
   int base_stack_consumption = GetStackConsumption(altstack);
 
   // Send SIGUSR2 signal and measure the stack consumption of signal_handler.
-  CHECK(kill(getpid(), SIGUSR2) == 0)<< "kill() failed";
+  FLARE_CHECK(kill(getpid(), SIGUSR2) == 0)<< "kill() failed";
   int signal_handler_stack_consumption = GetStackConsumption(altstack);
 
   // Now restore the old alt-signal-stack and signal handlers.
@@ -153,14 +153,14 @@ int GetSignalHandlerStackConsumption(void (*signal_handler)(int)) {
     // when SS_DISABLE is set.
     old_sigstk.ss_size = MINSIGSTKSZ;
   }
-  CHECK(sigaltstack(&old_sigstk, nullptr) == 0)<<
+  FLARE_CHECK(sigaltstack(&old_sigstk, nullptr) == 0)<<
                  "sigaltstack() failed";
-  CHECK(sigaction(SIGUSR1, &old_sa1, nullptr) == 0)<<
+  FLARE_CHECK(sigaction(SIGUSR1, &old_sa1, nullptr) == 0)<<
                  "sigaction() failed";
-  CHECK(sigaction(SIGUSR2, &old_sa2, nullptr) == 0)<<
+  FLARE_CHECK(sigaction(SIGUSR2, &old_sa2, nullptr) == 0)<<
                  "sigaction() failed";
 
-  CHECK(munmap(altstack, kAlternateStackSize) == 0)<< "munmap() failed";
+  FLARE_CHECK(munmap(altstack, kAlternateStackSize) == 0)<< "munmap() failed";
   if (signal_handler_stack_consumption != -1 && base_stack_consumption != -1) {
     return signal_handler_stack_consumption - base_stack_consumption;
   }

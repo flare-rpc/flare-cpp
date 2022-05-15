@@ -124,7 +124,7 @@ namespace flare::rpc {
         } else {
             client_info << "(no auth)";
         }
-        LOG(INFO) << client_info.str() << " requests for cpu profile for "
+        FLARE_LOG(INFO) << client_info.str() << " requests for cpu profile for "
                   << sleep_sec << " seconds";
 
         char prof_name[256];
@@ -144,7 +144,7 @@ namespace flare::rpc {
             return;
         }
         if (flare::fiber_sleep_for(sleep_sec * 1000000L) != 0) {
-            PLOG(WARNING) << "Profiling has been interrupted";
+            FLARE_PLOG(WARNING) << "Profiling has been interrupted";
         }
         ProfilerStop();
 
@@ -182,7 +182,7 @@ namespace flare::rpc {
         } else {
             client_info << "(no auth)";
         }
-        LOG(INFO) << client_info.str() << " requests for contention profile for "
+        FLARE_LOG(INFO) << client_info.str() << " requests for contention profile for "
                   << sleep_sec << " seconds";
 
         char prof_name[256];
@@ -195,7 +195,7 @@ namespace flare::rpc {
             return;
         }
         if (flare::fiber_sleep_for(sleep_sec * 1000000L) != 0) {
-            PLOG(WARNING) << "Profiling has been interrupted";
+            FLARE_PLOG(WARNING) << "Profiling has been interrupted";
         }
         flare::fiber_internal::ContentionProfilerStop();
 
@@ -235,7 +235,7 @@ namespace flare::rpc {
         } else {
             client_info << "(no auth)";
         }
-        LOG(INFO) << client_info.str() << " requests for heap profile";
+        FLARE_LOG(INFO) << client_info.str() << " requests for heap profile";
 
         std::string obj;
         malloc_ext->GetHeapSample(&obj);
@@ -265,7 +265,7 @@ namespace flare::rpc {
         } else {
             client_info << "(no auth)";
         }
-        LOG(INFO) << client_info.str() << " requests for growth profile";
+        FLARE_LOG(INFO) << client_info.str() << " requests for growth profile";
 
         std::string obj;
         malloc_ext->GetHeapGrowthStacks(&obj);
@@ -300,7 +300,7 @@ namespace flare::rpc {
         std::stringstream ss;
         const int rc = flare::base::read_command_output(ss, cmd.c_str());
     if (rc < 0) {
-        LOG(ERROR)<< "Fail to popen `" << cmd << "'";
+        FLARE_LOG(ERROR)<< "Fail to popen `" << cmd << "'";
         return -1;
     }
     std::string line;

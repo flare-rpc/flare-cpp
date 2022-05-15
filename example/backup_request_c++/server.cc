@@ -54,17 +54,17 @@ public:
         // how clients interact with servers more intuitively. You should 
         // remove these logs in performance-sensitive servers.
         // The noflush prevents the log from being flushed immediately.
-        LOG(INFO) << "Received request[index=" << request->index()
+        FLARE_LOG(INFO) << "Received request[index=" << request->index()
                   << "] from " << cntl->remote_side() 
                   << " to " << cntl->local_side() << noflush;
         // Sleep a while for 0th, 2nd, 4th, 6th ... requests to trigger backup request
         // at client-side.
         bool do_sleep = (_count.fetch_add(1, std::memory_order_relaxed) % 2 == 0);
         if (do_sleep) {
-            LOG(INFO) << ", sleep " << FLAGS_sleep_ms 
+            FLARE_LOG(INFO) << ", sleep " << FLAGS_sleep_ms
                       << " ms to trigger backup request" << noflush;
         }
-        LOG(INFO);
+        FLARE_LOG(INFO);
 
         // Fill response.
         response->set_index(request->index());
@@ -93,7 +93,7 @@ int main(int argc, char* argv[]) {
     // use flare::rpc::SERVER_OWNS_SERVICE.
     if (server.AddService(&echo_service_impl, 
                           flare::rpc::SERVER_DOESNT_OWN_SERVICE) != 0) {
-        LOG(ERROR) << "Fail to add service";
+        FLARE_LOG(ERROR) << "Fail to add service";
         return -1;
     }
 
@@ -101,7 +101,7 @@ int main(int argc, char* argv[]) {
     flare::rpc::ServerOptions options;
     options.idle_timeout_sec = FLAGS_idle_timeout_s;
     if (server.Start(FLAGS_port, &options) != 0) {
-        LOG(ERROR) << "Fail to start EchoServer";
+        FLARE_LOG(ERROR) << "Fail to start EchoServer";
         return -1;
     }
 

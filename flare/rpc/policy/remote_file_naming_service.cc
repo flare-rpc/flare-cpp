@@ -74,7 +74,7 @@ namespace flare::rpc {
                     proto = "http";
                 }
                 if (proto != "bns" && proto != "http") {
-                    LOG(ERROR) << "Invalid protocol=`" << proto
+                    FLARE_LOG(ERROR) << "Invalid protocol=`" << proto
                                << "\' in service_name=" << service_name_cstr;
                     return -1;
                 }
@@ -98,7 +98,7 @@ namespace flare::rpc {
                 opt.timeout_ms = FLAGS_remote_file_timeout_ms;
                 std::unique_ptr<Channel> chan(new Channel);
                 if (chan->Init(_server_addr.c_str(), "rr", &opt) != 0) {
-                    LOG(ERROR) << "Fail to init channel to " << _server_addr;
+                    FLARE_LOG(ERROR) << "Fail to init channel to " << _server_addr;
                     return -1;
                 }
                 _channel.swap(chan);
@@ -108,7 +108,7 @@ namespace flare::rpc {
             cntl.http_request().uri() = _path;
             _channel->CallMethod(NULL, &cntl, NULL, NULL, NULL);
             if (cntl.Failed()) {
-                LOG(WARNING) << "Fail to access " << _server_addr << _path << ": "
+                FLARE_LOG(WARNING) << "Fail to access " << _server_addr << _path << ": "
                              << cntl.ErrorText();
                 return -1;
             }
@@ -128,7 +128,7 @@ namespace flare::rpc {
                 flare::base::end_point point;
                 if (str2endpoint(addr.data(), &point) != 0 &&
                     hostname2endpoint(addr.data(), &point) != 0) {
-                    LOG(ERROR) << "Invalid address=`" << addr << '\'';
+                    FLARE_LOG(ERROR) << "Invalid address=`" << addr << '\'';
                     continue;
                 }
                 ServerNode node;

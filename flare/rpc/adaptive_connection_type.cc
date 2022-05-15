@@ -39,7 +39,7 @@ ConnectionType StringToConnectionType(const std::string_view& type,
     } else if (CompareStringPieceWithoutCase(type, "short")) {
         return CONNECTION_TYPE_SHORT;
     }
-    LOG_IF(ERROR, print_log_on_unknown && !type.empty())
+    FLARE_LOG_IF(ERROR, print_log_on_unknown && !type.empty())
         << "Unknown connection_type `" << type
         << "', supported types: single pooled short";
     return CONNECTION_TYPE_UNKNOWN;

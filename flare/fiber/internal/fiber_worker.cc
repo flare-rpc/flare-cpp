@@ -131,8 +131,8 @@ namespace flare::fiber_internal {
         fiber_id_t tid;
         while (wait_task(&tid)) {
             fiber_worker::sched_to(&dummy, tid);
-            DCHECK_EQ(this, dummy);
-            DCHECK_EQ(_cur_meta->stack, _main_stack);
+            FLARE_DCHECK_EQ(this, dummy);
+            FLARE_DCHECK_EQ(_cur_meta->stack, _main_stack);
             if (_cur_meta->tid != _main_tid) {
                 fiber_worker::task_runner(1/*skip remained*/);
             }
@@ -165,13 +165,13 @@ namespace flare::fiber_internal {
         _steal_seed = flare::base::fast_rand();
         _steal_offset = OFFSET_TABLE[_steal_seed % FLARE_ARRAY_SIZE(OFFSET_TABLE)];
         _pl = &c->_pl[flare::hash::fmix64(pthread_numeric_id()) % schedule_group::PARKING_LOT_NUM];
-        CHECK(c);
+        FLARE_CHECK(c);
     }
 
     fiber_worker::~fiber_worker() {
         if (_main_tid) {
             fiber_entity *m = address_meta(_main_tid);
-            CHECK(_main_stack == m->stack);
+            FLARE_CHECK(_main_stack == m->stack);
             return_stack(m->release_stack());
             return_resource(get_slot(_main_tid));
             _main_tid = 0;
@@ -180,22 +180,22 @@ namespace flare::fiber_internal {
 
     int fiber_worker::init(size_t runqueue_capacity) {
         if (_rq.init(runqueue_capacity) != 0) {
-            LOG(FATAL) << "Fail to init _rq";
+            FLARE_LOG(FATAL) << "Fail to init _rq";
             return -1;
         }
         if (_remote_rq.init(runqueue_capacity / 2) != 0) {
-            LOG(FATAL) << "Fail to init _remote_rq";
+            FLARE_LOG(FATAL) << "Fail to init _remote_rq";
             return -1;
         }
         fiber_contextual_stack *stk = get_stack(STACK_TYPE_MAIN, nullptr);
         if (nullptr == stk) {
-            LOG(FATAL) << "Fail to get main stack container";
+            FLARE_LOG(FATAL) << "Fail to get main stack container";
             return -1;
         }
         flare::ResourceId<fiber_entity> slot;
         fiber_entity *m = flare::get_resource<fiber_entity>(&slot);
         if (nullptr == m) {
-            LOG(FATAL) << "Fail to get fiber_entity";
+            FLARE_LOG(FATAL) << "Fail to get fiber_entity";
             return -1;
         }
         m->stop = false;
@@ -276,7 +276,7 @@ namespace flare::fiber_internal {
             // use fiber local storage internally, or will cause memory leak.
             // FIXME: the time from quiting fn to here is not counted into cputime
             if (m->attr.flags & FIBER_LOG_START_AND_FINISH) {
-                LOG(INFO) << "Finished fiber " << m->tid << ", cputime="
+                FLARE_LOG(INFO) << "Finished fiber " << m->tid << ", cputime="
                           << m->stat.cputime_ns / 1000000.0 << "ms";
             }
 
@@ -339,13 +339,13 @@ namespace flare::fiber_internal {
         if (__builtin_expect(!m, 0)) {
             return ENOMEM;
         }
-        CHECK(m->current_waiter.load(std::memory_order_relaxed) == nullptr);
+        FLARE_CHECK(m->current_waiter.load(std::memory_order_relaxed) == nullptr);
         m->stop = false;
         m->interrupted = false;
         m->about_to_quit = false;
         m->fn = std::move(fn);
         m->arg = arg;
-        CHECK(m->stack == nullptr);
+        FLARE_CHECK(m->stack == nullptr);
         m->attr = using_attr;
         m->local_storage = LOCAL_STORAGE_INIT;
         m->cpuwide_start_ns = start_ns;
@@ -353,7 +353,7 @@ namespace flare::fiber_internal {
         m->tid = make_tid(*m->version_butex, slot);
         *th = m->tid;
         if (using_attr.flags & FIBER_LOG_START_AND_FINISH) {
-            LOG(INFO) << "Started fiber " << m->tid;
+            FLARE_LOG(INFO) << "Started fiber " << m->tid;
         }
 
         fiber_worker *g = *pg;
@@ -394,13 +394,13 @@ namespace flare::fiber_internal {
         if (__builtin_expect(!m, 0)) {
             return ENOMEM;
         }
-        CHECK(m->current_waiter.load(std::memory_order_relaxed) == nullptr);
+        FLARE_CHECK(m->current_waiter.load(std::memory_order_relaxed) == nullptr);
         m->stop = false;
         m->interrupted = false;
         m->about_to_quit = false;
         m->fn = std::move(fn);
         m->arg = arg;
-        CHECK(m->stack == nullptr);
+        FLARE_CHECK(m->stack == nullptr);
         m->attr = using_attr;
         m->local_storage = LOCAL_STORAGE_INIT;
         m->cpuwide_start_ns = start_ns;
@@ -408,7 +408,7 @@ namespace flare::fiber_internal {
         m->tid = make_tid(*m->version_butex, slot);
         *th = m->tid;
         if (using_attr.flags & FIBER_LOG_START_AND_FINISH) {
-            LOG(INFO) << "Started fiber " << m->tid;
+            FLARE_LOG(INFO) << "Started fiber " << m->tid;
         }
         _control->_nfibers << 1;
         if (REMOTE) {
@@ -535,7 +535,7 @@ namespace flare::fiber_internal {
         fiber_worker *g = *pg;
 #ifndef NDEBUG
         if ((++g->_sched_recursive_guard) > 1) {
-            LOG(FATAL) << "Recursively(" << g->_sched_recursive_guard - 1
+            FLARE_LOG(FATAL) << "Recursively(" << g->_sched_recursive_guard - 1
                        << ") call sched_to(" << g << ")";
         }
 #endif
@@ -564,7 +564,7 @@ namespace flare::fiber_internal {
             // use fiber local storage internally, or will cause memory leak.
             if ((cur_meta->attr.flags & FIBER_LOG_CONTEXT_SWITCH) ||
                 (next_meta->attr.flags & FIBER_LOG_CONTEXT_SWITCH)) {
-                LOG(INFO) << "Switch fiber: " << cur_meta->tid << " -> "
+                FLARE_LOG(INFO) << "Switch fiber: " << cur_meta->tid << " -> "
                           << next_meta->tid;
             }
 
@@ -578,13 +578,13 @@ namespace flare::fiber_internal {
                 else {
                     // else pthread_task is switching to another pthread_task, sc
                     // can only equal when they're both _main_stack
-                    CHECK(cur_meta->stack == g->_main_stack);
+                    FLARE_CHECK(cur_meta->stack == g->_main_stack);
                 }
 #endif
             }
             // else because of ending_sched(including pthread_task->pthread_task)
         } else {
-            LOG(FATAL) << "fiber=" << g->current_fid() << " sched_to itself!";
+            FLARE_LOG(FATAL) << "fiber=" << g->current_fid() << " sched_to itself!";
         }
 
         while (g->_last_context_remained) {
@@ -609,7 +609,7 @@ namespace flare::fiber_internal {
             _control->_destroy_group(this);
             _control = nullptr;
         } else {
-            CHECK(false);
+            FLARE_CHECK(false);
         }
     }
 
@@ -638,7 +638,7 @@ namespace flare::fiber_internal {
         _remote_rq._mutex.lock();
         while (!_remote_rq.push_locked(tid)) {
             flush_nosignal_tasks_remote_locked(_remote_rq._mutex);
-            LOG_EVERY_SECOND(ERROR) << "_remote_rq is full, capacity="
+            FLARE_LOG_EVERY_SECOND(ERROR) << "_remote_rq is full, capacity="
                                     << _remote_rq.capacity();
             ::usleep(1000);
             _remote_rq._mutex.lock();
@@ -699,7 +699,7 @@ namespace flare::fiber_internal {
     };
 
     static void ready_to_run_from_timer_thread(void *arg) {
-        CHECK(tls_task_group == nullptr);
+        FLARE_CHECK(tls_task_group == nullptr);
         const SleepArgs *e = static_cast<const SleepArgs *>(arg);
         e->group->control()->choose_one_group()->ready_to_run_remote(e->tid);
     }
@@ -825,14 +825,14 @@ namespace flare::fiber_internal {
             return rc;
         }
         // a fiber cannot wait on a butex and be sleepy at the same time.
-        CHECK(!sleep_id || !w);
+        FLARE_CHECK(!sleep_id || !w);
         if (w != nullptr) {
             erase_from_event_because_of_interruption(w);
             // If waitable_event_wait() already wakes up before we set current_waiter back,
             // the function will spin until current_waiter becomes non-nullptr.
             rc = set_event_waiter(tid, w);
             if (rc) {
-                LOG(FATAL) << "waitable_event_wait should spin until setting back waiter";
+                FLARE_LOG(FATAL) << "waitable_event_wait should spin until setting back waiter";
                 return rc;
             }
         } else if (sleep_id != 0) {

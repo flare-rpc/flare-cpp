@@ -20,7 +20,7 @@ namespace flare {
     }
 
     flare_status sequential_write_file::open(const flare::file_path &path, bool truncate) noexcept {
-        CHECK(_fd == -1)<<"do not reopen";
+        FLARE_CHECK(_fd == -1)<<"do not reopen";
         flare_status rs;
         _path = path;
         if(truncate) {
@@ -29,7 +29,7 @@ namespace flare {
             _fd = ::open(path.c_str(), O_RDWR | O_CREAT | O_APPEND | O_CLOEXEC, 0644);
         }
         if(_fd < 0) {
-            LOG(ERROR)<<"open file to append : "<<path<<"error: "<<errno<<" "<<strerror(errno);
+            FLARE_LOG(ERROR)<<"open file to append : "<<path<<"error: "<<errno<<" "<<strerror(errno);
             rs.set_error(errno, "%s", strerror(errno));
         }
         return rs;
@@ -46,7 +46,7 @@ namespace flare {
             } else if (errno == EINTR) {
                 continue;
             } else {
-                LOG(WARNING) << "write falied, err: " << flare_error()
+                FLARE_LOG(WARNING) << "write falied, err: " << flare_error()
                              << " fd: " << _fd <<" size: " << size;
                 frs.set_error(errno, "%s", flare_error());
                 return frs;
@@ -68,7 +68,7 @@ namespace flare {
             } else if (errno == EINTR) {
                 continue;
             } else {
-                LOG(WARNING) << "write falied, err: " << flare_error()
+                FLARE_LOG(WARNING) << "write falied, err: " << flare_error()
                              << " fd: " << _fd <<" size: " << size;
                 frs.set_error(errno, "%s", flare_error());
                 return frs;

@@ -56,7 +56,7 @@ namespace {
             expected_result += i;
             ASSERT_EQ(0, flare::fiber_internal::execution_queue_execute(queue_id, i));
         }
-        LOG(INFO) << "stop";
+        FLARE_LOG(INFO) << "stop";
         ASSERT_EQ(0, flare::fiber_internal::execution_queue_stop(queue_id));
         ASSERT_NE(0, flare::fiber_internal::execution_queue_execute(queue_id, 0));
         ASSERT_EQ(0, flare::fiber_internal::execution_queue_join(queue_id));
@@ -149,7 +149,7 @@ namespace {
         ProfilerStop();
         ASSERT_EQ(0, flare::fiber_internal::execution_queue_join(queue_id));
         ASSERT_EQ(pa.expected_value.load(), result);
-        LOG(INFO) << "With addressed execq, each execution_queue_execute takes "
+        FLARE_LOG(INFO) << "With addressed execq, each execution_queue_execute takes "
                   << pa.total_time.load() / pa.total_num.load()
                   << " total_num=" << pa.total_num
                   << " ns with " << FLARE_ARRAY_SIZE(threads) << " threads";
@@ -175,7 +175,7 @@ namespace {
         ProfilerStop();
         ASSERT_EQ(0, flare::fiber_internal::execution_queue_join(queue_id));
         ASSERT_EQ(pa.expected_value.load(), result);
-        LOG(INFO) << "With id explicitly, execution_queue_execute takes "
+        FLARE_LOG(INFO) << "With id explicitly, execution_queue_execute takes "
                   << pa.total_time.load() / pa.total_num.load()
                   << " total_num=" << pa.total_num
                   << " ns with " << FLARE_ARRAY_SIZE(threads) << " threads";
@@ -256,7 +256,7 @@ namespace {
         for (size_t i = 0; i < FLARE_ARRAY_SIZE(threads); ++i) {
             pthread_join(threads[i], nullptr);
         }
-        LOG(INFO) << "result=" << result;
+        FLARE_LOG(INFO) << "result=" << result;
         ASSERT_EQ(0, flare::fiber_internal::execution_queue_join(queue_id));
         ASSERT_EQ(pa.expected_value.load(), result);
     }
@@ -274,7 +274,7 @@ namespace {
         while (!g_suspending) {
             usleep(10);
         }
-        LOG(INFO) << "Going to push";
+        FLARE_LOG(INFO) << "Going to push";
         int64_t expected = 0;
         for (int i = 1; i < 100; ++i) {
             expected += i;
@@ -286,7 +286,7 @@ namespace {
         g_suspending = false;
         std::atomic_thread_fence(std::memory_order_acq_rel);
         usleep(10 * 1000);
-        LOG(INFO) << "going to quit";
+        FLARE_LOG(INFO) << "going to quit";
         ASSERT_EQ(0, flare::fiber_internal::execution_queue_stop(queue_id));
         ASSERT_EQ(0, flare::fiber_internal::execution_queue_join(queue_id));
         ASSERT_EQ(expected, result);
@@ -298,7 +298,7 @@ namespace {
     void *push_thread_with_id(void *arg) {
         flare::fiber_internal::ExecutionQueueId<LongIntTask> id = {(uint64_t) arg};
         int thread_id = num_threads.fetch_add(1, std::memory_order_relaxed);
-        LOG(INFO) << "Start thread" << thread_id;
+        FLARE_LOG(INFO) << "Start thread" << thread_id;
         for (int i = 0; i < 100000; ++i) {
             flare::fiber_internal::execution_queue_execute(id, ((long) thread_id << 32) | i);
         }
@@ -426,7 +426,7 @@ namespace {
     void *inplace_push_thread(void *arg) {
         flare::fiber_internal::ExecutionQueueId<LongIntTask> id = {(uint64_t) arg};
         int thread_id = num_threads.fetch_add(1, std::memory_order_relaxed);
-        LOG(INFO) << "Start thread" << thread_id;
+        FLARE_LOG(INFO) << "Start thread" << thread_id;
         for (int i = 0; i < 100000; ++i) {
             flare::fiber_internal::execution_queue_execute(id, ((long) thread_id << 32) | i,
                                                            &flare::fiber_internal::TASK_OPTIONS_INPLACE);
@@ -454,7 +454,7 @@ namespace {
     }
 
     TEST_F(ExecutionQueueTest, size_of_task_node) {
-        LOG(INFO) << "sizeof(TaskNode)=" << sizeof(flare::fiber_internal::TaskNode);
+        FLARE_LOG(INFO) << "sizeof(TaskNode)=" << sizeof(flare::fiber_internal::TaskNode);
     }
 
     int add_with_suspend2(void *meta, flare::fiber_internal::TaskIterator<LongIntTask> &iter) {
@@ -613,7 +613,7 @@ namespace {
         ASSERT_EQ(0, flare::fiber_internal::execution_queue_stop(queue_id));
         ASSERT_EQ(0, flare::fiber_internal::execution_queue_join(queue_id));
         ASSERT_EQ(m.sum, m.expected.load());
-        LOG(INFO) << "sum=" << m.sum << " race_times=" << m.race_times
+        FLARE_LOG(INFO) << "sum=" << m.sum << " race_times=" << m.race_times
                   << " succ_times=" << m.succ_times
                   << " fail_times=" << m.fail_times;
 

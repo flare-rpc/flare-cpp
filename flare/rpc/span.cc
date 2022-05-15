@@ -285,7 +285,7 @@ namespace flare::rpc {
                     return true;
                 }
             }
-            LOG(ERROR) << "Unknown annotation: "
+            FLARE_LOG(ERROR) << "Unknown annotation: "
                        << std::string(_sp.field(), _sp.length());
         }
         return false;
@@ -486,7 +486,7 @@ namespace flare::rpc {
         std::error_code ec;
         const flare::file_path dir(local.id_db_name);
         if (!flare::create_directories(dir, ec)) {
-            LOG(ERROR) << "Fail to create directory=`" << dir.c_str() << ", "
+            FLARE_LOG(ERROR) << "Fail to create directory=`" << dir.c_str() << ", "
                        << ec.message();
             return NULL;
         }
@@ -494,7 +494,7 @@ namespace flare::rpc {
         local.id_db_name.append("/id.db");
         st = leveldb::DB::Open(options, local.id_db_name.c_str(), &local.id_db);
         if (!st.ok()) {
-            LOG(ERROR) << "Fail to open id_db: " << st.ToString();
+            FLARE_LOG(ERROR) << "Fail to open id_db: " << st.ToString();
             return NULL;
         }
 
@@ -503,14 +503,14 @@ namespace flare::rpc {
         local.time_db_name.append("/time.db");
         st = leveldb::DB::Open(options, local.time_db_name.c_str(), &local.time_db);
         if (!st.ok()) {
-            LOG(ERROR) << "Fail to open time_db: " << st.ToString();
+            FLARE_LOG(ERROR) << "Fail to open time_db: " << st.ToString();
             return NULL;
         }
         SpanDB *db = new(std::nothrow) SpanDB;
         if (NULL == db) {
             return NULL;
         }
-        LOG(INFO) << "Opened " << local.id_db_name << " and "
+        FLARE_LOG(INFO) << "Opened " << local.id_db_name << " and "
                   << local.time_db_name;
         Swap(local, *db);
         return db;
@@ -607,7 +607,7 @@ namespace flare::rpc {
         leveldb::Iterator *it = time_db->NewIterator(leveldb::ReadOptions());
         for (it->SeekToFirst(); it->Valid(); it->Next()) {
             if (it->key().size() != 8) {
-                LOG(ERROR) << "Invalid key size: " << it->key().size();
+                FLARE_LOG(ERROR) << "Invalid key size: " << it->key().size();
                 continue;
             }
             const int64_t realtime =
@@ -623,15 +623,15 @@ namespace flare::rpc {
                 leveldb::Slice key((char *) key_data, sizeof(key_data));
                 rc = id_db->Delete(options, key);
                 if (!rc.ok()) {
-                    LOG(ERROR) << "Fail to delete from id_db";
+                    FLARE_LOG(ERROR) << "Fail to delete from id_db";
                     break;
                 }
             } else {
-                LOG(ERROR) << "Fail to parse from value";
+                FLARE_LOG(ERROR) << "Fail to parse from value";
             }
             rc = time_db->Delete(options, it->key());
             if (!rc.ok()) {
-                LOG(ERROR) << "Fail to delete from time_db";
+                FLARE_LOG(ERROR) << "Fail to delete from time_db";
                 break;
             }
         }
@@ -653,7 +653,7 @@ namespace flare::rpc {
             }
             SpanDB *db2 = SpanDB::Open();
             if (db2 == NULL) {
-                LOG(WARNING) << "Fail to open SpanDB";
+                FLARE_LOG(WARNING) << "Fail to open SpanDB";
                 destroy();
                 return;
             }
@@ -664,7 +664,7 @@ namespace flare::rpc {
         leveldb::Status st = db->Index(this, &value_buf);
         destroy();
         if (!st.ok()) {
-            LOG(WARNING) << st.ToString();
+            FLARE_LOG(WARNING) << st.ToString();
             if (st.IsNotFound() || st.IsIOError() || st.IsCorruption()) {
                 ResetSpanDB(NULL);
                 return;
@@ -678,7 +678,7 @@ namespace flare::rpc {
             leveldb::Status st = db->RemoveSpansBefore(
                     now - FLAGS_rpcz_keep_span_seconds * 1000000L);
             if (!st.ok()) {
-                LOG(ERROR) << st.ToString();
+                FLARE_LOG(ERROR) << st.ToString();
                 if (st.IsNotFound() || st.IsIOError() || st.IsCorruption()) {
                     ResetSpanDB(NULL);
                     return;
@@ -702,7 +702,7 @@ namespace flare::rpc {
             return -1;
         }
         if (!response->ParseFromString(value)) {
-            LOG(ERROR) << "Fail to parse from the value";
+            FLARE_LOG(ERROR) << "Fail to parse from the value";
             return -1;
         }
         return 0;
@@ -721,7 +721,7 @@ namespace flare::rpc {
         leveldb::Slice key((char *) key_data, sizeof(key_data));
         for (it->Seek(key); it->Valid(); it->Next()) {
             if (it->key().size() != sizeof(key_data)) {
-                LOG(ERROR) << "Invalid key size: " << it->key().size();
+                FLARE_LOG(ERROR) << "Invalid key size: " << it->key().size();
                 break;
             }
             const uint64_t stored_trace_id =
@@ -733,7 +733,7 @@ namespace flare::rpc {
             if (span.ParseFromArray(it->value().data(), it->value().size())) {
                 out->push_back(span);
             } else {
-                LOG(ERROR) << "Fail to parse from value";
+                FLARE_LOG(ERROR) << "Fail to parse from value";
             }
         }
         delete it;
@@ -772,7 +772,7 @@ namespace flare::rpc {
                 // scaning too many entries.
                 ++nscan;
             } else {
-                LOG(ERROR) << "Fail to parse from value";
+                FLARE_LOG(ERROR) << "Fail to parse from value";
             }
         }
         delete it;

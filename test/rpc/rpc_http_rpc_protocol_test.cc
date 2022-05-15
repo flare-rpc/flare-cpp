@@ -51,8 +51,8 @@ int main(int argc, char* argv[]) {
         std::cerr << "Fail to set -socket_max_unwritten_bytes" << std::endl;
         return -1;
     }
-    if (GFLAGS_NS::SetCommandLineOption("crash_on_fatal_log", "true").empty()) {
-        std::cerr << "Fail to set -crash_on_fatal_log" << std::endl;
+    if (GFLAGS_NS::SetCommandLineOption("flare_crash_on_fatal_log", "true").empty()) {
+        std::cerr << "Fail to set -flare_crash_on_fatal_log" << std::endl;
         return -1;
     }
     return RUN_ALL_TESTS();
@@ -516,7 +516,7 @@ public:
             CopyPAPrefixedWithSeqNo(buf, c);
             if (pa->Write(buf, sizeof(buf)) != 0) {
                 if (errno == flare::rpc::EOVERCROWDED) {
-                    LOG_EVERY_SECOND(INFO) << "full pa=" << pa.get();
+                    FLARE_LOG_EVERY_SECOND(INFO) << "full pa=" << pa.get();
                     _ever_full = true;
                     flare::fiber_sleep_for(10000);
                     continue;
@@ -532,7 +532,7 @@ public:
         if (_done_place == DONE_AFTER_CREATE_PA_BEFORE_DESTROY_PA) {
             done_guard.reset(NULL);
         }
-        LOG(INFO) << "Destroy pa="  << pa.get();
+        FLARE_LOG(INFO) << "Destroy pa="  << pa.get();
         pa.reset(NULL);
         if (_done_place == DONE_AFTER_DESTROY_PA) {
             done_guard.reset(NULL);
@@ -559,7 +559,7 @@ public:
         while (true) {
             if (pa->Write(buf, sizeof(buf)) != 0) {
                 if (errno == flare::rpc::EOVERCROWDED) {
-                    LOG_EVERY_SECOND(INFO) << "full pa=" << pa.get();
+                    FLARE_LOG_EVERY_SECOND(INFO) << "full pa=" << pa.get();
                     flare::fiber_sleep_for(10000);
                     continue;
                 } else {
@@ -576,8 +576,8 @@ public:
         
         // Return value of Write after controller has failed should
         // be less than zero.
-        CHECK_LT(pa->Write(buf, sizeof(buf)), 0);
-        CHECK_EQ(errno, ECANCELED);
+        FLARE_CHECK_LT(pa->Write(buf, sizeof(buf)), 0);
+        FLARE_CHECK_EQ(errno, ECANCELED);
     }
     
     void set_done_place(DonePlace done_place) { _done_place = done_place; }
@@ -676,7 +676,7 @@ public:
         ASSERT_EQ(0, memcmp(_buf.data(), PA_DATA, _buf.size()));
         _destroyed = true;
         _destroying_st = st;
-        LOG(INFO) << "Destroy ReadBody=" << this << ", " << st;
+        FLARE_LOG(INFO) << "Destroy ReadBody=" << this << ", " << st;
     }
     bool destroyed() const { return _destroyed; }
     const flare::base::flare_status& destroying_status() const { return _destroying_st; }
@@ -718,7 +718,7 @@ TEST_F(HttpTest, read_long_body_progressively) {
                 for (size_t i = 0; i < 3; ++i) {
                     sleep(1);
                     size_t current_read = reader->read_bytes();
-                    LOG(INFO) << "read=" << current_read - last_read
+                    FLARE_LOG(INFO) << "read=" << current_read - last_read
                               << " total=" << current_read;
                     last_read = current_read;
                 }
@@ -766,7 +766,7 @@ TEST_F(HttpTest, read_short_body_progressively) {
             for (size_t i = 0; i < 3; ++i) {
                 sleep(1);
                 size_t current_read = reader->read_bytes();
-                LOG(INFO) << "read=" << current_read - last_read
+                FLARE_LOG(INFO) << "read=" << current_read - last_read
                           << " total=" << current_read;
                 last_read = current_read;
             }
@@ -806,7 +806,7 @@ TEST_F(HttpTest, read_progressively_after_cntl_destroys) {
             for (size_t i = 0; i < 3; ++i) {
                 sleep(1);
                 size_t current_read = reader->read_bytes();
-                LOG(INFO) << "read=" << current_read - last_read
+                FLARE_LOG(INFO) << "read=" << current_read - last_read
                           << " total=" << current_read;
                 last_read = current_read;
             }
@@ -845,7 +845,7 @@ TEST_F(HttpTest, read_progressively_after_long_delay) {
                 channel.CallMethod(NULL, &cntl, NULL, NULL, NULL);
                 ASSERT_FALSE(cntl.Failed()) << cntl.ErrorText();
                 ASSERT_TRUE(cntl.response_attachment().empty());
-                LOG(INFO) << "Sleep 3 seconds to make PA at server-side full";
+                FLARE_LOG(INFO) << "Sleep 3 seconds to make PA at server-side full";
                 sleep(3);
                 EXPECT_TRUE(svc.ever_full());
                 ASSERT_EQ(0, svc.last_errno());
@@ -855,7 +855,7 @@ TEST_F(HttpTest, read_progressively_after_long_delay) {
                 for (size_t i = 0; i < 3; ++i) {
                     sleep(1);
                     size_t current_read = reader->read_bytes();
-                    LOG(INFO) << "read=" << current_read - last_read
+                    FLARE_LOG(INFO) << "read=" << current_read - last_read
                               << " total=" << current_read;
                     last_read = current_read;
                 }
@@ -894,11 +894,11 @@ TEST_F(HttpTest, skip_progressive_reading) {
         ASSERT_TRUE(cntl.response_attachment().empty());
     }
     const size_t old_written_bytes = svc.written_bytes();
-    LOG(INFO) << "Sleep 3 seconds after destroy of Controller";
+    FLARE_LOG(INFO) << "Sleep 3 seconds after destroy of Controller";
     sleep(3);
     const size_t new_written_bytes = svc.written_bytes();
     ASSERT_EQ(0, svc.last_errno());
-    LOG(INFO) << "Server still wrote " << new_written_bytes - old_written_bytes;
+    FLARE_LOG(INFO) << "Server still wrote " << new_written_bytes - old_written_bytes;
     // The server side still wrote things.
     ASSERT_GT(new_written_bytes - old_written_bytes, (size_t)100000);
 }
@@ -910,7 +910,7 @@ public:
         return flare::base::flare_status(-1, "intended fail at %s:%d", __FILE__, __LINE__);
     }
     void OnEndOfMessage(const flare::base::flare_status& st) {
-        LOG(INFO) << "Destroy " << this << ": " << st;
+        FLARE_LOG(INFO) << "Destroy " << this << ": " << st;
         delete this;
     }
 };
@@ -935,7 +935,7 @@ TEST_F(HttpTest, failed_on_read_one_part) {
         ASSERT_TRUE(cntl.response_attachment().empty());
         cntl.ReadProgressiveAttachmentBy(new AlwaysFailRead);
     }
-    LOG(INFO) << "Sleep 1 second";
+    FLARE_LOG(INFO) << "Sleep 1 second";
     sleep(1);
     ASSERT_NE(0, svc.last_errno());
 }
@@ -966,7 +966,7 @@ TEST_F(HttpTest, broken_socket_stops_progressive_reading) {
         for (size_t i = 0; i < 3; ++i) {
             sleep(1);
             size_t current_read = reader->read_bytes();
-            LOG(INFO) << "read=" << current_read - last_read
+            FLARE_LOG(INFO) << "read=" << current_read - last_read
                       << " total=" << current_read;
             last_read = current_read;
         }
@@ -975,7 +975,7 @@ TEST_F(HttpTest, broken_socket_stops_progressive_reading) {
     }
     // the socket still holds a ref.
     ASSERT_FALSE(reader->destroyed());
-    LOG(INFO) << "Stopping the server";
+    FLARE_LOG(INFO) << "Stopping the server";
     server.Stop(0);
     server.Join();
         
@@ -1166,21 +1166,21 @@ TEST_F(HttpTest, http2_settings) {
     buf.append(settingsbuf, flare::rpc::policy::FRAME_HEAD_SIZE + nb);
 
     flare::rpc::policy::H2Context* ctx = new flare::rpc::policy::H2Context(_socket.get(), NULL);
-    CHECK_EQ(ctx->Init(), 0);
+    FLARE_CHECK_EQ(ctx->Init(), 0);
     _socket->initialize_parsing_context(&ctx);
     ctx->_conn_state = flare::rpc::policy::H2_CONNECTION_READY;
     // parse settings
     flare::rpc::policy::ParseH2Message(&buf, _socket.get(), false, NULL);
 
     flare::IOPortal response_buf;
-    CHECK_EQ(response_buf.append_from_file_descriptor(_pipe_fds[0], 1024),
+    FLARE_CHECK_EQ(response_buf.append_from_file_descriptor(_pipe_fds[0], 1024),
              (ssize_t)flare::rpc::policy::FRAME_HEAD_SIZE);
     flare::rpc::policy::H2FrameHead frame_head;
     flare::cord_buf_bytes_iterator it(response_buf);
     ctx->ConsumeFrameHead(it, &frame_head);
-    CHECK_EQ(frame_head.type, flare::rpc::policy::H2_FRAME_SETTINGS);
-    CHECK_EQ(frame_head.flags, 0x01 /* H2_FLAGS_ACK */);
-    CHECK_EQ(frame_head.stream_id, 0);
+    FLARE_CHECK_EQ(frame_head.type, flare::rpc::policy::H2_FRAME_SETTINGS);
+    FLARE_CHECK_EQ(frame_head.flags, 0x01 /* H2_FLAGS_ACK */);
+    FLARE_CHECK_EQ(frame_head.stream_id, 0);
     ASSERT_TRUE(ctx->_remote_settings.header_table_size == 8192);
     ASSERT_TRUE(ctx->_remote_settings.max_concurrent_streams == 1024);
     ASSERT_TRUE(ctx->_remote_settings.stream_window_size == (1u << 29) - 1);

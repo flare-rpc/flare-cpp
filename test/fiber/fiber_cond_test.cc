@@ -277,7 +277,7 @@ namespace {
             ASSERT_EQ(0, fiber_join(threads[i], nullptr));
         }
         ProfilerStop();
-        LOG(INFO) << "total_count=" << arg.total_count.load();
+        FLARE_LOG(INFO) << "total_count=" << arg.total_count.load();
     }
 
     struct BroadcastArg {
@@ -437,16 +437,16 @@ namespace {
             tids.push_back(t0);
         }
         tm.stop();
-        LOG(INFO) << "Creating fibers took " << tm.u_elapsed() << " us";
+        FLARE_LOG(INFO) << "Creating fibers took " << tm.u_elapsed() << " us";
         usleep(3 * 1000 * 1000L);
         c.Signal();
         g_stop = true;
         fiber_join(tid, nullptr);
         for (size_t i = 0; i < tids.size(); ++i) {
-            LOG_EVERY_SECOND(INFO) << "Joined " << i << " threads";
+            FLARE_LOG_EVERY_SECOND(INFO) << "Joined " << i << " threads";
             fiber_join(tids[i], nullptr);
         }
-        LOG_EVERY_SECOND(INFO) << "Joined " << tids.size() << " threads";
+        FLARE_LOG_EVERY_SECOND(INFO) << "Joined " << tids.size() << " threads";
     }
 
     TEST(CondTest, too_many_fibers_from_pthread) {

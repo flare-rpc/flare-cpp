@@ -23,7 +23,7 @@
 #include "flare/io/cord_buf.h"                  // flare::cord_buf
 #include <string_view>   // std::string_view
 #include "flare/memory/arena.h"                  // flare::Arena
-#include "flare/log/logging.h"                // CHECK
+#include "flare/log/logging.h"                // FLARE_CHECK
 #include "parse_result.h"                 // ParseError
 
 
@@ -198,7 +198,7 @@ inline int64_t RedisReply::integer() const {
     if (is_integer()) {
         return _data.integer;
     }
-    CHECK(false) << "The reply is " << RedisReplyTypeToString(_type)
+    FLARE_CHECK(false) << "The reply is " << RedisReplyTypeToString(_type)
                  << ", not an integer";
     return 0;
 }
@@ -266,7 +266,7 @@ inline const char* RedisReply::c_str() const {
             return _data.long_str;
         }
     }
-    CHECK(false) << "The reply is " << RedisReplyTypeToString(_type)
+    FLARE_CHECK(false) << "The reply is " << RedisReplyTypeToString(_type)
                  << ", not a string";
     return "";
 }
@@ -279,7 +279,7 @@ inline std::string_view RedisReply::data() const {
             return std::string_view(_data.long_str, _length);
         }
     }
-    CHECK(false) << "The reply is " << RedisReplyTypeToString(_type)
+    FLARE_CHECK(false) << "The reply is " << RedisReplyTypeToString(_type)
                  << ", not a string";
     return std::string_view();
 }
@@ -292,7 +292,7 @@ inline const char* RedisReply::error_message() const {
             return _data.long_str;
         }
     }
-    CHECK(false) << "The reply is " << RedisReplyTypeToString(_type)
+    FLARE_CHECK(false) << "The reply is " << RedisReplyTypeToString(_type)
                  << ", not an error";
     return "";
 }

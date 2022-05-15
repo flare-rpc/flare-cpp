@@ -236,4 +236,90 @@ namespace flare::base {
 #define FLARE_THREAD_LOCAL __thread
 #endif  // _MSC_VER
 
+
+// ------------------------------------------------------------------
+// Checks whether the compiler both supports and enables exceptions.
+// ------------------------------------------------------------------
+#ifdef FLARE_HAVE_EXCEPTIONS
+#error FLARE_HAVE_EXCEPTIONS cannot be directly set.
+#elif defined(__clang__)
+#if defined(__EXCEPTIONS) && __has_feature(cxx_exceptions)
+#define FLARE_HAVE_EXCEPTIONS 1
+#endif  // defined(__EXCEPTIONS) && __has_feature(cxx_exceptions)
+#elif !(defined(__GNUC__) && (__GNUC__ < 5) && !defined(__EXCEPTIONS)) && \
+    !(defined(__GNUC__) && (__GNUC__ >= 5) && !defined(__cpp_exceptions)) && \
+    !(defined(_MSC_VER) && !defined(_CPPUNWIND))
+#define FLARE_HAVE_EXCEPTIONS 1
+#endif
+
+#ifdef FLARE_HAVE_EXCEPTIONS
+#define FLARE_INTERNAL_TRY try
+#define FLARE_INTERNAL_CATCH_ANY catch (...)
+#define FLARE_INTERNAL_RETHROW do { throw; } while (false)
+#else  // FLARE_HAVE_EXCEPTIONS
+#define FLARE_INTERNAL_TRY if (true)
+#define FLARE_INTERNAL_CATCH_ANY else if (false)
+#define FLARE_INTERNAL_RETHROW do {} while (false)
+#endif  // FLARE_HAVE_EXCEPTIONS
+
+
+// ----------------------------------------------------------------------
+// Figure out SSE support
+// ----------------------------------------------------------------------
+#ifndef FLARE_HAVE_SSE2
+#if defined(__SSE2__) || \
+        (defined(_MSC_VER) && \
+         (defined(_M_X64) || (defined(_M_IX86) && _M_IX86_FP >= 2)))
+#define FLARE_HAVE_SSE2 1
+#else
+#define FLARE_HAVE_SSE2 0
+#endif
+#endif
+
+#ifndef FLARE_HAVE_SSSE3
+#if defined(__SSSE3__) || defined(__AVX2__)
+#define FLARE_HAVE_SSSE3 1
+#else
+#define FLARE_HAVE_SSSE3 0
+#endif
+#endif
+
+#if FLARE_HAVE_SSSE3 && !FLARE_HAVE_SSE2
+#error "Bad configuration!"
+#endif
+
+#if FLARE_HAVE_SSE2
+
+#include <emmintrin.h>
+
+#endif
+
+#if FLARE_HAVE_SSSE3
+
+#include <tmmintrin.h>
+
+#endif
+
+
+// FLARE_ASSERT()
+//
+// In C++11, `assert` can't be used portably within constexpr functions.
+// FLARE_ASSERT functions as a runtime assert but works in C++11 constexpr
+// functions.  Example:
+//
+// constexpr double Divide(double a, double b) {
+//   return FLARE_ASSERT(b != 0), a / b;
+// }
+//
+// This macro is inspired by
+// https://akrzemi1.wordpress.com/2017/05/18/asserts-in-constexpr-functions/
+#if defined(NDEBUG)
+#define FLARE_ASSERT(expr) (false ? (void)(expr) : (void)0)
+#else
+#define FLARE_ASSERT(expr)              \
+      (FLARE_LIKELY((expr)) ? (void)0 \
+                                 : [] { assert(false && #expr); }())  // NOLINT
+#endif
+
+
 #endif  // FLARE_BASE_PROFILE_MACROS_H_

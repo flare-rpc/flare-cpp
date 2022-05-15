@@ -30,7 +30,7 @@
 
 namespace {
 TEST(RecorderTest, test_complement) {
-    LOG(INFO) << "sizeof(LatencyRecorder)=" << sizeof(flare::variable::LatencyRecorder)
+    FLARE_LOG(INFO) << "sizeof(LatencyRecorder)=" << sizeof(flare::variable::LatencyRecorder)
               << " " << sizeof(flare::variable::detail::Percentile)
               << " " << sizeof(flare::variable::Maxer<int64_t>)
               << " " << sizeof(flare::variable::IntRecorder)
@@ -95,7 +95,7 @@ TEST(RecorderTest, window) {
         int64_t now = flare::get_current_time_micros();
         if (now - last_time >= 1000000L) {
             last_time = now;
-            LOG(INFO) << "c1=" << c1 << " w1=" << w1 << " w2=" << w2 << " w3=" << w3;
+            FLARE_LOG(INFO) << "c1=" << c1 << " w1=" << w1 << " w2=" << w2 << " w3=" << w3;
         } else {
             usleep(950);
         }
@@ -202,7 +202,7 @@ TEST(RecorderTest, perf) {
         totol_time += (long)ret;
     }
     ASSERT_EQ(((int64_t)OPS_PER_THREAD - 1) / 2, recorder.average());
-    LOG(INFO) << "Recorder takes " << totol_time / (OPS_PER_THREAD * FLARE_ARRAY_SIZE(threads))
+    FLARE_LOG(INFO) << "Recorder takes " << totol_time / (OPS_PER_THREAD * FLARE_ARRAY_SIZE(threads))
               << "ns per sample with " << FLARE_ARRAY_SIZE(threads)
               << " threads";
 }

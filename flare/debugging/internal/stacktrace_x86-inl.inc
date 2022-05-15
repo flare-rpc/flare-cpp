@@ -64,8 +64,8 @@ using flare::debugging::debugging_internal::address_is_readable;
 //
 static const int kMaxBytes = 10;
 
-// We use assert()s instead of DCHECK()s -- this is too low level
-// for DCHECK().
+// We use assert()s instead of FLARE_DCHECK()s -- this is too low level
+// for FLARE_DCHECK().
 
 static int CountPushInstructions(const unsigned char *const addr) {
   int result = 0;

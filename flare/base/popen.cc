@@ -36,7 +36,7 @@ namespace flare::base {
     int read_command_output_through_clone(std::ostream& os, const char* cmd) {
         int pipe_fd[2];
         if (pipe(pipe_fd) != 0) {
-            PLOG(ERROR) << "Fail to pipe";
+            FLARE_PLOG(ERROR) << "Fail to pipe";
             return -1;
         }
         int saved_errno = 0;
@@ -49,7 +49,7 @@ namespace flare::base {
         char* child_stack = NULL;
         char* child_stack_mem = (char*)malloc(CHILD_STACK_SIZE);
         if (!child_stack_mem) {
-            LOG(ERROR) << "Fail to alloc stack for the child process";
+            FLARE_LOG(ERROR) << "Fail to alloc stack for the child process";
             rc = -1;
             goto END;
         }
@@ -58,7 +58,7 @@ namespace flare::base {
         cpid = clone(launch_child_process, child_stack,
                      __WCLONE | CLONE_VM | SIGCHLD | CLONE_UNTRACED, &args);
         if (cpid < 0) {
-            PLOG(ERROR) << "Fail to clone child process";
+            FLARE_PLOG(ERROR) << "Fail to clone child process";
             rc = -1;
             goto END;
         }
@@ -73,7 +73,7 @@ namespace flare::base {
             } else if (nr == 0) {
                 break;
             } else if (errno != EINTR) {
-                LOG(ERROR) << "Encountered error while reading for the pipe";
+                FLARE_LOG(ERROR) << "Encountered error while reading for the pipe";
                 break;
             }
         }
@@ -145,7 +145,7 @@ namespace flare::base {
                 if (feof(pipe)) {
                     break;
                 } else if (ferror(pipe)) {
-                    LOG(ERROR) << "Encountered error while reading for the pipe";
+                    FLARE_LOG(ERROR) << "Encountered error while reading for the pipe";
                     break;
                 }
                 // retry;

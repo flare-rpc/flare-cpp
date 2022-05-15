@@ -119,12 +119,12 @@ TEST_F(ReducerTest, perf) {
     for (size_t i = 1; i <= 24; ++i) {
         oss << i << '\t' << start_perf_test_with_adder(i) << '\n';
     }
-    LOG(INFO) << "Adder performance:\n" << oss.str();
+    FLARE_LOG(INFO) << "Adder performance:\n" << oss.str();
     oss.str("");
     for (size_t i = 1; i <= 24; ++i) {
         oss << i << '\t' << start_perf_test_with_atomic(i) << '\n';
     }
-    LOG(INFO) << "Atomic performance:\n" << oss.str();
+    FLARE_LOG(INFO) << "Atomic performance:\n" << oss.str();
 }
 
 TEST_F(ReducerTest, Min) {
@@ -212,7 +212,7 @@ void ReducerTest_window() {
         if (now - last_time >= 1000000L) {
             last_time = now;
             ASSERT_EQ(total_count, c1.get_value());
-            LOG(INFO) << "c1=" << total_count
+            FLARE_LOG(INFO) << "c1=" << total_count
                       << " count=" << count
                       << " w1=" << w1
                       << " w2=" << w2
@@ -270,7 +270,7 @@ static void* string_appender(void* arg) {
     }
     StringAppenderResult* res = new StringAppenderResult;
     res->count = count;
-    LOG(INFO) << "Appended " << count;
+    FLARE_LOG(INFO) << "Appended " << count;
     return res;
 }
 

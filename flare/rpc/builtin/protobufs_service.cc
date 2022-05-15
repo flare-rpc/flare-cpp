@@ -28,7 +28,7 @@
 namespace flare::rpc {
 
 ProtobufsService::ProtobufsService(Server* server) : _server(server) {
-    CHECK_EQ(0, Init());
+    FLARE_CHECK_EQ(0, Init());
 }
 
 int ProtobufsService::Init() {

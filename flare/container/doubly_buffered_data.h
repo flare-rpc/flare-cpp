@@ -300,7 +300,7 @@ namespace flare::container {
         const int rc = pthread_key_create(&_wrapper_key,
                                           detail::delete_object < Wrapper > );
         if (rc != 0) {
-            LOG(FATAL) << "Fail to pthread_key_create: " << flare_error(rc);
+            FLARE_LOG(FATAL) << "Fail to pthread_key_create: " << flare_error(rc);
         } else {
             _created_key = true;
         }
@@ -392,7 +392,7 @@ namespace flare::container {
         }
 
         const size_t ret2 = fn(_data[bg_index]);
-        CHECK_EQ(ret2, ret) << "index=" << _index.load(std::memory_order_relaxed);
+        FLARE_CHECK_EQ(ret2, ret) << "index=" << _index.load(std::memory_order_relaxed);
         return ret2;
     }
 

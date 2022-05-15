@@ -77,7 +77,7 @@ FLARE_REGISTER_ERRNO(flare::rpc::ECLOSE, "Close socket initiatively");
 FLARE_REGISTER_ERRNO(flare::rpc::EITP, "Bad Itp response");
 
 
-DECLARE_bool(log_as_json);
+DECLARE_bool(flare_log_as_json);
 
 namespace flare::rpc {
 
@@ -127,13 +127,13 @@ namespace flare::rpc {
     }
 
     Controller::Controller() {
-        CHECK_EQ(0, pthread_once(&s_create_vars_once, CreateVars));
+        FLARE_CHECK_EQ(0, pthread_once(&s_create_vars_once, CreateVars));
         *g_ncontroller << 1;
         ResetPods();
     }
 
     Controller::Controller(const Inheritable &parent_ctx) {
-        CHECK_EQ(0, pthread_once(&s_create_vars_once, CreateVars));
+        FLARE_CHECK_EQ(0, pthread_once(&s_create_vars_once, CreateVars));
         *g_ncontroller << 1;
         ResetPods();
         _inheritable = parent_ctx;
@@ -151,7 +151,7 @@ namespace flare::rpc {
     Controller::~Controller() {
         *g_ncontroller << -1;
         if (_session_kv != nullptr && _session_kv->Count() != 0) {
-            LOG(INFO) << SessionKVFlusher{this};
+            FLARE_LOG(INFO) << SessionKVFlusher{this};
         }
         ResetNonPods();
     }
@@ -189,7 +189,7 @@ namespace flare::rpc {
         delete _sampled_request;
 
         if (!is_used_by_rpc() && _correlation_id != INVALID_FIBER_TOKEN) {
-            CHECK_NE(EPERM, fiber_token_cancel(_correlation_id));
+            FLARE_CHECK_NE(EPERM, fiber_token_cancel(_correlation_id));
         }
         if (_oncancel_id != INVALID_FIBER_TOKEN) {
             fiber_token_error(_oncancel_id, 0);
@@ -224,7 +224,7 @@ namespace flare::rpc {
         delete _remote_stream_settings;
         _thrift_method_name.clear();
 
-        CHECK(_unfinished_call == NULL);
+        FLARE_CHECK(_unfinished_call == NULL);
     }
 
     void Controller::ResetPods() {
@@ -293,7 +293,7 @@ namespace flare::rpc {
     }
 
     Controller::Call::~Call() {
-        CHECK(sending_sock.get() == NULL);
+        FLARE_CHECK(sending_sock.get() == NULL);
     }
 
     void Controller::Call::Reset() {
@@ -311,7 +311,7 @@ namespace flare::rpc {
             _timeout_ms = timeout_ms;
         } else {
             _timeout_ms = 0x7fffffff;
-            LOG(WARNING) << "timeout_ms is limited to 0x7fffffff (roughly 24 days)";
+            FLARE_LOG(WARNING) << "timeout_ms is limited to 0x7fffffff (roughly 24 days)";
         }
     }
 
@@ -320,13 +320,13 @@ namespace flare::rpc {
             _backup_request_ms = timeout_ms;
         } else {
             _backup_request_ms = 0x7fffffff;
-            LOG(WARNING) << "backup_request_ms is limited to 0x7fffffff (roughly 24 days)";
+            FLARE_LOG(WARNING) << "backup_request_ms is limited to 0x7fffffff (roughly 24 days)";
         }
     }
 
     void Controller::set_max_retry(int max_retry) {
         if (max_retry > MAX_RETRY_COUNT) {
-            LOG(WARNING) << "Retry count can't be larger than "
+            FLARE_LOG(WARNING) << "Retry count can't be larger than "
                          << MAX_RETRY_COUNT << ", round it to "
                          << MAX_RETRY_COUNT;
             _max_retry = MAX_RETRY_COUNT;
@@ -354,7 +354,7 @@ namespace flare::rpc {
     }
 
     void Controller::StartCancel() {
-        LOG(FATAL) << "You must call flare::rpc::StartCancel(id) instead!"
+        FLARE_LOG(FATAL) << "You must call flare::rpc::StartCancel(id) instead!"
                       " because this function is racing with ~Controller() in "
                       " asynchronous calls.";
     }
@@ -385,7 +385,7 @@ namespace flare::rpc {
     }
 
     inline void UpdateResponseHeader(Controller *cntl) {
-        DCHECK(cntl->Failed());
+        FLARE_DCHECK(cntl->Failed());
         if (cntl->request_protocol() == PROTOCOL_HTTP ||
             cntl->request_protocol() == PROTOCOL_H2) {
             if (cntl->ErrorCode() != EHTTP) {
@@ -424,7 +424,7 @@ namespace flare::rpc {
 
     void Controller::SetFailed(int error_code, const char *reason_fmt, ...) {
         if (error_code == 0) {
-            CHECK(false) << "error_code is 0";
+            FLARE_CHECK(false) << "error_code is 0";
             error_code = -1;
         }
         _error_code = error_code;
@@ -496,7 +496,7 @@ namespace flare::rpc {
 
         void Run() {
             _cb->Run();
-            CHECK_EQ(0, fiber_token_unlock_and_destroy(_id));
+            FLARE_CHECK_EQ(0, fiber_token_unlock_and_destroy(_id));
             delete this;
         }
 
@@ -510,7 +510,7 @@ namespace flare::rpc {
             // Called from Controller::ResetNonPods upon Controller's Reset or
             // destruction, we just call the callback in-place.
             static_cast<google::protobuf::Closure *>(data)->Run();
-            CHECK_EQ(0, fiber_token_unlock_and_destroy(id));
+            FLARE_CHECK_EQ(0, fiber_token_unlock_and_destroy(id));
             return 0;
         }
         // Called from Socket::SetFailed, should be infrequent.
@@ -519,23 +519,23 @@ namespace flare::rpc {
         RunOnCancelThread *arg = new RunOnCancelThread(
                 static_cast<google::protobuf::Closure *>(data), id);
         fiber_id_t th;
-        CHECK_EQ(0, fiber_start_urgent(&th, NULL, RunOnCancelThread::RunThis, arg));
+        FLARE_CHECK_EQ(0, fiber_start_urgent(&th, NULL, RunOnCancelThread::RunThis, arg));
         return 0;
     }
 
     void Controller::NotifyOnCancel(google::protobuf::Closure *callback) {
         if (NULL == callback) {
-            LOG(WARNING) << "Parameter `callback' is NLLL";
+            FLARE_LOG(WARNING) << "Parameter `callback' is NLLL";
             return;
         }
 
         ClosureGuard guard(callback);
         if (_oncancel_id != INVALID_FIBER_TOKEN) {
-            LOG(FATAL) << "NotifyCancel a single call more than once!";
+            FLARE_LOG(FATAL) << "NotifyCancel a single call more than once!";
             return;
         }
         if (fiber_token_create(&_oncancel_id, callback, RunOnCancel) != 0) {
-            PLOG(FATAL) << "Fail to create fiber_token";
+            FLARE_PLOG(FATAL) << "Fail to create fiber_token";
             return;
         }
         SocketUniquePtr sock;
@@ -578,7 +578,7 @@ namespace flare::rpc {
             // Ignore all non-backup requests and failed backup requests.
             _error_code = saved_error;
             response_attachment().clear();
-            CHECK_EQ(0, fiber_token_unlock(info.id));
+            FLARE_CHECK_EQ(0, fiber_token_unlock(info.id));
             return;
         }
 
@@ -611,7 +611,7 @@ namespace flare::rpc {
                 _accessed->Add(_current_call.peer_id);
             }
             // _current_call does not end yet.
-            CHECK(_unfinished_call == NULL);  // only one backup request now.
+            FLARE_CHECK(_unfinished_call == NULL);  // only one backup request now.
             _unfinished_call = new(std::nothrow) Call(&_current_call);
             if (_unfinished_call == NULL) {
                 SetFailed(ENOMEM, "Fail to new Call");
@@ -625,7 +625,7 @@ namespace flare::rpc {
             // The error must come from _current_call because:
             //  * we intercepted error from _unfinished_call in OnVersionedRPCReturned
             //  * ERPCTIMEDOUT/ECANCELED are not retrying error by default.
-            CHECK_EQ(current_id(), info.id) << "error_code=" << _error_code;
+            FLARE_CHECK_EQ(current_id(), info.id) << "error_code=" << _error_code;
             if (!SingleServer()) {
                 if (_accessed == NULL) {
                     _accessed = ExcludedServers::Create(
@@ -686,7 +686,7 @@ namespace flare::rpc {
                                    FIBER_ATTR_PTHREAD : FIBER_ATTR_NORMAL);
             _tmp_completion_info = info;
             if (fiber_start_background(&bt, &attr, RunEndRPC, this) != 0) {
-                LOG(FATAL) << "Fail to start fiber";
+                FLARE_LOG(FATAL) << "Fail to start fiber";
                 EndRPC(info);
             }
         } else {
@@ -847,7 +847,7 @@ namespace flare::rpc {
             // is sent after _unfinished_call, it's just normal that _current_call
             // does not respond before _unfinished_call.
             if (_unfinished_call == NULL) {
-                CHECK(false) << "A previous non-backup request responded, cid="
+                FLARE_CHECK(false) << "A previous non-backup request responded, cid="
                              << info.id << " current_cid=" << current_id()
                              << " initial_cid=" << _correlation_id
                              << " stream_user_data=" << _current_call.stream_user_data
@@ -865,7 +865,7 @@ namespace flare::rpc {
                     _unfinished_call->OnComplete(
                             this, _error_code, info.responded, true);
                 } else {
-                    CHECK(false) << "A previous non-backup request responded";
+                    FLARE_CHECK(false) << "A previous non-backup request responded";
                     _unfinished_call->OnComplete(this, ECANCELED, false, true);
                 }
 
@@ -919,7 +919,7 @@ namespace flare::rpc {
                     // fibers, saving signalings.
                     // FIXME: We're assuming the calling thread is about to quit.
                     fiber_about_to_quit();
-                    CHECK_EQ(0, fiber_token_unlock_and_destroy(saved_cid));
+                    FLARE_CHECK_EQ(0, fiber_token_unlock_and_destroy(saved_cid));
                 }
             } else {
                 RunUserCode(RunDoneInBackupThread, this);
@@ -930,7 +930,7 @@ namespace flare::rpc {
 
             // Check comments in above branch on fiber_about_to_quit.
             fiber_about_to_quit();
-            CHECK_EQ(0, fiber_token_unlock_and_destroy(saved_cid));
+            FLARE_CHECK_EQ(0, fiber_token_unlock_and_destroy(saved_cid));
         }
     }
 
@@ -947,7 +947,7 @@ namespace flare::rpc {
         _done->Run();
         // NOTE: Don't touch fields of controller anymore, it may be deleted.
         if (!destroy_cid_in_done) {
-            CHECK_EQ(0, fiber_token_unlock_and_destroy(saved_cid));
+            FLARE_CHECK_EQ(0, fiber_token_unlock_and_destroy(saved_cid));
         }
     }
 
@@ -964,7 +964,7 @@ namespace flare::rpc {
     void Controller::HandleSendFailed() {
         if (!FailedInline()) {
             SetFailed("Must be SetFailed() before calling HandleSendFailed()");
-            LOG(FATAL) << ErrorText();
+            FLARE_LOG(FATAL) << ErrorText();
         }
         const CompletionInfo info = {current_id(), false};
         // NOTE: Launch new thread to run the callback in an asynchronous call
@@ -999,7 +999,7 @@ namespace flare::rpc {
             if (_sender->IssueRPC(start_realtime_us) != 0) {
                 return HandleSendFailed();
             }
-            CHECK_EQ(0, fiber_token_unlock(cid));
+            FLARE_CHECK_EQ(0, fiber_token_unlock(cid));
             return;
         }
 
@@ -1047,7 +1047,7 @@ namespace flare::rpc {
                 return HandleSendFailed();
             }
             // remote_side can't be changed.
-            CHECK_EQ(_remote_side, tmp_sock->remote_side());
+            FLARE_CHECK_EQ(_remote_side, tmp_sock->remote_side());
         }
 
         Span *span = _span;
@@ -1185,12 +1185,12 @@ namespace flare::rpc {
             // to confirm the credential data
             _current_call.sending_sock->SetAuthentication(rc);
         }
-        CHECK_EQ(0, fiber_token_unlock(cid));
+        FLARE_CHECK_EQ(0, fiber_token_unlock(cid));
     }
 
     void Controller::set_auth_context(const AuthContext *ctx) {
         if (_auth_context != NULL) {
-            LOG(FATAL) << "Impossible! This function is supposed to be called "
+            FLARE_LOG(FATAL) << "Impossible! This function is supposed to be called "
                           "only once when verification succeeds in server side";
             return;
         }
@@ -1242,7 +1242,7 @@ namespace flare::rpc {
         // Optimistic locking.
         CallId cid = {0};
         // The range of this id will be reset in Channel::CallMethod
-        CHECK_EQ(0, fiber_token_create2(&cid, this, HandleSocketFailed));
+        FLARE_CHECK_EQ(0, fiber_token_create2(&cid, this, HandleSocketFailed));
         if (!target->compare_exchange_strong(loaded, cid.value,
                                              std::memory_order_relaxed)) {
             fiber_token_cancel(cid);
@@ -1313,7 +1313,7 @@ namespace flare::rpc {
 
     void Controller::HandleStreamConnection(Socket *host_socket) {
         if (_request_stream == INVALID_STREAM_ID) {
-            CHECK(!has_remote_stream());
+            FLARE_CHECK(!has_remote_stream());
             return;
         }
         SocketUniquePtr ptr;
@@ -1376,7 +1376,7 @@ namespace flare::rpc {
 
     void Controller::set_stream_creator(StreamCreator *sc) {
         if (_stream_creator) {
-            LOG(FATAL) << "A StreamCreator has been set previously";
+            FLARE_LOG(FATAL) << "A StreamCreator has been set previously";
             return;
         }
         _stream_creator = sc;
@@ -1385,15 +1385,15 @@ namespace flare::rpc {
     flare::container::intrusive_ptr<ProgressiveAttachment>
     Controller::CreateProgressiveAttachment(StopStyle stop_style) {
         if (has_progressive_writer()) {
-            LOG(ERROR) << "One controller can only have one ProgressiveAttachment";
+            FLARE_LOG(ERROR) << "One controller can only have one ProgressiveAttachment";
             return NULL;
         }
         if (_request_protocol != PROTOCOL_HTTP) {
-            LOG(ERROR) << "Only http supports ProgressiveAttachment now";
+            FLARE_LOG(ERROR) << "Only http supports ProgressiveAttachment now";
             return NULL;
         }
         if (_current_call.sending_sock == NULL) {
-            LOG(ERROR) << "sending_sock is NULL";
+            FLARE_LOG(ERROR) << "sending_sock is NULL";
             return NULL;
         }
         SocketUniquePtr httpsock;
@@ -1409,7 +1409,7 @@ namespace flare::rpc {
 
     void Controller::ReadProgressiveAttachmentBy(ProgressiveReader *r) {
         if (r == NULL) {
-            LOG(FATAL) << "Param[r] is NULL";
+            FLARE_LOG(FATAL) << "Param[r] is NULL";
             return;
         }
         if (!is_response_read_progressively()) {
@@ -1483,11 +1483,11 @@ namespace flare::rpc {
         if (prev != SIG_DFL &&
             prev != SIG_IGN) { // shell may install SIGINT of background jobs with SIG_IGN
             if (prev == SIG_ERR) {
-                LOG(ERROR) << "Fail to register SIGINT, abort";
+                FLARE_LOG(ERROR) << "Fail to register SIGINT, abort";
                 abort();
             } else {
                 s_prev_sigint_handler = prev;
-                LOG(WARNING) << "SIGINT was installed with " << prev;
+                FLARE_LOG(WARNING) << "SIGINT was installed with " << prev;
             }
         }
 
@@ -1496,11 +1496,11 @@ namespace flare::rpc {
             if (prev != SIG_DFL &&
                 prev != SIG_IGN) { // shell may install SIGTERM of background jobs with SIG_IGN
                 if (prev == SIG_ERR) {
-                    LOG(ERROR) << "Fail to register SIGTERM, abort";
+                    FLARE_LOG(ERROR) << "Fail to register SIGTERM, abort";
                     abort();
                 } else {
                     s_prev_sigterm_handler = prev;
-                    LOG(WARNING) << "SIGTERM was installed with " << prev;
+                    FLARE_LOG(WARNING) << "SIGTERM was installed with " << prev;
                 }
             }
         }
@@ -1544,7 +1544,7 @@ namespace flare::rpc {
             pRID = &request_id();
         }
 
-        if (FLAGS_log_as_json) {
+        if (FLAGS_flare_log_as_json) {
             if (pRID) {
                 os << "\"" FLARE_RPC_REQ_ID "\":\"" << *pRID << "\",";
             }
@@ -1573,14 +1573,14 @@ namespace flare::rpc {
         if (!request_id().empty()) {
             pRID = &request_id();
             if (pRID) {
-                if (FLAGS_log_as_json) {
+                if (FLAGS_flare_log_as_json) {
                     os << FLARE_RPC_REQ_ID "\":\"" << *pRID << "\",";
                 } else {
                     os << FLARE_RPC_REQ_ID FLARE_RPC_KV_SEP << *pRID << " ";
                 }
             }
         }
-        if (FLAGS_log_as_json) {
+        if (FLAGS_flare_log_as_json) {
             os << "\"M\":\"";
         }
     }

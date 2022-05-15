@@ -22,7 +22,7 @@ namespace flare {
             }
         }
 
-        ~fiber_mutex() { CHECK_EQ(0, fiber_mutex_destroy(&_mutex)); }
+        ~fiber_mutex() { FLARE_CHECK_EQ(0, fiber_mutex_destroy(&_mutex)); }
 
         native_handler_type native_handler() { return &_mutex; }
 

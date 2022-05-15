@@ -39,7 +39,7 @@ namespace debugging_internal {
 // Pack a pid and two file descriptors into a 64-bit word,
 // using 16, 24, and 24 bits for each respectively.
 static uint64_t Pack(uint64_t pid, uint64_t read_fd, uint64_t write_fd) {
-  DCHECK((read_fd >> 24) == 0 && (write_fd >> 24) == 0)<<"fd out of range";
+  FLARE_DCHECK((read_fd >> 24) == 0 && (write_fd >> 24) == 0)<<"fd out of range";
   return (pid << 48) | ((read_fd & 0xffffff) << 24) | (write_fd & 0xffffff);
 }
 
@@ -80,7 +80,7 @@ bool address_is_readable(const void *addr) {
       int p[2];
       // new pipe
       if (pipe(p) != 0) {
-        LOG(FATAL)<<"Failed to create pipe, errno="<<errno;
+        FLARE_LOG(FATAL)<<"Failed to create pipe, errno="<<errno;
       }
       fcntl(p[0], F_SETFD, FD_CLOEXEC);
       fcntl(p[1], F_SETFD, FD_CLOEXEC);

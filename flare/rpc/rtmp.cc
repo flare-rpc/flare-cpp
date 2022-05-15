@@ -199,7 +199,7 @@ namespace flare::rpc {
             }
             const char flv_header_signature[3] = {'F', 'L', 'V'};
             if (memcmp(p, flv_header_signature, sizeof(flv_header_signature)) != 0) {
-                LOG(FATAL) << "Fail to parse FLV header";
+                FLARE_LOG(FATAL) << "Fail to parse FLV header";
                 return flare::base::flare_status(EINVAL, "Fail to parse FLV header");
             }
             _buf->pop_front(sizeof(header_buf));
@@ -245,7 +245,7 @@ namespace flare::rpc {
         }
         _buf->pop_front(11);
         char first_byte = 0;
-        CHECK(_buf->cut1(&first_byte));
+        FLARE_CHECK(_buf->cut1(&first_byte));
         msg->timestamp = timestamp;
         msg->frame_type = (FlvVideoFrameType) ((first_byte >> 4) & 0xF);
         msg->codec = (FlvVideoCodec) (first_byte & 0xF);
@@ -273,7 +273,7 @@ namespace flare::rpc {
         }
         _buf->pop_front(11);
         char first_byte = 0;
-        CHECK(_buf->cut1(&first_byte));
+        FLARE_CHECK(_buf->cut1(&first_byte));
         msg->timestamp = timestamp;
         msg->codec = (FlvAudioCodec) ((first_byte >> 4) & 0xF);
         msg->rate = (FlvSoundRate) ((first_byte >> 2) & 0x3);
@@ -967,13 +967,13 @@ namespace flare::rpc {
     bool AVCNaluIterator::next_as_ibmf() {
         // The value of this field shall be one of 0, 1, or 3 corresponding to a
         // length encoded with 1, 2, or 4 bytes, respectively.
-        CHECK_NE(_length_size_minus1, 2u);
+        FLARE_CHECK_NE(_length_size_minus1, 2u);
 
         if (_data->empty()) {
             return false;
         }
         if (_data->size() < _length_size_minus1 + 1) {
-            LOG(ERROR) << "Not enough data to decode length of NALU";
+            FLARE_LOG(ERROR) << "Not enough data to decode length of NALU";
             return false;
         }
         int32_t nalu_length = 0;
@@ -991,11 +991,11 @@ namespace flare::rpc {
         // maybe stream is invalid format.
         // see: https://github.com/ossrs/srs/issues/183
         if (nalu_length < 0) {
-            LOG(ERROR) << "Invalid nalu_length=" << nalu_length;
+            FLARE_LOG(ERROR) << "Invalid nalu_length=" << nalu_length;
             return false;
         }
         if (_data->size() < _length_size_minus1 + 1 + nalu_length) {
-            LOG(ERROR) << "Not enough data to decode NALU";
+            FLARE_LOG(ERROR) << "Not enough data to decode NALU";
             return false;
         }
         _data->pop_front(_length_size_minus1 + 1);
@@ -1075,7 +1075,7 @@ namespace flare::rpc {
         policy::RtmpContext *ctx =
                 static_cast<policy::RtmpContext *>(s->parsing_context());
         if (ctx == NULL) {
-            LOG(FATAL) << "RtmpContext of " << *s << " is NULL";
+            FLARE_LOG(FATAL) << "RtmpContext of " << *s << " is NULL";
             return done(EINVAL, data);
         }
 
@@ -1083,7 +1083,7 @@ namespace flare::rpc {
         if (_client_options && _client_options->simplified_rtmp) {
             ctx->set_simplified_rtmp(true);
             if (ctx->SendConnectRequest(s->remote_side(), s->fd(), true) != 0) {
-                LOG(ERROR) << s->remote_side() << ": Fail to send simple connect";
+                FLARE_LOG(ERROR) << s->remote_side() << ": Fail to send simple connect";
                 return done(EINVAL, data);
             }
             ctx->SetState(s->remote_side(), policy::RtmpContext::STATE_RECEIVED_S2);
@@ -1097,7 +1097,7 @@ namespace flare::rpc {
         // Initiate the rtmp handshake.
         bool is_simple_handshake = false;
         if (policy::SendC0C1(s->fd(), &is_simple_handshake) != 0) {
-            LOG(ERROR) << s->remote_side() << ": Fail to send C0 C1";
+            FLARE_LOG(ERROR) << s->remote_side() << ": Fail to send C0 C1";
             return done(EINVAL, data);
         }
         if (is_simple_handshake) {
@@ -1109,7 +1109,7 @@ namespace flare::rpc {
         policy::RtmpContext *ctx =
                 static_cast<policy::RtmpContext *>(s->parsing_context());
         if (ctx == NULL) {
-            LOG(FATAL) << "RtmpContext of " << *s << " is NULL";
+            FLARE_LOG(FATAL) << "RtmpContext of " << *s << " is NULL";
         } else {
             ctx->OnConnected(EFAILEDSOCKET);
         }
@@ -1145,7 +1145,7 @@ namespace flare::rpc {
         SocketMapOptions sm_options;
         sm_options.socket_creator = new RtmpSocketCreator(_connect_options);
         if (_socket_map.Init(sm_options) != 0) {
-            LOG(ERROR) << "Fail to init _socket_map";
+            FLARE_LOG(ERROR) << "Fail to init _socket_map";
             return -1;
         }
         return 0;
@@ -1224,7 +1224,7 @@ namespace flare::rpc {
                          const RtmpClientOptions &options) {
         flare::container::intrusive_ptr<RtmpClientImpl> tmp(new(std::nothrow) RtmpClientImpl);
         if (tmp == NULL) {
-            LOG(FATAL) << "Fail to new RtmpClientImpl";
+            FLARE_LOG(FATAL) << "Fail to new RtmpClientImpl";
             return -1;
         }
         if (tmp->Init(server_addr_and_port, options) != 0) {
@@ -1238,7 +1238,7 @@ namespace flare::rpc {
                          const RtmpClientOptions &options) {
         flare::container::intrusive_ptr<RtmpClientImpl> tmp(new(std::nothrow) RtmpClientImpl);
         if (tmp == NULL) {
-            LOG(FATAL) << "Fail to new RtmpClientImpl";
+            FLARE_LOG(FATAL) << "Fail to new RtmpClientImpl";
             return -1;
         }
         if (tmp->Init(server_addr_and_port, options) != 0) {
@@ -1252,7 +1252,7 @@ namespace flare::rpc {
                          const RtmpClientOptions &options) {
         flare::container::intrusive_ptr<RtmpClientImpl> tmp(new(std::nothrow) RtmpClientImpl);
         if (tmp == NULL) {
-            LOG(FATAL) << "Fail to new RtmpClientImpl";
+            FLARE_LOG(FATAL) << "Fail to new RtmpClientImpl";
             return -1;
         }
         if (tmp->Init(server_addr, port, options) != 0) {
@@ -1267,7 +1267,7 @@ namespace flare::rpc {
                          const RtmpClientOptions &options) {
         flare::container::intrusive_ptr<RtmpClientImpl> tmp(new(std::nothrow) RtmpClientImpl);
         if (tmp == NULL) {
-            LOG(FATAL) << "Fail to new RtmpClientImpl";
+            FLARE_LOG(FATAL) << "Fail to new RtmpClientImpl";
             return -1;
         }
         if (tmp->Init(naming_service_url, load_balancer_name, options) != 0) {
@@ -1300,7 +1300,7 @@ namespace flare::rpc {
             return -1;
         }
         if (_chunk_stream_id == 0) {
-            LOG(ERROR) << "SendXXXMessage can't be called before play() is received";
+            FLARE_LOG(ERROR) << "SendXXXMessage can't be called before play() is received";
             errno = EPERM;
             return -1;
         }
@@ -1334,7 +1334,7 @@ namespace flare::rpc {
             WriteAMFString(RTMP_AMF0_ON_CUE_POINT, &ostream);
             WriteAMFObject(cuepoint.data, &ostream);
             if (!ostream.good()) {
-                LOG(ERROR) << "Fail to serialize cuepoint";
+                FLARE_LOG(ERROR) << "Fail to serialize cuepoint";
                 return -1;
             }
         }
@@ -1350,7 +1350,7 @@ namespace flare::rpc {
             WriteAMFString(name, &ostream);
             WriteAMFObject(metadata.data, &ostream);
             if (!ostream.good()) {
-                LOG(ERROR) << "Fail to serialize metadata";
+                FLARE_LOG(ERROR) << "Fail to serialize metadata";
                 return -1;
             }
         }
@@ -1358,7 +1358,7 @@ namespace flare::rpc {
     }
 
     int RtmpStreamBase::SendSharedObjectMessage(const RtmpSharedObjectMessage &) {
-        CHECK(false) << "Not supported yet";
+        FLARE_CHECK(false) << "Not supported yet";
         return -1;
     }
 
@@ -1368,7 +1368,7 @@ namespace flare::rpc {
             return -1;
         }
         if (_chunk_stream_id == 0) {
-            LOG(ERROR) << __FUNCTION__ << " can't be called before play() is received";
+            FLARE_LOG(ERROR) << __FUNCTION__ << " can't be called before play() is received";
             errno = EPERM;
             return -1;
         }
@@ -1399,7 +1399,7 @@ namespace flare::rpc {
             return -1;
         }
         if (_chunk_stream_id == 0) {
-            LOG(ERROR) << __FUNCTION__ << " can't be called before play() is received";
+            FLARE_LOG(ERROR) << __FUNCTION__ << " can't be called before play() is received";
             errno = EPERM;
             return -1;
         }
@@ -1426,7 +1426,7 @@ namespace flare::rpc {
     }
 
     int RtmpStreamBase::SendUserMessage(void *) {
-        CHECK(false) << "You should implement your own SendUserMessage";
+        FLARE_CHECK(false) << "You should implement your own SendUserMessage";
         return 0;
     }
 
@@ -1436,15 +1436,15 @@ namespace flare::rpc {
             return -1;
         }
         if (_chunk_stream_id == 0) {
-            LOG(ERROR) << __FUNCTION__ << " can't be called before play() is received";
+            FLARE_LOG(ERROR) << __FUNCTION__ << " can't be called before play() is received";
             errno = EPERM;
             return -1;
         }
         if (!policy::is_video_frame_type_valid(msg.frame_type)) {
-            LOG(WARNING) << "Invalid frame_type=" << (int) msg.frame_type;
+            FLARE_LOG(WARNING) << "Invalid frame_type=" << (int) msg.frame_type;
         }
         if (!policy::is_video_codec_valid(msg.codec)) {
-            LOG(WARNING) << "Invalid codec=" << (int) msg.codec;
+            FLARE_LOG(WARNING) << "Invalid codec=" << (int) msg.codec;
         }
         if (_paused) {
             errno = EPERM;
@@ -1469,12 +1469,12 @@ namespace flare::rpc {
             return -1;
         }
         if (_chunk_stream_id == 0) {
-            LOG(ERROR) << __FUNCTION__ << " can't be called before play() is received";
+            FLARE_LOG(ERROR) << __FUNCTION__ << " can't be called before play() is received";
             errno = EPERM;
             return -1;
         }
         if (!policy::is_video_frame_type_valid(msg.frame_type)) {
-            LOG(WARNING) << "Invalid frame_type=" << (int) msg.frame_type;
+            FLARE_LOG(WARNING) << "Invalid frame_type=" << (int) msg.frame_type;
         }
         if (_paused) {
             errno = EPERM;
@@ -1518,32 +1518,32 @@ namespace flare::rpc {
     void RtmpStreamBase::OnFirstMessage() {}
 
     void RtmpStreamBase::OnUserData(void *) {
-        LOG(INFO) << remote_side() << '[' << stream_id()
+        FLARE_LOG(INFO) << remote_side() << '[' << stream_id()
                   << "] ignored UserData{}";
     }
 
     void RtmpStreamBase::OnCuePoint(RtmpCuePoint *cuepoint) {
-        LOG(INFO) << remote_side() << '[' << stream_id()
+        FLARE_LOG(INFO) << remote_side() << '[' << stream_id()
                   << "] ignored CuePoint{" << cuepoint->data << '}';
     }
 
     void RtmpStreamBase::OnMetaData(RtmpMetaData *metadata, const std::string_view &name) {
-        LOG(INFO) << remote_side() << '[' << stream_id()
+        FLARE_LOG(INFO) << remote_side() << '[' << stream_id()
                   << "] ignored MetaData{" << metadata->data << '}'
                   << " name{" << name << '}';
     }
 
     void RtmpStreamBase::OnSharedObjectMessage(RtmpSharedObjectMessage *) {
-        LOG(ERROR) << remote_side() << '[' << stream_id()
+        FLARE_LOG(ERROR) << remote_side() << '[' << stream_id()
                    << "] ignored SharedObjectMessage{}";
     }
 
     void RtmpStreamBase::OnAudioMessage(RtmpAudioMessage *msg) {
-        LOG(ERROR) << remote_side() << '[' << stream_id() << "] ignored " << *msg;
+        FLARE_LOG(ERROR) << remote_side() << '[' << stream_id() << "] ignored " << *msg;
     }
 
     void RtmpStreamBase::OnVideoMessage(RtmpVideoMessage *msg) {
-        LOG(ERROR) << remote_side() << '[' << stream_id() << "] ignored " << *msg;
+        FLARE_LOG(ERROR) << remote_side() << '[' << stream_id() << "] ignored " << *msg;
     }
 
     void RtmpStreamBase::OnStop() {
@@ -1554,12 +1554,12 @@ namespace flare::rpc {
         std::unique_lock<flare::base::Mutex> mu(_call_mutex);
         if (_stopped) {
             mu.unlock();
-            LOG(ERROR) << fun_name << " is called after OnStop()";
+            FLARE_LOG(ERROR) << fun_name << " is called after OnStop()";
             return false;
         }
         if (_processing_msg) {
             mu.unlock();
-            LOG(ERROR) << "Impossible: Another OnXXXMessage is being called!";
+            FLARE_LOG(ERROR) << "Impossible: Another OnXXXMessage is being called!";
             return false;
         }
         _processing_msg = true;
@@ -1626,7 +1626,7 @@ namespace flare::rpc {
             std::unique_lock<flare::base::Mutex> mu(_call_mutex);
             if (_stopped) {
                 mu.unlock();
-                LOG(ERROR) << "OnStop() was called more than once";
+                FLARE_LOG(ERROR) << "OnStop() was called more than once";
                 return;
             }
             _stopped = true;
@@ -1762,7 +1762,7 @@ namespace flare::rpc {
     int RtmpClientStream::RunOnFailed(fiber_token_t id, void *data, int) {
         flare::container::intrusive_ptr<RtmpClientStream> stream(
                 static_cast<RtmpClientStream *>(data), false);
-        CHECK(stream->_rtmpsock);
+        FLARE_CHECK(stream->_rtmpsock);
         // Must happen after NotifyOnFailed which is after all other callsites
         // to OnStopInternal().
         stream->OnStopInternal();
@@ -1781,7 +1781,7 @@ namespace flare::rpc {
                 case STATE_CREATED:
                     _state = STATE_ERROR;
                     mu.unlock();
-                    CHECK(false) << "Impossible";
+                    FLARE_CHECK(false) << "Impossible";
                     break;
                 case STATE_ERROR:
                 case STATE_DESTROYING:
@@ -1824,12 +1824,12 @@ namespace flare::rpc {
                 cntl->ErrorCode() != ERTMPCREATESTREAM) {
                 // ^ ERTMPCREATESTREAM is triggered by receiving "_error" command,
                 // RemoveTransaction should already be called.
-                CHECK_LT(cntl->log_id(), (uint64_t) std::numeric_limits<uint32_t>::max());
+                FLARE_CHECK_LT(cntl->log_id(), (uint64_t) std::numeric_limits<uint32_t>::max());
                 const uint32_t transaction_id = cntl->log_id();
                 policy::RtmpContext *rtmp_ctx =
                         static_cast<policy::RtmpContext *>(_rtmpsock->parsing_context());
                 if (rtmp_ctx == NULL) {
-                    LOG(FATAL) << "RtmpContext must be created";
+                    FLARE_LOG(FATAL) << "RtmpContext must be created";
                 } else {
                     policy::RtmpTransactionHandler *handler =
                             rtmp_ctx->RemoveTransaction(transaction_id);
@@ -1847,7 +1847,7 @@ namespace flare::rpc {
             std::unique_lock<flare::base::Mutex> mu(_state_mutex);
             switch (_state) {
                 case STATE_CREATING:
-                    CHECK(_rtmpsock);
+                    FLARE_CHECK(_rtmpsock);
                     rc = fiber_token_create(&onfail_id, this, RunOnFailed);
                     if (rc) {
                         cntl->SetFailed(ENOMEM, "Fail to create _onfail_id: %s", flare_error(rc));
@@ -1863,7 +1863,7 @@ namespace flare::rpc {
                 case STATE_CREATED:
                     _state = STATE_ERROR;
                     mu.unlock();
-                    CHECK(false) << "Impossible";
+                    FLARE_CHECK(false) << "Impossible";
                     return OnStopInternal();
                 case STATE_ERROR:
                 case STATE_DESTROYING:
@@ -1890,7 +1890,7 @@ namespace flare::rpc {
                 WriteAMFString(RTMP_AMF0_COMMAND_CLOSE_STREAM, &ostream);
                 WriteAMFUint32(0, &ostream);
                 WriteAMFNull(&ostream);
-                CHECK(ostream.good());
+                FLARE_CHECK(ostream.good());
             }
             SocketMessagePtr<policy::RtmpUnsentMessage> msg1(new policy::RtmpUnsentMessage);
             msg1->header.message_length = req_buf1.size();
@@ -1908,7 +1908,7 @@ namespace flare::rpc {
                 WriteAMFUint32(0, &ostream);
                 WriteAMFNull(&ostream);
                 WriteAMFUint32(_message_stream_id, &ostream);
-                CHECK(ostream.good());
+                FLARE_CHECK(ostream.good());
             }
             policy::RtmpUnsentMessage *msg2 = policy::MakeUnsentControlMessage(
                     policy::RTMP_MESSAGE_COMMAND_AMF0, req_buf2);
@@ -1916,7 +1916,7 @@ namespace flare::rpc {
 
             if (policy::WriteWithoutOvercrowded(_rtmpsock.get(), msg1) != 0) {
                 if (errno != EFAILEDSOCKET) {
-                    PLOG(WARNING) << "Fail to send closeStream/deleteStream to "
+                    FLARE_PLOG(WARNING) << "Fail to send closeStream/deleteStream to "
                                   << _rtmpsock->remote_side() << "["
                                   << _message_stream_id << "]";
                     // Close the connection to make sure the server-side knows the
@@ -1931,10 +1931,10 @@ namespace flare::rpc {
         if (ctx != NULL) {
             if (!ctx->RemoveMessageStream(this)) {
                 // The stream is not registered yet. Is this normal?
-                LOG(ERROR) << "Fail to remove stream_id=" << _message_stream_id;
+                FLARE_LOG(ERROR) << "Fail to remove stream_id=" << _message_stream_id;
             }
         } else {
-            LOG(FATAL) << "RtmpContext of " << *_rtmpsock << " is NULL";
+            FLARE_LOG(FATAL) << "RtmpContext of " << *_rtmpsock << " is NULL";
         }
         if (_from_socketmap) {
             _client_impl->socket_map().Remove(SocketMapKey(_rtmpsock->remote_side()),
@@ -1955,12 +1955,12 @@ namespace flare::rpc {
             return -1;
         }
         if (opt.stream_name.empty()) {
-            LOG(ERROR) << "Empty stream_name";
+            FLARE_LOG(ERROR) << "Empty stream_name";
             errno = EINVAL;
             return -1;
         }
         if (_client_impl == NULL) {
-            LOG(ERROR) << "The client stream is not created yet";
+            FLARE_LOG(ERROR) << "The client stream is not created yet";
             errno = EPERM;
             return -1;
         }
@@ -1975,7 +1975,7 @@ namespace flare::rpc {
             WriteAMFNumber(opt.start, &ostream);
             WriteAMFNumber(opt.duration, &ostream);
             WriteAMFBool(opt.reset, &ostream);
-            CHECK(ostream.good());
+            FLARE_CHECK(ostream.good());
         }
         SocketMessagePtr<policy::RtmpUnsentMessage> msg1(new policy::RtmpUnsentMessage);
         msg1->header.message_length = req_buf.size();
@@ -2014,7 +2014,7 @@ namespace flare::rpc {
             WriteAMFNull(&ostream);
             WriteAMFObject(opt, &ostream);
             if (!ostream.good()) {
-                LOG(ERROR) << "Fail to serialize play2 request";
+                FLARE_LOG(ERROR) << "Fail to serialize play2 request";
                 errno = EINVAL;
                 return -1;
             }
@@ -2059,7 +2059,7 @@ namespace flare::rpc {
             WriteAMFNull(&ostream);
             WriteAMFString(name, &ostream);
             WriteAMFString(RtmpPublishType2Str(type), &ostream);
-            CHECK(ostream.good());
+            FLARE_CHECK(ostream.good());
         }
         return SendMessage(0, policy::RTMP_MESSAGE_COMMAND_AMF0, req_buf);
     }
@@ -2073,7 +2073,7 @@ namespace flare::rpc {
             WriteAMFUint32(0, &ostream);
             WriteAMFNull(&ostream);
             WriteAMFNumber(offset_ms, &ostream);
-            CHECK(ostream.good());
+            FLARE_CHECK(ostream.good());
         }
         return SendMessage(0, policy::RTMP_MESSAGE_COMMAND_AMF0, req_buf);
     }
@@ -2088,14 +2088,14 @@ namespace flare::rpc {
             WriteAMFNull(&ostream);
             WriteAMFBool(pause_or_unpause, &ostream);
             WriteAMFNumber(offset_ms, &ostream);
-            CHECK(ostream.good());
+            FLARE_CHECK(ostream.good());
         }
         return SendMessage(0, policy::RTMP_MESSAGE_COMMAND_AMF0, req_buf);
     }
 
     void RtmpClientStream::OnStatus(const RtmpInfo &info) {
         if (info.level() == RTMP_INFO_LEVEL_ERROR) {
-            LOG(WARNING) << remote_side() << '[' << stream_id()
+            FLARE_LOG(WARNING) << remote_side() << '[' << stream_id()
                          << "] " << info.code() << ": " << info.description();
             return SignalError();
         } else if (info.level() == RTMP_INFO_LEVEL_STATUS) {
@@ -2131,7 +2131,7 @@ namespace flare::rpc {
     void OnClientStreamCreated::Run() {
         std::unique_ptr<OnClientStreamCreated> delete_self(this);
         if (cntl.Failed()) {
-            LOG(WARNING) << "Fail to create stream=" << stream->rtmp_url()
+            FLARE_LOG(WARNING) << "Fail to create stream=" << stream->rtmp_url()
                          << ": " << cntl.ErrorText();
             return;
         }
@@ -2146,19 +2146,19 @@ namespace flare::rpc {
             RtmpPlayOptions play_opt;
             play_opt.stream_name = options.play_name;
             if (stream->Play(play_opt) != 0) {
-                LOG(WARNING) << "Fail to play " << options.play_name;
+                FLARE_LOG(WARNING) << "Fail to play " << options.play_name;
                 return stream->SignalError();
             }
         }
         if (!options.publish_name.empty()) {
             do_nothing = false;
             if (stream->Publish(options.publish_name, options.publish_type) != 0) {
-                LOG(WARNING) << "Fail to publish " << stream->rtmp_url();
+                FLARE_LOG(WARNING) << "Fail to publish " << stream->rtmp_url();
                 return stream->SignalError();
             }
         }
         if (do_nothing) {
-            LOG(ERROR) << "play_name and publish_name are both empty";
+            FLARE_LOG(ERROR) << "play_name and publish_name are both empty";
             return stream->SignalError();
         }
     }
@@ -2166,14 +2166,14 @@ namespace flare::rpc {
     void RtmpClientStream::Init(const RtmpClient *client,
                                 const RtmpClientStreamOptions &options) {
         if (client->_impl == NULL) {
-            LOG(FATAL) << "RtmpClient is not initialized";
+            FLARE_LOG(FATAL) << "RtmpClient is not initialized";
             return OnStopInternal();
         }
         {
             std::unique_lock<flare::base::Mutex> mu(_state_mutex);
             if (_state == STATE_DESTROYING || _state == STATE_ERROR) {
                 // already Destroy()-ed or SignalError()-ed
-                LOG(WARNING) << "RtmpClientStream=" << this << " was already "
+                FLARE_LOG(WARNING) << "RtmpClientStream=" << this << " was already "
                                                                "Destroy()-ed, stop Init()";
                 return;
             }
@@ -2206,7 +2206,7 @@ namespace flare::rpc {
                 case STATE_CREATING:
                 case STATE_CREATED:
                     mu.unlock();
-                    LOG(ERROR) << "RtmpClientStream::Init() is called by multiple "
+                    FLARE_LOG(ERROR) << "RtmpClientStream::Init() is called by multiple "
                                   "threads simultaneously";
                     return done->CancelBeforeCallMethod();
                 case STATE_ERROR:
@@ -2301,12 +2301,12 @@ namespace flare::rpc {
             SubStreamCreator *sub_stream_creator,
             const RtmpRetryingClientStreamOptions &options) {
         if (sub_stream_creator == NULL) {
-            LOG(ERROR) << "sub_stream_creator is NULL";
+            FLARE_LOG(ERROR) << "sub_stream_creator is NULL";
             return CallOnStopIfNeeded();
         }
         _sub_stream_creator = sub_stream_creator;
         if (_destroying.load(std::memory_order_relaxed)) {
-            LOG(WARNING) << "RtmpRetryingClientStream=" << this << " was already "
+            FLARE_LOG(WARNING) << "RtmpRetryingClientStream=" << this << " was already "
                                                                    "Destroy()-ed, stop Init()";
             return;
         }
@@ -2461,7 +2461,7 @@ namespace flare::rpc {
             if (fiber_timer_add(&_create_timer_id,
                                 flare::time_point::future_unix_micros(wait_us).to_timespec(),
                                 OnRecreateTimer, this) != 0) {
-                LOG(ERROR) << "Fail to create timer";
+                FLARE_LOG(ERROR) << "Fail to create timer";
                 return CallOnStopIfNeeded();
             }
             _has_timer_ever = true;
@@ -2597,7 +2597,7 @@ namespace flare::rpc {
     }
 
     void RtmpServerStream::Destroy() {
-        CHECK(false) << "You're not supposed to call Destroy() for server-side streams";
+        FLARE_CHECK(false) << "You're not supposed to call Destroy() for server-side streams";
     }
 
     void RtmpServerStream::OnPlay(const RtmpPlayOptions &opt,
@@ -2612,7 +2612,7 @@ namespace flare::rpc {
     }
 
     void RtmpServerStream::OnPlay2(const RtmpPlay2Options &opt) {
-        LOG(ERROR) << remote_side() << '[' << stream_id()
+        FLARE_LOG(ERROR) << remote_side() << '[' << stream_id()
                    << "] ignored play2{" << opt.ShortDebugString() << '}';
     }
 
@@ -2627,13 +2627,13 @@ namespace flare::rpc {
     }
 
     int RtmpServerStream::OnSeek(double offset_ms) {
-        LOG(ERROR) << remote_side() << '[' << stream_id() << "] ignored seek("
+        FLARE_LOG(ERROR) << remote_side() << '[' << stream_id() << "] ignored seek("
                    << offset_ms << ")";
         return -1;
     }
 
     int RtmpServerStream::OnPause(bool pause, double offset_ms) {
-        LOG(ERROR) << remote_side() << '[' << stream_id() << "] ignored "
+        FLARE_LOG(ERROR) << remote_side() << '[' << stream_id() << "] ignored "
                    << (pause ? "pause" : "unpause")
                    << "(offset_ms=" << offset_ms << ")";
         return -1;
@@ -2652,7 +2652,7 @@ namespace flare::rpc {
                                  (int) error_desc.size(), error_desc.data());
             // The purpose is to close the connection, no matter what SetFailed()
             // returns, the operation should be done.
-            LOG_IF(WARNING, FLAGS_log_error_text)
+            FLARE_LOG_IF(WARNING, FLAGS_log_error_text)
                             << "Close connection because " << error_desc;
             return 0;
         }
@@ -2691,12 +2691,12 @@ namespace flare::rpc {
         msg->body = req_buf;
 
         if (policy::WriteWithoutOvercrowded(_rtmpsock.get(), msg) != 0) {
-            PLOG_IF(WARNING, errno != EFAILEDSOCKET)
+            FLARE_PLOG_IF(WARNING, errno != EFAILEDSOCKET)
                             << _rtmpsock->remote_side() << '[' << _message_stream_id
                             << "]: Fail to send " << info.code() << ": " << error_desc;
             return -1;
         }
-        LOG_IF(WARNING, FLAGS_log_error_text)
+        FLARE_LOG_IF(WARNING, FLAGS_log_error_text)
                         << _rtmpsock->remote_side() << '[' << _message_stream_id << "]: Sent "
                         << info.code() << ' ' << error_desc;
         return 0;
@@ -2715,7 +2715,7 @@ namespace flare::rpc {
     int RtmpServerStream::RunOnFailed(fiber_token_t id, void *data, int) {
         flare::container::intrusive_ptr<RtmpServerStream> stream(
                 static_cast<RtmpServerStream *>(data), false);
-        CHECK(stream->_rtmpsock);
+        FLARE_CHECK(stream->_rtmpsock);
         stream->OnStopInternal();
         fiber_token_unlock_and_destroy(id);
         return 0;
@@ -2728,7 +2728,7 @@ namespace flare::rpc {
         policy::RtmpContext *ctx =
                 static_cast<policy::RtmpContext *>(_rtmpsock->parsing_context());
         if (ctx == NULL) {
-            LOG(FATAL) << _rtmpsock->remote_side() << ": RtmpContext of "
+            FLARE_LOG(FATAL) << _rtmpsock->remote_side() << ": RtmpContext of "
                        << *_rtmpsock << " is NULL";
             return CallOnStop();
         }

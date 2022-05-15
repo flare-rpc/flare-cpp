@@ -43,7 +43,7 @@ int ParseServerList(const char* service_name,
     std::string line;
 
     if (!service_name) {
-        LOG(FATAL) << "Param[service_name] is NULL";
+        FLARE_LOG(FATAL) << "Param[service_name] is NULL";
         return -1;
     }
     for (flare::StringSplitter sp(service_name, ','); sp != NULL; ++sp) {
@@ -57,7 +57,7 @@ int ParseServerList(const char* service_name,
         flare::base::end_point point;
         if (str2endpoint(addr.data(), &point) != 0 &&
             hostname2endpoint(addr.data(), &point) != 0) {
-            LOG(ERROR) << "Invalid address=`" << addr << '\'';
+            FLARE_LOG(ERROR) << "Invalid address=`" << addr << '\'';
             continue;
         }
         ServerNode node;

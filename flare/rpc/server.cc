@@ -27,7 +27,7 @@
 #include "flare/fiber/internal/unstable.h"                       // fiber_keytable_pool_init
 #include "flare/base/profile.h"                            // FLARE_ARRAY_SIZE
 #include "flare/base/fd_guard.h"                          // fd_guard
-#include "flare/log/logging.h"                           // CHECK
+#include "flare/log/logging.h"                           // FLARE_CHECK
 #include "flare/times/time.h"
 #include "flare/base/class_name.h"
 #include "flare/strings/str_format.h"
@@ -320,12 +320,12 @@ namespace flare::rpc {
             if (sleep_us < 1000L) {
                 if (++consecutive_nosleep >= 2) {
                     consecutive_nosleep = 0;
-                    LOG(WARNING) << __FUNCTION__ << " is too busy!";
+                    FLARE_LOG(WARNING) << __FUNCTION__ << " is too busy!";
                 }
             } else {
                 consecutive_nosleep = 0;
                 if (flare::fiber_sleep_for(sleep_us) < 0) {
-                    PLOG_IF(ERROR, errno != ESTOP) << "Fail to sleep";
+                    FLARE_PLOG_IF(ERROR, errno != ESTOP) << "Fail to sleep";
                     return nullptr;
                 }
             }
@@ -419,93 +419,93 @@ namespace flare::rpc {
     int Server::AddBuiltinServices() {
         // Firstly add services shown in tabs.
         if (AddBuiltinService(new(std::nothrow) StatusService)) {
-            LOG(ERROR) << "Fail to add StatusService";
+            FLARE_LOG(ERROR) << "Fail to add StatusService";
             return -1;
         }
         if (AddBuiltinService(new(std::nothrow) VarsService)) {
-            LOG(ERROR) << "Fail to add VarsService";
+            FLARE_LOG(ERROR) << "Fail to add VarsService";
             return -1;
         }
         if (AddBuiltinService(new(std::nothrow) ConnectionsService)) {
-            LOG(ERROR) << "Fail to add ConnectionsService";
+            FLARE_LOG(ERROR) << "Fail to add ConnectionsService";
             return -1;
         }
         if (AddBuiltinService(new(std::nothrow) FlagsService)) {
-            LOG(ERROR) << "Fail to add FlagsService";
+            FLARE_LOG(ERROR) << "Fail to add FlagsService";
             return -1;
         }
         if (AddBuiltinService(new(std::nothrow) RpczService)) {
-            LOG(ERROR) << "Fail to add RpczService";
+            FLARE_LOG(ERROR) << "Fail to add RpczService";
             return -1;
         }
         if (AddBuiltinService(new(std::nothrow) HotspotsService)) {
-            LOG(ERROR) << "Fail to add HotspotsService";
+            FLARE_LOG(ERROR) << "Fail to add HotspotsService";
             return -1;
         }
         if (AddBuiltinService(new(std::nothrow) IndexService)) {
-            LOG(ERROR) << "Fail to add IndexService";
+            FLARE_LOG(ERROR) << "Fail to add IndexService";
             return -1;
         }
 
         // Add other services.
         if (AddBuiltinService(new(std::nothrow) VersionService(this))) {
-            LOG(ERROR) << "Fail to add VersionService";
+            FLARE_LOG(ERROR) << "Fail to add VersionService";
             return -1;
         }
         if (AddBuiltinService(new(std::nothrow) HealthService)) {
-            LOG(ERROR) << "Fail to add HealthService";
+            FLARE_LOG(ERROR) << "Fail to add HealthService";
             return -1;
         }
         if (AddBuiltinService(new(std::nothrow) ProtobufsService(this))) {
-            LOG(ERROR) << "Fail to add ProtobufsService";
+            FLARE_LOG(ERROR) << "Fail to add ProtobufsService";
             return -1;
         }
         if (AddBuiltinService(new(std::nothrow) BadMethodService)) {
-            LOG(ERROR) << "Fail to add BadMethodService";
+            FLARE_LOG(ERROR) << "Fail to add BadMethodService";
             return -1;
         }
         if (AddBuiltinService(new(std::nothrow) ListService(this))) {
-            LOG(ERROR) << "Fail to add ListService";
+            FLARE_LOG(ERROR) << "Fail to add ListService";
             return -1;
         }
         if (AddBuiltinService(new(std::nothrow) PrometheusMetricsService)) {
-            LOG(ERROR) << "Fail to add MetricsService";
+            FLARE_LOG(ERROR) << "Fail to add MetricsService";
             return -1;
         }
         if (FLAGS_enable_threads_service &&
             AddBuiltinService(new(std::nothrow) ThreadsService)) {
-            LOG(ERROR) << "Fail to add ThreadsService";
+            FLARE_LOG(ERROR) << "Fail to add ThreadsService";
             return -1;
         }
 
 
         if (AddBuiltinService(new(std::nothrow) PProfService)) {
-            LOG(ERROR) << "Fail to add PProfService";
+            FLARE_LOG(ERROR) << "Fail to add PProfService";
             return -1;
         }
         if (FLAGS_enable_dir_service &&
             AddBuiltinService(new(std::nothrow) DirService)) {
-            LOG(ERROR) << "Fail to add DirService";
+            FLARE_LOG(ERROR) << "Fail to add DirService";
             return -1;
         }
         if (AddBuiltinService(new(std::nothrow) FibersService)) {
-            LOG(ERROR) << "Fail to add FibersService";
+            FLARE_LOG(ERROR) << "Fail to add FibersService";
             return -1;
         }
         if (AddBuiltinService(new(std::nothrow) TokenService)) {
-            LOG(ERROR) << "Fail to add TokenService";
+            FLARE_LOG(ERROR) << "Fail to add TokenService";
             return -1;
         }
         if (AddBuiltinService(new(std::nothrow) SocketsService)) {
-            LOG(ERROR) << "Fail to add SocketsService";
+            FLARE_LOG(ERROR) << "Fail to add SocketsService";
             return -1;
         }
         if (AddBuiltinService(new(std::nothrow) GetFaviconService)) {
-            LOG(ERROR) << "Fail to add GetFaviconService";
+            FLARE_LOG(ERROR) << "Fail to add GetFaviconService";
             return -1;
         }
         if (AddBuiltinService(new(std::nothrow) GetJsService)) {
-            LOG(ERROR) << "Fail to add GetJsService";
+            FLARE_LOG(ERROR) << "Fail to add GetJsService";
             return -1;
         }
         return 0;
@@ -528,7 +528,7 @@ namespace flare::rpc {
         const bool has_whitelist = !whitelist.empty();
         Acceptor *acceptor = new(std::nothrow) Acceptor(_keytable_pool);
         if (nullptr == acceptor) {
-            LOG(ERROR) << "Fail to new Acceptor";
+            FLARE_LOG(ERROR) << "Fail to new Acceptor";
             return nullptr;
         }
         InputMessageHandler handler;
@@ -553,7 +553,7 @@ namespace flare::rpc {
             handler.arg = this;
             handler.name = protocols[i].name;
             if (acceptor->AddHandler(handler) != 0) {
-                LOG(ERROR) << "Fail to add handler into Acceptor("
+                FLARE_LOG(ERROR) << "Fail to add handler into Acceptor("
                            << acceptor << ')';
                 delete acceptor;
                 return nullptr;
@@ -568,7 +568,7 @@ namespace flare::rpc {
             }
             err << '\'';
             delete acceptor;
-            LOG(ERROR) << err.str();
+            FLARE_LOG(ERROR) << err.str();
             return nullptr;
         }
         return acceptor;
@@ -584,19 +584,19 @@ namespace flare::rpc {
             return 0;
         }
         if (_fullname_service_map.init(INITIAL_SERVICE_CAP) != 0) {
-            LOG(ERROR) << "Fail to init _fullname_service_map";
+            FLARE_LOG(ERROR) << "Fail to init _fullname_service_map";
             return -1;
         }
         if (_service_map.init(INITIAL_SERVICE_CAP) != 0) {
-            LOG(ERROR) << "Fail to init _service_map";
+            FLARE_LOG(ERROR) << "Fail to init _service_map";
             return -1;
         }
         if (_method_map.init(INITIAL_SERVICE_CAP * 2) != 0) {
-            LOG(ERROR) << "Fail to init _method_map";
+            FLARE_LOG(ERROR) << "Fail to init _method_map";
             return -1;
         }
         if (_ssl_ctx_map.init(INITIAL_CERT_MAP) != 0) {
-            LOG(ERROR) << "Fail to init _ssl_ctx_map";
+            FLARE_LOG(ERROR) << "Fail to init _ssl_ctx_map";
             return -1;
         }
         _status = READY;
@@ -657,12 +657,12 @@ namespace flare::rpc {
         const ConcurrencyLimiter *cl =
                 ConcurrencyLimiterExtension()->Find(amc.type().c_str());
         if (cl == nullptr) {
-            LOG(ERROR) << "Fail to find ConcurrencyLimiter by `" << amc.value() << "'";
+            FLARE_LOG(ERROR) << "Fail to find ConcurrencyLimiter by `" << amc.value() << "'";
             return false;
         }
         ConcurrencyLimiter *cl_copy = cl->New(amc);
         if (cl_copy == nullptr) {
-            LOG(ERROR) << "Fail to new ConcurrencyLimiter";
+            FLARE_LOG(ERROR) << "Fail to new ConcurrencyLimiter";
             return false;
         }
         *out = cl_copy;
@@ -677,21 +677,21 @@ namespace flare::rpc {
         std::unique_ptr<Server, RevertServerStatus> revert_server(this);
         if (_failed_to_set_max_concurrency_of_method) {
             _failed_to_set_max_concurrency_of_method = false;
-            LOG(ERROR) << "previous call to MaxConcurrencyOf() was failed, "
+            FLARE_LOG(ERROR) << "previous call to MaxConcurrencyOf() was failed, "
                           "fix it before starting server";
             return -1;
         }
         if (InitializeOnce() != 0) {
-            LOG(ERROR) << "Fail to initialize Server[" << version() << ']';
+            FLARE_LOG(ERROR) << "Fail to initialize Server[" << version() << ']';
             return -1;
         }
         const Status st = status();
         if (st != READY) {
             if (st == RUNNING) {
-                LOG(ERROR) << "Server[" << version() << "] is already running on "
+                FLARE_LOG(ERROR) << "Server[" << version() << "] is already running on "
                            << _listen_addr;
             } else {
-                LOG(ERROR) << "Can't start Server[" << version()
+                FLARE_LOG(ERROR) << "Can't start Server[" << version()
                            << "] which is " << status_str(status());
             }
             return -1;
@@ -705,7 +705,7 @@ namespace flare::rpc {
         }
 
         if (!_options.h2_settings.IsValid(true/*log_error*/)) {
-            LOG(ERROR) << "Invalid h2_settings";
+            FLARE_LOG(ERROR) << "Invalid h2_settings";
             return -1;
         }
 
@@ -717,16 +717,16 @@ namespace flare::rpc {
             const google::protobuf::MethodDescriptor *md =
                     sd->FindMethodByName("default_method");
             if (md == nullptr) {
-                LOG(ERROR) << "http_master_service must have a method named `default_method'";
+                FLARE_LOG(ERROR) << "http_master_service must have a method named `default_method'";
                 return -1;
             }
             if (md->input_type()->field_count() != 0) {
-                LOG(ERROR) << "The request type of http_master_service must have "
+                FLARE_LOG(ERROR) << "The request type of http_master_service must have "
                               "no fields, actually " << md->input_type()->field_count();
                 return -1;
             }
             if (md->output_type()->field_count() != 0) {
-                LOG(ERROR) << "The response type of http_master_service must have "
+                FLARE_LOG(ERROR) << "The response type of http_master_service must have "
                               "no fields, actually " << md->output_type()->field_count();
                 return -1;
             }
@@ -741,7 +741,7 @@ namespace flare::rpc {
                 _session_local_data_pool =
                         new(std::nothrow) SimpleDataPool(_options.session_local_data_factory);
                 if (nullptr == _session_local_data_pool) {
-                    LOG(ERROR) << "Fail to new SimpleDataPool";
+                    FLARE_LOG(ERROR) << "Fail to new SimpleDataPool";
                     return -1;
                 }
             } else {
@@ -754,7 +754,7 @@ namespace flare::rpc {
         // should be destroyed in Join().
         _keytable_pool = new fiber_keytable_pool_t;
         if (fiber_keytable_pool_init(_keytable_pool) != 0) {
-            LOG(ERROR) << "Fail to init _keytable_pool";
+            FLARE_LOG(ERROR) << "Fail to init _keytable_pool";
             delete _keytable_pool;
             _keytable_pool = nullptr;
             return -1;
@@ -764,7 +764,7 @@ namespace flare::rpc {
             _tl_options.thread_local_data_factory = _options.thread_local_data_factory;
             if (fiber_key_create2(&_tl_options.tls_key, DestroyServerTLS,
                                     _options.thread_local_data_factory) != 0) {
-                LOG(ERROR) << "Fail to create thread-local key";
+                FLARE_LOG(ERROR) << "Fail to create thread-local key";
                 return -1;
             }
             if (_options.reserved_thread_local_data) {
@@ -819,12 +819,12 @@ namespace flare::rpc {
             }
             delete[] init_args;
             if (ncreated != _options.fiber_init_count) {
-                LOG(ERROR) << "Fail to create "
+                FLARE_LOG(ERROR) << "Fail to create "
                            << _options.fiber_init_count - ncreated << " fibers";
                 return -1;
             }
             if (num_failed_result != 0) {
-                LOG(ERROR) << num_failed_result << " fiber_init_fn failed";
+                FLARE_LOG(ERROR) << num_failed_result << " fiber_init_fn failed";
                 return -1;
             }
         }
@@ -834,7 +834,7 @@ namespace flare::rpc {
         if (_options.has_ssl_options()) {
             CertInfo &default_cert = _options.mutable_ssl_options()->default_cert;
             if (default_cert.certificate.empty()) {
-                LOG(ERROR) << "default_cert is empty";
+                FLARE_LOG(ERROR) << "default_cert is empty";
                 return -1;
             }
             if (AddCertificate(default_cert) != 0) {
@@ -855,14 +855,14 @@ namespace flare::rpc {
         if (_options.has_builtin_services &&
             _builtin_service_count <= 0 &&
             AddBuiltinServices() != 0) {
-            LOG(ERROR) << "Fail to add builtin services";
+            FLARE_LOG(ERROR) << "Fail to add builtin services";
             return -1;
         }
         // If a server is started/stopped for mutiple times and one of the options
         // sets has_builtin_service to true, builtin services will be enabled for
         // any later re-start. Check this case and report to user.
         if (!_options.has_builtin_services && _builtin_service_count > 0) {
-            LOG(ERROR) << "A server started/stopped for multiple times must be "
+            FLARE_LOG(ERROR) << "A server started/stopped for multiple times must be "
                           "consistent on ServerOptions.has_builtin_services";
             return -1;
         }
@@ -899,7 +899,7 @@ namespace flare::rpc {
                 }
                 ConcurrencyLimiter *cl = nullptr;
                 if (!CreateConcurrencyLimiter(*amc, &cl)) {
-                    LOG(ERROR) << "Fail to create ConcurrencyLimiter for method";
+                    FLARE_LOG(ERROR) << "Fail to create ConcurrencyLimiter for method";
                     return -1;
                 }
                 it->second.status->SetConcurrencyLimiter(cl);
@@ -908,7 +908,7 @@ namespace flare::rpc {
 
         // Create listening ports
         if (port_range.min_port > port_range.max_port) {
-            LOG(ERROR) << "Invalid port_range=[" << port_range.min_port << '-'
+            FLARE_LOG(ERROR) << "Invalid port_range=[" << port_range.min_port << '-'
                        << port_range.max_port << ']';
             return -1;
         }
@@ -921,11 +921,11 @@ namespace flare::rpc {
                     continue;
                 }
                 if (port_range.min_port != port_range.max_port) {
-                    LOG(ERROR) << "Fail to listen " << ip
+                    FLARE_LOG(ERROR) << "Fail to listen " << ip
                                << ":[" << port_range.min_port << '-'
                                << port_range.max_port << ']';
                 } else {
-                    LOG(ERROR) << "Fail to listen " << _listen_addr;
+                    FLARE_LOG(ERROR) << "Fail to listen " << _listen_addr;
                 }
                 return -1;
             }
@@ -934,14 +934,14 @@ namespace flare::rpc {
                 // https://en.wikipedia.org/wiki/Ephemeral_port
                 _listen_addr.port = get_port_from_fd(sockfd);
                 if (_listen_addr.port <= 0) {
-                    LOG(ERROR) << "Fail to get port from fd=" << sockfd;
+                    FLARE_LOG(ERROR) << "Fail to get port from fd=" << sockfd;
                     return -1;
                 }
             }
             if (_am == nullptr) {
                 _am = BuildAcceptor();
                 if (nullptr == _am) {
-                    LOG(ERROR) << "Fail to build acceptor";
+                    FLARE_LOG(ERROR) << "Fail to build acceptor";
                     return -1;
                 }
             }
@@ -955,7 +955,7 @@ namespace flare::rpc {
             // Pass ownership of `sockfd' to `_am'
             if (_am->StartAccept(sockfd, _options.idle_timeout_sec,
                                  _default_ssl_ctx) != 0) {
-                LOG(ERROR) << "Fail to start acceptor";
+                FLARE_LOG(ERROR) << "Fail to start acceptor";
                 return -1;
             }
             sockfd.release();
@@ -963,12 +963,12 @@ namespace flare::rpc {
         }
         if (_options.internal_port >= 0 && _options.has_builtin_services) {
             if (_options.internal_port == _listen_addr.port) {
-                LOG(ERROR) << "ServerOptions.internal_port=" << _options.internal_port
+                FLARE_LOG(ERROR) << "ServerOptions.internal_port=" << _options.internal_port
                            << " is same with port=" << _listen_addr.port << " to Start()";
                 return -1;
             }
             if (_options.internal_port == 0) {
-                LOG(ERROR) << "ServerOptions.internal_port cannot be 0, which"
+                FLARE_LOG(ERROR) << "ServerOptions.internal_port cannot be 0, which"
                               " allocates a dynamic and probabaly unfiltered port,"
                               " against the purpose of \"being internal\".";
                 return -1;
@@ -977,20 +977,20 @@ namespace flare::rpc {
             internal_point.port = _options.internal_port;
             flare::base::fd_guard sockfd(tcp_listen(internal_point));
             if (sockfd < 0) {
-                LOG(ERROR) << "Fail to listen " << internal_point << " (internal)";
+                FLARE_LOG(ERROR) << "Fail to listen " << internal_point << " (internal)";
                 return -1;
             }
             if (nullptr == _internal_am) {
                 _internal_am = BuildAcceptor();
                 if (nullptr == _internal_am) {
-                    LOG(ERROR) << "Fail to build internal acceptor";
+                    FLARE_LOG(ERROR) << "Fail to build internal acceptor";
                     return -1;
                 }
             }
             // Pass ownership of `sockfd' to `_internal_am'
             if (_internal_am->StartAccept(sockfd, _options.idle_timeout_sec,
                                           _default_ssl_ctx) != 0) {
-                LOG(ERROR) << "Fail to start internal_acceptor";
+                FLARE_LOG(ERROR) << "Fail to start internal_acceptor";
                 return -1;
             }
             sockfd.release();
@@ -999,10 +999,10 @@ namespace flare::rpc {
         PutPidFileIfNeeded();
 
         // Launch _derivative_thread.
-        CHECK_EQ(INVALID_FIBER_ID, _derivative_thread);
+        FLARE_CHECK_EQ(INVALID_FIBER_ID, _derivative_thread);
         if (fiber_start_background(&_derivative_thread, nullptr,
                                      UpdateDerivedVars, this) != 0) {
-            LOG(ERROR) << "Fail to create _derivative_thread";
+            FLARE_LOG(ERROR) << "Fail to create _derivative_thread";
             return -1;
         }
 
@@ -1015,13 +1015,13 @@ namespace flare::rpc {
             http_port = _options.internal_port;
             server_info << " and internal_port=" << _options.internal_port;
         }
-        LOG(INFO) << server_info.str() << '.';
+        FLARE_LOG(INFO) << server_info.str() << '.';
 
         if (_options.has_builtin_services) {
-            LOG(INFO) << "Check out http://" << flare::base::my_hostname() << ':'
+            FLARE_LOG(INFO) << "Check out http://" << flare::base::my_hostname() << ':'
                       << http_port << " in web browser.";
         } else {
-            LOG(WARNING) << "Builtin services are disabled according to "
+            FLARE_LOG(WARNING) << "Builtin services are disabled according to "
                             "ServerOptions.has_builtin_services";
         }
         // For trackme reporting
@@ -1039,7 +1039,7 @@ namespace flare::rpc {
         flare::base::end_point point;
         if (str2endpoint(ip_port_str, &point) != 0 &&
             hostname2endpoint(ip_port_str, &point) != 0) {
-            LOG(ERROR) << "Invalid address=`" << ip_port_str << '\'';
+            FLARE_LOG(ERROR) << "Invalid address=`" << ip_port_str << '\'';
             return -1;
         }
         return Start(point, opt);
@@ -1047,7 +1047,7 @@ namespace flare::rpc {
 
     int Server::Start(int port, const ServerOptions *opt) {
         if (port < 0 || port > 65535) {
-            LOG(ERROR) << "Invalid port=" << port;
+            FLARE_LOG(ERROR) << "Invalid port=" << port;
             return -1;
         }
         return Start(flare::base::end_point(flare::base::IP_ANY, port), opt);
@@ -1058,7 +1058,7 @@ namespace flare::rpc {
         flare::base::ip_t ip;
         if (flare::base::str2ip(ip_str, &ip) != 0 &&
             flare::base::hostname2ip(ip_str, &ip) != 0) {
-            LOG(ERROR) << "Invalid address=`" << ip_str << '\'';
+            FLARE_LOG(ERROR) << "Invalid address=`" << ip_str << '\'';
             return -1;
         }
         return StartInternal(ip, port_range, opt);
@@ -1070,7 +1070,7 @@ namespace flare::rpc {
         }
         _status = STOPPING;
 
-        LOG(INFO) << "Server[" << version() << "] is going to quit";
+        FLARE_LOG(INFO) << "Server[" << version() << "] is going to quit";
 
         if (_am) {
             _am->StopAccept(timeout_ms);
@@ -1105,7 +1105,7 @@ namespace flare::rpc {
             // done here (before leaving Join) because it's legal for users to
             // delete fiber keys after Join which makes related objects
             // in KeyTables undeletable anymore and leaked.
-            CHECK_EQ(0, fiber_keytable_pool_destroy(_keytable_pool));
+            FLARE_CHECK_EQ(0, fiber_keytable_pool_destroy(_keytable_pool));
             // TODO: Can't delete _keytable_pool which may be accessed by
             // still-running fibers (created by the server). The memory is
             // leaked but servers are unlikely to be started/stopped frequently,
@@ -1115,7 +1115,7 @@ namespace flare::rpc {
 
         // Delete tls_key as well since we don't need it anymore.
         if (_tl_options.tls_key != INVALID_FIBER_KEY) {
-            CHECK_EQ(0, fiber_key_delete(_tl_options.tls_key));
+            FLARE_CHECK_EQ(0, fiber_key_delete(_tl_options.tls_key));
             _tl_options.tls_key = INVALID_FIBER_KEY;
         }
 
@@ -1137,34 +1137,34 @@ namespace flare::rpc {
                                    bool is_builtin_service,
                                    const ServiceOptions &svc_opt) {
         if (nullptr == service) {
-            LOG(ERROR) << "Parameter[service] is nullptr!";
+            FLARE_LOG(ERROR) << "Parameter[service] is nullptr!";
             return -1;
         }
         const google::protobuf::ServiceDescriptor *sd = service->GetDescriptor();
         if (sd->method_count() == 0) {
-            LOG(ERROR) << "service=" << sd->full_name()
+            FLARE_LOG(ERROR) << "service=" << sd->full_name()
                        << " does not have any method.";
             return -1;
         }
 
         if (InitializeOnce() != 0) {
-            LOG(ERROR) << "Fail to initialize Server[" << version() << ']';
+            FLARE_LOG(ERROR) << "Fail to initialize Server[" << version() << ']';
             return -1;
         }
         if (status() != READY) {
-            LOG(ERROR) << "Can't add service=" << sd->full_name() << " to Server["
+            FLARE_LOG(ERROR) << "Can't add service=" << sd->full_name() << " to Server["
                        << version() << "] which is " << status_str(status());
             return -1;
         }
 
         if (_fullname_service_map.seek(sd->full_name()) != nullptr) {
-            LOG(ERROR) << "service=" << sd->full_name() << " already exists";
+            FLARE_LOG(ERROR) << "service=" << sd->full_name() << " already exists";
             return -1;
         }
         ServiceProperty *old_ss = _service_map.seek(sd->name());
         if (old_ss != nullptr) {
             // names conflict.
-            LOG(ERROR) << "Conflict service name between "
+            FLARE_LOG(ERROR) << "Conflict service name between "
                        << sd->full_name() << " and "
                        << old_ss->service_name();
             return -1;
@@ -1200,7 +1200,7 @@ namespace flare::rpc {
                 if (_method_map.seek(full_name_wo_ns) == nullptr) {
                     _method_map[full_name_wo_ns] = mp2;
                 } else {
-                    LOG(ERROR) << '`' << full_name_wo_ns << "' already exists";
+                    FLARE_LOG(ERROR) << '`' << full_name_wo_ns << "' already exists";
                     RemoveMethodsOf(service);
                     return -1;
                 }
@@ -1225,13 +1225,13 @@ namespace flare::rpc {
             // Parse the mappings.
             std::vector<RestfulMapping> mappings;
             if (!ParseRestfulMappings(restful_mappings, &mappings)) {
-                LOG(ERROR) << "Fail to parse mappings `" << restful_mappings << '\'';
+                FLARE_LOG(ERROR) << "Fail to parse mappings `" << restful_mappings << '\'';
                 RemoveService(service);
                 return -1;
             }
             if (mappings.empty()) {
                 // we already trimmed at the beginning, this is impossible.
-                LOG(ERROR) << "Impossible: Nothing in restful_mappings";
+                FLARE_LOG(ERROR) << "Impossible: Nothing in restful_mappings";
                 RemoveService(service);
                 return -1;
             }
@@ -1255,7 +1255,7 @@ namespace flare::rpc {
                         sd->full_name() + "." + mappings[i].method_name;
                 MethodProperty *mp = _method_map.seek(full_method_name);
                 if (mp == nullptr) {
-                    LOG(ERROR) << "Unknown method=`" << full_method_name << '\'';
+                    FLARE_LOG(ERROR) << "Unknown method=`" << full_method_name << '\'';
                     RemoveService(service);
                     return -1;
                 }
@@ -1273,7 +1273,7 @@ namespace flare::rpc {
                     if (!_global_restful_map->AddMethod(
                             mappings[i].path, service, params,
                             mappings[i].method_name, mp->status)) {
-                        LOG(ERROR) << "Fail to map `" << mappings[i].path
+                        FLARE_LOG(ERROR) << "Fail to map `" << mappings[i].path
                                    << "' to `" << full_method_name << '\'';
                         RemoveService(service);
                         return -1;
@@ -1292,7 +1292,7 @@ namespace flare::rpc {
                 ServiceProperty *sp2 = _service_map.seek(svc_name);
                 if (((!!sp) != (!!sp2)) ||
                     (sp != nullptr && sp->service != sp2->service)) {
-                    LOG(ERROR) << "Impossible: _fullname_service and _service_map are"
+                    FLARE_LOG(ERROR) << "Impossible: _fullname_service and _service_map are"
                                   " inconsistent before inserting " << svc_name;
                     RemoveService(service);
                     return -1;
@@ -1310,7 +1310,7 @@ namespace flare::rpc {
                 params.pb_bytes_to_base64 = svc_opt.pb_bytes_to_base64;
                 if (!m->AddMethod(mappings[i].path, service, params,
                                   mappings[i].method_name, mp->status)) {
-                    LOG(ERROR) << "Fail to map `" << mappings[i].path << "' to `"
+                    FLARE_LOG(ERROR) << "Fail to map `" << mappings[i].path << "' to `"
                                << sd->full_name() << '.' << mappings[i].method_name
                                << '\'';
                     if (sp == nullptr) {
@@ -1347,7 +1347,7 @@ namespace flare::rpc {
             for (size_t i = last_size; i != cur_size; ++i) {
                 const TabInfo &info = (*_tab_info_list)[i];
                 if (!info.valid()) {
-                    LOG(ERROR) << "Invalid TabInfo: path=" << info.path
+                    FLARE_LOG(ERROR) << "Invalid TabInfo: path=" << info.path
                                << " tab_name=" << info.tab_name;
                     _tab_info_list->resize(last_size);
                     RemoveService(service);
@@ -1409,7 +1409,7 @@ namespace flare::rpc {
                 _method_map.erase(full_name_wo_ns);
             }
             if (mp == nullptr) {
-                LOG(ERROR) << "Fail to find method=" << md->full_name();
+                FLARE_LOG(ERROR) << "Fail to find method=" << md->full_name();
                 continue;
             }
             if (mp->http_url) {
@@ -1420,7 +1420,7 @@ namespace flare::rpc {
                     flare::StringSplitter slash_sp(
                             path.data(), path.data() + path.size(), '/');
                     if (slash_sp == nullptr) {
-                        LOG(ERROR) << "Invalid http_url=" << *mp->http_url;
+                        FLARE_LOG(ERROR) << "Invalid http_url=" << *mp->http_url;
                         break;
                     }
                     std::string_view v_svc_name(slash_sp.field(), slash_sp.length());
@@ -1433,14 +1433,14 @@ namespace flare::rpc {
                                 continue;
                             }
                         }
-                        LOG(ERROR) << "Impossible: service=" << v_svc_name
+                        FLARE_LOG(ERROR) << "Impossible: service=" << v_svc_name
                                    << " for restful_map does not exist";
                         break;
                     }
                     std::string path_str;
                     flare::copy_to_string(path, &path_str);
                     if (!vsp->restful_map->RemoveByPathString(path_str)) {
-                        LOG(ERROR) << "Fail to find path=" << path
+                        FLARE_LOG(ERROR) << "Fail to find path=" << path
                                    << " in restful_map of service=" << v_svc_name;
                     }
                 }
@@ -1456,11 +1456,11 @@ namespace flare::rpc {
 
     int Server::RemoveService(google::protobuf::Service *service) {
         if (nullptr == service) {
-            LOG(ERROR) << "Parameter[service] is nullptr";
+            FLARE_LOG(ERROR) << "Parameter[service] is nullptr";
             return -1;
         }
         if (status() != READY) {
-            LOG(ERROR) << "Can't remove service="
+            FLARE_LOG(ERROR) << "Can't remove service="
                        << service->GetDescriptor()->full_name() << " from Server["
                        << version() << "] which is " << status_str(status());
             return -1;
@@ -1493,7 +1493,7 @@ namespace flare::rpc {
 
     void Server::ClearServices() {
         if (status() != READY) {
-            LOG_IF(ERROR, status() != UNINITIALIZED)
+            FLARE_LOG_IF(ERROR, status() != UNINITIALIZED)
                             << "Can't clear services from Server[" << version()
                             << "] which is " << status_str(status());
             return;
@@ -1612,7 +1612,7 @@ namespace flare::rpc {
         std::string ret;
         wordexp_t p;
         wordexp(path.c_str(), &p, 0);
-        CHECK_EQ(p.we_wordc, 1u);
+        FLARE_CHECK_EQ(p.we_wordc, 1u);
         if (p.we_wordc == 1) {
             ret = p.we_wordv[0];
         }
@@ -1637,21 +1637,21 @@ namespace flare::rpc {
                 && errno != EISDIR
 #endif
                     ) {
-                PLOG(WARNING) << "Fail to create " << dir_name;
+                FLARE_PLOG(WARNING) << "Fail to create " << dir_name;
                 _options.pid_file.clear();
                 return;
             }
         }
         int fd = open(_options.pid_file.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0666);
         if (fd < 0) {
-            LOG(WARNING) << "Fail to open " << _options.pid_file;
+            FLARE_LOG(WARNING) << "Fail to open " << _options.pid_file;
             _options.pid_file.clear();
             return;
         }
         char buf[32];
         int nw = snprintf(buf, sizeof(buf), "%lld", (long long) getpid());
-        CHECK_EQ(nw, write(fd, buf, nw));
-        CHECK_EQ(0, close(fd));
+        FLARE_CHECK_EQ(nw, write(fd, buf, nw));
+        FLARE_CHECK_EQ(0, close(fd));
     }
 
     void Server::RunUntilAskedToQuit() {
@@ -1669,14 +1669,14 @@ namespace flare::rpc {
             return nullptr;
         }
         if (FLARE_UNLIKELY(tl_options->thread_local_data_factory == nullptr)) {
-            CHECK(false) << "The protocol impl. may not set tls correctly";
+            FLARE_CHECK(false) << "The protocol impl. may not set tls correctly";
             return nullptr;
         }
         void *data = fiber_getspecific(tl_options->tls_key);
         if (data == nullptr) {
             data = tl_options->thread_local_data_factory->CreateData();
             if (data != nullptr) {
-                CHECK_EQ(0, fiber_setspecific(tl_options->tls_key, data));
+                FLARE_CHECK_EQ(0, fiber_setspecific(tl_options->tls_key, data));
             }
         }
         return data;
@@ -1711,7 +1711,7 @@ namespace flare::rpc {
 
     int StartDummyServerAt(int port, ProfilerLinker) {
         if (port < 0 || port >= 65536) {
-            LOG(ERROR) << "Invalid port=" << port;
+            FLARE_LOG(ERROR) << "Invalid port=" << port;
             return -1;
         }
         if (g_dummy_server == nullptr) {  // (1)
@@ -1723,7 +1723,7 @@ namespace flare::rpc {
                 ServerOptions options;
                 options.num_threads = 0;
                 if (dummy_server->Start(port, &options) != 0) {
-                    LOG(ERROR) << "Fail to start dummy_server at port=" << port;
+                    FLARE_LOG(ERROR) << "Fail to start dummy_server at port=" << port;
                     return -1;
                 }
                 // (1) may see uninitialized dummy_server due to relaxed memory
@@ -1733,7 +1733,7 @@ namespace flare::rpc {
                 return 0;
             }
         }
-        LOG(ERROR) << "Already have dummy_server at port="
+        FLARE_LOG(ERROR) << "Already have dummy_server at port="
                    << g_dummy_server->listen_address().port;
         return -1;
     }
@@ -1795,13 +1795,13 @@ namespace flare::rpc {
 
     int Server::AddCertificate(const CertInfo &cert) {
         if (!_options.has_ssl_options()) {
-            LOG(ERROR) << "ServerOptions.ssl_options is not configured yet";
+            FLARE_LOG(ERROR) << "ServerOptions.ssl_options is not configured yet";
             return -1;
         }
         std::string cert_key(cert.certificate);
         cert_key.append(cert.private_key);
         if (_ssl_ctx_map.seek(cert_key) != nullptr) {
-            LOG(WARNING) << cert << " already exists";
+            FLARE_LOG(WARNING) << cert << " already exists";
             return 0;
         }
 
@@ -1821,7 +1821,7 @@ namespace flare::rpc {
 #endif
 
         if (!_reload_cert_maps.Modify(AddCertMapping, ssl_ctx)) {
-            LOG(ERROR) << "Fail to add mappings into _reload_cert_maps";
+            FLARE_LOG(ERROR) << "Fail to add mappings into _reload_cert_maps";
             return -1;
         }
         _ssl_ctx_map[cert_key] = ssl_ctx;
@@ -1831,12 +1831,12 @@ namespace flare::rpc {
     bool Server::AddCertMapping(CertMaps &bg, const SSLContext &ssl_ctx) {
         if (!bg.cert_map.initialized()
             && bg.cert_map.init(INITIAL_CERT_MAP) != 0) {
-            LOG(ERROR) << "Fail to init _cert_map";
+            FLARE_LOG(ERROR) << "Fail to init _cert_map";
             return false;
         }
         if (!bg.wildcard_cert_map.initialized()
             && bg.wildcard_cert_map.init(INITIAL_CERT_MAP) != 0) {
-            LOG(ERROR) << "Fail to init _wildcard_cert_map";
+            FLARE_LOG(ERROR) << "Fail to init _wildcard_cert_map";
             return false;
         }
 
@@ -1852,7 +1852,7 @@ namespace flare::rpc {
             if (cmap->seek(hostname) == nullptr) {
                 cmap->insert(hostname, ssl_ctx.ctx);
             } else {
-                LOG(WARNING) << "Duplicate certificate hostname=" << hostname;
+                FLARE_LOG(WARNING) << "Duplicate certificate hostname=" << hostname;
             }
         }
         return true;
@@ -1860,24 +1860,24 @@ namespace flare::rpc {
 
     int Server::RemoveCertificate(const CertInfo &cert) {
         if (!_options.has_ssl_options()) {
-            LOG(ERROR) << "ServerOptions.ssl_options is not configured yet";
+            FLARE_LOG(ERROR) << "ServerOptions.ssl_options is not configured yet";
             return -1;
         }
         std::string cert_key(cert.certificate);
         cert_key.append(cert.private_key);
         SSLContext *ssl_ctx = _ssl_ctx_map.seek(cert_key);
         if (ssl_ctx == nullptr) {
-            LOG(WARNING) << cert << " doesn't exist";
+            FLARE_LOG(WARNING) << cert << " doesn't exist";
             return 0;
         }
         if (ssl_ctx->ctx == _default_ssl_ctx) {
-            LOG(WARNING) << "Cannot remove: " << cert
+            FLARE_LOG(WARNING) << "Cannot remove: " << cert
                          << " since it's the default certificate";
             return -1;
         }
 
         if (!_reload_cert_maps.Modify(RemoveCertMapping, *ssl_ctx)) {
-            LOG(ERROR) << "Fail to remove mappings from _reload_cert_maps";
+            FLARE_LOG(ERROR) << "Fail to remove mappings from _reload_cert_maps";
             return -1;
         }
 
@@ -1905,13 +1905,13 @@ namespace flare::rpc {
 
     int Server::ResetCertificates(const std::vector<CertInfo> &certs) {
         if (!_options.has_ssl_options()) {
-            LOG(ERROR) << "ServerOptions.ssl_options is not configured yet";
+            FLARE_LOG(ERROR) << "ServerOptions.ssl_options is not configured yet";
             return -1;
         }
 
         SSLContextMap tmp_map;
         if (tmp_map.init(INITIAL_CERT_MAP) != 0) {
-            LOG(ERROR) << "Fail to initialize tmp_map";
+            FLARE_LOG(ERROR) << "Fail to initialize tmp_map";
             return -1;
         }
 
@@ -1925,7 +1925,7 @@ namespace flare::rpc {
             std::string cert_key(certs[i].certificate);
             cert_key.append(certs[i].private_key);
             if (tmp_map.seek(cert_key) != nullptr) {
-                LOG(WARNING) << certs[i] << " already exists";
+                FLARE_LOG(WARNING) << certs[i] << " already exists";
                 return 0;
             }
 
@@ -1957,12 +1957,12 @@ namespace flare::rpc {
     bool Server::ResetCertMappings(CertMaps &bg, const SSLContextMap &ctx_map) {
         if (!bg.cert_map.initialized()
             && bg.cert_map.init(INITIAL_CERT_MAP) != 0) {
-            LOG(ERROR) << "Fail to init _cert_map";
+            FLARE_LOG(ERROR) << "Fail to init _cert_map";
             return false;
         }
         if (!bg.wildcard_cert_map.initialized()
             && bg.wildcard_cert_map.init(INITIAL_CERT_MAP) != 0) {
-            LOG(ERROR) << "Fail to init _wildcard_cert_map";
+            FLARE_LOG(ERROR) << "Fail to init _wildcard_cert_map";
             return false;
         }
         bg.cert_map.clear();
@@ -1983,7 +1983,7 @@ namespace flare::rpc {
                 if (cmap->seek(hostname) == nullptr) {
                     cmap->insert(hostname, ssl_ctx.ctx);
                 } else {
-                    LOG(WARNING) << "Duplicate certificate hostname=" << hostname;
+                    FLARE_LOG(WARNING) << "Duplicate certificate hostname=" << hostname;
                 }
             }
         }
@@ -2004,7 +2004,7 @@ namespace flare::rpc {
 
     int Server::ResetMaxConcurrency(int max_concurrency) {
         if (!IsRunning()) {
-            LOG(WARNING) << "ResetMaxConcurrency is only allowd for a Running Server";
+            FLARE_LOG(WARNING) << "ResetMaxConcurrency is only allowd for a Running Server";
             return -1;
         }
         // Assume that modifying int32 is atomical in X86
@@ -2014,11 +2014,11 @@ namespace flare::rpc {
 
     AdaptiveMaxConcurrency &Server::MaxConcurrencyOf(MethodProperty *mp) {
         if (IsRunning()) {
-            LOG(WARNING) << "MaxConcurrencyOf is only allowd before Server started";
+            FLARE_LOG(WARNING) << "MaxConcurrencyOf is only allowd before Server started";
             return g_default_max_concurrency_of_method;
         }
         if (mp->status == nullptr) {
-            LOG(ERROR) << "method=" << mp->method->full_name()
+            FLARE_LOG(ERROR) << "method=" << mp->method->full_name()
                        << " does not support max_concurrency";
             _failed_to_set_max_concurrency_of_method = true;
             return g_default_max_concurrency_of_method;
@@ -2028,7 +2028,7 @@ namespace flare::rpc {
 
     int Server::MaxConcurrencyOf(const MethodProperty *mp) const {
         if (IsRunning()) {
-            LOG(WARNING) << "MaxConcurrencyOf is only allowd before Server started";
+            FLARE_LOG(WARNING) << "MaxConcurrencyOf is only allowd before Server started";
             return g_default_max_concurrency_of_method;
         }
         if (mp == nullptr || mp->status == nullptr) {
@@ -2040,7 +2040,7 @@ namespace flare::rpc {
     AdaptiveMaxConcurrency &Server::MaxConcurrencyOf(const std::string_view &full_method_name) {
         MethodProperty *mp = _method_map.seek(full_method_name);
         if (mp == nullptr) {
-            LOG(ERROR) << "Fail to find method=" << full_method_name;
+            FLARE_LOG(ERROR) << "Fail to find method=" << full_method_name;
             _failed_to_set_max_concurrency_of_method = true;
             return g_default_max_concurrency_of_method;
         }
@@ -2056,7 +2056,7 @@ namespace flare::rpc {
         MethodProperty *mp = const_cast<MethodProperty *>(
                 FindMethodPropertyByFullName(full_service_name, method_name));
         if (mp == nullptr) {
-            LOG(ERROR) << "Fail to find method=" << full_service_name
+            FLARE_LOG(ERROR) << "Fail to find method=" << full_service_name
                        << '/' << method_name;
             _failed_to_set_max_concurrency_of_method = true;
             return g_default_max_concurrency_of_method;

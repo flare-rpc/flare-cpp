@@ -140,7 +140,7 @@ namespace flare::rpc {
 
     template<typename T>
     void SparseMinuteCounter<T>::Resize() {
-        CHECK_LT(_q->capacity(), (size_t) 60);
+        FLARE_CHECK_LT(_q->capacity(), (size_t) 60);
         uint32_t new_cap = std::min(2 * (uint32_t) _q->capacity(), 60u);
         Q *new_q = CreateQueue(new_cap);
         for (size_t i = 0; i < _q->size(); ++i) {

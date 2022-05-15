@@ -21,7 +21,7 @@
 #define  FLARE_VARIABLE_REDUCER_H_
 
 #include <limits>                                 // std::numeric_limits
-#include "flare/log/logging.h"                         // LOG()
+#include "flare/log/logging.h"                         // FLARE_LOG()
 #include "flare/base/type_traits.h"                     // flare::base::add_cr_non_integral
 #include "flare/base/class_name.h"                      // class_name_str
 #include "flare/variable/variable.h"                        // Variable
@@ -63,7 +63,7 @@ namespace flare::variable {
 // }
 // flare::variable::Adder<MyType> my_type_sum;
 // my_type_sum << MyType(1) << MyType(2) << MyType(3);
-// LOG(INFO) << my_type_sum;  // "MyType{6}"
+// FLARE_LOG(INFO) << my_type_sum;  // "MyType{6}"
 
 template <typename T, typename Op, typename InvOp = detail::VoidOp>
 class Reducer : public Variable {
@@ -115,7 +115,7 @@ public:
     // Notice that this function walks through threads that ever add values
     // into this reducer. You should avoid calling it frequently.
     T get_value() const {
-        CHECK(!(std::is_same<InvOp, detail::VoidOp>::value) || _sampler == NULL)
+        FLARE_CHECK(!(std::is_same<InvOp, detail::VoidOp>::value) || _sampler == NULL)
             << "You should not call Reducer<" << flare::base::class_name_str<T>()
             << ", " << flare::base::class_name_str<Op>() << ">::get_value() when a"
             << " Window<> is used because the operator does not have inverse.";
@@ -190,7 +190,7 @@ inline Reducer<T, Op, InvOp>& Reducer<T, Op, InvOp>::operator<<(
     // It's wait-free for most time
     agent_type* agent = _combiner.get_or_create_tls_agent();
     if (__builtin_expect(!agent, 0)) {
-        LOG(FATAL) << "Fail to create agent";
+        FLARE_LOG(FATAL) << "Fail to create agent";
         return *this;
     }
     agent->element.modify(_combiner.op(), value);
@@ -201,7 +201,7 @@ inline Reducer<T, Op, InvOp>& Reducer<T, Op, InvOp>::operator<<(
 
 // flare::variable::Adder<int> sum;
 // sum << 1 << 2 << 3 << 4;
-// LOG(INFO) << sum.get_value(); // 10
+// FLARE_LOG(INFO) << sum.get_value(); // 10
 // Commonly used functors
 namespace detail {
 template <typename Tp>
@@ -237,7 +237,7 @@ public:
 
 // flare::variable::Maxer<int> max_value;
 // max_value << 1 << 2 << 3 << 4;
-// LOG(INFO) << max_value.get_value(); // 4
+// FLARE_LOG(INFO) << max_value.get_value(); // 4
 namespace detail {
 template <typename Tp> 
 struct MaxTo {
@@ -286,7 +286,7 @@ private:
 
 // flare::variable::Miner<int> min_value;
 // min_value << 1 << 2 << 3 << 4;
-// LOG(INFO) << min_value.get_value(); // 1
+// FLARE_LOG(INFO) << min_value.get_value(); // 1
 namespace detail {
 
 template <typename Tp> 

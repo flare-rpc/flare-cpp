@@ -31,7 +31,7 @@ namespace flare::log {
 
     extern FLARE_EXPORT const char *const log_severity_names[NUM_SEVERITIES];
 
-// NDEBUG usage helpers related to (RAW_)DCHECK:
+// NDEBUG usage helpers related to (RAW_)FLARE_DCHECK:
 //
 // DEBUG_MODE is for small !NDEBUG uses like
 //   if (DEBUG_MODE) foo.CheckThatFoo();
@@ -40,23 +40,23 @@ namespace flare::log {
 //     foo.CheckThatFoo();
 //   #endif
 //
-// IF_DEBUG_MODE is for small !NDEBUG uses like
-//   IF_DEBUG_MODE( string error; )
-//   DCHECK(Foo(&error)) << error;
+// FLARE_IF_DEBUG_MODE is for small !NDEBUG uses like
+//   FLARE_IF_DEBUG_MODE( string error; )
+//   FLARE_DCHECK(Foo(&error)) << error;
 // instead of substantially more verbose
 //   #ifndef NDEBUG
 //     string error;
-//     DCHECK(Foo(&error)) << error;
+//     FLARE_DCHECK(Foo(&error)) << error;
 //   #endif
 //
 #ifdef NDEBUG
     enum {
         DEBUG_MODE = 0
     };
-#define IF_DEBUG_MODE(x)
+#define FLARE_IF_DEBUG_MODE(x)
 #else
     enum { DEBUG_MODE = 1 };
-#define IF_DEBUG_MODE(x) x
+#define FLARE_IF_DEBUG_MODE(x) x
 #endif
 }
 

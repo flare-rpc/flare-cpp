@@ -76,7 +76,7 @@ namespace flare::rpc {
 
     bool MemcacheRequest::MergePartialFromCodedStream(
             ::google::protobuf::io::CodedInputStream *input) {
-        LOG(WARNING) << "You're not supposed to parse a MemcacheRequest";
+        FLARE_LOG(WARNING) << "You're not supposed to parse a MemcacheRequest";
 
         // simple approach just making it work.
         flare::cord_buf tmp;
@@ -111,7 +111,7 @@ namespace flare::rpc {
 
     void MemcacheRequest::SerializeWithCachedSizes(
             ::google::protobuf::io::CodedOutputStream *output) const {
-        LOG(WARNING) << "You're not supposed to serialize a MemcacheRequest";
+        FLARE_LOG(WARNING) << "You're not supposed to serialize a MemcacheRequest";
 
         // simple approach just making it work.
         flare::cord_buf_as_zero_copy_input_stream wrapper(_buf);
@@ -227,7 +227,7 @@ namespace flare::rpc {
 
     bool MemcacheResponse::MergePartialFromCodedStream(
             ::google::protobuf::io::CodedInputStream *input) {
-        LOG(WARNING) << "You're not supposed to parse a MemcacheResponse";
+        FLARE_LOG(WARNING) << "You're not supposed to parse a MemcacheResponse";
 
         // simple approach just making it work.
         const void *data = NULL;
@@ -241,7 +241,7 @@ namespace flare::rpc {
 
     void MemcacheResponse::SerializeWithCachedSizes(
             ::google::protobuf::io::CodedOutputStream *output) const {
-        LOG(WARNING) << "You're not supposed to serialize a MemcacheResponse";
+        FLARE_LOG(WARNING) << "You're not supposed to serialize a MemcacheResponse";
 
         // simple approach just making it work.
         flare::cord_buf_as_zero_copy_input_stream wrapper(_buf);
@@ -448,8 +448,8 @@ namespace flare::rpc {
             return false;
         }
         if (header.status != (uint16_t) STATUS_SUCCESS) {
-            LOG_IF(ERROR, header.extras_length != 0) << "GET response must not have flags";
-            LOG_IF(ERROR, header.key_length != 0) << "GET response must not have key";
+            FLARE_LOG_IF(ERROR, header.extras_length != 0) << "GET response must not have flags";
+            FLARE_LOG_IF(ERROR, header.key_length != 0) << "GET response must not have key";
             const int value_size = (int) header.total_body_length - (int) header.extras_length
                                    - (int) header.key_length;
             if (value_size < 0) {
@@ -586,8 +586,8 @@ namespace flare::rpc {
             flare::string_printf(&_err, "Not enough data");
             return false;
         }
-        LOG_IF(ERROR, header.extras_length != 0) << "STORE response must not have flags";
-        LOG_IF(ERROR, header.key_length != 0) << "STORE response must not have key";
+        FLARE_LOG_IF(ERROR, header.extras_length != 0) << "STORE response must not have flags";
+        FLARE_LOG_IF(ERROR, header.key_length != 0) << "STORE response must not have key";
         int value_size = (int) header.total_body_length - (int) header.extras_length
                          - (int) header.key_length;
         if (header.status != (uint16_t) STATUS_SUCCESS) {
@@ -596,11 +596,11 @@ namespace flare::rpc {
             _buf.cutn(&_err, value_size);
             return false;
         }
-        LOG_IF(ERROR, value_size != 0) << "STORE response must not have value, actually="
+        FLARE_LOG_IF(ERROR, value_size != 0) << "STORE response must not have value, actually="
                                        << value_size;
         _buf.pop_front(sizeof(header) + header.total_body_length);
         if (cas_value) {
-            CHECK(header.cas_value);
+            FLARE_CHECK(header.cas_value);
             *cas_value = header.cas_value;
         }
         _err.clear();
@@ -629,7 +629,7 @@ namespace flare::rpc {
             const std::string_view &key, const std::string_view &value,
             uint32_t flags, uint32_t exptime, uint64_t cas_value) {
         if (value.empty()) {
-            LOG(ERROR) << "value to append must be non-empty";
+            FLARE_LOG(ERROR) << "value to append must be non-empty";
             return false;
         }
         return Store(policy::MC_BINARY_APPEND, key, value, flags, exptime, cas_value);
@@ -639,7 +639,7 @@ namespace flare::rpc {
             const std::string_view &key, const std::string_view &value,
             uint32_t flags, uint32_t exptime, uint64_t cas_value) {
         if (value.empty()) {
-            LOG(ERROR) << "value to prepend must be non-empty";
+            FLARE_LOG(ERROR) << "value to prepend must be non-empty";
             return false;
         }
         return Store(policy::MC_BINARY_PREPEND, key, value, flags, exptime, cas_value);
@@ -757,8 +757,8 @@ namespace flare::rpc {
                                        (unsigned) n, (unsigned) sizeof(header), header.total_body_length);
             return false;
         }
-        LOG_IF(ERROR, header.extras_length != 0) << "INCR/DECR response must not have flags";
-        LOG_IF(ERROR, header.key_length != 0) << "INCR/DECR response must not have key";
+        FLARE_LOG_IF(ERROR, header.extras_length != 0) << "INCR/DECR response must not have flags";
+        FLARE_LOG_IF(ERROR, header.key_length != 0) << "INCR/DECR response must not have key";
         const int value_size = (int) header.total_body_length - (int) header.extras_length
                                - (int) header.key_length;
         _buf.pop_front(sizeof(header) + header.extras_length + header.key_length);
@@ -878,8 +878,8 @@ namespace flare::rpc {
                                        (unsigned) n, (unsigned) sizeof(header), header.total_body_length);
             return false;
         }
-        LOG_IF(ERROR, header.extras_length != 0) << "VERSION response must not have flags";
-        LOG_IF(ERROR, header.key_length != 0) << "VERSION response must not have key";
+        FLARE_LOG_IF(ERROR, header.extras_length != 0) << "VERSION response must not have flags";
+        FLARE_LOG_IF(ERROR, header.key_length != 0) << "VERSION response must not have key";
         const int value_size = (int) header.total_body_length - (int) header.extras_length
                                - (int) header.key_length;
         _buf.pop_front(sizeof(header) + header.extras_length + header.key_length);

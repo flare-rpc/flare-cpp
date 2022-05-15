@@ -85,7 +85,7 @@ namespace flare {
     }
 
     bool simple_atob(std::string_view str, bool *out) {
-        CHECK(out != nullptr) << "Output pointer must not be nullptr.";
+        FLARE_CHECK(out != nullptr) << "Output pointer must not be nullptr.";
         if (equal_case(str, "true") || equal_case(str, "t") ||
             equal_case(str, "yes") || equal_case(str, "y") ||
             equal_case(str, "1")) {

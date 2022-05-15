@@ -105,11 +105,11 @@ public:
         EXPECT_EQ(EXP_REQUEST, request->message());
         response->set_message(EXP_RESPONSE);
         if (request->sleep_us() > 0) {
-            LOG(INFO) << "Sleep " << request->sleep_us() << " us, protocol="
+            FLARE_LOG(INFO) << "Sleep " << request->sleep_us() << " us, protocol="
                       << cntl->request_protocol(); 
             flare::fiber_sleep_for(request->sleep_us());
         } else {
-            LOG(INFO) << "No sleep, protocol=" << cntl->request_protocol();
+            FLARE_LOG(INFO) << "No sleep, protocol=" << cntl->request_protocol();
         }
     }
 
@@ -252,7 +252,7 @@ public:
         if (request->has_message()) {
             response->set_message(request->message() + "_v1");
         } else {
-            CHECK_EQ(flare::rpc::PROTOCOL_HTTP, cntl->request_protocol());
+            FLARE_CHECK_EQ(flare::rpc::PROTOCOL_HTTP, cntl->request_protocol());
             cntl->response_attachment() = cntl->request_attachment();
         }
         ncalled.fetch_add(1);
@@ -467,7 +467,7 @@ TEST_F(ServerTest, various_forms_of_uri_paths) {
     http_channel.CallMethod(NULL, &cntl, NULL, NULL, NULL);
     ASSERT_TRUE(cntl.Failed());
     ASSERT_EQ(flare::rpc::EREQUEST, cntl.ErrorCode());
-    LOG(INFO) << "Expected error: " << cntl.ErrorText();
+    FLARE_LOG(INFO) << "Expected error: " << cntl.ErrorText();
     ASSERT_EQ(2, service_v1.ncalled.load());
 
     // Additional path(stored in unresolved_path) after method is acceptible
@@ -499,7 +499,7 @@ TEST_F(ServerTest, missing_required_fields) {
     http_channel.CallMethod(NULL, &cntl, NULL, NULL, NULL);
     ASSERT_TRUE(cntl.Failed());
     ASSERT_EQ(flare::rpc::EHTTP, cntl.ErrorCode());
-    LOG(INFO) << cntl.ErrorText();
+    FLARE_LOG(INFO) << cntl.ErrorText();
     ASSERT_EQ(flare::rpc::HTTP_STATUS_BAD_REQUEST, cntl.http_response().status_code());
     ASSERT_EQ(0, service_v1.ncalled.load());
 
@@ -731,7 +731,7 @@ TEST_F(ServerTest, restful_mapping) {
     http_channel.CallMethod(NULL, &cntl, NULL, NULL, NULL);
     ASSERT_TRUE(cntl.Failed());
     ASSERT_EQ(flare::rpc::EHTTP, cntl.ErrorCode());
-    LOG(INFO) << "Expected error: " << cntl.ErrorText();
+    FLARE_LOG(INFO) << "Expected error: " << cntl.ErrorText();
     ASSERT_EQ(3, service_v1.ncalled.load());
 
     // Access v1.Echo via /v2/echo
@@ -1352,7 +1352,7 @@ TEST_F(ServerTest, max_concurrency) {
     stub.Echo(&cntl2, &req, &res, flare::rpc::DoNothing());
 
     flare::fiber_sleep_for(20000);
-    LOG(INFO) << "Send other requests";
+    FLARE_LOG(INFO) << "Send other requests";
     
     flare::rpc::Controller cntl3;
     cntl3.http_request().uri() = "/EchoService/Echo";

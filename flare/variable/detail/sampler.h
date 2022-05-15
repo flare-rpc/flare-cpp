@@ -23,7 +23,7 @@
 #include <vector>
 #include "flare/container/linked_list.h"
 #include "flare/base/scoped_lock.h"           // FLARE_SCOPED_LOCK
-#include "flare/log/logging.h"               // LOG()
+#include "flare/log/logging.h"               // FLARE_LOG()
 #include "flare/container/bounded_queue.h"// bounded_queue
 #include "flare/base/type_traits.h"           // is_same
 #include "flare/times/time.h"                  // gettimeofday_us
@@ -73,7 +73,7 @@ friend class SamplerCollector;
 struct VoidOp {
     template <typename T>
     T operator()(const T&, const T&) const {
-        CHECK(false) << "This function should never be called, abort";
+        FLARE_CHECK(false) << "This function should never be called, abort";
         abort();
     }
 };
@@ -142,7 +142,7 @@ public:
 
     bool get_value(time_t window_size, Sample<T>* result) {
         if (window_size <= 0) {
-            LOG(FATAL) << "Invalid window_size=" << window_size;
+            FLARE_LOG(FATAL) << "Invalid window_size=" << window_size;
             return false;
         }
         FLARE_SCOPED_LOCK(_mutex);
@@ -155,7 +155,7 @@ public:
             oldest = _q.top();
         }
         Sample<T>* latest = _q.bottom();
-        DCHECK(latest != oldest);
+        FLARE_DCHECK(latest != oldest);
         if (std::is_same<InvOp, VoidOp>::value) {
             // No inverse op. Sum up all samples within the window.
             result->data = latest->data;
@@ -178,7 +178,7 @@ public:
     // Change the time window which can only go larger.
     int set_window_size(time_t window_size) {
         if (window_size <= 0 || window_size > MAX_SECONDS_LIMIT) {
-            LOG(ERROR) << "Invalid window_size=" << window_size;
+            FLARE_LOG(ERROR) << "Invalid window_size=" << window_size;
             return -1;
         }
         FLARE_SCOPED_LOCK(_mutex);
@@ -190,7 +190,7 @@ public:
 
     void get_samples(std::vector<T> *samples, time_t window_size) {
         if (window_size <= 0) {
-            LOG(FATAL) << "Invalid window_size=" << window_size;
+            FLARE_LOG(FATAL) << "Invalid window_size=" << window_size;
             return;
         }
         FLARE_SCOPED_LOCK(_mutex);

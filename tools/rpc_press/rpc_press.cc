@@ -48,7 +48,7 @@ DEFINE_bool(pretty, true, "output pretty jsons");
 bool set_press_options(pbrpcframework::PressOptions* options){
     size_t dot_pos = FLAGS_method.find_last_of('.');
     if (dot_pos == std::string::npos) {
-        LOG(ERROR) << "-method must be in form of: package.service.method";
+        FLARE_LOG(ERROR) << "-method must be in form of: package.service.method";
         return false;
     }
     options->service = FLAGS_method.substr(0, dot_pos);
@@ -102,7 +102,7 @@ int main(int argc, char* argv[]) {
     }
     pbrpcframework::RpcPress* rpc_press = new pbrpcframework::RpcPress;
     if (0 != rpc_press->init(&options)) {
-        LOG(FATAL) << "Fail to init rpc_press";
+        FLARE_LOG(FATAL) << "Fail to init rpc_press";
         return -1;
     }
 

@@ -60,7 +60,7 @@ static void* sender(void* arg) {
     }
     flare::rpc::MemcacheRequest request;
     for (int i = 0; i < FLAGS_batch; ++i) {
-        CHECK(request.Get(kvs[i].first));
+        FLARE_CHECK(request.Get(kvs[i].first));
     }
     while (!flare::rpc::IsAskedToQuit()) {
         // We will receive response synchronously, safe to put variables
@@ -77,18 +77,18 @@ static void* sender(void* arg) {
             for (int i = 0; i < FLAGS_batch; ++i) {
                 uint32_t flags;
                 if (!response.PopGet(&value, &flags, NULL)) {
-                    LOG(INFO) << "Fail to GET the key, " << response.LastError();
+                    FLARE_LOG(INFO) << "Fail to GET the key, " << response.LastError();
                     flare::rpc::AskToQuit();
                     return NULL;
                 }
-                CHECK(flags == 0xdeadbeef + base_index + i)
+                FLARE_CHECK(flags == 0xdeadbeef + base_index + i)
                     << "flags=" << flags;
-                CHECK(kvs[i].second == value)
+                FLARE_CHECK(kvs[i].second == value)
                     << "base=" << base_index << " i=" << i << " value=" << value;
             }
         } else {
             g_error_count << 1; 
-            CHECK(flare::rpc::IsAskedToQuit() || !FLAGS_dont_fail)
+            FLARE_CHECK(flare::rpc::IsAskedToQuit() || !FLAGS_dont_fail)
                 << "error=" << cntl.ErrorText() << " latency=" << elp;
             // We can't connect to the server, sleep a while. Notice that this
             // is a specific sleeping to prevent this thread from spinning too
@@ -125,7 +125,7 @@ int main(int argc, char* argv[]) {
     }
 
     if (channel.Init(FLAGS_server.c_str(), FLAGS_load_balancer.c_str(), &options) != 0) {
-        LOG(ERROR) << "Fail to initialize channel";
+        FLARE_LOG(ERROR) << "Fail to initialize channel";
         return -1;
     }
 
@@ -138,27 +138,27 @@ int main(int argc, char* argv[]) {
         if (!request.Set(flare::string_printf("%s%d", FLAGS_key.c_str(), i),
                          flare::string_printf("%s%d", FLAGS_value.c_str(), i),
                          0xdeadbeef + i, FLAGS_exptime, 0)) {
-            LOG(ERROR) << "Fail to SET " << i << "th request";
+            FLARE_LOG(ERROR) << "Fail to SET " << i << "th request";
             return -1;
         }
     }
     channel.CallMethod(NULL, &cntl, &request, &response, NULL);
     if (cntl.Failed()) {
-        LOG(ERROR) << "Fail to access memcache, " << cntl.ErrorText();
+        FLARE_LOG(ERROR) << "Fail to access memcache, " << cntl.ErrorText();
         return -1;
     }
     for (int i = 0; i < FLAGS_batch * FLAGS_thread_num; ++i) {
         if (!response.PopSet(NULL)) {
-            LOG(ERROR) << "Fail to SET memcache, i=" << i
+            FLARE_LOG(ERROR) << "Fail to SET memcache, i=" << i
                        << ", " << response.LastError();
             return -1;
         }
     }
     if (FLAGS_exptime > 0) {
-        LOG(INFO) << "Set " << FLAGS_batch * FLAGS_thread_num 
+        FLARE_LOG(INFO) << "Set " << FLAGS_batch * FLAGS_thread_num
                   << " values, expired after " << FLAGS_exptime << " seconds";
     } else {
-        LOG(INFO) << "Set " << FLAGS_batch * FLAGS_thread_num 
+        FLARE_LOG(INFO) << "Set " << FLAGS_batch * FLAGS_thread_num
                   << " values, never expired";
     }
     
@@ -168,7 +168,7 @@ int main(int argc, char* argv[]) {
         pids.resize(FLAGS_thread_num);
         for (int i = 0; i < FLAGS_thread_num; ++i) {
             if (pthread_create(&pids[i], NULL, sender, &channel) != 0) {
-                LOG(ERROR) << "Fail to create pthread";
+                FLARE_LOG(ERROR) << "Fail to create pthread";
                 return -1;
             }
         }
@@ -177,7 +177,7 @@ int main(int argc, char* argv[]) {
         for (int i = 0; i < FLAGS_thread_num; ++i) {
             if (fiber_start_background(
                     &bids[i], NULL, sender, &channel) != 0) {
-                LOG(ERROR) << "Fail to create fiber";
+                FLARE_LOG(ERROR) << "Fail to create fiber";
                 return -1;
             }
         }
@@ -185,11 +185,11 @@ int main(int argc, char* argv[]) {
 
     while (!flare::rpc::IsAskedToQuit()) {
         sleep(1);
-        LOG(INFO) << "Accessing memcache server at qps=" << g_latency_recorder.qps(1)
+        FLARE_LOG(INFO) << "Accessing memcache server at qps=" << g_latency_recorder.qps(1)
                   << " latency=" << g_latency_recorder.latency(1);
     }
 
-    LOG(INFO) << "memcache_client is going to quit";
+    FLARE_LOG(INFO) << "memcache_client is going to quit";
     for (int i = 0; i < FLAGS_thread_num; ++i) {
         if (!FLAGS_use_fiber) {
             pthread_join(pids[i], NULL);

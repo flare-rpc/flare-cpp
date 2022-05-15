@@ -63,7 +63,7 @@ namespace flare::rpc {
 
     NamingServiceThread::Actions::Actions(NamingServiceThread *owner)
             : _owner(owner), _wait_id(INVALID_FIBER_TOKEN), _has_wait_error(false), _wait_error(0) {
-        CHECK_EQ(0, fiber_token_create(&_wait_id, NULL, NULL));
+        FLARE_CHECK_EQ(0, fiber_token_create(&_wait_id, NULL, NULL));
     }
 
     NamingServiceThread::Actions::~Actions() {
@@ -98,7 +98,7 @@ namespace flare::rpc {
         const size_t dedup_size = std::unique(_servers.begin(), _servers.end())
                                   - _servers.begin();
         if (dedup_size != _servers.size()) {
-            LOG(WARNING) << "Removed " << _servers.size() - dedup_size
+            FLARE_LOG(WARNING) << "Removed " << _servers.size() - dedup_size
                          << " duplicated servers";
             _servers.resize(dedup_size);
         }
@@ -124,7 +124,7 @@ namespace flare::rpc {
             //       Socket. SocketMapKey may be passed through AddWatcher. Make sure
             //       to pick those Sockets with the right settings during OnAddedServers
             const SocketMapKey key(_added[i], _owner->_options.channel_signature);
-            CHECK_EQ(0, SocketMapInsert(key, &tagged_id.id, _owner->_options.ssl_ctx));
+            FLARE_CHECK_EQ(0, SocketMapInsert(key, &tagged_id.id, _owner->_options.ssl_ctx));
             _added_sockets.push_back(tagged_id);
         }
 
@@ -133,7 +133,7 @@ namespace flare::rpc {
             ServerNodeWithId tagged_id;
             tagged_id.node = _removed[i];
             const SocketMapKey key(_removed[i], _owner->_options.channel_signature);
-            CHECK_EQ(0, SocketMapFind(key, &tagged_id.id));
+            FLARE_CHECK_EQ(0, SocketMapFind(key, &tagged_id.id));
             _removed_sockets.push_back(tagged_id);
         }
 
@@ -198,7 +198,7 @@ namespace flare::rpc {
             if (!_removed.empty()) {
                 info << " removed " << _removed.size();
             }
-            LOG(INFO) << info.str();
+            FLARE_LOG(INFO) << info.str();
         }
 
         EndWait(servers.empty() ? ENODATA : 0);
@@ -273,7 +273,7 @@ namespace flare::rpc {
                                    const std::string &service_name,
                                    const GetNamingServiceThreadOptions *opt_in) {
         if (naming_service == NULL) {
-            LOG(ERROR) << "Param[naming_service] is NULL";
+            FLARE_LOG(ERROR) << "Param[naming_service] is NULL";
             return -1;
         }
         _ns = naming_service;
@@ -288,7 +288,7 @@ namespace flare::rpc {
         } else {
             int rc = fiber_start_urgent(&_tid, NULL, RunThis, this);
             if (rc) {
-                LOG(ERROR) << "Fail to create fiber: " << flare_error(rc);
+                FLARE_LOG(ERROR) << "Fail to create fiber: " << flare_error(rc);
                 return -1;
             }
         }
@@ -299,13 +299,13 @@ namespace flare::rpc {
         int rc = _actions.WaitForFirstBatchOfServers();
         if (rc == ENODATA && _options.succeed_without_server) {
             if (_options.log_succeed_without_server) {
-                LOG(WARNING) << '`' << *this << "' is empty! RPC over the channel"
+                FLARE_LOG(WARNING) << '`' << *this << "' is empty! RPC over the channel"
                                                 " will fail until servers appear";
             }
             rc = 0;
         }
         if (rc) {
-            LOG(ERROR) << "Fail to WaitForFirstBatchOfServers: " << flare_error(rc);
+            FLARE_LOG(ERROR) << "Fail to WaitForFirstBatchOfServers: " << flare_error(rc);
             return -1;
         }
         return 0;
@@ -330,7 +330,7 @@ namespace flare::rpc {
     int NamingServiceThread::AddWatcher(NamingServiceWatcher *watcher,
                                         const NamingServiceFilter *filter) {
         if (watcher == NULL) {
-            LOG(ERROR) << "Param[watcher] is NULL";
+            FLARE_LOG(ERROR) << "Param[watcher] is NULL";
             return -1;
         }
         FLARE_SCOPED_LOCK(_mutex);
@@ -347,7 +347,7 @@ namespace flare::rpc {
 
     int NamingServiceThread::RemoveWatcher(NamingServiceWatcher *watcher) {
         if (watcher == NULL) {
-            LOG(ERROR) << "Param[watcher] is NULL";
+            FLARE_LOG(ERROR) << "Param[watcher] is NULL";
             return -1;
         }
         FLARE_SCOPED_LOCK(_mutex);
@@ -363,9 +363,9 @@ namespace flare::rpc {
     void NamingServiceThread::Run() {
         int rc = _ns->RunNamingService(_service_name.c_str(), &_actions);
         if (rc != 0) {
-            LOG(WARNING) << "Fail to run naming service: " << flare_error(rc);
+            FLARE_LOG(WARNING) << "Fail to run naming service: " << flare_error(rc);
             if (rc == ENODATA) {
-                LOG(ERROR) << "RunNamingService should not return ENODATA, "
+                FLARE_LOG(ERROR) << "RunNamingService should not return ENODATA, "
                               "change it to ESTOP";
                 rc = ESTOP;
             }
@@ -411,12 +411,12 @@ namespace flare::rpc {
         char protocol[MAX_PROTOCOL_LEN + 1];
         const char *const service_name = ParseNamingServiceUrl(url, protocol);
         if (service_name == NULL) {
-            LOG(ERROR) << "Invalid naming service url=" << url;
+            FLARE_LOG(ERROR) << "Invalid naming service url=" << url;
             return -1;
         }
         const NamingService *source_ns = NamingServiceExtension()->Find(protocol);
         if (source_ns == NULL) {
-            LOG(ERROR) << "Unknown protocol=" << protocol;
+            FLARE_LOG(ERROR) << "Unknown protocol=" << protocol;
             return -1;
         }
         const NSKey key(protocol, service_name,
@@ -429,12 +429,12 @@ namespace flare::rpc {
                 g_nsthread_map = new(std::nothrow) NamingServiceMap;
                 if (NULL == g_nsthread_map) {
                     mu.unlock();
-                    LOG(ERROR) << "Fail to new g_nsthread_map";
+                    FLARE_LOG(ERROR) << "Fail to new g_nsthread_map";
                     return -1;
                 }
                 if (g_nsthread_map->init(64) != 0) {
                     mu.unlock();
-                    LOG(ERROR) << "Fail to init g_nsthread_map";
+                    FLARE_LOG(ERROR) << "Fail to init g_nsthread_map";
                     return -1;
                 }
             }
@@ -456,7 +456,7 @@ namespace flare::rpc {
                 NamingServiceThread *thr = new(std::nothrow) NamingServiceThread;
                 if (thr == NULL) {
                     mu.unlock();
-                    LOG(ERROR) << "Fail to new NamingServiceThread";
+                    FLARE_LOG(ERROR) << "Fail to new NamingServiceThread";
                     return -1;
                 }
                 ptr = thr;
@@ -466,7 +466,7 @@ namespace flare::rpc {
         }
         if (new_thread) {
             if (nsthread->Start(source_ns->New(), key.protocol, key.service_name, options) != 0) {
-                LOG(ERROR) << "Fail to start NamingServiceThread";
+                FLARE_LOG(ERROR) << "Fail to start NamingServiceThread";
                 std::unique_lock<pthread_mutex_t> mu(g_nsthread_map_mutex);
                 g_nsthread_map->erase(key);
                 return -1;

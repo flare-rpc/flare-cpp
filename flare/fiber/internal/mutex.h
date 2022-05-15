@@ -80,7 +80,7 @@ namespace std {
 #if !defined(NDEBUG)
             const int rc = fiber_mutex_lock(_pmutex);
             if (rc) {
-                LOG(FATAL) << "Fail to lock fiber_mutex_t=" << _pmutex << ", " << flare_error(rc);
+                FLARE_LOG(FATAL) << "Fail to lock fiber_mutex_t=" << _pmutex << ", " << flare_error(rc);
                 _pmutex = NULL;
             }
 #else
@@ -135,11 +135,11 @@ namespace std {
 
         void lock() {
             if (!_mutex) {
-                CHECK(false) << "Invalid operation";
+                FLARE_CHECK(false) << "Invalid operation";
                 return;
             }
             if (_owns_lock) {
-                CHECK(false) << "Detected deadlock issue";
+                FLARE_CHECK(false) << "Detected deadlock issue";
                 return;
             }
             fiber_mutex_lock(_mutex);
@@ -148,11 +148,11 @@ namespace std {
 
         bool try_lock() {
             if (!_mutex) {
-                CHECK(false) << "Invalid operation";
+                FLARE_CHECK(false) << "Invalid operation";
                 return false;
             }
             if (_owns_lock) {
-                CHECK(false) << "Detected deadlock issue";
+                FLARE_CHECK(false) << "Detected deadlock issue";
                 return false;
             }
             _owns_lock = !fiber_mutex_trylock(_mutex);
@@ -161,7 +161,7 @@ namespace std {
 
         void unlock() {
             if (!_owns_lock) {
-                CHECK(false) << "Invalid operation";
+                FLARE_CHECK(false) << "Invalid operation";
                 return;
             }
             if (_mutex) {

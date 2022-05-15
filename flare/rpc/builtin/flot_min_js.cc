@@ -31,7 +31,7 @@ static void InitFlotMinBuf() {
     s_flot_min_buf = new flare::cord_buf;
     s_flot_min_buf->append(flot_min_js());
     s_flot_min_buf_gzip = new flare::cord_buf;
-    CHECK(policy::GzipCompress(*s_flot_min_buf, s_flot_min_buf_gzip, NULL));
+    FLARE_CHECK(policy::GzipCompress(*s_flot_min_buf, s_flot_min_buf_gzip, NULL));
 }
 const flare::cord_buf& flot_min_js_iobuf() {
     pthread_once(&s_flot_min_buf_once, InitFlotMinBuf);

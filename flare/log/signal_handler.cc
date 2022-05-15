@@ -299,7 +299,7 @@ namespace flare::log {
             // BEFORE this point, all code must be async-termination-safe!
             // (See WARNING above.)
             //
-            // AFTER this point, we do unsafe things, like using LOG()!
+            // AFTER this point, we do unsafe things, like using FLARE_LOG()!
             // The process could be terminated or hung at any time.  We try to
             // do more useful things first and riskier things later.
 
@@ -340,7 +340,7 @@ namespace flare::log {
         sig_action.sa_sigaction = &FailureSignalHandler;
 
         for (size_t i = 0; i < FLARE_ARRAY_SIZE(kFailureSignals); ++i) {
-            CHECK_ERR(sigaction(kFailureSignals[i].number, &sig_action, NULL));
+            FLARE_CHECK_ERR(sigaction(kFailureSignals[i].number, &sig_action, NULL));
         }
         kFailureSignalHandlerInstalled = true;
 #endif  // HAVE_SIGACTION

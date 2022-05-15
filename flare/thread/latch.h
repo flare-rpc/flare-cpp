@@ -28,14 +28,14 @@ namespace flare {
         bool wait_for(const flare::duration &d) {
             std::chrono::microseconds timeout = d.to_chrono_microseconds();
             std::unique_lock lk(m_);
-            CHECK_GE(count_, 0);
+            FLARE_CHECK_GE(count_, 0);
             return cv_.wait_for(lk, timeout, [this] { return count_ == 0; });
         }
 
         bool wait_until(const flare::time_point &deadline) {
             auto d = deadline.to_chrono_time();
             std::unique_lock lk(m_);
-            CHECK_GE(count_, 0);
+            FLARE_CHECK_GE(count_, 0);
             return cv_.wait_until(lk, d, [this] { return count_ == 0; });
         }
 

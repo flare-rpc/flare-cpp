@@ -81,7 +81,7 @@ namespace {
         tm.stop();
         int64_t elp2 = tm.n_elapsed();
 
-        LOG(INFO) << "elp1=" << elp1 / N << " elp2=" << elp2 / N;
+        FLARE_LOG(INFO) << "elp1=" << elp1 / N << " elp2=" << elp2 / N;
     }
 
 }

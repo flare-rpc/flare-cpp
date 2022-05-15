@@ -109,12 +109,12 @@ namespace flare::fiber_internal {
             // cause undefined behavior (e.g. deadlock)
             if (fiber_start_background(&tid, &_options.fiber_attr,
                                          _execute_tasks, node) != 0) {
-                PLOG(FATAL) << "Fail to start fiber";
+                FLARE_PLOG(FATAL) << "Fail to start fiber";
                 _execute_tasks(node);
             }
         } else {
             if (_options.executor->submit(_execute_tasks, node) != 0) {
-                PLOG(FATAL) << "Fail to submit task";
+                FLARE_PLOG(FATAL) << "Fail to submit task";
                 _execute_tasks(node);
             }
         }
@@ -128,7 +128,7 @@ namespace flare::fiber_internal {
         bool destroy_queue = false;
         for (;;) {
             if (head->iterated) {
-                CHECK(head->next != NULL);
+                FLARE_CHECK(head->next != NULL);
                 TaskNode *saved_head = head;
                 head = head->next;
                 m->return_task_node(saved_head);
@@ -162,15 +162,15 @@ namespace flare::fiber_internal {
             }
             // break when no more tasks and head has been executed
             if (!m->_more_tasks(cur_tail, &cur_tail, !head->iterated)) {
-                CHECK_EQ(cur_tail, head);
-                CHECK(head->iterated);
+                FLARE_CHECK_EQ(cur_tail, head);
+                FLARE_CHECK(head->iterated);
                 m->return_task_node(head);
                 break;
             }
         }
         if (destroy_queue) {
-            CHECK(m->_head.load(std::memory_order_relaxed) == NULL);
-            CHECK(m->_stopped);
+            FLARE_CHECK(m->_head.load(std::memory_order_relaxed) == NULL);
+            FLARE_CHECK(m->_stopped);
             // Add _join_butex by 2 to make it equal to the next version of the
             // ExecutionQueue from the same slot so that join with old id would
             // return immediatly.
@@ -204,7 +204,7 @@ namespace flare::fiber_internal {
                 start_execute(node);
                 break;
             }
-            CHECK(false) << "Fail to create task_node_t, " << flare_error();
+            FLARE_CHECK(false) << "Fail to create task_node_t, " << flare_error();
             flare::fiber_sleep_for(1000);
         }
     }
@@ -254,7 +254,7 @@ namespace flare::fiber_internal {
 
     int ExecutionQueueBase::_execute(TaskNode *head, bool high_priority, int *niterated) {
         if (head != NULL && head->stop_task) {
-            CHECK(head->next == NULL);
+            FLARE_CHECK(head->next == NULL);
             head->iterated = true;
             head->status = EXECUTED;
             TaskIteratorBase iter(NULL, this, true, false);
@@ -321,15 +321,15 @@ namespace flare::fiber_internal {
                             // is excuted m would be finally reset and returned
                         }
                     } else {
-                        CHECK(false) << "ref-version=" << ver1
+                        FLARE_CHECK(false) << "ref-version=" << ver1
                                      << " unref-version=" << ver2;
                     }
                 } else {
-                    CHECK_EQ(ver1, ver2);
+                    FLARE_CHECK_EQ(ver1, ver2);
                     // Addressed a free slot.
                 }
             } else {
-                CHECK(false) << "Over dereferenced id=" << id;
+                FLARE_CHECK(false) << "Over dereferenced id=" << id;
             }
         }
         return ret.Pass();
@@ -350,8 +350,8 @@ namespace flare::fiber_internal {
             m->_clear_func = clear_func;
             m->_meta = meta;
             m->_type_specific_function = type_specific_function;
-            CHECK(m->_head.load(std::memory_order_relaxed) == NULL);
-            CHECK_EQ(0, m->_high_priority_tasks.load(std::memory_order_relaxed));
+            FLARE_CHECK(m->_head.load(std::memory_order_relaxed) == NULL);
+            FLARE_CHECK_EQ(0, m->_high_priority_tasks.load(std::memory_order_relaxed));
             ExecutionQueueOptions opt;
             if (options != NULL) {
                 opt = *options;

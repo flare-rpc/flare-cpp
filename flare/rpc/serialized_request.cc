@@ -43,7 +43,7 @@ namespace flare::rpc {
     }
 
     void SerializedRequest::SetCachedSize(int /*size*/) const {
-        CHECK(false) << "You're not supposed to call " << __FUNCTION__;
+        FLARE_CHECK(false) << "You're not supposed to call " << __FUNCTION__;
     }
 
     const ::google::protobuf::Descriptor *SerializedRequest::descriptor() {
@@ -68,18 +68,18 @@ namespace flare::rpc {
 
     bool SerializedRequest::MergePartialFromCodedStream(
             ::google::protobuf::io::CodedInputStream *) {
-        CHECK(false) << "You're not supposed to call " << __FUNCTION__;
+        FLARE_CHECK(false) << "You're not supposed to call " << __FUNCTION__;
         return false;
     }
 
     void SerializedRequest::SerializeWithCachedSizes(
             ::google::protobuf::io::CodedOutputStream *) const {
-        CHECK(false) << "You're not supposed to call " << __FUNCTION__;
+        FLARE_CHECK(false) << "You're not supposed to call " << __FUNCTION__;
     }
 
     ::google::protobuf::uint8 *SerializedRequest::SerializeWithCachedSizesToArray(
             ::google::protobuf::uint8 *target) const {
-        CHECK(false) << "You're not supposed to call " << __FUNCTION__;
+        FLARE_CHECK(false) << "You're not supposed to call " << __FUNCTION__;
         return target;
     }
 
@@ -88,18 +88,18 @@ namespace flare::rpc {
     }
 
     void SerializedRequest::MergeFrom(const ::google::protobuf::Message &) {
-        CHECK(false) << "You're not supposed to call " << __FUNCTION__;
+        FLARE_CHECK(false) << "You're not supposed to call " << __FUNCTION__;
     }
 
     void SerializedRequest::MergeFrom(const SerializedRequest &) {
-        CHECK(false) << "You're not supposed to call " << __FUNCTION__;
+        FLARE_CHECK(false) << "You're not supposed to call " << __FUNCTION__;
     }
 
     void SerializedRequest::CopyFrom(const ::google::protobuf::Message &from) {
         if (&from == this) return;
         const SerializedRequest *source = dynamic_cast<const SerializedRequest *>(&from);
         if (source == NULL) {
-            CHECK(false) << "SerializedRequest can only CopyFrom SerializedRequest";
+            FLARE_CHECK(false) << "SerializedRequest can only CopyFrom SerializedRequest";
         } else {
             _serialized = source->_serialized;
         }

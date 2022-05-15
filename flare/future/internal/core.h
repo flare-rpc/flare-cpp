@@ -111,10 +111,10 @@ namespace flare {
                 state_.template emplace<waiting_for_single_object>(
                         waiting_for_single_object{std::move(action)});
             } else {  // Already satisfied, call the `action` immediately.
-                DCHECK_EQ(state_.index(), 1UL);
+                FLARE_DCHECK_EQ(state_.index(), 1UL);
                 auto &&s = std::get<satisfied>(state_);
 
-                DCHECK(!s.ever_called_continuation)<<
+                FLARE_DCHECK(!s.ever_called_continuation)<<
                            "Action may not be chained for multiple times.";
 
                 s.ever_called_continuation = true;
