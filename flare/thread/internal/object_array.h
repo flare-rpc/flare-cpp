@@ -335,9 +335,9 @@ namespace flare {
 #endif
             FLARE_INTERNAL_TLS_MODEL
             thread_local object_array_cache<T> cache;
-            FLARE_CHECK_EQ(offset % sizeof(T), 0ul);
-            FLARE_CHECK_GE(offset, 0ul);
-            if (FLARE_LIKELY(offset < cache.limit)) {
+            FLARE_CHECK_EQ(static_cast<size_t>(offset) % sizeof(T), 0ul);
+            FLARE_CHECK_GE(static_cast<size_t>(offset), 0ul);
+            if (FLARE_LIKELY(static_cast<size_t>(offset) < cache.limit)) {
                 // Pairs with the heavy barrier in `BroadcastingForEachLocked` above.
                 asymmetric_barrier_light();
                 return add_to_ptr(cache.objects, offset);
