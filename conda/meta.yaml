@@ -24,7 +24,7 @@ outputs:
     script: bld.sh   # [not win]
     script: bld.bat  # [win]
     build:
-      string: "h{{ PKG_HASH }}_{{ number }}"
+   #   string: "h{{ PKG_HASH }}_{{ number }}"
       run_exports:
         - {{ pin_compatible('libflare', exact=True) }}
     requirements:
@@ -57,5 +57,5 @@ outputs:
       commands:
         - test -f $PREFIX/lib/libflare.so              # [linux]
         - test -f $PREFIX/lib/libflare.dylib           # [osx]
-        - conda inspect linkages -p $PREFIX $PKG_NAME  # [not win]
-        - conda inspect objects -p $PREFIX $PKG_NAME   # [osx]
+      #  - conda inspect linkages -p $PREFIX $PKG_NAME  # [not win]
+      #  - conda inspect objects -p $PREFIX $PKG_NAME   # [osx]
