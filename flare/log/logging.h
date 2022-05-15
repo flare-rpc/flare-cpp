@@ -31,7 +31,6 @@
 #include "flare/base/profile.h"
 #include "flare/base/static_atomic.h" // Used by FLARE_LOG_EVERY_N, FLARE_LOG_FIRST_N etc
 #include "flare/times/time.h"
-#include <glog/logging.h>
 
 // The global value of FLARE_STRIP_LOG. All the messages logged to
 // FLARE_LOG(XXX) with severity less than FLARE_STRIP_LOG will not be displayed.
