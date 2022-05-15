@@ -16,6 +16,7 @@
 namespace {
     class FlatMapTest : public ::testing::Test {
     protected:
+
         FlatMapTest() {};
 
         virtual ~FlatMapTest() {};
@@ -217,8 +218,8 @@ namespace {
         sum += memcmp(input, input2, input_len);
         tm2.stop();
         FLARE_LOG(INFO) << "tm1=" << tm1.n_elapsed()
-                  << " tm2=" << tm2.n_elapsed()
-                  << " tm3=" << tm3.n_elapsed() << " " << sum;
+                        << " tm2=" << tm2.n_elapsed()
+                        << " tm3=" << tm3.n_elapsed() << " " << sum;
     }
 
     TEST_F(FlatMapTest, __builtin_ctzl_perf) {
@@ -327,7 +328,7 @@ namespace {
     TEST_F(FlatMapTest, flat_map_of_string) {
         std::vector<std::string> keys;
         flare::container::FlatMap<std::string, size_t> m1;
-        std::map < std::string, size_t > m2;
+        std::map<std::string, size_t> m2;
         flare::container::hash_map<std::string, size_t> m3;
         const size_t N = 10000;
         ASSERT_EQ(0, m1.init(N));
@@ -354,8 +355,8 @@ namespace {
         }
         tm3.stop();
         FLARE_LOG(INFO) << "inserting strings takes " << tm1.n_elapsed() / N
-                  << " " << tm2.n_elapsed() / N
-                  << " " << tm3.n_elapsed() / N;
+                        << " " << tm2.n_elapsed() / N
+                        << " " << tm3.n_elapsed() / N;
 
         tm1.start();
         for (size_t i = 0; i < N; ++i) {
@@ -373,7 +374,7 @@ namespace {
         }
         tm3.stop();
         FLARE_LOG(INFO) << "finding strings takes " << tm1.n_elapsed() / N
-                  << " " << tm2.n_elapsed() / N << " " << tm3.n_elapsed() / N;
+                        << " " << tm2.n_elapsed() / N << " " << tm3.n_elapsed() / N;
 
         tm1.start();
         for (size_t i = 0; i < N; ++i) {
@@ -397,8 +398,8 @@ namespace {
         tm1_2.stop();
 
         FLARE_LOG(INFO) << "finding c_strings takes " << tm1.n_elapsed() / N
-                  << " " << tm2.n_elapsed() / N << " " << tm3.n_elapsed() / N
-                  << " " << tm1_2.n_elapsed() / N;
+                        << " " << tm2.n_elapsed() / N << " " << tm3.n_elapsed() / N
+                        << " " << tm1_2.n_elapsed() / N;
 
         for (size_t i = 0; i < N; ++i) {
             ASSERT_EQ(i, m1[keys[i]]) << "i=" << i;
@@ -443,7 +444,7 @@ namespace {
         tm1.stop();
 
         FLARE_LOG(INFO) << "m1.insert=" << tm1.n_elapsed() / (double) N
-                  << "ns m2.insert=" << tm2.n_elapsed() / (double) N;
+                        << "ns m2.insert=" << tm2.n_elapsed() / (double) N;
         tm1.start();
         for (M1::iterator it = m1.begin(); it != m1.end(); ++it);
         tm1.stop();
@@ -452,7 +453,7 @@ namespace {
         for (M2::iterator it = m2.begin(); it != m2.end(); ++it);
         tm2.stop();
         FLARE_LOG(INFO) << "m1.iterate=" << tm1.n_elapsed() / (double) N
-                  << "ns m2.iterate=" << tm2.n_elapsed() / (double) N;
+                        << "ns m2.iterate=" << tm2.n_elapsed() / (double) N;
 
         M1::iterator it1 = m1.begin();
         M2::iterator it2 = m2.begin();
@@ -916,16 +917,16 @@ namespace {
             tm1.stop();
 
             tm2.start();
-            std::map < std::string, std::string > m2;
+            std::map<std::string, std::string> m2;
             m2["Content-type"] = "application/json";
             m2["Request-Id"] = "true";
             m2["Status-Code"] = "200";
             tm2.stop();
 
             FLARE_LOG(INFO) << "flatmap=" << tm1.n_elapsed()
-                      << " ci_flatmap=" << tm4.n_elapsed()
-                      << " map=" << tm2.n_elapsed()
-                      << " pooled_map=" << tm3.n_elapsed();
+                            << " ci_flatmap=" << tm4.n_elapsed()
+                            << " map=" << tm2.n_elapsed()
+                            << " pooled_map=" << tm3.n_elapsed();
         }
     }
 
@@ -1073,10 +1074,10 @@ namespace {
         ASSERT_EQ (n_con + n_cp_con, n_des);
 
         FLARE_LOG(INFO) << "n_con:" << n_con << std::endl
-                  << "n_cp_con:" << n_cp_con << std::endl
-                  << "n_con+n_cp_con:" << n_con + n_cp_con << std::endl
-                  << "n_des:" << n_des << std::endl
-                  << "n_cp:" << n_cp;
+                        << "n_cp_con:" << n_cp_con << std::endl
+                        << "n_con+n_cp_con:" << n_con + n_cp_con << std::endl
+                        << "n_des:" << n_des << std::endl
+                        << "n_cp:" << n_cp;
     }
 
     template<typename T>
@@ -1086,7 +1087,7 @@ namespace {
 
         std::vector<uint64_t> keys;
         flare::container::FlatMap<uint64_t, T> id_map;
-        std::map < uint64_t, T > std_map;
+        std::map<uint64_t, T> std_map;
         flare::container::PooledMap<uint64_t, T> pooled_map;
         flare::container::hash_map<uint64_t, T> hash_map;
         flare::stop_watcher id_tm, std_tm, pooled_tm, hash_tm;
@@ -1150,12 +1151,12 @@ namespace {
             hash_tm.stop();
 
             FLARE_LOG(INFO) << (random ? "Randomly" : "Sequentially")
-                      << " inserting " << keys.size()
-                      << " into FlatMap/std::map/flare::container::PooledMap/flare::container::hash_map takes "
-                      << id_tm.n_elapsed() / keys.size()
-                      << "/" << std_tm.n_elapsed() / keys.size()
-                      << "/" << pooled_tm.n_elapsed() / keys.size()
-                      << "/" << hash_tm.n_elapsed() / keys.size();
+                            << " inserting " << keys.size()
+                            << " into FlatMap/std::map/flare::container::PooledMap/flare::container::hash_map takes "
+                            << id_tm.n_elapsed() / keys.size()
+                            << "/" << std_tm.n_elapsed() / keys.size()
+                            << "/" << pooled_tm.n_elapsed() / keys.size()
+                            << "/" << hash_tm.n_elapsed() / keys.size();
 
             if (random) {
                 shuffle(keys.begin(), keys.end(), g);
@@ -1186,12 +1187,12 @@ namespace {
             hash_tm.stop();
 
             FLARE_LOG(INFO) << (random ? "Randomly" : "Sequentially")
-                      << " erasing " << keys.size()
-                      << " from FlatMap/std::map/flare::container::PooledMap/flare::container::hash_map takes "
-                      << id_tm.n_elapsed() / keys.size()
-                      << "/" << std_tm.n_elapsed() / keys.size()
-                      << "/" << pooled_tm.n_elapsed() / keys.size()
-                      << "/" << hash_tm.n_elapsed() / keys.size();
+                            << " erasing " << keys.size()
+                            << " from FlatMap/std::map/flare::container::PooledMap/flare::container::hash_map takes "
+                            << id_tm.n_elapsed() / keys.size()
+                            << "/" << std_tm.n_elapsed() / keys.size()
+                            << "/" << pooled_tm.n_elapsed() / keys.size()
+                            << "/" << hash_tm.n_elapsed() / keys.size();
         }
     }
 
@@ -1202,7 +1203,7 @@ namespace {
         std::vector<uint64_t> keys;
         std::vector<uint64_t> rkeys;
         flare::container::FlatMap<uint64_t, T> id_map;
-        std::map < uint64_t, T > std_map;
+        std::map<uint64_t, T> std_map;
         flare::container::PooledMap<uint64_t, T> pooled_map;
         flare::container::hash_map<uint64_t, T> hash_map;
 
@@ -1265,11 +1266,11 @@ namespace {
             hash_tm.stop();
 
             FLARE_LOG(INFO) << "Seeking " << keys.size()
-                      << " from FlatMap/std::map/flare::container::PooledMap/flare::container::hash_map takes "
-                      << id_tm.n_elapsed() / keys.size()
-                      << "/" << std_tm.n_elapsed() / keys.size()
-                      << "/" << pooled_tm.n_elapsed() / keys.size()
-                      << "/" << hash_tm.n_elapsed() / keys.size();
+                            << " from FlatMap/std::map/flare::container::PooledMap/flare::container::hash_map takes "
+                            << id_tm.n_elapsed() / keys.size()
+                            << "/" << std_tm.n_elapsed() / keys.size()
+                            << "/" << pooled_tm.n_elapsed() / keys.size()
+                            << "/" << hash_tm.n_elapsed() / keys.size();
         }
     }
 
