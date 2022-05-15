@@ -7,6 +7,7 @@
 #include <cstring>
 #include <iterator>
 #include <limits>
+#include <climits>
 #include <memory>
 #include <tuple>
 #include <type_traits>

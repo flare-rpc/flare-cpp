@@ -12,7 +12,6 @@
 #include "flare/container/flat_hash_map.h"
 #include "flare/container/parallel_node_hash_map.h"
 #include "flare/container/parallel_flat_hash_map.h"
-#include <any>
 #include "hash_generator_testing.h"
 #include "unordered_map_constructor_test.h"
 #include "unordered_map_lookup_test.h"
@@ -234,39 +233,6 @@ namespace flare {
                 m.insert(std::move(node));
                 EXPECT_THAT(m, UnorderedElementsAre(Pair(1, 17), Pair(2, 9)));
             }
-
-#if 0 && !defined(__ANDROID__) && !defined(__APPLE__) && !defined(__EMSCRIPTEN__)
-            TEST(THIS_TEST_NAME, Any) {
-              ThisMap<int, std::any> m;
-              m.emplace(1, 7);
-              auto it = m.find(1);
-              ASSERT_NE(it, m.end());
-              EXPECT_EQ(7, std::any_cast<int>(it->second));
-
-              m.emplace(std::piecewise_construct, std::make_tuple(2), std::make_tuple(8));
-              it = m.find(2);
-              ASSERT_NE(it, m.end());
-              EXPECT_EQ(8, std::any_cast<int>(it->second));
-
-              m.emplace(std::piecewise_construct, std::make_tuple(3),
-                        std::make_tuple(std::any(9)));
-              it = m.find(3);
-              ASSERT_NE(it, m.end());
-              EXPECT_EQ(9, std::any_cast<int>(it->second));
-
-              struct H {
-                size_t operator()(const std::any&) const { return 0; }
-              };
-              struct E {
-                bool operator()(const std::any&, const std::any&) const { return true; }
-              };
-              ThisMap<std::any, int, H, E> m2;
-              m2.emplace(1, 7);
-              auto it2 = m2.find(1);
-              ASSERT_NE(it2, m2.end());
-              EXPECT_EQ(7, it2->second);
-            }
-#endif  // __ANDROID__
 
         }  // namespace
     }  // namespace priv
