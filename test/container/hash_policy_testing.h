@@ -96,8 +96,8 @@ namespace flare {
             }
         };
 
-// It is expected that Alloc() == Alloc() for all allocators so we cannot use
-// WithId base. We need to explicitly assign ids.
+        // It is expected that Alloc() == Alloc() for all allocators so we cannot use
+        // WithId base. We need to explicitly assign ids.
         template<class T = int>
         struct Alloc : std::allocator<T> {
             using propagate_on_container_swap = std::true_type;
