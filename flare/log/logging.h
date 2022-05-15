@@ -20,7 +20,6 @@
 #include <cstdint>
 #include <atomic>
 
-#include <glog/logging.h>
 #include <gflags/gflags.h>
 #include "flare/base/profile.h"
 #include "flare/strings/fmt/format.h"
