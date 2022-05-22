@@ -56,7 +56,7 @@ namespace flare::rpc {
     DECLARE_bool(http_verbose);
     DECLARE_int32(http_verbose_max_body_length);
 
-// Defined in grpc.cpp
+    // Defined in grpc.cpp
     int64_t ConvertGrpcTimeoutToUS(const std::string *grpc_timeout);
 
     namespace policy {
@@ -78,7 +78,7 @@ namespace flare::rpc {
 
         DEFINE_string(request_id_header, "x-request-id", "The http header to mark a session");
 
-// Read user address from the header specified by -http_header_of_user_ip
+        // Read user address from the header specified by -http_header_of_user_ip
         static bool GetUserAddressFromHeaderImpl(const HttpHeader &headers,
                                                  flare::base::end_point *user_addr) {
             const std::string *user_addr_str =
