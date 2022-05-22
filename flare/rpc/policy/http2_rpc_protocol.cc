@@ -24,10 +24,10 @@
 
 namespace flare::rpc {
 
-DECLARE_bool(http_verbose);
-DECLARE_int32(http_verbose_max_body_length);
-DECLARE_int32(health_check_interval);
-DECLARE_bool(usercode_in_pthread);
+    DECLARE_bool(http_verbose);
+    DECLARE_int32(http_verbose_max_body_length);
+    DECLARE_int32(health_check_interval);
+    DECLARE_bool(usercode_in_pthread);
 
     namespace policy {
 
@@ -91,7 +91,7 @@ DECLARE_bool(usercode_in_pthread);
             return "UNKNOWN(H2ConnectionState)";
         }
 
-// A series of utilities to load numbers from http2 streams.
+        // A series of utilities to load numbers from http2 streams.
         inline uint8_t LoadUint8(flare::cord_buf_bytes_iterator &it) {
             uint8_t v = *it;
             ++it;
@@ -169,7 +169,7 @@ DECLARE_bool(usercode_in_pthread);
             return s->Write(&sendbuf, &wopt);
         }
 
-// [ https://tools.ietf.org/html/rfc7540#section-6.5.1 ]
+        // [ https://tools.ietf.org/html/rfc7540#section-6.5.1 ]
 
         enum H2SettingsIdentifier {
             H2_SETTINGS_HEADER_TABLE_SIZE = 0x1,
@@ -180,8 +180,8 @@ DECLARE_bool(usercode_in_pthread);
             H2_SETTINGS_MAX_HEADER_LIST_SIZE = 0x6
         };
 
-// Parse from n bytes from the iterator.
-// Returns true on success.
+        // Parse from n bytes from the iterator.
+        // Returns true on success.
         bool ParseH2Settings(H2Settings *out, flare::cord_buf_bytes_iterator &it, size_t n) {
             const uint32_t npairs = n / 6;
             if (npairs * 6 != n) {
@@ -233,11 +233,11 @@ DECLARE_bool(usercode_in_pthread);
             return true;
         }
 
-// Maximum value that may be returned by SerializeH2Settings
+        // Maximum value that may be returned by SerializeH2Settings
         static const size_t H2_SETTINGS_MAX_BYTE_SIZE = 36;
 
-// Serialize to `out' which is at least ByteSize() bytes long.
-// Returns bytes written.
+        // Serialize to `out' which is at least ByteSize() bytes long.
+        // Returns bytes written.
         size_t SerializeH2Settings(const H2Settings &in, void *out) {
             uint8_t *p = (uint8_t *) out;
             if (in.header_table_size != H2Settings::DEFAULT_HEADER_TABLE_SIZE) {
@@ -469,7 +469,7 @@ DECLARE_bool(usercode_in_pthread);
                                     | ((uint32_t) length_buf[1] << 8) | length_buf[2];
             if (length > _local_settings.max_frame_size) {
                 FLARE_LOG(ERROR) << "Too large frame length=" << length << " max="
-                           << _local_settings.max_frame_size;
+                                 << _local_settings.max_frame_size;
                 return MakeParseError(PARSE_ERROR_ABSOLUTELY_WRONG);
             }
             if (it.bytes_left() < FRAME_HEAD_SIZE - 3 + length) {
@@ -588,8 +588,8 @@ DECLARE_bool(usercode_in_pthread);
                 --frag_size;
             }
             if (has_priority) {
-               // const uint32_t FLARE_ALLOW_UNUSED stream_dep = LoadUint32(it);
-               // const uint32_t FLARE_ALLOW_UNUSED weight = LoadUint8(it);
+                // const uint32_t FLARE_ALLOW_UNUSED stream_dep = LoadUint32(it);
+                // const uint32_t FLARE_ALLOW_UNUSED weight = LoadUint8(it);
                 frag_size -= 5;
             }
             if (frag_size < pad_length) {
@@ -602,7 +602,7 @@ DECLARE_bool(usercode_in_pthread);
                 frame_head.stream_id > _last_received_stream_id) { // new stream
                 if ((frame_head.stream_id & 1) == 0) {
                     FLARE_LOG(ERROR) << "stream_id=" << frame_head.stream_id
-                               << " created by client is not odd";
+                                     << " created by client is not odd";
                     return MakeH2Error(H2_PROTOCOL_ERROR);
                 }
                 _last_received_stream_id = frame_head.stream_id;
@@ -646,7 +646,7 @@ DECLARE_bool(usercode_in_pthread);
             flare::cord_buf_bytes_iterator it2(it, frag_size);
             if (ConsumeHeaders(it2) < 0) {
                 FLARE_LOG(ERROR) << "Invalid header, frag_size=" << frag_size
-                           << ", stream_id=" << frame_head.stream_id;
+                                 << ", stream_id=" << frame_head.stream_id;
                 return MakeH2Error(H2_PROTOCOL_ERROR);
             }
             const size_t nskip = frag_size - it2.bytes_left();
@@ -659,7 +659,7 @@ DECLARE_bool(usercode_in_pthread);
             if (frame_head.flags & H2_FLAGS_END_HEADERS) {
                 if (it2.bytes_left() != 0) {
                     FLARE_LOG(ERROR) << "Incomplete header: payload_size=" << frame_head.payload_size
-                               << ", stream_id=" << frame_head.stream_id;
+                                     << ", stream_id=" << frame_head.stream_id;
                     return MakeH2Error(H2_PROTOCOL_ERROR);
                 }
                 if (frame_head.flags & H2_FLAGS_END_STREAM) {
@@ -702,14 +702,14 @@ DECLARE_bool(usercode_in_pthread);
             flare::cord_buf_bytes_iterator it2(_remaining_header_fragment);
             if (ConsumeHeaders(it2) < 0) {
                 FLARE_LOG(ERROR) << "Invalid header: payload_size=" << frame_head.payload_size
-                           << ", stream_id=" << frame_head.stream_id;
+                                 << ", stream_id=" << frame_head.stream_id;
                 return MakeH2Error(H2_PROTOCOL_ERROR);
             }
             _remaining_header_fragment.pop_front(size - it2.bytes_left());
             if (frame_head.flags & H2_FLAGS_END_HEADERS) {
                 if (it2.bytes_left() != 0) {
                     FLARE_LOG(ERROR) << "Incomplete header: payload_size=" << frame_head.payload_size
-                               << ", stream_id=" << frame_head.stream_id;
+                                     << ", stream_id=" << frame_head.stream_id;
                     return MakeH2Error(H2_PROTOCOL_ERROR);
                 }
                 if (_stream_ended) {
@@ -877,7 +877,7 @@ DECLARE_bool(usercode_in_pthread);
             if (frame_head.flags & H2_FLAGS_ACK) {
                 if (frame_head.payload_size != 0) {
                     FLARE_LOG(ERROR) << "Non-zero payload_size=" << frame_head.payload_size
-                               << " for settings-ACK";
+                                     << " for settings-ACK";
                     return MakeH2Error(H2_PROTOCOL_ERROR);
                 }
                 _local_settings = _unack_local_settings;
@@ -1010,11 +1010,11 @@ DECLARE_bool(usercode_in_pthread);
                 for (size_t i = 1; i < goaway_streams.size(); ++i) {
                     fiber_id_t th;
                     fiber_attribute tmp = (FLAGS_usercode_in_pthread ?
-                                          FIBER_ATTR_PTHREAD :
-                                          FIBER_ATTR_NORMAL);
+                                           FIBER_ATTR_PTHREAD :
+                                           FIBER_ATTR_NORMAL);
                     tmp.keytable_pool = _socket->keytable_pool();
                     FLARE_CHECK_EQ(0, fiber_start_background(&th, &tmp, ProcessHttpResponseWrapper,
-                                                         static_cast<InputMessageBase *>(goaway_streams[i])));
+                                                             static_cast<InputMessageBase *>(goaway_streams[i])));
                 }
                 return MakeH2Message(goaway_streams[0]);
             } else {
@@ -1048,8 +1048,8 @@ DECLARE_bool(usercode_in_pthread);
                 }
                 if (!AddWindowSize(&sctx->_remote_window_left, inc)) {
                     FLARE_LOG(ERROR) << "Invalid stream-level window_size_increment=" << inc
-                               << " to remote_window_left="
-                               << sctx->_remote_window_left.load(std::memory_order_relaxed);
+                                     << " to remote_window_left="
+                                     << sctx->_remote_window_left.load(std::memory_order_relaxed);
                     return MakeH2Error(H2_FLOW_CONTROL_ERROR);
                 }
                 return MakeH2Message(NULL);
@@ -1680,7 +1680,7 @@ DECLARE_bool(usercode_in_pthread);
                 msg->push(common->H2_STATUS, common->STATUS_200);
             } else {
                 flare::string_printf(&msg->push(common->H2_STATUS),
-                                           "%d", h->status_code());
+                                     "%d", h->status_code());
             }
             if (need_content_type) {
                 msg->push(common->CONTENT_TYPE, h->content_type());

@@ -25,47 +25,49 @@
 
 namespace flare::rpc {
 
-// Inherit this class to be intrusively shared. Comparing to shared_ptr,
-// intrusive_ptr saves one malloc (for shared_count) and gets better cache
-// locality when the ref/deref are frequent, in the cost of inability of
-// weak_ptr and worse interfacing.
-class SharedObject {
-friend void intrusive_ptr_add_ref(SharedObject*);
-friend void intrusive_ptr_release(SharedObject*);
+    // Inherit this class to be intrusively shared. Comparing to shared_ptr,
+    // intrusive_ptr saves one malloc (for shared_count) and gets better cache
+    // locality when the ref/deref are frequent, in the cost of inability of
+    // weak_ptr and worse interfacing.
+    class SharedObject {
+        friend void intrusive_ptr_add_ref(SharedObject *);
 
-public:
-    SharedObject() : _nref(0) { }
-    int ref_count() const { return _nref.load(std::memory_order_relaxed); }
-    
-    // Add ref and returns the ref_count seen before added.
-    // The effect is basically same as flare::container::intrusive_ptr<T>(obj).detach()
-    // except that the latter one does not return the seen ref_count which is
-    // useful in some scenarios.
-    int AddRefManually()
-    { return _nref.fetch_add(1, std::memory_order_relaxed); }
+        friend void intrusive_ptr_release(SharedObject *);
 
-    // Remove one ref, if the ref_count hit zero, delete this object.
-    // Same as flare::container::intrusive_ptr<T>(obj, false).reset(NULL)
-    void RemoveRefManually() {
-        if (_nref.fetch_sub(1, std::memory_order_release) == 1) {
-            std::atomic_thread_fence(std::memory_order_acquire);
-            delete this;
+    public:
+        SharedObject() : _nref(0) {}
+
+        int ref_count() const { return _nref.load(std::memory_order_relaxed); }
+
+        // Add ref and returns the ref_count seen before added.
+        // The effect is basically same as flare::container::intrusive_ptr<T>(obj).detach()
+        // except that the latter one does not return the seen ref_count which is
+        // useful in some scenarios.
+        int AddRefManually() { return _nref.fetch_add(1, std::memory_order_relaxed); }
+
+        // Remove one ref, if the ref_count hit zero, delete this object.
+        // Same as flare::container::intrusive_ptr<T>(obj, false).reset(NULL)
+        void RemoveRefManually() {
+            if (_nref.fetch_sub(1, std::memory_order_release) == 1) {
+                std::atomic_thread_fence(std::memory_order_acquire);
+                delete this;
+            }
         }
+
+    protected:
+        virtual ~SharedObject() {}
+
+    private:
+        std::atomic<int> _nref;
+    };
+
+    inline void intrusive_ptr_add_ref(SharedObject *obj) {
+        obj->AddRefManually();
     }
 
-protected:
-    virtual ~SharedObject() { }
-private:
-    std::atomic<int> _nref;
-};
-
-inline void intrusive_ptr_add_ref(SharedObject* obj) {
-    obj->AddRefManually();
-}
-
-inline void intrusive_ptr_release(SharedObject* obj) {
-    obj->RemoveRefManually();
-}
+    inline void intrusive_ptr_release(SharedObject *obj) {
+        obj->RemoveRefManually();
+    }
 
 } // namespace flare::rpc
 

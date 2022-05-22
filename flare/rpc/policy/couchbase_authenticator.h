@@ -21,31 +21,31 @@
 #include "flare/rpc/authenticator.h"
 
 namespace flare::rpc {
-namespace policy {
+    namespace policy {
 
-// Request to couchbase for authentication.
-// Notice that authentication for couchbase in special SASLAuthProtocol.
-// Couchbase Server 2.2 provide CRAM-MD5 support for SASL authentication,
-// but Couchbase Server prior to 2.2 using PLAIN SASL authentication.
-class CouchbaseAuthenticator : public Authenticator {
- public:
-  CouchbaseAuthenticator(const std::string& bucket_name,
-                         const std::string& bucket_password)
-      : bucket_name_(bucket_name), bucket_password_(bucket_password) {}
+        // Request to couchbase for authentication.
+        // Notice that authentication for couchbase in special SASLAuthProtocol.
+        // Couchbase Server 2.2 provide CRAM-MD5 support for SASL authentication,
+        // but Couchbase Server prior to 2.2 using PLAIN SASL authentication.
+        class CouchbaseAuthenticator : public Authenticator {
+        public:
+            CouchbaseAuthenticator(const std::string &bucket_name,
+                                   const std::string &bucket_password)
+                    : bucket_name_(bucket_name), bucket_password_(bucket_password) {}
 
-  int GenerateCredential(std::string* auth_str) const;
+            int GenerateCredential(std::string *auth_str) const;
 
-  int VerifyCredential(const std::string&, const flare::base::end_point&,
-                       flare::rpc::AuthContext*) const {
-    return 0;
-  }
+            int VerifyCredential(const std::string &, const flare::base::end_point &,
+                                 flare::rpc::AuthContext *) const {
+                return 0;
+            }
 
- private:
-  const std::string bucket_name_;
-  const std::string bucket_password_;
-};
+        private:
+            const std::string bucket_name_;
+            const std::string bucket_password_;
+        };
 
-}  // namespace policy
+    }  // namespace policy
 }  // namespace flare::rpc
 
 #endif  // FLARE_RPC_POLICY_COUCHBASE_AUTHENTICATOR_H_

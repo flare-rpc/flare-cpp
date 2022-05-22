@@ -24,30 +24,30 @@
 
 
 namespace flare::rpc {
-namespace policy {
+    namespace policy {
 
-// Parse binary format of sofa-pbrpc.
-ParseResult ParseSofaMessage(flare::cord_buf* source, Socket *socket, bool read_eof, const void *arg);
+        // Parse binary format of sofa-pbrpc.
+        ParseResult ParseSofaMessage(flare::cord_buf *source, Socket *socket, bool read_eof, const void *arg);
 
-// Actions to a (client) request in sofa-pbrpc format.
-void ProcessSofaRequest(InputMessageBase* msg);
+        // Actions to a (client) request in sofa-pbrpc format.
+        void ProcessSofaRequest(InputMessageBase *msg);
 
-// Actions to a (server) response in sofa-pbrpc format.
-void ProcessSofaResponse(InputMessageBase* msg);
+        // Actions to a (server) response in sofa-pbrpc format.
+        void ProcessSofaResponse(InputMessageBase *msg);
 
-// Verify authentication information in sofa-pbrpc format
-bool VerifySofaRequest(const InputMessageBase* msg);
+        // Verify authentication information in sofa-pbrpc format
+        bool VerifySofaRequest(const InputMessageBase *msg);
 
-// Pack `request' to `method' into `buf'.
-void PackSofaRequest(flare::cord_buf* buf,
-                     SocketMessage**,
-                     uint64_t correlation_id,
-                     const google::protobuf::MethodDescriptor* method,
-                     Controller* controller,
-                     const flare::cord_buf& request,
-                     const Authenticator* auth);
+        // Pack `request' to `method' into `buf'.
+        void PackSofaRequest(flare::cord_buf *buf,
+                             SocketMessage **,
+                             uint64_t correlation_id,
+                             const google::protobuf::MethodDescriptor *method,
+                             Controller *controller,
+                             const flare::cord_buf &request,
+                             const Authenticator *auth);
 
-}  // namespace policy
+    }  // namespace policy
 } // namespace flare::rpc
 
 

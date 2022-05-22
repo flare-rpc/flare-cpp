@@ -24,14 +24,14 @@
 #include "flare/rpc/redis_command.h"
 
 namespace flare::rpc {
-namespace policy {
+    namespace policy {
 
-int RedisAuthenticator::GenerateCredential(std::string* auth_str) const {
-    flare::cord_buf buf;
-    flare::rpc::RedisCommandFormat(&buf, "AUTH %s", passwd_.c_str());
-    *auth_str = buf.to_string();
-    return 0;
-}
+        int RedisAuthenticator::GenerateCredential(std::string *auth_str) const {
+            flare::cord_buf buf;
+            flare::rpc::RedisCommandFormat(&buf, "AUTH %s", passwd_.c_str());
+            *auth_str = buf.to_string();
+            return 0;
+        }
 
-}  // namespace policy
+    }  // namespace policy
 }  // namespace flare::rpc

@@ -23,33 +23,33 @@
 
 
 namespace flare::rpc {
-namespace policy {
+    namespace policy {
 
-// Parse binary format of nshead
-ParseResult ParseNsheadMessage(flare::cord_buf* source, Socket* socket, bool read_eof, const void *arg);
+        // Parse binary format of nshead
+        ParseResult ParseNsheadMessage(flare::cord_buf *source, Socket *socket, bool read_eof, const void *arg);
 
-// Actions to a (client) request in nshead format
-void ProcessNsheadRequest(InputMessageBase* msg);
+        // Actions to a (client) request in nshead format
+        void ProcessNsheadRequest(InputMessageBase *msg);
 
-// Actions to a (server) response in nshead format
-void ProcessNsheadResponse(InputMessageBase* msg);
+        // Actions to a (server) response in nshead format
+        void ProcessNsheadResponse(InputMessageBase *msg);
 
-void SerializeNsheadRequest(flare::cord_buf* request_buf, Controller* controller,
-                            const google::protobuf::Message* request);
+        void SerializeNsheadRequest(flare::cord_buf *request_buf, Controller *controller,
+                                    const google::protobuf::Message *request);
 
-void PackNsheadRequest(
-    flare::cord_buf* packet_buf,
-    SocketMessage**,
-    uint64_t correlation_id,
-    const google::protobuf::MethodDescriptor*,
-    Controller* controller,
-    const flare::cord_buf&,
-    const Authenticator*);
+        void PackNsheadRequest(
+                flare::cord_buf *packet_buf,
+                SocketMessage **,
+                uint64_t correlation_id,
+                const google::protobuf::MethodDescriptor *,
+                Controller *controller,
+                const flare::cord_buf &,
+                const Authenticator *);
 
-// Verify authentication information in nshead format
-bool VerifyNsheadRequest(const InputMessageBase *msg);
+        // Verify authentication information in nshead format
+        bool VerifyNsheadRequest(const InputMessageBase *msg);
 
-} // namespace policy
+    } // namespace policy
 } // namespace flare::rpc
 
 

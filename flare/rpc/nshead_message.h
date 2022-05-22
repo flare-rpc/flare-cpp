@@ -26,55 +26,70 @@
 
 namespace flare::rpc {
 
-// Representing a nshead request or response.
-class NsheadMessage : public ::google::protobuf::Message {
-public:
-    nshead_t head;
-    flare::cord_buf body;
-    
-public:
-    NsheadMessage();
-    virtual ~NsheadMessage();
-  
-    NsheadMessage(const NsheadMessage& from);
-  
-    inline NsheadMessage& operator=(const NsheadMessage& from) {
-        CopyFrom(from);
-        return *this;
-    }
-  
-    static const ::google::protobuf::Descriptor* descriptor();
-  
-    void Swap(NsheadMessage* other);
-  
-    // implements Message ----------------------------------------------
+    // Representing a nshead request or response.
+    class NsheadMessage : public ::google::protobuf::Message {
+    public:
+        nshead_t head;
+        flare::cord_buf body;
 
-    NsheadMessage* New() const override;
+    public:
+        NsheadMessage();
+
+        virtual ~NsheadMessage();
+
+        NsheadMessage(const NsheadMessage &from);
+
+        inline NsheadMessage &operator=(const NsheadMessage &from) {
+            CopyFrom(from);
+            return *this;
+        }
+
+        static const ::google::protobuf::Descriptor *descriptor();
+
+        void Swap(NsheadMessage *other);
+
+        // implements Message ----------------------------------------------
+
+        NsheadMessage *New() const override;
+
 #if GOOGLE_PROTOBUF_VERSION >= 3006000
+
         NsheadMessage *New(::google::protobuf::Arena *arena) const override;
+
 #endif
-    void CopyFrom(const ::google::protobuf::Message& from) override;
-    void MergeFrom(const ::google::protobuf::Message& from) override;
-    void CopyFrom(const NsheadMessage& from) ;
-    void MergeFrom(const NsheadMessage& from) ;
-    void Clear() override;
-    bool IsInitialized() const override;
-  
-    int ByteSize() const;
-    bool MergePartialFromCodedStream(
-        ::google::protobuf::io::CodedInputStream* input);
-    void SerializeWithCachedSizes(
-        ::google::protobuf::io::CodedOutputStream* output) const;
-    ::google::protobuf::uint8* SerializeWithCachedSizesToArray(::google::protobuf::uint8* output) const;
-    int GetCachedSize() const  override { return ByteSize(); }
 
-protected:
-    ::google::protobuf::Metadata GetMetadata() const override;
+        void CopyFrom(const ::google::protobuf::Message &from) override;
 
-private:
-    void SharedCtor();
-    void SharedDtor();
-};
+        void MergeFrom(const ::google::protobuf::Message &from) override;
+
+        void CopyFrom(const NsheadMessage &from);
+
+        void MergeFrom(const NsheadMessage &from);
+
+        void Clear() override;
+
+        bool IsInitialized() const override;
+
+        int ByteSize() const;
+
+        bool MergePartialFromCodedStream(
+                ::google::protobuf::io::CodedInputStream *input);
+
+        void SerializeWithCachedSizes(
+                ::google::protobuf::io::CodedOutputStream *output) const;
+
+        ::google::protobuf::uint8 *SerializeWithCachedSizesToArray(::google::protobuf::uint8 *output) const;
+
+        int GetCachedSize() const override { return ByteSize(); }
+
+    protected:
+        ::google::protobuf::Metadata GetMetadata() const override;
+
+    private:
+        void SharedCtor();
+
+        void SharedDtor();
+    };
 
 } // namespace flare::rpc
 

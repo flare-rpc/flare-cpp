@@ -25,42 +25,48 @@
 
 namespace flare::rpc {
 
-// Messages returned by Parse handlers must extend this class
-class InputMessageBase : public Destroyable {
-protected:
-    // Implement this method to customize deletion of this message.
-    virtual void DestroyImpl() = 0;
-    
-public:
-    // Called to release the memory of this message instead of "delete"
-    void Destroy();
-    
-    // Own the socket where this message is from.
-    Socket* ReleaseSocket();
+    // Messages returned by Parse handlers must extend this class
+    class InputMessageBase : public Destroyable {
+    protected:
+        // Implement this method to customize deletion of this message.
+        virtual void DestroyImpl() = 0;
 
-    // Get the socket where this message is from.
-    Socket* socket() const { return _socket.get(); }
+    public:
+        // Called to release the memory of this message instead of "delete"
+        void Destroy();
 
-    // Arg of the InputMessageHandler which parses this message successfully.
-    const void* arg() const { return _arg; }
+        // Own the socket where this message is from.
+        Socket *ReleaseSocket();
 
-    // [Internal]
-    int64_t received_us() const { return _received_us; }
-    int64_t base_real_us() const { return _base_real_us; }
+        // Get the socket where this message is from.
+        Socket *socket() const { return _socket.get(); }
 
-protected:
-    virtual ~InputMessageBase();
+        // Arg of the InputMessageHandler which parses this message successfully.
+        const void *arg() const { return _arg; }
 
-private:
-friend class InputMessenger;
-friend void* ProcessInputMessage(void*);
-friend class Stream;
-    int64_t _received_us;
-    int64_t _base_real_us;
-    SocketUniquePtr _socket;
-    void (*_process)(InputMessageBase* msg);
-    const void* _arg;
-};
+        // [Internal]
+        int64_t received_us() const { return _received_us; }
+
+        int64_t base_real_us() const { return _base_real_us; }
+
+    protected:
+        virtual ~InputMessageBase();
+
+    private:
+        friend class InputMessenger;
+
+        friend void *ProcessInputMessage(void *);
+
+        friend class Stream;
+
+        int64_t _received_us;
+        int64_t _base_real_us;
+        SocketUniquePtr _socket;
+
+        void (*_process)(InputMessageBase *msg);
+
+        const void *_arg;
+    };
 
 } // namespace flare::rpc
 

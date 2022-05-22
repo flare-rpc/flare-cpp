@@ -24,12 +24,14 @@
 
 namespace flare::rpc {
 
-// Get the viz.min.js as string or cord_buf.
-// We need to pack all js inside C++ code so that builtin services can be
-// accessed without external resources and network connection.
-const char* viz_min_js();
-const flare::cord_buf& viz_min_js_iobuf();
-const flare::cord_buf& viz_min_js_iobuf_gzip();
+    // Get the viz.min.js as string or cord_buf.
+    // We need to pack all js inside C++ code so that builtin services can be
+    // accessed without external resources and network connection.
+    const char *viz_min_js();
+
+    const flare::cord_buf &viz_min_js_iobuf();
+
+    const flare::cord_buf &viz_min_js_iobuf_gzip();
 
 } // namespace flare::rpc
 

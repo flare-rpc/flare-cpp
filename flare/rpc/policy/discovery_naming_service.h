@@ -24,66 +24,70 @@
 #include "flare/base/lock.h"
 
 namespace flare::rpc {
-namespace policy {
+    namespace policy {
 
-struct DiscoveryRegisterParam {
-    std::string appid;
-    std::string hostname;
-    std::string env;
-    std::string zone;
-    std::string region;
-    std::string addrs;          // splitted by ','
-    int status;
-    std::string version;
-    std::string metadata;
+        struct DiscoveryRegisterParam {
+            std::string appid;
+            std::string hostname;
+            std::string env;
+            std::string zone;
+            std::string region;
+            std::string addrs;          // splitted by ','
+            int status;
+            std::string version;
+            std::string metadata;
 
-    bool IsValid() const;
-};
+            bool IsValid() const;
+        };
 
-// ONE DiscoveryClient corresponds to ONE service instance.
-// If your program has multiple service instances to register,
-// you need multiple DiscoveryClient.
-// Note: Cancel to the server is automatically called in dtor.
-class DiscoveryClient {
-public:
-    DiscoveryClient();
-    ~DiscoveryClient();
+        // ONE DiscoveryClient corresponds to ONE service instance.
+        // If your program has multiple service instances to register,
+        // you need multiple DiscoveryClient.
+        // Note: Cancel to the server is automatically called in dtor.
+        class DiscoveryClient {
+        public:
+            DiscoveryClient();
 
-    // Initialize this client.
-    // Returns 0 on success.
-    // NOTE: Calling more than once does nothing and returns 0.
-    int Register(const DiscoveryRegisterParam& req);
+            ~DiscoveryClient();
 
-private:
-    static void* PeriodicRenew(void* arg);
-    int DoCancel() const;
-    int DoRegister();
-    int DoRenew() const;
+            // Initialize this client.
+            // Returns 0 on success.
+            // NOTE: Calling more than once does nothing and returns 0.
+            int Register(const DiscoveryRegisterParam &req);
 
-private:
-    fiber_id_t _th;
-    std::atomic<bool> _registered;
-    DiscoveryRegisterParam _params;
-    flare::base::end_point _current_discovery_server;
-};
+        private:
+            static void *PeriodicRenew(void *arg);
 
-class DiscoveryNamingService : public PeriodicNamingService {
-private:
-    int GetServers(const char* service_name,
-                   std::vector<ServerNode>* servers) override;
+            int DoCancel() const;
 
-    void Describe(std::ostream& os, const DescribeOptions&) const override;
+            int DoRegister();
 
-    NamingService* New() const override;
+            int DoRenew() const;
 
-    void Destroy() override;
+        private:
+            fiber_id_t _th;
+            std::atomic<bool> _registered;
+            DiscoveryRegisterParam _params;
+            flare::base::end_point _current_discovery_server;
+        };
 
-private:
-    DiscoveryClient _client;
-};
+        class DiscoveryNamingService : public PeriodicNamingService {
+        private:
+            int GetServers(const char *service_name,
+                           std::vector<ServerNode> *servers) override;
+
+            void Describe(std::ostream &os, const DescribeOptions &) const override;
+
+            NamingService *New() const override;
+
+            void Destroy() override;
+
+        private:
+            DiscoveryClient _client;
+        };
 
 
-} // namespace policy
+    } // namespace policy
 } // namespace flare::rpc
 
 #endif // FLARE_RPC_POLICY_DISCOVERY_NAMING_SERVICE_H_

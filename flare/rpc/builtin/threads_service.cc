@@ -27,27 +27,27 @@
 
 namespace flare::rpc {
 
-void ThreadsService::default_method(::google::protobuf::RpcController* cntl_base,
-                                    const ::flare::rpc::ThreadsRequest*,
-                                    ::flare::rpc::ThreadsResponse*,
-                                    ::google::protobuf::Closure* done) {
-    ClosureGuard done_guard(done);
-    Controller *cntl = static_cast<Controller*>(cntl_base);
-    cntl->http_response().set_content_type("text/plain");
-    flare::cord_buf& resp = cntl->response_attachment();
+    void ThreadsService::default_method(::google::protobuf::RpcController *cntl_base,
+                                        const ::flare::rpc::ThreadsRequest *,
+                                        ::flare::rpc::ThreadsResponse *,
+                                        ::google::protobuf::Closure *done) {
+        ClosureGuard done_guard(done);
+        Controller *cntl = static_cast<Controller *>(cntl_base);
+        cntl->http_response().set_content_type("text/plain");
+        flare::cord_buf &resp = cntl->response_attachment();
 
-    std::string cmd = flare::string_printf("pstack %lld", (long long)getpid());
-    flare::stop_watcher tm;
-    tm.start();
-    flare::cord_buf_builder pstack_output;
-    const int rc = flare::base::read_command_output(pstack_output, cmd.c_str());
-    if (rc < 0) {
-        FLARE_LOG(ERROR) << "Fail to popen `" << cmd << "'";
-        return;
+        std::string cmd = flare::string_printf("pstack %lld", (long long) getpid());
+        flare::stop_watcher tm;
+        tm.start();
+        flare::cord_buf_builder pstack_output;
+        const int rc = flare::base::read_command_output(pstack_output, cmd.c_str());
+        if (rc < 0) {
+            FLARE_LOG(ERROR) << "Fail to popen `" << cmd << "'";
+            return;
+        }
+        pstack_output.move_to(resp);
+        tm.stop();
+        resp.append(flare::string_printf("\n\ntime=%" PRId64 "ms", tm.m_elapsed()));
     }
-    pstack_output.move_to(resp);
-    tm.stop();
-    resp.append(flare::string_printf("\n\ntime=%" PRId64 "ms", tm.m_elapsed()));
-}
 
 } // namespace flare::rpc

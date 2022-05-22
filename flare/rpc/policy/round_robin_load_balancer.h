@@ -26,42 +26,56 @@
 #include "flare/rpc/cluster_recover_policy.h"
 
 namespace flare::rpc {
-namespace policy {
+    namespace policy {
 
-// This LoadBalancer selects server evenly. Selected numbers of servers(added
-// at the same time) are very close.
-class RoundRobinLoadBalancer : public LoadBalancer {
-public:
-    bool AddServer(const ServerId& id);
-    bool RemoveServer(const ServerId& id);
-    size_t AddServersInBatch(const std::vector<ServerId>& servers);
-    size_t RemoveServersInBatch(const std::vector<ServerId>& servers);
-    int SelectServer(const SelectIn& in, SelectOut* out);
-    RoundRobinLoadBalancer* New(const std::string_view&) const;
-    void Destroy();
-    void Describe(std::ostream&, const DescribeOptions& options);
+        // This LoadBalancer selects server evenly. Selected numbers of servers(added
+        // at the same time) are very close.
+        class RoundRobinLoadBalancer : public LoadBalancer {
+        public:
+            bool AddServer(const ServerId &id);
 
-private:
-    struct Servers {
-        std::vector<ServerId> server_list;
-        std::map<ServerId, size_t> server_map;
-    };
-    struct TLS {
-        TLS() : stride(0), offset(0) { }
-        uint32_t stride;
-        uint32_t offset;
-    };
-    bool SetParameters(const std::string_view& params);
-    static bool Add(Servers& bg, const ServerId& id);
-    static bool Remove(Servers& bg, const ServerId& id);
-    static size_t BatchAdd(Servers& bg, const std::vector<ServerId>& servers);
-    static size_t BatchRemove(Servers& bg, const std::vector<ServerId>& servers);
+            bool RemoveServer(const ServerId &id);
 
-    flare::container::DoublyBufferedData<Servers, TLS> _db_servers;
-    std::shared_ptr<ClusterRecoverPolicy> _cluster_recover_policy;
-};
+            size_t AddServersInBatch(const std::vector<ServerId> &servers);
 
-}  // namespace policy
+            size_t RemoveServersInBatch(const std::vector<ServerId> &servers);
+
+            int SelectServer(const SelectIn &in, SelectOut *out);
+
+            RoundRobinLoadBalancer *New(const std::string_view &) const;
+
+            void Destroy();
+
+            void Describe(std::ostream &, const DescribeOptions &options);
+
+        private:
+            struct Servers {
+                std::vector<ServerId> server_list;
+                std::map<ServerId, size_t> server_map;
+            };
+
+            struct TLS {
+                TLS() : stride(0), offset(0) {}
+
+                uint32_t stride;
+                uint32_t offset;
+            };
+
+            bool SetParameters(const std::string_view &params);
+
+            static bool Add(Servers &bg, const ServerId &id);
+
+            static bool Remove(Servers &bg, const ServerId &id);
+
+            static size_t BatchAdd(Servers &bg, const std::vector<ServerId> &servers);
+
+            static size_t BatchRemove(Servers &bg, const std::vector<ServerId> &servers);
+
+            flare::container::DoublyBufferedData<Servers, TLS> _db_servers;
+            std::shared_ptr<ClusterRecoverPolicy> _cluster_recover_policy;
+        };
+
+    }  // namespace policy
 } // namespace flare::rpc
 
 

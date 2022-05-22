@@ -30,25 +30,25 @@
 
 namespace flare::rpc {
 
-// The class for URI scheme : http://en.wikipedia.org/wiki/URI_scheme
-//
-//  foo://username:password@example.com:8042/over/there/index.dtb?type=animal&name=narwhal#nose
-//  \_/   \_______________/ \_________/ \__/            \___/ \_/ \______________________/ \__/
-//   |           |               |       |                |    |            |                |
-//   |       userinfo           host    port              |    |          query          fragment
-//   |    \________________________________/\_____________|____|/ \__/        \__/
-// scheme                 |                          |    |    |    |          |
-//                    authority                      |    |    |    |          |
-//                                                 path   |    |    interpretable as keys
-//                                                        |    |
-//        \_______________________________________________|____|/       \____/     \_____/
-//                             |                          |    |          |           |
-//                     hierarchical part                  |    |    interpretable as values
-//                                                        |    |
-//                                   interpretable as filename |
-//                                                             |
-//                                                             |
-//                                               interpretable as extension
+    // The class for URI scheme : http://en.wikipedia.org/wiki/URI_scheme
+    //
+    //  foo://username:password@example.com:8042/over/there/index.dtb?type=animal&name=narwhal#nose
+    //  \_/   \_______________/ \_________/ \__/            \___/ \_/ \______________________/ \__/
+    //   |           |               |       |                |    |            |                |
+    //   |       userinfo           host    port              |    |          query          fragment
+    //   |    \________________________________/\_____________|____|/ \__/        \__/
+    // scheme                 |                          |    |    |    |          |
+    //                    authority                      |    |    |    |          |
+    //                                                 path   |    |    interpretable as keys
+    //                                                        |    |
+    //        \_______________________________________________|____|/       \____/     \_____/
+    //                             |                          |    |          |           |
+    //                     hierarchical part                  |    |    interpretable as values
+    //                                                        |    |
+    //                                   interpretable as filename |
+    //                                                             |
+    //                                                             |
+    //                                               interpretable as extension
     class URI {
     public:
         static const size_t QUERY_MAP_INITIAL_BUCKET = 16;
@@ -231,9 +231,9 @@ namespace flare::rpc {
                 : KeyValuePairsSplitter(sp, '&', '=') {}
     };
 
-// A class to remove some specific keys in a query string, 
-// when removal is over, call modified_query() to get modified
-// query.
+    // A class to remove some specific keys in a query string,
+    // when removal is over, call modified_query() to get modified
+    // query.
     class QueryRemover {
     public:
         QueryRemover(const std::string *str);

@@ -25,30 +25,30 @@
 
 
 namespace flare::rpc {
-namespace policy {
+    namespace policy {
 
-ParseResult ParseEspMessage(
-        flare::cord_buf* source,
-        Socket* socket, 
-        bool read_eof, 
-        const void *arg);
+        ParseResult ParseEspMessage(
+                flare::cord_buf *source,
+                Socket *socket,
+                bool read_eof,
+                const void *arg);
 
-void SerializeEspRequest(
-        flare::cord_buf* request_buf,
-        Controller* controller,
-        const google::protobuf::Message* request);
+        void SerializeEspRequest(
+                flare::cord_buf *request_buf,
+                Controller *controller,
+                const google::protobuf::Message *request);
 
-void PackEspRequest(flare::cord_buf* packet_buf,
-                    SocketMessage**,
-                    uint64_t correlation_id,
-                    const google::protobuf::MethodDescriptor*,
-                    Controller* controller,
-                    const flare::cord_buf&,
-                    const Authenticator*);
+        void PackEspRequest(flare::cord_buf *packet_buf,
+                            SocketMessage **,
+                            uint64_t correlation_id,
+                            const google::protobuf::MethodDescriptor *,
+                            Controller *controller,
+                            const flare::cord_buf &,
+                            const Authenticator *);
 
-void ProcessEspResponse(InputMessageBase* msg);
+        void ProcessEspResponse(InputMessageBase *msg);
 
-} // namespace policy
+    } // namespace policy
 } // namespace flare::rpc
 
 

@@ -28,40 +28,41 @@
 
 namespace flare::rpc {
 
-// Format a redis command and append it to `buf'.
-// Returns flare::base::flare_status::OK() on success.
-flare::base::flare_status RedisCommandFormat(flare::cord_buf* buf, const char* fmt, ...);
-flare::base::flare_status RedisCommandFormatV(flare::cord_buf* buf, const char* fmt, va_list args);
+    // Format a redis command and append it to `buf'.
+    // Returns flare::base::flare_status::OK() on success.
+    flare::base::flare_status RedisCommandFormat(flare::cord_buf *buf, const char *fmt, ...);
 
-// Just convert the command to the text format of redis without processing the
-// specifiers(%) inside.
-flare::base::flare_status RedisCommandNoFormat(flare::cord_buf* buf, const std::string_view& command);
+    flare::base::flare_status RedisCommandFormatV(flare::cord_buf *buf, const char *fmt, va_list args);
 
-// Concatenate components to form a redis command.
-flare::base::flare_status RedisCommandByComponents(flare::cord_buf* buf,
-                                      const std::string_view* components,
-                                      size_t num_components);
+    // Just convert the command to the text format of redis without processing the
+    // specifiers(%) inside.
+    flare::base::flare_status RedisCommandNoFormat(flare::cord_buf *buf, const std::string_view &command);
 
-// A parser used to parse redis raw command.
-class RedisCommandParser {
-public:
-    RedisCommandParser();
+    // Concatenate components to form a redis command.
+    flare::base::flare_status RedisCommandByComponents(flare::cord_buf *buf,
+                                                       const std::string_view *components,
+                                                       size_t num_components);
 
-    // Parse raw message from `buf'. Return PARSE_OK and set the parsed command
-    // to `args' and length to `len' if successful. Memory of args are allocated 
-    // in `arena'.
-    ParseError Consume(flare::cord_buf& buf, std::vector<std::string_view>* args,
-                       flare::Arena* arena);
+    // A parser used to parse redis raw command.
+    class RedisCommandParser {
+    public:
+        RedisCommandParser();
 
-private:
-    // Reset parser to the initial state.
-    void Reset();
+        // Parse raw message from `buf'. Return PARSE_OK and set the parsed command
+        // to `args' and length to `len' if successful. Memory of args are allocated
+        // in `arena'.
+        ParseError Consume(flare::cord_buf &buf, std::vector<std::string_view> *args,
+                           flare::Arena *arena);
 
-    bool _parsing_array;            // if the parser has met array indicator '*'
-    int _length;                    // array length
-    int _index;                     // current parsing array index
-    std::vector<std::string_view> _args;  // parsed command string
-};
+    private:
+        // Reset parser to the initial state.
+        void Reset();
+
+        bool _parsing_array;            // if the parser has met array indicator '*'
+        int _length;                    // array length
+        int _index;                     // current parsing array index
+        std::vector<std::string_view> _args;  // parsed command string
+    };
 
 } // namespace flare::rpc
 

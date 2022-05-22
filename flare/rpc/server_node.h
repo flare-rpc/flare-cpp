@@ -23,40 +23,41 @@
 
 namespace flare::rpc {
 
-// Representing a server inside a NamingService.
-struct ServerNode {
-    ServerNode() {}
-    
-    explicit ServerNode(const flare::base::end_point& pt) : addr(pt) {}
+    // Representing a server inside a NamingService.
+    struct ServerNode {
+        ServerNode() {}
 
-    ServerNode(flare::base::ip_t ip, int port, const std::string& tag2)
-        : addr(ip, port), tag(tag2) {}
+        explicit ServerNode(const flare::base::end_point &pt) : addr(pt) {}
 
-    ServerNode(const flare::base::end_point& pt, const std::string& tag2)
-        : addr(pt), tag(tag2) {}
+        ServerNode(flare::base::ip_t ip, int port, const std::string &tag2)
+                : addr(ip, port), tag(tag2) {}
 
-    ServerNode(flare::base::ip_t ip, int port) : addr(ip, port) {}
+        ServerNode(const flare::base::end_point &pt, const std::string &tag2)
+                : addr(pt), tag(tag2) {}
 
-    flare::base::end_point addr;
-    std::string tag;
-};
+        ServerNode(flare::base::ip_t ip, int port) : addr(ip, port) {}
 
-inline bool operator<(const ServerNode& n1, const ServerNode& n2)
-{ return n1.addr != n2.addr ? (n1.addr < n2.addr) : (n1.tag < n2.tag); }
+        flare::base::end_point addr;
+        std::string tag;
+    };
 
-inline bool operator==(const ServerNode& n1, const ServerNode& n2)
-{ return n1.addr == n2.addr && n1.tag == n2.tag; }
-
-inline bool operator!=(const ServerNode& n1, const ServerNode& n2)
-{ return !(n1 == n2); }
-
-inline std::ostream& operator<<(std::ostream& os, const ServerNode& n) {
-    os << n.addr;
-    if (!n.tag.empty()) {
-        os << "(tag=" << n.tag << ')';
+    inline bool operator<(const ServerNode &n1, const ServerNode &n2) {
+        return n1.addr != n2.addr ? (n1.addr < n2.addr) : (n1.tag < n2.tag);
     }
-    return os;
-}
+
+    inline bool operator==(const ServerNode &n1, const ServerNode &n2) {
+        return n1.addr == n2.addr && n1.tag == n2.tag;
+    }
+
+    inline bool operator!=(const ServerNode &n1, const ServerNode &n2) { return !(n1 == n2); }
+
+    inline std::ostream &operator<<(std::ostream &os, const ServerNode &n) {
+        os << n.addr;
+        if (!n.tag.empty()) {
+            os << "(tag=" << n.tag << ')';
+        }
+        return os;
+    }
 
 } // namespace flare::rpc
 

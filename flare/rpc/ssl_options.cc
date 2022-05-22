@@ -20,20 +20,13 @@
 
 namespace flare::rpc {
 
-VerifyOptions::VerifyOptions() : verify_depth(0) {}
+    VerifyOptions::VerifyOptions() : verify_depth(0) {}
 
-ChannelSSLOptions::ChannelSSLOptions()
-    : ciphers("DEFAULT")
-    , protocols("TLSv1, TLSv1.1, TLSv1.2")
-{}
+    ChannelSSLOptions::ChannelSSLOptions()
+            : ciphers("DEFAULT"), protocols("TLSv1, TLSv1.1, TLSv1.2") {}
 
-ServerSSLOptions::ServerSSLOptions()
-    : strict_sni(false)
-    , disable_ssl3(true)
-    , release_buffer(false)
-    , session_lifetime_s(300)
-    , session_cache_size(20480)
-    , ecdhe_curve_name("prime256v1")
-{}
+    ServerSSLOptions::ServerSSLOptions()
+            : strict_sni(false), disable_ssl3(true), release_buffer(false), session_lifetime_s(300),
+              session_cache_size(20480), ecdhe_curve_name("prime256v1") {}
 
 } // namespace flare::rpc

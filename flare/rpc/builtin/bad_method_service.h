@@ -24,13 +24,13 @@
 
 namespace flare::rpc {
 
-class BadMethodService : public badmethod {
-public:
-    void no_method(::google::protobuf::RpcController* cntl_base,
-                   const ::flare::rpc::BadMethodRequest* request,
-                   ::flare::rpc::BadMethodResponse* response,
-                   ::google::protobuf::Closure* done);
-};
+    class BadMethodService : public badmethod {
+    public:
+        void no_method(::google::protobuf::RpcController *cntl_base,
+                       const ::flare::rpc::BadMethodRequest *request,
+                       ::flare::rpc::BadMethodResponse *response,
+                       ::google::protobuf::Closure *done);
+    };
 
 } // namespace flare::rpc
 

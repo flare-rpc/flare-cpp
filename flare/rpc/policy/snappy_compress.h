@@ -24,21 +24,21 @@
 
 
 namespace flare::rpc {
-namespace policy {
+    namespace policy {
 
-// Compress serialized `msg' into `buf'.
-bool SnappyCompress(const google::protobuf::Message& msg, flare::cord_buf* buf);
+        // Compress serialized `msg' into `buf'.
+        bool SnappyCompress(const google::protobuf::Message &msg, flare::cord_buf *buf);
 
-// Parse `msg' from decompressed `buf'
-bool SnappyDecompress(const flare::cord_buf& data, google::protobuf::Message* msg);
+        // Parse `msg' from decompressed `buf'
+        bool SnappyDecompress(const flare::cord_buf &data, google::protobuf::Message *msg);
 
-// Put compressed `in' into `out'.
-bool SnappyCompress(const flare::cord_buf& in, flare::cord_buf* out);
+        // Put compressed `in' into `out'.
+        bool SnappyCompress(const flare::cord_buf &in, flare::cord_buf *out);
 
-// Put decompressed `in' into `out'.
-bool SnappyDecompress(const flare::cord_buf& in, flare::cord_buf* out);
+        // Put decompressed `in' into `out'.
+        bool SnappyDecompress(const flare::cord_buf &in, flare::cord_buf *out);
 
-}  // namespace policy
+    }  // namespace policy
 } // namespace flare::rpc
 
 

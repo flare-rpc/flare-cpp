@@ -22,7 +22,7 @@
 
 namespace flare::rpc {
 
-const char* pprof_perl();
+    const char *pprof_perl();
 
 } // namespace flare::rpc
 

@@ -27,8 +27,9 @@
 
 namespace flare::rpc {
 
-bool CanAnnotateSpan();
-void AnnotateSpan(const char* fmt, ...);
+    bool CanAnnotateSpan();
+
+    void AnnotateSpan(const char *fmt, ...);
 
 } // namespace flare::rpc
 

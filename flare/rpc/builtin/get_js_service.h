@@ -23,32 +23,32 @@
 
 namespace flare::rpc {
 
-// Get packed js.
-//   "/js/sorttable"  : http://www.kryogenix.org/code/browser/sorttable/
-//   "/js/jquery_min" : jquery 1.8.3
-//   "/js/flot_min"   : ploting library for jquery.
-class GetJsService : public ::flare::rpc::js {
-public:
-    void sorttable(::google::protobuf::RpcController* controller,
-                   const GetJsRequest* request,
-                   GetJsResponse* response,
-                   ::google::protobuf::Closure* done);
-    
-    void jquery_min(::google::protobuf::RpcController* controller,
-                    const GetJsRequest* request,
-                    GetJsResponse* response,
-                    ::google::protobuf::Closure* done);
+    // Get packed js.
+    //   "/js/sorttable"  : http://www.kryogenix.org/code/browser/sorttable/
+    //   "/js/jquery_min" : jquery 1.8.3
+    //   "/js/flot_min"   : ploting library for jquery.
+    class GetJsService : public ::flare::rpc::js {
+    public:
+        void sorttable(::google::protobuf::RpcController *controller,
+                       const GetJsRequest *request,
+                       GetJsResponse *response,
+                       ::google::protobuf::Closure *done);
 
-    void flot_min(::google::protobuf::RpcController* controller,
-                  const GetJsRequest* request,
-                  GetJsResponse* response,
-                  ::google::protobuf::Closure* done);
+        void jquery_min(::google::protobuf::RpcController *controller,
+                        const GetJsRequest *request,
+                        GetJsResponse *response,
+                        ::google::protobuf::Closure *done);
 
-    void viz_min(::google::protobuf::RpcController* controller,
-                 const GetJsRequest* request,
-                 GetJsResponse* response,
-                 ::google::protobuf::Closure* done);
-};
+        void flot_min(::google::protobuf::RpcController *controller,
+                      const GetJsRequest *request,
+                      GetJsResponse *response,
+                      ::google::protobuf::Closure *done);
+
+        void viz_min(::google::protobuf::RpcController *controller,
+                     const GetJsRequest *request,
+                     GetJsResponse *response,
+                     ::google::protobuf::Closure *done);
+    };
 
 } // namespace flare::rpc
 

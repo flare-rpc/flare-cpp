@@ -17,7 +17,7 @@
 
 #ifndef FLARE_RPC_CONCURRENCY_LIMITER_H_
 #define FLARE_RPC_CONCURRENCY_LIMITER_H_
-                                            
+
 #include "flare/rpc/describable.h"
 #include "flare/rpc/destroyable.h"
 #include "flare/rpc/extension.h"                       // Extension<T>
@@ -25,35 +25,35 @@
 
 namespace flare::rpc {
 
-class ConcurrencyLimiter {
-public:
-    virtual ~ConcurrencyLimiter() {}
+    class ConcurrencyLimiter {
+    public:
+        virtual ~ConcurrencyLimiter() {}
 
-    // This method should be called each time a request comes in. It returns
-    // false when the concurrency reaches the upper limit, otherwise it 
-    // returns true. Normally, when OnRequested returns false, you should 
-    // return an ELIMIT error directly.
-    virtual bool OnRequested(int current_concurrency) = 0;
+        // This method should be called each time a request comes in. It returns
+        // false when the concurrency reaches the upper limit, otherwise it
+        // returns true. Normally, when OnRequested returns false, you should
+        // return an ELIMIT error directly.
+        virtual bool OnRequested(int current_concurrency) = 0;
 
-    // Each request should call this method before responding.
-    // `error_code' : Error code obtained from the controller, 0 means success.
-    // `latency' : Microseconds taken by RPC.
-    // NOTE: Even if OnRequested returns false, after sending ELIMIT, you 
-    // still need to call OnResponded.
-    virtual void OnResponded(int error_code, int64_t latency_us) = 0;
+        // Each request should call this method before responding.
+        // `error_code' : Error code obtained from the controller, 0 means success.
+        // `latency' : Microseconds taken by RPC.
+        // NOTE: Even if OnRequested returns false, after sending ELIMIT, you
+        // still need to call OnResponded.
+        virtual void OnResponded(int error_code, int64_t latency_us) = 0;
 
-    // Returns the latest max_concurrency.
-    // The return value is only for logging.
-    virtual int MaxConcurrency() = 0;
+        // Returns the latest max_concurrency.
+        // The return value is only for logging.
+        virtual int MaxConcurrency() = 0;
 
-    // Create an instance from the amc
-    // Caller is responsible for delete the instance after usage.
-    virtual ConcurrencyLimiter* New(const AdaptiveMaxConcurrency& amc) const = 0;
-};
+        // Create an instance from the amc
+        // Caller is responsible for delete the instance after usage.
+        virtual ConcurrencyLimiter *New(const AdaptiveMaxConcurrency &amc) const = 0;
+    };
 
-inline Extension<const ConcurrencyLimiter>* ConcurrencyLimiterExtension() {
-    return Extension<const ConcurrencyLimiter>::instance();
-}
+    inline Extension<const ConcurrencyLimiter> *ConcurrencyLimiterExtension() {
+        return Extension<const ConcurrencyLimiter>::instance();
+    }
 
 }  // namespace flare::rpc
 

@@ -61,11 +61,11 @@ namespace flare::rpc {
     DECLARE_uint64(max_body_size);
     DECLARE_bool(log_error_text);
 
-// 3 steps to add a new Protocol:
-// Step1: Add a new ProtocolType in flare/rpc/options.proto
-//        as identifier of the Protocol.
-// Step2: Implement callbacks of struct `Protocol' in policy/ directory.
-// Step3: Register the protocol in global.cpp using `RegisterProtocol'
+    // 3 steps to add a new Protocol:
+    // Step1: Add a new ProtocolType in flare/rpc/options.proto
+    //        as identifier of the Protocol.
+    // Step2: Implement callbacks of struct `Protocol' in policy/ directory.
+    // Step3: Register the protocol in global.cpp using `RegisterProtocol'
 
     struct Protocol {
         // [Required by both client and server]
@@ -174,13 +174,13 @@ namespace flare::rpc {
     };
 
     const ConnectionType CONNECTION_TYPE_POOLED_AND_SHORT =
-            (ConnectionType) ((int) CONNECTION_TYPE_POOLED |
-                              (int) CONNECTION_TYPE_SHORT);
+            (ConnectionType)((int) CONNECTION_TYPE_POOLED |
+                             (int) CONNECTION_TYPE_SHORT);
 
     const ConnectionType CONNECTION_TYPE_ALL =
-            (ConnectionType) ((int) CONNECTION_TYPE_SINGLE |
-                              (int) CONNECTION_TYPE_POOLED |
-                              (int) CONNECTION_TYPE_SHORT);
+            (ConnectionType)((int) CONNECTION_TYPE_SINGLE |
+                             (int) CONNECTION_TYPE_POOLED |
+                             (int) CONNECTION_TYPE_SHORT);
 
 // [thread-safe] 
 // Register `protocol' using key=`type'. 

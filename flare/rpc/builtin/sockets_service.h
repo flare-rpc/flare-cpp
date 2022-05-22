@@ -24,13 +24,13 @@
 
 namespace flare::rpc {
 
-class SocketsService : public sockets {
-public:
-    void default_method(::google::protobuf::RpcController* cntl_base,
-                        const ::flare::rpc::SocketsRequest* request,
-                        ::flare::rpc::SocketsResponse* response,
-                        ::google::protobuf::Closure* done);
-};
+    class SocketsService : public sockets {
+    public:
+        void default_method(::google::protobuf::RpcController *cntl_base,
+                            const ::flare::rpc::SocketsRequest *request,
+                            ::flare::rpc::SocketsResponse *response,
+                            ::google::protobuf::Closure *done);
+    };
 
 } // namespace flare::rpc
 

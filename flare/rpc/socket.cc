@@ -59,9 +59,9 @@ namespace flare::fiber_internal {
 
 namespace flare::rpc {
 
-// NOTE: This flag was true by default before r31206. Connected to somewhere
-// is not an important event now, we can check the connection in /connections
-// if we're in doubt.
+    // NOTE: This flag was true by default before r31206. Connected to somewhere
+    // is not an important event now, we can check the connection in /connections
+    // if we're in doubt.
     DEFINE_bool(log_connected, false, "Print log when a connection is established");
     FLARE_RPC_VALIDATE_GFLAG(log_connected, PassValidate);
 
@@ -72,7 +72,7 @@ namespace flare::rpc {
     DEFINE_int32(socket_recv_buffer_size, -1,
                  "Set the recv buffer size of socket if this value is positive");
 
-// Default value of SNDBUF is 2500000 on most machines.
+    // Default value of SNDBUF is 2500000 on most machines.
     DEFINE_int32(socket_send_buffer_size, -1,
                  "Set send buffer size of sockets if this value is positive");
 
@@ -131,8 +131,8 @@ namespace flare::rpc {
         std::atomic<int> _numinflight; // #inflight sockets in all sub pools.
     };
 
-// NOTE: sizeof of this class is 1200 bytes. If we have 10K sockets, total
-// memory is 12MB, not lightweight, but acceptable.
+    // NOTE: sizeof of this class is 1200 bytes. If we have 10K sockets, total
+    // memory is 12MB, not lightweight, but acceptable.
     struct ExtendedSocketStat : public SocketStat {
         // For computing stat.
         size_t last_in_size;
@@ -276,7 +276,7 @@ namespace flare::rpc {
         FLARE_CHECK_EQ(0, pthread_once(&s_create_vars_once, CreateVars));
     }
 
-// Used by ConnectionService
+    // Used by ConnectionService
     int64_t GetChannelConnectionCount() {
         if (g_vars) {
             return g_vars->channel_conn.get_value();
@@ -525,7 +525,7 @@ namespace flare::rpc {
             socklen_t size = sizeof(buff_size);
             if (setsockopt(fd, SOL_SOCKET, SO_SNDBUF, &buff_size, size) != 0) {
                 FLARE_PLOG(FATAL) << "Fail to set sndbuf of fd=" << fd << " to "
-                            << buff_size;
+                                  << buff_size;
             }
         }
 
@@ -534,14 +534,14 @@ namespace flare::rpc {
             socklen_t size = sizeof(buff_size);
             if (setsockopt(fd, SOL_SOCKET, SO_RCVBUF, &buff_size, size) != 0) {
                 FLARE_PLOG(FATAL) << "Fail to set rcvbuf of fd=" << fd << " to "
-                            << buff_size;
+                                  << buff_size;
             }
         }
 
         if (_on_edge_triggered_events) {
             if (GetGlobalEventDispatcher(fd).AddConsumer(id(), fd) != 0) {
                 FLARE_PLOG(ERROR) << "Fail to add SocketId=" << id()
-                            << " into EventDispatcher";
+                                  << " into EventDispatcher";
                 _fd.store(-1, std::memory_order_release);
                 return -1;
             }
@@ -549,9 +549,9 @@ namespace flare::rpc {
         return 0;
     }
 
-// SocketId = 32-bit version + 32-bit slot.
-//   version: from version part of _versioned_nref, must be an EVEN number.
-//   slot: designated by ResourcePool.
+    // SocketId = 32-bit version + 32-bit slot.
+    //   version: from version part of _versioned_nref, must be an EVEN number.
+    //   slot: designated by ResourcePool.
     int Socket::Create(const SocketOptions &options, SocketId *id) {
         flare::ResourceId<Socket> slot;
         Socket *const m = flare::get_resource(&slot, Forbidden());
@@ -895,7 +895,7 @@ namespace flare::rpc {
         }
     }
 
-// For unit-test.
+    // For unit-test.
     int Socket::Status(SocketId id, int32_t *nref) {
         const flare::ResourceId<Socket> slot = SlotOfSocketId(id);
         Socket *const m = address_resource(slot);
@@ -1407,7 +1407,7 @@ namespace flare::rpc {
         }
         if (opt.pipelined_count > MAX_PIPELINED_COUNT) {
             FLARE_LOG(ERROR) << "pipelined_count=" << opt.pipelined_count
-                       << " is too large";
+                             << " is too large";
             return SetError(opt.id_wait, EOVERFLOW);
         }
         if (Failed()) {
@@ -1443,7 +1443,7 @@ namespace flare::rpc {
         }
         if (opt.pipelined_count > MAX_PIPELINED_COUNT) {
             FLARE_LOG(ERROR) << "pipelined_count=" << opt.pipelined_count
-                       << " is too large";
+                             << " is too large";
             return SetError(opt.id_wait, EOVERFLOW);
         }
 
@@ -1684,7 +1684,7 @@ namespace flare::rpc {
                 const unsigned long e = ERR_get_error();
                 if (e != 0) {
                     FLARE_LOG(WARNING) << "Fail to write into ssl_fd=" << fd() << ": "
-                                 << SSLError(ERR_get_error());
+                                       << SSLError(ERR_get_error());
                     errno = ESSL;
                 } else {
                     // System error with corresponding errno set
@@ -1829,7 +1829,7 @@ namespace flare::rpc {
                     // Socket EOF or SSL session EOF
                 } else if (e != 0) {
                     FLARE_LOG(WARNING) << "Fail to read from ssl_fd=" << fd()
-                                 << ": " << SSLError(e);
+                                       << ": " << SSLError(e);
                     errno = ESSL;
                 } else {
                     // System error with corresponding errno set
@@ -1881,7 +1881,7 @@ namespace flare::rpc {
     AuthContext *Socket::mutable_auth_context() {
         if (_auth_context != NULL) {
             FLARE_LOG(FATAL) << "Impossible! This function is supposed to be called "
-                          "only once when verification succeeds in server side";
+                                "only once when verification succeeds in server side";
             return NULL;
         }
         _auth_context = new(std::nothrow) AuthContext();
@@ -2233,7 +2233,7 @@ namespace flare::rpc {
         FLARE_LOG(INFO) << "Revived " << *ptr << " (Connectable)";
     }
 
-////////// SocketPool //////////////
+    ////////// SocketPool //////////////
 
     inline SocketPool::SocketPool(const SocketOptions &opt)
             : _options(opt), _remote_side(opt.remote_side), _numfree(0), _numinflight(0) {

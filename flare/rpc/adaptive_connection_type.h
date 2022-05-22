@@ -26,42 +26,49 @@
 
 namespace flare::rpc {
 
-// Convert a case-insensitive string to corresponding ConnectionType
-// Possible options are: short, pooled, single
-// Returns: CONNECTION_TYPE_UNKNOWN on error.
-ConnectionType StringToConnectionType(const std::string_view& type,
-                                      bool print_log_on_unknown);
-inline ConnectionType StringToConnectionType(const std::string_view& type)
-{ return StringToConnectionType(type, true); }
+    // Convert a case-insensitive string to corresponding ConnectionType
+    // Possible options are: short, pooled, single
+    // Returns: CONNECTION_TYPE_UNKNOWN on error.
+    ConnectionType StringToConnectionType(const std::string_view &type,
+                                          bool print_log_on_unknown);
 
-// Convert a ConnectionType to a c-style string.
-const char* ConnectionTypeToString(ConnectionType);
-
-// Assignable by both ConnectionType and names.
-class AdaptiveConnectionType {
-public:
-    AdaptiveConnectionType() : _type(CONNECTION_TYPE_UNKNOWN), _error(false) {}
-    AdaptiveConnectionType(ConnectionType type) : _type(type), _error(false) {}
-    ~AdaptiveConnectionType() {}
-
-    void operator=(ConnectionType type) {
-        _type = type;
-        _error = false;
+    inline ConnectionType StringToConnectionType(const std::string_view &type) {
+        return StringToConnectionType(type, true);
     }
-    void operator=(const std::string_view& name);
 
-    operator ConnectionType() const { return _type; }
-    const char* name() const { return ConnectionTypeToString(_type); }
-    bool has_error() const { return _error; }
+    // Convert a ConnectionType to a c-style string.
+    const char *ConnectionTypeToString(ConnectionType);
 
-private:
-    ConnectionType _type;
-    // Since this structure occupies 8 bytes in 64-bit machines anyway,
-    // we add a field to mark if last operator=(name) failed so that
-    // channel can print a error log before re-selecting a valid
-    // ConnectionType for user.
-    bool _error;
-};
+    // Assignable by both ConnectionType and names.
+    class AdaptiveConnectionType {
+    public:
+        AdaptiveConnectionType() : _type(CONNECTION_TYPE_UNKNOWN), _error(false) {}
+
+        AdaptiveConnectionType(ConnectionType type) : _type(type), _error(false) {}
+
+        ~AdaptiveConnectionType() {}
+
+        void operator=(ConnectionType type) {
+            _type = type;
+            _error = false;
+        }
+
+        void operator=(const std::string_view &name);
+
+        operator ConnectionType() const { return _type; }
+
+        const char *name() const { return ConnectionTypeToString(_type); }
+
+        bool has_error() const { return _error; }
+
+    private:
+        ConnectionType _type;
+        // Since this structure occupies 8 bytes in 64-bit machines anyway,
+        // we add a field to mark if last operator=(name) failed so that
+        // channel can print a error log before re-selecting a valid
+        // ConnectionType for user.
+        bool _error;
+    };
 
 } // namespace flare::rpc
 

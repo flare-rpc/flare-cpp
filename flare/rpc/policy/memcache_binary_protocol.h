@@ -23,34 +23,34 @@
 
 
 namespace flare::rpc {
-namespace policy {
+    namespace policy {
 
-// Parse memcache messags.
-ParseResult ParseMemcacheMessage(flare::cord_buf* source, Socket *socket, bool read_eof,
-        const void *arg);
+        // Parse memcache messags.
+        ParseResult ParseMemcacheMessage(flare::cord_buf *source, Socket *socket, bool read_eof,
+                                         const void *arg);
 
-// Actions to a memcache response.
-void ProcessMemcacheResponse(InputMessageBase* msg);
+        // Actions to a memcache response.
+        void ProcessMemcacheResponse(InputMessageBase *msg);
 
-// Serialize a memcache request.
-void SerializeMemcacheRequest(flare::cord_buf* buf,
-                              Controller* cntl,
-                              const google::protobuf::Message* request);
+        // Serialize a memcache request.
+        void SerializeMemcacheRequest(flare::cord_buf *buf,
+                                      Controller *cntl,
+                                      const google::protobuf::Message *request);
 
-// Pack `request' to `method' into `buf'.
-void PackMemcacheRequest(flare::cord_buf* buf,
-                         SocketMessage**,
-                         uint64_t correlation_id,
-                         const google::protobuf::MethodDescriptor* method,
-                         Controller* controller,
-                         const flare::cord_buf& request,
-                         const Authenticator* auth);
+        // Pack `request' to `method' into `buf'.
+        void PackMemcacheRequest(flare::cord_buf *buf,
+                                 SocketMessage **,
+                                 uint64_t correlation_id,
+                                 const google::protobuf::MethodDescriptor *method,
+                                 Controller *controller,
+                                 const flare::cord_buf &request,
+                                 const Authenticator *auth);
 
-const std::string& GetMemcacheMethodName(
-    const google::protobuf::MethodDescriptor*,
-    const Controller*);
+        const std::string &GetMemcacheMethodName(
+                const google::protobuf::MethodDescriptor *,
+                const Controller *);
 
-}  // namespace policy
+    }  // namespace policy
 } // namespace flare::rpc
 
 

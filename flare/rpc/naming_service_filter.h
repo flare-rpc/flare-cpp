@@ -24,14 +24,14 @@
 
 namespace flare::rpc {
 
-class NamingServiceFilter {
-public:
-    virtual ~NamingServiceFilter() {}
+    class NamingServiceFilter {
+    public:
+        virtual ~NamingServiceFilter() {}
 
-    // Return true to take this `server' as a candidate to issue RPC
-    // Return false to filter it out
-    virtual bool Accept(const ServerNode& server) const = 0;
-};
+        // Return true to take this `server' as a candidate to issue RPC
+        // Return false to filter it out
+        virtual bool Accept(const ServerNode &server) const = 0;
+    };
 
 } // namespace flare::rpc
 

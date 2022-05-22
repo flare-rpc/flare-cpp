@@ -23,41 +23,41 @@
 
 namespace flare::rpc {
 
-static_assert(sizeof(nshead_t) == 36, "sizeof_nshead_must_be_36");
+    static_assert(sizeof(nshead_t) == 36, "sizeof_nshead_must_be_36");
 
-NsheadService::NsheadService() : _additional_space(0) {
-    _status = new (std::nothrow) MethodStatus;
-    FLARE_LOG_IF(FATAL, _status == NULL) << "Fail to new MethodStatus";
-}
-
-NsheadService::NsheadService(const NsheadServiceOptions& options)
-    : _status(NULL), _additional_space(options.additional_space) {
-    if (options.generate_status) {
-        _status = new (std::nothrow) MethodStatus;
+    NsheadService::NsheadService() : _additional_space(0) {
+        _status = new(std::nothrow) MethodStatus;
         FLARE_LOG_IF(FATAL, _status == NULL) << "Fail to new MethodStatus";
     }
-}
 
-NsheadService::~NsheadService() {
-    delete _status;
-    _status = NULL;
-}
-
-void NsheadService::Describe(std::ostream &os, const DescribeOptions&) const {
-    os << flare::base::class_name_str(*this);
-}
-
-void NsheadService::Expose(const std::string_view& prefix) {
-    _cached_name = flare::base::class_name_str(*this);
-    if (_status == NULL) {
-        return;
+    NsheadService::NsheadService(const NsheadServiceOptions &options)
+            : _status(NULL), _additional_space(options.additional_space) {
+        if (options.generate_status) {
+            _status = new(std::nothrow) MethodStatus;
+            FLARE_LOG_IF(FATAL, _status == NULL) << "Fail to new MethodStatus";
+        }
     }
-    std::string s;
-    s.reserve(prefix.size() + 1 + _cached_name.size());
-    s.append(prefix.data(), prefix.size());
-    s.push_back('_');
-    s.append(_cached_name);
-    _status->Expose(s);
-}
+
+    NsheadService::~NsheadService() {
+        delete _status;
+        _status = NULL;
+    }
+
+    void NsheadService::Describe(std::ostream &os, const DescribeOptions &) const {
+        os << flare::base::class_name_str(*this);
+    }
+
+    void NsheadService::Expose(const std::string_view &prefix) {
+        _cached_name = flare::base::class_name_str(*this);
+        if (_status == NULL) {
+            return;
+        }
+        std::string s;
+        s.reserve(prefix.size() + 1 + _cached_name.size());
+        s.append(prefix.data(), prefix.size());
+        s.push_back('_');
+        s.append(_cached_name);
+        _status->Expose(s);
+    }
 
 } // namespace flare::rpc

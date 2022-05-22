@@ -24,18 +24,18 @@
 
 namespace flare::rpc {
 
-void VersionService::default_method(::google::protobuf::RpcController* controller,
-                                    const ::flare::rpc::VersionRequest*,
-                                    ::flare::rpc::VersionResponse*,
-                                    ::google::protobuf::Closure* done) {
-    ClosureGuard done_guard(done);
-    Controller *cntl = (Controller *)controller;
-    cntl->http_response().set_content_type("text/plain");
-    if (_server->version().empty()) {
-        cntl->response_attachment().append("unknown");
-    } else {
-        cntl->response_attachment().append(_server->version());
+    void VersionService::default_method(::google::protobuf::RpcController *controller,
+                                        const ::flare::rpc::VersionRequest *,
+                                        ::flare::rpc::VersionResponse *,
+                                        ::google::protobuf::Closure *done) {
+        ClosureGuard done_guard(done);
+        Controller *cntl = (Controller *) controller;
+        cntl->http_response().set_content_type("text/plain");
+        if (_server->version().empty()) {
+            cntl->response_attachment().append("unknown");
+        } else {
+            cntl->response_attachment().append(_server->version());
+        }
     }
-}
 
 } // namespace flare::rpc

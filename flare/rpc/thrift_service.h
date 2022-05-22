@@ -25,48 +25,57 @@
 
 namespace flare::rpc {
 
-class Socket;
-class Server;
-class MethodStatus;
-class StatusService;
-namespace policy {
-class ThriftClosure;
-void ProcessThriftRequest(InputMessageBase* msg_base);
-}
+    class Socket;
 
-// Inherit this class to let flare server understands thrift_binary requests.
-class ThriftService : public Describable {
-public:
-    ThriftService();
-    virtual ~ThriftService();
+    class Server;
 
-    // Implement this method to handle thrift_binary requests.
-    // Parameters:
-    //   controller  per-rpc settings. controller->Failed() is always false.
-    //   request     The thrift_binary request received.
-    //   response    The thrift_binary response that you should fill in.
-    //   done        You must call done->Run() to end the processing.
-    virtual void ProcessThriftFramedRequest(
-        Controller* controller,
-        ThriftFramedMessage* request,
-        ThriftFramedMessage* response,
-        ::google::protobuf::Closure* done) = 0;
+    class MethodStatus;
 
-    // Put descriptions into the stream.
-    void Describe(std::ostream &os, const DescribeOptions&) const;
+    class StatusService;
+    namespace policy {
+        class ThriftClosure;
 
-private:
-FLARE_DISALLOW_COPY_AND_ASSIGN(ThriftService);
-friend class policy::ThriftClosure;
-friend void policy::ProcessThriftRequest(InputMessageBase* msg_base);
-friend class StatusService;
-friend class Server;
+        void ProcessThriftRequest(InputMessageBase *msg_base);
+    }
 
-private:
-    void Expose(const std::string_view& prefix);
-    
-    MethodStatus* _status;
-};
+    // Inherit this class to let flare server understands thrift_binary requests.
+    class ThriftService : public Describable {
+    public:
+        ThriftService();
+
+        virtual ~ThriftService();
+
+        // Implement this method to handle thrift_binary requests.
+        // Parameters:
+        //   controller  per-rpc settings. controller->Failed() is always false.
+        //   request     The thrift_binary request received.
+        //   response    The thrift_binary response that you should fill in.
+        //   done        You must call done->Run() to end the processing.
+        virtual void ProcessThriftFramedRequest(
+                Controller *controller,
+                ThriftFramedMessage *request,
+                ThriftFramedMessage *response,
+                ::google::protobuf::Closure *done) = 0;
+
+        // Put descriptions into the stream.
+        void Describe(std::ostream &os, const DescribeOptions &) const;
+
+    private:
+        FLARE_DISALLOW_COPY_AND_ASSIGN(ThriftService);
+
+        friend class policy::ThriftClosure;
+
+        friend void policy::ProcessThriftRequest(InputMessageBase *msg_base);
+
+        friend class StatusService;
+
+        friend class Server;
+
+    private:
+        void Expose(const std::string_view &prefix);
+
+        MethodStatus *_status;
+    };
 
 } // namespace flare::rpc
 

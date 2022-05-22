@@ -28,59 +28,74 @@
 
 
 namespace flare::rpc {
-namespace policy {
+    namespace policy {
 
-class ReplicaPolicy;
+        class ReplicaPolicy;
 
-enum ConsistentHashingLoadBalancerType {
-    CONS_HASH_LB_MURMUR3 = 0,
-    CONS_HASH_LB_MD5 = 1,
-    CONS_HASH_LB_KETAMA = 2,
+        enum ConsistentHashingLoadBalancerType {
+            CONS_HASH_LB_MURMUR3 = 0,
+            CONS_HASH_LB_MD5 = 1,
+            CONS_HASH_LB_KETAMA = 2,
 
-    // Identify the last one.
-    CONS_HASH_LB_LAST = 3
-};
+            // Identify the last one.
+            CONS_HASH_LB_LAST = 3
+        };
 
-class ConsistentHashingLoadBalancer : public LoadBalancer {
-public:
-    struct Node {
-        uint32_t hash;
-        ServerId server_sock;
-        flare::base::end_point server_addr;  // To make sorting stable among all clients
-        bool operator<(const Node &rhs) const {
-            if (hash < rhs.hash) { return true; }
-            if (hash > rhs.hash) { return false; }
-            return server_addr < rhs.server_addr;
-        }
-        bool operator<(const uint32_t code) const {
-            return hash < code;
-        }
-    };
-    explicit ConsistentHashingLoadBalancer(ConsistentHashingLoadBalancerType type);
-    bool AddServer(const ServerId& server);
-    bool RemoveServer(const ServerId& server);
-    size_t AddServersInBatch(const std::vector<ServerId> &servers);
-    size_t RemoveServersInBatch(const std::vector<ServerId> &servers);
-    LoadBalancer *New(const std::string_view& params) const;
-    void Destroy();
-    int SelectServer(const SelectIn &in, SelectOut *out);
-    void Describe(std::ostream &os, const DescribeOptions& options);
+        class ConsistentHashingLoadBalancer : public LoadBalancer {
+        public:
+            struct Node {
+                uint32_t hash;
+                ServerId server_sock;
+                flare::base::end_point server_addr;  // To make sorting stable among all clients
+                bool operator<(const Node &rhs) const {
+                    if (hash < rhs.hash) { return true; }
+                    if (hash > rhs.hash) { return false; }
+                    return server_addr < rhs.server_addr;
+                }
 
-private:
-    bool SetParameters(const std::string_view& params);
-    void GetLoads(std::map<flare::base::end_point, double> *load_map);
-    static size_t AddBatch(std::vector<Node> &bg, const std::vector<Node> &fg,
-                           const std::vector<Node> &servers, bool *executed);
-    static size_t RemoveBatch(std::vector<Node> &bg, const std::vector<Node> &fg,
-                              const std::vector<ServerId> &servers, bool *executed);
-    static size_t Remove(std::vector<Node> &bg, const std::vector<Node> &fg,
-                         const ServerId& server, bool *executed);
-    size_t _num_replicas;
-    ConsistentHashingLoadBalancerType _type;
-    flare::container::DoublyBufferedData<std::vector<Node> > _db_hash_ring;
-};
+                bool operator<(const uint32_t code) const {
+                    return hash < code;
+                }
+            };
 
-}  // namespace policy
+            explicit ConsistentHashingLoadBalancer(ConsistentHashingLoadBalancerType type);
+
+            bool AddServer(const ServerId &server);
+
+            bool RemoveServer(const ServerId &server);
+
+            size_t AddServersInBatch(const std::vector<ServerId> &servers);
+
+            size_t RemoveServersInBatch(const std::vector<ServerId> &servers);
+
+            LoadBalancer *New(const std::string_view &params) const;
+
+            void Destroy();
+
+            int SelectServer(const SelectIn &in, SelectOut *out);
+
+            void Describe(std::ostream &os, const DescribeOptions &options);
+
+        private:
+            bool SetParameters(const std::string_view &params);
+
+            void GetLoads(std::map<flare::base::end_point, double> *load_map);
+
+            static size_t AddBatch(std::vector<Node> &bg, const std::vector<Node> &fg,
+                                   const std::vector<Node> &servers, bool *executed);
+
+            static size_t RemoveBatch(std::vector<Node> &bg, const std::vector<Node> &fg,
+                                      const std::vector<ServerId> &servers, bool *executed);
+
+            static size_t Remove(std::vector<Node> &bg, const std::vector<Node> &fg,
+                                 const ServerId &server, bool *executed);
+
+            size_t _num_replicas;
+            ConsistentHashingLoadBalancerType _type;
+            flare::container::DoublyBufferedData<std::vector<Node> > _db_hash_ring;
+        };
+
+    }  // namespace policy
 } // namespace flare::rpc
 
 

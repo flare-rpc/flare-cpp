@@ -23,30 +23,30 @@
 #include "flare/rpc/protocol.h"
 
 namespace flare::rpc {
-namespace policy {
+    namespace policy {
 
-// Parse binary format of hulu-pbrpc.
-ParseResult ParseHuluMessage(flare::cord_buf* source, Socket *socket, bool read_eof, const void *arg);
+        // Parse binary format of hulu-pbrpc.
+        ParseResult ParseHuluMessage(flare::cord_buf *source, Socket *socket, bool read_eof, const void *arg);
 
-// Actions to a (client) request in hulu-pbrpc format.
-void ProcessHuluRequest(InputMessageBase* msg);
+        // Actions to a (client) request in hulu-pbrpc format.
+        void ProcessHuluRequest(InputMessageBase *msg);
 
-// Actions to a (server) response in hulu-pbrpc format.
-void ProcessHuluResponse(InputMessageBase* msg);
+        // Actions to a (server) response in hulu-pbrpc format.
+        void ProcessHuluResponse(InputMessageBase *msg);
 
-// Verify authentication information in hulu-pbrpc format
-bool VerifyHuluRequest(const InputMessageBase* msg);
+        // Verify authentication information in hulu-pbrpc format
+        bool VerifyHuluRequest(const InputMessageBase *msg);
 
-// Pack `request' to `method' into `buf'.
-void PackHuluRequest(flare::cord_buf* buf,
-                     SocketMessage**,
-                     uint64_t correlation_id,
-                     const google::protobuf::MethodDescriptor* method,
-                     Controller* controller,
-                     const flare::cord_buf& request,
-                     const Authenticator* auth);
+        // Pack `request' to `method' into `buf'.
+        void PackHuluRequest(flare::cord_buf *buf,
+                             SocketMessage **,
+                             uint64_t correlation_id,
+                             const google::protobuf::MethodDescriptor *method,
+                             Controller *controller,
+                             const flare::cord_buf &request,
+                             const Authenticator *auth);
 
-}  // namespace policy
+    }  // namespace policy
 } // namespace flare::rpc
 
 

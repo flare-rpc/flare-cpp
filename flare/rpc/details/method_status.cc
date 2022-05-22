@@ -24,137 +24,134 @@
 
 namespace flare::rpc {
 
-static int cast_int(void* arg) {
-    return *(int*)arg;
-}
+    static int cast_int(void *arg) {
+        return *(int *) arg;
+    }
 
-static int cast_cl(void* arg) {
-    auto cl = static_cast<std::unique_ptr<ConcurrencyLimiter>*>(arg)->get();
-    if (cl) {
-        return cl->MaxConcurrency();
+    static int cast_cl(void *arg) {
+        auto cl = static_cast<std::unique_ptr<ConcurrencyLimiter> *>(arg)->get();
+        if (cl) {
+            return cl->MaxConcurrency();
+        }
+        return 0;
     }
-    return 0;
-}
 
-MethodStatus::MethodStatus()
-    : _nconcurrency(0)
-    , _nconcurrency_var(cast_int, &_nconcurrency)
-    , _eps_var(&_nerror_var)
-    , _max_concurrency_var(cast_cl, &_cl)
-{
-}
+    MethodStatus::MethodStatus()
+            : _nconcurrency(0), _nconcurrency_var(cast_int, &_nconcurrency), _eps_var(&_nerror_var),
+              _max_concurrency_var(cast_cl, &_cl) {
+    }
 
-MethodStatus::~MethodStatus() {
-}
+    MethodStatus::~MethodStatus() {
+    }
 
-int MethodStatus::Expose(const std::string_view& prefix) {
-    if (_nconcurrency_var.expose_as(prefix, "concurrency") != 0) {
-        return -1;
-    }
-    if (_nerror_var.expose_as(prefix, "error") != 0) {
-        return -1;
-    }
-    if (_eps_var.expose_as(prefix, "eps") != 0) {
-        return -1;
-    }
-    if (_latency_rec.expose(prefix) != 0) {
-        return -1;
-    }
-    if (_cl) {
-        if (_max_concurrency_var.expose_as(prefix, "max_concurrency") != 0) {
+    int MethodStatus::Expose(const std::string_view &prefix) {
+        if (_nconcurrency_var.expose_as(prefix, "concurrency") != 0) {
             return -1;
         }
-    }
-    return 0;
-}
-
-template <typename T>
-void OutputTextValue(std::ostream& os,
-                     const char* prefix,
-                     const T& value) {
-    os << prefix << value << "\n";
-}
-
-template <typename T>
-void OutputValue(std::ostream& os,
-                 const char* prefix,
-                 const std::string& var_name,
-                 const T& value,
-                 const DescribeOptions& options,
-                 bool expand) {
-    if (options.use_html) {
-        os << "<p class=\"variable";
-        if (expand) {
-            os << " default_expand";
+        if (_nerror_var.expose_as(prefix, "error") != 0) {
+            return -1;
         }
-        os << "\">" << prefix << "<span id=\"value-" << var_name << "\">"
-           << value
-           << "</span></p><div class=\"detail\"><div id=\"" << var_name
-           << "\" class=\"flot-placeholder\"></div></div>\n";
-    } else {
-        return OutputTextValue(os, prefix, value);
+        if (_eps_var.expose_as(prefix, "eps") != 0) {
+            return -1;
+        }
+        if (_latency_rec.expose(prefix) != 0) {
+            return -1;
+        }
+        if (_cl) {
+            if (_max_concurrency_var.expose_as(prefix, "max_concurrency") != 0) {
+                return -1;
+            }
+        }
+        return 0;
     }
-}
 
-void MethodStatus::Describe(
-    std::ostream &os, const DescribeOptions& options) const {
-    // success requests
-    OutputValue(os, "count: ", _latency_rec.count_name(), _latency_rec.count(),
-                options, false);
-    const int64_t qps = _latency_rec.qps();
-    const bool expand = (qps != 0);
-    OutputValue(os, "qps: ", _latency_rec.qps_name(), _latency_rec.qps(),
-                options, expand);
-
-    // errorous requests
-    OutputValue(os, "error: ", _nerror_var.name(), _nerror_var.get_value(),
-                options, false);
-    OutputValue(os, "eps: ", _eps_var.name(),
-                _eps_var.get_value(1), options, false);
-
-    // latencies
-    OutputValue(os, "latency: ", _latency_rec.latency_name(),
-                _latency_rec.latency(), options, false);
-    if (options.use_html) {
-        OutputValue(os, "latency_percentiles: ",
-                    _latency_rec.latency_percentiles_name(),
-                    _latency_rec.latency_percentiles(), options, false);
-        OutputValue(os, "latency_cdf: ", _latency_rec.latency_cdf_name(),
-                    "click to view", options, expand);
-    } else {
-        OutputTextValue(os, "latency_50: ",
-                        _latency_rec.latency_percentile(0.5));
-        OutputTextValue(os, "latency_90: ",
-                        _latency_rec.latency_percentile(0.9));
-        OutputTextValue(os, "latency_99: ",
-                        _latency_rec.latency_percentile(0.99));
-        OutputTextValue(os, "latency_999: ",
-                        _latency_rec.latency_percentile(0.999));
-        OutputTextValue(os, "latency_9999: ",
-                        _latency_rec.latency_percentile(0.9999));
+    template<typename T>
+    void OutputTextValue(std::ostream &os,
+                         const char *prefix,
+                         const T &value) {
+        os << prefix << value << "\n";
     }
-    OutputValue(os, "max_latency: ", _latency_rec.max_latency_name(),
-                _latency_rec.max_latency(), options, false);
 
-    // Concurrency
-    OutputValue(os, "concurrency: ", _nconcurrency_var.name(),
-                _nconcurrency, options, false);
-    if (_cl) {
-        OutputValue(os, "max_concurrency: ", _max_concurrency_var.name(),
-                    MaxConcurrency(), options, false);
+    template<typename T>
+    void OutputValue(std::ostream &os,
+                     const char *prefix,
+                     const std::string &var_name,
+                     const T &value,
+                     const DescribeOptions &options,
+                     bool expand) {
+        if (options.use_html) {
+            os << "<p class=\"variable";
+            if (expand) {
+                os << " default_expand";
+            }
+            os << "\">" << prefix << "<span id=\"value-" << var_name << "\">"
+               << value
+               << "</span></p><div class=\"detail\"><div id=\"" << var_name
+               << "\" class=\"flot-placeholder\"></div></div>\n";
+        } else {
+            return OutputTextValue(os, prefix, value);
+        }
     }
-}
 
-void MethodStatus::SetConcurrencyLimiter(ConcurrencyLimiter* cl) {
-    _cl.reset(cl);
-}
+    void MethodStatus::Describe(
+            std::ostream &os, const DescribeOptions &options) const {
+        // success requests
+        OutputValue(os, "count: ", _latency_rec.count_name(), _latency_rec.count(),
+                    options, false);
+        const int64_t qps = _latency_rec.qps();
+        const bool expand = (qps != 0);
+        OutputValue(os, "qps: ", _latency_rec.qps_name(), _latency_rec.qps(),
+                    options, expand);
 
-ConcurrencyRemover::~ConcurrencyRemover() {
-    if (_status) {
-        _status->OnResponded(_c->ErrorCode(), flare::get_current_time_micros() - _received_us);
-        _status = NULL;
+        // errorous requests
+        OutputValue(os, "error: ", _nerror_var.name(), _nerror_var.get_value(),
+                    options, false);
+        OutputValue(os, "eps: ", _eps_var.name(),
+                    _eps_var.get_value(1), options, false);
+
+        // latencies
+        OutputValue(os, "latency: ", _latency_rec.latency_name(),
+                    _latency_rec.latency(), options, false);
+        if (options.use_html) {
+            OutputValue(os, "latency_percentiles: ",
+                        _latency_rec.latency_percentiles_name(),
+                        _latency_rec.latency_percentiles(), options, false);
+            OutputValue(os, "latency_cdf: ", _latency_rec.latency_cdf_name(),
+                        "click to view", options, expand);
+        } else {
+            OutputTextValue(os, "latency_50: ",
+                            _latency_rec.latency_percentile(0.5));
+            OutputTextValue(os, "latency_90: ",
+                            _latency_rec.latency_percentile(0.9));
+            OutputTextValue(os, "latency_99: ",
+                            _latency_rec.latency_percentile(0.99));
+            OutputTextValue(os, "latency_999: ",
+                            _latency_rec.latency_percentile(0.999));
+            OutputTextValue(os, "latency_9999: ",
+                            _latency_rec.latency_percentile(0.9999));
+        }
+        OutputValue(os, "max_latency: ", _latency_rec.max_latency_name(),
+                    _latency_rec.max_latency(), options, false);
+
+        // Concurrency
+        OutputValue(os, "concurrency: ", _nconcurrency_var.name(),
+                    _nconcurrency, options, false);
+        if (_cl) {
+            OutputValue(os, "max_concurrency: ", _max_concurrency_var.name(),
+                        MaxConcurrency(), options, false);
+        }
     }
-    ServerPrivateAccessor(_c->server()).RemoveConcurrency(_c);
-}
+
+    void MethodStatus::SetConcurrencyLimiter(ConcurrencyLimiter *cl) {
+        _cl.reset(cl);
+    }
+
+    ConcurrencyRemover::~ConcurrencyRemover() {
+        if (_status) {
+            _status->OnResponded(_c->ErrorCode(), flare::get_current_time_micros() - _received_us);
+            _status = NULL;
+        }
+        ServerPrivateAccessor(_c->server()).RemoveConcurrency(_c);
+    }
 
 }  // namespace flare::rpc

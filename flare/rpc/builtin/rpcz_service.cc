@@ -34,7 +34,7 @@
 
 namespace flare::rpc {
 
-// Defined in span.cpp
+    // Defined in span.cpp
     bool has_span_db();
 
     DEFINE_bool(enable_rpcz, false, "Turn on rpcz");
@@ -242,7 +242,7 @@ namespace flare::rpc {
         extr[num_extr++] = &client_extr;
         // start_send_us is always set for client spans.
         FLARE_CHECK(PrintAnnotationsAndRealTimeSpan(os, span.start_send_real_us(),
-                                              last_time, extr, num_extr));
+                                                    last_time, extr, num_extr));
         const Protocol *protocol = FindProtocol(span.protocol());
         const char *protocol_name = (protocol ? protocol->name : "Unknown");
         const flare::base::end_point remote_side(flare::base::int2ip(span.remote_ip()), span.remote_port());

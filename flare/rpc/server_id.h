@@ -29,7 +29,7 @@
 
 namespace flare::rpc {
 
-// Representing a server inside LoadBalancer.
+    // Representing a server inside LoadBalancer.
     struct ServerId {
         ServerId() : id(0) {}
 
@@ -58,7 +58,7 @@ namespace flare::rpc {
         return os;
     }
 
-// Statefully map ServerId to SocketId.
+    // Statefully map ServerId to SocketId.
     class ServerId2SocketIdMapper {
     public:
         ServerId2SocketIdMapper();

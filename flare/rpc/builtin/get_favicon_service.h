@@ -23,13 +23,13 @@
 
 namespace flare::rpc {
 
-class GetFaviconService : public ico {
-public:
-    void default_method(::google::protobuf::RpcController* controller,
-                        const GetFaviconRequest* request,
-                        GetFaviconResponse* response,
-                        ::google::protobuf::Closure* done);
-};
+    class GetFaviconService : public ico {
+    public:
+        void default_method(::google::protobuf::RpcController *controller,
+                            const GetFaviconRequest *request,
+                            GetFaviconResponse *response,
+                            ::google::protobuf::Closure *done);
+    };
 
 } // namespace flare::rpc
 

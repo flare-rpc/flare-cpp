@@ -24,30 +24,31 @@
 
 
 namespace flare::rpc {
-namespace policy {
+    namespace policy {
 
-class DomainNamingService : public PeriodicNamingService {
-public:
-    DomainNamingService(int default_port);
-    DomainNamingService() : DomainNamingService(80) {}
+        class DomainNamingService : public PeriodicNamingService {
+        public:
+            DomainNamingService(int default_port);
 
-private:
-    int GetServers(const char *service_name,
-                   std::vector<ServerNode>* servers) override;
+            DomainNamingService() : DomainNamingService(80) {}
 
-    void Describe(std::ostream& os, const DescribeOptions&) const override;
+        private:
+            int GetServers(const char *service_name,
+                           std::vector<ServerNode> *servers) override;
 
-    NamingService* New() const override;
-    
-    void Destroy() override;
+            void Describe(std::ostream &os, const DescribeOptions &) const override;
 
-private:
-    std::unique_ptr<char[]> _aux_buf;
-    size_t _aux_buf_len;
-    int _default_port;
-};
+            NamingService *New() const override;
 
-}  // namespace policy
+            void Destroy() override;
+
+        private:
+            std::unique_ptr<char[]> _aux_buf;
+            size_t _aux_buf_len;
+            int _default_port;
+        };
+
+    }  // namespace policy
 } // namespace flare::rpc
 
 
