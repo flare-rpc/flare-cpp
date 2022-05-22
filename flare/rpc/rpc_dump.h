@@ -28,46 +28,48 @@
 
 namespace flare::rpc {
 
-DECLARE_bool(rpc_dump);
+    DECLARE_bool(rpc_dump);
 
-// Randomly take samples of all requests and write into a file in batch in
-// a background thread.
+    // Randomly take samples of all requests and write into a file in batch in
+    // a background thread.
 
-// Example:
-//   SampledRequest* sample = AskToBeSampled();
-//   If (sample) {
-//     sample->xxx = yyy;
-//     sample->request = ...;
-//     sample->Submit();
-//   }
-//
-// In practice, sampled requests are just small fraction of all requests.
-// The overhead of sampling should be negligible for overall performance.
+    // Example:
+    //   SampledRequest* sample = AskToBeSampled();
+    //   If (sample) {
+    //     sample->xxx = yyy;
+    //     sample->request = ...;
+    //     sample->Submit();
+    //   }
+    //
+    // In practice, sampled requests are just small fraction of all requests.
+    // The overhead of sampling should be negligible for overall performance.
 
-class SampledRequest : public flare::variable::Collected {
-public:
-    flare::cord_buf request;
-    RpcDumpMeta meta;
+    class SampledRequest : public flare::variable::Collected {
+    public:
+        flare::cord_buf request;
+        RpcDumpMeta meta;
 
-    // Implement methods of Sampled.
-    void dump_and_destroy(size_t round) override;
-    void destroy() override;
-    flare::variable::CollectorSpeedLimit* speed_limit() override {
-        extern flare::variable::CollectorSpeedLimit g_rpc_dump_sl;
-        return &g_rpc_dump_sl;
-    }
-};
+        // Implement methods of Sampled.
+        void dump_and_destroy(size_t round) override;
+
+        void destroy() override;
+
+        flare::variable::CollectorSpeedLimit *speed_limit() override {
+            extern flare::variable::CollectorSpeedLimit g_rpc_dump_sl;
+            return &g_rpc_dump_sl;
+        }
+    };
 
 // If this function returns non-NULL, the caller must fill the returned
 // object and submit it for later dumping by calling SubmitSample(). If
 // the caller ignores non-NULL return value, the object is leaked.
-inline SampledRequest* AskToBeSampled() {
-    extern flare::variable::CollectorSpeedLimit g_rpc_dump_sl;
-    if (!FLAGS_rpc_dump || !flare::variable::is_collectable(&g_rpc_dump_sl)) {
-        return NULL;
+    inline SampledRequest *AskToBeSampled() {
+        extern flare::variable::CollectorSpeedLimit g_rpc_dump_sl;
+        if (!FLAGS_rpc_dump || !flare::variable::is_collectable(&g_rpc_dump_sl)) {
+            return NULL;
+        }
+        return new(std::nothrow) SampledRequest;
     }
-    return new (std::nothrow) SampledRequest;
-}
 
 // Read samples from dumped files in a directory.
 // Example:
@@ -75,27 +77,28 @@ inline SampledRequest* AskToBeSampled() {
 //   for (SampledRequest* req = it->Next(); req != NULL; req = it->Next()) {
 //     ...
 //   }
-class SampleIterator {
-public:
-    explicit SampleIterator(const std::string_view& dir);
-    ~SampleIterator();
+    class SampleIterator {
+    public:
+        explicit SampleIterator(const std::string_view &dir);
 
-    // Read a sample. Order of samples are not guaranteed to be same with
-    // the order that they're stored in dumped files.
-    // Returns the sample which should be deleted by caller. NULL means
-    // all dumped files are read.
-    SampledRequest* Next();
+        ~SampleIterator();
 
-private:
-    // Parse on request from the buf. Set `format_error' to true when
-    // the buf does not match the format.
-    static SampledRequest* Pop(flare::cord_buf& buf, bool* format_error);
-    
-    flare::IOPortal _cur_buf;
-    int _cur_fd;
-    flare::directory_iterator _enum;
-    std::string _dir;
-};
+        // Read a sample. Order of samples are not guaranteed to be same with
+        // the order that they're stored in dumped files.
+        // Returns the sample which should be deleted by caller. NULL means
+        // all dumped files are read.
+        SampledRequest *Next();
+
+    private:
+        // Parse on request from the buf. Set `format_error' to true when
+        // the buf does not match the format.
+        static SampledRequest *Pop(flare::cord_buf &buf, bool *format_error);
+
+        flare::IOPortal _cur_buf;
+        int _cur_fd;
+        flare::directory_iterator _enum;
+        std::string _dir;
+    };
 
 } // namespace flare::rpc
 

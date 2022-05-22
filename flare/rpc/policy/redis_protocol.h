@@ -23,41 +23,41 @@
 
 
 namespace flare::rpc {
-namespace policy {
+    namespace policy {
 
-// Parse redis response.
-ParseResult ParseRedisMessage(flare::cord_buf* source, Socket *socket, bool read_eof,
-                              const void *arg);
+        // Parse redis response.
+        ParseResult ParseRedisMessage(flare::cord_buf *source, Socket *socket, bool read_eof,
+                                      const void *arg);
 
-// Actions to a redis response.
-void ProcessRedisResponse(InputMessageBase* msg);
+        // Actions to a redis response.
+        void ProcessRedisResponse(InputMessageBase *msg);
 
-// Actions to a redis request, which is left unimplemented.
-// All requests are processed in execution queue pushed in
-// the parsing process. This function must be declared since
-// server only enables redis as a server-side protocol when
-// this function is declared.
-void ProcessRedisRequest(InputMessageBase* msg);
+        // Actions to a redis request, which is left unimplemented.
+        // All requests are processed in execution queue pushed in
+        // the parsing process. This function must be declared since
+        // server only enables redis as a server-side protocol when
+        // this function is declared.
+        void ProcessRedisRequest(InputMessageBase *msg);
 
-// Serialize a redis request.
-void SerializeRedisRequest(flare::cord_buf* buf,
-                           Controller* cntl,
-                           const google::protobuf::Message* request);
+        // Serialize a redis request.
+        void SerializeRedisRequest(flare::cord_buf *buf,
+                                   Controller *cntl,
+                                   const google::protobuf::Message *request);
 
-// Pack `request' to `method' into `buf'.
-void PackRedisRequest(flare::cord_buf* buf,
-                      SocketMessage**,
-                      uint64_t correlation_id,
-                      const google::protobuf::MethodDescriptor* method,
-                      Controller* controller,
-                      const flare::cord_buf& request,
-                      const Authenticator* auth);
+        // Pack `request' to `method' into `buf'.
+        void PackRedisRequest(flare::cord_buf *buf,
+                              SocketMessage **,
+                              uint64_t correlation_id,
+                              const google::protobuf::MethodDescriptor *method,
+                              Controller *controller,
+                              const flare::cord_buf &request,
+                              const Authenticator *auth);
 
-const std::string& GetRedisMethodName(
-    const google::protobuf::MethodDescriptor*,
-    const Controller*);
+        const std::string &GetRedisMethodName(
+                const google::protobuf::MethodDescriptor *,
+                const Controller *);
 
-}  // namespace policy
+    }  // namespace policy
 } // namespace flare::rpc
 
 

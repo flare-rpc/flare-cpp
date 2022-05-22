@@ -23,42 +23,42 @@
 
 
 namespace flare::rpc {
-namespace policy {
+    namespace policy {
 
-bool SnappyCompress(const google::protobuf::Message& res, flare::cord_buf* buf) {
-    flare::cord_buf serialized_pb;
-    flare::cord_buf_as_zero_copy_output_stream wrapper(&serialized_pb);
-    if (res.SerializeToZeroCopyStream(&wrapper)) {
-        flare::cord_buf_as_snappy_source source(serialized_pb);
-        flare::cord_buf_as_snappy_sink sink(*buf);
-        return flare::snappy::Compress(&source, &sink);
-    }
-    FLARE_LOG(WARNING) << "Fail to serialize input pb=" << &res;
-    return false;
-}
+        bool SnappyCompress(const google::protobuf::Message &res, flare::cord_buf *buf) {
+            flare::cord_buf serialized_pb;
+            flare::cord_buf_as_zero_copy_output_stream wrapper(&serialized_pb);
+            if (res.SerializeToZeroCopyStream(&wrapper)) {
+                flare::cord_buf_as_snappy_source source(serialized_pb);
+                flare::cord_buf_as_snappy_sink sink(*buf);
+                return flare::snappy::Compress(&source, &sink);
+            }
+            FLARE_LOG(WARNING) << "Fail to serialize input pb=" << &res;
+            return false;
+        }
 
-bool SnappyDecompress(const flare::cord_buf& data, google::protobuf::Message* req) {
-    flare::cord_buf_as_snappy_source source(data);
-    flare::cord_buf binary_pb;
-    flare::cord_buf_as_snappy_sink sink(binary_pb);
-    if (flare::snappy::Uncompress(&source, &sink)) {
-        return ParsePbFromCordBuf(req, binary_pb);
-    }
-    FLARE_LOG(WARNING) << "Fail to snappy::Uncompress, size=" << data.size();
-    return false;
-}
+        bool SnappyDecompress(const flare::cord_buf &data, google::protobuf::Message *req) {
+            flare::cord_buf_as_snappy_source source(data);
+            flare::cord_buf binary_pb;
+            flare::cord_buf_as_snappy_sink sink(binary_pb);
+            if (flare::snappy::Uncompress(&source, &sink)) {
+                return ParsePbFromCordBuf(req, binary_pb);
+            }
+            FLARE_LOG(WARNING) << "Fail to snappy::Uncompress, size=" << data.size();
+            return false;
+        }
 
-bool SnappyCompress(const flare::cord_buf& in, flare::cord_buf* out) {
-    flare::cord_buf_as_snappy_source source(in);
-    flare::cord_buf_as_snappy_sink sink(*out);
-    return flare::snappy::Compress(&source, &sink);
-}
+        bool SnappyCompress(const flare::cord_buf &in, flare::cord_buf *out) {
+            flare::cord_buf_as_snappy_source source(in);
+            flare::cord_buf_as_snappy_sink sink(*out);
+            return flare::snappy::Compress(&source, &sink);
+        }
 
-bool SnappyDecompress(const flare::cord_buf& in, flare::cord_buf* out) {
-    flare::cord_buf_as_snappy_source source(in);
-    flare::cord_buf_as_snappy_sink sink(*out);
-    return flare::snappy::Uncompress(&source, &sink);
-}
+        bool SnappyDecompress(const flare::cord_buf &in, flare::cord_buf *out) {
+            flare::cord_buf_as_snappy_source source(in);
+            flare::cord_buf_as_snappy_sink sink(*out);
+            return flare::snappy::Uncompress(&source, &sink);
+        }
 
-}  // namespace policy
+    }  // namespace policy
 } // namespace flare::rpc

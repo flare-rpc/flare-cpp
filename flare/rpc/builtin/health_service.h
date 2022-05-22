@@ -25,13 +25,13 @@
 
 namespace flare::rpc {
 
-class HealthService : public health {
-public:
-    void default_method(::google::protobuf::RpcController* cntl_base,
-                        const ::flare::rpc::HealthRequest* request,
-                        ::flare::rpc::HealthResponse* response,
-                        ::google::protobuf::Closure* done);
-};
+    class HealthService : public health {
+    public:
+        void default_method(::google::protobuf::RpcController *cntl_base,
+                            const ::flare::rpc::HealthRequest *request,
+                            ::flare::rpc::HealthResponse *response,
+                            ::google::protobuf::Closure *done);
+    };
 
 } // namespace flare::rpc
 

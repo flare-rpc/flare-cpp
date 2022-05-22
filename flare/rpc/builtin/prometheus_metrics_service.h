@@ -23,15 +23,15 @@
 
 namespace flare::rpc {
 
-class PrometheusMetricsService : public flare_metrics {
-public:
-    void default_method(::google::protobuf::RpcController* cntl_base,
-                        const ::flare::rpc::MetricsRequest* request,
-                        ::flare::rpc::MetricsResponse* response,
-                        ::google::protobuf::Closure* done) override;
-};
+    class PrometheusMetricsService : public flare_metrics {
+    public:
+        void default_method(::google::protobuf::RpcController *cntl_base,
+                            const ::flare::rpc::MetricsRequest *request,
+                            ::flare::rpc::MetricsResponse *response,
+                            ::google::protobuf::Closure *done) override;
+    };
 
-int DumpPrometheusMetricsToCordBuf(flare::cord_buf* output);
+    int DumpPrometheusMetricsToCordBuf(flare::cord_buf *output);
 
 } // namepace flare::rpc
 

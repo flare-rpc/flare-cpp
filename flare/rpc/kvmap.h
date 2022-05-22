@@ -21,54 +21,59 @@
 #include "flare/container/flat_map.h"
 
 namespace flare::rpc {
-    
-// Remember Key/Values in string
-class KVMap {
-public:
-    typedef flare::container::FlatMap<std::string, std::string> Map;
-    typedef Map::const_iterator Iterator;
 
-    KVMap() {}
+    // Remember Key/Values in string
+    class KVMap {
+    public:
+        typedef flare::container::FlatMap<std::string, std::string> Map;
+        typedef Map::const_iterator Iterator;
 
-    // Exchange internal fields with another KVMap.
-    void Swap(KVMap &rhs) { _entries.swap(rhs._entries); }
+        KVMap() {}
 
-    // Reset internal fields as if they're just default-constructed.
-    void Clear() { _entries.clear(); }
+        // Exchange internal fields with another KVMap.
+        void Swap(KVMap &rhs) { _entries.swap(rhs._entries); }
 
-    // Get value of a key(case-sensitive)
-    // Return pointer to the value, NULL on not found.
-    const std::string* Get(const char* key) const { return _entries.seek(key); }
-    const std::string* Get(const std::string& key) const { return _entries.seek(key); }
+        // Reset internal fields as if they're just default-constructed.
+        void Clear() { _entries.clear(); }
 
-    // Set value of a key
-    void Set(const std::string& key, const std::string& value) { GetOrAdd(key) = value; }
-    void Set(const std::string& key, const char* value) { GetOrAdd(key) = value; }
-    // Convert other types to string as well
-    template <typename T>
-    void Set(const std::string& key, const T& value) { GetOrAdd(key) = std::to_string(value); }
+        // Get value of a key(case-sensitive)
+        // Return pointer to the value, NULL on not found.
+        const std::string *Get(const char *key) const { return _entries.seek(key); }
 
-    // Remove a key
-    void Remove(const char* key) { _entries.erase(key); }
-    void Remove(const std::string& key) { _entries.erase(key); }
+        const std::string *Get(const std::string &key) const { return _entries.seek(key); }
 
-    // Get iterators to iterate key/value
-    Iterator Begin() const { return _entries.begin(); }
-    Iterator End() const { return _entries.end(); }
-    
-    // number of key/values
-    size_t Count() const { return _entries.size(); }
+        // Set value of a key
+        void Set(const std::string &key, const std::string &value) { GetOrAdd(key) = value; }
 
-private:
-    std::string& GetOrAdd(const std::string& key) {
-        if (!_entries.initialized()) {
-            _entries.init(29);
+        void Set(const std::string &key, const char *value) { GetOrAdd(key) = value; }
+
+        // Convert other types to string as well
+        template<typename T>
+        void Set(const std::string &key, const T &value) { GetOrAdd(key) = std::to_string(value); }
+
+        // Remove a key
+        void Remove(const char *key) { _entries.erase(key); }
+
+        void Remove(const std::string &key) { _entries.erase(key); }
+
+        // Get iterators to iterate key/value
+        Iterator Begin() const { return _entries.begin(); }
+
+        Iterator End() const { return _entries.end(); }
+
+        // number of key/values
+        size_t Count() const { return _entries.size(); }
+
+    private:
+        std::string &GetOrAdd(const std::string &key) {
+            if (!_entries.initialized()) {
+                _entries.init(29);
+            }
+            return _entries[key];
         }
-        return _entries[key];
-    }
 
-    Map _entries;
-};
+        Map _entries;
+    };
 
 } // namespace flare::rpc
 

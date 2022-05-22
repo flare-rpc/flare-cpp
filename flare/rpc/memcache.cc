@@ -64,9 +64,11 @@ namespace flare::rpc {
     }
 
 #if GOOGLE_PROTOBUF_VERSION >= 3006000
+
     MemcacheRequest *MemcacheRequest::New(::google::protobuf::Arena *arena) const {
         return CreateMaybeMessage<MemcacheRequest>(arena);
     }
+
 #endif
 
     void MemcacheRequest::Clear() {
@@ -444,7 +446,7 @@ namespace flare::rpc {
         }
         if (n < sizeof(header) + header.total_body_length) {
             flare::string_printf(&_err, "response=%u < header=%u + body=%u",
-                                       (unsigned) n, (unsigned) sizeof(header), header.total_body_length);
+                                 (unsigned) n, (unsigned) sizeof(header), header.total_body_length);
             return false;
         }
         if (header.status != (uint16_t) STATUS_SUCCESS) {
@@ -464,7 +466,7 @@ namespace flare::rpc {
         }
         if (header.extras_length != 4u) {
             flare::string_printf(&_err, "GET response must have flags as extras, actual length=%u",
-                                       header.extras_length);
+                                 header.extras_length);
             return false;
         }
         if (header.key_length != 0) {
@@ -597,7 +599,7 @@ namespace flare::rpc {
             return false;
         }
         FLARE_LOG_IF(ERROR, value_size != 0) << "STORE response must not have value, actually="
-                                       << value_size;
+                                             << value_size;
         _buf.pop_front(sizeof(header) + header.total_body_length);
         if (cas_value) {
             FLARE_CHECK(header.cas_value);
@@ -754,7 +756,7 @@ namespace flare::rpc {
         }
         if (n < sizeof(header) + header.total_body_length) {
             flare::string_printf(&_err, "response=%u < header=%u + body=%u",
-                                       (unsigned) n, (unsigned) sizeof(header), header.total_body_length);
+                                 (unsigned) n, (unsigned) sizeof(header), header.total_body_length);
             return false;
         }
         FLARE_LOG_IF(ERROR, header.extras_length != 0) << "INCR/DECR response must not have flags";
@@ -875,7 +877,7 @@ namespace flare::rpc {
         }
         if (n < sizeof(header) + header.total_body_length) {
             flare::string_printf(&_err, "response=%u < header=%u + body=%u",
-                                       (unsigned) n, (unsigned) sizeof(header), header.total_body_length);
+                                 (unsigned) n, (unsigned) sizeof(header), header.total_body_length);
             return false;
         }
         FLARE_LOG_IF(ERROR, header.extras_length != 0) << "VERSION response must not have flags";

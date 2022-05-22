@@ -26,15 +26,15 @@
 
 namespace flare::rpc {
 
-class IndexService : public index, public Tabbed {
-public:
-    void default_method(::google::protobuf::RpcController* cntl_base,
-                        const ::flare::rpc::IndexRequest* request,
-                        ::flare::rpc::IndexResponse* response,
-                        ::google::protobuf::Closure* done);
+    class IndexService : public index, public Tabbed {
+    public:
+        void default_method(::google::protobuf::RpcController *cntl_base,
+                            const ::flare::rpc::IndexRequest *request,
+                            ::flare::rpc::IndexResponse *response,
+                            ::google::protobuf::Closure *done);
 
-    void GetTabInfo(flare::rpc::TabInfoList*) const;
-};
+        void GetTabInfo(flare::rpc::TabInfoList *) const;
+    };
 
 } // namespace flare::rpc
 

@@ -824,8 +824,8 @@ namespace flare::rpc {
                 }
                 if (!cntl->response_attachment().empty()) {
                     FLARE_LOG(ERROR) << "response_attachment(size="
-                               << cntl->response_attachment().size() << ") will be"
-                                                                        " ignored when CreateProgressiveAttachment() was called";
+                                     << cntl->response_attachment().size() << ") will be"
+                                                                              " ignored when CreateProgressiveAttachment() was called";
                 }
                 // not set_content to enable chunked mode.
             } else if (cntl->response_compress_type() == COMPRESS_TYPE_GZIP) {
@@ -1252,7 +1252,7 @@ namespace flare::rpc {
                 uint64_t logid = strtoull(log_id_str->c_str(), &logid_end, 10);
                 if (*logid_end || errno) {
                     FLARE_LOG(ERROR) << "Invalid " << common->LOG_ID << '='
-                               << *log_id_str << " in http request";
+                                     << *log_id_str << " in http request";
                 } else {
                     cntl->set_log_id(logid);
                 }

@@ -25,27 +25,30 @@
 
 
 namespace flare::rpc {
-namespace policy {
+    namespace policy {
 
-typedef google::protobuf::io::GzipOutputStream::Options GzipCompressOptions;
+        typedef google::protobuf::io::GzipOutputStream::Options GzipCompressOptions;
 
-// Compress serialized `msg' into `buf'.
-bool GzipCompress(const google::protobuf::Message& msg, flare::cord_buf* buf);
-bool ZlibCompress(const google::protobuf::Message& msg, flare::cord_buf* buf);
+        // Compress serialized `msg' into `buf'.
+        bool GzipCompress(const google::protobuf::Message &msg, flare::cord_buf *buf);
 
-// Parse `msg' from decompressed `buf'.
-bool GzipDecompress(const flare::cord_buf& buf, google::protobuf::Message* msg);
-bool ZlibDecompress(const flare::cord_buf& buf, google::protobuf::Message* msg);
+        bool ZlibCompress(const google::protobuf::Message &msg, flare::cord_buf *buf);
 
-// Put compressed `in' into `out'.
-bool GzipCompress(const flare::cord_buf& in, flare::cord_buf* out,
-                  const GzipCompressOptions*);
+        // Parse `msg' from decompressed `buf'.
+        bool GzipDecompress(const flare::cord_buf &buf, google::protobuf::Message *msg);
 
-// Put decompressed `in' into `out'.
-bool GzipDecompress(const flare::cord_buf& in, flare::cord_buf* out);
-bool ZlibDecompress(const flare::cord_buf& in, flare::cord_buf* out);
+        bool ZlibDecompress(const flare::cord_buf &buf, google::protobuf::Message *msg);
 
-}  // namespace policy
+        // Put compressed `in' into `out'.
+        bool GzipCompress(const flare::cord_buf &in, flare::cord_buf *out,
+                                  const GzipCompressOptions *);
+
+        // Put decompressed `in' into `out'.
+        bool GzipDecompress(const flare::cord_buf &in, flare::cord_buf *out);
+
+        bool ZlibDecompress(const flare::cord_buf &in, flare::cord_buf *out);
+
+    }  // namespace policy
 } // namespace flare::rpc
 
 

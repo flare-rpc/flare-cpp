@@ -23,15 +23,15 @@
 
 
 namespace flare::rpc {
-namespace policy {
+    namespace policy {
 
-// Parse binary format of mongo
-ParseResult ParseMongoMessage(flare::cord_buf* source, Socket* socket, bool read_eof, const void *arg);
+        // Parse binary format of mongo
+        ParseResult ParseMongoMessage(flare::cord_buf *source, Socket *socket, bool read_eof, const void *arg);
 
-// Actions to a (client) request in mongo format
-void ProcessMongoRequest(InputMessageBase* msg);
+        // Actions to a (client) request in mongo format
+        void ProcessMongoRequest(InputMessageBase *msg);
 
-} // namespace policy
+    } // namespace policy
 } // namespace flare::rpc
 
 

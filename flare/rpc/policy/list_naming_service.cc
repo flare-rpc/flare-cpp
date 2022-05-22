@@ -26,100 +26,100 @@
 
 
 namespace flare::rpc {
-namespace policy {
+    namespace policy {
 
-// Defined in file_naming_service.cpp
-bool SplitIntoServerAndTag(const std::string_view& line,
-                           std::string_view* server_addr,
-                           std::string_view* tag);
+        // Defined in file_naming_service.cpp
+        bool SplitIntoServerAndTag(const std::string_view &line,
+                                   std::string_view *server_addr,
+                                   std::string_view *tag);
 
-int ParseServerList(const char* service_name,
-                    std::vector<ServerNode>* servers) {
-    servers->clear();
-    // Sort/unique the inserted vector is faster, but may have a different order
-    // of addresses from the file. To make assertions in tests easier, we use
-    // set to de-duplicate and keep the order.
-    std::set<ServerNode> presence;
-    std::string line;
+        int ParseServerList(const char *service_name,
+                            std::vector<ServerNode> *servers) {
+            servers->clear();
+            // Sort/unique the inserted vector is faster, but may have a different order
+            // of addresses from the file. To make assertions in tests easier, we use
+            // set to de-duplicate and keep the order.
+            std::set<ServerNode> presence;
+            std::string line;
 
-    if (!service_name) {
-        FLARE_LOG(FATAL) << "Param[service_name] is NULL";
-        return -1;
-    }
-    for (flare::StringSplitter sp(service_name, ','); sp != NULL; ++sp) {
-        line.assign(sp.field(), sp.length());
-        std::string_view addr;
-        std::string_view tag;
-        if (!SplitIntoServerAndTag(line, &addr, &tag)) {
-            continue;
+            if (!service_name) {
+                FLARE_LOG(FATAL) << "Param[service_name] is NULL";
+                return -1;
+            }
+            for (flare::StringSplitter sp(service_name, ','); sp != NULL; ++sp) {
+                line.assign(sp.field(), sp.length());
+                std::string_view addr;
+                std::string_view tag;
+                if (!SplitIntoServerAndTag(line, &addr, &tag)) {
+                    continue;
+                }
+                const_cast<char *>(addr.data())[addr.size()] = '\0'; // safe
+                flare::base::end_point point;
+                if (str2endpoint(addr.data(), &point) != 0 &&
+                    hostname2endpoint(addr.data(), &point) != 0) {
+                    FLARE_LOG(ERROR) << "Invalid address=`" << addr << '\'';
+                    continue;
+                }
+                ServerNode node;
+                node.addr = point;
+                flare::copy_to_string(tag, &node.tag);
+                if (presence.insert(node).second) {
+                    servers->push_back(node);
+                } else {
+                    RPC_VLOG << "Duplicated server=" << node;
+                }
+            }
+            RPC_VLOG << "Got " << servers->size()
+                     << (servers->size() > 1 ? " servers" : " server");
+            return 0;
         }
-        const_cast<char*>(addr.data())[addr.size()] = '\0'; // safe
-        flare::base::end_point point;
-        if (str2endpoint(addr.data(), &point) != 0 &&
-            hostname2endpoint(addr.data(), &point) != 0) {
-            FLARE_LOG(ERROR) << "Invalid address=`" << addr << '\'';
-            continue;
+
+        int ListNamingService::GetServers(const char *service_name,
+                                          std::vector<ServerNode> *servers) {
+            return ParseServerList(service_name, servers);
         }
-        ServerNode node;
-        node.addr = point;
-        flare::copy_to_string(tag, &node.tag);
-        if (presence.insert(node).second) {
-            servers->push_back(node);
-        } else {
-            RPC_VLOG << "Duplicated server=" << node;
+
+        int ListNamingService::RunNamingService(const char *service_name,
+                                                NamingServiceActions *actions) {
+            std::vector<ServerNode> servers;
+            const int rc = GetServers(service_name, &servers);
+            if (rc != 0) {
+                servers.clear();
+            }
+            actions->ResetServers(servers);
+            return 0;
         }
-    }
-    RPC_VLOG << "Got " << servers->size()
-             << (servers->size() > 1 ? " servers" : " server");
-    return 0;
-}
 
-int ListNamingService::GetServers(const char *service_name,
-                                  std::vector<ServerNode>* servers) {
-    return ParseServerList(service_name, servers);
-}
+        void ListNamingService::Describe(
+                std::ostream &os, const DescribeOptions &) const {
+            os << "list";
+            return;
+        }
 
-int ListNamingService::RunNamingService(const char* service_name,
-                                        NamingServiceActions* actions) {
-    std::vector<ServerNode> servers;
-    const int rc = GetServers(service_name, &servers);
-    if (rc != 0) {
-        servers.clear();
-    }
-    actions->ResetServers(servers);
-    return 0;
-}
+        NamingService *ListNamingService::New() const {
+            return new ListNamingService;
+        }
 
-void ListNamingService::Describe(
-    std::ostream& os, const DescribeOptions&) const {
-    os << "list";
-    return;
-}
+        void ListNamingService::Destroy() {
+            delete this;
+        }
 
-NamingService* ListNamingService::New() const {
-    return new ListNamingService;
-}
+        int DomainListNamingService::GetServers(const char *service_name,
+                                                std::vector<ServerNode> *servers) {
+            return ParseServerList(service_name, servers);
+        }
 
-void ListNamingService::Destroy() {
-    delete this;
-}
+        void DomainListNamingService::Describe(std::ostream &os,
+                                               const DescribeOptions &) const {
+            os << "dlist";
+            return;
+        }
 
-int DomainListNamingService::GetServers(const char* service_name,
-                                        std::vector<ServerNode>* servers) {
-    return ParseServerList(service_name, servers);
-}
+        NamingService *DomainListNamingService::New() const {
+            return new DomainListNamingService;
+        }
 
-void DomainListNamingService::Describe(std::ostream& os,
-                                       const DescribeOptions&) const {
-    os << "dlist";
-    return;
-}
+        void DomainListNamingService::Destroy() { delete this; }
 
-NamingService* DomainListNamingService::New() const {
-    return new DomainListNamingService;
-}
-
-void DomainListNamingService::Destroy() { delete this; }
-
-}  // namespace policy
+    }  // namespace policy
 } // namespace flare::rpc

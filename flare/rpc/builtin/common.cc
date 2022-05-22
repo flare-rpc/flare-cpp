@@ -48,8 +48,8 @@ namespace flare::rpc {
         return agent->find("curl/") == std::string::npos;
     }
 
-// Written by Jack Handy
-// <A href="mailto:jakkhandy@hotmail.com">jakkhandy@hotmail.com</A>
+    // Written by Jack Handy
+    // <A href="mailto:jakkhandy@hotmail.com">jakkhandy@hotmail.com</A>
     inline bool url_wildcmp(const char *wild, const char *str) {
         const char *cp = NULL;
         const char *mp = NULL;

@@ -31,109 +31,124 @@
 
 namespace flare::rpc {
 
-enum HttpParserStage {
-    HTTP_ON_MESSAGE_BEGIN,
-    HTTP_ON_URL,
-    HTTP_ON_STATUS,
-    HTTP_ON_HEADER_FIELD, 
-    HTTP_ON_HEADER_VALUE,
-    HTTP_ON_HEADERS_COMPLETE,
-    HTTP_ON_BODY,
-    HTTP_ON_MESSAGE_COMPLETE
-};
+    enum HttpParserStage {
+        HTTP_ON_MESSAGE_BEGIN,
+        HTTP_ON_URL,
+        HTTP_ON_STATUS,
+        HTTP_ON_HEADER_FIELD,
+        HTTP_ON_HEADER_VALUE,
+        HTTP_ON_HEADERS_COMPLETE,
+        HTTP_ON_BODY,
+        HTTP_ON_MESSAGE_COMPLETE
+    };
 
-class HttpMessage {
-public:
-    // If read_body_progressively is true, the body will be read progressively
-    // by using SetBodyReader().
-    HttpMessage(bool read_body_progressively = false);
-    ~HttpMessage();
+    class HttpMessage {
+    public:
+        // If read_body_progressively is true, the body will be read progressively
+        // by using SetBodyReader().
+        HttpMessage(bool read_body_progressively = false);
 
-    const flare::cord_buf &body() const { return _body; }
-    flare::cord_buf &body() { return _body; }
+        ~HttpMessage();
 
-    // Parse from array, length=0 is treated as EOF.
-    // Returns bytes parsed, -1 on failure.
-    ssize_t ParseFromArray(const char *data, const size_t length);
-    
-    // Parse from flare::cord_buf.
-    // Emtpy `buf' is sliently ignored, which is different from ParseFromArray.
-    // Returns bytes parsed, -1 on failure.
-    ssize_t ParseFromCordBuf(const flare::cord_buf &buf);
+        const flare::cord_buf &body() const { return _body; }
 
-    bool Completed() const { return _stage == HTTP_ON_MESSAGE_COMPLETE; }
-    HttpParserStage stage() const { return _stage; }
+        flare::cord_buf &body() { return _body; }
 
-    HttpHeader &header() { return _header; }
-    const HttpHeader &header() const { return _header; }
-    size_t parsed_length() const { return _parsed_length; }
-    
-    // Http parser callback functions
-    static int on_message_begin(http_parser *);
-    static int on_url(http_parser *, const char *, const size_t);
-    static int on_status(http_parser*, const char *, const size_t);
-    static int on_header_field(http_parser *, const char *, const size_t);
-    static int on_header_value(http_parser *, const char *, const size_t);
-    static int on_headers_complete(http_parser *);
-    static int on_body_cb(http_parser*, const char *, const size_t);
-    static int on_message_complete_cb(http_parser *);
+        // Parse from array, length=0 is treated as EOF.
+        // Returns bytes parsed, -1 on failure.
+        ssize_t ParseFromArray(const char *data, const size_t length);
 
-    const http_parser& parser() const { return _parser; }
+        // Parse from flare::cord_buf.
+        // Emtpy `buf' is sliently ignored, which is different from ParseFromArray.
+        // Returns bytes parsed, -1 on failure.
+        ssize_t ParseFromCordBuf(const flare::cord_buf &buf);
 
-    bool read_body_progressively() const { return _read_body_progressively; }
+        bool Completed() const { return _stage == HTTP_ON_MESSAGE_COMPLETE; }
 
-    // Send new parts of the body to the reader. If the body already has some
-    // data, feed them to the reader immediately.
-    // Any error during the setting will destroy the reader.
-    void SetBodyReader(ProgressiveReader* r);
+        HttpParserStage stage() const { return _stage; }
 
-protected:
-    int OnBody(const char* data, size_t size);
-    int OnMessageComplete();
-    size_t _parsed_length;
-    
-private:
-    FLARE_DISALLOW_COPY_AND_ASSIGN(HttpMessage);
-    int UnlockAndFlushToBodyReader(std::unique_lock<flare::base::Mutex>& locked);
+        HttpHeader &header() { return _header; }
 
-    HttpParserStage _stage;
-    std::string _url;
-    HttpHeader _header;
-    bool _read_body_progressively;
-    // For mutual exclusion between on_body and SetBodyReader.
-    flare::base::Mutex _body_mutex;
-    // Read body progressively
-    ProgressiveReader* _body_reader;
-    flare::cord_buf _body;
+        const HttpHeader &header() const { return _header; }
 
-    // Parser related members
-    struct http_parser _parser;
-    std::string _cur_header;
-    std::string *_cur_value;
+        size_t parsed_length() const { return _parsed_length; }
 
-protected:
-    // Only valid when -http_verbose is on
-    flare::cord_buf_builder* _vmsgbuilder;
-    size_t _vbodylen;
-};
+        // Http parser callback functions
+        static int on_message_begin(http_parser *);
 
-std::ostream& operator<<(std::ostream& os, const http_parser& parser);
+        static int on_url(http_parser *, const char *, const size_t);
+
+        static int on_status(http_parser *, const char *, const size_t);
+
+        static int on_header_field(http_parser *, const char *, const size_t);
+
+        static int on_header_value(http_parser *, const char *, const size_t);
+
+        static int on_headers_complete(http_parser *);
+
+        static int on_body_cb(http_parser *, const char *, const size_t);
+
+        static int on_message_complete_cb(http_parser *);
+
+        const http_parser &parser() const { return _parser; }
+
+        bool read_body_progressively() const { return _read_body_progressively; }
+
+        // Send new parts of the body to the reader. If the body already has some
+        // data, feed them to the reader immediately.
+        // Any error during the setting will destroy the reader.
+        void SetBodyReader(ProgressiveReader *r);
+
+    protected:
+        int OnBody(const char *data, size_t size);
+
+        int OnMessageComplete();
+
+        size_t _parsed_length;
+
+    private:
+        FLARE_DISALLOW_COPY_AND_ASSIGN(HttpMessage);
+
+        int UnlockAndFlushToBodyReader(std::unique_lock<flare::base::Mutex> &locked);
+
+        HttpParserStage _stage;
+        std::string _url;
+        HttpHeader _header;
+        bool _read_body_progressively;
+        // For mutual exclusion between on_body and SetBodyReader.
+        flare::base::Mutex _body_mutex;
+        // Read body progressively
+        ProgressiveReader *_body_reader;
+        flare::cord_buf _body;
+
+        // Parser related members
+        struct http_parser _parser;
+        std::string _cur_header;
+        std::string *_cur_value;
+
+    protected:
+        // Only valid when -http_verbose is on
+        flare::cord_buf_builder *_vmsgbuilder;
+        size_t _vbodylen;
+    };
+
+    std::ostream &operator<<(std::ostream &os, const http_parser &parser);
 
 // Serialize a http request.
 // header: may be modified in some cases
 // remote_side: used when "Host" is absent
 // content: could be NULL.
-void MakeRawHttpRequest(flare::cord_buf* request,
-                        HttpHeader* header,
-                        const flare::base::end_point& remote_side,
-                        const flare::cord_buf* content);
+    void MakeRawHttpRequest(flare::cord_buf *request,
+                            HttpHeader *header,
+                            const flare::base::end_point &remote_side,
+                            const flare::cord_buf *content);
 
-// Serialize a http response.
-// header: may be modified in some cases
-// content: cleared after usage. could be NULL. 
-void MakeRawHttpResponse(flare::cord_buf* response,
-                         HttpHeader* header,
-                         flare::cord_buf* content);
+    // Serialize a http response.
+    // header: may be modified in some cases
+    // content: cleared after usage. could be NULL.
+    void MakeRawHttpResponse(flare::cord_buf *response,
+                             HttpHeader *header,
+                             flare::cord_buf *content);
 
 } // namespace flare::rpc
 

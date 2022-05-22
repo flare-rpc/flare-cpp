@@ -22,32 +22,32 @@
 
 namespace flare::rpc {
 
-ThriftService::ThriftService() {
-    _status = new (std::nothrow) MethodStatus;
-    FLARE_LOG_IF(FATAL, _status == NULL) << "Fail to new MethodStatus";
-}
-
-ThriftService::~ThriftService() {
-    delete _status;
-    _status = NULL;
-}
-
-void ThriftService::Describe(std::ostream &os, const DescribeOptions&) const {
-    os << flare::base::class_name_str(*this);
-}
-
-void ThriftService::Expose(const std::string_view& prefix) {
-    if (_status == NULL) {
-        return;
+    ThriftService::ThriftService() {
+        _status = new(std::nothrow) MethodStatus;
+        FLARE_LOG_IF(FATAL, _status == NULL) << "Fail to new MethodStatus";
     }
-    std::string s;
-    const std::string& cached_name = flare::base::class_name_str(*this);
-    s.reserve(prefix.size() + 1 + cached_name.size());
-    s.append(prefix.data(), prefix.size());
-    s.push_back('_');
-    s.append(cached_name);
-    _status->Expose(s);
-}
+
+    ThriftService::~ThriftService() {
+        delete _status;
+        _status = NULL;
+    }
+
+    void ThriftService::Describe(std::ostream &os, const DescribeOptions &) const {
+        os << flare::base::class_name_str(*this);
+    }
+
+    void ThriftService::Expose(const std::string_view &prefix) {
+        if (_status == NULL) {
+            return;
+        }
+        std::string s;
+        const std::string &cached_name = flare::base::class_name_str(*this);
+        s.reserve(prefix.size() + 1 + cached_name.size());
+        s.append(prefix.data(), prefix.size());
+        s.push_back('_');
+        s.append(cached_name);
+        _status->Expose(s);
+    }
 
 } // namespace flare::rpc
 

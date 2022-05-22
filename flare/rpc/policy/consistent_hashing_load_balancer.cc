@@ -359,7 +359,7 @@ namespace flare::rpc {
         void ConsistentHashingLoadBalancer::GetLoads(
                 std::map<flare::base::end_point, double> *load_map) {
             load_map->clear();
-            std::map < flare::base::end_point, uint32_t > count_map;
+            std::map<flare::base::end_point, uint32_t> count_map;
             do {
                 flare::container::DoublyBufferedData<std::vector<Node> >::ScopedPtr s;
                 if (_db_hash_ring.Read(&s) != 0) {
@@ -389,7 +389,7 @@ namespace flare::rpc {
                     return false;
                 }
                 if (sp.key() == "replicas") {
-                    int64_t  r;
+                    int64_t r;
                     if (!flare::simple_atoi(sp.value(), &r)) {
                         return false;
                     }

@@ -24,42 +24,42 @@
 
 
 namespace flare::rpc {
-namespace policy {
+    namespace policy {
 
-// Actions to a (server) response in nshead+mcpack format.
-void ProcessNsheadMcpackResponse(InputMessageBase* msg);
+        // Actions to a (server) response in nshead+mcpack format.
+        void ProcessNsheadMcpackResponse(InputMessageBase *msg);
 
-void SerializeNsheadMcpackRequest(flare::cord_buf* buf, Controller* cntl,
-                                 const google::protobuf::Message* request);
+        void SerializeNsheadMcpackRequest(flare::cord_buf *buf, Controller *cntl,
+                                          const google::protobuf::Message *request);
 
-// Pack `request' to `method' into `buf'.
-void PackNsheadMcpackRequest(flare::cord_buf* buf,
-                             SocketMessage**,
-                             uint64_t correlation_id,
-                             const google::protobuf::MethodDescriptor* method,
-                             Controller* controller,
-                             const flare::cord_buf& request,
-                             const Authenticator* auth);
+        // Pack `request' to `method' into `buf'.
+        void PackNsheadMcpackRequest(flare::cord_buf *buf,
+                                     SocketMessage **,
+                                     uint64_t correlation_id,
+                                     const google::protobuf::MethodDescriptor *method,
+                                     Controller *controller,
+                                     const flare::cord_buf &request,
+                                     const Authenticator *auth);
 
-class NsheadMcpackAdaptor : public NsheadPbServiceAdaptor {
-public:
-    void ParseNsheadMeta(const Server& svr,
-                        const NsheadMessage& request,
-                        Controller*,
-                        NsheadMeta* out_meta) const;
+        class NsheadMcpackAdaptor : public NsheadPbServiceAdaptor {
+        public:
+            void ParseNsheadMeta(const Server &svr,
+                                 const NsheadMessage &request,
+                                 Controller *,
+                                 NsheadMeta *out_meta) const;
 
-    void ParseRequestFromCordBuf(
-        const NsheadMeta& meta, const NsheadMessage& ns_req,
-        Controller* controller, google::protobuf::Message* pb_req) const;
+            void ParseRequestFromCordBuf(
+                    const NsheadMeta &meta, const NsheadMessage &ns_req,
+                    Controller *controller, google::protobuf::Message *pb_req) const;
 
-    void SerializeResponseToCordBuf(
-        const NsheadMeta& meta,
-        Controller* controller,
-        const google::protobuf::Message* pb_res,
-        NsheadMessage* ns_res) const;
-};
+            void SerializeResponseToCordBuf(
+                    const NsheadMeta &meta,
+                    Controller *controller,
+                    const google::protobuf::Message *pb_res,
+                    NsheadMessage *ns_res) const;
+        };
 
-}  // namespace policy
+    }  // namespace policy
 } // namespace flare::rpc
 
 

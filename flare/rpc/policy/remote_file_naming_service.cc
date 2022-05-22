@@ -37,7 +37,7 @@ namespace flare::rpc {
         DEFINE_int32(remote_file_timeout_ms, 1000,
                      "Timeout for fetching remote server lists");
 
-// Defined in file_naming_service.cpp
+        // Defined in file_naming_service.cpp
         bool SplitIntoServerAndTag(const std::string_view &line,
                                    std::string_view *server_addr,
                                    std::string_view *tag);
@@ -67,7 +67,7 @@ namespace flare::rpc {
                 size_t pos = tmpname.find("://");
                 std::string_view proto;
                 if (pos != std::string_view::npos) {
-                    proto =flare::safe_substr(tmpname, 0, pos);
+                    proto = flare::safe_substr(tmpname, 0, pos);
                     for (pos += 3; tmpname[pos] == '/'; ++pos) {}
                     tmpname.remove_prefix(pos);
                 } else {
@@ -75,7 +75,7 @@ namespace flare::rpc {
                 }
                 if (proto != "bns" && proto != "http") {
                     FLARE_LOG(ERROR) << "Invalid protocol=`" << proto
-                               << "\' in service_name=" << service_name_cstr;
+                                     << "\' in service_name=" << service_name_cstr;
                     return -1;
                 }
                 size_t slash_pos = tmpname.find('/');
@@ -84,7 +84,7 @@ namespace flare::rpc {
                     server_addr_piece = tmpname;
                     _path = "/";
                 } else {
-                    server_addr_piece =flare::safe_substr(tmpname, 0, slash_pos);
+                    server_addr_piece = flare::safe_substr(tmpname, 0, slash_pos);
                     _path = flare::as_string(flare::safe_substr(tmpname, slash_pos));
                 }
                 _server_addr.reserve(proto.size() + 3 + server_addr_piece.size());
@@ -109,14 +109,14 @@ namespace flare::rpc {
             _channel->CallMethod(NULL, &cntl, NULL, NULL, NULL);
             if (cntl.Failed()) {
                 FLARE_LOG(WARNING) << "Fail to access " << _server_addr << _path << ": "
-                             << cntl.ErrorText();
+                                   << cntl.ErrorText();
                 return -1;
             }
             std::string line;
             // Sort/unique the inserted vector is faster, but may have a different order
             // of addresses from the file. To make assertions in tests easier, we use
             // set to de-duplicate and keep the order.
-            std::set < ServerNode > presence;
+            std::set<ServerNode> presence;
 
             while (CutLineFromCordBuf(&cntl.response_attachment(), &line)) {
                 std::string_view addr;

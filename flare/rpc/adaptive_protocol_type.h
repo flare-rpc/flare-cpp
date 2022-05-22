@@ -28,20 +28,20 @@
 
 namespace flare::rpc {
 
-// NOTE: impl. are in flare/rpc/protocol.cpp
+    // NOTE: impl. are in flare/rpc/protocol.cpp
 
-// Convert a case-insensitive string to corresponding ProtocolType which is
-// defined in flare/rpc/options.proto
-// Returns: PROTOCOL_UNKNOWN on error.
+    // Convert a case-insensitive string to corresponding ProtocolType which is
+    // defined in flare/rpc/options.proto
+    // Returns: PROTOCOL_UNKNOWN on error.
     ProtocolType StringToProtocolType(const std::string_view &type,
                                       bool print_log_on_unknown);
 
     inline ProtocolType StringToProtocolType(const std::string_view &type) { return StringToProtocolType(type, true); }
 
-// Convert a ProtocolType to a c-style string.
+    // Convert a ProtocolType to a c-style string.
     const char *ProtocolTypeToString(ProtocolType);
 
-// Assignable by both ProtocolType and names.
+    // Assignable by both ProtocolType and names.
     class AdaptiveProtocolType {
     public:
         explicit AdaptiveProtocolType() : _type(PROTOCOL_UNKNOWN) {}

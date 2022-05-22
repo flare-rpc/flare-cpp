@@ -31,17 +31,17 @@
 
 namespace flare::rpc {
 
-// Base of all flare/rpc channels.
-class ChannelBase : public google::protobuf::RpcChannel/*non-copyable*/,
-                    public Describable {
-public:
-    virtual int Weight() {
-        FLARE_CHECK(false) << "Not implemented";
-        abort();
-    };
+    // Base of all flare/rpc channels.
+    class ChannelBase : public google::protobuf::RpcChannel/*non-copyable*/,
+                        public Describable {
+    public:
+        virtual int Weight() {
+            FLARE_CHECK(false) << "Not implemented";
+            abort();
+        };
 
-    virtual int CheckHealth() = 0;
-};
+        virtual int CheckHealth() = 0;
+    };
 
 } // namespace flare::rpc
 

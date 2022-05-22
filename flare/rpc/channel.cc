@@ -156,13 +156,13 @@ namespace flare::rpc {
             }
             if (has_error) {
                 FLARE_LOG(ERROR) << "Channel=" << this << " chose connection_type="
-                           << _options.connection_type.name() << " for protocol="
-                           << _options.protocol.name();
+                                 << _options.connection_type.name() << " for protocol="
+                                 << _options.protocol.name();
             }
         } else {
             if (!(_options.connection_type & protocol->supported_connection_type)) {
                 FLARE_LOG(ERROR) << protocol->name << " does not support connection_type="
-                           << ConnectionTypeToString(_options.connection_type);
+                                 << ConnectionTypeToString(_options.connection_type);
                 return -1;
             }
         }
@@ -170,7 +170,7 @@ namespace flare::rpc {
         _preferred_index = get_client_side_messenger()->FindProtocolIndex(_options.protocol);
         if (_preferred_index < 0) {
             FLARE_LOG(ERROR) << "Fail to get index for protocol="
-                       << _options.protocol.name();
+                             << _options.protocol.name();
             return -1;
         }
 
@@ -210,8 +210,8 @@ namespace flare::rpc {
                 // our troubleshooting time.
                 if (strstr(server_addr_and_port, "://")) {
                     FLARE_LOG(ERROR) << "Invalid address=`" << server_addr_and_port
-                               << "'. Use Init(naming_service_name, "
-                                  "load_balancer_name, options) instead.";
+                                     << "'. Use Init(naming_service_name, "
+                                        "load_balancer_name, options) instead.";
                 } else {
                     FLARE_LOG(ERROR) << "Invalid address=`" << server_addr_and_port << '\'';
                 }

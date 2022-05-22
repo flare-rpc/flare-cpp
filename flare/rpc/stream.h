@@ -34,7 +34,7 @@ namespace flare::rpc {
         struct StreamIdTraits;
     };
 
-// Auto-closed Stream
+    // Auto-closed Stream
     typedef flare::base::scoped_generic<StreamId, detail::StreamIdTraits> ScopedStream;
 
     class StreamInputHandler {

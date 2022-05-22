@@ -21,26 +21,26 @@
 #include "flare/rpc/authenticator.h"
 
 namespace flare::rpc {
-namespace policy {
+    namespace policy {
 
-// Request to redis for authentication.
-class RedisAuthenticator : public Authenticator {
-public:
-    RedisAuthenticator(const std::string& passwd)
-        : passwd_(passwd) {}
+        // Request to redis for authentication.
+        class RedisAuthenticator : public Authenticator {
+        public:
+            RedisAuthenticator(const std::string &passwd)
+                    : passwd_(passwd) {}
 
-    int GenerateCredential(std::string* auth_str) const;
+            int GenerateCredential(std::string *auth_str) const;
 
-    int VerifyCredential(const std::string&, const flare::base::end_point&,
-                         flare::rpc::AuthContext*) const {
-        return 0;
-    }
+            int VerifyCredential(const std::string &, const flare::base::end_point &,
+                                 flare::rpc::AuthContext *) const {
+                return 0;
+            }
 
-private:
-    const std::string passwd_;
-};
+        private:
+            const std::string passwd_;
+        };
 
-}  // namespace policy
+    }  // namespace policy
 }  // namespace flare::rpc
 
 #endif  // FLARE_RPC_POLICY_COUCHBASE_AUTHENTICATOR_H_

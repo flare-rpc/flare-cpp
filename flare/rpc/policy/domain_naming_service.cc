@@ -63,7 +63,7 @@ namespace flare::rpc {
                 } else if (*end != '\0') {
                     if (*end != '/') {
                         FLARE_LOG(ERROR) << "Invalid content=`" << end << "' after port="
-                                   << port << " in `" << dns_name << '\'';
+                                         << port << " in `" << dns_name << '\'';
                         return -1;
                     }
                     // Drop path and other stuff.
@@ -130,7 +130,7 @@ namespace flare::rpc {
                     servers->push_back(ServerNode(point, std::string()));
                 } else {
                     FLARE_LOG(WARNING) << "Found address of unsupported protocol="
-                                 << result->h_addrtype;
+                                       << result->h_addrtype;
                 }
             }
             return 0;

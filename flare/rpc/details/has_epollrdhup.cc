@@ -32,40 +32,40 @@
 
 namespace flare::rpc {
 
-static unsigned int check_epollrdhup() {
-    flare::base::fd_guard epfd(epoll_create(16));
-    if (epfd < 0) {
-        return 0;
+    static unsigned int check_epollrdhup() {
+        flare::base::fd_guard epfd(epoll_create(16));
+        if (epfd < 0) {
+            return 0;
+        }
+        flare::base::fd_guard fds[2];
+        if (socketpair(AF_UNIX, SOCK_STREAM, 0, (int*)fds) < 0) {
+            return 0;
+        }
+        epoll_event evt = { static_cast<uint32_t>(EPOLLIN | EPOLLRDHUP | EPOLLET),
+                            { NULL }};
+        if (epoll_ctl(epfd, EPOLL_CTL_ADD, fds[0], &evt) < 0) {
+            return 0;
+        }
+        if (close(fds[1].release()) < 0) {
+            return 0;
+        }
+        epoll_event e;
+        int n;
+        while ((n = epoll_wait(epfd, &e, 1, -1)) == 0);
+        if (n < 0) {
+            return 0;
+        }
+        return (e.events & EPOLLRDHUP) ? EPOLLRDHUP : static_cast<EPOLL_EVENTS>(0);
     }
-    flare::base::fd_guard fds[2];
-    if (socketpair(AF_UNIX, SOCK_STREAM, 0, (int*)fds) < 0) {
-        return 0;
-    }
-    epoll_event evt = { static_cast<uint32_t>(EPOLLIN | EPOLLRDHUP | EPOLLET),
-                        { NULL }};
-    if (epoll_ctl(epfd, EPOLL_CTL_ADD, fds[0], &evt) < 0) {
-        return 0;
-    }
-    if (close(fds[1].release()) < 0) {
-        return 0;
-    }
-    epoll_event e;
-    int n;
-    while ((n = epoll_wait(epfd, &e, 1, -1)) == 0);
-    if (n < 0) {
-        return 0;
-    }
-    return (e.events & EPOLLRDHUP) ? EPOLLRDHUP : static_cast<EPOLL_EVENTS>(0);
-}
 
-extern const unsigned int has_epollrdhup = check_epollrdhup();
+    extern const unsigned int has_epollrdhup = check_epollrdhup();
 
 } // namespace flare::rpc
 
 #else
 
 namespace flare::rpc {
-extern const unsigned int has_epollrdhup = false;
+    extern const unsigned int has_epollrdhup = false;
 }
 
 #endif // defined(FLARE_PLATFORM_LINUX)

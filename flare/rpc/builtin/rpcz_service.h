@@ -25,40 +25,40 @@
 
 namespace flare::rpc {
 
-class RpczService : public rpcz, public Tabbed {
-public:
-    void enable(::google::protobuf::RpcController* cntl_base,
-                const ::flare::rpc::RpczRequest* request,
-                ::flare::rpc::RpczResponse* response,
-                ::google::protobuf::Closure* done);
+    class RpczService : public rpcz, public Tabbed {
+    public:
+        void enable(::google::protobuf::RpcController *cntl_base,
+                    const ::flare::rpc::RpczRequest *request,
+                    ::flare::rpc::RpczResponse *response,
+                    ::google::protobuf::Closure *done);
 
-    void disable(::google::protobuf::RpcController* cntl_base,
-                 const ::flare::rpc::RpczRequest* request,
-                 ::flare::rpc::RpczResponse* response,
-                 ::google::protobuf::Closure* done);
+        void disable(::google::protobuf::RpcController *cntl_base,
+                     const ::flare::rpc::RpczRequest *request,
+                     ::flare::rpc::RpczResponse *response,
+                     ::google::protobuf::Closure *done);
 
-    void stats(::google::protobuf::RpcController* cntl_base,
-               const ::flare::rpc::RpczRequest* request,
-               ::flare::rpc::RpczResponse* response,
-               ::google::protobuf::Closure* done);
+        void stats(::google::protobuf::RpcController *cntl_base,
+                   const ::flare::rpc::RpczRequest *request,
+                   ::flare::rpc::RpczResponse *response,
+                   ::google::protobuf::Closure *done);
 
-    void hex_log_id(::google::protobuf::RpcController* cntl_base,
-                    const ::flare::rpc::RpczRequest* request,
-                    ::flare::rpc::RpczResponse* response,
-                    ::google::protobuf::Closure* done);
+        void hex_log_id(::google::protobuf::RpcController *cntl_base,
+                        const ::flare::rpc::RpczRequest *request,
+                        ::flare::rpc::RpczResponse *response,
+                        ::google::protobuf::Closure *done);
 
-    void dec_log_id(::google::protobuf::RpcController* cntl_base,
-                    const ::flare::rpc::RpczRequest* request,
-                    ::flare::rpc::RpczResponse* response,
-                    ::google::protobuf::Closure* done);
+        void dec_log_id(::google::protobuf::RpcController *cntl_base,
+                        const ::flare::rpc::RpczRequest *request,
+                        ::flare::rpc::RpczResponse *response,
+                        ::google::protobuf::Closure *done);
 
-    void default_method(::google::protobuf::RpcController* cntl_base,
-                        const ::flare::rpc::RpczRequest* request,
-                        ::flare::rpc::RpczResponse* response,
-                        ::google::protobuf::Closure* done);
+        void default_method(::google::protobuf::RpcController *cntl_base,
+                            const ::flare::rpc::RpczRequest *request,
+                            ::flare::rpc::RpczResponse *response,
+                            ::google::protobuf::Closure *done);
 
-    void GetTabInfo(flare::rpc::TabInfoList*) const;
-};
+        void GetTabInfo(flare::rpc::TabInfoList *) const;
+    };
 
 } // namespace flare::rpc
 

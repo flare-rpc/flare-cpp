@@ -60,7 +60,7 @@ namespace flare::rpc {
         }
         if (idle_timeout_sec > 0) {
             if (fiber_start_background(&_close_idle_tid, NULL,
-                                         CloseIdleConnections, this) != 0) {
+                                       CloseIdleConnections, this) != 0) {
                 FLARE_LOG(FATAL) << "Fail to start fiber";
                 return -1;
             }
@@ -146,13 +146,13 @@ namespace flare::rpc {
     int Acceptor::Initialize() {
         if (_socket_map.init(INITIAL_CONNECTION_CAP) != 0) {
             FLARE_LOG(FATAL) << "Fail to initialize FlatMap, size="
-                       << INITIAL_CONNECTION_CAP;
+                             << INITIAL_CONNECTION_CAP;
             return -1;
         }
         return 0;
     }
 
-// NOTE: Join() can happen before StopAccept()
+    // NOTE: Join() can happen before StopAccept()
     void Acceptor::Join() {
         std::unique_lock<std::mutex> mu(_map_mutex);
         if (_status != STOPPING && _status != RUNNING) {  // no need to join.
@@ -295,7 +295,7 @@ namespace flare::rpc {
                 }
                 if (!is_running) {
                     FLARE_LOG(WARNING) << "Acceptor on fd=" << acception->fd()
-                                 << " has been stopped, discard newly created " << *sock;
+                                       << " has been stopped, discard newly created " << *sock;
                     sock->SetFailed(ELOGOFF, "Acceptor on fd=%d has been stopped, "
                                              "discard newly created %s", acception->fd(),
                                     sock->description().c_str());

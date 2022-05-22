@@ -26,10 +26,10 @@
 
 namespace flare::rpc {
 
-// Start health check for socket id after delay_ms.
-// If delay_ms <= 0, HealthCheck would be started
-// immediately.
-void StartHealthCheck(SocketId id, int64_t delay_ms);
+    // Start health check for socket id after delay_ms.
+    // If delay_ms <= 0, HealthCheck would be started
+    // immediately.
+    void StartHealthCheck(SocketId id, int64_t delay_ms);
 
 } // namespace flare::rpc
 

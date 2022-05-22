@@ -51,7 +51,7 @@ namespace flare::rpc {
 
     AdaptiveMaxConcurrency::AdaptiveMaxConcurrency(const std::string_view &value)
             : _max_concurrency(0) {
-        int64_t max_concurrency ;
+        int64_t max_concurrency;
         if (flare::simple_atoi(value, &max_concurrency)) {
             operator=(max_concurrency);
         } else {

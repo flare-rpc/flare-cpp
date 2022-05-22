@@ -24,13 +24,13 @@
 
 namespace flare::rpc {
 
-class DirService : public dir {
-public:
-    void default_method(::google::protobuf::RpcController* cntl_base,
-                        const ::flare::rpc::DirRequest* request,
-                        ::flare::rpc::DirResponse* response,
-                        ::google::protobuf::Closure* done);
-};
+    class DirService : public dir {
+    public:
+        void default_method(::google::protobuf::RpcController *cntl_base,
+                            const ::flare::rpc::DirRequest *request,
+                            ::flare::rpc::DirResponse *response,
+                            ::google::protobuf::Closure *done);
+    };
 
 } // namespace flare::rpc
 

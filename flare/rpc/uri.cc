@@ -99,11 +99,11 @@ namespace flare::rpc {
         return host_end;
     }
 
-// valid characters in URL
-// https://datatracker.ietf.org/doc/html/rfc3986#section-2.1
-// https://datatracker.ietf.org/doc/html/rfc3986#section-2.3
-// https://datatracker.ietf.org/doc/html/rfc3986#section-2.4
-// space is not allowed by rfc3986, but allowed by flare
+    // valid characters in URL
+    // https://datatracker.ietf.org/doc/html/rfc3986#section-2.1
+    // https://datatracker.ietf.org/doc/html/rfc3986#section-2.3
+    // https://datatracker.ietf.org/doc/html/rfc3986#section-2.4
+    // space is not allowed by rfc3986, but allowed by flare
     static bool is_valid_char(char c) {
         static const std::unordered_set<char> other_valid_char = {
                 ':', '/', '?', '#', '[', ']', '@', '!', '$', '&',

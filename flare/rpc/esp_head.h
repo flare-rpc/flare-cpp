@@ -21,22 +21,22 @@
 namespace flare::rpc {
 
 #pragma pack(push, r1, 1)
-union EspAddress {
-    uint64_t addr;
-    struct {
-        uint16_t stub;
-        uint16_t port;
-        uint32_t ip;
+    union EspAddress {
+        uint64_t addr;
+        struct {
+            uint16_t stub;
+            uint16_t port;
+            uint32_t ip;
+        };
     };
-};
 
-struct EspHead {
-    EspAddress from;
-    EspAddress to;
-    uint32_t msg;
-    uint64_t msg_id;
-    int body_len;
-};
+    struct EspHead {
+        EspAddress from;
+        EspAddress to;
+        uint32_t msg;
+        uint64_t msg_id;
+        int body_len;
+    };
 #pragma pack(pop, r1)
 
 } // namespace flare::rpc

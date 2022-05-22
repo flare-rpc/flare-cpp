@@ -23,38 +23,39 @@
 #include "flare/rpc/builtin/token_service.h"
 
 namespace flare::fiber_internal {
-void token_status(fiber_token_t id, std::ostream& os);
-void token_pool_status(std::ostream& os);
+    void token_status(fiber_token_t id, std::ostream &os);
+
+    void token_pool_status(std::ostream &os);
 }
 
 
 namespace flare::rpc {
 
-void TokenService::default_method(::google::protobuf::RpcController* cntl_base,
-                                const ::flare::rpc::TokenRequest*,
-                                ::flare::rpc::TokenResponse*,
-                                ::google::protobuf::Closure* done) {
-    ClosureGuard done_guard(done);
-    Controller *cntl = static_cast<Controller*>(cntl_base);
-    cntl->http_response().set_content_type("text/plain");
-    flare::cord_buf_builder os;
-    const std::string& constraint = cntl->http_request().unresolved_path();
-    
-    if (constraint.empty()) {
-        os << "# Use /token/<call_id>\n";
-        flare::fiber_internal::token_pool_status(os);
-    } else {
-        char* endptr = NULL;
-        fiber_token_t id = { strtoull(constraint.c_str(), &endptr, 10) };
-        if (*endptr == '\0' || *endptr == '/') {
-            flare::fiber_internal::token_status(id, os);
+    void TokenService::default_method(::google::protobuf::RpcController *cntl_base,
+                                      const ::flare::rpc::TokenRequest *,
+                                      ::flare::rpc::TokenResponse *,
+                                      ::google::protobuf::Closure *done) {
+        ClosureGuard done_guard(done);
+        Controller *cntl = static_cast<Controller *>(cntl_base);
+        cntl->http_response().set_content_type("text/plain");
+        flare::cord_buf_builder os;
+        const std::string &constraint = cntl->http_request().unresolved_path();
+
+        if (constraint.empty()) {
+            os << "# Use /token/<call_id>\n";
+            flare::fiber_internal::token_pool_status(os);
         } else {
-            cntl->SetFailed(ENOMETHOD, "path=%s is not a fiber_token",
-                            constraint.c_str());
-            return;
+            char *endptr = NULL;
+            fiber_token_t id = {strtoull(constraint.c_str(), &endptr, 10)};
+            if (*endptr == '\0' || *endptr == '/') {
+                flare::fiber_internal::token_status(id, os);
+            } else {
+                cntl->SetFailed(ENOMETHOD, "path=%s is not a fiber_token",
+                                constraint.c_str());
+                return;
+            }
         }
+        os.move_to(cntl->response_attachment());
     }
-    os.move_to(cntl->response_attachment());
-}
 
 } // namespace flare::rpc

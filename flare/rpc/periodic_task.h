@@ -21,26 +21,28 @@
 
 namespace flare::rpc {
 
-// Override OnTriggeringTask() with code that needs to be periodically run. If
-// the task is completed, the method should return false; Otherwise the method
-// should return true and set `next_abstime' to the time that the task should
-// be run next time.
-// Each call to OnTriggeringTask() is run in a separated fiber which can be
-// suspended. To preserve states between different calls, put the states as
-// fields of (subclass of) PeriodicTask.
-// If any error occurs or OnTriggeringTask() returns false, the task is called
-// with OnDestroyingTask() and will not be scheduled anymore.
-class PeriodicTask {
-public:
-    virtual ~PeriodicTask();
-    virtual bool OnTriggeringTask(timespec* next_abstime) = 0;
-    virtual void OnDestroyingTask() = 0;
-};
+    // Override OnTriggeringTask() with code that needs to be periodically run. If
+    // the task is completed, the method should return false; Otherwise the method
+    // should return true and set `next_abstime' to the time that the task should
+    // be run next time.
+    // Each call to OnTriggeringTask() is run in a separated fiber which can be
+    // suspended. To preserve states between different calls, put the states as
+    // fields of (subclass of) PeriodicTask.
+    // If any error occurs or OnTriggeringTask() returns false, the task is called
+    // with OnDestroyingTask() and will not be scheduled anymore.
+    class PeriodicTask {
+    public:
+        virtual ~PeriodicTask();
 
-class PeriodicTaskManager {
-public:
-    static void StartTaskAt(PeriodicTask* task, const timespec& abstime);
-};
+        virtual bool OnTriggeringTask(timespec *next_abstime) = 0;
+
+        virtual void OnDestroyingTask() = 0;
+    };
+
+    class PeriodicTaskManager {
+    public:
+        static void StartTaskAt(PeriodicTask *task, const timespec &abstime);
+    };
 
 
 } // namespace flare::rpc

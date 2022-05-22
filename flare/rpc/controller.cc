@@ -107,7 +107,7 @@ namespace flare::rpc {
 
     static const int RETRY_AVOIDANCE = 8;
 
-// Defined in parallel_channel.cpp
+    // Defined in parallel_channel.cpp
     void DestroyParallelChannelDone(google::protobuf::Closure *c);
 
     const Controller *GetSubControllerOfParallelChannel(
@@ -327,8 +327,8 @@ namespace flare::rpc {
     void Controller::set_max_retry(int max_retry) {
         if (max_retry > MAX_RETRY_COUNT) {
             FLARE_LOG(WARNING) << "Retry count can't be larger than "
-                         << MAX_RETRY_COUNT << ", round it to "
-                         << MAX_RETRY_COUNT;
+                               << MAX_RETRY_COUNT << ", round it to "
+                               << MAX_RETRY_COUNT;
             _max_retry = MAX_RETRY_COUNT;
         } else {
             _max_retry = max_retry;
@@ -355,8 +355,8 @@ namespace flare::rpc {
 
     void Controller::StartCancel() {
         FLARE_LOG(FATAL) << "You must call flare::rpc::StartCancel(id) instead!"
-                      " because this function is racing with ~Controller() in "
-                      " asynchronous calls.";
+                            " because this function is racing with ~Controller() in "
+                            " asynchronous calls.";
     }
 
     static const char HEX_ALPHA[] = "0123456789ABCDEF";
@@ -380,7 +380,7 @@ namespace flare::rpc {
             _error_text.push_back(']');
         } else {
             flare::string_appendf(&_error_text, "[%s:%d]",
-                                        flare::base::my_ip_cstr(), _server->listen_address().port);
+                                  flare::base::my_ip_cstr(), _server->listen_address().port);
         }
     }
 
@@ -683,7 +683,7 @@ namespace flare::rpc {
             // (or user's done won't be called) until this fiber finishes
             fiber_id_t bt;
             fiber_attribute attr = (FLAGS_usercode_in_pthread ?
-                                   FIBER_ATTR_PTHREAD : FIBER_ATTR_NORMAL);
+                                    FIBER_ATTR_PTHREAD : FIBER_ATTR_NORMAL);
             _tmp_completion_info = info;
             if (fiber_start_background(&bt, &attr, RunEndRPC, this) != 0) {
                 FLARE_LOG(FATAL) << "Fail to start fiber";
@@ -848,10 +848,10 @@ namespace flare::rpc {
             // does not respond before _unfinished_call.
             if (_unfinished_call == NULL) {
                 FLARE_CHECK(false) << "A previous non-backup request responded, cid="
-                             << info.id << " current_cid=" << current_id()
-                             << " initial_cid=" << _correlation_id
-                             << " stream_user_data=" << _current_call.stream_user_data
-                             << " sending_sock=" << _current_call.sending_sock.get();
+                                   << info.id << " current_cid=" << current_id()
+                                   << " initial_cid=" << _correlation_id
+                                   << " stream_user_data=" << _current_call.stream_user_data
+                                   << " sending_sock=" << _current_call.sending_sock.get();
             }
             _current_call.OnComplete(this, ECANCELED, false, false);
             if (_unfinished_call != NULL) {
@@ -1191,7 +1191,7 @@ namespace flare::rpc {
     void Controller::set_auth_context(const AuthContext *ctx) {
         if (_auth_context != NULL) {
             FLARE_LOG(FATAL) << "Impossible! This function is supposed to be called "
-                          "only once when verification succeeds in server side";
+                                "only once when verification succeeds in server side";
             return;
         }
         // Ownership is belong to `Socket' instead of `Controller'

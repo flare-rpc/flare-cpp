@@ -26,101 +26,111 @@
 
 namespace flare::rpc {
 
-class Server;
-class MethodStatus;
-class StatusService;
-namespace policy {
-void ProcessNsheadRequest(InputMessageBase* msg_base);
-}
+    class Server;
 
-// The continuation of request processing. Namely send response back to client.
-// NOTE: you DON'T need to inherit this class or create instance of this class.
-class NsheadClosure : public google::protobuf::Closure {
-public:
-    explicit NsheadClosure(void* additional_space);
+    class MethodStatus;
 
-    // [Required] Call this to send response back to the client.
-    void Run();
+    class StatusService;
+    namespace policy {
+        void ProcessNsheadRequest(InputMessageBase *msg_base);
+    }
 
-    // [Optional] Set the full method name. If unset, use name of the service.
-    void SetMethodName(const std::string& full_method_name);
-    
-    // The space required by subclass at NsheadServiceOptions. subclass may
-    // utilizes this feature to save the cost of allocating closure separately.
-    // If subclass does not require space, this return value is NULL.
-    void* additional_space() { return _additional_space; }
+    // The continuation of request processing. Namely send response back to client.
+    // NOTE: you DON'T need to inherit this class or create instance of this class.
+    class NsheadClosure : public google::protobuf::Closure {
+    public:
+        explicit NsheadClosure(void *additional_space);
 
-    int64_t received_us() const { return _received_us; }
+        // [Required] Call this to send response back to the client.
+        void Run();
 
-    // Don't send response back, used by MIMO.
-    void DoNotRespond();
+        // [Optional] Set the full method name. If unset, use name of the service.
+        void SetMethodName(const std::string &full_method_name);
 
-private:
-friend void policy::ProcessNsheadRequest(InputMessageBase* msg_base);
-friend class DeleteNsheadClosure;
-    // Only callable by Run().
-    ~NsheadClosure();
+        // The space required by subclass at NsheadServiceOptions. subclass may
+        // utilizes this feature to save the cost of allocating closure separately.
+        // If subclass does not require space, this return value is NULL.
+        void *additional_space() { return _additional_space; }
 
-    const Server* _server;
-    int64_t _received_us;
-    NsheadMessage _request;
-    NsheadMessage _response;
-    bool _do_respond;
-    void* _additional_space;
-    Controller _controller;
-};
+        int64_t received_us() const { return _received_us; }
 
-struct NsheadServiceOptions {
-    NsheadServiceOptions() : generate_status(true), additional_space(0) {}
-    NsheadServiceOptions(bool generate_status2, size_t additional_space2)
-        : generate_status(generate_status2)
-        , additional_space(additional_space2) {}
+        // Don't send response back, used by MIMO.
+        void DoNotRespond();
 
-    bool generate_status;
-    size_t additional_space;
-};
+    private:
+        friend void policy::ProcessNsheadRequest(InputMessageBase *msg_base);
 
-// Inherit this class to let flare server understands nshead requests.
-class NsheadService : public Describable {
-public:
-    NsheadService();
-    NsheadService(const NsheadServiceOptions&);
-    virtual ~NsheadService();
+        friend class DeleteNsheadClosure;
 
-    // Implement this method to handle nshead requests. Notice that this
-    // method can be called with a failed Controller(something wrong with the
-    // request before calling this method), in which case the implemenetation
-    // shall send specific response with error information back to client.
-    // Parameters:
-    //   server      The server receiving the request.
-    //   controller  per-rpc settings.
-    //   request     The nshead request received.
-    //   response    The nshead response that you should fill in.
-    //   done        You must call done->Run() to end the processing.
-    virtual void ProcessNsheadRequest(const Server& server,
-                                      Controller* controller,
-                                      const NsheadMessage& request,
-                                      NsheadMessage* response,
-                                      NsheadClosure* done) = 0;
+        // Only callable by Run().
+        ~NsheadClosure();
 
-    // Put descriptions into the stream.
-    void Describe(std::ostream &os, const DescribeOptions&) const;
+        const Server *_server;
+        int64_t _received_us;
+        NsheadMessage _request;
+        NsheadMessage _response;
+        bool _do_respond;
+        void *_additional_space;
+        Controller _controller;
+    };
 
-private:
-FLARE_DISALLOW_COPY_AND_ASSIGN(NsheadService);
-friend class NsheadClosure;
-friend void policy::ProcessNsheadRequest(InputMessageBase* msg_base);
-friend class StatusService;
-friend class Server;
+    struct NsheadServiceOptions {
+        NsheadServiceOptions() : generate_status(true), additional_space(0) {}
 
-private:
-    void Expose(const std::string_view& prefix);
-    
-    // Tracking status of non NsheadPbService
-    MethodStatus* _status;
-    size_t _additional_space;
-    std::string _cached_name;
-};
+        NsheadServiceOptions(bool generate_status2, size_t additional_space2)
+                : generate_status(generate_status2), additional_space(additional_space2) {}
+
+        bool generate_status;
+        size_t additional_space;
+    };
+
+    // Inherit this class to let flare server understands nshead requests.
+    class NsheadService : public Describable {
+    public:
+        NsheadService();
+
+        NsheadService(const NsheadServiceOptions &);
+
+        virtual ~NsheadService();
+
+        // Implement this method to handle nshead requests. Notice that this
+        // method can be called with a failed Controller(something wrong with the
+        // request before calling this method), in which case the implemenetation
+        // shall send specific response with error information back to client.
+        // Parameters:
+        //   server      The server receiving the request.
+        //   controller  per-rpc settings.
+        //   request     The nshead request received.
+        //   response    The nshead response that you should fill in.
+        //   done        You must call done->Run() to end the processing.
+        virtual void ProcessNsheadRequest(const Server &server,
+                                          Controller *controller,
+                                          const NsheadMessage &request,
+                                          NsheadMessage *response,
+                                          NsheadClosure *done) = 0;
+
+        // Put descriptions into the stream.
+        void Describe(std::ostream &os, const DescribeOptions &) const;
+
+    private:
+        FLARE_DISALLOW_COPY_AND_ASSIGN(NsheadService);
+
+        friend class NsheadClosure;
+
+        friend void policy::ProcessNsheadRequest(InputMessageBase *msg_base);
+
+        friend class StatusService;
+
+        friend class Server;
+
+    private:
+        void Expose(const std::string_view &prefix);
+
+        // Tracking status of non NsheadPbService
+        MethodStatus *_status;
+        size_t _additional_space;
+        std::string _cached_name;
+    };
 
 } // namespace flare::rpc
 

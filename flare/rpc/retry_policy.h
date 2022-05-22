@@ -24,54 +24,54 @@
 
 namespace flare::rpc {
 
-// Inherit this class to customize when the RPC should be retried.
-class RetryPolicy {
-public:
-    virtual ~RetryPolicy();
-    
-    // Returns true if the RPC represented by `controller' should be retried.
-    // [Example]
-    // By default, HTTP errors are not retried, but you need to retry
-    // HTTP_STATUS_FORBIDDEN in your app. You can implement the RetryPolicy
-    // as follows:
-    //
-    //   class MyRetryPolicy : public flare::rpc::RetryPolicy {
-    //   public:
-    //     bool DoRetry(const flare::rpc::Controller* cntl) const {
-    //       if (cntl->ErrorCode() == 0) { // don't retry successful RPC
-    //         return false;
-    //       }
-    //       if (cntl->ErrorCode() == flare::rpc::EHTTP && // http errors
-    //           cntl->http_response().status_code() == flare::rpc::HTTP_STATUS_FORBIDDEN) {
-    //         return true;
-    //       }
-    //       // Leave other cases to default.
-    //       return flare::rpc::DefaultRetryPolicy()->DoRetry(cntl);
-    //     }
-    //   };
-    // 
-    // You can retry unqualified responses even if the RPC was successful
-    //   class MyRetryPolicy : public flare::rpc::RetryPolicy {
-    //   public:
-    //     bool DoRetry(const flare::rpc::Controller* cntl) const {
-    //       if (cntl->ErrorCode() == 0) { // successful RPC
-    //         if (!is_qualified(cntl->response())) {
-    //           cntl->response()->Clear();  // reset the response
-    //           return true;
-    //         }
-    //         return false;
-    //       }
-    //       // Leave other cases to default.
-    //       return flare::rpc::DefaultRetryPolicy()->DoRetry(cntl);
-    //     }
-    //   };
-    virtual bool DoRetry(const Controller* controller) const = 0;
-    //                                                   ^
-    //                                don't forget the const modifier
-};
+    // Inherit this class to customize when the RPC should be retried.
+    class RetryPolicy {
+    public:
+        virtual ~RetryPolicy();
 
-// Get the RetryPolicy used by flare.
-const RetryPolicy* DefaultRetryPolicy();
+        // Returns true if the RPC represented by `controller' should be retried.
+        // [Example]
+        // By default, HTTP errors are not retried, but you need to retry
+        // HTTP_STATUS_FORBIDDEN in your app. You can implement the RetryPolicy
+        // as follows:
+        //
+        //   class MyRetryPolicy : public flare::rpc::RetryPolicy {
+        //   public:
+        //     bool DoRetry(const flare::rpc::Controller* cntl) const {
+        //       if (cntl->ErrorCode() == 0) { // don't retry successful RPC
+        //         return false;
+        //       }
+        //       if (cntl->ErrorCode() == flare::rpc::EHTTP && // http errors
+        //           cntl->http_response().status_code() == flare::rpc::HTTP_STATUS_FORBIDDEN) {
+        //         return true;
+        //       }
+        //       // Leave other cases to default.
+        //       return flare::rpc::DefaultRetryPolicy()->DoRetry(cntl);
+        //     }
+        //   };
+        //
+        // You can retry unqualified responses even if the RPC was successful
+        //   class MyRetryPolicy : public flare::rpc::RetryPolicy {
+        //   public:
+        //     bool DoRetry(const flare::rpc::Controller* cntl) const {
+        //       if (cntl->ErrorCode() == 0) { // successful RPC
+        //         if (!is_qualified(cntl->response())) {
+        //           cntl->response()->Clear();  // reset the response
+        //           return true;
+        //         }
+        //         return false;
+        //       }
+        //       // Leave other cases to default.
+        //       return flare::rpc::DefaultRetryPolicy()->DoRetry(cntl);
+        //     }
+        //   };
+        virtual bool DoRetry(const Controller *controller) const = 0;
+        //                                                   ^
+        //                                don't forget the const modifier
+    };
+
+    // Get the RetryPolicy used by flare.
+    const RetryPolicy *DefaultRetryPolicy();
 
 } // namespace flare::rpc
 

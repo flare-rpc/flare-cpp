@@ -25,15 +25,15 @@
 
 namespace flare::rpc {
 
-class VarsService : public vars, public Tabbed {
-public:
-    void default_method(::google::protobuf::RpcController* cntl_base,
-                        const ::flare::rpc::VarsRequest* request,
-                        ::flare::rpc::VarsResponse* response,
-                        ::google::protobuf::Closure* done);
+    class VarsService : public vars, public Tabbed {
+    public:
+        void default_method(::google::protobuf::RpcController *cntl_base,
+                            const ::flare::rpc::VarsRequest *request,
+                            ::flare::rpc::VarsResponse *response,
+                            ::google::protobuf::Closure *done);
 
-    void GetTabInfo(TabInfoList* info_list) const;
-};
+        void GetTabInfo(TabInfoList *info_list) const;
+    };
 
 } // namespace flare::rpc
 

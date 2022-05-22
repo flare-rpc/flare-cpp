@@ -64,7 +64,7 @@ namespace flare::rpc {
 
     namespace policy {
 
-// Used in rtmp.cpp, don't be static
+        // Used in rtmp.cpp, don't be static
         int WriteWithoutOvercrowded(Socket *s, SocketMessagePtr<> &msg) {
             Socket::WriteOptions wopt;
             wopt.ignore_eovercrowded = true;
@@ -111,7 +111,7 @@ namespace flare::rpc {
             return messagetype2str((RtmpMessageType) t);
         }
 
-// Unchangable constants required by RTMP
+        // Unchangable constants required by RTMP
         static const uint32_t RTMP_INITIAL_CHUNK_SIZE = 128;
         static const uint8_t RTMP_DEFAULT_VERSION = 3;
         static const size_t RTMP_HANDSHAKE_SIZE0 = 1;
@@ -120,9 +120,9 @@ namespace flare::rpc {
         static const char *const SIMPLIFIED_RTMP_MAGIC_NUMBER = "BDMS";
         static const size_t MAGIC_NUMBER_SIZE = 4; /* magic number */
 
-// ========== The handshaking described in RTMP spec ==========
+        // ========== The handshaking described in RTMP spec ==========
 
-// The random data for handshaking
+        // The random data for handshaking
         static flare::cord_buf *s_rtmp_handshake_server_random = NULL;
         static pthread_once_t s_sr_once = PTHREAD_ONCE_INIT;
 
@@ -157,15 +157,15 @@ namespace flare::rpc {
             return *s_rtmp_handshake_client_random;
         }
 
-// For timestamps in simple handshaking.
+        // For timestamps in simple handshaking.
         static uint32_t GetRtmpTimestamp() {
             return 0;
         }
 
-// ========== Proprietary handshaking used by Adobe =========
+        // ========== Proprietary handshaking used by Adobe =========
         namespace adobe_hs {
 
-// Modified from code in SRS2 (src/protocol/srs_rtmp_handshake.cpp:94)
+            // Modified from code in SRS2 (src/protocol/srs_rtmp_handshake.cpp:94)
             int openssl_HMACsha256(const void *key, int key_size,
                                    const void *data, int data_size, void *digest) {
                 if (NULL == EVP_sha256) {
@@ -198,7 +198,7 @@ namespace flare::rpc {
                 return 0;
             }
 
-// 68bytes FMS key for signing the sever packets.
+            // 68bytes FMS key for signing the sever packets.
             static const uint8_t GenuineFMSKey[] = {
                     0x47, 0x65, 0x6e, 0x75, 0x69, 0x6e, 0x65, 0x20,
                     0x41, 0x64, 0x6f, 0x62, 0x65, 0x20, 0x46, 0x6c,
@@ -211,7 +211,7 @@ namespace flare::rpc {
                     0x93, 0xb8, 0xe6, 0x36, 0xcf, 0xeb, 0x31, 0xae
             }; // 68
 
-// 62bytes FlashPlayer key for signing the client packets.
+            // 62bytes FlashPlayer key for signing the client packets.
             static const uint8_t GenuineFPKey[] = {
                     0x47, 0x65, 0x6E, 0x75, 0x69, 0x6E, 0x65, 0x20,
                     0x41, 0x64, 0x6F, 0x62, 0x65, 0x20, 0x46, 0x6C,
@@ -226,7 +226,7 @@ namespace flare::rpc {
             static const uint32_t FP_VERSION = 0x80000702;
             static const uint32_t FMS_VERSION = 0x01000504;
 
-// A structure inside C1 or S1
+            // A structure inside C1 or S1
             class KeyBlock {
             public:
                 static const int SIZE = 764;
@@ -255,7 +255,7 @@ namespace flare::rpc {
                 char _buf[SIZE - 4];
             };
 
-// A structure inside C1 or S1
+            // A structure inside C1 or S1
             class DigestBlock {
             public:
                 static const int SIZE = 764;
@@ -290,7 +290,7 @@ namespace flare::rpc {
                 INVALID_SCHEMA, SCHEMA0, SCHEMA1
             };
 
-// Common part of C1 and S1.
+            // Common part of C1 and S1.
             class C1S1Base {
             public:
                 static const int SIZE = 1536;
@@ -332,7 +332,7 @@ namespace flare::rpc {
                 bool ComputeDigest(void *digest) const { return ComputeDigestBase(GenuineFMSKey, 36, digest); }
             };
 
-// The common part of C2 and S2.
+            // The common part of C2 and S2.
             class C2S2Base {
             public:
                 static const int SIZE = 1536;
@@ -372,7 +372,7 @@ namespace flare::rpc {
                 }
             };
 
-// ===== impl. =====
+            // ===== impl. =====
             void KeyBlock::Generate() {
                 _offset_data = flare::base::fast_rand() & 0xFFFFFFFF;
                 const uint8_t *p = (const uint8_t *) &_offset_data;
@@ -609,7 +609,7 @@ namespace flare::rpc {
 
         } // namespace adobe_hs
 
-// Get size of the basic header according to chunk stream id.
+        // Get size of the basic header according to chunk stream id.
         inline size_t GetBasicHeaderLength(uint32_t cs_id) {
             if (cs_id < 2) {
                 return 0;
@@ -624,7 +624,7 @@ namespace flare::rpc {
             }
         }
 
-// Write a basic header into buf and forward the buf.
+        // Write a basic header into buf and forward the buf.
         static void
         WriteBasicHeader(char **buf, RtmpChunkType chunk_type, uint32_t cs_id) {
             char *out = *buf;
@@ -645,10 +645,10 @@ namespace flare::rpc {
             *buf = out;
         }
 
-// Write all data in *buf into fd.
-// Returns 0 on success, -1 otherwise.
-// Writing *all* is possible because we only call this fn during handshaking
-// and connecting, the data in total is generally less than socket buffer.
+        // Write all data in *buf into fd.
+        // Returns 0 on success, -1 otherwise.
+        // Writing *all* is possible because we only call this fn during handshaking
+        // and connecting, the data in total is generally less than socket buffer.
         static int WriteAll(int fd, flare::cord_buf *buf) {
             while (!buf->empty()) {
                 ssize_t nw = buf->cut_into_file_descriptor(fd);
@@ -672,8 +672,8 @@ namespace flare::rpc {
             return 0;
         }
 
-// Send C0 C1 to the socket.
-// Used in rtmp.cpp
+        // Send C0 C1 to the socket.
+        // Used in rtmp.cpp
         int SendC0C1(int fd, bool *is_simple_handshake) {
             bool done_adobe_hs = false;
             flare::cord_buf tmp;
@@ -2198,7 +2198,7 @@ namespace flare::rpc {
             flare::container::intrusive_ptr<RtmpStreamBase> stream;
             if (!connection_context()->FindMessageStream(mh.stream_id, &stream)) {
                 FLARE_LOG_EVERY_SECOND(WARNING) << socket->remote_side()
-                                          << ": Fail to find stream_id=" << mh.stream_id;
+                                                << ": Fail to find stream_id=" << mh.stream_id;
                 return false;
             }
             stream->CallOnAudioMessage(&msg);
@@ -2230,7 +2230,7 @@ namespace flare::rpc {
             flare::container::intrusive_ptr<RtmpStreamBase> stream;
             if (!connection_context()->FindMessageStream(mh.stream_id, &stream)) {
                 FLARE_LOG_EVERY_SECOND(WARNING) << socket->remote_side()
-                                          << ": Fail to find stream_id=" << mh.stream_id;
+                                                << ": Fail to find stream_id=" << mh.stream_id;
                 return false;
             }
             stream->CallOnVideoMessage(&msg);
@@ -2271,7 +2271,7 @@ namespace flare::rpc {
                 flare::container::intrusive_ptr<RtmpStreamBase> stream;
                 if (!connection_context()->FindMessageStream(mh.stream_id, &stream)) {
                     FLARE_LOG_EVERY_SECOND(WARNING) << socket->remote_side()
-                                              << ": Fail to find stream_id=" << mh.stream_id;
+                                                    << ": Fail to find stream_id=" << mh.stream_id;
                     return false;
                 }
                 stream->CallOnMetaData(&metadata, name);
@@ -2290,7 +2290,7 @@ namespace flare::rpc {
                 flare::container::intrusive_ptr<RtmpStreamBase> stream;
                 if (!connection_context()->FindMessageStream(mh.stream_id, &stream)) {
                     FLARE_LOG_EVERY_SECOND(WARNING) << socket->remote_side()
-                                              << ": Fail to find stream_id=" << mh.stream_id;
+                                                    << ": Fail to find stream_id=" << mh.stream_id;
                     return false;
                 }
                 stream->CallOnCuePoint(&cuepoint);

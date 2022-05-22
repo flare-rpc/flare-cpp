@@ -23,44 +23,46 @@
 
 
 namespace flare::rpc {
-namespace policy {
+    namespace policy {
 
-// Diffie-Hellman key exchange
-class DHWrapper {
-public:
-    DHWrapper() : _pdh(NULL) {}
-    ~DHWrapper() { clear(); }
-    
-    // initialize dh, generate the public and private key.
-    // set `ensure_128bytes_public_key' to true to ensure public key is 128bytes
-    int initialize(bool ensure_128bytes_public_key = false);
+        // Diffie-Hellman key exchange
+        class DHWrapper {
+        public:
+            DHWrapper() : _pdh(NULL) {}
 
-    // copy the public key.
-    // @param pkey the bytes to copy the public key.
-    // @param pkey_size the max public key size, output the actual public key size.
-    // user should never ignore this size.
-    // @remark, when ensure_128bytes_public_key is true, the size always 128.
-    int copy_public_key(char* pkey, int* pkey_size) const;
+            ~DHWrapper() { clear(); }
 
-    // generate and copy the shared key.
-    // generate the shared key with peer public key.
-    // @param ppkey peer public key.
-    // @param ppkey_size the size of ppkey.
-    // @param skey the computed shared key.
-    // @param skey_size the max shared key size, output the actual shared key size.
-    // user should never ignore this size.
-    int copy_shared_key(const void* ppkey, int ppkey_size,
-                        void* skey, int* skey_size) const;
-    
-private:
-    int do_initialize();
-    void clear();
-    
-private:
-    DH* _pdh;
-};
+            // initialize dh, generate the public and private key.
+            // set `ensure_128bytes_public_key' to true to ensure public key is 128bytes
+            int initialize(bool ensure_128bytes_public_key = false);
 
-}  // namespace policy
+            // copy the public key.
+            // @param pkey the bytes to copy the public key.
+            // @param pkey_size the max public key size, output the actual public key size.
+            // user should never ignore this size.
+            // @remark, when ensure_128bytes_public_key is true, the size always 128.
+            int copy_public_key(char *pkey, int *pkey_size) const;
+
+            // generate and copy the shared key.
+            // generate the shared key with peer public key.
+            // @param ppkey peer public key.
+            // @param ppkey_size the size of ppkey.
+            // @param skey the computed shared key.
+            // @param skey_size the max shared key size, output the actual shared key size.
+            // user should never ignore this size.
+            int copy_shared_key(const void *ppkey, int ppkey_size,
+                                void *skey, int *skey_size) const;
+
+        private:
+            int do_initialize();
+
+            void clear();
+
+        private:
+            DH *_pdh;
+        };
+
+    }  // namespace policy
 } // namespace flare::rpc
 
 

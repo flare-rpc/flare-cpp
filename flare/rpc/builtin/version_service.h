@@ -25,19 +25,20 @@
 
 namespace flare::rpc {
 
-class Server;
+    class Server;
 
-class VersionService : public version {
-public:
-    explicit VersionService(Server* server) : _server(server) {}
-    
-    void default_method(::google::protobuf::RpcController* cntl_base,
-                        const ::flare::rpc::VersionRequest* request,
-                        ::flare::rpc::VersionResponse* response,
-                        ::google::protobuf::Closure* done);
-private:
-    Server* _server;
-};
+    class VersionService : public version {
+    public:
+        explicit VersionService(Server *server) : _server(server) {}
+
+        void default_method(::google::protobuf::RpcController *cntl_base,
+                            const ::flare::rpc::VersionRequest *request,
+                            ::flare::rpc::VersionResponse *response,
+                            ::google::protobuf::Closure *done);
+
+    private:
+        Server *_server;
+    };
 
 } // namespace flare::rpc
 

@@ -26,52 +26,52 @@
 
 namespace flare::rpc {
 
-class Server;
+    class Server;
 
-class HotspotsService : public hotspots, public Tabbed {
-public:
-    void cpu(::google::protobuf::RpcController* cntl_base,
-             const ::flare::rpc::HotspotsRequest* request,
-             ::flare::rpc::HotspotsResponse* response,
-             ::google::protobuf::Closure* done);
-    
-    void heap(::google::protobuf::RpcController* cntl_base,
-              const ::flare::rpc::HotspotsRequest* request,
-              ::flare::rpc::HotspotsResponse* response,
-              ::google::protobuf::Closure* done);
+    class HotspotsService : public hotspots, public Tabbed {
+    public:
+        void cpu(::google::protobuf::RpcController *cntl_base,
+                 const ::flare::rpc::HotspotsRequest *request,
+                 ::flare::rpc::HotspotsResponse *response,
+                 ::google::protobuf::Closure *done);
 
-    void growth(::google::protobuf::RpcController* cntl_base,
-                const ::flare::rpc::HotspotsRequest* request,
-                ::flare::rpc::HotspotsResponse* response,
-                ::google::protobuf::Closure* done);
+        void heap(::google::protobuf::RpcController *cntl_base,
+                  const ::flare::rpc::HotspotsRequest *request,
+                  ::flare::rpc::HotspotsResponse *response,
+                  ::google::protobuf::Closure *done);
 
-    void contention(::google::protobuf::RpcController* cntl_base,
-                    const ::flare::rpc::HotspotsRequest* request,
-                    ::flare::rpc::HotspotsResponse* response,
-                    ::google::protobuf::Closure* done);
+        void growth(::google::protobuf::RpcController *cntl_base,
+                    const ::flare::rpc::HotspotsRequest *request,
+                    ::flare::rpc::HotspotsResponse *response,
+                    ::google::protobuf::Closure *done);
 
-    void cpu_non_responsive(::google::protobuf::RpcController* cntl_base,
-                            const ::flare::rpc::HotspotsRequest* request,
-                            ::flare::rpc::HotspotsResponse* response,
-                            ::google::protobuf::Closure* done);
+        void contention(::google::protobuf::RpcController *cntl_base,
+                        const ::flare::rpc::HotspotsRequest *request,
+                        ::flare::rpc::HotspotsResponse *response,
+                        ::google::protobuf::Closure *done);
 
-    void heap_non_responsive(::google::protobuf::RpcController* cntl_base,
-                            const ::flare::rpc::HotspotsRequest* request,
-                            ::flare::rpc::HotspotsResponse* response,
-                            ::google::protobuf::Closure* done);
-    
-    void growth_non_responsive(::google::protobuf::RpcController* cntl_base,
-                               const ::flare::rpc::HotspotsRequest* request,
-                               ::flare::rpc::HotspotsResponse* response,
-                               ::google::protobuf::Closure* done);
+        void cpu_non_responsive(::google::protobuf::RpcController *cntl_base,
+                                const ::flare::rpc::HotspotsRequest *request,
+                                ::flare::rpc::HotspotsResponse *response,
+                                ::google::protobuf::Closure *done);
 
-    void contention_non_responsive(::google::protobuf::RpcController* cntl_base,
-                                   const ::flare::rpc::HotspotsRequest* request,
-                                   ::flare::rpc::HotspotsResponse* response,
-                                   ::google::protobuf::Closure* done);
+        void heap_non_responsive(::google::protobuf::RpcController *cntl_base,
+                                 const ::flare::rpc::HotspotsRequest *request,
+                                 ::flare::rpc::HotspotsResponse *response,
+                                 ::google::protobuf::Closure *done);
 
-    void GetTabInfo(flare::rpc::TabInfoList*) const;
-};
+        void growth_non_responsive(::google::protobuf::RpcController *cntl_base,
+                                   const ::flare::rpc::HotspotsRequest *request,
+                                   ::flare::rpc::HotspotsResponse *response,
+                                   ::google::protobuf::Closure *done);
+
+        void contention_non_responsive(::google::protobuf::RpcController *cntl_base,
+                                       const ::flare::rpc::HotspotsRequest *request,
+                                       ::flare::rpc::HotspotsResponse *response,
+                                       ::google::protobuf::Closure *done);
+
+        void GetTabInfo(flare::rpc::TabInfoList *) const;
+    };
 
 } // namespace flare::rpc
 

@@ -25,27 +25,28 @@
 
 namespace flare::rpc {
 
-class Server;
+    class Server;
 
-// Show DebugString of protobuf messages used in the server.
-//   /protobufs         : list all supported messages.
-//   /protobufs/<msg>/  : Show DebugString() of <msg>
+    // Show DebugString of protobuf messages used in the server.
+    //   /protobufs         : list all supported messages.
+    //   /protobufs/<msg>/  : Show DebugString() of <msg>
 
-class ProtobufsService : public protobufs {
-public:
-    explicit ProtobufsService(Server* server);
-    
-    void default_method(::google::protobuf::RpcController* cntl_base,
-                        const ::flare::rpc::ProtobufsRequest* request,
-                        ::flare::rpc::ProtobufsResponse* response,
-                        ::google::protobuf::Closure* done);
-private:
-    int Init();
-    
-    Server* _server;
-    typedef std::map<std::string, std::string> Map;
-    Map _map;
-};
+    class ProtobufsService : public protobufs {
+    public:
+        explicit ProtobufsService(Server *server);
+
+        void default_method(::google::protobuf::RpcController *cntl_base,
+                            const ::flare::rpc::ProtobufsRequest *request,
+                            ::flare::rpc::ProtobufsResponse *response,
+                            ::google::protobuf::Closure *done);
+
+    private:
+        int Init();
+
+        Server *_server;
+        typedef std::map<std::string, std::string> Map;
+        Map _map;
+    };
 
 } // namespace flare::rpc
 

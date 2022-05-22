@@ -26,13 +26,13 @@
 
 namespace flare::rpc {
 
-// Set the server address for reporting.
-// Currently only the first address will be saved.
-void SetTrackMeAddress(flare::base::end_point pt);
+    // Set the server address for reporting.
+    // Currently only the first address will be saved.
+    void SetTrackMeAddress(flare::base::end_point pt);
 
-// Call this function every second (or every several seconds) to send
-// TrackMeRequest to -trackme_server every TRACKME_INTERVAL seconds.
-void TrackMe();
+    // Call this function every second (or every several seconds) to send
+    // TrackMeRequest to -trackme_server every TRACKME_INTERVAL seconds.
+    void TrackMe();
 
 } // namespace flare::rpc
 

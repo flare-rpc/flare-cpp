@@ -25,20 +25,20 @@
 
 namespace flare::rpc {
 
-void HealthService::default_method(::google::protobuf::RpcController* cntl_base,
-                                   const ::flare::rpc::HealthRequest*,
-                                   ::flare::rpc::HealthResponse*,
-                                   ::google::protobuf::Closure* done) {
-    ClosureGuard done_guard(done);
-    Controller *cntl = static_cast<Controller*>(cntl_base);
-    const Server* server = cntl->server();
-    if (server->options().health_reporter) {
-        server->options().health_reporter->GenerateReport(
-            cntl, done_guard.release());
-    } else {
-        cntl->http_response().set_content_type("text/plain");
-        cntl->response_attachment().append("OK");
+    void HealthService::default_method(::google::protobuf::RpcController *cntl_base,
+                                       const ::flare::rpc::HealthRequest *,
+                                       ::flare::rpc::HealthResponse *,
+                                       ::google::protobuf::Closure *done) {
+        ClosureGuard done_guard(done);
+        Controller *cntl = static_cast<Controller *>(cntl_base);
+        const Server *server = cntl->server();
+        if (server->options().health_reporter) {
+            server->options().health_reporter->GenerateReport(
+                    cntl, done_guard.release());
+        } else {
+            cntl->http_response().set_content_type("text/plain");
+            cntl->response_attachment().append("OK");
+        }
     }
-}
 
 } // namespace flare::rpc

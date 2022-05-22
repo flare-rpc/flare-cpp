@@ -21,19 +21,19 @@
 
 namespace flare::rpc {
 
-// Copied from public/nshead/nshead.h which is essentially unchangable. (Or
-// even if it's changed, servers accepting new formats should also accept
-// older formats).
-static const unsigned int NSHEAD_MAGICNUM = 0xfb709394;
-struct nshead_t {
-    unsigned short id;
-    unsigned short version;       
-    unsigned int   log_id;
-    char           provider[16];
-    unsigned int   magic_num;
-    unsigned int   reserved;       
-    unsigned int   body_len;
-};
+    // Copied from public/nshead/nshead.h which is essentially unchangable. (Or
+    // even if it's changed, servers accepting new formats should also accept
+    // older formats).
+    static const unsigned int NSHEAD_MAGICNUM = 0xfb709394;
+    struct nshead_t {
+        unsigned short id;
+        unsigned short version;
+        unsigned int log_id;
+        char provider[16];
+        unsigned int magic_num;
+        unsigned int reserved;
+        unsigned int body_len;
+    };
 
 } // namespace flare::rpc
 

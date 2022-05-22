@@ -34,17 +34,17 @@
 
 namespace flare::rpc {
 
-// Request to redis.
-// Notice that you can pipeline multiple commands in one request and sent
-// them to ONE redis-server together.
-// Example:
-//   RedisRequest request;
-//   request.AddCommand("PING");
-//   RedisResponse response;
-//   channel.CallMethod(&controller, &request, &response, NULL/*done*/);
-//   if (!cntl.Failed()) {
-//       FLARE_LOG(INFO) << response.reply(0);
-//   }
+    // Request to redis.
+    // Notice that you can pipeline multiple commands in one request and sent
+    // them to ONE redis-server together.
+    // Example:
+    //   RedisRequest request;
+    //   request.AddCommand("PING");
+    //   RedisResponse response;
+    //   channel.CallMethod(&controller, &request, &response, NULL/*done*/);
+    //   if (!cntl.Failed()) {
+    //       FLARE_LOG(INFO) << response.reply(0);
+    //   }
     class RedisRequest : public ::google::protobuf::Message {
     public:
         RedisRequest();
@@ -112,8 +112,11 @@ namespace flare::rpc {
 
         // Protobuf methods.
         RedisRequest *New() const override;
+
 #if GOOGLE_PROTOBUF_VERSION >= 3006000
+
         RedisRequest *New(::google::protobuf::Arena *arena) const override;
+
 #endif
 
         void CopyFrom(const ::google::protobuf::Message &from) override;
@@ -162,9 +165,9 @@ namespace flare::rpc {
         mutable int _cached_size_;  // ByteSize
     };
 
-// Response from Redis.
-// Notice that a RedisResponse instance may contain multiple replies
-// due to pipelining.
+    // Response from Redis.
+    // Notice that a RedisResponse instance may contain multiple replies
+    // due to pipelining.
     class RedisResponse : public ::google::protobuf::Message {
     public:
         RedisResponse();
@@ -202,8 +205,11 @@ namespace flare::rpc {
         // implements Message ----------------------------------------------
 
         RedisResponse *New() const override;
+
 #if GOOGLE_PROTOBUF_VERSION >= 3006000
+
         RedisResponse *New(::google::protobuf::Arena *arena) const override;
+
 #endif
 
         void CopyFrom(const ::google::protobuf::Message &from) override;

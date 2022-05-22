@@ -24,19 +24,20 @@
 
 namespace flare::rpc {
 
-class Server;
+    class Server;
 
-class ListService : public list {
-public:
-    explicit ListService(Server* server) : _server(server) {}
-    
-    void default_method(::google::protobuf::RpcController* cntl_base,
-                        const ::flare::rpc::ListRequest* request,
-                        ::flare::rpc::ListResponse* response,
-                        ::google::protobuf::Closure* done);
-private:
-    Server* _server;
-};
+    class ListService : public list {
+    public:
+        explicit ListService(Server *server) : _server(server) {}
+
+        void default_method(::google::protobuf::RpcController *cntl_base,
+                            const ::flare::rpc::ListRequest *request,
+                            ::flare::rpc::ListResponse *response,
+                            ::google::protobuf::Closure *done);
+
+    private:
+        Server *_server;
+    };
 
 } // namespace flare::rpc
 

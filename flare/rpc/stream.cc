@@ -125,9 +125,9 @@ namespace flare::rpc {
         }
         if (!_remote_settings.writable()) {
             FLARE_LOG(WARNING) << "The remote side of Stream=" << id()
-                         << "->" << _remote_settings.stream_id()
-                         << "@" << _host_socket->remote_side()
-                         << " doesn't have a handler";
+                               << "->" << _remote_settings.stream_id()
+                               << "@" << _host_socket->remote_side()
+                               << " doesn't have a handler";
             errno = EBADF;
             return -1;
         }

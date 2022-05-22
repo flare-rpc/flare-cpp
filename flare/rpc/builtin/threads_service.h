@@ -25,13 +25,13 @@
 
 namespace flare::rpc {
 
-class ThreadsService : public threads {
-public:
-    void default_method(::google::protobuf::RpcController* cntl_base,
-                        const ::flare::rpc::ThreadsRequest* request,
-                        ::flare::rpc::ThreadsResponse* response,
-                        ::google::protobuf::Closure* done);
-};
+    class ThreadsService : public threads {
+    public:
+        void default_method(::google::protobuf::RpcController *cntl_base,
+                            const ::flare::rpc::ThreadsRequest *request,
+                            ::flare::rpc::ThreadsResponse *response,
+                            ::google::protobuf::Closure *done);
+    };
 
 } // namespace flare::rpc
 

@@ -22,20 +22,20 @@
 
 
 namespace flare::rpc {
-namespace policy {
+    namespace policy {
 
-class EspAuthenticator: public Authenticator {
-public:
-    int GenerateCredential(std::string* auth_str) const;
+        class EspAuthenticator : public Authenticator {
+        public:
+            int GenerateCredential(std::string *auth_str) const;
 
-    int VerifyCredential(const std::string& auth_str,
-                         const flare::base::end_point& client_addr,
-                         AuthContext* out_ctx) const;
-};
+            int VerifyCredential(const std::string &auth_str,
+                                 const flare::base::end_point &client_addr,
+                                 AuthContext *out_ctx) const;
+        };
 
-const Authenticator* global_esp_authenticator();
+        const Authenticator *global_esp_authenticator();
 
-}  // namespace policy
+    }  // namespace policy
 } // namespace flare::rpc
 
 

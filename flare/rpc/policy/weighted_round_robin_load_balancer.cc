@@ -52,7 +52,7 @@ namespace {
         return num2 == 1;
     }
 
-// Get a reasonable stride according to weights configured of servers.
+    // Get a reasonable stride according to weights configured of servers.
     uint64_t GetStride(const uint64_t weight_sum, const size_t num) {
         if (weight_sum == 1) {
             return 1;

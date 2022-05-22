@@ -26,8 +26,8 @@
 namespace flare::rpc {
     namespace policy {
 
-// Put commonly used std::strings (or other constants that need memory
-// allocations) in this struct to avoid memory allocations for each request.
+        // Put commonly used std::strings (or other constants that need memory
+        // allocations) in this struct to avoid memory allocations for each request.
         struct CommonStrings {
             std::string ACCEPT;
             std::string DEFAULT_ACCEPT;

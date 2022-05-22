@@ -43,15 +43,15 @@ namespace flare::rpc {
     DEFINE_string(rpcz_database_dir, "./rpc_data/rpcz",
                   "For storing requests/contexts collected by rpcz.");
 
-// TODO: collected per second is customizable.
-// const int32_t MAX_RPCZ_MAX_SPAN_PER_SECOND = 10000;
-// DEFINE_int32(rpcz_max_span_per_second, MAX_RPCZ_MAX_SPAN_PER_SECOND,
-//              "Index so many spans per second at most");
-// static bool validate_rpcz_max_span_per_second(const char*, int32_t val) {
-//     return (val >= 1 && val <= MAX_RPCZ_MAX_SPAN_PER_SECOND);
-// }
-// FLARE_RPC_VALIDATE_GFLAG(rpcz_max_span_per_second,
-//                          validate_rpcz_max_span_per_second);
+    // TODO: collected per second is customizable.
+    // const int32_t MAX_RPCZ_MAX_SPAN_PER_SECOND = 10000;
+    // DEFINE_int32(rpcz_max_span_per_second, MAX_RPCZ_MAX_SPAN_PER_SECOND,
+    //              "Index so many spans per second at most");
+    // static bool validate_rpcz_max_span_per_second(const char*, int32_t val) {
+    //     return (val >= 1 && val <= MAX_RPCZ_MAX_SPAN_PER_SECOND);
+    // }
+    // FLARE_RPC_VALIDATE_GFLAG(rpcz_max_span_per_second,
+    //                          validate_rpcz_max_span_per_second);
 
     DEFINE_int32(rpcz_keep_span_seconds, 3600,
                  "Keep spans for at most so many seconds");
@@ -209,7 +209,7 @@ namespace flare::rpc {
     void Span::Annotate(const char *fmt, ...) {
         const int64_t anno_time = flare::get_current_time_micros() + _base_real_us;
         flare::string_appendf(&_info, FLARE_RPC_SPAN_INFO_SEP "%lld ",
-                                    (long long) anno_time);
+                              (long long) anno_time);
         va_list ap;
         va_start(ap, fmt);
         flare::string_vappendf(&_info, fmt, ap);
@@ -219,21 +219,21 @@ namespace flare::rpc {
     void Span::Annotate(const char *fmt, va_list args) {
         const int64_t anno_time = flare::get_current_time_micros() + _base_real_us;
         flare::string_appendf(&_info, FLARE_RPC_SPAN_INFO_SEP "%lld ",
-                                    (long long) anno_time);
+                              (long long) anno_time);
         flare::string_vappendf(&_info, fmt, args);
     }
 
     void Span::Annotate(const std::string &info) {
         const int64_t anno_time = flare::get_current_time_micros() + _base_real_us;
         flare::string_appendf(&_info, FLARE_RPC_SPAN_INFO_SEP "%lld ",
-                                    (long long) anno_time);
+                              (long long) anno_time);
         _info.append(info);
     }
 
     void Span::AnnotateCStr(const char *info, size_t length) {
         const int64_t anno_time = flare::get_current_time_micros() + _base_real_us;
         flare::string_appendf(&_info, FLARE_RPC_SPAN_INFO_SEP "%lld ",
-                                    (long long) anno_time);
+                              (long long) anno_time);
         if (length <= 0) {
             _info.append(info);
         } else {
@@ -286,7 +286,7 @@ namespace flare::rpc {
                 }
             }
             FLARE_LOG(ERROR) << "Unknown annotation: "
-                       << std::string(_sp.field(), _sp.length());
+                             << std::string(_sp.field(), _sp.length());
         }
         return false;
     }
@@ -334,8 +334,8 @@ namespace flare::rpc {
             delete time_db;
             if (!FLAGS_rpcz_keep_span_db) {
                 std::string cmd = flare::string_printf("rm -rf %s %s",
-                                                             id_db_name.c_str(),
-                                                             time_db_name.c_str());
+                                                       id_db_name.c_str(),
+                                                       time_db_name.c_str());
                 flare::base::ignore_result(system(cmd.c_str()));
             }
         }
@@ -487,7 +487,7 @@ namespace flare::rpc {
         const flare::file_path dir(local.id_db_name);
         if (!flare::create_directories(dir, ec)) {
             FLARE_LOG(ERROR) << "Fail to create directory=`" << dir.c_str() << ", "
-                       << ec.message();
+                             << ec.message();
             return NULL;
         }
 
@@ -511,7 +511,7 @@ namespace flare::rpc {
             return NULL;
         }
         FLARE_LOG(INFO) << "Opened " << local.id_db_name << " and "
-                  << local.time_db_name;
+                        << local.time_db_name;
         Swap(local, *db);
         return db;
     }

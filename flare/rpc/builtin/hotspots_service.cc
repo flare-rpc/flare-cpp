@@ -175,7 +175,7 @@ namespace flare::rpc {
         flare::file_path dir = flare::file_path(filepath_in).parent_path();
         if (!flare::create_directories(dir, ec)) {
             FLARE_LOG(ERROR) << "Fail to create directory=`" << dir.c_str()
-                       << "', " << ec.message();
+                             << "', " << ec.message();
             return false;
         }
         FILE *fp = fopen(filepath_in, "w");
@@ -198,7 +198,7 @@ namespace flare::rpc {
         flare::file_path dir = flare::file_path(filepath_in).parent_path();
         if (!flare::create_directories(dir, ec)) {
             FLARE_LOG(ERROR) << "Fail to create directory=`" << dir.c_str()
-                       << "', " << ec.message();
+                             << "', " << ec.message();
             return false;
         }
         FILE *fp = fopen(filepath_in, "w");
@@ -464,7 +464,7 @@ namespace flare::rpc {
                         break;
                     } else if (ferror(fp)) {
                         FLARE_LOG(ERROR) << "Encountered error while reading for "
-                                   << expected_result_name;
+                                         << expected_result_name;
                         break;
                     }
                     // retry;

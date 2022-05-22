@@ -61,11 +61,11 @@ namespace flare::rpc {
     DECLARE_uint64(max_body_size);
     DECLARE_bool(log_error_text);
 
-// 3 steps to add a new Protocol:
-// Step1: Add a new ProtocolType in flare/rpc/options.proto
-//        as identifier of the Protocol.
-// Step2: Implement callbacks of struct `Protocol' in policy/ directory.
-// Step3: Register the protocol in global.cpp using `RegisterProtocol'
+    // 3 steps to add a new Protocol:
+    // Step1: Add a new ProtocolType in flare/rpc/options.proto
+    //        as identifier of the Protocol.
+    // Step2: Implement callbacks of struct `Protocol' in policy/ directory.
+    // Step3: Register the protocol in global.cpp using `RegisterProtocol'
 
     struct Protocol {
         // [Required by both client and server]
@@ -174,37 +174,37 @@ namespace flare::rpc {
     };
 
     const ConnectionType CONNECTION_TYPE_POOLED_AND_SHORT =
-            (ConnectionType) ((int) CONNECTION_TYPE_POOLED |
-                              (int) CONNECTION_TYPE_SHORT);
+            (ConnectionType)((int) CONNECTION_TYPE_POOLED |
+                             (int) CONNECTION_TYPE_SHORT);
 
     const ConnectionType CONNECTION_TYPE_ALL =
-            (ConnectionType) ((int) CONNECTION_TYPE_SINGLE |
-                              (int) CONNECTION_TYPE_POOLED |
-                              (int) CONNECTION_TYPE_SHORT);
+            (ConnectionType)((int) CONNECTION_TYPE_SINGLE |
+                             (int) CONNECTION_TYPE_POOLED |
+                             (int) CONNECTION_TYPE_SHORT);
 
-// [thread-safe] 
-// Register `protocol' using key=`type'. 
-// Returns 0 on success, -1 otherwise
+    // [thread-safe]
+    // Register `protocol' using key=`type'.
+    // Returns 0 on success, -1 otherwise
     int RegisterProtocol(ProtocolType type, const Protocol &protocol);
 
-// [thread-safe]
-// Find the protocol registered with key=`type'.
-// Returns NULL on not found.
+    // [thread-safe]
+    // Find the protocol registered with key=`type'.
+    // Returns NULL on not found.
     const Protocol *FindProtocol(ProtocolType type);
 
-// [thread-safe]
-// List all registered protocols into `vec'.
+    // [thread-safe]
+    // List all registered protocols into `vec'.
     void ListProtocols(std::vector<Protocol> *vec);
 
     void ListProtocols(std::vector<std::pair<ProtocolType, Protocol> > *vec);
 
-// The common serialize_request implementation used by many protocols.
+    // The common serialize_request implementation used by many protocols.
     void SerializeRequestDefault(flare::cord_buf *buf,
                                  Controller *cntl,
                                  const google::protobuf::Message *request);
 
-// Replacements for msg->ParseFromXXX() to make the bytes limit in pb
-// consistent with -max_body_size
+    // Replacements for msg->ParseFromXXX() to make the bytes limit in pb
+    // consistent with -max_body_size
     bool ParsePbFromZeroCopyStream(google::protobuf::Message *msg,
                                    google::protobuf::io::ZeroCopyInputStream *input);
 
@@ -214,8 +214,8 @@ namespace flare::rpc {
 
     bool ParsePbFromString(google::protobuf::Message *msg, const std::string &str);
 
-// Deleter for unique_ptr to print error_text of the controller when
-// -log_error_text is on, then delete the controller if `delete_cntl' is true
+    // Deleter for unique_ptr to print error_text of the controller when
+    // -log_error_text is on, then delete the controller if `delete_cntl' is true
     class LogErrorTextAndDelete {
     public:
         explicit LogErrorTextAndDelete(bool delete_cntl = true)
@@ -227,12 +227,12 @@ namespace flare::rpc {
         bool _delete_cntl;
     };
 
-// Utility to build a temporary array.
-// Example:
-//   TemporaryArrayBuilder<Foo, 5> b;
-//   b.push() = Foo1;
-//   b.push() = Foo2;
-//   UseArray(b.raw_array(), b.size());
+    // Utility to build a temporary array.
+    // Example:
+    //   TemporaryArrayBuilder<Foo, 5> b;
+    //   b.push() = Foo1;
+    //   b.push() = Foo2;
+    //   UseArray(b.raw_array(), b.size());
     template<typename T, size_t N>
     class TemporaryArrayBuilder {
     public:

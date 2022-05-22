@@ -23,65 +23,66 @@
 #include "flare/rpc/concurrency_limiter.h"
 
 namespace flare::rpc {
-namespace policy {
+    namespace policy {
 
-class AutoConcurrencyLimiter : public ConcurrencyLimiter {
-public:
-    AutoConcurrencyLimiter();
+        class AutoConcurrencyLimiter : public ConcurrencyLimiter {
+        public:
+            AutoConcurrencyLimiter();
 
-    bool OnRequested(int current_concurrency) override;
-    
-    void OnResponded(int error_code, int64_t latency_us) override;
+            bool OnRequested(int current_concurrency) override;
 
-    int MaxConcurrency() override;
+            void OnResponded(int error_code, int64_t latency_us) override;
 
-    AutoConcurrencyLimiter* New(const AdaptiveMaxConcurrency&) const override;
+            int MaxConcurrency() override;
 
-private:
-    struct SampleWindow {
-        SampleWindow() 
-            : start_time_us(0)
-            , succ_count(0)
-            , failed_count(0)
-            , total_failed_us(0)
-            , total_succ_us(0) {}
-        int64_t start_time_us;
-        int32_t succ_count;
-        int32_t failed_count;
-        int64_t total_failed_us;
-        int64_t total_succ_us;
-    };
+            AutoConcurrencyLimiter *New(const AdaptiveMaxConcurrency &) const override;
 
-    bool AddSample(int error_code, int64_t latency_us, int64_t sampling_time_us);
-    int64_t NextResetTime(int64_t sampling_time_us);
+        private:
+            struct SampleWindow {
+                SampleWindow()
+                        : start_time_us(0), succ_count(0), failed_count(0), total_failed_us(0), total_succ_us(0) {}
 
-    // The following methods are not thread safe and can only be called 
-    // in AppSample()
-    void UpdateMaxConcurrency(int64_t sampling_time_us);
-    void ResetSampleWindow(int64_t sampling_time_us);
-    void UpdateMinLatency(int64_t latency_us);
-    void UpdateQps(double qps);
+                int64_t start_time_us;
+                int32_t succ_count;
+                int32_t failed_count;
+                int64_t total_failed_us;
+                int64_t total_succ_us;
+            };
 
-    void AdjustMaxConcurrency(int next_max_concurrency);
+            bool AddSample(int error_code, int64_t latency_us, int64_t sampling_time_us);
 
-    // modified per sample-window or more
-    int _max_concurrency;
-    int64_t _remeasure_start_us;
-    int64_t _reset_latency_us;
-    int64_t _min_latency_us; 
-    double _ema_max_qps;
-    double _explore_ratio;
-  
-    // modified per sample.
-    std::atomic<int64_t> FLARE_CACHELINE_ALIGNMENT _last_sampling_time_us;
-    flare::base::Mutex _sw_mutex;
-    SampleWindow _sw;
+            int64_t NextResetTime(int64_t sampling_time_us);
 
-    // modified per request.
-    std::atomic<int32_t> FLARE_CACHELINE_ALIGNMENT _total_succ_req;
-};
+            // The following methods are not thread safe and can only be called
+            // in AppSample()
+            void UpdateMaxConcurrency(int64_t sampling_time_us);
 
-}  // namespace policy
+            void ResetSampleWindow(int64_t sampling_time_us);
+
+            void UpdateMinLatency(int64_t latency_us);
+
+            void UpdateQps(double qps);
+
+            void AdjustMaxConcurrency(int next_max_concurrency);
+
+            // modified per sample-window or more
+            int _max_concurrency;
+            int64_t _remeasure_start_us;
+            int64_t _reset_latency_us;
+            int64_t _min_latency_us;
+            double _ema_max_qps;
+            double _explore_ratio;
+
+            // modified per sample.
+            std::atomic<int64_t> FLARE_CACHELINE_ALIGNMENT _last_sampling_time_us;
+            flare::base::Mutex _sw_mutex;
+            SampleWindow _sw;
+
+            // modified per request.
+            std::atomic<int32_t> FLARE_CACHELINE_ALIGNMENT _total_succ_req;
+        };
+
+    }  // namespace policy
 }  // namespace flare::rpc
 
 

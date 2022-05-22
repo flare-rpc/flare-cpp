@@ -26,17 +26,17 @@
 
 namespace flare::rpc {
 
-void ListService::default_method(::google::protobuf::RpcController*, 
-                                 const ::flare::rpc::ListRequest*,
-                                 ::flare::rpc::ListResponse* response,
-                                 ::google::protobuf::Closure* done) {
-    ClosureGuard done_guard(done);
-    std::vector<google::protobuf::Service*> services;
-    _server->ListServices(&services);
-    for (size_t i = 0; i < services.size(); ++i) {
-        google::protobuf::ServiceDescriptorProto *svc = response->add_service();
-        services[i]->GetDescriptor()->CopyTo(svc);
+    void ListService::default_method(::google::protobuf::RpcController *,
+                                     const ::flare::rpc::ListRequest *,
+                                     ::flare::rpc::ListResponse *response,
+                                     ::google::protobuf::Closure *done) {
+        ClosureGuard done_guard(done);
+        std::vector<google::protobuf::Service *> services;
+        _server->ListServices(&services);
+        for (size_t i = 0; i < services.size(); ++i) {
+            google::protobuf::ServiceDescriptorProto *svc = response->add_service();
+            services[i]->GetDescriptor()->CopyTo(svc);
+        }
     }
-}
 
 } // namespace flare::rpc

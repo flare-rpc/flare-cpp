@@ -25,19 +25,19 @@
 
 namespace flare::rpc {
 
-class FlagsService : public flags, public Tabbed {
-public:
-    void default_method(::google::protobuf::RpcController* cntl_base,
-                        const ::flare::rpc::FlagsRequest* request,
-                        ::flare::rpc::FlagsResponse* response,
-                        ::google::protobuf::Closure* done);
+    class FlagsService : public flags, public Tabbed {
+    public:
+        void default_method(::google::protobuf::RpcController *cntl_base,
+                            const ::flare::rpc::FlagsRequest *request,
+                            ::flare::rpc::FlagsResponse *response,
+                            ::google::protobuf::Closure *done);
 
-    void GetTabInfo(TabInfoList* info_list) const;
+        void GetTabInfo(TabInfoList *info_list) const;
 
-private:
-    void set_value_page(Controller* cntl, ::google::protobuf::Closure* done);
+    private:
+        void set_value_page(Controller *cntl, ::google::protobuf::Closure *done);
 
-};
+    };
 
 } // namespace flare::rpc
 

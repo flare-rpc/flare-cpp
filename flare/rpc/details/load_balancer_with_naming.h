@@ -26,24 +26,26 @@
 
 namespace flare::rpc {
 
-class LoadBalancerWithNaming : public SharedLoadBalancer,
-                               public NamingServiceWatcher {
-public:
-    LoadBalancerWithNaming() {}
-    ~LoadBalancerWithNaming();
+    class LoadBalancerWithNaming : public SharedLoadBalancer,
+                                   public NamingServiceWatcher {
+    public:
+        LoadBalancerWithNaming() {}
 
-    int Init(const char* ns_url, const char* lb_name,
-             const NamingServiceFilter* filter,
-             const GetNamingServiceThreadOptions* options);
-    
-    void OnAddedServers(const std::vector<ServerId>& servers);
-    void OnRemovedServers(const std::vector<ServerId>& servers);
+        ~LoadBalancerWithNaming();
 
-    void Describe(std::ostream& os, const DescribeOptions& options);
+        int Init(const char *ns_url, const char *lb_name,
+                 const NamingServiceFilter *filter,
+                 const GetNamingServiceThreadOptions *options);
 
-private:
-    flare::container::intrusive_ptr<NamingServiceThread> _nsthread_ptr;
-};
+        void OnAddedServers(const std::vector<ServerId> &servers);
+
+        void OnRemovedServers(const std::vector<ServerId> &servers);
+
+        void Describe(std::ostream &os, const DescribeOptions &options);
+
+    private:
+        flare::container::intrusive_ptr<NamingServiceThread> _nsthread_ptr;
+    };
 
 } // namespace flare::rpc
 

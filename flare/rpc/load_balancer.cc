@@ -108,7 +108,7 @@ namespace flare::rpc {
         } else {
             lb_name->append(lb_protocol.data(), pos);
             if (pos < lb_protocol.size() - sizeof(separator)) {
-                *lb_params =flare::safe_substr(lb_protocol, pos + sizeof(separator));
+                *lb_params = flare::safe_substr(lb_protocol, pos + sizeof(separator));
             }
         }
 

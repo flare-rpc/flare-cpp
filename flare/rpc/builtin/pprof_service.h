@@ -23,38 +23,38 @@
 
 namespace flare::rpc {
 
-class PProfService : public pprof {
-public:
-    void profile(::google::protobuf::RpcController* controller,
-                 const ::flare::rpc::ProfileRequest* request,
-                 ::flare::rpc::ProfileResponse* response,
-                 ::google::protobuf::Closure* done);
+    class PProfService : public pprof {
+    public:
+        void profile(::google::protobuf::RpcController *controller,
+                     const ::flare::rpc::ProfileRequest *request,
+                     ::flare::rpc::ProfileResponse *response,
+                     ::google::protobuf::Closure *done);
 
-    void contention(::google::protobuf::RpcController* controller,
-                    const ::flare::rpc::ProfileRequest* request,
-                    ::flare::rpc::ProfileResponse* response,
-                    ::google::protobuf::Closure* done);
-    
-    void heap(::google::protobuf::RpcController* controller,
-              const ::flare::rpc::ProfileRequest* request,
-              ::flare::rpc::ProfileResponse* response,
-              ::google::protobuf::Closure* done);
+        void contention(::google::protobuf::RpcController *controller,
+                        const ::flare::rpc::ProfileRequest *request,
+                        ::flare::rpc::ProfileResponse *response,
+                        ::google::protobuf::Closure *done);
 
-    void growth(::google::protobuf::RpcController* controller,
-                const ::flare::rpc::ProfileRequest* request,
-                ::flare::rpc::ProfileResponse* response,
-                ::google::protobuf::Closure* done);
+        void heap(::google::protobuf::RpcController *controller,
+                  const ::flare::rpc::ProfileRequest *request,
+                  ::flare::rpc::ProfileResponse *response,
+                  ::google::protobuf::Closure *done);
 
-    void symbol(::google::protobuf::RpcController* controller,
-                const ::flare::rpc::ProfileRequest* request,
-                ::flare::rpc::ProfileResponse* response,
-                ::google::protobuf::Closure* done);
+        void growth(::google::protobuf::RpcController *controller,
+                    const ::flare::rpc::ProfileRequest *request,
+                    ::flare::rpc::ProfileResponse *response,
+                    ::google::protobuf::Closure *done);
 
-    void cmdline(::google::protobuf::RpcController* controller,
-                 const ::flare::rpc::ProfileRequest* request,
-                 ::flare::rpc::ProfileResponse* response,
-                 ::google::protobuf::Closure* done);
-};
+        void symbol(::google::protobuf::RpcController *controller,
+                    const ::flare::rpc::ProfileRequest *request,
+                    ::flare::rpc::ProfileResponse *response,
+                    ::google::protobuf::Closure *done);
+
+        void cmdline(::google::protobuf::RpcController *controller,
+                     const ::flare::rpc::ProfileRequest *request,
+                     ::flare::rpc::ProfileResponse *response,
+                     ::google::protobuf::Closure *done);
+    };
 
 } // namespace flare::rpc
 

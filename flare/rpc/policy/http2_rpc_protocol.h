@@ -450,7 +450,7 @@ namespace flare::rpc {
         inline int H2Context::AllocateClientStreamId() {
             if (RunOutStreams()) {
                 FLARE_LOG(WARNING) << "Fail to allocate new client stream, _last_sent_stream_id="
-                             << _last_sent_stream_id;
+                                   << _last_sent_stream_id;
                 return -1;
             }
             const int id = _last_sent_stream_id;

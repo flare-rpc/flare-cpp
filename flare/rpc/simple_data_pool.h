@@ -25,35 +25,41 @@
 
 namespace flare::rpc {
 
-// As the name says, this is a simple unbounded dynamic-size pool for
-// reusing void* data. We're assuming that data consumes considerable
-// memory and should be reused as much as possible, thus unlike the
-// multi-threaded allocator caching objects thread-locally, we just
-// put everything in a global list to maximize sharing. It's currently
-// used by Server to reuse session-local data. 
-class SimpleDataPool {
-public:
-    struct Stat {
-        unsigned nfree;
-        unsigned ncreated;
-    };
+    // As the name says, this is a simple unbounded dynamic-size pool for
+    // reusing void* data. We're assuming that data consumes considerable
+    // memory and should be reused as much as possible, thus unlike the
+    // multi-threaded allocator caching objects thread-locally, we just
+    // put everything in a global list to maximize sharing. It's currently
+    // used by Server to reuse session-local data.
+    class SimpleDataPool {
+    public:
+        struct Stat {
+            unsigned nfree;
+            unsigned ncreated;
+        };
 
-    explicit SimpleDataPool(const DataFactory* factory);
-    ~SimpleDataPool();
-    void Reset(const DataFactory* factory);
-    void Reserve(unsigned n);
-    void* Borrow();
-    void Return(void*);
-    Stat stat() const;
-    
-private:
-    flare::base::Mutex _mutex;
-    unsigned _capacity;
-    unsigned _size;
-    std::atomic<unsigned> _ncreated;
-    void** _pool;
-    const DataFactory* _factory;
-};
+        explicit SimpleDataPool(const DataFactory *factory);
+
+        ~SimpleDataPool();
+
+        void Reset(const DataFactory *factory);
+
+        void Reserve(unsigned n);
+
+        void *Borrow();
+
+        void Return(void *);
+
+        Stat stat() const;
+
+    private:
+        flare::base::Mutex _mutex;
+        unsigned _capacity;
+        unsigned _size;
+        std::atomic<unsigned> _ncreated;
+        void **_pool;
+        const DataFactory *_factory;
+    };
 
 } // namespace flare::rpc
 

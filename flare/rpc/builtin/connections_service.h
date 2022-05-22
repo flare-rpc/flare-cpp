@@ -26,20 +26,21 @@
 
 namespace flare::rpc {
 
-class Acceptor;
-class ConnectionsService : public connections, public Tabbed {
-public:
-    void default_method(::google::protobuf::RpcController* cntl_base,
-                        const ::flare::rpc::ConnectionsRequest* request,
-                        ::flare::rpc::ConnectionsResponse* response,
-                        ::google::protobuf::Closure* done);
+    class Acceptor;
 
-    void GetTabInfo(TabInfoList* info_list) const;
-    
-private:
-    void PrintConnections(std::ostream& os, const std::vector<SocketId>& conns,
-                          bool use_html, const Server*, bool need_local) const;
-};
+    class ConnectionsService : public connections, public Tabbed {
+    public:
+        void default_method(::google::protobuf::RpcController *cntl_base,
+                            const ::flare::rpc::ConnectionsRequest *request,
+                            ::flare::rpc::ConnectionsResponse *response,
+                            ::google::protobuf::Closure *done);
+
+        void GetTabInfo(TabInfoList *info_list) const;
+
+    private:
+        void PrintConnections(std::ostream &os, const std::vector<SocketId> &conns,
+                              bool use_html, const Server *, bool need_local) const;
+    };
 
 } // namespace flare::rpc
 

@@ -22,44 +22,44 @@
 
 namespace flare::rpc {
 
-PeriodicTask::~PeriodicTask() {
-}
+    PeriodicTask::~PeriodicTask() {
+    }
 
-static void* PeriodicTaskThread(void* arg) {
-    PeriodicTask* task = static_cast<PeriodicTask*>(arg);
-    timespec abstime;
-    if (!task->OnTriggeringTask(&abstime)) { // end
-        task->OnDestroyingTask();
+    static void *PeriodicTaskThread(void *arg) {
+        PeriodicTask *task = static_cast<PeriodicTask *>(arg);
+        timespec abstime;
+        if (!task->OnTriggeringTask(&abstime)) { // end
+            task->OnDestroyingTask();
+            return NULL;
+        }
+        PeriodicTaskManager::StartTaskAt(task, abstime);
         return NULL;
     }
-    PeriodicTaskManager::StartTaskAt(task, abstime);
-    return NULL;
-}
 
-static void RunPeriodicTaskThread(void* arg) {
-    fiber_id_t th = 0;
-    int rc = fiber_start_background(
-        &th, &FIBER_ATTR_NORMAL, PeriodicTaskThread, arg);
-    if (rc != 0) {
-        FLARE_LOG(ERROR) << "Fail to start PeriodicTaskThread";
-        static_cast<PeriodicTask*>(arg)->OnDestroyingTask();
-        return;
+    static void RunPeriodicTaskThread(void *arg) {
+        fiber_id_t th = 0;
+        int rc = fiber_start_background(
+                &th, &FIBER_ATTR_NORMAL, PeriodicTaskThread, arg);
+        if (rc != 0) {
+            FLARE_LOG(ERROR) << "Fail to start PeriodicTaskThread";
+            static_cast<PeriodicTask *>(arg)->OnDestroyingTask();
+            return;
+        }
     }
-}
 
-void PeriodicTaskManager::StartTaskAt(PeriodicTask* task, const timespec& abstime) {
-    if (task == NULL) {
-        FLARE_LOG(ERROR) << "Param[task] is NULL";
-        return;
+    void PeriodicTaskManager::StartTaskAt(PeriodicTask *task, const timespec &abstime) {
+        if (task == NULL) {
+            FLARE_LOG(ERROR) << "Param[task] is NULL";
+            return;
+        }
+        fiber_timer_id timer_id;
+        const int rc = fiber_timer_add(
+                &timer_id, abstime, RunPeriodicTaskThread, task);
+        if (rc != 0) {
+            FLARE_LOG(ERROR) << "Fail to add timer for RunPerodicTaskThread";
+            task->OnDestroyingTask();
+            return;
+        }
     }
-    fiber_timer_id timer_id;
-    const int rc = fiber_timer_add(
-        &timer_id, abstime, RunPeriodicTaskThread, task);
-    if (rc != 0) {
-        FLARE_LOG(ERROR) << "Fail to add timer for RunPerodicTaskThread";
-        task->OnDestroyingTask();
-        return;
-    }
-}
 
 } // namespace flare::rpc

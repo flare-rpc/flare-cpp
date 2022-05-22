@@ -22,7 +22,7 @@
 
 namespace flare::rpc {
 
-void GlobalInitializeOrDie();
+    void GlobalInitializeOrDie();
 
 } // namespace flare::rpc
 

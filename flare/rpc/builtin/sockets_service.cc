@@ -26,30 +26,30 @@
 
 namespace flare::rpc {
 
-void SocketsService::default_method(::google::protobuf::RpcController* cntl_base,
-                                     const ::flare::rpc::SocketsRequest*,
-                                     ::flare::rpc::SocketsResponse*,
-                                     ::google::protobuf::Closure* done) {
-    ClosureGuard done_guard(done);
-    Controller *cntl = static_cast<Controller*>(cntl_base);
-    cntl->http_response().set_content_type("text/plain");
-    flare::cord_buf_builder os;
-    const std::string& constraint = cntl->http_request().unresolved_path();
-    
-    if (constraint.empty()) {
-        os << "# Use /sockets/<SocketId>\n"
-           << flare::describe_resources<Socket>() << '\n';
-    } else {
-        char* endptr = NULL;
-        SocketId sid = strtoull(constraint.c_str(), &endptr, 10);
-        if (*endptr == '\0' || *endptr == '/') {
-            Socket::DebugSocket(os, sid);
+    void SocketsService::default_method(::google::protobuf::RpcController *cntl_base,
+                                        const ::flare::rpc::SocketsRequest *,
+                                        ::flare::rpc::SocketsResponse *,
+                                        ::google::protobuf::Closure *done) {
+        ClosureGuard done_guard(done);
+        Controller *cntl = static_cast<Controller *>(cntl_base);
+        cntl->http_response().set_content_type("text/plain");
+        flare::cord_buf_builder os;
+        const std::string &constraint = cntl->http_request().unresolved_path();
+
+        if (constraint.empty()) {
+            os << "# Use /sockets/<SocketId>\n"
+               << flare::describe_resources<Socket>() << '\n';
         } else {
-            cntl->SetFailed(ENOMETHOD, "path=%s is not a SocketId",
-                            constraint.c_str());
+            char *endptr = NULL;
+            SocketId sid = strtoull(constraint.c_str(), &endptr, 10);
+            if (*endptr == '\0' || *endptr == '/') {
+                Socket::DebugSocket(os, sid);
+            } else {
+                cntl->SetFailed(ENOMETHOD, "path=%s is not a SocketId",
+                                constraint.c_str());
+            }
         }
+        os.move_to(cntl->response_attachment());
     }
-    os.move_to(cntl->response_attachment());
-}
 
 } // namespace flare::rpc

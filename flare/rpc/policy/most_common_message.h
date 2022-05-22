@@ -24,31 +24,31 @@
 
 
 namespace flare::rpc {
-namespace policy {
+    namespace policy {
 
-// Try to use this message as the intermediate message between Parse() and
-// Process() to maximize usage of ObjectPool<MostCommonMessage>, otherwise
-// you have to new the messages or use a separate ObjectPool (which is likely
-// to waste more memory)
-struct FLARE_CACHELINE_ALIGNMENT MostCommonMessage : public InputMessageBase {
-    flare::cord_buf meta;
-    flare::cord_buf payload;
-    PipelinedInfo pi;
+        // Try to use this message as the intermediate message between Parse() and
+        // Process() to maximize usage of ObjectPool<MostCommonMessage>, otherwise
+        // you have to new the messages or use a separate ObjectPool (which is likely
+        // to waste more memory)
+        struct FLARE_CACHELINE_ALIGNMENT MostCommonMessage : public InputMessageBase {
+            flare::cord_buf meta;
+            flare::cord_buf payload;
+            PipelinedInfo pi;
 
-    inline static MostCommonMessage* Get() {
-        return flare::get_object<MostCommonMessage>();
-    }
+            inline static MostCommonMessage *Get() {
+                return flare::get_object<MostCommonMessage>();
+            }
 
-    // @InputMessageBase
-    void DestroyImpl() {
-        meta.clear();
-        payload.clear();
-        pi.reset();
-        flare::return_object(this);
-    }
-};
+            // @InputMessageBase
+            void DestroyImpl() {
+                meta.clear();
+                payload.clear();
+                pi.reset();
+                flare::return_object(this);
+            }
+        };
 
-}  // namespace policy
+    }  // namespace policy
 } // namespace flare::rpc
 
 

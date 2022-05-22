@@ -25,18 +25,21 @@
 
 
 namespace flare::rpc {
-namespace policy {
+    namespace policy {
 
-using HashFunc = uint32_t(*)(const void*, size_t);
+        using HashFunc = uint32_t(*)(const void *, size_t);
 
-void MD5HashSignature(const void* key, size_t len, unsigned char* results);
-uint32_t MD5Hash32(const void* key, size_t len);
-uint32_t MD5Hash32V(const std::string_view* keys, size_t num_keys);
+        void MD5HashSignature(const void *key, size_t len, unsigned char *results);
 
-uint32_t MurmurHash32(const void* key, size_t len);
-uint32_t MurmurHash32V(const std::string_view* keys, size_t num_keys);
+        uint32_t MD5Hash32(const void *key, size_t len);
 
-}  // namespace policy
+        uint32_t MD5Hash32V(const std::string_view *keys, size_t num_keys);
+
+        uint32_t MurmurHash32(const void *key, size_t len);
+
+        uint32_t MurmurHash32V(const std::string_view *keys, size_t num_keys);
+
+    }  // namespace policy
 } // namespace flare::rpc
 
 
