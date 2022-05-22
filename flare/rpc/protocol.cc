@@ -93,7 +93,7 @@ namespace flare::rpc {
         return 0;
     }
 
-// Called frequently, must be fast.
+    // Called frequently, must be fast.
     const Protocol *FindProtocol(ProtocolType type) {
         const size_t index = type;
         if (index >= MAX_PROTOCOL_SIZE) {

@@ -165,9 +165,9 @@ namespace flare::rpc {
         mutable int _cached_size_;  // ByteSize
     };
 
-// Response from Redis.
-// Notice that a RedisResponse instance may contain multiple replies
-// due to pipelining.
+    // Response from Redis.
+    // Notice that a RedisResponse instance may contain multiple replies
+    // due to pipelining.
     class RedisResponse : public ::google::protobuf::Message {
     public:
         RedisResponse();
