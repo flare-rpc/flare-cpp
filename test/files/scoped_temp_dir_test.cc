@@ -4,7 +4,7 @@
 
 #include <string>
 #include "flare/files/scoped_temp_dir.h"
-#include <gtest/gtest.h>
+#include "testing/gtest_wrap.h"
 
 namespace flare {
 

@@ -7,7 +7,7 @@
 #include <memory>
 #include <thread>
 #include "flare/thread/latch.h"
-#include "gtest/gtest.h"
+#include "testing/gtest_wrap.h"
 #include "flare/times/time.h"
 
 namespace flare {

@@ -22,7 +22,7 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <fstream>
-#include <gtest/gtest.h>
+#include "testing/gtest_wrap.h"
 #include <google/protobuf/descriptor.h>
 #include "flare/times/time.h"
 #include "flare/base/fd_guard.h"
@@ -55,7 +55,7 @@
 
 int main(int argc, char* argv[]) {
     testing::InitGoogleTest(&argc, argv);
-    GFLAGS_NS::ParseCommandLineFlags(&argc, &argv, true);
+    google::ParseCommandLineFlags(&argc, &argv, true);
     return RUN_ALL_TESTS();
 }
 

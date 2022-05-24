@@ -19,7 +19,7 @@
 
 // Date: 2015/01/20 19:01:06
 
-#include <gtest/gtest.h>
+#include "testing/gtest_wrap.h"
 #include "flare/base/gperftools_profiler.h"
 #include "flare/io/snappy/snappy.h"
 #include "flare/io/cord_buf.h"

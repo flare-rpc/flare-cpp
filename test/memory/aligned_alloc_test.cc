@@ -8,7 +8,7 @@
 
 #include "flare/memory/aligned_memory.h"
 #include "flare/memory/scoped_ptr.h"
-#include <gtest/gtest.h>
+#include "testing/gtest_wrap.h"
 
 #define EXPECT_ALIGNED(ptr, align) \
     EXPECT_EQ(0u, reinterpret_cast<uintptr_t>(ptr) & (align - 1))

@@ -24,8 +24,8 @@
 #include <string>
 #include <vector>
 
-#include "gmock/gmock.h"
-#include "gtest/gtest.h"
+
+#include "testing/gtest_wrap.h"
 #include "flare/log/logging.h"
 #include "numbers_test_common.h"
 #include "flare/strings/str_cat.h"

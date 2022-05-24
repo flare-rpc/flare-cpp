@@ -8,7 +8,7 @@
 
 #include <string.h>
 
-#include <gtest/gtest.h>
+#include "testing/gtest_wrap.h"
 #include "flare/log/logging.h"
 
 namespace flare::debugging {

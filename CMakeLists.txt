@@ -19,6 +19,13 @@ cmake_minimum_required(VERSION 3.1.3)
 
 project(flare C CXX)
 
+list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
+list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake/modules)
+list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake/package)
+list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake/recipes)
+list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/copts)
+include(carbin_module)
+
 option(DEBUG "Print debug logs" OFF)
 option(WITH_DEBUG_SYMBOLS "With debug symbols" ON)
 option(WITH_THRIFT "With thrift framed protocol supported" OFF)
@@ -63,27 +70,8 @@ endif ()
 
 include(GNUInstallDirs)
 
-set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
-
-
-find_package(GFLAGS REQUIRED)
-
-
-execute_process(
-        COMMAND bash -c "grep \"namespace [_A-Za-z0-9]\\+ {\" ${GFLAGS_INCLUDE_PATH}/gflags/gflags_declare.h | head -1 | awk '{print $2}' | tr -d '\n'"
-        OUTPUT_VARIABLE GFLAGS_NS
-)
-if (${GFLAGS_NS} STREQUAL "GFLAGS_NAMESPACE")
-    execute_process(
-            COMMAND bash -c "grep \"#define GFLAGS_NAMESPACE [_A-Za-z0-9]\\+\" ${GFLAGS_INCLUDE_PATH}/gflags/gflags_declare.h | head -1 | awk '{print $3}' | tr -d '\n'"
-            OUTPUT_VARIABLE GFLAGS_NS
-    )
-endif ()
-
-include_directories(
-        ${PROJECT_SOURCE_DIR}
-        ${CMAKE_CURRENT_BINARY_DIR}
-)
+include(require_gflags)
+include(require_leveldb)
 
 execute_process(
         COMMAND bash -c "${PROJECT_SOURCE_DIR}/tools/get_flare_revision.sh ${PROJECT_SOURCE_DIR} | tr -d '\n'"
@@ -99,7 +87,7 @@ if (CMAKE_SYSTEM_NAME STREQUAL "Darwin")
     set(CMAKE_CPP_FLAGS "${CMAKE_CPP_FLAGS} -Wno-deprecated-declarations -Wno-inconsistent-missing-override")
 endif ()
 
-set(CMAKE_CPP_FLAGS "${CMAKE_CPP_FLAGS} ${DEFINE_CLOCK_GETTIME}  -DGFLAGS_NS=${GFLAGS_NS}")
+set(CMAKE_CPP_FLAGS "${CMAKE_CPP_FLAGS} ${DEFINE_CLOCK_GETTIME}")
 set(CMAKE_CPP_FLAGS "${CMAKE_CPP_FLAGS} -DFIBER_USE_FAST_PTHREAD_MUTEX -D__const__= -D_GNU_SOURCE -DUSE_SYMBOLIZE -DNO_TCMALLOC -D__STDC_FORMAT_MACROS -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -DFLARE_RPC_REVISION=\\\"${FLARE_RPC_REVISION}\\\" -D__STRICT_ANSI__")
 set(CMAKE_CPP_FLAGS "${CMAKE_CPP_FLAGS} ${DEBUG_SYMBOL} ${THRIFT_CPP_FLAG}")
 set(CMAKE_CXX_FLAGS "${CMAKE_CPP_FLAGS} -O2 -pipe -Wall -W -fPIC -fstrict-aliasing -Wno-invalid-offsetof -Wno-unused-parameter -fno-omit-frame-pointer")
@@ -126,12 +114,6 @@ endif ()
 
 find_package(Protobuf REQUIRED)
 find_package(Threads REQUIRED)
-
-find_path(LEVELDB_INCLUDE_PATH NAMES leveldb/db.h)
-find_library(LEVELDB_LIB NAMES leveldb)
-if ((NOT LEVELDB_INCLUDE_PATH) OR (NOT LEVELDB_LIB))
-    message(FATAL_ERROR "Fail to find leveldb")
-endif ()
 
 find_library(PROTOC_LIB NAMES protoc)
 if (NOT PROTOC_LIB)

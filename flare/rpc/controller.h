@@ -91,7 +91,7 @@ namespace flare::rpc {
         class SubDone;
     }
 
-// For serializing/parsing from idl services.
+    // For serializing/parsing from idl services.
     struct IdlNames {
         const char *request_name;  // must be string-constant
         const char *response_name; // must be string-constant
@@ -102,10 +102,10 @@ namespace flare::rpc {
     extern const IdlNames idl_multi_req_single_res;
     extern const IdlNames idl_multi_req_multi_res;
 
-// The identifier to be associated with a RPC call.
+    // The identifier to be associated with a RPC call.
     typedef fiber_token_t CallId;
 
-// Styles for stopping progressive attachment.
+    // Styles for stopping progressive attachment.
     enum StopStyle {
         FORCE_STOP,
         WAIT_FOR_STOP,
@@ -113,9 +113,9 @@ namespace flare::rpc {
 
     const int32_t UNSET_MAGIC_NUM = -123456789;
 
-// A Controller mediates a single method call. The primary purpose of
-// the controller is to provide a way to manipulate settings per RPC-call 
-// and to find out about RPC-level errors.
+    // A Controller mediates a single method call. The primary purpose of
+    // the controller is to provide a way to manipulate settings per RPC-call
+    // and to find out about RPC-level errors.
     class Controller : public google::protobuf::RpcController/*non-copyable*/ {
         friend class Channel;
 
@@ -870,31 +870,31 @@ namespace flare::rpc {
         std::string _thrift_method_name;
     };
 
-// Advises the RPC system that the caller desires that the RPC call be
-// canceled. If the call is canceled, the "done" callback will still be
-// called and the Controller will indicate that the call failed at that
-// time.
+    // Advises the RPC system that the caller desires that the RPC call be
+    // canceled. If the call is canceled, the "done" callback will still be
+    // called and the Controller will indicate that the call failed at that
+    // time.
     void StartCancel(CallId id);
 
-// Suspend until the RPC finishes.
+    // Suspend until the RPC finishes.
     void Join(CallId id);
 
-// Get a global closure for doing nothing. Used in semi-synchronous
-// RPC calls. Example:
-//   stub1.method1(&cntl1, &request1, &response1, flare::rpc::DoNothing());
-//   stub2.method2(&cntl2, &request2, &response2, flare::rpc::DoNothing());
-//   ...
-//   flare::rpc::Join(cntl1.call_id());
-//   flare::rpc::Join(cntl2.call_id());
+    // Get a global closure for doing nothing. Used in semi-synchronous
+    // RPC calls. Example:
+    //   stub1.method1(&cntl1, &request1, &response1, flare::rpc::DoNothing());
+    //   stub2.method2(&cntl2, &request2, &response2, flare::rpc::DoNothing());
+    //   ...
+    //   flare::rpc::Join(cntl1.call_id());
+    //   flare::rpc::Join(cntl2.call_id());
     google::protobuf::Closure *DoNothing();
 
-// Convert non-web symbols to web equivalence.
+    // Convert non-web symbols to web equivalence.
     void WebEscape(const std::string &source, std::string *output);
 
-// True if Ctrl-C is ever pressed.
+    // True if Ctrl-C is ever pressed.
     bool IsAskedToQuit();
 
-// Send Ctrl-C to current process.
+    // Send Ctrl-C to current process.
     void AskToQuit();
 
     std::ostream &operator<<(std::ostream &os, const Controller::LogPrefixDummy &p);

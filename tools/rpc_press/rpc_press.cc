@@ -89,7 +89,7 @@ bool set_press_options(pbrpcframework::PressOptions* options){
 
 int main(int argc, char* argv[]) {
     // Parse gflags. We recommend you to use gflags as well
-    GFLAGS_NS::ParseCommandLineFlags(&argc, &argv, true);
+    google::ParseCommandLineFlags(&argc, &argv, true);
     // set global log option
 
     if (FLAGS_dummy_port >= 0) {

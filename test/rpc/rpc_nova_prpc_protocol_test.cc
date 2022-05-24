@@ -22,7 +22,7 @@
 #include <sys/ioctl.h>
 #include <sys/types.h>
 #include <sys/socket.h>
-#include <gtest/gtest.h>
+#include "testing/gtest_wrap.h"
 #include <gflags/gflags.h>
 #include <google/protobuf/descriptor.h>
 #include "flare/times/time.h"

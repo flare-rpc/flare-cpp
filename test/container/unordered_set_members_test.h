@@ -3,8 +3,8 @@
 #define UNORDERED_SET_MEMBERS_TEST_H_
 
 #include <type_traits>
-#include "gmock/gmock.h"
-#include "gtest/gtest.h"
+
+#include "testing/gtest_wrap.h"
 
 namespace flare {
     namespace priv {

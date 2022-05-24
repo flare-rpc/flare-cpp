@@ -5,7 +5,7 @@
 #include "flare/strings/contain.h"
 #include "flare/strings/starts_with.h"
 #include "flare/strings/ends_with.h"
-#include "gtest/gtest.h"
+#include "testing/gtest_wrap.h"
 
 namespace {
 

@@ -1,7 +1,7 @@
 
 
 #include <inttypes.h>
-#include <gtest/gtest.h>
+#include "testing/gtest_wrap.h"
 #include <algorithm>
 #include <random>
 #include "flare/times/time.h"

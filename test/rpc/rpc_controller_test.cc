@@ -19,7 +19,7 @@
 
 // Date: Sun Jul 13 15:04:18 CST 2014
 
-#include <gtest/gtest.h>
+#include "testing/gtest_wrap.h"
 #include <google/protobuf/stubs/common.h>
 #include "flare/log/logging.h"
 #include "flare/times/time.h"

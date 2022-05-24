@@ -59,7 +59,7 @@ namespace flare::variable {
         return true;
     }
 
-    const bool FLARE_ALLOW_UNUSED dummy_variable_abort_on_same_name = ::GFLAGS_NS::RegisterFlagValidator(
+    const bool FLARE_ALLOW_UNUSED dummy_variable_abort_on_same_name = ::google::RegisterFlagValidator(
             &FLAGS_variable_abort_on_same_name, validate_variable_abort_on_same_name);
 
 
@@ -696,25 +696,25 @@ namespace flare::variable {
             DumpOptions options;
             std::string prefix;
             std::string tabs;
-            if (!GFLAGS_NS::GetCommandLineOption("variable_dump_file", &filename)) {
+            if (!google::GetCommandLineOption("variable_dump_file", &filename)) {
                 FLARE_LOG(ERROR) << "Fail to get gflag variable_dump_file";
                 return NULL;
             }
-            if (!GFLAGS_NS::GetCommandLineOption("variable_dump_include",
+            if (!google::GetCommandLineOption("variable_dump_include",
                                                  &options.white_wildcards)) {
                 FLARE_LOG(ERROR) << "Fail to get gflag variable_dump_include";
                 return NULL;
             }
-            if (!GFLAGS_NS::GetCommandLineOption("variable_dump_exclude",
+            if (!google::GetCommandLineOption("variable_dump_exclude",
                                                  &options.black_wildcards)) {
                 FLARE_LOG(ERROR) << "Fail to get gflag variable_dump_exclude";
                 return NULL;
             }
-            if (!GFLAGS_NS::GetCommandLineOption("variable_dump_prefix", &prefix)) {
+            if (!google::GetCommandLineOption("variable_dump_prefix", &prefix)) {
                 FLARE_LOG(ERROR) << "Fail to get gflag variable_dump_prefix";
                 return NULL;
             }
-            if (!GFLAGS_NS::GetCommandLineOption("variable_dump_tabs", &tabs)) {
+            if (!google::GetCommandLineOption("variable_dump_tabs", &tabs)) {
                 FLARE_LOG(ERROR) << "Fail to get gflags variable_dump_tabs";
                 return NULL;
             }
@@ -788,7 +788,7 @@ namespace flare::variable {
         return true;
     }
 
-    const bool FLARE_ALLOW_UNUSED dummy_variable_dump = ::GFLAGS_NS::RegisterFlagValidator(
+    const bool FLARE_ALLOW_UNUSED dummy_variable_dump = ::google::RegisterFlagValidator(
             &FLAGS_variable_dump, validate_variable_dump);
 
 // validators (to make these gflags reloadable in flare)
@@ -804,12 +804,12 @@ namespace flare::variable {
         return true;
     }
 
-    const bool FLARE_ALLOW_UNUSED dummy_variable_dump_interval = ::GFLAGS_NS::RegisterFlagValidator(
+    const bool FLARE_ALLOW_UNUSED dummy_variable_dump_interval = ::google::RegisterFlagValidator(
             &FLAGS_variable_dump_interval, validate_variable_dump_interval);
 
     static bool validate_variable_log_dumpped(const char *, bool) { return true; }
 
-    const bool FLARE_ALLOW_UNUSED dummy_variable_log_dumpped = ::GFLAGS_NS::RegisterFlagValidator(
+    const bool FLARE_ALLOW_UNUSED dummy_variable_log_dumpped = ::google::RegisterFlagValidator(
             &FLAGS_variable_log_dumpped, validate_variable_log_dumpped);
 
     static bool wakeup_dumping_thread(const char *, const std::string &) {
@@ -819,15 +819,15 @@ namespace flare::variable {
         return true;
     }
 
-    const bool FLARE_ALLOW_UNUSED dummy_variable_dump_file = ::GFLAGS_NS::RegisterFlagValidator(
+    const bool FLARE_ALLOW_UNUSED dummy_variable_dump_file = ::google::RegisterFlagValidator(
             &FLAGS_variable_dump_file, wakeup_dumping_thread);
-    const bool FLARE_ALLOW_UNUSED dummy_variable_dump_filter = ::GFLAGS_NS::RegisterFlagValidator(
+    const bool FLARE_ALLOW_UNUSED dummy_variable_dump_filter = ::google::RegisterFlagValidator(
             &FLAGS_variable_dump_include, wakeup_dumping_thread);
-    const bool FLARE_ALLOW_UNUSED dummy_variable_dump_exclude = ::GFLAGS_NS::RegisterFlagValidator(
+    const bool FLARE_ALLOW_UNUSED dummy_variable_dump_exclude = ::google::RegisterFlagValidator(
             &FLAGS_variable_dump_exclude, wakeup_dumping_thread);
-    const bool FLARE_ALLOW_UNUSED dummy_variable_dump_prefix = ::GFLAGS_NS::RegisterFlagValidator(
+    const bool FLARE_ALLOW_UNUSED dummy_variable_dump_prefix = ::google::RegisterFlagValidator(
             &FLAGS_variable_dump_prefix, wakeup_dumping_thread);
-    const bool FLARE_ALLOW_UNUSED dummy_variable_dump_tabs = ::GFLAGS_NS::RegisterFlagValidator(
+    const bool FLARE_ALLOW_UNUSED dummy_variable_dump_tabs = ::google::RegisterFlagValidator(
             &FLAGS_variable_dump_tabs, wakeup_dumping_thread);
 
     void to_underscored_name(std::string *name, const std::string_view &src) {

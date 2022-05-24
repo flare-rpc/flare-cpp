@@ -1,7 +1,7 @@
 
 #include "flare/base/base64.h"
 
-#include <gtest/gtest.h>
+#include "testing/gtest_wrap.h"
 
 namespace flare::base {
 

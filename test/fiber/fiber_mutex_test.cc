@@ -16,7 +16,7 @@
 // under the License.
 
 #include <inttypes.h>
-#include <gtest/gtest.h>
+#include "testing/gtest_wrap.h"
 #include "flare/base/compat.h"
 #include "flare/times/time.h"
 #include "flare/strings/str_format.h"

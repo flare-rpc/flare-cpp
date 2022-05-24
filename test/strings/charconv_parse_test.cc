@@ -7,8 +7,8 @@
 #include <string>
 #include <utility>
 
-#include "gmock/gmock.h"
-#include "gtest/gtest.h"
+
+#include "testing/gtest_wrap.h"
 #include "flare/log/logging.h"
 #include "flare/strings/str_cat.h"
 

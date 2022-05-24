@@ -17,6 +17,8 @@
 
 // Date: Fri Jul 24 17:19:40 CST 2015
 
+#include "testing/gtest_wrap.h"
+
 #include <pthread.h>                                // pthread_*
 
 #include <cstddef>
@@ -28,7 +30,6 @@
 #include "flare/variable/all.h"
 
 #include <gflags/gflags.h>
-#include <gtest/gtest.h>
 
 namespace flare::variable {
 DECLARE_bool(variable_log_dumpped);
@@ -375,6 +376,6 @@ TEST_F(VariableTest, recursive_mutex) {
 
 int main(int argc, char** argv) {
     testing::InitGoogleTest(&argc, argv);
-    GFLAGS_NS::ParseCommandLineFlags(&argc, &argv, true);
+    google::ParseCommandLineFlags(&argc, &argv, true);
     return RUN_ALL_TESTS();
 }

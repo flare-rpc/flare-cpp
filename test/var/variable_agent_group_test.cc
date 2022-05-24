@@ -15,8 +15,9 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#include <pthread.h>                                // pthread_*
+#include "testing/gtest_wrap.h"
 
+#include <pthread.h>                                // pthread_*
 #include <cstddef>
 #include <memory>
 #include <iostream>
@@ -25,7 +26,6 @@
 #include "flare/variable/detail/agent_group.h"
 #include "flare/base/static_atomic.h"
 
-#include <gtest/gtest.h>
 
 namespace {
 using namespace flare::variable::detail;

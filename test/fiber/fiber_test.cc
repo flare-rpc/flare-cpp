@@ -16,7 +16,7 @@
 // under the License.
 
 #include <execinfo.h>
-#include <gtest/gtest.h>
+#include "testing/gtest_wrap.h"
 #include "flare/times/time.h"
 #include "flare/log/logging.h"
 #include "flare/base/gperftools_profiler.h"

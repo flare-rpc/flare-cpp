@@ -20,7 +20,7 @@
 // Date: Sun Jul 13 15:04:18 CST 2014
 
 #include <fstream>
-#include <gtest/gtest.h>
+#include "testing/gtest_wrap.h"
 #include <google/protobuf/descriptor.h>
 #include "flare/times/time.h"
 #include "flare/base/fd_guard.h"
@@ -40,7 +40,7 @@ namespace flare::rpc {
 
 int main(int argc, char *argv[]) {
     testing::InitGoogleTest(&argc, argv);
-    GFLAGS_NS::ParseCommandLineFlags(&argc, &argv, true);
+    google::ParseCommandLineFlags(&argc, &argv, true);
     flare::rpc::GlobalInitializeOrDie();
     return RUN_ALL_TESTS();
 }

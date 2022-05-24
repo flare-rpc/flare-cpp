@@ -15,12 +15,13 @@
 #include <unordered_set>
 #include <vector>
 
-#include "gmock/gmock.h"
-#include "gtest/gtest.h"
+
+#include "testing/gtest_wrap.h"
 #include "flare/base/dynamic_annotations/dynamic_annotations.h"  // for RunningOnValgrind
 #include "flare/base/profile.h"
 #include "flare/strings/numbers.h"
 
+#ifndef FLARE_PLATFORM_OSX
 namespace {
 
     using ::testing::ElementsAre;
@@ -55,10 +56,10 @@ namespace {
                       "");
     }
 
-// This tests the overall split API, which is made up of the flare:: string_split()
-// function and the Delimiter objects in the flare:: namespace.
-// This TEST macro is outside of any namespace to require full specification of
-// namespaces just like callers will need to use.
+    // This tests the overall split API, which is made up of the flare:: string_split()
+    // function and the Delimiter objects in the flare:: namespace.
+    // This TEST macro is outside of any namespace to require full specification of
+    // namespaces just like callers will need to use.
     TEST(Split, APIExamples) {
         {
             // Passes std::string delimiter. Assumes the default of by_string.
@@ -765,11 +766,11 @@ namespace {
                expected_pos == found.data() - text.data();
     }
 
-// Helper function for testing Delimiter objects. Returns true if the given
-// Delimiter is found in the given string at the given position. This function
-// tests two cases:
-//   1. The actual text given, staring at position 0
-//   2. The text given with leading padding that should be ignored
+    // Helper function for testing Delimiter objects. Returns true if the given
+    // Delimiter is found in the given string at the given position. This function
+    // tests two cases:
+    //   1. The actual text given, staring at position 0
+    //   2. The text given with leading padding that should be ignored
     template<typename Delimiter>
     static bool IsFoundAt(std::string_view text, Delimiter d, int expected_pos) {
         const std::string leading_text = ",x,y,z,";
@@ -779,11 +780,11 @@ namespace {
                                     expected_pos + leading_text.length());
     }
 
-//
-// Tests for by_string
-//
+    //
+    // Tests for by_string
+    //
 
-// Tests using any delimiter that represents a single comma.
+    // Tests using any delimiter that represents a single comma.
     template<typename Delimiter>
     void TestComma(Delimiter d) {
         EXPECT_TRUE(IsFoundAt(",", d, 0));
@@ -879,9 +880,9 @@ namespace {
         EXPECT_TRUE(IsFoundAt("abc", empty, 1));
     }
 
-//
-// Tests for  by_length
-//
+    //
+    // Tests for  by_length
+    //
 
     TEST(Delimiter, by_length) {
         using flare::by_length;
@@ -931,3 +932,4 @@ namespace {
     }
 
 }  // namespace
+#endif

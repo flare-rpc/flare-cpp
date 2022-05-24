@@ -20,7 +20,7 @@
 // Date: Tue Oct 9 20:27:18 CST 2018
 
 #include <gflags/gflags.h>
-#include <gtest/gtest.h>
+#include "testing/gtest_wrap.h"
 #include "flare/fiber/internal/fiber.h"
 #include "flare/base/static_atomic.h"
 #include "flare/rpc/policy/http_rpc_protocol.h"

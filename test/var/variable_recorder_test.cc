@@ -17,6 +17,7 @@
 
 // Date 2014/10/13 19:47:59
 
+#include "testing/gtest_wrap.h"
 #include <pthread.h>                                // pthread_*
 
 #include <cstddef>
@@ -26,7 +27,6 @@
 #include "flare/variable/recorder.h"
 #include "flare/variable/latency_recorder.h"
 #include "flare/strings/str_join.h"
-#include <gtest/gtest.h>
 
 namespace {
 TEST(RecorderTest, test_complement) {

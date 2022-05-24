@@ -19,7 +19,7 @@
 
 // Date: 2015/10/22 16:28:44
 
-#include <gtest/gtest.h>
+#include "testing/gtest_wrap.h"
 
 #include "flare/rpc/server.h"
 #include "flare/rpc/controller.h"

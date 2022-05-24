@@ -18,7 +18,7 @@
 // Date: 2015/03/31 14:50:20
 
 
-#include <gtest/gtest.h>
+#include "testing/gtest_wrap.h"
 #include <google/protobuf/descriptor.h>
 #include <google/protobuf/descriptor.pb.h>
 #include <google/protobuf/dynamic_message.h>

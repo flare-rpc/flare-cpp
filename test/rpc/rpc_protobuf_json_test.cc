@@ -16,7 +16,7 @@
 // under the License.
 
 #include <sys/time.h>
-#include <gtest/gtest.h>
+#include "testing/gtest_wrap.h"
 #include <iostream>
 #include <fstream>
 #include <string>

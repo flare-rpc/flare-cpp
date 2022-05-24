@@ -15,11 +15,11 @@
 // specific language governing permissions and limitations
 // under the License.
 
+#include "testing/gtest_wrap.h"
 #include <limits>                           //std::numeric_limits
 #include "flare/variable/detail/sampler.h"
 #include "flare/times/time.h"
 #include "flare/log/logging.h"
-#include <gtest/gtest.h>
 
 namespace {
 

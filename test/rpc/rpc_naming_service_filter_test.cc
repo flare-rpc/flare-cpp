@@ -16,7 +16,7 @@
 // under the License.
 
 #include <stdio.h>
-#include <gtest/gtest.h>
+#include "testing/gtest_wrap.h"
 #include <vector>
 #include "flare/strings/str_format.h"
 #include "flare/files/temp_file.h"

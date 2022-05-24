@@ -17,9 +17,9 @@
 
 // Date: 2015/09/15 15:42:55
 
+#include "testing/gtest_wrap.h"
 #include "flare/variable/detail/percentile.h"
 #include "flare/log/logging.h"
-#include <gtest/gtest.h>
 #include <fstream>
 
 class PercentileTest : public testing::Test {

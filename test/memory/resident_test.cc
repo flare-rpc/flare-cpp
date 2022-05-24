@@ -2,7 +2,7 @@
 // Created by jeff.li.
 //
 #include "flare/memory/resident.h"
-#include "gtest/gtest.h"
+#include "testing/gtest_wrap.h"
 
 namespace flare {
 

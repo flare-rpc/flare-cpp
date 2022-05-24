@@ -14,7 +14,7 @@
 #include <cstring>
 #include <iostream>
 #include <memory>
-#include <gtest/gtest.h>
+#include "testing/gtest_wrap.h"
 #include <gmock/gmock.h>
 #include "flare/base/profile.h"
 #include "flare/base/math/bit_cast.h"

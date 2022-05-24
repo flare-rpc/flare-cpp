@@ -22,7 +22,7 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <fstream>
-#include <gtest/gtest.h>
+#include "testing/gtest_wrap.h"
 #include <gflags/gflags.h>
 #include <google/protobuf/descriptor.h>
 #include "flare/base/gperftools_profiler.h"

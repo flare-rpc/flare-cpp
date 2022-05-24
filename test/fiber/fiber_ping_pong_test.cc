@@ -21,7 +21,7 @@
 #include <stdio.h>
 #include <signal.h>
 #include <gflags/gflags.h>
-#include <gtest/gtest.h>
+#include "testing/gtest_wrap.h"
 #include "flare/base/compat.h"
 #include "flare/times/time.h"
 #include "flare/base/errno.h"

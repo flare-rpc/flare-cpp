@@ -3,7 +3,7 @@
 //
 
 #include <testing/filesystem_test_util.h>
-#include <gtest/gtest.h>
+#include "testing/gtest_wrap.h"
 
 TEST(directory, entry) {
     TemporaryDirectory t;

@@ -9,8 +9,8 @@
 #pragma warning(push, 0)
 #endif
 
-#include "gmock/gmock.h"
-#include "gtest/gtest.h"
+
+#include "testing/gtest_wrap.h"
 #include "hash_generator_testing.h"
 #include "hash_policy_testing.h"
 

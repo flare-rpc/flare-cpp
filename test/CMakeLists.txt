@@ -42,17 +42,10 @@ compile_proto(PROTO_HDRS PROTO_SRCS ${CMAKE_BINARY_DIR}/test
         "${TEST_PROTO_FILES}")
 add_library(TEST_PROTO_LIB OBJECT ${PROTO_SRCS} ${PROTO_HDRS})
 
-set(BRPC_SYSTEM_GTEST_SOURCE_DIR "" CACHE PATH "System googletest source directory.")
+include(require_gtest)
+include(require_gmock)
 
-if (DOWNLOAD_GTEST)
-    include(SetupGtest)
-elseif (BRPC_SYSTEM_GTEST_SOURCE_DIR)
-    add_subdirectory("${BRPC_SYSTEM_GTEST_SOURCE_DIR}" "${PROJECT_BINARY_DIR}/system-googletest-build")
-else ()
-    message(FATAL_ERROR "Googletest is not available")
-endif ()
-
-set(CMAKE_CPP_FLAGS "${DEFINE_CLOCK_GETTIME}  -DGFLAGS_NS=${GFLAGS_NS}")
+set(CMAKE_CPP_FLAGS "${DEFINE_CLOCK_GETTIME}")
 set(CMAKE_CPP_FLAGS "${CMAKE_CPP_FLAGS} -DFIBER_USE_FAST_PTHREAD_MUTEX -D__const__= -D_GNU_SOURCE -DUSE_SYMBOLIZE -DNO_TCMALLOC -D__STDC_FORMAT_MACROS -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -DUNIT_TEST -Dprivate=public -Dprotected=public -DVARIABLE_NOT_LINK_DEFAULT_VARIABLES -D__STRICT_ANSI__ -include ${PROJECT_SOURCE_DIR}/test/sstream_workaround.h")
 set(CMAKE_CXX_FLAGS "${CMAKE_CPP_FLAGS} -g -O2 -pipe -Wall -W -fPIC -fstrict-aliasing -Wno-invalid-offsetof -Wno-unused-parameter -fno-omit-frame-pointer")
 use_cxx17()
@@ -114,8 +107,8 @@ target_link_libraries(flare-shared-debug ${DYNAMIC_LIB})
 add_executable(test_io io/cord_buf_test.cc
         ${CMAKE_CURRENT_BINARY_DIR}/cord_buf.pb.cc)
 target_link_libraries(test_io flare-shared-debug
-        gtest
-        gtest_main
+        ${GTEST_MAIN_LIB}
+        ${GTEST_LIB}
         ${GPERFTOOLS_LIBRARIES})
 
 add_test(NAME test_io COMMAND test_io)

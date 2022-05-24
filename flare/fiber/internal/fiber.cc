@@ -47,13 +47,13 @@ namespace flare::fiber_internal {
     }
 
     const int FLARE_ALLOW_UNUSED register_FLAGS_fiber_concurrency =
-            ::GFLAGS_NS::RegisterFlagValidator(&FLAGS_fiber_concurrency,
+            ::google::RegisterFlagValidator(&FLAGS_fiber_concurrency,
                                                validate_fiber_concurrency);
 
     static bool validate_fiber_min_concurrency(const char *, int32_t val);
 
     const int FLARE_ALLOW_UNUSED register_FLAGS_fiber_min_concurrency =
-            ::GFLAGS_NS::RegisterFlagValidator(&FLAGS_fiber_min_concurrency,
+            ::google::RegisterFlagValidator(&FLAGS_fiber_min_concurrency,
                                                validate_fiber_min_concurrency);
 
     static_assert(sizeof(schedule_group *) == sizeof(std::atomic<schedule_group *>), "atomic_size_match");

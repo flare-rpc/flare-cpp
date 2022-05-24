@@ -28,13 +28,13 @@ namespace flare::fiber_internal {
                                                     "from fiber creation to first run will be recorded and shown "
                                                     "in /vars");
     const bool FLARE_ALLOW_UNUSED dummy_show_fiber_creation_in_vars =
-            ::GFLAGS_NS::RegisterFlagValidator(&FLAGS_show_fiber_creation_in_vars,
+            ::google::RegisterFlagValidator(&FLAGS_show_fiber_creation_in_vars,
                                                pass_bool);
 
     DEFINE_bool(show_per_worker_usage_in_vars, false,
                 "Show per-worker usage in /vars/fiber_per_worker_usage_<tid>");
     const bool FLARE_ALLOW_UNUSED dummy_show_per_worker_usage_in_vars =
-            ::GFLAGS_NS::RegisterFlagValidator(&FLAGS_show_per_worker_usage_in_vars,
+            ::google::RegisterFlagValidator(&FLAGS_show_per_worker_usage_in_vars,
                                                pass_bool);
 
     __thread fiber_worker *tls_task_group = nullptr;

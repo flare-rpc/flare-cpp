@@ -1,6 +1,6 @@
 
 
-#include <gtest/gtest.h>
+#include "testing/gtest_wrap.h"
 
 #include <flare/fiber/internal/execution_queue.h>
 #include <flare/fiber/internal/sys_futex.h>

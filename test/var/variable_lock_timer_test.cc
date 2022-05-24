@@ -17,11 +17,10 @@
 
 // Date: 2015/03/06 18:34:03
 
+#include "testing/gtest_wrap.h"
 #include <iostream>
-#if __cplusplus >= 201103L
 #include <condition_variable>
-#endif
-#include <gtest/gtest.h>
+
 #include "flare/base/gperftools_profiler.h"
 #include "flare/variable/utils/lock_timer.h"
 
@@ -58,7 +57,6 @@ using flare::variable::utils::MutexWithLatencyRecorder;
 class LockTimerTest : public testing::Test {
 };
 
-#if __cplusplus >= 201103L
 TEST_F(LockTimerTest, MutexWithRecorder) {
     IntRecorder recorder;
     MutexWithRecorder<std::mutex> mutex(recorder);
@@ -97,7 +95,6 @@ TEST_F(LockTimerTest, MutexWithLatencyRecorder) {
     }
     ASSERT_EQ(3u, recorder.count());
 }
-#endif
 
 TEST_F(LockTimerTest, pthread_mutex_and_cond) {
     LatencyRecorder recorder(10);

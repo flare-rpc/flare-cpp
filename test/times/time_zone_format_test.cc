@@ -7,8 +7,8 @@
 #include <sstream>
 #include <string>
 
-#include "gmock/gmock.h"
-#include "gtest/gtest.h"
+
+#include "testing/gtest_wrap.h"
 #include "flare/base/profile.h"
 #include "flare/times/internal/chrono_time_internal.h"
 #include "flare/times/internal/time_zone.h"

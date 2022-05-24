@@ -56,7 +56,7 @@ bool NonNegativeInteger(const char*, int64_t val) {
 template <typename T>
 static bool RegisterFlagValidatorOrDieImpl(
     const T* flag, bool (*validate_fn)(const char*, T val)) {
-    if (GFLAGS_NS::RegisterFlagValidator(flag, validate_fn)) {
+    if (google::RegisterFlagValidator(flag, validate_fn)) {
         return true;
     }
     // Error printed by gflags does not have newline. Add one to it.

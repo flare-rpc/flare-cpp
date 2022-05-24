@@ -1,5 +1,5 @@
 
-#include <gtest/gtest.h>
+#include "testing/gtest_wrap.h"
 #include "flare/base/errno.h"
 
 class ErrnoTest : public ::testing::Test {

@@ -34,8 +34,8 @@ GFlag::GFlag(const std::string_view& prefix,
 }
 
 void GFlag::describe(std::ostream& os, bool quote_string) const {
-    GFLAGS_NS::CommandLineFlagInfo info;
-    if (!GFLAGS_NS::GetCommandLineFlagInfo(gflag_name().c_str(), &info)) {
+    google::CommandLineFlagInfo info;
+    if (!google::GetCommandLineFlagInfo(gflag_name().c_str(), &info)) {
         if (quote_string) {
             os << '"';
         }
@@ -54,14 +54,14 @@ void GFlag::describe(std::ostream& os, bool quote_string) const {
 
 std::string GFlag::get_value() const {
     std::string str;
-    if (!GFLAGS_NS::GetCommandLineOption(gflag_name().c_str(), &str)) {
+    if (!google::GetCommandLineOption(gflag_name().c_str(), &str)) {
         return "Unknown gflag=" + gflag_name();
     }
     return str;
 }
 
 bool GFlag::set_value(const char* value) {
-    return !GFLAGS_NS::SetCommandLineOption(gflag_name().c_str(), value).empty();
+    return !google::SetCommandLineOption(gflag_name().c_str(), value).empty();
 }
 
 }  // namespace flare::variable

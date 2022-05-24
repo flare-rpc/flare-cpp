@@ -4,7 +4,7 @@
 
 #include "flare/fiber/future.h"
 #include "flare/fiber/fiber.h"
-#include "gtest/gtest.h"
+#include "testing/gtest_wrap.h"
 #include "flare/fiber/this_fiber.h"
 #include "flare/fiber/async.h"
 #include "flare/base/fast_rand.h"

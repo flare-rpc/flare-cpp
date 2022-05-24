@@ -17,7 +17,7 @@
 
 #include <inttypes.h>
 #include <map>
-#include <gtest/gtest.h>
+#include "testing/gtest_wrap.h"
 #include "flare/base/static_atomic.h"
 #include "flare/times/time.h"
 #include "flare/base/scoped_lock.h"

@@ -4,7 +4,7 @@
 
 #include "flare/times/internal/time_zone.h"
 
-#include "gtest/gtest.h"
+#include "testing/gtest_wrap.h"
 #include "testing/time_util.h"
 #include "flare/times/time.h"
 

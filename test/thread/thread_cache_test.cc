@@ -9,7 +9,7 @@
 #include <thread>
 #include <vector>
 
-#include "gtest/gtest.h"
+#include "testing/gtest_wrap.h"
 #include "flare/strings/numbers.h"
 #include "flare/times/time.h"
 #include "flare/thread/latch.h"

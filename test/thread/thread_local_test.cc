@@ -20,7 +20,7 @@
 #include <thread>
 #include <vector>
 
-#include "gtest/gtest.h"
+#include "testing/gtest_wrap.h"
 #include "flare/thread/latch.h"
 
 namespace flare {

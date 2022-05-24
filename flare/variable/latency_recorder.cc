@@ -34,11 +34,11 @@ namespace flare::variable {
         return v > 0 && v < 100;
     }
 
-    const bool FLARE_ALLOW_UNUSED dummy_variable_latency_p1 = ::GFLAGS_NS::RegisterFlagValidator(
+    const bool FLARE_ALLOW_UNUSED dummy_variable_latency_p1 = ::google::RegisterFlagValidator(
             &FLAGS_variable_latency_p1, valid_percentile);
-    const bool FLARE_ALLOW_UNUSED dummy_variable_latency_p2 = ::GFLAGS_NS::RegisterFlagValidator(
+    const bool FLARE_ALLOW_UNUSED dummy_variable_latency_p2 = ::google::RegisterFlagValidator(
             &FLAGS_variable_latency_p2, valid_percentile);
-    const bool FLARE_ALLOW_UNUSED dummy_variable_latency_p3 = ::GFLAGS_NS::RegisterFlagValidator(
+    const bool FLARE_ALLOW_UNUSED dummy_variable_latency_p3 = ::google::RegisterFlagValidator(
             &FLAGS_variable_latency_p3, valid_percentile);
 
     namespace detail {

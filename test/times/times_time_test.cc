@@ -15,8 +15,8 @@
 #include <limits>
 #include <string>
 
-#include "gmock/gmock.h"
-#include "gtest/gtest.h"
+
+#include "testing/gtest_wrap.h"
 #include "flare/base/int128.h"
 #include "testing/time_util.h"
 

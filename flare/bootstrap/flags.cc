@@ -32,9 +32,9 @@ namespace flare::detail {
     void apply_flags_overrider() {
         for (auto&&[k, v] : *get_registry()) {
             // Make sure the flag name is present.
-            auto current = GFLAGS_NS::GetCommandLineFlagInfoOrDie(k.c_str());
+            auto current = google::GetCommandLineFlagInfoOrDie(k.c_str());
             if (current.is_default || v.second) {
-                GFLAGS_NS::SetCommandLineOption(k.c_str(), v.first.c_str());
+                google::SetCommandLineOption(k.c_str(), v.first.c_str());
                 FLARE_VLOG(10)<<"Overriding flag ["<<k<<"] with ["<<v.first<<"].";
             }
         }

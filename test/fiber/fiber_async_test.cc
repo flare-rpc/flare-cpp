@@ -4,7 +4,7 @@
 
 #include <thread>
 #include "flare/fiber/async.h"
-#include "gtest/gtest.h"
+#include "testing/gtest_wrap.h"
 #include "flare/fiber/future.h"
 #include "flare/fiber/this_fiber.h"
 

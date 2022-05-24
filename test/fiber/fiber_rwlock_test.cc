@@ -19,7 +19,7 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <signal.h>
-#include <gtest/gtest.h>
+#include "testing/gtest_wrap.h"
 #include "flare/times/time.h"
 #include "flare/base/profile.h"
 

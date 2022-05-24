@@ -1,5 +1,5 @@
 
-#include <gtest/gtest.h>
+#include "testing/gtest_wrap.h"
 #include <errno.h>                     // errno
 #include "flare/files/temp_file.h"
 

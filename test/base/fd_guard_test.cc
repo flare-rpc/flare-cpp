@@ -3,7 +3,7 @@
 #include <sys/types.h>                          // open
 #include <sys/stat.h>                           // ^
 #include <fcntl.h>                              // ^
-#include <gtest/gtest.h>
+#include "testing/gtest_wrap.h"
 #include <errno.h>
 #include "flare/base/fd_guard.h"
 

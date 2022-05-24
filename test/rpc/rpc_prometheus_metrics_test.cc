@@ -17,7 +17,7 @@
 
 
 
-#include <gtest/gtest.h>
+#include "testing/gtest_wrap.h"
 #include "flare/rpc/server.h"
 #include "flare/rpc/channel.h"
 #include "flare/rpc/controller.h"

@@ -2,8 +2,8 @@
 #ifndef UNORDERED_MAP_LOOKUP_TEST_H_
 #define UNORDERED_MAP_LOOKUP_TEST_H_
 
-#include "gmock/gmock.h"
-#include "gtest/gtest.h"
+
+#include "testing/gtest_wrap.h"
 #include "hash_generator_testing.h"
 #include "hash_policy_testing.h"
 

@@ -1,5 +1,5 @@
 
-#include <gtest/gtest.h>
+#include "testing/gtest_wrap.h"
 #include "flare/files/file_watcher.h"
 #include "flare/log/logging.h"
 

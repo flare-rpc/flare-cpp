@@ -7,8 +7,8 @@
 #include <cstdlib>
 #include <string>
 
-#include "gmock/gmock.h"
-#include "gtest/gtest.h"
+
+#include "testing/gtest_wrap.h"
 #include "testing/pow10_helper.h"
 #include "flare/strings/str_cat.h"
 #include "flare/strings/str_format.h"

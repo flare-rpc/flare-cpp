@@ -15,6 +15,7 @@
 // specific language governing permissions and limitations
 // under the License.
 
+#include "testing/gtest_wrap.h"
 #include <limits>                           //std::numeric_limits
 
 #include "flare/variable/reducer.h"
@@ -22,7 +23,6 @@
 #include "flare/strings/str_format.h"
 #include "flare/strings/string_splitter.h"
 #include "flare/container/hash_tables.h"
-#include <gtest/gtest.h>
 
 namespace {
 class ReducerTest : public testing::Test {

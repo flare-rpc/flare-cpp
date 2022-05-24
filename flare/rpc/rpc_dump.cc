@@ -133,7 +133,7 @@ namespace flare::rpc {
 // Save gflags which could be reloaded at anytime.
     void RpcDumpContext::SaveFlags() {
         std::string dir;
-        FLARE_CHECK(GFLAGS_NS::GetCommandLineOption("rpc_dump_dir", &dir));
+        FLARE_CHECK(google::GetCommandLineOption("rpc_dump_dir", &dir));
 
         const size_t pos = dir.find("<app>");
         if (pos != std::string::npos) {

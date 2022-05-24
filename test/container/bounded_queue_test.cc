@@ -2,7 +2,7 @@
 
 #include <iostream>
 #include "flare/container/bounded_queue.h"
-#include <gtest/gtest.h>
+#include "testing/gtest_wrap.h"
 
 namespace {
 

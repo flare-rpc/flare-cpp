@@ -17,6 +17,7 @@
 
 // Date 2014/10/13 19:47:59
 
+#include "testing/gtest_wrap.h"
 #include <pthread.h>                                // pthread_*
 
 #include <cstddef>
@@ -25,7 +26,6 @@
 #include <sstream>
 #include "flare/times/time.h"
 #include "flare/variable/all.h"
-#include <gtest/gtest.h>
 
 namespace {
 class StatusTest : public testing::Test {

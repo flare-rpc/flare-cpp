@@ -2,7 +2,7 @@
 #include "flare/bootstrap/flags.h"
 #include "flare/bootstrap/bootstrap.h"
 #include "gflags/gflags.h"
-#include "gtest/gtest.h"
+#include "testing/gtest_wrap.h"
 
 DEFINE_bool(test, true, "");
 

@@ -1,5 +1,5 @@
 
-#include <gtest/gtest.h>
+#include "testing/gtest_wrap.h"
 #include <flare/fiber/fiber_latch.h>
 #include "flare/base/static_atomic.h"
 #include "flare/times/time.h"
