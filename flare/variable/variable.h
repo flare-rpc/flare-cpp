@@ -24,6 +24,7 @@
 #include <string>                      // std::string
 #include <vector>                      // std::vector
 #include <string_view>
+#include <map>
 #include <gflags/gflags_declare.h>
 #include "flare/base/profile.h"               // FLARE_DISALLOW_COPY_AND_ASSIGN
 
@@ -36,6 +37,7 @@ namespace flare::variable {
         DISPLAY_ON_HTML = 1,
         DISPLAY_ON_PLAIN_TEXT = 2,
         DISPLAY_ON_ALL = 3,
+        DISPLAY_ON_PROMETHEUS = 4,
     };
 
     // Implement this class to write variables into different places.
@@ -115,8 +117,9 @@ namespace flare::variable {
         //   find_exposed
         // Return 0 on success, -1 otherwise.
         int expose(const std::string_view &name,
+                   const std::map<std::string, std::string> &tags = std::map<std::string, std::string>(),
                    DisplayFilter display_filter = DISPLAY_ON_ALL) {
-            return expose_impl(std::string_view(), name, display_filter);
+            return expose_impl(std::string_view(), name, tags, display_filter);
         }
 
         // Expose this variable with a prefix.
@@ -136,8 +139,9 @@ namespace flare::variable {
         // Returns 0 on success, -1 otherwise.
         int expose_as(const std::string_view &prefix,
                       const std::string_view &name,
+                      const std::map<std::string, std::string> &tags = std::map<std::string, std::string>(),
                       DisplayFilter display_filter = DISPLAY_ON_ALL) {
-            return expose_impl(prefix, name, display_filter);
+            return expose_impl(prefix, name, tags, display_filter);
         }
 
         // Hide this variable so that it's not counted in *_exposed functions.
@@ -191,11 +195,12 @@ namespace flare::variable {
     protected:
         virtual int expose_impl(const std::string_view &prefix,
                                 const std::string_view &name,
+                                const std::map<std::string, std::string> &tags,
                                 DisplayFilter display_filter);
 
     private:
         std::string _name;
-
+        std::map<std::string, std::string> _tags;
         // variable uses TLS, thus copying/assignment need to copy TLS stuff as well,
         // which is heavy. We disable copying/assignment now.
         FLARE_DISALLOW_COPY_AND_ASSIGN(Variable);

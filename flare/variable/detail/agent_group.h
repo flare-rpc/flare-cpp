@@ -37,13 +37,13 @@ namespace flare::variable {
 
         typedef int AgentId;
 
-// General NOTES:
-// * Don't use bound-checking vector::at.
-// * static functions in template class are not guaranteed to be inlined,
-//   add inline keyword explicitly.
-// * Put fast path in "if" branch, which is more cpu-wise.
-// * don't use __builtin_expect excessively because CPU may predict the branch
-//   better than you. Only hint branches that are definitely unusual.
+        // General NOTES:
+        // * Don't use bound-checking vector::at.
+        // * static functions in template class are not guaranteed to be inlined,
+        //   add inline keyword explicitly.
+        // * Put fast path in "if" branch, which is more cpu-wise.
+        // * don't use __builtin_expect excessively because CPU may predict the branch
+        //   better than you. Only hint branches that are definitely unusual.
 
         template<typename Agent>
         class AgentGroup {

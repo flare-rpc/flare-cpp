@@ -153,8 +153,9 @@ namespace flare::variable {
     protected:
         int expose_impl(const std::string_view &prefix,
                         const std::string_view &name,
+                        const std::map<std::string, std::string> &tags,
                         DisplayFilter display_filter) override {
-            const int rc = Variable::expose_impl(prefix, name, display_filter);
+            const int rc = Variable::expose_impl(prefix, name, tags, display_filter);
             if (rc == 0 &&
                 _series_sampler == NULL &&
                 FLAGS_save_series) {

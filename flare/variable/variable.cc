@@ -34,6 +34,7 @@
 #include "flare/strings/str_format.h"
 #include "flare/strings/ends_with.h"
 #include "flare/strings/strip.h"
+#include "flare/strings/str_join.h"
 
 namespace flare::variable {
 
@@ -46,7 +47,7 @@ namespace flare::variable {
 
     DEFINE_bool(variable_abort_on_same_name, false,
                 "Abort when names of variable are same");
-// Remember abort request before variable_abort_on_same_name is initialized.
+    // Remember abort request before variable_abort_on_same_name is initialized.
     static bool s_var_may_abort = false;
 
     static bool validate_variable_abort_on_same_name(const char *, bool v) {
@@ -93,8 +94,8 @@ namespace flare::variable {
         }
     };
 
-// We have to initialize global map on need because variable is possibly used
-// before main().
+    // We have to initialize global map on need because variable is possibly used
+    // before main().
     static pthread_once_t s_var_maps_once = PTHREAD_ONCE_INIT;
     static VarMapWithLock *s_var_maps = NULL;
 
@@ -133,6 +134,7 @@ namespace flare::variable {
 
     int Variable::expose_impl(const std::string_view &prefix,
                               const std::string_view &name,
+                              const std::map<std::string, std::string> &tags,
                               DisplayFilter display_filter) {
         if (name.empty()) {
             FLARE_LOG(ERROR) << "Parameter[name] is empty";
@@ -150,7 +152,10 @@ namespace flare::variable {
 
         // Build the name.
         _name.clear();
-        _name.reserve((prefix.size() + name.size()) * 5 / 4);
+        _tags.clear();
+        _tags = tags;
+        std::string tags_str = flare::string_join(_tags, "_", flare::pair_formatter("_"));
+        _name.reserve((prefix.size() + name.size() + tags_str.size()) * 5 / 4);
         if (!prefix.empty()) {
             to_underscored_name(&_name, prefix);
             if (!_name.empty() && flare::back_char(_name) != '_') {
@@ -158,7 +163,10 @@ namespace flare::variable {
             }
         }
         to_underscored_name(&_name, name);
-
+        if(_tags.size() > 0) {
+            _name.push_back('_');
+            to_underscored_name(&_name, tags_str);
+        }
         VarMapWithLock &m = get_var_map(_name);
         {
             FLARE_SCOPED_LOCK(m.mutex);
@@ -353,8 +361,8 @@ namespace flare::variable {
     }
 
 
-// Written by Jack Handy
-// <A href="mailto:jakkhandy@hotmail.com">jakkhandy@hotmail.com</A>
+    // Written by Jack Handy
+    // <A href="mailto:jakkhandy@hotmail.com">jakkhandy@hotmail.com</A>
     inline bool wildcmp(const char *wild, const char *str, char question_mark) {
         const char *cp = NULL;
         const char *mp = NULL;

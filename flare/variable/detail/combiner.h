@@ -34,7 +34,7 @@
 namespace flare::variable {
     namespace detail {
 
-// Parameter to merge_global.
+        // Parameter to merge_global.
         template<typename Combiner>
         class GlobalValue {
         public:

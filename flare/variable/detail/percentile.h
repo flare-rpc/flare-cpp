@@ -35,7 +35,7 @@
 namespace flare::variable {
     namespace detail {
 
-// Round of expectation of a rational number |a/b| to a natural number.
+        // Round of expectation of a rational number |a/b| to a natural number.
         inline unsigned long round_of_expectation(unsigned long a, unsigned long b) {
             if (FLARE_UNLIKELY(b == 0)) {
                 return 0;
@@ -43,7 +43,7 @@ namespace flare::variable {
             return a / b + (flare::base::fast_rand_less_than(b) < a % b);
         }
 
-// Storing latencies inside a interval.
+        // Storing latencies inside a interval.
         template<size_t SAMPLE_SIZE>
         class PercentileInterval {
         public:
@@ -439,13 +439,13 @@ namespace flare::variable {
             return os;
         }
 
-// NOTE: we intentionally minus 2 uint32_t from sample-size to make the struct
-// size be power of 2 and more friendly to memory allocators.
+        // NOTE: we intentionally minus 2 uint32_t from sample-size to make the struct
+        // size be power of 2 and more friendly to memory allocators.
         typedef PercentileSamples<254> GlobalPercentileSamples;
         typedef PercentileSamples<30> ThreadLocalPercentileSamples;
 
-// A specialized reducer for finding the percentile of latencies.
-// NOTE: DON'T use it directly, use LatencyRecorder instead.
+        // A specialized reducer for finding the percentile of latencies.
+        // NOTE: DON'T use it directly, use LatencyRecorder instead.
         class Percentile {
         public:
             struct AddPercentileSamples {

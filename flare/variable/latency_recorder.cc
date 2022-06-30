@@ -105,7 +105,7 @@ namespace flare::variable {
             return static_cast<IntRecorder *>(arg)->get_value().num;
         }
 
-// Caller is responsible for deleting the return value.
+        // Caller is responsible for deleting the return value.
         static CombinedPercentileSamples *combine(PercentileWindow *w) {
             CombinedPercentileSamples *cb = new CombinedPercentileSamples;
             std::vector<GlobalPercentileSamples> buckets;
@@ -218,27 +218,27 @@ namespace flare::variable {
         }
         char namebuf[32];
         snprintf(namebuf, sizeof(namebuf), "latency_%d", (int) FLAGS_variable_latency_p1);
-        if (_latency_p1.expose_as(prefix, namebuf, DISPLAY_ON_PLAIN_TEXT) != 0) {
+        if (_latency_p1.expose_as(prefix, namebuf, {}, DISPLAY_ON_PLAIN_TEXT) != 0) {
             return -1;
         }
         snprintf(namebuf, sizeof(namebuf), "latency_%d", (int) FLAGS_variable_latency_p2);
-        if (_latency_p2.expose_as(prefix, namebuf, DISPLAY_ON_PLAIN_TEXT) != 0) {
+        if (_latency_p2.expose_as(prefix, namebuf, {}, DISPLAY_ON_PLAIN_TEXT) != 0) {
             return -1;
         }
         snprintf(namebuf, sizeof(namebuf), "latency_%u", (int) FLAGS_variable_latency_p3);
-        if (_latency_p3.expose_as(prefix, namebuf, DISPLAY_ON_PLAIN_TEXT) != 0) {
+        if (_latency_p3.expose_as(prefix, namebuf, {}, DISPLAY_ON_PLAIN_TEXT) != 0) {
             return -1;
         }
-        if (_latency_999.expose_as(prefix, "latency_999", DISPLAY_ON_PLAIN_TEXT) != 0) {
+        if (_latency_999.expose_as(prefix, "latency_999", {}, DISPLAY_ON_PLAIN_TEXT) != 0) {
             return -1;
         }
         if (_latency_9999.expose_as(prefix, "latency_9999") != 0) {
             return -1;
         }
-        if (_latency_cdf.expose_as(prefix, "latency_cdf", DISPLAY_ON_HTML) != 0) {
+        if (_latency_cdf.expose_as(prefix, "latency_cdf", {}, DISPLAY_ON_HTML) != 0) {
             return -1;
         }
-        if (_latency_percentiles.expose_as(prefix, "latency_percentiles", DISPLAY_ON_HTML) != 0) {
+        if (_latency_percentiles.expose_as(prefix, "latency_percentiles", {}, DISPLAY_ON_HTML) != 0) {
             return -1;
         }
         snprintf(namebuf, sizeof(namebuf), "%d%%,%d%%,%d%%,99.9%%",
