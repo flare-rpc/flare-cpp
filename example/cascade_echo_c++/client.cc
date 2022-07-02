@@ -43,7 +43,7 @@ DEFINE_int32(depth, 0, "number of loop calls");
 DEFINE_int32(sleep_ms, 1000, "milliseconds to sleep after each RPC");
 DEFINE_int32(dummy_port, -1, "Launch dummy server at this port");
 
-flare::variable::LatencyRecorder g_latency_recorder("client");
+flare::LatencyRecorder g_latency_recorder("client");
 
 void* sender(void* arg) {
     flare::rpc::Channel* chan = (flare::rpc::Channel*)arg;

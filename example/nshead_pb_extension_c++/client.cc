@@ -25,7 +25,7 @@
 #include <flare/rpc/nshead_message.h>
 #include <flare/variable/all.h>
 
-flare::variable::LatencyRecorder g_latency_recorder("client");
+flare::LatencyRecorder g_latency_recorder("client");
 
 DEFINE_string(server, "0.0.0.0:8010", "IP Address of server");
 DEFINE_string(load_balancer, "", "The algorithm for load balancing");

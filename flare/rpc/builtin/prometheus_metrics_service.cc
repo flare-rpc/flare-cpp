@@ -24,13 +24,13 @@
 #include "flare/rpc/closure_guard.h"             // ClosureGuard
 #include "flare/rpc/builtin/prometheus_metrics_service.h"
 #include "flare/rpc/builtin/common.h"
-#include "flare/variable/all.h"
+#include "flare/metrics/all.h"
 #include "flare/strings/str_format.h"
 #include "flare/strings/utility.h"
 #include "flare/strings/starts_with.h"
 #include "flare/strings/ends_with.h"
 
-namespace flare::variable {
+namespace flare {
     DECLARE_int32(variable_latency_p1);
     DECLARE_int32(variable_latency_p2);
     DECLARE_int32(variable_latency_p3);
@@ -48,7 +48,7 @@ namespace flare::rpc {
     // more counter is just another gauge.
     // 2) Histogram and summary is equivalent except that histogram
     // calculates quantiles in the server side.
-    class PrometheusMetricsDumper : public flare::variable::Dumper {
+    class PrometheusMetricsDumper : public flare::Dumper {
     public:
         explicit PrometheusMetricsDumper(flare::cord_buf_builder *os,
                                          const std::string &server_prefix)
@@ -106,9 +106,9 @@ namespace flare::rpc {
     PrometheusMetricsDumper::ProcessLatencyRecorderSuffix(const std::string_view &name,
                                                           const std::string_view &desc) {
         static std::string latency_names[] = {
-                flare::string_printf("_latency_%d", (int) flare::variable::FLAGS_variable_latency_p1),
-                flare::string_printf("_latency_%d", (int) flare::variable::FLAGS_variable_latency_p2),
-                flare::string_printf("_latency_%d", (int) flare::variable::FLAGS_variable_latency_p3),
+                flare::string_printf("_latency_%d", (int) flare::FLAGS_variable_latency_p1),
+                flare::string_printf("_latency_%d", (int) flare::FLAGS_variable_latency_p2),
+                flare::string_printf("_latency_%d", (int) flare::FLAGS_variable_latency_p3),
                 "_latency_999", "_latency_9999", "_max_latency"
         };
         FLARE_CHECK(NPERCENTILES == FLARE_ARRAY_SIZE(latency_names));
@@ -161,13 +161,13 @@ namespace flare::rpc {
         *_os << "# HELP " << si->metric_name << '\n'
              << "# TYPE " << si->metric_name << " summary\n"
              << si->metric_name << "{quantile=\""
-             << (double) (flare::variable::FLAGS_variable_latency_p1) / 100 << "\"} "
+             << (double) (flare::FLAGS_variable_latency_p1) / 100 << "\"} "
              << si->latency_percentiles[0] << '\n'
              << si->metric_name << "{quantile=\""
-             << (double) (flare::variable::FLAGS_variable_latency_p2) / 100 << "\"} "
+             << (double) (flare::FLAGS_variable_latency_p2) / 100 << "\"} "
              << si->latency_percentiles[1] << '\n'
              << si->metric_name << "{quantile=\""
-             << (double) (flare::variable::FLAGS_variable_latency_p3) / 100 << "\"} "
+             << (double) (flare::FLAGS_variable_latency_p3) / 100 << "\"} "
              << si->latency_percentiles[2] << '\n'
              << si->metric_name << "{quantile=\"0.999\"} "
              << si->latency_percentiles[3] << '\n'
@@ -199,7 +199,7 @@ namespace flare::rpc {
     int DumpPrometheusMetricsToCordBuf(flare::cord_buf *output) {
         flare::cord_buf_builder os;
         PrometheusMetricsDumper dumper(&os, g_server_info_prefix);
-        const int ndump = flare::variable::Variable::dump_exposed(&dumper, NULL);
+        const int ndump = flare::variable_base::dump_exposed(&dumper, NULL);
         if (ndump < 0) {
             return -1;
         }

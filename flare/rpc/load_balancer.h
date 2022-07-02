@@ -19,7 +19,7 @@
 #ifndef FLARE_RPC_LOAD_BALANCER_H_
 #define FLARE_RPC_LOAD_BALANCER_H_
 
-#include "flare/variable/passive_status.h"
+#include "flare/metrics/passive_status.h"
 #include "flare/rpc/describable.h"
 #include "flare/rpc/destroyable.h"
 #include "flare/rpc/excluded_servers.h"                // ExcludedServers
@@ -180,7 +180,7 @@ namespace flare::rpc {
         std::atomic<int> _weight_sum;
         volatile bool _exposed;
         flare::base::Mutex _st_mutex;
-        flare::variable::PassiveStatus<std::string> _st;
+        flare::PassiveStatus<std::string> _st;
     };
 
     // For registering global instances.

@@ -123,9 +123,9 @@ namespace flare::fiber_internal {
     }
 
     void fiber_worker::run_main_task() {
-        flare::variable::PassiveStatus<double> cumulated_cputime(
+        flare::PassiveStatus<double> cumulated_cputime(
                 get_cumulated_cputime_from_this, this);
-        std::unique_ptr<flare::variable::PerSecond<flare::variable::PassiveStatus<double> > > usage_variable;
+        std::unique_ptr<flare::PerSecond<flare::PassiveStatus<double> > > usage_variable;
 
         fiber_worker *dummy = this;
         fiber_id_t tid;
@@ -145,7 +145,7 @@ namespace flare::fiber_internal {
                 snprintf(name, sizeof(name), "fiber_worker_usage_%ld",
                          (long)syscall(SYS_gettid));
 #endif
-                usage_variable.reset(new flare::variable::PerSecond<flare::variable::PassiveStatus<double> >
+                usage_variable.reset(new flare::PerSecond<flare::PassiveStatus<double> >
                                              (name, &cumulated_cputime, 1));
             }
         }
@@ -249,7 +249,7 @@ namespace flare::fiber_internal {
 
             if (FLAGS_show_fiber_creation_in_vars) {
                 // NOTE: the thread triggering exposure of pending time may spend
-                // considerable time because a single flare::variable::LatencyRecorder
+                // considerable time because a single flare::LatencyRecorder
                 // contains many variable.
                 g->_control->exposed_pending_time() <<
                                                     (flare::get_current_time_nanos() - m->cpuwide_start_ns) / 1000L;

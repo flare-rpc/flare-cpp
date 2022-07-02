@@ -37,7 +37,7 @@ DEFINE_bool(dont_fail, false, "Print fatal when some call failed");
 DEFINE_int32(dummy_port, -1, "Launch dummy server at this port");
 DEFINE_string(protocol, "http", "Client-side protocol");
 
-flare::variable::LatencyRecorder g_latency_recorder("client");
+flare::LatencyRecorder g_latency_recorder("client");
 
 static void* sender(void* arg) {
     flare::rpc::Channel* channel = static_cast<flare::rpc::Channel*>(arg);

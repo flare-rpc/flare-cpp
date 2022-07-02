@@ -40,7 +40,7 @@ DEFINE_bool(dont_fail, false, "Print fatal when some call failed");
 std::string g_request;
 std::string g_attachment;
 
-flare::variable::LatencyRecorder g_latency_recorder("client");
+flare::LatencyRecorder g_latency_recorder("client");
 
 static void* sender(void* arg) {
     // Normally, you should not call a Channel directly, but instead construct

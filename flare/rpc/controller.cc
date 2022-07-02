@@ -27,7 +27,7 @@
 #include "flare/times/time.h"
 #include "flare/fiber/internal/fiber.h"
 #include "flare/fiber/internal/unstable.h"
-#include "flare/variable/all.h"
+#include "flare/metrics/all.h"
 #include "flare/rpc/socket.h"
 #include "flare/rpc/socket_map.h"
 #include "flare/rpc/channel.h"
@@ -102,7 +102,7 @@ namespace flare::rpc {
 #endif
     }
 
-    static flare::variable::PassiveStatus<std::string> s_rpc_revision(
+    static flare::PassiveStatus<std::string> s_rpc_revision(
             "rpc_revision", PrintRevision, NULL);
 
     static const int RETRY_AVOIDANCE = 8;
@@ -118,12 +118,12 @@ namespace flare::rpc {
 
     DECLARE_bool(usercode_in_pthread);
     static const int MAX_RETRY_COUNT = 1000;
-    static flare::variable::Adder<int64_t> *g_ncontroller = NULL;
+    static flare::Adder<int64_t> *g_ncontroller = NULL;
 
     static pthread_once_t s_create_vars_once = PTHREAD_ONCE_INIT;
 
     static void CreateVars() {
-        g_ncontroller = new flare::variable::Adder<int64_t>("rpc_controller_count");
+        g_ncontroller = new flare::Adder<int64_t>("rpc_controller_count");
     }
 
     Controller::Controller() {

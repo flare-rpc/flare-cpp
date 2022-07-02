@@ -193,18 +193,18 @@ namespace flare::rpc {
 // Update global stuff periodically.
     static void *GlobalUpdate(void *) {
         // Expose variables.
-        flare::variable::PassiveStatus<size_t> var_iobuf_block_count(
+        flare::PassiveStatus<size_t> var_iobuf_block_count(
                 "iobuf_block_count", GetCordBufBlockCount, NULL);
-        flare::variable::PassiveStatus<size_t> var_iobuf_block_count_hit_tls_threshold(
+        flare::PassiveStatus<size_t> var_iobuf_block_count_hit_tls_threshold(
                 "iobuf_block_count_hit_tls_threshold",
                 GetCordBufBlockCountHitTLSThreshold, NULL);
-        flare::variable::PassiveStatus<size_t> var_iobuf_new_bigview_count(
+        flare::PassiveStatus<size_t> var_iobuf_new_bigview_count(
                 GetCordBufNewBigViewCount, NULL);
-        flare::variable::PerSecond<flare::variable::PassiveStatus<size_t> > var_iobuf_new_bigview_second(
+        flare::PerSecond<flare::PassiveStatus<size_t> > var_iobuf_new_bigview_second(
                 "iobuf_newbigview_second", &var_iobuf_new_bigview_count);
-        flare::variable::PassiveStatus<size_t> var_iobuf_block_memory(
+        flare::PassiveStatus<size_t> var_iobuf_block_memory(
                 "iobuf_block_memory", GetCordBufBlockMemory, NULL);
-        flare::variable::PassiveStatus<int> var_running_server_count(
+        flare::PassiveStatus<int> var_running_server_count(
                 "rpc_server_count", GetRunningServerCount, NULL);
 
         flare::file_watcher fw;

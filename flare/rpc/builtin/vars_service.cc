@@ -19,7 +19,7 @@
 #include <ostream>
 #include <vector>                           // std::vector
 #include "flare/strings/string_splitter.h"
-#include "flare/variable/all.h"
+#include "flare/metrics/all.h"
 
 #include "flare/rpc/closure_guard.h"        // ClosureGuard
 #include "flare/rpc/controller.h"           // Controller
@@ -28,7 +28,7 @@
 #include "flare/rpc/builtin/common.h"
 #include "flare/rpc/builtin/vars_service.h"
 
-namespace flare::variable {
+namespace flare {
     DECLARE_bool(quote_vector);
 }
 
@@ -224,7 +224,7 @@ namespace flare::rpc {
            "        $(\"#value-\" + var_name).html(series.data[series.data.length - 1][1]);\n"
            "      } else {\n"
            "        lastPlot[var_name] = $.plot(\"#\" + var_name, series, trendOptions);\n"
-           << (flare::variable::FLAGS_quote_vector ?
+           << (flare::FLAGS_quote_vector ?
                "        var newValue = '\"[';\n" :
                "        var newValue = '[';\n") <<
            "        var i;\n"
@@ -233,7 +233,7 @@ namespace flare::rpc {
            "            var data = series[i].data;\n"
            "            newValue += data[data.length - 1][1];\n"
            "        }\n"
-           << (flare::variable::FLAGS_quote_vector ?
+           << (flare::FLAGS_quote_vector ?
                "        newValue += ']\"';\n" :
                "        newValue += ']';\n") <<
            "        $(\"#value-\" + var_name).html(newValue);\n"
@@ -258,7 +258,7 @@ namespace flare::rpc {
 // trailing colon from $1
     static const std::string VAR_SEP = " : ";
 
-    class VarsDumper : public flare::variable::Dumper {
+    class VarsDumper : public flare::Dumper {
     public:
         explicit VarsDumper(flare::cord_buf_builder &os, bool use_html)
                 : _os(os), _use_html(use_html) {}
@@ -266,9 +266,9 @@ namespace flare::rpc {
         bool dump(const std::string &name, const std::string_view &desc) {
             bool plot = false;
             if (_use_html) {
-                flare::variable::SeriesOptions series_options;
+                flare::variable_series_options series_options;
                 series_options.test_only = true;
-                const int rc = flare::variable::Variable::describe_series_exposed(
+                const int rc = flare::variable_base::describe_series_exposed(
                         name, _os, series_options);
                 plot = (rc == 0);
                 if (plot) {
@@ -313,8 +313,8 @@ namespace flare::rpc {
         Controller *cntl = static_cast<Controller *>(cntl_base);
         if (cntl->http_request().uri().GetQuery("series") != NULL) {
             flare::cord_buf_builder os;
-            flare::variable::SeriesOptions series_options;
-            const int rc = flare::variable::Variable::describe_series_exposed(
+            flare::variable_series_options series_options;
+            const int rc = flare::variable_base::describe_series_exposed(
                     cntl->http_request().unresolved_path(), os, series_options);
             if (rc == 0) {
                 cntl->http_response().set_content_type("application/json");
@@ -408,12 +408,12 @@ namespace flare::rpc {
                   "<div id=\"layer1\">\n";
         }
         VarsDumper dumper(os, use_html);
-        flare::variable::DumpOptions options;
+        flare::variable_dump_options options;
         options.question_mark = '$';
         options.display_filter =
-                (use_html ? flare::variable::DISPLAY_ON_HTML : flare::variable::DISPLAY_ON_PLAIN_TEXT);
+                (use_html ? flare::DISPLAY_ON_HTML : flare::DISPLAY_ON_PLAIN_TEXT);
         options.white_wildcards = cntl->http_request().unresolved_path();
-        const int ndump = flare::variable::Variable::dump_exposed(&dumper, &options);
+        const int ndump = flare::variable_base::dump_exposed(&dumper, &options);
         if (ndump < 0) {
             cntl->SetFailed("Fail to dump vars");
             return;

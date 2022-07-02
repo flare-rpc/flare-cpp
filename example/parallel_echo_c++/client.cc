@@ -44,9 +44,9 @@ DEFINE_int32(dummy_port, -1, "Launch dummy server at this port");
 
 std::string g_request;
 std::string g_attachment;
-flare::variable::LatencyRecorder g_latency_recorder("client");
-flare::variable::Adder<int> g_error_count("client_error_count");
-flare::variable::LatencyRecorder* g_sub_channel_latency = NULL;
+flare::LatencyRecorder g_latency_recorder("client");
+flare::Adder<int> g_error_count("client_error_count");
+flare::LatencyRecorder* g_sub_channel_latency = NULL;
 
 static void* sender(void* arg) {
     // Normally, you should not call a Channel directly, but instead construct
@@ -146,7 +146,7 @@ int main(int argc, char* argv[]) {
     }
 
     // Initialize variable for sub channel
-    g_sub_channel_latency = new flare::variable::LatencyRecorder[FLAGS_channel_num];
+    g_sub_channel_latency = new flare::LatencyRecorder[FLAGS_channel_num];
     for (int i = 0; i < FLAGS_channel_num; ++i) {
         std::string name;
         flare::string_printf(&name, "client_sub_%d", i);

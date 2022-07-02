@@ -160,10 +160,10 @@ namespace flare::fiber_internal {
                 return -1;
             }
         }
-        _worker_usage_second.expose("fiber_worker_usage");
-        _switch_per_second.expose("fiber_switch_second");
-        _signal_per_second.expose("fiber_signal_second");
-        _status.expose("fiber_group_status");
+        _worker_usage_second.expose("fiber_worker_usage", "");
+        _switch_per_second.expose("fiber_switch_second", "");
+        _signal_per_second.expose("fiber_signal_second", "");
+        _status.expose("fiber_group_status", "");
 
         // Wait for at least one group is added so that choose_one_group()
         // never returns NULL.
@@ -438,12 +438,12 @@ namespace flare::fiber_internal {
         return c;
     }
 
-    flare::variable::LatencyRecorder *schedule_group::create_exposed_pending_time() {
+    flare::LatencyRecorder *schedule_group::create_exposed_pending_time() {
         bool is_creator = false;
         _pending_time_mutex.lock();
-        flare::variable::LatencyRecorder *pt = _pending_time.load(std::memory_order_consume);
+        flare::LatencyRecorder *pt = _pending_time.load(std::memory_order_consume);
         if (!pt) {
-            pt = new flare::variable::LatencyRecorder;
+            pt = new flare::LatencyRecorder;
             _pending_time.store(pt, std::memory_order_release);
             is_creator = true;
         }

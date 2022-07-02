@@ -42,8 +42,8 @@ DEFINE_int32(dummy_port, -1, "Launch dummy server at this port");
 
 std::string g_attachment;
 
-flare::variable::LatencyRecorder g_latency_recorder("client");
-flare::variable::Adder<int> g_error_count("client_error_count");
+flare::LatencyRecorder g_latency_recorder("client");
+flare::Adder<int> g_error_count("client_error_count");
 flare::static_atomic<int> g_sender_count = FLARE_STATIC_ATOMIC_INIT(0);
 
 static void* sender(void* arg) {

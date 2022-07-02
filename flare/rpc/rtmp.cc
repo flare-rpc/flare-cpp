@@ -40,10 +40,10 @@ namespace flare::rpc {
                 " by this flag");
 
     struct rtmp_variables {
-        flare::variable::Adder<int> client_count;
-        flare::variable::Adder<int> client_stream_count;
-        flare::variable::Adder<int> retrying_client_stream_count;
-        flare::variable::Adder<int> server_stream_count;
+        flare::Adder<int> client_count;
+        flare::Adder<int> client_stream_count;
+        flare::Adder<int> retrying_client_stream_count;
+        flare::Adder<int> server_stream_count;
 
         rtmp_variables()
                 : client_count("rtmp_client_count"), client_stream_count("rtmp_client_stream_count"),

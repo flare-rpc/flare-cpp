@@ -41,10 +41,10 @@
 namespace flare::fiber_internal {
 
 #ifdef SHOW_FIBER_EVENT_WAITER_COUNT_IN_VARS
-    struct waitable_event_count : public flare::variable::Adder<int64_t> {
-        waitable_event_count() : flare::variable::Adder<int64_t>("fiber_waitable_event_count") {}
+    struct waitable_event_count : public flare::Adder<int64_t> {
+        waitable_event_count() : flare::Adder<int64_t>("fiber_waitable_event_count") {}
     };
-    inline flare::variable::Adder<int64_t>& get_waitable_event_count() {
+    inline flare::Adder<int64_t>& get_waitable_event_count() {
         return *flare::base::get_leaky_singleton<waitable_event_count>();
     }
 #endif
@@ -567,7 +567,7 @@ namespace flare::fiber_internal {
             b->waiter_lock.unlock();
 
 #ifdef SHOW_FIBER_EVENT_WAITER_COUNT_IN_VARS
-            flare::variable::Adder<int64_t>& num_waiters = get_waitable_event_count();
+            flare::Adder<int64_t>& num_waiters = get_waitable_event_count();
             num_waiters << 1;
 #endif
             rc = wait_pthread(pw, ptimeout);
@@ -633,7 +633,7 @@ namespace flare::fiber_internal {
             }
         }
 #ifdef SHOW_FIBER_EVENT_WAITER_COUNT_IN_VARS
-        flare::variable::Adder<int64_t>& num_waiters = get_waitable_event_count();
+        flare::Adder<int64_t>& num_waiters = get_waitable_event_count();
         num_waiters << 1;
 #endif
 

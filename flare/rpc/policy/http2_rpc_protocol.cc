@@ -1114,15 +1114,15 @@ namespace flare::rpc {
         }
 
 #if defined(FLARE_RPC_PROFILE_H2)
-        flare::variable::Adder<int64_t> g_parse_time;
-        flare::variable::PerSecond<flare::variable::Adder<int64_t> > g_parse_time_per_second(
+        flare::Adder<int64_t> g_parse_time;
+        flare::PerSecond<flare::Adder<int64_t> > g_parse_time_per_second(
             "h2_parse_second", &g_parse_time);
 #endif
 
         ParseResult ParseH2Message(flare::cord_buf *source, Socket *socket,
                                    bool read_eof, const void *arg) {
 #if defined(FLARE_RPC_PROFILE_H2)
-            flare::variable::ScopedTimer<flare::variable::Adder<int64_t> > tm(g_parse_time);
+            flare::ScopedTimer<flare::Adder<int64_t> > tm(g_parse_time);
 #endif
             H2Context *ctx = static_cast<H2Context *>(socket->parsing_context());
             if (ctx == NULL) {
@@ -1511,15 +1511,15 @@ namespace flare::rpc {
         }
 
 #if defined(FLARE_RPC_PROFILE_H2)
-        flare::variable::Adder<int64_t> g_append_request_time;
-        flare::variable::PerSecond<flare::variable::Adder<int64_t> > g_append_request_time_per_second(
+        flare::Adder<int64_t> g_append_request_time;
+        flare::PerSecond<flare::Adder<int64_t> > g_append_request_time_per_second(
             "h2_append_request_second",     &g_append_request_time);
 #endif
 
         flare::base::flare_status
         H2UnsentRequest::AppendAndDestroySelf(flare::cord_buf *out, Socket *socket) {
 #if defined(FLARE_RPC_PROFILE_H2)
-            flare::variable::ScopedTimer<flare::variable::Adder<int64_t> > tm(g_append_request_time);
+            flare::ScopedTimer<flare::Adder<int64_t> > tm(g_append_request_time);
 #endif
             RemoveRefOnQuit deref_self(this);
             if (socket == NULL) {
@@ -1697,15 +1697,15 @@ namespace flare::rpc {
         }
 
 #if defined(FLARE_RPC_PROFILE_H2)
-        flare::variable::Adder<int64_t> g_append_response_time;
-        flare::variable::PerSecond<flare::variable::Adder<int64_t> > g_append_response_time_per_second(
+        flare::Adder<int64_t> g_append_response_time;
+        flare::PerSecond<flare::Adder<int64_t> > g_append_response_time_per_second(
             "h2_append_response_second",     &g_append_response_time);
 #endif
 
         flare::base::flare_status
         H2UnsentResponse::AppendAndDestroySelf(flare::cord_buf *out, Socket *socket) {
 #if defined(FLARE_RPC_PROFILE_H2)
-            flare::variable::ScopedTimer<flare::variable::Adder<int64_t> > tm(g_append_response_time);
+            flare::ScopedTimer<flare::Adder<int64_t> > tm(g_append_response_time);
 #endif
             DestroyingPtr<H2UnsentResponse> destroy_self(this);
             if (socket == NULL) {

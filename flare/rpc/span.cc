@@ -354,19 +354,19 @@ namespace flare::rpc {
 
     bool has_span_db() { return !!g_span_db; }
 
-    flare::variable::CollectorSpeedLimit g_span_sl = VARIABLE_COLLECTOR_SPEED_LIMIT_INITIALIZER;
-    static flare::variable::DisplaySamplingRatio s_display_sampling_ratio(
+    flare::CollectorSpeedLimit g_span_sl = VARIABLE_COLLECTOR_SPEED_LIMIT_INITIALIZER;
+    static flare::DisplaySamplingRatio s_display_sampling_ratio(
             "rpcz_sampling_ratio", &g_span_sl);
 
     struct SpanEarlier {
-        bool operator()(flare::variable::Collected *c1, flare::variable::Collected *c2) const {
+        bool operator()(flare::Collected *c1, flare::Collected *c2) const {
             return ((Span *) c1)->GetStartRealTimeUs() < ((Span *) c2)->GetStartRealTimeUs();
         }
     };
 
-    class SpanPreprocessor : public flare::variable::CollectorPreprocessor {
+    class SpanPreprocessor : public flare::CollectorPreprocessor {
     public:
-        void process(std::vector<flare::variable::Collected *> &list) {
+        void process(std::vector<flare::Collected *> &list) {
             // Sort spans by their starting time so that the code on making
             // time monotonic in Span::Index works better.
             std::sort(list.begin(), list.end(), SpanEarlier());
@@ -375,11 +375,11 @@ namespace flare::rpc {
 
     static SpanPreprocessor *g_span_prep = NULL;
 
-    flare::variable::CollectorSpeedLimit *Span::speed_limit() {
+    flare::CollectorSpeedLimit *Span::speed_limit() {
         return &g_span_sl;
     }
 
-    flare::variable::CollectorPreprocessor *Span::preprocessor() {
+    flare::CollectorPreprocessor *Span::preprocessor() {
         return g_span_prep;
     }
 

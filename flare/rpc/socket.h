@@ -37,7 +37,7 @@
 #include "flare/rpc/options.pb.h"              // ConnectionType
 #include "flare/rpc/socket_id.h"               // SocketId
 #include "flare/rpc/socket_message.h"          // SocketMessagePtr
-#include "flare/variable/all.h"
+#include "flare/metrics/all.h"
 #include "flare/fiber/this_fiber.h"
 
 namespace flare::rpc {
@@ -143,15 +143,15 @@ namespace flare::rpc {
                   nkeepwrite_second("rpc_keepwrite_second", &nkeepwrite), nwaitepollout("rpc_waitepollout_count"),
                   nwaitepollout_second("rpc_waitepollout_second", &nwaitepollout) {}
 
-        flare::variable::Adder<int64_t> nsocket;
-        flare::variable::Adder<int64_t> channel_conn;
-        flare::variable::Adder<int> neventthread;
-        flare::variable::PerSecond<flare::variable::Adder<int> > neventthread_second;
-        flare::variable::Adder<int64_t> nhealthcheck;
-        flare::variable::Adder<int64_t> nkeepwrite;
-        flare::variable::PerSecond<flare::variable::Adder<int64_t> > nkeepwrite_second;
-        flare::variable::Adder<int64_t> nwaitepollout;
-        flare::variable::PerSecond<flare::variable::Adder<int64_t> > nwaitepollout_second;
+        flare::Adder<int64_t> nsocket;
+        flare::Adder<int64_t> channel_conn;
+        flare::Adder<int> neventthread;
+        flare::PerSecond<flare::Adder<int> > neventthread_second;
+        flare::Adder<int64_t> nhealthcheck;
+        flare::Adder<int64_t> nkeepwrite;
+        flare::PerSecond<flare::Adder<int64_t> > nkeepwrite_second;
+        flare::Adder<int64_t> nwaitepollout;
+        flare::PerSecond<flare::Adder<int64_t> > nwaitepollout_second;
     };
 
     struct PipelinedInfo {

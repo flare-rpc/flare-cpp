@@ -8,8 +8,7 @@
 #include "flare/memory/scoped_ptr.h"     // flare::scoped_ptr
 #include "flare/log/logging.h"               // FLARE_LOG
 #include "flare/times/time.h"                  // flare::base::cpuwide_time_ns
-#include "flare/variable/all.h"                  // flare::variable::Adder
-#include "flare/fiber/internal/waitable_event.h"              // butex_construct
+#include "flare/fiber/internal/waitable_event.h"
 
 namespace flare::fiber_internal {
 

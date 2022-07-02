@@ -22,7 +22,7 @@
 #include <deque>
 #include <google/protobuf/compiler/importer.h>
 #include <google/protobuf/dynamic_message.h>
-#include <flare/variable/all.h>
+#include <flare/metrics/all.h>
 #include <flare/rpc/channel.h>
 #include "info_thread.h"
 #include "pb_util.h"
@@ -132,9 +132,9 @@ namespace pbrpcframework {
 
         static void *sync_call_thread(void *arg);
 
-        flare::variable::LatencyRecorder _latency_recorder;
-        flare::variable::Adder<int64_t> _error_count;
-        flare::variable::Adder<int64_t> _sent_count;
+        flare::LatencyRecorder _latency_recorder;
+        flare::Adder<int64_t> _error_count;
+        flare::Adder<int64_t> _sent_count;
         std::deque<google::protobuf::Message *> _msgs;
         PressClient *_pbrpc_client;
         PressOptions _options;

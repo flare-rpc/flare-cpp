@@ -40,8 +40,8 @@ DEFINE_int32(batch, 1, "Pipelined Operations");
 DEFINE_int32(dummy_port, -1, "port of dummy server(for monitoring)");
 DEFINE_int32(backup_request_ms, -1, "Timeout for sending a backup request");
 
-flare::variable::LatencyRecorder g_latency_recorder("client");
-flare::variable::Adder<int> g_error_count("client_error_count");
+flare::LatencyRecorder g_latency_recorder("client");
+flare::Adder<int> g_error_count("client_error_count");
 
 struct SenderArgs {
     int base_index;

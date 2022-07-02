@@ -22,13 +22,13 @@
 #include "flare/io/raw_pack.h"
 #include <memory>
 #include "flare/base/fast_rand.h"
-#include "flare/variable/all.h"
+#include "flare/metrics/all.h"
 #include "flare/rpc/log.h"
 #include "flare/rpc/reloadable_flags.h"
 #include "flare/rpc/rpc_dump.h"
 #include "flare/rpc/protocol.h"
 
-namespace flare::variable {
+namespace flare {
     std::string read_command_name();
 }
 
@@ -77,7 +77,7 @@ namespace flare::rpc {
         RpcDumpContext()
                 : _cur_req_count(0), _cur_fd(-1), _last_round(0), _max_requests_in_one_file(0), _max_files(0),
                   _sched_write_time(flare::get_current_time_micros() + FLUSH_TIMEOUT), _last_file_time(0) {
-            _command_name = flare::variable::read_command_name();
+            _command_name = flare::read_command_name();
             SaveFlags();
             // Clean the directory at fist time.
             flare::remove_all(_dir);
@@ -109,11 +109,11 @@ namespace flare::rpc {
         flare::cord_buf _unwritten_buf;
     };
 
-    flare::variable::CollectorSpeedLimit g_rpc_dump_sl = VARIABLE_COLLECTOR_SPEED_LIMIT_INITIALIZER;
+    flare::CollectorSpeedLimit g_rpc_dump_sl = VARIABLE_COLLECTOR_SPEED_LIMIT_INITIALIZER;
     static RpcDumpContext *g_rpc_dump_ctx = NULL;
 
     void SampledRequest::dump_and_destroy(size_t round) {
-        static flare::variable::DisplaySamplingRatio sampling_ratio_var(
+        static flare::DisplaySamplingRatio sampling_ratio_var(
                 "rpc_dump_sampling_ratio", &g_rpc_dump_sl);
 
         // Safe to modify g_rpc_dump_ctx w/o locking.

@@ -115,10 +115,10 @@ add_test(NAME test_io COMMAND test_io)
 
 # test_variable
 # -DVARIABLE_NOT_LINK_DEFAULT_VARIABLES not work for gcc >= 5.0, just remove the file to prevent linking into unit tests
-list(REMOVE_ITEM VARIABLE_SOURCES ${PROJECT_SOURCE_DIR}/flare/variable/default_variables.cc)
+list(REMOVE_ITEM METRICS_SOURCES ${PROJECT_SOURCE_DIR}/flare/metrics/default_variables.cc)
 
-add_library(VARIABLE_DEBUG_LIB OBJECT ${VARIABLE_SOURCES})
-add_subdirectory(var)
+add_library(VARIABLE_DEBUG_LIB OBJECT ${METRICS_SOURCES})
+add_subdirectory(metrics)
 
 # fiber tests
 add_subdirectory(fiber)
@@ -140,5 +140,4 @@ add_subdirectory(io)
 add_subdirectory(debugging)
 add_subdirectory(times)
 add_subdirectory(thread)
-add_subdirectory(metrics)
 

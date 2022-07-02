@@ -56,7 +56,7 @@ status = False
 def get_fiber_num():
     root_agent = gdb.parse_and_eval("&(((((*flare::fiber_internal::g_task_control)._nfibers)._combiner)._agents).root_)")
     global_res = int(gdb.parse_and_eval("((*flare::fiber_internal::g_task_control)._nfibers)._combiner._global_result"))
-    get_agent = "(*(('flare::variable::detail::AgentCombiner<long, long, flare::variable::detail::AddTo<long> >::Agent' *){}))"
+    get_agent = "(*(('flare::detail::agent_combiner<long, long, flare::detail::AddTo<long> >::Agent' *){}))"
     last_node = root_agent
     while True:
         agent = gdb.parse_and_eval(get_agent.format(last_node))

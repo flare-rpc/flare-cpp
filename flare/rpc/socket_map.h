@@ -20,7 +20,7 @@
 #define FLARE_RPC_SOCKET_MAP_H_
 
 #include <vector>                             // std::vector
-#include "flare/variable/all.h"                        // flare::variable::PassiveStatus
+#include "flare/metrics/all.h"                        // flare::PassiveStatus
 #include "flare/container/flat_map.h"        // FlatMap
 #include "flare/rpc/socket_id.h"                   // SockdetId
 #include "flare/rpc/options.pb.h"                  // ProtocolType
@@ -195,7 +195,7 @@ namespace flare::rpc {
         flare::base::Mutex _mutex;
         Map _map;
         bool _exposed_in_variable;
-        flare::variable::PassiveStatus<std::string> *_this_map_var;
+        flare::PassiveStatus<std::string> *_this_map_var;
         bool _has_close_idle_thread;
         fiber_id_t _close_idle_thread;
     };

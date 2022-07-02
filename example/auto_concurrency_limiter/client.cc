@@ -66,10 +66,10 @@ uint32_t cast_func(void* arg) {
 std::atomic<uint32_t> g_timeout(0);
 std::atomic<uint32_t> g_error(0);
 std::atomic<uint32_t> g_succ(0);
-flare::variable::PassiveStatus<uint32_t> g_timeout_var(cast_func, &g_timeout);
-flare::variable::PassiveStatus<uint32_t> g_error_var(cast_func, &g_error);
-flare::variable::PassiveStatus<uint32_t> g_succ_var(cast_func, &g_succ);
-flare::variable::LatencyRecorder g_latency_rec;
+flare::PassiveStatus<uint32_t> g_timeout_var(cast_func, &g_timeout);
+flare::PassiveStatus<uint32_t> g_error_var(cast_func, &g_error);
+flare::PassiveStatus<uint32_t> g_succ_var(cast_func, &g_succ);
+flare::LatencyRecorder g_latency_rec;
 
 void LoadCaseSet(test::TestCaseSet* case_set, const std::string& file_path) {
     std::ifstream ifs(file_path.c_str(), std::ios::in);  

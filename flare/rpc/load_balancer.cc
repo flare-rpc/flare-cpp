@@ -45,7 +45,7 @@ namespace flare::rpc {
             char name[32];
             snprintf(name, sizeof(name), "_load_balancer_%d", g_lb_counter.fetch_add(
                     1, std::memory_order_relaxed));
-            _st.expose(name);
+            _st.expose(name, "");
         }
     }
 

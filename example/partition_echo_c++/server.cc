@@ -95,7 +95,7 @@ public:
 private:
     size_t _index;
     int64_t _sleep_us;
-    flare::variable::Adder<size_t> _nreq;
+    flare::Adder<size_t> _nreq;
 };
 
 int main(int argc, char* argv[]) {

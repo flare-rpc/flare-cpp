@@ -605,8 +605,8 @@ TEST_F(BuiltinServiceTest, vars) {
     {
         ClosureChecker done;
         flare::rpc::Controller cntl;
-        flare::variable::Adder<int64_t> myvar;
-        myvar.expose("myvar");
+        flare::Adder<int64_t> myvar;
+        myvar.expose("myvar", "");
         myvar << 9;
         service.default_method(&cntl, &req, &res, &done);
         EXPECT_FALSE(cntl.Failed());

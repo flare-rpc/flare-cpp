@@ -45,20 +45,20 @@ namespace flare::rpc {
     }
 
     int MethodStatus::Expose(const std::string_view &prefix) {
-        if (_nconcurrency_var.expose_as(prefix, "concurrency") != 0) {
+        if (_nconcurrency_var.expose_as(prefix, "concurrency", "") != 0) {
             return -1;
         }
-        if (_nerror_var.expose_as(prefix, "error") != 0) {
+        if (_nerror_var.expose_as(prefix, "error", "") != 0) {
             return -1;
         }
-        if (_eps_var.expose_as(prefix, "eps") != 0) {
+        if (_eps_var.expose_as(prefix, "eps", "") != 0) {
             return -1;
         }
         if (_latency_rec.expose(prefix) != 0) {
             return -1;
         }
         if (_cl) {
-            if (_max_concurrency_var.expose_as(prefix, "max_concurrency") != 0) {
+            if (_max_concurrency_var.expose_as(prefix, "max_concurrency", "") != 0) {
                 return -1;
             }
         }
