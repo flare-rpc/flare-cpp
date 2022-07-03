@@ -22,7 +22,7 @@
 #include <pthread.h>
 #include "flare/base/profile.h"
 #include "flare/base/static_atomic.h"
-#include "flare/metrics/passive_status.h"
+#include "flare/metrics/gauge.h"
 #include "flare/fiber/internal/errno.h"                       // EAGAIN
 #include "flare/fiber/internal/fiber_worker.h"                  // fiber_worker
 
@@ -270,11 +270,11 @@ namespace flare::fiber_internal {
         return n * sizeof(KeyTable) + nsub * sizeof(SubKeyTable);
     }
 
-    static flare::PassiveStatus<int> s_fiber_key_count(
+    static flare::status_gauge<int> s_fiber_key_count(
             "fiber_key_count", get_key_count, nullptr);
-    static flare::PassiveStatus<size_t> s_fiber_keytable_count(
+    static flare::status_gauge<size_t> s_fiber_keytable_count(
             "fiber_keytable_count", get_keytable_count, nullptr);
-    static flare::PassiveStatus<size_t> s_fiber_keytable_memory(
+    static flare::status_gauge<size_t> s_fiber_keytable_memory(
             "fiber_keytable_memory", get_keytable_memory, nullptr);
 
 }  // namespace flare::fiber_internal

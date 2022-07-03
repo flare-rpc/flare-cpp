@@ -4,18 +4,18 @@
 
 #include "flare/metrics/recorder.h"
 #include "flare/metrics/variable_reducer.h"
-#include "flare/metrics/passive_status.h"
+#include "flare/metrics/gauge.h"
 #include "flare/metrics/gauge.h"
 #include "flare/metrics/detail/percentile.h"
 
 namespace flare {
     namespace metrics_detail {
 
-        class Percentile;
+        class percentile;
 
-        typedef Window<IntRecorder, SERIES_IN_SECOND> RecorderWindow;
-        typedef Window<max_gauge<int64_t>, SERIES_IN_SECOND> MaxWindow;
-        typedef Window<Percentile, SERIES_IN_SECOND> PercentileWindow;
+        typedef window<IntRecorder, SERIES_IN_SECOND> RecorderWindow;
+        typedef window<max_gauge<int64_t>, SERIES_IN_SECOND> MaxWindow;
+        typedef window<percentile, SERIES_IN_SECOND> PercentileWindow;
 
         // NOTE: Always use int64_t in the interfaces no matter what the impl. is.
 
@@ -43,20 +43,20 @@ namespace flare {
         protected:
             IntRecorder _latency;
             max_gauge<int64_t> _max_latency;
-            Percentile _latency_percentile;
+            percentile _latency_percentile;
 
             RecorderWindow _latency_window;
             MaxWindow _max_latency_window;
-            PassiveStatus<int64_t> _count;
-            PassiveStatus<int64_t> _qps;
+            status_gauge<int64_t> _count;
+            status_gauge<int64_t> _qps;
             PercentileWindow _latency_percentile_window;
-            PassiveStatus<int64_t> _latency_p1;
-            PassiveStatus<int64_t> _latency_p2;
-            PassiveStatus<int64_t> _latency_p3;
-            PassiveStatus<int64_t> _latency_999;  // 99.9%
-            PassiveStatus<int64_t> _latency_9999; // 99.99%
+            status_gauge<int64_t> _latency_p1;
+            status_gauge<int64_t> _latency_p2;
+            status_gauge<int64_t> _latency_p3;
+            status_gauge<int64_t> _latency_999;  // 99.9%
+            status_gauge<int64_t> _latency_9999; // 99.99%
             CDF _latency_cdf;
-            PassiveStatus<Vector<int64_t, 4> > _latency_percentiles;
+            status_gauge<Vector<int64_t, 4> > _latency_percentiles;
         };
     } // namespace detail
 

@@ -9,7 +9,7 @@
 #include <algorithm>                    // std::sort
 #include <math.h>                       // ceil
 #include "flare/metrics/variable_reducer.h"               // variable_reducer
-#include "flare/metrics/window.h"                // Window
+#include "flare/metrics/window.h"                // window
 #include "flare/metrics/detail/combiner.h"       // agent_combiner
 #include "flare/metrics/detail/sampler.h"        // reducer_sampler
 #include "flare/base/fast_rand.h"
@@ -27,9 +27,9 @@ namespace flare {
 
         // Storing latencies inside a interval.
         template<size_t SAMPLE_SIZE>
-        class PercentileInterval {
+        class percentile_interval {
         public:
-            PercentileInterval()
+            percentile_interval()
                     : _num_added(0), _sorted(false), _num_samples(0) {
             }
 
@@ -47,17 +47,17 @@ namespace flare {
                     _sorted = true;
                 }
                 FLARE_CHECK_EQ(saved_num, _num_samples) << "You must call get_number() on"
-                                                           " a unchanging PercentileInterval";
+                                                           " a unchanging percentile_interval";
                 return _samples[index];
             }
 
             // Add samples of another interval. This function tries to make each
             // sample in merged _samples has (approximately) equal probability to
             // remain.
-            // This method is invoked when merging ThreadLocalPercentileSamples in to
-            // GlobalPercentileSamples
+            // This method is invoked when merging thread_local_percentile_samples in to
+            // global_percentile_samples
             template<size_t size2>
-            void merge(const PercentileInterval<size2> &rhs) {
+            void merge(const percentile_interval<size2> &rhs) {
                 if (rhs._num_added == 0) {
                     return;
                 }
@@ -120,7 +120,7 @@ namespace flare {
 
             // Randomly pick n samples from mutable_rhs to |this|
             template<size_t size2>
-            void merge_with_expectation(PercentileInterval<size2> &mutable_rhs, size_t n) {
+            void merge_with_expectation(percentile_interval<size2> &mutable_rhs, size_t n) {
                 FLARE_CHECK(n <= mutable_rhs._num_samples);
                 _num_added += mutable_rhs._num_added;
                 if (_num_samples + n <= SAMPLE_SIZE && n == mutable_rhs._num_samples) {
@@ -142,8 +142,8 @@ namespace flare {
             }
 
             // Add an unsigned 32-bit latency (what percentile actually accepts) to a
-            // non-full interval, which is invoked by Percentile::operator<< to add a
-            // sample into the ThreadLocalPercentileSamples.
+            // non-full interval, which is invoked by percentile::operator<< to add a
+            // sample into the thread_local_percentile_samples.
             // Returns true if the input was stored.
             bool add32(uint32_t x) {
                 if (FLARE_UNLIKELY(_num_samples >= SAMPLE_SIZE)) {
@@ -191,9 +191,9 @@ namespace flare {
                 os << " ]";
             }
 
-            // True if two PercentileInterval are exactly same, namely same # of added and
+            // True if two percentile_interval are exactly same, namely same # of added and
             // same samples, mainly for debuggin.
-            bool operator==(const PercentileInterval &rhs) const {
+            bool operator==(const percentile_interval &rhs) const {
                 return (_num_added == rhs._num_added &&
                         _num_samples == rhs._num_samples &&
                         memcmp(_samples, rhs._samples, _num_samples * sizeof(uint32_t)) == 0);
@@ -202,7 +202,7 @@ namespace flare {
         private:
 
             template<size_t size2> friend
-            class PercentileInterval;
+            class percentile_interval;
 
             static_assert(SAMPLE_SIZE <= 65536, "SAMPLE_SIZE must be 6bit");
 
@@ -214,22 +214,22 @@ namespace flare {
 
         static const size_t NUM_INTERVALS = 32;
 
-// This declartion is a must for gcc 3.4
-        class AddLatency;
+        // This declartion is a must for gcc 3.4
+        class add_latency;
 
-// Group of PercentileIntervals.
+        // Group of PercentileIntervals.
         template<size_t SAMPLE_SIZE_IN>
-        class PercentileSamples {
+        class percentile_samples {
         public:
-            friend class AddLatency;
+            friend class add_latency;
 
             static const size_t SAMPLE_SIZE = SAMPLE_SIZE_IN;
 
-            PercentileSamples() {
+            percentile_samples() {
                 memset(this, 0, sizeof(*this));
             }
 
-            ~PercentileSamples() {
+            ~percentile_samples() {
                 for (size_t i = 0; i < NUM_INTERVALS; ++i) {
                     if (_intervals[i]) {
                         delete _intervals[i];
@@ -237,22 +237,22 @@ namespace flare {
                 }
             }
 
-            // Copy-construct from another PercentileSamples.
+            // Copy-construct from another percentile_samples.
             // Copy/assigning happen at per-second scale. should be OK.
-            PercentileSamples(const PercentileSamples &rhs) {
+            percentile_samples(const percentile_samples &rhs) {
                 _num_added = rhs._num_added;
                 for (size_t i = 0; i < NUM_INTERVALS; ++i) {
                     if (rhs._intervals[i] && !rhs._intervals[i]->empty()) {
-                        _intervals[i] = new PercentileInterval<SAMPLE_SIZE>(*rhs._intervals[i]);
+                        _intervals[i] = new percentile_interval<SAMPLE_SIZE>(*rhs._intervals[i]);
                     } else {
                         _intervals[i] = NULL;
                     }
                 }
             }
 
-            // Assign from another PercentileSamples.
+            // Assign from another percentile_samples.
             // Notice that we keep empty _intervals to avoid future allocations.
-            void operator=(const PercentileSamples &rhs) {
+            void operator=(const percentile_samples &rhs) {
                 _num_added = rhs._num_added;
                 for (size_t i = 0; i < NUM_INTERVALS; ++i) {
                     if (rhs._intervals[i] && !rhs._intervals[i]->empty()) {
@@ -283,7 +283,7 @@ namespace flare {
                     if (_intervals[i] == NULL) {
                         continue;
                     }
-                    PercentileInterval<SAMPLE_SIZE> &invl = *_intervals[i];
+                    percentile_interval<SAMPLE_SIZE> &invl = *_intervals[i];
                     if (n <= invl.added_count()) {
                         size_t sample_n = n * invl.sample_count() / invl.added_count();
                         size_t sample_index = (sample_n ? sample_n - 1 : 0);
@@ -295,9 +295,9 @@ namespace flare {
                 return std::numeric_limits<uint32_t>::max();
             }
 
-            // Add samples in another PercentileSamples.
+            // Add samples in another percentile_samples.
             template<size_t size2>
-            void merge(const PercentileSamples<size2> &rhs) {
+            void merge(const percentile_samples<size2> &rhs) {
                 _num_added += rhs._num_added;
                 for (size_t i = 0; i < NUM_INTERVALS; ++i) {
                     if (rhs._intervals[i] && !rhs._intervals[i]->empty()) {
@@ -306,7 +306,7 @@ namespace flare {
                 }
             }
 
-            // Combine multiple into a single PercentileSamples
+            // Combine multiple into a single percentile_samples
             template<typename Iterator>
             void combine_of(const Iterator &begin, const Iterator &end) {
                 if (_num_added) {
@@ -380,8 +380,8 @@ namespace flare {
                 os << '}';
             }
 
-            // True if intervals of two PercentileSamples are exactly same.
-            bool operator==(const PercentileSamples &rhs) const {
+            // True if intervals of two percentile_samples are exactly same.
+            bool operator==(const percentile_samples &rhs) const {
                 for (size_t i = 0; i < NUM_INTERVALS; ++i) {
                     if (_intervals != rhs._intervals[i]) {
                         return false;
@@ -393,12 +393,12 @@ namespace flare {
         private:
 
             template<size_t size1> friend
-            class PercentileSamples;
+            class percentile_samples;
 
             // Get/create interval on-demand.
-            PercentileInterval<SAMPLE_SIZE> &get_interval_at(size_t index) {
+            percentile_interval<SAMPLE_SIZE> &get_interval_at(size_t index) {
                 if (_intervals[index] == NULL) {
-                    _intervals[index] = new PercentileInterval<SAMPLE_SIZE>;
+                    _intervals[index] = new percentile_interval<SAMPLE_SIZE>;
                 }
                 return *_intervals[index];
             }
@@ -406,56 +406,56 @@ namespace flare {
             // sum of _num_added of all intervals. we update this value after any
             // changes to intervals inside to make it O(1)-time accessible.
             size_t _num_added;
-            PercentileInterval<SAMPLE_SIZE> *_intervals[NUM_INTERVALS];
+            percentile_interval<SAMPLE_SIZE> *_intervals[NUM_INTERVALS];
         };
 
-        template<size_t sz> const size_t PercentileSamples<sz>::SAMPLE_SIZE;
+        template<size_t sz> const size_t percentile_samples<sz>::SAMPLE_SIZE;
 
         template<size_t size>
-        std::ostream &operator<<(std::ostream &os, const PercentileInterval<size> &p) {
+        std::ostream &operator<<(std::ostream &os, const percentile_interval<size> &p) {
             p.describe(os);
             return os;
         }
 
         template<size_t size>
-        std::ostream &operator<<(std::ostream &os, const PercentileSamples<size> &p) {
+        std::ostream &operator<<(std::ostream &os, const percentile_samples<size> &p) {
             p.describe(os);
             return os;
         }
 
         // NOTE: we intentionally minus 2 uint32_t from sample-size to make the struct
         // size be power of 2 and more friendly to memory allocators.
-        typedef PercentileSamples<254> GlobalPercentileSamples;
-        typedef PercentileSamples<30> ThreadLocalPercentileSamples;
+        typedef percentile_samples<254> global_percentile_samples;
+        typedef percentile_samples<30> thread_local_percentile_samples;
 
         // A specialized reducer for finding the percentile of latencies.
         // NOTE: DON'T use it directly, use LatencyRecorder instead.
-        class Percentile {
+        class percentile {
         public:
-            struct AddPercentileSamples {
+            struct add_percentile_samples {
                 template<size_t size1, size_t size2>
-                void operator()(PercentileSamples<size1> &b1,
-                                const PercentileSamples<size2> &b2) const {
+                void operator()(percentile_samples<size1> &b1,
+                                const percentile_samples<size2> &b2) const {
                     b1.merge(b2);
                 }
             };
 
-            typedef GlobalPercentileSamples value_type;
-            typedef reducer_sampler <Percentile,
-            GlobalPercentileSamples,
-            AddPercentileSamples, VoidOp> sampler_type;
-            typedef agent_combiner<GlobalPercentileSamples,
-                    ThreadLocalPercentileSamples,
-                    AddPercentileSamples> combiner_type;
+            typedef global_percentile_samples value_type;
+            typedef reducer_sampler <percentile,
+            global_percentile_samples,
+            add_percentile_samples, void_op> sampler_type;
+            typedef agent_combiner<global_percentile_samples,
+                    thread_local_percentile_samples,
+                    add_percentile_samples> combiner_type;
             typedef combiner_type::Agent agent_type;
 
-            Percentile();
+            percentile();
 
-            ~Percentile();
+            ~percentile();
 
-            AddPercentileSamples op() const { return AddPercentileSamples(); }
+            add_percentile_samples op() const { return add_percentile_samples(); }
 
-            VoidOp inv_op() const { return VoidOp(); }
+            void_op inv_op() const { return void_op(); }
 
             // The sampler for windows over percentile.
             sampler_type *get_sampler() {
@@ -470,7 +470,7 @@ namespace flare {
 
             value_type get_value() const;
 
-            Percentile &operator<<(int64_t latency);
+            percentile &operator<<(int64_t latency);
 
             bool valid() const { return _combiner != NULL && _combiner->valid(); }
 
@@ -480,7 +480,7 @@ namespace flare {
             }
 
         private:
-            FLARE_DISALLOW_COPY_AND_ASSIGN(Percentile);
+            FLARE_DISALLOW_COPY_AND_ASSIGN(percentile);
 
             combiner_type *_combiner;
             sampler_type *_sampler;

@@ -21,7 +21,7 @@
 #include "flare/base/process_util.h"            // read_command_line
 #include "flare/base/popen.h"                   // read_command_output
 #include "flare/metrics/gauge.h"
-#include "flare/metrics/passive_status.h"
+#include "flare/metrics/gauge.h"
 #include "flare/base/static_atomic.h"
 
 namespace flare {
@@ -171,12 +171,12 @@ namespace flare {
     };
 
 #define VARIABLE_DEFINE_PROC_STAT_FIELD(field)                              \
-    PassiveStatus<VARIABLE_MEMBER_TYPE(&ProcStat::field)> g_##field(        \
+    status_gauge<VARIABLE_MEMBER_TYPE(&ProcStat::field)> g_##field(        \
         ProcStatReader::get_field<VARIABLE_MEMBER_TYPE(&ProcStat::field),   \
         offsetof(ProcStat, field)>, nullptr);
 
 #define VARIABLE_DEFINE_PROC_STAT_FIELD2(field, name)                       \
-    PassiveStatus<VARIABLE_MEMBER_TYPE(&ProcStat::field)> g_##field(        \
+    status_gauge<VARIABLE_MEMBER_TYPE(&ProcStat::field)> g_##field(        \
         name,                                                           \
         ProcStatReader::get_field<VARIABLE_MEMBER_TYPE(&ProcStat::field),   \
         offsetof(ProcStat, field)>, nullptr);
@@ -250,7 +250,7 @@ namespace flare {
     };
 
 #define VARIABLE_DEFINE_PROC_MEMORY_FIELD(field, name)                      \
-    PassiveStatus<VARIABLE_MEMBER_TYPE(&ProcMemory::field)> g_##field(      \
+    status_gauge<VARIABLE_MEMBER_TYPE(&ProcMemory::field)> g_##field(      \
         name,                                                           \
         ProcMemoryReader::get_field<VARIABLE_MEMBER_TYPE(&ProcMemory::field), \
         offsetof(ProcMemory, field)>, nullptr);
@@ -311,7 +311,7 @@ namespace flare {
     };
 
 #define VARIABLE_DEFINE_LOAD_AVERAGE_FIELD(field, name)                     \
-    PassiveStatus<VARIABLE_MEMBER_TYPE(&LoadAverage::field)> g_##field(     \
+    status_gauge<VARIABLE_MEMBER_TYPE(&LoadAverage::field)> g_##field(     \
         name,                                                           \
         LoadAverageReader::get_field<VARIABLE_MEMBER_TYPE(&LoadAverage::field), \
         offsetof(LoadAverage, field)>, nullptr);
@@ -363,7 +363,7 @@ namespace flare {
 #endif
     }
 
-    extern PassiveStatus<int> g_fd_num;
+    extern status_gauge<int> g_fd_num;
 
     const int MAX_FD_SCAN_COUNT = 10003;
     static flare::static_atomic<bool> s_ever_reached_fd_scan_limit = FLARE_STATIC_ATOMIC_INIT(false);
@@ -470,7 +470,7 @@ namespace flare {
     };
 
 #define VARIABLE_DEFINE_PROC_IO_FIELD(field)                                \
-    PassiveStatus<VARIABLE_MEMBER_TYPE(&ProcIO::field)> g_##field(          \
+    status_gauge<VARIABLE_MEMBER_TYPE(&ProcIO::field)> g_##field(          \
         ProcIOReader::get_field<VARIABLE_MEMBER_TYPE(&ProcIO::field),       \
         offsetof(ProcIO, field)>, nullptr);
 
@@ -581,7 +581,7 @@ namespace flare {
     };
 
 #define VARIABLE_DEFINE_DISK_STAT_FIELD(field)                              \
-    PassiveStatus<VARIABLE_MEMBER_TYPE(&DiskStat::field)> g_##field(        \
+    status_gauge<VARIABLE_MEMBER_TYPE(&DiskStat::field)> g_##field(        \
         DiskStatReader::get_field<VARIABLE_MEMBER_TYPE(&DiskStat::field),   \
         offsetof(DiskStat, field)>, nullptr);
 
@@ -651,12 +651,12 @@ namespace flare {
     };
 
 #define VARIABLE_DEFINE_RUSAGE_FIELD(field)                                 \
-    PassiveStatus<VARIABLE_MEMBER_TYPE(&rusage::field)> g_##field(          \
+    status_gauge<VARIABLE_MEMBER_TYPE(&rusage::field)> g_##field(          \
         RUsageReader::get_field<VARIABLE_MEMBER_TYPE(&rusage::field),       \
         offsetof(rusage, field)>, nullptr);                                \
 
 #define VARIABLE_DEFINE_RUSAGE_FIELD2(field, name)                          \
-    PassiveStatus<VARIABLE_MEMBER_TYPE(&rusage::field)> g_##field(          \
+    status_gauge<VARIABLE_MEMBER_TYPE(&rusage::field)> g_##field(          \
         name,                                                           \
         RUsageReader::get_field<VARIABLE_MEMBER_TYPE(&rusage::field),       \
         offsetof(rusage, field)>, nullptr);                                \
@@ -677,11 +677,11 @@ namespace flare {
         }
     }
 
-    PassiveStatus<std::string> g_username(
+    status_gauge<std::string> g_username(
             "process_username", get_username, nullptr);
 
     VARIABLE_DEFINE_PROC_STAT_FIELD(minflt);
-    PerSecond<PassiveStatus<unsigned long>> g_minflt_second(
+    per_second<status_gauge<unsigned long>> g_minflt_second(
             "process_faults_minor_second", &g_minflt);
     VARIABLE_DEFINE_PROC_STAT_FIELD2(majflt, "process_faults_major");
 
@@ -689,7 +689,7 @@ namespace flare {
     VARIABLE_DEFINE_PROC_STAT_FIELD2(nice, "process_nice");
 
     VARIABLE_DEFINE_PROC_STAT_FIELD2(num_threads, "process_thread_count");
-    PassiveStatus<int> g_fd_num("process_fd_count", print_fd_count, nullptr);
+    status_gauge<int> g_fd_num("process_fd_count", print_fd_count, nullptr);
 
     VARIABLE_DEFINE_PROC_MEMORY_FIELD(size, "process_memory_virtual");
     VARIABLE_DEFINE_PROC_MEMORY_FIELD(resident, "process_memory_resident");
@@ -703,34 +703,34 @@ namespace flare {
 
     VARIABLE_DEFINE_PROC_IO_FIELD(rchar);
     VARIABLE_DEFINE_PROC_IO_FIELD(wchar);
-    PerSecond<PassiveStatus<size_t>> g_io_read_second(
+    per_second<status_gauge<size_t>> g_io_read_second(
             "process_io_read_bytes_second", &g_rchar);
-    PerSecond<PassiveStatus<size_t>> g_io_write_second(
+    per_second<status_gauge<size_t>> g_io_write_second(
             "process_io_write_bytes_second", &g_wchar);
 
     VARIABLE_DEFINE_PROC_IO_FIELD(syscr);
     VARIABLE_DEFINE_PROC_IO_FIELD(syscw);
-    PerSecond<PassiveStatus<size_t>> g_io_num_reads_second(
+    per_second<status_gauge<size_t>> g_io_num_reads_second(
             "process_io_read_second", &g_syscr);
-    PerSecond<PassiveStatus<size_t>> g_io_num_writes_second(
+    per_second<status_gauge<size_t>> g_io_num_writes_second(
             "process_io_write_second", &g_syscw);
 
     VARIABLE_DEFINE_PROC_IO_FIELD(read_bytes);
     VARIABLE_DEFINE_PROC_IO_FIELD(write_bytes);
-    PerSecond<PassiveStatus<size_t>> g_disk_read_second(
+    per_second<status_gauge<size_t>> g_disk_read_second(
             "process_disk_read_bytes_second", &g_read_bytes);
-    PerSecond<PassiveStatus<size_t>> g_disk_write_second(
+    per_second<status_gauge<size_t>> g_disk_write_second(
             "process_disk_write_bytes_second", &g_write_bytes);
 
     VARIABLE_DEFINE_RUSAGE_FIELD(ru_utime);
     VARIABLE_DEFINE_RUSAGE_FIELD(ru_stime);
-    PassiveStatus<timeval> g_uptime("process_uptime", get_uptime, nullptr);
+    status_gauge<timeval> g_uptime("process_uptime", get_uptime, nullptr);
 
     static int get_core_num(void *) {
         return sysconf(_SC_NPROCESSORS_ONLN);
     }
 
-    PassiveStatus<int> g_core_num("system_core_count", get_core_num, nullptr);
+    status_gauge<int> g_core_num("system_core_count", get_core_num, nullptr);
 
     struct TimePercent {
         int64_t time_us;
@@ -763,8 +763,8 @@ namespace flare {
         return tp;
     }
 
-    PassiveStatus<TimePercent> g_cputime_percent(get_cputime_percent, nullptr);
-    Window<PassiveStatus<TimePercent>, SERIES_IN_SECOND> g_cputime_percent_second(
+    status_gauge<TimePercent> g_cputime_percent(get_cputime_percent, nullptr);
+    window<status_gauge<TimePercent>, SERIES_IN_SECOND> g_cputime_percent_second(
             "process_cpu_usage", &g_cputime_percent, FLAGS_variable_dump_interval);
 
     static TimePercent get_stime_percent(void *) {
@@ -773,8 +773,8 @@ namespace flare {
         return tp;
     }
 
-    PassiveStatus<TimePercent> g_stime_percent(get_stime_percent, nullptr);
-    Window<PassiveStatus<TimePercent>, SERIES_IN_SECOND> g_stime_percent_second(
+    status_gauge<TimePercent> g_stime_percent(get_stime_percent, nullptr);
+    window<status_gauge<TimePercent>, SERIES_IN_SECOND> g_stime_percent_second(
             "process_cpu_usage_system", &g_stime_percent, FLAGS_variable_dump_interval);
 
     static TimePercent get_utime_percent(void *) {
@@ -783,8 +783,8 @@ namespace flare {
         return tp;
     }
 
-    PassiveStatus<TimePercent> g_utime_percent(get_utime_percent, nullptr);
-    Window<PassiveStatus<TimePercent>, SERIES_IN_SECOND> g_utime_percent_second(
+    status_gauge<TimePercent> g_utime_percent(get_utime_percent, nullptr);
+    window<status_gauge<TimePercent>, SERIES_IN_SECOND> g_utime_percent_second(
             "process_cpu_usage_user", &g_utime_percent, FLAGS_variable_dump_interval);
 
     // According to http://man7.org/linux/man-pages/man2/getrusage.2.html
@@ -798,17 +798,17 @@ namespace flare {
     VARIABLE_DEFINE_RUSAGE_FIELD(ru_oublock);
     VARIABLE_DEFINE_RUSAGE_FIELD(ru_nvcsw);
     VARIABLE_DEFINE_RUSAGE_FIELD(ru_nivcsw);
-    PerSecond<PassiveStatus<long>> g_ru_inblock_second(
+    per_second<status_gauge<long>> g_ru_inblock_second(
             "process_inblocks_second", &g_ru_inblock);
-    PerSecond<PassiveStatus<long>> g_ru_oublock_second(
+    per_second<status_gauge<long>> g_ru_oublock_second(
             "process_outblocks_second", &g_ru_oublock);
-    PerSecond<PassiveStatus<long>> cs_vol_second(
+    per_second<status_gauge<long>> cs_vol_second(
             "process_context_switches_voluntary_second", &g_ru_nvcsw);
-    PerSecond<PassiveStatus<long>> cs_invol_second(
+    per_second<status_gauge<long>> cs_invol_second(
             "process_context_switches_involuntary_second", &g_ru_nivcsw);
 
-    PassiveStatus<std::string> g_cmdline("process_cmdline", get_cmdline, nullptr);
-    PassiveStatus<std::string> g_kernel_version(
+    status_gauge<std::string> g_cmdline("process_cmdline", get_cmdline, nullptr);
+    status_gauge<std::string> g_kernel_version(
             "kernel_version", get_kernel_version, nullptr);
 
     static std::string *s_gcc_version = nullptr;
@@ -862,7 +862,7 @@ namespace flare {
     }
 
 // =============================================
-    PassiveStatus<std::string> g_gcc_version("gcc_version", get_gcc_version, nullptr);
+    status_gauge<std::string> g_gcc_version("gcc_version", get_gcc_version, nullptr);
 
     void get_work_dir(std::ostream &os, void *) {
         std::error_code ec;
@@ -871,7 +871,7 @@ namespace flare {
         os << curr.c_str();
     }
 
-    PassiveStatus<std::string> g_work_dir("process_work_dir", get_work_dir, nullptr);
+    status_gauge<std::string> g_work_dir("process_work_dir", get_work_dir, nullptr);
 
 #undef VARIABLE_MEMBER_TYPE
 #undef VARIABLE_DEFINE_PROC_STAT_FIELD

@@ -10,6 +10,7 @@
 #include "flare/times/time.h"
 #include "flare/strings/utility.h"
 #include "flare/metrics/all.h"
+#include "flare/metrics/gauge.h"
 
 #include <gflags/gflags.h>
 
@@ -46,7 +47,7 @@ namespace {
     };
 
     TEST_F(VariableTest, status) {
-        flare::Status<int> st1;
+        flare::read_most_gauge<int> st1;
         st1.set_value(9);
         ASSERT_EQ(0, st1.expose("var1", ""));
         ASSERT_EQ("9", flare::variable_base::describe_exposed("var1", ""));
@@ -56,7 +57,7 @@ namespace {
         ASSERT_EQ("var1", vars[0]);
         ASSERT_EQ(1UL, flare::variable_base::count_exposed());
 
-        flare::Status<int> st2;
+        flare::read_most_gauge<int> st2;
         st2.set_value(10);
         ASSERT_EQ(-1, st2.expose("var1", ""));
         ASSERT_EQ(1UL, flare::variable_base::count_exposed());
@@ -96,7 +97,7 @@ namespace {
         ASSERT_EQ("var2_again", vars[1]);
         ASSERT_EQ(2UL, flare::variable_base::count_exposed());
 
-        flare::Status<int> st3("var3", 11);
+        flare::read_most_gauge<int> st3("var3", 11);
         ASSERT_EQ("var3", st3.name());
         ASSERT_EQ(3UL, flare::variable_base::count_exposed());
         ASSERT_EQ("11", flare::variable_base::describe_exposed("var3"));
@@ -107,7 +108,7 @@ namespace {
         ASSERT_EQ("var2_again", vars[2]);
         ASSERT_EQ(3UL, flare::variable_base::count_exposed());
 
-        flare::Status<int> st4("var4", 12);
+        flare::read_most_gauge<int> st4("var4", 12);
         ASSERT_EQ("var4", st4.name());
         ASSERT_EQ(4UL, flare::variable_base::count_exposed());
         ASSERT_EQ("12", flare::variable_base::describe_exposed("var4"));
@@ -118,7 +119,7 @@ namespace {
         ASSERT_EQ("var4", vars[2]);
         ASSERT_EQ("var2_again", vars[3]);
 
-        flare::Status<void *> st5((void *) 19UL);
+        flare::read_most_gauge<void *> st5((void *) 19UL);
         FLARE_LOG(INFO) << st5;
         ASSERT_EQ("0x13", st5.get_description());
     }
@@ -143,7 +144,7 @@ namespace {
     }
 
     TEST_F(VariableTest, expose) {
-        flare::Status<int> c1;
+        flare::read_most_gauge<int> c1;
         ASSERT_EQ(0, c1.expose_as("foo::bar::Apple", "c1", ""));
         ASSERT_EQ("foo_bar_apple_c1", c1.name());
         ASSERT_EQ(1UL, flare::variable_base::count_exposed());
@@ -169,7 +170,7 @@ namespace {
         ASSERT_EQ(1UL, flare::variable_base::count_exposed());
     }
 
-    class MyDumper : public flare::Dumper {
+    class MyDumper : public flare::variable_dumper {
     public:
         bool dump(const std::string &name,
                   const std::string_view &description) {
@@ -189,20 +190,20 @@ namespace {
 
         // Nothing to dump yet.
         flare::FLAGS_variable_log_dumpped = true;
-        ASSERT_EQ(0, flare::variable_base::dump_exposed(&d, NULL));
+        ASSERT_EQ(0, flare::variable_base::dump_exposed(&d, nullptr));
         ASSERT_TRUE(d._list.empty());
 
-        flare::Adder<int> v2("var2");
+        flare::gauge<int> v2("var2");
         v2 << 2;
-        flare::Status<int> v1("var1", 1);
-        flare::Status<int> v1_2("var1", 12);
-        flare::Status<int> v3("foo.bar.Apple", "var3", 3);
-        flare::Adder<int> v4("foo.bar.BaNaNa", "var4");
+        flare::read_most_gauge<int> v1("var1", 1);
+        flare::read_most_gauge<int> v1_2("var1", 12);
+        flare::read_most_gauge<int> v3("foo.bar.Apple", "var3", 3);
+        flare::gauge<int> v4("foo.bar.BaNaNa", "var4","", {});
         v4 << 4;
-        flare::BasicPassiveStatus<int> v5(
-                "foo::bar::Car_Rot", "var5", print_int, NULL);
+        flare::basic_status_gauge<int> v5(
+                "foo::bar::Car_Rot", "var5", print_int, nullptr);
 
-        ASSERT_EQ(5, flare::variable_base::dump_exposed(&d, NULL));
+        ASSERT_EQ(5, flare::variable_base::dump_exposed(&d, nullptr));
         ASSERT_EQ(5UL, d._list.size());
         int i = 0;
         ASSERT_EQ("foo_bar_apple_var3", d._list[i++ / 2].first);

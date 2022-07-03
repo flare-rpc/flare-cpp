@@ -25,7 +25,7 @@ namespace flare {
 
     namespace metrics_detail {
 
-        typedef PercentileSamples<1022> CombinedPercentileSamples;
+        typedef percentile_samples<1022> CombinedPercentileSamples;
 
         CDF::CDF(PercentileWindow *w) : _w(w) {}
 
@@ -46,7 +46,7 @@ namespace flare {
                 return 0;
             }
             std::unique_ptr<CombinedPercentileSamples> cb(new CombinedPercentileSamples);
-            std::vector<GlobalPercentileSamples> buckets;
+            std::vector<global_percentile_samples> buckets;
             _w->get_samples(&buckets);
             for (size_t i = 0; i < buckets.size(); ++i) {
                 cb->combine_of(buckets.begin(), buckets.end());
@@ -90,7 +90,7 @@ namespace flare {
         // Caller is responsible for deleting the return value.
         static CombinedPercentileSamples *combine(PercentileWindow *w) {
             CombinedPercentileSamples *cb = new CombinedPercentileSamples;
-            std::vector<GlobalPercentileSamples> buckets;
+            std::vector<global_percentile_samples> buckets;
             w->get_samples(&buckets);
             cb->combine_of(buckets.begin(), buckets.end());
             return cb;

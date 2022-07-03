@@ -969,10 +969,10 @@ namespace flare {
                                              single_table_ratios.end());
                 }
 
-                // Percentile ratio total_probe_length/size over tables.
-                double PercentileRatio(double Percentile = 0.95) const {
+                // percentile ratio total_probe_length/size over tables.
+                double PercentileRatio(double percentile = 0.95) const {
                     auto r = single_table_ratios;
-                    auto mid = r.begin() + static_cast<size_t>(r.size() * Percentile);
+                    auto mid = r.begin() + static_cast<size_t>(r.size() * percentile);
                     if (mid != r.end()) {
                         std::nth_element(r.begin(), mid, r.end());
                         return *mid;
@@ -995,11 +995,11 @@ namespace flare {
                     return res;
                 }
 
-                size_t PercentileProbe(double Percentile = 0.99) const {
+                size_t PercentileProbe(double percentile = 0.99) const {
                     size_t idx = 0;
                     for (double p : ProbeNormalizedHistogram()) {
-                        if (Percentile > p) {
-                            Percentile -= p;
+                        if (percentile > p) {
+                            percentile -= p;
                             ++idx;
                         } else {
                             return idx;

@@ -123,9 +123,9 @@ namespace flare::fiber_internal {
     }
 
     void fiber_worker::run_main_task() {
-        flare::PassiveStatus<double> cumulated_cputime(
+        flare::status_gauge<double> cumulated_cputime(
                 get_cumulated_cputime_from_this, this);
-        std::unique_ptr<flare::PerSecond<flare::PassiveStatus<double> > > usage_variable;
+        std::unique_ptr<flare::per_second<flare::status_gauge<double> > > usage_variable;
 
         fiber_worker *dummy = this;
         fiber_id_t tid;
@@ -145,7 +145,7 @@ namespace flare::fiber_internal {
                 snprintf(name, sizeof(name), "fiber_worker_usage_%ld",
                          (long)syscall(SYS_gettid));
 #endif
-                usage_variable.reset(new flare::PerSecond<flare::PassiveStatus<double> >
+                usage_variable.reset(new flare::per_second<flare::status_gauge<double> >
                                              (name, &cumulated_cputime, 1));
             }
         }

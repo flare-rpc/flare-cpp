@@ -17,7 +17,7 @@
 namespace flare {
     namespace metrics_detail {
 
-        typedef int AgentId;
+        typedef int agent_id;
 
         // General NOTES:
         // * Don't use bound-checking vector::at.
@@ -28,13 +28,13 @@ namespace flare {
         //   better than you. Only hint branches that are definitely unusual.
 
         template<typename Agent>
-        class AgentGroup {
+        class agent_group {
         public:
             typedef Agent agent_type;
 
-            // TODO: We should remove the template parameter and unify AgentGroup
+            // TODO: We should remove the template parameter and unify agent_group
             // of all variable with a same one, to reuse the memory between different
-            // type of variable. The unified AgentGroup allocates small structs in-place
+            // type of variable. The unified agent_group allocates small structs in-place
             // and large structs on heap, thus keeping batch efficiencies on small
             // structs and improving memory usage on large structs.
             const static size_t RAW_BLOCK_SIZE = 4096;
@@ -67,9 +67,9 @@ namespace flare {
                 Agent _agents[ELEMENTS_PER_BLOCK];
             };
 
-            inline static AgentId create_new_agent() {
+            inline static agent_id create_new_agent() {
                 FLARE_SCOPED_LOCK(_s_mutex);
-                AgentId agent_id = 0;
+                agent_id agent_id = 0;
                 if (!_get_free_ids().empty()) {
                     agent_id = _get_free_ids().back();
                     _get_free_ids().pop_back();
@@ -79,7 +79,7 @@ namespace flare {
                 return agent_id;
             }
 
-            inline static int destroy_agent(AgentId id) {
+            inline static int destroy_agent(agent_id id) {
                 // TODO: How to avoid double free?
                 FLARE_SCOPED_LOCK(_s_mutex);
                 if (id < 0 || id >= _s_agent_kinds) {
@@ -92,7 +92,7 @@ namespace flare {
 
             // Note: May return non-null for unexist id, see notes on ThreadBlock
             // We need this function to be as fast as possible.
-            inline static Agent *get_tls_agent(AgentId id) {
+            inline static Agent *get_tls_agent(agent_id id) {
                 if (__builtin_expect(id >= 0, 1)) {
                     if (_s_tls_blocks) {
                         const size_t block_id = (size_t) id / ELEMENTS_PER_BLOCK;
@@ -108,7 +108,7 @@ namespace flare {
             }
 
             // Note: May return non-null for unexist id, see notes on ThreadBlock
-            inline static Agent *get_or_create_tls_agent(AgentId id) {
+            inline static Agent *get_or_create_tls_agent(agent_id id) {
                 if (__builtin_expect(id < 0, 0)) {
                     FLARE_CHECK(false) << "Invalid id=" << id;
                     return NULL;
@@ -151,9 +151,9 @@ namespace flare {
                 _s_tls_blocks = NULL;
             }
 
-            inline static std::deque<AgentId> &_get_free_ids() {
+            inline static std::deque<agent_id> &_get_free_ids() {
                 if (__builtin_expect(!_s_free_ids, 0)) {
-                    _s_free_ids = new(std::nothrow) std::deque<AgentId>();
+                    _s_free_ids = new(std::nothrow) std::deque<agent_id>();
                     if (!_s_free_ids) {
                         abort();
                     }
@@ -162,23 +162,23 @@ namespace flare {
             }
 
             static pthread_mutex_t _s_mutex;
-            static AgentId _s_agent_kinds;
-            static std::deque<AgentId> *_s_free_ids;
+            static agent_id _s_agent_kinds;
+            static std::deque<agent_id> *_s_free_ids;
             static __thread std::vector<ThreadBlock *> *_s_tls_blocks;
         };
 
         template<typename Agent>
-        pthread_mutex_t AgentGroup<Agent>::_s_mutex = PTHREAD_MUTEX_INITIALIZER;
+        pthread_mutex_t agent_group<Agent>::_s_mutex = PTHREAD_MUTEX_INITIALIZER;
 
         template<typename Agent>
-        std::deque<AgentId> *AgentGroup<Agent>::_s_free_ids = NULL;
+        std::deque<agent_id> *agent_group<Agent>::_s_free_ids = NULL;
 
         template<typename Agent>
-        AgentId AgentGroup<Agent>::_s_agent_kinds = 0;
+        agent_id agent_group<Agent>::_s_agent_kinds = 0;
 
         template<typename Agent>
-        __thread std::vector<typename AgentGroup<Agent>::ThreadBlock *>
-                *AgentGroup<Agent>::_s_tls_blocks = NULL;
+        __thread std::vector<typename agent_group<Agent>::ThreadBlock *>
+                *agent_group<Agent>::_s_tls_blocks = NULL;
 
     }  // namespace metrics_detail
 }  // namespace flare

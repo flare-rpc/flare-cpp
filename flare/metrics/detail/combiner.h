@@ -9,7 +9,7 @@
 #include "flare/base/type_traits.h"           // flare::base::add_cr_non_integral
 #include "flare/base/lock.h"  // flare::base::Lock
 #include "flare/container/linked_list.h"// link_node
-#include "flare/metrics/detail/agent_group.h"    // detail::AgentGroup
+#include "flare/metrics/detail/agent_group.h"    // detail::agent_group
 #include "flare/metrics/detail/is_atomical.h"
 #include "flare/metrics/detail/call_op_returning_void.h"
 
@@ -198,19 +198,19 @@ namespace flare {
                 ElementContainer<ElementTp> element;
             };
 
-            typedef metrics_detail::AgentGroup<Agent> AgentGroup;
+            typedef metrics_detail::agent_group<Agent> agent_group;
 
             explicit agent_combiner(const ResultTp result_identity = ResultTp(),
                                    const ElementTp element_identity = ElementTp(),
                                    const BinaryOp &op = BinaryOp())
-                    : _id(AgentGroup::create_new_agent()), _op(op), _global_result(result_identity),
+                    : _id(agent_group::create_new_agent()), _op(op), _global_result(result_identity),
                       _result_identity(result_identity), _element_identity(element_identity) {
             }
 
             ~agent_combiner() {
                 if (_id >= 0) {
                     clear_all_agents();
-                    AgentGroup::destroy_agent(_id);
+                    agent_group::destroy_agent(_id);
                     _id = -1;
                 }
             }
@@ -275,10 +275,10 @@ namespace flare {
 
             // We need this function to be as fast as possible.
             inline Agent *get_or_create_tls_agent() {
-                Agent *agent = AgentGroup::get_tls_agent(_id);
+                Agent *agent = agent_group::get_tls_agent(_id);
                 if (!agent) {
                     // Create the agent
-                    agent = AgentGroup::get_or_create_tls_agent(_id);
+                    agent = agent_group::get_or_create_tls_agent(_id);
                     if (NULL == agent) {
                         FLARE_LOG(FATAL) << "Fail to create agent";
                         return NULL;
@@ -315,7 +315,7 @@ namespace flare {
             bool valid() const { return _id >= 0; }
 
         private:
-            AgentId _id;
+            agent_id _id;
             BinaryOp _op;
             mutable flare::base::Lock _lock;
             ResultTp _global_result;

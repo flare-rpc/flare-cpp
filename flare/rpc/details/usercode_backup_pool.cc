@@ -46,14 +46,14 @@ namespace flare::rpc {
     struct UserCodeBackupPool {
         // Run user code when parallelism of user code reaches the threshold
         std::deque<UserCode> queue;
-        flare::PassiveStatus<int> inplace_var;
-        flare::PassiveStatus<size_t> queue_size_var;
-        flare::Adder<size_t> inpool_count;
-        flare::PerSecond<flare::Adder<size_t> > inpool_per_second;
+        flare::status_gauge<int> inplace_var;
+        flare::status_gauge<size_t> queue_size_var;
+        flare::gauge<size_t> inpool_count;
+        flare::per_second<flare::gauge<size_t> > inpool_per_second;
         // NOTE: we don't use Adder<double> directly which does not compile in gcc 3.4
-        flare::Adder<int64_t> inpool_elapse_us;
-        flare::PassiveStatus<double> inpool_elapse_s;
-        flare::PerSecond<flare::PassiveStatus<double> > pool_usage;
+        flare::gauge<int64_t> inpool_elapse_us;
+        flare::status_gauge<double> inpool_elapse_s;
+        flare::per_second<flare::status_gauge<double> > pool_usage;
 
         UserCodeBackupPool();
 
@@ -79,7 +79,7 @@ namespace flare::rpc {
     }
 
     static double GetInPoolElapseInSecond(void *arg) {
-        return static_cast<flare::Adder<int64_t> *>(arg)->get_value() / 1000000.0;
+        return static_cast<flare::gauge<int64_t> *>(arg)->get_value() / 1000000.0;
     }
 
     UserCodeBackupPool::UserCodeBackupPool()

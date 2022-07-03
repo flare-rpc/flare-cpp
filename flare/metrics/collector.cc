@@ -139,15 +139,15 @@ namespace flare {
         FLARE_CHECK_EQ(0, pthread_create(&_dump_thread, NULL, run_dump_thread, this));
 
         // vars
-        flare::PassiveStatus<int64_t> pending_sampled_data(
+        flare::status_gauge<int64_t> pending_sampled_data(
                 "variable_collector_pending_samples", get_pending_count, this);
         double busy_seconds = 0;
-        flare::PassiveStatus<double> busy_seconds_var(deref_value<double>, &busy_seconds);
-        flare::PerSecond<flare::PassiveStatus<double> > busy_seconds_second(
+        flare::status_gauge<double> busy_seconds_var(deref_value<double>, &busy_seconds);
+        flare::per_second<flare::status_gauge<double> > busy_seconds_second(
                 "variable_collector_grab_thread_usage", &busy_seconds_var);
 
-        flare::PassiveStatus<int64_t> ngrab_var(deref_value<int64_t>, &_ngrab);
-        flare::PerSecond<flare::PassiveStatus<int64_t> > ngrab_second(
+        flare::status_gauge<int64_t> ngrab_var(deref_value<int64_t>, &_ngrab);
+        flare::per_second<flare::status_gauge<int64_t> > ngrab_second(
                 "variable_collector_grab_second", &ngrab_var);
 
         // Maps for calculating speed limit.
@@ -339,12 +339,12 @@ namespace flare {
 
         // vars
         double busy_seconds = 0;
-        flare::PassiveStatus<double> busy_seconds_var(deref_value<double>, &busy_seconds);
-        flare::PerSecond<flare::PassiveStatus<double> > busy_seconds_second(
+        flare::status_gauge<double> busy_seconds_var(deref_value<double>, &busy_seconds);
+        flare::per_second<flare::status_gauge<double> > busy_seconds_second(
                 "variable_collector_dump_thread_usage", &busy_seconds_var);
 
-        flare::PassiveStatus<int64_t> ndumped_var(deref_value<int64_t>, &_ndump);
-        flare::PerSecond<flare::PassiveStatus<int64_t> > ndumped_second(
+        flare::status_gauge<int64_t> ndumped_var(deref_value<int64_t>, &_ndump);
+        flare::per_second<flare::status_gauge<int64_t> > ndumped_second(
                 "flare::collector_dump_second", &ndumped_var);
 
         flare::container::link_node<Collected> root;

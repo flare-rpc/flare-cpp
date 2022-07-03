@@ -84,7 +84,7 @@ namespace flare {
         //           _error.expose_as("foo_bar_apple_pie", "error");
         //       }
         //   private:
-        //       flare::Adder<int> _error;
+        //       flare::counter<int> _error;
         //   };
         //   }  // foo
         //   }  // bar
@@ -152,9 +152,11 @@ namespace flare {
         // `black_wildcards' and send them to `dumper'.
         // Use default options when `options' is NULL.
         // Return number of dumped variables, -1 on error.
-        static int dump_exposed(Dumper *dumper, const variable_dump_options *options);
+        static int dump_exposed(variable_dumper *dumper, const variable_dump_options *options);
 
         static int dump_metrics(metrics_dumper *dumper, const metrics_dump_options *options);
+
+        void copy_metric_family(cache_metrics &metric) const;
 
     protected:
 
@@ -164,7 +166,6 @@ namespace flare {
                                 const tag_type &tags,
                                 display_filter display_filter);
 
-        void copy_metric_family(cache_metrics &metric) const;
 
     protected:
         std::string _name;

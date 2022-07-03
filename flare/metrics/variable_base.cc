@@ -17,6 +17,7 @@
 #include "flare/strings/ends_with.h"
 #include "flare/strings/strip.h"
 #include "flare/strings/str_join.h"
+#include "flare/log/logging.h"
 
 namespace flare {
 
@@ -273,7 +274,9 @@ namespace flare {
                         break;
                     }
                 }
+                FLARE_LOG(INFO)<<it->first<<": "<<it->second.display_filter;
                 if (it->second.display_filter & DISPLAY_ON_METRICS) {
+                    FLARE_LOG(INFO)<<it->first<<": "<<it->second.display_filter;
                     cache_metrics m;
                     it->second.var->collect_metrics(m);
                     metrics->push_back(std::move(m));
@@ -488,7 +491,7 @@ namespace flare {
     variable_dump_options::variable_dump_options()
             : quote_string(true), question_mark('?'), display_filter(DISPLAY_ON_PLAIN_TEXT) {}
 
-    int variable_base::dump_exposed(Dumper *dumper, const variable_dump_options *poptions) {
+    int variable_base::dump_exposed(variable_dumper *dumper, const variable_dump_options *poptions) {
         if (nullptr == dumper) {
             FLARE_LOG(ERROR) << "Parameter[dumper] is nullptr";
             return -1;
@@ -627,7 +630,7 @@ namespace flare {
         return s;
     }
 
-    class FileDumper : public Dumper {
+    class FileDumper : public variable_dumper {
     public:
         FileDumper(const std::string &filename, std::string_view s/*prefix*/)
                 : _filename(filename), _fp(nullptr) {
@@ -688,7 +691,7 @@ namespace flare {
         std::string _prefix;
     };
 
-    class FileDumperGroup : public Dumper {
+    class FileDumperGroup : public variable_dumper {
     public:
         FileDumperGroup(std::string tabs, std::string filename,
                         std::string_view s/*prefix*/) {

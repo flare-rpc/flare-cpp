@@ -18,7 +18,7 @@
 // Date: 2015/08/27 17:12:38
 
 #include "testing/gtest_wrap.h"
-#include "flare/metrics/variable_reducer.h"
+#include "flare/metrics/gauge.h"
 #include <gflags/gflags.h>
 #include <stdlib.h>
 
@@ -29,11 +29,11 @@ protected:
 };
 
 TEST_F(FileDumperTest, filters) {
-    flare::Adder<int> a1("a_latency");
-    flare::Adder<int> a2("a_qps");
-    flare::Adder<int> a3("a_error");
-    flare::Adder<int> a4("process_*");
-    flare::Adder<int> a5("default");
+    flare::gauge<int> a1("a_latency");
+    flare::gauge<int> a2("a_qps");
+    flare::gauge<int> a3("a_error");
+    flare::gauge<int> a4("process_*");
+    flare::gauge<int> a5("default");
     google::SetCommandLineOption("variable_dump_interval", "1");
     google::SetCommandLineOption("variable_dump", "true");
     sleep(2);

@@ -11,7 +11,7 @@
 
 #include <stddef.h>                             // size_t
 #include "flare/base/static_atomic.h"                     // std::atomic
-#include "flare/metrics/all.h"                          // flare::PassiveStatus
+#include "flare/metrics/all.h"                          // flare::status_gauge
 #include "flare/fiber/internal/fiber_entity.h"                  // fiber_entity
 #include "flare/memory/resource_pool.h"                 // ResourcePool
 #include "flare/fiber/internal/work_stealing_queue.h"        // WorkStealingQueue
@@ -88,17 +88,17 @@ namespace flare::fiber_internal {
         std::atomic<int> _concurrency;
         std::vector<pthread_t> _workers;
 
-        flare::Adder<int64_t> _nworkers;
+        flare::gauge<int64_t> _nworkers;
         flare::base::Mutex _pending_time_mutex;
         std::atomic<flare::LatencyRecorder *> _pending_time;
-        flare::PassiveStatus<double> _cumulated_worker_time;
-        flare::PerSecond<flare::PassiveStatus<double> > _worker_usage_second;
-        flare::PassiveStatus<int64_t> _cumulated_switch_count;
-        flare::PerSecond<flare::PassiveStatus<int64_t> > _switch_per_second;
-        flare::PassiveStatus<int64_t> _cumulated_signal_count;
-        flare::PerSecond<flare::PassiveStatus<int64_t> > _signal_per_second;
-        flare::PassiveStatus<std::string> _status;
-        flare::Adder<int64_t> _nfibers;
+        flare::status_gauge<double> _cumulated_worker_time;
+        flare::per_second<flare::status_gauge<double> > _worker_usage_second;
+        flare::status_gauge<int64_t> _cumulated_switch_count;
+        flare::per_second<flare::status_gauge<int64_t> > _switch_per_second;
+        flare::status_gauge<int64_t> _cumulated_signal_count;
+        flare::per_second<flare::status_gauge<int64_t> > _signal_per_second;
+        flare::status_gauge<std::string> _status;
+        flare::gauge<int64_t> _nfibers;
 
         static const int PARKING_LOT_NUM = 4;
         ParkingLot _pl[PARKING_LOT_NUM];

@@ -53,9 +53,9 @@ namespace flare {
         };
 
         // Representing a non-existing operator so that we can test
-        // is_same<Op, VoidOp>::value to write code for different branches.
+        // is_same<Op, void_op>::value to write code for different branches.
         // The false branch should be removed by compiler at compile-time.
-        struct VoidOp {
+        struct void_op {
             template<typename T>
             T operator()(const T &, const T &) const {
                 FLARE_CHECK(false) << "This function should never be called, abort";
@@ -87,7 +87,7 @@ namespace flare {
             void take_sample() override {
                 // Make _q ready.
                 // If _window_size is larger than what _q can hold, e.g. a larger
-                // Window<> is created after running of sampler, make _q larger.
+                // window<> is created after running of sampler, make _q larger.
                 if ((size_t) _window_size + 1 > _q.capacity()) {
                     const size_t new_cap =
                             std::max(_q.capacity() * 2, (size_t) _window_size + 1);
@@ -106,7 +106,7 @@ namespace flare {
                 }
 
                 variable_sample<T> latest;
-                if (std::is_same<InvOp, VoidOp>::value) {
+                if (std::is_same<InvOp, void_op>::value) {
                     // The operator can't be inversed.
                     // We reset the reducer and save the result as a sample.
                     // Suming up samples gives the result within a window.
@@ -141,7 +141,7 @@ namespace flare {
                 }
                 variable_sample<T> *latest = _q.bottom();
                 FLARE_DCHECK(latest != oldest);
-                if (std::is_same<InvOp, VoidOp>::value) {
+                if (std::is_same<InvOp, void_op>::value) {
                     // No inverse op. Sum up all samples within the window.
                     result->data = latest->data;
                     for (int i = 1; true; ++i) {

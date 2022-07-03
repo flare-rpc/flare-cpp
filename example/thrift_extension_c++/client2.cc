@@ -42,7 +42,7 @@ DEFINE_int32(dummy_port, -1, "Launch dummy server at this port");
 std::string g_request;
 
 flare::LatencyRecorder g_latency_recorder("client");
-flare::Adder<int> g_error_count("client_error_count");
+flare::gauge<int> g_error_count("client_error_count");
 
 static void* sender(void* arg) {
     // Normally, you should not call a Channel directly, but instead construct

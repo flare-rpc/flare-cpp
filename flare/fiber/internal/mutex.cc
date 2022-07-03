@@ -315,7 +315,7 @@ namespace flare::fiber_internal {
         }
 
         // Create related global variable lazily.
-        static flare::PassiveStatus<int64_t> g_nconflicthash_var
+        static flare::status_gauge<int64_t> g_nconflicthash_var
                 ("contention_profiler_conflict_hash", get_nconflicthash, NULL);
         static flare::DisplaySamplingRatio g_sampling_ratio_var(
                 "contention_profiler_sampling_ratio", &g_cp_sl);

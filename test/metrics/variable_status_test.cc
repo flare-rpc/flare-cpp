@@ -22,7 +22,7 @@ namespace {
     };
 
     TEST_F(StatusTest, status) {
-        flare::Status<std::string> st1;
+        flare::read_most_gauge<std::string> st1;
         st1.set_value("hello %d", 9);
         ASSERT_EQ(0, st1.expose("var1", ""));
         ASSERT_EQ("hello 9", flare::variable_base::describe_exposed("var1"));
@@ -33,7 +33,7 @@ namespace {
         ASSERT_EQ("var1", vars[0]);
         ASSERT_EQ(1UL, flare::variable_base::count_exposed());
 
-        flare::Status<std::string> st2;
+        flare::read_most_gauge<std::string> st2;
         st2.set_value("world %d", 10);
         ASSERT_EQ(-1, st2.expose("var1", ""));
         ASSERT_EQ(1UL, flare::variable_base::count_exposed());
@@ -73,7 +73,7 @@ namespace {
         ASSERT_EQ("var2_again", vars[1]);
         ASSERT_EQ(2UL, flare::variable_base::count_exposed());
 
-        flare::Status<std::string> st3("var3", "foobar");
+        flare::read_most_gauge<std::string> st3("var3", "foobar");
         ASSERT_EQ("var3", st3.name());
         ASSERT_EQ(3UL, flare::variable_base::count_exposed());
         ASSERT_EQ("foobar", flare::variable_base::describe_exposed("var3"));
@@ -84,7 +84,7 @@ namespace {
         ASSERT_EQ("var2_again", vars[2]);
         ASSERT_EQ(3UL, flare::variable_base::count_exposed());
 
-        flare::Status<int> st4("var4", 9);
+        flare::read_most_gauge<int> st4("var4", 9);
         ASSERT_EQ("var4", st4.name());
         ASSERT_EQ(4UL, flare::variable_base::count_exposed());
         ASSERT_EQ("9", flare::variable_base::describe_exposed("var4"));
@@ -95,7 +95,7 @@ namespace {
         ASSERT_EQ("var4", vars[2]);
         ASSERT_EQ("var2_again", vars[3]);
 
-        flare::Status<void *> st5((void *) 19UL);
+        flare::read_most_gauge<void *> st5((void *) 19UL);
         FLARE_LOG(INFO) << st5;
         ASSERT_EQ("0x13", st5.get_description());
     }
@@ -109,7 +109,7 @@ namespace {
     }
 
     TEST_F(StatusTest, passive_status) {
-        flare::BasicPassiveStatus<std::string> st1("var11", print1, (void *) 9UL);
+        flare::basic_status_gauge<std::string> st1("var11", print1, (void *) 9UL);
         FLARE_LOG(INFO) << st1;
         std::ostringstream ss;
         ASSERT_EQ(0, flare::variable_base::describe_exposed("var11", ss));
@@ -121,7 +121,7 @@ namespace {
         ASSERT_EQ(1UL, flare::variable_base::count_exposed());
 
         int64_t tmp2 = 9;
-        flare::BasicPassiveStatus<int64_t> st2("var12", print2, &tmp2);
+        flare::basic_status_gauge<int64_t> st2("var12", print2, &tmp2);
         ss.str("");
         ASSERT_EQ(0, flare::variable_base::describe_exposed("var12", ss));
         ASSERT_EQ("9", ss.str());
@@ -149,7 +149,7 @@ namespace {
     }
 
     TEST_F(StatusTest, non_primitive) {
-        flare::Status<Foo> st;
+        flare::read_most_gauge<Foo> st;
         ASSERT_EQ(0, st.get_value().x);
         st.set_value(Foo(1));
         ASSERT_EQ(1, st.get_value().x);

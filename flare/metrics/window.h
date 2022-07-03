@@ -20,9 +20,9 @@ namespace flare {
     };
 
     namespace metrics_detail {
-        // Just for constructor reusing of Window<>
+        // Just for constructor reusing of window<>
         template<typename R, SeriesFrequency series_freq>
-        class WindowBase : public variable_base {
+        class window_base : public variable_base {
         public:
             typedef typename R::value_type value_type;
             typedef typename R::sampler_type sampler_type;
@@ -40,14 +40,14 @@ namespace flare {
                     R *_var;
                 };
 
-                series_sampler(WindowBase *owner, R *var)
+                series_sampler(window_base *owner, R *var)
                         : _owner(owner), _series(Op(var)) {}
 
                 ~series_sampler() {}
 
                 void take_sample() override {
                     if (series_freq == SERIES_IN_SECOND) {
-                        // Get one-second window value for PerSecond<>, otherwise the
+                        // Get one-second window value for per_second<>, otherwise the
                         // "smoother" plot may hide peaks.
                         _series.append(_owner->get_value(1));
                     } else {
@@ -61,17 +61,17 @@ namespace flare {
                 void describe(std::ostream &os) { _series.describe(os, NULL); }
 
             private:
-                WindowBase *_owner;
-                metrics_detail::Series<value_type, Op> _series;
+                window_base *_owner;
+                metrics_detail::series<value_type, Op> _series;
             };
 
-            WindowBase(R *var, time_t window_size)
+            window_base(R *var, time_t window_size)
                     : _var(var), _window_size(window_size > 0 ? window_size : FLAGS_variable_dump_interval),
                       _sampler(var->get_sampler()), _series_sampler(NULL) {
                 FLARE_CHECK_EQ(0, _sampler->set_window_size(_window_size));
             }
 
-            ~WindowBase() {
+            ~window_base() {
                 hide();
                 if (_series_sampler) {
                     _series_sampler->destroy();
@@ -150,28 +150,28 @@ namespace flare {
 
     // Get data within a time window.
     // The time unit is 1 second fixed.
-    // Window relies on other variable which should be constructed before this window
+    // window relies on other variable which should be constructed before this window
     // and destructs after this window.
 
     // R must:
     // - have get_sampler() (not require thread-safe)
     // - defined value_type and sampler_type
     template<typename R, SeriesFrequency series_freq = SERIES_IN_WINDOW>
-    class Window : public metrics_detail::WindowBase<R, series_freq> {
-        typedef metrics_detail::WindowBase<R, series_freq> Base;
+    class window : public metrics_detail::window_base<R, series_freq> {
+        typedef metrics_detail::window_base<R, series_freq> Base;
         typedef typename R::value_type value_type;
         typedef typename R::sampler_type sampler_type;
     public:
-        // Different from PerSecond, we require window_size here because get_value
-        // of Window is largely affected by window_size while PerSecond is not.
-        Window(R *var, time_t window_size) : Base(var, window_size) {}
+        // Different from per_second, we require window_size here because get_value
+        // of window is largely affected by window_size while per_second is not.
+        window(R *var, time_t window_size) : Base(var, window_size) {}
 
-        Window(const std::string_view &name, R *var, time_t window_size)
+        window(const std::string_view &name, R *var, time_t window_size)
                 : Base(var, window_size) {
             this->expose(name, "");
         }
 
-        Window(const std::string_view &prefix,
+        window(const std::string_view &prefix,
                const std::string_view &name, R *var, time_t window_size)
                 : Base(var, window_size) {
             this->expose_as(prefix, name, "");
@@ -179,35 +179,35 @@ namespace flare {
     };
 
     // Get data per second within a time window.
-    // The only difference between PerSecond and Window is that PerSecond divides
+    // The only difference between per_second and window is that per_second divides
     // the data by time duration.
     template<typename R>
-    class PerSecond : public metrics_detail::WindowBase<R, SERIES_IN_SECOND> {
-        typedef metrics_detail::WindowBase<R, SERIES_IN_SECOND> Base;
+    class per_second : public metrics_detail::window_base<R, SERIES_IN_SECOND> {
+        typedef metrics_detail::window_base<R, SERIES_IN_SECOND> Base;
         typedef typename R::value_type value_type;
         typedef typename R::sampler_type sampler_type;
     public:
         // If window_size is non-positive or absent, use FLAGS_variable_dump_interval.
-        PerSecond(R *var) : Base(var, -1) {}
+        per_second(R *var) : Base(var, -1) {}
 
-        PerSecond(R *var, time_t window_size) : Base(var, window_size) {}
+        per_second(R *var, time_t window_size) : Base(var, window_size) {}
 
-        PerSecond(const std::string_view &name, R *var) : Base(var, -1) {
+        per_second(const std::string_view &name, R *var) : Base(var, -1) {
             this->expose(name, "");
         }
 
-        PerSecond(const std::string_view &name, R *var, time_t window_size)
+        per_second(const std::string_view &name, R *var, time_t window_size)
                 : Base(var, window_size) {
             this->expose(name, "");
         }
 
-        PerSecond(const std::string_view &prefix,
+        per_second(const std::string_view &prefix,
                   const std::string_view &name, R *var)
                 : Base(var, -1) {
             this->expose_as(prefix, name, "");
         }
 
-        PerSecond(const std::string_view &prefix,
+        per_second(const std::string_view &prefix,
                   const std::string_view &name, R *var, time_t window_size)
                 : Base(var, window_size) {
             this->expose_as(prefix, name);

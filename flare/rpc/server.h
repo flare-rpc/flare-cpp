@@ -714,7 +714,7 @@ namespace flare::rpc {
         fiber_keytable_pool_t *_keytable_pool;
 
         // mutable is required for `ServerPrivateAccessor' to change this variable
-        mutable flare::Adder<int64_t> _nerror_var;
+        mutable flare::gauge<int64_t> _nerror_var;
         mutable std::atomic<int32_t> FLARE_CACHELINE_ALIGNMENT _concurrency;
 
     };

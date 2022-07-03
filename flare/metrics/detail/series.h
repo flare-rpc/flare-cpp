@@ -14,15 +14,15 @@ namespace flare {
     namespace metrics_detail {
 
         template<typename T, typename Op, typename Enabler = void>
-        struct DivideOnAddition {
+        struct divide_on_addition {
             static void inplace_divide(T & /*obj*/, const Op &, int /*number*/) {
                 // do nothing
             }
         };
 
         template<typename T, typename Op>
-        struct ProbablyAddtition {
-            ProbablyAddtition(const Op &op) {
+        struct probably_addtition {
+            probably_addtition(const Op &op) {
                 T res(32);
                 call_op_returning_void(op, res, T(64));
                 _ok = (res == T(96));  // works for integral/floating point.
@@ -35,10 +35,10 @@ namespace flare {
         };
 
         template<typename T, typename Op>
-        struct DivideOnAddition<T, Op, typename std::enable_if<
+        struct divide_on_addition<T, Op, typename std::enable_if<
                 std::is_integral<T>::value>::type> {
             static void inplace_divide(T &obj, const Op &op, int number) {
-                static ProbablyAddtition<T, Op> probably_add(op);
+                static probably_addtition<T, Op> probably_add(op);
                 if (probably_add) {
                     obj = (T) round(obj / (double) number);
                 }
@@ -46,10 +46,10 @@ namespace flare {
         };
 
         template<typename T, typename Op>
-        struct DivideOnAddition<T, Op, typename std::enable_if<
+        struct divide_on_addition<T, Op, typename std::enable_if<
                 std::is_floating_point<T>::value>::type> {
             static void inplace_divide(T &obj, const Op &op, int number) {
-                static ProbablyAddtition<T, Op> probably_add(op);
+                static probably_addtition<T, Op> probably_add(op);
                 if (probably_add) {
                     obj /= number;
                 }
@@ -57,10 +57,10 @@ namespace flare {
         };
 
         template<typename T, size_t N, typename Op>
-        struct DivideOnAddition<Vector<T, N>, Op, typename std::enable_if<
+        struct divide_on_addition<Vector<T, N>, Op, typename std::enable_if<
                 std::is_integral<T>::value>::type> {
             static void inplace_divide(Vector<T, N> &obj, const Op &op, int number) {
-                static ProbablyAddtition<Vector<T, N>, Op> probably_add(op);
+                static probably_addtition<Vector<T, N>, Op> probably_add(op);
                 if (probably_add) {
                     for (size_t i = 0; i < N; ++i) {
                         obj[i] = (T) round(obj[i] / (double) number);
@@ -70,10 +70,10 @@ namespace flare {
         };
 
         template<typename T, size_t N, typename Op>
-        struct DivideOnAddition<Vector<T, N>, Op, typename std::enable_if<
+        struct divide_on_addition<Vector<T, N>, Op, typename std::enable_if<
                 std::is_floating_point<T>::value>::type> {
             static void inplace_divide(Vector<T, N> &obj, const Op &op, int number) {
-                static ProbablyAddtition<Vector<T, N>, Op> probably_add(op);
+                static probably_addtition<Vector<T, N>, Op> probably_add(op);
                 if (probably_add) {
                     obj /= number;
                 }
@@ -81,14 +81,14 @@ namespace flare {
         };
 
         template<typename T, typename Op>
-        class SeriesBase {
+        class series_base {
         public:
-            explicit SeriesBase(const Op &op)
+            explicit series_base(const Op &op)
                     : _op(op), _nsecond(0), _nminute(0), _nhour(0), _nday(0) {
                 pthread_mutex_init(&_mutex, NULL);
             }
 
-            ~SeriesBase() {
+            ~series_base() {
                 pthread_mutex_destroy(&_mutex);
             }
 
@@ -106,9 +106,9 @@ namespace flare {
 
             void append_day(const T &value);
 
-            struct Data {
+            struct inner_data {
             public:
-                Data() {
+                inner_data() {
                     // is_pod does not work for gcc 3.4
                     if (std::is_integral<T>::value ||
                         std::is_floating_point<T>::value) {
@@ -143,11 +143,11 @@ namespace flare {
             char _nminute;
             char _nhour;
             char _nday;
-            Data _data;
+            inner_data _data;
         };
 
         template<typename T, typename Op>
-        void SeriesBase<T, Op>::append_second(const T &value, const Op &op) {
+        void series_base<T, Op>::append_second(const T &value, const Op &op) {
             _data.second(_nsecond) = value;
             ++_nsecond;
             if (_nsecond >= 60) {
@@ -156,13 +156,13 @@ namespace flare {
                 for (int i = 1; i < 60; ++i) {
                     call_op_returning_void(op, tmp, _data.second(i));
                 }
-                DivideOnAddition<T, Op>::inplace_divide(tmp, op, 60);
+                divide_on_addition<T, Op>::inplace_divide(tmp, op, 60);
                 append_minute(tmp, op);
             }
         }
 
         template<typename T, typename Op>
-        void SeriesBase<T, Op>::append_minute(const T &value, const Op &op) {
+        void series_base<T, Op>::append_minute(const T &value, const Op &op) {
             _data.minute(_nminute) = value;
             ++_nminute;
             if (_nminute >= 60) {
@@ -171,13 +171,13 @@ namespace flare {
                 for (int i = 1; i < 60; ++i) {
                     call_op_returning_void(op, tmp, _data.minute(i));
                 }
-                DivideOnAddition<T, Op>::inplace_divide(tmp, op, 60);
+                divide_on_addition<T, Op>::inplace_divide(tmp, op, 60);
                 append_hour(tmp, op);
             }
         }
 
         template<typename T, typename Op>
-        void SeriesBase<T, Op>::append_hour(const T &value, const Op &op) {
+        void series_base<T, Op>::append_hour(const T &value, const Op &op) {
             _data.hour(_nhour) = value;
             ++_nhour;
             if (_nhour >= 24) {
@@ -186,13 +186,13 @@ namespace flare {
                 for (int i = 1; i < 24; ++i) {
                     call_op_returning_void(op, tmp, _data.hour(i));
                 }
-                DivideOnAddition<T, Op>::inplace_divide(tmp, op, 24);
+                divide_on_addition<T, Op>::inplace_divide(tmp, op, 24);
                 append_day(tmp);
             }
         }
 
         template<typename T, typename Op>
-        void SeriesBase<T, Op>::append_day(const T &value) {
+        void series_base<T, Op>::append_day(const T &value) {
             _data.day(_nday) = value;
             ++_nday;
             if (_nday >= 30) {
@@ -201,25 +201,25 @@ namespace flare {
         }
 
         template<typename T, typename Op>
-        class Series : public SeriesBase<T, Op> {
-            typedef SeriesBase<T, Op> Base;
+        class series : public series_base<T, Op> {
+            typedef series_base<T, Op> Base;
         public:
-            explicit Series(const Op &op) : Base(op) {}
+            explicit series(const Op &op) : Base(op) {}
 
             void describe(std::ostream &os, const std::string *vector_names) const;
         };
 
         template<typename T, size_t N, typename Op>
-        class Series<Vector<T, N>, Op> : public SeriesBase<Vector<T, N>, Op> {
-            typedef SeriesBase<Vector<T, N>, Op> Base;
+        class series<Vector<T, N>, Op> : public series_base<Vector<T, N>, Op> {
+            typedef series_base<Vector<T, N>, Op> Base;
         public:
-            explicit Series(const Op &op) : Base(op) {}
+            explicit series(const Op &op) : Base(op) {}
 
             void describe(std::ostream &os, const std::string *vector_names) const;
         };
 
         template<typename T, typename Op>
-        void Series<T, Op>::describe(std::ostream &os,
+        void series<T, Op>::describe(std::ostream &os,
                                      const std::string *vector_names) const {
             FLARE_CHECK(vector_names == NULL);
             pthread_mutex_lock(&this->_mutex);
@@ -261,7 +261,7 @@ namespace flare {
         }
 
         template<typename T, size_t N, typename Op>
-        void Series<Vector<T, N>, Op>::describe(std::ostream &os,
+        void series<Vector<T, N>, Op>::describe(std::ostream &os,
                                                 const std::string *vector_names) const {
             pthread_mutex_lock(&this->_mutex);
             const int second_begin = this->_nsecond;

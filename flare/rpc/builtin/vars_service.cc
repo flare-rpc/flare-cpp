@@ -258,7 +258,7 @@ namespace flare::rpc {
 // trailing colon from $1
     static const std::string VAR_SEP = " : ";
 
-    class VarsDumper : public flare::Dumper {
+    class VarsDumper : public flare::variable_dumper {
     public:
         explicit VarsDumper(flare::cord_buf_builder &os, bool use_html)
                 : _os(os), _use_html(use_html) {}

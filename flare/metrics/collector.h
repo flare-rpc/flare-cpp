@@ -6,7 +6,7 @@
 #include "flare/base/fast_rand.h"
 #include "flare/times/time.h"
 #include "flare/base/static_atomic.h"
-#include "flare/metrics/passive_status.h"
+#include "flare/metrics/gauge.h"
 
 namespace flare {
 
@@ -113,7 +113,7 @@ namespace flare {
         DisplaySamplingRatio(const char *name, const CollectorSpeedLimit *);
 
     private:
-        flare::PassiveStatus<double> _var;
+        flare::status_gauge<double> _var;
     };
 
 }  // namespace flare

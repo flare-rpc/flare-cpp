@@ -26,17 +26,17 @@ namespace {
     }
 
     TEST_F(ReducerTest, adder) {
-        flare::Adder<uint32_t> reducer1;
+        flare::gauge<uint32_t> reducer1;
         ASSERT_TRUE(reducer1.valid());
         reducer1 << 2 << 4;
         ASSERT_EQ(6ul, reducer1.get_value());
 
-        flare::Adder<double> reducer2;
+        flare::gauge<double> reducer2;
         ASSERT_TRUE(reducer2.valid());
         reducer2 << 2.0 << 4.0;
         ASSERT_DOUBLE_EQ(6.0, reducer2.get_value());
 
-        flare::Adder<int> reducer3;
+        flare::gauge<int> reducer3;
         ASSERT_TRUE(reducer3.valid());
         reducer3 << -9 << 1 << 0 << 3;
         ASSERT_EQ(-5, reducer3.get_value());
@@ -45,7 +45,7 @@ namespace {
     const size_t OPS_PER_THREAD = 500000;
 
     static void *thread_counter(void *arg) {
-        flare::Adder<uint64_t> *reducer = (flare::Adder<uint64_t> *) arg;
+        flare::gauge<uint64_t> *reducer = (flare::gauge<uint64_t> *) arg;
         flare::stop_watcher timer;
         timer.start();
         for (size_t i = 0; i < OPS_PER_THREAD; ++i) {
@@ -84,7 +84,7 @@ namespace {
     }
 
     static long start_perf_test_with_adder(size_t num_thread) {
-        flare::Adder<uint64_t> reducer;
+        flare::gauge<uint64_t> reducer;
         EXPECT_TRUE(reducer.valid());
         pthread_t threads[num_thread];
         for (size_t i = 0; i < num_thread; ++i) {
@@ -164,7 +164,7 @@ namespace {
         ASSERT_EQ(std::numeric_limits<int>::max(), reducer2.get_value());
     }
 
-    flare::Adder<long> g_a;
+    flare::gauge<long> g_a;
 
     TEST_F(ReducerTest, global) {
         ASSERT_TRUE(g_a.valid());
@@ -172,18 +172,18 @@ namespace {
     }
 
     void ReducerTest_window() {
-        flare::Adder<int> c1;
+        flare::gauge<int> c1;
         flare::max_gauge<int> c2;
         flare::min_gauge<int> c3;
-        flare::Window<flare::Adder<int> > w1(&c1, 1);
-        flare::Window<flare::Adder<int> > w2(&c1, 2);
-        flare::Window<flare::Adder<int> > w3(&c1, 3);
-        flare::Window<flare::max_gauge<int> > w4(&c2, 1);
-        flare::Window<flare::max_gauge<int> > w5(&c2, 2);
-        flare::Window<flare::max_gauge<int> > w6(&c2, 3);
-        flare::Window<flare::min_gauge<int> > w7(&c3, 1);
-        flare::Window<flare::min_gauge<int> > w8(&c3, 2);
-        flare::Window<flare::min_gauge<int> > w9(&c3, 3);
+        flare::window<flare::gauge<int> > w1(&c1, 1);
+        flare::window<flare::gauge<int> > w2(&c1, 2);
+        flare::window<flare::gauge<int> > w3(&c1, 3);
+        flare::window<flare::max_gauge<int> > w4(&c2, 1);
+        flare::window<flare::max_gauge<int> > w5(&c2, 2);
+        flare::window<flare::max_gauge<int> > w6(&c2, 3);
+        flare::window<flare::min_gauge<int> > w7(&c3, 1);
+        flare::window<flare::min_gauge<int> > w8(&c3, 2);
+        flare::window<flare::min_gauge<int> > w9(&c3, 3);
 
         const int N = 6000;
         int count = 0;
@@ -235,7 +235,7 @@ namespace {
     }
 
     TEST_F(ReducerTest, non_primitive) {
-        flare::Adder<Foo> adder;
+        flare::gauge<Foo> adder;
         adder << Foo(2) << Foo(3) << Foo(4);
         ASSERT_EQ(9, adder.get_value().x);
     }
@@ -246,7 +246,7 @@ namespace {
     };
 
     static void *string_appender(void *arg) {
-        flare::Adder<std::string> *cater = (flare::Adder<std::string> *) arg;
+        flare::gauge<std::string> *cater = (flare::gauge<std::string> *) arg;
         int count = 0;
         std::string id = flare::string_printf("%lld", (long long) pthread_self());
         std::string tmp = "a";
@@ -265,7 +265,7 @@ namespace {
     }
 
     TEST_F(ReducerTest, non_primitive_mt) {
-        flare::Adder<std::string> cater;
+        flare::gauge<std::string> cater;
         pthread_t th[8];
         g_stop = false;
         for (size_t i = 0; i < FLARE_ARRAY_SIZE(th); ++i) {
@@ -296,8 +296,8 @@ namespace {
     }
 
     TEST_F(ReducerTest, simple_window) {
-        flare::Adder<int64_t> a;
-        flare::Window<flare::Adder<int64_t> > w(&a, 10);
+        flare::gauge<int64_t> a;
+        flare::window<flare::gauge<int64_t> > w(&a, 10);
         a << 100;
         sleep(3);
         const int64_t v = w.get_value();

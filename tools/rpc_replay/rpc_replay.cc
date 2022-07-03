@@ -42,8 +42,8 @@ DEFINE_int32(max_retry, 3, "Maximum retry times");
 DEFINE_int32(dummy_port, 8899, "Port of dummy server(to monitor replaying)");
 
 flare::LatencyRecorder g_latency_recorder("rpc_replay");
-flare::Adder<int64_t> g_error_count("rpc_replay_error_count");
-flare::Adder<int64_t> g_sent_count;
+flare::counter<int64_t> g_error_count("rpc_replay_error_count");
+flare::counter<int64_t> g_sent_count;
 
 // Include channels for all protocols that support both client and server.
 class ChannelGroup {

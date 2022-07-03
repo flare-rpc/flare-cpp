@@ -48,7 +48,7 @@ namespace flare::rpc {
     // more counter is just another gauge.
     // 2) Histogram and summary is equivalent except that histogram
     // calculates quantiles in the server side.
-    class PrometheusMetricsDumper : public flare::Dumper {
+    class PrometheusMetricsDumper : public flare::variable_dumper {
     public:
         explicit PrometheusMetricsDumper(flare::cord_buf_builder *os,
                                          const std::string &server_prefix)
@@ -133,16 +133,16 @@ namespace flare::rpc {
         if (flare::ends_with(metric_name, "_latency")) {
             metric_name.remove_suffix(8);
             SummaryItems *si = &_m[flare::as_string(metric_name)];
-            si->latency_avg = strtoll(desc_str.data(), NULL, 10);
+            si->latency_avg = strtoll(desc_str.data(), nullptr, 10);
             return si;
         }
         if (flare::ends_with(metric_name, "_count")) {
             metric_name.remove_suffix(6);
             SummaryItems *si = &_m[flare::as_string(metric_name)];
-            si->count = strtoll(desc_str.data(), NULL, 10);
+            si->count = strtoll(desc_str.data(), nullptr, 10);
             return si;
         }
-        return NULL;
+        return nullptr;
     }
 
     bool PrometheusMetricsDumper::DumpLatencyRecorderSuffix(
@@ -198,13 +198,27 @@ namespace flare::rpc {
 
     int DumpPrometheusMetricsToCordBuf(flare::cord_buf *output) {
         flare::cord_buf_builder os;
-        PrometheusMetricsDumper dumper(&os, g_server_info_prefix);
-        const int ndump = flare::variable_base::dump_exposed(&dumper, NULL);
+        flare::prometheus_dumper dumper(&os);
+        const int ndump = flare::variable_base::dump_metrics(&dumper, nullptr);
         if (ndump < 0) {
             return -1;
         }
         os.move_to(*output);
         return 0;
     }
+
+
+    /*
+     * int DumpPrometheusMetricsToCordBuf(flare::cord_buf *output) {
+        flare::cord_buf_builder os;
+        PrometheusMetricsDumper dumper(&os, g_server_info_prefix);
+        const int ndump = flare::variable_base::dump_exposed(&dumper, nullptr);
+        if (ndump < 0) {
+            return -1;
+        }
+        os.move_to(*output);
+        return 0;
+    }
+     */
 
 } // namespace flare::rpc

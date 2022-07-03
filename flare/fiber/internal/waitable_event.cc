@@ -41,10 +41,10 @@
 namespace flare::fiber_internal {
 
 #ifdef SHOW_FIBER_EVENT_WAITER_COUNT_IN_VARS
-    struct waitable_event_count : public flare::Adder<int64_t> {
+    struct waitable_event_count : public flare::gauge<int64_t> {
         waitable_event_count() : flare::Adder<int64_t>("fiber_waitable_event_count") {}
     };
-    inline flare::Adder<int64_t>& get_waitable_event_count() {
+    inline flare::gauge<int64_t>& get_waitable_event_count() {
         return *flare::base::get_leaky_singleton<waitable_event_count>();
     }
 #endif

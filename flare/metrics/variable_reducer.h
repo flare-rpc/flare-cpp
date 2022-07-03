@@ -47,7 +47,7 @@ namespace flare {
     // my_type_sum << MyType(1) << MyType(2) << MyType(3);
     // FLARE_LOG(INFO) << my_type_sum;  // "MyType{6}"
 
-    template<typename T, typename Op, typename InvOp = metrics_detail::VoidOp>
+    template<typename T, typename Op, typename InvOp = metrics_detail::void_op>
     class variable_reducer : public variable_base {
     public:
         typedef typename metrics_detail::agent_combiner<T, T, Op> combiner_type;
@@ -67,7 +67,7 @@ namespace flare {
 
         private:
             variable_reducer *_owner;
-            metrics_detail::Series<T, Op> _series;
+            metrics_detail::series<T, Op> _series;
         };
 
     public:
@@ -99,10 +99,10 @@ namespace flare {
         // Notice that this function walks through threads that ever add values
         // into this reducer. You should avoid calling it frequently.
         T get_value() const {
-            FLARE_CHECK(!(std::is_same<InvOp, metrics_detail::VoidOp>::value) || _sampler == NULL)
+            FLARE_CHECK(!(std::is_same<InvOp, metrics_detail::void_op>::value) || _sampler == NULL)
                             << "You should not call variable_reducer<" << flare::base::class_name_str<T>()
                             << ", " << flare::base::class_name_str<Op>() << ">::get_value() when a"
-                            << " Window<> is used because the operator does not have inverse.";
+                            << " window<> is used because the operator does not have inverse.";
             return _combiner.combine_agents();
         }
 
@@ -155,7 +155,7 @@ namespace flare {
             const int rc = variable_base::expose_impl(prefix, name, help, tags, display_filter);
             if (rc == 0 &&
                 _series_sampler == NULL &&
-                !std::is_same<InvOp, metrics_detail::VoidOp>::value &&
+                !std::is_same<InvOp, metrics_detail::void_op>::value &&
                 !std::is_same<T, std::string>::value &&
                 FLAGS_save_series) {
                 _series_sampler = new series_sampler(this, _combiner.op());
@@ -184,53 +184,23 @@ namespace flare {
         return *this;
     }
 
-    // =================== Common reducers ===================
-
-    // flare::Adder<int> sum;
-    // sum << 1 << 2 << 3 << 4;
-    // FLARE_LOG(INFO) << sum.get_value(); // 10
-    // Commonly used functors
     namespace metrics_detail {
         template<typename Tp>
-        struct AddTo {
+        struct add_to {
             void operator()(Tp &lhs,
                             typename flare::base::add_cr_non_integral<Tp>::type rhs) const { lhs += rhs; }
         };
 
         template<typename Tp>
-        struct MinusFrom {
+        struct minus_from {
             void operator()(Tp &lhs,
                             typename flare::base::add_cr_non_integral<Tp>::type rhs) const { lhs -= rhs; }
         };
     }
-    template<typename T>
-    class Adder : public variable_reducer<T, metrics_detail::AddTo<T>, metrics_detail::MinusFrom<T> > {
-    public:
-        typedef variable_reducer<T, metrics_detail::AddTo<T>, metrics_detail::MinusFrom<T> > Base;
-        typedef T value_type;
-        typedef typename Base::sampler_type sampler_type;
-    public:
-        Adder() : Base() {}
 
-        explicit Adder(const std::string_view &name) : Base() {
-            this->expose(name, "");
-        }
-
-        Adder(const std::string_view &prefix,
-              const std::string_view &name) : Base() {
-            this->expose_as(prefix, name, "");
-        }
-
-
-        ~Adder() { variable_base::hide(); }
-    };
-
-    // flare::Maxer<int> max_value;
-    // max_value << 1 << 2 << 3 << 4;
-    // FLARE_LOG(INFO) << max_value.get_value(); // 4
     namespace metrics_detail {
         template<typename Tp>
-        struct MaxTo {
+        struct max_to {
             void operator()(Tp &lhs,
                             typename flare::base::add_cr_non_integral<Tp>::type rhs) const {
                 // Use operator< as well.
@@ -241,56 +211,9 @@ namespace flare {
         };
 
         class LatencyRecorderBase;
-    }
-    /*
-    template<typename T>
-    class Maxer : public variable_reducer<T, metrics_detail::MaxTo<T> > {
-    public:
-        typedef variable_reducer<T, metrics_detail::MaxTo<T> > Base;
-        typedef T value_type;
-        typedef typename Base::sampler_type sampler_type;
-    public:
-        Maxer() : Base(std::numeric_limits<T>::min()) {}
-
-        explicit Maxer(const std::string_view &name)
-                : Base(std::numeric_limits<T>::min()) {
-            this->expose(name);
-        }
-
-        Maxer(const std::string_view &prefix, const std::string_view &name)
-                : Base(std::numeric_limits<T>::min()) {
-            this->expose_as(prefix, name);
-        }
-
-        ~Maxer() { variable_base::hide(); }
-
-    private:
-        friend class metrics_detail::LatencyRecorderBase;
-
-        // The following private funcition a now used in LatencyRecorder,
-        // it's dangerous so we don't make them public
-        explicit Maxer(T default_value) : Base(default_value) {
-        }
-
-        Maxer(T default_value, const std::string_view &prefix,
-              const std::string_view &name)
-                : Base(default_value) {
-            this->expose_as(prefix, name);
-        }
-
-        Maxer(T default_value, const std::string_view &name) : Base(default_value) {
-            this->expose(name);
-        }
-    };
-     */
-
-    // flare::Miner<int> min_value;
-    // min_value << 1 << 2 << 3 << 4;
-    // FLARE_LOG(INFO) << min_value.get_value(); // 1
-    namespace metrics_detail {
 
         template<typename Tp>
-        struct MinTo {
+        struct min_to {
             void operator()(Tp &lhs,
                             typename flare::base::add_cr_non_integral<Tp>::type rhs) const {
                 if (rhs < lhs) {
@@ -299,31 +222,7 @@ namespace flare {
             }
         };
 
-    }  // namespace metrics_detail
-
-    /*
-    template<typename T>
-    class Miner : public variable_reducer<T, metrics_detail::MinTo<T> > {
-    public:
-        typedef variable_reducer<T, metrics_detail::MinTo<T> > Base;
-        typedef T value_type;
-        typedef typename Base::sampler_type sampler_type;
-    public:
-        Miner() : Base(std::numeric_limits<T>::max()) {}
-
-        explicit Miner(const std::string_view &name)
-                : Base(std::numeric_limits<T>::max()) {
-            this->expose(name);
-        }
-
-        Miner(const std::string_view &prefix, const std::string_view &name)
-                : Base(std::numeric_limits<T>::max()) {
-            this->expose_as(prefix, name);
-        }
-
-        ~Miner() { variable_base::hide(); }
-    };
-     */
+    }
 
 }  // namespace flare
 

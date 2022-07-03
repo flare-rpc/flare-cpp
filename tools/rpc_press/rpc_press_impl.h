@@ -133,8 +133,8 @@ namespace pbrpcframework {
         static void *sync_call_thread(void *arg);
 
         flare::LatencyRecorder _latency_recorder;
-        flare::Adder<int64_t> _error_count;
-        flare::Adder<int64_t> _sent_count;
+        flare::gauge<int64_t> _error_count;
+        flare::gauge<int64_t> _sent_count;
         std::deque<google::protobuf::Message *> _msgs;
         PressClient *_pbrpc_client;
         PressOptions _options;

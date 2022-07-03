@@ -3,7 +3,7 @@
 #include "flare/base/singleton_on_pthread_once.h"
 #include "flare/metrics/variable_reducer.h"
 #include "flare/metrics/detail/sampler.h"
-#include "flare/metrics/passive_status.h"
+#include "flare/metrics/gauge.h"
 #include "flare/metrics/window.h"
 
 namespace flare {
@@ -32,7 +32,7 @@ namespace flare {
         // Call take_sample() of all scheduled samplers.
         // This can be done with regular timer thread, but it's way too slow(global
         // contention + log(N) heap manipulations). We need it to be super fast so that
-        // creation overhead of Window<> is negliable.
+        // creation overhead of window<> is negliable.
         // The trick is to use variable_reducer<variable_sampler*, CombineSampler>. Each variable_sampler is
         // doubly linked, thus we can reduce multiple Samplers into one cicurlarly
         // doubly linked list, and multiple lists into larger lists. We create a
@@ -104,8 +104,8 @@ namespace flare {
         };
 
 #ifndef UNIT_TEST
-        static PassiveStatus<double>* s_cumulated_time_var = NULL;
-        static flare::PerSecond<flare::PassiveStatus<double> >* s_sampling_thread_usage_variable = NULL;
+        static status_gauge<double>* s_cumulated_time_var = NULL;
+        static flare::per_second<flare::status_gauge<double> >* s_sampling_thread_usage_variable = NULL;
 #endif
 
         void sampler_collector::run() {
@@ -117,11 +117,11 @@ namespace flare {
             //   which results in deadlock.
             if (s_cumulated_time_var == NULL) {
                 s_cumulated_time_var =
-                    new PassiveStatus<double>(get_cumulated_time, this);
+                    new status_gauge<double>(get_cumulated_time, this);
             }
             if (s_sampling_thread_usage_variable == NULL) {
                 s_sampling_thread_usage_variable =
-                    new flare::PerSecond<flare::PassiveStatus<double> >(
+                    new flare::per_second<flare::status_gauge<double> >(
                             "variable_sampler_collector_usage", s_cumulated_time_var, 10);
             }
 #endif

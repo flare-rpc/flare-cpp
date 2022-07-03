@@ -71,11 +71,11 @@ namespace flare::rpc {
 
         std::unique_ptr<ConcurrencyLimiter> _cl;
         std::atomic<int> _nconcurrency;
-        flare::Adder<int64_t> _nerror_var;
+        flare::gauge<int64_t> _nerror_var;
         flare::LatencyRecorder _latency_rec;
-        flare::PassiveStatus<int> _nconcurrency_var;
-        flare::PerSecond<flare::Adder<int64_t>> _eps_var;
-        flare::PassiveStatus<int32_t> _max_concurrency_var;
+        flare::status_gauge<int> _nconcurrency_var;
+        flare::per_second<flare::gauge<int64_t>> _eps_var;
+        flare::status_gauge<int32_t> _max_concurrency_var;
     };
 
     class ConcurrencyRemover {

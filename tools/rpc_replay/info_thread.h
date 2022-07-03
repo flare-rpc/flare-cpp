@@ -20,13 +20,14 @@
 
 #include <pthread.h>
 #include <flare/metrics/all.h>
+#include <flare/metrics/counter.h>
 
 namespace flare::rpc {
 
 struct InfoThreadOptions {
     flare::LatencyRecorder* latency_recorder;
-    flare::Adder<int64_t>* sent_count;
-    flare::Adder<int64_t>* error_count;
+    flare::counter<int64_t>* sent_count;
+    flare::counter<int64_t>* error_count;
 
     InfoThreadOptions()
         : latency_recorder(NULL)

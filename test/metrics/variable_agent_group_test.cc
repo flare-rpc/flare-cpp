@@ -46,7 +46,7 @@ protected:
 
     static void *thread_counter(void *arg) {
         int id = (int)((long)arg);
-        agent_type *item = AgentGroup<agent_type>::get_or_create_tls_agent(id);
+        agent_type *item = agent_group<agent_type>::get_or_create_tls_agent(id);
         if (item == NULL) {
             EXPECT_TRUE(false);
             return NULL;
@@ -54,7 +54,7 @@ protected:
         flare::stop_watcher timer;
         timer.start();
         for (size_t i = 0; i < OPS_PER_THREAD; ++i) {
-            agent_type *element = AgentGroup<agent_type>::get_or_create_tls_agent(id);
+            agent_type *element = agent_group<agent_type>::get_or_create_tls_agent(id);
             uint64_t old_value = element->load(std::memory_order_relaxed);
             uint64_t new_value;
             do {
@@ -72,11 +72,11 @@ protected:
 };
 
 TEST_F(AgentGroupTest, test_sanity) {
-    int id = AgentGroup<agent_type>::create_new_agent();
+    int id = agent_group<agent_type>::create_new_agent();
     ASSERT_TRUE(id >= 0) << id;
-    agent_type *element = AgentGroup<agent_type>::get_or_create_tls_agent(id);
+    agent_type *element = agent_group<agent_type>::get_or_create_tls_agent(id);
     ASSERT_TRUE(element != NULL);
-    AgentGroup<agent_type>::destroy_agent(id);
+    agent_group<agent_type>::destroy_agent(id);
 }
 
 std::atomic<uint64_t> g_counter(0);
@@ -96,7 +96,7 @@ TEST_F(AgentGroupTest, test_perf) {
     size_t id_num = 512;
     int ids[id_num];
     for (size_t i = 0; i < id_num; ++i) {
-        ids[i] = AgentGroup<agent_type>::create_new_agent();
+        ids[i] = agent_group<agent_type>::create_new_agent();
         ASSERT_TRUE(ids[i] >= 0);
     }
     flare::stop_watcher timer;
@@ -104,7 +104,7 @@ TEST_F(AgentGroupTest, test_perf) {
     for (size_t i = 0; i < loops; ++i) {
         for (size_t j = 0; j < id_num; ++j) {
             agent_type *agent =
-                AgentGroup<agent_type>::get_or_create_tls_agent(ids[j]);
+                agent_group<agent_type>::get_or_create_tls_agent(ids[j]);
             ASSERT_TRUE(agent != NULL) << ids[j];
         }
     }
@@ -112,13 +112,13 @@ TEST_F(AgentGroupTest, test_perf) {
     FLARE_LOG(INFO) << "It takes " << timer.n_elapsed() / (loops * id_num)
               << " ns to get tls agent for " << id_num << " agents";
     for (size_t i = 0; i < id_num; ++i) {
-        AgentGroup<agent_type>::destroy_agent(ids[i]);
+        agent_group<agent_type>::destroy_agent(ids[i]);
     }
 
 }
 
 TEST_F(AgentGroupTest, test_all_perf) {
-    long id = AgentGroup<agent_type>::create_new_agent();
+    long id = agent_group<agent_type>::create_new_agent();
     ASSERT_TRUE(id >= 0) << id;
     pthread_t threads[24];
     for (size_t i = 0; i < FLARE_ARRAY_SIZE(threads); ++i) {
@@ -144,7 +144,7 @@ TEST_F(AgentGroupTest, test_all_perf) {
     }
     FLARE_LOG(INFO) << "Global Atomic takes "
               << totol_time / (OPS_PER_THREAD * FLARE_ARRAY_SIZE(threads));
-    AgentGroup<agent_type>::destroy_agent(id);
+    agent_group<agent_type>::destroy_agent(id);
     //sleep(1000);
 }
 } // namespace

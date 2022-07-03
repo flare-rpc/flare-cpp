@@ -321,14 +321,14 @@ void TimerThread::run() {
 
     // vars
     size_t nscheduled = 0;
-    flare::PassiveStatus<size_t> nscheduled_var(deref_value<size_t>, &nscheduled);
-    flare::PerSecond<flare::PassiveStatus<size_t> > nscheduled_second(&nscheduled_var);
+    flare::status_gauge<size_t> nscheduled_var(deref_value<size_t>, &nscheduled);
+    flare::per_second<flare::status_gauge<size_t> > nscheduled_second(&nscheduled_var);
     size_t ntriggered = 0;
-    flare::PassiveStatus<size_t> ntriggered_var(deref_value<size_t>, &ntriggered);
-    flare::PerSecond<flare::PassiveStatus<size_t> > ntriggered_second(&ntriggered_var);
+    flare::status_gauge<size_t> ntriggered_var(deref_value<size_t>, &ntriggered);
+    flare::per_second<flare::status_gauge<size_t> > ntriggered_second(&ntriggered_var);
     double busy_seconds = 0;
-    flare::PassiveStatus<double> busy_seconds_var(deref_value<double>, &busy_seconds);
-    flare::PerSecond<flare::PassiveStatus<double> > busy_seconds_second(&busy_seconds_var);
+    flare::status_gauge<double> busy_seconds_var(deref_value<double>, &busy_seconds);
+    flare::per_second<flare::status_gauge<double> > busy_seconds_second(&busy_seconds_var);
     if (!_options.variable_prefix.empty()) {
         nscheduled_second.expose_as(_options.variable_prefix, "scheduled_second", "");
         ntriggered_second.expose_as(_options.variable_prefix, "triggered_second", "");

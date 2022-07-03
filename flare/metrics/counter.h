@@ -10,9 +10,9 @@
 namespace flare {
 
     template<typename T>
-    class counter : public variable_reducer<T, metrics_detail::AddTo<T>, metrics_detail::MinusFrom<T> > {
+    class counter : public variable_reducer<T, metrics_detail::add_to<T>, metrics_detail::minus_from<T> > {
     public:
-        typedef variable_reducer<T, metrics_detail::AddTo<T>, metrics_detail::MinusFrom<T> > Base;
+        typedef variable_reducer<T, metrics_detail::add_to<T>, metrics_detail::minus_from<T> > Base;
         typedef T value_type;
         typedef typename Base::sampler_type sampler_type;
     public:

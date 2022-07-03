@@ -21,9 +21,9 @@ namespace flare {
 
     // Implement this class to write variables into different places.
     // If dump() returns false, variable_base::dump_exposed() stops and returns -1.
-    class Dumper {
+    class variable_dumper {
     public:
-        virtual ~Dumper() {}
+        virtual ~variable_dumper() {}
 
         virtual bool dump(const std::string &name,
                           const std::string_view &description) = 0;

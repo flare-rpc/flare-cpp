@@ -60,9 +60,9 @@ namespace flare::rpc {
 
     class Stream;
 
-// A special closure for processing the about-to-recycle socket. Socket does
-// not delete SocketUser, if you want, `delete this' at the end of
-// BeforeRecycle().
+    // A special closure for processing the about-to-recycle socket. Socket does
+    // not delete SocketUser, if you want, `delete this' at the end of
+    // BeforeRecycle().
     class SocketUser {
     public:
         virtual ~SocketUser() {}
@@ -143,15 +143,15 @@ namespace flare::rpc {
                   nkeepwrite_second("rpc_keepwrite_second", &nkeepwrite), nwaitepollout("rpc_waitepollout_count"),
                   nwaitepollout_second("rpc_waitepollout_second", &nwaitepollout) {}
 
-        flare::Adder<int64_t> nsocket;
-        flare::Adder<int64_t> channel_conn;
-        flare::Adder<int> neventthread;
-        flare::PerSecond<flare::Adder<int> > neventthread_second;
-        flare::Adder<int64_t> nhealthcheck;
-        flare::Adder<int64_t> nkeepwrite;
-        flare::PerSecond<flare::Adder<int64_t> > nkeepwrite_second;
-        flare::Adder<int64_t> nwaitepollout;
-        flare::PerSecond<flare::Adder<int64_t> > nwaitepollout_second;
+        flare::gauge<int64_t> nsocket;
+        flare::gauge<int64_t> channel_conn;
+        flare::gauge<int> neventthread;
+        flare::per_second<flare::gauge<int> > neventthread_second;
+        flare::gauge<int64_t> nhealthcheck;
+        flare::gauge<int64_t> nkeepwrite;
+        flare::per_second<flare::gauge<int64_t> > nkeepwrite_second;
+        flare::gauge<int64_t> nwaitepollout;
+        flare::per_second<flare::gauge<int64_t> > nwaitepollout_second;
     };
 
     struct PipelinedInfo {

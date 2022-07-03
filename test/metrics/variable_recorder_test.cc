@@ -14,11 +14,11 @@
 namespace {
     TEST(RecorderTest, test_complement) {
         FLARE_LOG(INFO) << "sizeof(LatencyRecorder)=" << sizeof(flare::LatencyRecorder)
-                        << " " << sizeof(flare::metrics_detail::Percentile)
+                        << " " << sizeof(flare::metrics_detail::percentile)
                         << " " << sizeof(flare::max_gauge<int64_t>)
                         << " " << sizeof(flare::IntRecorder)
-                        << " " << sizeof(flare::Window<flare::IntRecorder>)
-                        << " " << sizeof(flare::Window<flare::metrics_detail::Percentile>);
+                        << " " << sizeof(flare::window<flare::IntRecorder>)
+                        << " " << sizeof(flare::window<flare::metrics_detail::percentile>);
 
         for (int a = -10000000; a < 10000000; ++a) {
             const uint64_t complement = flare::IntRecorder::_get_complement(a);
@@ -67,9 +67,9 @@ namespace {
     TEST(RecorderTest, window) {
         flare::IntRecorder c1;
         ASSERT_TRUE(c1.valid());
-        flare::Window<flare::IntRecorder> w1(&c1, 1);
-        flare::Window<flare::IntRecorder> w2(&c1, 2);
-        flare::Window<flare::IntRecorder> w3(&c1, 3);
+        flare::window<flare::IntRecorder> w1(&c1, 1);
+        flare::window<flare::IntRecorder> w2(&c1, 2);
+        flare::window<flare::IntRecorder> w3(&c1, 3);
 
         const int N = 10000;
         int64_t last_time = flare::get_current_time_micros();

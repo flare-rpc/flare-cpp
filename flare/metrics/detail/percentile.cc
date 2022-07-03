@@ -41,19 +41,19 @@ namespace flare {
             }
         }
 
-        class AddLatency {
+        class add_latency {
         public:
-            AddLatency(int64_t latency) : _latency(latency) {}
+            add_latency(int64_t latency) : _latency(latency) {}
 
-            void operator()(GlobalValue<Percentile::combiner_type> &global_value,
-                            ThreadLocalPercentileSamples &local_value) const {
+            void operator()(GlobalValue<percentile::combiner_type> &global_value,
+                            thread_local_percentile_samples &local_value) const {
                 // Copy to latency since get_interval_index may change input.
                 int64_t latency = _latency;
                 const size_t index = get_interval_index(latency);
-                PercentileInterval <ThreadLocalPercentileSamples::SAMPLE_SIZE> &
+                percentile_interval <thread_local_percentile_samples::SAMPLE_SIZE> &
                         interval = local_value.get_interval_at(index);
                 if (interval.full()) {
-                    GlobalPercentileSamples *g = global_value.lock();
+                    global_percentile_samples *g = global_value.lock();
                     g->get_interval_at(index).merge(interval);
                     g->_num_added += interval.added_count();
                     global_value.unlock();
@@ -68,11 +68,11 @@ namespace flare {
             int64_t _latency;
         };
 
-        Percentile::Percentile() : _combiner(NULL), _sampler(NULL) {
+        percentile::percentile() : _combiner(NULL), _sampler(NULL) {
             _combiner = new combiner_type;
         }
 
-        Percentile::~Percentile() {
+        percentile::~percentile() {
             // Have to destroy sampler first to avoid the race between destruction and
             // sampler
             if (_sampler != NULL) {
@@ -82,15 +82,15 @@ namespace flare {
             delete _combiner;
         }
 
-        Percentile::value_type Percentile::reset() {
+        percentile::value_type percentile::reset() {
             return _combiner->reset_all_agents();
         }
 
-        Percentile::value_type Percentile::get_value() const {
+        percentile::value_type percentile::get_value() const {
             return _combiner->combine_agents();
         }
 
-        Percentile &Percentile::operator<<(int64_t latency) {
+        percentile &percentile::operator<<(int64_t latency) {
             agent_type *agent = _combiner->get_or_create_tls_agent();
             if (FLARE_UNLIKELY(!agent)) {
                 FLARE_LOG(FATAL) << "Fail to create agent";
@@ -104,12 +104,12 @@ namespace flare {
                     FLARE_LOG(WARNING) << "Input=" << latency << " to `" << _debug_name
                                        << "' is negative, drop";
                 } else {
-                    FLARE_LOG(WARNING) << "Input=" << latency << " to Percentile("
+                    FLARE_LOG(WARNING) << "Input=" << latency << " to percentile("
                                        << (void *) this << ") is negative, drop";
                 }
                 return *this;
             }
-            agent->merge_global(AddLatency(latency));
+            agent->merge_global(add_latency(latency));
             return *this;
         }
 

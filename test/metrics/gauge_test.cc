@@ -26,4 +26,7 @@ TEST(metrics, gauge) {
                        "g1{a=\"search\",q=\"qruu\"} 6.000000\n";
     std::cout<<g1_s<<std::endl;
     std::cout<<str<<std::endl;
+    std::vector<flare::cache_metrics> vcm;
+    flare::variable_base::list_metrics(&vcm);
+    EXPECT_EQ(vcm.size(), 1);
 }

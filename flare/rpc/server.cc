@@ -214,19 +214,19 @@ namespace flare::rpc {
         os << "contention";
     }
 
-    static flare::PassiveStatus<std::string> s_lb_st(
+    static flare::status_gauge<std::string> s_lb_st(
             "rpc_load_balancer", PrintSupportedLB, nullptr);
 
-    static flare::PassiveStatus<std::string> s_ns_st(
+    static flare::status_gauge<std::string> s_ns_st(
             "rpc_naming_service", PrintSupportedNS, nullptr);
 
-    static flare::PassiveStatus<std::string> s_proto_st(
+    static flare::status_gauge<std::string> s_proto_st(
             "rpc_protocols", PrintSupportedProtocols, nullptr);
 
-    static flare::PassiveStatus<std::string> s_comp_st(
+    static flare::status_gauge<std::string> s_comp_st(
             "rpc_compressions", PrintSupportedCompressions, nullptr);
 
-    static flare::PassiveStatus<std::string> s_prof_st(
+    static flare::status_gauge<std::string> s_prof_st(
             "rpc_profilers", PrintEnabledProfilers, nullptr);
 
     static int32_t GetConnectionCount(void *arg) {
@@ -270,22 +270,22 @@ namespace flare::rpc {
 
         server->_nerror_var.expose_as(prefix, "error","");
 
-        flare::PassiveStatus<timeval> uptime_st(
+        flare::status_gauge<timeval> uptime_st(
                 prefix, "uptime", GetUptime, (void *) (intptr_t) start_us);
 
-        flare::PassiveStatus<std::string> start_time_st(
+        flare::status_gauge<std::string> start_time_st(
                 prefix, "start_time", PrintStartTime, server);
 
-        flare::PassiveStatus<int32_t> nconn_st(
+        flare::status_gauge<int32_t> nconn_st(
                 prefix, "connection_count", GetConnectionCount, server);
 
-        flare::PassiveStatus<int32_t> nservice_st(
+        flare::status_gauge<int32_t> nservice_st(
                 prefix, "service_count", GetServiceCount, server);
 
-        flare::PassiveStatus<int32_t> nbuiltinservice_st(
+        flare::status_gauge<int32_t> nbuiltinservice_st(
                 prefix, "builtin_service_count", GetBuiltinServiceCount, server);
 
-        flare::PassiveStatus<flare::Vector<unsigned, 2> > nsessiondata_st(
+        flare::status_gauge<flare::Vector<unsigned, 2> > nsessiondata_st(
                 GetSessionLocalDataCount, server);
         if (server->session_local_data_pool()) {
             nsessiondata_st.expose_as(prefix, "session_local_data_count","");
