@@ -41,7 +41,7 @@ namespace flare {
             void operator()(const T *sg, cache_metrics &metric) const {
                 sg->copy_metric_family(metric);
                 metric.type = metrics_type::mt_gauge;
-                metric.counter.value = sg->get_value();
+                metric.gauge.value = sg->get_value();
             }
         };
     }  // namespace metrics_detail
