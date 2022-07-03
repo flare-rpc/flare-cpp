@@ -41,7 +41,7 @@ namespace flare {
         virtual ~Collected() {}
 
         // Sumbit the sample for later dumping, a sample can only be submitted once.
-        // submit() is implemented as writing a value to flare::Reducer which does
+        // submit() is implemented as writing a value to flare::variable_reducer which does
         // not compete globally. This function generally does not alter the
         // interleaving status of threads even in highly contended situations.
         // You should also create the sample using a malloc() impl. that are

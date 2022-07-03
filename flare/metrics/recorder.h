@@ -89,7 +89,7 @@ namespace flare {
         };
 
         typedef Stat value_type;
-        typedef metrics_detail::ReducerSampler<IntRecorder, Stat,
+        typedef metrics_detail::reducer_sampler<IntRecorder, Stat,
                 AddStat, MinusStat> sampler_type;
 
         typedef Stat SampleSet;

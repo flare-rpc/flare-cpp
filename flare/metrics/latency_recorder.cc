@@ -74,7 +74,7 @@ namespace flare {
         }
 
         static int64_t get_window_recorder_qps(void *arg) {
-            metrics_detail::Sample<Stat> s;
+            metrics_detail::variable_sample<Stat> s;
             static_cast<RecorderWindow *>(arg)->get_span(1, &s);
             // Use floating point to avoid overflow.
             if (s.time_us <= 0) {
@@ -149,7 +149,7 @@ namespace flare {
     }
 
     int64_t LatencyRecorder::qps(time_t window_size) const {
-        metrics_detail::Sample<Stat> s;
+        metrics_detail::variable_sample<Stat> s;
         _latency_window.get_span(window_size, &s);
         // Use floating point to avoid overflow.
         if (s.time_us <= 0) {

@@ -13,7 +13,6 @@
 #include "flare/metrics/counter.h"
 #include "flare/metrics/bucket.h"
 #include "flare/metrics/variable_base.h"
-#include "flare/metrics/utils/prom_util.h"
 
 namespace flare {
 
@@ -24,7 +23,7 @@ namespace flare {
         histogram(const std::string &name,
                   const std::string_view &help,
                   const bucket &buckets,
-                  const std::unordered_map<std::string, std::string> &tags = std::unordered_map<std::string, std::string>());
+                  const variable_base::tag_type &tags =variable_base::tag_type());
 
         ~histogram();
 
@@ -36,8 +35,8 @@ namespace flare {
 
     private:
         const bucket _bucket_boundaries;
-        std::vector<std::unique_ptr<counter>> _bucket_counts;
-        counter _sum;
+        std::vector<std::unique_ptr<counter<int64_t>>> _bucket_counts;
+        counter<int64_t> _sum;
     };
 
 

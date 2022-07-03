@@ -8,7 +8,7 @@
 #include "flare/base/class_name.h"                      // class_name_str
 #include "flare/metrics/variable_base.h"                        // variable_base
 #include "flare/metrics/detail/combiner.h"                 // metrics_detail::agent_combiner
-#include "flare/metrics/detail/sampler.h"                  // ReducerSampler
+#include "flare/metrics/detail/sampler.h"                  // reducer_sampler
 #include "flare/metrics/detail/series.h"
 #include "flare/metrics/window.h"
 
@@ -25,7 +25,7 @@ namespace flare {
     // set the result to the first parameter in-place. Namely to add two values,
     // "+=" should be implemented rather than "+".
     //
-    // Reducer works for non-primitive T which satisfies:
+    // variable_reducer works for non-primitive T which satisfies:
     //   - T() should be the identity of Op.
     //   - stream << v should compile and put description of v into the stream
     // Example:
@@ -48,37 +48,37 @@ namespace flare {
     // FLARE_LOG(INFO) << my_type_sum;  // "MyType{6}"
 
     template<typename T, typename Op, typename InvOp = metrics_detail::VoidOp>
-    class Reducer : public variable_base {
+    class variable_reducer : public variable_base {
     public:
         typedef typename metrics_detail::agent_combiner<T, T, Op> combiner_type;
         typedef typename combiner_type::Agent agent_type;
-        typedef metrics_detail::ReducerSampler<Reducer, T, Op, InvOp> sampler_type;
+        typedef metrics_detail::reducer_sampler<variable_reducer, T, Op, InvOp> sampler_type;
 
-        class SeriesSampler : public metrics_detail::Sampler {
+        class series_sampler : public metrics_detail::variable_sampler {
         public:
-            SeriesSampler(Reducer *owner, const Op &op)
+            series_sampler(variable_reducer *owner, const Op &op)
                     : _owner(owner), _series(op) {}
 
-            ~SeriesSampler() {}
+            ~series_sampler() {}
 
             void take_sample() override { _series.append(_owner->get_value()); }
 
             void describe(std::ostream &os) { _series.describe(os, NULL); }
 
         private:
-            Reducer *_owner;
+            variable_reducer *_owner;
             metrics_detail::Series<T, Op> _series;
         };
 
     public:
         // The `identify' must satisfy: identity Op a == a
-        Reducer(typename flare::base::add_cr_non_integral<T>::type identity = T(),
+        variable_reducer(typename flare::base::add_cr_non_integral<T>::type identity = T(),
                 const Op &op = Op(),
                 const InvOp &inv_op = InvOp())
                 : _combiner(identity, identity, op), _sampler(NULL), _series_sampler(NULL), _inv_op(inv_op) {
         }
 
-        ~Reducer() {
+        ~variable_reducer() {
             // Calling hide() manually is a MUST required by Variable.
             hide();
             if (_sampler) {
@@ -93,14 +93,14 @@ namespace flare {
 
         // Add a value.
         // Returns self reference for chaining.
-        Reducer &operator<<(typename flare::base::add_cr_non_integral<T>::type value);
+        variable_reducer &operator<<(typename flare::base::add_cr_non_integral<T>::type value);
 
         // Get reduced value.
         // Notice that this function walks through threads that ever add values
         // into this reducer. You should avoid calling it frequently.
         T get_value() const {
             FLARE_CHECK(!(std::is_same<InvOp, metrics_detail::VoidOp>::value) || _sampler == NULL)
-                            << "You should not call Reducer<" << flare::base::class_name_str<T>()
+                            << "You should not call variable_reducer<" << flare::base::class_name_str<T>()
                             << ", " << flare::base::class_name_str<Op>() << ">::get_value() when a"
                             << " Window<> is used because the operator does not have inverse.";
             return _combiner.combine_agents();
@@ -158,7 +158,7 @@ namespace flare {
                 !std::is_same<InvOp, metrics_detail::VoidOp>::value &&
                 !std::is_same<T, std::string>::value &&
                 FLAGS_save_series) {
-                _series_sampler = new SeriesSampler(this, _combiner.op());
+                _series_sampler = new series_sampler(this, _combiner.op());
                 _series_sampler->schedule();
             }
             return rc;
@@ -167,12 +167,12 @@ namespace flare {
     private:
         combiner_type _combiner;
         sampler_type *_sampler;
-        SeriesSampler *_series_sampler;
+        series_sampler *_series_sampler;
         InvOp _inv_op;
     };
 
     template<typename T, typename Op, typename InvOp>
-    inline Reducer<T, Op, InvOp> &Reducer<T, Op, InvOp>::operator<<(
+    inline variable_reducer<T, Op, InvOp> &variable_reducer<T, Op, InvOp>::operator<<(
             typename flare::base::add_cr_non_integral<T>::type value) {
         // It's wait-free for most time
         agent_type *agent = _combiner.get_or_create_tls_agent();
@@ -204,9 +204,9 @@ namespace flare {
         };
     }
     template<typename T>
-    class Adder : public Reducer<T, metrics_detail::AddTo<T>, metrics_detail::MinusFrom<T> > {
+    class Adder : public variable_reducer<T, metrics_detail::AddTo<T>, metrics_detail::MinusFrom<T> > {
     public:
-        typedef Reducer<T, metrics_detail::AddTo<T>, metrics_detail::MinusFrom<T> > Base;
+        typedef variable_reducer<T, metrics_detail::AddTo<T>, metrics_detail::MinusFrom<T> > Base;
         typedef T value_type;
         typedef typename Base::sampler_type sampler_type;
     public:
@@ -220,6 +220,7 @@ namespace flare {
               const std::string_view &name) : Base() {
             this->expose_as(prefix, name, "");
         }
+
 
         ~Adder() { variable_base::hide(); }
     };
@@ -241,10 +242,11 @@ namespace flare {
 
         class LatencyRecorderBase;
     }
+    /*
     template<typename T>
-    class Maxer : public Reducer<T, metrics_detail::MaxTo<T> > {
+    class Maxer : public variable_reducer<T, metrics_detail::MaxTo<T> > {
     public:
-        typedef Reducer<T, metrics_detail::MaxTo<T> > Base;
+        typedef variable_reducer<T, metrics_detail::MaxTo<T> > Base;
         typedef T value_type;
         typedef typename Base::sampler_type sampler_type;
     public:
@@ -280,6 +282,7 @@ namespace flare {
             this->expose(name);
         }
     };
+     */
 
     // flare::Miner<int> min_value;
     // min_value << 1 << 2 << 3 << 4;
@@ -298,10 +301,11 @@ namespace flare {
 
     }  // namespace metrics_detail
 
+    /*
     template<typename T>
-    class Miner : public Reducer<T, metrics_detail::MinTo<T> > {
+    class Miner : public variable_reducer<T, metrics_detail::MinTo<T> > {
     public:
-        typedef Reducer<T, metrics_detail::MinTo<T> > Base;
+        typedef variable_reducer<T, metrics_detail::MinTo<T> > Base;
         typedef T value_type;
         typedef typename Base::sampler_type sampler_type;
     public:
@@ -319,6 +323,7 @@ namespace flare {
 
         ~Miner() { variable_base::hide(); }
     };
+     */
 
 }  // namespace flare
 

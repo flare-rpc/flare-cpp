@@ -8,14 +8,14 @@
 namespace {
 
     TEST(SamplerTest, linked_list) {
-        flare::container::link_node<flare::metrics_detail::Sampler> n1, n2;
+        flare::container::link_node<flare::metrics_detail::variable_sampler> n1, n2;
         n1.insert_before_as_list(&n2);
         ASSERT_EQ(n1.next(), &n2);
         ASSERT_EQ(n1.previous(), &n2);
         ASSERT_EQ(n2.next(), &n1);
         ASSERT_EQ(n2.previous(), &n1);
 
-        flare::container::link_node<flare::metrics_detail::Sampler> n3, n4;
+        flare::container::link_node<flare::metrics_detail::variable_sampler> n3, n4;
         n3.insert_before_as_list(&n4);
         ASSERT_EQ(n3.next(), &n4);
         ASSERT_EQ(n3.previous(), &n4);
@@ -33,7 +33,7 @@ namespace {
         ASSERT_EQ(&n4, n1.previous());
     }
 
-    class DebugSampler : public flare::metrics_detail::Sampler {
+    class DebugSampler : public flare::metrics_detail::variable_sampler {
     public:
         DebugSampler() : _ncalled(0) {}
 

@@ -18,7 +18,7 @@
 // Date: 2015/08/27 17:12:38
 
 #include "testing/gtest_wrap.h"
-#include "flare/metrics/reducer.h"
+#include "flare/metrics/variable_reducer.h"
 #include <gflags/gflags.h>
 #include <stdlib.h>
 

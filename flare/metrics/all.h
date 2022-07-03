@@ -20,7 +20,7 @@
 #ifndef  FLARE_VARIABLE_ALL_H_
 #define  FLARE_VARIABLE_ALL_H_
 
-#include "flare/metrics/reducer.h"
+#include "flare/metrics/variable_reducer.h"
 #include "flare/metrics/recorder.h"
 #include "flare/metrics/status.h"
 #include "flare/metrics/passive_status.h"

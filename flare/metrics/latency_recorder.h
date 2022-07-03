@@ -3,8 +3,9 @@
 #define  FLARE_VARIABLE_LATENCY_RECORDER_H_
 
 #include "flare/metrics/recorder.h"
-#include "flare/metrics/reducer.h"
+#include "flare/metrics/variable_reducer.h"
 #include "flare/metrics/passive_status.h"
+#include "flare/metrics/gauge.h"
 #include "flare/metrics/detail/percentile.h"
 
 namespace flare {
@@ -13,7 +14,7 @@ namespace flare {
         class Percentile;
 
         typedef Window<IntRecorder, SERIES_IN_SECOND> RecorderWindow;
-        typedef Window<Maxer<int64_t>, SERIES_IN_SECOND> MaxWindow;
+        typedef Window<max_gauge<int64_t>, SERIES_IN_SECOND> MaxWindow;
         typedef Window<Percentile, SERIES_IN_SECOND> PercentileWindow;
 
         // NOTE: Always use int64_t in the interfaces no matter what the impl. is.
@@ -41,7 +42,7 @@ namespace flare {
 
         protected:
             IntRecorder _latency;
-            Maxer<int64_t> _max_latency;
+            max_gauge<int64_t> _max_latency;
             Percentile _latency_percentile;
 
             RecorderWindow _latency_window;

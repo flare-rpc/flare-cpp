@@ -9,14 +9,16 @@ namespace flare {
     histogram::histogram(const std::string &name,
                          const std::string_view &help,
                          const bucket &buckets,
-                         const std::unordered_map<std::string, std::string> &tags)
-            : _bucket_boundaries(buckets), _sum(name + "_sum", "", std::unordered_map<std::string, std::string>(), DISPLAY_NON) {
+                         const variable_base::tag_type &tags)
+            : _bucket_boundaries(buckets),
+              _sum(name + "_sum", "", std::unordered_map < std::string, std::string > (), DISPLAY_NON) {
         FLARE_CHECK(std::is_sorted(std::begin(_bucket_boundaries),
                                    std::end(_bucket_boundaries)));
-        std::unordered_map<std::string, std::string> empty;
+        std::unordered_map < std::string, std::string > empty;
         for (size_t i = 0; i < _bucket_boundaries.size(); ++i) {
             std::string n = name + "_" + std::to_string(i);
-            _bucket_counts.push_back(std::unique_ptr<counter>(new counter(n, "", empty, DISPLAY_NON)));
+            _bucket_counts.push_back(
+                    std::unique_ptr<counter<int64_t>>(new counter<int64_t>(n, "", empty, DISPLAY_NON)));
         }
         expose(name, help, tags);
     }
@@ -37,6 +39,7 @@ namespace flare {
             (*_bucket_counts[bucket_index]) << 1;
         }
     }
+
 /*
     void histogram::describe_metrics(std::ostream &out, const flare::time_point *stamp) const {
         out << "# HELP " << _name << "\n";

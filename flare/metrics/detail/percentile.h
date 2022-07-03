@@ -8,10 +8,10 @@
 #include <ostream>                      // std::ostream
 #include <algorithm>                    // std::sort
 #include <math.h>                       // ceil
-#include "flare/metrics/reducer.h"               // Reducer
+#include "flare/metrics/variable_reducer.h"               // variable_reducer
 #include "flare/metrics/window.h"                // Window
 #include "flare/metrics/detail/combiner.h"       // agent_combiner
-#include "flare/metrics/detail/sampler.h"        // ReducerSampler
+#include "flare/metrics/detail/sampler.h"        // reducer_sampler
 #include "flare/base/fast_rand.h"
 
 namespace flare {
@@ -441,7 +441,7 @@ namespace flare {
             };
 
             typedef GlobalPercentileSamples value_type;
-            typedef ReducerSampler <Percentile,
+            typedef reducer_sampler <Percentile,
             GlobalPercentileSamples,
             AddPercentileSamples, VoidOp> sampler_type;
             typedef agent_combiner<GlobalPercentileSamples,

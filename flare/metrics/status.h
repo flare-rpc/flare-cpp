@@ -68,13 +68,13 @@ namespace flare {
             void operator()(T &, const T &) const {}
         };
 
-        class SeriesSampler : public metrics_detail::Sampler {
+        class series_sampler : public metrics_detail::variable_sampler {
         public:
             typedef typename std::conditional<
                     true, metrics_detail::AddTo<T>, PlaceHolderOp>
             ::type Op;
 
-            explicit SeriesSampler(Status *owner)
+            explicit series_sampler(Status *owner)
                     : _owner(owner), _series(Op()) {}
 
             void take_sample() { _series.append(_owner->get_value()); }
@@ -143,7 +143,7 @@ namespace flare {
             if (rc == 0 &&
                 _series_sampler == NULL &&
                 FLAGS_save_series) {
-                _series_sampler = new SeriesSampler(this);
+                _series_sampler = new series_sampler(this);
                 _series_sampler->schedule();
             }
             return rc;
@@ -151,7 +151,7 @@ namespace flare {
 
     private:
         std::atomic<T> _value;
-        SeriesSampler *_series_sampler;
+        series_sampler *_series_sampler;
     };
 
     // Specialize for std::string, adding a printf-style set_value().

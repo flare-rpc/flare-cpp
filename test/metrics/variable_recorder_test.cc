@@ -8,13 +8,14 @@
 #include "flare/times/time.h"
 #include "flare/metrics/recorder.h"
 #include "flare/metrics/latency_recorder.h"
+#include "flare/metrics/gauge.h"
 #include "flare/strings/str_join.h"
 
 namespace {
     TEST(RecorderTest, test_complement) {
         FLARE_LOG(INFO) << "sizeof(LatencyRecorder)=" << sizeof(flare::LatencyRecorder)
                         << " " << sizeof(flare::metrics_detail::Percentile)
-                        << " " << sizeof(flare::Maxer<int64_t>)
+                        << " " << sizeof(flare::max_gauge<int64_t>)
                         << " " << sizeof(flare::IntRecorder)
                         << " " << sizeof(flare::Window<flare::IntRecorder>)
                         << " " << sizeof(flare::Window<flare::metrics_detail::Percentile>);

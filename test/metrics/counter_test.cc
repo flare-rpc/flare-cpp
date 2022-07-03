@@ -12,7 +12,7 @@
 #include "testing/gtest_wrap.h"
 
 TEST(metrics, counter) {
-    flare::counter c1("c1","", {{"a","search"}, {"q","qruu"}});
+    flare::counter<int64_t> c1("c1","", {{"a","search"}, {"q","qruu"}});
     c1<<1;
     c1<<5;
     EXPECT_EQ(c1.get_value(), 6ul);

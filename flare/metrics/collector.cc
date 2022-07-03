@@ -37,7 +37,7 @@ namespace flare {
     };
 
     // A thread and a special variable to collect samples submitted.
-    class Collector : public flare::Reducer<Collected *, CombineCollected> {
+    class Collector : public flare::variable_reducer<Collected *, CombineCollected> {
     public:
         Collector();
 

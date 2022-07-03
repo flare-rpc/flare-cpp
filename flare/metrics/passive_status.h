@@ -3,7 +3,7 @@
 #define  FLARE_VARIABLE_PASSIVE_STATUS_H_
 
 #include "flare/metrics/variable_base.h"
-#include "flare/metrics/reducer.h"
+#include "flare/metrics/variable_reducer.h"
 
 namespace flare {
 
@@ -24,7 +24,7 @@ namespace flare {
     class PassiveStatus : public variable_base {
     public:
         typedef Tp value_type;
-        typedef metrics_detail::ReducerSampler<PassiveStatus, Tp, metrics_detail::AddTo<Tp>,
+        typedef metrics_detail::reducer_sampler<PassiveStatus, Tp, metrics_detail::AddTo<Tp>,
                 metrics_detail::MinusFrom<Tp> > sampler_type;
 
         struct PlaceHolderOp {
@@ -35,15 +35,15 @@ namespace flare {
                                       std::is_floating_point<Tp>::value ||
                                       is_vector<Tp>::value);
 
-        class SeriesSampler : public metrics_detail::Sampler {
+        class series_sampler : public metrics_detail::variable_sampler {
         public:
             typedef typename std::conditional<
                     ADDITIVE, metrics_detail::AddTo<Tp>, PlaceHolderOp>::type Op;
 
-            explicit SeriesSampler(PassiveStatus *owner)
+            explicit series_sampler(PassiveStatus *owner)
                     : _owner(owner), _vector_names(NULL), _series(Op()) {}
 
-            ~SeriesSampler() {
+            ~series_sampler() {
                 delete _vector_names;
             }
 
@@ -150,7 +150,7 @@ namespace flare {
                 rc == 0 &&
                 _series_sampler == NULL &&
                 FLAGS_save_series) {
-                _series_sampler = new SeriesSampler(this);
+                _series_sampler = new series_sampler(this);
                 _series_sampler->schedule();
             }
             return rc;
@@ -161,7 +161,7 @@ namespace flare {
 
         void *_arg;
         sampler_type *_sampler;
-        SeriesSampler *_series_sampler;
+        series_sampler *_series_sampler;
     };
 
     // ccover g++ may complain about ADDITIVE is undefined unless it's

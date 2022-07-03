@@ -117,7 +117,7 @@ namespace flare {
     int variable_base::expose_impl(const std::string_view &prefix,
                                    const std::string_view &name,
                                    const std::string_view &help,
-                                   const std::unordered_map<std::string, std::string> &tags,
+                                   const tag_type &tags,
                                    display_filter display_filter) {
         if (name.empty()) {
             FLARE_LOG(ERROR) << "Parameter[name] is empty";
@@ -153,7 +153,7 @@ namespace flare {
             _index_name.push_back('_');
             to_underscored_name(&_index_name, tags_str);
         }
-        if(help.empty()) {
+        if (help.empty()) {
             _help = _name;
         } else {
             _help.assign(help.data(), help.size());
@@ -583,15 +583,15 @@ namespace flare {
         const bool log_dummped = FLAGS_variable_log_dumpped;
         std::vector<cache_metrics> cm;
         flare::variable_base::list_metrics(&cm);
-            for (auto it = cm.begin(); it != cm.end(); ++it) {
-                const std::string &name = it->name;
-                if (white_matcher.match(name) && !black_matcher.match(name)) {
-                    if (!dumper->dump(*it, opt.dump_time)) {
-                        return -1;
-                    }
-                    ++count;
+        for (auto it = cm.begin(); it != cm.end(); ++it) {
+            const std::string &name = it->name;
+            if (white_matcher.match(name) && !black_matcher.match(name)) {
+                if (!dumper->dump(*it, opt.dump_time)) {
+                    return -1;
                 }
+                ++count;
             }
+        }
         if (log_dummped) {
             FLARE_LOG(INFO) << "Dumpped variables:" << dumpped_info.str();
         }
@@ -761,7 +761,7 @@ namespace flare {
 #if !defined(VARIABLE_NOT_LINK_DEFAULT_VARIABLES)
     // Expose variable-releated gflags so that they're collected by noah.
     // Maybe useful when debugging process of monitoring.
-        static metrics_gflag s_gflag_variable_dump_interval("variable_dump_interval");
+    static metrics_gflag s_gflag_variable_dump_interval("variable_dump_interval");
 #endif
 
     // The background thread to export all variable periodically.
@@ -935,8 +935,8 @@ namespace flare {
 #if !defined(VARIABLE_NOT_LINK_DEFAULT_VARIABLES)
     // Without these, default_variables.o are stripped.
     // At least working in gcc 4.8
-        extern int do_link_default_variables;
-        int dummy = do_link_default_variables;
+    extern int do_link_default_variables;
+    int dummy = do_link_default_variables;
 #endif
 
 }  // namespace flare

@@ -15,19 +15,19 @@ namespace flare {
     namespace metrics_detail {
 
         template<typename T>
-        struct Sample {
+        struct variable_sample {
             T data;
             int64_t time_us;
 
-            Sample() : data(), time_us(0) {}
+            variable_sample() : data(), time_us(0) {}
 
-            Sample(const T &data2, int64_t time2) : data(data2), time_us(time2) {}
+            variable_sample(const T &data2, int64_t time2) : data(data2), time_us(time2) {}
         };
 
         // The base class for all samplers whose take_sample() are called periodically.
-        class Sampler : public flare::container::link_node<Sampler> {
+        class variable_sampler : public flare::container::link_node<variable_sampler> {
         public:
-            Sampler();
+            variable_sampler();
 
             // This function will be called every second(approximately) in a
             // dedicated thread if schedule() is called.
@@ -43,9 +43,9 @@ namespace flare {
 
         protected:
 
-            virtual ~Sampler();
+            virtual ~variable_sampler();
 
-            friend class SamplerCollector;
+            friend class sampler_collector;
 
             bool _used;
             // Sync destroy() and take_sample().
@@ -70,11 +70,11 @@ namespace flare {
         //  - Op op();
         //  - InvOp inv_op();
         template<typename R, typename T, typename Op, typename InvOp>
-        class ReducerSampler : public Sampler {
+        class reducer_sampler : public variable_sampler {
         public:
             static const time_t MAX_SECONDS_LIMIT = 3600;
 
-            explicit ReducerSampler(R *reducer)
+            explicit reducer_sampler(R *reducer)
                     : _reducer(reducer), _window_size(1) {
 
                 // Invoked take_sample at begining so the value of the first second
@@ -82,7 +82,7 @@ namespace flare {
                 take_sample();
             }
 
-            ~ReducerSampler() {}
+            ~reducer_sampler() {}
 
             void take_sample() override {
                 // Make _q ready.
@@ -91,21 +91,21 @@ namespace flare {
                 if ((size_t) _window_size + 1 > _q.capacity()) {
                     const size_t new_cap =
                             std::max(_q.capacity() * 2, (size_t) _window_size + 1);
-                    const size_t memsize = sizeof(Sample<T>) * new_cap;
+                    const size_t memsize = sizeof(variable_sample<T>) * new_cap;
                     void *mem = malloc(memsize);
                     if (NULL == mem) {
                         return;
                     }
-                    flare::container::bounded_queue<Sample<T> > new_q(
+                    flare::container::bounded_queue<variable_sample<T> > new_q(
                             mem, memsize, flare::container::OWNS_STORAGE);
-                    Sample<T> tmp;
+                    variable_sample<T> tmp;
                     while (_q.pop(&tmp)) {
                         new_q.push(tmp);
                     }
                     new_q.swap(_q);
                 }
 
-                Sample<T> latest;
+                variable_sample<T> latest;
                 if (std::is_same<InvOp, VoidOp>::value) {
                     // The operator can't be inversed.
                     // We reset the reducer and save the result as a sample.
@@ -125,7 +125,7 @@ namespace flare {
                 _q.elim_push(latest);
             }
 
-            bool get_value(time_t window_size, Sample<T> *result) {
+            bool get_value(time_t window_size, variable_sample<T> *result) {
                 if (window_size <= 0) {
                     FLARE_LOG(FATAL) << "Invalid window_size=" << window_size;
                     return false;
@@ -135,17 +135,17 @@ namespace flare {
                     // We need more samples to get reasonable result.
                     return false;
                 }
-                Sample<T> *oldest = _q.bottom(window_size);
+                variable_sample<T> *oldest = _q.bottom(window_size);
                 if (NULL == oldest) {
                     oldest = _q.top();
                 }
-                Sample<T> *latest = _q.bottom();
+                variable_sample<T> *latest = _q.bottom();
                 FLARE_DCHECK(latest != oldest);
                 if (std::is_same<InvOp, VoidOp>::value) {
                     // No inverse op. Sum up all samples within the window.
                     result->data = latest->data;
                     for (int i = 1; true; ++i) {
-                        Sample<T> *e = _q.bottom(i);
+                        variable_sample<T> *e = _q.bottom(i);
                         if (e == oldest) {
                             break;
                         }
@@ -183,12 +183,12 @@ namespace flare {
                     // We need more samples to get reasonable result.
                     return;
                 }
-                Sample<T> *oldest = _q.bottom(window_size);
+                variable_sample<T> *oldest = _q.bottom(window_size);
                 if (NULL == oldest) {
                     oldest = _q.top();
                 }
                 for (int i = 1; true; ++i) {
-                    Sample<T> *e = _q.bottom(i);
+                    variable_sample<T> *e = _q.bottom(i);
                     if (e == oldest) {
                         break;
                     }
@@ -199,7 +199,7 @@ namespace flare {
         private:
             R *_reducer;
             time_t _window_size;
-            flare::container::bounded_queue<Sample<T> > _q;
+            flare::container::bounded_queue<variable_sample<T> > _q;
         };
 
     }  // namespace metrics_detail

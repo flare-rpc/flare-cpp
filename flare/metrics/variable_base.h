@@ -39,6 +39,8 @@ namespace flare {
     //     safely (provided that there's no non-const methods going on).
     class variable_base {
     public:
+        typedef std::unordered_map<std::string, std::string> tag_type;
+    public:
         variable_base() {}
 
         virtual ~variable_base();
@@ -46,7 +48,7 @@ namespace flare {
         // Implement this method to print the variable into ostream.
         virtual void describe(std::ostream &, bool quote_string) const = 0;
 
-        virtual void collect_metrics(cache_metrics&metric) const {}
+        virtual void collect_metrics(cache_metrics &metric) const {}
 
         // string form of describe().
         std::string get_description() const;
@@ -66,8 +68,8 @@ namespace flare {
         // Return 0 on success, -1 otherwise.
         int expose(const std::string_view &name,
                    const std::string_view &help,
-                   const std::unordered_map<std::string, std::string> &tags = std::unordered_map < std::string,std::string>(),
-        display_filter display_filter = DISPLAY_ON_ALL
+                   const tag_type &tags = tag_type(),
+                   display_filter display_filter = DISPLAY_ON_ALL
         ) {
             return expose_impl(std::string_view(), name, help, tags, display_filter);
         }
@@ -90,9 +92,9 @@ namespace flare {
         int expose_as(const std::string_view &prefix,
                       const std::string_view &name,
                       const std::string_view &help,
-                      const std::unordered_map<std::string, std::string> &tags =
-                      std::unordered_map < std::string, std::string>(),
-        display_filter display_filter = DISPLAY_ON_ALL) {
+                      const tag_type &tags = tag_type(),
+                      display_filter display_filter = DISPLAY_ON_ALL
+        ) {
             return expose_impl(prefix, name, help, tags, display_filter);
         }
 
@@ -159,7 +161,7 @@ namespace flare {
         virtual int expose_impl(const std::string_view &prefix,
                                 const std::string_view &name,
                                 const std::string_view &help,
-                                const std::unordered_map<std::string, std::string> &tags,
+                                const tag_type &tags,
                                 display_filter display_filter);
 
         void copy_metric_family(cache_metrics &metric) const;
@@ -168,7 +170,7 @@ namespace flare {
         std::string _name;
         std::string _index_name;
         std::string _help;
-        std::unordered_map<std::string, std::string> _tags;
+        tag_type _tags;
         // variable uses TLS, thus copying/assignment need to copy TLS stuff as well,
         // which is heavy. We disable copying/assignment now.
         FLARE_DISALLOW_COPY_AND_ASSIGN(variable_base);

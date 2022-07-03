@@ -12,10 +12,10 @@
 #include "testing/gtest_wrap.h"
 
 TEST(metrics, gauge) {
-    flare::gauge g1("g1","", {{"a","search"}, {"q","qruu"}});
-    g1.inc();
-    g1.inc(5);
-    EXPECT_EQ(g1.get_value(), 6.0);
+    flare::gauge<int64_t> g1("g1","", {{"a","search"}, {"q","qruu"}});
+    g1<<1;
+    g1<<5;
+    EXPECT_EQ(g1.get_value(), 6);
     auto n = flare::time_now();
     flare::cache_metrics cm;
     g1.collect_metrics(cm);

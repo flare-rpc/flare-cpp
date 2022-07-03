@@ -27,7 +27,7 @@ namespace flare {
             typedef typename R::value_type value_type;
             typedef typename R::sampler_type sampler_type;
 
-            class SeriesSampler : public metrics_detail::Sampler {
+            class series_sampler : public metrics_detail::variable_sampler {
             public:
                 struct Op {
                     explicit Op(R *var) : _var(var) {}
@@ -40,10 +40,10 @@ namespace flare {
                     R *_var;
                 };
 
-                SeriesSampler(WindowBase *owner, R *var)
+                series_sampler(WindowBase *owner, R *var)
                         : _owner(owner), _series(Op(var)) {}
 
-                ~SeriesSampler() {}
+                ~series_sampler() {}
 
                 void take_sample() override {
                     if (series_freq == SERIES_IN_SECOND) {
@@ -79,16 +79,16 @@ namespace flare {
                 }
             }
 
-            bool get_span(time_t window_size, metrics_detail::Sample<value_type> *result) const {
+            bool get_span(time_t window_size, metrics_detail::variable_sample<value_type> *result) const {
                 return _sampler->get_value(window_size, result);
             }
 
-            bool get_span(metrics_detail::Sample<value_type> *result) const {
+            bool get_span(metrics_detail::variable_sample<value_type> *result) const {
                 return get_span(_window_size, result);
             }
 
             virtual value_type get_value(time_t window_size) const {
-                metrics_detail::Sample<value_type> tmp;
+                metrics_detail::variable_sample<value_type> tmp;
                 if (get_span(window_size, &tmp)) {
                     return tmp.data;
                 }
@@ -134,7 +134,7 @@ namespace flare {
                 if (rc == 0 &&
                     _series_sampler == NULL &&
                     FLAGS_save_series) {
-                    _series_sampler = new SeriesSampler(this, _var);
+                    _series_sampler = new series_sampler(this, _var);
                     _series_sampler->schedule();
                 }
                 return rc;
@@ -143,7 +143,7 @@ namespace flare {
             R *_var;
             time_t _window_size;
             sampler_type *_sampler;
-            SeriesSampler *_series_sampler;
+            series_sampler *_series_sampler;
         };
 
     }  // namespace detail
@@ -214,7 +214,7 @@ namespace flare {
         }
 
         value_type get_value(time_t window_size) const override {
-            metrics_detail::Sample<value_type> s;
+            metrics_detail::variable_sample<value_type> s;
             this->get_span(window_size, &s);
             // We may test if the multiplication overflows and use integral ops
             // if possible. However signed/unsigned 32-bit/64-bit make the solution

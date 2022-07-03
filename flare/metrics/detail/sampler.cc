@@ -1,7 +1,7 @@
 
 #include "flare/times/time.h"
 #include "flare/base/singleton_on_pthread_once.h"
-#include "flare/metrics/reducer.h"
+#include "flare/metrics/variable_reducer.h"
 #include "flare/metrics/detail/sampler.h"
 #include "flare/metrics/passive_status.h"
 #include "flare/metrics/window.h"
@@ -13,7 +13,7 @@ namespace flare {
 
         // Combine two circular linked list into one.
         struct CombineSampler {
-            void operator()(Sampler *&s1, Sampler *s2) const {
+            void operator()(variable_sampler *&s1, variable_sampler *s2) const {
                 if (s2 == NULL) {
                     return;
                 }
@@ -33,21 +33,21 @@ namespace flare {
         // This can be done with regular timer thread, but it's way too slow(global
         // contention + log(N) heap manipulations). We need it to be super fast so that
         // creation overhead of Window<> is negliable.
-        // The trick is to use Reducer<Sampler*, CombineSampler>. Each Sampler is
+        // The trick is to use variable_reducer<variable_sampler*, CombineSampler>. Each variable_sampler is
         // doubly linked, thus we can reduce multiple Samplers into one cicurlarly
         // doubly linked list, and multiple lists into larger lists. We create a
         // dedicated thread to periodically get_value() which is just the combined
         // list of Samplers. Waking through the list and call take_sample().
-        // If a Sampler needs to be deleted, we just mark it as unused and the
+        // If a variable_sampler needs to be deleted, we just mark it as unused and the
         // deletion is taken place in the thread as well.
-        class SamplerCollector : public flare::Reducer<Sampler *, CombineSampler> {
+        class sampler_collector : public flare::variable_reducer<variable_sampler *, CombineSampler> {
         public:
-            SamplerCollector()
+            sampler_collector()
                     : _created(false), _stop(false), _cumulated_time_us(0) {
                 create_sampling_thread();
             }
 
-            ~SamplerCollector() {
+            ~sampler_collector() {
                 if (_created) {
                     _stop = true;
                     pthread_join(_tid, NULL);
@@ -64,7 +64,7 @@ namespace flare {
             // * A forked program can be forked again.
 
             static void child_callback_atfork() {
-                flare::base::get_leaky_singleton<SamplerCollector>()->after_forked_as_child();
+                flare::base::get_leaky_singleton<sampler_collector>()->after_forked_as_child();
             }
 
             void create_sampling_thread() {
@@ -88,12 +88,12 @@ namespace flare {
             void run();
 
             static void *sampling_thread(void *arg) {
-                static_cast<SamplerCollector *>(arg)->run();
+                static_cast<sampler_collector *>(arg)->run();
                 return NULL;
             }
 
             static double get_cumulated_time(void *arg) {
-                return static_cast<SamplerCollector *>(arg)->_cumulated_time_us / 1000.0 / 1000.0;
+                return static_cast<sampler_collector *>(arg)->_cumulated_time_us / 1000.0 / 1000.0;
             }
 
         private:
@@ -108,12 +108,12 @@ namespace flare {
         static flare::PerSecond<flare::PassiveStatus<double> >* s_sampling_thread_usage_variable = NULL;
 #endif
 
-        void SamplerCollector::run() {
+        void sampler_collector::run() {
 #ifndef UNIT_TEST
             // NOTE:
             // * Following vars can't be created on thread's stack since this thread
             //   may be abandoned at any time after forking.
-            // * They can't created inside the constructor of SamplerCollector as well,
+            // * They can't created inside the constructor of sampler_collector as well,
             //   which results in deadlock.
             if (s_cumulated_time_var == NULL) {
                 s_cumulated_time_var =
@@ -126,20 +126,20 @@ namespace flare {
             }
 #endif
 
-            flare::container::link_node<Sampler> root;
+            flare::container::link_node<variable_sampler> root;
             int consecutive_nosleep = 0;
             while (!_stop) {
                 int64_t abstime = flare::get_current_time_micros();
-                Sampler *s = this->reset();
+                variable_sampler *s = this->reset();
                 if (s) {
                     s->insert_before_as_list(&root);
                 }
                 int nremoved = 0;
                 int nsampled = 0;
-                for (flare::container::link_node<Sampler> *p = root.next(); p != &root;) {
+                for (flare::container::link_node<variable_sampler> *p = root.next(); p != &root;) {
                     // We may remove p from the list, save next first.
-                    flare::container::link_node<Sampler> *saved_next = p->next();
-                    Sampler *s = p->value();
+                    flare::container::link_node<variable_sampler> *saved_next = p->next();
+                    variable_sampler *s = p->value();
                     s->_mutex.lock();
                     if (!s->_used) {
                         s->_mutex.unlock();
@@ -174,15 +174,15 @@ namespace flare {
             }
         }
 
-        Sampler::Sampler() : _used(true) {}
+        variable_sampler::variable_sampler() : _used(true) {}
 
-        Sampler::~Sampler() {}
+        variable_sampler::~variable_sampler() {}
 
-        void Sampler::schedule() {
-            *flare::base::get_leaky_singleton<SamplerCollector>() << this;
+        void variable_sampler::schedule() {
+            *flare::base::get_leaky_singleton<sampler_collector>() << this;
         }
 
-        void Sampler::destroy() {
+        void variable_sampler::destroy() {
             _mutex.lock();
             _used = false;
             _mutex.unlock();
