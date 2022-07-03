@@ -26,7 +26,7 @@
 #include <flare/rpc/channel.h>
 #include <flare/rpc/server.h>
 #include "echo.pb.h"
-#include <flare/variable/all.h>
+#include <flare/metrics/all.h>
 #include <flare/base/fast_rand.h>
 
 DEFINE_int32(thread_num, 2, "Number of threads to send requests");

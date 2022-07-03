@@ -21,7 +21,6 @@
 #include <flare/fiber/this_fiber.h>
 #include <flare/fiber/internal/fiber.h>
 #include "flare/log/logging.h"
-#include <flare/base/strings.h>
 #include "flare/times/time.h"
 #include <flare/rpc/parallel_channel.h>
 #include <flare/rpc/server.h>
@@ -38,20 +37,20 @@ DEFINE_string(protocol, "baidu_std", "Protocol type. Defined in flare/rpc/option
 DEFINE_string(server, "0.0.0.0:8002", "IP Address of server");
 DEFINE_string(load_balancer, "", "The algorithm for load balancing");
 DEFINE_int32(timeout_ms, 100, "RPC timeout in milliseconds");
-DEFINE_int32(max_retry, 3, "Max retries(not including the first RPC)"); 
+DEFINE_int32(max_retry, 3, "Max retries(not including the first RPC)");
 DEFINE_bool(dont_fail, false, "Print fatal when some call failed");
 DEFINE_int32(dummy_port, -1, "Launch dummy server at this port");
 
 std::string g_request;
 std::string g_attachment;
 flare::LatencyRecorder g_latency_recorder("client");
-flare::Adder<int> g_error_count("client_error_count");
-flare::LatencyRecorder* g_sub_channel_latency = NULL;
+flare::counter<int> g_error_count("client_error_count");
+flare::LatencyRecorder *g_sub_channel_latency = NULL;
 
-static void* sender(void* arg) {
+static void *sender(void *arg) {
     // Normally, you should not call a Channel directly, but instead construct
     // a stub Service wrapping it. stub can be shared by all threads as well.
-    example::EchoService_Stub stub(static_cast<google::protobuf::RpcChannel*>(arg));
+    example::EchoService_Stub stub(static_cast<google::protobuf::RpcChannel *>(arg));
 
     int log_id = 0;
     while (!flare::rpc::IsAskedToQuit()) {
@@ -81,7 +80,7 @@ static void* sender(void* arg) {
         } else {
             g_error_count << 1;
             FLARE_CHECK(flare::rpc::IsAskedToQuit() || !FLAGS_dont_fail)
-                << "error=" << cntl.ErrorText() << " latency=" << cntl.latency_us();
+                            << "error=" << cntl.ErrorText() << " latency=" << cntl.latency_us();
             // We can't connect to the server, sleep a while. Notice that this
             // is a specific sleeping to prevent this thread from spinning too
             // fast. You should continue the business logic in a production 
@@ -92,7 +91,7 @@ static void* sender(void* arg) {
     return NULL;
 }
 
-int main(int argc, char* argv[]) {
+int main(int argc, char *argv[]) {
     // Parse gflags. We recommend you to use gflags as well.
     google::ParseCommandLineFlags(&argc, &argv, true);
 
@@ -114,7 +113,7 @@ int main(int argc, char* argv[]) {
     // channels are disabled in ParallelChannel.
 
     if (FLAGS_same_channel) {
-        flare::rpc::Channel* sub_channel = new flare::rpc::Channel;
+        flare::rpc::Channel *sub_channel = new flare::rpc::Channel;
         // Initialize the channel, NULL means using default options. 
         // options, see `flare/rpc/channel.h'.
         if (sub_channel->Init(FLAGS_server.c_str(), FLAGS_load_balancer.c_str(), &sub_options) != 0) {
@@ -130,7 +129,7 @@ int main(int argc, char* argv[]) {
         }
     } else {
         for (int i = 0; i < FLAGS_channel_num; ++i) {
-            flare::rpc::Channel* sub_channel = new flare::rpc::Channel;
+            flare::rpc::Channel *sub_channel = new flare::rpc::Channel;
             // Initialize the channel, NULL means using default options. 
             // options, see `flare/rpc/channel.h'.
             if (sub_channel->Init(FLAGS_server.c_str(), FLAGS_load_balancer.c_str(), &sub_options) != 0) {
@@ -190,15 +189,14 @@ int main(int argc, char* argv[]) {
     while (!flare::rpc::IsAskedToQuit()) {
         sleep(1);
         FLARE_LOG(INFO) << "Sending EchoRequest at qps=" << g_latency_recorder.qps(1)
-                  << " latency=" << g_latency_recorder.latency(1) << noflush;
+                        << " latency=" << g_latency_recorder.latency(1);
         for (int i = 0; i < FLAGS_channel_num; ++i) {
             FLARE_LOG(INFO) << " latency_" << i << "="
-                      << g_sub_channel_latency[i].latency(1)
-                      << noflush;
+                            << g_sub_channel_latency[i].latency(1);
         }
         FLARE_LOG(INFO);
     }
-    
+
     FLARE_LOG(INFO) << "EchoClient is going to quit";
     for (int i = 0; i < FLAGS_thread_num; ++i) {
         if (!FLAGS_use_fiber) {

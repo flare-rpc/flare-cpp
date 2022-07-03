@@ -17,11 +17,13 @@
 
 // A client sending requests to server in parallel by multiple threads.
 
+#include <cstddef>
 #include <gflags/gflags.h>
 #include <flare/fiber/this_fiber.h>
 #include <flare/fiber/internal/fiber.h>
 #include "flare/log/logging.h"
-#include <flare/base/strings.h>
+#include "flare/base/profile.h"
+//#include <flare/strings/strings.h>
 #include "flare/times/time.h"
 #include <flare/rpc/partition_channel.h>
 #include <deque>
@@ -42,7 +44,7 @@ DEFINE_bool(dont_fail, false, "Print fatal when some call failed");
 std::string g_request;
 std::string g_attachment;
 pthread_mutex_t g_latency_mutex = PTHREAD_MUTEX_INITIALIZER;
-struct BAIDU_CACHELINE_ALIGNMENT SenderInfo {
+struct FLARE_CACHELINE_ALIGNMENT SenderInfo {
     size_t nsuccess;
     int64_t latency_sum;
 };

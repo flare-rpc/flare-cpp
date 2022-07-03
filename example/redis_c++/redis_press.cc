@@ -1,28 +1,9 @@
-// Licensed to the Apache Software Foundation (ASF) under one
-// or more contributor license agreements.  See the NOTICE file
-// distributed with this work for additional information
-// regarding copyright ownership.  The ASF licenses this file
-// to you under the Apache License, Version 2.0 (the
-// "License"); you may not use this file except in compliance
-// with the License.  You may obtain a copy of the License at
-//
-//   http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing,
-// software distributed under the License is distributed on an
-// "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-// KIND, either express or implied.  See the License for the
-// specific language governing permissions and limitations
-// under the License.
-
-// A multi-threaded client getting keys from a redis-server constantly.
 
 #include <gflags/gflags.h>
 #include <flare/fiber/this_fiber.h>
 #include <flare/fiber/internal/fiber.h>
 #include "flare/log/logging.h"
-#include <flare/base/strings.h>
-#include <flare/variable/all.h>
+#include <flare/metrics/all.h>
 #include <flare/rpc/channel.h>
 #include <flare/rpc/server.h>
 #include <flare/rpc/redis.h>
@@ -41,7 +22,7 @@ DEFINE_int32(dummy_port, -1, "port of dummy server(for monitoring)");
 DEFINE_int32(backup_request_ms, -1, "Timeout for sending a backup request");
 
 flare::LatencyRecorder g_latency_recorder("client");
-flare::Adder<int> g_error_count("client_error_count");
+flare::counter<int> g_error_count("client_error_count");
 
 struct SenderArgs {
     int base_index;

@@ -86,4 +86,4 @@ namespace flare::rpc {
 }  // namespace flare::rpc
 
 
-#endif // FLARE_RPC_POLICY_AUTO_CONCURRENCY_LIMITER_H_
+#endif  // FLARE_RPC_POLICY_AUTO_CONCURRENCY_LIMITER_H_

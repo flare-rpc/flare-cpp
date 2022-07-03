@@ -1,21 +1,3 @@
-// Licensed to the Apache Software Foundation (ASF) under one
-// or more contributor license agreements.  See the NOTICE file
-// distributed with this work for additional information
-// regarding copyright ownership.  The ASF licenses this file
-// to you under the Apache License, Version 2.0 (the
-// "License"); you may not use this file except in compliance
-// with the License.  You may obtain a copy of the License at
-//
-//   http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing,
-// software distributed under the License is distributed on an
-// "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-// KIND, either express or implied.  See the License for the
-// specific language governing permissions and limitations
-// under the License.
-
-// A client sending requests to servers(discovered by naming service) by multiple threads.
 
 #include <gflags/gflags.h>
 #include <flare/fiber/this_fiber.h>
@@ -43,7 +25,7 @@ DEFINE_int32(dummy_port, -1, "Launch dummy server at this port");
 std::string g_attachment;
 
 flare::LatencyRecorder g_latency_recorder("client");
-flare::Adder<int> g_error_count("client_error_count");
+flare::counter<int> g_error_count("client_error_count");
 flare::static_atomic<int> g_sender_count = FLARE_STATIC_ATOMIC_INIT(0);
 
 static void* sender(void* arg) {

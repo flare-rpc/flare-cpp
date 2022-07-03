@@ -21,7 +21,7 @@
 #include "flare/log/logging.h"
 #include "flare/times/time.h"
 #include <flare/rpc/channel.h>
-#include <flare/variable/all.h>
+#include <flare/metrics/all.h>
 #include <flare/fiber/internal/timer_thread.h>
 #include <flare/json2pb/json_to_pb.h>
 
@@ -33,16 +33,16 @@ DEFINE_string(connection_type, "", "Connection type. Available values: single, p
 DEFINE_string(cntl_server, "0.0.0.0:9000", "IP Address of server");
 DEFINE_string(echo_server, "0.0.0.0:9001", "IP Address of server");
 DEFINE_int32(timeout_ms, 3000, "RPC timeout in milliseconds");
-DEFINE_int32(max_retry, 0, "Max retries(not including the first RPC)"); 
+DEFINE_int32(max_retry, 0, "Max retries(not including the first RPC)");
 DEFINE_int32(case_interval, 20, "Intervals for different test cases");
-DEFINE_int32(client_qps_change_interval_us, 50000, 
+DEFINE_int32(client_qps_change_interval_us, 50000,
              "The interval for client changes the sending speed");
 DEFINE_string(case_file, "", "File path for test_cases");
 
-void DisplayStage(const test::Stage& stage) {
+void DisplayStage(const test::Stage &stage) {
     std::string type;
-    switch(stage.type()) {
-        case test::FLUCTUATE: 
+    switch (stage.type()) {
+        case test::FLUCTUATE:
             type = "Fluctuate";
             break;
         case test::SMOOTH:
@@ -52,15 +52,15 @@ void DisplayStage(const test::Stage& stage) {
             type = "Unknown";
     }
     std::stringstream ss;
-    ss 
-        << "Stage:[" << stage.lower_bound() << ':' 
-        << stage.upper_bound() <<  "]"
-        << " , Type:" << type;
+    ss
+            << "Stage:[" << stage.lower_bound() << ':'
+            << stage.upper_bound() << "]"
+            << " , Type:" << type;
     FLARE_LOG(INFO) << ss.str();
 }
 
-uint32_t cast_func(void* arg) {
-    return *(uint32_t*)arg;
+uint32_t cast_func(void *arg) {
+    return *(uint32_t *) arg;
 }
 
 std::atomic<uint32_t> g_timeout(0);
@@ -71,24 +71,24 @@ flare::status_gauge<uint32_t> g_error_var(cast_func, &g_error);
 flare::status_gauge<uint32_t> g_succ_var(cast_func, &g_succ);
 flare::LatencyRecorder g_latency_rec;
 
-void LoadCaseSet(test::TestCaseSet* case_set, const std::string& file_path) {
-    std::ifstream ifs(file_path.c_str(), std::ios::in);  
+void LoadCaseSet(test::TestCaseSet *case_set, const std::string &file_path) {
+    std::ifstream ifs(file_path.c_str(), std::ios::in);
     if (!ifs) {
         FLARE_LOG(FATAL) << "Fail to open case set file: " << file_path;
     }
-    std::string case_set_json((std::istreambuf_iterator<char>(ifs)),  
-                              std::istreambuf_iterator<char>()); 
+    std::string case_set_json((std::istreambuf_iterator<char>(ifs)),
+                              std::istreambuf_iterator<char>());
     std::string err;
     if (!json2pb::JsonToProtoMessage(case_set_json, case_set, &err)) {
         FLARE_LOG(FATAL)
-            << "Fail to trans case_set from json to protobuf message: "
-            << err;
+                << "Fail to trans case_set from json to protobuf message: "
+                << err;
     }
 }
 
 void HandleEchoResponse(
-        flare::rpc::Controller* cntl,
-        test::NotifyResponse* response) {
+        flare::rpc::Controller *cntl,
+        test::NotifyResponse *response) {
     // std::unique_ptr makes sure cntl/response will be deleted before returning.
     std::unique_ptr<flare::rpc::Controller> cntl_guard(cntl);
     std::unique_ptr<test::NotifyResponse> response_guard(response);
@@ -107,28 +107,25 @@ void HandleEchoResponse(
 }
 
 void Expose() {
-    g_timeout_var.expose_as("cl", "timeout");
-    g_error_var.expose_as("cl", "failed");
-    g_succ_var.expose_as("cl", "succ");
-    g_latency_rec.expose("cl");
+    g_timeout_var.expose_as("cl", "timeout","");
+    g_error_var.expose_as("cl", "failed", "");
+    g_succ_var.expose_as("cl", "succ", "");
+    g_latency_rec.expose("cl", "");
 }
 
 struct TestCaseContext {
-    TestCaseContext(const test::TestCase& tc) 
-        : running(true)
-        , stage_index(0)
-        , test_case(tc)
-        , next_stage_sec(test_case.qps_stage_list(0).duration_sec() + 
-                         flare::base::gettimeofday_s()) {
+    TestCaseContext(const test::TestCase &tc)
+            : running(true), stage_index(0), test_case(tc), next_stage_sec(test_case.qps_stage_list(0).duration_sec() +
+                                                                           flare::time_now().to_unix_seconds()) {
         DisplayStage(test_case.qps_stage_list(stage_index));
         Update();
     }
 
     bool Update() {
-        if (flare::base::gettimeofday_s() >= next_stage_sec) {
+        if (flare::time_now().to_unix_seconds() >= next_stage_sec) {
             ++stage_index;
             if (stage_index < test_case.qps_stage_list_size()) {
-                next_stage_sec += test_case.qps_stage_list(stage_index).duration_sec(); 
+                next_stage_sec += test_case.qps_stage_list(stage_index).duration_sec();
                 DisplayStage(test_case.qps_stage_list(stage_index));
             } else {
                 return false;
@@ -136,15 +133,15 @@ struct TestCaseContext {
         }
 
         int qps = 0;
-        const test::Stage& qps_stage = test_case.qps_stage_list(stage_index);
+        const test::Stage &qps_stage = test_case.qps_stage_list(stage_index);
         const int lower_bound = qps_stage.lower_bound();
         const int upper_bound = qps_stage.upper_bound();
         if (qps_stage.type() == test::FLUCTUATE) {
             qps = flare::base::fast_rand_less_than(upper_bound - lower_bound) + lower_bound;
         } else if (qps_stage.type() == test::SMOOTH) {
-            qps = lower_bound + (upper_bound - lower_bound) / 
-                double(qps_stage.duration_sec()) * (qps_stage.duration_sec() - next_stage_sec
-                + flare::base::gettimeofday_s());
+            qps = lower_bound + (upper_bound - lower_bound) /
+                                double(qps_stage.duration_sec()) * (qps_stage.duration_sec() - next_stage_sec
+                                                                    + flare::time_now().to_unix_seconds());
         }
         interval_us.store(1.0 / qps * 1000000, std::memory_order_relaxed);
         return true;
@@ -157,19 +154,19 @@ struct TestCaseContext {
     int next_stage_sec;
 };
 
-void RunUpdateTask(void* data) {
-    TestCaseContext* context = (TestCaseContext*)data;
+void RunUpdateTask(void *data) {
+    TestCaseContext *context = (TestCaseContext *) data;
     bool should_continue = context->Update();
     if (should_continue) {
         flare::fiber_internal::get_global_timer_thread()->schedule(RunUpdateTask, data,
-            flare::base::microseconds_from_now(FLAGS_client_qps_change_interval_us));
+                                                                   flare::time_point::future_unix_micros(FLAGS_client_qps_change_interval_us).to_timespec());
     } else {
         context->running.store(false, std::memory_order_release);
     }
 }
 
-void RunCase(test::ControlService_Stub &cntl_stub, 
-             const test::TestCase& test_case) {
+void RunCase(test::ControlService_Stub &cntl_stub,
+             const test::TestCase &test_case) {
     FLARE_LOG(INFO) << "Running case:`" << test_case.case_name() << '\'';
     flare::rpc::Channel channel;
     flare::rpc::ChannelOptions options;
@@ -191,15 +188,16 @@ void RunCase(test::ControlService_Stub &cntl_stub,
 
     TestCaseContext context(test_case);
     flare::fiber_internal::get_global_timer_thread()->schedule(RunUpdateTask, &context,
-        flare::base::microseconds_from_now(FLAGS_client_qps_change_interval_us));
+                                                               flare::time_point::future_unix_micros(
+                                                                       FLAGS_client_qps_change_interval_us).to_timespec());
 
     while (context.running.load(std::memory_order_acquire)) {
         test::NotifyRequest echo_req;
         echo_req.set_message("hello");
-        flare::rpc::Controller* echo_cntl = new flare::rpc::Controller;
-        test::NotifyResponse* echo_rsp = new test::NotifyResponse;
-        google::protobuf::Closure* done = flare::rpc::NewCallback(
-            &HandleEchoResponse, echo_cntl, echo_rsp);
+        flare::rpc::Controller *echo_cntl = new flare::rpc::Controller;
+        test::NotifyResponse *echo_rsp = new test::NotifyResponse;
+        google::protobuf::Closure *done = flare::rpc::NewCallback(
+                &HandleEchoResponse, echo_cntl, echo_rsp);
         echo_stub.Echo(echo_cntl, &echo_req, echo_rsp, done);
         ::usleep(context.interval_us.load(std::memory_order_relaxed));
     }
@@ -213,7 +211,7 @@ void RunCase(test::ControlService_Stub &cntl_stub,
     FLARE_LOG(INFO) << "Case `" << test_case.case_name() << "' finshed:";
 }
 
-int main(int argc, char* argv[]) {
+int main(int argc, char *argv[]) {
     // Parse gflags. We recommend you to use gflags as well.
     google::ParseCommandLineFlags(&argc, &argv, true);
     Expose();

@@ -1,28 +1,7 @@
-// Licensed to the Apache Software Foundation (ASF) under one
-// or more contributor license agreements.  See the NOTICE file
-// distributed with this work for additional information
-// regarding copyright ownership.  The ASF licenses this file
-// to you under the Apache License, Version 2.0 (the
-// "License"); you may not use this file except in compliance
-// with the License.  You may obtain a copy of the License at
-//
-//   http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing,
-// software distributed under the License is distributed on an
-// "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-// KIND, either express or implied.  See the License for the
-// specific language governing permissions and limitations
-// under the License.
-//
-// A flare based redis-server. Currently just implement set and
-// get, but it's sufficient that you can get the idea how to
-// implement flare::rpc::RedisCommandHandler.
 
 #include <flare/rpc/server.h>
 #include <flare/rpc/redis.h>
 #include <flare/base/crc32c.h>
-#include <flare/base/strings/string_split.h>
 #include <gflags/gflags.h>
 #include <unordered_map>
 
@@ -33,7 +12,7 @@ DEFINE_int32(port, 6379, "TCP Port of this server");
 class RedisServiceImpl : public flare::rpc::RedisService {
 public:
     bool Set(const std::string& key, const std::string& value) {
-        int slot = flare::base::crc32c::Value(key.c_str(), key.size()) % kHashSlotNum;
+        int slot = flare::base::value(key.c_str(), key.size()) % kHashSlotNum;
         _mutex[slot].lock();
         _map[slot][key] = value;
         _mutex[slot].unlock();
@@ -41,7 +20,7 @@ public:
     }
 
     bool Get(const std::string& key, std::string* value) {
-        int slot = flare::base::crc32c::Value(key.c_str(), key.size()) % kHashSlotNum;
+        int slot = flare::base::value(key.c_str(), key.size()) % kHashSlotNum;
         _mutex[slot].lock();
         auto it = _map[slot].find(key);
         if (it == _map[slot].end()) {

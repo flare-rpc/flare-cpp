@@ -1,30 +1,10 @@
-// Licensed to the Apache Software Foundation (ASF) under one
-// or more contributor license agreements.  See the NOTICE file
-// distributed with this work for additional information
-// regarding copyright ownership.  The ASF licenses this file
-// to you under the Apache License, Version 2.0 (the
-// "License"); you may not use this file except in compliance
-// with the License.  You may obtain a copy of the License at
-//
-//   http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing,
-// software distributed under the License is distributed on an
-// "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-// KIND, either express or implied.  See the License for the
-// specific language governing permissions and limitations
-// under the License.
-
-// A server to receive EchoRequest and send back EchoResponse.
 
 #include <vector>
 #include <gflags/gflags.h>
 #include "flare/times/time.h"
 #include "flare/log/logging.h"
-#include <flare/base/strings.h>
 #include <random>
 #include <chrono>
-#include <flare/base/string_splitter.h>
 #include <flare/rpc/server.h>
 #include "echo.pb.h"
 
@@ -95,7 +75,7 @@ public:
 private:
     size_t _index;
     int64_t _sleep_us;
-    flare::Adder<size_t> _nreq;
+    flare::counter<size_t> _nreq;
 };
 
 int main(int argc, char* argv[]) {
@@ -160,7 +140,7 @@ int main(int argc, char* argv[]) {
             size_t diff = current_num_requests - last_num_requests[i];
             cur_total += diff;
             last_num_requests[i] = current_num_requests;
-            FLARE_LOG(INFO) << "S[" << i << "]=" << diff << ' ' << noflush;
+            FLARE_LOG(INFO) << "S[" << i << "]=" << diff << ' ';
         }
         FLARE_LOG(INFO) << "[total=" << cur_total << ']';
     }

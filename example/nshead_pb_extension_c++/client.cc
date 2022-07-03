@@ -23,7 +23,7 @@
 #include "flare/times/time.h"
 #include <flare/rpc/channel.h>
 #include <flare/rpc/nshead_message.h>
-#include <flare/variable/all.h>
+#include <flare/metrics/all.h>
 
 flare::LatencyRecorder g_latency_recorder("client");
 

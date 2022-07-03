@@ -23,7 +23,7 @@
 #include "flare/log/logging.h"
 #include <flare/rpc/channel.h>
 #include <flare/rpc/server.h>
-#include <flare/variable/all.h>
+#include <flare/metrics/all.h>
 
 DEFINE_string(data, "", "POST this data to the http server");
 DEFINE_int32(thread_num, 50, "Number of threads to send requests");
