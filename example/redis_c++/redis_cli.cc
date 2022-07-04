@@ -17,8 +17,8 @@
 
 // A flare based command-line interface to talk with redis-server
 
-#include <signal.h>
-#include <stdio.h>
+#include <csignal>
+#include <cstdio>
 #include <readline/readline.h>
 #include <readline/history.h>
 #include <gflags/gflags.h>
@@ -29,14 +29,14 @@
 DEFINE_string(connection_type, "", "Connection type. Available values: single, pooled, short");
 DEFINE_string(server, "127.0.0.1:6379", "IP Address of server");
 DEFINE_int32(timeout_ms, 1000, "RPC timeout in milliseconds");
-DEFINE_int32(max_retry, 3, "Max retries(not including the first RPC)"); 
+DEFINE_int32(max_retry, 3, "Max retries(not including the first RPC)");
 
 namespace flare::rpc {
-const char* logo();
+    const char *logo();
 }
 
 // Send `command' to redis-server via `channel'
-static bool access_redis(flare::rpc::Channel& channel, const char* command) {
+static bool access_redis(flare::rpc::Channel &channel, const char *command) {
     flare::rpc::RedisRequest request;
     if (!request.AddCommand(command)) {
         FLARE_LOG(ERROR) << "Fail to add command";
@@ -56,7 +56,7 @@ static bool access_redis(flare::rpc::Channel& channel, const char* command) {
 
 // For freeing the memory returned by readline().
 struct Freer {
-    void operator()(char* mem) {
+    void operator()(char *mem) {
         free(mem);
     }
 };
@@ -66,6 +66,7 @@ static void dummy_handler(int) {}
 // The getc for readline. The default getc retries reading when meeting
 // EINTR, which is not what we want.
 static bool g_canceled = false;
+
 static int cli_getc(FILE *stream) {
     int c = getc(stream);
     if (c == EOF && errno == EINTR) {
@@ -75,14 +76,14 @@ static int cli_getc(FILE *stream) {
     return c;
 }
 
-int main(int argc, char* argv[]) {
+int main(int argc, char *argv[]) {
     // Parse gflags. We recommend you to use gflags as well.
     google::ParseCommandLineFlags(&argc, &argv, true);
 
     // A Channel represents a communication line to a Server. Notice that 
     // Channel is thread-safe and can be shared by all threads in your program.
     flare::rpc::Channel channel;
-    
+
     // Initialize the channel, NULL means using default options.
     flare::rpc::ChannelOptions options;
     options.protocol = flare::rpc::PROTOCOL_REDIS;
@@ -98,7 +99,7 @@ int main(int argc, char* argv[]) {
         // We need this dummy signal hander to interrupt getc (and returning
         // EINTR), SIG_IGN did not work.
         signal(SIGINT, dummy_handler);
-        
+
         // Hook getc of readline.
         rl_getc_function = cli_getc;
 
