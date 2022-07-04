@@ -30,7 +30,7 @@
 namespace flare::rpc {
 
     // Different types of replies.
-    enum RedisReplyType {
+    enum redis_reply_type {
         REDIS_REPLY_STRING = 1,  // Bulk String
         REDIS_REPLY_ARRAY = 2,
         REDIS_REPLY_INTEGER = 3,
@@ -39,7 +39,7 @@ namespace flare::rpc {
         REDIS_REPLY_ERROR = 6
     };
 
-    const char *RedisReplyTypeToString(RedisReplyType);
+    const char *RedisReplyTypeToString(redis_reply_type);
 
     // A reply from redis-server.
     class RedisReply {
@@ -49,7 +49,7 @@ namespace flare::rpc {
         RedisReply(flare::Arena *arena);
 
         // Type of the reply.
-        RedisReplyType type() const { return _type; }
+        redis_reply_type type() const { return _type; }
 
         bool is_nil() const;     // True if the reply is a (redis) nil.
         bool is_integer() const; // True if the reply is an integer.
@@ -153,11 +153,11 @@ namespace flare::rpc {
         // by calling CopyFrom[Different|Same]Arena.
         FLARE_DISALLOW_COPY_AND_ASSIGN(RedisReply);
 
-        void FormatStringImpl(const char *fmt, va_list args, RedisReplyType type);
+        void FormatStringImpl(const char *fmt, va_list args, redis_reply_type type);
 
-        void SetStringImpl(const std::string_view &str, RedisReplyType type);
+        void SetStringImpl(const std::string_view &str, redis_reply_type type);
 
-        RedisReplyType _type;
+        redis_reply_type _type;
         int _length;  // length of short_str/long_str, count of replies
         union {
             int64_t integer;
@@ -172,7 +172,7 @@ namespace flare::rpc {
         flare::Arena *_arena;
     };
 
-// =========== inline impl. ==============
+    // =========== inline impl. ==============
 
     inline std::ostream &operator<<(std::ostream &os, const RedisReply &r) {
         r.Print(os);
