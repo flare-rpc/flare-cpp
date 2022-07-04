@@ -34,7 +34,7 @@ namespace {
         ASSERT_EQ(1UL, flare::variable_base::count_exposed());
 
         flare::read_most_gauge<std::string> st2;
-        st2.set_value("world %d", 10);
+        st2.set_value("world {}", 10);
         ASSERT_EQ(-1, st2.expose("var1", ""));
         ASSERT_EQ(1UL, flare::variable_base::count_exposed());
         ASSERT_EQ("world 10", st2.get_description());
