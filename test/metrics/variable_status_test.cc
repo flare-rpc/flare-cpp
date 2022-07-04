@@ -23,7 +23,7 @@ namespace {
 
     TEST_F(StatusTest, status) {
         flare::read_most_gauge<std::string> st1;
-        st1.set_value("hello %d", 9);
+        st1.set_value("hello {}", 9);
         ASSERT_EQ(0, st1.expose("var1", ""));
         ASSERT_EQ("hello 9", flare::variable_base::describe_exposed("var1"));
         ASSERT_EQ("\"hello 9\"", flare::variable_base::describe_exposed("var1", true));
