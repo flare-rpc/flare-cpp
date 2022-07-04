@@ -7,4 +7,4 @@ add_executable(metrics_test ${TEST_VARIABLE_SRCS}
 target_link_libraries(metrics_test ${GTEST_LIB}
         ${GPERFTOOLS_LIBRARIES}
         ${DYNAMIC_LIB})
-add_test(NAME test_variable COMMAND test_variable)
+add_test(NAME metrics_test COMMAND metrics_test)
