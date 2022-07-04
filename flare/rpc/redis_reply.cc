@@ -321,7 +321,7 @@ namespace flare::rpc {
         }
     }
 
-// Mimic how official redis-cli prints.
+    // Mimic how official redis-cli prints.
     void RedisReply::Print(std::ostream &os) const {
         switch (_type) {
             case REDIS_REPLY_STRING:
