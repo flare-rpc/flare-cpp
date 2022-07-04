@@ -195,21 +195,21 @@ namespace flare::rpc {
     };
 
     Socket::SharedPart::SharedPart(SocketId creator_socket_id2)
-            : socket_pool(NULL), creator_socket_id(creator_socket_id2), num_continuous_connect_timeouts(0), in_size(0),
-              in_num_messages(0), out_size(0), out_num_messages(0), extended_stat(NULL), recent_error_count(0) {
+            : socket_pool(nullptr), creator_socket_id(creator_socket_id2), num_continuous_connect_timeouts(0), in_size(0),
+              in_num_messages(0), out_size(0), out_num_messages(0), extended_stat(nullptr), recent_error_count(0) {
     }
 
     Socket::SharedPart::~SharedPart() {
         delete extended_stat;
-        extended_stat = NULL;
-        delete socket_pool.exchange(NULL, std::memory_order_relaxed);
+        extended_stat = nullptr;
+        delete socket_pool.exchange(nullptr, std::memory_order_relaxed);
     }
 
     void Socket::SharedPart::UpdateStatsEverySecond(int64_t now_ms) {
         ExtendedSocketStat *stat = extended_stat;
-        if (stat == NULL) {
+        if (stat == nullptr) {
             stat = new(std::nothrow) ExtendedSocketStat;
-            if (stat == NULL) {
+            if (stat == nullptr) {
                 return;
             }
             extended_stat = stat;
@@ -264,7 +264,7 @@ namespace flare::rpc {
         }
     }
 
-    SocketVarsCollector *g_vars = NULL;
+    SocketVarsCollector *g_vars = nullptr;
 
     static pthread_once_t s_create_vars_once = PTHREAD_ONCE_INIT;
 
@@ -334,9 +334,9 @@ namespace flare::rpc {
                     flare::cord_buf dummy_buf;
                     // We don't care about the return value since the request
                     // is already failed.
-                    (void) msg->AppendAndDestroySelf(&dummy_buf, NULL);
+                    (void) msg->AppendAndDestroySelf(&dummy_buf, nullptr);
                 }
-                set_pipelined_count_and_user_message(0, NULL, false);
+                set_pipelined_count_and_user_message(0, nullptr, false);
                 return true;
             }
             return false;
@@ -387,7 +387,7 @@ namespace flare::rpc {
 
     class Socket::EpollOutRequest : public SocketUser {
     public:
-        EpollOutRequest() : fd(-1), timer_id(0), on_epollout_event(NULL), data(NULL) {}
+        EpollOutRequest() : fd(-1), timer_id(0), on_epollout_event(nullptr), data(nullptr) {}
 
         ~EpollOutRequest() {
             // Remove the timer at last inside destructor to avoid
@@ -415,18 +415,18 @@ namespace flare::rpc {
 
     Socket::Socket(Forbidden)
     // must be even because Address() relies on evenness of version
-            : _versioned_ref(0), _shared_part(NULL), _nevent(0), _keytable_pool(NULL), _fd(-1), _tos(0),
-              _reset_fd_real_us(-1), _on_edge_triggered_events(NULL), _user(NULL), _conn(NULL), _this_id(0),
+            : _versioned_ref(0), _shared_part(nullptr), _nevent(0), _keytable_pool(nullptr), _fd(-1), _tos(0),
+              _reset_fd_real_us(-1), _on_edge_triggered_events(nullptr), _user(nullptr), _conn(nullptr), _this_id(0),
               _preferred_index(-1), _hc_count(0), _last_msg_size(0), _avg_msg_size(0), _last_readtime_us(0),
-              _parsing_context(NULL), _correlation_id(0), _health_check_interval_s(-1), _ninprocess(1),
-              _auth_flag_error(0), _auth_id(INVALID_FIBER_TOKEN), _auth_context(NULL), _ssl_state(SSL_UNKNOWN),
-              _ssl_session(NULL), _connection_type_for_progressive_read(CONNECTION_TYPE_UNKNOWN),
+              _parsing_context(nullptr), _correlation_id(0), _health_check_interval_s(-1), _ninprocess(1),
+              _auth_flag_error(0), _auth_id(INVALID_FIBER_TOKEN), _auth_context(nullptr), _ssl_state(SSL_UNKNOWN),
+              _ssl_session(nullptr), _connection_type_for_progressive_read(CONNECTION_TYPE_UNKNOWN),
               _controller_released_socket(false), _overcrowded(false), _fail_me_at_server_stop(false),
-              _logoff_flag(false), _recycle_flag(false), _error_code(0), _pipeline_q(NULL), _last_writetime_us(0),
-              _unwritten_bytes(0), _epollout_butex(NULL), _write_head(NULL), _stream_set(NULL),
+              _logoff_flag(false), _recycle_flag(false), _error_code(0), _pipeline_q(nullptr), _last_writetime_us(0),
+              _unwritten_bytes(0), _epollout_butex(nullptr), _write_head(nullptr), _stream_set(nullptr),
               _ninflight_app_health_check(0) {
         CreateVarsOnce();
-        pthread_mutex_init(&_id_wait_list_mutex, NULL);
+        pthread_mutex_init(&_id_wait_list_mutex, nullptr);
         _epollout_butex = flare::fiber_internal::waitable_event_create_checked<std::atomic<int> >();
     }
 
@@ -461,7 +461,7 @@ namespace flare::rpc {
     Socket::WriteRequest *Socket::ReleaseWriteRequestsExceptLast(
             Socket::WriteRequest *req, int error_code, const std::string &error_text) {
         WriteRequest *p = req;
-        while (p->next != NULL) {
+        while (p->next != nullptr) {
             WriteRequest *const saved_next = p->next;
             ReturnFailedWriteRequest(p, error_code, error_text);
             p = saved_next;
@@ -482,7 +482,7 @@ namespace flare::rpc {
                 CancelUnwrittenBytes(req->data.size());
             }
             req->data.clear();  // MUST, otherwise IsWriteComplete is false
-        } while (!IsWriteComplete(req, true, NULL));
+        } while (!IsWriteComplete(req, true, nullptr));
         ReturnFailedWriteRequest(req, error_code, error_text);
     }
 
@@ -555,12 +555,12 @@ namespace flare::rpc {
     int Socket::Create(const SocketOptions &options, SocketId *id) {
         flare::ResourceId<Socket> slot;
         Socket *const m = flare::get_resource(&slot, Forbidden());
-        if (m == NULL) {
+        if (m == nullptr) {
             FLARE_LOG(FATAL) << "Fail to get_resource<Socket>";
             return -1;
         }
         g_vars->nsocket << 1;
-        FLARE_CHECK(NULL == m->_shared_part.load(std::memory_order_relaxed));
+        FLARE_CHECK(nullptr == m->_shared_part.load(std::memory_order_relaxed));
         m->_nevent.store(0, std::memory_order_relaxed);
         m->_keytable_pool = options.keytable_pool;
         m->_tos = 0;
@@ -586,15 +586,15 @@ namespace flare::rpc {
         m->_health_check_interval_s = options.health_check_interval_s;
         m->_ninprocess.store(1, std::memory_order_relaxed);
         m->_auth_flag_error.store(0, std::memory_order_relaxed);
-        const int rc2 = fiber_token_create(&m->_auth_id, NULL, NULL);
+        const int rc2 = fiber_token_create(&m->_auth_id, nullptr, nullptr);
         if (rc2) {
             FLARE_LOG(ERROR) << "Fail to create auth_id: " << flare_error(rc2);
             m->SetFailed(rc2, "Fail to create auth_id: %s", flare_error(rc2));
             return -1;
         }
         // Disable SSL check if there is no SSL context
-        m->_ssl_state = (options.initial_ssl_ctx == NULL ? SSL_OFF : SSL_UNKNOWN);
-        m->_ssl_session = NULL;
+        m->_ssl_state = (options.initial_ssl_ctx == nullptr ? SSL_OFF : SSL_UNKNOWN);
+        m->_ssl_session = nullptr;
         m->_ssl_ctx = options.initial_ssl_ctx;
         m->_connection_type_for_progressive_read = CONNECTION_TYPE_UNKNOWN;
         m->_controller_released_socket.store(false, std::memory_order_relaxed);
@@ -616,7 +616,7 @@ namespace flare::rpc {
         }
         m->_last_writetime_us.store(cpuwide_now, std::memory_order_relaxed);
         m->_unwritten_bytes.store(0, std::memory_order_relaxed);
-        FLARE_CHECK(NULL == m->_write_head.load(std::memory_order_relaxed));
+        FLARE_CHECK(nullptr == m->_write_head.load(std::memory_order_relaxed));
         // Must be last one! Internal fields of this Socket may be access
         // just after calling ResetFileDescriptor.
         if (m->ResetFileDescriptor(options.fd) != 0) {
@@ -659,7 +659,7 @@ namespace flare::rpc {
         // It's safe to close previous fd (provided expected_nref is correct).
         const int prev_fd = _fd.exchange(-1, std::memory_order_relaxed);
         if (ValidFileDescriptor(prev_fd)) {
-            if (_on_edge_triggered_events != NULL) {
+            if (_on_edge_triggered_events != nullptr) {
                 GetGlobalEventDispatcher(prev_fd).RemoveConsumer(prev_fd);
             }
             close(prev_fd);
@@ -670,20 +670,20 @@ namespace flare::rpc {
         _local_side = flare::base::end_point();
         if (_ssl_session) {
             SSL_free(_ssl_session);
-            _ssl_session = NULL;
+            _ssl_session = nullptr;
         }
         _ssl_state = SSL_UNKNOWN;
         _nevent.store(0, std::memory_order_relaxed);
         // parsing_context is very likely to be associated with the fd,
         // removing it is a safer choice and required by http2.
-        reset_parsing_context(NULL);
+        reset_parsing_context(nullptr);
         // Must clear _read_buf otehrwise even if the connections is recovered,
         // the kept old data is likely to make parsing fail.
         _read_buf.clear();
         _ninprocess.store(1, std::memory_order_relaxed);
         _auth_flag_error.store(0, std::memory_order_relaxed);
         fiber_token_error(_auth_id, 0);
-        const int rc = fiber_token_create(&_auth_id, NULL, NULL);
+        const int rc = fiber_token_create(&_auth_id, nullptr, nullptr);
         if (rc != 0) {
             FLARE_LOG(FATAL) << "Fail to create _auth_id, " << flare_error(rc);
             return -1;
@@ -785,7 +785,7 @@ namespace flare::rpc {
             if (VersionOfVRef(vref) != id_ver) {
                 return -1;
             }
-            // Try to set version=id_ver+1 (to make later Address() return NULL),
+            // Try to set version=id_ver+1 (to make later Address() return nullptr),
             // retry on fail.
             if (_versioned_ref.compare_exchange_strong(
                     vref, MakeVRef(id_ver + 1, NRefOfVRef(vref)),
@@ -793,7 +793,7 @@ namespace flare::rpc {
                     std::memory_order_relaxed)) {
                 // Update _error_text
                 std::string error_text;
-                if (error_fmt != NULL) {
+                if (error_fmt != nullptr) {
                     va_list ap;
                     va_start(ap, error_fmt);
                     flare::string_vprintf(&error_text, error_fmt, ap);
@@ -822,12 +822,12 @@ namespace flare::rpc {
                         &_id_wait_list_mutex));
 
                 ResetAllStreams();
-                // _app_connect shouldn't be set to NULL in SetFailed otherwise
+                // _app_connect shouldn't be set to nullptr in SetFailed otherwise
                 // HC is always not supported.
                 // FIXME: Design a better interface for AppConnect
                 // if (_app_connect) {
                 //     AppConnect* const saved_app_connect = _app_connect;
-                //     _app_connect = NULL;
+                //     _app_connect = nullptr;
                 //     saved_app_connect->StopConnect(this);
                 // }
 
@@ -842,7 +842,7 @@ namespace flare::rpc {
     }
 
     int Socket::SetFailed() {
-        return SetFailed(EFAILEDSOCKET, NULL);
+        return SetFailed(EFAILEDSOCKET, nullptr);
     }
 
     void Socket::FeedbackCircuitBreaker(int error_code, int64_t latency_us) {
@@ -899,7 +899,7 @@ namespace flare::rpc {
     int Socket::Status(SocketId id, int32_t *nref) {
         const flare::ResourceId<Socket> slot = SlotOfSocketId(id);
         Socket *const m = address_resource(slot);
-        if (m != NULL) {
+        if (m != nullptr) {
             const uint64_t vref = m->_versioned_ref.load(std::memory_order_relaxed);
             if (VersionOfVRef(vref) == VersionOfSocketId(id)) {
                 if (nref) {
@@ -925,21 +925,21 @@ namespace flare::rpc {
         }
         if (_conn) {
             SocketConnection *const saved_conn = _conn;
-            _conn = NULL;
+            _conn = nullptr;
             saved_conn->BeforeRecycle(this);
         }
         if (_user) {
             SocketUser *const saved_user = _user;
-            _user = NULL;
+            _user = nullptr;
             saved_user->BeforeRecycle(this);
         }
-        SharedPart *sp = _shared_part.exchange(NULL, std::memory_order_acquire);
+        SharedPart *sp = _shared_part.exchange(nullptr, std::memory_order_acquire);
         if (sp) {
             sp->RemoveRefManually();
         }
         const int prev_fd = _fd.exchange(-1, std::memory_order_relaxed);
         if (ValidFileDescriptor(prev_fd)) {
-            if (_on_edge_triggered_events != NULL) {
+            if (_on_edge_triggered_events != nullptr) {
                 GetGlobalEventDispatcher(prev_fd).RemoveConsumer(prev_fd);
             }
             close(prev_fd);
@@ -947,7 +947,7 @@ namespace flare::rpc {
                 g_vars->channel_conn << -1;
             }
         }
-        reset_parsing_context(NULL);
+        reset_parsing_context(nullptr);
         _read_buf.clear();
 
         _auth_flag_error.store(0, std::memory_order_relaxed);
@@ -957,19 +957,19 @@ namespace flare::rpc {
 
         if (_ssl_session) {
             SSL_free(_ssl_session);
-            _ssl_session = NULL;
+            _ssl_session = nullptr;
         }
 
-        _ssl_ctx = NULL;
+        _ssl_ctx = nullptr;
 
         delete _pipeline_q;
-        _pipeline_q = NULL;
+        _pipeline_q = nullptr;
 
         delete _auth_context;
-        _auth_context = NULL;
+        _auth_context = nullptr;
 
         delete _stream_set;
-        _stream_set = NULL;
+        _stream_set = nullptr;
 
         const SocketId asid = _agent_socket_id.load(std::memory_order_relaxed);
         if (asid != INVALID_SOCKET_ID) {
@@ -986,13 +986,13 @@ namespace flare::rpc {
         // the enclosed Socket is valid and free to access inside this function.
         SocketUniquePtr s(static_cast<Socket *>(arg));
         s->_on_edge_triggered_events(s.get());
-        return NULL;
+        return nullptr;
     }
 
 // Check if there're new requests appended.
 // If yes, point old_head to to reversed new requests and return false;
 // If no:
-//    old_head is fully written, set _write_head to NULL and return true;
+//    old_head is fully written, set _write_head to nullptr and return true;
 //    old_head is not written yet, keep _write_head unchanged and return false;
 // `old_head' is last new_head got from this function or (in another word)
 // tail of current writing list.
@@ -1000,10 +1000,10 @@ namespace flare::rpc {
     bool Socket::IsWriteComplete(Socket::WriteRequest *old_head,
                                  bool singular_node,
                                  Socket::WriteRequest **new_tail) {
-        FLARE_CHECK(NULL == old_head->next);
-        // Try to set _write_head to NULL to mark that the write is done.
+        FLARE_CHECK(nullptr == old_head->next);
+        // Try to set _write_head to nullptr to mark that the write is done.
         WriteRequest *new_head = old_head;
-        WriteRequest *desired = NULL;
+        WriteRequest *desired = nullptr;
         bool return_when_no_more = true;
         if (!old_head->data.empty() || !singular_node) {
             desired = old_head;
@@ -1024,7 +1024,7 @@ namespace flare::rpc {
 
         // Someone added new requests.
         // Reverse the list until old_head.
-        WriteRequest *tail = NULL;
+        WriteRequest *tail = nullptr;
         WriteRequest *p = new_head;
         do {
             while (p->next == WriteRequest::UNCONNECTED) {
@@ -1035,7 +1035,7 @@ namespace flare::rpc {
             p->next = tail;
             tail = p;
             p = saved_next;
-            FLARE_CHECK(p != NULL);
+            FLARE_CHECK(p != nullptr);
         } while (p != old_head);
 
         // Link old list with new list.
@@ -1107,7 +1107,7 @@ namespace flare::rpc {
         }
         if (on_connect) {
             EpollOutRequest *req = new(std::nothrow) EpollOutRequest;
-            if (req == NULL) {
+            if (req == nullptr) {
                 FLARE_LOG(FATAL) << "Fail to new EpollOutRequest";
                 return -1;
             }
@@ -1235,7 +1235,7 @@ namespace flare::rpc {
         }
 
         EpollOutRequest *req = dynamic_cast<EpollOutRequest *>(s->user());
-        if (req != NULL) {
+        if (req != nullptr) {
             return s->HandleEpollOutRequest(0, req);
         }
 
@@ -1253,7 +1253,7 @@ namespace flare::rpc {
             return;
         }
         EpollOutRequest *req = dynamic_cast<EpollOutRequest *>(s->user());
-        if (req == NULL) {
+        if (req == nullptr) {
             FLARE_LOG(FATAL) << "Impossible! SocketUser MUST be EpollOutRequest here";
             return;
         }
@@ -1313,7 +1313,7 @@ namespace flare::rpc {
     static void *RunClosure(void *arg) {
         google::protobuf::Closure *done = (google::protobuf::Closure *) arg;
         done->Run();
-        return NULL;
+        return nullptr;
     }
 
     int Socket::KeepWriteIfConnected(int fd, int err, void *data) {
@@ -1392,7 +1392,7 @@ namespace flare::rpc {
 
     X509 *Socket::GetPeerCertificate() const {
         if (ssl_state() != SSL_CONNECTED) {
-            return NULL;
+            return nullptr;
         }
         return SSL_get_peer_certificate(_ssl_session);
     }
@@ -1428,7 +1428,7 @@ namespace flare::rpc {
 
         req->data.swap(*data);
         // Set `req->next' to UNCONNECTED so that the KeepWrite thread will
-        // wait until it points to a valid WriteRequest or NULL.
+        // wait until it points to a valid WriteRequest or nullptr.
         req->next = WriteRequest::UNCONNECTED;
         req->id_wait = opt.id_wait;
         req->set_pipelined_count_and_user_message(
@@ -1464,7 +1464,7 @@ namespace flare::rpc {
         }
 
         // Set `req->next' to UNCONNECTED so that the KeepWrite thread will
-        // wait until it points to a valid WriteRequest or NULL.
+        // wait until it points to a valid WriteRequest or nullptr.
         req->next = WriteRequest::UNCONNECTED;
         req->id_wait = opt.id_wait;
         req->set_pipelined_count_and_user_message(opt.pipelined_count, msg.release(), opt.with_auth);
@@ -1475,7 +1475,7 @@ namespace flare::rpc {
         // Release fence makes sure the thread getting request sees *req
         WriteRequest *const prev_head =
                 _write_head.exchange(req, std::memory_order_release);
-        if (prev_head != NULL) {
+        if (prev_head != nullptr) {
             // Someone is writing to the fd. The KeepWrite thread may spin
             // until req->next to be non-UNCONNECTED. This process is not
             // lock-free, but the duration is so short(1~2 instructions,
@@ -1491,7 +1491,7 @@ namespace flare::rpc {
         ssize_t nw = 0;
 
         // We've got the right to write.
-        req->next = NULL;
+        req->next = nullptr;
 
         // Connect to remote_side() if not.
         int ret = ConnectIfNot(opt.abstime, req);
@@ -1537,7 +1537,7 @@ namespace flare::rpc {
         } else {
             AddOutputBytes(nw);
         }
-        if (IsWriteComplete(req, true, NULL)) {
+        if (IsWriteComplete(req, true, nullptr)) {
             ReturnSuccessfulWriteRequest(req);
             return 0;
         }
@@ -1569,12 +1569,12 @@ namespace flare::rpc {
         SocketUniquePtr s(req->socket);
 
         // When error occurs, spin until there's no more requests instead of
-        // returning directly otherwise _write_head is permantly non-NULL which
+        // returning directly otherwise _write_head is permantly non-nullptr which
         // makes later Write() abnormal.
-        WriteRequest *cur_tail = NULL;
+        WriteRequest *cur_tail = nullptr;
         do {
             // req was written, skip it.
-            if (req->next != NULL && req->data.empty()) {
+            if (req->next != nullptr && req->data.empty()) {
                 WriteRequest *const saved_req = req;
                 req = req->next;
                 s->ReturnSuccessfulWriteRequest(saved_req);
@@ -1592,7 +1592,7 @@ namespace flare::rpc {
                 s->AddOutputBytes(nw);
             }
             // Release WriteRequest until non-empty data or last request.
-            while (req->next != NULL && req->data.empty()) {
+            while (req->next != nullptr && req->data.empty()) {
                 WriteRequest *const saved_req = req;
                 req = req->next;
                 s->ReturnSuccessfulWriteRequest(saved_req);
@@ -1605,7 +1605,7 @@ namespace flare::rpc {
             //if (nw <= 0 || req->data.empty()/*note*/) {
             if (nw <= 0) {
                 g_vars->nwaitepollout << 1;
-                bool pollin = (s->_on_edge_triggered_events != NULL);
+                bool pollin = (s->_on_edge_triggered_events != nullptr);
                 // NOTE: Waiting epollout within timeout is a must to force
                 // KeepWrite to check and setup pending WriteRequests periodically,
                 // which may turn on _overcrowded to stop pending requests from
@@ -1621,8 +1621,8 @@ namespace flare::rpc {
                     break;
                 }
             }
-            if (NULL == cur_tail) {
-                for (cur_tail = req; cur_tail->next != NULL;
+            if (nullptr == cur_tail) {
+                for (cur_tail = req; cur_tail->next != nullptr;
                      cur_tail = cur_tail->next);
             }
             // Return when there's no more WriteRequests and req is completely
@@ -1630,20 +1630,20 @@ namespace flare::rpc {
             if (s->IsWriteComplete(cur_tail, (req == cur_tail), &cur_tail)) {
                 FLARE_CHECK_EQ(cur_tail, req);
                 s->ReturnSuccessfulWriteRequest(req);
-                return NULL;
+                return nullptr;
             }
         } while (1);
 
         // Error occurred, release all requests until no new requests.
         s->ReleaseAllFailedWriteRequests(req);
-        return NULL;
+        return nullptr;
     }
 
     ssize_t Socket::DoWrite(WriteRequest *req) {
         // Group flare::cord_buf in the list into a batch array.
         flare::cord_buf *data_list[DATA_LIST_MAX];
         size_t ndata = 0;
-        for (WriteRequest *p = req; p != NULL && ndata < DATA_LIST_MAX;
+        for (WriteRequest *p = req; p != nullptr && ndata < DATA_LIST_MAX;
              p = p->next) {
             data_list[ndata++] = &p->data;
         }
@@ -1697,7 +1697,7 @@ namespace flare::rpc {
     }
 
     int Socket::SSLHandshake(int fd, bool server_mode) {
-        if (_ssl_ctx == NULL) {
+        if (_ssl_ctx == nullptr) {
             if (server_mode) {
                 FLARE_LOG(ERROR) << "Lack SSL configuration to handle SSL request";
                 return -1;
@@ -1711,7 +1711,7 @@ namespace flare::rpc {
             SSL_free(_ssl_session);
         }
         _ssl_session = CreateSSLSession(_ssl_ctx->raw_ctx, id(), fd, server_mode);
-        if (_ssl_session == NULL) {
+        if (_ssl_session == nullptr) {
             FLARE_LOG(ERROR) << "Fail to CreateSSLSession";
             return -1;
         }
@@ -1850,7 +1850,7 @@ namespace flare::rpc {
             *auth_error = (int32_t) (flag_error & 0xFFFFFFFFul);
             return EINVAL;
         }
-        if (0 == fiber_token_trylock(_auth_id, NULL)) {
+        if (0 == fiber_token_trylock(_auth_id, nullptr)) {
             // Winner
             return 0;
         } else {
@@ -1879,10 +1879,10 @@ namespace flare::rpc {
     }
 
     AuthContext *Socket::mutable_auth_context() {
-        if (_auth_context != NULL) {
+        if (_auth_context != nullptr) {
             FLARE_LOG(FATAL) << "Impossible! This function is supposed to be called "
                                 "only once when verification succeeds in server side";
-            return NULL;
+            return nullptr;
         }
         _auth_context = new(std::nothrow) AuthContext();
         FLARE_CHECK(_auth_context);
@@ -1895,8 +1895,8 @@ namespace flare::rpc {
         if (Address(id, &s) < 0) {
             return -1;
         }
-        if (NULL == s->_on_edge_triggered_events) {
-            // Callback can be NULL when receiving error epoll events
+        if (nullptr == s->_on_edge_triggered_events) {
+            // Callback can be nullptr when receiving error epoll events
             // (Added into epoll by `WaitConnected')
             return 0;
         }
@@ -1960,7 +1960,7 @@ namespace flare::rpc {
 
     template<typename T>
     std::ostream &operator<<(std::ostream &os, const ObjectPtr<T> &obj) {
-        if (obj._obj != NULL) {
+        if (obj._obj != nullptr) {
             os << '(' << flare::base::class_name_str(*obj._obj) << "*)";
         }
         return os << obj._obj;
@@ -2045,7 +2045,7 @@ namespace flare::rpc {
            << "\nthis_id=" << ptr->_this_id
            << "\npreferred_index=" << preferred_index;
         InputMessenger *messenger = dynamic_cast<InputMessenger *>(ptr->user());
-        if (messenger != NULL) {
+        if (messenger != nullptr) {
             os << " (" << messenger->NameOfProtocol(preferred_index) << ')';
         }
         const int64_t cpuwide_now = flare::get_current_time_micros();
@@ -2174,7 +2174,7 @@ namespace flare::rpc {
         }
         const timespec duetime =
                 flare::time_point::future_unix_millis(FLAGS_health_check_timeout_ms).to_timespec();
-        const int connected_fd = Connect(&duetime, NULL, NULL);
+        const int connected_fd = Connect(&duetime, nullptr, nullptr);
         if (connected_fd >= 0) {
             ::close(connected_fd);
             return 0;
@@ -2188,7 +2188,7 @@ namespace flare::rpc {
             _stream_mutex.unlock();
             return -1;
         }
-        if (_stream_set == NULL) {
+        if (_stream_set == nullptr) {
             _stream_set = new std::set<StreamId>();
         }
         _stream_set->insert(stream_id);
@@ -2198,7 +2198,7 @@ namespace flare::rpc {
 
     int Socket::RemoveStream(StreamId stream_id) {
         _stream_mutex.lock();
-        if (_stream_set == NULL) {
+        if (_stream_set == nullptr) {
             _stream_mutex.unlock();
             FLARE_CHECK(false) << "AddStream was not called";
             return -1;
@@ -2212,7 +2212,7 @@ namespace flare::rpc {
         FLARE_DCHECK(Failed());
         std::set<StreamId> saved_stream_set;
         _stream_mutex.lock();
-        if (_stream_set != NULL) {
+        if (_stream_set != nullptr) {
             // Not delete _stream_set because there are likely more streams added
             // after reviving if the Socket is still in use, or it is to be deleted in
             // OnRecycle()
@@ -2342,10 +2342,10 @@ namespace flare::rpc {
     Socket::SharedPart *Socket::GetOrNewSharedPartSlower() {
         // Create _shared_part optimistically.
         SharedPart *shared_part = GetSharedPart();
-        if (shared_part == NULL) {
+        if (shared_part == nullptr) {
             shared_part = new SharedPart(id());
             shared_part->AddRefManually();
-            SharedPart *expected = NULL;
+            SharedPart *expected = nullptr;
             if (!_shared_part.compare_exchange_strong(
                     expected, shared_part, std::memory_order_acq_rel)) {
                 shared_part->RemoveRefManually();
@@ -2367,18 +2367,18 @@ namespace flare::rpc {
     }
 
     int Socket::GetPooledSocket(SocketUniquePtr *pooled_socket) {
-        if (pooled_socket == NULL) {
-            FLARE_LOG(ERROR) << "pooled_socket is NULL";
+        if (pooled_socket == nullptr) {
+            FLARE_LOG(ERROR) << "pooled_socket is nullptr";
             return -1;
         }
         SharedPart *main_sp = GetOrNewSharedPart();
-        if (main_sp == NULL) {
-            FLARE_LOG(ERROR) << "_shared_part is NULL";
+        if (main_sp == nullptr) {
+            FLARE_LOG(ERROR) << "_shared_part is nullptr";
             return -1;
         }
         // Create socket_pool optimistically.
         SocketPool *socket_pool = main_sp->socket_pool.load(std::memory_order_consume);
-        if (socket_pool == NULL) {
+        if (socket_pool == nullptr) {
             SocketOptions opt;
             opt.remote_side = remote_side();
             opt.user = user();
@@ -2387,7 +2387,7 @@ namespace flare::rpc {
             opt.keytable_pool = _keytable_pool;
             opt.app_connect = _app_connect;
             socket_pool = new SocketPool(opt);
-            SocketPool *expected = NULL;
+            SocketPool *expected = nullptr;
             if (!main_sp->socket_pool.compare_exchange_strong(
                     expected, socket_pool, std::memory_order_acq_rel)) {
                 delete socket_pool;
@@ -2399,28 +2399,28 @@ namespace flare::rpc {
             return -1;
         }
         (*pooled_socket)->ShareStats(this);
-        FLARE_CHECK((*pooled_socket)->parsing_context() == NULL)
+        FLARE_CHECK((*pooled_socket)->parsing_context() == nullptr)
                         << "context=" << (*pooled_socket)->parsing_context()
-                        << " is not NULL when " << *(*pooled_socket) << " is got from"
+                        << " is not nullptr when " << *(*pooled_socket) << " is got from"
                                                                         " SocketPool, the protocol implementation is buggy";
         return 0;
     }
 
     int Socket::ReturnToPool() {
-        SharedPart *sp = _shared_part.exchange(NULL, std::memory_order_acquire);
-        if (sp == NULL) {
-            FLARE_LOG(ERROR) << "_shared_part is NULL";
-            SetFailed(EINVAL, "_shared_part is NULL");
+        SharedPart *sp = _shared_part.exchange(nullptr, std::memory_order_acquire);
+        if (sp == nullptr) {
+            FLARE_LOG(ERROR) << "_shared_part is nullptr";
+            SetFailed(EINVAL, "_shared_part is nullptr");
             return -1;
         }
         SocketPool *pool = sp->socket_pool.load(std::memory_order_consume);
-        if (pool == NULL) {
-            FLARE_LOG(ERROR) << "_shared_part->socket_pool is NULL";
-            SetFailed(EINVAL, "_shared_part->socket_pool is NULL");
+        if (pool == nullptr) {
+            FLARE_LOG(ERROR) << "_shared_part->socket_pool is nullptr";
+            SetFailed(EINVAL, "_shared_part->socket_pool is nullptr");
             sp->RemoveRefManually();
             return -1;
         }
-        FLARE_CHECK(parsing_context() == NULL)
+        FLARE_CHECK(parsing_context() == nullptr)
                         << "context=" << parsing_context() << " is not released when "
                         << *this << " is returned to SocketPool, the protocol "
                                     "implementation is buggy";
@@ -2436,8 +2436,8 @@ namespace flare::rpc {
 
     bool Socket::HasSocketPool() const {
         SharedPart *sp = GetSharedPart();
-        if (sp != NULL) {
-            return sp->socket_pool.load(std::memory_order_consume) != NULL;
+        if (sp != nullptr) {
+            return sp->socket_pool.load(std::memory_order_consume) != nullptr;
         }
         return false;
     }
@@ -2445,11 +2445,11 @@ namespace flare::rpc {
     void Socket::ListPooledSockets(std::vector<SocketId> *out, size_t max_count) {
         out->clear();
         SharedPart *sp = GetSharedPart();
-        if (sp == NULL) {
+        if (sp == nullptr) {
             return;
         }
         SocketPool *pool = sp->socket_pool.load(std::memory_order_consume);
-        if (pool == NULL) {
+        if (pool == nullptr) {
             return;
         }
         pool->ListSockets(out, max_count);
@@ -2457,11 +2457,11 @@ namespace flare::rpc {
 
     bool Socket::GetPooledSocketStats(int *numfree, int *numinflight) {
         SharedPart *sp = GetSharedPart();
-        if (sp == NULL) {
+        if (sp == nullptr) {
             return false;
         }
         SocketPool *pool = sp->socket_pool.load(std::memory_order_consume);
-        if (pool == NULL) {
+        if (pool == nullptr) {
             return false;
         }
         *numfree = pool->_numfree.load(std::memory_order_relaxed);
@@ -2470,8 +2470,8 @@ namespace flare::rpc {
     }
 
     int Socket::GetShortSocket(SocketUniquePtr *short_socket) {
-        if (short_socket == NULL) {
-            FLARE_LOG(ERROR) << "short_socket is NULL";
+        if (short_socket == nullptr) {
+            FLARE_LOG(ERROR) << "short_socket is nullptr";
             return -1;
         }
         SocketId id;
@@ -2495,7 +2495,7 @@ namespace flare::rpc {
         SocketUniquePtr tmp_sock;
         do {
             if (Socket::Address(id, &tmp_sock) == 0) {
-                if (checkfn == NULL || checkfn(tmp_sock.get())) {
+                if (checkfn == nullptr || checkfn(tmp_sock.get())) {
                     out->swap(tmp_sock);
                     return 0;
                 }
@@ -2506,7 +2506,7 @@ namespace flare::rpc {
                     FLARE_LOG(ERROR) << "Fail to get short socket from " << *this;
                     return -1;
                 }
-                if (checkfn == NULL || checkfn(tmp_sock.get())) {
+                if (checkfn == nullptr || checkfn(tmp_sock.get())) {
                     break;
                 }
                 tmp_sock->ReleaseAdditionalReference();
@@ -2535,7 +2535,7 @@ namespace flare::rpc {
         static_assert(sizeof(WriteRequest) == 64, "sizeof_write_request_is_64");
 
         SharedPart *sp = GetSharedPart();
-        if (sp != NULL && sp->extended_stat != NULL) {
+        if (sp != nullptr && sp->extended_stat != nullptr) {
             *s = *sp->extended_stat;
         } else {
             memset(s, 0, sizeof(*s));
@@ -2610,7 +2610,7 @@ namespace flare::rpc {
     }
 
     SocketSSLContext::SocketSSLContext()
-            : raw_ctx(NULL) {}
+            : raw_ctx(nullptr) {}
 
     SocketSSLContext::~SocketSSLContext() {
         if (raw_ctx) {

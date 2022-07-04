@@ -606,7 +606,7 @@ namespace flare {
         series_sampler *_series_sampler;
     };
 
-// Specialize for std::string, adding a printf-style set_value().
+    // Specialize for std::string, adding a printf-style set_value().
     template<>
     class read_most_gauge<std::string, void> : public variable_base {
     public:

@@ -9,14 +9,14 @@ namespace flare {
 
 namespace strings_internal {
 
-OStringStream::Buf::int_type OStringStream::overflow(int c) {
+string_output_stream::Buf::int_type string_output_stream::overflow(int c) {
     assert(s_);
     if (!Buf::traits_type::eq_int_type(c, Buf::traits_type::eof()))
         s_->push_back(static_cast<char>(c));
     return 1;
 }
 
-std::streamsize OStringStream::xsputn(const char *s, std::streamsize n) {
+std::streamsize string_output_stream::xsputn(const char *s, std::streamsize n) {
     assert(s_);
     s_->append(s, n);
     return n;

@@ -20,6 +20,7 @@
 #include "flare/rpc/reloadable_flags.h"
 #include "flare/rpc/load_balancer.h"
 #include "flare/strings/str_format.h"
+#include "flare/strings/safe_substr.h"
 
 namespace flare::rpc {
 
