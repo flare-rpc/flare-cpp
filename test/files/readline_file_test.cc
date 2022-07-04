@@ -2,7 +2,7 @@
 // Created by liyinbin on 2022/3/6.
 //
 
-#include <gtest/gtest.h>
+#include "testing/gtest_wrap.h"
 #include "flare/files/readline_file.h"
 #include "flare/files/temp_file.h"
 #include "flare/strings/fmt/format.h"

@@ -172,7 +172,7 @@ namespace pbrpcframework {
         }
         FLARE_LOG(INFO) << "Loaded " << _msgs.size() << " requests";
         _latency_recorder.expose("rpc_press");
-        _error_count.expose("rpc_press_error_count");
+        _error_count.expose("rpc_press_error_count", "");
         return 0;
     }
 

@@ -3,7 +3,7 @@
 //
 
 #include "flare/memory/maybe_owning.h"
-#include "gtest/gtest.h"
+#include "testing/gtest_wrap.h"
 
 using namespace std::literals;
 

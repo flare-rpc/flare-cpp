@@ -97,7 +97,7 @@ private:
 };
 
 int main(int argc, char *argv[]) {
-    GFLAGS_NS::ParseCommandLineFlags(&argc, &argv, true);
+    google::ParseCommandLineFlags(&argc, &argv, true);
 
     flare::rpc::Server server;
     server.set_version("trackme_server");

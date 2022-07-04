@@ -4,7 +4,7 @@
 
 #include "flare/base/reuse_id.h"
 
-#include "gtest/gtest.h"
+#include "testing/gtest_wrap.h"
 
 struct fd_tag;
 struct fd_tag1;

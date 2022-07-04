@@ -6,7 +6,7 @@
 #include "flare/base/profile.h"
 #include <signal.h>
 #include <unistd.h>
-#include "gtest/gtest.h"
+#include "testing/gtest_wrap.h"
 
 namespace {
 

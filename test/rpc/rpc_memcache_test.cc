@@ -20,7 +20,7 @@
 #include "flare/log/logging.h"
 #include <flare/rpc/memcache.h>
 #include <flare/rpc/channel.h>
-#include <gtest/gtest.h>
+#include "testing/gtest_wrap.h"
 
 namespace flare::rpc {
 DECLARE_int32(idle_timeout_second);

@@ -23,7 +23,7 @@
 #include "flare/log/logging.h"
 #include "flare/hash/murmurhash3.h"   // fmix64
 #include "flare/memory/resource_pool.h"
-#include "flare/variable/all.h"
+#include "flare/metrics/all.h"
 #include "flare/fiber/internal/sys_futex.h"
 #include "flare/fiber/internal/timer_thread.h"
 #include "flare/fiber/internal/log.h"
@@ -321,18 +321,18 @@ void TimerThread::run() {
 
     // vars
     size_t nscheduled = 0;
-    flare::variable::PassiveStatus<size_t> nscheduled_var(deref_value<size_t>, &nscheduled);
-    flare::variable::PerSecond<flare::variable::PassiveStatus<size_t> > nscheduled_second(&nscheduled_var);
+    flare::status_gauge<size_t> nscheduled_var(deref_value<size_t>, &nscheduled);
+    flare::per_second<flare::status_gauge<size_t> > nscheduled_second(&nscheduled_var);
     size_t ntriggered = 0;
-    flare::variable::PassiveStatus<size_t> ntriggered_var(deref_value<size_t>, &ntriggered);
-    flare::variable::PerSecond<flare::variable::PassiveStatus<size_t> > ntriggered_second(&ntriggered_var);
+    flare::status_gauge<size_t> ntriggered_var(deref_value<size_t>, &ntriggered);
+    flare::per_second<flare::status_gauge<size_t> > ntriggered_second(&ntriggered_var);
     double busy_seconds = 0;
-    flare::variable::PassiveStatus<double> busy_seconds_var(deref_value<double>, &busy_seconds);
-    flare::variable::PerSecond<flare::variable::PassiveStatus<double> > busy_seconds_second(&busy_seconds_var);
+    flare::status_gauge<double> busy_seconds_var(deref_value<double>, &busy_seconds);
+    flare::per_second<flare::status_gauge<double> > busy_seconds_second(&busy_seconds_var);
     if (!_options.variable_prefix.empty()) {
-        nscheduled_second.expose_as(_options.variable_prefix, "scheduled_second");
-        ntriggered_second.expose_as(_options.variable_prefix, "triggered_second");
-        busy_seconds_second.expose_as(_options.variable_prefix, "usage");
+        nscheduled_second.expose_as(_options.variable_prefix, "scheduled_second", "");
+        ntriggered_second.expose_as(_options.variable_prefix, "triggered_second", "");
+        busy_seconds_second.expose_as(_options.variable_prefix, "usage", "");
     }
     
     while (!_stop.load(std::memory_order_relaxed)) {

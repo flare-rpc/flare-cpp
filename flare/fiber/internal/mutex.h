@@ -24,7 +24,7 @@
 
 #include "flare/fiber/internal/types.h"
 #include "flare/base/scoped_lock.h"
-#include "flare/variable/utils/lock_timer.h"
+#include "flare/metrics/utils/lock_timer.h"
 
 __BEGIN_DECLS
 extern int fiber_mutex_init(fiber_mutex_t *__restrict mutex,
@@ -195,7 +195,7 @@ namespace std {
 
 }  // namespace std
 
-namespace flare::variable {
+namespace flare {
 
     template<>
     struct MutexConstructor<fiber_mutex_t> {
@@ -211,6 +211,6 @@ namespace flare::variable {
         }
     };
 
-}  // namespace flare::variable
+}  // namespace flare
 
 #endif  // FLARE_FIBER_INTERNAL_MUTEX_H_

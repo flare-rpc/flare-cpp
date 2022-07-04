@@ -15,7 +15,7 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#include <gtest/gtest.h>
+#include "testing/gtest_wrap.h"
 #include <pthread.h>
 #include <sched.h>
 #include <unistd.h>

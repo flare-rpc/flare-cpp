@@ -15,7 +15,7 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#include <gtest/gtest.h>
+#include "testing/gtest_wrap.h"
 #include "flare/base/static_atomic.h"
 #include "flare/times/time.h"
 #include "flare/log/logging.h"

@@ -14,8 +14,8 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
+#include "testing/gtest_wrap.h"
 
-#include <gtest/gtest.h>
 #include <sys/types.h>
 #include <sys/socket.h>                // socketpair
 #include <errno.h>                     // errno

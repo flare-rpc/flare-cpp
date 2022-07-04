@@ -21,7 +21,7 @@
 
 #include "flare/rpc/socket_id.h"
 #include "flare/rpc/periodic_task.h"
-#include "flare/variable/all.h"
+#include "flare/metrics/all.h"
 #include "flare/rpc/socket.h"
 
 namespace flare::rpc {

@@ -1,6 +1,6 @@
 
 
-#include <gtest/gtest.h>
+#include "testing/gtest_wrap.h"
 #include "flare/base/errno.h"
 #include "flare/base/endpoint.h"
 #include "flare/log/logging.h"

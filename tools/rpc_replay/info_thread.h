@@ -19,14 +19,15 @@
 #define FLARE_RPC_RPC_REPLAY_INFO_THREAD_H_
 
 #include <pthread.h>
-#include <flare/variable/all.h>
+#include <flare/metrics/all.h>
+#include <flare/metrics/counter.h>
 
 namespace flare::rpc {
 
 struct InfoThreadOptions {
-    flare::variable::LatencyRecorder* latency_recorder;
-    flare::variable::Adder<int64_t>* sent_count;
-    flare::variable::Adder<int64_t>* error_count;
+    flare::LatencyRecorder* latency_recorder;
+    flare::counter<int64_t>* sent_count;
+    flare::counter<int64_t>* error_count;
 
     InfoThreadOptions()
         : latency_recorder(NULL)

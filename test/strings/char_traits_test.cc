@@ -4,7 +4,7 @@
 
 #include "flare/strings/internal/char_traits.h"
 #include <cstdlib>
-#include "gtest/gtest.h"
+#include "testing/gtest_wrap.h"
 #include "flare/strings/ascii.h"
 
 namespace {

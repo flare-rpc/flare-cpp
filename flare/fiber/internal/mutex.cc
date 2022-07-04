@@ -25,8 +25,8 @@
 #include <dlfcn.h>                               // dlsym
 #include <fcntl.h>                               // O_RDONLY
 #include "flare/base/static_atomic.h"
-#include "flare/variable/all.h"
-#include "flare/variable/collector.h"
+#include "flare/metrics/all.h"
+#include "flare/metrics/collector.h"
 #include "flare/container/flat_map.h"
 #include "flare/io/cord_buf.h"
 #include "flare/base/fd_guard.h"
@@ -50,13 +50,13 @@ namespace flare::fiber_internal {
     const int FLARE_ALLOW_UNUSED dummy_bt = backtrace(dummy_buf, FLARE_ARRAY_SIZE(dummy_buf));
 
 // For controlling contentions collected per second.
-    static flare::variable::CollectorSpeedLimit g_cp_sl = VARIABLE_COLLECTOR_SPEED_LIMIT_INITIALIZER;
+    static flare::CollectorSpeedLimit g_cp_sl = VARIABLE_COLLECTOR_SPEED_LIMIT_INITIALIZER;
 
     const size_t MAX_CACHED_CONTENTIONS = 512;
 // Skip frames which are always same: the unlock function and submit_contention()
     const int SKIPPED_STACK_FRAMES = 2;
 
-    struct SampledContention : public flare::variable::Collected {
+    struct SampledContention : public flare::Collected {
         // time taken by lock and unlock, normalized according to sampling_range
         int64_t duration_ns;
         // number of samples, normalized according to to sampling_range
@@ -64,12 +64,12 @@ namespace flare::fiber_internal {
         int nframes;          // #elements in stack
         void *stack[26];      // backtrace.
 
-        // Implement flare::variable::Collected
+        // Implement flare::Collected
         void dump_and_destroy(size_t round) override;
 
         void destroy() override;
 
-        flare::variable::CollectorSpeedLimit *speed_limit() override { return &g_cp_sl; }
+        flare::CollectorSpeedLimit *speed_limit() override { return &g_cp_sl; }
 
         // For combining samples with hashmap.
         size_t hash_code() const {
@@ -315,9 +315,9 @@ namespace flare::fiber_internal {
         }
 
         // Create related global variable lazily.
-        static flare::variable::PassiveStatus<int64_t> g_nconflicthash_var
+        static flare::status_gauge<int64_t> g_nconflicthash_var
                 ("contention_profiler_conflict_hash", get_nconflicthash, NULL);
-        static flare::variable::DisplaySamplingRatio g_sampling_ratio_var(
+        static flare::DisplaySamplingRatio g_sampling_ratio_var(
                 "contention_profiler_sampling_ratio", &g_cp_sl);
 
         // Optimistic locking. A not-used ContentionProfiler does not write file.
@@ -484,9 +484,9 @@ namespace flare::fiber_internal {
         // Normalize duration_us and count so that they're addable in later
         // processings. Notice that sampling_range is adjusted periodically by
         // collecting thread.
-        sc->duration_ns = csite.duration_ns * flare::variable::COLLECTOR_SAMPLING_BASE
+        sc->duration_ns = csite.duration_ns * flare::COLLECTOR_SAMPLING_BASE
                           / csite.sampling_range;
-        sc->count = flare::variable::COLLECTOR_SAMPLING_BASE / (double) csite.sampling_range;
+        sc->count = flare::COLLECTOR_SAMPLING_BASE / (double) csite.sampling_range;
         sc->nframes = backtrace(sc->stack, FLARE_ARRAY_SIZE(sc->stack)); // may lock
         sc->submit(now_ns / 1000);  // may lock
         tls_inside_lock = false;
@@ -505,8 +505,8 @@ namespace flare::fiber_internal {
         if (rc != EBUSY) {
             return rc;
         }
-        // Ask flare::variable::Collector if this (contended) locking should be sampled
-        const size_t sampling_range = flare::variable::is_collectable(&g_cp_sl);
+        // Ask flare::Collector if this (contended) locking should be sampled
+        const size_t sampling_range = flare::is_collectable(&g_cp_sl);
 
         fiber_contention_site_t *csite = NULL;
 #ifndef DONT_SPEEDUP_PTHREAD_CONTENTION_PROFILER_WITH_TLS
@@ -710,7 +710,7 @@ int fiber_mutex_lock(fiber_mutex_t *m) {
         return flare::fiber_internal::mutex_lock_contended(m);
     }
     // Ask Collector if this (contended) locking should be sampled.
-    const size_t sampling_range = flare::variable::is_collectable(&flare::fiber_internal::g_cp_sl);
+    const size_t sampling_range = flare::is_collectable(&flare::fiber_internal::g_cp_sl);
     if (!sampling_range) { // Don't sample
         return flare::fiber_internal::mutex_lock_contended(m);
     }
@@ -737,7 +737,7 @@ int fiber_mutex_timedlock(fiber_mutex_t *__restrict m,
         return flare::fiber_internal::mutex_timedlock_contended(m, abstime);
     }
     // Ask Collector if this (contended) locking should be sampled.
-    const size_t sampling_range = flare::variable::is_collectable(&flare::fiber_internal::g_cp_sl);
+    const size_t sampling_range = flare::is_collectable(&flare::fiber_internal::g_cp_sl);
     if (!sampling_range) { // Don't sample
         return flare::fiber_internal::mutex_timedlock_contended(m, abstime);
     }

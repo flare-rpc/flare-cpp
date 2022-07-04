@@ -5,7 +5,7 @@
 
 #include "flare/base/type_index.h"
 #include <string>
-#include "gtest/gtest.h"
+#include "testing/gtest_wrap.h"
 
 namespace flare::base {
 

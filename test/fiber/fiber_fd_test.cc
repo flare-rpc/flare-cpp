@@ -20,7 +20,7 @@
 #include <sys/socket.h>
 #include <sys/utsname.h>                           // uname
 #include <fcntl.h>
-#include <gtest/gtest.h>
+#include "testing/gtest_wrap.h"
 #include <pthread.h>
 #include "flare/base/gperftools_profiler.h"
 #include "flare/times/time.h"

@@ -10,7 +10,7 @@
 #include <string>
 #include <type_traits>
 
-#include "gtest/gtest.h"
+#include "testing/gtest_wrap.h"
 #include "flare/base/profile.h"
 
 namespace flare {

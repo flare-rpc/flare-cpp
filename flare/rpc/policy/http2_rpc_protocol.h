@@ -27,7 +27,7 @@
 #include "flare/rpc/controller.h"
 
 #ifndef NDEBUG
-#include "flare/variable/all.h"
+#include "flare/metrics/all.h"
 #endif
 
 namespace flare::rpc {
@@ -121,8 +121,8 @@ namespace flare::rpc {
 
 #ifndef NDEBUG
         struct h2_variables {
-            flare::variable::Adder<int> h2_unsent_request_count;
-            flare::variable::Adder<int> h2_stream_context_count;
+            flare::gauge<int> h2_unsent_request_count;
+            flare::gauge<int> h2_stream_context_count;
 
             h2_variables()
                 : h2_unsent_request_count("h2_unsent_request_count")

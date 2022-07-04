@@ -19,7 +19,7 @@
 
 // Date: 2017/04/25 00:23:12
 
-#include <gtest/gtest.h>
+#include "testing/gtest_wrap.h"
 #include "flare/rpc/details/hpack.h"
 #include "flare/log/logging.h"
 

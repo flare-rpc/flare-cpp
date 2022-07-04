@@ -252,7 +252,7 @@ namespace flare::rpc {
         if (need_to_create_variable) {
             char namebuf[32];
             int len = snprintf(namebuf, sizeof(namebuf), "rpc_socketmap_%p", this);
-            _this_map_var = new flare::variable::PassiveStatus<std::string>(
+            _this_map_var = new flare::status_gauge<std::string>(
                     std::string_view(namebuf, len), PrintSocketMap, this);
         }
         return 0;
@@ -294,7 +294,7 @@ namespace flare::rpc {
                 if (need_to_create_variable) {
                     char namebuf[32];
                     int len = snprintf(namebuf, sizeof(namebuf), "rpc_socketmap_%p", this);
-                    _this_map_var = new flare::variable::PassiveStatus<std::string>(
+                    _this_map_var = new flare::status_gauge<std::string>(
                             std::string_view(namebuf, len), PrintSocketMap, this);
                 }
                 s->ReleaseAdditionalReference(); // release extra ref

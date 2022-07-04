@@ -12,8 +12,8 @@
 #include <cstdio>
 #include <cstring>
 
-#include "gmock/gmock.h"
-#include "gtest/gtest.h"
+
+#include "testing/gtest_wrap.h"
 #include <string_view>
 #include "flare/strings/trim.h"
 

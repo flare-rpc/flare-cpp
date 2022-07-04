@@ -20,7 +20,7 @@
 #include "flare/log/logging.h"
 #include "flare/times/time.h"
 #include "flare/files/filesystem.h"
-#include <flare/variable/all.h>
+#include <flare/metrics/all.h>
 #include <flare/fiber/internal/fiber.h>
 #include <flare/rpc/channel.h>
 #include <flare/rpc/server.h>
@@ -41,9 +41,9 @@ DEFINE_int32(timeout_ms, 100, "RPC timeout in milliseconds");
 DEFINE_int32(max_retry, 3, "Maximum retry times");
 DEFINE_int32(dummy_port, 8899, "Port of dummy server(to monitor replaying)");
 
-flare::variable::LatencyRecorder g_latency_recorder("rpc_replay");
-flare::variable::Adder<int64_t> g_error_count("rpc_replay_error_count");
-flare::variable::Adder<int64_t> g_sent_count;
+flare::LatencyRecorder g_latency_recorder("rpc_replay");
+flare::counter<int64_t> g_error_count("rpc_replay_error_count");
+flare::counter<int64_t> g_sent_count;
 
 // Include channels for all protocols that support both client and server.
 class ChannelGroup {
@@ -201,7 +201,7 @@ static void* replay_thread(void* arg) {
 
 int main(int argc, char* argv[]) {
     // Parse gflags. We recommend you to use gflags as well.
-    GFLAGS_NS::ParseCommandLineFlags(&argc, &argv, true);
+    google::ParseCommandLineFlags(&argc, &argv, true);
 
     if (FLAGS_dir.empty() ||
         !flare::exists(FLAGS_dir)) {

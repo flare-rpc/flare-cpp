@@ -7,7 +7,7 @@
 #include <cstdlib>
 #include <string>
 
-#include <gtest/gtest.h>
+#include "testing/gtest_wrap.h"
 #include "flare/log/logging.h"
 #include "flare/debugging/internal/stack_consumption.h"
 

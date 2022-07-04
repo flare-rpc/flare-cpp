@@ -6,7 +6,7 @@
 #include "flare/container/flat_hash_map.h"
 #include "flare/container/parallel_node_hash_map.h"
 #include "flare/container/parallel_flat_hash_map.h"
-#include "gtest/gtest.h"
+#include "testing/gtest_wrap.h"
 
 TEST(CaseIgnoredFlatHashMap, all) {
     flare::case_ignored_flat_hash_map<std::string, std::string> map;

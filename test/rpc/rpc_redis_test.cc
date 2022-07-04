@@ -25,7 +25,7 @@
 #include <flare/rpc/policy/redis_authenticator.h>
 #include <flare/rpc/server.h>
 #include <flare/rpc/redis_command.h>
-#include <gtest/gtest.h>
+#include "testing/gtest_wrap.h"
 #include "flare/strings/utility.h"
 #include "flare/strings/starts_with.h"
 

@@ -15,7 +15,7 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#include <gtest/gtest.h>
+#include "testing/gtest_wrap.h"
 #include <gflags/gflags.h>
 #include "flare/fiber/internal/sys_futex.h"
 #include "flare/fiber/internal/timer_thread.h"

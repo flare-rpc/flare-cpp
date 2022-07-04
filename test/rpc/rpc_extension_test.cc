@@ -22,7 +22,7 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <map>
-#include <gtest/gtest.h>
+#include "testing/gtest_wrap.h"
 #include "flare/times/time.h"
 #include "flare/rpc/extension.h"
 

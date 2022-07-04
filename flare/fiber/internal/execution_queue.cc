@@ -46,9 +46,9 @@ namespace flare::fiber_internal {
     }  // namespace anonymous
 
     struct ExecutionQueueVars {
-        flare::variable::Adder<int64_t> running_task_count;
-        flare::variable::Adder<int64_t> execq_count;
-        flare::variable::Adder<int64_t> execq_active_count;
+        flare::gauge<int64_t> running_task_count;
+        flare::gauge<int64_t> execq_count;
+        flare::gauge<int64_t> execq_active_count;
 
         ExecutionQueueVars();
     };

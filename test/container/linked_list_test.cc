@@ -4,7 +4,7 @@
 
 
 #include "flare/container/linked_list.h"
-#include <gtest/gtest.h>
+#include "testing/gtest_wrap.h"
 
 namespace flare::container {
     namespace {

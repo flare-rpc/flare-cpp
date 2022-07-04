@@ -18,7 +18,7 @@
 #ifndef FLARE_RPC_POLICY_AUTO_CONCURRENCY_LIMITER_H_
 #define FLARE_RPC_POLICY_AUTO_CONCURRENCY_LIMITER_H_
 
-#include "flare/variable/all.h"
+#include "flare/metrics/all.h"
 #include "flare/container/bounded_queue.h"
 #include "flare/rpc/concurrency_limiter.h"
 
@@ -86,4 +86,4 @@ namespace flare::rpc {
 }  // namespace flare::rpc
 
 
-#endif // FLARE_RPC_POLICY_AUTO_CONCURRENCY_LIMITER_H_
+#endif  // FLARE_RPC_POLICY_AUTO_CONCURRENCY_LIMITER_H_

@@ -1452,8 +1452,8 @@ namespace flare::rpc {
         }
 
         struct ChunkStatus {
-            flare::variable::Adder<int64_t> count;
-            flare::variable::PerSecond<flare::variable::Adder<int64_t> > second;
+            flare::gauge<int64_t> count;
+            flare::per_second<flare::gauge<int64_t> > second;
 
             ChunkStatus() : second("rtmp_chunk_in_second", &count) {}
         };

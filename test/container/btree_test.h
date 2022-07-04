@@ -18,8 +18,8 @@
 #include <cstdlib>
 #include <ostream>
 
-#include "gmock/gmock.h"
-#include "gtest/gtest.h"
+
+#include "testing/gtest_wrap.h"
 
 #include "flare/container/btree.h"
 #include "flare/container/flat_hash_map.h"

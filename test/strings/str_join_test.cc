@@ -18,7 +18,7 @@
 #include <type_traits>
 #include <vector>
 
-#include "gtest/gtest.h"
+#include "testing/gtest_wrap.h"
 #include "flare/base/profile.h"
 #include "flare/strings/str_cat.h"
 #include "flare/strings/str_split.h"

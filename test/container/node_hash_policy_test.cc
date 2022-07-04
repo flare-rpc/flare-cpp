@@ -3,8 +3,8 @@
 #include <memory>
 #include "flare/container/flat_hash_map.h"
 
-#include "gmock/gmock.h"
-#include "gtest/gtest.h"
+
+#include "testing/gtest_wrap.h"
 
 namespace flare {
     namespace priv {

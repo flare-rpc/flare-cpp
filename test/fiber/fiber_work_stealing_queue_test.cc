@@ -15,8 +15,9 @@
 // specific language governing permissions and limitations
 // under the License.
 
+#include "testing/gtest_wrap.h"
+
 #include <algorithm>                        // std::sort
-#include <gtest/gtest.h>
 #include "flare/times/time.h"
 #include "flare/base/scoped_lock.h"
 #include "flare/fiber/internal/work_stealing_queue.h"

@@ -27,7 +27,7 @@
 #include "flare/times/time.h"
 #include "flare/fiber/internal/fiber.h"
 #include "flare/fiber/internal/unstable.h"
-#include "flare/variable/all.h"
+#include "flare/metrics/all.h"
 #include "flare/rpc/socket.h"
 #include "flare/rpc/socket_map.h"
 #include "flare/rpc/channel.h"
@@ -102,8 +102,8 @@ namespace flare::rpc {
 #endif
     }
 
-    static flare::variable::PassiveStatus<std::string> s_rpc_revision(
-            "rpc_revision", PrintRevision, NULL);
+    static flare::status_gauge<std::string> s_rpc_revision(
+            "rpc_revision", PrintRevision, nullptr);
 
     static const int RETRY_AVOIDANCE = 8;
 
@@ -118,12 +118,12 @@ namespace flare::rpc {
 
     DECLARE_bool(usercode_in_pthread);
     static const int MAX_RETRY_COUNT = 1000;
-    static flare::variable::Adder<int64_t> *g_ncontroller = NULL;
+    static flare::gauge<int64_t> *g_ncontroller = nullptr;
 
     static pthread_once_t s_create_vars_once = PTHREAD_ONCE_INIT;
 
     static void CreateVars() {
-        g_ncontroller = new flare::variable::Adder<int64_t>("rpc_controller_count");
+        g_ncontroller = new flare::gauge<int64_t>("rpc_controller_count");
     }
 
     Controller::Controller() {
@@ -166,7 +166,7 @@ namespace flare::rpc {
         void OnEndOfMessage(const flare::base::flare_status &) {}
     };
 
-    static IgnoreAllRead *s_ignore_all_read = NULL;
+    static IgnoreAllRead *s_ignore_all_read = nullptr;
     static pthread_once_t s_ignore_all_read_once = PTHREAD_ONCE_INIT;
 
     static void CreateIgnoreAllRead() { s_ignore_all_read = new IgnoreAllRead; }
@@ -198,7 +198,7 @@ namespace flare::rpc {
             DestroyParallelChannelDone(_done);
         }
         delete _sender;
-        _lb.reset(NULL);
+        _lb.reset(nullptr);
         _current_call.Reset();
         ExcludedServers::Destroy(_accessed);
         _request_buf.clear();
@@ -208,9 +208,9 @@ namespace flare::rpc {
         _response_attachment.clear();
         if (_wpa) {
             _wpa->MarkRPCAsDone(Failed());
-            _wpa.reset(NULL);
+            _wpa.reset(nullptr);
         }
-        if (_rpa != NULL) {
+        if (_rpa != nullptr) {
             if (!has_progressive_reader()) {
                 // Never called ReadProgressiveAttachmentBy (successfully), the data
                 // is probably being buffered and a full buffer may block parse
@@ -219,29 +219,29 @@ namespace flare::rpc {
                 pthread_once(&s_ignore_all_read_once, CreateIgnoreAllRead);
                 _rpa->ReadProgressiveAttachmentBy(s_ignore_all_read);
             }
-            _rpa.reset(NULL);
+            _rpa.reset(nullptr);
         }
         delete _remote_stream_settings;
         _thrift_method_name.clear();
 
-        FLARE_CHECK(_unfinished_call == NULL);
+        FLARE_CHECK(_unfinished_call == nullptr);
     }
 
     void Controller::ResetPods() {
         // NOTE: Make the sequence of assignments same with the order that they're
         // defined in header. Better for cpu cache and faster for lookup.
-        _span = NULL;
+        _span = nullptr;
         _flags = 0;
         set_pb_bytes_to_base64(true);
         _error_code = 0;
-        _session_local_data = NULL;
-        _server = NULL;
+        _session_local_data = nullptr;
+        _server = nullptr;
         _oncancel_id = INVALID_FIBER_TOKEN;
-        _auth_context = NULL;
-        _sampled_request = NULL;
+        _auth_context = nullptr;
+        _sampled_request = nullptr;
         _request_protocol = PROTOCOL_UNKNOWN;
         _max_retry = UNSET_MAGIC_NUM;
-        _retry_policy = NULL;
+        _retry_policy = nullptr;
         _correlation_id = INVALID_FIBER_TOKEN;
         _connection_type = CONNECTION_TYPE_UNKNOWN;
         _timeout_ms = UNSET_MAGIC_NUM;
@@ -259,24 +259,24 @@ namespace flare::rpc {
         _pipelined_count = 0;
         _inheritable.Reset();
         _pchan_sub_count = 0;
-        _response = NULL;
-        _done = NULL;
-        _sender = NULL;
+        _response = nullptr;
+        _done = nullptr;
+        _sender = nullptr;
         _request_code = 0;
         _single_server_id = INVALID_SOCKET_ID;
-        _unfinished_call = NULL;
-        _stream_creator = NULL;
-        _accessed = NULL;
-        _pack_request = NULL;
-        _method = NULL;
-        _auth = NULL;
+        _unfinished_call = nullptr;
+        _stream_creator = nullptr;
+        _accessed = nullptr;
+        _pack_request = nullptr;
+        _method = nullptr;
+        _auth = nullptr;
         _idl_names = idl_single_req_single_res;
         _idl_result = IDL_VOID_RESULT;
-        _http_request = NULL;
-        _http_response = NULL;
+        _http_request = nullptr;
+        _http_response = nullptr;
         _request_stream = INVALID_STREAM_ID;
         _response_stream = INVALID_STREAM_ID;
-        _remote_stream_settings = NULL;
+        _remote_stream_settings = nullptr;
     }
 
     Controller::Call::Call(Controller::Call *rhs)
@@ -289,11 +289,11 @@ namespace flare::rpc {
         // will behave incorrectly.
         rhs->need_feedback = false;
         rhs->peer_id = INVALID_SOCKET_ID;
-        rhs->stream_user_data = NULL;
+        rhs->stream_user_data = nullptr;
     }
 
     Controller::Call::~Call() {
-        FLARE_CHECK(sending_sock.get() == NULL);
+        FLARE_CHECK(sending_sock.get() == nullptr);
     }
 
     void Controller::Call::Reset() {
@@ -302,8 +302,8 @@ namespace flare::rpc {
         enable_circuit_breaker = false;
         peer_id = INVALID_SOCKET_ID;
         begin_time_us = 0;
-        sending_sock.reset(NULL);
-        stream_user_data = NULL;
+        sending_sock.reset(nullptr);
+        stream_user_data = nullptr;
     }
 
     void Controller::set_timeout_ms(int64_t timeout_ms) {
@@ -362,7 +362,7 @@ namespace flare::rpc {
     static const char HEX_ALPHA[] = "0123456789ABCDEF";
 
     void Controller::AppendServerIdentiy() {
-        if (_server == NULL) {
+        if (_server == nullptr) {
             return;
         }
         if (is_security_mode()) {
@@ -393,7 +393,7 @@ namespace flare::rpc {
                 cntl->http_response().set_status_code(
                         ErrorCodeToStatusCode(cntl->ErrorCode()));
             } // else assume that status code is already set along with EHTTP.
-            if (cntl->server() != NULL) {
+            if (cntl->server() != nullptr) {
                 // Override HTTP body at server-side to conduct error text
                 // to the client.
                 // The client-side should preserve body which may be a piece
@@ -491,7 +491,7 @@ namespace flare::rpc {
 
         static void *RunThis(void *arg) {
             ((RunOnCancelThread *) arg)->Run();
-            return NULL;
+            return nullptr;
         }
 
         void Run() {
@@ -519,12 +519,12 @@ namespace flare::rpc {
         RunOnCancelThread *arg = new RunOnCancelThread(
                 static_cast<google::protobuf::Closure *>(data), id);
         fiber_id_t th;
-        FLARE_CHECK_EQ(0, fiber_start_urgent(&th, NULL, RunOnCancelThread::RunThis, arg));
+        FLARE_CHECK_EQ(0, fiber_start_urgent(&th, nullptr, RunOnCancelThread::RunThis, arg));
         return 0;
     }
 
     void Controller::NotifyOnCancel(google::protobuf::Closure *callback) {
-        if (NULL == callback) {
+        if (nullptr == callback) {
             FLARE_LOG(WARNING) << "Parameter `callback' is NLLL";
             return;
         }
@@ -573,7 +573,7 @@ namespace flare::rpc {
                 // Complete failed backup request.
                 _unfinished_call->OnComplete(this, _error_code, info.responded, false);
                 delete _unfinished_call;
-                _unfinished_call = NULL;
+                _unfinished_call = nullptr;
             }
             // Ignore all non-backup requests and failed backup requests.
             _error_code = saved_error;
@@ -582,7 +582,7 @@ namespace flare::rpc {
             return;
         }
 
-        if ((!_error_code && _retry_policy == NULL) ||
+        if ((!_error_code && _retry_policy == nullptr) ||
             _current_call.nretry >= _max_retry) {
             goto END_OF_RPC;
         }
@@ -600,10 +600,10 @@ namespace flare::rpc {
                 goto END_OF_RPC;
             }
             if (!SingleServer()) {
-                if (_accessed == NULL) {
+                if (_accessed == nullptr) {
                     _accessed = ExcludedServers::Create(
                             std::min(_max_retry, RETRY_AVOIDANCE));
-                    if (NULL == _accessed) {
+                    if (nullptr == _accessed) {
                         SetFailed(ENOMEM, "Fail to create ExcludedServers");
                         goto END_OF_RPC;
                     }
@@ -611,9 +611,9 @@ namespace flare::rpc {
                 _accessed->Add(_current_call.peer_id);
             }
             // _current_call does not end yet.
-            FLARE_CHECK(_unfinished_call == NULL);  // only one backup request now.
+            FLARE_CHECK(_unfinished_call == nullptr);  // only one backup request now.
             _unfinished_call = new(std::nothrow) Call(&_current_call);
-            if (_unfinished_call == NULL) {
+            if (_unfinished_call == nullptr) {
                 SetFailed(ENOMEM, "Fail to new Call");
                 goto END_OF_RPC;
             }
@@ -627,10 +627,10 @@ namespace flare::rpc {
             //  * ERPCTIMEDOUT/ECANCELED are not retrying error by default.
             FLARE_CHECK_EQ(current_id(), info.id) << "error_code=" << _error_code;
             if (!SingleServer()) {
-                if (_accessed == NULL) {
+                if (_accessed == nullptr) {
                     _accessed = ExcludedServers::Create(
                             std::min(_max_retry, RETRY_AVOIDANCE));
-                    if (NULL == _accessed) {
+                    if (nullptr == _accessed) {
                         SetFailed(ENOMEM, "Fail to create ExcludedServers");
                         goto END_OF_RPC;
                     }
@@ -675,7 +675,7 @@ namespace flare::rpc {
             // FLAGS_DESTROY_CID_IN_DONE to true must be aware of
             // -usercode_in_pthread and avoid deadlock by their own (TBR)
 
-            if ((FLAGS_usercode_in_pthread || _done != NULL/*Note[_done]*/) &&
+            if ((FLAGS_usercode_in_pthread || _done != nullptr/*Note[_done]*/) &&
                 !has_flag(FLAGS_DESTROY_CID_IN_DONE)/*Note[cid]*/) {
                 fiber_token_about_to_destroy(info.id);
             }
@@ -690,7 +690,7 @@ namespace flare::rpc {
                 EndRPC(info);
             }
         } else {
-            if (_done != NULL/*Note[_done]*/ &&
+            if (_done != nullptr/*Note[_done]*/ &&
                 !has_flag(FLAGS_DESTROY_CID_IN_DONE)/*Note[cid]*/) {
                 fiber_token_about_to_destroy(info.id);
             }
@@ -701,7 +701,7 @@ namespace flare::rpc {
     void *Controller::RunEndRPC(void *arg) {
         Controller *c = static_cast<Controller *>(arg);
         c->EndRPC(c->_tmp_completion_info);
-        return NULL;
+        return nullptr;
     }
 
     inline bool does_error_affect_main_socket(int error_code) {
@@ -722,10 +722,10 @@ namespace flare::rpc {
             Controller *c, int error_code/*note*/, bool responded, bool end_of_rpc) {
         if (stream_user_data) {
             stream_user_data->DestroyStreamUserData(sending_sock, c, error_code, end_of_rpc);
-            stream_user_data = NULL;
+            stream_user_data = nullptr;
         }
 
-        if (sending_sock != NULL) {
+        if (sending_sock != nullptr) {
             if (error_code != 0) {
                 sending_sock->AddRecentError();
             }
@@ -743,9 +743,9 @@ namespace flare::rpc {
                 // Set main socket to be failed for connection refusal of streams.
                 // "single" streams are often maintained in a separate SocketMap and
                 // different from the main socket as well.
-                if (c->_stream_creator != NULL &&
+                if (c->_stream_creator != nullptr &&
                     does_error_affect_main_socket(error_code) &&
-                    (sending_sock == NULL || sending_sock->id() != peer_id)) {
+                    (sending_sock == nullptr || sending_sock->id() != peer_id)) {
                     Socket::SetFailed(peer_id);
                 }
                 break;
@@ -755,7 +755,7 @@ namespace flare::rpc {
                 // Otherwise in-flight responses may come back in future and break the
                 // assumption that one pooled connection cannot have more than one
                 // message at the same time.
-                if (sending_sock != NULL && (error_code == 0 || responded)) {
+                if (sending_sock != nullptr && (error_code == 0 || responded)) {
                     if (!sending_sock->is_read_progressive()) {
                         // Normally-read socket which will not be used after RPC ends,
                         // safe to return. Notice that Socket::is_read_progressive may
@@ -771,10 +771,10 @@ namespace flare::rpc {
                 }
                 // fall through
             case CONNECTION_TYPE_SHORT:
-                if (sending_sock != NULL) {
+                if (sending_sock != nullptr) {
                     // Check the comment in CONNECTION_TYPE_POOLED branch.
                     if (!sending_sock->is_read_progressive()) {
-                        if (c->_stream_creator == NULL) {
+                        if (c->_stream_creator == nullptr) {
                             sending_sock->SetFailed();
                         }
                     } else {
@@ -809,7 +809,7 @@ namespace flare::rpc {
         }
 
         // Release the `Socket' we used to send/receive data
-        sending_sock.reset(NULL);
+        sending_sock.reset(nullptr);
     }
 
     void Controller::EndRPC(const CompletionInfo &info) {
@@ -820,12 +820,12 @@ namespace flare::rpc {
 
         // End _current_call and _unfinished_call.
         if (info.id == current_id() || info.id == _correlation_id) {
-            if (_current_call.sending_sock != NULL) {
+            if (_current_call.sending_sock != nullptr) {
                 _remote_side = _current_call.sending_sock->remote_side();
                 _local_side = _current_call.sending_sock->local_side();
             }
 
-            if (_unfinished_call != NULL) {
+            if (_unfinished_call != nullptr) {
                 // When _current_call is successful, mark _unfinished_call as
                 // EBACKUPREQUEST, we can't use 0 because the server possibly
                 // never respond, we can't use ERPCTIMEDOUT because _current_call
@@ -836,7 +836,7 @@ namespace flare::rpc {
                 const int err = (_error_code == 0 ? EBACKUPREQUEST : _error_code);
                 _unfinished_call->OnComplete(this, err, false, false);
                 delete _unfinished_call;
-                _unfinished_call = NULL;
+                _unfinished_call = nullptr;
             }
             // TODO: Replace this with stream_creator.
             HandleStreamConnection(_current_call.sending_sock.get());
@@ -846,7 +846,7 @@ namespace flare::rpc {
             // (which gets punished in LALB) for _current_call because _current_call
             // is sent after _unfinished_call, it's just normal that _current_call
             // does not respond before _unfinished_call.
-            if (_unfinished_call == NULL) {
+            if (_unfinished_call == nullptr) {
                 FLARE_CHECK(false) << "A previous non-backup request responded, cid="
                                    << info.id << " current_cid=" << current_id()
                                    << " initial_cid=" << _correlation_id
@@ -854,8 +854,8 @@ namespace flare::rpc {
                                    << " sending_sock=" << _current_call.sending_sock.get();
             }
             _current_call.OnComplete(this, ECANCELED, false, false);
-            if (_unfinished_call != NULL) {
-                if (_unfinished_call->sending_sock != NULL) {
+            if (_unfinished_call != nullptr) {
+                if (_unfinished_call->sending_sock != nullptr) {
                     _remote_side = _unfinished_call->sending_sock->remote_side();
                     _local_side = _unfinished_call->sending_sock->local_side();
                 }
@@ -870,12 +870,12 @@ namespace flare::rpc {
                 }
 
                 delete _unfinished_call;
-                _unfinished_call = NULL;
+                _unfinished_call = nullptr;
             }
         }
         if (_stream_creator) {
             _stream_creator->DestroyStreamCreator(this);
-            _stream_creator = NULL;
+            _stream_creator = nullptr;
         }
         // Clear _error_text when the call succeeded, otherwise a successful
         // call with non-empty ErrorText may confuse user.
@@ -958,7 +958,7 @@ namespace flare::rpc {
             _span->local_parent()->AsParent();
         }
         Span::Submit(_span, now);
-        _span = NULL;
+        _span = nullptr;
     }
 
     void Controller::HandleSendFailed() {
@@ -974,7 +974,7 @@ namespace flare::rpc {
         // same stack of CallMethod, the code is deadlocked.
         // We don't need to run the callback in new thread in a sync call since
         // the created thread needs to be joined anyway before end of CallMethod.
-        const bool new_fiber = (_done != NULL && !is_done_allowed_to_run_in_place());
+        const bool new_fiber = (_done != nullptr && !is_done_allowed_to_run_in_place());
         OnVersionedRPCReturned(info, new_fiber, _error_code);
     }
 
@@ -1061,7 +1061,7 @@ namespace flare::rpc {
         }
         // Handle connection type
         if (_connection_type == CONNECTION_TYPE_SINGLE ||
-            _stream_creator != NULL) { // let user decides the sending_sock
+            _stream_creator != nullptr) { // let user decides the sending_sock
             // in the callback(according to connection_type) directly
             _current_call.sending_sock.reset(tmp_sock.release());
             // TODO(gejun): Setting preferred index of single-connected socket
@@ -1110,8 +1110,8 @@ namespace flare::rpc {
         }
 
         // Handle authentication
-        const Authenticator *using_auth = NULL;
-        if (_auth != NULL) {
+        const Authenticator *using_auth = nullptr;
+        if (_auth != nullptr) {
             // Only one thread will be the winner and get the right to pack
             // authentication information, others wait until the request
             // is sent.
@@ -1126,7 +1126,7 @@ namespace flare::rpc {
         }
         // Make request
         flare::cord_buf packet;
-        SocketMessage *user_packet = NULL;
+        SocketMessage *user_packet = nullptr;
         _pack_request(&packet, &user_packet, cid.value, _method, this,
                       _request_buf, using_auth);
         // TODO: PackRequest may accept SocketMessagePtr<>?
@@ -1141,7 +1141,7 @@ namespace flare::rpc {
         }
 
         timespec connect_abstime;
-        timespec *pabstime = NULL;
+        timespec *pabstime = nullptr;
         if (_connect_timeout_ms > 0) {
             if (_deadline_us >= 0) {
                 connect_abstime = flare::time_point::from_unix_micros(
@@ -1189,7 +1189,7 @@ namespace flare::rpc {
     }
 
     void Controller::set_auth_context(const AuthContext *ctx) {
-        if (_auth_context != NULL) {
+        if (_auth_context != nullptr) {
             FLARE_LOG(FATAL) << "Impossible! This function is supposed to be called "
                                 "only once when verification succeeds in server side";
             return;
@@ -1284,13 +1284,13 @@ namespace flare::rpc {
     }
 
     const Controller *Controller::sub(int index) const {
-        if (_pchan_sub_count > 0 && _done != NULL) {
+        if (_pchan_sub_count > 0 && _done != nullptr) {
             return GetSubControllerOfParallelChannel(_done, index);
         }
-        if (_sender != NULL) {
+        if (_sender != nullptr) {
             return GetSubControllerOfSelectiveChannel(_sender, index);
         }
-        return NULL;
+        return nullptr;
     }
 
     uint64_t Controller::trace_id() const { return _span ? _span->trace_id() : 0; }
@@ -1308,7 +1308,7 @@ namespace flare::rpc {
                 return _session_local_data;
             }
         }
-        return NULL;
+        return nullptr;
     }
 
     void Controller::HandleStreamConnection(Socket *host_socket) {
@@ -1323,7 +1323,7 @@ namespace flare::rpc {
                     SetFailed(EREQUEST, "Request stream=%" PRIu64 " was closed before responded",
                               _request_stream);
                 }
-            } else if (_remote_stream_settings == NULL) {
+            } else if (_remote_stream_settings == nullptr) {
                 if (!FailedInline()) {
                     SetFailed(EREQUEST, "The server didn't accept the stream");
                 }
@@ -1331,7 +1331,7 @@ namespace flare::rpc {
         }
         if (FailedInline()) {
             Stream::SetFailed(_request_stream);
-            if (_remote_stream_settings != NULL) {
+            if (_remote_stream_settings != nullptr) {
                 policy::SendStreamRst(host_socket,
                                       _remote_stream_settings->stream_id());
             }
@@ -1386,15 +1386,15 @@ namespace flare::rpc {
     Controller::CreateProgressiveAttachment(StopStyle stop_style) {
         if (has_progressive_writer()) {
             FLARE_LOG(ERROR) << "One controller can only have one ProgressiveAttachment";
-            return NULL;
+            return nullptr;
         }
         if (_request_protocol != PROTOCOL_HTTP) {
             FLARE_LOG(ERROR) << "Only http supports ProgressiveAttachment now";
-            return NULL;
+            return nullptr;
         }
-        if (_current_call.sending_sock == NULL) {
-            FLARE_LOG(ERROR) << "sending_sock is NULL";
-            return NULL;
+        if (_current_call.sending_sock == nullptr) {
+            FLARE_LOG(ERROR) << "sending_sock is nullptr";
+            return nullptr;
         }
         SocketUniquePtr httpsock;
         _current_call.sending_sock->ReAddress(&httpsock);
@@ -1408,8 +1408,8 @@ namespace flare::rpc {
     }
 
     void Controller::ReadProgressiveAttachmentBy(ProgressiveReader *r) {
-        if (r == NULL) {
-            FLARE_LOG(FATAL) << "Param[r] is NULL";
+        if (r == nullptr) {
+            FLARE_LOG(FATAL) << "Param[r] is nullptr";
             return;
         }
         if (!is_response_read_progressively()) {
@@ -1418,9 +1418,9 @@ namespace flare::rpc {
                                                       "controller without calling "
                                                       "response_will_be_read_progressively() before"));
         }
-        if (_rpa == NULL) {
+        if (_rpa == nullptr) {
             return r->OnEndOfMessage(
-                    flare::base::flare_status(EINVAL, "ReadableProgressiveAttachment is NULL"));
+                    flare::base::flare_status(EINVAL, "ReadableProgressiveAttachment is nullptr"));
         }
         if (has_progressive_reader()) {
             return r->OnEndOfMessage(
@@ -1437,12 +1437,12 @@ namespace flare::rpc {
 
     bool Controller::is_ssl() const {
         Socket *s = _current_call.sending_sock.get();
-        return s != NULL && s->is_ssl();
+        return s != nullptr && s->is_ssl();
     }
 
     x509_st *Controller::get_peer_certificate() const {
         Socket *s = _current_call.sending_sock.get();
-        return s ? s->GetPeerCertificate() : NULL;
+        return s ? s->GetPeerCertificate() : nullptr;
     }
 
     int Controller::GetSockOption(int level, int optname, void *optval, socklen_t *optlen) {
@@ -1462,8 +1462,8 @@ namespace flare::rpc {
 #endif
 
     static volatile bool s_signal_quit = false;
-    static SignalHandler s_prev_sigint_handler = NULL;
-    static SignalHandler s_prev_sigterm_handler = NULL;
+    static SignalHandler s_prev_sigint_handler = nullptr;
+    static SignalHandler s_prev_sigterm_handler = nullptr;
 
     static void quit_handler(int signo) {
         s_signal_quit = true;

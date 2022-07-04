@@ -5,7 +5,7 @@
 #ifndef TEST_TRESTING_EXCEPTION_TESTING_H_
 #define TEST_TRESTING_EXCEPTION_TESTING_H_
 
-#include "gtest/gtest.h"
+#include "testing/gtest_wrap.h"
 #include "flare/base/profile.h"
 
 // FLARE_BASE_INTERNAL_EXPECT_FAIL tests either for a specified thrown exception

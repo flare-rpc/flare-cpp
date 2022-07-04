@@ -26,7 +26,7 @@ namespace flare::rpc {
     //static_assert(sizeof(RedisReply) == 24, size_match);
     const int RedisReply::npos = -1;
 
-    const char *RedisReplyTypeToString(RedisReplyType type) {
+    const char *RedisReplyTypeToString(redis_reply_type type) {
         switch (type) {
             case REDIS_REPLY_STRING:
                 return "string";
@@ -321,7 +321,7 @@ namespace flare::rpc {
         }
     }
 
-// Mimic how official redis-cli prints.
+    // Mimic how official redis-cli prints.
     void RedisReply::Print(std::ostream &os) const {
         switch (_type) {
             case REDIS_REPLY_STRING:
@@ -441,7 +441,7 @@ namespace flare::rpc {
         _data.array.replies = subs;
     }
 
-    void RedisReply::SetStringImpl(const std::string_view &str, RedisReplyType type) {
+    void RedisReply::SetStringImpl(const std::string_view &str, redis_reply_type type) {
         if (_type != REDIS_REPLY_NIL) {
             Reset();
         }
@@ -463,7 +463,7 @@ namespace flare::rpc {
         _length = size;
     }
 
-    void RedisReply::FormatStringImpl(const char *fmt, va_list args, RedisReplyType type) {
+    void RedisReply::FormatStringImpl(const char *fmt, va_list args, redis_reply_type type) {
         va_list copied_args;
         va_copy(copied_args, args);
         char buf[64];

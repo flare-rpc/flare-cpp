@@ -10,7 +10,7 @@
 #include <string>
 #include <vector>
 
-#include "gtest/gtest.h"
+#include "testing/gtest_wrap.h"
 
 #ifdef __ANDROID__
 // Android assert messages only go to system log, so death tests cannot inspect

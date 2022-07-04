@@ -214,19 +214,19 @@ namespace flare::rpc {
         os << "contention";
     }
 
-    static flare::variable::PassiveStatus<std::string> s_lb_st(
+    static flare::status_gauge<std::string> s_lb_st(
             "rpc_load_balancer", PrintSupportedLB, nullptr);
 
-    static flare::variable::PassiveStatus<std::string> s_ns_st(
+    static flare::status_gauge<std::string> s_ns_st(
             "rpc_naming_service", PrintSupportedNS, nullptr);
 
-    static flare::variable::PassiveStatus<std::string> s_proto_st(
+    static flare::status_gauge<std::string> s_proto_st(
             "rpc_protocols", PrintSupportedProtocols, nullptr);
 
-    static flare::variable::PassiveStatus<std::string> s_comp_st(
+    static flare::status_gauge<std::string> s_comp_st(
             "rpc_compressions", PrintSupportedCompressions, nullptr);
 
-    static flare::variable::PassiveStatus<std::string> s_prof_st(
+    static flare::status_gauge<std::string> s_prof_st(
             "rpc_profilers", PrintEnabledProfilers, nullptr);
 
     static int32_t GetConnectionCount(void *arg) {
@@ -247,8 +247,8 @@ namespace flare::rpc {
         return ss.builtin_service_count;
     }
 
-    static flare::variable::Vector<unsigned, 2> GetSessionLocalDataCount(void *arg) {
-        flare::variable::Vector<unsigned, 2> v;
+    static flare::Vector<unsigned, 2> GetSessionLocalDataCount(void *arg) {
+        flare::Vector<unsigned, 2> v;
         SimpleDataPool::Stat s =
                 static_cast<Server *>(arg)->session_local_data_pool()->stat();
         v[0] = s.ncreated - s.nfree;
@@ -268,27 +268,27 @@ namespace flare::rpc {
         std::vector<SocketId> conns;
         std::vector<SocketId> internal_conns;
 
-        server->_nerror_var.expose_as(prefix, "error");
+        server->_nerror_var.expose_as(prefix, "error","");
 
-        flare::variable::PassiveStatus<timeval> uptime_st(
+        flare::status_gauge<timeval> uptime_st(
                 prefix, "uptime", GetUptime, (void *) (intptr_t) start_us);
 
-        flare::variable::PassiveStatus<std::string> start_time_st(
+        flare::status_gauge<std::string> start_time_st(
                 prefix, "start_time", PrintStartTime, server);
 
-        flare::variable::PassiveStatus<int32_t> nconn_st(
+        flare::status_gauge<int32_t> nconn_st(
                 prefix, "connection_count", GetConnectionCount, server);
 
-        flare::variable::PassiveStatus<int32_t> nservice_st(
+        flare::status_gauge<int32_t> nservice_st(
                 prefix, "service_count", GetServiceCount, server);
 
-        flare::variable::PassiveStatus<int32_t> nbuiltinservice_st(
+        flare::status_gauge<int32_t> nbuiltinservice_st(
                 prefix, "builtin_service_count", GetBuiltinServiceCount, server);
 
-        flare::variable::PassiveStatus<flare::variable::Vector<unsigned, 2> > nsessiondata_st(
+        flare::status_gauge<flare::Vector<unsigned, 2> > nsessiondata_st(
                 GetSessionLocalDataCount, server);
         if (server->session_local_data_pool()) {
-            nsessiondata_st.expose_as(prefix, "session_local_data_count");
+            nsessiondata_st.expose_as(prefix, "session_local_data_count","");
             nsessiondata_st.set_vector_names("using,free");
         }
 
@@ -299,7 +299,7 @@ namespace flare::rpc {
             if (!it->second.is_builtin_service) {
                 mprefix.resize(prefix.size());
                 mprefix.push_back('_');
-                flare::variable::to_underscored_name(&mprefix, it->second.method->full_name());
+                flare::to_underscored_name(&mprefix, it->second.method->full_name());
                 it->second.status->Expose(mprefix);
             }
         }

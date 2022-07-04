@@ -9,7 +9,7 @@
 #include <clocale>
 #include <cstring>
 #include <string>
-#include "gtest/gtest.h"
+#include "testing/gtest_wrap.h"
 #include "flare/base/profile.h"
 
 

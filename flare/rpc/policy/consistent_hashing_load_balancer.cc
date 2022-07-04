@@ -25,6 +25,7 @@
 #include "flare/rpc/policy/consistent_hashing_load_balancer.h"
 #include "flare/rpc/policy/hasher.h"
 #include "flare/strings/numbers.h"
+#include "flare/strings/string_splitter.h"
 
 namespace flare::rpc {
     namespace policy {

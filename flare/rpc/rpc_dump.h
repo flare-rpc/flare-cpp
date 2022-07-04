@@ -22,7 +22,7 @@
 #include "flare/files/filesystem.h"
 #include <gflags/gflags_declare.h>
 #include "flare/io/cord_buf.h"                            // cord_buf
-#include "flare/variable/collector.h"
+#include "flare/metrics/collector.h"
 #include "flare/rpc/rpc_dump.pb.h"                       // RpcDumpMeta
 
 
@@ -44,7 +44,7 @@ namespace flare::rpc {
     // In practice, sampled requests are just small fraction of all requests.
     // The overhead of sampling should be negligible for overall performance.
 
-    class SampledRequest : public flare::variable::Collected {
+    class SampledRequest : public flare::Collected {
     public:
         flare::cord_buf request;
         RpcDumpMeta meta;
@@ -54,8 +54,8 @@ namespace flare::rpc {
 
         void destroy() override;
 
-        flare::variable::CollectorSpeedLimit *speed_limit() override {
-            extern flare::variable::CollectorSpeedLimit g_rpc_dump_sl;
+        flare::CollectorSpeedLimit *speed_limit() override {
+            extern flare::CollectorSpeedLimit g_rpc_dump_sl;
             return &g_rpc_dump_sl;
         }
     };
@@ -64,8 +64,8 @@ namespace flare::rpc {
 // object and submit it for later dumping by calling SubmitSample(). If
 // the caller ignores non-NULL return value, the object is leaked.
     inline SampledRequest *AskToBeSampled() {
-        extern flare::variable::CollectorSpeedLimit g_rpc_dump_sl;
-        if (!FLAGS_rpc_dump || !flare::variable::is_collectable(&g_rpc_dump_sl)) {
+        extern flare::CollectorSpeedLimit g_rpc_dump_sl;
+        if (!FLAGS_rpc_dump || !flare::is_collectable(&g_rpc_dump_sl)) {
             return NULL;
         }
         return new(std::nothrow) SampledRequest;

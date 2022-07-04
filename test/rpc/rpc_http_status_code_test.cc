@@ -20,7 +20,7 @@
 // File: test_http_status_code.cpp
 // Date: 2014/11/04 18:33:39
 
-#include <gtest/gtest.h>
+#include "testing/gtest_wrap.h"
 #include "flare/rpc/http_status_code.h"
 
 class HttpStatusTest : public testing::Test {

@@ -23,7 +23,7 @@
 #include "flare/log/logging.h"
 #include <flare/rpc/channel.h>
 #include "echo.pb.h"
-#include <flare/variable/all.h>
+#include <flare/metrics/all.h>
 
 DEFINE_int32(thread_num, 50, "Number of threads to send requests");
 DEFINE_bool(use_fiber, false, "Use fiber to send requests");
@@ -40,7 +40,7 @@ DEFINE_bool(dont_fail, false, "Print fatal when some call failed");
 std::string g_request;
 std::string g_attachment;
 
-flare::variable::LatencyRecorder g_latency_recorder("client");
+flare::LatencyRecorder g_latency_recorder("client");
 
 static void* sender(void* arg) {
     // Normally, you should not call a Channel directly, but instead construct
@@ -86,7 +86,7 @@ static void* sender(void* arg) {
 
 int main(int argc, char* argv[]) {
     // Parse gflags. We recommend you to use gflags as well.
-    GFLAGS_NS::ParseCommandLineFlags(&argc, &argv, true);
+    google::ParseCommandLineFlags(&argc, &argv, true);
 
     // A Channel represents a communication line to a Server. Notice that 
     // Channel is thread-safe and can be shared by all threads in your program.

@@ -19,12 +19,24 @@ cmake_minimum_required(VERSION 3.1.3)
 
 project(flare C CXX)
 
+list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
+list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake/modules)
+list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake/package)
+list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake/recipes)
+list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/copts)
+include(carbin_module)
+
 option(DEBUG "Print debug logs" OFF)
 option(WITH_DEBUG_SYMBOLS "With debug symbols" ON)
 option(WITH_THRIFT "With thrift framed protocol supported" OFF)
 option(BUILD_UNIT_TESTS "Whether to build unit tests" OFF)
 option(INSTALL_STATIC_LIBS "Whether to install static libraries" OFF)
-option(DOWNLOAD_GTEST "Download and build a fresh copy of googletest. Requires Internet access." ON)
+option(BUILD_IN_CONDA "build in conda environemnt" ON)
+option(BUILD_EXAMPLES "build in conda environemnt" ON)
+
+if (BUILD_IN_CONDA)
+    set(CMAKE_PREFIX_PATH $ENV{CONDA_PREFIX})
+endif (BUILD_IN_CONDA)
 
 # Enable MACOSX_RPATH. Run "cmake --help-policy CMP0042" for policy details.
 if (POLICY CMP0042)
@@ -63,27 +75,8 @@ endif ()
 
 include(GNUInstallDirs)
 
-set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
-
-
-find_package(GFLAGS REQUIRED)
-
-
-execute_process(
-        COMMAND bash -c "grep \"namespace [_A-Za-z0-9]\\+ {\" ${GFLAGS_INCLUDE_PATH}/gflags/gflags_declare.h | head -1 | awk '{print $2}' | tr -d '\n'"
-        OUTPUT_VARIABLE GFLAGS_NS
-)
-if (${GFLAGS_NS} STREQUAL "GFLAGS_NAMESPACE")
-    execute_process(
-            COMMAND bash -c "grep \"#define GFLAGS_NAMESPACE [_A-Za-z0-9]\\+\" ${GFLAGS_INCLUDE_PATH}/gflags/gflags_declare.h | head -1 | awk '{print $3}' | tr -d '\n'"
-            OUTPUT_VARIABLE GFLAGS_NS
-    )
-endif ()
-
-include_directories(
-        ${PROJECT_SOURCE_DIR}
-        ${CMAKE_CURRENT_BINARY_DIR}
-)
+include(require_gflags)
+include(require_leveldb)
 
 execute_process(
         COMMAND bash -c "${PROJECT_SOURCE_DIR}/tools/get_flare_revision.sh ${PROJECT_SOURCE_DIR} | tr -d '\n'"
@@ -99,7 +92,7 @@ if (CMAKE_SYSTEM_NAME STREQUAL "Darwin")
     set(CMAKE_CPP_FLAGS "${CMAKE_CPP_FLAGS} -Wno-deprecated-declarations -Wno-inconsistent-missing-override")
 endif ()
 
-set(CMAKE_CPP_FLAGS "${CMAKE_CPP_FLAGS} ${DEFINE_CLOCK_GETTIME}  -DGFLAGS_NS=${GFLAGS_NS}")
+set(CMAKE_CPP_FLAGS "${CMAKE_CPP_FLAGS} ${DEFINE_CLOCK_GETTIME}")
 set(CMAKE_CPP_FLAGS "${CMAKE_CPP_FLAGS} -DFIBER_USE_FAST_PTHREAD_MUTEX -D__const__= -D_GNU_SOURCE -DUSE_SYMBOLIZE -DNO_TCMALLOC -D__STDC_FORMAT_MACROS -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -DFLARE_RPC_REVISION=\\\"${FLARE_RPC_REVISION}\\\" -D__STRICT_ANSI__")
 set(CMAKE_CPP_FLAGS "${CMAKE_CPP_FLAGS} ${DEBUG_SYMBOL} ${THRIFT_CPP_FLAG}")
 set(CMAKE_CXX_FLAGS "${CMAKE_CPP_FLAGS} -O2 -pipe -Wall -W -fPIC -fstrict-aliasing -Wno-invalid-offsetof -Wno-unused-parameter -fno-omit-frame-pointer")
@@ -126,12 +119,6 @@ endif ()
 
 find_package(Protobuf REQUIRED)
 find_package(Threads REQUIRED)
-
-find_path(LEVELDB_INCLUDE_PATH NAMES leveldb/db.h)
-find_library(LEVELDB_LIB NAMES leveldb)
-if ((NOT LEVELDB_INCLUDE_PATH) OR (NOT LEVELDB_LIB))
-    message(FATAL_ERROR "Fail to find leveldb")
-endif ()
 
 find_library(PROTOC_LIB NAMES protoc)
 if (NOT PROTOC_LIB)
@@ -206,7 +193,7 @@ file(GLOB_RECURSE FLARE_BOOTSTRAP_SRC "${PROJECT_SOURCE_DIR}/flare/bootstrap/*.c
 file(GLOB_RECURSE FLARE_TIMES_SRC "${PROJECT_SOURCE_DIR}/flare/times/*.cc")
 file(GLOB_RECURSE FLARE_FILES_SRC "${PROJECT_SOURCE_DIR}/flare/files/*.cc")
 file(GLOB_RECURSE FLARE_THREAD_SRC "${PROJECT_SOURCE_DIR}/flare/thread/*.cc")
-file(GLOB_RECURSE FLARE_METRICS_SRC "${PROJECT_SOURCE_DIR}/flare/metrics/*.cc")
+file(GLOB_RECURSE FLARE_FLOW_SRC "${PROJECT_SOURCE_DIR}/flare/flow/*.cc")
 
 set(FLARE_SRC
         "${PROJECT_SOURCE_DIR}/flare/base/dynamic_annotations/dynamic_annotations.c"
@@ -223,10 +210,10 @@ set(FLARE_SRC
         ${FLARE_TIMES_SRC}
         ${FLARE_FILES_SRC}
         ${FLARE_THREAD_SRC}
-        ${FLARE_METRICS_SRC}
+        ${FLARE_FLOW_SRC}
         )
 
-file(GLOB_RECURSE VARIABLE_SOURCES "${PROJECT_SOURCE_DIR}/flare/variable/*.cc")
+file(GLOB_RECURSE METRICS_SOURCES "${PROJECT_SOURCE_DIR}/flare/metrics/*.cc")
 file(GLOB_RECURSE FIBER_SOURCES "${PROJECT_SOURCE_DIR}/flare/fiber/*.cc")
 file(GLOB_RECURSE JSON2PB_SOURCES "${PROJECT_SOURCE_DIR}/flare/json2pb/*.cc")
 file(GLOB_RECURSE RPC_SOURCES "${PROJECT_SOURCE_DIR}/flare/rpc/*.cc")
@@ -277,7 +264,7 @@ compile_proto(PROTO_HDRS PROTO_SRCS ${PROJECT_BINARY_DIR}
 add_library(PROTO_LIB OBJECT ${PROTO_SRCS} ${PROTO_HDRS})
 
 set(SOURCES
-        ${VARIABLE_SOURCES}
+        ${METRICS_SOURCES}
         ${FIBER_SOURCES}
         ${JSON2PB_SOURCES}
         ${MCPACK2PB_SOURCES}
@@ -286,6 +273,12 @@ set(SOURCES
         )
 
 add_subdirectory(flare)
+
+if (BUILD_EXAMPLES)
+    set(FLARE_LIB flare-shared)
+    add_subdirectory(example)
+endif (BUILD_EXAMPLES)
+
 if (BUILD_UNIT_TESTS)
     enable_testing()
     add_subdirectory(test)

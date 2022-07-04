@@ -28,7 +28,7 @@
 #include <google/protobuf/service.h>                 // google::protobuf::Service
 #include "flare/base/profile.h"                            // FLARE_DISALLOW_COPY_AND_ASSIGN
 #include "flare/container/doubly_buffered_data.h"   // DoublyBufferedData
-#include "flare/variable/all.h"
+#include "flare/metrics/all.h"
 #include "flare/container/case_ignored_flat_map.h"  // [CaseIgnored]FlatMap
 #include "flare/container/ptr_container.h"
 #include "flare/rpc/controller.h"                   // flare::rpc::Controller
@@ -714,7 +714,7 @@ namespace flare::rpc {
         fiber_keytable_pool_t *_keytable_pool;
 
         // mutable is required for `ServerPrivateAccessor' to change this variable
-        mutable flare::variable::Adder<int64_t> _nerror_var;
+        mutable flare::gauge<int64_t> _nerror_var;
         mutable std::atomic<int32_t> FLARE_CACHELINE_ALIGNMENT _concurrency;
 
     };

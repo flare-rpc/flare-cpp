@@ -22,7 +22,7 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <fcntl.h>  // F_GETFD
-#include <gtest/gtest.h>
+#include "testing/gtest_wrap.h"
 #include <gflags/gflags.h>
 #include "flare/base/gperftools_profiler.h"
 #include "flare/times/time.h"
@@ -63,7 +63,7 @@ void EchoProcessHuluRequest(flare::rpc::InputMessageBase *msg_base);
 
 int main(int argc, char *argv[]) {
     testing::InitGoogleTest(&argc, argv);
-    GFLAGS_NS::ParseCommandLineFlags(&argc, &argv, true);
+    google::ParseCommandLineFlags(&argc, &argv, true);
     flare::rpc::Protocol dummy_protocol =
             {flare::rpc::policy::ParseHuluMessage,
              flare::rpc::SerializeRequestDefault,
@@ -594,8 +594,8 @@ public:
 
 TEST_F(SocketTest, app_level_health_check) {
     int old_health_check_interval = flare::rpc::FLAGS_health_check_interval;
-    GFLAGS_NS::SetCommandLineOption("health_check_path", "/HealthCheckTestService");
-    GFLAGS_NS::SetCommandLineOption("health_check_interval", "1");
+    google::SetCommandLineOption("health_check_path", "/HealthCheckTestService");
+    google::SetCommandLineOption("health_check_interval", "1");
 
     flare::base::end_point point(flare::base::IP_ANY, 7777);
     flare::rpc::ChannelOptions options;
@@ -647,10 +647,10 @@ TEST_F(SocketTest, app_level_health_check) {
         ASSERT_GT(cntl.response_attachment().size(), (size_t) 0);
     }
 
-    GFLAGS_NS::SetCommandLineOption("health_check_path", "");
+    google::SetCommandLineOption("health_check_path", "");
     char hc_buf[8];
     snprintf(hc_buf, sizeof(hc_buf), "%d", old_health_check_interval);
-    GFLAGS_NS::SetCommandLineOption("health_check_interval", hc_buf);
+    google::SetCommandLineOption("health_check_interval", hc_buf);
 }
 
 TEST_F(SocketTest, health_check) {

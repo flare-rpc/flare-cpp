@@ -341,7 +341,7 @@ namespace flare::rpc {
         inline H2Context::FrameHandler FindFrameHandler(H2FrameType type) {
             pthread_once(&s_frame_handlers_init_once, InitFrameHandlers);
             if (type < 0 || type > H2_FRAME_TYPE_MAX) {
-                return NULL;
+                return nullptr;
             }
             return s_frame_handlers[type];
         }
@@ -394,11 +394,11 @@ namespace flare::rpc {
         }
 
         H2StreamContext *H2Context::RemoveStream(int stream_id) {
-            H2StreamContext *sctx = NULL;
+            H2StreamContext *sctx = nullptr;
             {
                 std::unique_lock<flare::base::Mutex> mu(_stream_mutex);
                 if (!_pending_streams.erase(stream_id, &sctx)) {
-                    return NULL;
+                    return nullptr;
                 }
             }
             // The remote stream will not send any more data, sending back the
@@ -442,7 +442,7 @@ namespace flare::rpc {
             if (psctx) {
                 return *psctx;
             }
-            return NULL;
+            return nullptr;
         }
 
         int H2Context::TryToInsertStream(int stream_id, H2StreamContext *ctx) {
@@ -451,7 +451,7 @@ namespace flare::rpc {
                 return 1;
             }
             H2StreamContext *&sctx = _pending_streams[stream_id];
-            if (sctx == NULL) {
+            if (sctx == nullptr) {
                 sctx = ctx;
                 return 0;
             }
@@ -484,7 +484,7 @@ namespace flare::rpc {
                 return MakeParseError(PARSE_ERROR_ABSOLUTELY_WRONG);
             }
             frame_head->stream_id = static_cast<int>(stream_id);
-            return MakeMessage(NULL);
+            return MakeMessage(nullptr);
         }
 
         ParseResult H2Context::Consume(
@@ -512,7 +512,7 @@ namespace flare::rpc {
                 } else {
                     _conn_state = H2_CONNECTION_READY;
                 }
-                return MakeMessage(NULL);
+                return MakeMessage(nullptr);
             } else if (_conn_state == H2_CONNECTION_READY) {
                 H2FrameHead frame_head;
                 ParseResult res = ConsumeFrameHead(it, &frame_head);
@@ -520,7 +520,7 @@ namespace flare::rpc {
                     return res;
                 }
                 H2Context::FrameHandler handler = FindFrameHandler(frame_head.type);
-                if (handler == NULL) {
+                if (handler == nullptr) {
                     FLARE_LOG(ERROR) << "Invalid frame type=" << (int) frame_head.type;
                     return MakeParseError(PARSE_ERROR_ABSOLUTELY_WRONG);
                 }
@@ -541,14 +541,14 @@ namespace flare::rpc {
                     if (sctx) {
                         if (is_server_side()) {
                             delete sctx;
-                            return MakeMessage(NULL);
+                            return MakeMessage(nullptr);
                         } else {
                             sctx->header().set_status_code(
                                     H2ErrorToStatusCode(h2_res.error()));
                             return MakeMessage(sctx);
                         }
                     }
-                    return MakeMessage(NULL);
+                    return MakeMessage(nullptr);
                 } else { // send GOAWAY
                     char goawaybuf[FRAME_HEAD_SIZE + 8];
                     SerializeFrameHead(goawaybuf, 8, H2_FRAME_GOAWAY, 0, 0);
@@ -558,7 +558,7 @@ namespace flare::rpc {
                         FLARE_LOG(WARNING) << "Fail to send GOAWAY to " << *_socket;
                         return MakeParseError(PARSE_ERROR_ABSOLUTELY_WRONG);
                     }
-                    return MakeMessage(NULL);
+                    return MakeMessage(nullptr);
                 }
             } else {
                 return MakeParseError(PARSE_ERROR_NO_RESOURCE);
@@ -597,7 +597,7 @@ namespace flare::rpc {
                 return MakeH2Error(H2_FRAME_SIZE_ERROR);
             }
             frag_size -= pad_length;
-            H2StreamContext *sctx = NULL;
+            H2StreamContext *sctx = nullptr;
             if (is_server_side() &&
                 frame_head.stream_id > _last_received_stream_id) { // new stream
                 if ((frame_head.stream_id & 1) == 0) {
@@ -619,14 +619,14 @@ namespace flare::rpc {
                 }
             } else {
                 sctx = FindStream(frame_head.stream_id);
-                if (sctx == NULL) {
+                if (sctx == nullptr) {
                     if (is_client_side()) {
                         RPC_VLOG << "Fail to find stream_id=" << frame_head.stream_id;
                         // Ignore the message without closing the socket.
                         H2StreamContext tmp_sctx(false);
                         tmp_sctx.Init(this, frame_head.stream_id);
                         tmp_sctx.OnHeaders(it, frame_head, frag_size, pad_length);
-                        return MakeH2Message(NULL);
+                        return MakeH2Message(nullptr);
                     } else {
                         FLARE_LOG(ERROR) << "Fail to find stream_id=" << frame_head.stream_id;
                         return MakeH2Error(H2_PROTOCOL_ERROR);
@@ -665,27 +665,27 @@ namespace flare::rpc {
                 if (frame_head.flags & H2_FLAGS_END_STREAM) {
                     return OnEndStream();
                 }
-                return MakeH2Message(NULL);
+                return MakeH2Message(nullptr);
             } else {
                 if (frame_head.flags & H2_FLAGS_END_STREAM) {
                     // Delay calling OnEndStream() in OnContinuation()
                     _stream_ended = true;
                 }
-                return MakeH2Message(NULL);
+                return MakeH2Message(nullptr);
             }
         }
 
         H2ParseResult H2Context::OnContinuation(
                 flare::cord_buf_bytes_iterator &it, const H2FrameHead &frame_head) {
             H2StreamContext *sctx = FindStream(frame_head.stream_id);
-            if (sctx == NULL) {
+            if (sctx == nullptr) {
                 if (is_client_side()) {
                     RPC_VLOG << "Fail to find stream_id=" << frame_head.stream_id;
                     // Ignore the message without closing the socket.
                     H2StreamContext tmp_sctx(false);
                     tmp_sctx.Init(this, frame_head.stream_id);
                     tmp_sctx.OnContinuation(it, frame_head);
-                    return MakeH2Message(NULL);
+                    return MakeH2Message(nullptr);
                 } else {
                     FLARE_LOG(ERROR) << "Fail to find stream_id=" << frame_head.stream_id;
                     return MakeH2Error(H2_PROTOCOL_ERROR);
@@ -716,7 +716,7 @@ namespace flare::rpc {
                     return OnEndStream();
                 }
             }
-            return MakeH2Message(NULL);
+            return MakeH2Message(nullptr);
         }
 
         H2ParseResult H2Context::OnData(
@@ -733,7 +733,7 @@ namespace flare::rpc {
             }
             frag_size -= pad_length;
             H2StreamContext *sctx = FindStream(frame_head.stream_id);
-            if (sctx == NULL) {
+            if (sctx == nullptr) {
                 // If a DATA frame is received whose stream is not in "open" or "half-closed (local)" state,
                 // the recipient MUST respond with a stream error (Section 5.4.2) of type STREAM_CLOSED.
                 // Ignore the message without closing the socket.
@@ -793,7 +793,7 @@ namespace flare::rpc {
             if (frame_head.flags & H2_FLAGS_END_STREAM) {
                 return OnEndStream();
             }
-            return MakeH2Message(NULL);
+            return MakeH2Message(nullptr);
         }
 
         H2ParseResult H2Context::OnResetStream(
@@ -804,9 +804,9 @@ namespace flare::rpc {
             }
             const H2Error h2_error = static_cast<H2Error>(LoadUint32(it));
             H2StreamContext *sctx = FindStream(frame_head.stream_id);
-            if (sctx == NULL) {
+            if (sctx == nullptr) {
                 RPC_VLOG << "Fail to find stream_id=" << frame_head.stream_id;
-                return MakeH2Message(NULL);
+                return MakeH2Message(nullptr);
             }
             return sctx->OnResetStream(h2_error, frame_head);
         }
@@ -826,7 +826,7 @@ namespace flare::rpc {
             }
 #endif
             H2StreamContext *sctx = _conn_ctx->RemoveStream(stream_id());
-            if (sctx == NULL) {
+            if (sctx == nullptr) {
                 FLARE_LOG(ERROR) << "Fail to find stream_id=" << stream_id();
                 return MakeH2Error(H2_PROTOCOL_ERROR);
             }
@@ -836,7 +836,7 @@ namespace flare::rpc {
             } else {
                 // No need to process the request.
                 delete sctx;
-                return MakeH2Message(NULL);
+                return MakeH2Message(nullptr);
             }
         }
 
@@ -853,9 +853,9 @@ namespace flare::rpc {
             }
 #endif
             H2StreamContext *sctx = _conn_ctx->RemoveStream(stream_id());
-            if (sctx == NULL) {
+            if (sctx == nullptr) {
                 RPC_VLOG << "Fail to find stream_id=" << stream_id();
-                return MakeH2Message(NULL);
+                return MakeH2Message(nullptr);
             }
             FLARE_CHECK_EQ(sctx, this);
 
@@ -881,7 +881,7 @@ namespace flare::rpc {
                     return MakeH2Error(H2_PROTOCOL_ERROR);
                 }
                 _local_settings = _unack_local_settings;
-                return MakeH2Message(NULL);
+                return MakeH2Message(nullptr);
             }
             const int64_t old_stream_window_size = _remote_settings.stream_window_size;
             if (!_remote_settings_received) {
@@ -930,7 +930,7 @@ namespace flare::rpc {
                 FLARE_LOG(WARNING) << "Fail to respond settings with ack to " << *_socket;
                 return MakeH2Error(H2_PROTOCOL_ERROR);
             }
-            return MakeH2Message(NULL);
+            return MakeH2Message(nullptr);
         }
 
         H2ParseResult H2Context::OnPriority(
@@ -956,7 +956,7 @@ namespace flare::rpc {
                 return MakeH2Error(H2_PROTOCOL_ERROR);
             }
             if (frame_head.flags & H2_FLAGS_ACK) {
-                return MakeH2Message(NULL);
+                return MakeH2Message(nullptr);
             }
 
             char pongbuf[FRAME_HEAD_SIZE + 8];
@@ -966,12 +966,12 @@ namespace flare::rpc {
                 FLARE_LOG(WARNING) << "Fail to send ack of PING to " << *_socket;
                 return MakeH2Error(H2_PROTOCOL_ERROR);
             }
-            return MakeH2Message(NULL);
+            return MakeH2Message(nullptr);
         }
 
         static void *ProcessHttpResponseWrapper(void *void_arg) {
             ProcessHttpResponse(static_cast<InputMessageBase *>(void_arg));
-            return NULL;
+            return nullptr;
         }
 
         H2ParseResult H2Context::OnGoAway(
@@ -1001,7 +1001,7 @@ namespace flare::rpc {
                 std::vector<H2StreamContext *> goaway_streams;
                 RemoveGoAwayStreams(last_stream_id, &goaway_streams);
                 if (goaway_streams.empty()) {
-                    return MakeH2Message(NULL);
+                    return MakeH2Message(nullptr);
                 }
                 for (size_t i = 0; i < goaway_streams.size(); ++i) {
                     H2StreamContext *sctx = goaway_streams[i];
@@ -1019,7 +1019,7 @@ namespace flare::rpc {
                 return MakeH2Message(goaway_streams[0]);
             } else {
                 // server serves requests on-demand, ignoring GOAWAY is OK.
-                return MakeH2Message(NULL);
+                return MakeH2Message(nullptr);
             }
         }
 
@@ -1039,12 +1039,12 @@ namespace flare::rpc {
                     FLARE_LOG(ERROR) << "Invalid connection-level window_size_increment=" << inc;
                     return MakeH2Error(H2_FLOW_CONTROL_ERROR);
                 }
-                return MakeH2Message(NULL);
+                return MakeH2Message(nullptr);
             } else {
                 H2StreamContext *sctx = FindStream(frame_head.stream_id);
-                if (sctx == NULL) {
+                if (sctx == nullptr) {
                     RPC_VLOG << "Fail to find stream_id=" << frame_head.stream_id;
-                    return MakeH2Message(NULL);
+                    return MakeH2Message(nullptr);
                 }
                 if (!AddWindowSize(&sctx->_remote_window_left, inc)) {
                     FLARE_LOG(ERROR) << "Invalid stream-level window_size_increment=" << inc
@@ -1052,7 +1052,7 @@ namespace flare::rpc {
                                      << sctx->_remote_window_left.load(std::memory_order_relaxed);
                     return MakeH2Error(H2_FLOW_CONTROL_ERROR);
                 }
-                return MakeH2Message(NULL);
+                return MakeH2Message(nullptr);
             }
         }
 
@@ -1114,18 +1114,18 @@ namespace flare::rpc {
         }
 
 #if defined(FLARE_RPC_PROFILE_H2)
-        flare::variable::Adder<int64_t> g_parse_time;
-        flare::variable::PerSecond<flare::variable::Adder<int64_t> > g_parse_time_per_second(
+        flare::counter<int64_t> g_parse_time;
+        flare::per_second<flare::counter<int64_t> > g_parse_time_per_second(
             "h2_parse_second", &g_parse_time);
 #endif
 
         ParseResult ParseH2Message(flare::cord_buf *source, Socket *socket,
                                    bool read_eof, const void *arg) {
 #if defined(FLARE_RPC_PROFILE_H2)
-            flare::variable::ScopedTimer<flare::variable::Adder<int64_t> > tm(g_parse_time);
+            flare::scoped_timer<flare::counter<int64_t> > tm(g_parse_time);
 #endif
             H2Context *ctx = static_cast<H2Context *>(socket->parsing_context());
-            if (ctx == NULL) {
+            if (ctx == nullptr) {
                 if (read_eof || source->empty()) {
                     return MakeParseError(PARSE_ERROR_NOT_ENOUGH_DATA);
                 }
@@ -1145,7 +1145,7 @@ namespace flare::rpc {
                 ParseResult res = ctx->Consume(it, socket);
                 if (res.is_ok()) {
                     last_bytes_left = it.bytes_left();
-                    if (res.message() == NULL) {
+                    if (res.message() == nullptr) {
                         // no message to process, continue parsing.
                         continue;
                     }
@@ -1173,14 +1173,14 @@ namespace flare::rpc {
                 const uint32_t stream_id = _abandoned_streams.back();
                 _abandoned_streams.pop_back();
                 H2StreamContext *sctx = RemoveStream(stream_id);
-                if (sctx != NULL) {
+                if (sctx != nullptr) {
                     delete sctx;
                 }
             }
         }
 
         H2StreamContext::H2StreamContext(bool read_body_progressively)
-                : HttpContext(read_body_progressively), _conn_ctx(NULL)
+                : HttpContext(read_body_progressively), _conn_ctx(nullptr)
 #if defined(FLARE_RPC_H2_STREAM_STATE)
                 , _state(H2_STREAM_IDLE)
 #endif
@@ -1283,7 +1283,7 @@ namespace flare::rpc {
                                 h.uri().set_scheme(pair.value);
                             } else if (strcmp(name + 2, /*:s*/"tatus") == 0) {
                                 matched = true;
-                                char *endptr = NULL;
+                                char *endptr = nullptr;
                                 const int sc = strtol(pair.value.c_str(), &endptr, 10);
                                 if (*endptr != '\0') {
                                     FLARE_LOG(ERROR) << "Invalid status=" << pair.value;
@@ -1309,7 +1309,7 @@ namespace flare::rpc {
 
                 if (FLAGS_http_verbose) {
                     flare::cord_buf_builder *vs = this->_vmsgbuilder;
-                    if (vs == NULL) {
+                    if (vs == nullptr) {
                         vs = new flare::cord_buf_builder;
                         this->_vmsgbuilder = vs;
                         if (_conn_ctx->is_server_side()) {
@@ -1499,10 +1499,10 @@ namespace flare::rpc {
                                                     int error_code,
                                                     bool /*end_of_rpc*/) {
             RemoveRefOnQuit deref_self(this);
-            if (sending_sock != NULL && error_code != 0) {
+            if (sending_sock != nullptr && error_code != 0) {
                 FLARE_CHECK_EQ(cntl, _cntl);
                 std::unique_lock<flare::base::Mutex> mu(_mutex);
-                _cntl = NULL;
+                _cntl = nullptr;
                 if (_stream_id != 0) {
                     H2Context *ctx = static_cast<H2Context *>(sending_sock->parsing_context());
                     ctx->AddAbandonedStream(_stream_id);
@@ -1511,26 +1511,26 @@ namespace flare::rpc {
         }
 
 #if defined(FLARE_RPC_PROFILE_H2)
-        flare::variable::Adder<int64_t> g_append_request_time;
-        flare::variable::PerSecond<flare::variable::Adder<int64_t> > g_append_request_time_per_second(
+        flare::counter<int64_t> g_append_request_time;
+        flare::per_second<flare::counter<int64_t> > g_append_request_time_per_second(
             "h2_append_request_second",     &g_append_request_time);
 #endif
 
         flare::base::flare_status
         H2UnsentRequest::AppendAndDestroySelf(flare::cord_buf *out, Socket *socket) {
 #if defined(FLARE_RPC_PROFILE_H2)
-            flare::variable::ScopedTimer<flare::variable::Adder<int64_t> > tm(g_append_request_time);
+            flare::scoped_timer<flare::counter<int64_t> > tm(g_append_request_time);
 #endif
             RemoveRefOnQuit deref_self(this);
-            if (socket == NULL) {
+            if (socket == nullptr) {
                 return flare::base::flare_status::OK();
             }
             H2Context *ctx = static_cast<H2Context *>(socket->parsing_context());
 
             // Create a http2 stream and store correlation_id in.
-            if (ctx == NULL) {
+            if (ctx == nullptr) {
                 FLARE_CHECK(socket->CreatedByConnect());
-                ctx = new H2Context(socket, NULL);
+                ctx = new H2Context(socket, nullptr);
                 if (ctx->Init() != 0) {
                     delete ctx;
                     return flare::base::flare_status(EINTERNAL, "Fail to init H2Context");
@@ -1556,7 +1556,7 @@ namespace flare::rpc {
             // Although the critical section looks huge, it should rarely be contended
             // since timeout of RPC is much larger than the delay of sending.
             std::unique_lock<flare::base::Mutex> mu(_mutex);
-            if (_cntl == NULL) {
+            if (_cntl == nullptr) {
                 return flare::base::flare_status(ECANCELED, "The RPC was already failed");
             }
 
@@ -1619,7 +1619,7 @@ namespace flare::rpc {
                 sz += _list[i].name.size() + _list[i].value.size() + 1;
             }
             std::unique_lock<flare::base::Mutex> mu(_mutex);
-            if (_cntl == NULL) {
+            if (_cntl == nullptr) {
                 return 0;
             }
             if (_cntl->has_http_request()) {
@@ -1639,7 +1639,7 @@ namespace flare::rpc {
                 os << "> " << _list[i].name << " = " << _list[i].value << '\n';
             }
             std::unique_lock<flare::base::Mutex> mu(_mutex);
-            if (_cntl == NULL) {
+            if (_cntl == nullptr) {
                 return;
             }
             if (_cntl->has_http_request()) {
@@ -1697,18 +1697,18 @@ namespace flare::rpc {
         }
 
 #if defined(FLARE_RPC_PROFILE_H2)
-        flare::variable::Adder<int64_t> g_append_response_time;
-        flare::variable::PerSecond<flare::variable::Adder<int64_t> > g_append_response_time_per_second(
+        flare::counter<int64_t> g_append_response_time;
+        flare::per_second<flare::counter<int64_t> > g_append_response_time_per_second(
             "h2_append_response_second",     &g_append_response_time);
 #endif
 
         flare::base::flare_status
         H2UnsentResponse::AppendAndDestroySelf(flare::cord_buf *out, Socket *socket) {
 #if defined(FLARE_RPC_PROFILE_H2)
-            flare::variable::ScopedTimer<flare::variable::Adder<int64_t> > tm(g_append_response_time);
+            flare::scoped_timer<flare::counter<int64_t> > tm(g_append_response_time);
 #endif
             DestroyingPtr<H2UnsentResponse> destroy_self(this);
-            if (socket == NULL) {
+            if (socket == nullptr) {
                 return flare::base::flare_status::OK();
             }
             H2Context *ctx = static_cast<H2Context *>(socket->parsing_context());
@@ -1805,7 +1805,7 @@ namespace flare::rpc {
             ControllerPrivateAccessor accessor(cntl);
 
             HttpHeader *header = &cntl->http_request();
-            if (auth != NULL && header->GetHeader("Authorization") == NULL) {
+            if (auth != nullptr && header->GetHeader("Authorization") == nullptr) {
                 std::string auth_data;
                 if (auth->GenerateCredential(&auth_data) != 0) {
                     return cntl->SetFailed(EREQUEST, "Fail to GenerateCredential");
@@ -1826,20 +1826,20 @@ namespace flare::rpc {
 
         static bool IsH2SocketValid(Socket *s) {
             H2Context *c = static_cast<H2Context *>(s->parsing_context());
-            return (c == NULL || !c->RunOutStreams());
+            return (c == nullptr || !c->RunOutStreams());
         }
 
         StreamUserData *H2GlobalStreamCreator::OnCreatingStream(
                 SocketUniquePtr *inout, Controller *cntl) {
             if ((*inout)->GetAgentSocket(inout, IsH2SocketValid) != 0) {
                 cntl->SetFailed(EINTERNAL, "Fail to create agent socket");
-                return NULL;
+                return nullptr;
             }
 
             H2UnsentRequest *h2_req = H2UnsentRequest::New(cntl);
             if (!h2_req) {
                 cntl->SetFailed(ENOMEM, "Fail to create H2UnsentRequest");
-                return NULL;
+                return nullptr;
             }
             return h2_req;
         }

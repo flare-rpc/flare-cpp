@@ -633,7 +633,7 @@ namespace flare::rpc {
         // where i is the index of the first byte of this Transport Stream packet,
         // offset is the value encoded in this field, t(i) is the arrival time of
         // byte i in the T-STD, and t1(i) is the upper bound in time of a time
-        // interval called the Legal Time Window which is associated with this
+        // interval called the Legal Time window which is associated with this
         // Transport Stream packet.
         int16_t ltw_offset; // 15 bits
 

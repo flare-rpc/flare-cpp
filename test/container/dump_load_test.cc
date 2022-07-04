@@ -1,6 +1,6 @@
 #include <vector>
 
-#include "gtest/gtest.h"
+#include "testing/gtest_wrap.h"
 
 #include "flare/container/flat_hash_map_dump.h"
 #include "flare/container/flat_hash_set.h"

@@ -19,7 +19,7 @@
 
 // Date: 2019/04/16 23:41:04
 
-#include <gtest/gtest.h>
+#include "testing/gtest_wrap.h"
 #include "flare/rpc/adaptive_max_concurrency.h"
 #include "flare/rpc/adaptive_protocol_type.h"
 #include "flare/rpc/adaptive_connection_type.h"

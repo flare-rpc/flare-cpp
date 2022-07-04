@@ -3,7 +3,7 @@
 #include <limits>
 #include <scoped_allocator>
 
-#include "gtest/gtest.h"
+#include "testing/gtest_wrap.h"
 #include "flare/container/flat_hash_map.h"
 #include "tracked.h"
 

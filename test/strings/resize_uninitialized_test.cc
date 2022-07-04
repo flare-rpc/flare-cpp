@@ -3,7 +3,7 @@
 // Created by liyinbin lijippy@163.com
 
 #include "flare/base/uninitialized.h"
-#include "gtest/gtest.h"
+#include "testing/gtest_wrap.h"
 
 namespace {
 

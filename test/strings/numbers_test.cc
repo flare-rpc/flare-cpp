@@ -24,8 +24,8 @@
 #include <string>
 #include <vector>
 
-#include "gmock/gmock.h"
-#include "gtest/gtest.h"
+
+#include "testing/gtest_wrap.h"
 #include "flare/log/logging.h"
 #include "numbers_test_common.h"
 #include "flare/strings/str_cat.h"
@@ -347,7 +347,7 @@ namespace {
     void VerifySimpleAtoiGood(in_val_type in_value, int_type exp_value) {
         std::string s;
         // uint128 can be streamed but not string_cat'd
-        flare::strings_internal::OStringStream(&s) << in_value;
+        flare::strings_internal::string_output_stream(&s) << in_value;
         int_type x = static_cast<int_type>(~exp_value);
         EXPECT_TRUE(simple_atoi(s, &x))
                             << "in_value=" << in_value << " s=" << s << " x=" << x;
@@ -808,13 +808,13 @@ namespace {
 
             // Test overflow
             std::string s;
-            flare::strings_internal::OStringStream(&s)
+            flare::strings_internal::string_output_stream(&s)
                     << std::numeric_limits<IntType>::max() << value;
             EXPECT_FALSE(parse_func(s, &parsed_value, base));
 
             // Test underflow
             s.clear();
-            flare::strings_internal::OStringStream(&s) << "-" << value;
+            flare::strings_internal::string_output_stream(&s) << "-" << value;
             EXPECT_FALSE(parse_func(s, &parsed_value, base));
         }
     }

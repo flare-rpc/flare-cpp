@@ -28,13 +28,13 @@ namespace flare::fiber_internal {
                                                     "from fiber creation to first run will be recorded and shown "
                                                     "in /vars");
     const bool FLARE_ALLOW_UNUSED dummy_show_fiber_creation_in_vars =
-            ::GFLAGS_NS::RegisterFlagValidator(&FLAGS_show_fiber_creation_in_vars,
+            ::google::RegisterFlagValidator(&FLAGS_show_fiber_creation_in_vars,
                                                pass_bool);
 
     DEFINE_bool(show_per_worker_usage_in_vars, false,
                 "Show per-worker usage in /vars/fiber_per_worker_usage_<tid>");
     const bool FLARE_ALLOW_UNUSED dummy_show_per_worker_usage_in_vars =
-            ::GFLAGS_NS::RegisterFlagValidator(&FLAGS_show_per_worker_usage_in_vars,
+            ::google::RegisterFlagValidator(&FLAGS_show_per_worker_usage_in_vars,
                                                pass_bool);
 
     __thread fiber_worker *tls_task_group = nullptr;
@@ -123,9 +123,9 @@ namespace flare::fiber_internal {
     }
 
     void fiber_worker::run_main_task() {
-        flare::variable::PassiveStatus<double> cumulated_cputime(
+        flare::status_gauge<double> cumulated_cputime(
                 get_cumulated_cputime_from_this, this);
-        std::unique_ptr<flare::variable::PerSecond<flare::variable::PassiveStatus<double> > > usage_variable;
+        std::unique_ptr<flare::per_second<flare::status_gauge<double> > > usage_variable;
 
         fiber_worker *dummy = this;
         fiber_id_t tid;
@@ -145,7 +145,7 @@ namespace flare::fiber_internal {
                 snprintf(name, sizeof(name), "fiber_worker_usage_%ld",
                          (long)syscall(SYS_gettid));
 #endif
-                usage_variable.reset(new flare::variable::PerSecond<flare::variable::PassiveStatus<double> >
+                usage_variable.reset(new flare::per_second<flare::status_gauge<double> >
                                              (name, &cumulated_cputime, 1));
             }
         }
@@ -249,7 +249,7 @@ namespace flare::fiber_internal {
 
             if (FLAGS_show_fiber_creation_in_vars) {
                 // NOTE: the thread triggering exposure of pending time may spend
-                // considerable time because a single flare::variable::LatencyRecorder
+                // considerable time because a single flare::LatencyRecorder
                 // contains many variable.
                 g->_control->exposed_pending_time() <<
                                                     (flare::get_current_time_nanos() - m->cpuwide_start_ns) / 1000L;

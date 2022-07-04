@@ -1,6 +1,6 @@
 
 #include "flare/container/hash_tables.h"
-#include <gtest/gtest.h>
+#include "testing/gtest_wrap.h"
 
 namespace {
 

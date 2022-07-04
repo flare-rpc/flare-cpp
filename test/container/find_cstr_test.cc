@@ -1,7 +1,7 @@
 
 #include <algorithm>
 #include <random>
-#include <gtest/gtest.h>
+#include "testing/gtest_wrap.h"
 #include "flare/container/find_cstr.h"
 #include "flare/times/time.h"
 #include "flare/log/logging.h"

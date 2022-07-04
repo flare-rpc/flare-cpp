@@ -20,7 +20,7 @@
 #define  FLARE_RPC_METHOD_STATUS_H_
 
 #include "flare/base/profile.h"                  // FLARE_DISALLOW_COPY_AND_ASSIGN
-#include "flare/variable/all.h"                    // vars
+#include "flare/metrics/all.h"                    // vars
 #include "flare/rpc/describable.h"
 #include "flare/rpc/concurrency_limiter.h"
 
@@ -71,11 +71,11 @@ namespace flare::rpc {
 
         std::unique_ptr<ConcurrencyLimiter> _cl;
         std::atomic<int> _nconcurrency;
-        flare::variable::Adder<int64_t> _nerror_var;
-        flare::variable::LatencyRecorder _latency_rec;
-        flare::variable::PassiveStatus<int> _nconcurrency_var;
-        flare::variable::PerSecond<flare::variable::Adder<int64_t>> _eps_var;
-        flare::variable::PassiveStatus<int32_t> _max_concurrency_var;
+        flare::gauge<int64_t> _nerror_var;
+        flare::LatencyRecorder _latency_rec;
+        flare::status_gauge<int> _nconcurrency_var;
+        flare::per_second<flare::gauge<int64_t>> _eps_var;
+        flare::status_gauge<int32_t> _max_concurrency_var;
     };
 
     class ConcurrencyRemover {

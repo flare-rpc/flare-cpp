@@ -28,7 +28,7 @@
 #include "flare/base/profile.h"
 #include "flare/base/endpoint.h"
 #include "flare/strings/string_splitter.h"
-#include "flare/variable/collector.h"
+#include "flare/metrics/collector.h"
 #include "flare/fiber/internal/fiber_entity.h"
 #include "flare/rpc/options.pb.h"                 // ProtocolType
 #include "flare/rpc/span.pb.h"
@@ -44,7 +44,7 @@ namespace flare::rpc {
 
     // Collect information required by /rpcz and tracing system whose idea is
     // described in http://static.googleusercontent.com/media/research.google.com/en//pubs/archive/36356.pdf
-    class Span : public flare::variable::Collected {
+    class Span : public flare::Collected {
         friend class SpanDB;
 
         struct Forbidden {
@@ -180,9 +180,9 @@ namespace flare::rpc {
 
         void destroy();
 
-        flare::variable::CollectorSpeedLimit *speed_limit();
+        flare::CollectorSpeedLimit *speed_limit();
 
-        flare::variable::CollectorPreprocessor *preprocessor();
+        flare::CollectorPreprocessor *preprocessor();
 
         void EndAsParent() {
             if (this == (Span *) flare::fiber_internal::tls_bls.rpcz_parent_span) {
@@ -273,9 +273,9 @@ namespace flare::rpc {
     // Check this function first before creating a span.
     // If rpcz of upstream is enabled, local rpcz is enabled automatically.
     inline bool IsTraceable(bool is_upstream_traced) {
-        extern flare::variable::CollectorSpeedLimit g_span_sl;
+        extern flare::CollectorSpeedLimit g_span_sl;
         return is_upstream_traced ||
-               (FLAGS_enable_rpcz && flare::variable::is_collectable(&g_span_sl));
+               (FLAGS_enable_rpcz && flare::is_collectable(&g_span_sl));
     }
 
 } // namespace flare::rpc

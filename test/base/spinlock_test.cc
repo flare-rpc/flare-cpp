@@ -5,7 +5,7 @@
 #include "flare/thread/spinlock.h"
 #include <thread>
 #include "flare/thread/latch.h"
-#include "gtest/gtest.h"
+#include "testing/gtest_wrap.h"
 
 namespace flare {
 

@@ -16,7 +16,7 @@
 // under the License.
 
 
-#include <gtest/gtest.h>
+#include "testing/gtest_wrap.h"
 #include <gflags/gflags.h>
 #include "flare/rpc/controller.h"
 #include "flare/rpc/server.h"
@@ -29,12 +29,12 @@
 
 int main(int argc, char* argv[]) {
     testing::InitGoogleTest(&argc, argv);
-    GFLAGS_NS::ParseCommandLineFlags(&argc, &argv, true);
-    if (GFLAGS_NS::SetCommandLineOption("http_body_compress_threshold", "0").empty()) {
+    google::ParseCommandLineFlags(&argc, &argv, true);
+    if (google::SetCommandLineOption("http_body_compress_threshold", "0").empty()) {
         std::cerr << "Fail to set -flare_crash_on_fatal_log" << std::endl;
         return -1;
     }
-    if (GFLAGS_NS::SetCommandLineOption("flare_crash_on_fatal_log", "true").empty()) {
+    if (google::SetCommandLineOption("flare_crash_on_fatal_log", "true").empty()) {
         std::cerr << "Fail to set -flare_crash_on_fatal_log" << std::endl;
         return -1;
     }

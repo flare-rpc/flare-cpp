@@ -22,7 +22,7 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netdb.h>                   //
-#include <gtest/gtest.h>
+#include "testing/gtest_wrap.h"
 #include "flare/base/gperftools_profiler.h"
 #include "flare/times/time.h"
 #include "flare/base/fd_utility.h"

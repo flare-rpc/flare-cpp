@@ -11,7 +11,7 @@
 
 #include <stddef.h>                             // size_t
 #include "flare/base/static_atomic.h"                     // std::atomic
-#include "flare/variable/all.h"                          // flare::variable::PassiveStatus
+#include "flare/metrics/all.h"                          // flare::status_gauge
 #include "flare/fiber/internal/fiber_entity.h"                  // fiber_entity
 #include "flare/memory/resource_pool.h"                 // ResourcePool
 #include "flare/fiber/internal/work_stealing_queue.h"        // WorkStealingQueue
@@ -76,9 +76,9 @@ namespace flare::fiber_internal {
 
         static void *worker_thread(void *task_control);
 
-        flare::variable::LatencyRecorder &exposed_pending_time();
+        flare::LatencyRecorder &exposed_pending_time();
 
-        flare::variable::LatencyRecorder *create_exposed_pending_time();
+        flare::LatencyRecorder *create_exposed_pending_time();
 
         std::atomic<size_t> _ngroup;
         fiber_worker **_groups;
@@ -88,24 +88,24 @@ namespace flare::fiber_internal {
         std::atomic<int> _concurrency;
         std::vector<pthread_t> _workers;
 
-        flare::variable::Adder<int64_t> _nworkers;
+        flare::gauge<int64_t> _nworkers;
         flare::base::Mutex _pending_time_mutex;
-        std::atomic<flare::variable::LatencyRecorder *> _pending_time;
-        flare::variable::PassiveStatus<double> _cumulated_worker_time;
-        flare::variable::PerSecond<flare::variable::PassiveStatus<double> > _worker_usage_second;
-        flare::variable::PassiveStatus<int64_t> _cumulated_switch_count;
-        flare::variable::PerSecond<flare::variable::PassiveStatus<int64_t> > _switch_per_second;
-        flare::variable::PassiveStatus<int64_t> _cumulated_signal_count;
-        flare::variable::PerSecond<flare::variable::PassiveStatus<int64_t> > _signal_per_second;
-        flare::variable::PassiveStatus<std::string> _status;
-        flare::variable::Adder<int64_t> _nfibers;
+        std::atomic<flare::LatencyRecorder *> _pending_time;
+        flare::status_gauge<double> _cumulated_worker_time;
+        flare::per_second<flare::status_gauge<double> > _worker_usage_second;
+        flare::status_gauge<int64_t> _cumulated_switch_count;
+        flare::per_second<flare::status_gauge<int64_t> > _switch_per_second;
+        flare::status_gauge<int64_t> _cumulated_signal_count;
+        flare::per_second<flare::status_gauge<int64_t> > _signal_per_second;
+        flare::status_gauge<std::string> _status;
+        flare::gauge<int64_t> _nfibers;
 
         static const int PARKING_LOT_NUM = 4;
         ParkingLot _pl[PARKING_LOT_NUM];
     };
 
-    inline flare::variable::LatencyRecorder &schedule_group::exposed_pending_time() {
-        flare::variable::LatencyRecorder *pt = _pending_time.load(std::memory_order_consume);
+    inline flare::LatencyRecorder &schedule_group::exposed_pending_time() {
+        flare::LatencyRecorder *pt = _pending_time.load(std::memory_order_consume);
         if (!pt) {
             pt = create_exposed_pending_time();
         }

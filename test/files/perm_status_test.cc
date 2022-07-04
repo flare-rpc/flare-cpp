@@ -3,7 +3,7 @@
 //
 
 #include <testing/filesystem_test_util.h>
-#include <gtest/gtest.h>
+#include "testing/gtest_wrap.h"
 
 TEST(perm, all) {
     EXPECT_TRUE((flare::perms::owner_read | flare::perms::owner_write | flare::perms::owner_exec) == flare::perms::owner_all);

@@ -16,7 +16,7 @@
 // under the License.
 
 #include "repeated.pb.h"
-#include <gtest/gtest.h>
+#include "testing/gtest_wrap.h"
 #include <flare/json2pb/pb_to_json.h>
 
 class RepeatedFieldTest : public testing::Test {

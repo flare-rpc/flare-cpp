@@ -3,7 +3,7 @@
 //
 
 #include <testing/filesystem_test_util.h>
-#include <gtest/gtest.h>
+#include "testing/gtest_wrap.h"
 
 TEST(path_preferred_separator, fs_path_generic) {
 #ifdef FLARE_PLATFORM_WINDOWS

@@ -2,7 +2,7 @@
 #include "flare/base/popen.h"
 #include "flare/base/errno.h"
 #include "flare/strings/ends_with.h"
-#include <gtest/gtest.h>
+#include "testing/gtest_wrap.h"
 
 namespace flare::base {
     extern int read_command_output_through_clone(std::ostream &, const char *);

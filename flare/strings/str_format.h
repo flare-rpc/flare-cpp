@@ -14,8 +14,11 @@
 #include <limits>
 #include <stdarg.h>
 #include "flare/strings/fmt/format.h"
+#include "flare/strings/internal/ostringstream.h"
 
 namespace flare {
+
+    using string_output_stream = ::flare::strings_internal::string_output_stream;
 
     template <class... Args>
     std::string string_format(const std::string_view& fmt, Args&&... args) {

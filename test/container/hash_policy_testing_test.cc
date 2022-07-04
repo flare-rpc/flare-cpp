@@ -2,7 +2,7 @@
 #include "flare/container/flat_hash_map.h"
 #include "hash_policy_testing.h"
 
-#include "gtest/gtest.h"
+#include "testing/gtest_wrap.h"
 
 namespace flare {
     namespace priv {

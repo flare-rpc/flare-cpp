@@ -19,7 +19,7 @@
 
 // Date: Sun Jul 13 15:04:18 CST 2014
 
-#include <gtest/gtest.h>
+#include "testing/gtest_wrap.h"
 #include <gflags/gflags.h>
 #include "flare/rpc/socket.h"
 #include "flare/rpc/socket_map.h"

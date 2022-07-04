@@ -19,36 +19,38 @@
 #define FLARE_RPC_RPC_REPLAY_INFO_THREAD_H_
 
 #include <pthread.h>
-#include <flare/variable/all.h>
+#include <flare/metrics/all.h>
 
 namespace flare::rpc {
 
-struct InfoThreadOptions {
-    flare::variable::LatencyRecorder* latency_recorder;
-    flare::variable::Adder<int64_t>* sent_count;
-    flare::variable::Adder<int64_t>* error_count;
+    struct InfoThreadOptions {
+        flare::LatencyRecorder *latency_recorder;
+        flare::gauge<int64_t> *sent_count;
+        flare::gauge<int64_t> *error_count;
 
-    InfoThreadOptions()
-        : latency_recorder(NULL)
-        , sent_count(NULL)
-        , error_count(NULL) {}
-};
+        InfoThreadOptions()
+                : latency_recorder(NULL), sent_count(NULL), error_count(NULL) {}
+    };
 
-class InfoThread {
-public:
-    InfoThread();
-    ~InfoThread();
-    void run();
-    bool start(const InfoThreadOptions&);
-    void stop();
-    
-private:
-    bool _stop;
-    InfoThreadOptions _options;
-    pthread_mutex_t _mutex;
-    pthread_cond_t _cond;
-    pthread_t _tid;
-};
+    class InfoThread {
+    public:
+        InfoThread();
+
+        ~InfoThread();
+
+        void run();
+
+        bool start(const InfoThreadOptions &);
+
+        void stop();
+
+    private:
+        bool _stop;
+        InfoThreadOptions _options;
+        pthread_mutex_t _mutex;
+        pthread_cond_t _cond;
+        pthread_t _tid;
+    };
 
 } // namespace flare::rpc
 
