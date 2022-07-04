@@ -63,7 +63,7 @@ namespace flare {
         char question_mark;
 
         // Dump variables with matched display_filter
-        display_filter display_filter;
+        display_filter filter;
 
         // Name matched by these wildcards (or exact names) are kept.
         std::string white_wildcards;

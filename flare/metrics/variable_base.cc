@@ -56,10 +56,10 @@ namespace flare {
 
     class VarEntry {
     public:
-        VarEntry() : var(nullptr), display_filter(DISPLAY_ON_ALL) {}
+        VarEntry() : var(nullptr), filter(DISPLAY_ON_ALL) {}
 
         variable_base *var;
-        display_filter display_filter;
+        display_filter filter;
     };
 
     typedef flare::container::FlatMap<std::string, VarEntry> VarMap;
@@ -119,7 +119,7 @@ namespace flare {
                                    const std::string_view &name,
                                    const std::string_view &help,
                                    const tag_type &tags,
-                                   display_filter display_filter) {
+                                   display_filter filter) {
         if (name.empty()) {
             FLARE_LOG(ERROR) << "Parameter[name] is empty";
             return -1;
@@ -166,7 +166,7 @@ namespace flare {
             if (entry == nullptr) {
                 entry = &m[_index_name];
                 entry->var = this;
-                entry->display_filter = display_filter;
+                entry->filter = filter;
                 return 0;
             }
         }
@@ -211,7 +211,7 @@ namespace flare {
     }
 
     void variable_base::list_exposed(std::vector<std::string> *names,
-                                     display_filter display_filter) {
+                                     display_filter filter) {
         if (names == nullptr) {
             return;
         }
@@ -239,7 +239,7 @@ namespace flare {
                         break;
                     }
                 }
-                if (it->second.display_filter & display_filter) {
+                if (it->second.filter & filter) {
                     names->push_back(it->first);
                 }
             }
@@ -274,9 +274,9 @@ namespace flare {
                         break;
                     }
                 }
-                FLARE_LOG(INFO)<<it->first<<": "<<it->second.display_filter;
-                if (it->second.display_filter & DISPLAY_ON_METRICS) {
-                    FLARE_LOG(INFO)<<it->first<<": "<<it->second.display_filter;
+                FLARE_LOG(INFO) << it->first << ": " << it->second.filter;
+                if (it->second.filter & DISPLAY_ON_METRICS) {
+                    FLARE_LOG(INFO) << it->first << ": " << it->second.filter;
                     cache_metrics m;
                     it->second.var->collect_metrics(m);
                     metrics->push_back(std::move(m));
@@ -296,14 +296,14 @@ namespace flare {
 
     int variable_base::describe_exposed(const std::string &name, std::ostream &os,
                                         bool quote_string,
-                                        display_filter display_filter) {
+                                        display_filter filter) {
         VarMapWithLock &m = get_var_map(name);
         FLARE_SCOPED_LOCK(m.mutex);
         VarEntry *p = m.seek(name);
         if (p == nullptr) {
             return -1;
         }
-        if (!(display_filter & p->display_filter)) {
+        if (!(filter & p->filter)) {
             return -1;
         }
         p->var->describe(os, quote_string);
@@ -312,9 +312,9 @@ namespace flare {
 
     std::string variable_base::describe_exposed(const std::string &name,
                                                 bool quote_string,
-                                                display_filter display_filter) {
+                                                display_filter filter) {
         std::ostringstream oss;
-        if (describe_exposed(name, oss, quote_string, display_filter) == 0) {
+        if (describe_exposed(name, oss, quote_string, filter) == 0) {
             return oss.str();
         }
         return std::string();
@@ -489,7 +489,7 @@ namespace flare {
     };
 
     variable_dump_options::variable_dump_options()
-            : quote_string(true), question_mark('?'), display_filter(DISPLAY_ON_PLAIN_TEXT) {}
+            : quote_string(true), question_mark('?'), filter(DISPLAY_ON_PLAIN_TEXT) {}
 
     int variable_base::dump_exposed(variable_dumper *dumper, const variable_dump_options *poptions) {
         if (nullptr == dumper) {
@@ -521,7 +521,7 @@ namespace flare {
                 const std::string &name = *it;
                 if (!black_matcher.match(name)) {
                     if (flare::variable_base::describe_exposed(
-                            name, os, opt.quote_string, opt.display_filter) != 0) {
+                            name, os, opt.quote_string, opt.filter) != 0) {
                         continue;
                     }
                     if (log_dummped) {
@@ -537,7 +537,7 @@ namespace flare {
         } else {
             // Have to iterate all variables.
             std::vector<std::string> varnames;
-            flare::variable_base::list_exposed(&varnames, opt.display_filter);
+            flare::variable_base::list_exposed(&varnames, opt.filter);
             // Sort the names to make them more readable.
             std::sort(varnames.begin(), varnames.end());
             for (std::vector<std::string>::const_iterator
@@ -545,7 +545,7 @@ namespace flare {
                 const std::string &name = *it;
                 if (white_matcher.match(name) && !black_matcher.match(name)) {
                     if (flare::variable_base::describe_exposed(
-                            name, os, opt.quote_string, opt.display_filter) != 0) {
+                            name, os, opt.quote_string, opt.filter) != 0) {
                         continue;
                     }
                     if (log_dummped) {

@@ -151,8 +151,8 @@ namespace flare {
                         const std::string_view &name,
                         const std::string_view &help,
                         const std::unordered_map<std::string, std::string> &tags,
-                        display_filter display_filter) override {
-            const int rc = variable_base::expose_impl(prefix, name, help, tags, display_filter);
+                        display_filter filter) override {
+            const int rc = variable_base::expose_impl(prefix, name, help, tags, filter);
             if (rc == 0 &&
                 _series_sampler == NULL &&
                 !std::is_same<InvOp, metrics_detail::void_op>::value &&

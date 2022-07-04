@@ -410,7 +410,7 @@ namespace flare::rpc {
         VarsDumper dumper(os, use_html);
         flare::variable_dump_options options;
         options.question_mark = '$';
-        options.display_filter =
+        options.filter =
                 (use_html ? flare::DISPLAY_ON_HTML : flare::DISPLAY_ON_PLAIN_TEXT);
         options.white_wildcards = cntl->http_request().unresolved_path();
         const int ndump = flare::variable_base::dump_exposed(&dumper, &options);

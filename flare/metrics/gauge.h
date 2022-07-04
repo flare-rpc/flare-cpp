@@ -31,12 +31,12 @@ namespace flare {
             }
         };
 
-        template <typename T>
+        template<typename T>
         struct place_holder_collect {
             void operator()(const T *, cache_metrics &metric) const {}
         };
 
-        template <typename T>
+        template<typename T>
         struct metrics_collect {
             void operator()(const T *sg, cache_metrics &metric) const {
                 sg->copy_metric_family(metric);
@@ -349,8 +349,8 @@ namespace flare {
                         const std::string_view &name,
                         const std::string_view &help,
                         const std::unordered_map<std::string, std::string> &tags,
-                        display_filter display_filter) override {
-            const int rc = variable_base::expose_impl(prefix, name, help, tags, display_filter);
+                        display_filter filter) override {
+            const int rc = variable_base::expose_impl(prefix, name, help, tags, filter);
             if (ADDITIVE &&
                 rc == 0 &&
                 _series_sampler == nullptr &&
@@ -465,13 +465,16 @@ namespace flare {
 
         read_most_gauge(const T &value) : _value(value) {}
 
-        read_most_gauge(const std::string_view &name, const T &value) : _value(value) {
-            this->expose(name);
+        read_most_gauge(const std::string_view &name, const T &value, const std::string_view &help = "",
+                        const variable_base::tag_type &tags = variable_base::tag_type()) : _value(
+                value) {
+            this->expose(name, help, tags, DISPLAY_ON_ALL);
         }
 
         read_most_gauge(const std::string_view &prefix,
-                        const std::string_view &name, const T &value) : _value(value) {
-            this->expose_as(prefix, name);
+                        const std::string_view &name, const T &value, const std::string_view &help = "",
+                        const variable_base::tag_type &tags = variable_base::tag_type()) : _value(value) {
+            this->expose_as(prefix, name, help, tags, DISPLAY_ON_ALL);
         }
 
         // Calling hide() manually is a MUST required by variable_base.
@@ -536,16 +539,18 @@ namespace flare {
 
         read_most_gauge(const T &value) : _value(value), _series_sampler(nullptr) {}
 
-        read_most_gauge(const std::string_view &name, const T &value)
+        read_most_gauge(const std::string_view &name, const T &value, const std::string_view &help = "",
+                        const variable_base::tag_type &tags = variable_base::tag_type())
                 : _value(value), _series_sampler(nullptr) {
-            this->expose(name, "", {},
+            this->expose(name, help, tags,
                          Filter()(static_cast<display_filter>(DISPLAY_ON_ALL | DISPLAY_ON_METRICS)));
         }
 
         read_most_gauge(const std::string_view &prefix,
-                        const std::string_view &name, const T &value)
+                        const std::string_view &name, const T &value, const std::string_view &help = "",
+                        const variable_base::tag_type &tags = variable_base::tag_type())
                 : _value(value), _series_sampler(nullptr) {
-            this->expose_as(prefix, name, "", {}, Filter()(
+            this->expose_as(prefix, name, help, tags, Filter()(
                     static_cast<display_filter>(DISPLAY_ON_ALL | DISPLAY_ON_METRICS)));
         }
 
@@ -612,24 +617,16 @@ namespace flare {
     public:
         read_most_gauge() {}
 
-        read_most_gauge(const std::string_view &name, const char *fmt, ...) {
-            if (fmt) {
-                va_list ap;
-                va_start(ap, fmt);
-                flare::string_vprintf(&_value, fmt, ap);
-                va_end(ap);
-            }
+        template<class... Args>
+        read_most_gauge(const std::string_view &name, const std::string_view &fmt, Args &&... args) {
+            _value = flare::string_format(fmt, std::forward<Args>(args)...);
             expose(name, "");
         }
 
+        template<class... Args>
         read_most_gauge(const std::string_view &prefix,
-                        const std::string_view &name, const char *fmt, ...) {
-            if (fmt) {
-                va_list ap;
-                va_start(ap, fmt);
-                flare::string_vprintf(&_value, fmt, ap);
-                va_end(ap);
-            }
+                        const std::string_view &name, const std::string_view &fmt, Args &&... args) {
+            _value = flare::string_format(fmt, std::forward<Args>(args)...);
             expose_as(prefix, name, "");
         }
 
@@ -648,14 +645,10 @@ namespace flare {
             return _value;
         }
 
-        void set_value(const char *fmt, ...) {
-            va_list ap;
-            va_start(ap, fmt);
-            {
-                std::unique_lock<std::mutex> guard(_lock);
-                flare::string_vprintf(&_value, fmt, ap);
-            }
-            va_end(ap);
+        template<class... Args>
+        void set_value(const std::string_view &fmt, Args &&... args) {
+            std::unique_lock<std::mutex> guard(_lock);
+            _value = flare::string_format(fmt, std::forward<Args>(args)...);
         }
 
         void set_value(const std::string &s) {

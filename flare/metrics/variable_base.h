@@ -69,9 +69,9 @@ namespace flare {
         int expose(const std::string_view &name,
                    const std::string_view &help,
                    const tag_type &tags = tag_type(),
-                   display_filter display_filter = DISPLAY_ON_ALL
+                   display_filter filter = DISPLAY_ON_ALL
         ) {
-            return expose_impl(std::string_view(), name, help, tags, display_filter);
+            return expose_impl(std::string_view(), name, help, tags, filter);
         }
 
         // Expose this variable with a prefix.
@@ -93,9 +93,9 @@ namespace flare {
                       const std::string_view &name,
                       const std::string_view &help,
                       const tag_type &tags = tag_type(),
-                      display_filter display_filter = DISPLAY_ON_ALL
+                      display_filter filter = DISPLAY_ON_ALL
         ) {
-            return expose_impl(prefix, name, help, tags, display_filter);
+            return expose_impl(prefix, name, help, tags, filter);
         }
 
         // Hide this variable so that it's not counted in *_exposed functions.
@@ -164,7 +164,7 @@ namespace flare {
                                 const std::string_view &name,
                                 const std::string_view &help,
                                 const tag_type &tags,
-                                display_filter display_filter);
+                                display_filter filter);
 
 
     protected:
