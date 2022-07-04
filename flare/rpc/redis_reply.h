@@ -29,7 +29,7 @@
 
 namespace flare::rpc {
 
-// Different types of replies.
+    // Different types of replies.
     enum RedisReplyType {
         REDIS_REPLY_STRING = 1,  // Bulk String
         REDIS_REPLY_ARRAY = 2,
@@ -41,7 +41,7 @@ namespace flare::rpc {
 
     const char *RedisReplyTypeToString(RedisReplyType);
 
-// A reply from redis-server.
+    // A reply from redis-server.
     class RedisReply {
     public:
         // The initial value for a reply is a nil.
