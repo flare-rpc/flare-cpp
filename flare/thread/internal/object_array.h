@@ -17,6 +17,7 @@
 #include <type_traits>
 #include <utility>
 #include <vector>
+#include <functional>
 
 #include "flare/base/profile.h"
 #include "flare/base/annotation.h"
@@ -212,7 +213,7 @@ namespace flare {
         // `object_array<T>`.
         template<class T>
         class object_array_layout {
-            using InitializerPtr = flare::base::function<void(void *)> *;
+            using InitializerPtr = std::function<void(void *)> *;
 
         public:
             // Access newest layout with internal lock held.
@@ -224,7 +225,7 @@ namespace flare {
 
             // Returns: [Version ID, Index in resulting layout].
             template<class F>
-            std::size_t create_entry(flare::base::function<void(void *)> *initializer, F &&cb) {
+            std::size_t create_entry(std::function<void(void *)> *initializer, F &&cb) {
                 std::scoped_lock _(lock_);
 
                 // Let's see if we can reuse a slot.

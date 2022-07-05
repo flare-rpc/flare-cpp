@@ -84,6 +84,8 @@ namespace flare {
 
         void stop();
 
+        int error() const { return _save_error; }
+
     private:
 
         int _save_error;

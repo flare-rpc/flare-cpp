@@ -12,8 +12,7 @@
 
 
 #include <utility>
-
-#include "flare/base/functional.h"
+#include <functional>
 #include "flare/thread/internal/object_array.h"
 
 namespace flare::thread_internal {
@@ -66,7 +65,7 @@ namespace flare::thread_internal {
         //
         // Always a multiple of `kEntrySize`.
         std::ptrdiff_t offset_;
-        flare::base::function<void(void *)> initializer_;
+        std::function<void(void *)> initializer_;
     };
 
     template<class T>

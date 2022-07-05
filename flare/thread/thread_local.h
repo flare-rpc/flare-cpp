@@ -13,8 +13,7 @@
 #include <mutex>
 #include <type_traits>
 #include <utility>
-
-#include "flare/base/functional.h"
+#include <functional>
 #include "flare/log/logging.h"
 #include "flare/thread/internal/always_initialized.h"
 #include "flare/memory/atomic_ptr.h"
@@ -102,7 +101,7 @@ namespace flare {
 
         mutable thread_internal::thread_local_always_initialized<flare::atomic_scoped_ptr<T>> raw_tls_;
         mutable std::mutex init_lock_;
-        flare::base::function<std::unique_ptr<T>()> creator_;
+        std::function<std::unique_ptr<T>()> creator_;
     };
 
 }  // namespace flare
