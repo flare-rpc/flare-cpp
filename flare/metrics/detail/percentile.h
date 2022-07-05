@@ -351,7 +351,7 @@ namespace flare {
                         if (!iter->_intervals[i] || iter->_intervals[i]->empty()) {
                             continue;
                         }
-                        typename flare::base::add_reference<decltype(*(iter->_intervals[i]))>::type
+                        typename flare::add_reference<decltype(*(iter->_intervals[i]))>::type
                                 invl = *(iter->_intervals[i]);
                         if (total <= SAMPLE_SIZE) {
                             get_interval_at(i).merge_with_expectation(

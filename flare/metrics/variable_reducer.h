@@ -72,7 +72,7 @@ namespace flare {
 
     public:
         // The `identify' must satisfy: identity Op a == a
-        variable_reducer(typename flare::base::add_cr_non_integral<T>::type identity = T(),
+        variable_reducer(typename flare::add_cr_non_integral<T>::type identity = T(),
                 const Op &op = Op(),
                 const InvOp &inv_op = InvOp())
                 : _combiner(identity, identity, op), _sampler(NULL), _series_sampler(NULL), _inv_op(inv_op) {
@@ -93,7 +93,7 @@ namespace flare {
 
         // Add a value.
         // Returns self reference for chaining.
-        variable_reducer &operator<<(typename flare::base::add_cr_non_integral<T>::type value);
+        variable_reducer &operator<<(typename flare::add_cr_non_integral<T>::type value);
 
         // Get reduced value.
         // Notice that this function walks through threads that ever add values
@@ -173,7 +173,7 @@ namespace flare {
 
     template<typename T, typename Op, typename InvOp>
     inline variable_reducer<T, Op, InvOp> &variable_reducer<T, Op, InvOp>::operator<<(
-            typename flare::base::add_cr_non_integral<T>::type value) {
+            typename flare::add_cr_non_integral<T>::type value) {
         // It's wait-free for most time
         agent_type *agent = _combiner.get_or_create_tls_agent();
         if (__builtin_expect(!agent, 0)) {
@@ -188,13 +188,13 @@ namespace flare {
         template<typename Tp>
         struct add_to {
             void operator()(Tp &lhs,
-                            typename flare::base::add_cr_non_integral<Tp>::type rhs) const { lhs += rhs; }
+                            typename flare::add_cr_non_integral<Tp>::type rhs) const { lhs += rhs; }
         };
 
         template<typename Tp>
         struct minus_from {
             void operator()(Tp &lhs,
-                            typename flare::base::add_cr_non_integral<Tp>::type rhs) const { lhs -= rhs; }
+                            typename flare::add_cr_non_integral<Tp>::type rhs) const { lhs -= rhs; }
         };
     }
 
@@ -202,7 +202,7 @@ namespace flare {
         template<typename Tp>
         struct max_to {
             void operator()(Tp &lhs,
-                            typename flare::base::add_cr_non_integral<Tp>::type rhs) const {
+                            typename flare::add_cr_non_integral<Tp>::type rhs) const {
                 // Use operator< as well.
                 if (lhs < rhs) {
                     lhs = rhs;
@@ -215,7 +215,7 @@ namespace flare {
         template<typename Tp>
         struct min_to {
             void operator()(Tp &lhs,
-                            typename flare::base::add_cr_non_integral<Tp>::type rhs) const {
+                            typename flare::add_cr_non_integral<Tp>::type rhs) const {
                 if (rhs < lhs) {
                     lhs = rhs;
                 }

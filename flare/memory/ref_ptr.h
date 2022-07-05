@@ -11,7 +11,7 @@
 #include "flare/log/logging.h"
 
 namespace flare {
-    
+
     constexpr struct ref_ptr_t {
         explicit ref_ptr_t() = default;
     } ref_ptr_v;
@@ -96,7 +96,7 @@ namespace flare {
     // Utilities for internal use.
     //
     // FIXME: I'm not sure if it compiles quickly enough, but it might worth a look.
-    namespace detail {
+    namespace memory_internal {
 
         // This methods serves multiple purposes:
         //
@@ -170,14 +170,14 @@ namespace flare {
         // - `T` inherts from `ref_counted<U, ...>` and `U`'s destructor is virtual.
         template<class T>
         constexpr auto is_default_ref_traits_safe_v =
-                detail::is_ref_counted_directly_v<T> ||
-                detail::is_ref_counted_indirectly_safe_v<T>;
+                memory_internal::is_ref_counted_directly_v<T> ||
+                memory_internal::is_ref_counted_indirectly_safe_v<T>;
 
         template<class T>
         using as_ref_counted_t =
         decltype(get_ref_counted_type(reinterpret_cast<const T *>(0)));
 
-    }  // namespace detail
+    }  // namespace memory_internal
 
     // Specialization for `ref_counted<T>` ...
     template<class T, class Deleter>
@@ -195,10 +195,9 @@ namespace flare {
 
     // ... and its subclasses.
     template<class T>
-    struct ref_traits<
-            T, std::enable_if_t<!std::is_same_v<detail::as_ref_counted_t<T>, T> &&
-                                detail::is_default_ref_traits_safe_v<T>>>
-            : ref_traits<detail::as_ref_counted_t<T>> {
+    struct ref_traits<T, std::enable_if_t<!std::is_same_v<memory_internal::as_ref_counted_t < T>, T> &&
+                    memory_internal::is_default_ref_traits_safe_v < T>>>
+        : ref_traits<memory_internal::as_ref_counted_t < T>> {
     };
 
     // @sa: http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0468r1.html
@@ -414,6 +413,7 @@ namespace flare {
     constexpr bool operator==(std::nullptr_t, const ref_ptr<T> &ptr) noexcept {
         return ptr.get() == nullptr;
     }
+
 }  // namespace flare
 
 namespace std {
@@ -421,12 +421,12 @@ namespace std {
     // Specialization for `std::atomic<flare::ref_ptr<T>>`.
     //
     // @sa: https://en.cppreference.com/w/cpp/memory/shared_ptr/atomic2
-    template <class T>
+    template<class T>
     class atomic<flare::ref_ptr<T>> {
         using Traits = flare::ref_traits<T>;
 
     public:
-        constexpr atomic() noexcept : ptr_(nullptr) {}
+        constexpr atomic() noexcept: ptr_(nullptr) {}
 
         // FIXME: It destructor of specialization of `std::atomic>` allowed to be
         // non-trivial? I don't see a way to implement a trival destructor while
@@ -440,7 +440,8 @@ namespace std {
         // Receiving a pointer.
         constexpr /* implicit */ atomic(flare::ref_ptr<T> ptr) noexcept
                 : ptr_(ptr.leak()) {}
-        atomic& operator=(flare::ref_ptr<T> ptr) noexcept {
+
+        atomic &operator=(flare::ref_ptr<T> ptr) noexcept {
             store(std::move(ptr));
             return *this;
         }
@@ -475,33 +476,36 @@ namespace std {
         // Compares if this atomic holds the `expected` pointer, and exchanges it with
         // the new `desired` one if the comparsion holds.
         bool compare_exchange_strong(
-                flare::ref_ptr<T>& expected, flare::ref_ptr<T> desired,
+                flare::ref_ptr<T> &expected, flare::ref_ptr<T> desired,
                 std::memory_order order = std::memory_order_seq_cst) noexcept {
             return compare_exchange_impl(
-                    [&](auto&&... args) { return ptr_.compare_exchange_strong(args...); },
+                    [&](auto &&... args) { return ptr_.compare_exchange_strong(args...); },
                     expected, std::move(desired), order);
         }
+
         bool compare_exchange_weak(
-                flare::ref_ptr<T>& expected, flare::ref_ptr<T> desired,
+                flare::ref_ptr<T> &expected, flare::ref_ptr<T> desired,
                 std::memory_order order = std::memory_order_seq_cst) noexcept {
             return compare_exchange_impl(
-                    [&](auto&&... args) { return ptr_.compare_exchange_weak(args...); },
+                    [&](auto &&... args) { return ptr_.compare_exchange_weak(args...); },
                     expected, std::move(desired), order);
         }
-        bool compare_exchange_strong(flare::ref_ptr<T>& expected,
+
+        bool compare_exchange_strong(flare::ref_ptr<T> &expected,
                                      flare::ref_ptr<T> desired,
                                      std::memory_order success,
                                      std::memory_order failure) noexcept {
             return compare_exchange_impl(
-                    [&](auto&&... args) { return ptr_.compare_exchange_strong(args...); },
+                    [&](auto &&... args) { return ptr_.compare_exchange_strong(args...); },
                     expected, std::move(desired), success, failure);
         }
-        bool compare_exchange_weak(flare::ref_ptr<T>& expected,
+
+        bool compare_exchange_weak(flare::ref_ptr<T> &expected,
                                    flare::ref_ptr<T> desired,
                                    std::memory_order success,
                                    std::memory_order failure) noexcept {
             return compare_exchange_impl(
-                    [&](auto&&... args) { return ptr_.compare_exchange_weak(args...); },
+                    [&](auto &&... args) { return ptr_.compare_exchange_weak(args...); },
                     expected, std::move(desired), success, failure);
         }
 
@@ -522,16 +526,17 @@ namespace std {
 #endif
 
         // Not copyable, as requested by the Standard.
-        atomic(const atomic&) = delete;
-        atomic& operator=(const atomic&) = delete;
+        atomic(const atomic &) = delete;
+
+        atomic &operator=(const atomic &) = delete;
 
     private:
-        template <class F, class... Orders>
-        bool compare_exchange_impl(F&& f, flare::ref_ptr<T>& expected,
-                                 flare::ref_ptr<T> desired, Orders... orders) {
+        template<class F, class... Orders>
+        bool compare_exchange_impl(F &&f, flare::ref_ptr<T> &expected,
+                                   flare::ref_ptr<T> desired, Orders... orders) {
             auto current = expected.get();
             if (std::forward<F>(f)(current, desired.get(), orders...)) {
-                (void)desired.leak();  // Ownership transfer to `ptr_`.
+                (void) desired.leak();  // Ownership transfer to `ptr_`.
                 // Ownership of the old pointer is transferred to us, release it.
                 flare::ref_ptr(flare::adopt_ptr_v, current);
                 return true;
@@ -541,7 +546,7 @@ namespace std {
         }
 
     private:
-        std::atomic<T*> ptr_;  // We hold a reference to it.
+        std::atomic<T *> ptr_;  // We hold a reference to it.
     };
 
 }  // namespace std

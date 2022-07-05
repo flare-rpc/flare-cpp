@@ -6,7 +6,7 @@
 #include <vector>                       // std::vector
 #include "flare/base/static_atomic.h"
 #include "flare/base/scoped_lock.h"           // FLARE_SCOPED_LOCK
-#include "flare/base/type_traits.h"           // flare::base::add_cr_non_integral
+#include "flare/base/type_traits.h"           // flare::add_cr_non_integral
 #include "flare/base/lock.h"  // flare::base::Lock
 #include "flare/container/linked_list.h"// link_node
 #include "flare/metrics/detail/agent_group.h"    // detail::agent_group
@@ -228,10 +228,10 @@ namespace flare {
                 return ret;
             }
 
-            typename flare::base::add_cr_non_integral<ElementTp>::type
+            typename flare::add_cr_non_integral<ElementTp>::type
             element_identity() const { return _element_identity; }
 
-            typename flare::base::add_cr_non_integral<ResultTp>::type
+            typename flare::add_cr_non_integral<ResultTp>::type
             result_identity() const { return _result_identity; }
 
             // [Threadsafe] May be called from anywhere.
