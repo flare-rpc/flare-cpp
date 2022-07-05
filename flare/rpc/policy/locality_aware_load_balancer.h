@@ -19,6 +19,7 @@
 #ifndef FLARE_RPC_POLICY_LOCALITY_AWARE_LOAD_BALANCER_H_
 #define FLARE_RPC_POLICY_LOCALITY_AWARE_LOAD_BALANCER_H_
 
+#include <mutex>
 #include <vector>                                      // std::vector
 #include <deque>                                       // std::deque
 #include <map>                                         // std::map
@@ -112,7 +113,7 @@ namespace flare::rpc {
             private:
                 int64_t _weight;
                 int64_t _base_weight;
-                flare::base::Mutex _mutex;
+                std::mutex _mutex;
                 int64_t _begin_time_sum;
                 int _begin_time_count;
                 int64_t _old_diff_sum;

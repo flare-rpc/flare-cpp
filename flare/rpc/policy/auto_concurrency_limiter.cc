@@ -141,7 +141,7 @@ namespace flare::rpc {
         bool AutoConcurrencyLimiter::AddSample(int error_code,
                                                int64_t latency_us,
                                                int64_t sampling_time_us) {
-            std::unique_lock<flare::base::Mutex> lock_guard(_sw_mutex);
+            std::unique_lock<std::mutex> lock_guard(_sw_mutex);
             if (_reset_latency_us != 0) {
                 // min_latency is about to be reset soon.
                 if (_reset_latency_us > sampling_time_us) {

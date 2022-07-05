@@ -976,7 +976,7 @@ namespace flare::rpc {
             }
             uint32_t chunk_stream_id = 0;
             {
-                std::unique_lock<flare::base::Mutex> mu(_stream_mutex);
+                std::unique_lock<std::mutex> mu(_stream_mutex);
                 MessageStreamInfo &info = _mstream_map[stream_id];
                 if (info.stream != NULL) {
                     mu.unlock();
@@ -993,7 +993,7 @@ namespace flare::rpc {
         bool RtmpContext::AddServerStream(RtmpStreamBase *stream) {
             uint32_t stream_id = 0;
             {
-                std::unique_lock<flare::base::Mutex> mu(_stream_mutex);
+                std::unique_lock<std::mutex> mu(_stream_mutex);
                 if (!AllocateMessageStreamId(&stream_id)) {
                     return false;
                 }
@@ -1024,7 +1024,7 @@ namespace flare::rpc {
             // for deref the stream outside _stream_mutex.
             flare::container::intrusive_ptr<RtmpStreamBase> deref_ptr;
             {
-                std::unique_lock<flare::base::Mutex> mu(_stream_mutex);
+                std::unique_lock<std::mutex> mu(_stream_mutex);
                 MessageStreamInfo *info = _mstream_map.seek(stream_id);
                 if (info == NULL) {
                     mu.unlock();

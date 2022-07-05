@@ -256,7 +256,7 @@ namespace flare::fiber_internal {
         if (__builtin_expect(NULL == g, 0)) {
             return -1;
         }
-        std::unique_lock<flare::base::Mutex> mu(_modify_group_mutex);
+        std::unique_lock<std::mutex> mu(_modify_group_mutex);
         if (_stop) {
             return -1;
         }

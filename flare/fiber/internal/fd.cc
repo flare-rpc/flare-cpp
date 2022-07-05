@@ -395,7 +395,7 @@ namespace flare::fiber_internal {
         int _epfd;
         bool _stop;
         fiber_id_t _tid;
-        flare::base::Mutex _start_mutex;
+        std::mutex _start_mutex;
     };
 
     EpollThread epoll_thread[FIBER_EPOLL_THREAD_NUM];

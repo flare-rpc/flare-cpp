@@ -124,7 +124,7 @@ namespace flare::rpc {
     private:
         // options used to create this instance
         SocketOptions _options;
-        flare::base::Mutex _mutex;
+        std::mutex _mutex;
         std::vector<SocketId> _pool;
         flare::base::end_point _remote_side;
         std::atomic<int> _numfree; // #free sockets in all sub pools.

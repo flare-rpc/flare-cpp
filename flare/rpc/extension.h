@@ -59,7 +59,7 @@ namespace flare::rpc {
         ~Extension();
 
         flare::container::CaseIgnoredFlatMap<T *> _instance_map;
-        flare::base::Mutex _map_mutex;
+        std::mutex _map_mutex;
     };
 
 } // namespace flare::rpc

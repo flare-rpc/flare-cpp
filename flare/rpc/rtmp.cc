@@ -1551,7 +1551,7 @@ namespace flare::rpc {
     }
 
     bool RtmpStreamBase::BeginProcessingMessage(const char *fun_name) {
-        std::unique_lock<flare::base::Mutex> mu(_call_mutex);
+        std::unique_lock<std::mutex> mu(_call_mutex);
         if (_stopped) {
             mu.unlock();
             FLARE_LOG(ERROR) << fun_name << " is called after OnStop()";
@@ -1571,7 +1571,7 @@ namespace flare::rpc {
     }
 
     void RtmpStreamBase::EndProcessingMessage() {
-        std::unique_lock<flare::base::Mutex> mu(_call_mutex);
+        std::unique_lock<std::mutex> mu(_call_mutex);
         _processing_msg = false;
         if (_stopped) {
             mu.unlock();
@@ -1623,7 +1623,7 @@ namespace flare::rpc {
 
     void RtmpStreamBase::CallOnStop() {
         {
-            std::unique_lock<flare::base::Mutex> mu(_call_mutex);
+            std::unique_lock<std::mutex> mu(_call_mutex);
             if (_stopped) {
                 mu.unlock();
                 FLARE_LOG(ERROR) << "OnStop() was called more than once";
@@ -1664,7 +1664,7 @@ namespace flare::rpc {
         CallId create_stream_rpc_id = INVALID_FIBER_TOKEN;
         flare::container::intrusive_ptr<RtmpClientStream> self_ref;
 
-        std::unique_lock<flare::base::Mutex> mu(_state_mutex);
+        std::unique_lock<std::mutex> mu(_state_mutex);
         switch (_state) {
             case STATE_UNINITIALIZED:
                 _state = STATE_DESTROYING;
@@ -1699,7 +1699,7 @@ namespace flare::rpc {
 
     void RtmpClientStream::SignalError() {
         fiber_token_t onfail_id = INVALID_FIBER_TOKEN;
-        std::unique_lock<flare::base::Mutex> mu(_state_mutex);
+        std::unique_lock<std::mutex> mu(_state_mutex);
         switch (_state) {
             case STATE_UNINITIALIZED:
                 _state = STATE_ERROR;
@@ -1726,7 +1726,7 @@ namespace flare::rpc {
     StreamUserData *RtmpClientStream::OnCreatingStream(
             SocketUniquePtr *inout, Controller *cntl) {
         {
-            std::unique_lock<flare::base::Mutex> mu(_state_mutex);
+            std::unique_lock<std::mutex> mu(_state_mutex);
             if (_state == STATE_ERROR || _state == STATE_DESTROYING) {
                 cntl->SetFailed(EINVAL, "Fail to replace socket for stream, _state is error or destroying");
                 return NULL;
@@ -1772,7 +1772,7 @@ namespace flare::rpc {
 
     void RtmpClientStream::OnFailedToCreateStream() {
         {
-            std::unique_lock<flare::base::Mutex> mu(_state_mutex);
+            std::unique_lock<std::mutex> mu(_state_mutex);
             switch (_state) {
                 case STATE_CREATING:
                     _state = STATE_ERROR;
@@ -1844,7 +1844,7 @@ namespace flare::rpc {
         int rc = 0;
         fiber_token_t onfail_id = INVALID_FIBER_TOKEN;
         {
-            std::unique_lock<flare::base::Mutex> mu(_state_mutex);
+            std::unique_lock<std::mutex> mu(_state_mutex);
             switch (_state) {
                 case STATE_CREATING:
                     FLARE_CHECK(_rtmpsock);
@@ -2170,7 +2170,7 @@ namespace flare::rpc {
             return OnStopInternal();
         }
         {
-            std::unique_lock<flare::base::Mutex> mu(_state_mutex);
+            std::unique_lock<std::mutex> mu(_state_mutex);
             if (_state == STATE_DESTROYING || _state == STATE_ERROR) {
                 // already Destroy()-ed or SignalError()-ed
                 FLARE_LOG(WARNING) << "RtmpClientStream=" << this << " was already "
@@ -2197,7 +2197,7 @@ namespace flare::rpc {
         google::protobuf::Message *res = (google::protobuf::Message *) this;
         const CallId call_id = done->cntl.call_id();
         {
-            std::unique_lock<flare::base::Mutex> mu(_state_mutex);
+            std::unique_lock<std::mutex> mu(_state_mutex);
             switch (_state) {
                 case STATE_UNINITIALIZED:
                     _state = STATE_CREATING;

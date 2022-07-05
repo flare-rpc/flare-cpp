@@ -106,7 +106,7 @@ namespace flare::rpc {
         if (!_factory->ResetData(data)) {
             return _factory->DestroyData(data);
         }
-        std::unique_lock<flare::base::Mutex> mu(_mutex);
+        std::unique_lock<std::mutex> mu(_mutex);
         if (_capacity == _size) {
             const unsigned new_cap = (_capacity <= 1 ? 128 : (_capacity * 3 / 2));
             void **new_pool = (void **) malloc(new_cap * sizeof(void *));

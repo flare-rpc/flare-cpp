@@ -63,7 +63,7 @@ namespace flare::fiber_internal {
         };
 
 #else
-        typedef flare::base::Mutex FastPthreadMutex;
+        typedef std::mutex FastPthreadMutex;
 #endif
     }
 

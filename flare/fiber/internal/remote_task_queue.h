@@ -58,7 +58,7 @@ namespace flare::fiber_internal {
         FLARE_DISALLOW_COPY_AND_ASSIGN(RemoteTaskQueue);
 
         flare::container::bounded_queue<fiber_id_t> _tasks;
-        flare::base::Mutex _mutex;
+        std::mutex _mutex;
     };
 
 }  // namespace flare::fiber_internal

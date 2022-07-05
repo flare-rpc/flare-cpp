@@ -42,7 +42,7 @@ struct AccessThreadArgs {
     const std::deque<std::string> *url_list;
     size_t offset;
     std::deque<std::pair<std::string, flare::cord_buf> > output_queue;
-    flare::base::Mutex output_queue_mutex;
+    std::mutex output_queue_mutex;
     std::atomic<int> current_concurrency;
 };
 

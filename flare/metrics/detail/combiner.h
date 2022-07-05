@@ -2,12 +2,12 @@
 #ifndef  FLARE_VARIABLE_COMBINER_H_
 #define  FLARE_VARIABLE_COMBINER_H_
 
+#include <mutex>
 #include <string>                       // std::string
 #include <vector>                       // std::vector
 #include "flare/base/static_atomic.h"
 #include "flare/base/scoped_lock.h"           // FLARE_SCOPED_LOCK
 #include "flare/base/type_traits.h"           // flare::add_cr_non_integral
-#include "flare/base/lock.h"  // flare::base::Lock
 #include "flare/container/linked_list.h"// link_node
 #include "flare/metrics/detail/agent_group.h"    // detail::agent_group
 #include "flare/metrics/detail/is_atomical.h"
@@ -35,15 +35,15 @@ namespace flare {
             // global_result will not be changed provided this method is called
             // from the thread owning the agent.
             result_type *lock() {
-                _a->element._lock.Release();
-                _c->_lock.Acquire();
+                _a->element._lock.unlock();
+                _c->_lock.lock();
                 return &_c->_global_result;
             }
 
             // Call this method to unlock the combiner and lock tls element again.
             void unlock() {
-                _c->_lock.Release();
-                _a->element._lock.Acquire();
+                _c->_lock.unlock();
+                _a->element._lock.lock();
             }
 
         private:
@@ -51,7 +51,7 @@ namespace flare {
             Combiner *_c;
         };
 
-// Abstraction of tls element whose operations are all atomic.
+        // Abstraction of tls element whose operations are all atomic.
         template<typename T, typename Enabler = void>
         class ElementContainer {
             template<typename> friend
@@ -59,38 +59,38 @@ namespace flare {
 
         public:
             void load(T *out) {
-                flare::base::AutoLock guard(_lock);
+                std::unique_lock guard(_lock);
                 *out = _value;
             }
 
             void store(const T &new_value) {
-                flare::base::AutoLock guard(_lock);
+                std::unique_lock guard(_lock);
                 _value = new_value;
             }
 
             void exchange(T *prev, const T &new_value) {
-                flare::base::AutoLock guard(_lock);
+                std::unique_lock guard(_lock);
                 *prev = _value;
                 _value = new_value;
             }
 
             template<typename Op, typename T1>
             void modify(const Op &op, const T1 &value2) {
-                flare::base::AutoLock guard(_lock);
+                std::unique_lock guard(_lock);
                 call_op_returning_void(op, _value, value2);
             }
 
             // [Unique]
             template<typename Op, typename GlobalValue>
             void merge_global(const Op &op, GlobalValue &global_value) {
-                _lock.Acquire();
+                _lock.lock();
                 op(global_value, _value);
-                _lock.Release();
+                _lock.unlock();
             }
 
         private:
             T _value;
-            flare::base::Lock _lock;
+            std::mutex _lock;
         };
 
         template<typename T>
@@ -218,7 +218,7 @@ namespace flare {
             // [Threadsafe] May be called from anywhere
             ResultTp combine_agents() const {
                 ElementTp tls_value;
-                flare::base::AutoLock guard(_lock);
+                std::unique_lock guard(_lock);
                 ResultTp ret = _global_result;
                 for (flare::container::link_node<Agent> *node = _agents.head();
                      node != _agents.end(); node = node->next()) {
@@ -237,7 +237,7 @@ namespace flare {
             // [Threadsafe] May be called from anywhere.
             ResultTp reset_all_agents() {
                 ElementTp prev;
-                flare::base::AutoLock guard(_lock);
+                std::unique_lock guard(_lock);
                 ResultTp tmp = _global_result;
                 _global_result = _result_identity;
                 for (flare::container::link_node<Agent> *node = _agents.head();
@@ -254,7 +254,7 @@ namespace flare {
                     return;
                 }
                 ElementTp local;
-                flare::base::AutoLock guard(_lock);
+                std::unique_lock guard(_lock);
                 // TODO: For non-atomic types, we can pass the reference to op directly.
                 // But atomic types cannot. The code is a little troublesome to write.
                 agent->element.load(&local);
@@ -268,7 +268,7 @@ namespace flare {
                     return;
                 }
                 ElementTp prev;
-                flare::base::AutoLock guard(_lock);
+                std::unique_lock guard(_lock);
                 agent->element.exchange(&prev, _element_identity);
                 call_op_returning_void(_op, _global_result, prev);
             }
@@ -290,14 +290,14 @@ namespace flare {
                 agent->reset(_element_identity, this);
                 // TODO: Is uniqueness-checking necessary here?
                 {
-                    flare::base::AutoLock guard(_lock);
+                    std::unique_lock guard(_lock);
                     _agents.append(agent);
                 }
                 return agent;
             }
 
             void clear_all_agents() {
-                flare::base::AutoLock guard(_lock);
+                std::unique_lock guard(_lock);
                 // reseting agents is must because the agent object may be reused.
                 // Set element to be default-constructed so that if it's non-pod,
                 // internal allocations should be released.
@@ -317,7 +317,7 @@ namespace flare {
         private:
             agent_id _id;
             BinaryOp _op;
-            mutable flare::base::Lock _lock;
+            mutable std::mutex _lock;
             ResultTp _global_result;
             ResultTp _result_identity;
             ElementTp _element_identity;

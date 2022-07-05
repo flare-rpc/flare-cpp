@@ -19,6 +19,7 @@
 #ifndef FLARE_RPC_PROGRESSIVE_ATTACHMENT_H_
 #define FLARE_RPC_PROGRESSIVE_ATTACHMENT_H_
 
+#include <mutex>
 #include "flare/rpc/callback.h"
 #include "flare/base/static_atomic.h"
 #include "flare/io/cord_buf.h"
@@ -70,7 +71,7 @@ namespace flare::rpc {
         bool _before_http_1_1;
         bool _pause_from_mark_rpc_as_done;
         std::atomic<int> _rpc_state;
-        flare::base::Mutex _mutex;
+        std::mutex _mutex;
         SocketUniquePtr _httpsock;
         flare::cord_buf _saved_buf;
         fiber_token_t _notify_id;

@@ -19,6 +19,7 @@
 #ifndef BAIDU_RPC_POLICY_HTTP2_RPC_PROTOCOL_H
 #define BAIDU_RPC_POLICY_HTTP2_RPC_PROTOCOL_H
 
+#include <mutex>
 #include "flare/rpc/policy/http_rpc_protocol.h"   // HttpContext
 #include "flare/rpc/input_message_base.h"
 #include "flare/rpc/protocol.h"
@@ -194,7 +195,7 @@ namespace flare::rpc {
             std::atomic<int> _nref;
             uint32_t _size;
             int _stream_id;
-            mutable flare::base::Mutex _mutex;
+            mutable std::mutex _mutex;
             Controller *_cntl;
             std::unique_ptr<H2StreamContext> _sctx;
             HPacker::Header _list[0];
@@ -439,10 +440,10 @@ namespace flare::rpc {
             H2Settings _local_settings;
             H2Settings _unack_local_settings;
             HPacker _hpacker;
-            mutable flare::base::Mutex _abandoned_streams_mutex;
+            mutable std::mutex _abandoned_streams_mutex;
             std::vector<uint32_t> _abandoned_streams;
             typedef flare::container::FlatMap<int, H2StreamContext *> StreamMap;
-            mutable flare::base::Mutex _stream_mutex;
+            mutable std::mutex _stream_mutex;
             StreamMap _pending_streams;
             std::atomic<int64_t> _deferred_window_update;
         };

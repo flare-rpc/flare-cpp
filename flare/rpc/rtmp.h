@@ -19,6 +19,7 @@
 #ifndef FLARE_RPC_RTMP_H_
 #define FLARE_RPC_RTMP_H_
 
+#include <mutex>
 #include <string_view>   // std::string_view
 #include "flare/base/endpoint.h"               // flare::base::end_point
 #include "flare/rpc/shared_object.h"          // SharedObject, intrusive_ptr
@@ -646,7 +647,7 @@ friend class policy::OnServerStreamCreated;
     uint32_t _chunk_stream_id;
     int64_t _create_realtime_us;
     SocketUniquePtr _rtmpsock;
-    flare::base::Mutex _call_mutex;
+    std::mutex _call_mutex;
     std::atomic<bool> _is_server_accepted;
 };
 
@@ -873,7 +874,7 @@ friend class RtmpRetryingClientStream;
         STATE_DESTROYING,
     };
     State _state;
-    flare::base::Mutex _state_mutex;
+    std::mutex _state_mutex;
     RtmpClientStreamOptions _options;
 };
 
@@ -1006,7 +1007,7 @@ friend class RetryingClientMessageHandler;
     
     flare::container::intrusive_ptr<RtmpStreamBase> _using_sub_stream;
     flare::container::intrusive_ptr<RtmpRetryingClientStream> _self_ref;
-    mutable flare::base::Mutex _stream_mutex;
+    mutable std::mutex _stream_mutex;
     RtmpRetryingClientStreamOptions _options;
     std::atomic<bool> _destroying;
     std::atomic<bool> _called_on_stop;

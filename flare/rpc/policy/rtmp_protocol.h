@@ -19,6 +19,7 @@
 #ifndef FLARE_RPC_POLICY_RTMP_PROTOCOL_H_
 #define FLARE_RPC_POLICY_RTMP_PROTOCOL_H_
 
+#include <mutex>
 #include "flare/container/flat_map.h"
 #include "flare/rpc/protocol.h"
 #include "flare/rpc/rtmp.h"
@@ -409,14 +410,14 @@ namespace flare::rpc {
             RtmpService *_service;
 
             // Mapping message_stream_id to message streams.
-            flare::base::Mutex _stream_mutex;
+            std::mutex _stream_mutex;
             struct MessageStreamInfo {
                 flare::container::intrusive_ptr<RtmpStreamBase> stream;
             };
             flare::container::FlatMap<uint32_t, MessageStreamInfo> _mstream_map;
 
             // Mapping transaction id to handlers.
-            flare::base::Mutex _trans_mutex;
+            std::mutex _trans_mutex;
             uint32_t _trans_id_allocator;
             flare::container::FlatMap<uint32_t, RtmpTransactionHandler *> _trans_map;
 

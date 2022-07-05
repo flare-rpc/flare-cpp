@@ -20,7 +20,6 @@
 #include <gflags/gflags.h>
 #include "flare/rpc/cluster_recover_policy.h"
 #include "flare/base/scoped_lock.h"
-#include "flare/base/lock.h"
 #include "flare/rpc/server_id.h"
 #include "flare/rpc/socket.h"
 #include "flare/base/fast_rand.h"
@@ -39,7 +38,7 @@ namespace flare::rpc {
               _last_usable_change_time_ms(0), _hold_seconds(hold_seconds), _usable_cache(0), _usable_cache_time_ms(0) {}
 
     void DefaultClusterRecoverPolicy::StartRecover() {
-        std::unique_lock<flare::base::Mutex> mu(_mutex);
+        std::unique_lock<std::mutex> mu(_mutex);
         _recovering = true;
     }
 
@@ -48,7 +47,7 @@ namespace flare::rpc {
             return false;
         }
         int64_t now_ms = flare::time_now().to_unix_millis();
-        std::unique_lock<flare::base::Mutex> mu(_mutex);
+        std::unique_lock<std::mutex> mu(_mutex);
         if (_last_usable_change_time_ms != 0 && _last_usable != 0 &&
             (now_ms - _last_usable_change_time_ms > _hold_seconds * 1000)) {
             _recovering = false;
@@ -76,7 +75,7 @@ namespace flare::rpc {
             }
         }
         {
-            std::unique_lock<flare::base::Mutex> mu(_mutex);
+            std::unique_lock<std::mutex> mu(_mutex);
             _usable_cache = usable;
             _usable_cache_time_ms = now_ms;
         }
@@ -91,7 +90,7 @@ namespace flare::rpc {
         int64_t now_ms = flare::time_now().to_unix_millis();
         uint64_t usable = GetUsableServerCount(now_ms, server_list);
         if (_last_usable != usable) {
-            std::unique_lock<flare::base::Mutex> mu(_mutex);
+            std::unique_lock<std::mutex> mu(_mutex);
             if (_last_usable != usable) {
                 _last_usable = usable;
                 _last_usable_change_time_ms = now_ms;

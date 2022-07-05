@@ -181,7 +181,7 @@ namespace flare::rpc {
         return 0;
     }
 
-    int HttpMessage::UnlockAndFlushToBodyReader(std::unique_lock<flare::base::Mutex> &mu) {
+    int HttpMessage::UnlockAndFlushToBodyReader(std::unique_lock<std::mutex> &mu) {
         if (_body.empty()) {
             mu.unlock();
             return 0;
@@ -248,7 +248,7 @@ namespace flare::rpc {
             return 0;
         }
         // Progressive read.
-        std::unique_lock<flare::base::Mutex> mu(_body_mutex);
+        std::unique_lock<std::mutex> mu(_body_mutex);
         ProgressiveReader *r = _body_reader;
         while (r == NULL) {
             // When _body is full, the sleep-waiting may block parse handler
@@ -300,7 +300,7 @@ namespace flare::rpc {
             return 0;
         }
         // Progressive read.
-        std::unique_lock<flare::base::Mutex> mu(_body_mutex);
+        std::unique_lock<std::mutex> mu(_body_mutex);
         _stage = HTTP_ON_MESSAGE_COMPLETE;
         if (_body_reader != NULL) {
             // Solve the case: SetBodyReader quit at ntry=MAX_TRY with non-empty
@@ -343,7 +343,7 @@ namespace flare::rpc {
         const int MAX_TRY = 3;
         int ntry = 0;
         do {
-            std::unique_lock<flare::base::Mutex> mu(_body_mutex);
+            std::unique_lock<std::mutex> mu(_body_mutex);
             if (_body_reader != NULL) {
                 mu.unlock();
                 return r->OnEndOfMessage(

@@ -3,7 +3,6 @@
 #define FLARE_BASE_SCOPED_LOCK_H_
 
 #include <mutex>                           // std::lock_guard
-#include "flare/base/lock.h"
 #include "flare/log/logging.h"
 #include "flare/base/errno.h"
 #include "flare/base/profile.h"

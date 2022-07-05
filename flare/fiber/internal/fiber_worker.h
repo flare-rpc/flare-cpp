@@ -152,7 +152,7 @@ namespace flare::fiber_internal {
         // Push a fiber into the runqueue from another non-worker thread.
         void ready_to_run_remote(fiber_id_t tid, bool nosignal = false);
 
-        void flush_nosignal_tasks_remote_locked(flare::base::Mutex &locked_mutex);
+        void flush_nosignal_tasks_remote_locked(std::mutex &locked_mutex);
 
         void flush_nosignal_tasks_remote();
 

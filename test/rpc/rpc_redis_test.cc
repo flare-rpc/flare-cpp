@@ -801,7 +801,7 @@ namespace {
         }
     }
 
-    flare::base::Mutex s_mutex;
+    std::mutex s_mutex;
     std::unordered_map<std::string, std::string> m;
     std::unordered_map<std::string, int64_t> int_map;
 

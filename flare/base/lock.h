@@ -140,8 +140,8 @@ namespace flare::base {
         FLARE_DISALLOW_COPY_AND_ASSIGN(AutoLock);
     };
 
-// AutoUnlock is a helper that will Release() the |lock| argument in the
-// constructor, and re-Acquire() it in the destructor.
+    // AutoUnlock is a helper that will Release() the |lock| argument in the
+    // constructor, and re-Acquire() it in the destructor.
     class AutoUnlock {
     public:
         explicit AutoUnlock(Lock &lock) : lock_(lock) {

@@ -655,7 +655,7 @@ namespace flare::fiber_internal {
         }
     }
 
-    void fiber_worker::flush_nosignal_tasks_remote_locked(flare::base::Mutex &locked_mutex) {
+    void fiber_worker::flush_nosignal_tasks_remote_locked(std::mutex &locked_mutex) {
         const int val = _remote_num_nosignal;
         if (!val) {
             locked_mutex.unlock();

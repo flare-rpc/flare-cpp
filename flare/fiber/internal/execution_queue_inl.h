@@ -63,7 +63,7 @@ namespace flare::fiber_internal {
             return false;
         }
 
-        flare::base::Mutex mutex;  // to guard version and status
+        std::mutex mutex;  // to guard version and status
         int64_t version;
         uint8_t status;
         bool stop_task;
@@ -83,7 +83,7 @@ namespace flare::fiber_internal {
                 FLARE_CHECK(iterated);
             }
             q = NULL;
-            std::unique_lock<flare::base::Mutex> lck(mutex);
+            std::unique_lock<std::mutex> lck(mutex);
             ++version;
             const int saved_status = status;
             status = UNEXECUTED;

@@ -59,7 +59,7 @@ namespace flare::rpc {
         // Controller::_accessed may be shared by sub channels in schan, protect
         // all mutable methods with this mutex. In ordinary channels, this mutex
         // is never contended.
-        mutable flare::base::Mutex _mutex;
+        mutable std::mutex _mutex;
         flare::container::bounded_queue<SocketId> _l;
         SocketId _space[0];
     };

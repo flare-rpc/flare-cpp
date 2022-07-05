@@ -19,6 +19,7 @@
 #ifndef FLARE_RPC_SOCKET_MAP_H_
 #define FLARE_RPC_SOCKET_MAP_H_
 
+#include <mutex>
 #include <vector>                             // std::vector
 #include "flare/metrics/all.h"                        // flare::status_gauge
 #include "flare/container/flat_map.h"        // FlatMap
@@ -192,7 +193,7 @@ namespace flare::rpc {
         typedef flare::container::FlatMap<SocketMapKey, SingleConnection,
                 SocketMapKeyHasher> Map;
         SocketMapOptions _options;
-        flare::base::Mutex _mutex;
+        std::mutex _mutex;
         Map _map;
         bool _exposed_in_variable;
         flare::status_gauge<std::string> *_this_map_var;

@@ -21,7 +21,6 @@
 
 #include "flare/rpc/periodic_naming_service.h"
 #include "flare/rpc/channel.h"
-#include "flare/base/lock.h"
 
 namespace flare::rpc {
     namespace policy {

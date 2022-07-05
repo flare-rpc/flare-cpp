@@ -82,14 +82,14 @@ namespace flare::fiber_internal {
 
         std::atomic<size_t> _ngroup;
         fiber_worker **_groups;
-        flare::base::Mutex _modify_group_mutex;
+        std::mutex _modify_group_mutex;
 
         bool _stop;
         std::atomic<int> _concurrency;
         std::vector<pthread_t> _workers;
 
         flare::gauge<int64_t> _nworkers;
-        flare::base::Mutex _pending_time_mutex;
+        std::mutex _pending_time_mutex;
         std::atomic<flare::LatencyRecorder *> _pending_time;
         flare::status_gauge<double> _cumulated_worker_time;
         flare::per_second<flare::status_gauge<double> > _worker_usage_second;

@@ -35,7 +35,7 @@ public:
 private:
     const static int kHashSlotNum = 32;
     std::unordered_map<std::string, std::string> _map[kHashSlotNum];
-    flare::base::Mutex _mutex[kHashSlotNum];
+    std::mutex _mutex[kHashSlotNum];
 };
 
 class GetCommandHandler : public flare::rpc::RedisCommandHandler {

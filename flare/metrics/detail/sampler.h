@@ -3,6 +3,7 @@
 #define  FLARE_VARIABLE_DETAIL_SAMPLER_H_
 
 #include <vector>
+#include <mutex>
 #include "flare/container/linked_list.h"
 #include "flare/base/scoped_lock.h"           // FLARE_SCOPED_LOCK
 #include "flare/log/logging.h"               // FLARE_LOG()
@@ -49,7 +50,7 @@ namespace flare {
 
             bool _used;
             // Sync destroy() and take_sample().
-            flare::base::Mutex _mutex;
+            std::mutex _mutex;
         };
 
         // Representing a non-existing operator so that we can test
