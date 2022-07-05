@@ -1,7 +1,9 @@
-// Copyright (c) 2021, gottingen group.
-// All rights reserved.
-// Created by liyinbin lijippy@163.com
 
+/****************************************************************
+ * Copyright (c) 2022, liyinbin
+ * All rights reserved.
+ * Author by liyinbin (jeff.li) lijippy@163.com
+ *****************************************************************/
 
 unsigned char America_Los_Angeles[] = {
   0x54, 0x5a, 0x69, 0x66, 0x32, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,

@@ -1,7 +1,9 @@
-// Copyright (c) 2021, gottingen group.
-// All rights reserved.
-// Created by liyinbin lijippy@163.com
 
+/****************************************************************
+ * Copyright (c) 2022, liyinbin
+ * All rights reserved.
+ * Author by liyinbin (jeff.li) lijippy@163.com
+ *****************************************************************/
 // The implementation of the flare::duration class, which is declared in
 // //flare/times/time.h.  This class behaves like a numeric type; it has no public
 // methods and is used only through the operators defined here.

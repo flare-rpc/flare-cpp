@@ -1,6 +1,9 @@
-//
-// Created by liyinbin on 2022/2/15.
-//
+
+/****************************************************************
+ * Copyright (c) 2022, liyinbin
+ * All rights reserved.
+ * Author by liyinbin (jeff.li) lijippy@163.com
+ *****************************************************************/
 
 #include "flare/memory/maybe_owning.h"
 #include "testing/gtest_wrap.h"

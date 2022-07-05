@@ -1,6 +1,9 @@
-//
-// Created by liyinbin on 2022/2/20.
-//
+
+/****************************************************************
+ * Copyright (c) 2022, liyinbin
+ * All rights reserved.
+ * Author by liyinbin (jeff.li) lijippy@163.com
+ *****************************************************************/
 
 #include "flare/fiber/this_fiber.h"
 #include "flare/fiber/internal/fiber_worker.h"

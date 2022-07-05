@@ -1,7 +1,9 @@
-// Copyright (c) 2021, gottingen group.
-// All rights reserved.
-// Created by liyinbin lijippy@163.com
 
+/****************************************************************
+ * Copyright (c) 2022, liyinbin
+ * All rights reserved.
+ * Author by liyinbin (jeff.li) lijippy@163.com
+ *****************************************************************/
 #ifndef TEST_TESTING_INTERNAL_TIME_UTIL_H_
 #define TEST_TESTING_INTERNAL_TIME_UTIL_H_
 

@@ -1,6 +1,9 @@
-//
-// Created by liyinbin on 2021/4/3.
-//
+
+/****************************************************************
+ * Copyright (c) 2022, liyinbin
+ * All rights reserved.
+ * Author by liyinbin (jeff.li) lijippy@163.com
+ *****************************************************************/
 
 #ifndef FLARE_FUTURE_FUTURE_H_
 #define FLARE_FUTURE_FUTURE_H_

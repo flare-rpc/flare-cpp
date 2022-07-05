@@ -1,7 +1,9 @@
-// Copyright (c) 2021, gottingen group.
-// All rights reserved.
-// Created by liyinbin lijippy@163.com
-// Copyright 2000 - 2007 Google Inc.
+
+/****************************************************************
+ * Copyright (c) 2022, liyinbin
+ * All rights reserved.
+ * Author by liyinbin (jeff.li) lijippy@163.com
+ *****************************************************************/// Copyright 2000 - 2007 Google Inc.
 // All rights reserved.
 //
 // Author: Sanjay Ghemawat

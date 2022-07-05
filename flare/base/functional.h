@@ -1,9 +1,10 @@
-// Copyright (c) 2021, gottingen group.
-// All rights reserved.
-// Created by liyinbin lijippy@163.com
-//
-// Created by liyinbin on 2020/3/23.
-//
+
+/****************************************************************
+ * Copyright (c) 2022, liyinbin
+ * All rights reserved.
+ * Author by liyinbin (jeff.li) lijippy@163.com
+ *****************************************************************/
+
 
 #ifndef FLARE_CONTAINER_FUNCTIONAL_H_
 #define FLARE_CONTAINER_FUNCTIONAL_H_

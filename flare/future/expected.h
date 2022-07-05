@@ -1,7 +1,13 @@
 
+
+/****************************************************************
+ * Copyright (c) 2022, liyinbin
+ * All rights reserved.
+ * Author by liyinbin (jeff.li) lijippy@163.com
+ *****************************************************************/
+
 #ifndef FLARE_FUTURE_EXPECTED_H_
 #define FLARE_FUTURE_EXPECTED_H_
-
 
 #include <utility>
 #include <cassert>
@@ -478,7 +484,7 @@ namespace flare {
 
     } // namespace expected_lite
 
-// provide flare::unexpected_type:
+    // provide flare::unexpected_type:
 
     using expected_lite::unexpected_type;
 

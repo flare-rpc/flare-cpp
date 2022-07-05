@@ -1,6 +1,9 @@
-//
-// Created by liyinbin on 2022/1/19.
-//
+
+/****************************************************************
+ * Copyright (c) 2022, liyinbin
+ * All rights reserved.
+ * Author by liyinbin (jeff.li) lijippy@163.com
+ *****************************************************************/
 
 #ifndef FLARE_BASE_STATIC_ATOMIC_H_
 #define FLARE_BASE_STATIC_ATOMIC_H_

@@ -1,7 +1,9 @@
-//
-// Created by liyinbin on 2021/4/5.
-//
 
+/****************************************************************
+ * Copyright (c) 2022, liyinbin
+ * All rights reserved.
+ * Author by liyinbin (jeff.li) lijippy@163.com
+ *****************************************************************/
 
 #include "flare/thread/thread_cache.h"
 

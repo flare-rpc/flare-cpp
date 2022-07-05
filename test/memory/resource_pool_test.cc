@@ -1,5 +1,11 @@
 
 
+/****************************************************************
+ * Copyright (c) 2022, liyinbin
+ * All rights reserved.
+ * Author by liyinbin (jeff.li) lijippy@163.com
+ *****************************************************************/
+
 #include <inttypes.h>
 #include "testing/gtest_wrap.h"
 #include <algorithm>

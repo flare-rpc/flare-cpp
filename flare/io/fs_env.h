@@ -1,6 +1,9 @@
-//
-// Created by liyinbin on 2022/2/6.
-//
+
+/****************************************************************
+ * Copyright (c) 2022, liyinbin
+ * All rights reserved.
+ * Author by liyinbin (jeff.li) lijippy@163.com
+ *****************************************************************/
 
 #ifndef FLARE_IO_FS_ENV_H_
 #define FLARE_IO_FS_ENV_H_
