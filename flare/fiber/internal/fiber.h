@@ -35,7 +35,6 @@
 #endif
 
 #include "flare/fiber/internal/token.h"
-#include "flare/base/functional.h"
 
 __BEGIN_DECLS
 
@@ -45,7 +44,7 @@ __BEGIN_DECLS
 // Returns 0 on success, errno otherwise.
 extern int fiber_start_urgent(fiber_id_t *__restrict tid,
                               const fiber_attribute *__restrict attr,
-                              flare::base::function<void*(void*)> && fn,
+                              std::function<void*(void*)> && fn,
                               void *__restrict args);
 
 // Create fiber `fn(args)' with attributes `attr' and put the identifier into
@@ -55,7 +54,7 @@ extern int fiber_start_urgent(fiber_id_t *__restrict tid,
 // Return 0 on success, errno otherwise.
 extern int fiber_start_background(fiber_id_t *__restrict tid,
                                   const fiber_attribute *__restrict attr,
-                                  flare::base::function<void*(void*)> && fn,
+                                  std::function<void*(void*)> && fn,
                                   void *__restrict args);
 
 // Wake up operations blocking the thread. Different functions may behave

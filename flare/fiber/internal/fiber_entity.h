@@ -19,11 +19,11 @@
 #define FLARE_FIBER_INTERNAL_FIBER_ENTITY_H_
 
 #include <pthread.h>                 // pthread_spin_init
+#include <functional>
 #include "flare/fiber/internal/waitable_event.h"           // butex_construct/destruct
 #include "flare/base/static_atomic.h"          // std::atomic
 #include "flare/fiber/internal/types.h"           // fiber_attribute
 #include "flare/fiber/internal/stack.h"           // fiber_contextual_stack
-#include "flare/base/functional.h"
 
 namespace flare::fiber_internal {
 
@@ -72,7 +72,7 @@ namespace flare::fiber_internal {
 
         // User function and argument
         //void *(*fn)(void *);
-        flare::base::function<void*(void*)> fn;
+        std::function<void*(void*)> fn;
         void *arg;
 
         // Stack of this task.

@@ -44,7 +44,7 @@ namespace flare::fiber_internal {
         static int start_foreground(fiber_worker **pg,
                                     fiber_id_t *__restrict tid,
                                     const fiber_attribute *__restrict attr,
-                                    flare::base::function<void*(void*)> && fn,
+                                    std::function<void*(void*)> && fn,
                                     void *__restrict arg);
 
         // Create task `fn(arg)' with attributes `attr' in this fiber_worker, put the
@@ -55,7 +55,7 @@ namespace flare::fiber_internal {
         template<bool REMOTE>
         int start_background(fiber_id_t *__restrict tid,
                              const fiber_attribute *__restrict attr,
-                             flare::base::function<void*(void*)> && fn,
+                             std::function<void*(void*)> && fn,
                              void *__restrict arg);
 
         // Suspend caller and run next fiber in fiber_worker *pg.

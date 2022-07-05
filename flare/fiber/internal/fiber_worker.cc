@@ -327,7 +327,7 @@ namespace flare::fiber_internal {
     int fiber_worker::start_foreground(fiber_worker **pg,
                                        fiber_id_t *__restrict th,
                                        const fiber_attribute *__restrict attr,
-                                       flare::base::function<void *(void *)> &&fn,
+                                       std::function<void *(void *)> &&fn,
                                        void *__restrict arg) {
         if (__builtin_expect(!fn, 0)) {
             return EINVAL;
@@ -382,7 +382,7 @@ namespace flare::fiber_internal {
     template<bool REMOTE>
     int fiber_worker::start_background(fiber_id_t *__restrict th,
                                        const fiber_attribute *__restrict attr,
-                                       flare::base::function<void *(void *)> &&fn,
+                                       std::function<void *(void *)> &&fn,
                                        void *__restrict arg) {
         if (__builtin_expect(!fn, 0)) {
             return EINVAL;
@@ -423,13 +423,13 @@ namespace flare::fiber_internal {
     template int
     fiber_worker::start_background<true>(fiber_id_t *__restrict th,
                                          const fiber_attribute *__restrict attr,
-                                         flare::base::function<void *(void *)> &&fn,
+                                         std::function<void *(void *)> &&fn,
                                          void *__restrict arg);
 
     template int
     fiber_worker::start_background<false>(fiber_id_t *__restrict th,
                                           const fiber_attribute *__restrict attr,
-                                          flare::base::function<void *(void *)> &&fn,
+                                          std::function<void *(void *)> &&fn,
                                           void *__restrict arg);
 
     int fiber_worker::join(fiber_id_t tid, void **return_value) {
@@ -869,7 +869,7 @@ namespace flare::fiber_internal {
         bool stop = false;
         bool interrupted = false;
         bool about_to_quit = false;
-        flare::base::function<void *(void *)> *fn = nullptr;
+        std::function<void *(void *)> *fn = nullptr;
         void *arg = nullptr;
         fiber_attribute attr = FIBER_ATTR_NORMAL;
         bool has_tls = false;
