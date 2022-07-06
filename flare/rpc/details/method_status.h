@@ -70,6 +70,7 @@ namespace flare::rpc {
         void SetConcurrencyLimiter(ConcurrencyLimiter *cl);
 
         flare::histogram _his_latency;
+        flare::counter<int64_t> _qps;
         std::unique_ptr<ConcurrencyLimiter> _cl;
         std::atomic<int> _nconcurrency;
         flare::gauge<int64_t> _nerror_var;
@@ -110,6 +111,7 @@ namespace flare::rpc {
         if (0 == error_code) {
             _latency_rec << latency;
             _his_latency << static_cast<double>(latency/1000);
+            _qps<<1;
         } else {
             _nerror_var << 1;
         }

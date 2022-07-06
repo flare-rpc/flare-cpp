@@ -71,7 +71,6 @@ namespace flare {
                        const std::string_view &help = "",
                        const variable_base::tag_type &tags = variable_base::tag_type(),
                        display_filter f = static_cast<display_filter>(DISPLAY_ON_ALL | DISPLAY_ON_METRICS)) : Base() {
-            FLARE_LOG(INFO) << "filter: " << f << " " << Filter()(f);
             this->expose(name, help, tags, Filter()(f));
         }
 
