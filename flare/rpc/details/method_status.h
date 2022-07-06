@@ -40,8 +40,8 @@ namespace flare::rpc {
 
         // Call this function when the method is about to be called.
         // Returns false when the method is overloaded. If rejected_cc is not
-        // NULL, it's set with the rejected concurrency.
-        bool OnRequested(int *rejected_cc = NULL);
+        // nullptr, it's set with the rejected concurrency.
+        bool OnRequested(int *rejected_cc = nullptr);
 
         // Call this when the method just finished.
         // `error_code' : The error code obtained from the controller. Equal to
@@ -69,6 +69,7 @@ namespace flare::rpc {
         // before the server is started.
         void SetConcurrencyLimiter(ConcurrencyLimiter *cl);
 
+        flare::histogram _his_latency;
         std::unique_ptr<ConcurrencyLimiter> _cl;
         std::atomic<int> _nconcurrency;
         flare::gauge<int64_t> _nerror_var;
@@ -95,7 +96,7 @@ namespace flare::rpc {
 
     inline bool MethodStatus::OnRequested(int *rejected_cc) {
         const int cc = _nconcurrency.fetch_add(1, std::memory_order_relaxed) + 1;
-        if (NULL == _cl || _cl->OnRequested(cc)) {
+        if (nullptr == _cl || _cl->OnRequested(cc)) {
             return true;
         }
         if (rejected_cc) {
@@ -108,10 +109,11 @@ namespace flare::rpc {
         _nconcurrency.fetch_sub(1, std::memory_order_relaxed);
         if (0 == error_code) {
             _latency_rec << latency;
+            _his_latency << static_cast<double>(latency/1000);
         } else {
             _nerror_var << 1;
         }
-        if (NULL != _cl) {
+        if (nullptr != _cl) {
             _cl->OnResponded(error_code, latency);
         }
     }

@@ -276,7 +276,6 @@ namespace flare {
                 }
                 FLARE_LOG(INFO) << it->first << ": " << it->second.filter;
                 if (it->second.filter & DISPLAY_ON_METRICS) {
-                    FLARE_LOG(INFO) << it->first << ": " << it->second.filter;
                     cache_metrics m;
                     it->second.var->collect_metrics(m);
                     metrics->push_back(std::move(m));

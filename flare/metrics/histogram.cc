@@ -14,21 +14,49 @@ namespace flare {
                          const bucket &buckets,
                          const variable_base::tag_type &tags)
             : _bucket_boundaries(buckets),
-              _sum(name + "_sum", "", std::unordered_map < std::string, std::string > (), DISPLAY_NON) {
+              _sum(name + "_sum", "", std::unordered_map<std::string, std::string>(), DISPLAY_NON) {
         FLARE_CHECK(std::is_sorted(std::begin(_bucket_boundaries),
                                    std::end(_bucket_boundaries)));
-        std::unordered_map < std::string, std::string > empty;
+        make_bucket(name, buckets);
+        variable_base::expose(name, help, tags, DISPLAY_ON_METRICS);
+    }
+
+    void histogram::make_bucket(const std::string &name, const bucket &buckets) {
+        _bucket_boundaries = buckets;
+        _bucket_counts.clear();
+        std::unordered_map<std::string, std::string> empty;
         for (size_t i = 0; i < _bucket_boundaries.size(); ++i) {
             std::string n = name + "_" + std::to_string(i);
-            _bucket_counts.push_back(
-                    std::unique_ptr<counter<int64_t>>(new counter<int64_t>(n, "", empty, DISPLAY_NON)));
+            _bucket_counts.push_back(std::unique_ptr<counter<int64_t>>(new counter<int64_t>(n, "", empty, DISPLAY_NON)));
         }
-        expose(name, help, tags);
     }
 
     histogram::~histogram() {
+        for (size_t i = 0; i < _bucket_boundaries.size(); ++i) {
+            _bucket_counts[i]->hide();
+        }
+        _sum.hide();
         hide();
     }
+
+    int histogram::expose(const std::string &name,
+               const std::string_view &help,
+               const bucket &buckets,
+               const variable_base::tag_type &tags) {
+        return expose_as("", name, help, buckets, tags);
+    }
+
+    int histogram::expose_as(const std::string &prefix, const std::string &name,
+                  const std::string_view &help,
+                  const bucket &buckets,
+                  const variable_base::tag_type &tags) {
+        _sum.expose(prefix + name + "_sum", "", std::unordered_map<std::string, std::string>(), DISPLAY_NON);
+        make_bucket(prefix + name, buckets);
+        FLARE_CHECK(std::is_sorted(std::begin(_bucket_boundaries),
+                                   std::end(_bucket_boundaries)));
+        return variable_base::expose_as(prefix, name, help, tags, DISPLAY_ON_METRICS);
+    }
+
 
     void histogram::observe(const double value) noexcept {
         // TODO: determine bucket list size at which binary search would be faster

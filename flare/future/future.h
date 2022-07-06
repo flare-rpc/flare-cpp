@@ -25,17 +25,17 @@ namespace flare {
      * fields set to `void` have special rules applied to them.
      * The following types may not be used:
      * - `expected<T>`
-     * - `Future<Ts...>`
-     * - `Promise<T>`
+     * - `future<Ts...>`
+     * - `promise<T>`
      *
-     * @invariant A Future is in one of two states:
+     * @invariant A future is in one of two states:
      * - \b Uninitialized: The only legal operation is to assign another future to
      * it.
      * - \b Ready: All operations are legal.
      */
     template <typename Alloc, typename... Ts>
     class basic_future {
-        static_assert(sizeof...(Ts) >= 1, "you probably meant Future<void>");
+        static_assert(sizeof...(Ts) >= 1, "you probably meant future<void>");
 
     public:
         using promise_type = basic_promise<Alloc, Ts...>;
@@ -52,7 +52,7 @@ namespace flare {
         using finish_type = future_internal::finish_type_t<Ts...>;
 
         /**
-         * @brief Construct an \b uninitialized Future
+         * @brief Construct an \b uninitialized future
          *
          * @post `this` will be \b uninitialized
          */
@@ -71,7 +71,7 @@ namespace flare {
          * @brief Move assignment
          *
          * @param rhs
-         * @return Future&
+         * @return future&
          *
          * @post `rhs` will be \b uninitialized
          */
@@ -83,7 +83,7 @@ namespace flare {
          *
          * @tparam CbT
          * @param callback
-         * @return Future<decltype(callback(Ts...))> a \ready Future
+         * @return future<decltype(callback(Ts...))> a \ready future
          *
          * @pre the future must be \b ready
          * @post the future will be \b uninitialized
@@ -212,7 +212,7 @@ namespace flare {
     };
 
     /**
-     * @brief Landing for a value that finishes a Future.
+     * @brief Landing for a value that finishes a future.
      *
      * @tparam Ts
      */
@@ -289,7 +289,7 @@ namespace flare {
     template <typename... Ts>
     using promise = basic_promise<std::allocator<void>, Ts...>;
     /**
-     * @brief Ties a set of Future<> into a single Future<> that is finished once
+     * @brief Ties a set of future<> into a single future<> that is finished once
      *        all child futures are finished.
      *
      * @tparam FutTs
@@ -316,7 +316,7 @@ namespace flare {
     auto async(QueueT& q, CbT&& callback);
 
     /**
-     * @brief Create a higher-order Future from a `future<tuple>`
+     * @brief Create a higher-order future from a `future<tuple>`
      *
      * @param rhs
      *
