@@ -1,6 +1,10 @@
-//
-// Created by liyinbin on 2022/5/15.
-//
+
+/****************************************************************
+ * Copyright (c) 2022, liyinbin
+ * All rights reserved.
+ * Author by liyinbin (jeff.li) lijippy@163.com
+ *****************************************************************/
+
 
 #ifndef FLARE_CONTAINER_PARALLEL_FLAT_HASH_MAP_H_
 #define FLARE_CONTAINER_PARALLEL_FLAT_HASH_MAP_H_

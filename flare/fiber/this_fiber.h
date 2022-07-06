@@ -1,6 +1,11 @@
-//
-// Created by liyinbin on 2022/2/20.
-//
+
+/****************************************************************
+ * Copyright (c) 2022, liyinbin
+ * All rights reserved.
+ * Author by liyinbin (jeff.li) lijippy@163.com
+ *****************************************************************/
+
+
 
 #ifndef FLARE_FIBER_THIS_FIBER_H_
 #define FLARE_FIBER_THIS_FIBER_H_

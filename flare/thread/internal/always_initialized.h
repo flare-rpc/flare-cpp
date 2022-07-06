@@ -1,14 +1,18 @@
-//
-// Created by liyinbin on 2021/4/5.
-//
+
+/****************************************************************
+ * Copyright (c) 2022, liyinbin
+ * All rights reserved.
+ * Author by liyinbin (jeff.li) lijippy@163.com
+ *****************************************************************/
+
+
 
 #ifndef FLARE_THREAD_INTERNAL_ALWAYS_INITIALIZED_H_
 #define FLARE_THREAD_INTERNAL_ALWAYS_INITIALIZED_H_
 
 
 #include <utility>
-
-#include "flare/base/functional.h"
+#include <functional>
 #include "flare/thread/internal/object_array.h"
 
 namespace flare::thread_internal {
@@ -61,7 +65,7 @@ namespace flare::thread_internal {
         //
         // Always a multiple of `kEntrySize`.
         std::ptrdiff_t offset_;
-        flare::base::function<void(void *)> initializer_;
+        std::function<void(void *)> initializer_;
     };
 
     template<class T>

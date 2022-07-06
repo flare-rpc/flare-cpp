@@ -396,7 +396,7 @@ namespace flare::rpc {
         H2StreamContext *H2Context::RemoveStream(int stream_id) {
             H2StreamContext *sctx = nullptr;
             {
-                std::unique_lock<flare::base::Mutex> mu(_stream_mutex);
+                std::unique_lock<std::mutex> mu(_stream_mutex);
                 if (!_pending_streams.erase(stream_id, &sctx)) {
                     return nullptr;
                 }
@@ -414,7 +414,7 @@ namespace flare::rpc {
             if (goaway_stream_id == 0) {  // quick path
                 StreamMap tmp;
                 {
-                    std::unique_lock<flare::base::Mutex> mu(_stream_mutex);
+                    std::unique_lock<std::mutex> mu(_stream_mutex);
                     _goaway_stream_id = goaway_stream_id;
                     _pending_streams.swap(tmp);
                 }
@@ -422,7 +422,7 @@ namespace flare::rpc {
                     out_streams->push_back(it->second);
                 }
             } else {
-                std::unique_lock<flare::base::Mutex> mu(_stream_mutex);
+                std::unique_lock<std::mutex> mu(_stream_mutex);
                 _goaway_stream_id = goaway_stream_id;
                 for (StreamMap::const_iterator it = _pending_streams.begin();
                      it != _pending_streams.end(); ++it) {
@@ -437,7 +437,7 @@ namespace flare::rpc {
         }
 
         H2StreamContext *H2Context::FindStream(int stream_id) {
-            std::unique_lock<flare::base::Mutex> mu(_stream_mutex);
+            std::unique_lock<std::mutex> mu(_stream_mutex);
             H2StreamContext **psctx = _pending_streams.seek(stream_id);
             if (psctx) {
                 return *psctx;
@@ -446,7 +446,7 @@ namespace flare::rpc {
         }
 
         int H2Context::TryToInsertStream(int stream_id, H2StreamContext *ctx) {
-            std::unique_lock<flare::base::Mutex> mu(_stream_mutex);
+            std::unique_lock<std::mutex> mu(_stream_mutex);
             if (_goaway_stream_id >= 0 && stream_id > _goaway_stream_id) {
                 return 1;
             }
@@ -915,7 +915,7 @@ namespace flare::rpc {
                 // be changed using WINDOW_UPDATE frames.
                 // https://tools.ietf.org/html/rfc7540#section-6.9.2
                 // TODO(gejun): Has race conditions with AppendAndDestroySelf
-                std::unique_lock<flare::base::Mutex> mu(_stream_mutex);
+                std::unique_lock<std::mutex> mu(_stream_mutex);
                 for (StreamMap::const_iterator it = _pending_streams.begin();
                      it != _pending_streams.end(); ++it) {
                     if (!AddWindowSize(&it->second->_remote_window_left, window_diff)) {
@@ -1157,7 +1157,7 @@ namespace flare::rpc {
         }
 
         void H2Context::AddAbandonedStream(uint32_t stream_id) {
-            std::unique_lock<flare::base::Mutex> mu(_abandoned_streams_mutex);
+            std::unique_lock<std::mutex> mu(_abandoned_streams_mutex);
             _abandoned_streams.push_back(stream_id);
         }
 
@@ -1168,7 +1168,7 @@ namespace flare::rpc {
         }
 
         void H2Context::ClearAbandonedStreamsImpl() {
-            std::unique_lock<flare::base::Mutex> mu(_abandoned_streams_mutex);
+            std::unique_lock<std::mutex> mu(_abandoned_streams_mutex);
             while (!_abandoned_streams.empty()) {
                 const uint32_t stream_id = _abandoned_streams.back();
                 _abandoned_streams.pop_back();
@@ -1501,7 +1501,7 @@ namespace flare::rpc {
             RemoveRefOnQuit deref_self(this);
             if (sending_sock != nullptr && error_code != 0) {
                 FLARE_CHECK_EQ(cntl, _cntl);
-                std::unique_lock<flare::base::Mutex> mu(_mutex);
+                std::unique_lock<std::mutex> mu(_mutex);
                 _cntl = nullptr;
                 if (_stream_id != 0) {
                     H2Context *ctx = static_cast<H2Context *>(sending_sock->parsing_context());
@@ -1555,7 +1555,7 @@ namespace flare::rpc {
 
             // Although the critical section looks huge, it should rarely be contended
             // since timeout of RPC is much larger than the delay of sending.
-            std::unique_lock<flare::base::Mutex> mu(_mutex);
+            std::unique_lock<std::mutex> mu(_mutex);
             if (_cntl == nullptr) {
                 return flare::base::flare_status(ECANCELED, "The RPC was already failed");
             }
@@ -1618,7 +1618,7 @@ namespace flare::rpc {
             for (size_t i = 0; i < _size; ++i) {
                 sz += _list[i].name.size() + _list[i].value.size() + 1;
             }
-            std::unique_lock<flare::base::Mutex> mu(_mutex);
+            std::unique_lock<std::mutex> mu(_mutex);
             if (_cntl == nullptr) {
                 return 0;
             }
@@ -1638,7 +1638,7 @@ namespace flare::rpc {
             for (size_t i = 0; i < _size; ++i) {
                 os << "> " << _list[i].name << " = " << _list[i].value << '\n';
             }
-            std::unique_lock<flare::base::Mutex> mu(_mutex);
+            std::unique_lock<std::mutex> mu(_mutex);
             if (_cntl == nullptr) {
                 return;
             }

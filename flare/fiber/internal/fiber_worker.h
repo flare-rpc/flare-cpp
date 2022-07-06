@@ -44,7 +44,7 @@ namespace flare::fiber_internal {
         static int start_foreground(fiber_worker **pg,
                                     fiber_id_t *__restrict tid,
                                     const fiber_attribute *__restrict attr,
-                                    flare::base::function<void*(void*)> && fn,
+                                    std::function<void*(void*)> && fn,
                                     void *__restrict arg);
 
         // Create task `fn(arg)' with attributes `attr' in this fiber_worker, put the
@@ -55,7 +55,7 @@ namespace flare::fiber_internal {
         template<bool REMOTE>
         int start_background(fiber_id_t *__restrict tid,
                              const fiber_attribute *__restrict attr,
-                             flare::base::function<void*(void*)> && fn,
+                             std::function<void*(void*)> && fn,
                              void *__restrict arg);
 
         // Suspend caller and run next fiber in fiber_worker *pg.
@@ -152,7 +152,7 @@ namespace flare::fiber_internal {
         // Push a fiber into the runqueue from another non-worker thread.
         void ready_to_run_remote(fiber_id_t tid, bool nosignal = false);
 
-        void flush_nosignal_tasks_remote_locked(flare::base::Mutex &locked_mutex);
+        void flush_nosignal_tasks_remote_locked(std::mutex &locked_mutex);
 
         void flush_nosignal_tasks_remote();
 

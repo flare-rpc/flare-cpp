@@ -223,7 +223,7 @@ namespace {
 
     TEST(MutexTest, performance) {
         const int thread_num = 12;
-        flare::base::Mutex base_mutex;
+        std::mutex base_mutex;
         PerfTest(&base_mutex, (pthread_t *) nullptr, thread_num, pthread_create, pthread_join);
         PerfTest(&base_mutex, (fiber_id_t *) nullptr, thread_num, fiber_start_background, fiber_join);
         flare::fiber_mutex fbr_mutex;

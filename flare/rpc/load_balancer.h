@@ -179,7 +179,7 @@ namespace flare::rpc {
         LoadBalancer *_lb;
         std::atomic<int> _weight_sum;
         volatile bool _exposed;
-        flare::base::Mutex _st_mutex;
+        std::mutex _st_mutex;
         flare::status_gauge<std::string> _st;
     };
 

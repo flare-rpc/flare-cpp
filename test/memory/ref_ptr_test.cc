@@ -1,6 +1,9 @@
-//
-// Created by jeff.li.
-//
+
+/****************************************************************
+ * Copyright (c) 2022, liyinbin
+ * All rights reserved.
+ * Author by liyinbin (jeff.li) lijippy@163.com
+ *****************************************************************/
 
 #include "flare/memory/ref_ptr.h"
 #include <atomic>
@@ -61,8 +64,8 @@ namespace flare {
         inline static int instances = 0;
     };
 
-    static_assert(!detail::is_ref_counted_directly_v<RefCounted3>);
-    static_assert(detail::is_ref_counted_indirectly_safe_v<RefCounted3>);
+    static_assert(!memory_internal::is_ref_counted_directly_v<RefCounted3>);
+    static_assert(memory_internal::is_ref_counted_indirectly_safe_v<RefCounted3>);
 
     TEST(ref_ptr, ReferenceCount) {
         {

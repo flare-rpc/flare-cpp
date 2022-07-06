@@ -125,7 +125,7 @@ namespace flare::fiber_internal {
     FLARE_FORCE_INLINE int
     start_from_non_worker(fiber_id_t *__restrict tid,
                           const fiber_attribute *__restrict attr,
-                          flare::base::function<void *(void *)> &&fn,
+                          std::function<void *(void *)> &&fn,
                           void *__restrict arg) {
         schedule_group *c = get_or_new_task_control();
         if (NULL == c) {
@@ -176,7 +176,7 @@ extern "C" {
 
 int fiber_start_urgent(fiber_id_t *__restrict tid,
                        const fiber_attribute *__restrict attr,
-                       flare::base::function<void *(void *)> &&fn,
+                       std::function<void *(void *)> &&fn,
                        void *__restrict arg) {
     flare::fiber_internal::fiber_worker *g = flare::fiber_internal::tls_task_group;
     if (g) {
@@ -188,7 +188,7 @@ int fiber_start_urgent(fiber_id_t *__restrict tid,
 
 int fiber_start_background(fiber_id_t *__restrict tid,
                            const fiber_attribute *__restrict attr,
-                           flare::base::function<void *(void *)> &&fn,
+                           std::function<void *(void *)> &&fn,
                            void *__restrict arg) {
     flare::fiber_internal::fiber_worker *g = flare::fiber_internal::tls_task_group;
     if (g) {

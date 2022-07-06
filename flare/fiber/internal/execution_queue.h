@@ -198,7 +198,7 @@ namespace flare::fiber_internal {
     // Execute a task with defaut TaskOptions (normal task);
     template<typename T>
     int execution_queue_execute(ExecutionQueueId<T> id,
-                                typename flare::base::add_const_reference<T>::type task);
+                                typename flare::add_const_reference<T>::type task);
 
     // Thread-safe and Wait-free.
     // Execute a task with options. e.g
@@ -207,12 +207,12 @@ namespace flare::fiber_internal {
     // If |handle| is not NULL, we will assign it with the hanlder of this task.
     template<typename T>
     int execution_queue_execute(ExecutionQueueId<T> id,
-                                typename flare::base::add_const_reference<T>::type task,
+                                typename flare::add_const_reference<T>::type task,
                                 const TaskOptions *options);
 
     template<typename T>
     int execution_queue_execute(ExecutionQueueId<T> id,
-                                typename flare::base::add_const_reference<T>::type task,
+                                typename flare::add_const_reference<T>::type task,
                                 const TaskOptions *options,
                                 TaskHandle *handle);
 

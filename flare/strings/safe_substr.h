@@ -1,6 +1,9 @@
-//
-// Created by liyinbin on 2022/1/30.
-//
+
+/****************************************************************
+ * Copyright (c) 2022, liyinbin
+ * All rights reserved.
+ * Author by liyinbin (jeff.li) lijippy@163.com
+ *****************************************************************/
 
 #ifndef FLARE_STRINGS_SAFE_SUBSTR_H_
 #define FLARE_STRINGS_SAFE_SUBSTR_H_

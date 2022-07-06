@@ -1,6 +1,10 @@
-//
-// Created by jeff.li.
-//
+
+/****************************************************************
+ * Copyright (c) 2022, liyinbin
+ * All rights reserved.
+ * Author by liyinbin (jeff.li) lijippy@163.com
+ *****************************************************************/
+
 #include "flare/memory/resident.h"
 #include "testing/gtest_wrap.h"
 

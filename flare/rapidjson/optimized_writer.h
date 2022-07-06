@@ -1,6 +1,10 @@
-//
-// Created by liyinbin on 2020/3/29.
-//
+
+/****************************************************************
+ * Copyright (c) 2022, liyinbin
+ * All rights reserved.
+ * Author by liyinbin (jeff.li) lijippy@163.com
+ *****************************************************************/
+
 
 #ifndef FLARE_OPTIMIZED_WRITER_H
 #define FLARE_OPTIMIZED_WRITER_H

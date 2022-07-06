@@ -29,7 +29,8 @@ include(carbin_module)
 option(DEBUG "Print debug logs" OFF)
 option(WITH_DEBUG_SYMBOLS "With debug symbols" ON)
 option(WITH_THRIFT "With thrift framed protocol supported" OFF)
-option(BUILD_UNIT_TESTS "Whether to build unit tests" OFF)
+option(BUILD_UNIT_TESTS "Whether to build unit tests" ON)
+option(BUILD_BENCHMARK "Whether to build benchmarks" ON)
 option(INSTALL_STATIC_LIBS "Whether to install static libraries" OFF)
 option(BUILD_IN_CONDA "build in conda environemnt" ON)
 option(BUILD_EXAMPLES "build in conda environemnt" ON)
@@ -193,7 +194,7 @@ file(GLOB_RECURSE FLARE_BOOTSTRAP_SRC "${PROJECT_SOURCE_DIR}/flare/bootstrap/*.c
 file(GLOB_RECURSE FLARE_TIMES_SRC "${PROJECT_SOURCE_DIR}/flare/times/*.cc")
 file(GLOB_RECURSE FLARE_FILES_SRC "${PROJECT_SOURCE_DIR}/flare/files/*.cc")
 file(GLOB_RECURSE FLARE_THREAD_SRC "${PROJECT_SOURCE_DIR}/flare/thread/*.cc")
-file(GLOB_RECURSE FLARE_FLOW_SRC "${PROJECT_SOURCE_DIR}/flare/flow/*.cc")
+file(GLOB_RECURSE FLARE_FUTURE_SRC "${PROJECT_SOURCE_DIR}/flare/future/*.cc")
 
 set(FLARE_SRC
         "${PROJECT_SOURCE_DIR}/flare/base/dynamic_annotations/dynamic_annotations.c"
@@ -210,7 +211,7 @@ set(FLARE_SRC
         ${FLARE_TIMES_SRC}
         ${FLARE_FILES_SRC}
         ${FLARE_THREAD_SRC}
-        ${FLARE_FLOW_SRC}
+        ${FLARE_FUTURE_SRC}
         )
 
 file(GLOB_RECURSE METRICS_SOURCES "${PROJECT_SOURCE_DIR}/flare/metrics/*.cc")
@@ -274,10 +275,16 @@ set(SOURCES
 
 add_subdirectory(flare)
 
+set(FLARE_LIB flare-shared)
+
 if (BUILD_EXAMPLES)
-    set(FLARE_LIB flare-shared)
     add_subdirectory(example)
 endif (BUILD_EXAMPLES)
+
+if (BUILD_BENCHMARK)
+    enable_testing()
+    add_subdirectory(benchmark)
+endif (BUILD_BENCHMARK)
 
 if (BUILD_UNIT_TESTS)
     enable_testing()

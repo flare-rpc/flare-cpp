@@ -1,7 +1,9 @@
-// Copyright (c) 2021, gottingen group.
-// All rights reserved.
-// Created by liyinbin lijippy@163.com
-//
+
+/****************************************************************
+ * Copyright (c) 2022, liyinbin
+ * All rights reserved.
+ * Author by liyinbin (jeff.li) lijippy@163.com
+ *****************************************************************///
 // unscaled_cycle_clock
 //    An unscaled_cycle_clock yields the value and frequency of a cycle counter
 //    that increments at a rate that is approximately constant.

@@ -1,7 +1,9 @@
-// Copyright (c) 2021, gottingen group.
-// All rights reserved.
-// Created by liyinbin lijippy@163.com
-//
+
+/****************************************************************
+ * Copyright (c) 2022, liyinbin
+ * All rights reserved.
+ * Author by liyinbin (jeff.li) lijippy@163.com
+ *****************************************************************///
 // Produces a stack trace for Windows.  Normally, one could use
 // stacktrace_x86-inl.h or stacktrace_x86_64-inl.h -- and indeed, that
 // should work for binaries compiled using MSVC in "debug" mode.

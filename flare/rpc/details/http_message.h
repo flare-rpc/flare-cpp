@@ -109,14 +109,14 @@ namespace flare::rpc {
     private:
         FLARE_DISALLOW_COPY_AND_ASSIGN(HttpMessage);
 
-        int UnlockAndFlushToBodyReader(std::unique_lock<flare::base::Mutex> &locked);
+        int UnlockAndFlushToBodyReader(std::unique_lock<std::mutex> &locked);
 
         HttpParserStage _stage;
         std::string _url;
         HttpHeader _header;
         bool _read_body_progressively;
         // For mutual exclusion between on_body and SetBodyReader.
-        flare::base::Mutex _body_mutex;
+        std::mutex _body_mutex;
         // Read body progressively
         ProgressiveReader *_body_reader;
         flare::cord_buf _body;

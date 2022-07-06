@@ -6,15 +6,15 @@
 #include <vector>
 #include <string>
 #include <pthread.h>
+#include <functional>
 #include "flare/thread/affinity.h"
-#include "flare/base/functional.h"
 #include "flare/thread/latch.h"
 #include "flare/memory/ref_ptr.h"
 
 namespace flare {
 
     // thread provides an OS abstraction for threads of execution.
-    using thread_func = flare::base::function<void()>;
+    using thread_func = std::function<void()>;
     struct thread_option {
         size_t stack_size{8 * 1024 * 1024};
         bool join_able{true};

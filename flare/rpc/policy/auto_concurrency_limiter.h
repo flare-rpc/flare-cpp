@@ -18,6 +18,7 @@
 #ifndef FLARE_RPC_POLICY_AUTO_CONCURRENCY_LIMITER_H_
 #define FLARE_RPC_POLICY_AUTO_CONCURRENCY_LIMITER_H_
 
+#include <mutex>
 #include "flare/metrics/all.h"
 #include "flare/container/bounded_queue.h"
 #include "flare/rpc/concurrency_limiter.h"
@@ -75,7 +76,7 @@ namespace flare::rpc {
 
             // modified per sample.
             std::atomic<int64_t> FLARE_CACHELINE_ALIGNMENT _last_sampling_time_us;
-            flare::base::Mutex _sw_mutex;
+            std::mutex _sw_mutex;
             SampleWindow _sw;
 
             // modified per request.

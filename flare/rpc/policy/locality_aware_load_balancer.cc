@@ -473,7 +473,7 @@ namespace flare::rpc {
         }
 
         void LocalityAwareLoadBalancer::Weight::Describe(std::ostream &os, int64_t now) {
-            std::unique_lock<flare::base::Mutex> mu(_mutex);
+            std::unique_lock<std::mutex> mu(_mutex);
             int64_t begin_time_sum = _begin_time_sum;
             int begin_time_count = _begin_time_count;
             int64_t weight = _weight;

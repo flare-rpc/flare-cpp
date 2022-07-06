@@ -1,7 +1,9 @@
-// Copyright (c) 2021, gottingen group.
-// All rights reserved.
-// Created by liyinbin lijippy@163.com
-//
+
+/****************************************************************
+ * Copyright (c) 2022, liyinbin
+ * All rights reserved.
+ * Author by liyinbin (jeff.li) lijippy@163.com
+ *****************************************************************///
 
 // Wrappers around lsan_interface functions.
 // When lsan is not linked in, these functions are not available,

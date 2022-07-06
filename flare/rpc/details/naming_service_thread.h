@@ -123,7 +123,7 @@ namespace flare::rpc {
                 const std::vector<ServerNodeWithId> &src,
                 std::vector<ServerId> *dst, const NamingServiceFilter *filter);
 
-        flare::base::Mutex _mutex;
+        std::mutex _mutex;
         fiber_id_t _tid;
         NamingService *_ns;
         std::string _protocol;

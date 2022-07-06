@@ -63,7 +63,7 @@ namespace flare::fiber_internal {
             return false;
         }
 
-        flare::base::Mutex mutex;  // to guard version and status
+        std::mutex mutex;  // to guard version and status
         int64_t version;
         uint8_t status;
         bool stop_task;
@@ -83,7 +83,7 @@ namespace flare::fiber_internal {
                 FLARE_CHECK(iterated);
             }
             q = NULL;
-            std::unique_lock<flare::base::Mutex> lck(mutex);
+            std::unique_lock<std::mutex> lck(mutex);
             ++version;
             const int saved_status = status;
             status = UNEXECUTED;
@@ -291,11 +291,11 @@ namespace flare::fiber_internal {
             return ret.Pass();
         }
 
-        int execute(typename flare::base::add_const_reference<T>::type task) {
+        int execute(typename flare::add_const_reference<T>::type task) {
             return execute(task, NULL, NULL);
         }
 
-        int execute(typename flare::base::add_const_reference<T>::type task,
+        int execute(typename flare::add_const_reference<T>::type task,
                     const TaskOptions *options, TaskHandle *handle) {
             if (stopped()) {
                 return EINVAL;
@@ -346,20 +346,20 @@ namespace flare::fiber_internal {
 
     template<typename T>
     inline int execution_queue_execute(ExecutionQueueId<T> id,
-                                       typename flare::base::add_const_reference<T>::type task) {
+                                       typename flare::add_const_reference<T>::type task) {
         return execution_queue_execute(id, task, NULL);
     }
 
     template<typename T>
     inline int execution_queue_execute(ExecutionQueueId<T> id,
-                                       typename flare::base::add_const_reference<T>::type task,
+                                       typename flare::add_const_reference<T>::type task,
                                        const TaskOptions *options) {
         return execution_queue_execute(id, task, options, NULL);
     }
 
     template<typename T>
     inline int execution_queue_execute(ExecutionQueueId<T> id,
-                                       typename flare::base::add_const_reference<T>::type task,
+                                       typename flare::add_const_reference<T>::type task,
                                        const TaskOptions *options,
                                        TaskHandle *handle) {
         typename ExecutionQueue<T>::scoped_ptr_t

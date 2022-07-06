@@ -124,7 +124,7 @@ namespace flare::rpc {
 
         int rpc_state = _rpc_state.load(std::memory_order_acquire);
         if (rpc_state == RPC_RUNNING) {
-            std::unique_lock<flare::base::Mutex> mu(_mutex);
+            std::unique_lock<std::mutex> mu(_mutex);
             rpc_state = _rpc_state.load(std::memory_order_acquire);
             if (rpc_state == RPC_RUNNING) {
                 if (_saved_buf.size() >= (size_t) FLAGS_socket_max_unwritten_bytes ||
@@ -157,7 +157,7 @@ namespace flare::rpc {
         }
         int rpc_state = _rpc_state.load(std::memory_order_acquire);
         if (rpc_state == RPC_RUNNING) {
-            std::unique_lock<flare::base::Mutex> mu(_mutex);
+            std::unique_lock<std::mutex> mu(_mutex);
             rpc_state = _rpc_state.load(std::memory_order_relaxed);
             if (rpc_state == RPC_RUNNING) {
                 if (_saved_buf.size() >= (size_t) FLAGS_socket_max_unwritten_bytes ||
@@ -199,7 +199,7 @@ namespace flare::rpc {
         int ntry = 0;
         bool permanent_error = false;
         do {
-            std::unique_lock<flare::base::Mutex> mu(_mutex);
+            std::unique_lock<std::mutex> mu(_mutex);
             if (_saved_buf.empty() || permanent_error || rpc_failed) {
                 flare::cord_buf tmp;
                 tmp.swap(_saved_buf); // Clear _saved_buf outside lock.

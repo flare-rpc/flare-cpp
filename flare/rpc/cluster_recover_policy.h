@@ -20,8 +20,8 @@
 #define FLARE_RPC_CLUSTER_RECOVER_POLICY_H_
 
 #include <cstdint>
+#include <mutex>
 #include <memory>
-#include "flare/base/lock.h"
 #include <string_view>
 
 namespace flare::rpc {
@@ -72,7 +72,7 @@ namespace flare::rpc {
     private:
         bool _recovering;
         int64_t _min_working_instances;
-        flare::base::Mutex _mutex;
+        std::mutex _mutex;
         uint64_t _last_usable;
         int64_t _last_usable_change_time_ms;
         int64_t _hold_seconds;

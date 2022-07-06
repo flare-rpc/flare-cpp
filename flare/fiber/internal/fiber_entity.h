@@ -19,11 +19,11 @@
 #define FLARE_FIBER_INTERNAL_FIBER_ENTITY_H_
 
 #include <pthread.h>                 // pthread_spin_init
+#include <functional>
 #include "flare/fiber/internal/waitable_event.h"           // butex_construct/destruct
 #include "flare/base/static_atomic.h"          // std::atomic
 #include "flare/fiber/internal/types.h"           // fiber_attribute
 #include "flare/fiber/internal/stack.h"           // fiber_contextual_stack
-#include "flare/base/functional.h"
 
 namespace flare::fiber_internal {
 
@@ -42,7 +42,7 @@ namespace flare::fiber_internal {
         void *rpcz_parent_span;
     };
 
-#define FIBER_LOCAL_STORAGE_INITIALIZER { NULL, NULL, NULL }
+#define FIBER_LOCAL_STORAGE_INITIALIZER { nullptr, nullptr, nullptr }
 
     const static fiber_local_storage LOCAL_STORAGE_INIT = FIBER_LOCAL_STORAGE_INITIALIZER;
 
@@ -72,7 +72,7 @@ namespace flare::fiber_internal {
 
         // User function and argument
         //void *(*fn)(void *);
-        flare::base::function<void*(void*)> fn;
+        std::function<void*(void*)> fn;
         void *arg;
 
         // Stack of this task.
@@ -94,7 +94,7 @@ namespace flare::fiber_internal {
         // Only initialize [Not Reset] fields, other fields will be reset in
         // fiber_start* functions
         fiber_entity()
-                : current_waiter(NULL), current_sleep(0), stack(NULL) {
+                : current_waiter(nullptr), current_sleep(0), stack(nullptr) {
             pthread_spin_init(&version_lock, 0);
             version_butex = waitable_event_create_checked<uint32_t>();
             *version_butex = 1;
@@ -102,7 +102,7 @@ namespace flare::fiber_internal {
 
         ~fiber_entity() {
             waitable_event_destroy(version_butex);
-            version_butex = NULL;
+            version_butex = nullptr;
             pthread_spin_destroy(&version_lock);
         }
 
@@ -112,7 +112,7 @@ namespace flare::fiber_internal {
 
         fiber_contextual_stack *release_stack() {
             fiber_contextual_stack *tmp = stack;
-            stack = NULL;
+            stack = nullptr;
             return tmp;
         }
 

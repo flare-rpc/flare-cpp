@@ -854,7 +854,7 @@ namespace flare::rpc {
 
         std::atomic<SocketId> _agent_socket_id;
 
-        flare::base::Mutex _pipeline_mutex;
+        std::mutex _pipeline_mutex;
         std::deque<PipelinedInfo> *_pipeline_q;
 
         // For storing call-id of in-progress RPC.
@@ -872,7 +872,7 @@ namespace flare::rpc {
         // Storing data that are not flushed into `fd' yet.
         std::atomic<WriteRequest *> _write_head;
 
-        flare::base::Mutex _stream_mutex;
+        std::mutex _stream_mutex;
         std::set<StreamId> *_stream_set;
 
         std::atomic<int64_t> _ninflight_app_health_check;

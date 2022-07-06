@@ -1,6 +1,9 @@
-//
-// Created by liyinbin on 2022/2/21.
-//
+
+/****************************************************************
+ * Copyright (c) 2022, liyinbin
+ * All rights reserved.
+ * Author by liyinbin (jeff.li) lijippy@163.com
+ *****************************************************************/
 
 #include "flare/fiber/fiber.h"
 #include "flare/fiber/internal/fiber.h"
@@ -10,7 +13,7 @@ namespace flare {
 
     }
 
-    fiber::fiber(const attribute &attr, flare::base::function<void *(void *)> &&fn, void *args)
+    fiber::fiber(const attribute &attr, std::function<void *(void *)> &&fn, void *args)
             : _save_error(0),
               _fid(INVALID_FIBER_ID), _detached(false) {
         fiber_attribute tmp;

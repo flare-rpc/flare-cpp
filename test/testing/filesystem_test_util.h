@@ -1,6 +1,9 @@
-//
-// Created by liyinbin on 2022/1/27.
-//
+
+/****************************************************************
+ * Copyright (c) 2022, liyinbin
+ * All rights reserved.
+ * Author by liyinbin (jeff.li) lijippy@163.com
+ *****************************************************************/
 
 #ifndef TEST_TESTING_FILESYSTEM_TEST_UTIL_H_
 #define TEST_TESTING_FILESYSTEM_TEST_UTIL_H_

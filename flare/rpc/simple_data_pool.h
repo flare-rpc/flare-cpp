@@ -53,7 +53,7 @@ namespace flare::rpc {
         Stat stat() const;
 
     private:
-        flare::base::Mutex _mutex;
+        std::mutex _mutex;
         unsigned _capacity;
         unsigned _size;
         std::atomic<unsigned> _ncreated;

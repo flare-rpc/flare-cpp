@@ -1,6 +1,9 @@
-//
-// Created by liyinbin on 2022/7/1.
-//
+
+/****************************************************************
+ * Copyright (c) 2022, liyinbin
+ * All rights reserved.
+ * Author by liyinbin (jeff.li) lijippy@163.com
+ *****************************************************************/
 
 #ifndef FLARE_METRICS_GAUGE_H_
 #define FLARE_METRICS_GAUGE_H_
