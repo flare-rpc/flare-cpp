@@ -51,10 +51,14 @@ namespace flare::rpc {
             return -1;
         }
 
-        if (_nconcurrency_var.expose_as(prefix, "concurrency", "") != 0) {
+        if (_qps.expose_as(std::string(prefix.data(), prefix.size()), "counter_qps", "", {}, static_cast<display_filter>(DISPLAY_ON_METRICS | DISPLAY_ON_ALL)) != 0) {
             return -1;
         }
-        if (_nerror_var.expose_as(prefix, "error", "") != 0) {
+
+        if (_nconcurrency_var.expose_as(prefix, "concurrency", "", {}, static_cast<display_filter>(DISPLAY_ON_METRICS | DISPLAY_ON_ALL)) != 0) {
+            return -1;
+        }
+        if (_nerror_var.expose_as(prefix, "error", "",{}, static_cast<display_filter>(DISPLAY_ON_METRICS | DISPLAY_ON_ALL)) != 0) {
             return -1;
         }
         if (_eps_var.expose_as(prefix, "eps", "") != 0) {
@@ -64,7 +68,7 @@ namespace flare::rpc {
             return -1;
         }
         if (_cl) {
-            if (_max_concurrency_var.expose_as(prefix, "max_concurrency", "") != 0) {
+            if (_max_concurrency_var.expose_as(prefix, "max_concurrency", "", {}, static_cast<display_filter>(DISPLAY_ON_METRICS | DISPLAY_ON_ALL)) != 0) {
                 return -1;
             }
         }
