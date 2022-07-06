@@ -20,14 +20,13 @@
 
 namespace flare {
 
-
     class histogram : public variable_base {
     public:
 
         histogram(const std::string &name,
                   const std::string_view &help,
                   const bucket &buckets,
-                  const variable_base::tag_type &tags =variable_base::tag_type());
+                  const variable_base::tag_type &tags = variable_base::tag_type());
 
         ~histogram();
 
@@ -40,9 +39,8 @@ namespace flare {
     private:
         const bucket _bucket_boundaries;
         std::vector<std::unique_ptr<counter<int64_t>>> _bucket_counts;
-        counter<int64_t> _sum;
+        counter<double> _sum;
     };
-
 
 }  // namespace flare
 
