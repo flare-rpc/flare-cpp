@@ -26,7 +26,7 @@ namespace flare {
 
         struct cctz_parts {
             flare::times_internal::time_point<flare::times_internal::seconds> sec;
-            flare::times_internal::detail::femtoseconds fem;
+            flare::times_internal::times_detail::femtoseconds fem;
         };
 
         FLARE_FORCE_INLINE flare::times_internal::time_point<flare::times_internal::seconds>
@@ -43,12 +43,12 @@ namespace flare {
             const int64_t rep_hi = duration::get_rep_hi(d);
             const int64_t rep_lo = duration::get_rep_lo(d);
             const auto sec = unix_epoch() + flare::times_internal::seconds(rep_hi);
-            const auto fem = flare::times_internal::detail::femtoseconds(rep_lo * (1000 * 1000 / 4));
+            const auto fem = flare::times_internal::times_detail::femtoseconds(rep_lo * (1000 * 1000 / 4));
             return {sec, fem};
         }
 
-// Joins the given seconds and femtoseconds into a time_point. See duration.cc for
-// details about rep_hi and rep_lo.
+        // Joins the given seconds and femtoseconds into a time_point. See duration.cc for
+        // details about rep_hi and rep_lo.
         flare::time_point Join(const cctz_parts &parts) {
             const int64_t rep_hi = (parts.sec - unix_epoch()).count();
             const uint32_t rep_lo = parts.fem.count() / (1000 * 1000 / 4);
@@ -65,7 +65,7 @@ namespace flare {
         if (t == flare::time_point::infinite_past())
             return kInfinitePastStr;
         const auto parts = Split(t);
-        return flare::times_internal::detail::format(format, parts.sec, parts.fem,
+        return flare::times_internal::times_detail::format(format, parts.sec, parts.fem,
                                                      flare::times_internal::time_zone(tz));
     }
 
@@ -114,7 +114,7 @@ namespace flare {
 
         std::string error;
         cctz_parts parts;
-        const bool b = flare::times_internal::detail::parse(format, input, flare::times_internal::time_zone(tz),
+        const bool b = flare::times_internal::times_detail::parse(format, input, flare::times_internal::time_zone(tz),
                                                             &parts.sec, &parts.fem, &error);
         if (b) {
             *time = Join(parts);

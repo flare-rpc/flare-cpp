@@ -22,7 +22,7 @@ namespace flare::times_internal {
     // constructor parameters and operands/results of addition/subtraction).
     using diff_t = std::int_fast64_t;
 
-    namespace detail {
+    namespace times_detail {
 
         // Type aliases that indicate normalized argument values.
         using month_t = std::int_fast8_t;   // [1:12]
@@ -212,7 +212,7 @@ namespace flare::times_internal {
 
         }  // namespace impl
 
-// Increments the indicated (normalized) field by "n".
+        // Increments the indicated (normalized) field by "n".
         constexpr fields step(second_tag, fields f, diff_t n) noexcept {
             return impl::n_sec(f.y, f.m, f.d, f.hh, f.mm + n / 60, f.ss + n % 60);
         }
@@ -239,13 +239,13 @@ namespace flare::times_internal {
 
         namespace impl {
 
-// Returns (v * f + a) but avoiding intermediate overflow when possible.
+            // Returns (v * f + a) but avoiding intermediate overflow when possible.
             constexpr diff_t scale_add(diff_t v, diff_t f, diff_t a) noexcept {
                 return (v < 0) ? ((v + 1) * f + a) - f : ((v - 1) * f + a) + f;
             }
 
-// Map a (normalized) Y/M/D to the number of days before/after 1970-01-01.
-// Probably overflows for years outside [-292277022656:292277026595].
+            // Map a (normalized) Y/M/D to the number of days before/after 1970-01-01.
+            // Probably overflows for years outside [-292277022656:292277026595].
             constexpr diff_t ymd_ord(year_t y, month_t m, day_t d) noexcept {
                 const diff_t eyear = (m <= 2) ? y - 1 : y;
                 const diff_t era = (eyear >= 0 ? eyear : eyear - 399) / 400;
@@ -255,11 +255,11 @@ namespace flare::times_internal {
                 return era * 146097 + doe - 719468;
             }
 
-// Returns the difference in days between two normalized Y-M-D tuples.
-// ymd_ord() will encounter integer overflow given extreme year values,
-// yet the difference between two such extreme values may actually be
-// small, so we take a little care to avoid overflow when possible by
-// exploiting the 146097-day cycle.
+            // Returns the difference in days between two normalized Y-M-D tuples.
+            // ymd_ord() will encounter integer overflow given extreme year values,
+            // yet the difference between two such extreme values may actually be
+            // small, so we take a little care to avoid overflow when possible by
+            // exploiting the 146097-day cycle.
             constexpr diff_t day_difference(year_t y1, month_t m1, day_t d1, year_t y2,
                                             month_t m2, day_t d2) noexcept {
                 const diff_t a_c4_off = y1 % 400;
@@ -278,7 +278,7 @@ namespace flare::times_internal {
 
         }  // namespace impl
 
-// Returns the difference between fields structs using the indicated unit.
+        // Returns the difference between fields structs using the indicated unit.
         constexpr diff_t difference(year_tag, fields f1, fields f2) noexcept {
             return f1.y - f2.y;
         }
@@ -304,7 +304,7 @@ namespace flare::times_internal {
         }
 
 
-// Aligns the (normalized) fields struct to the indicated field.
+        // Aligns the (normalized) fields struct to the indicated field.
         constexpr fields align(second_tag, fields f) noexcept { return f; }
 
         constexpr fields align(minute_tag, fields f) noexcept {
@@ -478,8 +478,8 @@ namespace flare::times_internal {
             fields f_;
         };
 
-// Disallows difference between differently aligned types.
-// auto n = civil_day(...) - civil_hour(...);  // would be confusing.
+        // Disallows difference between differently aligned types.
+        // auto n = civil_day(...) - civil_hour(...);  // would be confusing.
         template<typename T, typename U>
         constexpr diff_t operator-(civil_time<T>, civil_time<U>) = delete;
 
@@ -634,7 +634,7 @@ namespace flare::times_internal {
 
         std::ostream &operator<<(std::ostream &os, weekday wd);
 
-    }  // namespace detail
+    }  // namespace times_detail
 
 }  // namespace flare::times_internal
 #endif  // FLARE_TIMES_INTERNAL_CHRONO_TIME_DETAIL_H_

@@ -10,27 +10,33 @@
 
 namespace flare {
 
-    latch::latch(std::ptrdiff_t count) : count_(count) {}
+    latch::latch(uint32_t count) : _data(std::make_shared<inner_data>()) {
+        _data->count = count;
+    }
 
-    void latch::count_down(std::ptrdiff_t update) {
-        std::unique_lock lk(m_);
-        FLARE_CHECK_GE(count_, update);
-        count_ -= update;
-        if (!count_) {
-            cv_.notify_all();
+    void latch::count_down(uint32_t update) {
+        FLARE_CHECK(_data->count > 0) << "flare::latch::count_down() called too many times";
+        _data->count -= update;
+        if (_data->count == 0) {
+            std::unique_lock lk(_data->mutex);
+            _data->cond.notify_all();
         }
     }
 
+    void latch::count_up(uint32_t update) {
+        _data->count += update;
+    }
+
     bool latch::try_wait() const noexcept {
-        std::scoped_lock _(m_);
-        FLARE_CHECK_GE(count_, 0);
-        return !count_;
+        std::unique_lock lk(_data->mutex);
+        FLARE_CHECK_GE(_data->count, 0u);
+        return !_data->count;
     }
 
     void latch::wait() const {
-        std::unique_lock lk(m_);
-        FLARE_CHECK_GE(count_, 0);
-        return cv_.wait(lk, [this] { return count_ == 0; });
+        std::unique_lock lk(_data->mutex);
+        FLARE_CHECK_GE(_data->count, 0);
+        return _data->cond.wait(lk, [this] { return _data->count == 0; });
     }
 
     void latch::arrive_and_wait(std::ptrdiff_t update) {

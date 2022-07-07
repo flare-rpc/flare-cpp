@@ -44,7 +44,7 @@
 
 namespace flare::times_internal {
 
-    namespace detail {
+    namespace times_detail {
 
         namespace {
 
@@ -106,9 +106,9 @@ namespace flare::times_internal {
 
             const char kDigits[] = "0123456789";
 
-// Formats a 64-bit integer in the given field width.  Note that it is up
-// to the caller of Format64() [and Format02d()/FormatOffset()] to ensure
-// that there is sufficient space before ep to hold the conversion.
+            // Formats a 64-bit integer in the given field width.  Note that it is up
+            // to the caller of Format64() [and Format02d()/FormatOffset()] to ensure
+            // that there is sufficient space before ep to hold the conversion.
             char *Format64(char *ep, int width, std::int_fast64_t v) {
                 bool neg = false;
                 if (v < 0) {
@@ -136,14 +136,14 @@ namespace flare::times_internal {
                 return ep;
             }
 
-// Formats [0 .. 99] as %02d.
+            // Formats [0 .. 99] as %02d.
             char *Format02d(char *ep, int v) {
                 *--ep = kDigits[v % 10];
                 *--ep = kDigits[(v / 10) % 10];
                 return ep;
             }
 
-// Formats a UTC offset, like +00:00.
+            // Formats a UTC offset, like +00:00.
             char *FormatOffset(char *ep, int offset, const char *mode) {
                 // TODO: Follow the RFC3339 "Unknown Local Offset Convention" and
                 // generate a "negative zero" when we're formatting a zero offset
@@ -274,28 +274,28 @@ namespace flare::times_internal {
 
         }  // namespace
 
-// Uses strftime(3) to format the given time_point.  The following extended format
-// specifiers are also supported:
-//
-//   - %Ez  - RFC3339-compatible numeric UTC offset (+hh:mm or -hh:mm)
-//   - %E*z - Full-resolution numeric UTC offset (+hh:mm:ss or -hh:mm:ss)
-//   - %E#S - seconds with # digits of fractional precision
-//   - %E*S - seconds with full fractional precision (a literal '*')
-//   - %E4Y - Four-character years (-999 ... -001, 0000, 0001 ... 9999)
-//
-// The standard specifiers from RFC3339_* (%Y, %m, %d, %H, %M, and %S) are
-// handled internally for performance reasons.  strftime(3) is slow due to
-// a POSIX requirement to respect changes to ${TZ}.
-//
-// The TZ/GNU %s extension is handled internally because strftime() has
-// to use mktime() to generate it, and that assumes the local time zone.
-//
-// We also handle the %z and %Z specifiers to accommodate platforms that do
-// not support the tm_gmtoff and tm_zone extensions to std::tm.
-//
-// Requires that zero() <= fs < seconds(1).
+        // Uses strftime(3) to format the given time_point.  The following extended format
+        // specifiers are also supported:
+        //
+        //   - %Ez  - RFC3339-compatible numeric UTC offset (+hh:mm or -hh:mm)
+        //   - %E*z - Full-resolution numeric UTC offset (+hh:mm:ss or -hh:mm:ss)
+        //   - %E#S - seconds with # digits of fractional precision
+        //   - %E*S - seconds with full fractional precision (a literal '*')
+        //   - %E4Y - Four-character years (-999 ... -001, 0000, 0001 ... 9999)
+        //
+        // The standard specifiers from RFC3339_* (%Y, %m, %d, %H, %M, and %S) are
+        // handled internally for performance reasons.  strftime(3) is slow due to
+        // a POSIX requirement to respect changes to ${TZ}.
+        //
+        // The TZ/GNU %s extension is handled internally because strftime() has
+        // to use mktime() to generate it, and that assumes the local time zone.
+        //
+        // We also handle the %z and %Z specifiers to accommodate platforms that do
+        // not support the tm_gmtoff and tm_zone extensions to std::tm.
+        //
+        // Requires that zero() <= fs < seconds(1).
         std::string format(const std::string &format, const time_point<seconds> &tp,
-                           const detail::femtoseconds &fs, const time_zone &tz) {
+                           const times_detail::femtoseconds &fs, const time_zone &tz) {
             std::string result;
             result.reserve(format.size());  // A reasonable guess for the result size.
             const time_zone::absolute_lookup al = tz.lookup(tp);
@@ -561,7 +561,7 @@ namespace flare::times_internal {
                 return dp;
             }
 
-            const char *ParseSubSeconds(const char *dp, detail::femtoseconds *subseconds) {
+            const char *ParseSubSeconds(const char *dp, times_detail::femtoseconds *subseconds) {
                 if (dp != nullptr) {
                     std::int_fast64_t v = 0;
                     std::int_fast64_t exp = 0;
@@ -578,7 +578,7 @@ namespace flare::times_internal {
                     }
                     if (dp != bp) {
                         v *= kExp10[15 - exp];
-                        *subseconds = detail::femtoseconds(v);
+                        *subseconds = times_detail::femtoseconds(v);
                     } else {
                         dp = nullptr;
                     }
@@ -586,7 +586,7 @@ namespace flare::times_internal {
                 return dp;
             }
 
-// Parses a string into a std::tm using strptime(3).
+            // Parses a string into a std::tm using strptime(3).
             const char *ParseTM(const char *dp, const char *fmt, std::tm *tm) {
                 if (dp != nullptr) {
                     dp = strptime(dp, fmt, tm);
@@ -596,23 +596,23 @@ namespace flare::times_internal {
 
         }  // namespace
 
-// Uses strptime(3) to parse the given input.  Supports the same extended
-// format specifiers as format(), although %E#S and %E*S are treated
-// identically (and similarly for %E#f and %E*f).  %Ez and %E*z also accept
-// the same inputs.
-//
-// The standard specifiers from RFC3339_* (%Y, %m, %d, %H, %M, and %S) are
-// handled internally so that we can normally avoid strptime() altogether
-// (which is particularly helpful when the native implementation is broken).
-//
-// The TZ/GNU %s extension is handled internally because strptime() has to
-// use localtime_r() to generate it, and that assumes the local time zone.
-//
-// We also handle the %z specifier to accommodate platforms that do not
-// support the tm_gmtoff extension to std::tm.  %Z is parsed but ignored.
+        // Uses strptime(3) to parse the given input.  Supports the same extended
+        // format specifiers as format(), although %E#S and %E*S are treated
+        // identically (and similarly for %E#f and %E*f).  %Ez and %E*z also accept
+        // the same inputs.
+        //
+        // The standard specifiers from RFC3339_* (%Y, %m, %d, %H, %M, and %S) are
+        // handled internally so that we can normally avoid strptime() altogether
+        // (which is particularly helpful when the native implementation is broken).
+        //
+        // The TZ/GNU %s extension is handled internally because strptime() has to
+        // use localtime_r() to generate it, and that assumes the local time zone.
+        //
+        // We also handle the %z specifier to accommodate platforms that do not
+        // support the tm_gmtoff extension to std::tm.  %Z is parsed but ignored.
         bool parse(const std::string &format, const std::string &input,
                    const time_zone &tz, time_point<seconds> *sec,
-                   detail::femtoseconds *fs, std::string *err) {
+                   times_detail::femtoseconds *fs, std::string *err) {
             // The unparsed input.
             const char *data = input.c_str();  // NUL terminated
 
@@ -635,7 +635,7 @@ namespace flare::times_internal {
             tm.tm_wday = 4;  // Thu
             tm.tm_yday = 0;
             tm.tm_isdst = 0;
-            auto subseconds = detail::femtoseconds::zero();
+            auto subseconds = times_detail::femtoseconds::zero();
             bool saw_offset = false;
             int offset = 0;  // No offset from passed tz.
             std::string zone = "UTC";
@@ -840,7 +840,7 @@ namespace flare::times_internal {
             // If we saw %s then we ignore anything else and return that time.
             if (saw_percent_s) {
                 *sec = from_unix_seconds(percent_s);
-                *fs = detail::femtoseconds::zero();
+                *fs = times_detail::femtoseconds::zero();
                 return true;
             }
 
@@ -853,7 +853,7 @@ namespace flare::times_internal {
             if (tm.tm_sec == 60) {
                 tm.tm_sec -= 1;
                 offset -= 1;
-                subseconds = detail::femtoseconds::zero();
+                subseconds = times_detail::femtoseconds::zero();
             }
 
             if (!saw_year) {
@@ -907,6 +907,6 @@ namespace flare::times_internal {
             return true;
         }
 
-    }  // namespace detail
+    }  // namespace times_detail
 
 }  // namespace flare::times_internal

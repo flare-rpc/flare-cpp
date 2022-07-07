@@ -71,17 +71,17 @@
 namespace flare {
 
     namespace times_internal {
-        struct second_tag : flare::times_internal::detail::second_tag {
+        struct second_tag : flare::times_internal::times_detail::second_tag {
         };
-        struct minute_tag : second_tag, flare::times_internal::detail::minute_tag {
+        struct minute_tag : second_tag, flare::times_internal::times_detail::minute_tag {
         };
-        struct hour_tag : minute_tag, flare::times_internal::detail::hour_tag {
+        struct hour_tag : minute_tag, flare::times_internal::times_detail::hour_tag {
         };
-        struct day_tag : hour_tag, flare::times_internal::detail::day_tag {
+        struct day_tag : hour_tag, flare::times_internal::times_detail::day_tag {
         };
-        struct month_tag : day_tag, flare::times_internal::detail::month_tag {
+        struct month_tag : day_tag, flare::times_internal::times_detail::month_tag {
         };
-        struct year_tag : month_tag, flare::times_internal::detail::year_tag {
+        struct year_tag : month_tag, flare::times_internal::times_detail::year_tag {
         };
     }  // namespace times_internal
 
@@ -319,17 +319,17 @@ namespace flare {
     //   }
     //
     using chrono_second =
-    flare::times_internal::detail::civil_time<times_internal::second_tag>;
+    flare::times_internal::times_detail::civil_time<times_internal::second_tag>;
     using chrono_minute =
-    flare::times_internal::detail::civil_time<times_internal::minute_tag>;
+    flare::times_internal::times_detail::civil_time<times_internal::minute_tag>;
     using chrono_hour =
-    flare::times_internal::detail::civil_time<times_internal::hour_tag>;
+    flare::times_internal::times_detail::civil_time<times_internal::hour_tag>;
     using chrono_day =
-    flare::times_internal::detail::civil_time<times_internal::day_tag>;
+    flare::times_internal::times_detail::civil_time<times_internal::day_tag>;
     using chrono_month =
-    flare::times_internal::detail::civil_time<times_internal::month_tag>;
+    flare::times_internal::times_detail::civil_time<times_internal::month_tag>;
     using chrono_year =
-    flare::times_internal::detail::civil_time<times_internal::year_tag>;
+    flare::times_internal::times_detail::civil_time<times_internal::year_tag>;
 
     // chrono_year_t
     //
@@ -364,8 +364,8 @@ namespace flare {
     // members for all days of the week.
     //
     //   flare::chrono_weekday wd = flare::chrono_weekday::thursday;
-    //
-    using chrono_weekday = flare::times_internal::weekday;
+    //::
+    using chrono_weekday = flare::times_internal::times_detail::weekday;
 
     // get_weekday()
     //
@@ -377,7 +377,7 @@ namespace flare {
     //   flare::chrono_weekday wd = flare::get_weekday(a);  // wd == flare::chrono_weekday::thursday
     //
     FLARE_FORCE_INLINE chrono_weekday get_weekday(chrono_second cs) {
-        return flare::times_internal::get_weekday(cs);
+        return flare::times_internal::times_detail::get_weekday(cs);
     }
 
     // next_weekday()
@@ -411,11 +411,11 @@ namespace flare {
     //   flare::chrono_day thurs2 = flare::prev_weekday(d + 1, flare::chrono_weekday::thursday);
     //
     FLARE_FORCE_INLINE chrono_day next_weekday(chrono_day cd, chrono_weekday wd) {
-        return chrono_day(flare::times_internal::next_weekday(cd, wd));
+        return chrono_day(flare::times_internal::times_detail::next_weekday(cd, wd));
     }
 
     FLARE_FORCE_INLINE chrono_day prev_weekday(chrono_day cd, chrono_weekday wd) {
-        return chrono_day(flare::times_internal::prev_weekday(cd, wd));
+        return chrono_day(flare::times_internal::times_detail::prev_weekday(cd, wd));
     }
 
     // get_yearday()
@@ -430,7 +430,7 @@ namespace flare {
     //   int yd_dec_31 = flare::get_yearday(b);  // yd_dec_31 = 365
     //
     FLARE_FORCE_INLINE int get_yearday(chrono_second cs) {
-        return flare::times_internal::get_yearday(cs);
+        return flare::times_internal::times_detail::get_yearday(cs);
     }
 
     // format_chrono_time()
