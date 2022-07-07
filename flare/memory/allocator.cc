@@ -1,4 +1,11 @@
 
+
+/****************************************************************
+ * Copyright (c) 2022, liyinbin
+ * All rights reserved.
+ * Author by liyinbin (jeff.li) lijippy@163.com
+ *****************************************************************/
+
 #include "flare/memory/allocator.h"
 #include <cstring>
 
@@ -8,9 +15,9 @@
 #include <unistd.h>
 
 namespace {
-// This was a static in page_size(), but due to the following TSAN false-positive
-// bug, this has been moved out to a global.
-// https://gcc.gnu.org/bugzilla/show_bug.cgi?id=68338
+    // This was a static in page_size(), but due to the following TSAN false-positive
+    // bug, this has been moved out to a global.
+    // https://gcc.gnu.org/bugzilla/show_bug.cgi?id=68338
     const size_t kPageSize = sysconf(_SC_PAGESIZE);
 
     inline size_t page_size() {
