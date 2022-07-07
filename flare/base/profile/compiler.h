@@ -4,6 +4,7 @@
  * All rights reserved.
  * Author by liyinbin (jeff.li) lijippy@163.com
  *****************************************************************/
+
 #ifndef FLARE_BASE_INTERNAL_COMPILER_H_
 #define FLARE_BASE_INTERNAL_COMPILER_H_
 

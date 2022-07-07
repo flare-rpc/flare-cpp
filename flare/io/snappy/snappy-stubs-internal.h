@@ -33,7 +33,7 @@
 
 #include <string>
 #include <assert.h>
-#include <stdlib.h>
+#include <cstdlib>
 #include <string.h>
 #include "flare/base/profile.h"
 #include "flare/base/endian.h"

@@ -16,7 +16,7 @@
 // under the License.
 
 #include <inttypes.h>
-#include <stdlib.h>
+#include <cstdlib>
 #include <unistd.h>
 #include <stdio.h>
 #include <signal.h>

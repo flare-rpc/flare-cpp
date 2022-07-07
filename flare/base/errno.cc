@@ -1,8 +1,14 @@
 
+/****************************************************************
+ * Copyright (c) 2022, liyinbin
+ * All rights reserved.
+ * Author by liyinbin (jeff.li) lijippy@163.com
+ *****************************************************************/
+
 #include "flare/base/profile.h"
 #include <errno.h>                                     // errno
 #include <string.h>                                    // strerror_r
-#include <stdlib.h>                                    // EXIT_FAILURE
+#include <cstdlib>                                    // EXIT_FAILURE
 #include <stdio.h>                                     // snprintf
 #include <pthread.h>                                   // pthread_mutex_t
 #include <unistd.h>                                    // _exit

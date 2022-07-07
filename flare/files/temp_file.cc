@@ -1,8 +1,14 @@
 
+/****************************************************************
+ * Copyright (c) 2022, liyinbin
+ * All rights reserved.
+ * Author by liyinbin (jeff.li) lijippy@163.com
+ *****************************************************************/
+
 #include <fcntl.h>                                  // open
 #include <unistd.h>                                 // close
 #include <stdio.h>                                  // snprintf, vdprintf
-#include <stdlib.h>                                 // mkstemp
+#include <cstdlib>                                 // mkstemp
 #include <string.h>                                 // strlen 
 #include <stdarg.h>                                 // va_list
 #include <errno.h>                                  // errno

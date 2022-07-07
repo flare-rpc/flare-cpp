@@ -1,9 +1,15 @@
 
+/****************************************************************
+ * Copyright (c) 2022, liyinbin
+ * All rights reserved.
+ * Author by liyinbin (jeff.li) lijippy@163.com
+ *****************************************************************/
+
 #ifndef FLARE_BASE_STATUS_H_
 #define FLARE_BASE_STATUS_H_
 
 #include <stdarg.h>                       // va_list
-#include <stdlib.h>                       // free
+#include <cstdlib>                       // free
 #include <string>                         // std::string
 #include <ostream>                        // std::ostream
 #include <string_view>

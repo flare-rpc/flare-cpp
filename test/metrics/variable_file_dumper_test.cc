@@ -20,7 +20,7 @@
 #include "testing/gtest_wrap.h"
 #include "flare/metrics/gauge.h"
 #include <gflags/gflags.h>
-#include <stdlib.h>
+#include <cstdlib>
 
 class FileDumperTest : public testing::Test {
 protected:

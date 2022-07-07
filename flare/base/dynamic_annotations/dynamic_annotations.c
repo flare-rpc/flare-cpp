@@ -32,7 +32,7 @@
 # error "This file should be built as pure C to avoid name mangling"
 #endif
 
-#include <stdlib.h>
+#include <cstdlib>
 #include <string.h>
 
 #include "flare/base/dynamic_annotations/dynamic_annotations.h"

@@ -1,5 +1,5 @@
 
-#include <stdlib.h>
+#include <cstdlib>
 #include <gflags/gflags.h>
 #include "flare/metrics/gflag.h"
 

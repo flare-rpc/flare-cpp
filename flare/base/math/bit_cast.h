@@ -4,6 +4,7 @@
  * All rights reserved.
  * Author by liyinbin (jeff.li) lijippy@163.com
  *****************************************************************/
+
 #ifndef FLARE_BASE_MATH_BIT_CAST_H_
 #define FLARE_BASE_MATH_BIT_CAST_H_
 

@@ -16,7 +16,7 @@
 // under the License.
 
 
-#include <stdlib.h>                                   // strtol
+#include <cstdlib>                                   // strtol
 #include <string>                                     // std::string
 #include <set>                                        // std::set
 #include "flare/strings/string_splitter.h"                     // StringSplitter

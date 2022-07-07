@@ -1,4 +1,9 @@
 
+/****************************************************************
+ * Copyright (c) 2022, liyinbin
+ * All rights reserved.
+ * Author by liyinbin (jeff.li) lijippy@163.com
+ *****************************************************************/
 
 #include "flare/base/profile.h"
 #include <arpa/inet.h>                         // inet_pton, inet_ntop
@@ -7,7 +12,7 @@
 #include <errno.h>                             // errno
 #include <string.h>                            // strcpy
 #include <stdio.h>                             // snprintf
-#include <stdlib.h>                            // strtol
+#include <cstdlib>                            // strtol
 #include <gflags/gflags.h>
 #include "flare/base/fd_guard.h"                    // fd_guard
 #include "flare/base/endpoint.h"                    // ip_t

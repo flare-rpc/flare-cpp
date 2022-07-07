@@ -17,7 +17,7 @@
 
 
 #include <netdb.h>                                    // gethostbyname_r
-#include <stdlib.h>                                   // strtol
+#include <cstdlib>                                   // strtol
 #include <string>                                     // std::string
 #include "flare/fiber/internal/fiber.h"
 #include "flare/rpc/log.h"
