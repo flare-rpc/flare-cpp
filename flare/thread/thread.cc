@@ -2,6 +2,7 @@
 
 #include "flare/thread/thread.h"
 #include "flare/base/profile.h"
+#include "flare/base/sysinfo.h"
 #include "flare/log/logging.h"
 #include "flare/bootstrap/bootstrap.h"
 #include <signal.h>
@@ -32,48 +33,31 @@
 
 namespace flare {
 
-    __thread thread_impl *local_impl = nullptr;
+    __thread thread::inner_data* local_impl = nullptr;
+    /// reserve 0 for main thread
+    std::atomic<int32_t> g_thread_id{1};
+    __thread int32_t local_thread_id = -1;
 
-    thread_impl::thread_impl(thread_option &&option)
-            : option(std::move(option)), thread_id(0), start_latch(1) {}
-
-    bool thread_impl::start() {
-        pthread_attr_t attr;
-        pthread_attr_init(&attr);
-        if (!option.join_able) {
-            pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
-            detached = true;
-        }
-        if (option.stack_size > 0) {
-            pthread_attr_setstacksize(&attr, option.stack_size);
-        }
-
-        auto ret = ::pthread_create(&thread_id, &attr, &thread_impl::thread_func, this);
-        pthread_attr_destroy(&attr);
-        if (ret != 0) {
-            return false;
-        }
-        start_latch.wait();
-        return true;
-    }
-
-    void *thread_impl::thread_func(void *arg) {
-        auto impl = ref_ptr(ref_ptr_v, (thread_impl *) arg);
+    void *thread::thread_func(void *arg) {
+        thread *ptr = (thread *) arg;
+        std::shared_ptr<thread::inner_data> impl = ptr->_impl;
         local_impl = impl.get();
-        auto i = thread::thread_index();
-        thread::set_name("%s#%d", impl->option.prefix.c_str(), i);
-        FLARE_LOG(INFO) << "start thread: " << impl->option.prefix << "#" << i;
-        impl->set_affinity();
+        local_thread_id = impl->index;
+        impl->name = flare::string_format("{}#{}", impl->prefix, impl->index);
+        thread::set_name(impl->name);
+        FLARE_LOG(INFO) << "start thread: " << impl->name;
+        ptr->set_affinity();
         impl->start_latch.count_down();
-        impl->option.func();
+        impl->func();
         local_impl = nullptr;
-        FLARE_LOG(INFO) << "exit thread: " << impl->option.prefix << "#" << i;
+        FLARE_LOG(INFO) << "exit thread: " << impl->name;
         return nullptr;
     }
 
-    void thread_impl::set_affinity() const {
-        auto count = option.affinity.count();
-        if (count == 0) {
+    void thread::set_affinity() {
+        return ;
+        FLARE_CHECK(_impl);
+        if (_impl->affinity == -1) {
             return;
         }
 
@@ -94,15 +78,29 @@ namespace flare {
             auto thread = pthread_self();
             pthread_setaffinity_np(thread, sizeof(cpuset_t), &cpuset);
 #else
-        FLARE_CHECK(!flare::core_affinity::supported)<<"Attempting to use thread affinity on a unsupported platform";
+        FLARE_CHECK(!flare::core_affinity::supported) << "Attempting to use thread affinity on a unsupported platform";
 #endif
     }
 
     thread::~thread() {
         if (_impl) {
-            FLARE_LOG(WARNING) << "thread: " << _impl->option.prefix << "was not called before destruction, detach instead.";
+            FLARE_LOG(WARNING) << "thread: " << _impl->name
+                               << "was not called before destruction, detach instead.";
             detach();
         }
+    }
+
+    std::string thread::name() const {
+        FLARE_CHECK(_impl);
+        return _impl->name;
+
+    }
+
+    std::string thread::current_name() {
+        if(local_impl) {
+            return local_impl->name;
+        }
+        return "";
     }
 
     void thread::join(void **ptr) {
@@ -117,8 +115,10 @@ namespace flare {
         if (!_impl) {
             return;
         }
-        ::pthread_detach(_impl->thread_id);
-        _impl = nullptr;
+        if(!_impl->detached) {
+            ::pthread_detach(_impl->thread_id);
+            _impl = nullptr;
+        }
     }
 
     void do_nothing_handler(int) {}
@@ -142,55 +142,57 @@ namespace flare {
         ::pthread_kill(th, SIGURG);
     }
 
-    void thread::set_name(const char *fmt, ...) {
-        char name[1024];
-        va_list vararg;
-        va_start(vararg, fmt);
-        vsnprintf(name, sizeof(name), fmt, vararg);
-        va_end(vararg);
-
+    void thread::set_name(const std::string &name) {
 #if defined(__APPLE__)
-        pthread_setname_np(name);
+        pthread_setname_np(name.c_str());
 #elif defined(__FreeBSD__)
-        pthread_set_name_np(pthread_self(), name);
+        pthread_set_name_np(pthread_self(), name.c_str());
 #elif !defined(__Fuchsia__)
-        pthread_setname_np(pthread_self(), name);
+        pthread_setname_np(pthread_self(), name.c_str());
 #endif
 
     }
 
     bool thread::start() {
         FLARE_CHECK(_impl);
-        auto r = _impl->start();
-        if (!_impl->option.join_able) {
-            _impl = nullptr;
+        pthread_attr_t attr;
+        pthread_attr_init(&attr);
+        if (_impl->stack_size < 2 * 1024 * 1024 || _impl->stack_size > 8 * 1024 * 1024) {
+            _impl->stack_size = 8 * 1024 * 1024;
         }
-        return r;
+        pthread_attr_setstacksize(&attr, _impl->stack_size);
+
+        _impl->start_latch.count_up();
+        auto ret = ::pthread_create(&_impl->thread_id, &attr, &thread::thread_func, (void*)this);
+        pthread_attr_destroy(&attr);
+        if (ret != 0) {
+            return false;
+        }
+        _impl->start_latch.wait();
+        return true;
     }
 
-    void thread::init_by_option(thread_option &&option) {
-        _impl = ref_ptr(ref_ptr_v, new thread_impl(std::move(option)));
+    void thread::initialize_impl(std::function<void()> &&f) {
+        FLARE_CHECK(_impl == nullptr);
+        _impl = std::make_shared<inner_data>();
+        FLARE_CHECK(_impl);
+        _impl->func = std::forward<std::function<void()>>(f);
+        _impl->index = thread_index_pre_alloc();
     }
-
-
-    thread::thread(thread &&rhs) noexcept: _impl(std::move(rhs._impl)) {
-        rhs._impl = nullptr;
-    }
-
-    thread &thread::operator=(thread &&rhs) {
-        _impl = rhs._impl;
-        rhs._impl = nullptr;
-        return *this;
-    }
-
-    std::atomic<int32_t> g_thread_id{0};
-    __thread int32_t local_thread_id = -1;
 
     int32_t thread::thread_index() {
         if (FLARE_UNLIKELY(local_thread_id == -1)) {
-            local_thread_id = g_thread_id.fetch_add(1, std::memory_order_relaxed);
+            if (flare::base::get_tid() != flare::base::get_main_thread_pid()) {
+                local_thread_id = g_thread_id.fetch_add(1, std::memory_order_relaxed);
+            } else {
+                local_thread_id = 0;
+            }
         }
         return local_thread_id;
+    }
+
+    int32_t thread::thread_index_pre_alloc() {
+        return g_thread_id.fetch_add(1, std::memory_order_relaxed);
     }
 
     namespace detail {
@@ -271,7 +273,8 @@ namespace flare {
             detail::thread_exit_helper *h =
                     (detail::thread_exit_helper *) pthread_getspecific(detail::thread_atexit_key);
             if (NULL == h) {
-                h = new(std::nothrow) detail::thread_exit_helper;
+                h = new(std::nothrow)
+                detail::thread_exit_helper;
                 if (NULL != h) {
                     pthread_setspecific(detail::thread_atexit_key, h);
                 }
