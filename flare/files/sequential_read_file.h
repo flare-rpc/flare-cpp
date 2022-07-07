@@ -27,9 +27,9 @@ namespace flare {
 
         flare_status open(const flare::file_path &path) noexcept;
 
-        flare_status read(size_t n, std::string *content);
+        flare_status read(std::string *content, size_t n = npos);
 
-        flare_status read(size_t n, flare::cord_buf *buf);
+        flare_status read(flare::cord_buf *buf, size_t n = npos);
 
         flare_status skip(size_t n);
 
@@ -46,6 +46,7 @@ namespace flare {
     private:
         FLARE_DISALLOW_COPY_AND_ASSIGN(sequential_read_file);
 
+        static const size_t npos = std::numeric_limits<size_t>::max();
         int _fd{-1};
         flare::file_path _path;
         size_t _has_read{0};

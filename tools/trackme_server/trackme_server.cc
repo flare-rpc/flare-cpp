@@ -23,7 +23,9 @@
 #include "flare/log/logging.h"
 #include <flare/rpc/server.h>
 #include <flare/files/file_watcher.h>
-#include <flare/base/scoped_file.h>
+#include <flare/files/readline_file.h>
+#include <flare/strings/str_split.h>
+#include <flare/strings/numbers.h>
 #include <flare/rpc/trackme.pb.h>
 
 DEFINE_string(bug_file, "./bugs", "A file containing revision and information of bugs");
@@ -130,7 +132,7 @@ BugsLoader::BugsLoader()
 
 bool BugsLoader::start(const std::string &bugs_file) {
     _bugs_file = bugs_file;
-    if (pthread_create(&_tid, NULL, run_this, this) != 0) {
+    if (pthread_create(&_tid, nullptr, run_this, this) != 0) {
         FLARE_LOG(ERROR) << "Fail to create loading thread";
         return false;
     }
@@ -143,12 +145,12 @@ void BugsLoader::stop() {
         return;
     }
     _stop = true;
-    pthread_join(_tid, NULL);
+    pthread_join(_tid, nullptr);
 }
 
 void *BugsLoader::run_this(void *arg) {
     ((BugsLoader *) arg)->run();
-    return NULL;
+    return nullptr;
 }
 
 void BugsLoader::run() {
@@ -175,36 +177,34 @@ void BugsLoader::run() {
 }
 
 void BugsLoader::load_bugs() {
-    flare::base::scoped_file fp(fopen(_bugs_file.c_str(), "r"));
-    if (!fp) {
+    flare::readline_file file;
+    auto status = file.open(_bugs_file);
+    if (!status.ok()) {
         FLARE_PLOG(WARNING) << "Fail to open `" << _bugs_file << '\'';
         return;
     }
 
-    char *line = NULL;
-    size_t line_len = 0;
-    ssize_t nr = 0;
     int nline = 0;
     std::unique_ptr<BugList> m(new BugList);
-    while ((nr = getline(&line, &line_len, fp.get())) != -1) {
+    auto lines = file.lines();
+    for (auto line : lines) {
         ++nline;
-        if (line[nr - 1] == '\n') { // remove ending newline
-            --nr;
-        }
+        line = flare::strip_suffix(line, "\n");
         // line format: 
         //   min_rev <sp> max_rev <sp> severity <sp> description
-        flare::StringMultiSplitter sp(line, line + nr, " \t");
-        if (!sp) {
+        std::vector<std::string> sps = flare::string_split(line, " \t");
+        auto sp = sps.begin();
+        if (sp == sps.end()) {
             continue;
         }
         long long min_rev;
-        if (sp.to_longlong(&min_rev)) {
+        if (!flare::simple_atoi(*sp, &min_rev)) {
             FLARE_LOG(WARNING) << "[line" << nline << "] Fail to parse column1 as min_rev";
             continue;
         }
         ++sp;
         long long max_rev;
-        if (!sp || sp.to_longlong(&max_rev)) {
+        if (sp == sps.end()|| !flare::simple_atoi(*sp, &max_rev)) {
             FLARE_LOG(WARNING) << "[line" << nline << "] Fail to parse column2 as max_rev";
             continue;
         }
@@ -214,38 +214,35 @@ void BugsLoader::load_bugs() {
             continue;
         }
         ++sp;
-        if (!sp) {
+        if (sp == sps.end()) {
             FLARE_LOG(WARNING) << "[line" << nline << "] Fail to parse column3 as severity";
             continue;
         }
         flare::rpc::TrackMeSeverity severity = flare::rpc::TrackMeOK;
-        std::string_view severity_str(sp.field(), sp.length());
+        std::string_view severity_str = *sp;
         if (severity_str == "f" || severity_str == "F") {
             severity = flare::rpc::TrackMeFatal;
         } else if (severity_str == "w" || severity_str == "W") {
-            \
             severity = flare::rpc::TrackMeWarning;
         } else {
             FLARE_LOG(WARNING) << "[line" << nline << "] Invalid severity=" << severity_str;
             continue;
         }
         ++sp;
-        if (!sp) {
+        if (sp == sps.end()) {
             FLARE_LOG(WARNING) << "[line" << nline << "] Fail to parse column4 as string";
             continue;
         }
         // Treat everything until end of the line as description. So don't add 
         // comments starting with # or //, they are not recognized.
-        std::string_view description(sp.field(), line + nr - sp.field());
         RevisionInfo info;
         info.min_rev = min_rev;
         info.max_rev = max_rev;
         info.severity = severity;
-        info.error_text.assign(description.data(), description.size());
+        info.error_text.assign(sp->data(), sp->size());
         m->push_back(info);
     }
     FLARE_LOG(INFO) << "Loaded " << m->size() << " bugs";
-    free(line);
     // Just reseting the shared_ptr. Previous BugList will be destroyed when
     // no threads reference it.
     _bug_list.reset(m.release());
@@ -254,7 +251,7 @@ void BugsLoader::load_bugs() {
 bool BugsLoader::find(int64_t revision, flare::rpc::TrackMeResponse *response) {
     // Add reference to make sure the bug list is not deleted.
     std::shared_ptr<BugList> local_list = _bug_list;
-    if (local_list.get() == NULL) {
+    if (local_list.get() == nullptr) {
         return false;
     }
     // Reading the list in this function is always safe because a BugList

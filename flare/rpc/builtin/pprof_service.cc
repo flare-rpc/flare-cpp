@@ -24,7 +24,7 @@
 #include <fcntl.h>                          // O_RDONLY
 #include "flare/strings/str_format.h"             // string_printf
 #include "flare/strings/string_splitter.h"           // StringSplitter
-#include "flare/base/scoped_file.h"         // scoped_file
+#include "flare/files/readline_file.h"         // readline_file
 #include "flare/times/time.h"
 #include "flare/base/popen.h"                    // flare::base::read_command_output
 #include "flare/base/process_util.h"             // flare::base::read_command_line
@@ -59,8 +59,8 @@ namespace flare::rpc {
         int seconds = 0;
         const std::string *param =
                 cntl->http_request().uri().GetQuery("seconds");
-        if (param != NULL) {
-            char *endptr = NULL;
+        if (param != nullptr) {
+            char *endptr = nullptr;
             const long sec = strtol(param->c_str(), &endptr, 10);
             if (endptr == param->c_str() + param->length()) {
                 seconds = sec;
@@ -102,7 +102,7 @@ namespace flare::rpc {
         ClosureGuard done_guard(done);
         Controller *cntl = static_cast<Controller *>(controller_base);
         cntl->http_response().set_content_type("text/plain");
-        if ((void *) ProfilerStart == NULL || (void *) ProfilerStop == NULL) {
+        if ((void *) ProfilerStart == nullptr || (void *) ProfilerStop == nullptr) {
             cntl->SetFailed(ENOMETHOD, "%s, to enable cpu profiler, check out "
                                        "docs/cn/cpu_profiler.md",
                             flare_error(ENOMETHOD));
@@ -217,9 +217,9 @@ namespace flare::rpc {
         ClosureGuard done_guard(done);
         Controller *cntl = static_cast<Controller *>(controller_base);
         MallocExtension *malloc_ext = MallocExtension::instance();
-        if (malloc_ext == NULL || !has_TCMALLOC_SAMPLE_PARAMETER()) {
+        if (malloc_ext == nullptr || !has_TCMALLOC_SAMPLE_PARAMETER()) {
             const char *extra_desc = "";
-            if (malloc_ext != NULL) {
+            if (malloc_ext != nullptr) {
                 extra_desc = " (no TCMALLOC_SAMPLE_PARAMETER in env)";
             }
             cntl->SetFailed(ENOMETHOD, "Heap profiler is not enabled%s,"
@@ -251,7 +251,7 @@ namespace flare::rpc {
         ClosureGuard done_guard(done);
         Controller *cntl = static_cast<Controller *>(controller_base);
         MallocExtension *malloc_ext = MallocExtension::instance();
-        if (malloc_ext == NULL) {
+        if (malloc_ext == nullptr) {
             cntl->SetFailed(ENOMETHOD, "%s, to enable growth profiler, check out "
                                        "docs/cn/heap_profiler.md",
                             flare_error(ENOMETHOD));
@@ -306,10 +306,10 @@ namespace flare::rpc {
         std::string line;
         while (std::getline(ss, line)) {
             flare::StringSplitter sp(line.c_str(), ' ');
-            if (sp == NULL) {
+            if (sp == nullptr) {
                 continue;
             }
-            char *endptr = NULL;
+            char *endptr = nullptr;
             uintptr_t addr = strtoull(sp.field(), &endptr, 16);
             if (*endptr != ' ') {
                 continue;
@@ -321,7 +321,7 @@ namespace flare::rpc {
                 continue;
             }
             ++sp;
-            if (sp == NULL) {
+            if (sp == nullptr) {
                 continue;
             }
             if (sp.length() != 1UL) {
@@ -330,7 +330,7 @@ namespace flare::rpc {
             //const char c = *sp.field();
 
             ++sp;
-            if (sp == NULL) {
+            if (sp == nullptr) {
                 continue;
             }
             const char *name_begin = sp.field();
@@ -394,16 +394,17 @@ namespace flare::rpc {
     static void LoadSymbols() {
         flare::stop_watcher tm;
         tm.start();
-        flare::base::scoped_file fp(fopen("/proc/self/maps", "r"));
-        if (fp == NULL) {
+        flare::readline_file file;
+        auto status = file.open("/proc/self/maps");
+        if (!status.ok()) {
             return;
         }
-        char *line = NULL;
-        size_t line_len = 0;
-        ssize_t nr = 0;
-        while ((nr = getline(&line, &line_len, fp.get())) != -1) {
-            flare::StringSplitter sp(line, line + nr, ' ');
-            if (sp == NULL) {
+
+        auto lines = file.lines();
+
+        for (auto line : lines) {
+            flare::StringSplitter sp(line, ' ');
+            if (sp == nullptr) {
                 continue;
             }
             char *endptr;
@@ -418,11 +419,11 @@ namespace flare::rpc {
             }
             ++sp;
             // ..x. must be executable
-            if (sp == NULL || sp.length() != 4 || sp.field()[2] != 'x') {
+            if (sp == nullptr || sp.length() != 4 || sp.field()[2] != 'x') {
                 continue;
             }
             ++sp;
-            if (sp == NULL) {
+            if (sp == nullptr) {
                 continue;
             }
             size_t offset = strtoull(sp.field(), &endptr, 16);
@@ -433,7 +434,7 @@ namespace flare::rpc {
             for (int i = 0; i < 3; ++i) {
                 ++sp;
             }
-            if (sp == NULL) {
+            if (sp == nullptr) {
                 continue;
             }
             size_t n = sp.length();
@@ -452,7 +453,6 @@ namespace flare::rpc {
             info.path = path;
             ExtractSymbolsFromBinary(symbol_map, info);
         }
-        free(line);
 
         LibInfo info;
         info.start_addr = 0;
@@ -543,7 +543,7 @@ namespace flare::rpc {
             std::vector<uintptr_t> addr_list;
             addr_list.reserve(32);
             flare::StringSplitter sp(addr_cstr, '+');
-            for (; sp != NULL; ++sp) {
+            for (; sp != nullptr; ++sp) {
                 char *endptr;
                 uintptr_t addr = strtoull(sp.field(), &endptr, 16);
                 addr_list.push_back(addr);

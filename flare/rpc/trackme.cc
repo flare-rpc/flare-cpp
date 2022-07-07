@@ -29,7 +29,11 @@
 #include "flare/rpc/channel.h"
 #include "flare/rpc/trackme.pb.h"
 #include "flare/rpc/policy/hasher.h"
-#include "flare/base/scoped_file.h"
+#include "flare/files/readline_file.h"
+#include "flare/strings/str_format.h"
+#include "flare/strings/strip.h"
+#include "flare/strings/numbers.h"
+
 
 namespace flare::rpc {
 
@@ -41,9 +45,9 @@ namespace flare::rpc {
     // Protecting global vars on trackme
     static pthread_mutex_t s_trackme_mutex = PTHREAD_MUTEX_INITIALIZER;
     // For contacting with trackme_server.
-    static Channel *s_trackme_chan = NULL;
+    static Channel *s_trackme_chan = nullptr;
     // Any server address in this process.
-    static std::string *s_trackme_addr = NULL;
+    static std::string *s_trackme_addr = nullptr;
 
     // Information of bugs.
     // Notice that this structure may be a combination of all affected bugs.
@@ -61,7 +65,7 @@ namespace flare::rpc {
 
     // If a bug was shown, its info was stored in this var as well so that we
     // can avoid showing the same bug repeatly.
-    static BugInfo *g_bug_info = NULL;
+    static BugInfo *g_bug_info = nullptr;
     // The timestamp(microseconds) that we sent TrackMeRequest.
     static int64_t s_trackme_last_time = 0;
 
@@ -76,49 +80,43 @@ namespace flare::rpc {
     const int64_t g_rpc_version = 0;
 #endif
 
-    int ReadJPaasHostPort(int container_port) {
+    int read_jpaas_host_port(int container_port) {
         const uid_t uid = getuid();
         struct passwd *pw = getpwuid(uid);
-        if (pw == NULL) {
+        if (pw == nullptr) {
             RPC_VLOG << "Fail to get password file entry of uid=" << uid;
             return -1;
         }
-        char JPAAS_LOG_PATH[64];
-        snprintf(JPAAS_LOG_PATH, sizeof(JPAAS_LOG_PATH),
-                 "%s/jpaas_run/logs/env.log", pw->pw_dir);
-        char *line = NULL;
-        size_t line_len = 0;
-        ssize_t nr = 0;
-        flare::base::scoped_file fp(fopen(JPAAS_LOG_PATH, "r"));
-        if (!fp) {
+        std::string JPAAS_LOG_PATH =  flare::string_format("{}/jpaas_run/logs/env.log", pw->pw_dir);
+        flare::readline_file file;
+        auto fs = file.open(JPAAS_LOG_PATH);
+        if (!fs.ok()) {
             RPC_VLOG << "Fail to open `" << JPAAS_LOG_PATH << '\'';
             return -1;
         }
         int host_port = -1;
-        char prefix[32];
-        const int prefix_len =
-                snprintf(prefix, sizeof(prefix), "JPAAS_HOST_PORT_%d=", container_port);
-        while ((nr = getline(&line, &line_len, fp.get())) != -1) {
-            if (line[nr - 1] == '\n') { // remove ending newline
-                --nr;
-            }
-            if (nr > prefix_len && memcmp(line, prefix, prefix_len) == 0) {
-                host_port = strtol(line + prefix_len, NULL, 10);
+        std::string prefix = flare::string_format( "JPAAS_HOST_PORT_{}=", container_port);
+        auto lines = file.lines();
+        for (auto line : lines) {
+            line = flare::strip_suffix(line, "\n");
+            if (flare::starts_with(line, prefix)) {
+                line = line.substr(prefix.size());
+                auto r = flare::simple_atoi(line, &host_port);
+                FLARE_UNUSED(r);
                 break;
             }
         }
-        free(line);
         RPC_VLOG_IF(host_port < 0) << "No entry starting with `" << prefix << "' found";
         return host_port;
     }
 
-// Called in server.cpp
+    // Called in server.cpp
     void SetTrackMeAddress(flare::base::end_point pt) {
         FLARE_SCOPED_LOCK(s_trackme_mutex);
-        if (s_trackme_addr == NULL) {
+        if (s_trackme_addr == nullptr) {
             // JPAAS has NAT capabilities, read its log to figure out the open port
             // accessible from outside.
-            const int jpaas_port = ReadJPaasHostPort(pt.port);
+            const int jpaas_port = read_jpaas_host_port(pt.port);
             if (jpaas_port > 0) {
                 RPC_VLOG << "Use jpaas_host_port=" << jpaas_port
                          << " instead of jpaas_container_port=" << pt.port;
@@ -138,12 +136,12 @@ namespace flare::rpc {
             bool already_reported = false;
             {
                 FLARE_SCOPED_LOCK(s_trackme_mutex);
-                if (g_bug_info != NULL && *g_bug_info == cur_info) {
+                if (g_bug_info != nullptr && *g_bug_info == cur_info) {
                     // we've shown the bug.
                     already_reported = true;
                 } else {
                     // save the bug.
-                    if (g_bug_info == NULL) {
+                    if (g_bug_info == nullptr) {
                         g_bug_info = new BugInfo(cur_info);
                     } else {
                         *g_bug_info = cur_info;
@@ -185,12 +183,12 @@ namespace flare::rpc {
     }
 
     static void TrackMeNow(std::unique_lock<pthread_mutex_t> &mu) {
-        if (s_trackme_addr == NULL) {
+        if (s_trackme_addr == nullptr) {
             return;
         }
-        if (s_trackme_chan == NULL) {
+        if (s_trackme_chan == nullptr) {
             Channel *chan = new(std::nothrow) Channel;
-            if (chan == NULL) {
+            if (chan == nullptr) {
                 FLARE_LOG(FATAL) << "Fail to new trackme channel";
                 return;
             }

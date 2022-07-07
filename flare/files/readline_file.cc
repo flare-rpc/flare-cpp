@@ -23,13 +23,8 @@ namespace flare {
             FLARE_LOG(ERROR) << "open file :"<<_path<<" eroor "<< flare_error();
             return _status;
         }
-        std::error_code ec;
-        auto file_size = flare::file_size(path, ec);
-        if (ec) {
-            FLARE_LOG(ERROR) << "get file size :"<<_path<<" eroor "<< flare_error();
-            _status.set_error(errno, "%s", flare_error());
-        }
-        _status = file.read(file_size, &_content);
+
+        _status = file.read(&_content);
         if (!_status.ok()) {
             FLARE_LOG(ERROR) << "read file :"<<_path<<" eroor "<< flare_error();
             return _status;
