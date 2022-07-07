@@ -35,7 +35,7 @@ namespace flare {
     // core_affinity holds the affinity mask for a thread - a description of what cores
     // the thread is allowed to run on.
     struct core_affinity {
-        // supported is true if marl supports controlling thread affinity for this
+        // supported is true if flare supports controlling thread affinity for this
         // platform.
 #if defined(_WIN32) || (defined(__linux__) && !defined(__ANDROID__)) || \
     defined(__FreeBSD__)

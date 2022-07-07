@@ -121,7 +121,7 @@ namespace flare {
         }
     };
 
-    namespace detail {
+    namespace metrics_internal {
 
         template<typename Mutex, typename Recorder,
                 typename MCtor, typename MDtor>
@@ -317,10 +317,10 @@ namespace flare {
 // Wappers of Mutex along with a shared LatencyRecorder 
     template<typename Mutex>
     struct MutexWithRecorder
-            : public detail::MutexWithRecorderBase<
+            : public metrics_internal::MutexWithRecorderBase<
                     Mutex, IntRecorder,
                     MutexConstructor<Mutex>, MutexDestructor<Mutex> > {
-        typedef detail::MutexWithRecorderBase<
+        typedef metrics_internal::MutexWithRecorderBase<
                 Mutex, IntRecorder,
                 MutexConstructor<Mutex>, MutexDestructor<Mutex> > Base;
 
@@ -334,10 +334,10 @@ namespace flare {
 // Wappers of Mutex along with a shared LatencyRecorder
     template<typename Mutex>
     struct MutexWithLatencyRecorder
-            : public detail::MutexWithRecorderBase<
+            : public metrics_internal::MutexWithRecorderBase<
                     Mutex, LatencyRecorder,
                     MutexConstructor<Mutex>, MutexDestructor<Mutex> > {
-        typedef detail::MutexWithRecorderBase<
+        typedef metrics_internal::MutexWithRecorderBase<
                 Mutex, LatencyRecorder,
                 MutexConstructor<Mutex>, MutexDestructor<Mutex> > Base;
 
@@ -354,10 +354,10 @@ namespace std {
     // Specialize lock_guard and unique_lock
     template<typename Mutex>
     class lock_guard<flare::MutexWithRecorder<Mutex> >
-            : public ::flare::detail::
+            : public ::flare::metrics_internal::
             LockGuardBase<::flare::MutexWithRecorder<Mutex> > {
     public:
-        typedef ::flare::detail::
+        typedef ::flare::metrics_internal::
         LockGuardBase<flare::MutexWithRecorder<Mutex> > Base;
 
         explicit lock_guard(::flare::MutexWithRecorder<Mutex> &mutex)
@@ -366,10 +366,10 @@ namespace std {
 
     template<typename Mutex>
     class lock_guard<flare::MutexWithLatencyRecorder<Mutex> >
-            : public ::flare::detail::
+            : public ::flare::metrics_internal::
             LockGuardBase<::flare::MutexWithLatencyRecorder<Mutex> > {
     public:
-        typedef ::flare::detail::
+        typedef ::flare::metrics_internal::
         LockGuardBase<flare::MutexWithLatencyRecorder<Mutex> > Base;
 
         explicit lock_guard(::flare::MutexWithLatencyRecorder<Mutex> &mutex)
@@ -378,10 +378,10 @@ namespace std {
 
     template<typename Mutex>
     class unique_lock<flare::MutexWithRecorder<Mutex> >
-            : public ::flare::detail::
+            : public ::flare::metrics_internal::
             UniqueLockBase<::flare::MutexWithRecorder<Mutex> > {
     public:
-        typedef ::flare::detail::
+        typedef ::flare::metrics_internal::
         UniqueLockBase<::flare::MutexWithRecorder<Mutex> > Base;
         typedef typename Base::mutex_type mutex_type;
 
@@ -397,10 +397,10 @@ namespace std {
 
     template<typename Mutex>
     class unique_lock<flare::MutexWithLatencyRecorder<Mutex> >
-            : public ::flare::detail::
+            : public ::flare::metrics_internal::
             UniqueLockBase<::flare::MutexWithLatencyRecorder<Mutex> > {
     public:
-        typedef ::flare::detail::
+        typedef ::flare::metrics_internal::
         UniqueLockBase<::flare::MutexWithLatencyRecorder<Mutex> > Base;
         typedef typename Base::mutex_type mutex_type;
 

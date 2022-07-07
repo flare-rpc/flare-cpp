@@ -17,13 +17,13 @@
 namespace flare::times_internal {
 
 
-// Convenience aliases. Not intended as public API points.
+    // Convenience aliases. Not intended as public API points.
     template<typename D>
     using time_point = std::chrono::time_point<std::chrono::system_clock, D>;
     using seconds = std::chrono::duration<std::int_fast64_t>;
     using sys_seconds = seconds;  // Deprecated.  Use flare::times_internal::seconds instead.
 
-    namespace detail {
+    namespace times_detail {
         template<typename D>
         FLARE_FORCE_INLINE std::pair<time_point<seconds>, D>
 
@@ -42,7 +42,7 @@ namespace flare::times_internal {
         split_seconds(const time_point<seconds> &tp) {
             return {tp, seconds::zero()};
         }
-    }  // namespace detail
+    }  // namespace times_internal
 
 // flare::times_internal::time_zone is an opaque, small, value-type class representing a
 // geo-political region within which particular rules are used for mapping
@@ -95,7 +95,7 @@ namespace flare::times_internal {
 
         template<typename D>
         absolute_lookup lookup(const time_point<D> &tp) const {
-            return lookup(detail::split_seconds(tp).first);
+            return lookup(times_detail::split_seconds(tp).first);
         }
 
         // A civil_lookup represents the absolute time(s) (time_point) that
@@ -190,7 +190,7 @@ namespace flare::times_internal {
 
         template<typename D>
         bool next_transition(const time_point<D> &tp, civil_transition *trans) const {
-            return next_transition(detail::split_seconds(tp).first, trans);
+            return next_transition(times_detail::split_seconds(tp).first, trans);
         }
 
         bool prev_transition(const time_point<seconds> &tp,
@@ -198,7 +198,7 @@ namespace flare::times_internal {
 
         template<typename D>
         bool prev_transition(const time_point<D> &tp, civil_transition *trans) const {
-            return prev_transition(detail::split_seconds(tp).first, trans);
+            return prev_transition(times_detail::split_seconds(tp).first, trans);
         }
 
         // version() and description() provide additional information about the
@@ -270,7 +270,7 @@ namespace flare::times_internal {
         return cl.pre;
     }
 
-    namespace detail {
+    namespace times_detail {
         using femtoseconds = std::chrono::duration<std::int_fast64_t, std::femto>;
 
         std::string format(const std::string &, const time_point<seconds> &,
@@ -278,44 +278,42 @@ namespace flare::times_internal {
 
         bool parse(const std::string &, const std::string &, const time_zone &,
                    time_point<seconds> *, femtoseconds *, std::string *err = nullptr);
-    }  // namespace detail
+    }  // namespace times_detail
 
-// Formats the given time_point in the given flare::times_internal::time_zone according to
-// the provided format string. Uses strftime()-like formatting options,
-// with the following extensions:
-//
-//   - %Ez  - RFC3339-compatible numeric UTC offset (+hh:mm or -hh:mm)
-//   - %E*z - Full-resolution numeric UTC offset (+hh:mm:ss or -hh:mm:ss)
-//   - %E#S - seconds with # digits of fractional precision
-//   - %E*S - seconds with full fractional precision (a literal '*')
-//   - %E#f - Fractional seconds with # digits of precision
-//   - %E*f - Fractional seconds with full precision (a literal '*')
-//   - %E4Y - Four-character years (-999 ... -001, 0000, 0001 ... 9999)
-//
-// Note that %E0S behaves like %S, and %E0f produces no characters. In
-// contrast %E*f always produces at least one digit, which may be '0'.
-//
-// Note that %Y produces as many characters as it takes to fully render the
-// year. A year outside of [-999:9999] when formatted with %E4Y will produce
-// more than four characters, just like %Y.
-//
-// Tip: Format strings should include the UTC offset (e.g., %z, %Ez, or %E*z)
-// so that the resulting string uniquely identifies an absolute time.
-//
-// Example:
-//   flare::times_internal::time_zone lax;
-//   if (!flare::times_internal::load_time_zone("America/Los_Angeles", &lax)) { ... }
-//   auto tp = flare::times_internal::convert(flare::times_internal::civil_second(2013, 1, 2, 3, 4, 5), lax);
-//   std::string f = flare::times_internal::format("%H:%M:%S", tp, lax);  // "03:04:05"
-//   f = flare::times_internal::format("%H:%M:%E3S", tp, lax);            // "03:04:05.000"
+    // Formats the given time_point in the given flare::times_internal::time_zone according to
+    // the provided format string. Uses strftime()-like formatting options,
+    // with the following extensions:
+    //
+    //   - %Ez  - RFC3339-compatible numeric UTC offset (+hh:mm or -hh:mm)
+    //   - %E*z - Full-resolution numeric UTC offset (+hh:mm:ss or -hh:mm:ss)
+    //   - %E#S - seconds with # digits of fractional precision
+    //   - %E*S - seconds with full fractional precision (a literal '*')
+    //   - %E#f - Fractional seconds with # digits of precision
+    //   - %E*f - Fractional seconds with full precision (a literal '*')
+    //   - %E4Y - Four-character years (-999 ... -001, 0000, 0001 ... 9999)
+    //
+    // Note that %E0S behaves like %S, and %E0f produces no characters. In
+    // contrast %E*f always produces at least one digit, which may be '0'.
+    //
+    // Note that %Y produces as many characters as it takes to fully render the
+    // year. A year outside of [-999:9999] when formatted with %E4Y will produce
+    // more than four characters, just like %Y.
+    //
+    // Tip: Format strings should include the UTC offset (e.g., %z, %Ez, or %E*z)
+    // so that the resulting string uniquely identifies an absolute time.
+    //
+    // Example:
+    //   flare::times_internal::time_zone lax;
+    //   if (!flare::times_internal::load_time_zone("America/Los_Angeles", &lax)) { ... }
+    //   auto tp = flare::times_internal::convert(flare::times_internal::civil_second(2013, 1, 2, 3, 4, 5), lax);
+    //   std::string f = flare::times_internal::format("%H:%M:%S", tp, lax);  // "03:04:05"
+    //   f = flare::times_internal::format("%H:%M:%E3S", tp, lax);            // "03:04:05.000"
     template<typename D>
-    FLARE_FORCE_INLINE std::string
-
-    format(const std::string &fmt, const time_point<D> &tp,
+    FLARE_FORCE_INLINE std::string format(const std::string &fmt, const time_point<D> &tp,
            const time_zone &tz) {
-        const auto p = detail::split_seconds(tp);
-        const auto n = std::chrono::duration_cast<detail::femtoseconds>(p.second);
-        return detail::format(fmt, p.first, n, tz);
+        const auto p = times_detail::split_seconds(tp);
+        const auto n = std::chrono::duration_cast<times_detail::femtoseconds>(p.second);
+        return times_detail::format(fmt, p.first, n, tz);
     }
 
     // Parses an input string according to the provided format string and
@@ -367,8 +365,8 @@ namespace flare::times_internal {
     FLARE_FORCE_INLINE bool parse(const std::string &fmt, const std::string &input,
                                   const time_zone &tz, time_point<D> *tpp) {
         time_point<seconds> sec;
-        detail::femtoseconds fs;
-        const bool b = detail::parse(fmt, input, tz, &sec, &fs);
+        times_detail::femtoseconds fs;
+        const bool b = times_detail::parse(fmt, input, tz, &sec, &fs);
         if (b) {
             // TODO: Return false if unrepresentable as a time_point<D>.
             *tpp = std::chrono::time_point_cast<D>(sec);

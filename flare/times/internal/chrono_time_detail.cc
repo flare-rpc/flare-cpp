@@ -9,7 +9,7 @@
 #include <ostream>
 #include <sstream>
 
-namespace flare::times_internal::detail {
+namespace flare::times_internal::times_detail {
 
     // Output stream operators output a format matching YYYY-MM-DDThh:mm:ss,
     // while omitting fields inferior to the type's alignment. For example,

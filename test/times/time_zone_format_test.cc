@@ -46,8 +46,8 @@ namespace flare {
             const char RFC1123_full[] = "%a, %d %b %Y %H:%M:%S %z";
             const char RFC1123_no_wday[] = "%d %b %Y %H:%M:%S %z";
 
-// A helper that tests the given format specifier by itself, and with leading
-// and trailing characters.  For example: TestFormatSpecifier(tp, "%a", "Thu").
+            // A helper that tests the given format specifier by itself, and with leading
+            // and trailing characters.  For example: TestFormatSpecifier(tp, "%a", "Thu").
             template<typename D>
             void TestFormatSpecifier(time_point<D> tp, time_zone tz, const std::string &fmt,
                                      const std::string &ans) {
@@ -59,9 +59,9 @@ namespace flare {
 
         }  // namespace
 
-//
-// Testing format()
-//
+        //
+        // Testing format()
+        //
 
         TEST(Format, TimePointResolution) {
             const char kFmt[] = "%H:%M:%E*S";
@@ -102,21 +102,21 @@ namespace flare {
 
             EXPECT_EQ(
                     "12:34:56.123456789012345",
-                    detail::format(kFmt, tp, detail::femtoseconds(123456789012345), utc));
+                    times_detail::format(kFmt, tp, times_detail::femtoseconds(123456789012345), utc));
             EXPECT_EQ(
                     "12:34:56.012345678901234",
-                    detail::format(kFmt, tp, detail::femtoseconds(12345678901234), utc));
+                    times_detail::format(kFmt, tp, times_detail::femtoseconds(12345678901234), utc));
             EXPECT_EQ("12:34:56.001234567890123",
-                      detail::format(kFmt, tp, detail::femtoseconds(1234567890123), utc));
+                      times_detail::format(kFmt, tp, times_detail::femtoseconds(1234567890123), utc));
             EXPECT_EQ("12:34:56.000123456789012",
-                      detail::format(kFmt, tp, detail::femtoseconds(123456789012), utc));
+                      times_detail::format(kFmt, tp, times_detail::femtoseconds(123456789012), utc));
 
             EXPECT_EQ("12:34:56.000000000000123",
-                      detail::format(kFmt, tp, detail::femtoseconds(123), utc));
+                      times_detail::format(kFmt, tp, times_detail::femtoseconds(123), utc));
             EXPECT_EQ("12:34:56.000000000000012",
-                      detail::format(kFmt, tp, detail::femtoseconds(12), utc));
+                      times_detail::format(kFmt, tp, times_detail::femtoseconds(12), utc));
             EXPECT_EQ("12:34:56.000000000000001",
-                      detail::format(kFmt, tp, detail::femtoseconds(1), utc));
+                      times_detail::format(kFmt, tp, times_detail::femtoseconds(1), utc));
         }
 
         TEST(Format, Basics) {
@@ -721,19 +721,19 @@ namespace flare {
             const time_zone utc = utc_time_zone();
 
             time_point<flare::times_internal::seconds> tp;
-            detail::femtoseconds fs;
-            EXPECT_TRUE(detail::parse(kFmt, "12:34:56.123456789012345", utc, &tp, &fs));
-            EXPECT_EQ("12:34:56.123456789012345", detail::format(kFmt, tp, fs, utc));
-            EXPECT_TRUE(detail::parse(kFmt, "12:34:56.012345678901234", utc, &tp, &fs));
-            EXPECT_EQ("12:34:56.012345678901234", detail::format(kFmt, tp, fs, utc));
-            EXPECT_TRUE(detail::parse(kFmt, "12:34:56.001234567890123", utc, &tp, &fs));
-            EXPECT_EQ("12:34:56.001234567890123", detail::format(kFmt, tp, fs, utc));
-            EXPECT_TRUE(detail::parse(kFmt, "12:34:56.000000000000123", utc, &tp, &fs));
-            EXPECT_EQ("12:34:56.000000000000123", detail::format(kFmt, tp, fs, utc));
-            EXPECT_TRUE(detail::parse(kFmt, "12:34:56.000000000000012", utc, &tp, &fs));
-            EXPECT_EQ("12:34:56.000000000000012", detail::format(kFmt, tp, fs, utc));
-            EXPECT_TRUE(detail::parse(kFmt, "12:34:56.000000000000001", utc, &tp, &fs));
-            EXPECT_EQ("12:34:56.000000000000001", detail::format(kFmt, tp, fs, utc));
+            times_detail::femtoseconds fs;
+            EXPECT_TRUE(times_detail::parse(kFmt, "12:34:56.123456789012345", utc, &tp, &fs));
+            EXPECT_EQ("12:34:56.123456789012345", times_detail::format(kFmt, tp, fs, utc));
+            EXPECT_TRUE(times_detail::parse(kFmt, "12:34:56.012345678901234", utc, &tp, &fs));
+            EXPECT_EQ("12:34:56.012345678901234", times_detail::format(kFmt, tp, fs, utc));
+            EXPECT_TRUE(times_detail::parse(kFmt, "12:34:56.001234567890123", utc, &tp, &fs));
+            EXPECT_EQ("12:34:56.001234567890123", times_detail::format(kFmt, tp, fs, utc));
+            EXPECT_TRUE(times_detail::parse(kFmt, "12:34:56.000000000000123", utc, &tp, &fs));
+            EXPECT_EQ("12:34:56.000000000000123", times_detail::format(kFmt, tp, fs, utc));
+            EXPECT_TRUE(times_detail::parse(kFmt, "12:34:56.000000000000012", utc, &tp, &fs));
+            EXPECT_EQ("12:34:56.000000000000012", times_detail::format(kFmt, tp, fs, utc));
+            EXPECT_TRUE(times_detail::parse(kFmt, "12:34:56.000000000000001", utc, &tp, &fs));
+            EXPECT_EQ("12:34:56.000000000000001", times_detail::format(kFmt, tp, fs, utc));
         }
 
         TEST(Parse, Basics) {
