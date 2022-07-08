@@ -71,7 +71,7 @@ namespace flare {
         }
         std::string content;
         file.read(&content);
-        if (scanf(content.c_str(), "%d %*s %c "
+        if (sscanf(content.c_str(), "%d %*s %c "
                    "%d %d %d %d %d "
                    "%u %lu %lu %lu "
                    "%lu %lu %lu %lu %lu "
@@ -81,7 +81,7 @@ namespace flare {
                    &stat.flags, &stat.minflt, &stat.cminflt, &stat.majflt,
                    &stat.cmajflt, &stat.utime, &stat.stime, &stat.cutime, &stat.cstime,
                    &stat.priority, &stat.nice, &stat.num_threads) != 19) {
-            FLARE_PLOG(WARNING) << "Fail to fscanf";
+            FLARE_PLOG(WARNING) << "Fail to sscanf";
             return false;
         }
         return true;
@@ -207,10 +207,10 @@ namespace flare {
         }
         std::string content;
         file.read(&content);
-        if (scanf(content.c_str(), "%ld %ld %ld %ld %ld %ld %ld",
+        if (sscanf(content.c_str(), "%ld %ld %ld %ld %ld %ld %ld",
                    &m.size, &m.resident, &m.share,
                    &m.trs, &m.lrs, &m.drs, &m.dt) != 7) {
-            FLARE_PLOG(WARNING) << "Fail to fscanf /proc/self/statm";
+            FLARE_PLOG(WARNING) << "Fail to sscanf /proc/self/statm";
             return false;
         }
         return true;
@@ -280,7 +280,7 @@ namespace flare {
         errno = 0;
         std::string content;
         file.read(&content);
-        if (scanf(content.c_str(), "%lf %lf %lf",
+        if (sscanf(content.c_str(), "%lf %lf %lf",
                    &m.loadavg_1m, &m.loadavg_5m, &m.loadavg_15m) != 3) {
             FLARE_PLOG(WARNING) << "Fail to fscanf";
             return false;
@@ -441,7 +441,7 @@ namespace flare {
         errno = 0;
         std::string content;
         file.read(&content);
-        if (scanf(content.c_str(), "%*s %lu %*s %lu %*s %lu %*s %lu %*s %lu %*s %lu %*s %lu",
+        if (sscanf(content.c_str(), "%*s %lu %*s %lu %*s %lu %*s %lu %*s %lu %*s %lu %*s %lu",
                    &s->rchar, &s->wchar, &s->syscr, &s->syscw,
                    &s->read_bytes, &s->write_bytes, &s->cancelled_write_bytes)
             != 7) {
@@ -553,7 +553,7 @@ namespace flare {
         errno = 0;
         std::string content;
         file.read(&content);
-        if (scanf(content.c_str(), "%lld %lld %s %lld %lld %lld %lld %lld %lld %lld "
+        if (sscanf(content.c_str(), "%lld %lld %s %lld %lld %lld %lld %lld %lld %lld "
                    "%lld %lld %lld %lld",
                    &s->major_number,
                    &s->minor_mumber,
