@@ -56,6 +56,7 @@ namespace flare {
 
     void thread::set_affinity() {
         return ;
+        /*
         FLARE_CHECK(_impl);
         if (_impl->affinity == -1) {
             return;
@@ -80,6 +81,7 @@ namespace flare {
 #else
         FLARE_CHECK(!flare::core_affinity::supported) << "Attempting to use thread affinity on a unsupported platform";
 #endif
+         */
     }
 
     thread::~thread() {

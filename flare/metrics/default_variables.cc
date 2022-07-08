@@ -201,7 +201,7 @@ namespace flare {
 #if defined(FLARE_PLATFORM_LINUX)
         flare::sequential_read_file file;
         auto status = file.open("/proc/self/statm");
-        if (!status.ok() {
+        if (!status.ok()) {
             FLARE_PLOG_ONCE(WARNING) << "Fail to open /proc/self/statm";
             return false;
         }
@@ -272,7 +272,7 @@ namespace flare {
 #if defined(FLARE_PLATFORM_LINUX)
         flare::sequential_read_file file;
         auto status = file.open("/proc/loadavg");
-        if (!status.ok() {
+        if (!status.ok()) {
             FLARE_PLOG_ONCE(WARNING) << "Fail to open /proc/loadavg";
             return false;
         }

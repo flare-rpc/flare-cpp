@@ -44,3 +44,16 @@ TEST(thread, index) {
     EXPECT_EQ(th1.name(), "th#3");
     th1.join();
 }
+
+int c = 0;
+
+void sum(int a, int b) {
+     c = a+b;
+}
+
+TEST(thread, varidic_fun) {
+    flare::thread th(sum, 2, 3);
+    th.start();
+    th.join();
+    EXPECT_EQ(c, 5);
+}
