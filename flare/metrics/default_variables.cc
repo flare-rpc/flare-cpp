@@ -552,7 +552,7 @@ namespace flare {
         }
         errno = 0;
         std::string content;
-        file.read(&content)
+        file.read(&content);
         if (scanf(content.c_str(), "%lld %lld %s %lld %lld %lld %lld %lld %lld %lld "
                    "%lld %lld %lld %lld",
                    &s->major_number,
