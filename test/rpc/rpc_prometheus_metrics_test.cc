@@ -90,7 +90,6 @@ TEST(PrometheusMetrics, sanity) {
                 } else if (strcmp(type, "summary") == 0) {
                     state = SUMMARY;
                 } else if (strcmp(type, "histogram")){
-                    has_ever_summary_or_histogram = true;
                     state = HISTOGRAM;
                 } else {
                     ASSERT_TRUE(false);
@@ -106,7 +105,7 @@ TEST(PrometheusMetrics, sanity) {
             case HISTOGRAM:
                 if (std::string_view(item).find("+Inf")
                     != std::string_view::npos) {
-                    has_ever_summary_or_histogram = false;
+                    has_ever_summary_or_histogram = true;
                     state = HELP;
                 }
                 break;
