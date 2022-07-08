@@ -138,7 +138,7 @@ namespace flare {
             size_t capacity = BASE_CAPACITY;
             TStorage buffer[BASE_CAPACITY];
             TStorage *elements = buffer;
-            allocation allocation;
+            allocation _allocation;
         };
 
         template<typename T, int BASE_CAPACITY>
@@ -310,15 +310,15 @@ namespace flare {
                 request.alignment = alignof(T);
                 request.usage = allocation::Usage::Vector;
 
-                auto alloc = allocator->allocate(request);
-                auto grown = reinterpret_cast<TStorage *>(alloc.ptr);
+                auto a = allocator->allocate(request);
+                auto grown = reinterpret_cast<TStorage *>(a.ptr);
                 for (size_t i = 0; i < count; i++) {
                     new(&reinterpret_cast<T *>(grown)[i])
                             T(std::move(reinterpret_cast<T *>(elements)[i]));
                 }
                 free();
                 elements = grown;
-                allocation = alloc;
+                _allocation = a;
             }
         }
 
@@ -338,9 +338,9 @@ namespace flare {
                 reinterpret_cast<T *>(elements)[i].~T();
             }
 
-            if (allocation.ptr != nullptr) {
-                allocator->free(allocation);
-                allocation = {};
+            if (_allocation.ptr != nullptr) {
+                allocator->free(_allocation);
+                _allocation = {};
                 elements = nullptr;
             }
         }
@@ -409,7 +409,7 @@ namespace flare {
             list &operator=(list &&) = delete;
 
             struct AllocationChain {
-                allocation allocation;
+                allocation _allocation;
                 AllocationChain *next;
             };
 
@@ -469,7 +469,7 @@ namespace flare {
             auto curr = allocations;
             while (curr != nullptr) {
                 auto next = curr->next;
-                alloc->free(curr->allocation);
+                alloc->free(curr->_allocation);
                 curr = next;
             }
         }
@@ -543,7 +543,7 @@ namespace flare {
             auto allocChain = reinterpret_cast<AllocationChain *>(
                     reinterpret_cast<uint8_t *>(alloca.ptr) + allocChainOffset);
 
-            allocChain->allocation = alloca;
+            allocChain->_allocation = alloca;
             allocChain->next = allocations;
             allocations = allocChain;
 
