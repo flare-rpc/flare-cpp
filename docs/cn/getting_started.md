@@ -1,5 +1,18 @@
 # BUILD
 
+#build with conda
+
+
+```shell
+cd flare-cpp
+conda env create -f conda/environment_linux.yaml
+mkdir build
+cd build
+cmake ..
+make -j 4
+```
+
+
 flare prefers static linkages of deps, so that they don't have to be installed on every machine running the app.
 
 flare depends on following packages:
