@@ -25,6 +25,7 @@
 #include "testing/gtest_wrap.h"
 #include "flare/thread/latch.h"
 
+#ifdef FLARE_PLATFORM_OSX
 TEST(thread, index) {
     EXPECT_EQ(flare::thread::thread_index(), 1);
     flare::thread th([]{
@@ -44,6 +45,29 @@ TEST(thread, index) {
     EXPECT_EQ(th1.name(), "th#3");
     th1.join();
 }
+#endif // FLARE_PLATFORM_OSX
+
+#ifdef FLARE_PLATFORM_LINUX
+TEST(thread, index) {
+    EXPECT_EQ(flare::thread::thread_index(), 0);
+    flare::thread th([]{
+        EXPECT_EQ(flare::thread::thread_index(), 1);
+        EXPECT_EQ(flare::thread::current_name(), "#1");
+    });
+    th.start();
+    EXPECT_EQ(th.name(), "#1");
+    th.join();
+
+    flare::thread th1([]{
+        EXPECT_EQ(flare::thread::thread_index(), 2);
+        EXPECT_EQ(flare::thread::current_name(), "th#2");
+    });
+    th1.set_prefix("th");
+    th1.start();
+    EXPECT_EQ(th1.name(), "th#2");
+    th1.join();
+}
+#endif  // #ifdef FLARE_PLATFORM_LINUX
 
 int c = 0;
 

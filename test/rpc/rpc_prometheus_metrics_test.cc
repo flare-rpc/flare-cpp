@@ -28,7 +28,8 @@ enum STATE {
     HELP = 0,
     TYPE,
     GAUGE,
-    SUMMARY
+    SUMMARY,
+    HISTOGRAM
 };
 
 TEST(PrometheusMetrics, sanity) {
@@ -62,7 +63,7 @@ TEST(PrometheusMetrics, sanity) {
     int gauge_num = 0;
     bool summary_sum_gathered = false;
     bool summary_count_gathered = false;
-    bool has_ever_summary = false;
+    bool has_ever_summary_or_histogram = false;
     bool has_ever_gauge = false;
 
     std::vector<std::string> lines = flare::string_split(res, '\n');
@@ -86,8 +87,11 @@ TEST(PrometheusMetrics, sanity) {
                 ASSERT_STREQ(name_type, name_help);
                 if (strcmp(type, "gauge") == 0) {
                     state = GAUGE;
-                } else if (strcmp(type, "histogram") == 0) {
+                } else if (strcmp(type, "summary") == 0) {
                     state = SUMMARY;
+                } else if (strcmp(type, "histogram")){
+                    has_ever_summary_or_histogram = true;
+                    state = HISTOGRAM;
                 } else {
                     ASSERT_TRUE(false);
                 }
@@ -98,6 +102,13 @@ TEST(PrometheusMetrics, sanity) {
                 ASSERT_STREQ(name_type, name_help);
                 state = HELP;
                 has_ever_gauge = true;
+                break;
+            case HISTOGRAM:
+                if (std::string_view(item).find("+Inf")
+                    != std::string_view::npos) {
+                    has_ever_summary_or_histogram = false;
+                    state = HELP;
+                }
                 break;
             case SUMMARY:
                 if (std::string_view(item).find("quantile=")
@@ -118,7 +129,7 @@ TEST(PrometheusMetrics, sanity) {
                         state = HELP;
                         summary_sum_gathered = false;
                         summary_count_gathered = false;
-                        has_ever_summary = true;
+                        has_ever_summary_or_histogram = true;
                     }
                 } // else find "quantile=", just break to next line
                 break;
@@ -129,7 +140,7 @@ TEST(PrometheusMetrics, sanity) {
         start_pos = end_pos + 1;
     }
     ASSERT_TRUE(has_ever_gauge);
-    //ASSERT_TRUE(has_ever_summary);
+    ASSERT_TRUE(has_ever_summary_or_histogram);
     ASSERT_EQ(0, server.Stop(0));
     ASSERT_EQ(0, server.Join());
 }
