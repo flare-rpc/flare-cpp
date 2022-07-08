@@ -6,6 +6,7 @@ on linux platform
 ```shell
 cd flare-cpp
 conda env create -f conda/environment_linux.yaml
+conda activate flare-dev
 mkdir build
 cd build
 cmake ..
