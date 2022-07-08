@@ -125,7 +125,7 @@ namespace flare {
 
             inline const T *data() const;
 
-            allocator *const allocator;
+            allocator *const _allocator;
 
         private:
             using TStorage = typename flare::aligned_storage<sizeof(T), alignof(T)>::type;
@@ -144,13 +144,13 @@ namespace flare {
         template<typename T, int BASE_CAPACITY>
         vector<T, BASE_CAPACITY>::vector(
                 flare::allocator *allocator /* = allocator::Default */)
-                : allocator(allocator) {}
+                : _allocator(allocator) {}
 
         template<typename T, int BASE_CAPACITY>
         template<int BASE_CAPACITY_2>
         vector<T, BASE_CAPACITY>::vector(
                 const vector<T, BASE_CAPACITY_2> &other, flare::allocator *alloc /* = allocator::Default */)
-                : allocator(alloc) {
+                : _allocator(alloc) {
             *this = other;
         }
 
@@ -159,7 +159,7 @@ namespace flare {
         vector<T, BASE_CAPACITY>::vector(
                 vector<T, BASE_CAPACITY_2> &&other,
                 flare::allocator *allocator /* = allocator::Default */)
-                : allocator(allocator) {
+                : _allocator(allocator) {
             *this = std::move(other);
         }
 
@@ -310,7 +310,7 @@ namespace flare {
                 request.alignment = alignof(T);
                 request.usage = allocation::Usage::Vector;
 
-                auto a = allocator->allocate(request);
+                auto a = _allocator->allocate(request);
                 auto grown = reinterpret_cast<TStorage *>(a.ptr);
                 for (size_t i = 0; i < count; i++) {
                     new(&reinterpret_cast<T *>(grown)[i])
@@ -339,7 +339,7 @@ namespace flare {
             }
 
             if (_allocation.ptr != nullptr) {
-                allocator->free(_allocation);
+                _allocator->free(_allocation);
                 _allocation = {};
                 elements = nullptr;
             }
