@@ -17,3 +17,4 @@ dependencies:
   - gperftools=2.9.1
   - gtest =1.11.0
   - gmock =1.11.0
+  - benchmark

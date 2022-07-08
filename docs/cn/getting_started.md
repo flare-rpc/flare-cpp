@@ -1,5 +1,36 @@
 # BUILD
 
+#build with conda
+
+on linux platform
+```shell
+cd flare-cpp
+conda env create -f conda/environment_linux.yaml
+mkdir build
+cd build
+cmake ..
+make -j 4
+```
+
+on linux mac os
+```shell
+cd flare-cpp
+conda env create -f conda/environment_osx.yaml
+mkdir build
+cd build
+cmake ..
+make -j 4
+```
+
+if you want a conda package, do below
+
+```shell
+    cd flare-cpp/conda
+    conda build .
+```
+
+when you on mac os, mac sdk, you have install.
+
 flare prefers static linkages of deps, so that they don't have to be installed on every machine running the app.
 
 flare depends on following packages:
