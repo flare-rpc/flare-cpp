@@ -97,7 +97,7 @@ TEST(PrometheusMetrics, sanity) {
                 }else {
                     ASSERT_TRUE(false);
                 }
-                std::cout<<"type: "<<type<<std::endl;
+                std::cout<<"type: "<<type<<"state: "<<state<<std::endl;
                 break;
             case GAUGE:
                 matched = sscanf(item.c_str(), "%s %d", name_type, &gauge_num);
