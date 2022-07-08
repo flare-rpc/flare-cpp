@@ -22,7 +22,7 @@ DEFINE_int32(dummy_port, -1, "port of dummy server(for monitoring)");
 DEFINE_int32(backup_request_ms, -1, "Timeout for sending a backup request");
 
 flare::LatencyRecorder g_latency_recorder("client");
-flare::counter<int> g_error_count("client_error_count");
+flare::counter g_error_count("client_error_count");
 
 struct SenderArgs {
     int base_index;

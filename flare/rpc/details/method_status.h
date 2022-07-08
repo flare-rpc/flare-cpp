@@ -70,7 +70,7 @@ namespace flare::rpc {
         void SetConcurrencyLimiter(ConcurrencyLimiter *cl);
 
         flare::histogram _his_latency;
-        flare::counter<int64_t> _qps;
+        flare::counter _qps;
         std::unique_ptr<ConcurrencyLimiter> _cl;
         std::atomic<int> _nconcurrency;
         flare::gauge<int64_t> _nerror_var;

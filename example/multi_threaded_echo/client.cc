@@ -26,7 +26,7 @@ std::string g_request;
 std::string g_attachment;
 
 flare::LatencyRecorder g_latency_recorder("client");
-flare::counter<int> g_error_count("client_error_count");
+flare::counter g_error_count("client_error_count");
 
 static void* sender(void* arg) {
     // Normally, you should not call a Channel directly, but instead construct

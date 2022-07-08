@@ -35,7 +35,7 @@ TEST(metrics, histogram) {
     std::cout <<str<<std::endl;
 
     flare::histogram h2;
-    h2.expose("h2","", b, {{"a","search"}, {"q","qruu"}});
+    h2.expose_metric("h2","", b, {{"a","search"}, {"q","qruu"}});
 
     for(int i =0 ; i < 1800; i++) {
         auto v = flare::base::fast_rand_in(0, 1900);

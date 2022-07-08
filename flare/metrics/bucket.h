@@ -14,13 +14,13 @@
 #include "flare/times/time.h"
 
 namespace flare {
-    typedef std::vector<double> bucket;
+    typedef std::vector<int64_t> bucket;
 
     struct bucket_builder {
 
-        static bucket liner_values(double start, double width, size_t number);
+        static bucket liner_values(int64_t start, int64_t width, size_t number);
 
-        static bucket exponential_values(double start, double factor, size_t num);
+        static bucket exponential_values(int64_t start, int64_t factor, size_t num);
 
         static bucket liner_duration(flare::duration start, flare::duration width, size_t num);
 

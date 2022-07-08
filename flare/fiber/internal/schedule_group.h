@@ -21,7 +21,7 @@ namespace flare::fiber_internal {
 
     class fiber_worker;
 
-// Control all task groups
+    // Control all task groups
     class schedule_group {
         friend class fiber_worker;
 

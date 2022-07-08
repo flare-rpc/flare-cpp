@@ -17,9 +17,7 @@ namespace flare {
             } else if (std::isinf(value)) {
                 *out << (value < 0 ? "-Inf" : "+Inf");
             } else {
-                auto saved_flags = out->setf(std::ios::fixed, std::ios::floatfield);
                 *out << value;
-                out->setf(saved_flags, std::ios::floatfield);
             }
         }
 
@@ -92,7 +90,7 @@ namespace flare {
             write_value(out, hist.sample_sum);
             write_tail(out, metric, nullptr);
 
-            double last = -std::numeric_limits<double>::infinity();
+            int64_t last = -std::numeric_limits<int64_t>::infinity();
             for (auto &b : hist.bucket) {
                 write_head(out, metric, "_bucket", "le", b.upper_bound);
                 last = b.upper_bound;
@@ -100,7 +98,7 @@ namespace flare {
                 write_tail(out, metric, nullptr);
             }
 
-            if (last != std::numeric_limits<double>::infinity()) {
+            if (last != std::numeric_limits<int64_t>::infinity()) {
                 write_head(out, metric, "_bucket", "le", "+Inf");
                 *out << hist.sample_count;
                 write_tail(out, metric, nullptr);

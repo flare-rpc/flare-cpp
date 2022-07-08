@@ -26,7 +26,7 @@ DEFINE_string(value, "world", "The value associated with the key");
 DEFINE_int32(batch, 1, "Pipelined Operations");
 
 flare::LatencyRecorder g_latency_recorder("client");
-flare::counter<int> g_error_count("client_error_count");
+flare::counter g_error_count("client_error_count");
 flare::static_atomic<int> g_sender_count = FLARE_STATIC_ATOMIC_INIT(0);
 
 static void* sender(void* arg) {

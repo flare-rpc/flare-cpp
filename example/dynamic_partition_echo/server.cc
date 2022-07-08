@@ -80,7 +80,7 @@ public:
 private:
     size_t _index;
     int64_t _sleep_us;
-    flare::counter<size_t> _nreq;
+    flare::counter _nreq;
 };
 
 int main(int argc, char *argv[]) {

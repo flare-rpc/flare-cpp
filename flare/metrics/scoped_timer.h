@@ -6,7 +6,7 @@
 
 // Accumulate microseconds spent by scopes into variable, useful for debugging.
 // Example:
-//   flare::counter<int64_t> g_function1_spent;
+//   flare::counter g_function1_spent;
 //   ...
 //   void function1() {
 //     // time cost by function1() will be sent to g_spent_time when

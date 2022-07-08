@@ -46,8 +46,8 @@ namespace flare::rpc {
 
     int MethodStatus::Expose(const std::string_view &prefix) {
 
-        std::vector<double> buckets{10, 30, 50, 80, 100,  150, 200, 300, 400, 500, 700, 800, 1000, 1500, 2000};
-        if (_his_latency.expose_as(std::string(prefix.data(), prefix.size()), "histogram_latency", "", buckets) != 0) {
+        std::vector<int64_t> buckets{10, 30, 50, 80, 100,  150, 200, 300, 400, 500, 700, 800, 1000, 1500, 2000};
+        if (_his_latency.expose_metric_as(std::string(prefix.data(), prefix.size()), "histogram_latency", "", buckets) != 0) {
             return -1;
         }
 

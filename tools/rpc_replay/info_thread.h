@@ -26,8 +26,8 @@ namespace flare::rpc {
 
 struct InfoThreadOptions {
     flare::LatencyRecorder* latency_recorder;
-    flare::counter<int64_t>* sent_count;
-    flare::counter<int64_t>* error_count;
+    flare::counter* sent_count;
+    flare::counter* error_count;
 
     InfoThreadOptions()
         : latency_recorder(NULL)

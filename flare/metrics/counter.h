@@ -14,11 +14,11 @@
 
 namespace flare {
 
-    template<typename T>
-    class counter : public variable_reducer<T, metrics_detail::add_to<T>, metrics_detail::minus_from<T> > {
+    class counter
+            : public variable_reducer<int64_t, metrics_detail::add_to<int64_t>, metrics_detail::minus_from<int64_t> > {
     public:
-        typedef variable_reducer<T, metrics_detail::add_to<T>, metrics_detail::minus_from<T> > Base;
-        typedef T value_type;
+        typedef variable_reducer <int64_t, metrics_detail::add_to<int64_t>, metrics_detail::minus_from<int64_t>> Base;
+        typedef int64_t value_type;
         typedef typename Base::sampler_type sampler_type;
     public:
         counter() : Base() {}
@@ -37,6 +37,21 @@ namespace flare {
                 display_filter f = static_cast<display_filter>(DISPLAY_ON_ALL | DISPLAY_ON_METRICS)) : Base() {
             this->expose_as(prefix, name, help, tags, f);
         }
+
+        int expose_metric(const std::string_view &name,
+                 const std::string_view &help = "",
+                 const variable_base::tag_type &tags = variable_base::tag_type(),
+                 display_filter f = static_cast<display_filter>(DISPLAY_ON_ALL | DISPLAY_ON_METRICS)) {
+            return expose(name, help, tags, f);
+        }
+
+        int expose_metric_as(const std::string_view &prefix, const std::string_view &name,
+                             const std::string_view &help = "",
+                             const variable_base::tag_type &tags = variable_base::tag_type(),
+                             display_filter f = static_cast<display_filter>(DISPLAY_ON_ALL | DISPLAY_ON_METRICS)) {
+            return expose_as(prefix, name, help, tags, f);
+        }
+
 
         void collect_metrics(cache_metrics &metric) const override {
             this->copy_metric_family(metric);

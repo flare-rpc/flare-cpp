@@ -84,7 +84,7 @@ namespace flare {
         //           _error.expose_as("foo_bar_apple_pie", "error");
         //       }
         //   private:
-        //       flare::counter<int> _error;
+        //       flare::counter _error;
         //   };
         //   }  // foo
         //   }  // bar

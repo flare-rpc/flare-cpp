@@ -32,15 +32,15 @@ namespace flare {
 
         ~histogram();
 
-        int expose(const std::string &name,
-                   const std::string_view &help,
-                   const bucket &buckets,
-                   const variable_base::tag_type &tags = variable_base::tag_type());
+        int expose_metric(const std::string &name,
+                          const std::string_view &help,
+                          const bucket &buckets,
+                          const variable_base::tag_type &tags = variable_base::tag_type());
 
-        int expose_as(const std::string &prefix, const std::string &name,
-                      const std::string_view &help,
-                      const bucket &buckets,
-                      const variable_base::tag_type &tags = variable_base::tag_type());
+        int expose_metric_as(const std::string &prefix, const std::string &name,
+                             const std::string_view &help,
+                             const bucket &buckets,
+                             const variable_base::tag_type &tags = variable_base::tag_type());
 
         void observe(double value) noexcept;
 
@@ -58,8 +58,8 @@ namespace flare {
 
     private:
         bucket _bucket_boundaries;
-        std::vector<std::unique_ptr<counter<int64_t>>> _bucket_counts;
-        counter<double> _sum;
+        std::vector<std::unique_ptr<counter>> _bucket_counts;
+        counter _sum;
     };
 
 }  // namespace flare

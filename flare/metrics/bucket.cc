@@ -11,9 +11,9 @@
 
 namespace flare {
 
-    bucket bucket_builder::liner_values(double start, double width, size_t number) {
+    bucket bucket_builder::liner_values(int64_t start, int64_t width, size_t number) {
         FLARE_CHECK(width > 0);
-        std::vector<double> ret;
+        std::vector<int64_t> ret;
         ret.reserve(number);
         double value = start;
         for (size_t i = 0; i < number; ++i) {
@@ -23,10 +23,10 @@ namespace flare {
         return ret;
     }
 
-    bucket bucket_builder::exponential_values(double start, double factor, size_t number) {
+    bucket bucket_builder::exponential_values(int64_t start, int64_t factor, size_t number) {
         FLARE_CHECK(factor > 0);
         FLARE_CHECK(start > 0);
-        std::vector<double> ret;
+        std::vector<int64_t> ret;
         ret.reserve(number);
         double value = start;
         for (size_t i = 0; i < number; ++i) {
@@ -38,11 +38,11 @@ namespace flare {
 
     bucket bucket_builder::liner_duration(flare::duration start, flare::duration width, size_t num) {
         flare::duration value = start;
-        FLARE_CHECK(width.to_double_microseconds() > 0);
-        std::vector<double> ret;
+        FLARE_CHECK(width.to_int64_microseconds() > 0);
+        std::vector<int64_t> ret;
         ret.reserve(num);
         for (size_t i = 0; i < num; ++i) {
-            ret.push_back(value.to_double_microseconds());
+            ret.push_back(value.to_int64_microseconds());
             value += width;
         }
         return ret;
@@ -51,10 +51,10 @@ namespace flare {
     bucket bucket_builder::exponential_duration(flare::duration start, uint64_t factor, size_t num) {
         flare::duration value = start;
         FLARE_CHECK(factor > 1);
-        std::vector<double> ret;
+        std::vector<int64_t> ret;
         ret.reserve(num);
         for (size_t i = 0; i < num; ++i) {
-            ret.push_back(value.to_double_microseconds());
+            ret.push_back(value.to_int64_microseconds());
             value *= factor;
         }
         return ret;
