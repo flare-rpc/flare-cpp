@@ -38,7 +38,7 @@
 #define FLARE_HASH_INTERNAL_CITY_H_
 
 #include <stdint.h>
-#include <stdlib.h>  // for size_t.
+#include <cstdlib>  // for size_t.
 #include <utility>
 #include "flare/base/profile.h"
 

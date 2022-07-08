@@ -92,7 +92,7 @@
 
 #include <assert.h>
 #include <stddef.h>
-#include <stdlib.h>
+#include <cstdlib>
 
 #include <algorithm>  // For std::swap().
 

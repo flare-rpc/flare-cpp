@@ -24,7 +24,7 @@ namespace flare {
     }
 
     flare_status sequential_read_file::open(const flare::file_path &path) noexcept {
-        FLARE_CHECK(_fd == -1)<<"do not reopen";
+        FLARE_CHECK(_fd == -1) << "do not reopen";
         flare_status rs;
         _path = path;
         _fd = ::open(path.c_str(), O_RDONLY | O_CLOEXEC, 0644);
@@ -35,9 +35,9 @@ namespace flare {
         return rs;
     }
 
-    flare_status sequential_read_file::read(size_t n, std::string *content) {
+    flare_status sequential_read_file::read(std::string *content, size_t n) {
         flare::IOPortal portal;
-        auto frs = read(n, &portal);
+        auto frs = read(&portal, n);
         if (frs.ok()) {
             auto size = portal.size();
             portal.cutn(content, size);
@@ -45,8 +45,8 @@ namespace flare {
         return frs;
     }
 
-    flare_status sequential_read_file::read(size_t n, flare::cord_buf *buf) {
-        ssize_t left = n;
+    flare_status sequential_read_file::read(flare::cord_buf *buf, size_t n) {
+        size_t left = n;
         flare::IOPortal portal;
         flare_status frs;
         while (left > 0) {
@@ -59,7 +59,7 @@ namespace flare {
                 continue;
             } else {
                 FLARE_LOG(WARNING) << "read failed, err: " << flare_error()
-                             << " fd: " << _fd << " size: " << n;
+                                   << " fd: " << _fd << " size: " << n;
                 frs.set_error(errno, "%s", flare_error());
                 return frs;
             }
@@ -79,8 +79,8 @@ namespace flare {
     bool sequential_read_file::is_eof(flare_status *frs) {
         std::error_code ec;
         auto size = flare::file_size(_path, ec);
-        if(ec) {
-            if(frs) {
+        if (ec) {
+            if (frs) {
                 frs->set_error(errno, "%s", flare_error());
             }
             return false;

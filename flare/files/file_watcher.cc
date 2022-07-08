@@ -1,4 +1,10 @@
 
+/****************************************************************
+ * Copyright (c) 2022, liyinbin
+ * All rights reserved.
+ * Author by liyinbin (jeff.li) lijippy@163.com
+ *****************************************************************/
+
 #include <sys/stat.h>
 #include "flare/base/profile.h"              // FLARE_PLATFORM_OSX
 #include "flare/files/file_watcher.h"

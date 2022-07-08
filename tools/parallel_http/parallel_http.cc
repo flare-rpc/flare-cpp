@@ -26,8 +26,8 @@
 #include "flare/strings/starts_with.h"
 #include "flare/strings/trim.h"
 #include "flare/strings/utility.h"
-#include <flare/base/scoped_file.h>
-#include <flare/rpc/channel.h>
+#include "flare/files/readline_file.h"
+#include "flare/rpc/channel.h"
 
 DEFINE_string(url_file, "", "The file containing urls to fetch. If this flag is"
                             " empty, read urls from stdin");
@@ -97,9 +97,9 @@ void *access_thread(void *void_args) {
         done->cntl.http_request().uri() = url;
         done->args = args;
         done->url = url;
-        channel.CallMethod(NULL, &done->cntl, NULL, NULL, done);
+        channel.CallMethod(nullptr, &done->cntl, nullptr, nullptr, done);
     }
-    return NULL;
+    return nullptr;
 }
 
 int main(int argc, char **argv) {
@@ -110,28 +110,21 @@ int main(int argc, char **argv) {
     //     FLAGS_path = "/" + FLAGS_path;
     // }
 
-    flare::base::scoped_file fp_guard;
-    FILE *fp = NULL;
+    flare::readline_file file;
     if (!FLAGS_url_file.empty()) {
-        fp_guard.reset(fopen(FLAGS_url_file.c_str(), "r"));
-        if (!fp_guard) {
+        if (!file.open(FLAGS_url_file.c_str()).ok()) {
             FLARE_PLOG(ERROR) << "Fail to open `" << FLAGS_url_file << '\'';
             return -1;
         }
-        fp = fp_guard.get();
     } else {
-        fp = stdin;
+        FLARE_PLOG(ERROR) << "must set `FLAGS_url_file`";
+        return 0;
     }
-    char *line_buf = NULL;
-    size_t line_len = 0;
-    ssize_t nr = 0;
+
     std::deque<std::string> url_list;
-    while ((nr = getline(&line_buf, &line_len, fp)) != -1) {
-        if (line_buf[nr - 1] == '\n') { // remove ending newline
-            line_buf[nr - 1] = '\0';
-            --nr;
-        }
-        std::string_view line(line_buf, nr);
+    auto lines = file.lines();
+    for (auto line : lines) {
+        line = flare::strip_suffix(line, "\n");
         line = flare::trim_all(line);
         if (!line.empty()) {
             url_list.push_back(flare::as_string(line));
@@ -149,7 +142,7 @@ int main(int argc, char **argv) {
     std::vector<fiber_id_t> tids;
     tids.resize(FLAGS_thread_num);
     for (int i = 0; i < FLAGS_thread_num; ++i) {
-        FLARE_CHECK_EQ(0, fiber_start_background(&tids[i], NULL, access_thread, &args[i]));
+        FLARE_CHECK_EQ(0, fiber_start_background(&tids[i], nullptr, access_thread, &args[i]));
     }
     std::deque<std::pair<std::string, flare::cord_buf> > output_queue;
     size_t nprinted = 0;
@@ -205,7 +198,7 @@ int main(int argc, char **argv) {
     }
 
     for (int i = 0; i < FLAGS_thread_num; ++i) {
-        fiber_join(tids[i], NULL);
+        fiber_join(tids[i], nullptr);
     }
     for (int i = 0; i < FLAGS_thread_num; ++i) {
         while (args[i].current_concurrency.load(std::memory_order_relaxed) != 0) {

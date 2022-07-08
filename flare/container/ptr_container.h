@@ -1,4 +1,9 @@
 
+/****************************************************************
+ * Copyright (c) 2022, liyinbin
+ * All rights reserved.
+ * Author by liyinbin (jeff.li) lijippy@163.com
+ *****************************************************************/
 
 #ifndef FLARE_CONTAINER_PTR_CONTAINER_H_
 #define FLARE_CONTAINER_PTR_CONTAINER_H_
@@ -11,7 +16,7 @@ namespace flare::container {
     template<typename T>
     class ptr_container {
     public:
-        ptr_container() : _ptr(NULL) {}
+        ptr_container() : _ptr(nullptr) {}
 
         explicit ptr_container(T *obj) : _ptr(obj) {}
 
@@ -20,7 +25,7 @@ namespace flare::container {
         }
 
         ptr_container(const ptr_container &rhs)
-                : _ptr(rhs._ptr ? new T(*rhs._ptr) : NULL) {}
+                : _ptr(rhs._ptr ? new T(*rhs._ptr) : nullptr) {}
 
         void operator=(const ptr_container &rhs) {
             if (rhs._ptr) {
@@ -31,7 +36,7 @@ namespace flare::container {
                 }
             } else {
                 delete _ptr;
-                _ptr = NULL;
+                _ptr = nullptr;
             }
         }
 

@@ -1,5 +1,11 @@
 
 
+/****************************************************************
+ * Copyright (c) 2022, liyinbin
+ * All rights reserved.
+ * Author by liyinbin (jeff.li) lijippy@163.com
+ *****************************************************************/
+
 #ifndef FLARE_CONTAINER_INTERNAL_MAP_FWD_DECL_H_
 #define FLARE_CONTAINER_INTERNAL_MAP_FWD_DECL_H_
 

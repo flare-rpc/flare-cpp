@@ -41,7 +41,7 @@ namespace flare {
             return _path;
         }
 
-        const std::vector<std::string_view> lines() const noexcept {
+        const std::vector<std::string_view> &lines() const noexcept {
             return _lines;
         }
 

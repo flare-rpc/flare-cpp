@@ -15,7 +15,7 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#include <stdlib.h>
+#include <cstdlib>
 #include <unistd.h>
 #include <stdio.h>
 #include "testing/gtest_wrap.h"

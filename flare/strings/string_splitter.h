@@ -2,7 +2,7 @@
 #ifndef FLARE_STRINGS_STRING_SPLITTER_H_
 #define FLARE_STRINGS_STRING_SPLITTER_H_
 
-#include <stdlib.h>
+#include <cstdlib>
 #include <stdint.h>
 #include <string_view>
 #include "flare/strings/safe_substr.h"

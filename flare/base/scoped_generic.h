@@ -1,8 +1,14 @@
 
+/****************************************************************
+ * Copyright (c) 2022, liyinbin
+ * All rights reserved.
+ * Author by liyinbin (jeff.li) lijippy@163.com
+ *****************************************************************/
+
 #ifndef FLARE_BASE_SCOPED_GENERIC_H_
 #define FLARE_BASE_SCOPED_GENERIC_H_
 
-#include <stdlib.h>
+#include <cstdlib>
 #include <algorithm>
 #include "flare/base/profile.h"
 #include "flare/memory/move.h"

@@ -41,7 +41,7 @@
 
 #if defined(_MSC_VER)
 
-#include <stdlib.h>
+#include <cstdlib>
 
 #define ROTL32(x,y) _rotl(x,y)
 #define ROTL64(x,y) _rotl64(x,y)

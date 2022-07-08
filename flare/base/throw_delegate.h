@@ -4,6 +4,7 @@
  * All rights reserved.
  * Author by liyinbin (jeff.li) lijippy@163.com
  *****************************************************************/
+
 #ifndef FLARE_BASE_THROW_DELEGATE_H_
 #define FLARE_BASE_THROW_DELEGATE_H_
 

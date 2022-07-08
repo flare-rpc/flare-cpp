@@ -17,10 +17,9 @@
 #include "flare/times/time.h"
 #include "flare/base/singleton_on_pthread_once.h"
 #include "flare/base/scoped_lock.h"
-#include "flare/base/scoped_file.h"
+#include "flare/files/sequential_read_file.h"
 #include "flare/base/process_util.h"            // read_command_line
 #include "flare/base/popen.h"                   // read_command_output
-#include "flare/metrics/gauge.h"
 #include "flare/metrics/gauge.h"
 #include "flare/base/static_atomic.h"
 
@@ -64,12 +63,15 @@ namespace flare {
 #if defined(FLARE_PLATFORM_LINUX)
         // Read status from /proc/self/stat. Information from `man proc' is out of date,
         // see http://man7.org/linux/man-pages/man5/proc.5.html
-        flare::base::scoped_file fp("/proc/self/stat", "r");
-        if (nullptr == fp) {
+        flare::sequential_read_file file;
+        auto status = file.open("/proc/self/stat");
+        if (!status.ok()) {
             FLARE_PLOG_ONCE(WARNING) << "Fail to open /proc/self/stat";
             return false;
         }
-        if (fscanf(fp, "%d %*s %c "
+        std::string content;
+        file.read(&content);
+        if (sscanf(content.c_str(), "%d %*s %c "
                    "%d %d %d %d %d "
                    "%u %lu %lu %lu "
                    "%lu %lu %lu %lu %lu "
@@ -79,7 +81,7 @@ namespace flare {
                    &stat.flags, &stat.minflt, &stat.cminflt, &stat.majflt,
                    &stat.cmajflt, &stat.utime, &stat.stime, &stat.cutime, &stat.cstime,
                    &stat.priority, &stat.nice, &stat.num_threads) != 19) {
-            FLARE_PLOG(WARNING) << "Fail to fscanf";
+            FLARE_PLOG(WARNING) << "Fail to sscanf";
             return false;
         }
         return true;
@@ -197,15 +199,18 @@ namespace flare {
         m = ProcMemory();
         errno = 0;
 #if defined(FLARE_PLATFORM_LINUX)
-        flare::base::scoped_file fp("/proc/self/statm", "r");
-        if (nullptr == fp) {
+        flare::sequential_read_file file;
+        auto status = file.open("/proc/self/statm");
+        if (!status.ok()) {
             FLARE_PLOG_ONCE(WARNING) << "Fail to open /proc/self/statm";
             return false;
         }
-        if (fscanf(fp, "%ld %ld %ld %ld %ld %ld %ld",
+        std::string content;
+        file.read(&content);
+        if (sscanf(content.c_str(), "%ld %ld %ld %ld %ld %ld %ld",
                    &m.size, &m.resident, &m.share,
                    &m.trs, &m.lrs, &m.drs, &m.dt) != 7) {
-            FLARE_PLOG(WARNING) << "Fail to fscanf /proc/self/statm";
+            FLARE_PLOG(WARNING) << "Fail to sscanf /proc/self/statm";
             return false;
         }
         return true;
@@ -265,14 +270,17 @@ namespace flare {
 
     static bool read_load_average(LoadAverage &m) {
 #if defined(FLARE_PLATFORM_LINUX)
-        flare::base::scoped_file fp("/proc/loadavg", "r");
-        if (nullptr == fp) {
+        flare::sequential_read_file file;
+        auto status = file.open("/proc/loadavg");
+        if (!status.ok()) {
             FLARE_PLOG_ONCE(WARNING) << "Fail to open /proc/loadavg";
             return false;
         }
         m = LoadAverage();
         errno = 0;
-        if (fscanf(fp, "%lf %lf %lf",
+        std::string content;
+        file.read(&content);
+        if (sscanf(content.c_str(), "%lf %lf %lf",
                    &m.loadavg_1m, &m.loadavg_5m, &m.loadavg_15m) != 3) {
             FLARE_PLOG(WARNING) << "Fail to fscanf";
             return false;
@@ -424,13 +432,16 @@ namespace flare {
 
     static bool read_proc_io(ProcIO *s) {
 #if defined(FLARE_PLATFORM_LINUX)
-        flare::base::scoped_file fp("/proc/self/io", "r");
-        if (nullptr == fp) {
+        flare::sequential_read_file file;
+        auto status = file.open("/proc/self/io");
+        if (!status.ok()) {
             FLARE_PLOG_ONCE(WARNING) << "Fail to open /proc/self/io";
             return false;
         }
         errno = 0;
-        if (fscanf(fp, "%*s %lu %*s %lu %*s %lu %*s %lu %*s %lu %*s %lu %*s %lu",
+        std::string content;
+        file.read(&content);
+        if (sscanf(content.c_str(), "%*s %lu %*s %lu %*s %lu %*s %lu %*s %lu %*s %lu %*s %lu",
                    &s->rchar, &s->wchar, &s->syscr, &s->syscw,
                    &s->read_bytes, &s->write_bytes, &s->cancelled_write_bytes)
             != 7) {
@@ -474,13 +485,13 @@ namespace flare {
         ProcIOReader::get_field<VARIABLE_MEMBER_TYPE(&ProcIO::field),       \
         offsetof(ProcIO, field)>, nullptr);
 
-// ==================================================
-// Refs:
-//   https://www.kernel.org/doc/Documentation/ABI/testing/procfs-diskstats
-//   https://www.kernel.org/doc/Documentation/iostats.txt
-//
-// The /proc/diskstats file displays the I/O statistics of block devices.
-// Each line contains the following 14 fields:
+    // ==================================================
+    // Refs:
+    //   https://www.kernel.org/doc/Documentation/ABI/testing/procfs-diskstats
+    //   https://www.kernel.org/doc/Documentation/iostats.txt
+    //
+    // The /proc/diskstats file displays the I/O statistics of block devices.
+    // Each line contains the following 14 fields:
     struct DiskStat {
         long long major_number;
         long long minor_mumber;
@@ -533,13 +544,16 @@ namespace flare {
 
     static bool read_disk_stat(DiskStat *s) {
 #if defined(FLARE_PLATFORM_LINUX)
-        flare::base::scoped_file fp("/proc/diskstats", "r");
-        if (nullptr == fp) {
+         flare::sequential_read_file file;
+        auto status = file.open("/proc/diskstats");
+        if (!status.ok()) {
             FLARE_PLOG_ONCE(WARNING) << "Fail to open /proc/diskstats";
             return false;
         }
         errno = 0;
-        if (fscanf(fp, "%lld %lld %s %lld %lld %lld %lld %lld %lld %lld "
+        std::string content;
+        file.read(&content);
+        if (sscanf(content.c_str(), "%lld %lld %s %lld %lld %lld %lld %lld %lld %lld "
                    "%lld %lld %lld %lld",
                    &s->major_number,
                    &s->minor_mumber,

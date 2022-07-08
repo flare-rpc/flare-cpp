@@ -24,7 +24,7 @@
 #include <google/protobuf/descriptor.h>
 #include "flare/times/time.h"
 #include "flare/base/fd_guard.h"
-#include <flare/base/scoped_file.h>
+#include <flare/files/sequential_read_file.h>
 #include "flare/rpc/global.h"
 #include "flare/rpc/socket.h"
 #include "flare/rpc/server.h"
@@ -202,12 +202,11 @@ void CheckCert(const char *cname, const char *cert) {
 }
 
 std::string GetRawPemString(const char *fname) {
-    flare::base::scoped_file fp(fname, "r");
-    char buf[4096];
-    int size = read(fileno(fp), buf, sizeof(buf));
-    std::string raw;
-    raw.append(buf, size);
-    return raw;
+    flare::sequential_read_file file;
+    file.open(fname);
+    std::string content;
+    auto fs = file.read(&content);
+    return content;
 }
 
 #ifdef SSL_CTRL_SET_TLSEXT_HOSTNAME

@@ -22,7 +22,7 @@
 #include <unistd.h>                               // getpagesize
 #include <sys/mman.h>                             // mmap, munmap, mprotect
 #include <algorithm>                              // std::max
-#include <stdlib.h>                               // posix_memalign
+#include <cstdlib>                               // posix_memalign
 #include "flare/base/singleton_on_pthread_once.h"
 #include "flare/base/dynamic_annotations/dynamic_annotations.h" // RunningOnValgrind
 #include "flare/base/valgrind/valgrind.h"   // VALGRIND_STACK_REGISTER

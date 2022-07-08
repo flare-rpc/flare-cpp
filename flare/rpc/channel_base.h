@@ -19,7 +19,7 @@
 #ifndef FLARE_RPC_CHANNEL_BASE_H_
 #define FLARE_RPC_CHANNEL_BASE_H_
 
-#include <stdlib.h>
+#include <cstdlib>
 #include <ostream>
 #include "flare/log/logging.h"
 #include <google/protobuf/service.h>            // google::protobuf::RpcChannel

@@ -9,7 +9,7 @@
 
 // The following guarantees declaration of the byte swap functions
 #ifdef _MSC_VER
-#include <stdlib.h>  // NOLINT(build/include)
+#include <cstdlib>  // NOLINT(build/include)
 #elif defined(__FreeBSD__)
 #include <sys/endian.h>
 #elif defined(__GLIBC__)

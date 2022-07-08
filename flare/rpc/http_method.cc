@@ -16,7 +16,7 @@
 // under the License.
 
 
-#include <stdlib.h>                     // abort()
+#include <cstdlib>                     // abort()
 #include "flare/base/profile.h"
 #include "flare/log/logging.h"
 #include <pthread.h>

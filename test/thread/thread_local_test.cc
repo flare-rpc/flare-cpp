@@ -184,8 +184,8 @@ namespace flare {
             tls.insert(m.second.tl.get());
         }
 
-// Make sure that we have 4 different instances of *tl
-        EXPECT_EQ(4, tls.size());
+        // Make sure that we have 4 different instances of *tl
+        EXPECT_EQ(4ul, tls.size());
     }
 
     using TLPInt = thread_local_store<std::atomic<int>>;

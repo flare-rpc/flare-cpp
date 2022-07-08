@@ -4,6 +4,7 @@
  * All rights reserved.
  * Author by liyinbin (jeff.li) lijippy@163.com
  *****************************************************************/
+
 #include "flare/base/sha512.h"
 #include "flare/strings/hex_dump.h"
 #include "flare/base/math.h"

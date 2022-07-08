@@ -26,7 +26,6 @@
 #include <google/protobuf/descriptor.h>
 #include "flare/times/time.h"
 #include "flare/base/fd_guard.h"
-#include "flare/base/scoped_file.h"
 #include "flare/rpc/socket.h"
 #include "flare/rpc/builtin/version_service.h"
 #include "flare/rpc/builtin/health_service.h"

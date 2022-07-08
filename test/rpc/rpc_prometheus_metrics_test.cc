@@ -27,8 +27,10 @@ public:
 enum STATE {
     HELP = 0,
     TYPE,
+    COUNTER,
     GAUGE,
-    SUMMARY
+    SUMMARY,
+    HISTOGRAM
 };
 
 TEST(PrometheusMetrics, sanity) {
@@ -52,7 +54,6 @@ TEST(PrometheusMetrics, sanity) {
     ASSERT_FALSE(cntl.Failed());
     std::string res = cntl.response_attachment().to_string();
     std::cout <<"res: "<< res << std::endl;
-    size_t start_pos = 0;
     size_t end_pos = 0;
     STATE state = HELP;
     char name_help[128];
@@ -62,15 +63,16 @@ TEST(PrometheusMetrics, sanity) {
     int gauge_num = 0;
     bool summary_sum_gathered = false;
     bool summary_count_gathered = false;
-    bool has_ever_summary = false;
+    bool has_ever_summary_or_histogram = false;
     bool has_ever_gauge = false;
+    bool has_ever_counter = false;
 
     std::vector<std::string> lines = flare::string_split(res, '\n');
 
-    //while ((end_pos = res.find('\n', start_pos)) != std::string_view::npos) {
     for(auto &item : lines) {
         res[end_pos] = '\0';       // safe;
         std::cout<<"precess: "<<item<<std::endl;
+        std::cout<<"state: "<<state<<std::endl;
         if(item.empty()) {
             continue;
         }
@@ -86,11 +88,16 @@ TEST(PrometheusMetrics, sanity) {
                 ASSERT_STREQ(name_type, name_help);
                 if (strcmp(type, "gauge") == 0) {
                     state = GAUGE;
-                } else if (strcmp(type, "histogram") == 0) {
+                } else if (strcmp(type, "summary") == 0) {
                     state = SUMMARY;
-                } else {
+                } else if (strcmp(type, "histogram") == 0){
+                    state = HISTOGRAM;
+                } else if (strcmp(type, "counter") == 0){
+                    state = COUNTER;
+                }else {
                     ASSERT_TRUE(false);
                 }
+                std::cout<<"type: "<<type<<" state: "<<state<<std::endl;
                 break;
             case GAUGE:
                 matched = sscanf(item.c_str(), "%s %d", name_type, &gauge_num);
@@ -98,6 +105,20 @@ TEST(PrometheusMetrics, sanity) {
                 ASSERT_STREQ(name_type, name_help);
                 state = HELP;
                 has_ever_gauge = true;
+                break;
+            case COUNTER:
+                matched = sscanf(item.c_str(), "%s %d", name_type, &gauge_num);
+                ASSERT_EQ(2, matched);
+                ASSERT_STREQ(name_type, name_help);
+                state = HELP;
+                has_ever_counter = true;
+                break;
+            case HISTOGRAM:
+                if (std::string_view(item).find("+Inf")
+                    != std::string_view::npos) {
+                    has_ever_summary_or_histogram = true;
+                    state = HELP;
+                }
                 break;
             case SUMMARY:
                 if (std::string_view(item).find("quantile=")
@@ -118,7 +139,7 @@ TEST(PrometheusMetrics, sanity) {
                         state = HELP;
                         summary_sum_gathered = false;
                         summary_count_gathered = false;
-                        has_ever_summary = true;
+                        has_ever_summary_or_histogram = true;
                     }
                 } // else find "quantile=", just break to next line
                 break;
@@ -126,10 +147,10 @@ TEST(PrometheusMetrics, sanity) {
                 ASSERT_TRUE(false);
                 break;
         }
-        start_pos = end_pos + 1;
     }
     ASSERT_TRUE(has_ever_gauge);
-    //ASSERT_TRUE(has_ever_summary);
+    ASSERT_TRUE(has_ever_counter);
+    ASSERT_TRUE(has_ever_summary_or_histogram);
     ASSERT_EQ(0, server.Stop(0));
     ASSERT_EQ(0, server.Join());
 }

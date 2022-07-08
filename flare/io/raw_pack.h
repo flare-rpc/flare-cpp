@@ -22,24 +22,24 @@
 
 namespace flare {
 
-// -------------------------------------------------------------------------
-// NOTE: raw_packer/raw_unpacker is used for packing/unpacking low-level and
-// hard-to-change header. If the fields are likely to be changed in future,
-// use protobuf.
-// -------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
+    // NOTE: raw_packer/raw_unpacker is used for packing/unpacking low-level and
+    // hard-to-change header. If the fields are likely to be changed in future,
+    // use protobuf.
+    // -------------------------------------------------------------------------
 
-// This utility class packs 32-bit and 64-bit integers into binary data 
-// that can be unpacked by raw_unpacker. Notice that the packed data is
-// schemaless and user must match pack..() methods with same-width 
-// unpack..() methods to get the integers back.
-// Example:
-//   char buf[16];  // 4 + 8 + 4 bytes.
-//   flare::raw_packer(buf).pack32(a).pack64(b).pack32(c);  // buf holds packed data
-//
-//   ... network ...
-//
-//   // positional correspondence with pack..()
-//   flare::Unpacker(buf2).unpack32(a).unpack64(b).unpack32(c);
+    // This utility class packs 32-bit and 64-bit integers into binary data
+    // that can be unpacked by raw_unpacker. Notice that the packed data is
+    // schemaless and user must match pack..() methods with same-width
+    // unpack..() methods to get the integers back.
+    // Example:
+    //   char buf[16];  // 4 + 8 + 4 bytes.
+    //   flare::raw_packer(buf).pack32(a).pack64(b).pack32(c);  // buf holds packed data
+    //
+    //   ... network ...
+    //
+    //   // positional correspondence with pack..()
+    //   flare::raw_unpacker(buf2).unpack32(a).unpack64(b).unpack32(c);
     class raw_packer {
     public:
         // Notice: User must guarantee `stream' is as long as the packed data.
@@ -67,8 +67,8 @@ namespace flare {
         char *_stream;
     };
 
-// This utility class unpacks 32-bit and 64-bit integers from binary data
-// packed by raw_packer.
+    // This utility class unpacks 32-bit and 64-bit integers from binary data
+    // packed by raw_packer.
     class raw_unpacker {
     public:
         explicit raw_unpacker(const void *stream) : _stream((const char *) stream) {}

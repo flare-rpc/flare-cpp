@@ -149,7 +149,7 @@ TEST(NamingServiceTest, wrong_name) {
         "10.128.0.1:",
         "10.128.0.1",
         "localhost:1234",
-        "baidu.com:1234",
+        "tencent.com:1234",
         "LOCAL:1234"
     };
     flare::temp_file tmp_file;

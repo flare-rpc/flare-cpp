@@ -3,7 +3,7 @@
 #define  FLARE_VARIABLE_DETAIL__AGENT_GROUP_H_
 
 #include <pthread.h>                        // pthread_mutex_*
-#include <stdlib.h>                         // abort
+#include <cstdlib>                         // abort
 
 #include <new>                              // std::nothrow
 #include <deque>                            // std::deque

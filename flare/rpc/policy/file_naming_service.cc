@@ -20,7 +20,7 @@
 #include <string>                                       // std::string
 #include <set>                                          // std::set
 #include "flare/files/file_watcher.h"                    // file_watcher
-#include "flare/base/scoped_file.h"                     // scoped_file
+#include "flare/files/readline_file.h"
 #include "flare/fiber/internal/fiber.h"                            // flare::fiber_sleep_for
 #include "flare/rpc/log.h"
 #include "flare/rpc/policy/file_naming_service.h"
@@ -40,7 +40,7 @@ namespace flare::rpc {
                 return false;
             }
             const char *const addr_start = line.data() + i;
-            const char *tag_start = NULL;
+            const char *tag_start = nullptr;
             ssize_t tag_size = 0;
             for (; i < line.size() && !isspace(line[i]); ++i) {}
             if (server_addr) {
@@ -71,27 +71,23 @@ namespace flare::rpc {
         int FileNamingService::GetServers(const char *service_name,
                                           std::vector<ServerNode> *servers) {
             servers->clear();
-            char *line = NULL;
-            size_t line_len = 0;
-            ssize_t nr = 0;
             // Sort/unique the inserted vector is faster, but may have a different order
             // of addresses from the file. To make assertions in tests easier, we use
             // set to de-duplicate and keep the order.
-            std::set<ServerNode> presence;
+            std::set < ServerNode > presence;
 
-            flare::base::scoped_file fp(fopen(service_name, "r"));
-            if (!fp) {
+            flare::readline_file file;
+            auto status = file.open(service_name);
+            if (!status.ok()) {
                 FLARE_PLOG(ERROR) << "Fail to open `" << service_name << "'";
                 return errno;
             }
-            while ((nr = getline(&line, &line_len, fp.get())) != -1) {
-                if (line[nr - 1] == '\n') { // remove ending newline
-                    --nr;
-                }
+            auto &lines = file.lines();
+            for (auto line : lines) {
+                line = strip_suffix(line, "\n");
                 std::string_view addr;
                 std::string_view tag;
-                if (!SplitIntoServerAndTag(std::string_view(line, nr),
-                                           &addr, &tag)) {
+                if (!SplitIntoServerAndTag(line, &addr, &tag)) {
                     continue;
                 }
                 const_cast<char *>(addr.data())[addr.size()] = '\0'; // safe
@@ -112,7 +108,6 @@ namespace flare::rpc {
             }
             RPC_VLOG << "Got " << servers->size()
                      << (servers->size() > 1 ? " servers" : " server");
-            free(line);
             return 0;
         }
 
