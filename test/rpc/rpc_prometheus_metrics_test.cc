@@ -90,14 +90,14 @@ TEST(PrometheusMetrics, sanity) {
                     state = GAUGE;
                 } else if (strcmp(type, "summary") == 0) {
                     state = SUMMARY;
-                } else if (strcmp(type, "histogram")){
+                } else if (strcmp(type, "histogram") == 0){
                     state = HISTOGRAM;
-                } else if (strcmp(type, "counter")){
+                } else if (strcmp(type, "counter") == 0){
                     state = COUNTER;
                 }else {
                     ASSERT_TRUE(false);
                 }
-                std::cout<<"type: "<<type<<"state: "<<state<<std::endl;
+                std::cout<<"type: "<<type<<" state: "<<state<<std::endl;
                 break;
             case GAUGE:
                 matched = sscanf(item.c_str(), "%s %d", name_type, &gauge_num);
