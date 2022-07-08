@@ -54,7 +54,6 @@ TEST(PrometheusMetrics, sanity) {
     ASSERT_FALSE(cntl.Failed());
     std::string res = cntl.response_attachment().to_string();
     std::cout <<"res: "<< res << std::endl;
-    size_t start_pos = 0;
     size_t end_pos = 0;
     STATE state = HELP;
     char name_help[128];
@@ -70,7 +69,6 @@ TEST(PrometheusMetrics, sanity) {
 
     std::vector<std::string> lines = flare::string_split(res, '\n');
 
-    //while ((end_pos = res.find('\n', start_pos)) != std::string_view::npos) {
     for(auto &item : lines) {
         res[end_pos] = '\0';       // safe;
         std::cout<<"precess: "<<item<<std::endl;
@@ -99,6 +97,7 @@ TEST(PrometheusMetrics, sanity) {
                 }else {
                     ASSERT_TRUE(false);
                 }
+                std::cout<<"type: "<<type<<std::endl;
                 break;
             case GAUGE:
                 matched = sscanf(item.c_str(), "%s %d", name_type, &gauge_num);
@@ -148,7 +147,6 @@ TEST(PrometheusMetrics, sanity) {
                 ASSERT_TRUE(false);
                 break;
         }
-        start_pos = end_pos + 1;
     }
     ASSERT_TRUE(has_ever_gauge);
     ASSERT_TRUE(has_ever_counter);
