@@ -27,10 +27,10 @@ public:
 enum STATE {
     HELP = 0,
     TYPE,
+    COUNTER,
     GAUGE,
     SUMMARY,
-    HISTOGRAM,
-    COUNTER
+    HISTOGRAM
 };
 
 TEST(PrometheusMetrics, sanity) {
