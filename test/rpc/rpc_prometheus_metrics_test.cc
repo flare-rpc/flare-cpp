@@ -29,7 +29,8 @@ enum STATE {
     TYPE,
     GAUGE,
     SUMMARY,
-    HISTOGRAM
+    HISTOGRAM,
+    COUNTER
 };
 
 TEST(PrometheusMetrics, sanity) {
@@ -65,6 +66,7 @@ TEST(PrometheusMetrics, sanity) {
     bool summary_count_gathered = false;
     bool has_ever_summary_or_histogram = false;
     bool has_ever_gauge = false;
+    bool has_ever_counter = false;
 
     std::vector<std::string> lines = flare::string_split(res, '\n');
 
@@ -91,7 +93,9 @@ TEST(PrometheusMetrics, sanity) {
                     state = SUMMARY;
                 } else if (strcmp(type, "histogram")){
                     state = HISTOGRAM;
-                } else {
+                } else if (strcmp(type, "counter")){
+                    state = COUNTER;
+                }else {
                     ASSERT_TRUE(false);
                 }
                 break;
@@ -101,6 +105,13 @@ TEST(PrometheusMetrics, sanity) {
                 ASSERT_STREQ(name_type, name_help);
                 state = HELP;
                 has_ever_gauge = true;
+                break;
+            case COUNTER:
+                matched = sscanf(item.c_str(), "%s %d", name_type, &gauge_num);
+                ASSERT_EQ(2, matched);
+                ASSERT_STREQ(name_type, name_help);
+                state = HELP;
+                has_ever_counter = true;
                 break;
             case HISTOGRAM:
                 if (std::string_view(item).find("+Inf")
@@ -139,6 +150,7 @@ TEST(PrometheusMetrics, sanity) {
         start_pos = end_pos + 1;
     }
     ASSERT_TRUE(has_ever_gauge);
+    ASSERT_TRUE(has_ever_counter);
     ASSERT_TRUE(has_ever_summary_or_histogram);
     ASSERT_EQ(0, server.Stop(0));
     ASSERT_EQ(0, server.Join());
