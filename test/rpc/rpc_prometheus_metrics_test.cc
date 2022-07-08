@@ -74,6 +74,7 @@ TEST(PrometheusMetrics, sanity) {
     for(auto &item : lines) {
         res[end_pos] = '\0';       // safe;
         std::cout<<"precess: "<<item<<std::endl;
+        std::cout<<"state: "<<state<<std::endl;
         if(item.empty()) {
             continue;
         }
