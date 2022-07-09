@@ -24,7 +24,6 @@
 #include "flare/log/logging.h"
 #include "flare/hash/murmurhash3.h"
 #include "flare/fiber/internal/sys_futex.h"            // futex_wake_private
-#include "flare/fiber/internal/interrupt_pthread.h"
 #include "flare/fiber/internal/processor.h"            // cpu_relax
 #include "flare/fiber/internal/fiber_worker.h"           // fiber_worker
 #include "flare/fiber/internal/schedule_group.h"
@@ -229,7 +228,7 @@ namespace flare::fiber_internal {
         }
         // Interrupt blocking operations.
         for (size_t i = 0; i < _workers.size(); ++i) {
-            interrupt_pthread(_workers[i]);
+            thread::kill(_workers[i]);
         }
         // Join workers
         for (size_t i = 0; i < _workers.size(); ++i) {

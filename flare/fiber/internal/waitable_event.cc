@@ -103,7 +103,7 @@ namespace flare::fiber_internal {
 
         std::atomic<int> value;
         event_waiter_list waiters;
-        internal::FastPthreadMutex waiter_lock;
+        internal::fast_pthread_mutex waiter_lock;
     };
 
     static_assert(offsetof(waitable_event, value) == 0, "offsetof value must be 0");
@@ -399,8 +399,8 @@ namespace flare::fiber_internal {
 
         fiber_mutex_waiter *front = NULL;
         {
-            std::unique_lock<internal::FastPthreadMutex> lck1(b->waiter_lock, std::defer_lock);
-            std::unique_lock<internal::FastPthreadMutex> lck2(m->waiter_lock, std::defer_lock);
+            std::unique_lock<internal::fast_pthread_mutex> lck1(b->waiter_lock, std::defer_lock);
+            std::unique_lock<internal::fast_pthread_mutex> lck2(m->waiter_lock, std::defer_lock);
             flare::base::double_lock(lck1, lck2);
             if (b->waiters.empty()) {
                 return 0;

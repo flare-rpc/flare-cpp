@@ -65,18 +65,18 @@ namespace flare::fiber_internal {
 
     static KeyInfo s_key_info[KEYS_MAX] = {};
 
-// For allocating keys.
+    // For allocating keys.
     static pthread_mutex_t s_key_mutex = PTHREAD_MUTEX_INITIALIZER;
     static size_t nfreekey = 0;
     static size_t nkey = 0;
     static uint32_t s_free_keys[KEYS_MAX];
 
-// Stats.
+    // Stats.
     static flare::static_atomic<size_t> nkeytable = FLARE_STATIC_ATOMIC_INIT(0);
     static flare::static_atomic<size_t> nsubkeytable = FLARE_STATIC_ATOMIC_INIT(0);
 
-// The second-level array.
-// Align with cacheline to avoid false sharing.
+    // The second-level array.
+    // Align with cacheline to avoid false sharing.
     class FLARE_CACHELINE_ALIGNMENT SubKeyTable {
     public:
         SubKeyTable() {
@@ -270,13 +270,6 @@ namespace flare::fiber_internal {
         return n * sizeof(KeyTable) + nsub * sizeof(SubKeyTable);
     }
 
-    static flare::status_gauge<int> s_fiber_key_count(
-            "fiber_key_count", get_key_count, nullptr);
-    static flare::status_gauge<size_t> s_fiber_keytable_count(
-            "fiber_keytable_count", get_keytable_count, nullptr);
-    static flare::status_gauge<size_t> s_fiber_keytable_memory(
-            "fiber_keytable_memory", get_keytable_memory, nullptr);
-
 }  // namespace flare::fiber_internal
 
 extern "C" {
@@ -339,7 +332,7 @@ int fiber_keytable_pool_getstat(fiber_keytable_pool_t *pool,
     }
     std::unique_lock<pthread_mutex_t> mu(pool->mutex);
     size_t count = 0;
-    flare::fiber_internal::KeyTable *p = (flare::fiber_internal::KeyTable *) pool->free_keytables;
+    auto *p = (flare::fiber_internal::KeyTable *) pool->free_keytables;
     for (; p; p = p->next, ++count) {}
     stat->nfree = count;
     return 0;

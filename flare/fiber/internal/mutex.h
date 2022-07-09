@@ -40,13 +40,12 @@ __END_DECLS
 namespace flare::fiber_internal {
 
     namespace internal {
-#ifdef FIBER_USE_FAST_PTHREAD_MUTEX
 
-        class FastPthreadMutex {
+        class fast_pthread_mutex {
         public:
-            FastPthreadMutex() : _futex(0) {}
+            fast_pthread_mutex() : _futex(0) {}
 
-            ~FastPthreadMutex() {}
+            ~fast_pthread_mutex() {}
 
             void lock();
 
@@ -55,16 +54,13 @@ namespace flare::fiber_internal {
             bool try_lock();
 
         private:
-            FLARE_DISALLOW_COPY_AND_ASSIGN(FastPthreadMutex);
+            FLARE_DISALLOW_COPY_AND_ASSIGN(fast_pthread_mutex);
 
             int lock_contended();
 
             unsigned _futex;
         };
 
-#else
-        typedef std::mutex FastPthreadMutex;
-#endif
     }
 
 }  // namespace flare::fiber_internal

@@ -27,38 +27,38 @@
 
 namespace flare::fiber_internal {
 
-// A container for storing identifiers that may be invalidated.
+    // A container for storing identifiers that may be invalidated.
 
-// [Basic Idea]
-// identifiers are remembered for error notifications. While insertions are 
-// easy, removals are hard to be done in O(1) time. More importantly, 
-// insertions are often done in one thread, while removals come from many
-// threads simultaneously. Think about the usage in flare::rpc::Socket, most
-// fiber_token_t are inserted by one thread (the thread calling non-contended
-// Write or the KeepWrite thread), but removals are from many threads 
-// processing responses simultaneously.
+    // [Basic Idea]
+    // identifiers are remembered for error notifications. While insertions are
+    // easy, removals are hard to be done in O(1) time. More importantly,
+    // insertions are often done in one thread, while removals come from many
+    // threads simultaneously. Think about the usage in flare::rpc::Socket, most
+    // fiber_token_t are inserted by one thread (the thread calling non-contended
+    // Write or the KeepWrite thread), but removals are from many threads
+    // processing responses simultaneously.
 
-// [The approach]
-// Don't remove old identifiers eagerly, replace them when new ones are inserted.
+    // [The approach]
+    // Don't remove old identifiers eagerly, replace them when new ones are inserted.
 
-// token_traits MUST have {
-//   // #identifiers in each block
-//   static const size_t BLOCK_SIZE = 63;
-//
-//   // Max #entries. Often has close relationship with concurrency, 65536
-//   // is "huge" for most apps.
-//   static const size_t MAX_ENTRIES = 65536;
-//
-//   // Initial value of id. Id with the value is treated as invalid.
-//   static const Id TOKEN_INIT = ...;
-//
-//   // Returns true if the id is valid. The "validness" must be permanent or
-//   // stable for a very long period (to make the id ABA-free).
-//   static bool exists(Id id);
-// }
+    // token_traits MUST have {
+    //   // #identifiers in each block
+    //   static const size_t BLOCK_SIZE = 63;
+    //
+    //   // Max #entries. Often has close relationship with concurrency, 65536
+    //   // is "huge" for most apps.
+    //   static const size_t MAX_ENTRIES = 65536;
+    //
+    //   // Initial value of id. Id with the value is treated as invalid.
+    //   static const Id TOKEN_INIT = ...;
+    //
+    //   // Returns true if the id is valid. The "validness" must be permanent or
+    //   // stable for a very long period (to make the id ABA-free).
+    //   static bool exists(Id id);
+    // }
 
-// This container is NOT thread-safe right now, and shouldn't be
-// an issue in current usages throughout flare.
+    // This container is NOT thread-safe right now, and shouldn't be
+    // an issue in current usages throughout flare.
     template<typename Id, typename token_traits>
     class ListOfABAFreeId {
     public:
@@ -101,20 +101,20 @@ namespace flare::fiber_internal {
         for (size_t i = 0; i < token_traits::BLOCK_SIZE; ++i) {
             _head_block.ids[i] = token_traits::TOKEN_INIT;
         }
-        _head_block.next = NULL;
+        _head_block.next = nullptr;
     }
 
     template<typename Id, typename token_traits>
     ListOfABAFreeId<Id, token_traits>::~ListOfABAFreeId() {
-        _cur_block = NULL;
+        _cur_block = nullptr;
         _cur_index = 0;
         _nblock = 0;
-        for (IdBlock *p = _head_block.next; p != NULL;) {
+        for (IdBlock *p = _head_block.next; p != nullptr;) {
             IdBlock *saved_next = p->next;
             delete p;
             p = saved_next;
         }
-        _head_block.next = NULL;
+        _head_block.next = nullptr;
     }
 
     template<typename Id, typename token_traits>
@@ -159,7 +159,7 @@ namespace flare::fiber_internal {
             return EAGAIN;
         }
         IdBlock *new_block = new(std::nothrow) IdBlock;
-        if (NULL == new_block) {
+        if (nullptr == new_block) {
             return ENOMEM;
         }
         ++_nblock;
@@ -194,7 +194,7 @@ namespace flare::fiber_internal {
     template<typename Id, typename token_traits>
     template<typename Fn>
     void ListOfABAFreeId<Id, token_traits>::apply(const Fn &fn) {
-        for (IdBlock *p = &_head_block; p != NULL; p = p->next) {
+        for (IdBlock *p = &_head_block; p != nullptr; p = p->next) {
             for (size_t i = 0; i < token_traits::BLOCK_SIZE; ++i) {
                 if (p->ids[i] != token_traits::TOKEN_INIT && token_traits::exists(p->ids[i])) {
                     fn(p->ids[i]);

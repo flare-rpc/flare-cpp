@@ -96,7 +96,7 @@ namespace flare::fiber_internal {
         // contended_ver: locked and contended
         uint32_t first_ver;
         uint32_t locked_ver;
-        internal::FastPthreadMutex mutex;
+        internal::fast_pthread_mutex mutex;
         void *data;
 
         int (*on_error)(fiber_token_t, void *, int);
