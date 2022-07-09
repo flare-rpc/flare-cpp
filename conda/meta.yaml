@@ -41,19 +41,17 @@ outputs:
         - zlib
         - sysroot_linux-64=2.17 # [linux]
         - openssl =1.1.1
-        - gflags =2.2.2
-        - leveldb =1.22
-        - protobuf =3.12.4
-        - gperftools =2.9.1
+        - gflags
+        - leveldb
+        - protobuf =3.9
       run:
         - __osx >={{ MACOSX_DEPLOYMENT_TARGET|default("10.15") }}  # [osx and x86_64]
         - zlib
         - sysroot_linux-64=2.17 # [linux]
         - openssl =1.1.1
-        - gflags =2.2.2
-        - leveldb =1.22
-        - protobuf =3.12.4
-        - gperftools =2.9.1
+        - gflags
+        - leveldb
+        - protobuf =3.9
     test:
       commands:
         - test -f $PREFIX/lib/libflare.so              # [linux]
