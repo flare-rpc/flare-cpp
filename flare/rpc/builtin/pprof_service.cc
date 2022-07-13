@@ -22,8 +22,7 @@
 #include "flare/files/filesystem.h"
 #include <sys/stat.h>
 #include <fcntl.h>                          // O_RDONLY
-#include "flare/strings/str_format.h"             // string_printf
-#include "flare/strings/string_splitter.h"           // StringSplitter
+#include "flare/strings/str_split.h"
 #include "flare/files/readline_file.h"         // readline_file
 #include "flare/times/time.h"
 #include "flare/base/popen.h"                    // flare::base::read_command_output
@@ -305,12 +304,13 @@ namespace flare::rpc {
         }
         std::string line;
         while (std::getline(ss, line)) {
-            flare::StringSplitter sp(line.c_str(), ' ');
-            if (sp == nullptr) {
+            std::vector<std::string_view> sps = flare::string_split(line.c_str(), ' ');
+            auto sp = sps.begin();
+            if (sp == sps.end()) {
                 continue;
             }
             char *endptr = nullptr;
-            uintptr_t addr = strtoull(sp.field(), &endptr, 16);
+            uintptr_t addr = strtoull(sp->data(), &endptr, 16);
             if (*endptr != ' ') {
                 continue;
             }
@@ -321,19 +321,19 @@ namespace flare::rpc {
                 continue;
             }
             ++sp;
-            if (sp == nullptr) {
+            if (sp == sps.end()) {
                 continue;
             }
-            if (sp.length() != 1UL) {
+            if (sp->size() != 1UL) {
                 continue;
             }
             //const char c = *sp.field();
 
             ++sp;
-            if (sp == nullptr) {
+            if (sp == sps.end()) {
                 continue;
             }
-            const char *name_begin = sp.field();
+            const char *name_begin = sp->data();
             if (strncmp(name_begin, "typeinfo ", 9) == 0 || strncmp(name_begin, "VTT ", 4) == 0 ||
                 strncmp(name_begin, "vtable ", 7) == 0 ||
                 strncmp(name_begin, "global ", 7) == 0 || strncmp(name_begin, "guard ", 6) == 0) {
@@ -341,7 +341,7 @@ namespace flare::rpc {
                 continue;
             }
 
-            const char *name_end = sp.field();
+            const char *name_end = sp->data();
             bool stop = false;
             char last_char = '\0';
             while (1) {
@@ -403,12 +403,13 @@ namespace flare::rpc {
         auto lines = file.lines();
 
         for (auto line : lines) {
-            flare::StringSplitter sp(line, ' ');
-            if (sp == nullptr) {
+            std::vector<std::string_view> sps = flare::string_split(line, ' ');
+            auto sp = sps.begin();
+            if (sp == sps.end()) {
                 continue;
             }
             char *endptr;
-            uintptr_t start_addr = strtoull(sp.field(), &endptr, 16);
+            uintptr_t start_addr = strtoull(sp->data(), &endptr, 16);
             if (*endptr != '-') {
                 continue;
             }
@@ -419,14 +420,14 @@ namespace flare::rpc {
             }
             ++sp;
             // ..x. must be executable
-            if (sp == nullptr || sp.length() != 4 || sp.field()[2] != 'x') {
+            if (sp == sps.end() || sp->size() != 4 || sp->data()[2] != 'x') {
                 continue;
             }
             ++sp;
-            if (sp == nullptr) {
+            if (sp == sps.end()) {
                 continue;
             }
-            size_t offset = strtoull(sp.field(), &endptr, 16);
+            size_t offset = strtoull(sp->data(), &endptr, 16);
             if (*endptr != ' ') {
                 continue;
             }
@@ -434,14 +435,14 @@ namespace flare::rpc {
             for (int i = 0; i < 3; ++i) {
                 ++sp;
             }
-            if (sp == nullptr) {
+            if (sp == sps.end()) {
                 continue;
             }
-            size_t n = sp.length();
-            if (sp.field()[n - 1] == '\n') {
+            size_t n = sp->size();
+            if (sp->data()[n - 1] == '\n') {
                 --n;
             }
-            std::string path(sp.field(), n);
+            std::string path(sp->data(), n);
             if (!HasExt(path, ".so") && !HasExt(path, ".dll") &&
                 !HasExt(path, ".dylib") && !HasExt(path, ".bundle")) {
                 continue;
@@ -542,10 +543,10 @@ namespace flare::rpc {
             }
             std::vector<uintptr_t> addr_list;
             addr_list.reserve(32);
-            flare::StringSplitter sp(addr_cstr, '+');
-            for (; sp != nullptr; ++sp) {
+            std::vector<std::string_view> sps = flare::string_split(addr_cstr, '+');
+            for (auto sp : sps) {
                 char *endptr;
-                uintptr_t addr = strtoull(sp.field(), &endptr, 16);
+                uintptr_t addr = strtoull(sp.data(), &endptr, 16);
                 addr_list.push_back(addr);
             }
             FindSymbols(&cntl->response_attachment(), addr_list);

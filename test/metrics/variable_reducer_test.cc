@@ -76,7 +76,7 @@ namespace {
         std::atomic<uint64_t> counter(0);
         pthread_t threads[num_thread];
         for (size_t i = 0; i < num_thread; ++i) {
-            pthread_create(&threads[i], NULL, &add_atomic, (void *) &counter);
+            pthread_create(&threads[i], nullptr, &add_atomic, (void *) &counter);
         }
         long totol_time = 0;
         for (size_t i = 0; i < num_thread; ++i) {
@@ -94,11 +94,11 @@ namespace {
         EXPECT_TRUE(reducer.valid());
         pthread_t threads[num_thread];
         for (size_t i = 0; i < num_thread; ++i) {
-            pthread_create(&threads[i], NULL, &thread_counter, (void *) &reducer);
+            pthread_create(&threads[i], nullptr, &thread_counter, (void *) &reducer);
         }
         long totol_time = 0;
         for (size_t i = 0; i < num_thread; ++i) {
-            void *ret = NULL;
+            void *ret = nullptr;
             pthread_join(threads[i], &ret);
             totol_time += (long) ret;
         }
@@ -275,24 +275,25 @@ namespace {
         pthread_t th[8];
         g_stop = false;
         for (size_t i = 0; i < FLARE_ARRAY_SIZE(th); ++i) {
-            pthread_create(&th[i], NULL, string_appender, &cater);
+            pthread_create(&th[i], nullptr, string_appender, &cater);
         }
         usleep(50000);
         g_stop = true;
         flare::container::hash_map<pthread_t, int> appended_count;
         for (size_t i = 0; i < FLARE_ARRAY_SIZE(th); ++i) {
-            StringAppenderResult *res = NULL;
+            StringAppenderResult *res = nullptr;
             pthread_join(th[i], (void **) &res);
             appended_count[th[i]] = res->count;
             delete res;
         }
         flare::container::hash_map<pthread_t, int> got_count;
         std::string res = cater.get_value();
-        for (flare::StringSplitter sp(res.c_str(), '.'); sp; ++sp) {
-            char *endptr = NULL;
-            ++got_count[(pthread_t) strtoll(sp.field(), &endptr, 10)];
-            ASSERT_EQ(27LL, sp.field() + sp.length() - endptr)
-                                        << std::string_view(sp.field(), sp.length());
+        std::vector<std::string_view> sps = flare::string_split(res.c_str(), '.');
+        for (auto &sp : sps) {
+            char *endptr = nullptr;
+            ++got_count[(pthread_t) strtoll(sp.data(), &endptr, 10)];
+            ASSERT_EQ(27LL, sp.data() + sp.size() - endptr)
+                                        << std::string_view(sp.data(), sp.size());
             ASSERT_EQ(0, memcmp(":abcdefghijklmnopqrstuvwxyz", endptr, 27));
         }
         ASSERT_EQ(appended_count.size(), got_count.size());

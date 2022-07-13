@@ -95,10 +95,10 @@ int main(int argc, char* argv[]) {
     // We need multiple servers in this example.
     flare::rpc::Server* servers = new flare::rpc::Server[FLAGS_server_num];
 
-    flare::StringSplitter sp(FLAGS_sleep_us.c_str(), ',');
+    std::vector<std::string_view> sps = flare::string_split(FLAGS_sleep_us.c_str(), ',');
     std::vector<int64_t> sleep_list;
-    for (; sp; ++sp) {
-        sleep_list.push_back(strtoll(sp.field(), NULL, 10));
+    for (auto &sp : sps) {
+        sleep_list.push_back(strtoll(sp.data(), nullptr, 10));
     }
     if (sleep_list.empty()) {
         sleep_list.push_back(0);
