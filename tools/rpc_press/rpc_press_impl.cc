@@ -28,6 +28,7 @@
 #include <flare/rpc/channel.h>
 #include <flare/rpc/controller.h>
 #include "flare/log/logging.h"
+#include "flare/strings/str_split.h"
 #include <flare/json2pb/pb_to_json.h>
 #include "json_loader.h"
 #include "rpc_press_impl.h"
@@ -116,9 +117,9 @@ namespace pbrpcframework {
         sourceTree.MapPath("", proto_path.c_str());
         // Add paths in -inc
         if (!_options.proto_includes.empty()) {
-            flare::StringSplitter sp(_options.proto_includes.c_str(), ';');
-            for (; sp; ++sp) {
-                sourceTree.MapPath("", std::string(sp.field(), sp.length()));
+            std::vector<std::string_view> sps = flare::string_split(_options.proto_includes.c_str(), ';');
+            for (auto &sp :sps) {
+                sourceTree.MapPath("", std::string(sp.data(), sp.size()));
             }
         }
         ImportErrorPrinter error_printer;

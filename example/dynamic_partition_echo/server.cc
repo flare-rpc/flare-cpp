@@ -6,6 +6,7 @@
 #include "flare/times/time.h"
 #include "flare/log/logging.h"
 #include <flare/strings/str_format.h>
+#include <flare/strings/numbers.h>
 #include <flare/strings/str_split.h>
 #include <flare/rpc/server.h>
 #include "echo.pb.h"
@@ -99,10 +100,12 @@ int main(int argc, char *argv[]) {
     options.idle_timeout_sec = FLAGS_idle_timeout_s;
     options.max_concurrency = FLAGS_max_concurrency;
 
-    flare::StringSplitter sp(FLAGS_sleep_us.c_str(), ',');
+    std::vector<std::string> sps = flare::string_split(FLAGS_sleep_us.c_str(), ',');
     std::vector<int64_t> sleep_list;
-    for (; sp; ++sp) {
-        sleep_list.push_back(strtoll(sp.field(), NULL, 10));
+    int64_t sd;
+    for (auto &sp : sps) {
+        flare::simple_atoi(sp, &sd);
+        sleep_list.push_back(sd);
     }
     if (sleep_list.empty()) {
         sleep_list.push_back(0);

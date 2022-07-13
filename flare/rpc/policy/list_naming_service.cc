@@ -19,7 +19,7 @@
 #include <cstdlib>                                   // strtol
 #include <string>                                     // std::string
 #include <set>                                        // std::set
-#include "flare/strings/string_splitter.h"                     // StringSplitter
+#include "flare/strings/str_split.h"
 #include "flare/rpc/log.h"
 #include "flare/rpc/policy/list_naming_service.h"
 #include "flare/strings/utility.h"
@@ -46,8 +46,9 @@ namespace flare::rpc {
                 FLARE_LOG(FATAL) << "Param[service_name] is NULL";
                 return -1;
             }
-            for (flare::StringSplitter sp(service_name, ','); sp != NULL; ++sp) {
-                line.assign(sp.field(), sp.length());
+            std::vector<std::string_view> sps = flare::string_split(service_name, ',');
+            for (auto sp :sps) {
+                line.assign(sp.data(), sp.size());
                 std::string_view addr;
                 std::string_view tag;
                 if (!SplitIntoServerAndTag(line, &addr, &tag)) {

@@ -22,10 +22,11 @@
 #include "flare/rpc/details/method_status.h"
 #include "flare/strings/trim.h"
 #include "flare/strings/ends_with.h"
+#include "flare/strings/str_split.h"
 
 namespace flare::rpc {
 
-// Define in http_parser.cpp
+    // Define in http_parser.cpp
     extern bool is_url_char(char c);
 
     inline std::string_view remove_last_char(std::string_view s) {
@@ -97,12 +98,12 @@ namespace flare::rpc {
                     star_index = (int) (p - path.data());
                 } else {
                     FLARE_LOG(ERROR) << "More than one wildcard in restful_path=`"
-                               << path << '\'';
+                                     << path << '\'';
                     return false;
                 }
             } else if (!is_url_char(*p)) {
                 FLARE_LOG(ERROR) << "Invalid character=`" << *p << "' (index="
-                           << p - path.data() << ") in path=`" << path << '\'';
+                                 << p - path.data() << ") in path=`" << path << '\'';
                 return false;
             }
         }
@@ -134,15 +135,14 @@ namespace flare::rpc {
         if (slash_pos != std::string_view::npos) {
             path_out->service_name.assign(first_part.data(), slash_pos);
             std::string_view prefix_raw = flare::safe_substr(first_part, slash_pos + 1);
-            flare::StringSplitter sp(prefix_raw.data(),
-                                     prefix_raw.data() + prefix_raw.size(), '/');
-            for (; sp; ++sp) {
+            std::vector<std::string_view> sps = flare::string_split(prefix_raw, '/');
+            for (auto &sp:sps) {
                 // Put first component into service_name and others into prefix.
                 if (path_out->prefix.empty()) {
                     path_out->prefix.reserve(prefix_raw.size() + 2);
                 }
                 path_out->prefix.push_back('/');
-                path_out->prefix.append(sp.field(), sp.length());
+                path_out->prefix.append(sp.data(), sp.size());
             }
             if (!path_out->has_wildcard ||
                 prefix_raw.empty() ||
@@ -150,7 +150,7 @@ namespace flare::rpc {
                 path_out->prefix.push_back('/');
             } else {
                 FLARE_LOG(ERROR) << "Pattern A* (A is not ended with /) in path=`"
-                           << path << "' is disallowed for performance concerns";
+                                 << path << "' is disallowed for performance concerns";
                 return false;
             }
         } else if (!path_out->has_wildcard) {
@@ -160,7 +160,7 @@ namespace flare::rpc {
         } else { // no slashes, has wildcard. Example: abc* => Method
             if (!first_part.empty()) {
                 FLARE_LOG(ERROR) << "Pattern A* (A is not ended with /) in path=`"
-                           << path << "' is disallowed for performance concerns";
+                                 << path << "' is disallowed for performance concerns";
                 return false;
             }
             path_out->prefix.push_back('/');
@@ -176,41 +176,39 @@ namespace flare::rpc {
             if (second_part.empty() || second_part[0] == '/') {
                 path_out->postfix.push_back('/');
             }
-            flare::StringSplitter sp2(second_part.data(),
-                                      second_part.data() + second_part.size(), '/');
-            for (; sp2; ++sp2) {
+            std::vector<std::string_view> parts = flare::string_split(second_part, '/');
+            for (auto &sp2 : parts) {
                 if (path_out->postfix.empty()) {
                     path_out->postfix.reserve(second_part.size() + 2);
                 }
-                path_out->postfix.append(sp2.field(), sp2.length());
+                path_out->postfix.append(sp2.data(), sp2.size());
                 path_out->postfix.push_back('/');
             }
         } else {
             path_out->postfix.push_back('/');
         }
         FLARE_VLOG(RPC_VLOG_LEVEL + 1) << "orig_path=" << path
-                                 << " first_part=" << first_part
-                                 << " second_part=" << second_part
-                                 << " path=" << DebugPrinter(*path_out);
+                                       << " first_part=" << first_part
+                                       << " second_part=" << second_part
+                                       << " path=" << DebugPrinter(*path_out);
         return true;
     }
 
     bool ParseRestfulMappings(const std::string_view &mappings,
                               std::vector<RestfulMapping> *list) {
-        if (list == NULL) {
-            FLARE_LOG(ERROR) << "Param[list] is NULL";
+        if (list == nullptr) {
+            FLARE_LOG(ERROR) << "Param[list] is nullptr";
             return false;
         }
         list->clear();
         list->reserve(8);
-        flare::StringSplitter sp(
-                mappings.data(), mappings.data() + mappings.size(), ',');
+        std::vector<std::string_view> segs = flare::string_split(mappings, ',');
         int nmappings = 0;
-        for (; sp; ++sp) {
+        for (auto &sp : segs) {
             ++nmappings;
             size_t i = 0;
-            const char *p = sp.field();
-            const size_t n = sp.length();
+            const char *p = sp.data();
+            const size_t n = sp.size();
             bool added_sth = false;
             for (; i < n; ++i) {
                 // find =
@@ -224,9 +222,8 @@ namespace flare::rpc {
                 if (i < n && p[i] == '>') {
                     RestfulMapping m;
                     // Parse left part of the arrow as url path.
-                    std::string_view path(sp.field(), equal_sign_pos);
-                    if (!ParseRestfulPath(path, &m.path)) {
-                        FLARE_LOG(ERROR) << "Fail to parse path=`" << path << '\'';
+                    if (!ParseRestfulPath(sp, &m.path)) {
+                        FLARE_LOG(ERROR) << "Fail to parse path=`" << sp << '\'';
                         return false;
                     }
                     // Treat right part of the arrow as method_name.
@@ -234,7 +231,7 @@ namespace flare::rpc {
                     method_name_piece = flare::trim_all(method_name_piece);
                     if (method_name_piece.empty()) {
                         FLARE_LOG(ERROR) << "No method name in " << nmappings
-                                   << "-th mapping";
+                                         << "-th mapping";
                         return false;
                     }
                     m.method_name.assign(method_name_piece.data(),
@@ -247,7 +244,7 @@ namespace flare::rpc {
             // If we don't get a valid mapping from the string, issue error.
             if (!added_sth) {
                 FLARE_LOG(ERROR) << "Invalid mapping: "
-                           << std::string_view(sp.field(), sp.length());
+                                 << sp;
                 return false;
             }
         }
@@ -264,20 +261,20 @@ namespace flare::rpc {
                                const Server::MethodProperty::OpaqueParams &params,
                                const std::string &method_name,
                                MethodStatus *status) {
-        if (service == NULL) {
-            FLARE_LOG(ERROR) << "Param[service] is NULL";
+        if (service == nullptr) {
+            FLARE_LOG(ERROR) << "Param[service] is nullptr";
             return false;
         }
         const google::protobuf::MethodDescriptor *md =
                 service->GetDescriptor()->FindMethodByName(method_name);
-        if (md == NULL) {
+        if (md == nullptr) {
             FLARE_LOG(ERROR) << service->GetDescriptor()->full_name()
-                       << " has no method called `" << method_name << '\'';
+                             << " has no method called `" << method_name << '\'';
             return false;
         }
         if (path.service_name != _service_name) {
             FLARE_LOG(ERROR) << "Impossible: path.service_name does not match name"
-                          " of this RestfulMap";
+                                " of this RestfulMap";
             return false;
         }
         // Use the string-form of path as key is a MUST to implement
@@ -286,7 +283,7 @@ namespace flare::rpc {
         DedupMap::const_iterator it = _dedup_map.find(dedup_key);
         if (it != _dedup_map.end()) {
             FLARE_LOG(ERROR) << "Already mapped `" << it->second.path
-                       << "' to `" << it->second.method->full_name() << '\'';
+                             << "' to `" << it->second.method->full_name() << '\'';
             return false;
         }
         RestfulMethodProperty &info = _dedup_map[dedup_key];
@@ -380,14 +377,14 @@ namespace flare::rpc {
         return true;
     }
 
-// Normalized as /A/B/C/
+    // Normalized as /A/B/C/
     static std::string NormalizeSlashes(const std::string_view &path) {
         std::string out_path;
         out_path.reserve(path.size() + 2);
-        flare::StringSplitter sp(path.data(), path.data() + path.size(), '/');
-        for (; sp; ++sp) {
+        std::vector<std::string_view> ps = flare::string_split(path, '/');
+        for (auto &sp : ps) {
             out_path.push_back('/');
-            out_path.append(sp.field(), sp.length());
+            out_path.append(sp.data(), sp.size());
         }
         out_path.push_back('/');
         return out_path;
@@ -414,14 +411,14 @@ namespace flare::rpc {
                                    std::string *unresolved_path) const {
         if (_sorted_paths.empty()) {
             FLARE_LOG(ERROR) << "_sorted_paths is empty, method_path=" << method_path;
-            return NULL;
+            return nullptr;
         }
         const std::string full_path = NormalizeSlashes(method_path);
         std::string_view sub_path = full_path;
         PathList::const_iterator last_find_pos = _sorted_paths.end();
         do {
             if (last_find_pos == _sorted_paths.begin()) {
-                return NULL;
+                return nullptr;
             }
             // Note: stop trying places that we already visited or skipped.
             PathList::const_iterator it =
@@ -484,7 +481,7 @@ namespace flare::rpc {
                                     << "Hit beginning, sub_path=" << sub_path
                                     << " full_path=" << full_path
                                     << " candidate=" << DebugPrinter(rpath);
-                    return NULL;
+                    return nullptr;
                 }
                 // Matched with prefix but postfix or wildcard, moving forward
                 --it;
@@ -509,7 +506,7 @@ namespace flare::rpc {
         } while (RemoveLastComponent(&sub_path));
         //                            ^^^^^^^^
         // sub_path can be / to match patterns like "*.flv => M" whose prefix is /
-        return NULL;
+        return nullptr;
     }
 
 } // namespace flare::rpc

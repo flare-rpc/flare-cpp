@@ -30,6 +30,7 @@
 #include "flare/rpc/details/rtmp_utils.h"
 #include "flare/strings/starts_with.h"
 #include "flare/strings/utility.h"
+#include "flare/strings/str_split.h"
 
 
 namespace flare::rpc {
@@ -1519,23 +1520,23 @@ namespace flare::rpc {
 
     void RtmpStreamBase::OnUserData(void *) {
         FLARE_LOG(INFO) << remote_side() << '[' << stream_id()
-                  << "] ignored UserData{}";
+                        << "] ignored UserData{}";
     }
 
     void RtmpStreamBase::OnCuePoint(RtmpCuePoint *cuepoint) {
         FLARE_LOG(INFO) << remote_side() << '[' << stream_id()
-                  << "] ignored CuePoint{" << cuepoint->data << '}';
+                        << "] ignored CuePoint{" << cuepoint->data << '}';
     }
 
     void RtmpStreamBase::OnMetaData(RtmpMetaData *metadata, const std::string_view &name) {
         FLARE_LOG(INFO) << remote_side() << '[' << stream_id()
-                  << "] ignored MetaData{" << metadata->data << '}'
-                  << " name{" << name << '}';
+                        << "] ignored MetaData{" << metadata->data << '}'
+                        << " name{" << name << '}';
     }
 
     void RtmpStreamBase::OnSharedObjectMessage(RtmpSharedObjectMessage *) {
         FLARE_LOG(ERROR) << remote_side() << '[' << stream_id()
-                   << "] ignored SharedObjectMessage{}";
+                         << "] ignored SharedObjectMessage{}";
     }
 
     void RtmpStreamBase::OnAudioMessage(RtmpAudioMessage *msg) {
@@ -1917,8 +1918,8 @@ namespace flare::rpc {
             if (policy::WriteWithoutOvercrowded(_rtmpsock.get(), msg1) != 0) {
                 if (errno != EFAILEDSOCKET) {
                     FLARE_PLOG(WARNING) << "Fail to send closeStream/deleteStream to "
-                                  << _rtmpsock->remote_side() << "["
-                                  << _message_stream_id << "]";
+                                        << _rtmpsock->remote_side() << "["
+                                        << _message_stream_id << "]";
                     // Close the connection to make sure the server-side knows the
                     // closing event, however this may terminate other streams over
                     // the connection as well.
@@ -2096,7 +2097,7 @@ namespace flare::rpc {
     void RtmpClientStream::OnStatus(const RtmpInfo &info) {
         if (info.level() == RTMP_INFO_LEVEL_ERROR) {
             FLARE_LOG(WARNING) << remote_side() << '[' << stream_id()
-                         << "] " << info.code() << ": " << info.description();
+                               << "] " << info.code() << ": " << info.description();
             return SignalError();
         } else if (info.level() == RTMP_INFO_LEVEL_STATUS) {
             if ((!_options.play_name.empty() &&
@@ -2132,7 +2133,7 @@ namespace flare::rpc {
         std::unique_ptr<OnClientStreamCreated> delete_self(this);
         if (cntl.Failed()) {
             FLARE_LOG(WARNING) << "Fail to create stream=" << stream->rtmp_url()
-                         << ": " << cntl.ErrorText();
+                               << ": " << cntl.ErrorText();
             return;
         }
         if (stream->_created_stream_with_play_or_publish) {
@@ -2174,7 +2175,7 @@ namespace flare::rpc {
             if (_state == STATE_DESTROYING || _state == STATE_ERROR) {
                 // already Destroy()-ed or SignalError()-ed
                 FLARE_LOG(WARNING) << "RtmpClientStream=" << this << " was already "
-                                                               "Destroy()-ed, stop Init()";
+                                                                     "Destroy()-ed, stop Init()";
                 return;
             }
         }
@@ -2207,7 +2208,7 @@ namespace flare::rpc {
                 case STATE_CREATED:
                     mu.unlock();
                     FLARE_LOG(ERROR) << "RtmpClientStream::Init() is called by multiple "
-                                  "threads simultaneously";
+                                        "threads simultaneously";
                     return done->CancelBeforeCallMethod();
                 case STATE_ERROR:
                 case STATE_DESTROYING:
@@ -2307,7 +2308,7 @@ namespace flare::rpc {
         _sub_stream_creator = sub_stream_creator;
         if (_destroying.load(std::memory_order_relaxed)) {
             FLARE_LOG(WARNING) << "RtmpRetryingClientStream=" << this << " was already "
-                                                                   "Destroy()-ed, stop Init()";
+                                                                         "Destroy()-ed, stop Init()";
             return;
         }
         _options = options;
@@ -2613,7 +2614,7 @@ namespace flare::rpc {
 
     void RtmpServerStream::OnPlay2(const RtmpPlay2Options &opt) {
         FLARE_LOG(ERROR) << remote_side() << '[' << stream_id()
-                   << "] ignored play2{" << opt.ShortDebugString() << '}';
+                         << "] ignored play2{" << opt.ShortDebugString() << '}';
     }
 
     void RtmpServerStream::OnPublish(const std::string &name,
@@ -2628,14 +2629,14 @@ namespace flare::rpc {
 
     int RtmpServerStream::OnSeek(double offset_ms) {
         FLARE_LOG(ERROR) << remote_side() << '[' << stream_id() << "] ignored seek("
-                   << offset_ms << ")";
+                         << offset_ms << ")";
         return -1;
     }
 
     int RtmpServerStream::OnPause(bool pause, double offset_ms) {
         FLARE_LOG(ERROR) << remote_side() << '[' << stream_id() << "] ignored "
-                   << (pause ? "pause" : "unpause")
-                   << "(offset_ms=" << offset_ms << ")";
+                         << (pause ? "pause" : "unpause")
+                         << "(offset_ms=" << offset_ms << ")";
         return -1;
     }
 
@@ -2729,7 +2730,7 @@ namespace flare::rpc {
                 static_cast<policy::RtmpContext *>(_rtmpsock->parsing_context());
         if (ctx == NULL) {
             FLARE_LOG(FATAL) << _rtmpsock->remote_side() << ": RtmpContext of "
-                       << *_rtmpsock << " is NULL";
+                             << *_rtmpsock << " is NULL";
             return CallOnStop();
         }
         if (ctx->RemoveMessageStream(this)) {
@@ -2817,9 +2818,9 @@ namespace flare::rpc {
         }
         if (vhost) {
             std::string_view qstr = app_and_vhost.substr(q_pos + 1);
-            flare::StringSplitter sp(qstr.data(), qstr.data() + qstr.size(), '&');
-            for (; sp; ++sp) {
-                std::string_view field(sp.field(), sp.length());
+            std::vector<std::string_view> sps = flare::string_split(qstr, '&');
+            for (auto &sp : sps) {
+                std::string_view field(sp.data(), sp.size());
                 if (flare::starts_with(field, "vhost=")) {
                     *vhost = field.substr(6);
                     // vhost cannot have port.
