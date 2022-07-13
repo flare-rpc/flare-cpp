@@ -6,8 +6,8 @@
 #include <gflags/gflags.h>
 #include "flare/files/filesystem.h"
 #include "flare/container/flat_map.h"           // flare::container::FlatMap
-#include "flare/base/scoped_lock.h"                   // BAIDU_SCOPE_LOCK
-#include "flare/strings/string_splitter.h"               // flare::StringSplitter
+#include "flare/base/scoped_lock.h"
+#include "flare/strings/str_split.h"
 #include "flare/base/errno.h"                          // flare_error
 #include "flare/times/time.h"                          // milliseconds_from_now
 #include "flare/metrics/gflag.h"
@@ -446,9 +446,9 @@ namespace flare {
             }
             std::string name;
             const char wc_pattern[3] = {'*', question_mark, '\0'};
-            for (flare::StringMultiSplitter sp(wildcards.c_str(), ",;");
-                 sp != nullptr; ++sp) {
-                name.assign(sp.field(), sp.length());
+            std::vector<std::string_view> sps = flare::string_split(wildcards.c_str(), ",;");
+            for (auto  &sp : sps) {
+                name.assign(sp.data(), sp.size());
                 if (name.find_first_of(wc_pattern) != std::string::npos) {
                     if (_wcs.empty()) {
                         _wcs.reserve(8);
@@ -699,10 +699,10 @@ namespace flare {
                 // .data will be appended later
                 flare::consume_suffix(&path_str, ".data");
             }
-
-            for (flare::KeyValuePairsSplitter sp(tabs, ';', '='); sp; ++sp) {
-                std::string key = flare::as_string(sp.key());
-                std::string value = flare::as_string(sp.value());
+            std::map<std::string_view, std::string_view> kvs = flare::string_split(tabs, ";=");
+            for (auto sp : kvs) {
+                std::string key = flare::as_string(sp.first);
+                std::string value = flare::as_string(sp.second);
                 std::string pathString(path_str.data(), path_str.size());
                 flare::string_appendf(&pathString, ".%s.data", key.c_str());
                 FileDumper *f = new FileDumper(pathString, s);

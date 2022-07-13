@@ -24,7 +24,7 @@
 #include "flare/rpc/socket.h"
 #include "flare/base/fast_rand.h"
 #include "flare/times/time.h"
-#include "flare/strings/string_splitter.h"
+#include "flare/strings/str_split.h"
 #include "flare/strings/numbers.h"
 
 namespace flare::rpc {
@@ -107,31 +107,31 @@ namespace flare::rpc {
         int64_t min_working_instances = -1;
         int64_t hold_seconds = -1;
         bool has_meet_params = false;
-        for (flare::KeyValuePairsSplitter sp(params.begin(), params.end(), ' ', '=');
-             sp; ++sp) {
-            if (sp.value().empty()) {
-                FLARE_LOG(ERROR) << "Empty value for " << sp.key() << " in lb parameter";
+        std::map<std::string_view, std::string_view> kvs = flare::string_split(params, " =");
+        for (auto &sp : kvs) {
+            if (sp.second.empty()) {
+                FLARE_LOG(ERROR) << "Empty value for " << sp.first << " in lb parameter";
                 return false;
             }
-            if (sp.key() == "min_working_instances") {
+            if (sp.first == "min_working_instances") {
                 int64_t r;
-                if (!flare::simple_atoi(sp.value(), &r)) {
+                if (!flare::simple_atoi(sp.second, &r)) {
                     return false;
                 }
 
                 min_working_instances = r;
                 has_meet_params = true;
                 continue;
-            } else if (sp.key() == "hold_seconds") {
+            } else if (sp.first == "hold_seconds") {
                 int64_t r;
-                if (!flare::simple_atoi(sp.value(), &r)) {
+                if (!flare::simple_atoi(sp.second, &r)) {
                     return false;
                 }
                 hold_seconds = r;
                 has_meet_params = true;
                 continue;
             }
-            FLARE_LOG(ERROR) << "Failed to set this unknown parameters " << sp.key_and_value();
+            FLARE_LOG(ERROR) << "Failed to set this unknown parameters " << sp.first<<sp.second;
             return false;
         }
         if (min_working_instances > 0 && hold_seconds > 0) {

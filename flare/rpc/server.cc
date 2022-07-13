@@ -522,9 +522,9 @@ namespace flare::rpc {
 
     Acceptor *Server::BuildAcceptor() {
         std::set<std::string> whitelist;
-        std::vector<std::string_view> sps = flare::string_split(_options.enabled_protocols.c_str(), ' ');
+        std::vector<std::string_view> sps = flare::string_split(_options.enabled_protocols.c_str(), ' ', skip_whitespace());
         for (auto &sp: sps) {
-            std::string protocol(sp.data(), sp.length());
+            std::string protocol(sp.data(), sp.size());
             whitelist.insert(protocol);
         }
         const bool has_whitelist = !whitelist.empty();
