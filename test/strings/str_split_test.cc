@@ -23,7 +23,7 @@
 #include "flare/base/profile.h"
 #include "flare/strings/numbers.h"
 
-#ifndef FLARE_PLATFORM_OSX
+#if 0
 namespace {
 
     using ::testing::ElementsAre;
@@ -31,29 +31,29 @@ namespace {
     using ::testing::UnorderedElementsAre;
 
     TEST(Split, TraitsTest) {
-        static_assert(!flare::strings_internal::splitterIs_convertible_to<int>::value,
+        static_assert(!flare::strings_internal::splitter_is_convertible_to<int>::value,
                       "");
         static_assert(
-                !flare::strings_internal::splitterIs_convertible_to<std::string>::value, "");
-        static_assert(flare::strings_internal::splitterIs_convertible_to<
+                !flare::strings_internal::splitter_is_convertible_to<std::string>::value, "");
+        static_assert(flare::strings_internal::splitter_is_convertible_to<
                               std::vector<std::string>>::value,
                       "");
         static_assert(
-                !flare::strings_internal::splitterIs_convertible_to<std::vector<int>>::value,
+                !flare::strings_internal::splitter_is_convertible_to<std::vector<int>>::value,
                 "");
-        static_assert(flare::strings_internal::splitterIs_convertible_to<
+        static_assert(flare::strings_internal::splitter_is_convertible_to<
                               std::vector<std::string_view>>::value,
                       "");
-        static_assert(flare::strings_internal::splitterIs_convertible_to<
+        static_assert(flare::strings_internal::splitter_is_convertible_to<
                               std::map<std::string, std::string>>::value,
                       "");
-        static_assert(flare::strings_internal::splitterIs_convertible_to<
+        static_assert(flare::strings_internal::splitter_is_convertible_to<
                               std::map<std::string_view, std::string_view>>::value,
                       "");
-        static_assert(!flare::strings_internal::splitterIs_convertible_to<
+        static_assert(!flare::strings_internal::splitter_is_convertible_to<
                               std::map<int, std::string>>::value,
                       "");
-        static_assert(!flare::strings_internal::splitterIs_convertible_to<
+        static_assert(!flare::strings_internal::splitter_is_convertible_to<
                               std::map<std::string, int>>::value,
                       "");
     }
@@ -242,9 +242,9 @@ namespace {
         }
     }
 
-//
-// Tests for split_iterator
-//
+    //
+    // Tests for split_iterator
+    //
 
     TEST(split_iterator, Basics) {
         auto splitter = flare::string_split("a,b", ',');
@@ -261,7 +261,7 @@ namespace {
         EXPECT_EQ(it, end);
     }
 
-// Simple Predicate to skip a particular string.
+    // Simple Predicate to skip a particular string.
     class Skip {
     public:
         explicit Skip(const std::string &s) : s_(s) {}
@@ -365,7 +365,7 @@ namespace {
         EXPECT_THAT(output, ElementsAre("a", "b", "c"));
     }
 
-// Some template functions for use in testing conversion operators
+    // Some template functions for use in testing conversion operators
     template<typename ContainerType, typename Splitter>
     void TestConversionOperator(const Splitter &splitter) {
         ContainerType output = splitter;
@@ -919,17 +919,17 @@ namespace {
     }
 
     TEST(SplitInternalTest, TypeTraits) {
-        EXPECT_FALSE(flare::strings_internal::has_mapped_type<int>::value);
+        EXPECT_FALSE(flare::has_mapped_type<int>::value);
         EXPECT_TRUE(
-                (flare::strings_internal::has_mapped_type<std::map<int, int>>::value));
-        EXPECT_FALSE(flare::strings_internal::has_value_type<int>::value);
+                (flare::has_mapped_type<std::map<int, int>>::value));
+        EXPECT_FALSE(flare::has_value_type<int>::value);
         EXPECT_TRUE(
-                (flare::strings_internal::has_value_type<std::map<int, int>>::value));
-        EXPECT_FALSE(flare::strings_internal::has_const_iterator<int>::value);
+                (flare::has_value_type<std::map<int, int>>::value));
+        EXPECT_FALSE(flare::has_const_iterator<int>::value);
         EXPECT_TRUE(
-                (flare::strings_internal::has_const_iterator<std::map<int, int>>::value));
-        EXPECT_FALSE(flare::strings_internal::is_initializer_list<int>::value);
-        EXPECT_TRUE((flare::strings_internal::is_initializer_list<
+                (flare::has_const_iterator<std::map<int, int>>::value));
+        EXPECT_FALSE(flare::is_initializer_list<int>::value);
+        EXPECT_TRUE((flare::is_initializer_list<
                 std::initializer_list<int>>::value));
     }
 
