@@ -42,4 +42,19 @@ TEST(files_util, join_path_multi_container) {
     EXPECT_EQ(vp1, vp);
 }
 
+TEST(files_util, join_path_multi_container_file_path) {
+    flare::file_path prefix = "/usr";
+    flare::file_path local = "local";
+    flare::file_path lib = "lib";
+    std::vector<flare::file_path> vs{prefix, local, lib};
+    std::set<flare::file_path> ss{prefix, local, lib};
+
+    auto vp = flare::join_path(vs);
+    auto sp = flare::join_path(vs);
+    EXPECT_EQ(vp, sp);
+    EXPECT_EQ(vp, "/usr/local/lib");
+    auto vp1 = flare::join_path("/root",vs);
+    EXPECT_EQ(vp1, vp);
+}
+
 //TODO(jeff) more corner case for directory_iterator
