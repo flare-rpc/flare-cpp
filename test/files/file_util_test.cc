@@ -41,3 +41,5 @@ TEST(files_util, join_path_multi_container) {
     auto vp1 = flare::join_path("/root",vs);
     EXPECT_EQ(vp1, vp);
 }
+
+//TODO(jeff) more corner case for directory_iterator
