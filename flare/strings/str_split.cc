@@ -50,8 +50,8 @@ namespace flare {
             return found;
         }
 
-// Finds using std::string_view::find(), therefore the length of the found
-// delimiter is delimiter.length().
+        // Finds using std::string_view::find(), therefore the length of the found
+        // delimiter is delimiter.length().
         struct literal_policy {
             size_t find(std::string_view text, std::string_view delimiter, size_t pos) {
                 return text.find(delimiter, pos);

@@ -31,29 +31,29 @@ namespace {
     using ::testing::UnorderedElementsAre;
 
     TEST(Split, TraitsTest) {
-        static_assert(!flare::strings_internal::splitterIs_convertible_to<int>::value,
+        static_assert(!flare::strings_internal::splitter_is_convertible_to<int>::value,
                       "");
         static_assert(
-                !flare::strings_internal::splitterIs_convertible_to<std::string>::value, "");
-        static_assert(flare::strings_internal::splitterIs_convertible_to<
+                !flare::strings_internal::splitter_is_convertible_to<std::string>::value, "");
+        static_assert(flare::strings_internal::splitter_is_convertible_to<
                               std::vector<std::string>>::value,
                       "");
         static_assert(
-                !flare::strings_internal::splitterIs_convertible_to<std::vector<int>>::value,
+                !flare::strings_internal::splitter_is_convertible_to<std::vector<int>>::value,
                 "");
-        static_assert(flare::strings_internal::splitterIs_convertible_to<
+        static_assert(flare::strings_internal::splitter_is_convertible_to<
                               std::vector<std::string_view>>::value,
                       "");
-        static_assert(flare::strings_internal::splitterIs_convertible_to<
+        static_assert(flare::strings_internal::splitter_is_convertible_to<
                               std::map<std::string, std::string>>::value,
                       "");
-        static_assert(flare::strings_internal::splitterIs_convertible_to<
+        static_assert(flare::strings_internal::splitter_is_convertible_to<
                               std::map<std::string_view, std::string_view>>::value,
                       "");
-        static_assert(!flare::strings_internal::splitterIs_convertible_to<
+        static_assert(!flare::strings_internal::splitter_is_convertible_to<
                               std::map<int, std::string>>::value,
                       "");
-        static_assert(!flare::strings_internal::splitterIs_convertible_to<
+        static_assert(!flare::strings_internal::splitter_is_convertible_to<
                               std::map<std::string, int>>::value,
                       "");
     }
@@ -918,20 +918,6 @@ namespace {
         }
     }
 
-    TEST(SplitInternalTest, TypeTraits) {
-        EXPECT_FALSE(flare::strings_internal::has_mapped_type<int>::value);
-        EXPECT_TRUE(
-                (flare::strings_internal::has_mapped_type<std::map<int, int>>::value));
-        EXPECT_FALSE(flare::strings_internal::has_value_type<int>::value);
-        EXPECT_TRUE(
-                (flare::strings_internal::has_value_type<std::map<int, int>>::value));
-        EXPECT_FALSE(flare::strings_internal::has_const_iterator<int>::value);
-        EXPECT_TRUE(
-                (flare::strings_internal::has_const_iterator<std::map<int, int>>::value));
-        EXPECT_FALSE(flare::strings_internal::is_initializer_list<int>::value);
-        EXPECT_TRUE((flare::strings_internal::is_initializer_list<
-                std::initializer_list<int>>::value));
-    }
 
 }  // namespace
 #endif

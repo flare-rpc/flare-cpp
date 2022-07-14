@@ -70,7 +70,7 @@ namespace flare {
     struct add_reference<T &> {
         typedef T &type;
     };
-// Specializations for void which can't be referenced.
+    // Specializations for void which can't be referenced.
     template<>
     struct add_reference<void> {
         typedef void type;
@@ -107,6 +107,43 @@ namespace flare {
                 typename add_reference<typename std::add_const<T>::type>::type>::type type;
     };
 
+
+    // has_mapped_type<T>::value is true iff there exists a type T::mapped_type.
+    template<typename T, typename = void>
+    struct has_mapped_type : std::false_type {
+    };
+    template<typename T>
+    struct has_mapped_type<T, std::void_t<typename T::mapped_type>>
+            : std::true_type {
+    };
+
+    // has_value_type<T>::value is true iff there exists a type T::value_type.
+    template<typename T, typename = void>
+    struct has_value_type : std::false_type {
+    };
+    template<typename T>
+    struct has_value_type<T, std::void_t<typename T::value_type>> : std::true_type {
+    };
+
+    // has_const_iterator<T>::value is true iff there exists a type T::const_iterator.
+    template<typename T, typename = void>
+    struct has_const_iterator : std::false_type {
+    };
+    template<typename T>
+    struct has_const_iterator<T, std::void_t<typename T::const_iterator>>
+            : std::true_type {
+    };
+
+    // is_initializer_list<T>::value is true iff T is an std::initializer_list. More
+    // details below in Splitter<> where this is used.
+    std::false_type is_initializer_list_dispatch(...);  // default: No
+    template<typename T>
+    std::true_type is_initializer_list_dispatch(std::initializer_list<T> *);
+
+    template<typename T>
+    struct is_initializer_list
+            : decltype(is_initializer_list_dispatch(static_cast<T *>(nullptr))) {
+    };
 
 }  // namespace flare
 
