@@ -14,6 +14,24 @@
 
 namespace flare::files_internal {
 
+    template<typename C, bool has_value_type>
+    struct collector_is_convertible_to_impl : std::false_type {
+    };
+
+    template<typename C>
+    struct collector_is_convertible_to_impl<C, true>
+            : std::is_constructible<typename C::value_type, std::string> {
+    };
+
+    template<typename C>
+    struct collector_is_convertible_to
+            : collector_is_convertible_to_impl<C,
+                    !flare::is_initializer_list<typename std::remove_reference<C>::type>::value &&
+                    flare::has_value_type<C>::value &&
+                    !std::is_same<typename C::value_type, std::string_view>::value
+            > {
+    };
+
     template<typename Predicate>
     class files_collector {
     public:
@@ -21,9 +39,15 @@ namespace flare::files_internal {
             _files = list_directory_internal(path, re, _error);
         }
 
-        template<typename Container, typename ValueType = typename Container::value_type>
+        template<typename Container, typename = typename std::enable_if<
+                flare::has_value_type<Container>::value &&
+                std::is_same<typename Container::value_type, std::string_view>::value == false &&
+                (std::is_constructible<typename Container::value_type, std::string>::value ||
+                 std::is_constructible<typename Container::value_type, std::string_view>::value ||
+                 std::is_constructible<typename Container::value_type, flare::file_path>::value)>::type>
         operator Container() {
             Container c;
+            using ValueType = typename Container::value_type;
             if (_error) {
                 return c;
             }
@@ -96,7 +120,7 @@ namespace flare {
                             ), typename Container::value_type>::type>
     file_path join_path(const Container &c) {
         file_path path;
-        for(auto it : c) {
+        for (auto it : c) {
             path /= it;
         }
         return path;
@@ -110,7 +134,7 @@ namespace flare {
                             ), typename Container::value_type>::type>
     file_path join_path(const file_path &p, const Container &c) {
         file_path path(p);
-        for(auto it : c) {
+        for (auto it : c) {
             path /= it;
         }
         return path;
