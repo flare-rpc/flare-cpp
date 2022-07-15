@@ -50,7 +50,7 @@ namespace flare::rpc {
 
         // implements Message ----------------------------------------------
 
-        NsheadMessage *New() const override;
+        NsheadMessage *New() const;
 
 #if GOOGLE_PROTOBUF_VERSION >= 3006000
 

@@ -55,7 +55,7 @@ namespace flare::rpc {
 
         // implements Message ----------------------------------------------
 
-        EspMessage *New() const override;
+        EspMessage *New() const;
 
 #if GOOGLE_PROTOBUF_VERSION >= 3006000
 

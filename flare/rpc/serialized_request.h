@@ -44,7 +44,7 @@ namespace flare::rpc {
 
         // implements Message ----------------------------------------------
 
-        SerializedRequest *New() const override;
+        SerializedRequest *New() const;
 
 #if GOOGLE_PROTOBUF_VERSION >= 3006000
 
