@@ -1,6 +1,9 @@
-//
-// Created by jeff.li.
-//
+
+/****************************************************************
+ * Copyright (c) 2022, liyinbin
+ * All rights reserved.
+ * Author by liyinbin (jeff.li) lijippy@163.com
+ *****************************************************************/
 
 #ifndef FLARE_LOG_INIT_H_
 #define FLARE_LOG_INIT_H_
