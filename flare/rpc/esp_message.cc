@@ -52,13 +52,10 @@ namespace flare::rpc {
         return new EspMessage;
     }
 
-#if GOOGLE_PROTOBUF_VERSION >= 3006000
-
     EspMessage *EspMessage::New(::google::protobuf::Arena *arena) const {
         return CreateMaybeMessage<EspMessage>(arena);
     }
 
-#endif
 
     void EspMessage::Clear() {
         head.body_len = 0;

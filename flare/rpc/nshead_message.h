@@ -52,11 +52,7 @@ namespace flare::rpc {
 
         NsheadMessage *New() const;
 
-#if GOOGLE_PROTOBUF_VERSION >= 3006000
-
         NsheadMessage *New(::google::protobuf::Arena *arena) const override;
-
-#endif
 
         void CopyFrom(const ::google::protobuf::Message &from) override;
 

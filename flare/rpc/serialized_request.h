@@ -46,11 +46,7 @@ namespace flare::rpc {
 
         SerializedRequest *New() const;
 
-#if GOOGLE_PROTOBUF_VERSION >= 3006000
-
         SerializedRequest *New(::google::protobuf::Arena *arena) const override;
-
-#endif
 
         void CopyFrom(const ::google::protobuf::Message &from) override;
 

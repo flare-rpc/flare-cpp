@@ -57,11 +57,9 @@ namespace flare::rpc {
 
         EspMessage *New() const;
 
-#if GOOGLE_PROTOBUF_VERSION >= 3006000
 
         EspMessage *New(::google::protobuf::Arena *arena) const override;
 
-#endif
 
         void CopyFrom(const ::google::protobuf::Message &from) override;
 

@@ -89,11 +89,8 @@ namespace flare::rpc {
 
         ThriftFramedMessage *New() const;
 
-#if GOOGLE_PROTOBUF_VERSION >= 3006000
-
         ThriftFramedMessage *New(::google::protobuf::Arena *arena) const override;
 
-#endif
 
         void CopyFrom(const ::google::protobuf::Message &from);
 
@@ -120,9 +117,11 @@ namespace flare::rpc {
         int GetCachedSize() const { return ByteSize(); }
 
     protected:
+
         ::google::protobuf::Metadata GetMetadata() const;
 
     private:
+
         void SharedCtor();
 
         void SharedDtor();

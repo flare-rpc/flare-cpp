@@ -152,7 +152,7 @@ namespace flare::rpc {
         template<typename Meta>
         static void SerializeHuluHeaderAndMeta(
                 flare::cord_buf *out, const Meta &meta, int payload_size) {
-            const int meta_size = meta.ByteSize();
+            const int meta_size = meta.ByteSizeLong();
             if (meta_size <= 244) { // most common cases
                 char header_and_meta[12 + meta_size];
                 PackHuluHeader(header_and_meta, meta_size, payload_size);

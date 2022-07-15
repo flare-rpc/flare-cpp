@@ -113,11 +113,7 @@ namespace flare::rpc {
         // Protobuf methods.
         RedisRequest *New() const;
 
-#if GOOGLE_PROTOBUF_VERSION >= 3006000
-
         RedisRequest *New(::google::protobuf::Arena *arena) const override;
-
-#endif
 
         void CopyFrom(const ::google::protobuf::Message &from) override;
 
@@ -206,11 +202,7 @@ namespace flare::rpc {
 
         RedisResponse *New() const;
 
-#if GOOGLE_PROTOBUF_VERSION >= 3006000
-
         RedisResponse *New(::google::protobuf::Arena *arena) const override;
-
-#endif
 
         void CopyFrom(const ::google::protobuf::Message &from) override;
 
