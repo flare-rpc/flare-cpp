@@ -222,8 +222,8 @@ namespace {
             flare::rpc::SocketMessage *socket_message = NULL;
             flare::rpc::policy::PackH2Request(NULL, &socket_message, cntl->call_id().value,
                                               NULL, cntl, request_buf, NULL);
-            flare::base::flare_status st = socket_message->AppendAndDestroySelf(out, _h2_client_sock.get());
-            ASSERT_TRUE(st.ok());
+            flare::result_status st = socket_message->AppendAndDestroySelf(out, _h2_client_sock.get());
+            ASSERT_TRUE(st.is_ok());
             *h2_stream_id = h2_req->_stream_id;
         }
 
@@ -239,8 +239,8 @@ namespace {
             flare::rpc::policy::H2UnsentResponse *h2_res = flare::rpc::policy::H2UnsentResponse::New(&cntl,
                                                                                                      h2_stream_id,
                                                                                                      false /*is grpc*/);
-            flare::base::flare_status st = h2_res->AppendAndDestroySelf(out, _h2_client_sock.get());
-            ASSERT_TRUE(st.ok());
+            flare::result_status st = h2_res->AppendAndDestroySelf(out, _h2_client_sock.get());
+            ASSERT_TRUE(st);
         }
 
         int _pipe_fds[2];
@@ -469,7 +469,7 @@ namespace {
         flare::sequential_read_file file;
         file.open(res_fname);
         std::string content;
-        ASSERT_TRUE(file.read(&content).ok());
+        ASSERT_TRUE(file.read(&content));
         EXPECT_EQ(exp_res, content);
     }
 
@@ -655,7 +655,7 @@ namespace {
             flare::container::intrusive_ptr<ReadBody>(this).detach(); // ref
         }
 
-        flare::base::flare_status OnReadOnePart(const void *data, size_t length) {
+        flare::result_status OnReadOnePart(const void *data, size_t length) {
             _nread += length;
             while (length > 0) {
                 size_t nappend = std::min(_buf.size() + length, PA_DATA_LEN) - _buf.size();
@@ -671,10 +671,10 @@ namespace {
                     _buf.clear();
                 }
             }
-            return flare::base::flare_status::OK();
+            return flare::result_status::ok();
         }
 
-        void OnEndOfMessage(const flare::base::flare_status &st) {
+        void OnEndOfMessage(const flare::result_status &st) {
             flare::container::intrusive_ptr<ReadBody>(this, false); // deref
             ASSERT_LT(_buf.size(), PA_DATA_LEN);
             ASSERT_EQ(0, memcmp(_buf.data(), PA_DATA, _buf.size()));
@@ -685,7 +685,7 @@ namespace {
 
         bool destroyed() const { return _destroyed; }
 
-        const flare::base::flare_status &destroying_status() const { return _destroying_st; }
+        const flare::result_status &destroying_status() const { return _destroying_st; }
 
         size_t read_bytes() const { return _nread; }
 
@@ -694,7 +694,7 @@ namespace {
         size_t _nread;
         size_t _ncount;
         bool _destroyed;
-        flare::base::flare_status _destroying_st;
+        flare::result_status _destroying_st;
     };
 
     static const int GENERAL_DELAY_US = 300000; // 0.3s
@@ -914,11 +914,11 @@ namespace {
     class AlwaysFailRead : public flare::rpc::ProgressiveReader {
     public:
         // @ProgressiveReader
-        flare::base::flare_status OnReadOnePart(const void * /*data*/, size_t /*length*/) {
-            return flare::base::flare_status(-1, "intended fail at %s:%d", __FILE__, __LINE__);
+        flare::result_status OnReadOnePart(const void * /*data*/, size_t /*length*/) {
+            return flare::result_status(-1, "intended fail at {}:{}", __FILE__, __LINE__);
         }
 
-        void OnEndOfMessage(const flare::base::flare_status &st) {
+        void OnEndOfMessage(const flare::result_status &st) {
             FLARE_LOG(INFO) << "Destroy " << this << ": " << st;
             delete this;
         }
@@ -1151,14 +1151,14 @@ namespace {
             flare::rpc::policy::PackH2Request(NULL, &socket_message, cntl.call_id().value,
                                               NULL, &cntl, request_buf, NULL);
             flare::cord_buf dummy;
-            flare::base::flare_status st = socket_message->AppendAndDestroySelf(&dummy, _h2_client_sock.get());
+            flare::result_status st = socket_message->AppendAndDestroySelf(&dummy, _h2_client_sock.get());
             if (i == nsuc) {
                 // the last message should fail according to flow control policy.
-                ASSERT_FALSE(st.ok());
+                ASSERT_FALSE(st);
                 ASSERT_TRUE(st.error_code() == flare::rpc::ELIMIT);
-                ASSERT_TRUE(flare::starts_with(st.error_str(), "remote_window_left is not enough"));
+                ASSERT_TRUE(flare::starts_with(st.error_data(), "remote_window_left is not enough"));
             } else {
-                ASSERT_TRUE(st.ok());
+                ASSERT_TRUE(st);
             }
             h2_req->DestroyStreamUserData(_h2_client_sock, &cntl, 0, false);
         }
@@ -1407,7 +1407,7 @@ namespace {
         flare::rpc::policy::PackH2Request(NULL, &socket_message, cntl.call_id().value,
                                           NULL, &cntl, flare::cord_buf(), NULL);
         flare::cord_buf dummy;
-        flare::base::flare_status st = socket_message->AppendAndDestroySelf(&dummy, _h2_client_sock.get());
+        flare::result_status st = socket_message->AppendAndDestroySelf(&dummy, _h2_client_sock.get());
         ASSERT_EQ(st.error_code(), flare::rpc::ELOGOFF);
         ASSERT_TRUE(flare::ends_with(st.error_data(), "the connection just issued GOAWAY"));
     }

@@ -70,7 +70,7 @@ namespace flare::rpc {
             : _write_header(false), _buf(buf), _options(options) {
     }
 
-    flare::base::flare_status FlvWriter::Write(const RtmpVideoMessage &msg) {
+    flare::result_status FlvWriter::Write(const RtmpVideoMessage &msg) {
         char buf[32];
         char *p = buf;
         if (!_write_header) {
@@ -95,10 +95,10 @@ namespace flare::rpc {
         p = buf;
         policy::WriteBigEndian4Bytes(&p, 11 + msg.size());
         _buf->append(buf, p - buf);
-        return flare::base::flare_status::OK();
+        return flare::result_status::ok();
     }
 
-    flare::base::flare_status FlvWriter::Write(const RtmpAudioMessage &msg) {
+    flare::result_status FlvWriter::Write(const RtmpAudioMessage &msg) {
         char buf[32];
         char *p = buf;
         if (!_write_header) {
@@ -126,10 +126,10 @@ namespace flare::rpc {
         p = buf;
         policy::WriteBigEndian4Bytes(&p, 11 + msg.size());
         _buf->append(buf, p - buf);
-        return flare::base::flare_status::OK();
+        return flare::result_status::ok();
     }
 
-    flare::base::flare_status FlvWriter::WriteScriptData(const flare::cord_buf &req_buf, uint32_t timestamp) {
+    flare::result_status FlvWriter::WriteScriptData(const flare::cord_buf &req_buf, uint32_t timestamp) {
         char buf[32];
         char *p = buf;
         if (!_write_header) {
@@ -152,10 +152,10 @@ namespace flare::rpc {
         p = buf;
         policy::WriteBigEndian4Bytes(&p, 11 + req_buf.size());
         _buf->append(buf, p - buf);
-        return flare::base::flare_status::OK();
+        return flare::result_status::ok();
     }
 
-    flare::base::flare_status FlvWriter::Write(const RtmpCuePoint &cuepoint) {
+    flare::result_status FlvWriter::Write(const RtmpCuePoint &cuepoint) {
         flare::cord_buf req_buf;
         {
             flare::cord_buf_as_zero_copy_output_stream zc_stream(&req_buf);
@@ -164,13 +164,13 @@ namespace flare::rpc {
             WriteAMFString(RTMP_AMF0_ON_CUE_POINT, &ostream);
             WriteAMFObject(cuepoint.data, &ostream);
             if (!ostream.good()) {
-                return flare::base::flare_status(EINVAL, "Fail to serialize cuepoint");
+                return flare::result_status(EINVAL, "Fail to serialize cuepoint");
             }
         }
         return WriteScriptData(req_buf, cuepoint.timestamp);
     }
 
-    flare::base::flare_status FlvWriter::Write(const RtmpMetaData &metadata) {
+    flare::result_status FlvWriter::Write(const RtmpMetaData &metadata) {
         flare::cord_buf req_buf;
         {
             flare::cord_buf_as_zero_copy_output_stream zc_stream(&req_buf);
@@ -178,7 +178,7 @@ namespace flare::rpc {
             WriteAMFString(RTMP_AMF0_ON_META_DATA, &ostream);
             WriteAMFObject(metadata.data, &ostream);
             if (!ostream.good()) {
-                return flare::base::flare_status(EINVAL, "Fail to serialize metadata");
+                return flare::result_status(EINVAL, "Fail to serialize metadata");
             }
         }
         return WriteScriptData(req_buf, metadata.timestamp);
@@ -188,60 +188,60 @@ namespace flare::rpc {
             : _read_header(false), _buf(buf) {
     }
 
-    flare::base::flare_status FlvReader::ReadHeader() {
+    flare::result_status FlvReader::ReadHeader() {
         if (!_read_header) {
             // 9 is the size of FlvHeader, which is usually composed of
             // { 'F', 'L', 'V', 0x01, 0x05, 0, 0, 0, 0x09 }.
             char header_buf[9 + 4/* PreviousTagSize0 */];
             const char *p = (const char *) _buf->fetch(header_buf, sizeof(header_buf));
             if (p == NULL) {
-                return flare::base::flare_status(EAGAIN, "Fail to read, not enough data");
+                return flare::result_status(EAGAIN, "Fail to read, not enough data");
             }
             const char flv_header_signature[3] = {'F', 'L', 'V'};
             if (memcmp(p, flv_header_signature, sizeof(flv_header_signature)) != 0) {
                 FLARE_LOG(FATAL) << "Fail to parse FLV header";
-                return flare::base::flare_status(EINVAL, "Fail to parse FLV header");
+                return flare::result_status(EINVAL, "Fail to parse FLV header");
             }
             _buf->pop_front(sizeof(header_buf));
             _read_header = true;
         }
-        return flare::base::flare_status::OK();
+        return flare::result_status::ok();
     }
 
-    flare::base::flare_status FlvReader::PeekMessageType(FlvTagType *type_out) {
-        flare::base::flare_status st = ReadHeader();
-        if (!st.ok()) {
+    flare::result_status FlvReader::PeekMessageType(FlvTagType *type_out) {
+        flare::result_status st = ReadHeader();
+        if (!st.is_ok()) {
             return st;
         }
         const char *p = (const char *) _buf->fetch1();
         if (p == NULL) {
-            return flare::base::flare_status(EAGAIN, "Fail to read, not enough data");
+            return flare::result_status(EAGAIN, "Fail to read, not enough data");
         }
         FlvTagType type = (FlvTagType) *p;
         if (type != FLV_TAG_AUDIO && type != FLV_TAG_VIDEO &&
             type != FLV_TAG_SCRIPT_DATA) {
-            return flare::base::flare_status(EINVAL, "Fail to parse FLV tag");
+            return flare::result_status(EINVAL, "Fail to parse FLV tag");
         }
         if (type_out) {
             *type_out = type;
         }
-        return flare::base::flare_status::OK();
+        return flare::result_status::ok();
     }
 
-    flare::base::flare_status FlvReader::Read(RtmpVideoMessage *msg) {
+    flare::result_status FlvReader::Read(RtmpVideoMessage *msg) {
         char tags[11];
         const unsigned char *p = (const unsigned char *) _buf->fetch(tags, sizeof(tags));
         if (p == NULL) {
-            return flare::base::flare_status(EAGAIN, "Fail to read, not enough data");
+            return flare::result_status(EAGAIN, "Fail to read, not enough data");
         }
         if (*p != FLV_TAG_VIDEO) {
-            return flare::base::flare_status(EINVAL, "Fail to parse RtmpVideoMessage");
+            return flare::result_status(EINVAL, "Fail to parse RtmpVideoMessage");
         }
         uint32_t msg_size = policy::ReadBigEndian3Bytes(p + 1);
         uint32_t timestamp = policy::ReadBigEndian3Bytes(p + 4);
         timestamp |= (*(p + 7) << 24);
         if (_buf->length() < 11 + msg_size + 4/*PreviousTagSize*/) {
-            return flare::base::flare_status(EAGAIN, "Fail to read, not enough data");
+            return flare::result_status(EAGAIN, "Fail to read, not enough data");
         }
         _buf->pop_front(11);
         char first_byte = 0;
@@ -253,23 +253,23 @@ namespace flare::rpc {
         _buf->cutn(&msg->data, msg_size - 1);
         _buf->pop_front(4/* PreviousTagSize0 */);
 
-        return flare::base::flare_status::OK();
+        return flare::result_status::ok();
     }
 
-    flare::base::flare_status FlvReader::Read(RtmpAudioMessage *msg) {
+    flare::result_status FlvReader::Read(RtmpAudioMessage *msg) {
         char tags[11];
         const unsigned char *p = (const unsigned char *) _buf->fetch(tags, sizeof(tags));
         if (p == NULL) {
-            return flare::base::flare_status(EAGAIN, "Fail to read, not enough data");
+            return flare::result_status(EAGAIN, "Fail to read, not enough data");
         }
         if (*p != FLV_TAG_AUDIO) {
-            return flare::base::flare_status(EINVAL, "Fail to parse RtmpAudioMessage");
+            return flare::result_status(EINVAL, "Fail to parse RtmpAudioMessage");
         }
         uint32_t msg_size = policy::ReadBigEndian3Bytes(p + 1);
         uint32_t timestamp = policy::ReadBigEndian3Bytes(p + 4);
         timestamp |= (*(p + 7) << 24);
         if (_buf->length() < 11 + msg_size + 4/*PreviousTagSize*/) {
-            return flare::base::flare_status(EAGAIN, "Fail to read, not enough data");
+            return flare::result_status(EAGAIN, "Fail to read, not enough data");
         }
         _buf->pop_front(11);
         char first_byte = 0;
@@ -282,23 +282,23 @@ namespace flare::rpc {
         _buf->cutn(&msg->data, msg_size - 1);
         _buf->pop_front(4/* PreviousTagSize0 */);
 
-        return flare::base::flare_status::OK();
+        return flare::result_status::ok();
     }
 
-    flare::base::flare_status FlvReader::Read(RtmpMetaData *msg, std::string *name) {
+    flare::result_status FlvReader::Read(RtmpMetaData *msg, std::string *name) {
         char tags[11];
         const unsigned char *p = (const unsigned char *) _buf->fetch(tags, sizeof(tags));
         if (p == NULL) {
-            return flare::base::flare_status(EAGAIN, "Fail to read, not enough data");
+            return flare::result_status(EAGAIN, "Fail to read, not enough data");
         }
         if (*p != FLV_TAG_SCRIPT_DATA) {
-            return flare::base::flare_status(EINVAL, "Fail to parse RtmpScriptMessage");
+            return flare::result_status(EINVAL, "Fail to parse RtmpScriptMessage");
         }
         uint32_t msg_size = policy::ReadBigEndian3Bytes(p + 1);
         uint32_t timestamp = policy::ReadBigEndian3Bytes(p + 4);
         timestamp |= (*(p + 7) << 24);
         if (_buf->length() < 11 + msg_size + 4/*PreviousTagSize*/) {
-            return flare::base::flare_status(EAGAIN, "Fail to read, not enough data");
+            return flare::result_status(EAGAIN, "Fail to read, not enough data");
         }
         _buf->pop_front(11);
         flare::cord_buf req_buf;
@@ -308,14 +308,14 @@ namespace flare::rpc {
             flare::cord_buf_as_zero_copy_input_stream zc_stream(req_buf);
             AMFInputStream istream(&zc_stream);
             if (!ReadAMFString(name, &istream)) {
-                return flare::base::flare_status(EINVAL, "Fail to read AMF string");
+                return flare::result_status(EINVAL, "Fail to read AMF string");
             }
             if (!ReadAMFObject(&msg->data, &istream)) {
-                return flare::base::flare_status(EINVAL, "Fail to read AMF object");
+                return flare::result_status(EINVAL, "Fail to read AMF object");
             }
         }
         msg->timestamp = timestamp;
-        return flare::base::flare_status::OK();
+        return flare::result_status::ok();
     }
 
     const char *FlvVideoFrameType2Str(FlvVideoFrameType t) {
@@ -440,17 +440,17 @@ namespace flare::rpc {
                   << " data=" << flare::to_printable(msg.data) << '}';
     }
 
-    flare::base::flare_status RtmpAACMessage::Create(const RtmpAudioMessage &msg) {
+    flare::result_status RtmpAACMessage::Create(const RtmpAudioMessage &msg) {
         if (msg.codec != FLV_AUDIO_AAC) {
-            return flare::base::flare_status(EINVAL, "codec=%s is not AAC",
+            return flare::result_status(EINVAL, "codec={} is not AAC",
                                              FlvAudioCodec2Str(msg.codec));
         }
         const uint8_t *p = (const uint8_t *) msg.data.fetch1();
         if (p == NULL) {
-            return flare::base::flare_status(EINVAL, "Not enough data in AudioMessage");
+            return flare::result_status(EINVAL, "Not enough data in AudioMessage");
         }
         if (*p > FLV_AAC_PACKET_RAW) {
-            return flare::base::flare_status(EINVAL, "Invalid AAC packet_type=%d", (int) *p);
+            return flare::result_status(EINVAL, "Invalid AAC packet_type={}", (int) *p);
         }
         this->timestamp = msg.timestamp;
         this->rate = msg.rate;
@@ -458,16 +458,16 @@ namespace flare::rpc {
         this->type = msg.type;
         this->packet_type = (FlvAACPacketType) *p;
         msg.data.append_to(&data, msg.data.size() - 1, 1);
-        return flare::base::flare_status::OK();
+        return flare::result_status::ok();
     }
 
     AudioSpecificConfig::AudioSpecificConfig()
             : aac_object(AAC_OBJECT_UNKNOWN), aac_sample_rate(0), aac_channels(0) {
     }
 
-    flare::base::flare_status AudioSpecificConfig::Create(const flare::cord_buf &buf) {
+    flare::result_status AudioSpecificConfig::Create(const flare::cord_buf &buf) {
         if (buf.size() < 2u) {
-            return flare::base::flare_status(EINVAL, "data_size=%" PRIu64 " is too short",
+            return flare::result_status(EINVAL, "data_size={} is too short",
                                              (uint64_t) buf.size());
         }
         char tmpbuf[2];
@@ -475,9 +475,9 @@ namespace flare::rpc {
         return Create(tmpbuf, FLARE_ARRAY_SIZE(tmpbuf));
     }
 
-    flare::base::flare_status AudioSpecificConfig::Create(const void *data, size_t len) {
+    flare::result_status AudioSpecificConfig::Create(const void *data, size_t len) {
         if (len < 2u) {
-            return flare::base::flare_status(EINVAL, "data_size=%" PRIu64 " is too short", (uint64_t) len);
+            return flare::result_status(EINVAL, "data_size={} is too short", (uint64_t) len);
         }
         uint8_t profile_ObjectType = ((const char *) data)[0];
         uint8_t samplingFrequencyIndex = ((const char *) data)[1];
@@ -485,9 +485,9 @@ namespace flare::rpc {
         aac_sample_rate = ((profile_ObjectType << 1) & 0x0e) | ((samplingFrequencyIndex >> 7) & 0x01);
         aac_object = (AACObjectType) ((profile_ObjectType >> 3) & 0x1f);
         if (aac_object == AAC_OBJECT_UNKNOWN) {
-            return flare::base::flare_status(EINVAL, "Invalid object type");
+            return flare::result_status(EINVAL, "Invalid object type");
         }
-        return flare::base::flare_status::OK();
+        return flare::result_status::ok();
     }
 
     bool RtmpAudioMessage::IsAACSequenceHeader() const {
@@ -501,25 +501,25 @@ namespace flare::rpc {
         return *p == FLV_AAC_PACKET_SEQUENCE_HEADER;
     }
 
-    flare::base::flare_status RtmpAVCMessage::Create(const RtmpVideoMessage &msg) {
+    flare::result_status RtmpAVCMessage::Create(const RtmpVideoMessage &msg) {
         if (msg.codec != FLV_VIDEO_AVC) {
-            return flare::base::flare_status(EINVAL, "codec=%s is not AVC",
+            return flare::result_status(EINVAL, "codec={} is not AVC",
                                              FlvVideoCodec2Str(msg.codec));
         }
         uint8_t buf[4];
         const uint8_t *p = (const uint8_t *) msg.data.fetch(buf, sizeof(buf));
         if (p == NULL) {
-            return flare::base::flare_status(EINVAL, "Not enough data in VideoMessage");
+            return flare::result_status(EINVAL, "Not enough data in VideoMessage");
         }
         if (*p > FLV_AVC_PACKET_END_OF_SEQUENCE) {
-            return flare::base::flare_status(EINVAL, "Invalid AVC packet_type=%d", (int) *p);
+            return flare::result_status(EINVAL, "Invalid AVC packet_type={}", (int) *p);
         }
         this->timestamp = msg.timestamp;
         this->frame_type = msg.frame_type;
         this->packet_type = (FlvAVCPacketType) *p;
         this->composition_time = policy::ReadBigEndian3Bytes(p + 1);
         msg.data.append_to(&data, msg.data.size() - 4, 4);
-        return flare::base::flare_status::OK();
+        return flare::result_status::ok();
     }
 
     bool RtmpVideoMessage::IsAVCSequenceHeader() const {
@@ -603,7 +603,7 @@ namespace flare::rpc {
         return os;
     }
 
-    flare::base::flare_status AVCDecoderConfigurationRecord::Create(const flare::cord_buf &buf) {
+    flare::result_status AVCDecoderConfigurationRecord::Create(const flare::cord_buf &buf) {
         // the buf should be short generally, copy it out to continuous memory
         // to simplify parsing.
         DEFINE_SMALL_ARRAY(char, cont_buf, buf.size(), 64);
@@ -611,10 +611,10 @@ namespace flare::rpc {
         return Create(cont_buf, buf.size());
     }
 
-    flare::base::flare_status AVCDecoderConfigurationRecord::Create(const void *data, size_t len) {
+    flare::result_status AVCDecoderConfigurationRecord::Create(const void *data, size_t len) {
         std::string_view buf((const char *) data, len);
         if (buf.size() < 6) {
-            return flare::base::flare_status(EINVAL, "Length=%lu is not long enough",
+            return flare::result_status(EINVAL, "Length={} is not long enough",
                                              (unsigned long) buf.size());
         }
         // skip configurationVersion at buf[0]
@@ -629,7 +629,7 @@ namespace flare::rpc {
         // length encoded with 1, 2, or 4 bytes, respectively.
         length_size_minus1 = buf[4] & 0x03;
         if (length_size_minus1 == 2) {
-            return flare::base::flare_status(EINVAL, "lengthSizeMinusOne should never be 2");
+            return flare::result_status(EINVAL, "lengthSizeMinusOne should never be 2");
         }
 
         // Parsing SPS
@@ -639,15 +639,15 @@ namespace flare::rpc {
         sps_list.reserve(num_sps);
         for (int i = 0; i < num_sps; ++i) {
             if (buf.size() < 2) {
-                return flare::base::flare_status(EINVAL, "Not enough data to decode SPS-length");
+                return flare::result_status(EINVAL, "Not enough data to decode SPS-length");
             }
             const uint16_t sps_length = policy::ReadBigEndian2Bytes(buf.data());
             if (buf.size() < 2u + sps_length) {
-                return flare::base::flare_status(EINVAL, "Not enough data to decode SPS");
+                return flare::result_status(EINVAL, "Not enough data to decode SPS");
             }
             if (sps_length > 0) {
-                flare::base::flare_status st = ParseSPS(buf.data() + 2, sps_length);
-                if (!st.ok()) {
+                flare::result_status st = ParseSPS(buf.data() + 2, sps_length);
+                if (!st.is_ok()) {
                     return st;
                 }
                 sps_list.push_back(flare::as_string(buf.substr(2, sps_length)));
@@ -657,37 +657,37 @@ namespace flare::rpc {
         // Parsing PPS
         pps_list.clear();
         if (buf.empty()) {
-            return flare::base::flare_status(EINVAL, "Not enough data to decode PPS");
+            return flare::result_status(EINVAL, "Not enough data to decode PPS");
         }
         const int num_pps = (int) buf[0];
         buf.remove_prefix(1);
         for (int i = 0; i < num_pps; ++i) {
             if (buf.size() < 2) {
-                return flare::base::flare_status(EINVAL, "Not enough data to decode PPS-length");
+                return flare::result_status(EINVAL, "Not enough data to decode PPS-length");
             }
             const uint16_t pps_length = policy::ReadBigEndian2Bytes(buf.data());
             if (buf.size() < 2u + pps_length) {
-                return flare::base::flare_status(EINVAL, "Not enough data to decode PPS");
+                return flare::result_status(EINVAL, "Not enough data to decode PPS");
             }
             if (pps_length > 0) {
                 pps_list.push_back(flare::as_string(buf.substr(2, pps_length)));
             }
             buf.remove_prefix(2 + pps_length);
         }
-        return flare::base::flare_status::OK();
+        return flare::result_status::ok();
     }
 
-    flare::base::flare_status AVCDecoderConfigurationRecord::ParseSPS(
+    flare::result_status AVCDecoderConfigurationRecord::ParseSPS(
             const std::string_view &buf, size_t sps_length) {
         // for NALU, 7.3.1 NAL unit syntax
         // H.264-AVC-ISO_IEC_14496-10-2012.pdf, page 61.
         if (buf.empty()) {
-            return flare::base::flare_status(EINVAL, "SPS is empty");
+            return flare::result_status(EINVAL, "SPS is empty");
         }
         const int8_t nutv = buf[0];
         const int8_t forbidden_zero_bit = (nutv >> 7) & 0x01;
         if (forbidden_zero_bit) {
-            return flare::base::flare_status(EINVAL, "forbidden_zero_bit shall equal 0");
+            return flare::result_status(EINVAL, "forbidden_zero_bit shall equal 0");
         }
         // nal_ref_idc not equal to 0 specifies that the content of the NAL unit
         // contains:
@@ -697,7 +697,7 @@ namespace flare::rpc {
         // or a slice data partition of a reference picture.
         int8_t nal_ref_idc = (nutv >> 5) & 0x03;
         if (!nal_ref_idc) {
-            return flare::base::flare_status(EINVAL, "nal_ref_idc is 0");
+            return flare::result_status(EINVAL, "nal_ref_idc is 0");
         }
         // 7.4.1 NAL unit semantics
         // H.264-AVC-ISO_IEC_14496-10-2012.pdf, page 61.
@@ -705,7 +705,7 @@ namespace flare::rpc {
         // the NAL unit as specified in Table 7-1.
         const AVCNaluType nal_unit_type = (AVCNaluType) (nutv & 0x1f);
         if (nal_unit_type != AVC_NALU_SPS) {
-            return flare::base::flare_status(EINVAL, "nal_unit_type is not %d", (int) AVC_NALU_SPS);
+            return flare::result_status(EINVAL, "nal_unit_type is not {}", (int) AVC_NALU_SPS);
         }
         // Extract the rbsp from sps.
         DEFINE_SMALL_ARRAY(char, rbsp, sps_length - 1, 64);
@@ -720,29 +720,29 @@ namespace flare::rpc {
         // for SPS, 7.3.2.1.1 Sequence parameter set data syntax
         // H.264-AVC-ISO_IEC_14496-10-2012.pdf, page 62.
         if (rbsp_len < 3) {
-            return flare::base::flare_status(EINVAL, "rbsp must be at least 3 bytes");
+            return flare::result_status(EINVAL, "rbsp must be at least 3 bytes");
         }
         // Decode rbsp.
         const char *p = rbsp;
         uint8_t profile_idc = *p++;
         if (!profile_idc) {
-            return flare::base::flare_status(EINVAL, "profile_idc is 0");
+            return flare::result_status(EINVAL, "profile_idc is 0");
         }
         int8_t flags = *p++;
         if (flags & 0x03) {
-            return flare::base::flare_status(EINVAL, "Invalid flags=%d", (int) flags);
+            return flare::result_status(EINVAL, "Invalid flags={}", (int) flags);
         }
         uint8_t level_idc = *p++;
         if (!level_idc) {
-            return flare::base::flare_status(EINVAL, "level_idc is 0");
+            return flare::result_status(EINVAL, "level_idc is 0");
         }
         BitStream bs(p, rbsp + rbsp_len - p);
         int32_t seq_parameter_set_id = -1;
         if (avc_nalu_read_uev(&bs, &seq_parameter_set_id) != 0) {
-            return flare::base::flare_status(EINVAL, "Fail to read seq_parameter_set_id");
+            return flare::result_status(EINVAL, "Fail to read seq_parameter_set_id");
         }
         if (seq_parameter_set_id < 0) {
-            return flare::base::flare_status(EINVAL, "Invalid seq_parameter_set_id=%d",
+            return flare::result_status(EINVAL, "Invalid seq_parameter_set_id={}",
                                              (int) seq_parameter_set_id);
         }
         int32_t chroma_format_idc = -1;
@@ -750,41 +750,41 @@ namespace flare::rpc {
             profile_idc == 244 || profile_idc == 44 || profile_idc == 83 ||
             profile_idc == 86 || profile_idc == 118 || profile_idc == 128) {
             if (avc_nalu_read_uev(&bs, &chroma_format_idc) != 0) {
-                return flare::base::flare_status(EINVAL, "Fail to read chroma_format_idc");
+                return flare::result_status(EINVAL, "Fail to read chroma_format_idc");
             }
             if (chroma_format_idc == 3) {
                 int8_t separate_colour_plane_flag = -1;
                 if (avc_nalu_read_bit(&bs, &separate_colour_plane_flag) != 0) {
-                    return flare::base::flare_status(EINVAL, "Fail to read separate_colour_plane_flag");
+                    return flare::result_status(EINVAL, "Fail to read separate_colour_plane_flag");
                 }
             }
             int32_t bit_depth_luma_minus8 = -1;
             if (avc_nalu_read_uev(&bs, &bit_depth_luma_minus8) != 0) {
-                return flare::base::flare_status(EINVAL, "Fail to read bit_depth_luma_minus8");
+                return flare::result_status(EINVAL, "Fail to read bit_depth_luma_minus8");
             }
             int32_t bit_depth_chroma_minus8 = -1;
             if (avc_nalu_read_uev(&bs, &bit_depth_chroma_minus8) != 0) {
-                return flare::base::flare_status(EINVAL, "Fail to read bit_depth_chroma_minus8");
+                return flare::result_status(EINVAL, "Fail to read bit_depth_chroma_minus8");
             }
             int8_t qpprime_y_zero_transform_bypass_flag = -1;
             if (avc_nalu_read_bit(&bs, &qpprime_y_zero_transform_bypass_flag) != 0) {
-                return flare::base::flare_status(EINVAL, "Fail to read qpprime_y_zero_transform_bypass_flag");
+                return flare::result_status(EINVAL, "Fail to read qpprime_y_zero_transform_bypass_flag");
             }
             int8_t seq_scaling_matrix_present_flag = -1;
             if (avc_nalu_read_bit(&bs, &seq_scaling_matrix_present_flag) != 0) {
-                return flare::base::flare_status(EINVAL, "Fail to read seq_scaling_matrix_present_flag");
+                return flare::result_status(EINVAL, "Fail to read seq_scaling_matrix_present_flag");
             }
             if (seq_scaling_matrix_present_flag) {
                 int nb_scmpfs = (chroma_format_idc != 3 ? 8 : 12);
                 for (int i = 0; i < nb_scmpfs; i++) {
                     int8_t seq_scaling_matrix_present_flag_i = -1;
                     if (avc_nalu_read_bit(&bs, &seq_scaling_matrix_present_flag_i)) {
-                        return flare::base::flare_status(EINVAL, "Fail to read seq_scaling_"
-                                                                 "matrix_present_flag[%d]", i);
+                        return flare::result_status(EINVAL, "Fail to read seq_scaling_"
+                                                                 "matrix_present_flag[{}]", i);
                     }
                     if (seq_scaling_matrix_present_flag_i) {
-                        return flare::base::flare_status(EINVAL, "Invalid seq_scaling_matrix_"
-                                                                 "present_flag[%d]=%d nb_scmpfs=%d",
+                        return flare::result_status(EINVAL, "Invalid seq_scaling_matrix_"
+                                                                 "present_flag[{}]={} nb_scmpfs={}",
                                                          i, (int) seq_scaling_matrix_present_flag_i,
                                                          nb_scmpfs);
                     }
@@ -793,58 +793,58 @@ namespace flare::rpc {
         }
         int32_t log2_max_frame_num_minus4 = -1;
         if (avc_nalu_read_uev(&bs, &log2_max_frame_num_minus4) != 0) {
-            return flare::base::flare_status(EINVAL, "Fail to read log2_max_frame_num_minus4");
+            return flare::result_status(EINVAL, "Fail to read log2_max_frame_num_minus4");
         }
         int32_t pic_order_cnt_type = -1;
         if (avc_nalu_read_uev(&bs, &pic_order_cnt_type) != 0) {
-            return flare::base::flare_status(EINVAL, "Fail to read pic_order_cnt_type");
+            return flare::result_status(EINVAL, "Fail to read pic_order_cnt_type");
         }
         if (pic_order_cnt_type == 0) {
             int32_t log2_max_pic_order_cnt_lsb_minus4 = -1;
             if (avc_nalu_read_uev(&bs, &log2_max_pic_order_cnt_lsb_minus4) != 0) {
-                return flare::base::flare_status(EINVAL, "Fail to read log2_max_pic_order_cnt_lsb_minus4");
+                return flare::result_status(EINVAL, "Fail to read log2_max_pic_order_cnt_lsb_minus4");
             }
         } else if (pic_order_cnt_type == 1) {
             int8_t delta_pic_order_always_zero_flag = -1;
             if (avc_nalu_read_bit(&bs, &delta_pic_order_always_zero_flag) != 0) {
-                return flare::base::flare_status(EINVAL, "Fail to read delta_pic_order_always_zero_flag");
+                return flare::result_status(EINVAL, "Fail to read delta_pic_order_always_zero_flag");
             }
             int32_t offset_for_non_ref_pic = -1;
             if (avc_nalu_read_uev(&bs, &offset_for_non_ref_pic) != 0) {
-                return flare::base::flare_status(EINVAL, "Fail to read offset_for_non_ref_pic");
+                return flare::result_status(EINVAL, "Fail to read offset_for_non_ref_pic");
             }
             int32_t offset_for_top_to_bottom_field = -1;
             if (avc_nalu_read_uev(&bs, &offset_for_top_to_bottom_field) != 0) {
-                return flare::base::flare_status(EINVAL, "Fail to read offset_for_top_to_bottom_field");
+                return flare::result_status(EINVAL, "Fail to read offset_for_top_to_bottom_field");
             }
             int32_t num_ref_frames_in_pic_order_cnt_cycle = -1;
             if (avc_nalu_read_uev(&bs, &num_ref_frames_in_pic_order_cnt_cycle) != 0) {
-                return flare::base::flare_status(EINVAL, "Fail to read num_ref_frames_in_pic_order_cnt_cycle");
+                return flare::result_status(EINVAL, "Fail to read num_ref_frames_in_pic_order_cnt_cycle");
             }
             if (num_ref_frames_in_pic_order_cnt_cycle) {
-                return flare::base::flare_status(EINVAL, "Invalid num_ref_frames_in_pic_order_cnt_cycle=%d",
+                return flare::result_status(EINVAL, "Invalid num_ref_frames_in_pic_order_cnt_cycle={}",
                                                  num_ref_frames_in_pic_order_cnt_cycle);
             }
         }
         int32_t max_num_ref_frames = -1;
         if (avc_nalu_read_uev(&bs, &max_num_ref_frames) != 0) {
-            return flare::base::flare_status(EINVAL, "Fail to read max_num_ref_frames");
+            return flare::result_status(EINVAL, "Fail to read max_num_ref_frames");
         }
         int8_t gaps_in_frame_num_value_allowed_flag = -1;
         if (avc_nalu_read_bit(&bs, &gaps_in_frame_num_value_allowed_flag) != 0) {
-            return flare::base::flare_status(EINVAL, "Fail to read gaps_in_frame_num_value_allowed_flag");
+            return flare::result_status(EINVAL, "Fail to read gaps_in_frame_num_value_allowed_flag");
         }
         int32_t pic_width_in_mbs_minus1 = -1;
         if (avc_nalu_read_uev(&bs, &pic_width_in_mbs_minus1) != 0) {
-            return flare::base::flare_status(EINVAL, "Fail to read pic_width_in_mbs_minus1");
+            return flare::result_status(EINVAL, "Fail to read pic_width_in_mbs_minus1");
         }
         int32_t pic_height_in_map_units_minus1 = -1;
         if (avc_nalu_read_uev(&bs, &pic_height_in_map_units_minus1) != 0) {
-            return flare::base::flare_status(EINVAL, "Fail to read pic_height_in_map_units_minus1");
+            return flare::result_status(EINVAL, "Fail to read pic_height_in_map_units_minus1");
         }
         width = (int) (pic_width_in_mbs_minus1 + 1) * 16;
         height = (int) (pic_height_in_map_units_minus1 + 1) * 16;
-        return flare::base::flare_status::OK();
+        return flare::result_status::ok();
     }
 
     static bool find_avc_annexb_nalu_start_code(const flare::cord_buf &buf,
@@ -2601,11 +2601,11 @@ namespace flare::rpc {
     }
 
     void RtmpServerStream::OnPlay(const RtmpPlayOptions &opt,
-                                  flare::base::flare_status *status,
+                                  flare::result_status *status,
                                   google::protobuf::Closure *done) {
         ClosureGuard done_guard(done);
-        status->set_error(EPERM, "%s[%u] ignored play{stream_name=%s start=%f"
-                                 " duration=%f reset=%d}",
+        status->set_error(EPERM, "{}[{}] ignored play{stream_name={} start={}"
+                                 " duration={} reset={}}",
                           flare::base::endpoint2str(remote_side()).c_str(), stream_id(),
                           opt.stream_name.c_str(), opt.start, opt.duration,
                           (int) opt.reset);
@@ -2618,10 +2618,10 @@ namespace flare::rpc {
 
     void RtmpServerStream::OnPublish(const std::string &name,
                                      RtmpPublishType type,
-                                     flare::base::flare_status *status,
+                                     flare::result_status *status,
                                      google::protobuf::Closure *done) {
         ClosureGuard done_guard(done);
-        status->set_error(EPERM, "%s[%u] ignored publish{stream_name=%s type=%s}",
+        status->set_error(EPERM, "{}[{}] ignored publish{stream_name={} type={}}",
                           flare::base::endpoint2str(remote_side()).c_str(), stream_id(),
                           name.c_str(), RtmpPublishType2Str(type));
     }
@@ -2702,8 +2702,8 @@ namespace flare::rpc {
         return 0;
     }
 
-// Call this method to send StreamDry to the client.
-// Returns 0 on success, -1 otherwise.
+    // Call this method to send StreamDry to the client.
+    // Returns 0 on success, -1 otherwise.
     int RtmpServerStream::SendStreamDry() {
         char data[6];
         char *p = data;

@@ -14,18 +14,18 @@
 
 namespace flare {
 
-    flare::base::flare_status readline_file::open(const flare::file_path &path,  readline_option option) {
+    result_status readline_file::open(const flare::file_path &path,  readline_option option) {
         FLARE_CHECK(_path.empty()) << "do not reopen";
         sequential_read_file file;
         _path = path;
         _status = file.open(_path);
-        if (!_status.ok()) {
+        if (!_status.is_ok()) {
             FLARE_LOG(ERROR) << "open file :"<<_path<<" eroor "<< flare_error();
             return _status;
         }
 
         _status = file.read(&_content);
-        if (!_status.ok()) {
+        if (!_status.is_ok()) {
             FLARE_LOG(ERROR) << "read file :"<<_path<<" eroor "<< flare_error();
             return _status;
         }

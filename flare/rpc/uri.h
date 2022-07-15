@@ -21,7 +21,7 @@
 
 #include <string>                   // std::string
 #include "flare/container/flat_map.h"
-#include "flare/base/status.h"
+#include "flare/base/result_status.h"
 #include "flare/strings/string_splitter.h"
 
 // To flare developers: This is a class exposed to end-user. DON'T put impl.
@@ -79,7 +79,7 @@ namespace flare::rpc {
         void operator=(const std::string &url) { SetHttpURL(url); }
 
         // Status of previous SetHttpURL or opreator=.
-        const flare::base::flare_status &status() const { return _st; }
+        const flare::result_status &status() const { return _st; }
 
         // Sub fields. Empty string if the field is not set.
         const std::string &scheme() const { return _scheme; }
@@ -166,7 +166,7 @@ namespace flare::rpc {
         // Iterate _query_map and append all queries to `query'
         void AppendQueryString(std::string *query, bool append_question_mark) const;
 
-        flare::base::flare_status _st;
+        flare::result_status _st;
         int _port;
         mutable bool _query_was_modified;
         mutable bool _initialized_query_map;

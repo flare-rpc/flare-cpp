@@ -78,7 +78,7 @@ namespace flare::rpc {
 
             flare::readline_file file;
             auto status = file.open(service_name);
-            if (!status.ok()) {
+            if (!status.is_ok()) {
                 FLARE_PLOG(ERROR) << "Fail to open `" << service_name << "'";
                 return errno;
             }

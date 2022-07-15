@@ -27,12 +27,12 @@
 #include <type_traits>
 #include <utility>
 #include <vector>
-#include "flare/base/profile.h"
 #include <string_view>
+#include "flare/base/profile.h"
+#include "flare/base/type_traits.h"
 
 
 namespace flare::strings_internal {
-
 
     // This class is implicitly constructible from everything that std::string_view
     // is implicitly constructible from. If it's constructed from a temporary
@@ -70,6 +70,7 @@ namespace flare::strings_internal {
         std::string_view value() const { return value_; }
 
     private:
+
         // Returns true if ctsp's value refers to its internal copy_ member.
         bool is_self_referential() const { return value_.data() == copy_.data(); }
 
@@ -180,44 +181,7 @@ namespace flare::strings_internal {
         typename Splitter::PredicateType predicate_;
     };
 
-    // has_mapped_type<T>::value is true iff there exists a type T::mapped_type.
-    template<typename T, typename = void>
-    struct has_mapped_type : std::false_type {
-    };
-    template<typename T>
-    struct has_mapped_type<T, std::void_t<typename T::mapped_type>>
-            : std::true_type {
-    };
-
-    // has_value_type<T>::value is true iff there exists a type T::value_type.
-    template<typename T, typename = void>
-    struct has_value_type : std::false_type {
-    };
-    template<typename T>
-    struct has_value_type<T, std::void_t<typename T::value_type>> : std::true_type {
-    };
-
-// has_const_iterator<T>::value is true iff there exists a type T::const_iterator.
-    template<typename T, typename = void>
-    struct has_const_iterator : std::false_type {
-    };
-    template<typename T>
-    struct has_const_iterator<T, std::void_t<typename T::const_iterator>>
-            : std::true_type {
-    };
-
-// is_initializer_list<T>::value is true iff T is an std::initializer_list. More
-// details below in Splitter<> where this is used.
-    std::false_type is_initializer_list_dispatch(...);  // default: No
-    template<typename T>
-    std::true_type is_initializer_list_dispatch(std::initializer_list<T> *);
-
-    template<typename T>
-    struct is_initializer_list
-            : decltype(is_initializer_list_dispatch(static_cast<T *>(nullptr))) {
-    };
-
-    // A splitterIs_convertible_to<C>::type alias exists iff the specified condition
+    // A splitter_is_convertible_to<C>::type alias exists iff the specified condition
     // is true for type 'C'.
     //
     // Restricts conversion to container-like types (by testing for the presence of
@@ -244,11 +208,11 @@ namespace flare::strings_internal {
     };
 
     template<typename C>
-    struct splitterIs_convertible_to
+    struct splitter_is_convertible_to
             : splitter_is_convertible_to_impl<C,
-                    !is_initializer_list<typename std::remove_reference<C>::type>::value &&
-                    has_value_type<C>::value && has_const_iterator<C>::value,
-                    has_mapped_type<C>::value> {
+                    !flare::is_initializer_list<typename std::remove_reference<C>::type>::value &&
+                    flare::has_value_type<C>::value && flare::has_const_iterator<C>::value,
+                    flare::has_mapped_type<C>::value> {
     };
 
     // This class implements the range that is returned by flare:: string_split(). This
@@ -298,7 +262,7 @@ namespace flare::strings_internal {
         // that the splitter is convertible to.
         template<typename Container,
                 typename = typename std::enable_if<
-                        splitterIs_convertible_to<Container>::value>::type>
+                        splitter_is_convertible_to<Container>::value>::type>
         operator Container() const {  // NOLINT(runtime/explicit)
             return convert_to_container<Container, typename Container::value_type,
                     has_mapped_type<Container>::value>()(*this);
@@ -322,6 +286,7 @@ namespace flare::strings_internal {
         }
 
     private:
+
         // convert_to_container is a functor converting a Splitter to the requested
         // Container of ValueType. It is specialized below to optimize splitting to
         // certain combinations of Container and ValueType.

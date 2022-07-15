@@ -179,7 +179,7 @@ void BugsLoader::run() {
 void BugsLoader::load_bugs() {
     flare::readline_file file;
     auto status = file.open(_bugs_file);
-    if (!status.ok()) {
+    if (!status.is_ok()) {
         FLARE_PLOG(WARNING) << "Fail to open `" << _bugs_file << '\'';
         return;
     }

@@ -90,7 +90,7 @@ namespace flare::rpc {
         std::string JPAAS_LOG_PATH =  flare::string_format("{}/jpaas_run/logs/env.log", pw->pw_dir);
         flare::readline_file file;
         auto fs = file.open(JPAAS_LOG_PATH);
-        if (!fs.ok()) {
+        if (!fs.is_ok()) {
             RPC_VLOG << "Fail to open `" << JPAAS_LOG_PATH << '\'';
             return -1;
         }

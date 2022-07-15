@@ -24,9 +24,9 @@ namespace flare {
         }
     }
 
-    flare_status random_write_file::open(const flare::file_path &path, bool truncate) noexcept {
+    result_status random_write_file::open(const flare::file_path &path, bool truncate) noexcept {
         FLARE_CHECK(_fd == -1) << "do not reopen";
-        flare_status rs;
+        result_status rs;
         _path = path;
         if (truncate) {
             _fd = ::open(path.c_str(), O_RDWR | O_CREAT | O_TRUNC | O_CLOEXEC, 0644);
@@ -35,15 +35,15 @@ namespace flare {
         }
         if (_fd < 0) {
             FLARE_LOG(ERROR) << "open file to append : " << path << "error: " << errno << " " << strerror(errno);
-            rs.set_error(errno, "%s", strerror(errno));
+            rs.set_error(errno, "{}", strerror(errno));
         }
         return rs;
     }
 
-    flare_status random_write_file::write(off_t offset, std::string_view content) {
+    result_status random_write_file::write(off_t offset, std::string_view content) {
         size_t size = content.size();
         off_t orig_offset = offset;
-        flare_status frs;
+        result_status frs;
         ssize_t left = size;
         const char *data = content.data();
         while (left > 0) {
@@ -57,7 +57,7 @@ namespace flare {
             } else {
                 FLARE_LOG(WARNING) << "write falied, err: " << flare_error()
                              << " fd: " << _fd << " offset: " << orig_offset << " size: " << size;
-                frs.set_error(errno, "%s", flare_error());
+                frs.set_error(errno, "{}", flare_error());
                 return frs;
             }
         }
@@ -65,11 +65,11 @@ namespace flare {
         return frs;
     }
 
-    flare_status random_write_file::write(off_t offset, const flare::cord_buf &data) {
+    result_status random_write_file::write(off_t offset, const flare::cord_buf &data) {
         size_t size = data.size();
         flare::cord_buf piece_data(data);
         off_t orig_offset = offset;
-        flare_status frs;
+        result_status frs;
         ssize_t left = size;
         while (left > 0) {
             ssize_t written = piece_data.pcut_into_file_descriptor(_fd, offset, left);
@@ -81,7 +81,7 @@ namespace flare {
             } else {
                 FLARE_LOG(WARNING) << "write falied, err: " << flare_error()
                              << " fd: " << _fd << " offset: " << orig_offset << " size: " << size;
-                frs.set_error(errno, "%s", flare_error());
+                frs.set_error(errno, "{}", flare_error());
                 return frs;
             }
         }

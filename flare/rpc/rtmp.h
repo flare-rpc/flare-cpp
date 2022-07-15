@@ -136,7 +136,7 @@ struct RtmpAACMessage {
     flare::cord_buf data;
 
     // Create AAC message from audio message.
-    flare::base::flare_status Create(const RtmpAudioMessage& msg);
+    flare::result_status Create(const RtmpAudioMessage& msg);
 
     // Size of serialized message.
     size_t size() const { return data.size() + 2; }
@@ -155,8 +155,8 @@ static const AACObjectType AAC_OBJECT_UNKNOWN = (AACObjectType)0;
 
 struct AudioSpecificConfig {
     AudioSpecificConfig();
-    flare::base::flare_status Create(const flare::cord_buf& buf);
-    flare::base::flare_status Create(const void* data, size_t len);
+    flare::result_status Create(const flare::cord_buf& buf);
+    flare::result_status Create(const void* data, size_t len);
 
     AACObjectType  aac_object;
     uint8_t        aac_sample_rate;
@@ -244,7 +244,7 @@ struct RtmpAVCMessage {
     flare::cord_buf data;
 
     // Create a AVC message from a video message.
-    flare::base::flare_status Create(const RtmpVideoMessage&);
+    flare::result_status Create(const RtmpVideoMessage&);
 
     // Size of serialized message.
     size_t size() const { return data.size() + 5; }
@@ -314,8 +314,8 @@ enum AVCNaluType {
 struct AVCDecoderConfigurationRecord {
     AVCDecoderConfigurationRecord();
     
-    flare::base::flare_status Create(const flare::cord_buf& buf);
-    flare::base::flare_status Create(const void* data, size_t len);
+    flare::result_status Create(const flare::cord_buf& buf);
+    flare::result_status Create(const void* data, size_t len);
 
     int             width;
     int             height;
@@ -326,7 +326,7 @@ struct AVCDecoderConfigurationRecord {
     std::vector<std::string> pps_list;
 
 private:
-    flare::base::flare_status ParseSPS(const std::string_view& buf, size_t sps_length);
+    flare::result_status ParseSPS(const std::string_view& buf, size_t sps_length);
 };
 std::ostream& operator<<(std::ostream&, const AVCDecoderConfigurationRecord&);
 
@@ -406,13 +406,13 @@ public:
     explicit FlvWriter(flare::cord_buf* buf, const FlvWriterOptions& options);
     
     // Append a video/audio/metadata/cuepoint message into the output buffer.
-    flare::base::flare_status Write(const RtmpVideoMessage&);
-    flare::base::flare_status Write(const RtmpAudioMessage&);
-    flare::base::flare_status Write(const RtmpMetaData&);
-    flare::base::flare_status Write(const RtmpCuePoint&);
+    flare::result_status Write(const RtmpVideoMessage&);
+    flare::result_status Write(const RtmpAudioMessage&);
+    flare::result_status Write(const RtmpMetaData&);
+    flare::result_status Write(const RtmpCuePoint&);
 
 private:
-    flare::base::flare_status WriteScriptData(const flare::cord_buf& req_buf, uint32_t timestamp);
+    flare::result_status WriteScriptData(const flare::cord_buf& req_buf, uint32_t timestamp);
 
 private:
     bool _write_header;
@@ -427,23 +427,23 @@ public:
     explicit FlvReader(flare::cord_buf* buf);
 
     // Get the next message type.
-    // If it is a valid flv tag, flare::base::flare_status::OK() is returned and the
+    // If it is a valid flv tag, flare::result_status::OK() is returned and the
     // type is written to *type. Otherwise an error would be returned,
     // leaving *type unchanged.
     // Note: If error_code of the return value is EAGAIN, the caller 
     // should wait more data and try call PeekMessageType again.
-    flare::base::flare_status PeekMessageType(FlvTagType* type);
+    flare::result_status PeekMessageType(FlvTagType* type);
 
     // Read a video/audio/metadata message from the input buffer.
     // Caller should use the result of function PeekMessageType to select an
     // appropriate function, e.g., if *type is set to FLV_TAG_AUDIO in 
     // PeekMessageType, caller should call Read(RtmpAudioMessage*) subsequently.
-    flare::base::flare_status Read(RtmpVideoMessage* msg);
-    flare::base::flare_status Read(RtmpAudioMessage* msg);
-    flare::base::flare_status Read(RtmpMetaData* object, std::string* object_name);
+    flare::result_status Read(RtmpVideoMessage* msg);
+    flare::result_status Read(RtmpAudioMessage* msg);
+    flare::result_status Read(RtmpMetaData* object, std::string* object_name);
 
 private:
-    flare::base::flare_status ReadHeader();
+    flare::result_status ReadHeader();
 
 private:
     bool _read_header;
@@ -1081,7 +1081,7 @@ public:
     // Call done->Run() when the play request is processed (either accepted
     // or rejected)
     virtual void OnPlay(const RtmpPlayOptions&,
-                        flare::base::flare_status* status,
+                        flare::result_status* status,
                         google::protobuf::Closure* done);
     
     // Called when receiving a publish request.
@@ -1090,7 +1090,7 @@ public:
     // Returns 0 on success, -1 otherwise.
     virtual void OnPublish(const std::string& stream_name,
                            RtmpPublishType publish_type,
-                           flare::base::flare_status* status,
+                           flare::result_status* status,
                            google::protobuf::Closure* done);
     
     // Called when receiving a play2 request.

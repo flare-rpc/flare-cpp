@@ -191,8 +191,8 @@ namespace flare::rpc {
         mu.unlock();
         for (size_t i = 0; i < body_seen.backing_block_num(); ++i) {
             std::string_view blk = body_seen.backing_block(i);
-            flare::base::flare_status st = r->OnReadOnePart(blk.data(), blk.size());
-            if (!st.ok()) {
+            flare::result_status st = r->OnReadOnePart(blk.data(), blk.size());
+            if (!st.is_ok()) {
                 mu.lock();
                 _body_reader = NULL;
                 mu.unlock();
@@ -271,8 +271,8 @@ namespace flare::rpc {
         if (UnlockAndFlushToBodyReader(mu) != 0) {
             return -1;
         }
-        flare::base::flare_status st = r->OnReadOnePart(at, length);
-        if (st.ok()) {
+        flare::result_status st = r->OnReadOnePart(at, length);
+        if (st.is_ok()) {
             return 0;
         }
         mu.lock();
@@ -313,7 +313,7 @@ namespace flare::rpc {
             ProgressiveReader *r = _body_reader;
             _body_reader = NULL;
             mu.unlock();
-            r->OnEndOfMessage(flare::base::flare_status());
+            r->OnEndOfMessage(flare::result_status());
         }
         return 0;
     }
@@ -321,12 +321,12 @@ namespace flare::rpc {
     class FailAllRead : public ProgressiveReader {
     public:
         // @ProgressiveReader
-        flare::base::flare_status OnReadOnePart(const void * /*data*/, size_t /*length*/) {
-            return flare::base::flare_status(-1, "Trigger by FailAllRead at %s:%d",
+        flare::result_status OnReadOnePart(const void * /*data*/, size_t /*length*/) {
+            return flare::result_status(-1, "Trigger by FailAllRead at {}:{}",
                                              __FILE__, __LINE__);
         }
 
-        void OnEndOfMessage(const flare::base::flare_status &) {}
+        void OnEndOfMessage(const flare::result_status &) {}
     };
 
     static FailAllRead *s_fail_all_read = NULL;
@@ -337,7 +337,7 @@ namespace flare::rpc {
     void HttpMessage::SetBodyReader(ProgressiveReader *r) {
         if (!_read_body_progressively) {
             return r->OnEndOfMessage(
-                    flare::base::flare_status(EPERM, "Call SetBodyReader on HttpMessage with"
+                    flare::result_status(EPERM, "Call SetBodyReader on HttpMessage with"
                                                      " read_body_progressively=false"));
         }
         const int MAX_TRY = 3;
@@ -347,7 +347,7 @@ namespace flare::rpc {
             if (_body_reader != NULL) {
                 mu.unlock();
                 return r->OnEndOfMessage(
-                        flare::base::flare_status(EPERM, "SetBodyReader is called more than once"));
+                        flare::result_status(EPERM, "SetBodyReader is called more than once"));
             }
             if (_body.empty()) {
                 if (_stage <= HTTP_ON_BODY) {
@@ -355,7 +355,7 @@ namespace flare::rpc {
                     return;
                 } else {  // The body is complete and successfully consumed.
                     mu.unlock();
-                    return r->OnEndOfMessage(flare::base::flare_status());
+                    return r->OnEndOfMessage(flare::result_status());
                 }
             } else if (_stage <= HTTP_ON_BODY && ++ntry >= MAX_TRY) {
                 // Stop making _body empty after we've tried several times.
@@ -369,8 +369,8 @@ namespace flare::rpc {
             mu.unlock();
             for (size_t i = 0; i < body_seen.backing_block_num(); ++i) {
                 std::string_view blk = body_seen.backing_block(i);
-                flare::base::flare_status st = r->OnReadOnePart(blk.data(), blk.size());
-                if (!st.ok()) {
+                flare::result_status st = r->OnReadOnePart(blk.data(), blk.size());
+                if (!st.is_ok()) {
                     r->OnEndOfMessage(st);
                     // Make OnBody() or OnMessageComplete() fail on next call to
                     // close the socket. If the message was already complete, the
@@ -411,7 +411,7 @@ namespace flare::rpc {
             // _body_reader here just means the socket is broken before completion
             // of the message.
             saved_body_reader->OnEndOfMessage(
-                    flare::base::flare_status(ECONNRESET, "The socket was broken"));
+                    flare::result_status(ECONNRESET, "The socket was broken"));
         }
     }
 

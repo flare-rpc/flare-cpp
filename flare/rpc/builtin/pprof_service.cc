@@ -396,7 +396,7 @@ namespace flare::rpc {
         tm.start();
         flare::readline_file file;
         auto status = file.open("/proc/self/maps");
-        if (!status.ok()) {
+        if (!status.is_ok()) {
             return;
         }
 

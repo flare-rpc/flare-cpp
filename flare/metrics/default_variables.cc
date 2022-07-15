@@ -65,7 +65,7 @@ namespace flare {
         // see http://man7.org/linux/man-pages/man5/proc.5.html
         flare::sequential_read_file file;
         auto status = file.open("/proc/self/stat");
-        if (!status.ok()) {
+        if (!status.is_ok()) {
             FLARE_PLOG_ONCE(WARNING) << "Fail to open /proc/self/stat";
             return false;
         }
@@ -201,7 +201,7 @@ namespace flare {
 #if defined(FLARE_PLATFORM_LINUX)
         flare::sequential_read_file file;
         auto status = file.open("/proc/self/statm");
-        if (!status.ok()) {
+        if (!status.is_ok()) {
             FLARE_PLOG_ONCE(WARNING) << "Fail to open /proc/self/statm";
             return false;
         }
@@ -272,7 +272,7 @@ namespace flare {
 #if defined(FLARE_PLATFORM_LINUX)
         flare::sequential_read_file file;
         auto status = file.open("/proc/loadavg");
-        if (!status.ok()) {
+        if (!status.is_ok()) {
             FLARE_PLOG_ONCE(WARNING) << "Fail to open /proc/loadavg";
             return false;
         }
@@ -434,7 +434,7 @@ namespace flare {
 #if defined(FLARE_PLATFORM_LINUX)
         flare::sequential_read_file file;
         auto status = file.open("/proc/self/io");
-        if (!status.ok()) {
+        if (!status.is_ok()) {
             FLARE_PLOG_ONCE(WARNING) << "Fail to open /proc/self/io";
             return false;
         }
@@ -546,7 +546,7 @@ namespace flare {
 #if defined(FLARE_PLATFORM_LINUX)
          flare::sequential_read_file file;
         auto status = file.open("/proc/diskstats");
-        if (!status.ok()) {
+        if (!status.is_ok()) {
             FLARE_PLOG_ONCE(WARNING) << "Fail to open /proc/diskstats";
             return false;
         }

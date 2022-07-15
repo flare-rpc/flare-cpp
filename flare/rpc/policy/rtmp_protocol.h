@@ -73,7 +73,7 @@ namespace flare::rpc {
             return (id >= FLV_VIDEO_JPEG && id <= FLV_VIDEO_HEVC);
         }
 
-// Get literal form of the message type.
+        // Get literal form of the message type.
         const char *messagetype2str(RtmpMessageType);
 
         const char *messagetype2str(uint8_t);
@@ -178,7 +178,7 @@ namespace flare::rpc {
                     : chunk_stream_id(0), new_chunk_size(0), next(NULL) {}
 
             // @SocketMessage
-            flare::base::flare_status AppendAndDestroySelf(flare::cord_buf *out, Socket *);
+            flare::result_status AppendAndDestroySelf(flare::cord_buf *out, Socket *);
         };
 
         // Notice that we can't directly pack CreateStream command in PackRtmpRequest, because
@@ -193,7 +193,7 @@ namespace flare::rpc {
             explicit RtmpCreateStreamMessage() {}
 
             // @SocketMessage
-            flare::base::flare_status AppendAndDestroySelf(flare::cord_buf *out, Socket *);
+            flare::result_status AppendAndDestroySelf(flare::cord_buf *out, Socket *);
         };
 
         enum RtmpChunkType {

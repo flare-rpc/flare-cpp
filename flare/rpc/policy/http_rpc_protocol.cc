@@ -520,7 +520,7 @@ namespace flare::rpc {
                 // TODO: Checking required fields of http header.
             }
             // Make RPC fail if uri() is not OK (previous SetHttpURL/operator= failed)
-            if (!hreq.uri().status().ok()) {
+            if (!hreq.uri().status().is_ok()) {
                 return cntl->SetFailed(EREQUEST, "%s",
                                        hreq.uri().status().error_cstr());
             }

@@ -159,11 +159,11 @@ namespace flare::rpc {
     class IgnoreAllRead : public ProgressiveReader {
     public:
         // @ProgressiveReader
-        flare::base::flare_status OnReadOnePart(const void * /*data*/, size_t /*length*/) {
-            return flare::base::flare_status::OK();
+        flare::result_status OnReadOnePart(const void * /*data*/, size_t /*length*/) {
+            return flare::result_status::ok();
         }
 
-        void OnEndOfMessage(const flare::base::flare_status &) {}
+        void OnEndOfMessage(const flare::result_status &) {}
     };
 
     static IgnoreAllRead *s_ignore_all_read = nullptr;
@@ -171,10 +171,10 @@ namespace flare::rpc {
 
     static void CreateIgnoreAllRead() { s_ignore_all_read = new IgnoreAllRead; }
 
-// If resource needs to be destroyed or memory needs to be deleted (both
-// directly and indirectly referenced), do them in this method. Notice that
-// you don't have to set the fields to initial state after deletion since
-// they'll be set uniformly after this method is called.
+    // If resource needs to be destroyed or memory needs to be deleted (both
+    // directly and indirectly referenced), do them in this method. Notice that
+    // you don't have to set the fields to initial state after deletion since
+    // they'll be set uniformly after this method is called.
     void Controller::ResetNonPods() {
         if (_span) {
             Span::Submit(_span, flare::get_current_time_micros());
@@ -1414,17 +1414,17 @@ namespace flare::rpc {
         }
         if (!is_response_read_progressively()) {
             return r->OnEndOfMessage(
-                    flare::base::flare_status(EINVAL, "Can't read progressive attachment from a "
+                    flare::result_status(EINVAL, "Can't read progressive attachment from a "
                                                       "controller without calling "
                                                       "response_will_be_read_progressively() before"));
         }
         if (_rpa == nullptr) {
             return r->OnEndOfMessage(
-                    flare::base::flare_status(EINVAL, "ReadableProgressiveAttachment is nullptr"));
+                    flare::result_status(EINVAL, "ReadableProgressiveAttachment is nullptr"));
         }
         if (has_progressive_reader()) {
             return r->OnEndOfMessage(
-                    flare::base::flare_status(EPERM, "%s can't be called more than once",
+                    flare::result_status(EPERM, "{} can't be called more than once",
                                               __FUNCTION__));
         }
         add_flag(FLAGS_PROGRESSIVE_READER);

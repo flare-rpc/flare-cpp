@@ -11,13 +11,11 @@
 
 #include "flare/files/filesystem.h"
 #include "flare/base/profile.h"
-#include "flare/base/status.h"
+#include "flare/base/result_status.h"
 #include "flare/io/cord_buf.h"
 #include <fcntl.h>
 
 namespace flare {
-
-    using flare::base::flare_status;
 
     class random_write_file {
     public:
@@ -25,11 +23,11 @@ namespace flare {
 
         ~random_write_file();
 
-        flare_status open(const flare::file_path &path, bool truncate = true) noexcept;
+        result_status open(const flare::file_path &path, bool truncate = true) noexcept;
 
-        flare_status write(off_t offset, std::string_view content);
+        result_status write(off_t offset, std::string_view content);
 
-        flare_status write(off_t offset, const flare::cord_buf &data);
+        result_status write(off_t offset, const flare::cord_buf &data);
 
         void flush();
 

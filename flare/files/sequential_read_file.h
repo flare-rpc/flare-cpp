@@ -12,12 +12,10 @@
 
 #include "flare/files/filesystem.h"
 #include "flare/base/profile.h"
-#include "flare/base/status.h"
+#include "flare/base/result_status.h"
 #include "flare/io/cord_buf.h"
 
 namespace flare {
-
-    using flare::base::flare_status;
 
     class sequential_read_file {
     public:
@@ -25,15 +23,15 @@ namespace flare {
 
         ~sequential_read_file();
 
-        flare_status open(const flare::file_path &path) noexcept;
+        result_status open(const flare::file_path &path) noexcept;
 
-        flare_status read(std::string *content, size_t n = npos);
+        result_status read(std::string *content, size_t n = npos);
 
-        flare_status read(flare::cord_buf *buf, size_t n = npos);
+        result_status read(flare::cord_buf *buf, size_t n = npos);
 
-        flare_status skip(size_t n);
+        result_status skip(size_t n);
 
-        bool is_eof(flare_status *frs);
+        bool is_eof(result_status *frs);
 
         size_t has_read() const {
             return _has_read;

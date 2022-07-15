@@ -33,20 +33,20 @@ namespace flare {
         {
             readline_file rl_file;
             auto rs = rl_file.open(lines_file.fname());
-            EXPECT_TRUE(rs.ok());
+            EXPECT_TRUE(rs.is_ok());
             EXPECT_EQ(205UL, rl_file.size());
         }
         {
             readline_file rl_file1;
             auto rs = rl_file1.open(lines_file.fname(), flare::readline_option::eNoSkip);
-            EXPECT_TRUE(rs.ok());
+            EXPECT_TRUE(rs.is_ok());
             EXPECT_EQ(207UL, rl_file1.size());
         }
 
         {
             readline_file rl_file1;
             auto rs = rl_file1.open(lines_file.fname(), flare::readline_option::eTrimWhitespace);
-            EXPECT_TRUE(rs.ok());
+            EXPECT_TRUE(rs.is_ok());
             EXPECT_EQ(203UL, rl_file1.size());
         }
     }

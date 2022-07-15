@@ -73,10 +73,10 @@ namespace flare::rpc {
     // Some code is copied or modified from redisvFormatCommand() in
     // https://github.com/redis/hiredis/blob/master/hiredis.c to keep close
     // compatibility with hiredis.
-    flare::base::flare_status
+    flare::result_status
     RedisCommandFormatV(flare::cord_buf *outbuf, const char *fmt, va_list ap) {
-        if (outbuf == NULL || fmt == NULL) {
-            return flare::base::flare_status(EINVAL, "Param[outbuf] or [fmt] is NULL");
+        if (outbuf == nullptr || fmt == nullptr) {
+            return flare::result_status(EINVAL, "Param[outbuf] or [fmt] is nullptr");
         }
         const size_t fmt_len = strlen(fmt);
         std::string nocount_buf;
@@ -156,7 +156,7 @@ namespace flare::rpc {
                         va_list _cpy;
 
                         /* Flags */
-                        while (*_p != '\0' && strchr(flags, *_p) != NULL) _p++;
+                        while (*_p != '\0' && strchr(flags, *_p) != nullptr) _p++;
 
                         /* Field width */
                         while (*_p != '\0' && isdigit(*_p)) _p++;
@@ -171,13 +171,13 @@ namespace flare::rpc {
                         va_copy(_cpy, ap);
 
                         /* Integer conversion (without modifiers) */
-                        if (strchr(intfmts, *_p) != NULL) {
+                        if (strchr(intfmts, *_p) != nullptr) {
                             va_arg(ap, int);
                             goto fmt_valid;
                         }
 
                         /* Double conversion (without modifiers) */
-                        if (strchr("eEfFgGaA", *_p) != NULL) {
+                        if (strchr("eEfFgGaA", *_p) != nullptr) {
                             va_arg(ap, double);
                             goto fmt_valid;
                         }
@@ -185,7 +185,7 @@ namespace flare::rpc {
                         /* Size: char */
                         if (_p[0] == 'h' && _p[1] == 'h') {
                             _p += 2;
-                            if (*_p != '\0' && strchr(intfmts, *_p) != NULL) {
+                            if (*_p != '\0' && strchr(intfmts, *_p) != nullptr) {
                                 va_arg(ap, int); /* char gets promoted to int */
                                 goto fmt_valid;
                             }
@@ -195,7 +195,7 @@ namespace flare::rpc {
                         /* Size: short */
                         if (_p[0] == 'h') {
                             _p += 1;
-                            if (*_p != '\0' && strchr(intfmts, *_p) != NULL) {
+                            if (*_p != '\0' && strchr(intfmts, *_p) != nullptr) {
                                 va_arg(ap, int); /* short gets promoted to int */
                                 goto fmt_valid;
                             }
@@ -205,7 +205,7 @@ namespace flare::rpc {
                         /* Size: long long */
                         if (_p[0] == 'l' && _p[1] == 'l') {
                             _p += 2;
-                            if (*_p != '\0' && strchr(intfmts, *_p) != NULL) {
+                            if (*_p != '\0' && strchr(intfmts, *_p) != nullptr) {
                                 va_arg(ap, long long);
                                 goto fmt_valid;
                             }
@@ -215,7 +215,7 @@ namespace flare::rpc {
                         /* Size: long */
                         if (_p[0] == 'l') {
                             _p += 1;
-                            if (*_p != '\0' && strchr(intfmts, *_p) != NULL) {
+                            if (*_p != '\0' && strchr(intfmts, *_p) != nullptr) {
                                 va_arg(ap, long);
                                 goto fmt_valid;
                             }
@@ -224,7 +224,7 @@ namespace flare::rpc {
 
                         fmt_invalid:
                         va_end(_cpy);
-                        return flare::base::flare_status(EINVAL, "Invalid format");
+                        return flare::result_status(EINVAL, "Invalid format");
 
                         fmt_valid:
                         ++nargs;
@@ -253,8 +253,8 @@ namespace flare::rpc {
                     quote_pos - std::min((size_t) (quote_pos - fmt), CTX_WIDTH);
             size_t ctx_size =
                     std::min((size_t) (fmt + fmt_len - ctx_begin), CTX_WIDTH * 2 + 1);
-            return flare::base::flare_status(EINVAL, "Unmatched quote: ...%.*s... (offset=%lu)",
-                                             (int) ctx_size, ctx_begin, quote_pos - fmt);
+            return flare::result_status(EINVAL, "Unmatched quote: ...{}... (offset={})",
+                                        std::string_view(ctx_begin, (int) ctx_size), quote_pos - fmt);
         }
 
         if (!compbuf.empty()) {
@@ -267,21 +267,21 @@ namespace flare::rpc {
 
         AppendHeader(*outbuf, '*', ncomponent);
         outbuf->append(nocount_buf);
-        return flare::base::flare_status::OK();
+        return flare::result_status::ok();
     }
 
-    flare::base::flare_status RedisCommandFormat(flare::cord_buf *buf, const char *fmt, ...) {
+    flare::result_status RedisCommandFormat(flare::cord_buf *buf, const char *fmt, ...) {
         va_list ap;
         va_start(ap, fmt);
-        const flare::base::flare_status st = RedisCommandFormatV(buf, fmt, ap);
+        const flare::result_status st = RedisCommandFormatV(buf, fmt, ap);
         va_end(ap);
         return st;
     }
 
-    flare::base::flare_status
+    flare::result_status
     RedisCommandNoFormat(flare::cord_buf *outbuf, const std::string_view &cmd) {
-        if (outbuf == NULL || cmd.empty()) {
-            return flare::base::flare_status(EINVAL, "Param[outbuf] or [cmd] is NULL");
+        if (outbuf == nullptr || cmd.empty()) {
+            return flare::result_status(EINVAL, "Param[outbuf] or [cmd] is nullptr");
         }
         const size_t cmd_len = cmd.size();
         std::string nocount_buf;
@@ -329,8 +329,8 @@ namespace flare::rpc {
                     quote_pos - std::min((size_t) (quote_pos - cmd.data()), CTX_WIDTH);
             size_t ctx_size =
                     std::min((size_t) (cmd.data() + cmd.size() - ctx_begin), CTX_WIDTH * 2 + 1);
-            return flare::base::flare_status(EINVAL, "Unmatched quote: ...%.*s... (offset=%lu)",
-                                             (int) ctx_size, ctx_begin, quote_pos - cmd.data());
+            return flare::result_status(EINVAL, "Unmatched quote: ...{}... (offset={})",
+                                             std::string_view(ctx_begin, (int) ctx_size), quote_pos - cmd.data());
         }
 
         if (!compbuf.empty()) {
@@ -339,14 +339,14 @@ namespace flare::rpc {
 
         AppendHeader(*outbuf, '*', ncomponent);
         outbuf->append(nocount_buf);
-        return flare::base::flare_status::OK();
+        return flare::result_status::ok();
     }
 
-    flare::base::flare_status RedisCommandByComponents(flare::cord_buf *output,
+    flare::result_status RedisCommandByComponents(flare::cord_buf *output,
                                                        const std::string_view *components,
                                                        size_t ncomponents) {
-        if (output == NULL) {
-            return flare::base::flare_status(EINVAL, "Param[output] is NULL");
+        if (output == nullptr) {
+            return flare::result_status(EINVAL, "Param[output] is nullptr");
         }
         AppendHeader(*output, '*', ncomponents);
         for (size_t i = 0; i < ncomponents; ++i) {
@@ -354,7 +354,7 @@ namespace flare::rpc {
             output->append(components[i].data(), components[i].size());
             output->append("\r\n", 2);
         }
-        return flare::base::flare_status::OK();
+        return flare::result_status::ok();
     }
 
     RedisCommandParser::RedisCommandParser()
@@ -364,7 +364,7 @@ namespace flare::rpc {
                                            std::vector<std::string_view> *args,
                                            flare::Arena *arena) {
         const char *pfc = (const char *) buf.fetch1();
-        if (pfc == NULL) {
+        if (pfc == nullptr) {
             return PARSE_ERROR_NOT_ENOUGH_DATA;
         }
         // '*' stands for array "*<size>\r\n<sub-reply1><sub-reply2>..."
@@ -382,7 +382,7 @@ namespace flare::rpc {
         if (crlf_pos == std::string_view::npos) {  // not enough data
             return PARSE_ERROR_NOT_ENOUGH_DATA;
         }
-        char *endptr = NULL;
+        char *endptr = nullptr;
         int64_t value = strtoll(intbuf + 1/*skip fc*/, &endptr, 10);
         if (endptr != intbuf + crlf_pos) {
             FLARE_LOG(ERROR) << '`' << intbuf + 1 << "' is not a valid 64-bit decimal";

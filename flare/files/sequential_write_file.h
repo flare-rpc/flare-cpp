@@ -12,11 +12,10 @@
 
 #include "flare/files/filesystem.h"
 #include "flare/base/profile.h"
-#include "flare/base/status.h"
+#include "flare/base/result_status.h"
 #include "flare/io/cord_buf.h"
 
 namespace flare {
-    using flare::base::flare_status;
 
     class sequential_write_file {
     public:
@@ -24,11 +23,11 @@ namespace flare {
 
         ~sequential_write_file();
 
-        flare_status open(const flare::file_path &path, bool truncate = true) noexcept;
+        result_status open(const flare::file_path &path, bool truncate = true) noexcept;
 
-        flare_status write(std::string_view content);
+        result_status write(std::string_view content);
 
-        flare_status write(const flare::cord_buf &data);
+        result_status write(const flare::cord_buf &data);
 
         void flush();
 

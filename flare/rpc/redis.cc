@@ -18,7 +18,7 @@
 
 #include <google/protobuf/reflection_ops.h>     // ReflectionOps::Merge
 #include <gflags/gflags.h>
-#include "flare/base/status.h"
+#include "flare/base/result_status.h"
 #include "flare/strings/case_conv.h"
 #include "flare/rpc/redis.h"
 #include "flare/rpc/redis_command.h"
@@ -140,12 +140,12 @@ namespace flare::rpc {
         if (_has_error) {
             return false;
         }
-        const flare::base::flare_status st = RedisCommandNoFormat(&_buf, command);
-        if (st.ok()) {
+        const flare::result_status st = RedisCommandNoFormat(&_buf, command);
+        if (st.is_ok()) {
             ++_ncommand;
             return true;
         } else {
-            FLARE_CHECK(st.ok()) << st;
+            FLARE_CHECK(st.is_ok()) << st;
             _has_error = true;
             return false;
         }
@@ -156,12 +156,12 @@ namespace flare::rpc {
         if (_has_error) {
             return false;
         }
-        const flare::base::flare_status st = RedisCommandByComponents(&_buf, components, n);
-        if (st.ok()) {
+        const flare::result_status st = RedisCommandByComponents(&_buf, components, n);
+        if (st.is_ok()) {
             ++_ncommand;
             return true;
         } else {
-            FLARE_CHECK(st.ok()) << st;
+            FLARE_CHECK(st.is_ok()) << st;
             _has_error = true;
             return false;
         }
@@ -173,13 +173,13 @@ namespace flare::rpc {
         }
         va_list ap;
         va_start(ap, fmt);
-        const flare::base::flare_status st = RedisCommandFormatV(&_buf, fmt, ap);
+        const flare::result_status st = RedisCommandFormatV(&_buf, fmt, ap);
         va_end(ap);
-        if (st.ok()) {
+        if (st.is_ok()) {
             ++_ncommand;
             return true;
         } else {
-            FLARE_CHECK(st.ok()) << st;
+            FLARE_CHECK(st.is_ok()) << st;
             _has_error = true;
             return false;
         }
@@ -189,12 +189,12 @@ namespace flare::rpc {
         if (_has_error) {
             return false;
         }
-        const flare::base::flare_status st = RedisCommandFormatV(&_buf, fmt, ap);
-        if (st.ok()) {
+        const flare::result_status st = RedisCommandFormatV(&_buf, fmt, ap);
+        if (st.is_ok()) {
             ++_ncommand;
             return true;
         } else {
-            FLARE_CHECK(st.ok()) << st;
+            FLARE_CHECK(st.is_ok()) << st;
             _has_error = true;
             return false;
         }
