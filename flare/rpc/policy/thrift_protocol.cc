@@ -66,7 +66,7 @@ struct thrift_head_t {
 
 // A faster implementation of TProtocol::readMessageBegin without depending
 // on thrift stuff.
-static flare::base::flare_status
+static flare::result_status
 ReadThriftMessageBegin(flare::cord_buf* body,
                        std::string* method_name,
                        ::apache::thrift::protocol::TMessageType* mtype,
@@ -78,27 +78,27 @@ ReadThriftMessageBegin(flare::cord_buf* body,
     uint32_t version_and_len_buf[2];
     size_t k = body->copy_to(version_and_len_buf, sizeof(version_and_len_buf));
     if (k != sizeof(version_and_len_buf) ) {
-        return flare::base::flare_status(-1, "Fail to copy %" PRIu64 " bytes from body",
+        return flare:result_status(-1, "Fail to copy {} bytes from body",
                              sizeof(version_and_len_buf));
     }
     *mtype = (apache::thrift::protocol::TMessageType)
         (ntohl(version_and_len_buf[0]) & 0x000000FF);
     const uint32_t method_name_length = ntohl(version_and_len_buf[1]);
     if (method_name_length > MAX_THRIFT_METHOD_NAME_LENGTH) {
-        return flare::base::flare_status(-1, "method_name_length=%u is too long",
+        return flare:result_status(-1, "method_name_length={} is too long",
                              method_name_length);
     }
 
     char buf[sizeof(version_and_len_buf) + method_name_length + 4];
     k = body->cutn(buf, sizeof(buf));
     if (k != sizeof(buf)) {
-        return flare::base::flare_status(-1, "Fail to cut %" PRIu64 " bytes", sizeof(buf));
+        return flare:result_status(-1, "Fail to cut {} bytes", sizeof(buf));
     }
     method_name->assign(buf + sizeof(version_and_len_buf), method_name_length);
     // suppress strict-aliasing warning
     uint32_t* p_seq_id = (uint32_t*)(buf + sizeof(version_and_len_buf) + method_name_length);
     *seq_id = ntohl(*p_seq_id);
-    return flare::base::flare_status::OK();
+    return flare:result_status::OK();
 }
 
 inline size_t ThriftMessageBeginSize(const std::string& method_name) {
@@ -472,7 +472,7 @@ void ProcessThriftRequest(InputMessageBase* msg_base) {
 
     uint32_t seq_id;
     ::apache::thrift::protocol::TMessageType mtype;
-    flare::base::flare_status st = ReadThriftMessageBegin(
+    flare:result_status st = ReadThriftMessageBegin(
         &msg->payload, &cntl->_thrift_method_name, &mtype, &seq_id);
     if (!st.ok()) {
         return cntl->SetFailed(EREQUEST, "%s", st.error_cstr());
@@ -585,7 +585,7 @@ void ProcessThriftResponse(InputMessageBase* msg_base) {
         ::apache::thrift::protocol::TMessageType mtype;
         uint32_t seq_id = 0; // unchecked
         
-        flare::base::flare_status st = ReadThriftMessageBegin(&msg->payload, &fname, &mtype, &seq_id);
+        flare:result_status st = ReadThriftMessageBegin(&msg->payload, &fname, &mtype, &seq_id);
         if (!st.ok()) {
             cntl->SetFailed(ERESPONSE, "%s", st.error_cstr());
             break;

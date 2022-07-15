@@ -14,7 +14,7 @@
 
 namespace flare {
 
-    flare::base::flare_status readline_file::open(const flare::file_path &path,  readline_option option) {
+    result_status readline_file::open(const flare::file_path &path,  readline_option option) {
         FLARE_CHECK(_path.empty()) << "do not reopen";
         sequential_read_file file;
         _path = path;

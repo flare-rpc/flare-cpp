@@ -22,24 +22,24 @@
 #include <memory>           // std::unique_ptr
 #include <vector>
 #include "flare/io/cord_buf.h"
-#include "flare/base/status.h"
+#include "flare/base/result_status.h"
 #include "flare/memory/arena.h"
 #include "flare/rpc/parse_result.h"
 
 namespace flare::rpc {
 
     // Format a redis command and append it to `buf'.
-    // Returns flare::base::flare_status::OK() on success.
-    flare::base::flare_status RedisCommandFormat(flare::cord_buf *buf, const char *fmt, ...);
+    // Returns flare::result_status::ok() on success.
+    flare::result_status RedisCommandFormat(flare::cord_buf *buf, const char *fmt, ...);
 
-    flare::base::flare_status RedisCommandFormatV(flare::cord_buf *buf, const char *fmt, va_list args);
+    flare::result_status RedisCommandFormatV(flare::cord_buf *buf, const char *fmt, va_list args);
 
     // Just convert the command to the text format of redis without processing the
     // specifiers(%) inside.
-    flare::base::flare_status RedisCommandNoFormat(flare::cord_buf *buf, const std::string_view &command);
+    flare::result_status RedisCommandNoFormat(flare::cord_buf *buf, const std::string_view &command);
 
     // Concatenate components to form a redis command.
-    flare::base::flare_status RedisCommandByComponents(flare::cord_buf *buf,
+    flare::result_status RedisCommandByComponents(flare::cord_buf *buf,
                                                        const std::string_view *components,
                                                        size_t num_components);
 

@@ -1,7 +1,7 @@
 
 #include <errno.h>
 #include "testing/gtest_wrap.h"
-#include "flare/base/status.h"
+#include "flare/base/result_status.h"
 #include "flare/strings/utility.h"
 
 namespace {
@@ -23,7 +23,7 @@ namespace {
     TEST_F(StatusTest, success_status) {
         std::ostringstream oss;
 
-        flare::base::flare_status st;
+        flare::result_status st;
         ASSERT_TRUE(st.ok());
         ASSERT_EQ(0, st.error_code());
         ASSERT_STREQ("OK", st.error_cstr());
@@ -32,7 +32,7 @@ namespace {
         oss << st;
         ASSERT_EQ("OK", oss.str());
 
-        flare::base::flare_status st2(0, "blahblah");
+        flare::result_status st2(0, "blahblah");
         ASSERT_TRUE(st2.ok());
         ASSERT_EQ(0, st2.error_code());
         ASSERT_STREQ("OK", st2.error_cstr());
@@ -41,7 +41,7 @@ namespace {
         oss << st2;
         ASSERT_EQ("OK", oss.str());
 
-        flare::base::flare_status st3 = flare::base::flare_status::OK();
+        flare::result_status st3 = flare::result_status::ok();
         ASSERT_TRUE(st3.ok());
         ASSERT_EQ(0, st3.error_code());
         ASSERT_STREQ("OK", st3.error_cstr());
@@ -57,7 +57,7 @@ namespace {
     TEST_F(StatusTest, failed_status) {
         std::ostringstream oss;
 
-        flare::base::flare_status st1(ENOMEM, NO_MEMORY_STR);
+        flare::result_status st1(ENOMEM, NO_MEMORY_STR);
         ASSERT_FALSE(st1.ok());
         ASSERT_EQ(ENOMEM, st1.error_code());
         ASSERT_STREQ(NO_MEMORY_STR, st1.error_cstr());
@@ -66,7 +66,7 @@ namespace {
         oss << st1;
         ASSERT_EQ(NO_MEMORY_STR, oss.str());
 
-        flare::base::flare_status st2(EINVAL, "%s%s", NO_MEMORY_STR, NO_CPU_STR);
+        flare::result_status st2(EINVAL, "%s%s", NO_MEMORY_STR, NO_CPU_STR);
         ASSERT_FALSE(st2.ok());
         ASSERT_EQ(EINVAL, st2.error_code());
         ASSERT_STREQ(NO_MEMORY_STR NO_CPU_STR, st2.error_cstr());
@@ -75,7 +75,7 @@ namespace {
         oss << st2;
         ASSERT_EQ(NO_MEMORY_STR NO_CPU_STR, oss.str());
 
-        flare::base::flare_status st3(ENOMEM, NO_MEMORY_STR);
+        flare::result_status st3(ENOMEM, NO_MEMORY_STR);
         ASSERT_FALSE(st3.ok());
         ASSERT_EQ(ENOMEM, st3.error_code());
         ASSERT_STREQ(NO_MEMORY_STR, st3.error_cstr());
@@ -84,7 +84,7 @@ namespace {
         oss << st3;
         ASSERT_EQ(NO_MEMORY_STR, oss.str());
 
-        flare::base::flare_status st4(EINVAL, "%s%s", NO_MEMORY_STR, NO_CPU_STR);
+        flare::result_status st4(EINVAL, "%s%s", NO_MEMORY_STR, NO_CPU_STR);
         ASSERT_FALSE(st4.ok());
         ASSERT_EQ(EINVAL, st4.error_code());
         ASSERT_STREQ(NO_MEMORY_STR NO_CPU_STR, st4.error_cstr());
@@ -93,7 +93,7 @@ namespace {
         oss << st4;
         ASSERT_EQ(NO_MEMORY_STR NO_CPU_STR, oss.str());
 
-        flare::base::flare_status st5(EINVAL, "Blah");
+        flare::result_status st5(EINVAL, "Blah");
         ASSERT_FALSE(st5.ok());
         ASSERT_EQ(EINVAL, st5.error_code());
         ASSERT_STREQ("Blah", st5.error_cstr());
@@ -120,7 +120,7 @@ namespace {
     TEST_F(StatusTest, reset) {
         std::ostringstream oss;
 
-        flare::base::flare_status st1(ENOMEM, NO_MEMORY_STR);
+        flare::result_status st1(ENOMEM, NO_MEMORY_STR);
         ASSERT_FALSE(st1.ok());
         ASSERT_EQ(ENOMEM, st1.error_code());
         ASSERT_STREQ(NO_MEMORY_STR, st1.error_cstr());
@@ -129,7 +129,7 @@ namespace {
         oss << st1;
         ASSERT_EQ(NO_MEMORY_STR, oss.str());
 
-        ASSERT_EQ(0, st1.set_error(EINVAL, "%s%s", NO_MEMORY_STR, NO_CPU_STR));
+        st1.set_error(EINVAL, "%{}%{}", NO_MEMORY_STR, NO_CPU_STR);
         ASSERT_FALSE(st1.ok());
         ASSERT_EQ(EINVAL, st1.error_code());
         ASSERT_STREQ(NO_MEMORY_STR NO_CPU_STR, st1.error_cstr());
@@ -138,7 +138,7 @@ namespace {
         oss << st1;
         ASSERT_EQ(NO_MEMORY_STR NO_CPU_STR, oss.str());
 
-        ASSERT_EQ(0, st1.set_error(ENOMEM, NO_MEMORY_STR));
+        st1.set_error(ENOMEM, NO_MEMORY_STR);
         ASSERT_FALSE(st1.ok());
         ASSERT_EQ(ENOMEM, st1.error_code());
         ASSERT_STREQ(NO_MEMORY_STR, st1.error_cstr());
@@ -156,7 +156,7 @@ namespace {
         oss << st1;
         ASSERT_EQ("OK", oss.str());
 
-        ASSERT_EQ(0, st1.set_error(ENOMEM, "%s", VERYLONGERROR));
+        st1.set_error(ENOMEM, "{}", VERYLONGERROR);
         ASSERT_FALSE(st1.ok());
         ASSERT_EQ(ENOMEM, st1.error_code());
         ASSERT_STREQ(VERYLONGERROR, st1.error_cstr());
@@ -169,7 +169,7 @@ namespace {
     TEST_F(StatusTest, copy) {
         std::ostringstream oss;
 
-        flare::base::flare_status st1(ENOMEM, NO_MEMORY_STR);
+        flare::result_status st1(ENOMEM, NO_MEMORY_STR);
         ASSERT_FALSE(st1.ok());
         ASSERT_EQ(ENOMEM, st1.error_code());
         ASSERT_STREQ(NO_MEMORY_STR, st1.error_cstr());
@@ -178,7 +178,7 @@ namespace {
         oss << st1;
         ASSERT_EQ(NO_MEMORY_STR, oss.str());
 
-        flare::base::flare_status st2;
+        flare::result_status st2;
         ASSERT_TRUE(st2.ok());
         ASSERT_EQ(0, st2.error_code());
         ASSERT_STREQ("OK", st2.error_cstr());
@@ -196,7 +196,7 @@ namespace {
         oss << st2;
         ASSERT_EQ(NO_MEMORY_STR, oss.str());
 
-        ASSERT_EQ(0, st1.set_error(EINVAL, "%s%s", NO_MEMORY_STR, NO_CPU_STR));
+        st1.set_error(EINVAL, "%{}%{}", NO_MEMORY_STR, NO_CPU_STR);
         ASSERT_FALSE(st1.ok());
         ASSERT_EQ(EINVAL, st1.error_code());
         ASSERT_STREQ(NO_MEMORY_STR NO_CPU_STR, st1.error_cstr());
@@ -222,7 +222,7 @@ namespace {
         oss << st2;
         ASSERT_EQ(NO_MEMORY_STR NO_CPU_STR, oss.str());
 
-        ASSERT_EQ(0, st1.set_error(ENOMEM, NO_MEMORY_STR));
+        st1.set_error(ENOMEM, NO_MEMORY_STR);
         ASSERT_FALSE(st1.ok());
         ASSERT_EQ(ENOMEM, st1.error_code());
         ASSERT_STREQ(NO_MEMORY_STR, st1.error_cstr());
@@ -249,7 +249,7 @@ namespace {
         ASSERT_EQ(11UL, flare::as_string(slice).size());
         str[5] = '\0';
         ASSERT_EQ(11UL, flare::as_string(slice).size());
-        flare::base::flare_status st1(ENOMEM, slice);
+        flare::result_status st1(ENOMEM, slice);
         ASSERT_FALSE(st1.ok());
         ASSERT_EQ(ENOMEM, st1.error_code());
         ASSERT_STREQ("hello", st1.error_cstr());

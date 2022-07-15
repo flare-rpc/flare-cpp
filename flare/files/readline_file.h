@@ -17,7 +17,7 @@
 #include "flare/log/logging.h"
 #include "flare/base/profile.h"
 #include "flare/files/filesystem.h"
-#include "flare/base/status.h"
+#include "flare/base/result_status.h"
 
 namespace flare {
     // readline_file
@@ -31,7 +31,7 @@ namespace flare {
     class readline_file {
     public:
 
-        flare::base::flare_status open(const flare::file_path &path, readline_option option = readline_option::eSkipEmptyLine);
+        result_status open(const flare::file_path &path, readline_option option = readline_option::eSkipEmptyLine);
 
         size_t size() const noexcept {
             return _lines.size();
@@ -46,17 +46,17 @@ namespace flare {
         }
 
         operator bool() noexcept {
-            return !_path.empty() && _status.ok();
+            return !_path.empty() && _status.is_ok();
         }
 
-        flare::base::flare_status status() const noexcept{
+        result_status status() const noexcept{
             return _status;
         }
 
     private:
         std::string _content;
         file_path _path;
-        flare::base::flare_status _status;
+        result_status _status;
         std::vector<std::string_view> _lines;
     };
 }  // namespace flare

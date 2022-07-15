@@ -155,7 +155,7 @@ namespace flare::rpc {
             }
 
             // @SocketMessage
-            flare::base::flare_status AppendAndDestroySelf(flare::cord_buf *out, Socket *) override;
+            flare::result_status AppendAndDestroySelf(flare::cord_buf *out, Socket *) override;
 
             size_t EstimatedByteSize() override;
 
@@ -210,7 +210,7 @@ namespace flare::rpc {
             void Print(std::ostream &os) const;
 
             // @SocketMessage
-            flare::base::flare_status AppendAndDestroySelf(flare::cord_buf *out, Socket *) override;
+            flare::result_status AppendAndDestroySelf(flare::cord_buf *out, Socket *) override;
 
             size_t EstimatedByteSize() override;
 

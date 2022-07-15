@@ -159,11 +159,11 @@ namespace flare::rpc {
     class IgnoreAllRead : public ProgressiveReader {
     public:
         // @ProgressiveReader
-        flare::base::flare_status OnReadOnePart(const void * /*data*/, size_t /*length*/) {
-            return flare::base::flare_status::OK();
+        flare::result_status OnReadOnePart(const void * /*data*/, size_t /*length*/) {
+            return flare::result_status::ok();
         }
 
-        void OnEndOfMessage(const flare::base::flare_status &) {}
+        void OnEndOfMessage(const flare::result_status &) {}
     };
 
     static IgnoreAllRead *s_ignore_all_read = nullptr;
@@ -1414,17 +1414,17 @@ namespace flare::rpc {
         }
         if (!is_response_read_progressively()) {
             return r->OnEndOfMessage(
-                    flare::base::flare_status(EINVAL, "Can't read progressive attachment from a "
+                    flare::result_status(EINVAL, "Can't read progressive attachment from a "
                                                       "controller without calling "
                                                       "response_will_be_read_progressively() before"));
         }
         if (_rpa == nullptr) {
             return r->OnEndOfMessage(
-                    flare::base::flare_status(EINVAL, "ReadableProgressiveAttachment is nullptr"));
+                    flare::result_status(EINVAL, "ReadableProgressiveAttachment is nullptr"));
         }
         if (has_progressive_reader()) {
             return r->OnEndOfMessage(
-                    flare::base::flare_status(EPERM, "%s can't be called more than once",
+                    flare::result_status(EPERM, "%s can't be called more than once",
                                               __FUNCTION__));
         }
         add_flag(FLAGS_PROGRESSIVE_READER);

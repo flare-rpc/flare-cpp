@@ -61,7 +61,7 @@ namespace flare::rpc {
         _query_map.swap(rhs._query_map);
     }
 
-// Parse queries, which is case-sensitive
+    // Parse queries, which is case-sensitive
     static void ParseQueries(URI::QueryMap &query_map, const std::string &query) {
         query_map.clear();
         if (query.empty()) {

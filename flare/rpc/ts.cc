@@ -1038,10 +1038,10 @@ namespace flare::rpc {
     TsWriter::~TsWriter() {
     }
 
-    flare::base::flare_status TsWriter::Write(const RtmpAudioMessage &msg) {
+    flare::result_status TsWriter::Write(const RtmpAudioMessage &msg) {
         // ts support audio codec: aac/mp3
         if (msg.codec != FLV_AUDIO_AAC && msg.codec != FLV_AUDIO_MP3) {
-            return flare::base::flare_status(EINVAL, "Unsupported codec=%s",
+            return flare::result_status(EINVAL, "Unsupported codec=%s",
                                              FlvAudioCodec2Str(msg.codec));
         }
         const int64_t dts = static_cast<int64_t>(msg.timestamp) * 90;
@@ -1053,25 +1053,25 @@ namespace flare::rpc {
 
         if (msg.codec == FLV_AUDIO_AAC) {
             RtmpAACMessage aac_msg;
-            flare::base::flare_status st = aac_msg.Create(msg);
+            flare::result_status st = aac_msg.Create(msg);
             if (!st.ok()) {
                 return st;
             }
             // ignore sequence header
             if (aac_msg.packet_type == FLV_AAC_PACKET_SEQUENCE_HEADER) {
-                flare::base::flare_status st2 = _aac_seq_header.Create(aac_msg.data);
+                flare::result_status st2 = _aac_seq_header.Create(aac_msg.data);
                 if (!st2.ok()) {
                     return st2;
                 }
                 _has_aac_seq_header = true;
                 ++_discontinuity_counter;
-                return flare::base::flare_status::OK();
+                return flare::result_status::ok();
             }
             if (!_has_aac_seq_header) {
-                return flare::base::flare_status(EINVAL, "Lack of AAC sequence header");
+                return flare::result_status(EINVAL, "Lack of AAC sequence header");
             }
             if (aac_msg.data.size() > 0x1fff) {
-                return flare::base::flare_status(EINVAL, "Invalid AAC data_size=%" PRIu64,
+                return flare::result_status(EINVAL, "Invalid AAC data_size=%" PRIu64,
                                                  (uint64_t) aac_msg.data.size());
             }
 
@@ -1087,7 +1087,7 @@ namespace flare::rpc {
             const AACProfile aac_profile =
                     AACObjectType2Profile(_aac_seq_header.aac_object);
             if (aac_profile == AAC_PROFILE_UNKNOWN) {
-                return flare::base::flare_status(EINVAL, "Invalid aac_object=%d",
+                return flare::result_status(EINVAL, "Invalid aac_object=%d",
                                                  (int) _aac_seq_header.aac_object);
             }
             adts_header[2] = (aac_profile << 6) & 0xc0;
@@ -1112,7 +1112,7 @@ namespace flare::rpc {
         TsPid apid = TS_PID_NULL;
         TsStream as = FlvAudioCodec2TsStream(msg.codec, &apid);
         if (as == TS_STREAM_RESERVED) {
-            return flare::base::flare_status(EINVAL, "Unsupported audio codec=%s",
+            return flare::result_status(EINVAL, "Unsupported audio codec=%s",
                                              FlvAudioCodec2Str(msg.codec));
         }
         return Encode(&tsmsg, as, apid);
@@ -1196,33 +1196,33 @@ namespace flare::rpc {
     static const uint8_t fresh_nalu_header_and_aud_nalu_7[] =
             {0x00, 0x00, 0x00, 0x01, 0x09, 0xf0};
 
-    flare::base::flare_status TsWriter::Write(const RtmpVideoMessage &msg) {
+    flare::result_status TsWriter::Write(const RtmpVideoMessage &msg) {
         if (msg.frame_type == FLV_VIDEO_FRAME_INFOFRAME) {
             // Ignore info frame.
-            return flare::base::flare_status::OK();
+            return flare::result_status::ok();
         }
         if (msg.codec != FLV_VIDEO_AVC) {
-            return flare::base::flare_status(EINVAL, "video_codec=%s is not AVC",
+            return flare::result_status(EINVAL, "video_codec=%s is not AVC",
                                              FlvVideoCodec2Str(msg.codec));
         }
         RtmpAVCMessage avc_msg;
-        flare::base::flare_status st = avc_msg.Create(msg);
+        flare::result_status st = avc_msg.Create(msg);
         if (!st.ok()) {
             return st;
         }
         // ignore sequence header
         if (avc_msg.frame_type == FLV_VIDEO_FRAME_KEYFRAME &&
             avc_msg.packet_type == FLV_AVC_PACKET_SEQUENCE_HEADER) {
-            flare::base::flare_status st2 = _avc_seq_header.Create(avc_msg.data);
+            flare::result_status st2 = _avc_seq_header.Create(avc_msg.data);
             if (!st2.ok()) {
                 return st2;
             }
             _has_avc_seq_header = true;
             ++_discontinuity_counter;
-            return flare::base::flare_status::OK();
+            return flare::result_status::ok();
         }
         if (!_has_avc_seq_header) {
-            return flare::base::flare_status(EINVAL, "Lack of AVC sequence header");
+            return flare::result_status(EINVAL, "Lack of AVC sequence header");
         }
 
         const int64_t dts = static_cast<int64_t>(avc_msg.timestamp) * 90;
@@ -1286,13 +1286,13 @@ namespace flare::rpc {
         TsPid vpid = TS_PID_PAT;
         TsStream vs = FlvVideoCodec2TsStream(msg.codec, &vpid);
         if (vs == TS_STREAM_RESERVED) {
-            return flare::base::flare_status(EINVAL, "Unsupported video codec=%s",
+            return flare::result_status(EINVAL, "Unsupported video codec=%s",
                                              FlvVideoCodec2Str(msg.codec));
         }
         return Encode(&tsmsg, vs, vpid);
     }
 
-    flare::base::flare_status
+    flare::result_status
     TsWriter::EncodePATPMT(TsStream vs, TsPid vpid, TsStream as, TsPid apid) {
         char buf[TS_PACKET_SIZE];
 
@@ -1303,28 +1303,28 @@ namespace flare::rpc {
         FLARE_CHECK_LT(size1, TS_PACKET_SIZE);
         memset(buf, 0xFF, TS_PACKET_SIZE);
         if (pat.Encode(buf) != 0) {
-            return flare::base::flare_status(EINVAL, "Fail to encode PAT");
+            return flare::result_status(EINVAL, "Fail to encode PAT");
         }
         _outbuf->append(buf, TS_PACKET_SIZE);
 
         TsPacket pmt(&_tschan_group);
         if (pmt.CreateAsPMT(TS_PMT_NUMBER, TS_PID_PMT, vpid, vs, apid, as) != 0) {
-            return flare::base::flare_status(EINVAL, "Fail to CreateAsPMT");
+            return flare::result_status(EINVAL, "Fail to CreateAsPMT");
         }
         // set the left bytes with 0xFF.
         const size_t size2 = pmt.ByteSize();
         FLARE_CHECK_LT(size2, TS_PACKET_SIZE);
         memset(buf, 0xFF, TS_PACKET_SIZE);
         if (pmt.Encode(buf) != 0) {
-            return flare::base::flare_status(EINVAL, "Fail to encode PMT");
+            return flare::result_status(EINVAL, "Fail to encode PMT");
         }
         _outbuf->append(buf, TS_PACKET_SIZE);
-        return flare::base::flare_status::OK();
+        return flare::result_status::ok();
     }
 
-    flare::base::flare_status TsWriter::Encode(TsMessage *msg, TsStream stream, TsPid pid) {
+    flare::result_status TsWriter::Encode(TsMessage *msg, TsStream stream, TsPid pid) {
         if (stream == TS_STREAM_RESERVED) {
-            return flare::base::flare_status(EINVAL, "Invalid stream=%d", (int) stream);
+            return flare::result_status(EINVAL, "Invalid stream=%d", (int) stream);
         }
         // Encode the media frame to PES packets over TS.
         bool add_pat_pmt = false;
@@ -1341,14 +1341,14 @@ namespace flare::rpc {
                 add_pat_pmt = true;
             }
         } else {
-            return flare::base::flare_status(EINVAL, "Unknown stream_id=%d", (int) msg->sid);
+            return flare::result_status(EINVAL, "Unknown stream_id=%d", (int) msg->sid);
         }
         if (!_encoded_pat_pmt) {
             _encoded_pat_pmt = true;
             add_pat_pmt = true;
         }
         if (add_pat_pmt) {
-            flare::base::flare_status st = EncodePATPMT(_last_video_stream, _last_video_pid,
+            flare::result_status st = EncodePATPMT(_last_video_stream, _last_video_pid,
                                                         _last_audio_stream, _last_audio_pid);
             if (!st.ok()) {
                 return st;
@@ -1358,21 +1358,21 @@ namespace flare::rpc {
                          (_last_video_stream == TS_STREAM_RESERVED));
     }
 
-    flare::base::flare_status TsWriter::EncodePES(TsMessage *msg, TsStream sid, TsPid pid,
+    flare::result_status TsWriter::EncodePES(TsMessage *msg, TsStream sid, TsPid pid,
                                                   bool pure_audio) {
         if (msg->payload.empty()) {
-            return flare::base::flare_status::OK();
+            return flare::result_status::ok();
         }
         if (sid != TS_STREAM_VIDEO_H264 &&
             sid != TS_STREAM_AUDIO_MP3 &&
             sid != TS_STREAM_AUDIO_AAC) {
             FLARE_LOG(WARNING) << "Ignore unknown stream_id=" << sid;
-            return flare::base::flare_status::OK();
+            return flare::result_status::ok();
         }
 
         TsChannel *channel = _tschan_group.get(pid);
         if (channel == NULL) {
-            return flare::base::flare_status(EINVAL, "Fail to get channel on pid=%d", (int) pid);
+            return flare::result_status(EINVAL, "Fail to get channel on pid=%d", (int) pid);
         }
 
         bool first_msg = true;
@@ -1424,11 +1424,11 @@ namespace flare::rpc {
             }
             msg->payload.cutn(buf + pkt_size, left);
             if (pkt.Encode(buf) != 0) {
-                return flare::base::flare_status(EINVAL, "Fail to encode PES");
+                return flare::result_status(EINVAL, "Fail to encode PES");
             }
             _outbuf->append(buf, TS_PACKET_SIZE);
         }
-        return flare::base::flare_status::OK();
+        return flare::result_status::ok();
     }
 
 } // namespace flare::rpc

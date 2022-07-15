@@ -151,7 +151,7 @@ public:
         FLARE_LOG(INFO) << __FUNCTION__ << "(" << this << ")";
     }
     void OnPlay(const flare::rpc::RtmpPlayOptions& opt,
-                flare::base::flare_status* status,
+                flare::result_status* status,
                 google::protobuf::Closure* done) {
         flare::rpc::ClosureGuard done_guard(done);
         FLARE_LOG(INFO) << remote_side() << "|stream=" << stream_id()
@@ -273,7 +273,7 @@ public:
     }
     void OnPublish(const std::string& stream_name,
                    flare::rpc::RtmpPublishType publish_type,
-                   flare::base::flare_status* status,
+                   flare::result_status* status,
                    google::protobuf::Closure* done) {
         flare::rpc::ClosureGuard done_guard(done);
         FLARE_LOG(INFO) << remote_side() << "|stream=" << stream_id()

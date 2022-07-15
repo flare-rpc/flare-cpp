@@ -354,7 +354,7 @@ namespace flare::rpc {
         if (msg) {
             clear_user_message();
             if (msg != DUMMY_USER_MESSAGE) {
-                flare::base::flare_status st = msg->AppendAndDestroySelf(&data, s);
+                flare::result_status st = msg->AppendAndDestroySelf(&data, s);
                 if (!st.ok()) {
                     // Abandon the request.
                     data.clear();

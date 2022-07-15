@@ -1516,14 +1516,14 @@ namespace flare::rpc {
             "h2_append_request_second",     &g_append_request_time);
 #endif
 
-        flare::base::flare_status
+        flare::result_status
         H2UnsentRequest::AppendAndDestroySelf(flare::cord_buf *out, Socket *socket) {
 #if defined(FLARE_RPC_PROFILE_H2)
             flare::scoped_timer<flare::counter<int64_t> > tm(g_append_request_time);
 #endif
             RemoveRefOnQuit deref_self(this);
             if (socket == nullptr) {
-                return flare::base::flare_status::OK();
+                return flare::result_status::ok();
             }
             H2Context *ctx = static_cast<H2Context *>(socket->parsing_context());
 
@@ -1533,7 +1533,7 @@ namespace flare::rpc {
                 ctx = new H2Context(socket, nullptr);
                 if (ctx->Init() != 0) {
                     delete ctx;
-                    return flare::base::flare_status(EINTERNAL, "Fail to init H2Context");
+                    return flare::result_status(EINTERNAL, "Fail to init H2Context");
                 }
                 socket->initialize_parsing_context(&ctx);
 
@@ -1550,14 +1550,14 @@ namespace flare::rpc {
 
             // TODO(zhujiashun): also check this in server push
             if (ctx->VolatilePendingStreamSize() > ctx->remote_settings().max_concurrent_streams) {
-                return flare::base::flare_status(ELIMIT, "Pending Stream count exceeds max concurrent stream");
+                return flare::result_status(ELIMIT, "Pending Stream count exceeds max concurrent stream");
             }
 
             // Although the critical section looks huge, it should rarely be contended
             // since timeout of RPC is much larger than the delay of sending.
             std::unique_lock<std::mutex> mu(_mutex);
             if (_cntl == nullptr) {
-                return flare::base::flare_status(ECANCELED, "The RPC was already failed");
+                return flare::result_status(ECANCELED, "The RPC was already failed");
             }
 
             const int id = ctx->AllocateClientStreamId();
@@ -1567,7 +1567,7 @@ namespace flare::rpc {
                 // other RPC successfully sent requests and waiting for responses.
                 RPC_VLOG << "Fail to allocate stream_id on " << *socket
                          << " h2req=" << (StreamUserData *) this;
-                return flare::base::flare_status(EH2RUNOUTSTREAMS, "Fail to allocate stream_id");
+                return flare::result_status(EH2RUNOUTSTREAMS, "Fail to allocate stream_id");
             }
 
             _sctx->Init(ctx, id);
@@ -1575,16 +1575,16 @@ namespace flare::rpc {
             if (!_cntl->request_attachment().empty()) {
                 const int64_t data_size = _cntl->request_attachment().size();
                 if (!_sctx->ConsumeWindowSize(data_size)) {
-                    return flare::base::flare_status(ELIMIT, "remote_window_left is not enough, data_size=%" PRId64,
+                    return flare::result_status(ELIMIT, "remote_window_left is not enough, data_size=%" PRId64,
                                                      data_size);
                 }
             }
 
             const int rc = ctx->TryToInsertStream(id, _sctx.get());
             if (rc < 0) {
-                return flare::base::flare_status(EINTERNAL, "Fail to insert existing stream_id");
+                return flare::result_status(EINTERNAL, "Fail to insert existing stream_id");
             } else if (rc > 0) {
-                return flare::base::flare_status(ELOGOFF, "the connection just issued GOAWAY");
+                return flare::result_status(ELOGOFF, "the connection just issued GOAWAY");
             }
             _stream_id = _sctx->stream_id();
             // After calling TryToInsertStream, the ownership of _sctx is transferred to ctx
@@ -1610,7 +1610,7 @@ namespace flare::rpc {
             appender.move_to(frag);
             flare::cord_buf dummy_buf;
             PackH2Message(out, frag, dummy_buf, _cntl->request_attachment(), _stream_id, ctx);
-            return flare::base::flare_status::OK();
+            return flare::result_status::ok();
         }
 
         size_t H2UnsentRequest::EstimatedByteSize() {
@@ -1702,14 +1702,14 @@ namespace flare::rpc {
             "h2_append_response_second",     &g_append_response_time);
 #endif
 
-        flare::base::flare_status
+        flare::result_status
         H2UnsentResponse::AppendAndDestroySelf(flare::cord_buf *out, Socket *socket) {
 #if defined(FLARE_RPC_PROFILE_H2)
             flare::scoped_timer<flare::counter<int64_t> > tm(g_append_response_time);
 #endif
             DestroyingPtr<H2UnsentResponse> destroy_self(this);
             if (socket == nullptr) {
-                return flare::base::flare_status::OK();
+                return flare::result_status::ok();
             }
             H2Context *ctx = static_cast<H2Context *>(socket->parsing_context());
 
@@ -1725,7 +1725,7 @@ namespace flare::rpc {
                 SerializeFrameHead(rstbuf, 4, H2_FRAME_RST_STREAM, 0, _stream_id);
                 SaveUint32(rstbuf + FRAME_HEAD_SIZE, H2_FLOW_CONTROL_ERROR);
                 out->append(rstbuf, sizeof(rstbuf));
-                return flare::base::flare_status::OK();
+                return flare::result_status::ok();
             }
 
             HPacker &hpacker = ctx->hpacker();
@@ -1760,7 +1760,7 @@ namespace flare::rpc {
             }
 
             PackH2Message(out, frag, trailer_frag, _data, _stream_id, ctx);
-            return flare::base::flare_status::OK();
+            return flare::result_status::ok();
         }
 
         size_t H2UnsentResponse::EstimatedByteSize() {

@@ -64,7 +64,24 @@ namespace flare {
             return _error;
         }
 
+        void swap(result_status &rhs) {
+            std::swap(_error, rhs._error);
+            std::swap(_error_msg, rhs._error_msg);
+        }
+
+        const char* error_cstr() const {
+            return _error == 0 ? "OK" : _error_msg.c_str();
+        }
+
+        const std::string &error_str() const {
+            return error_data();
+        }
+
         const std::string &error_data() const {
+            static std::string ok_str = "OK";
+            if(_error == 0) {
+                return ok_str;
+            }
             return _error_msg;
         }
 
@@ -86,5 +103,12 @@ namespace flare {
         int _error{0};
         std::string _error_msg;
     };
+
+    inline std::ostream &operator<<(std::ostream &os, const result_status &st) {
+        // NOTE: don't use st.error_text() which is inaccurate if message has '\0'
+        return os << st.error_data();
+    }
+
 }  // namespace flare
+
 #endif  // FLARE_BASE_RESULT_STATUS_H_

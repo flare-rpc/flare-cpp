@@ -197,13 +197,13 @@ public:
 
 private:
 
-    flare::base::flare_status AppendAndDestroySelf(flare::cord_buf *out_buf, flare::rpc::Socket *) {
+    flare::result_status AppendAndDestroySelf(flare::cord_buf *out_buf, flare::rpc::Socket *) {
         out_buf->append(_str, _len);
         if (_called) {
             *_called = g_called_seq.fetch_add(1, std::memory_order_relaxed);
         }
         delete this;
-        return flare::base::flare_status::OK();
+        return flare::result_status::ok();
     };
     const char *_str;
     size_t _len;
@@ -212,14 +212,14 @@ private:
 
 class MyErrorMessage : public flare::rpc::SocketMessage {
 public:
-    explicit MyErrorMessage(const flare::base::flare_status &st) : _status(st) {}
+    explicit MyErrorMessage(const flare::result_status &st) : _status(st) {}
 
 private:
 
-    flare::base::flare_status AppendAndDestroySelf(flare::cord_buf *, flare::rpc::Socket *) {
+    flare::result_status AppendAndDestroySelf(flare::cord_buf *, flare::rpc::Socket *) {
         return _status;
     };
-    flare::base::flare_status _status;
+    flare::result_status _status;
 };
 
 TEST_F(SocketTest, single_threaded_write) {
@@ -250,7 +250,7 @@ TEST_F(SocketTest, single_threaded_write) {
                 ASSERT_EQ(0, s->Write(msg));
             } else if (i % 4 == 1) {
                 flare::rpc::SocketMessagePtr<MyErrorMessage> msg(
-                        new MyErrorMessage(flare::base::flare_status(EINVAL, "Invalid input")));
+                        new MyErrorMessage(flare::result_status(EINVAL, "Invalid input")));
                 fiber_token_t wait_id;
                 WaitData data;
                 ASSERT_EQ(0, fiber_token_create2(&wait_id, &data, OnWaitIdReset));

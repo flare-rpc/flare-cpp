@@ -11,13 +11,11 @@
 
 #include "flare/files/filesystem.h"
 #include "flare/base/profile.h"
-#include "flare/base/status.h"
+#include "flare/base/result_status.h"
 #include "flare/io/cord_buf.h"
 #include <fcntl.h>
 
 namespace flare {
-
-    using flare::base::flare_status;
 
     class random_access_file {
     public:
@@ -25,13 +23,13 @@ namespace flare {
 
         ~random_access_file();
 
-        flare_status open(const flare::file_path &path) noexcept;
+        result_status open(const flare::file_path &path) noexcept;
 
-        flare_status read(size_t n, off_t offset, std::string *content);
+        result_status read(size_t n, off_t offset, std::string *content);
 
-        flare_status read(size_t n, off_t offset, flare::cord_buf *buf);
+        result_status read(size_t n, off_t offset, flare::cord_buf *buf);
 
-        bool is_eof(off_t off, size_t has_read, flare_status *frs);
+        bool is_eof(off_t off, size_t has_read, result_status *frs);
 
 
         const flare::file_path &path() const {
