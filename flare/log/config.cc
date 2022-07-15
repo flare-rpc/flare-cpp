@@ -1,6 +1,10 @@
-//
-// Created by jeff.li.
-//
+
+/****************************************************************
+ * Copyright (c) 2022, liyinbin
+ * All rights reserved.
+ * Author by liyinbin (jeff.li) lijippy@163.com
+ *****************************************************************/
+
 
 #include "flare/log/config.h"
 #include "flare/log/severity.h"
