@@ -1041,7 +1041,7 @@ namespace flare::rpc {
     flare::result_status TsWriter::Write(const RtmpAudioMessage &msg) {
         // ts support audio codec: aac/mp3
         if (msg.codec != FLV_AUDIO_AAC && msg.codec != FLV_AUDIO_MP3) {
-            return flare::result_status(EINVAL, "Unsupported codec=%s",
+            return flare::result_status(EINVAL, "Unsupported codec={}",
                                              FlvAudioCodec2Str(msg.codec));
         }
         const int64_t dts = static_cast<int64_t>(msg.timestamp) * 90;
@@ -1071,7 +1071,7 @@ namespace flare::rpc {
                 return flare::result_status(EINVAL, "Lack of AAC sequence header");
             }
             if (aac_msg.data.size() > 0x1fff) {
-                return flare::result_status(EINVAL, "Invalid AAC data_size=%" PRIu64,
+                return flare::result_status(EINVAL, "Invalid AAC data_size={}",
                                                  (uint64_t) aac_msg.data.size());
             }
 
@@ -1087,7 +1087,7 @@ namespace flare::rpc {
             const AACProfile aac_profile =
                     AACObjectType2Profile(_aac_seq_header.aac_object);
             if (aac_profile == AAC_PROFILE_UNKNOWN) {
-                return flare::result_status(EINVAL, "Invalid aac_object=%d",
+                return flare::result_status(EINVAL, "Invalid aac_object={}",
                                                  (int) _aac_seq_header.aac_object);
             }
             adts_header[2] = (aac_profile << 6) & 0xc0;
@@ -1112,7 +1112,7 @@ namespace flare::rpc {
         TsPid apid = TS_PID_NULL;
         TsStream as = FlvAudioCodec2TsStream(msg.codec, &apid);
         if (as == TS_STREAM_RESERVED) {
-            return flare::result_status(EINVAL, "Unsupported audio codec=%s",
+            return flare::result_status(EINVAL, "Unsupported audio codec={}",
                                              FlvAudioCodec2Str(msg.codec));
         }
         return Encode(&tsmsg, as, apid);
@@ -1202,7 +1202,7 @@ namespace flare::rpc {
             return flare::result_status::ok();
         }
         if (msg.codec != FLV_VIDEO_AVC) {
-            return flare::result_status(EINVAL, "video_codec=%s is not AVC",
+            return flare::result_status(EINVAL, "video_codec={} is not AVC",
                                              FlvVideoCodec2Str(msg.codec));
         }
         RtmpAVCMessage avc_msg;
@@ -1286,7 +1286,7 @@ namespace flare::rpc {
         TsPid vpid = TS_PID_PAT;
         TsStream vs = FlvVideoCodec2TsStream(msg.codec, &vpid);
         if (vs == TS_STREAM_RESERVED) {
-            return flare::result_status(EINVAL, "Unsupported video codec=%s",
+            return flare::result_status(EINVAL, "Unsupported video codec={}",
                                              FlvVideoCodec2Str(msg.codec));
         }
         return Encode(&tsmsg, vs, vpid);
@@ -1324,7 +1324,7 @@ namespace flare::rpc {
 
     flare::result_status TsWriter::Encode(TsMessage *msg, TsStream stream, TsPid pid) {
         if (stream == TS_STREAM_RESERVED) {
-            return flare::result_status(EINVAL, "Invalid stream=%d", (int) stream);
+            return flare::result_status(EINVAL, "Invalid stream={}", (int) stream);
         }
         // Encode the media frame to PES packets over TS.
         bool add_pat_pmt = false;
@@ -1341,7 +1341,7 @@ namespace flare::rpc {
                 add_pat_pmt = true;
             }
         } else {
-            return flare::result_status(EINVAL, "Unknown stream_id=%d", (int) msg->sid);
+            return flare::result_status(EINVAL, "Unknown stream_id={}", (int) msg->sid);
         }
         if (!_encoded_pat_pmt) {
             _encoded_pat_pmt = true;
@@ -1372,7 +1372,7 @@ namespace flare::rpc {
 
         TsChannel *channel = _tschan_group.get(pid);
         if (channel == NULL) {
-            return flare::result_status(EINVAL, "Fail to get channel on pid=%d", (int) pid);
+            return flare::result_status(EINVAL, "Fail to get channel on pid={}", (int) pid);
         }
 
         bool first_msg = true;

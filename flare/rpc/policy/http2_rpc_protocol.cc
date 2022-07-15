@@ -1575,7 +1575,7 @@ namespace flare::rpc {
             if (!_cntl->request_attachment().empty()) {
                 const int64_t data_size = _cntl->request_attachment().size();
                 if (!_sctx->ConsumeWindowSize(data_size)) {
-                    return flare::result_status(ELIMIT, "remote_window_left is not enough, data_size=%" PRId64,
+                    return flare::result_status(ELIMIT, "remote_window_left is not enough, data_size={}",
                                                      data_size);
                 }
             }

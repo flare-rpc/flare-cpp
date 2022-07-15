@@ -171,10 +171,10 @@ namespace flare::rpc {
 
     static void CreateIgnoreAllRead() { s_ignore_all_read = new IgnoreAllRead; }
 
-// If resource needs to be destroyed or memory needs to be deleted (both
-// directly and indirectly referenced), do them in this method. Notice that
-// you don't have to set the fields to initial state after deletion since
-// they'll be set uniformly after this method is called.
+    // If resource needs to be destroyed or memory needs to be deleted (both
+    // directly and indirectly referenced), do them in this method. Notice that
+    // you don't have to set the fields to initial state after deletion since
+    // they'll be set uniformly after this method is called.
     void Controller::ResetNonPods() {
         if (_span) {
             Span::Submit(_span, flare::get_current_time_micros());
@@ -1424,7 +1424,7 @@ namespace flare::rpc {
         }
         if (has_progressive_reader()) {
             return r->OnEndOfMessage(
-                    flare::result_status(EPERM, "%s can't be called more than once",
+                    flare::result_status(EPERM, "{} can't be called more than once",
                                               __FUNCTION__));
         }
         add_flag(FLAGS_PROGRESSIVE_READER);

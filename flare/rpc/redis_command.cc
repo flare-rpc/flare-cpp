@@ -253,8 +253,8 @@ namespace flare::rpc {
                     quote_pos - std::min((size_t) (quote_pos - fmt), CTX_WIDTH);
             size_t ctx_size =
                     std::min((size_t) (fmt + fmt_len - ctx_begin), CTX_WIDTH * 2 + 1);
-            return flare::result_status(EINVAL, "Unmatched quote: ...%.*s... (offset=%lu)",
-                                             (int) ctx_size, ctx_begin, quote_pos - fmt);
+            return flare::result_status(EINVAL, "Unmatched quote: ...{}... (offset={})",
+                                        std::string_view(ctx_begin, (int) ctx_size), quote_pos - fmt);
         }
 
         if (!compbuf.empty()) {
@@ -329,8 +329,8 @@ namespace flare::rpc {
                     quote_pos - std::min((size_t) (quote_pos - cmd.data()), CTX_WIDTH);
             size_t ctx_size =
                     std::min((size_t) (cmd.data() + cmd.size() - ctx_begin), CTX_WIDTH * 2 + 1);
-            return flare::result_status(EINVAL, "Unmatched quote: ...%.*s... (offset=%lu)",
-                                             (int) ctx_size, ctx_begin, quote_pos - cmd.data());
+            return flare::result_status(EINVAL, "Unmatched quote: ...{}... (offset={})",
+                                             std::string_view(ctx_begin, (int) ctx_size), quote_pos - cmd.data());
         }
 
         if (!compbuf.empty()) {

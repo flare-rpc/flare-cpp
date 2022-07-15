@@ -915,7 +915,7 @@ namespace {
     public:
         // @ProgressiveReader
         flare::result_status OnReadOnePart(const void * /*data*/, size_t /*length*/) {
-            return flare::result_status(-1, "intended fail at %s:%d", __FILE__, __LINE__);
+            return flare::result_status(-1, "intended fail at {}:{}", __FILE__, __LINE__);
         }
 
         void OnEndOfMessage(const flare::result_status &st) {

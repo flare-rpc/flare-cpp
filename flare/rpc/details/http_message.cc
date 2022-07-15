@@ -322,7 +322,7 @@ namespace flare::rpc {
     public:
         // @ProgressiveReader
         flare::result_status OnReadOnePart(const void * /*data*/, size_t /*length*/) {
-            return flare::result_status(-1, "Trigger by FailAllRead at %s:%d",
+            return flare::result_status(-1, "Trigger by FailAllRead at {}:{}",
                                              __FILE__, __LINE__);
         }
 

@@ -66,7 +66,7 @@ namespace {
         oss << st1;
         ASSERT_EQ(NO_MEMORY_STR, oss.str());
 
-        flare::result_status st2(EINVAL, "%s%s", NO_MEMORY_STR, NO_CPU_STR);
+        flare::result_status st2(EINVAL, "{}{}", NO_MEMORY_STR, NO_CPU_STR);
         ASSERT_FALSE(st2.is_ok());
         ASSERT_EQ(EINVAL, st2.error_code());
         ASSERT_STREQ(NO_MEMORY_STR NO_CPU_STR, st2.error_cstr());
@@ -84,7 +84,7 @@ namespace {
         oss << st3;
         ASSERT_EQ(NO_MEMORY_STR, oss.str());
 
-        flare::result_status st4(EINVAL, "%s%s", NO_MEMORY_STR, NO_CPU_STR);
+        flare::result_status st4(EINVAL, "{}{}", NO_MEMORY_STR, NO_CPU_STR);
         ASSERT_FALSE(st4.is_ok());
         ASSERT_EQ(EINVAL, st4.error_code());
         ASSERT_STREQ(NO_MEMORY_STR NO_CPU_STR, st4.error_cstr());
@@ -129,7 +129,7 @@ namespace {
         oss << st1;
         ASSERT_EQ(NO_MEMORY_STR, oss.str());
 
-        st1.set_error(EINVAL, "%{}%{}", NO_MEMORY_STR, NO_CPU_STR);
+        st1.set_error(EINVAL, "{}{}", NO_MEMORY_STR, NO_CPU_STR);
         ASSERT_FALSE(st1.is_ok());
         ASSERT_EQ(EINVAL, st1.error_code());
         ASSERT_STREQ(NO_MEMORY_STR NO_CPU_STR, st1.error_cstr());
@@ -196,7 +196,7 @@ namespace {
         oss << st2;
         ASSERT_EQ(NO_MEMORY_STR, oss.str());
 
-        st1.set_error(EINVAL, "%{}%{}", NO_MEMORY_STR, NO_CPU_STR);
+        st1.set_error(EINVAL, "{}{}", NO_MEMORY_STR, NO_CPU_STR);
         ASSERT_FALSE(st1.is_ok());
         ASSERT_EQ(EINVAL, st1.error_code());
         ASSERT_STREQ(NO_MEMORY_STR NO_CPU_STR, st1.error_cstr());

@@ -442,7 +442,7 @@ namespace flare::rpc {
 
     flare::result_status RtmpAACMessage::Create(const RtmpAudioMessage &msg) {
         if (msg.codec != FLV_AUDIO_AAC) {
-            return flare::result_status(EINVAL, "codec=%s is not AAC",
+            return flare::result_status(EINVAL, "codec={} is not AAC",
                                              FlvAudioCodec2Str(msg.codec));
         }
         const uint8_t *p = (const uint8_t *) msg.data.fetch1();
@@ -450,7 +450,7 @@ namespace flare::rpc {
             return flare::result_status(EINVAL, "Not enough data in AudioMessage");
         }
         if (*p > FLV_AAC_PACKET_RAW) {
-            return flare::result_status(EINVAL, "Invalid AAC packet_type=%d", (int) *p);
+            return flare::result_status(EINVAL, "Invalid AAC packet_type={}", (int) *p);
         }
         this->timestamp = msg.timestamp;
         this->rate = msg.rate;
@@ -467,7 +467,7 @@ namespace flare::rpc {
 
     flare::result_status AudioSpecificConfig::Create(const flare::cord_buf &buf) {
         if (buf.size() < 2u) {
-            return flare::result_status(EINVAL, "data_size=%" PRIu64 " is too short",
+            return flare::result_status(EINVAL, "data_size={} is too short",
                                              (uint64_t) buf.size());
         }
         char tmpbuf[2];
@@ -477,7 +477,7 @@ namespace flare::rpc {
 
     flare::result_status AudioSpecificConfig::Create(const void *data, size_t len) {
         if (len < 2u) {
-            return flare::result_status(EINVAL, "data_size=%" PRIu64 " is too short", (uint64_t) len);
+            return flare::result_status(EINVAL, "data_size={} is too short", (uint64_t) len);
         }
         uint8_t profile_ObjectType = ((const char *) data)[0];
         uint8_t samplingFrequencyIndex = ((const char *) data)[1];
@@ -503,7 +503,7 @@ namespace flare::rpc {
 
     flare::result_status RtmpAVCMessage::Create(const RtmpVideoMessage &msg) {
         if (msg.codec != FLV_VIDEO_AVC) {
-            return flare::result_status(EINVAL, "codec=%s is not AVC",
+            return flare::result_status(EINVAL, "codec={} is not AVC",
                                              FlvVideoCodec2Str(msg.codec));
         }
         uint8_t buf[4];
@@ -512,7 +512,7 @@ namespace flare::rpc {
             return flare::result_status(EINVAL, "Not enough data in VideoMessage");
         }
         if (*p > FLV_AVC_PACKET_END_OF_SEQUENCE) {
-            return flare::result_status(EINVAL, "Invalid AVC packet_type=%d", (int) *p);
+            return flare::result_status(EINVAL, "Invalid AVC packet_type={}", (int) *p);
         }
         this->timestamp = msg.timestamp;
         this->frame_type = msg.frame_type;
@@ -614,7 +614,7 @@ namespace flare::rpc {
     flare::result_status AVCDecoderConfigurationRecord::Create(const void *data, size_t len) {
         std::string_view buf((const char *) data, len);
         if (buf.size() < 6) {
-            return flare::result_status(EINVAL, "Length=%lu is not long enough",
+            return flare::result_status(EINVAL, "Length={} is not long enough",
                                              (unsigned long) buf.size());
         }
         // skip configurationVersion at buf[0]
@@ -705,7 +705,7 @@ namespace flare::rpc {
         // the NAL unit as specified in Table 7-1.
         const AVCNaluType nal_unit_type = (AVCNaluType) (nutv & 0x1f);
         if (nal_unit_type != AVC_NALU_SPS) {
-            return flare::result_status(EINVAL, "nal_unit_type is not %d", (int) AVC_NALU_SPS);
+            return flare::result_status(EINVAL, "nal_unit_type is not {}", (int) AVC_NALU_SPS);
         }
         // Extract the rbsp from sps.
         DEFINE_SMALL_ARRAY(char, rbsp, sps_length - 1, 64);
@@ -730,7 +730,7 @@ namespace flare::rpc {
         }
         int8_t flags = *p++;
         if (flags & 0x03) {
-            return flare::result_status(EINVAL, "Invalid flags=%d", (int) flags);
+            return flare::result_status(EINVAL, "Invalid flags={}", (int) flags);
         }
         uint8_t level_idc = *p++;
         if (!level_idc) {
@@ -742,7 +742,7 @@ namespace flare::rpc {
             return flare::result_status(EINVAL, "Fail to read seq_parameter_set_id");
         }
         if (seq_parameter_set_id < 0) {
-            return flare::result_status(EINVAL, "Invalid seq_parameter_set_id=%d",
+            return flare::result_status(EINVAL, "Invalid seq_parameter_set_id={}",
                                              (int) seq_parameter_set_id);
         }
         int32_t chroma_format_idc = -1;
@@ -780,11 +780,11 @@ namespace flare::rpc {
                     int8_t seq_scaling_matrix_present_flag_i = -1;
                     if (avc_nalu_read_bit(&bs, &seq_scaling_matrix_present_flag_i)) {
                         return flare::result_status(EINVAL, "Fail to read seq_scaling_"
-                                                                 "matrix_present_flag[%d]", i);
+                                                                 "matrix_present_flag[{}]", i);
                     }
                     if (seq_scaling_matrix_present_flag_i) {
                         return flare::result_status(EINVAL, "Invalid seq_scaling_matrix_"
-                                                                 "present_flag[%d]=%d nb_scmpfs=%d",
+                                                                 "present_flag[{}]={} nb_scmpfs={}",
                                                          i, (int) seq_scaling_matrix_present_flag_i,
                                                          nb_scmpfs);
                     }
@@ -822,7 +822,7 @@ namespace flare::rpc {
                 return flare::result_status(EINVAL, "Fail to read num_ref_frames_in_pic_order_cnt_cycle");
             }
             if (num_ref_frames_in_pic_order_cnt_cycle) {
-                return flare::result_status(EINVAL, "Invalid num_ref_frames_in_pic_order_cnt_cycle=%d",
+                return flare::result_status(EINVAL, "Invalid num_ref_frames_in_pic_order_cnt_cycle={}",
                                                  num_ref_frames_in_pic_order_cnt_cycle);
             }
         }

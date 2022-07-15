@@ -834,7 +834,7 @@ namespace flare::rpc {
             RtmpChunkStream *cstream = ctx->GetChunkStream(chunk_stream_id);
             if (cstream == NULL) {
                 s->SetFailed(EINVAL, "Invalid chunk_stream_id=%u", chunk_stream_id);
-                return flare::result_status(EINVAL, "Invalid chunk_stream_id=%u", chunk_stream_id);
+                return flare::result_status(EINVAL, "Invalid chunk_stream_id={}", chunk_stream_id);
             }
             if (cstream->SerializeMessage(out, header, &body) != 0) {
                 s->SetFailed(EINVAL, "Fail to serialize message");
@@ -3614,7 +3614,7 @@ namespace flare::rpc {
             // Serialize createStream command
             RtmpContext *ctx = static_cast<RtmpContext *>(socket->parsing_context());
             if (ctx == NULL) {
-                return flare::result_status(EINVAL, "RtmpContext of %s is not created",
+                return flare::result_status(EINVAL, "RtmpContext of {} is not created",
                                                  socket->description().c_str());
             }
             flare::cord_buf req_buf;
@@ -3657,7 +3657,7 @@ namespace flare::rpc {
             if (cstream == NULL) {
                 socket->SetFailed(EINVAL, "Invalid chunk_stream_id=%u",
                                   RTMP_CONTROL_CHUNK_STREAM_ID);
-                return flare::result_status(EINVAL, "Invalid chunk_stream_id=%u",
+                return flare::result_status(EINVAL, "Invalid chunk_stream_id={}",
                                                  RTMP_CONTROL_CHUNK_STREAM_ID);
             }
             RtmpMessageHeader header;

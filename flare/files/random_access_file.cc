@@ -63,7 +63,7 @@ namespace flare {
             } else {
                 FLARE_LOG(WARNING) << "read failed, errno: " <<errno<<" "<<flare_error()
                              << " fd: " << _fd << " size: " << n;
-                frs.set_error(errno, "%s", flare_error());
+                frs.set_error(errno, "{}", flare_error());
                 return frs;
             }
         }
