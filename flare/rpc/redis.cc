@@ -141,11 +141,11 @@ namespace flare::rpc {
             return false;
         }
         const flare::result_status st = RedisCommandNoFormat(&_buf, command);
-        if (st.ok()) {
+        if (st.is_ok()) {
             ++_ncommand;
             return true;
         } else {
-            FLARE_CHECK(st.ok()) << st;
+            FLARE_CHECK(st.is_ok()) << st;
             _has_error = true;
             return false;
         }
@@ -157,11 +157,11 @@ namespace flare::rpc {
             return false;
         }
         const flare::result_status st = RedisCommandByComponents(&_buf, components, n);
-        if (st.ok()) {
+        if (st.is_ok()) {
             ++_ncommand;
             return true;
         } else {
-            FLARE_CHECK(st.ok()) << st;
+            FLARE_CHECK(st.is_ok()) << st;
             _has_error = true;
             return false;
         }
@@ -175,11 +175,11 @@ namespace flare::rpc {
         va_start(ap, fmt);
         const flare::result_status st = RedisCommandFormatV(&_buf, fmt, ap);
         va_end(ap);
-        if (st.ok()) {
+        if (st.is_ok()) {
             ++_ncommand;
             return true;
         } else {
-            FLARE_CHECK(st.ok()) << st;
+            FLARE_CHECK(st.is_ok()) << st;
             _has_error = true;
             return false;
         }
@@ -190,11 +190,11 @@ namespace flare::rpc {
             return false;
         }
         const flare::result_status st = RedisCommandFormatV(&_buf, fmt, ap);
-        if (st.ok()) {
+        if (st.is_ok()) {
             ++_ncommand;
             return true;
         } else {
-            FLARE_CHECK(st.ok()) << st;
+            FLARE_CHECK(st.is_ok()) << st;
             _has_error = true;
             return false;
         }

@@ -38,7 +38,7 @@ namespace flare {
     result_status sequential_read_file::read(std::string *content, size_t n) {
         flare::IOPortal portal;
         auto frs = read(&portal, n);
-        if (frs.ok()) {
+        if (frs.is_ok()) {
             auto size = portal.size();
             portal.cutn(content, size);
         }

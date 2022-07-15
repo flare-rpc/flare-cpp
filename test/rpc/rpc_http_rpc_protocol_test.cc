@@ -223,7 +223,7 @@ namespace {
             flare::rpc::policy::PackH2Request(NULL, &socket_message, cntl->call_id().value,
                                               NULL, cntl, request_buf, NULL);
             flare::result_status st = socket_message->AppendAndDestroySelf(out, _h2_client_sock.get());
-            ASSERT_TRUE(st.ok());
+            ASSERT_TRUE(st.is_ok());
             *h2_stream_id = h2_req->_stream_id;
         }
 

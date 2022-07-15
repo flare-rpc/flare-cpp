@@ -2766,7 +2766,7 @@ namespace flare::rpc {
         void OnPlayContinuation::Run() {
             std::unique_ptr<OnPlayContinuation> delete_self(this);
 
-            if (status.ok()) {
+            if (status.is_ok()) {
                 // nothing to do, we already sent NetStream.Play.Reset/Start stuff in
                 // RtmpContext::OnPlay(). Notice that we can't send those stuff here
                 // because user may write to players inside RtmpStreamBase::OnPlay()
@@ -3071,7 +3071,7 @@ namespace flare::rpc {
 
         void OnPublishContinuation::Run() {
             std::unique_ptr<OnPublishContinuation> delete_self(this);
-            if (!status.ok()) {
+            if (!status.is_ok()) {
                 if (publish_stream->SendStopMessage(status.error_cstr()) != 0) {
                     FLARE_PLOG(WARNING) << "Fail to send StreamNotFound to "
                                         << publish_stream->remote_side();

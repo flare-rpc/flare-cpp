@@ -39,7 +39,7 @@ namespace flare {
     result_status random_access_file::read(size_t n, off_t offset, std::string *content) {
         flare::IOPortal portal;
         auto frs = read(n, offset, &portal);
-        if (frs.ok()) {
+        if (frs.is_ok()) {
             auto size = portal.size();
             portal.cutn(content, size);
         }

@@ -210,7 +210,7 @@ namespace flare::rpc {
 
     flare::result_status FlvReader::PeekMessageType(FlvTagType *type_out) {
         flare::result_status st = ReadHeader();
-        if (!st.ok()) {
+        if (!st.is_ok()) {
             return st;
         }
         const char *p = (const char *) _buf->fetch1();
@@ -647,7 +647,7 @@ namespace flare::rpc {
             }
             if (sps_length > 0) {
                 flare::result_status st = ParseSPS(buf.data() + 2, sps_length);
-                if (!st.ok()) {
+                if (!st.is_ok()) {
                     return st;
                 }
                 sps_list.push_back(flare::as_string(buf.substr(2, sps_length)));

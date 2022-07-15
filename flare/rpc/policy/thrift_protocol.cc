@@ -474,7 +474,7 @@ void ProcessThriftRequest(InputMessageBase* msg_base) {
     ::apache::thrift::protocol::TMessageType mtype;
     flare:result_status st = ReadThriftMessageBegin(
         &msg->payload, &cntl->_thrift_method_name, &mtype, &seq_id);
-    if (!st.ok()) {
+    if (!st.is_ok()) {
         return cntl->SetFailed(EREQUEST, "%s", st.error_cstr());
     }
     msg->payload.swap(req->body);
@@ -586,7 +586,7 @@ void ProcessThriftResponse(InputMessageBase* msg_base) {
         uint32_t seq_id = 0; // unchecked
         
         flare:result_status st = ReadThriftMessageBegin(&msg->payload, &fname, &mtype, &seq_id);
-        if (!st.ok()) {
+        if (!st.is_ok()) {
             cntl->SetFailed(ERESPONSE, "%s", st.error_cstr());
             break;
         }

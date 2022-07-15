@@ -19,13 +19,13 @@ namespace flare {
         sequential_read_file file;
         _path = path;
         _status = file.open(_path);
-        if (!_status.ok()) {
+        if (!_status.is_ok()) {
             FLARE_LOG(ERROR) << "open file :"<<_path<<" eroor "<< flare_error();
             return _status;
         }
 
         _status = file.read(&_content);
-        if (!_status.ok()) {
+        if (!_status.is_ok()) {
             FLARE_LOG(ERROR) << "read file :"<<_path<<" eroor "<< flare_error();
             return _status;
         }

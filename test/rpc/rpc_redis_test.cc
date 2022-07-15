@@ -565,7 +565,7 @@ namespace {
         {
             // parse from whole command
             std::string command = "set abc edc";
-            ASSERT_TRUE(flare::rpc::RedisCommandNoFormat(&buf, command.c_str()).ok());
+            ASSERT_TRUE(flare::rpc::RedisCommandNoFormat(&buf, command.c_str()).is_ok());
             ASSERT_EQ(flare::rpc::PARSE_OK, parser.Consume(buf, &command_out, &arena));
             ASSERT_TRUE(buf.empty());
             ASSERT_EQ(command, GetCompleteCommand(command_out));

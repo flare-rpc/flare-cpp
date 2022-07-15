@@ -44,7 +44,7 @@ namespace flare::rpc {
 
         // Called when there's nothing to read anymore. The `status' is a hint for
         // why this method is called.
-        // - status.ok(): the message is complete and successfully consumed.
+        // - status.is_ok(): the message is complete and successfully consumed.
         // - otherwise: socket was broken or OnReadOnePart() failed.
         // This method will be called once and only once. No other methods will
         // be called after. User can release the memory of this object inside.

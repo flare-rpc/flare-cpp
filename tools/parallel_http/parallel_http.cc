@@ -112,7 +112,7 @@ int main(int argc, char **argv) {
 
     flare::readline_file file;
     if (!FLAGS_url_file.empty()) {
-        if (!file.open(FLAGS_url_file.c_str()).ok()) {
+        if (!file.open(FLAGS_url_file.c_str()).is_ok()) {
             FLARE_PLOG(ERROR) << "Fail to open `" << FLAGS_url_file << '\'';
             return -1;
         }

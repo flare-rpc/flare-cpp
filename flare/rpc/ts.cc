@@ -1054,13 +1054,13 @@ namespace flare::rpc {
         if (msg.codec == FLV_AUDIO_AAC) {
             RtmpAACMessage aac_msg;
             flare::result_status st = aac_msg.Create(msg);
-            if (!st.ok()) {
+            if (!st.is_ok()) {
                 return st;
             }
             // ignore sequence header
             if (aac_msg.packet_type == FLV_AAC_PACKET_SEQUENCE_HEADER) {
                 flare::result_status st2 = _aac_seq_header.Create(aac_msg.data);
-                if (!st2.ok()) {
+                if (!st2.is_ok()) {
                     return st2;
                 }
                 _has_aac_seq_header = true;
@@ -1207,14 +1207,14 @@ namespace flare::rpc {
         }
         RtmpAVCMessage avc_msg;
         flare::result_status st = avc_msg.Create(msg);
-        if (!st.ok()) {
+        if (!st.is_ok()) {
             return st;
         }
         // ignore sequence header
         if (avc_msg.frame_type == FLV_VIDEO_FRAME_KEYFRAME &&
             avc_msg.packet_type == FLV_AVC_PACKET_SEQUENCE_HEADER) {
             flare::result_status st2 = _avc_seq_header.Create(avc_msg.data);
-            if (!st2.ok()) {
+            if (!st2.is_ok()) {
                 return st2;
             }
             _has_avc_seq_header = true;
@@ -1350,7 +1350,7 @@ namespace flare::rpc {
         if (add_pat_pmt) {
             flare::result_status st = EncodePATPMT(_last_video_stream, _last_video_pid,
                                                         _last_audio_stream, _last_audio_pid);
-            if (!st.ok()) {
+            if (!st.is_ok()) {
                 return st;
             }
         }

@@ -192,7 +192,7 @@ namespace flare::rpc {
         for (size_t i = 0; i < body_seen.backing_block_num(); ++i) {
             std::string_view blk = body_seen.backing_block(i);
             flare::result_status st = r->OnReadOnePart(blk.data(), blk.size());
-            if (!st.ok()) {
+            if (!st.is_ok()) {
                 mu.lock();
                 _body_reader = NULL;
                 mu.unlock();
@@ -272,7 +272,7 @@ namespace flare::rpc {
             return -1;
         }
         flare::result_status st = r->OnReadOnePart(at, length);
-        if (st.ok()) {
+        if (st.is_ok()) {
             return 0;
         }
         mu.lock();
@@ -370,7 +370,7 @@ namespace flare::rpc {
             for (size_t i = 0; i < body_seen.backing_block_num(); ++i) {
                 std::string_view blk = body_seen.backing_block(i);
                 flare::result_status st = r->OnReadOnePart(blk.data(), blk.size());
-                if (!st.ok()) {
+                if (!st.is_ok()) {
                     r->OnEndOfMessage(st);
                     // Make OnBody() or OnMessageComplete() fail on next call to
                     // close the socket. If the message was already complete, the

@@ -355,7 +355,7 @@ namespace flare::rpc {
             clear_user_message();
             if (msg != DUMMY_USER_MESSAGE) {
                 flare::result_status st = msg->AppendAndDestroySelf(&data, s);
-                if (!st.ok()) {
+                if (!st.is_ok()) {
                     // Abandon the request.
                     data.clear();
                     fiber_token_error2(id_wait, st.error_code(), st.error_cstr());
