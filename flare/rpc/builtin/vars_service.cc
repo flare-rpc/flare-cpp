@@ -320,7 +320,7 @@ namespace flare::rpc {
                 cntl->http_response().set_content_type("application/json");
                 os.move_to(cntl->response_attachment());
             } else if (rc < 0) {
-                cntl->SetFailed(ENOMETHOD, "Fail to find any variable by `%s'",
+                cntl->SetFailed(ENOMETHOD, "Fail to find any variable by `{}'",
                                 cntl->http_request().unresolved_path().c_str());
             } else {
                 cntl->SetFailed(ENODATA, "`%s' does not have value series",
@@ -419,7 +419,7 @@ namespace flare::rpc {
             return;
         }
         if (!options.white_wildcards.empty() && ndump == 0) {
-            cntl->SetFailed(ENOMETHOD, "Fail to find any variable by `%s'",
+            cntl->SetFailed(ENOMETHOD, "Fail to find any variable by `{}'",
                             options.white_wildcards.c_str());
         }
         if (with_tabs) {
