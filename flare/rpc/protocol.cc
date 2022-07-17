@@ -140,12 +140,12 @@ namespace flare::rpc {
         }
         if (!request->IsInitialized()) {
             return cntl->SetFailed(
-                    EREQUEST, "Missing required fields in request: %s",
+                    EREQUEST, "Missing required fields in request: {}",
                     request->InitializationErrorString().c_str());
         }
         if (!SerializeAsCompressedData(*request, buf, cntl->request_compress_type())) {
             return cntl->SetFailed(
-                    EREQUEST, "Fail to compress request, compress_tpye=%d",
+                    EREQUEST, "Fail to compress request, compress_tpye={}",
                     (int) cntl->request_compress_type());
         }
     }

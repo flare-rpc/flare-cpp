@@ -47,7 +47,7 @@ namespace flare::rpc {
             if (*endptr == '\0' || *endptr == '/') {
                 ::flare::fiber_internal::print_task(os, tid);
             } else {
-                cntl->SetFailed(ENOMETHOD, "path=%s is not a fiber id",
+                cntl->SetFailed(ENOMETHOD, "path={} is not a fiber id",
                                 constraint.c_str());
             }
         }

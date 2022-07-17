@@ -250,14 +250,14 @@ namespace flare::rpc {
                     int rejected_cc = 0;
                     if (!method_status->OnRequested(&rejected_cc)) {
                         mongo_done->cntl.SetFailed(
-                                ELIMIT, "Rejected by %s's ConcurrencyLimiter, concurrency=%d",
+                                ELIMIT, "Rejected by {}'s ConcurrencyLimiter, concurrency={}",
                                 mp->method->full_name().c_str(), rejected_cc);
                         break;
                     }
                 }
 
                 if (!MongoOp_IsValid(header->op_code)) {
-                    mongo_done->cntl.SetFailed(EREQUEST, "Unknown op_code:%d", header->op_code);
+                    mongo_done->cntl.SetFailed(EREQUEST, "Unknown op_code:{}", header->op_code);
                     break;
                 }
 

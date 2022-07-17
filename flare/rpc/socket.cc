@@ -589,7 +589,7 @@ namespace flare::rpc {
         const int rc2 = fiber_token_create(&m->_auth_id, nullptr, nullptr);
         if (rc2) {
             FLARE_LOG(ERROR) << "Fail to create auth_id: " << flare_error(rc2);
-            m->SetFailed(rc2, "Fail to create auth_id: %s", flare_error(rc2));
+            m->SetFailed(rc2, "Fail to create auth_id: {}", flare_error(rc2));
             return -1;
         }
         // Disable SSL check if there is no SSL context
@@ -611,7 +611,7 @@ namespace flare::rpc {
         const int rc = fiber_token_list_init(&m->_id_wait_list, 512, 512);
         if (rc) {
             FLARE_LOG(ERROR) << "Fail to init _id_wait_list: " << flare_error(rc);
-            m->SetFailed(rc, "Fail to init _id_wait_list: %s", flare_error(rc));
+            m->SetFailed(rc, "Fail to init _id_wait_list: {}", flare_error(rc));
             return -1;
         }
         m->_last_writetime_us.store(cpuwide_now, std::memory_order_relaxed);
@@ -622,7 +622,7 @@ namespace flare::rpc {
         if (m->ResetFileDescriptor(options.fd) != 0) {
             const int saved_errno = errno;
             FLARE_PLOG(ERROR) << "Fail to ResetFileDescriptor";
-            m->SetFailed(saved_errno, "Fail to ResetFileDescriptor: %s",
+            m->SetFailed(saved_errno, "Fail to ResetFileDescriptor: {}",
                          flare_error(saved_errno));
             return -1;
         }
@@ -774,7 +774,7 @@ namespace flare::rpc {
         return 0;
     }
 
-    int Socket::SetFailed(int error_code, const char *error_fmt, ...) {
+    int Socket::SetFailed(int error_code, std::string_view sv) {
         if (error_code == 0) {
             FLARE_CHECK(false) << "error_code is 0";
             error_code = EFAILEDSOCKET;
@@ -791,17 +791,9 @@ namespace flare::rpc {
                     vref, MakeVRef(id_ver + 1, NRefOfVRef(vref)),
                     std::memory_order_release,
                     std::memory_order_relaxed)) {
-                // Update _error_text
-                std::string error_text;
-                if (error_fmt != nullptr) {
-                    va_list ap;
-                    va_start(ap, error_fmt);
-                    flare::string_vprintf(&error_text, error_fmt, ap);
-                    va_end(ap);
-                }
                 pthread_mutex_lock(&_id_wait_list_mutex);
                 _error_code = error_code;
-                _error_text = error_text;
+                _error_text.assign(sv.data(),sv.size());
                 pthread_mutex_unlock(&_id_wait_list_mutex);
 
                 // Do health-checking even if we're not connected before, needed
@@ -818,7 +810,7 @@ namespace flare::rpc {
 
                 // Wake up all unresponded RPC.
                 FLARE_CHECK_EQ(0, fiber_token_list_reset2_pthreadsafe(
-                        &_id_wait_list, error_code, error_text,
+                        &_id_wait_list, error_code, _error_text,
                         &_id_wait_list_mutex));
 
                 ResetAllStreams();
@@ -865,7 +857,7 @@ namespace flare::rpc {
             // sockets for streaming purposes (say RTMP) are probably referenced
             // by many places, ReleaseAdditionalReference() cannot notify other
             // places to release refs, SetFailed() is a must.
-            return SetFailed(EUNUSED, "No data transmission for %d seconds",
+            return SetFailed(EUNUSED, "No data transmission for {} seconds",
                              idle_seconds);
         }
         return ReleaseAdditionalReference();
@@ -1137,7 +1129,7 @@ namespace flare::rpc {
                     AddEpollOut(connect_id, sockfd, false) != 0) {
                 const int saved_errno = errno;
                 FLARE_PLOG(WARNING) << "Fail to add fd=" << sockfd << " into epoll";
-                s->SetFailed(saved_errno, "Fail to add fd=%d into epoll: %s",
+                s->SetFailed(saved_errno, "Fail to add fd={} into epoll: {}",
                              (int) sockfd, flare_error(saved_errno));
                 return -1;
             }
@@ -1154,7 +1146,7 @@ namespace flare::rpc {
                                          (void *) connect_id);
                 if (rc) {
                     FLARE_LOG(ERROR) << "Fail to add timer: " << flare_error(rc);
-                    s->SetFailed(rc, "Fail to add timer: %s", flare_error(rc));
+                    s->SetFailed(rc, "Fail to add timer: {}", flare_error(rc));
                     return -1;
                 }
             }
@@ -1304,7 +1296,7 @@ namespace flare::rpc {
                 }
             }
 
-            s->SetFailed(err, "Fail to connect %s: %s",
+            s->SetFailed(err, "Fail to connect {}: {}",
                          s->description().c_str(), flare_error(err));
             s->ReleaseAllFailedWriteRequests(req);
         }
@@ -1497,7 +1489,7 @@ namespace flare::rpc {
         int ret = ConnectIfNot(opt.abstime, req);
         if (ret < 0) {
             saved_errno = errno;
-            SetFailed(errno, "Fail to connect %s directly: %m", description().c_str());
+            SetFailed(errno, "Fail to connect {} directly: {}", description().c_str(), flare_error());
             goto FAIL_TO_WRITE;
         } else if (ret == 1) {
             // We are doing connection. Callback `KeepWriteIfConnected'
@@ -1530,7 +1522,7 @@ namespace flare::rpc {
                 saved_errno = errno;
                 // EPIPE is common in pooled connections + backup requests.
                 FLARE_PLOG_IF(WARNING, errno != EPIPE) << "Fail to write into " << *this;
-                SetFailed(saved_errno, "Fail to write into %s: %s",
+                SetFailed(saved_errno, "Fail to write into {}: {}",
                           description().c_str(), flare_error(saved_errno));
                 goto FAIL_TO_WRITE;
             }
@@ -1584,7 +1576,7 @@ namespace flare::rpc {
                 if (errno != EAGAIN && errno != EOVERCROWDED) {
                     const int saved_errno = errno;
                     FLARE_PLOG(WARNING) << "Fail to keep-write into " << *s;
-                    s->SetFailed(saved_errno, "Fail to keep-write into %s: %s",
+                    s->SetFailed(saved_errno, "Fail to keep-write into {}: {}",
                                  s->description().c_str(), flare_error(saved_errno));
                     break;
                 }
@@ -1616,7 +1608,7 @@ namespace flare::rpc {
                 if (rc < 0 && errno != ETIMEDOUT) {
                     const int saved_errno = errno;
                     FLARE_PLOG(WARNING) << "Fail to wait epollout of " << *s;
-                    s->SetFailed(saved_errno, "Fail to wait epollout of %s: %s",
+                    s->SetFailed(saved_errno, "Fail to wait epollout of {}: {}",
                                  s->description().c_str(), flare_error(saved_errno));
                     break;
                 }
@@ -1872,7 +1864,7 @@ namespace flare::rpc {
                 std::memory_order_relaxed)) {
             // As expected
             if (error_code != 0) {
-                SetFailed(error_code, "Fail to authenticate %s", description().c_str());
+                SetFailed(error_code, "Fail to authenticate {}", description().c_str());
             }
             FLARE_CHECK_EQ(0, fiber_token_unlock_and_destroy(_auth_id));
         }

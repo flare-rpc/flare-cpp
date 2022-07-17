@@ -423,7 +423,7 @@ namespace flare::rpc {
         if (display_type_query) {
             display_type = StringToDisplayType(*display_type_query);
             if (display_type == DisplayType::kUnknown) {
-                return cntl->SetFailed(EINVAL, "Invalid display_type=%s", display_type_query->c_str());
+                return cntl->SetFailed(EINVAL, "Invalid display_type={}", display_type_query->c_str());
             }
 #if defined(FLARE_PLATFORM_LINUX)
             if (display_type == DisplayType::kFlameGraph && !flamegraph_tool) {
@@ -893,7 +893,7 @@ namespace flare::rpc {
         if (display_type_query) {
             display_type = StringToDisplayType(*display_type_query);
             if (display_type == DisplayType::kUnknown) {
-                return cntl->SetFailed(EINVAL, "Invalid display_type=%s", display_type_query->c_str());
+                return cntl->SetFailed(EINVAL, "Invalid display_type={}", display_type_query->c_str());
             }
 #if defined(FLARE_PLATFORM_LINUX)
             if (display_type == DisplayType::kFlameGraph && !getenv("FLAMEGRAPH_PL_PATH")) {

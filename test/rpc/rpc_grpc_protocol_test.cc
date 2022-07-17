@@ -66,7 +66,7 @@ public:
         res->set_message(g_prefix + req->message());
 
         if (req->return_error()) {
-            cntl->SetFailed(flare::rpc::EINTERNAL, "%s", g_prefix.c_str());
+            cntl->SetFailed(flare::rpc::EINTERNAL, "{}", g_prefix.c_str());
             return;
         }
         if (req->has_timeout_us()) {

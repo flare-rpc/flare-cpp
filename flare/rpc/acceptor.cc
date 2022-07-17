@@ -296,8 +296,8 @@ namespace flare::rpc {
                 if (!is_running) {
                     FLARE_LOG(WARNING) << "Acceptor on fd=" << acception->fd()
                                        << " has been stopped, discard newly created " << *sock;
-                    sock->SetFailed(ELOGOFF, "Acceptor on fd=%d has been stopped, "
-                                             "discard newly created %s", acception->fd(),
+                    sock->SetFailed(ELOGOFF, "Acceptor on fd={} has been stopped, "
+                                             "discard newly created {}", acception->fd(),
                                     sock->description().c_str());
                     return;
                 }

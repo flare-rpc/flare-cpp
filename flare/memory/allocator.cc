@@ -8,9 +8,6 @@
 
 #include "flare/memory/allocator.h"
 #include <cstring>
-
-#if defined(__linux__) || defined(__FreeBSD__) || defined(__APPLE__)
-
 #include <sys/mman.h>
 #include <unistd.h>
 
@@ -46,82 +43,6 @@ namespace {
         FLARE_CHECK(res == 0) << "Failed to protect page at " << addr;
     }
 }  // anonymous namespace
-#elif defined(__Fuchsia__)
-#include <unistd.h>
-#include <zircon/process.h>
-#include <zircon/syscalls.h>
-namespace {
-// This was a static in page_size(), but due to the following TSAN false-positive
-// bug, this has been moved out to a global.
-// https://gcc.gnu.org/bugzilla/show_bug.cgi?id=68338
-const size_t kPageSize = sysconf(_SC_PAGESIZE);
-inline size_t page_size() {
-  return kPageSize;
-}
-inline void* allocate_pages(size_t count) {
-  auto length = count * kPageSize;
-  zx_handle_t vmo;
-  if (zx_vmo_create(length, 0, &vmo) != ZX_OK) {
-    return nullptr;
-  }
-  zx_vaddr_t reservation;
-  zx_status_t status =
-      zx_vmar_map(zx_vmar_root_self(), ZX_VM_PERM_READ | ZX_VM_PERM_WRITE, 0,
-                  vmo, 0, length, &reservation);
-  zx_handle_close(vmo);
-  (void)status;
-  FLARE_CHECK(status == ZX_OK, "Failed to allocate %d pages", int(count));
-  return reinterpret_cast<void*>(reservation);
-}
-inline void freePages(void* ptr, size_t count) {
-  auto length = count * kPageSize;
-  zx_status_t status = zx_vmar_unmap(zx_vmar_root_self(),
-                                     reinterpret_cast<zx_vaddr_t>(ptr), length);
-  (void)status;
-  FLARE_CHECK(status == ZX_OK, "Failed to free %d pages at %p", int(count),
-              ptr);
-}
-inline void protect_page(void* addr) {
-  zx_status_t status = zx_vmar_protect(
-      zx_vmar_root_self(), 0, reinterpret_cast<zx_vaddr_t>(addr), kPageSize);
-  (void)status;
-  FLARE_CHECK(status == ZX_OK, "Failed to protect page at %p", addr);
-}
-}  // anonymous namespace
-#elif defined(_WIN32)
-#define WIN32_LEAN_AND_MEAN 1
-#include <Windows.h>
-namespace {
-inline size_t page_size() {
-  static auto size = [] {
-    SYSTEM_INFO systemInfo = {};
-    GetSystemInfo(&systemInfo);
-    return systemInfo.dwPageSize;
-  }();
-  return size;
-}
-inline void* allocate_pages(size_t count) {
-  auto mapping = VirtualAlloc(nullptr, count * page_size(),
-                              MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
-  FLARE_CHECK(mapping != nullptr, "Failed to allocate %d pages", int(count));
-  return mapping;
-}
-inline void freePages(void* ptr, size_t count) {
-  (void)count;
-  auto res = VirtualFree(ptr, 0, MEM_RELEASE);
-  (void)res;
-  FLARE_CHECK(res != 0, "Failed to free %d pages at %p", int(count), ptr);
-}
-inline void protect_page(void* addr) {
-  DWORD oldVal = 0;
-  auto res = VirtualProtect(addr, page_size(), PAGE_NOACCESS, &oldVal);
-  (void)res;
-  FLARE_CHECK(res != 0, "Failed to protect page at %p", addr);
-}
-}  // anonymous namespace
-#else
-#error "Page based allocation not implemented for this platform"
-#endif
 
 namespace {
 

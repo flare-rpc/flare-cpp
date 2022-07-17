@@ -314,10 +314,10 @@ namespace flare::rpc {
                             if (grpc_message) {
                                 std::string message_decoded;
                                 PercentDecode(*grpc_message, &message_decoded);
-                                cntl->SetFailed(GrpcStatusToErrorCode(status), "%s",
+                                cntl->SetFailed(GrpcStatusToErrorCode(status), "{}",
                                                 message_decoded.c_str());
                             } else {
-                                cntl->SetFailed(GrpcStatusToErrorCode(status), "%s",
+                                cntl->SetFailed(GrpcStatusToErrorCode(status), "{}",
                                                 GrpcStatusToString(status));
                             }
                             break;
@@ -338,12 +338,12 @@ namespace flare::rpc {
                         res_body.copy_to(
                                 &body_str, std::min((int) res_body.size(),
                                                     FLAGS_http_max_error_length));
-                        cntl->SetFailed(EHTTP, "HTTP/%d.%d %d %s: %.*s",
+                        cntl->SetFailed(EHTTP, "HTTP/{}.{} {} {}: %{}",
                                         res_header->major_version(),
                                         res_header->minor_version(),
                                         static_cast<int>(res_header->status_code()),
                                         res_header->reason_phrase(),
-                                        (int) body_str.size(), body_str.c_str());
+                                        body_str.c_str());
                     } else if (cntl->response() != nullptr &&
                                cntl->response()->GetDescriptor()->field_count() != 0) {
                         cntl->SetFailed(ERESPONSE, "A protobuf response can't be parsed"
@@ -370,7 +370,7 @@ namespace flare::rpc {
                                 &err, std::min((int) res_body.size(),
                                                FLAGS_http_max_error_length));
                     }
-                    cntl->SetFailed(EHTTP, "%s", err.c_str());
+                    cntl->SetFailed(EHTTP, "{}", err.c_str());
                     if (cntl->response() == nullptr ||
                         cntl->response()->GetDescriptor()->field_count() == 0) {
                         // A http call. Http users may need the body(containing a html,
@@ -423,12 +423,12 @@ namespace flare::rpc {
                     json2pb::Json2PbOptions options;
                     options.base64_to_bytes = cntl->has_pb_bytes_to_base64();
                     if (!json2pb::JsonToProtoMessage(&wrapper, cntl->response(), options, &err)) {
-                        cntl->SetFailed(ERESPONSE, "Fail to parse content, %s", err.c_str());
+                        cntl->SetFailed(ERESPONSE, "Fail to parse content, {}", err.c_str());
                         break;
                     }
                 } else {
                     cntl->SetFailed(ERESPONSE,
-                                    "Unknown content-type=%s when response is not nullptr",
+                                    "Unknown content-type={} when response is not nullptr",
                                     res_header->content_type().c_str());
                     break;
                 }
@@ -462,7 +462,7 @@ namespace flare::rpc {
                 // If request is not nullptr, message body will be serialized proto/json,
                 if (!pbreq->IsInitialized()) {
                     return cntl->SetFailed(
-                            EREQUEST, "Missing required fields in request: %s",
+                            EREQUEST, "Missing required fields in request: {}",
                             pbreq->InitializationErrorString().c_str());
                 }
                 if (!cntl->request_attachment().empty()) {
@@ -492,7 +492,7 @@ namespace flare::rpc {
                     // Serialize content as protobuf
                     if (!pbreq->SerializeToZeroCopyStream(&wrapper)) {
                         cntl->request_attachment().clear();
-                        return cntl->SetFailed(EREQUEST, "Fail to serialize %s",
+                        return cntl->SetFailed(EREQUEST, "Fail to serialize {}",
                                                pbreq->GetTypeName().c_str());
                     }
                 } else if (content_type == HTTP_CONTENT_JSON) {
@@ -508,11 +508,11 @@ namespace flare::rpc {
                     if (!json2pb::ProtoMessageToJson(*pbreq, &wrapper, opt, &err)) {
                         cntl->request_attachment().clear();
                         return cntl->SetFailed(
-                                EREQUEST, "Fail to convert request to json, %s", err.c_str());
+                                EREQUEST, "Fail to convert request to json, {}", err.c_str());
                     }
                 } else {
                     return cntl->SetFailed(
-                            EREQUEST, "Cannot serialize pb request according to content_type=%s",
+                            EREQUEST, "Cannot serialize pb request according to content_type={}",
                             hreq.content_type().c_str());
                 }
             } else {
@@ -521,13 +521,13 @@ namespace flare::rpc {
             }
             // Make RPC fail if uri() is not OK (previous SetHttpURL/operator= failed)
             if (!hreq.uri().status().is_ok()) {
-                return cntl->SetFailed(EREQUEST, "%s",
+                return cntl->SetFailed(EREQUEST, "{}",
                                        hreq.uri().status().error_cstr());
             }
             bool grpc_compressed = false;
             if (cntl->request_compress_type() != COMPRESS_TYPE_NONE) {
                 if (cntl->request_compress_type() != COMPRESS_TYPE_GZIP) {
-                    return cntl->SetFailed(EREQUEST, "http does not support %s",
+                    return cntl->SetFailed(EREQUEST, "http does not support {}",
                                            CompressTypeToCStr(cntl->request_compress_type()));
                 }
                 const size_t request_size = cntl->request_attachment().size();

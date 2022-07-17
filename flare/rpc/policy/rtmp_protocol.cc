@@ -833,7 +833,7 @@ namespace flare::rpc {
             RtmpContext *ctx = static_cast<RtmpContext *>(s->parsing_context());
             RtmpChunkStream *cstream = ctx->GetChunkStream(chunk_stream_id);
             if (cstream == NULL) {
-                s->SetFailed(EINVAL, "Invalid chunk_stream_id=%u", chunk_stream_id);
+                s->SetFailed(EINVAL, "Invalid chunk_stream_id={}", chunk_stream_id);
                 return flare::result_status(EINVAL, "Invalid chunk_stream_id={}", chunk_stream_id);
             }
             if (cstream->SerializeMessage(out, header, &body) != 0) {
@@ -3568,7 +3568,7 @@ namespace flare::rpc {
                         cntl->SetFailed(ERESPONSE, "Fail to read the info object");
                         break;
                     }
-                    cntl->SetFailed(ERTMPCREATESTREAM, "%s: %s", info.code().c_str(),
+                    cntl->SetFailed(ERTMPCREATESTREAM, "{}: {}", info.code().c_str(),
                                     info.description().c_str());
                     break;
                 }
@@ -3583,7 +3583,7 @@ namespace flare::rpc {
                 // because the former function runs in another fiber and may run later
                 // than OnStatus which needs to see the stream.
                 if (!ctx->AddClientStream(_stream.get())) {
-                    cntl->SetFailed(EINVAL, "Fail to add client stream_id=%u", stream_id);
+                    cntl->SetFailed(EINVAL, "Fail to add client stream_id={}", stream_id);
                     break;
                 }
             } while (0);
@@ -3655,7 +3655,7 @@ namespace flare::rpc {
             }
             RtmpChunkStream *cstream = ctx->GetChunkStream(RTMP_CONTROL_CHUNK_STREAM_ID);
             if (cstream == NULL) {
-                socket->SetFailed(EINVAL, "Invalid chunk_stream_id=%u",
+                socket->SetFailed(EINVAL, "Invalid chunk_stream_id={}",
                                   RTMP_CONTROL_CHUNK_STREAM_ID);
                 return flare::result_status(EINVAL, "Invalid chunk_stream_id={}",
                                                  RTMP_CONTROL_CHUNK_STREAM_ID);

@@ -231,7 +231,7 @@ namespace flare::rpc {
                 // short connection), so it won't receive any epoll
                 // events. We need to `SetFailed' it to trigger health
                 // checking, otherwise it may be blocked forever
-                SetFailed(ELOGOFF, "The server at %s is stopping",
+                SetFailed(ELOGOFF, "The server at {} is stopping",
                           flare::base::endpoint2str(remote_side()).c_str());
             }
         }
@@ -261,7 +261,7 @@ namespace flare::rpc {
         if ((nref & ~EOF_FLAG) == 1) {
             std::atomic_thread_fence(std::memory_order_acquire);
             // It's safe to call `SetFailed' each time `_ninprocess' hits 0
-            SetFailed(EEOF, "Got EOF of %s", description().c_str());
+            SetFailed(EEOF, "Got EOF of {}", description().c_str());
         }
     }
 

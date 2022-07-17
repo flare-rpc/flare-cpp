@@ -51,7 +51,7 @@ namespace flare::rpc {
         if (NULL == dir) {
             flare::base::fd_guard fd(open(open_path.c_str(), O_RDONLY));
             if (fd < 0) {
-                cntl->SetFailed(errno, "Cannot open `%s'", open_path.c_str());
+                cntl->SetFailed(errno, "Cannot open `{}'", open_path.c_str());
                 return;
             }
             flare::base::make_non_blocking(fd);
@@ -63,7 +63,7 @@ namespace flare::rpc {
                 const ssize_t nr = read_portal.append_from_file_descriptor(
                         fd, MAX_READ);
                 if (nr < 0) {
-                    cntl->SetFailed(errno, "Cannot read `%s'", open_path.c_str());
+                    cntl->SetFailed(errno, "Cannot read `{}'", open_path.c_str());
                     return;
                 }
                 if (nr == 0) {

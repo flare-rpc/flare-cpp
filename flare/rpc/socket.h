@@ -375,8 +375,12 @@ namespace flare::rpc {
         // Returns -1 when the Socket was already SetFailed(), 0 otherwise.
         int SetFailed();
 
-        int SetFailed(int error_code, const char *error_fmt, ...)
-        __attribute__ ((__format__ (__printf__, 3, 4)));
+        int SetFailed(int error_code, std::string_view sv);
+
+        template <typename ... Args>
+        int SetFailed(int error_code, const std::string_view &error_fmt, Args&&...args) {
+            return SetFailed(error_code, flare::string_format(error_fmt,std::forward<Args>(args)...));
+        }
 
         static int SetFailed(SocketId id);
 

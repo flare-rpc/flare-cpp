@@ -646,7 +646,7 @@ namespace flare::rpc {
                 request_meta->set_method_name(cntl->sampled_request()->meta.method_name());
                 meta.set_compress_type(cntl->sampled_request()->meta.compress_type());
             } else {
-                return cntl->SetFailed(ENOMETHOD, "%s.method is NULL", __FUNCTION__);
+                return cntl->SetFailed(ENOMETHOD, "{}.method is NULL", __FUNCTION__);
             }
             if (cntl->has_log_id()) {
                 request_meta->set_log_id(cntl->log_id());
@@ -659,7 +659,7 @@ namespace flare::rpc {
             if (request_stream_id != INVALID_STREAM_ID) {
                 SocketUniquePtr ptr;
                 if (Socket::Address(request_stream_id, &ptr) != 0) {
-                    return cntl->SetFailed(EREQUEST, "Stream=%" PRIu64 " was closed",
+                    return cntl->SetFailed(EREQUEST, "Stream={} was closed",
                                            request_stream_id);
                 }
                 Stream *s = (Stream *) ptr->conn();

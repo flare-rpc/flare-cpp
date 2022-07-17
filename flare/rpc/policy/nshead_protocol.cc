@@ -113,7 +113,7 @@ namespace flare::rpc {
             if (sock->Write(&write_buf, &wopt) != 0) {
                 const int errcode = errno;
                 FLARE_PLOG_IF(WARNING, errcode != EPIPE) << "Fail to write into " << *sock;
-                _controller.SetFailed(errcode, "Fail to write into %s",
+                _controller.SetFailed(errcode, "Fail to write into {}",
                                       sock->description().c_str());
                 return;
             }
@@ -287,13 +287,13 @@ namespace flare::rpc {
                     break;
                 }
                 if (socket->is_overcrowded()) {
-                    cntl->SetFailed(EOVERCROWDED, "Connection to %s is overcrowded",
+                    cntl->SetFailed(EOVERCROWDED, "Connection to {} is overcrowded",
                                     flare::base::endpoint2str(socket->remote_side()).c_str());
                     break;
                 }
                 if (!server_accessor.AddConcurrency(cntl)) {
                     cntl->SetFailed(
-                            ELIMIT, "Reached server's max_concurrency=%d",
+                            ELIMIT, "Reached server's max_concurrency={}",
                             server->options().max_concurrency);
                     break;
                 }
