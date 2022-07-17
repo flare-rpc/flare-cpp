@@ -65,7 +65,7 @@ namespace flare::rpc {
             if (endptr == param->c_str() + param->length()) {
                 seconds = sec;
             } else {
-                cntl->SetFailed(EINVAL, "Invalid seconds=%s", param->c_str());
+                cntl->SetFailed(EINVAL, "Invalid seconds={}", param->c_str());
             }
         }
 
@@ -129,14 +129,14 @@ namespace flare::rpc {
 
         char prof_name[256];
         if (MakeProfName(PROFILING_CPU, prof_name, sizeof(prof_name)) != 0) {
-            cntl->SetFailed(errno, "Fail to create .prof file, %s", flare_error());
+            cntl->SetFailed(errno, "Fail to create .prof file, {}", flare_error());
             return;
         }
         std::error_code error;
         const flare::file_path dir = flare::file_path(prof_name).parent_path();
 
         if (!flare::create_directories(dir, error)) {
-            cntl->SetFailed(EPERM, "Fail to create directory=`%s'", dir.c_str());
+            cntl->SetFailed(EPERM, "Fail to create directory=`{}'", dir.c_str());
             return;
         }
         if (!ProfilerStart(prof_name)) {
@@ -150,7 +150,7 @@ namespace flare::rpc {
 
         flare::base::fd_guard fd(open(prof_name, O_RDONLY));
         if (fd < 0) {
-            cntl->SetFailed(ENOENT, "Fail to open %s", prof_name);
+            cntl->SetFailed(ENOENT, "Fail to open {}", prof_name);
             return;
         }
         flare::IOPortal portal;
@@ -187,7 +187,7 @@ namespace flare::rpc {
 
         char prof_name[256];
         if (MakeProfName(PROFILING_CONTENTION, prof_name, sizeof(prof_name)) != 0) {
-            cntl->SetFailed(errno, "Fail to create .prof file, %s", flare_error());
+            cntl->SetFailed(errno, "Fail to create .prof file, {}", flare_error());
             return;
         }
         if (!flare::fiber_internal::ContentionProfilerStart(prof_name)) {
@@ -201,7 +201,7 @@ namespace flare::rpc {
 
         flare::base::fd_guard fd(open(prof_name, O_RDONLY));
         if (fd < 0) {
-            cntl->SetFailed(ENOENT, "Fail to open %s", prof_name);
+            cntl->SetFailed(ENOENT, "Fail to open {}", prof_name);
             return;
         }
         flare::IOPortal portal;
@@ -222,7 +222,7 @@ namespace flare::rpc {
             if (malloc_ext != nullptr) {
                 extra_desc = " (no TCMALLOC_SAMPLE_PARAMETER in env)";
             }
-            cntl->SetFailed(ENOMETHOD, "Heap profiler is not enabled%s,"
+            cntl->SetFailed(ENOMETHOD, "Heap profiler is not enabled{},"
                                        "check out http://wiki.baidu.com/display/RPC",
                             extra_desc);
             return;
@@ -252,7 +252,7 @@ namespace flare::rpc {
         Controller *cntl = static_cast<Controller *>(controller_base);
         MallocExtension *malloc_ext = MallocExtension::instance();
         if (malloc_ext == nullptr) {
-            cntl->SetFailed(ENOMETHOD, "%s, to enable growth profiler, check out "
+            cntl->SetFailed(ENOMETHOD, "{}, to enable growth profiler, check out "
                                        "docs/cn/heap_profiler.md",
                             flare_error(ENOMETHOD));
             return;
