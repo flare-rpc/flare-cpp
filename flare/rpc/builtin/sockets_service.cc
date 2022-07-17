@@ -45,7 +45,7 @@ namespace flare::rpc {
             if (*endptr == '\0' || *endptr == '/') {
                 Socket::DebugSocket(os, sid);
             } else {
-                cntl->SetFailed(ENOMETHOD, "path=%s is not a SocketId",
+                cntl->SetFailed(ENOMETHOD, "path={} is not a SocketId",
                                 constraint.c_str());
             }
         }
