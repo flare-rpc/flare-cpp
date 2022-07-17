@@ -173,13 +173,13 @@ namespace flare::rpc {
                 return;
             }
             if (FLAGS_immutable_flags) {
-                cntl->SetFailed(EPERM, "Cannot modify `%s' because -immutable_flags is on",
+                cntl->SetFailed(EPERM, "Cannot modify `{}' because -immutable_flags is on",
                                 constraint.c_str());
                 return;
             }
             if (google::SetCommandLineOption(constraint.c_str(),
                                                 value_str->c_str()).empty()) {
-                cntl->SetFailed(EPERM, "Fail to set `%s' to %s",
+                cntl->SetFailed(EPERM, "Fail to set `{}' to {}",
                                 constraint.c_str(),
                                 (value_str->empty() ? "empty string" : value_str->c_str()));
                 return;
