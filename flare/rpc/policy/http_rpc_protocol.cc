@@ -402,7 +402,7 @@ namespace flare::rpc {
                     encoding = res_header->GetHeader(common->CONTENT_ENCODING);
                 }
                 if (encoding != nullptr && *encoding == common->GZIP) {
-                    TRACEPRINTF("Decompressing response=%lu",
+                    TRACEPRINTF("Decompressing response={}",
                                 (unsigned long) res_body.size());
                     flare::cord_buf uncompressed;
                     if (!policy::GzipDecompress(res_body, &uncompressed)) {
@@ -532,7 +532,7 @@ namespace flare::rpc {
                 }
                 const size_t request_size = cntl->request_attachment().size();
                 if (request_size >= (size_t) FLAGS_http_body_compress_threshold) {
-                    TRACEPRINTF("Compressing request=%lu", (unsigned long) request_size);
+                    TRACEPRINTF("Compressing request={}", (unsigned long) request_size);
                     flare::cord_buf compressed;
                     if (GzipCompress(cntl->request_attachment(), &compressed, nullptr)) {
                         cntl->request_attachment().swap(compressed);
@@ -832,7 +832,7 @@ namespace flare::rpc {
                 const size_t response_size = cntl->response_attachment().size();
                 if (response_size >= (size_t) FLAGS_http_body_compress_threshold
                     && (is_http2 || SupportGzip(cntl))) {
-                    TRACEPRINTF("Compressing response=%lu", (unsigned long) response_size);
+                    TRACEPRINTF("Compressing response={}", (unsigned long) response_size);
                     flare::cord_buf tmpbuf;
                     if (GzipCompress(cntl->response_attachment(), &tmpbuf, nullptr)) {
                         cntl->response_attachment().swap(tmpbuf);
@@ -1444,7 +1444,7 @@ namespace flare::rpc {
                         encoding = req_header.GetHeader(common->CONTENT_ENCODING);
                     }
                     if (encoding != nullptr && *encoding == common->GZIP) {
-                        TRACEPRINTF("Decompressing request=%lu",
+                        TRACEPRINTF("Decompressing request={}",
                                     (unsigned long) req_body.size());
                         flare::cord_buf uncompressed;
                         if (!policy::GzipDecompress(req_body, &uncompressed)) {

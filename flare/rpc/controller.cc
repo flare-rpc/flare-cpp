@@ -379,7 +379,7 @@ namespace flare::rpc {
             }
             _error_text.push_back(']');
         } else {
-            flare::string_appendf(&_error_text, "[%s:%d]",
+            _error_text += flare::string_format("[{}:{}]",
                                   flare::base::my_ip_cstr(), _server->listen_address().port);
         }
     }
@@ -410,7 +410,7 @@ namespace flare::rpc {
             _error_text.push_back(' ');
         }
         if (_current_call.nretry != 0) {
-            flare::string_appendf(&_error_text, "[R%d]", _current_call.nretry);
+            _error_text += flare::string_format("[R{}]", _current_call.nretry);
         } else {
             AppendServerIdentiy();
         }
@@ -422,7 +422,7 @@ namespace flare::rpc {
         UpdateResponseHeader(this);
     }
 
-    void Controller::SetFailed(int error_code, const char *reason_fmt, ...) {
+    void Controller::SetFailed(int error_code, const std::string &reason) {
         if (error_code == 0) {
             FLARE_CHECK(false) << "error_code is 0";
             error_code = -1;
@@ -432,18 +432,15 @@ namespace flare::rpc {
             _error_text.push_back(' ');
         }
         if (_current_call.nretry != 0) {
-            flare::string_appendf(&_error_text, "[R%d]", _current_call.nretry);
+            _error_text += flare::string_format("[R{}]", _current_call.nretry);
         } else {
             AppendServerIdentiy();
         }
         const size_t old_size = _error_text.size();
         if (_error_code != -1) {
-            flare::string_appendf(&_error_text, "[E%d]", _error_code);
+            _error_text += flare::string_format("[E{}]", _error_code);
         }
-        va_list ap;
-        va_start(ap, reason_fmt);
-        flare::string_vappendf(&_error_text, reason_fmt, ap);
-        va_end(ap);
+        _error_text += reason;
         if (_span) {
             _span->set_error_code(_error_code);
             _span->AnnotateCStr(_error_text.c_str() + old_size, 0);
@@ -451,7 +448,7 @@ namespace flare::rpc {
         UpdateResponseHeader(this);
     }
 
-    void Controller::CloseConnection(const char *reason_fmt, ...) {
+    void Controller::CloseConnection(std::string_view reason) {
         if (_error_code == 0) {
             _error_code = ECLOSE;
         }
@@ -460,18 +457,15 @@ namespace flare::rpc {
             _error_text.push_back(' ');
         }
         if (_current_call.nretry != 0) {
-            flare::string_appendf(&_error_text, "[R%d]", _current_call.nretry);
+            _error_text+= flare::string_format("[R{}]", _current_call.nretry);
         } else {
             AppendServerIdentiy();
         }
         const size_t old_size = _error_text.size();
         if (_error_code != -1) {
-            flare::string_appendf(&_error_text, "[E%d]", _error_code);
+            _error_text += flare::string_format("[E{}]", _error_code);
         }
-        va_list ap;
-        va_start(ap, reason_fmt);
-        flare::string_vappendf(&_error_text, reason_fmt, ap);
-        va_end(ap);
+        _error_text.append(reason.data(),reason.size());
         if (_span) {
             _span->set_error_code(_error_code);
             _span->AnnotateCStr(_error_text.c_str() + old_size, 0);
@@ -1012,7 +1006,7 @@ namespace flare::rpc {
             // of the backup call.
             const int rc = Socket::Address(_single_server_id, &tmp_sock);
             if (rc != 0 || (!is_health_check_call() && !tmp_sock->IsAvailable())) {
-                SetFailed(EHOSTDOWN, "Not connected to %s yet, server_id=%" PRIu64,
+                SetFailed(EHOSTDOWN, "Not connected to {} yet, server_id={} ",
                           endpoint2str(_remote_side).c_str(), _single_server_id);
                 tmp_sock.reset();  // Release ref ASAP
                 return HandleSendFailed();
@@ -1029,7 +1023,7 @@ namespace flare::rpc {
                 DescribeOptions opt;
                 opt.verbose = false;
                 _lb->Describe(os, opt);
-                SetFailed(rc, "Fail to select server from %s", os.str().c_str());
+                SetFailed(rc, "Fail to select server from {}", os.str().c_str());
                 return HandleSendFailed();
             }
             _current_call.need_feedback = sel_out.need_feedback;
@@ -1079,12 +1073,12 @@ namespace flare::rpc {
                 rc = tmp_sock->GetShortSocket(&_current_call.sending_sock);
             } else {
                 tmp_sock.reset();
-                SetFailed(EINVAL, "Invalid connection_type=%d", (int) _connection_type);
+                SetFailed(EINVAL, "Invalid connection_type={}", (int) _connection_type);
                 return HandleSendFailed();
             }
             if (rc) {
                 tmp_sock.reset();
-                SetFailed(rc, "Fail to get %s connection",
+                SetFailed(rc, "Fail to get {} connection",
                           ConnectionTypeToString(_connection_type));
                 return HandleSendFailed();
             }
@@ -1119,7 +1113,7 @@ namespace flare::rpc {
             if (_current_call.sending_sock->FightAuthentication(&auth_error) == 0) {
                 using_auth = _auth;
             } else if (auth_error != 0) {
-                SetFailed(auth_error, "Fail to authenticate, %s",
+                SetFailed(auth_error, "Fail to authenticate, {}",
                           flare_error(auth_error));
                 return HandleSendFailed();
             }
@@ -1207,23 +1201,22 @@ namespace flare::rpc {
             // destroyed before done->Run() running in another fiber.
             // The error set will be detected in Channel::CallMethod and fail
             // the RPC.
-            cntl->SetFailed(error_code, "Cancel call_id=%" PRId64
-                                        " before CallMethod()", id.value);
+            cntl->SetFailed(error_code, "Cancel call_id={} before CallMethod()", id.value);
             return fiber_token_unlock(id);
         }
         const int saved_error = cntl->ErrorCode();
         if (error_code == ERPCTIMEDOUT) {
-            cntl->SetFailed(error_code, "Reached timeout=%" PRId64 "ms @%s",
+            cntl->SetFailed(error_code, "Reached timeout={} ms @{}",
                             cntl->timeout_ms(),
                             flare::base::endpoint2str(cntl->remote_side()).c_str());
         } else if (error_code == EBACKUPREQUEST) {
-            cntl->SetFailed(error_code, "Reached backup timeout=%" PRId64 "ms @%s",
+            cntl->SetFailed(error_code, "Reached backup timeout={} ms @{}",
                             cntl->backup_request_ms(),
                             flare::base::endpoint2str(cntl->remote_side()).c_str());
         } else if (!error_text.empty()) {
-            cntl->SetFailed(error_code, "%s", error_text.c_str());
+            cntl->SetFailed(error_code, "{}", error_text.c_str());
         } else {
-            cntl->SetFailed(error_code, "%s @%s", flare_error(error_code),
+            cntl->SetFailed(error_code, "{} @{}", flare_error(error_code),
                             flare::base::endpoint2str(cntl->remote_side()).c_str());
         }
         CompletionInfo info = {id, false};
@@ -1320,7 +1313,7 @@ namespace flare::rpc {
         if (!FailedInline()) {
             if (Socket::Address(_request_stream, &ptr) != 0) {
                 if (!FailedInline()) {
-                    SetFailed(EREQUEST, "Request stream=%" PRIu64 " was closed before responded",
+                    SetFailed(EREQUEST, "Request stream={} was closed before responded",
                               _request_stream);
                 }
             } else if (_remote_stream_settings == nullptr) {

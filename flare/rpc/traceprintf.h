@@ -20,20 +20,22 @@
 #define FLARE_RPC_TRACEPRINTF_H_
 
 #include "flare/base/profile.h"
+#include "flare/rpc/span.h"
 
 // To flare developers: This is a header included by user, don't depend
 // on internal structures, use opaque pointers instead.
 
-
+/*
 namespace flare::rpc {
 
     bool CanAnnotateSpan();
 
-    void AnnotateSpan(const char *fmt, ...);
+    template<typename ... Args>
+    void AnnotateSpan(const std::string_view&fmt, Args&&...args);
 
 } // namespace flare::rpc
 
-
+*/
 // Use this macro to print log to /rpcz and tracing system.
 // If rpcz is not enabled, arguments to this macro is NOT evaluated, don't
 // have (critical) side effects in arguments.

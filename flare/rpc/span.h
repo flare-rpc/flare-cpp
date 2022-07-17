@@ -81,9 +81,11 @@ namespace flare::rpc {
         }
 
         // Add log with time.
-        void Annotate(const char *fmt, ...);
-
-        void Annotate(const char *fmt, va_list args);
+        template<typename ... Args>
+        void Annotate(const std::string_view &fmt, Args&&...args) {
+            auto info = flare::string_format(fmt, std::forward<Args>(args)...);
+            Annotate(info);
+        }
 
         void Annotate(const std::string &info);
 
@@ -237,8 +239,12 @@ namespace flare::rpc {
 // span implementations.
     bool CanAnnotateSpan();
 
-    void AnnotateSpan(const char *fmt, ...);
+    void AnnotateSpan(const std::string &sv);
 
+    template<typename ... Args>
+    inline void AnnotateSpan(const std::string_view &fmt, Args&&... args) {
+        AnnotateSpan(flare::string_format(fmt, std::forward<Args>(args)...));
+    }
 
     class SpanFilter {
     public:

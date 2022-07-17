@@ -166,7 +166,7 @@ TEST(NamingServiceTest, wrong_name) {
 
     std::string s;
     for (size_t i = 0; i < FLARE_ARRAY_SIZE(address_list); ++i) {
-        ASSERT_EQ(0, flare::string_appendf(&s, ", %s", address_list[i]));
+        s += flare::string_format(", {}", address_list[i]);
     }
     flare::rpc::policy::ListNamingService lns;
     ASSERT_EQ(0, lns.GetServers(s.c_str(), &servers));

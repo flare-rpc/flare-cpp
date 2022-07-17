@@ -456,7 +456,13 @@ namespace flare::rpc {
         // If this controller was not SetFailed() before, ErrorCode() will be
         // set to ECLOSE.
         // NOTE: the underlying connection is not closed immediately.
-        void CloseConnection(const char *reason_fmt, ...);
+        template<typename ... Args>
+        void CloseConnection(const std::string_view &reason_fmt, Args &&...args) {
+            CloseConnection(flare::string_format(reason_fmt, std::forward<Args>(args)...));
+        }
+
+
+        void CloseConnection(std::string_view reason);
 
         // True if CloseConnection() was called.
         bool IsCloseConnection() const { return has_flag(FLAGS_CLOSE_CONNECTION); }
@@ -512,8 +518,22 @@ namespace flare::rpc {
         // (rather than before SetFailed)
         void SetFailed(const std::string &reason) override;
 
+        void SetFailed(int error_code, const std::string &reason);
+
+        template<typename ... Args>
+        void SetFailed(const std::string_view &reason_fmt, Args &&...args) {
+            SetFailed(flare::string_format(reason_fmt, std::forward<Args>(args)...));
+        }
+
+        template<typename ... Args>
+        void SetFailed(int error_code, const std::string_view &reason_fmt, Args &&...args) {
+            SetFailed(error_code, flare::string_format(reason_fmt, std::forward<Args>(args)...));
+        }
+
+        /*
         void SetFailed(int error_code, const char *reason_fmt, ...)
         __attribute__ ((__format__ (__printf__, 3, 4)));
+         */
 
         // After a call has finished, returns true if the RPC call failed.
         // The response to Channel is undefined when Failed() is true.

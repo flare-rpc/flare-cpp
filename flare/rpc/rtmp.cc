@@ -1747,9 +1747,8 @@ namespace flare::rpc {
         }
         SocketUniquePtr tmp_ptr;
         if (Socket::Address(esid, &tmp_ptr) != 0) {
-            cntl->SetFailed(EFAILEDSOCKET, "Fail to address RTMP SocketId=%" PRIu64
-                                           " from SocketMap of RtmpClient=%p",
-                            esid, _client_impl.get());
+            cntl->SetFailed(EFAILEDSOCKET, "Fail to address RTMP SocketId={} from SocketMap of RtmpClient={}",
+                            esid, fmt::ptr(_client_impl.get()));
             return NULL;
         }
         RPC_VLOG << "Replace Socket For Stream, RTMP socketId=" << esid

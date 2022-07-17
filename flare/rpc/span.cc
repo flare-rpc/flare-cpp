@@ -40,7 +40,8 @@ namespace flare::rpc {
 
     const int64_t SPAN_DELETE_INTERVAL_US = 10000000L/*10s*/;
 
-    DEFINE_string(rpcz_database_dir, "./rpc_data/rpcz",
+    DEFINE_string(rpcz_database_dir,
+                  "./rpc_data/rpcz",
                   "For storing requests/contexts collected by rpcz.");
 
     // TODO: collected per second is customizable.
@@ -53,11 +54,14 @@ namespace flare::rpc {
     // FLARE_RPC_VALIDATE_GFLAG(rpcz_max_span_per_second,
     //                          validate_rpcz_max_span_per_second);
 
-    DEFINE_int32(rpcz_keep_span_seconds, 3600,
+    DEFINE_int32(rpcz_keep_span_seconds,
+                 3600,
                  "Keep spans for at most so many seconds");
-    FLARE_RPC_VALIDATE_GFLAG(rpcz_keep_span_seconds, PositiveInteger);
+    FLARE_RPC_VALIDATE_GFLAG(rpcz_keep_span_seconds, PositiveInteger
+    );
 
-    DEFINE_bool(rpcz_keep_span_db, false, "Don't remove DB of rpcz at program's exit");
+    DEFINE_bool(rpcz_keep_span_db,
+                false, "Don't remove DB of rpcz at program's exit");
 
     struct IdGen {
         bool init;
@@ -206,34 +210,16 @@ namespace flare::rpc {
         flare::return_object(this);
     }
 
-    void Span::Annotate(const char *fmt, ...) {
-        const int64_t anno_time = flare::get_current_time_micros() + _base_real_us;
-        flare::string_appendf(&_info, FLARE_RPC_SPAN_INFO_SEP "%lld ",
-                              (long long) anno_time);
-        va_list ap;
-        va_start(ap, fmt);
-        flare::string_vappendf(&_info, fmt, ap);
-        va_end(ap);
-    }
-
-    void Span::Annotate(const char *fmt, va_list args) {
-        const int64_t anno_time = flare::get_current_time_micros() + _base_real_us;
-        flare::string_appendf(&_info, FLARE_RPC_SPAN_INFO_SEP "%lld ",
-                              (long long) anno_time);
-        flare::string_vappendf(&_info, fmt, args);
-    }
-
     void Span::Annotate(const std::string &info) {
         const int64_t anno_time = flare::get_current_time_micros() + _base_real_us;
-        flare::string_appendf(&_info, FLARE_RPC_SPAN_INFO_SEP "%lld ",
-                              (long long) anno_time);
+        _info += flare::string_format(FLARE_RPC_SPAN_INFO_SEP "{} ",
+                                      (long long) anno_time);
         _info.append(info);
     }
 
     void Span::AnnotateCStr(const char *info, size_t length) {
         const int64_t anno_time = flare::get_current_time_micros() + _base_real_us;
-        flare::string_appendf(&_info, FLARE_RPC_SPAN_INFO_SEP "%lld ",
-                              (long long) anno_time);
+        _info += flare::string_format(FLARE_RPC_SPAN_INFO_SEP "{} ", (long long) anno_time);
         if (length <= 0) {
             _info.append(info);
         } else {
@@ -295,12 +281,9 @@ namespace flare::rpc {
         return flare::fiber_internal::tls_bls.rpcz_parent_span;
     }
 
-    void AnnotateSpan(const char *fmt, ...) {
+    void AnnotateSpan(const std::string &info) {
         Span *span = (Span *) flare::fiber_internal::tls_bls.rpcz_parent_span;
-        va_list ap;
-        va_start(ap, fmt);
-        span->Annotate(fmt, ap);
-        va_end(ap);
+        span->Annotate(info);
     }
 
     class SpanDB : public SharedObject {

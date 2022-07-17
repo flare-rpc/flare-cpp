@@ -547,8 +547,8 @@ void SelectiveChannel::CallMethod(
     google::protobuf::Closure* user_done) {
     Controller* cntl = static_cast<Controller*>(controller_base);
     if (!initialized()) {
-        cntl->SetFailed(EINVAL, "SelectiveChannel=%p is not initialized yet",
-                        this);
+        cntl->SetFailed(EINVAL, "SelectiveChannel={} is not initialized yet",
+                        (void*)this);
     }
     schan::Sender* sndr = new schan::Sender(cntl, request, response, user_done);
     cntl->_sender = sndr;

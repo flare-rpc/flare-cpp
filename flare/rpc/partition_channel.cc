@@ -265,8 +265,8 @@ namespace flare::rpc {
             _pchan->CallMethod(method, controller, request, response, done);
         } else {
             Controller *cntl = static_cast<Controller *>(controller);
-            cntl->SetFailed(EINVAL, "PartitionChannel=%p is not initialized yet",
-                            this);
+            cntl->SetFailed(EINVAL, "PartitionChannel={} is not initialized yet",
+                            (void*)this);
             // This is a branch only entered by wrongly-used RPC, just call done
             // in-place. See comments in channel.cpp on deadlock concerns.
             if (done) {

@@ -90,7 +90,7 @@ namespace flare::rpc {
             mcpack2pb::MessageHandler handler = mcpack2pb::find_message_handler(msg_name);
             if (!handler.serialize_to_iobuf(*pb_res, &raw_res->body,
                                             ::mcpack2pb::FORMAT_MCPACK_V2)) {
-                cntl->CloseConnection("Fail to serialize %s", msg_name.c_str());
+                cntl->CloseConnection("Fail to serialize {}", msg_name.c_str());
                 return;
             }
         }

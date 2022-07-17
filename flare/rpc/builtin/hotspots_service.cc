@@ -1045,14 +1045,14 @@ namespace flare::rpc {
             }
         }
         if (!past_profs.empty()) {
-            TRACEPRINTF("Sort %lu profiles in decending order", past_profs.size());
+            TRACEPRINTF("Sort {} profiles in decending order", past_profs.size());
             std::sort(past_profs.begin(), past_profs.end(), std::greater<std::string>());
             int max_profiles = FLAGS_max_profiles_kept/*may be reloaded*/;
             if (max_profiles < 0) {
                 max_profiles = 0;
             }
             if (past_profs.size() > (size_t) max_profiles) {
-                TRACEPRINTF("Remove %lu profiles",
+                TRACEPRINTF("Remove {} profiles",
                             past_profs.size() - (size_t) max_profiles);
                 for (size_t i = max_profiles; i < past_profs.size(); ++i) {
                     FLARE_CHECK(flare::remove(past_profs[i]));
