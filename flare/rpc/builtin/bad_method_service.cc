@@ -61,7 +61,7 @@ namespace flare::rpc {
         if (sp != NULL && sp->restful_map != NULL) {
             os << " This path is associated with a RestfulMap!";
         }
-        cntl->SetFailed(ENOMETHOD, "%s", os.str().c_str());
+        cntl->SetFailed(ENOMETHOD, "{}", os.str().c_str());
     }
 
 } // namespace flare::rpc
