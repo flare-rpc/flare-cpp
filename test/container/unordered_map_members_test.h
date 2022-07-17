@@ -65,7 +65,7 @@ namespace flare {
         }
 
         TYPED_TEST_P(MembersTest, SimpleFunctions) {
-            EXPECT_GT(TypeParam().max_size(), 0);
+            EXPECT_GT(TypeParam().max_size(), 0ul);
         }
 
         TYPED_TEST_P(MembersTest, BeginEnd) {

@@ -370,7 +370,7 @@ namespace flare {
 
     template<typename T>
     void dag_graph<T>::run(T &arg, allocator *allocator /* = allocator::Default */) {
-        typename dag_base<T>::run_context ctx{arg};
+        typename dag_base<T>::run_context ctx{arg, nullptr};
         this->init_counters(&ctx, allocator);
         latch wg;
         this->invoke(&ctx, this->RootIndex, &wg);

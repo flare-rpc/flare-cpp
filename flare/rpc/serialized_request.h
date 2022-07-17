@@ -77,7 +77,7 @@ namespace flare::rpc {
         ::google::protobuf::uint8 *SerializeWithCachedSizesToArray(
                 ::google::protobuf::uint8 *output) const;
 
-        void MergeFrom(const ::google::protobuf::Message &from);
+        void MergeFrom(const ::google::protobuf::Message &from) override;
 
         void MergeFrom(const SerializedRequest &from);
 
@@ -85,7 +85,7 @@ namespace flare::rpc {
 
         void SharedDtor();
 
-        void SetCachedSize(int size) const;
+        void SetCachedSize(int size) const override;
 
     private:
         flare::cord_buf _serialized;

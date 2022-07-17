@@ -7,20 +7,21 @@
 
 #include "flare/times/time.h"
 
-DEFINE_int32(port, 6379, "TCP Port of this server");
+DEFINE_int32(port,
+6379, "TCP Port of this server");
 
 class RedisServiceImpl : public flare::rpc::RedisService {
 public:
-    bool Set(const std::string& key, const std::string& value) {
-        int slot = flare::base::value(key.c_str(), key.size()) % kHashSlotNum;
+    bool Set(const std::string &key, const std::string &value) {
+        int slot = flare::crc32c().extend(key) % kHashSlotNum;
         _mutex[slot].lock();
         _map[slot][key] = value;
         _mutex[slot].unlock();
         return true;
     }
 
-    bool Get(const std::string& key, std::string* value) {
-        int slot = flare::base::value(key.c_str(), key.size()) % kHashSlotNum;
+    bool Get(const std::string &key, std::string *value) {
+        int slot = flare::crc32c().extend(key) % kHashSlotNum;
         _mutex[slot].lock();
         auto it = _map[slot].find(key);
         if (it == _map[slot].end()) {
@@ -40,14 +41,14 @@ private:
 
 class GetCommandHandler : public flare::rpc::RedisCommandHandler {
 public:
-    explicit GetCommandHandler(RedisServiceImpl* rsimpl)
-        : _rsimpl(rsimpl) {}
+    explicit GetCommandHandler(RedisServiceImpl *rsimpl)
+            : _rsimpl(rsimpl) {}
 
-    flare::rpc::RedisCommandHandlerResult Run(const std::vector<std::string_view>& args,
-                                        flare::rpc::RedisReply* output,
-                                        bool /*flush_batched*/) override {
+    flare::rpc::RedisCommandHandlerResult Run(const std::vector<std::string_view> &args,
+                                              flare::rpc::RedisReply *output,
+                                              bool /*flush_batched*/) override {
         if (args.size() != 2ul) {
-            output->FormatError("Expect 1 arg for 'get', actually %lu", args.size()-1);
+            output->FormatError("Expect 1 arg for 'get', actually %lu", args.size() - 1);
             return flare::rpc::REDIS_CMD_HANDLED;
         }
         const std::string key(args[1].data(), args[1].size());
@@ -58,22 +59,22 @@ public:
             output->SetNullString();
         }
         return flare::rpc::REDIS_CMD_HANDLED;
-	}
+    }
 
 private:
-   	RedisServiceImpl* _rsimpl;
+    RedisServiceImpl *_rsimpl;
 };
 
 class SetCommandHandler : public flare::rpc::RedisCommandHandler {
 public:
-    explicit SetCommandHandler(RedisServiceImpl* rsimpl)
-        : _rsimpl(rsimpl) {}
+    explicit SetCommandHandler(RedisServiceImpl *rsimpl)
+            : _rsimpl(rsimpl) {}
 
-    flare::rpc::RedisCommandHandlerResult Run(const std::vector<std::string_view>& args,
-                                        flare::rpc::RedisReply* output,
-                                        bool /*flush_batched*/) override {
+    flare::rpc::RedisCommandHandlerResult Run(const std::vector<std::string_view> &args,
+                                              flare::rpc::RedisReply *output,
+                                              bool /*flush_batched*/) override {
         if (args.size() != 3ul) {
-            output->FormatError("Expect 2 args for 'set', actually %lu", args.size()-1);
+            output->FormatError("Expect 2 args for 'set', actually %lu", args.size() - 1);
             return flare::rpc::REDIS_CMD_HANDLED;
         }
         const std::string key(args[1].data(), args[1].size());
@@ -81,15 +82,15 @@ public:
         _rsimpl->Set(key, value);
         output->SetStatus("OK");
         return flare::rpc::REDIS_CMD_HANDLED;
-	}
+    }
 
 private:
-   	RedisServiceImpl* _rsimpl;
+    RedisServiceImpl *_rsimpl;
 };
 
-int main(int argc, char* argv[]) {
+int main(int argc, char *argv[]) {
     google::ParseCommandLineFlags(&argc, &argv, true);
-    RedisServiceImpl* rsimpl = new RedisServiceImpl;
+    RedisServiceImpl *rsimpl = new RedisServiceImpl;
     rsimpl->AddCommandHandler("get", new GetCommandHandler(rsimpl));
     rsimpl->AddCommandHandler("set", new SetCommandHandler(rsimpl));
 

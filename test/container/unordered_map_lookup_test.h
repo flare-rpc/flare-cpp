@@ -52,10 +52,10 @@ namespace flare {
                             hash_internal::Generator<T>());
             TypeParam m;
             for (const auto &p : values)
-                EXPECT_EQ(0, m.count(p.first)) << ::testing::PrintToString(p.first);
+                EXPECT_EQ(0ul, m.count(p.first)) << ::testing::PrintToString(p.first);
             m.insert(values.begin(), values.end());
             for (const auto &p : values)
-                EXPECT_EQ(1, m.count(p.first)) << ::testing::PrintToString(p.first);
+                EXPECT_EQ(1ul, m.count(p.first)) << ::testing::PrintToString(p.first);
         }
 
         TYPED_TEST_P(LookupTest, Find) {
@@ -85,12 +85,12 @@ namespace flare {
             TypeParam m;
             for (const auto &p : values) {
                 auto r = m.equal_range(p.first);
-                ASSERT_EQ(0, std::distance(r.first, r.second));
+                ASSERT_EQ(0l, std::distance(r.first, r.second));
             }
             m.insert(values.begin(), values.end());
             for (const auto &p : values) {
                 auto r = m.equal_range(p.first);
-                ASSERT_EQ(1, std::distance(r.first, r.second));
+                ASSERT_EQ(1l, std::distance(r.first, r.second));
                 EXPECT_EQ(p.second, get<1>(*r.first)) << ::testing::PrintToString(p.first);
             }
         }

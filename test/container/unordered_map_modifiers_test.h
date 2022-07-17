@@ -205,7 +205,7 @@ namespace flare {
                 if (get<0>(val) != get<0>(first)) values2.push_back(val);
             auto it = EraseFirst()(&m, 0);
             ASSERT_TRUE(it != m.end());
-            EXPECT_EQ(1, std::count(values2.begin(), values2.end(), *it));
+            EXPECT_EQ(1l, std::count(values2.begin(), values2.end(), *it));
             EXPECT_THAT(items(m), ::testing::UnorderedElementsAreArray(values2.begin(),
                                                                        values2.end()));
         }
@@ -229,8 +229,8 @@ namespace flare {
                             hash_internal::Generator<T>());
             TypeParam m(values.begin(), values.end());
             ASSERT_THAT(items(m), ::testing::UnorderedElementsAreArray(values));
-            EXPECT_EQ(1, m.erase(values[0].first));
-            EXPECT_EQ(0, std::count(m.begin(), m.end(), values[0]));
+            EXPECT_EQ(1ul, m.erase(values[0].first));
+            EXPECT_EQ(0l, std::count(m.begin(), m.end(), values[0]));
             EXPECT_THAT(items(m), ::testing::UnorderedElementsAreArray(values.begin() + 1,
                                                                        values.end()));
         }

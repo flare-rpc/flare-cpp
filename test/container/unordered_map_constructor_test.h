@@ -30,7 +30,7 @@ namespace flare {
             TypeParam m(123);
             EXPECT_TRUE(m.empty());
             EXPECT_THAT(m, ::testing::UnorderedElementsAre());
-            EXPECT_GE(m.bucket_count(), 123);
+            EXPECT_GE(m.bucket_count(), 123ul);
         }
 
         TYPED_TEST_P(ConstructorTest, BucketCountHash) {
@@ -40,7 +40,7 @@ namespace flare {
             EXPECT_EQ(m.hash_function(), hasher);
             EXPECT_TRUE(m.empty());
             EXPECT_THAT(m, ::testing::UnorderedElementsAre());
-            EXPECT_GE(m.bucket_count(), 123);
+            EXPECT_GE(m.bucket_count(), 123ul);
         }
 
         TYPED_TEST_P(ConstructorTest, BucketCountHashEqual) {
@@ -53,7 +53,7 @@ namespace flare {
             EXPECT_EQ(m.key_eq(), equal);
             EXPECT_TRUE(m.empty());
             EXPECT_THAT(m, ::testing::UnorderedElementsAre());
-            EXPECT_GE(m.bucket_count(), 123);
+            EXPECT_GE(m.bucket_count(), 123ul);
         }
 
         TYPED_TEST_P(ConstructorTest, BucketCountHashEqualAlloc) {
@@ -69,7 +69,7 @@ namespace flare {
             EXPECT_EQ(m.get_allocator(), alloc);
             EXPECT_TRUE(m.empty());
             EXPECT_THAT(m, ::testing::UnorderedElementsAre());
-            EXPECT_GE(m.bucket_count(), 123);
+            EXPECT_GE(m.bucket_count(), 123ul);
         }
 
         template<typename T>
@@ -102,7 +102,7 @@ namespace flare {
             EXPECT_EQ(m.get_allocator(), alloc);
             EXPECT_TRUE(m.empty());
             EXPECT_THAT(m, ::testing::UnorderedElementsAre());
-            EXPECT_GE(m.bucket_count(), 123);
+            EXPECT_GE(m.bucket_count(), 123ul);
         }
 
         TYPED_TEST_P(ConstructorTest, BucketCountAlloc) {
@@ -123,7 +123,7 @@ namespace flare {
             EXPECT_EQ(m.get_allocator(), alloc);
             EXPECT_TRUE(m.empty());
             EXPECT_THAT(m, ::testing::UnorderedElementsAre());
-            EXPECT_GE(m.bucket_count(), 123);
+            EXPECT_GE(m.bucket_count(), 123ul);
         }
 
         TYPED_TEST_P(ConstructorTest, BucketCountHashAlloc) {
@@ -174,7 +174,7 @@ namespace flare {
             EXPECT_EQ(m.key_eq(), equal);
             EXPECT_EQ(m.get_allocator(), alloc);
             EXPECT_THAT(items(m), ::testing::UnorderedElementsAreArray(values));
-            EXPECT_GE(m.bucket_count(), 123);
+            EXPECT_GE(m.bucket_count(), 123ul);
         }
 
         template<typename TypeParam>
@@ -191,7 +191,7 @@ namespace flare {
             TypeParam m(values.begin(), values.end(), 123, alloc);
             EXPECT_EQ(m.get_allocator(), alloc);
             EXPECT_THAT(items(m), ::testing::UnorderedElementsAreArray(values));
-            EXPECT_GE(m.bucket_count(), 123);
+            EXPECT_GE(m.bucket_count(), 123ul);
         }
 
         TYPED_TEST_P(ConstructorTest, InputIteratorBucketAlloc) {
@@ -215,7 +215,7 @@ namespace flare {
             EXPECT_EQ(m.hash_function(), hasher);
             EXPECT_EQ(m.get_allocator(), alloc);
             EXPECT_THAT(items(m), ::testing::UnorderedElementsAreArray(values));
-            EXPECT_GE(m.bucket_count(), 123);
+            EXPECT_GE(m.bucket_count(), 123ul);
         }
 
         TYPED_TEST_P(ConstructorTest, InputIteratorBucketHashAlloc) {
@@ -327,7 +327,7 @@ namespace flare {
             EXPECT_EQ(m.key_eq(), equal);
             EXPECT_EQ(m.get_allocator(), alloc);
             EXPECT_THAT(items(m), ::testing::UnorderedElementsAreArray(values));
-            EXPECT_GE(m.bucket_count(), 123);
+            EXPECT_GE(m.bucket_count(), 123ul);
         }
 
         template<typename TypeParam>
@@ -343,7 +343,7 @@ namespace flare {
             TypeParam m(values, 123, alloc);
             EXPECT_EQ(m.get_allocator(), alloc);
             EXPECT_THAT(items(m), ::testing::UnorderedElementsAreArray(values));
-            EXPECT_GE(m.bucket_count(), 123);
+            EXPECT_GE(m.bucket_count(), 123ul);
         }
 
         TYPED_TEST_P(ConstructorTest, InitializerListBucketAlloc) {
@@ -366,7 +366,7 @@ namespace flare {
             EXPECT_EQ(m.hash_function(), hasher);
             EXPECT_EQ(m.get_allocator(), alloc);
             EXPECT_THAT(items(m), ::testing::UnorderedElementsAreArray(values));
-            EXPECT_GE(m.bucket_count(), 123);
+            EXPECT_GE(m.bucket_count(), 123ul);
         }
 
         TYPED_TEST_P(ConstructorTest, InitializerListBucketHashAlloc) {

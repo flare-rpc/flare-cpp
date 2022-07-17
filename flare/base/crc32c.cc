@@ -15,7 +15,7 @@
 #endif
 
 
-namespace flare::base {
+namespace flare::base_internal {
 
     static const uint32_t table0_[256] = {
             0x00000000, 0xf26b8303, 0xe13b70f7, 0x1350f3f4,
@@ -435,17 +435,19 @@ namespace flare::base {
                (Function) ExtendImpl<SlowCRC32Functor>;
     }
 
-    bool is_fast_crc32_supported() {
-    #ifdef __SSE4_2__
-        return isSSE42();
-    #else
+}  // namespace flare::base_internal
+
+namespace flare {
+
+    bool crc32c::is_fast_crc32_supported() {
+#ifdef __SSE4_2__
+        return flare::base_internal::isSSE42();
+#else
         return false;
-    #endif
+#endif
     }
-
-    uint32_t extend(uint32_t crc, const char *buf, size_t size) {
-        static Function ChosenExtend = Choose_Extend();
-        return ChosenExtend(crc, buf, size);
+    uint32_t crc32c::extend(const char* str, size_t n) {
+        static flare::base_internal::Function ChosenExtend = flare::base_internal::Choose_Extend();
+        return ChosenExtend(_value, str, n);
     }
-
-}  // namespace flare::base
+}

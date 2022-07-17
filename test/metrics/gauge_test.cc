@@ -19,7 +19,7 @@ TEST(metrics, gauge) {
     g1<<1;
     g1<<5;
     EXPECT_EQ(g1.get_value(), 6);
-    auto n = flare::time_now();
+    //auto n = flare::time_now();
     flare::cache_metrics cm;
     g1.collect_metrics(cm);
     auto t = flare::time_now();
