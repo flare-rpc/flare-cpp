@@ -323,7 +323,7 @@ namespace flare::rpc {
                 cntl->SetFailed(ENOMETHOD, "Fail to find any variable by `{}'",
                                 cntl->http_request().unresolved_path().c_str());
             } else {
-                cntl->SetFailed(ENODATA, "`%s' does not have value series",
+                cntl->SetFailed(ENODATA, "`{}' does not have value series",
                                 cntl->http_request().unresolved_path().c_str());
             }
             return;
