@@ -279,7 +279,7 @@ static bool generate_parsing(const google::protobuf::Descriptor* d,
             impl.Print("// repeated $type$ $name$ = $number$;\n"
                        , "type", field_to_string(f)
                        , "name", f->name()
-                       , "number", flare::string_printf("%d", f->number()));
+                       , "number", flare::string_format("{}", f->number()));
             impl.Print(TEMPLATE_OF_ADD_FUNC_SIGNATURE()
                        , "vmsg", var_name
                        , "lcfield", f->lowercase_name());
@@ -483,12 +483,12 @@ static bool generate_parsing(const google::protobuf::Descriptor* d,
                 impl.Print("// optional $type$ $name$ = $number$;\n"
                            , "type", field_to_string(f)
                            , "name", f->name()
-                           , "number", flare::string_printf("%d", f->number()));
+                           , "number", flare::string_format("{}", f->number()));
             } else {
                 impl.Print("// required $type$ $name$ = $number$;\n"
                            , "type", field_to_string(f)
                            , "name", f->name()
-                           , "number", flare::string_printf("%d", f->number()));
+                           , "number", flare::string_format("{}", f->number()));
             }
             impl.Print(TEMPLATE_OF_SET_FUNC_SIGNATURE()
                        , "vmsg", var_name
@@ -882,13 +882,13 @@ static bool generate_serializing(const google::protobuf::Descriptor* d,
         // Print the field as comment.
         std::string comment_template;
         if (cit == IDL_AUTO) {
-            flare::string_printf(&comment_template,
-                                "// %s $type$ $name$ = $number$;\n",
+            comment_template = flare::string_format(
+                                "// {} $type$ $name$ = $number$;\n",
                                 (f->is_repeated() ? "repeated" :
                                  (f->is_optional() ? "optional" : "required")));
         } else {
-            flare::string_printf(&comment_template,
-                                "// %s $type$ $name$ = $number$ [(idl_type)=%s];\n",
+            comment_template = flare::string_format(
+                                "// {} $type$ $name$ = $number$ [(idl_type)={}];\n",
                                 (f->is_repeated() ? "repeated" :
                                  (f->is_optional() ? "optional" : "required")),
                                 describe_idl_type(cit));
@@ -896,7 +896,7 @@ static bool generate_serializing(const google::protobuf::Descriptor* d,
         impl.Print(comment_template.c_str()
                    , "type", field_to_string(f)
                    , "name", f->name()
-                   , "number", flare::string_printf("%d", f->number()));
+                   , "number", flare::string_format("{}", f->number()));
         if (f->is_repeated()) {
             switch (f->cpp_type()) {
             case google::protobuf::FieldDescriptor::CPPTYPE_INT32:
@@ -1089,8 +1089,8 @@ static bool generate_serializing(const google::protobuf::Descriptor* d,
                                 , "lcfield2", f2->lowercase_name());
                         }
                     } else if (f2->is_repeated()) {
-                        const std::string msgstr = flare::string_printf(
-                            "msg.%s(i)", f->lowercase_name().c_str());
+                        const std::string msgstr = flare::string_format(
+                            "msg.{}(i)", f->lowercase_name().c_str());
                         switch (f2->cpp_type()) {
                         case google::protobuf::FieldDescriptor::CPPTYPE_INT32:
                         case google::protobuf::FieldDescriptor::CPPTYPE_UINT32:
@@ -1139,8 +1139,8 @@ static bool generate_serializing(const google::protobuf::Descriptor* d,
                             return false;
                         }
                     } else {
-                        const std::string msgstr = flare::string_printf(
-                            "msg.%s(i)", f->lowercase_name().c_str());
+                        const std::string msgstr = flare::string_format(
+                            "msg.{}(i)", f->lowercase_name().c_str());
                         switch (f2->cpp_type()) {
                         case google::protobuf::FieldDescriptor::CPPTYPE_INT32:
                         case google::protobuf::FieldDescriptor::CPPTYPE_INT64:
@@ -1286,9 +1286,8 @@ static std::string protobuf_style_normalize_filename(const std::string & fname) 
         if (fname[i] == '_' || isdigit(fname[i]) || isalpha(fname[i])) {
             norm_fname.push_back(fname[i]);
         } else {
-            char symbol[4];
-            snprintf(symbol, sizeof(symbol), "_%02x", (int)fname[i]);
-            norm_fname.append(symbol, 3);
+            auto symbol = flare::string_format("_{:02x}", (int)fname[i]);
+            norm_fname.append(symbol);
         }
     }
     return norm_fname;
@@ -1315,7 +1314,7 @@ static bool generate_registration(
             "g_$vmsg$_fields = new ::mcpack2pb::FieldMap;\n"
             "FLARE_CHECK_EQ(0, g_$vmsg$_fields->init(std::max($field_count$, 1), 30));\n"
             , "vmsg", var_name
-            , "field_count", ::flare::string_printf("%d", d->field_count()));
+            , "field_count", ::flare::string_format("{}", d->field_count()));
         for (int i = 0; i < d->field_count(); ++i) {
             const google::protobuf::FieldDescriptor* f = d->field(i);
             impl.Print("(*g_$vmsg$_fields)[\"$field$\"] = ::set_$vmsg$_$lcfield$;\n"
@@ -1362,7 +1361,7 @@ bool McpackToProtobuf::Generate(const google::protobuf::FileDescriptor* file,
     std::string cpp_name = file->name();
     const size_t pos = cpp_name.find_last_of('.');
     if (pos == std::string::npos) {
-        ::flare::string_printf(error, "Bad filename=%s", cpp_name.c_str());
+        *error = ::flare::string_format("Bad filename={}", cpp_name.c_str());
         return false;
     }
     cpp_name.resize(pos);
@@ -1388,14 +1387,12 @@ bool McpackToProtobuf::Generate(const google::protobuf::FileDescriptor* file,
     for (int i = 0; i < file->message_type_count(); ++i) {
         const google::protobuf::Descriptor* d = file->message_type(i);
         if (!generate_parsing(d, ref_msgs, ref_maps, gimpl_printer)) {
-            ::flare::string_printf(
-                error, "Fail to generate parsing code for %s",
+            *error = ::flare::string_format("Fail to generate parsing code for {}",
                 d->full_name().c_str());
             return false;
         }
         if (!generate_serializing(d, ref_msgs, ref_maps, gimpl_printer)) {
-            ::flare::string_printf(
-                error, "Fail to generate serializing code for %s",
+            *error = ::flare::string_format("Fail to generate serializing code for {}",
                 d->full_name().c_str());
             return false;
         }
@@ -1405,14 +1402,12 @@ bool McpackToProtobuf::Generate(const google::protobuf::FileDescriptor* file,
             , "vmsg", var_name);
     }
     if (!generate_declarations(ref_msgs, ref_maps, gdecl_printer)) {
-        ::flare::string_printf(
-            error, "Fail to generate declarations for %s",
+        *error = ::flare::string_format("Fail to generate declarations for {}",
             cpp_name.c_str());
         return false;        
     }
     if (!generate_registration(file, gimpl_printer)) {
-        ::flare::string_printf(
-            error, "Fail to generate registration code for %s",
+        *error = ::flare::string_format("Fail to generate registration code for {}",
             cpp_name.c_str());
         return false;
     }

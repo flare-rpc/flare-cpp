@@ -35,7 +35,7 @@ namespace flare::rpc {
             _value = UNLIMITED();
             _max_concurrency = 0;
         } else {
-            _value = flare::string_printf("%d", max_concurrency);
+            _value = flare::string_format("{}", max_concurrency);
             _max_concurrency = max_concurrency;
         }
     }
@@ -75,7 +75,7 @@ namespace flare::rpc {
             _value = UNLIMITED();
             _max_concurrency = 0;
         } else {
-            _value = flare::string_printf("%d", max_concurrency);
+            _value = flare::string_format("{}", max_concurrency);
             _max_concurrency = max_concurrency;
         }
     }

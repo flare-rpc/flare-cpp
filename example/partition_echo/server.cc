@@ -112,8 +112,8 @@ int main(int argc, char* argv[]) {
         int64_t sleep_us = sleep_list[(size_t)i < sleep_list.size() ? i : (sleep_list.size() - 1)];
         echo_service_impls[i].set_index(i, sleep_us);
         // will be shown on /version page
-        servers[i].set_version(flare::string_printf(
-                    "example/dynamic_partition_echo_c++[%d]", i));
+        servers[i].set_version(flare::string_format(
+                    "example/dynamic_partition_echo_c++[{}]", i));
         if (servers[i].AddService(&echo_service_impls[i], 
                                   flare::rpc::SERVER_DOESNT_OWN_SERVICE) != 0) {
             FLARE_LOG(ERROR) << "Fail to add service";

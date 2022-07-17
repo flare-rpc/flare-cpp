@@ -457,10 +457,9 @@ namespace {
         // Send request via curl using chunked encoding
         const std::string req = "{\"message\":\"hello\"}";
         const std::string res_fname = "curl.out";
-        std::string cmd;
-        flare::string_printf(&cmd, "curl -X POST -d '%s' -H 'Transfer-Encoding:chunked' "
-                                   "-H 'Content-Type:application/json' -o %s "
-                                   "http://localhost:%d/EchoService/Echo",
+        std::string cmd = flare::string_format("curl -X POST -d '{}' -H 'Transfer-Encoding:chunked' "
+                                   "-H 'Content-Type:application/json' -o {} "
+                                   "http://localhost:{}/EchoService/Echo",
                              req.c_str(), res_fname.c_str(), port);
         ASSERT_EQ(0, system(cmd.c_str()));
 
@@ -1305,7 +1304,7 @@ namespace {
             }
             {
                 flare::rpc::HPacker::Header header("content-length",
-                                                   flare::string_printf("%llu", (unsigned long long) data_buf.size()));
+                                                   flare::string_format("{}", (unsigned long long) data_buf.size()));
                 hpacker.Encode(&header1_appender, header, options);
             }
             {

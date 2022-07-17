@@ -4,6 +4,7 @@
  * All rights reserved.
  * Author by liyinbin (jeff.li) lijippy@163.com
  *****************************************************************/
+
 #include "flare/strings/char_conv.h"
 
 #include <cstdlib>
@@ -245,19 +246,19 @@ namespace {
         EXPECT_EQ(ToFloat("459926601011.e15"), ldexpf(12466336, 65));
     }
 
-// Common test logic for converting a string which lies exactly halfway between
-// two target floats.
-//
-// mantissa and exponent represent the precise value between two floating point
-// numbers, `expected_low` and `expected_high`.  The floating point
-// representation to parse in `string_cat(mantissa, "e", exponent)`.
-//
-// This function checks that an input just slightly less than the exact value
-// is rounded down to `expected_low`, and an input just slightly greater than
-// the exact value is rounded up to `expected_high`.
-//
-// The exact value should round to `expected_half`, which must be either
-// `expected_low` or `expected_high`.
+    // Common test logic for converting a string which lies exactly halfway between
+    // two target floats.
+    //
+    // mantissa and exponent represent the precise value between two floating point
+    // numbers, `expected_low` and `expected_high`.  The floating point
+    // representation to parse in `string_cat(mantissa, "e", exponent)`.
+    //
+    // This function checks that an input just slightly less than the exact value
+    // is rounded down to `expected_low`, and an input just slightly greater than
+    // the exact value is rounded up to `expected_high`.
+    //
+    // The exact value should round to `expected_half`, which must be either
+    // `expected_low` or `expected_high`.
     template<typename FloatType>
     void TestHalfwayValue(const std::string &mantissa, int exponent,
                           FloatType expected_low, FloatType expected_high,
@@ -656,17 +657,17 @@ namespace {
         return step + (step >> 2) + 1;
     }
 
-// Test a conversion on a family of input strings, checking that the calculation
-// is correct for in-bounds values, and that overflow and underflow are done
-// correctly for out-of-bounds values.
-//
-// input_generator maps from an integer index to a string to test.
-// expected_generator maps from an integer index to an expected Float value.
-// from_chars conversion of input_generator(i) should result in
-// expected_generator(i).
-//
-// lower_bound and upper_bound denote the smallest and largest values for which
-// the conversion is expected to succeed.
+    // Test a conversion on a family of input strings, checking that the calculation
+    // is correct for in-bounds values, and that overflow and underflow are done
+    // correctly for out-of-bounds values.
+    //
+    // input_generator maps from an integer index to a string to test.
+    // expected_generator maps from an integer index to an expected Float value.
+    // from_chars conversion of input_generator(i) should result in
+    // expected_generator(i).
+    //
+    // lower_bound and upper_bound denote the smallest and largest values for which
+    // the conversion is expected to succeed.
     template<typename Float>
     void TestOverflowAndUnderflow(
             const std::function<std::string(int)> &input_generator,
@@ -684,7 +685,7 @@ namespace {
                     flare::from_chars(input.data(), input.data() + input.size(), actual);
             EXPECT_EQ(result.ec, std::errc());
             EXPECT_EQ(expected, actual)
-                                << flare::string_printf("%a vs %a", expected, actual);
+                                << flare::string_format("{} vs {}", expected, actual);
         }
         // test legal values near upper_bound
         for (index = upper_bound, step = 1; index > lower_bound;
@@ -697,7 +698,7 @@ namespace {
                     flare::from_chars(input.data(), input.data() + input.size(), actual);
             EXPECT_EQ(result.ec, std::errc());
             EXPECT_EQ(expected, actual)
-                                << flare::string_printf("%a vs %a", expected, actual);
+                                << flare::string_format("{} vs {}", expected, actual);
         }
         // Test underflow values below lower_bound
         for (index = lower_bound - 1, step = 1; index > -1000000;

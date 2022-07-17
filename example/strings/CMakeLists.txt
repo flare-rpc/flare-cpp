@@ -1,0 +1,6 @@
+file(GLOB BASE_EXAMPLES "*.cc")
+foreach(BASE_EX ${BASE_EXAMPLES})
+    get_filename_component(BASE_UT_WE ${BASE_EX} NAME_WE)
+    add_executable(${BASE_UT_WE} ${BASE_EX})
+    target_link_libraries(${BASE_UT_WE} flare-shared)
+endforeach()

@@ -1444,7 +1444,7 @@ namespace flare::rpc {
                     if (uri.port() < 0) {
                         *val = uri.host();
                     } else {
-                        flare::string_printf(val, "%s:%d", uri.host().c_str(), uri.port());
+                        *val = flare::string_format("{}:{}", uri.host().c_str(), uri.port());
                     }
                 } else if (c->remote_side().port != 0) {
                     *val = flare::base::endpoint2str(c->remote_side()).c_str();
@@ -1679,8 +1679,7 @@ namespace flare::rpc {
             if (h->status_code() == 200) {
                 msg->push(common->H2_STATUS, common->STATUS_200);
             } else {
-                flare::string_printf(&msg->push(common->H2_STATUS),
-                                     "%d", h->status_code());
+                msg->push(common->H2_STATUS) = flare::string_format("{}", h->status_code());
             }
             if (need_content_type) {
                 msg->push(common->CONTENT_TYPE, h->content_type());
@@ -1750,7 +1749,7 @@ namespace flare::rpc {
             flare::cord_buf trailer_frag;
             if (_is_grpc) {
                 HPacker::Header status_header("grpc-status",
-                                              flare::string_printf("%d", _grpc_status));
+                                              flare::string_format("{}", _grpc_status));
                 hpacker.Encode(&appender, status_header, options);
                 if (!_grpc_message.empty()) {
                     HPacker::Header msg_header("grpc-message", _grpc_message);

@@ -704,7 +704,7 @@ namespace flare {
                 std::string key = flare::as_string(sp.key());
                 std::string value = flare::as_string(sp.value());
                 std::string pathString(path_str.data(), path_str.size());
-                flare::string_appendf(&pathString, ".%s.data", key.c_str());
+                pathString += flare::string_format(".{}.data", key.c_str());
                 FileDumper *f = new FileDumper(pathString, s);
                 WildcardMatcher *m = new WildcardMatcher(value, '?', true);
                 dumpers.emplace_back(f, m);

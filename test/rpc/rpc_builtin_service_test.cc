@@ -132,8 +132,7 @@ void CheckFieldInContent(const flare::rpc::Controller &cntl,
 
 void CheckAnnotation(const flare::rpc::Controller &cntl, int64_t expect) {
     const std::string &content = cntl.response_attachment().to_string();
-    std::string expect_str;
-    flare::string_printf(&expect_str, "MyAnnotation: %" PRId64, expect);
+    std::string expect_str = flare::string_format("MyAnnotation: {}", expect);
     std::size_t pos = content.find(expect_str);
     ASSERT_TRUE(pos != std::string::npos) << expect;
 }
@@ -738,8 +737,7 @@ TEST_F(BuiltinServiceTest, token) {
         EXPECT_EQ(0, fiber_token_create(&id, nullptr, nullptr));
         ClosureChecker done;
         flare::rpc::Controller cntl;
-        std::string id_string;
-        flare::string_printf(&id_string, "%llu", (unsigned long long) id.value);
+        std::string id_string = flare::string_format("{}", (unsigned long long) id.value);
         cntl.http_request()._unresolved_path = id_string;
         service.default_method(&cntl, &req, &res, &done);
         EXPECT_FALSE(cntl.Failed());
@@ -776,8 +774,7 @@ TEST_F(BuiltinServiceTest, fibers) {
         EXPECT_EQ(0, fiber_start_background(&th, nullptr, dummy_fiber, nullptr));
         ClosureChecker done;
         flare::rpc::Controller cntl;
-        std::string id_string;
-        flare::string_printf(&id_string, "%llu", (unsigned long long) th);
+        std::string id_string = flare::string_format( "{}", (unsigned long long) th);
         cntl.http_request()._unresolved_path = id_string;
         service.default_method(&cntl, &req, &res, &done);
         EXPECT_FALSE(cntl.Failed());
@@ -810,8 +807,7 @@ TEST_F(BuiltinServiceTest, sockets) {
         EXPECT_EQ(0, flare::rpc::Socket::Create(options, &id));
         ClosureChecker done;
         flare::rpc::Controller cntl;
-        std::string id_string;
-        flare::string_printf(&id_string, "%llu", (unsigned long long) id);
+        std::string id_string = flare::string_format("{}", (unsigned long long) id);
         cntl.http_request()._unresolved_path = id_string;
         service.default_method(&cntl, &req, &res, &done);
         EXPECT_FALSE(cntl.Failed());

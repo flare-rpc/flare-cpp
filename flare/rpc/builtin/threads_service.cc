@@ -36,7 +36,7 @@ namespace flare::rpc {
         cntl->http_response().set_content_type("text/plain");
         flare::cord_buf &resp = cntl->response_attachment();
 
-        std::string cmd = flare::string_printf("pstack %lld", (long long) getpid());
+        std::string cmd = flare::string_format("pstack {}", (long long) getpid());
         flare::stop_watcher tm;
         tm.start();
         flare::cord_buf_builder pstack_output;
@@ -47,7 +47,7 @@ namespace flare::rpc {
         }
         pstack_output.move_to(resp);
         tm.stop();
-        resp.append(flare::string_printf("\n\ntime=%" PRId64 "ms", tm.m_elapsed()));
+        resp.append(flare::string_format("\n\ntime={} ms", tm.m_elapsed()));
     }
 
 } // namespace flare::rpc

@@ -97,13 +97,13 @@ namespace flare::rpc {
             servers->clear();
             std::string consul_url(_consul_url);
             if (!_consul_index.empty()) {
-                flare::string_appendf(&consul_url, "&index=%s&wait=%ds", _consul_index.c_str(),
+                consul_url += flare::string_format("&index={}&wait={}s", _consul_index.c_str(),
                                       FLAGS_consul_blocking_query_wait_secs);
             }
 
             Controller cntl;
             cntl.http_request().uri() = consul_url;
-            _channel.CallMethod(NULL, &cntl, NULL, NULL, NULL);
+            _channel.CallMethod(nullptr, &cntl, nullptr, nullptr, nullptr);
             if (cntl.Failed()) {
                 FLARE_LOG(ERROR) << "Fail to access " << consul_url << ": "
                                  << cntl.ErrorText();

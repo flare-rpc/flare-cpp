@@ -22,7 +22,7 @@
 #include "flare/files/filesystem.h"
 #include <sys/stat.h>
 #include <fcntl.h>                          // O_RDONLY
-#include "flare/strings/str_format.h"             // string_printf
+#include "flare/strings/str_format.h"
 #include "flare/strings/string_splitter.h"           // StringSplitter
 #include "flare/files/readline_file.h"         // readline_file
 #include "flare/times/time.h"

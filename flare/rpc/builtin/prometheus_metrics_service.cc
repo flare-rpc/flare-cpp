@@ -106,9 +106,9 @@ namespace flare::rpc {
     PrometheusMetricsDumper::ProcessLatencyRecorderSuffix(const std::string_view &name,
                                                           const std::string_view &desc) {
         static std::string latency_names[] = {
-                flare::string_printf("_latency_%d", (int) flare::FLAGS_variable_latency_p1),
-                flare::string_printf("_latency_%d", (int) flare::FLAGS_variable_latency_p2),
-                flare::string_printf("_latency_%d", (int) flare::FLAGS_variable_latency_p3),
+                flare::string_format("_latency_{}", (int) flare::FLAGS_variable_latency_p1),
+                flare::string_format("_latency_{}", (int) flare::FLAGS_variable_latency_p2),
+                flare::string_format("_latency_{}", (int) flare::FLAGS_variable_latency_p3),
                 "_latency_999", "_latency_9999", "_max_latency"
         };
         FLARE_CHECK(NPERCENTILES == FLARE_ARRAY_SIZE(latency_names));

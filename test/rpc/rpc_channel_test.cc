@@ -763,7 +763,7 @@ namespace {
 
             for (size_t i = 0; i < NCHANS; ++i) {
                 ::test::EchoRequest *sub_req = req.add_requests();
-                sub_req->set_message(flare::string_printf("hello_%llu", (long long) i));
+                sub_req->set_message(flare::string_format("hello_{}", (long long) i));
                 sub_req->set_code(i + 1);
             }
 
@@ -782,7 +782,7 @@ namespace {
             ASSERT_GT(cntl.latency_us(), 0);
             ASSERT_EQ((int) NCHANS, res.responses_size());
             for (int i = 0; i < res.responses_size(); ++i) {
-                EXPECT_EQ(flare::string_printf("received hello_%d", i),
+                EXPECT_EQ(flare::string_format("received hello_{}", i),
                           res.responses(i).message());
                 ASSERT_EQ(1, res.responses(i).code_list_size());
                 EXPECT_EQ(i + 1, res.responses(i).code_list(0));

@@ -13,7 +13,7 @@ DEFINE_bool(use_fiber, false, "Use fiber to send requests");
 DEFINE_string(connection_type, "", "Connection type. Available values: single, pooled, short");
 DEFINE_string(server, "0.0.0.0:6379", "IP Address of server");
 DEFINE_int32(timeout_ms, 100, "RPC timeout in milliseconds");
-DEFINE_int32(max_retry, 3, "Max retries(not including the first RPC)"); 
+DEFINE_int32(max_retry, 3, "Max retries(not including the first RPC)");
 DEFINE_bool(dont_fail, false, "Print fatal when some call failed");
 DEFINE_string(key, "hello", "The key to be get");
 DEFINE_string(value, "world", "The value associated with the key");
@@ -26,20 +26,20 @@ flare::counter<int> g_error_count("client_error_count");
 
 struct SenderArgs {
     int base_index;
-    flare::rpc::Channel* redis_channel;
+    flare::rpc::Channel *redis_channel;
 };
 
-static void* sender(void* void_args) {
-    SenderArgs* args = (SenderArgs*)void_args;
+static void *sender(void *void_args) {
+    SenderArgs *args = (SenderArgs *) void_args;
 
     std::string value;
     std::vector<std::pair<std::string, std::string> > kvs;
     kvs.resize(FLAGS_batch);
     for (int i = 0; i < FLAGS_batch; ++i) {
-        kvs[i].first = flare::string_printf(
-            "%s_%04d", FLAGS_key.c_str(), args->base_index + i);
-        kvs[i].second = flare::string_printf(
-            "%s_%04d", FLAGS_value.c_str(), args->base_index + i);
+        kvs[i].first = flare::string_format(
+                "{}_{:04d}", FLAGS_key.c_str(), args->base_index + i);
+        kvs[i].second = flare::string_format(
+                "{}_{:04d}", FLAGS_value.c_str(), args->base_index + i);
     }
 
     flare::rpc::RedisRequest request;
@@ -66,7 +66,7 @@ static void* sender(void* void_args) {
         } else {
             g_error_count << 1;
             FLARE_CHECK(flare::rpc::IsAskedToQuit() || !FLAGS_dont_fail)
-                << "error=" << cntl.ErrorText() << " latency=" << elp;
+                            << "error=" << cntl.ErrorText() << " latency=" << elp;
             // We can't connect to the server, sleep a while. Notice that this
             // is a specific sleeping to prevent this thread from spinning too
             // fast. You should continue the business logic in a production 
@@ -77,14 +77,14 @@ static void* sender(void* void_args) {
     return NULL;
 }
 
-int main(int argc, char* argv[]) {
+int main(int argc, char *argv[]) {
     // Parse gflags. We recommend you to use gflags as well.
     google::ParseCommandLineFlags(&argc, &argv, true);
 
     // A Channel represents a communication line to a Server. Notice that 
     // Channel is thread-safe and can be shared by all threads in your program.
     flare::rpc::Channel channel;
-    
+
     // Initialize the channel, NULL means using default options. 
     flare::rpc::ChannelOptions options;
     options.protocol = flare::rpc::PROTOCOL_REDIS;
@@ -103,9 +103,9 @@ int main(int argc, char* argv[]) {
     flare::rpc::RedisResponse response;
     flare::rpc::Controller cntl;
     for (int i = 0; i < FLAGS_batch * FLAGS_thread_num; ++i) {
-        if (!request.AddCommand("SET %s_%04d %s_%04d", 
-                    FLAGS_key.c_str(), i,
-                    FLAGS_value.c_str(), i)) {
+        if (!request.AddCommand("SET %s_%04d %s_%04d",
+                                FLAGS_key.c_str(), i,
+                                FLAGS_value.c_str(), i)) {
             FLARE_LOG(ERROR) << "Fail to SET " << i << "th request";
             return -1;
         }
@@ -153,9 +153,9 @@ int main(int argc, char* argv[]) {
 
     while (!flare::rpc::IsAskedToQuit()) {
         sleep(1);
-        
+
         FLARE_LOG(INFO) << "Accessing redis-server at qps=" << g_latency_recorder.qps(1)
-                  << " latency=" << g_latency_recorder.latency(1);
+                        << " latency=" << g_latency_recorder.latency(1);
     }
 
     FLARE_LOG(INFO) << "redis_client is going to quit";

@@ -356,8 +356,8 @@ namespace flare::rpc {
             }
             servers->clear();
             Controller cntl;
-            std::string uri_str = flare::string_printf(
-                    "/discovery/fetchs?appid=%s&env=%s&status=%s", service_name,
+            std::string uri_str = flare::string_format(
+                    "/discovery/fetchs?appid={}&env={}&status={}", service_name,
                     FLAGS_discovery_env.c_str(), FLAGS_discovery_status.c_str());
             if (!FLAGS_discovery_zone.empty()) {
                 uri_str.append("&zone=");

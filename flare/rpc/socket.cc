@@ -2592,20 +2592,18 @@ namespace flare::rpc {
 
     std::string Socket::description() const {
         // NOTE: The output should be consistent with operator<<()
-        std::string result;
-        result.reserve(64);
-        flare::string_appendf(&result, "Socket{id=%" PRIu64, id());
+        std::string result = flare::string_format("Socket{{id={}", id());
         const int saved_fd = fd();
         if (saved_fd >= 0) {
-            flare::string_appendf(&result, " fd=%d", saved_fd);
+            result.append(flare::string_format(" fd={}", saved_fd));
         }
-        flare::string_appendf(&result, " addr=%s",
-                              flare::base::endpoint2str(remote_side()).c_str());
+        result.append(flare::string_format(" addr={}",
+                              flare::base::endpoint2str(remote_side()).c_str()));
         const int local_port = local_side().port;
         if (local_port > 0) {
-            flare::string_appendf(&result, ":%d", local_port);
+            result += flare::string_format("{}", local_port);
         }
-        flare::string_appendf(&result, "} (0x%p)", this);
+        result += flare::string_format("}} ({})", fmt::ptr(this));
         return result;
     }
 

@@ -174,7 +174,7 @@ TEST_F(GrpcTest, return_error) {
     stub.Method(&cntl, &req, &res, NULL);
     EXPECT_TRUE(cntl.Failed());
     EXPECT_EQ(cntl.ErrorCode(), flare::rpc::EINTERNAL);
-    EXPECT_TRUE(flare::ends_with(cntl.ErrorText(), flare::string_printf("%s", g_prefix.c_str())));
+    EXPECT_TRUE(flare::ends_with(cntl.ErrorText(), flare::string_format("{}", g_prefix.c_str())));
 }
 
 TEST_F(GrpcTest, RpcTimedOut) {

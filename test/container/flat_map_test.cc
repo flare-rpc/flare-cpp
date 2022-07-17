@@ -336,7 +336,7 @@ namespace {
         size_t sum = 0;
         keys.reserve(N);
         for (size_t i = 0; i < N; ++i) {
-            keys.push_back(flare::string_printf("up_latency_as_key_%lu", i));
+            keys.push_back(flare::string_format("up_latency_as_key_{}", i));
         }
 
         tm1.start();

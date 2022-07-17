@@ -38,7 +38,7 @@
         if (!perr->empty()) {                                           \
             perr->append(", ", 2);                                      \
         }                                                               \
-        flare::string_appendf(perr, fmt, ##__VA_ARGS__);                 \
+        *perr += flare::string_format(fmt, ##__VA_ARGS__);                 \
     } else { }
 
 namespace json2pb {
@@ -60,15 +60,15 @@ static void string_append_value(const RAPIDJSON_NAMESPACE::Value& value,
     } else if (value.IsBool()) {
         output->append(value.GetBool() ? "true" : "false");
     } else if (value.IsInt()) {
-        flare::string_appendf(output, "%d", value.GetInt());
+        output->append(flare::string_format("{}", value.GetInt()));
     } else if (value.IsUint()) {
-        flare::string_appendf(output, "%u", value.GetUint());
+        output->append(flare::string_format("{}", value.GetUint()));
     } else if (value.IsInt64()) {
-        flare::string_appendf(output, "%" PRId64, value.GetInt64());
+        output->append(flare::string_format("{}", value.GetInt64()));
     } else if (value.IsUint64()) {
-        flare::string_appendf(output, "%" PRIu64, value.GetUint64());
+        output->append(flare::string_format("{}", value.GetUint64()));
     } else if (value.IsDouble()) {
-        flare::string_appendf(output, "%f", value.GetDouble());
+        output->append(flare::string_format("{}", value.GetDouble()));
     } else if (value.IsString()) {
         output->push_back('"');
         output->append(value.GetString(), value.GetStringLength());
@@ -95,9 +95,9 @@ inline bool value_invalid(const google::protobuf::FieldDescriptor* field, const 
         }
         err->append("Invalid value `");
         string_append_value(value, err);
-        flare::string_appendf(err, "' for %sfield `%s' which SHOULD be %s",
+        err->append(flare::string_format("' for {}field `{}' which SHOULD be {}",
                        optional ? "optional " : "",
-                       field->full_name().c_str(), type);
+                       field->full_name().c_str(), type));
     }
     if (!optional) {
         return false;                                           
@@ -187,7 +187,7 @@ inline bool convert_enum_type(const RAPIDJSON_NAMESPACE::Value&item, bool repeat
                               const google::protobuf::FieldDescriptor* field,
                               const google::protobuf::Reflection* reflection,
                               std::string* err) {
-    const google::protobuf::EnumValueDescriptor * enum_value_descriptor = NULL; 
+    const google::protobuf::EnumValueDescriptor * enum_value_descriptor = nullptr; 
     if (item.IsInt()) {
         enum_value_descriptor = field->enum_type()->FindValueByNumber(item.GetInt()); 
     } else if (item.IsString()) {                                          
@@ -535,7 +535,7 @@ bool JsonValueToProtoMessage(const RAPIDJSON_NAMESPACE::Value& json_value,
     }
 
     std::string field_name_str_temp; 
-    const RAPIDJSON_NAMESPACE::Value* value_ptr = NULL;
+    const RAPIDJSON_NAMESPACE::Value* value_ptr = nullptr;
     for (size_t i = 0; i < fields.size(); ++i) {
         const google::protobuf::FieldDescriptor* field = fields[i];
         
@@ -557,7 +557,7 @@ bool JsonValueToProtoMessage(const RAPIDJSON_NAMESPACE::Value& json_value,
 #else 
         const RAPIDJSON_NAMESPACE::Value::Member* member =
                 json_value.FindMember(field_name_str.data());
-        if (member == NULL) {
+        if (member == nullptr) {
             if (field->is_required()) {
                 J2PERROR(err, "Missing required field: %s", field->full_name().c_str());
                 return false;

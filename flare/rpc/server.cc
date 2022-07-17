@@ -257,7 +257,7 @@ namespace flare::rpc {
     }
 
     std::string Server::ServerPrefix() const {
-        return flare::string_printf("%s_%d", g_server_info_prefix, listen_address().port);
+        return flare::string_format("{}_{}", g_server_info_prefix, listen_address().port);
     }
 
     void *Server::UpdateDerivedVars(void *arg) {
@@ -1718,8 +1718,8 @@ namespace flare::rpc {
             FLARE_SCOPED_LOCK(g_dummy_server_mutex);
             if (g_dummy_server == nullptr) {
                 Server *dummy_server = new Server;
-                dummy_server->set_version(flare::string_printf(
-                        "DummyServerOf(%s)", GetProgramName()));
+                dummy_server->set_version(flare::string_format(
+                        "DummyServerOf({})", GetProgramName()));
                 ServerOptions options;
                 options.num_threads = 0;
                 if (dummy_server->Start(port, &options) != 0) {

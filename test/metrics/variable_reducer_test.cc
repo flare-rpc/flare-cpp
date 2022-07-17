@@ -254,7 +254,7 @@ namespace {
     static void *string_appender(void *arg) {
         flare::gauge<std::string> *cater = (flare::gauge<std::string> *) arg;
         int count = 0;
-        std::string id = flare::string_printf("%lld", (long long) pthread_self());
+        std::string id = flare::string_format("{}", (long long) pthread_self());
         std::string tmp = "a";
         for (count = 0; !count || !g_stop; ++count) {
             *cater << id << ":";
