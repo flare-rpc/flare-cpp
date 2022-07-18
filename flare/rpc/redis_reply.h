@@ -71,12 +71,14 @@ namespace flare::rpc {
         // Set the reply to a status.
         void SetStatus(const std::string_view &str);
 
-        void FormatStatus(const char *fmt, ...);
+        template<typename ...Args>
+        void FormatStatus(const std::string_view &fmt, Args&&...args);
 
         // Set the reply to an error.
         void SetError(const std::string_view &str);
 
-        void FormatError(const char *fmt, ...);
+        template<typename ...Args>
+        void FormatError(const std::string_view &fmt, Args&&...args);
 
         // Set this reply to integer `value'.
         void SetInteger(int64_t value);
@@ -84,7 +86,8 @@ namespace flare::rpc {
         // Set this reply to a (bulk) string.
         void SetString(const std::string_view &str);
 
-        void FormatString(const char *fmt, ...);
+        template <typename ...Args>
+        void FormatString(const std::string_view &fmt, Args&&...args);
 
         // Convert the reply into a signed 64-bit integer(according to
         // http://redis.io/topics/protocol). If the reply is not an integer,
@@ -153,8 +156,6 @@ namespace flare::rpc {
         // by calling CopyFrom[Different|Same]Arena.
         FLARE_DISALLOW_COPY_AND_ASSIGN(RedisReply);
 
-        void FormatStringImpl(const char *fmt, va_list args, redis_reply_type type);
-
         void SetStringImpl(const std::string_view &str, redis_reply_type type);
 
         redis_reply_type _type;
@@ -183,7 +184,7 @@ namespace flare::rpc {
         _type = REDIS_REPLY_NIL;
         _length = 0;
         _data.array.last_index = -1;
-        _data.array.replies = NULL;
+        _data.array.replies = nullptr;
         // _arena should not be reset because further memory allocation needs it.
     }
 
@@ -233,22 +234,20 @@ namespace flare::rpc {
         return SetStringImpl(str, REDIS_REPLY_STATUS);
     }
 
-    inline void RedisReply::FormatStatus(const char *fmt, ...) {
-        va_list ap;
-        va_start(ap, fmt);
-        FormatStringImpl(fmt, ap, REDIS_REPLY_STATUS);
-        va_end(ap);
+    template<typename ...Args>
+    void RedisReply::FormatStatus(const std::string_view &fmt, Args&&...args) {
+        auto str = flare::string_format(fmt, std::forward<Args>(args)...);
+        SetStringImpl(str, REDIS_REPLY_STATUS);
     }
 
     inline void RedisReply::SetError(const std::string_view &str) {
         return SetStringImpl(str, REDIS_REPLY_ERROR);
     }
 
-    inline void RedisReply::FormatError(const char *fmt, ...) {
-        va_list ap;
-        va_start(ap, fmt);
-        FormatStringImpl(fmt, ap, REDIS_REPLY_ERROR);
-        va_end(ap);
+    template<typename ...Args>
+    inline void RedisReply::FormatError(const std::string_view &fmt, Args&&...args) {
+        auto str = flare::string_format(fmt, std::forward<Args>(args)...);
+        SetStringImpl(str, REDIS_REPLY_ERROR);
     }
 
     inline void RedisReply::SetInteger(int64_t value) {
@@ -264,11 +263,10 @@ namespace flare::rpc {
         return SetStringImpl(str, REDIS_REPLY_STRING);
     }
 
-    inline void RedisReply::FormatString(const char *fmt, ...) {
-        va_list ap;
-        va_start(ap, fmt);
-        FormatStringImpl(fmt, ap, REDIS_REPLY_STRING);
-        va_end(ap);
+    template <typename ...Args>
+    inline void RedisReply::FormatString(const std::string_view &fmt, Args&&...args) {
+        auto str = flare::string_format(fmt, std::forward<Args>(args)...);
+        SetStringImpl(str, REDIS_REPLY_STRING);
     }
 
     inline const char *RedisReply::c_str() const {
@@ -323,7 +321,7 @@ namespace flare::rpc {
         if (is_array() && index < (size_t) _length) {
             return _data.array.replies[index];
         }
-        static RedisReply redis_nil(NULL);
+        static RedisReply redis_nil(nullptr);
         return redis_nil;
     }
 

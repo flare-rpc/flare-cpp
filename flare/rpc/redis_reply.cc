@@ -115,7 +115,7 @@ namespace flare::rpc {
 
         // Notice that all branches returning PARSE_ERROR_NOT_ENOUGH_DATA must not change `buf'.
         const char *pfc = (const char *) buf.fetch1();
-        if (pfc == NULL) {
+        if (pfc == nullptr) {
             return PARSE_ERROR_NOT_ENOUGH_DATA;
         }
         const char fc = *pfc;  // first character
@@ -141,7 +141,7 @@ namespace flare::rpc {
                     return PARSE_OK;
                 }
                 char *d = (char *) _arena->allocate((len / 8 + 1) * 8);
-                if (d == NULL) {
+                if (d == nullptr) {
                     FLARE_LOG(FATAL) << "Fail to allocate string[" << len << "]";
                     return PARSE_ERROR_ABSOLUTELY_WRONG;
                 }
@@ -161,7 +161,7 @@ namespace flare::rpc {
                 if (crlf_pos == std::string_view::npos) {  // not enough data
                     return PARSE_ERROR_NOT_ENOUGH_DATA;
                 }
-                char *endptr = NULL;
+                char *endptr = nullptr;
                 int64_t value = strtoll(intbuf + 1/*skip fc*/, &endptr, 10);
                 if (endptr != intbuf + crlf_pos) {
                     FLARE_LOG(ERROR) << '`' << intbuf + 1 << "' is not a valid 64-bit decimal";
@@ -201,7 +201,7 @@ namespace flare::rpc {
                         _data.short_str[len] = '\0';
                     } else {
                         char *d = (char *) _arena->allocate((len / 8 + 1) * 8);
-                        if (d == NULL) {
+                        if (d == nullptr) {
                             FLARE_LOG(FATAL) << "Fail to allocate string[" << len << "]";
                             return PARSE_ERROR_ABSOLUTELY_WRONG;
                         }
@@ -233,7 +233,7 @@ namespace flare::rpc {
                         _type = REDIS_REPLY_ARRAY;
                         _length = 0;
                         _data.array.last_index = -1;
-                        _data.array.replies = NULL;
+                        _data.array.replies = nullptr;
                         return PARSE_OK;
                     }
                     if (count > (int64_t) std::numeric_limits<uint32_t>::max()) {
@@ -243,7 +243,7 @@ namespace flare::rpc {
                     }
                     // FIXME(gejun): Call allocate_aligned instead.
                     RedisReply *subs = (RedisReply *) _arena->allocate(sizeof(RedisReply) * count);
-                    if (subs == NULL) {
+                    if (subs == nullptr) {
                         FLARE_LOG(FATAL) << "Fail to allocate RedisReply[" << count << "]";
                         return PARSE_ERROR_ABSOLUTELY_WRONG;
                     }
@@ -371,7 +371,7 @@ namespace flare::rpc {
         switch (_type) {
             case REDIS_REPLY_ARRAY: {
                 RedisReply *subs = (RedisReply *) _arena->allocate(sizeof(RedisReply) * _length);
-                if (subs == NULL) {
+                if (subs == nullptr) {
                     FLARE_LOG(FATAL) << "Fail to allocate RedisReply[" << _length << "]";
                     return;
                 }
@@ -406,7 +406,7 @@ namespace flare::rpc {
                     memcpy(_data.short_str, other._data.short_str, _length + 1);
                 } else {
                     char *d = (char *) _arena->allocate((_length / 8 + 1) * 8);
-                    if (d == NULL) {
+                    if (d == nullptr) {
                         FLARE_LOG(FATAL) << "Fail to allocate string[" << _length << "]";
                         return;
                     }
@@ -461,25 +461,6 @@ namespace flare::rpc {
         }
         _type = type;
         _length = size;
-    }
-
-    void RedisReply::FormatStringImpl(const char *fmt, va_list args, redis_reply_type type) {
-        va_list copied_args;
-        va_copy(copied_args, args);
-        char buf[64];
-        int ret = vsnprintf(buf, sizeof(buf), fmt, copied_args);
-        va_end(copied_args);
-        if (ret < 0) {
-            FLARE_LOG(FATAL) << "Fail to vsnprintf into buf=" << (void *) buf << " size=" << sizeof(buf);
-            return;
-        } else if (ret < (int) sizeof(buf)) {
-            return SetStringImpl(buf, type);
-        } else {
-            std::string str;
-            str.reserve(ret + 1);
-            flare::string_vappendf(&str, fmt, args);
-            return SetStringImpl(str, type);
-        }
     }
 
 } // namespace flare::rpc

@@ -48,7 +48,7 @@ public:
                                               flare::rpc::RedisReply *output,
                                               bool /*flush_batched*/) override {
         if (args.size() != 2ul) {
-            output->FormatError("Expect 1 arg for 'get', actually %lu", args.size() - 1);
+            output->FormatError("Expect 1 arg for 'get', actually {}", args.size() - 1);
             return flare::rpc::REDIS_CMD_HANDLED;
         }
         const std::string key(args[1].data(), args[1].size());
@@ -74,7 +74,7 @@ public:
                                               flare::rpc::RedisReply *output,
                                               bool /*flush_batched*/) override {
         if (args.size() != 3ul) {
-            output->FormatError("Expect 2 args for 'set', actually %lu", args.size() - 1);
+            output->FormatError("Expect 2 args for 'set', actually {}", args.size() - 1);
             return flare::rpc::REDIS_CMD_HANDLED;
         }
         const std::string key(args[1].data(), args[1].size());

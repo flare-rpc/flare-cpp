@@ -682,13 +682,13 @@ namespace {
             ASSERT_STREQ(buf.to_string().c_str(), "$17\r\nabcde'hello world\r\n");
             ASSERT_STREQ("abcde'hello world", r.c_str());
 
-            r.FormatString("int:%d str:%s fp:%.2f", 123, "foobar", 3.21);
+            r.FormatString("int:{} str:{} fp:{:.2f}", 123, "foobar", 3.21);
             ASSERT_TRUE(r.SerializeTo(&appender));
             appender.move_to(buf);
             ASSERT_STREQ(buf.to_string().c_str(), "$26\r\nint:123 str:foobar fp:3.21\r\n");
             ASSERT_STREQ("int:123 str:foobar fp:3.21", r.c_str());
 
-            r.FormatString("verylongstring verylongstring verylongstring verylongstring int:%d str:%s fp:%.2f", 123,
+            r.FormatString("verylongstring verylongstring verylongstring verylongstring int:{} str:{} fp:{:.2f}", 123,
                            "foobar", 3.21);
             ASSERT_TRUE(r.SerializeTo(&appender));
             appender.move_to(buf);
