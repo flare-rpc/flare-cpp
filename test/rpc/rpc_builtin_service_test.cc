@@ -80,7 +80,7 @@ public:
         flare::rpc::Controller *cntl =
                 static_cast<flare::rpc::Controller *>(cntl_base);
         flare::rpc::ClosureGuard done_guard(done);
-        TRACEPRINTF("MyAnnotation: %ld", cntl->log_id());
+        TRACEPRINTF("MyAnnotation: {}", cntl->log_id());
         if (req->sleep_us() > 0) {
             flare::fiber_sleep_for(req->sleep_us());
         }
