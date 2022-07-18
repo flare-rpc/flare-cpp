@@ -7,6 +7,7 @@ foreach(RPC_UT ${RPC_UNITTESTS})
             ${GTEST_MAIN_LIB}
             ${GTEST_LIB}
             ${GMOCK_LIB}
+            ${DYNAMIC_LIB}
             ${GPERFTOOLS_LIBRARIES})
     add_test(NAME ${RPC_UT_WE} COMMAND ${RPC_UT_WE})
 endforeach()

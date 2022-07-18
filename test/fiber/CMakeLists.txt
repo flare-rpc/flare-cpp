@@ -8,6 +8,7 @@ foreach(FIBER_UT ${FIBER_UNITTESTS})
             ${GTEST_MAIN_LIB}
             ${GTEST_LIB}
             ${GMOCK_LIB}
+            ${DYNAMIC_LIB}
             flare-shared-debug
             ${GPERFTOOLS_LIBRARIES})
     add_test(NAME ${FIBER_UT_WE} COMMAND ${FIBER_UT_WE})
