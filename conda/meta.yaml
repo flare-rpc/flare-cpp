@@ -38,7 +38,7 @@ outputs:
         - openssl =1.1.1
         - gflags >=2.2.2
         - leveldb >=1.22
-        - protobuf >=3.9.2
+        - protobuf >=3.9.2, <=3.19.1
         - gperftools =2.9.1
       host:
         - zlib
@@ -46,7 +46,7 @@ outputs:
         - openssl =1.1.1
         - gflags >=2.2.2
         - leveldb >=1.22
-        - protobuf >=3.9.2
+        - protobuf >=3.9.2, <=3.19.1
         - gperftools =2.9.1
       run:
         #- __osx >={{ MACOSX_DEPLOYMENT_TARGET|default("10.15") }}  # [osx and x86_64]
@@ -55,7 +55,7 @@ outputs:
         - openssl =1.1.1
         - gflags >=2.2.2
         - leveldb >=1.22
-        - protobuf >=3.9.2
+        - protobuf >=3.9.2, <=3.19.1
         - gperftools =2.9.1
     test:
       commands:
