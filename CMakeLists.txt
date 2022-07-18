@@ -144,6 +144,7 @@ include_directories(
 set(DYNAMIC_LIB
         ${GFLAGS_LIBRARY}
         ${PROTOBUF_LIBRARIES}
+        ${Protobuf_LITE_LIBRARIES}
         ${LEVELDB_LIB}
         ${PROTOC_LIB}
         ${CMAKE_THREAD_LIBS_INIT}

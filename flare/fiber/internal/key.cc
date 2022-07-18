@@ -20,6 +20,7 @@
 // Date: Sun Aug  3 12:46:15 CST 2014
 
 #include <pthread.h>
+#include <limits.h>
 #include "flare/base/profile.h"
 #include "flare/base/static_atomic.h"
 #include "flare/metrics/gauge.h"
