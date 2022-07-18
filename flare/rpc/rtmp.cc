@@ -1849,7 +1849,7 @@ namespace flare::rpc {
                     FLARE_CHECK(_rtmpsock);
                     rc = fiber_token_create(&onfail_id, this, RunOnFailed);
                     if (rc) {
-                        cntl->SetFailed(ENOMEM, "Fail to create _onfail_id: %s", flare_error(rc));
+                        cntl->SetFailed(ENOMEM, "Fail to create _onfail_id: {}", flare_error(rc));
                         mu.unlock();
                         return OnFailedToCreateStream();
                     }
@@ -2647,8 +2647,7 @@ namespace flare::rpc {
         }
         if (FLAGS_rtmp_server_close_connection_on_error &&
             !_client_supports_stream_multiplexing) {
-            _rtmpsock->SetFailed(EFAILEDSOCKET, "Close connection because %.*s",
-                                 (int) error_desc.size(), error_desc.data());
+            _rtmpsock->SetFailed(EFAILEDSOCKET, "Close connection because {}",error_desc);
             // The purpose is to close the connection, no matter what SetFailed()
             // returns, the operation should be done.
             FLARE_LOG_IF(WARNING, FLAGS_log_error_text)

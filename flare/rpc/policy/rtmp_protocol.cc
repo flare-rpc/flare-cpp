@@ -3683,7 +3683,7 @@ namespace flare::rpc {
             Socket *s = accessor.get_sending_socket();
             RtmpContext *ctx = static_cast<RtmpContext *>(s->parsing_context());
             if (ctx == NULL) {
-                cntl->SetFailed(EINVAL, "RtmpContext of %s is not created",
+                cntl->SetFailed(EINVAL, "RtmpContext of {} is not created",
                                 s->description().c_str());
                 return;
             }

@@ -65,7 +65,7 @@ namespace flare::rpc {
             }
             if (it1->value.type() != mcpack2pb::FIELD_ARRAY) {
                 cntl->SetFailed(EREQUEST, "Expect request.content to be array, "
-                                          "actually %s", mcpack2pb::type2str(it1->value.type()));
+                                          "actually {}", mcpack2pb::type2str(it1->value.type()));
                 return;
             }
 
@@ -83,7 +83,7 @@ namespace flare::rpc {
                 if (it3->name == "service_name") {
                     if (it3->value.type() != mcpack2pb::FIELD_STRING) {
                         cntl->SetFailed(EREQUEST, "Expect request.content[0].service_name"
-                                                  " to be string, actually %s",
+                                                  " to be string, actually {}",
                                         mcpack2pb::type2str(it3->value.type()));
                         return;
                     }
@@ -91,7 +91,7 @@ namespace flare::rpc {
                 } else if (it3->name == "method") {
                     if (it3->value.type() != mcpack2pb::FIELD_STRING) {
                         cntl->SetFailed(EREQUEST, "Expect request.content[0].method"
-                                                  " to be string, actually %s",
+                                                  " to be string, actually {}",
                                         mcpack2pb::type2str(it3->value.type()));
                         return;
                     }
@@ -100,7 +100,7 @@ namespace flare::rpc {
                     if (!mcpack2pb::is_primitive(it3->value.type()) ||
                         !mcpack2pb::is_integral((mcpack2pb::PrimitiveFieldType) it3->value.type())) {
                         cntl->SetFailed(ERESPONSE, "request.content[0].id must be "
-                                                   "integer, actually %s",
+                                                   "integer, actually {}",
                                         mcpack2pb::type2str(it3->value.type()));
                         return;
                     }
@@ -109,7 +109,7 @@ namespace flare::rpc {
                 } else if (it3->name == "params") {
                     if (it3->value.type() != mcpack2pb::FIELD_OBJECT) {
                         cntl->SetFailed(EREQUEST, "Expect request.content[0].params "
-                                                  "to be object, actually %s",
+                                                  "to be object, actually {}",
                                         mcpack2pb::type2str(it3->value.type()));
                         return;
                     }
@@ -151,8 +151,7 @@ namespace flare::rpc {
             buf.pop_front(user_req_offset);
             if (buf.size() != user_req_size) {
                 if (buf.size() < user_req_size) {
-                    cntl->SetFailed(EREQUEST, "request_size=%" PRIu64 " is shorter than"
-                                              "specified=%" PRIu64, (uint64_t) buf.size(),
+                    cntl->SetFailed(EREQUEST, "request_size={} is shorter than specified={}", (uint64_t) buf.size(),
                                     (uint64_t) user_req_size);
                     return;
                 }
@@ -172,12 +171,12 @@ namespace flare::rpc {
             const std::string &msg_name = pb_req->GetDescriptor()->full_name();
             mcpack2pb::MessageHandler handler = mcpack2pb::find_message_handler(msg_name);
             if (handler.parse_body == NULL) {
-                return cntl->SetFailed(EREQUEST, "Fail to find parser of %s",
+                return cntl->SetFailed(EREQUEST, "Fail to find parser of {}",
                                        msg_name.c_str());
             }
             flare::cord_buf_as_zero_copy_input_stream bodystream(raw_req.body);
             if (!handler.parse_body(pb_req, &bodystream, raw_req.body.size())) {
-                cntl->SetFailed(EREQUEST, "Fail to parse %s", msg_name.c_str());
+                cntl->SetFailed(EREQUEST, "Fail to parse {}", msg_name.c_str());
                 return;
             }
         }
@@ -222,7 +221,7 @@ namespace flare::rpc {
             }
             // TODO: This is optional since serializing already checks.
             // if (!pb_res->IsInitialized()) {
-            //     cntl->SetFailed(ERESPONSE, "Missing required fields in response: %s",
+            //     cntl->SetFailed(ERESPONSE, "Missing required fields in response: {}",
             //                     pb_res->InitializationErrorString().c_str());
             //     return AppendError(meta, cntl, raw_res->body);
             // }
@@ -230,7 +229,7 @@ namespace flare::rpc {
             const std::string &msg_name = pb_res->GetDescriptor()->full_name();
             mcpack2pb::MessageHandler handler = mcpack2pb::find_message_handler(msg_name);
             if (handler.serialize_body == NULL) {
-                cntl->SetFailed(ERESPONSE, "Fail to find serializer of %s",
+                cntl->SetFailed(ERESPONSE, "Fail to find serializer of {}",
                                 msg_name.c_str());
                 return AppendError(meta, cntl, raw_res->body);
             }
@@ -267,7 +266,7 @@ namespace flare::rpc {
             sr.end_object();
             ostream.done();
             if (!sr.good()) {
-                cntl->SetFailed(ERESPONSE, "Fail to serialize %s", msg_name.c_str());
+                cntl->SetFailed(ERESPONSE, "Fail to serialize {}", msg_name.c_str());
                 raw_res->body.clear();
                 return AppendError(meta, cntl, raw_res->body);
             }
@@ -282,7 +281,7 @@ namespace flare::rpc {
             const std::string &msg_name = res->GetDescriptor()->full_name();
             mcpack2pb::MessageHandler handler = mcpack2pb::find_message_handler(msg_name);
             if (handler.parse_body == NULL) {
-                return cntl->SetFailed(ERESPONSE, "Fail to find parser of %s",
+                return cntl->SetFailed(ERESPONSE, "Fail to find parser of {}",
                                        msg_name.c_str());
             }
             flare::cord_buf_as_zero_copy_input_stream zc_stream(buf);
@@ -305,7 +304,7 @@ namespace flare::rpc {
             }
             if (it1->value.type() != mcpack2pb::FIELD_ARRAY) {
                 cntl->SetFailed(ERESPONSE, "Expect response.content to be array,"
-                                           " actually %s", mcpack2pb::type2str(it1->value.type()));
+                                           " actually {}", mcpack2pb::type2str(it1->value.type()));
                 return;
             }
             mcpack2pb::ArrayIterator it2(it1->value);
@@ -321,7 +320,7 @@ namespace flare::rpc {
                 if (it3->name == "error") {
                     if (it3->value.type() != mcpack2pb::FIELD_OBJECT) {
                         cntl->SetFailed(ERESPONSE, "Expect response.content[0].error"
-                                                   " to be object, actually %s",
+                                                   " to be object, actually {}",
                                         mcpack2pb::type2str(it3->value.type()));
                         return;
                     }
@@ -334,7 +333,7 @@ namespace flare::rpc {
                                         (mcpack2pb::PrimitiveFieldType) it4->value.type())) {
                                 cntl->SetFailed(
                                         ERESPONSE, "Expect response.content[0].error.code "
-                                                   "to be integer, actually %s",
+                                                   "to be integer, actually {}",
                                         mcpack2pb::type2str(it4->value.type()));
                                 return;
                             }
@@ -348,7 +347,7 @@ namespace flare::rpc {
                             if (it4->value.type() != mcpack2pb::FIELD_STRING) {
                                 cntl->SetFailed(
                                         ERESPONSE, "Expect response.content[0].error."
-                                                   "message to be string, actually %s",
+                                                   "message to be string, actually {}",
                                         mcpack2pb::type2str(it4->value.type()));
                                 return;
                             }
@@ -365,13 +364,13 @@ namespace flare::rpc {
                                         "Fail to find response.content[0].error.message");
                         return;
                     }
-                    cntl->SetFailed(code, "%s", msg.c_str());
+                    cntl->SetFailed(code, "{}", msg.c_str());
                     return; // no need to parse left fields.
                 } else if (it3->name == "result") {
                     if (!mcpack2pb::is_primitive(it3->value.type()) ||
                         !mcpack2pb::is_integral((mcpack2pb::PrimitiveFieldType) it3->value.type())) {
                         cntl->SetFailed(ERESPONSE, "Expect response.content[0].result"
-                                                   " to be integer, actually %s",
+                                                   " to be integer, actually {}",
                                         mcpack2pb::type2str(it3->value.type()));
                         return;
                     }
@@ -379,7 +378,7 @@ namespace flare::rpc {
                 } else if (it3->name == "result_params") {
                     if (it3->value.type() != mcpack2pb::FIELD_OBJECT) {
                         cntl->SetFailed(ERESPONSE, "Expect response.content[0].result_params"
-                                                   " to be object, actually %s",
+                                                   " to be object, actually {}",
                                         mcpack2pb::type2str(it3->value.type()));
                         return;
                     }
@@ -399,7 +398,7 @@ namespace flare::rpc {
                         }
                         if (!found_response_name) {
                             cntl->SetFailed(ERESPONSE, "Fail to find response."
-                                                       "content[0].result_params.%s", expname);
+                                                       "content[0].result_params.{}", expname);
                             return;
                         }
                         response_name = expname;
@@ -422,8 +421,7 @@ namespace flare::rpc {
             buf.pop_front(user_res_offset);
             if (buf.size() != user_res_size) {
                 if (buf.size() < user_res_size) {
-                    cntl->SetFailed(ERESPONSE, "response_size=%" PRIu64 " is shorter "
-                                               "than specified=%" PRIu64, (uint64_t) buf.size(),
+                    cntl->SetFailed(ERESPONSE, "response_size={} is shorter than specified={}", (uint64_t) buf.size(),
                                     (uint64_t) user_res_size);
                     return;
                 }
@@ -431,8 +429,7 @@ namespace flare::rpc {
             }
             flare::cord_buf_as_zero_copy_input_stream bufstream(buf);
             if (!handler.parse_body(res, &bufstream, buf.size())) {
-                cntl->SetFailed(ERESPONSE, "Fail to parse %s from response.content[0]."
-                                           "result_params.%s", msg_name.c_str(), response_name);
+                cntl->SetFailed(ERESPONSE, "Fail to parse {} from response.content[0].result_params.{}", msg_name.c_str(), response_name);
                 return;
             }
         }
@@ -483,7 +480,7 @@ namespace flare::rpc {
             const std::string &msg_name = request->GetDescriptor()->full_name();
             mcpack2pb::MessageHandler handler = mcpack2pb::find_message_handler(msg_name);
             if (handler.serialize_body == NULL) {
-                return cntl->SetFailed(EREQUEST, "Fail to find serializer of %s",
+                return cntl->SetFailed(EREQUEST, "Fail to find serializer of {}",
                                        msg_name.c_str());
             }
 
@@ -520,7 +517,7 @@ namespace flare::rpc {
             sr.end_object();
             ostream.done();
             if (!sr.good()) {
-                return cntl->SetFailed(EREQUEST, "Fail to serialize %s",
+                return cntl->SetFailed(EREQUEST, "Fail to serialize {}",
                                        msg_name.c_str());
             }
         }

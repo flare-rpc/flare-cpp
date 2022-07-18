@@ -60,7 +60,7 @@ namespace flare::rpc {
             const int method_index = request.head.reserved;
             const google::protobuf::ServiceDescriptor *sd = service->GetDescriptor();
             if (method_index < 0 || method_index >= sd->method_count()) {
-                cntl->SetFailed(ENOMETHOD, "Fail to find method by index=%d", method_index);
+                cntl->SetFailed(ENOMETHOD, "Fail to find method by index={}", method_index);
                 return;
             }
             const google::protobuf::MethodDescriptor *method = sd->method(method_index);
@@ -76,7 +76,7 @@ namespace flare::rpc {
             CompressType type = meta.compress_type();
             if (!ParseFromCompressedData(raw_req.body, pb_req, type)) {
                 cntl->SetFailed(EREQUEST, "Fail to parse request message, "
-                                          "CompressType=%s, request_size=%" PRIu64,
+                                          "CompressType={}, request_size={}",
                                 CompressTypeToCStr(type),
                                 (uint64_t) raw_req.body.length());
             } else {
@@ -156,7 +156,7 @@ namespace flare::rpc {
             CompressType type = cntl->request_compress_type();
             if (type != COMPRESS_TYPE_NONE && type != COMPRESS_TYPE_SNAPPY) {
                 cntl->SetFailed(EREQUEST, "nova_pbrpc protocol doesn't support "
-                                          "compress_type=%d", type);
+                                          "compress_type={}", type);
                 return;
             }
             return SerializeRequestDefault(buf, cntl, request);

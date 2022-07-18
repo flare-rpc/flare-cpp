@@ -180,8 +180,8 @@ namespace flare::rpc {
                 // We work around ParseFrom of pb which is just a placeholder.
                 ((MemcacheResponse *) cntl->response())->raw_buffer() = msg->meta.movable();
                 if (msg->pi.count != accessor.pipelined_count()) {
-                    cntl->SetFailed(ERESPONSE, "pipelined_count=%d of response does "
-                                               "not equal request's=%d",
+                    cntl->SetFailed(ERESPONSE, "pipelined_count={} of response does "
+                                               "not equal request's={}",
                                     msg->pi.count, accessor.pipelined_count());
                 }
             }

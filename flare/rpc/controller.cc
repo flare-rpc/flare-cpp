@@ -1049,7 +1049,7 @@ namespace flare::rpc {
             if (_current_call.nretry == 0) {
                 span->set_remote_side(_remote_side);
             } else {
-                span->Annotate("Retrying %s",
+                span->Annotate("Retrying {}",
                                endpoint2str(_remote_side).c_str());
             }
         }
@@ -1169,7 +1169,7 @@ namespace flare::rpc {
                 span->set_sent_us(flare::get_current_time_micros());
                 span->set_request_size(packet_size);
             } else {
-                span->Annotate("Requested(%lld) [%d]",
+                span->Annotate("Requested({}) [{}]",
                                (long long) packet_size, _current_call.nretry + 1);
             }
         }

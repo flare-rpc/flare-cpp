@@ -103,7 +103,7 @@ namespace flare::rpc {
         Controller *cntl = static_cast<Controller *>(controller_base);
         cntl->http_response().set_content_type("text/plain");
         if ((void *) ProfilerStart == nullptr || (void *) ProfilerStop == nullptr) {
-            cntl->SetFailed(ENOMETHOD, "%s, to enable cpu profiler, check out "
+            cntl->SetFailed(ENOMETHOD, "{}, to enable cpu profiler, check out "
                                        "docs/cn/cpu_profiler.md",
                             flare_error(ENOMETHOD));
             return;

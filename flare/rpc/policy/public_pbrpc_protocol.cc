@@ -75,7 +75,7 @@ namespace flare::rpc {
             const Server::MethodProperty *sp = ServerPrivateAccessor(&svr)
                     .FindMethodPropertyByNameAndIndex(body.service(), body.method_id());
             if (NULL == sp) {
-                cntl->SetFailed(ENOMETHOD, "Fail to find method by service=%s method_id=%u",
+                cntl->SetFailed(ENOMETHOD, "Fail to find method by service={} method_id={}",
                                 body.service().c_str(), body.method_id());
                 return;
             }
@@ -104,7 +104,7 @@ namespace flare::rpc {
             CompressType type = meta.compress_type();
             if (!ParseFromCompressedData(raw_req.body, pb_req, type)) {
                 cntl->SetFailed(EREQUEST, "Fail to parse request message, "
-                                          "CompressType=%s, request_size=%" PRIu64,
+                                          "CompressType={}, request_size={}",
                                 CompressTypeToCStr(type),
                                 (uint64_t) raw_req.body.length());
             } else {
@@ -184,7 +184,7 @@ namespace flare::rpc {
             const int saved_error = cntl->ErrorCode();
             if (head.code() != 0) {
                 // If error_code is unset, default is 0 = success.
-                cntl->SetFailed(head.code(), "%s", head.text().c_str());
+                cntl->SetFailed(head.code(), "{}", head.text().c_str());
             } else {
                 // Parse response message iff error code from meta is 0
                 const std::string &res_data = body.serialized_response();
@@ -200,7 +200,7 @@ namespace flare::rpc {
                 }
                 if (!parse_result) {
                     cntl->SetFailed(ERESPONSE, "Fail to parse response message, "
-                                               "CompressType=%s, response_size=%" PRIu64,
+                                               "CompressType={}, response_size={}",
                                     CompressTypeToCStr(type),
                                     (uint64_t) res_data.length());
                 } else {
@@ -218,7 +218,7 @@ namespace flare::rpc {
             CompressType type = cntl->request_compress_type();
             if (type != COMPRESS_TYPE_NONE && type != COMPRESS_TYPE_SNAPPY) {
                 cntl->SetFailed(EREQUEST, "public_pbrpc doesn't support "
-                                          "compress type=%d", type);
+                                          "compress type={}", type);
                 return;
             }
             return SerializeRequestDefault(buf, cntl, request);

@@ -113,7 +113,7 @@ namespace flare::rpc {
                     .FindMethodPropertyByFullName(meta->full_method_name());
             if (NULL == sp ||
                 sp->service->GetDescriptor() == BadMethodService::descriptor()) {
-                controller->SetFailed(ENOMETHOD, "Fail to find method=%s",
+                controller->SetFailed(ENOMETHOD, "Fail to find method={}",
                                       meta->full_method_name().c_str());
                 break;
             }

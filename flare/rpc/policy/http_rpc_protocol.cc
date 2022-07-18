@@ -338,7 +338,7 @@ namespace flare::rpc {
                         res_body.copy_to(
                                 &body_str, std::min((int) res_body.size(),
                                                     FLAGS_http_max_error_length));
-                        cntl->SetFailed(EHTTP, "HTTP/{}.{} {} {}: %{}",
+                        cntl->SetFailed(EHTTP, "HTTP/{}.{} {} {}: {}",
                                         res_header->major_version(),
                                         res_header->minor_version(),
                                         static_cast<int>(res_header->status_code()),
@@ -744,7 +744,7 @@ namespace flare::rpc {
                 flare::cord_buf_as_zero_copy_output_stream wrapper(&cntl->response_attachment());
                 if (content_type == HTTP_CONTENT_PROTO) {
                     if (!res->SerializeToZeroCopyStream(&wrapper)) {
-                        cntl->SetFailed(ERESPONSE, "Fail to serialize %s", res->GetTypeName().c_str());
+                        cntl->SetFailed(ERESPONSE, "Fail to serialize {}", res->GetTypeName().c_str());
                     }
                 } else {
                     std::string err;
@@ -756,7 +756,7 @@ namespace flare::rpc {
                                        ? json2pb::OUTPUT_ENUM_BY_NUMBER
                                        : json2pb::OUTPUT_ENUM_BY_NAME);
                     if (!json2pb::ProtoMessageToJson(*res, &wrapper, opt, &err)) {
-                        cntl->SetFailed(ERESPONSE, "Fail to convert response to json, %s", err.c_str());
+                        cntl->SetFailed(ERESPONSE, "Fail to convert response to json, {}", err.c_str());
                     }
                 }
             }
@@ -898,7 +898,7 @@ namespace flare::rpc {
                 // EPIPE is common in pooled connections + backup requests.
                 const int errcode = errno;
                 FLARE_PLOG_IF(WARNING, errcode != EPIPE) << "Fail to write into " << *socket;
-                cntl->SetFailed(errcode, "Fail to write into %s", socket->description().c_str());
+                cntl->SetFailed(errcode, "Fail to write into {}", socket->description().c_str());
                 return;
             }
             if (span) {
@@ -1331,9 +1331,9 @@ namespace flare::rpc {
                 if (security_mode) {
                     std::string escape_path;
                     WebEscape(path, &escape_path);
-                    cntl->SetFailed(ENOMETHOD, "Fail to find method on `%s'", escape_path.c_str());
+                    cntl->SetFailed(ENOMETHOD, "Fail to find method on `{}'", escape_path.c_str());
                 } else {
-                    cntl->SetFailed(ENOMETHOD, "Fail to find method on `%s'", path.c_str());
+                    cntl->SetFailed(ENOMETHOD, "Fail to find method on `{}'", path.c_str());
                 }
                 return;
             } else if (sp->service->GetDescriptor() == BadMethodService::descriptor()) {
@@ -1351,7 +1351,7 @@ namespace flare::rpc {
             if (method_status) {
                 int rejected_cc = 0;
                 if (!method_status->OnRequested(&rejected_cc)) {
-                    cntl->SetFailed(ELIMIT, "Rejected by %s's ConcurrencyLimiter, concurrency=%d",
+                    cntl->SetFailed(ELIMIT, "Rejected by {}'s ConcurrencyLimiter, concurrency={}",
                                     sp->method->full_name().c_str(), rejected_cc);
                     return;
                 }
@@ -1364,12 +1364,12 @@ namespace flare::rpc {
             // concurrency, therefore are not limited by ServerOptions.max_concurrency.
             if (!sp->is_builtin_service && !sp->params.is_tabbed) {
                 if (socket->is_overcrowded()) {
-                    cntl->SetFailed(EOVERCROWDED, "Connection to %s is overcrowded",
+                    cntl->SetFailed(EOVERCROWDED, "Connection to {} is overcrowded",
                                     flare::base::endpoint2str(socket->remote_side()).c_str());
                     return;
                 }
                 if (!server_accessor.AddConcurrency(cntl)) {
-                    cntl->SetFailed(ELIMIT, "Reached server's max_concurrency=%d",
+                    cntl->SetFailed(ELIMIT, "Reached server's max_concurrency={}",
                                     server->options().max_concurrency);
                     return;
                 }
@@ -1407,7 +1407,7 @@ namespace flare::rpc {
                 if (req_body.empty()) {
                     // Treat empty body specially since parsing it results in error
                     if (!req->IsInitialized()) {
-                        cntl->SetFailed(EREQUEST, "%s needs to be created from a"
+                        cntl->SetFailed(EREQUEST, "{} needs to be created from a"
                                                   " non-empty json, it has required fields.",
                                         req->GetDescriptor()->full_name().c_str());
                         return;
@@ -1455,7 +1455,7 @@ namespace flare::rpc {
                     }
                     if (content_type == HTTP_CONTENT_PROTO) {
                         if (!ParsePbFromCordBuf(req, req_body)) {
-                            cntl->SetFailed(EREQUEST, "Fail to parse http body as %s",
+                            cntl->SetFailed(EREQUEST, "Fail to parse http body as {}",
                                             req->GetDescriptor()->full_name().c_str());
                             return;
                         }
@@ -1466,7 +1466,7 @@ namespace flare::rpc {
                         options.base64_to_bytes = sp->params.pb_bytes_to_base64;
                         cntl->set_pb_bytes_to_base64(sp->params.pb_bytes_to_base64);
                         if (!json2pb::JsonToProtoMessage(&wrapper, req, options, &err)) {
-                            cntl->SetFailed(EREQUEST, "Fail to parse http body as %s, %s",
+                            cntl->SetFailed(EREQUEST, "Fail to parse http body as {}, {}",
                                             req->GetDescriptor()->full_name().c_str(), err.c_str());
                             return;
                         }

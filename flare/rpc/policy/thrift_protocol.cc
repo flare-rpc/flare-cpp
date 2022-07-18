@@ -271,7 +271,7 @@ void ThriftClosure::DoRun() {
         _controller.SetFailed(ENOMETHOD, "thrift_method_name is too long");
     }
     if (_controller.log_id() > (uint64_t)0xffffffff) {
-        _controller.SetFailed(ERESPONSE, "Invalid thrift seq_id=%" PRIu64,
+        _controller.SetFailed(ERESPONSE, "Invalid thrift seq_id={}",
                               _controller.log_id());
     }
     const uint32_t seq_id = (uint32_t)_controller.log_id();
@@ -346,7 +346,7 @@ void ThriftClosure::DoRun() {
     if (sock->Write(&write_buf, &wopt) != 0) {
         const int errcode = errno;
         FLARE_PLOG_IF(WARNING, errcode != EPIPE) << "Fail to write into " << *sock;
-        _controller.SetFailed(errcode, "Fail to write into %s",
+        _controller.SetFailed(errcode, "Fail to write into {}",
                               sock->description().c_str());
         return;
     }
@@ -398,11 +398,11 @@ inline void ProcessThriftFramedRequestNoExcept(ThriftService* service,
     try {
         service->ProcessThriftFramedRequest(cntl, req, res, done);
     } catch (std::exception& e) {
-        cntl->SetFailed(EINTERNAL, "Catched exception: %s", e.what());
+        cntl->SetFailed(EINTERNAL, "Catched exception: {}", e.what());
     } catch (std::string& e) {
-        cntl->SetFailed(EINTERNAL, "Catched std::string: %s", e.c_str());
+        cntl->SetFailed(EINTERNAL, "Catched std::string: {}", e.c_str());
     } catch (const char* e) {
-        cntl->SetFailed(EINTERNAL, "Catched const char*: %s", e);
+        cntl->SetFailed(EINTERNAL, "Catched const char*: {}", e);
     } catch (...) {
         cntl->SetFailed(EINTERNAL, "Catched unknown exception");
     }
@@ -475,7 +475,7 @@ void ProcessThriftRequest(InputMessageBase* msg_base) {
     flare:result_status st = ReadThriftMessageBegin(
         &msg->payload, &cntl->_thrift_method_name, &mtype, &seq_id);
     if (!st.is_ok()) {
-        return cntl->SetFailed(EREQUEST, "%s", st.error_cstr());
+        return cntl->SetFailed(EREQUEST, "{}", st.error_cstr());
     }
     msg->payload.swap(req->body);
     req->field_id = THRIFT_REQUEST_FID;
@@ -494,7 +494,7 @@ void ProcessThriftRequest(InputMessageBase* msg_base) {
     MethodStatus* method_status = service->_status;
     if (method_status) {
         if (!method_status->OnRequested()) {
-            return cntl->SetFailed(ELIMIT, "Reached %s's max_concurrency=%d",
+            return cntl->SetFailed(ELIMIT, "Reached {}'s max_concurrency={}",
                             cntl->thrift_method_name().c_str(),
                             method_status->MaxConcurrency());
         }
@@ -521,11 +521,11 @@ void ProcessThriftRequest(InputMessageBase* msg_base) {
         return cntl->SetFailed(ELOGOFF, "Server is stopping");
     }
     if (socket->is_overcrowded()) {
-        return cntl->SetFailed(EOVERCROWDED, "Connection to %s is overcrowded",
+        return cntl->SetFailed(EOVERCROWDED, "Connection to {} is overcrowded",
                 flare::base::endpoint2str(socket->remote_side()).c_str());
     }
     if (!server_accessor.AddConcurrency(cntl)) {
-        return cntl->SetFailed(ELIMIT, "Reached server's max_concurrency=%d",
+        return cntl->SetFailed(ELIMIT, "Reached server's max_concurrency={}",
                 server->options().max_concurrency);
     }
     if (FLAGS_usercode_in_pthread && TooManyUserCode()) {
@@ -587,7 +587,7 @@ void ProcessThriftResponse(InputMessageBase* msg_base) {
         
         flare:result_status st = ReadThriftMessageBegin(&msg->payload, &fname, &mtype, &seq_id);
         if (!st.is_ok()) {
-            cntl->SetFailed(ERESPONSE, "%s", st.error_cstr());
+            cntl->SetFailed(ERESPONSE, "{}", st.error_cstr());
             break;
         }
         if (mtype == ::apache::thrift::protocol::T_EXCEPTION) {
@@ -603,7 +603,7 @@ void ProcessThriftResponse(InputMessageBase* msg_base) {
         }
         if (fname != cntl->thrift_method_name()) {
             cntl->SetFailed(ERESPONSE,
-                            "response.method_name=%s does not match request.method_name=%s",
+                            "response.method_name={} does not match request.method_name={}",
                             fname.c_str(), cntl->thrift_method_name().c_str());
             break;
         }

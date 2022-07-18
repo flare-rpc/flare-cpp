@@ -400,7 +400,7 @@ namespace flare::rpc {
         if (rc != 0) {
             FLARE_CHECK_EQ(EINVAL, rc);
             if (!cntl->FailedInline()) {
-                cntl->SetFailed(EINVAL, "Fail to lock call_id=%" PRId64,
+                cntl->SetFailed(EINVAL, "Fail to lock call_id={}",
                                 correlation_id.value);
             }
             FLARE_LOG_IF(ERROR, cntl->is_used_by_rpc())

@@ -48,7 +48,7 @@ namespace flare::rpc {
             }
             const google::protobuf::ServiceDescriptor *sd = service->GetDescriptor();
             if (sd->method_count() == 0) {
-                cntl->SetFailed(ENOMETHOD, "No method in service=%s",
+                cntl->SetFailed(ENOMETHOD, "No method in service={}",
                                 sd->full_name().c_str());
                 return;
             }
@@ -62,8 +62,7 @@ namespace flare::rpc {
             const std::string &msg_name = pb_req->GetDescriptor()->full_name();
             mcpack2pb::MessageHandler handler = mcpack2pb::find_message_handler(msg_name);
             if (!handler.parse_from_iobuf(pb_req, raw_req.body)) {
-                cntl->SetFailed(EREQUEST, "Fail to parse request message, "
-                                          "request_size=%" PRIu64, (uint64_t) raw_req.body.length());
+                cntl->SetFailed(EREQUEST, "Fail to parse request message, request_size={}", (uint64_t) raw_req.body.length());
                 return;
             }
         }
@@ -146,7 +145,7 @@ namespace flare::rpc {
             const std::string &msg_name = pb_req->GetDescriptor()->full_name();
             mcpack2pb::MessageHandler handler = mcpack2pb::find_message_handler(msg_name);
             if (!handler.serialize_to_iobuf(*pb_req, buf, ::mcpack2pb::FORMAT_MCPACK_V2)) {
-                cntl->SetFailed(EREQUEST, "Fail to serialize %s", msg_name.c_str());
+                cntl->SetFailed(EREQUEST, "Fail to serialize {}", msg_name.c_str());
                 return;
             }
         }

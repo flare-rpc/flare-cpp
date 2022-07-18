@@ -50,7 +50,7 @@ namespace flare::rpc {
             if (*endptr == '\0' || *endptr == '/') {
                 flare::fiber_internal::token_status(id, os);
             } else {
-                cntl->SetFailed(ENOMETHOD, "path=%s is not a fiber_token",
+                cntl->SetFailed(ENOMETHOD, "path={} is not a fiber_token",
                                 constraint.c_str());
                 return;
             }

@@ -2577,7 +2577,7 @@ namespace flare::rpc {
             if (_connection_type_for_progressive_read == CONNECTION_TYPE_POOLED) {
                 ReturnToPool();
             } else if (_connection_type_for_progressive_read == CONNECTION_TYPE_SHORT) {
-                SetFailed(EUNUSED, "[%s]Close short connection", __FUNCTION__);
+                SetFailed(EUNUSED, "[{}]Close short connection", __FUNCTION__);
             }
         }
     }

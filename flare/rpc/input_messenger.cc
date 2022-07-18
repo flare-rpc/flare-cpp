@@ -214,7 +214,7 @@ namespace flare::rpc {
                     }
                     const int saved_errno = errno;
                     FLARE_PLOG(WARNING) << "Fail to read from " << *m;
-                    m->SetFailed(saved_errno, "Fail to read from %s: %s",
+                    m->SetFailed(saved_errno, "Fail to read from {}: {}",
                                  m->description().c_str(), flare_error(saved_errno));
                     return;
                 } else if (!m->MoreReadEvents(&progress)) {
@@ -245,12 +245,12 @@ namespace flare::rpc {
                         FLARE_LOG(WARNING)
                                 << "Close " << *m << " due to unknown message: "
                                 << flare::to_printable(m->_read_buf);
-                        m->SetFailed(EINVAL, "Close %s due to unknown message",
+                        m->SetFailed(EINVAL, "Close {} due to unknown message",
                                      m->description().c_str());
                         return;
                     } else {
                         FLARE_LOG(WARNING) << "Close " << *m << ": " << pr.error_str();
-                        m->SetFailed(EINVAL, "Close %s: %s",
+                        m->SetFailed(EINVAL, "Close {}: {}",
                                      m->description().c_str(), pr.error_str());
                         return;
                     }
@@ -306,7 +306,7 @@ namespace flare::rpc {
                         } else {
                             m->SetAuthentication(ERPCAUTH);
                             FLARE_LOG(WARNING) << "Fail to authenticate " << *m;
-                            m->SetFailed(ERPCAUTH, "Fail to authenticate %s",
+                            m->SetFailed(ERPCAUTH, "Fail to authenticate {}",
                                          m->description().c_str());
                             return;
                         }

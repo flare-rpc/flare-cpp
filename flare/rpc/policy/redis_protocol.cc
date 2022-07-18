@@ -276,8 +276,8 @@ namespace flare::rpc {
                 } else {
                     // We work around ParseFrom of pb which is just a placeholder.
                     if (msg->response.reply_size() != (int) accessor.pipelined_count()) {
-                        cntl->SetFailed(ERESPONSE, "pipelined_count=%d of response does "
-                                                   "not equal request's=%d",
+                        cntl->SetFailed(ERESPONSE, "pipelined_count={} of response does "
+                                                   "not equal request's={}",
                                         msg->response.reply_size(), accessor.pipelined_count());
                     }
                     ((RedisResponse *) cntl->response())->Swap(&msg->response);

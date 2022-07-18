@@ -167,11 +167,11 @@ namespace flare::rpc {
             if (res != NULL && !cntl->Failed()) {
                 if (!res->IsInitialized()) {
                     cntl->SetFailed(
-                            ERESPONSE, "Missing required fields in response: %s",
+                            ERESPONSE, "Missing required fields in response: {}",
                             res->InitializationErrorString().c_str());
                 } else if (!SerializeAsCompressedData(*res, &res_body, type)) {
                     cntl->SetFailed(ERESPONSE, "Fail to serialize response, "
-                                               "CompressType=%s", CompressTypeToCStr(type));
+                                               "CompressType={}", CompressTypeToCStr(type));
                 } else {
                     append_body = true;
                 }
@@ -237,7 +237,7 @@ namespace flare::rpc {
                                    accessor.response_stream()) != 0) {
                     const int errcode = errno;
                     FLARE_PLOG_IF(WARNING, errcode != EPIPE) << "Fail to write into " << *sock;
-                    cntl->SetFailed(errcode, "Fail to write into %s",
+                    cntl->SetFailed(errcode, "Fail to write into {}",
                                     sock->description().c_str());
                     ((Stream *) stream_ptr->conn())->Close();
                     return;
@@ -253,7 +253,7 @@ namespace flare::rpc {
                 if (sock->Write(&res_buf, &wopt) != 0) {
                     const int errcode = errno;
                     FLARE_PLOG_IF(WARNING, errcode != EPIPE) << "Fail to write into " << *sock;
-                    cntl->SetFailed(errcode, "Fail to write into %s",
+                    cntl->SetFailed(errcode, "Fail to write into {}",
                                     sock->description().c_str());
                     return;
                 }
@@ -310,7 +310,7 @@ namespace flare::rpc {
             RpcMeta meta;
             if (!ParsePbFromCordBuf(&meta, msg->meta)) {
                 FLARE_LOG(WARNING) << "Fail to parse RpcMeta from " << *socket;
-                socket->SetFailed(EREQUEST, "Fail to parse RpcMeta from %s",
+                socket->SetFailed(EREQUEST, "Fail to parse RpcMeta from {}",
                                   socket->description().c_str());
                 return;
             }
@@ -388,14 +388,14 @@ namespace flare::rpc {
                 }
 
                 if (socket->is_overcrowded()) {
-                    cntl->SetFailed(EOVERCROWDED, "Connection to %s is overcrowded",
+                    cntl->SetFailed(EOVERCROWDED, "Connection to {} is overcrowded",
                                     flare::base::endpoint2str(socket->remote_side()).c_str());
                     break;
                 }
 
                 if (!server_accessor.AddConcurrency(cntl.get())) {
                     cntl->SetFailed(
-                            ELIMIT, "Reached server's max_concurrency=%d",
+                            ELIMIT, "Reached server's max_concurrency={}",
                             server->options().max_concurrency);
                     break;
                 }
@@ -413,7 +413,7 @@ namespace flare::rpc {
                     const Server::ServiceProperty *sp =
                             server_accessor.FindServicePropertyByName(svc_name);
                     if (NULL == sp) {
-                        cntl->SetFailed(ENOSERVICE, "Fail to find service=%s",
+                        cntl->SetFailed(ENOSERVICE, "Fail to find service={}",
                                         request_meta.service_name().c_str());
                         break;
                     }
@@ -423,7 +423,7 @@ namespace flare::rpc {
                         server_accessor.FindMethodPropertyByFullName(
                                 svc_name, request_meta.method_name());
                 if (NULL == mp) {
-                    cntl->SetFailed(ENOMETHOD, "Fail to find method=%s/%s",
+                    cntl->SetFailed(ENOMETHOD, "Fail to find method={}/{}",
                                     request_meta.service_name().c_str(),
                                     request_meta.method_name().c_str());
                     break;
@@ -441,7 +441,7 @@ namespace flare::rpc {
                 if (method_status) {
                     int rejected_cc = 0;
                     if (!method_status->OnRequested(&rejected_cc)) {
-                        cntl->SetFailed(ELIMIT, "Rejected by %s's ConcurrencyLimiter, concurrency=%d",
+                        cntl->SetFailed(ELIMIT, "Rejected by {}'s ConcurrencyLimiter, concurrency={}",
                                         mp->method->full_name().c_str(), rejected_cc);
                         break;
                     }
@@ -458,7 +458,7 @@ namespace flare::rpc {
                 if (meta.has_attachment_size()) {
                     if (req_size < meta.attachment_size()) {
                         cntl->SetFailed(EREQUEST,
-                                        "attachment_size=%d is larger than request_size=%d",
+                                        "attachment_size={} is larger than request_size={}",
                                         meta.attachment_size(), req_size);
                         break;
                     }
@@ -472,7 +472,7 @@ namespace flare::rpc {
                 req.reset(svc->GetRequestPrototype(method).New());
                 if (!ParseFromCompressedData(*req_buf_ptr, req.get(), req_cmp_type)) {
                     cntl->SetFailed(EREQUEST, "Fail to parse request message, "
-                                              "CompressType=%s, request_size=%d",
+                                              "CompressType={}, request_size={}",
                                     CompressTypeToCStr(req_cmp_type), req_size);
                     break;
                 }
@@ -580,7 +580,7 @@ namespace flare::rpc {
                 if (response_meta.error_code() != 0) {
                     // If error_code is unset, default is 0 = success.
                     cntl->SetFailed(response_meta.error_code(),
-                                    "%s", response_meta.error_text().c_str());
+                                    "{}", response_meta.error_text().c_str());
                     break;
                 }
                 // Parse response message iff error code from meta is 0
@@ -591,7 +591,7 @@ namespace flare::rpc {
                     if (meta.attachment_size() > res_size) {
                         cntl->SetFailed(
                                 ERESPONSE,
-                                "attachment_size=%d is larger than response_size=%d",
+                                "attachment_size={} is larger than response_size={}",
                                 meta.attachment_size(), res_size);
                         break;
                     }
@@ -608,7 +608,7 @@ namespace flare::rpc {
                             *res_buf_ptr, cntl->response(), res_cmp_type)) {
                         cntl->SetFailed(
                                 ERESPONSE, "Fail to parse response message, "
-                                           "CompressType=%s, response_size=%d",
+                                           "CompressType={}, response_size={}",
                                 CompressTypeToCStr(res_cmp_type), res_size);
                     }
                 } // else silently ignore the response.
