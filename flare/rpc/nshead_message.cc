@@ -54,13 +54,9 @@ namespace flare::rpc {
         return new NsheadMessage;
     }
 
-#if GOOGLE_PROTOBUF_VERSION >= 3006000
-
     NsheadMessage *NsheadMessage::New(::google::protobuf::Arena *arena) const {
         return CreateMaybeMessage<NsheadMessage>(arena);
     }
-
-#endif
 
     void NsheadMessage::Clear() {
         memset(&head, 0, sizeof(head));

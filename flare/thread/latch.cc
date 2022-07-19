@@ -35,7 +35,7 @@ namespace flare {
 
     void latch::wait() const {
         std::unique_lock lk(_data->mutex);
-        FLARE_CHECK_GE(_data->count, 0);
+        FLARE_CHECK_GE(_data->count, 0u);
         return _data->cond.wait(lk, [this] { return _data->count == 0; });
     }
 

@@ -96,13 +96,9 @@ namespace flare::rpc {
         const flare::cord_buf &raw_buffer() const { return _buf; }
 
         // Protobuf methods.
-        MemcacheRequest *New() const override;
-
-#if GOOGLE_PROTOBUF_VERSION >= 3006000
+        MemcacheRequest *New() const;
 
         MemcacheRequest *New(::google::protobuf::Arena *arena) const override;
-
-#endif
 
         void CopyFrom(const ::google::protobuf::Message &from) override;
 
@@ -246,13 +242,9 @@ namespace flare::rpc {
 
         // implements Message ----------------------------------------------
 
-        MemcacheResponse *New() const override;
-
-#if GOOGLE_PROTOBUF_VERSION >= 3006000
+        MemcacheResponse *New() const;
 
         MemcacheResponse *New(::google::protobuf::Arena *arena) const override;
-
-#endif
 
         void CopyFrom(const ::google::protobuf::Message &from) override;
 

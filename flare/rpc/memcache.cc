@@ -63,13 +63,9 @@ namespace flare::rpc {
         return new MemcacheRequest;
     }
 
-#if GOOGLE_PROTOBUF_VERSION >= 3006000
-
     MemcacheRequest *MemcacheRequest::New(::google::protobuf::Arena *arena) const {
         return CreateMaybeMessage<MemcacheRequest>(arena);
     }
-
-#endif
 
     void MemcacheRequest::Clear() {
         _buf.clear();
@@ -216,13 +212,9 @@ namespace flare::rpc {
         return new MemcacheResponse;
     }
 
-#if GOOGLE_PROTOBUF_VERSION >= 3006000
-
     MemcacheResponse *MemcacheResponse::New(::google::protobuf::Arena *arena) const {
         return CreateMaybeMessage<MemcacheResponse>(arena);
     }
-
-#endif
 
     void MemcacheResponse::Clear() {
     }

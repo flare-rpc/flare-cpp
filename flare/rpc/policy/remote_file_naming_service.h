@@ -35,7 +35,7 @@ namespace flare::rpc {
 
             void Describe(std::ostream &os, const DescribeOptions &) const override;
 
-            NamingService *New() const override;
+            NamingService *New() const;
 
             void Destroy() override;
 

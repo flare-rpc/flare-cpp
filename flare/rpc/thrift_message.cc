@@ -60,13 +60,10 @@ namespace flare::rpc {
         return new ThriftFramedMessage;
     }
 
-#if GOOGLE_PROTOBUF_VERSION >= 3006000
-
     ThriftFramedMessage *ThriftFramedMessage::New(::google::protobuf::Arena *arena) const {
         return CreateMaybeMessage<ThriftFramedMessage>(arena);
     }
 
-#endif
 
     void ThriftFramedMessage::Clear() {
         body.clear();

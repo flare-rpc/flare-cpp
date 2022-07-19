@@ -98,13 +98,13 @@ namespace flare::rpc {
         const size_t index = type;
         if (index >= MAX_PROTOCOL_SIZE) {
             FLARE_LOG(ERROR) << "ProtocolType=" << type << " is out of range";
-            return NULL;
+            return nullptr;
         }
         ProtocolEntry *const protocol_map = get_protocol_map();
         if (protocol_map[index].valid.load(std::memory_order_acquire)) {
             return &protocol_map[index].protocol;
         }
-        return NULL;
+        return nullptr;
     }
 
     void ListProtocols(std::vector<Protocol> *vec) {
@@ -132,7 +132,7 @@ namespace flare::rpc {
                                  const google::protobuf::Message *request) {
         // Check sanity of request.
         if (!request) {
-            return cntl->SetFailed(EREQUEST, "`request' is NULL");
+            return cntl->SetFailed(EREQUEST, "`request' is nullptr");
         }
         if (request->GetDescriptor() == SerializedRequest::descriptor()) {
             buf->append(((SerializedRequest *) request)->serialized_data());
@@ -195,7 +195,7 @@ namespace flare::rpc {
         GlobalInitializeOrDie();
 
         const Protocol *p = FindProtocol(type);
-        if (p != NULL) {
+        if (p != nullptr) {
             return p->name;
         }
         return "unknown";
@@ -209,7 +209,7 @@ namespace flare::rpc {
         // According to source code of pb, SetTotalBytesLimit is not a simple set,
         // avoid calling the function when the limit is definitely unreached.
         if (PB_TOTAL_BYETS_LIMITS < FLAGS_max_body_size) {
-            decoder.SetTotalBytesLimit(INT_MAX, -1);
+            decoder.SetTotalBytesLimit(INT_MAX);
         }
         return msg->ParseFromCodedStream(&decoder) && decoder.ConsumedEntireMessage();
     }

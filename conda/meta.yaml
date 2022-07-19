@@ -35,24 +35,27 @@ outputs:
         - gxx =8.5 # [linux]
         - sysroot_linux-64=2.17 # [linux]
         - make
-        - cmake =3.19.1
         - openssl =1.1.1
+        - gflags >=2.2.2
+        - leveldb >=1.22
+        - protobuf >=3.9.2, <=3.19.1
+        - gperftools =2.9.1
       host:
         - zlib
         - sysroot_linux-64=2.17 # [linux]
         - openssl =1.1.1
-        - gflags =2.2.2
-        - leveldb =1.22
-        - protobuf =3.12.4
+        - gflags >=2.2.2
+        - leveldb >=1.22
+        - protobuf >=3.9.2, <=3.19.1
         - gperftools =2.9.1
       run:
-        - __osx >={{ MACOSX_DEPLOYMENT_TARGET|default("10.15") }}  # [osx and x86_64]
+        #- __osx >={{ MACOSX_DEPLOYMENT_TARGET|default("10.15") }}  # [osx and x86_64]
         - zlib
         - sysroot_linux-64=2.17 # [linux]
         - openssl =1.1.1
-        - gflags =2.2.2
-        - leveldb =1.22
-        - protobuf =3.12.4
+        - gflags >=2.2.2
+        - leveldb >=1.22
+        - protobuf >=3.9.2, <=3.19.1
         - gperftools =2.9.1
     test:
       commands:

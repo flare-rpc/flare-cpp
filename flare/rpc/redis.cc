@@ -60,11 +60,9 @@ namespace flare::rpc {
         return new RedisRequest;
     }
 
-#if GOOGLE_PROTOBUF_VERSION >= 3006000
     RedisRequest *RedisRequest::New(::google::protobuf::Arena *arena) const {
         return CreateMaybeMessage<RedisRequest>(arena);
     }
-#endif
 
     void RedisRequest::Clear() {
         _ncommand = 0;
@@ -97,7 +95,7 @@ namespace flare::rpc {
     void RedisRequest::MergeFrom(const ::google::protobuf::Message &from) {
         GOOGLE_CHECK_NE(&from, this);
         const RedisRequest *source = dynamic_cast<const RedisRequest *>(&from);
-        if (source == NULL) {
+        if (source == nullptr) {
             ::google::protobuf::internal::ReflectionOps::Merge(from, this);
         } else {
             MergeFrom(*source);
@@ -216,7 +214,7 @@ namespace flare::rpc {
     ::google::protobuf::Metadata RedisRequest::GetMetadata() const {
         ::google::protobuf::Metadata metadata;
         metadata.descriptor = RedisRequest::descriptor();
-        metadata.reflection = NULL;
+        metadata.reflection = nullptr;
         return metadata;
     }
 
@@ -257,7 +255,7 @@ namespace flare::rpc {
     }
 
     void RedisResponse::SharedCtor() {
-        _other_replies = NULL;
+        _other_replies = nullptr;
         _cached_size_ = 0;
         _nreply = 0;
     }
@@ -276,15 +274,14 @@ namespace flare::rpc {
     RedisResponse *RedisResponse::New() const {
         return new RedisResponse;
     }
-#if GOOGLE_PROTOBUF_VERSION >= 3006000
+
     RedisResponse *RedisResponse::New(::google::protobuf::Arena *arena) const {
         return CreateMaybeMessage<RedisResponse>(arena);
     }
-#endif
 
     void RedisResponse::Clear() {
         _first_reply.Reset();
-        _other_replies = NULL;
+        _other_replies = nullptr;
         _arena.clear();
         _nreply = 0;
         _cached_size_ = 0;
@@ -313,7 +310,7 @@ namespace flare::rpc {
     void RedisResponse::MergeFrom(const ::google::protobuf::Message &from) {
         GOOGLE_CHECK_NE(&from, this);
         const RedisResponse *source = dynamic_cast<const RedisResponse *>(&from);
-        if (source == NULL) {
+        if (source == nullptr) {
             ::google::protobuf::internal::ReflectionOps::Merge(from, this);
         } else {
             MergeFrom(*source);
@@ -385,7 +382,7 @@ namespace flare::rpc {
     ::google::protobuf::Metadata RedisResponse::GetMetadata() const {
         ::google::protobuf::Metadata metadata;
         metadata.descriptor = RedisResponse::descriptor();
-        metadata.reflection = NULL;
+        metadata.reflection = nullptr;
         return metadata;
     }
 
@@ -404,10 +401,10 @@ namespace flare::rpc {
             ++_nreply;
         }
         if (reply_count > 1) {
-            if (_other_replies == NULL) {
+            if (_other_replies == nullptr) {
                 _other_replies = (RedisReply *) _arena.allocate(
                         sizeof(RedisReply) * (reply_count - 1));
-                if (_other_replies == NULL) {
+                if (_other_replies == nullptr) {
                     FLARE_LOG(ERROR) << "Fail to allocate RedisReply[" << reply_count - 1 << "]";
                     return PARSE_ERROR_ABSOLUTELY_WRONG;
                 }
@@ -463,12 +460,12 @@ namespace flare::rpc {
         if (it != _command_map.end()) {
             return it->second;
         }
-        return NULL;
+        return nullptr;
     }
 
     RedisCommandHandler *RedisCommandHandler::NewTransactionHandler() {
         FLARE_LOG(ERROR) << "NewTransactionHandler is not implemented";
-        return NULL;
+        return nullptr;
     }
 
 } // namespace flare::rpc

@@ -109,6 +109,7 @@ add_executable(test_io io/cord_buf_test.cc
 target_link_libraries(test_io flare-shared-debug
         ${GTEST_MAIN_LIB}
         ${GTEST_LIB}
+        ${DYNAMIC_LIB}
         ${GPERFTOOLS_LIBRARIES})
 
 add_test(NAME test_io COMMAND test_io)
