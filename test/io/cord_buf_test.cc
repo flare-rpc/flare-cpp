@@ -1072,8 +1072,8 @@ namespace {
         flare::cord_buf_as_zero_copy_output_stream out_wrapper(&buf);
         ASSERT_EQ(0, out_wrapper.ByteCount());
         ASSERT_TRUE(m1.SerializeToZeroCopyStream(&out_wrapper));
-        ASSERT_EQ((size_t) m1.ByteSize() + header.size(), buf.length());
-        ASSERT_EQ(m1.ByteSize(), out_wrapper.ByteCount());
+        ASSERT_EQ((size_t) m1.ByteSizeLong() + header.size(), buf.length());
+        ASSERT_EQ(m1.ByteSizeLong(), static_cast<size_t>(out_wrapper.ByteCount()));
 
         ASSERT_EQ(header.size(), buf.pop_front(header.size()));
         flare::cord_buf_as_zero_copy_input_stream in_wrapper(buf);
@@ -1096,8 +1096,8 @@ namespace {
         }
         proto::Misc m2;
         ASSERT_TRUE(m2.ParseFromZeroCopyStream(&in_wrapper));
-        ASSERT_EQ(m1.ByteSize(), in_wrapper.ByteCount());
-        ASSERT_EQ(m2.ByteSize(), in_wrapper.ByteCount());
+        ASSERT_EQ(m1.ByteSizeLong(), in_wrapper.ByteCount());
+        ASSERT_EQ(m2.ByteSizeLong(), in_wrapper.ByteCount());
 
         ASSERT_EQ(m1.required_enum(), m2.required_enum());
         ASSERT_FALSE(m2.has_optional_enum());

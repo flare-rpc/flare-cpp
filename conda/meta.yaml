@@ -24,7 +24,7 @@ outputs:
     script: bld.sh   # [not win]
     script: bld.bat  # [win]
     build:
-   #   string: "h{{ PKG_HASH }}_{{ number }}"
+      string: "h{{ GIT_DESCRIBE_HASH }}_{{ number }}"
       run_exports:
         - {{ pin_compatible('libflare', exact=True) }}
     requirements:

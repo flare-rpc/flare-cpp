@@ -10,7 +10,7 @@ dependencies:
   - make
   - gflags =2.2.2
   - leveldb =1.22
-  - protobuf =3.12.4 # includes Protobuf compiler, C++ headers, Python libraries
+  - protobuf >=3.9.2, <=3.19.1
   - openssl =1.1.1
   - zlib
   - gperftools=2.9.1
