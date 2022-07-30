@@ -50,5 +50,5 @@ TEST(metrics, histogram) {
 
     std::vector<flare::cache_metrics> cml;
     flare::variable_base::list_metrics(&cml);
-    EXPECT_EQ(cml.size(),2);
+    EXPECT_EQ(cml.size(),2ul);
 }

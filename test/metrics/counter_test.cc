@@ -17,7 +17,7 @@ TEST(metrics, counter) {
     flare::counter<int64_t> c1("c1","", {{"a","search"}, {"q","qruu"}});
     c1<<1;
     c1<<5;
-    EXPECT_EQ(c1.get_value(), 6ul);
+    EXPECT_EQ(c1.get_value(), 6);
     flare::cache_metrics cm;
     c1.collect_metrics(cm);
     auto t = flare::time_now();

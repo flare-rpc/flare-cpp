@@ -96,7 +96,7 @@ namespace flare::rpc {
         const flare::cord_buf &raw_buffer() const { return _buf; }
 
         // Protobuf methods.
-        MemcacheRequest *New() const;
+        MemcacheRequest *New() const override;
 
         MemcacheRequest *New(::google::protobuf::Arena *arena) const override;
 
@@ -242,7 +242,7 @@ namespace flare::rpc {
 
         // implements Message ----------------------------------------------
 
-        MemcacheResponse *New() const;
+        MemcacheResponse *New() const override;
 
         MemcacheResponse *New(::google::protobuf::Arena *arena) const override;
 

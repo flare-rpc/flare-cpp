@@ -50,7 +50,7 @@ namespace flare::rpc {
 
         // implements Message ----------------------------------------------
 
-        NsheadMessage *New() const;
+        NsheadMessage *New() const override;
 
         NsheadMessage *New(::google::protobuf::Arena *arena) const override;
 

@@ -117,10 +117,12 @@
 #define FLARE_LOG_TO_STRING_FATAL(message) flare::log::null_stream_fatal()
 #endif
 
+#ifndef FLARE_DCHECK_IS_ON
 #if defined(NDEBUG) && !defined(DCHECK_ALWAYS_ON)
 #define FLARE_DCHECK_IS_ON() 0
 #else
 #define FLARE_DCHECK_IS_ON() 1
+#endif
 #endif
 
 // For DFATAL, we want to use log_message (as opposed to

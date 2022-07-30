@@ -55,7 +55,7 @@ namespace flare::rpc {
 
         // implements Message ----------------------------------------------
 
-        EspMessage *New() const;
+        EspMessage *New() const override;
 
 
         EspMessage *New(::google::protobuf::Arena *arena) const override;
