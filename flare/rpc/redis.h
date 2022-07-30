@@ -111,7 +111,7 @@ namespace flare::rpc {
         bool SerializeTo(flare::cord_buf *buf) const;
 
         // Protobuf methods.
-        RedisRequest *New() const override;
+        RedisRequest *New() const;
 
         RedisRequest *New(::google::protobuf::Arena *arena) const override;
 
@@ -200,7 +200,7 @@ namespace flare::rpc {
 
         // implements Message ----------------------------------------------
 
-        RedisResponse *New() const override;
+        RedisResponse *New() const;
 
         RedisResponse *New(::google::protobuf::Arena *arena) const override;
 

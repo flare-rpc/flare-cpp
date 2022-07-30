@@ -44,7 +44,7 @@ namespace flare::rpc {
 
         // implements Message ----------------------------------------------
 
-        SerializedRequest *New() const override;
+        SerializedRequest *New() const;
 
         SerializedRequest *New(::google::protobuf::Arena *arena) const override;
 
