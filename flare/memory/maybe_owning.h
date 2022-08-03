@@ -125,8 +125,7 @@ namespace flare {
         // If we're not owning the pointer, calling this method cause undefined
         // behavior. (Use `Get()` instead.)
         [[nodiscard]] constexpr T *leak() noexcept {
-            FLARE_CHECK(_owning) <<
-                           "Calling `Leak()` on non-owning `maybe_owning<T>` is undefined.";
+            FLARE_CHECK(_owning) <<"Calling `leak()` on non-owning `maybe_owning<T>` is undefined.";
             _owning = false;
             return std::exchange(_ptr, nullptr);
         }

@@ -125,13 +125,13 @@ inline void protect_page(void* addr) {
 
 namespace {
 
-// pagedMalloc() allocates size bytes of uninitialized storage with the
-// specified minimum byte alignment using OS specific page mapping calls.
-// If guardLow is true then reads or writes to the page below the returned
-// address will cause a page fault.
-// If guardHigh is true then reads or writes to the page above the allocated
-// block will cause a page fault.
-// The pointer returned must be freed with pagedFree().
+    // pagedMalloc() allocates size bytes of uninitialized storage with the
+    // specified minimum byte alignment using OS specific page mapping calls.
+    // If guardLow is true then reads or writes to the page below the returned
+    // address will cause a page fault.
+    // If guardHigh is true then reads or writes to the page above the allocated
+    // block will cause a page fault.
+    // The pointer returned must be freed with pagedFree().
     void *pagedMalloc(size_t alignment,
                       size_t size,
                       bool guardLow,

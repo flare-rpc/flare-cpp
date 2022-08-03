@@ -46,10 +46,11 @@ namespace flare {
             Undefined = 0,
             Stack,   // Fiber stack
             Create,  // Allocator::create(), make_unique(), make_shared()
-            Vector,  // containers::vector<T>
+            Vector,  // inline_vector<T>
             List,    // containers::list<T>
             Stl,     // stl_allocator
             Count,   // Not intended to be used as a usage type - used for upper bound.
+            Bitmap,
         };
 
         // Request holds all the information required to make an allocation.
@@ -151,9 +152,9 @@ namespace flare {
         alloc->free(allocation);
     }
 
-///////////////////////////////////////////////////////////////////////////////
-// Allocator
-///////////////////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////////
+    // Allocator
+    ///////////////////////////////////////////////////////////////////////////////
     template<typename T, typename... ARGS>
     T *allocator::create(ARGS &&... args) {
         allocation::required_info request;

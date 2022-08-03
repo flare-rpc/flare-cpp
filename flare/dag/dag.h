@@ -9,7 +9,7 @@
 #ifndef FLARE_DAG_DAG_H_
 #define FLARE_DAG_DAG_H_
 
-#include "flare/container/containers.h"
+#include "flare/container/inline_vector.h"
 #include "flare/memory/allocator.h"
 #include "flare/thread/latch.h"
 #include "flare/fiber/fiber_async.h"
@@ -98,7 +98,7 @@ namespace flare {
             size_t counterIndex = InvalidCounterIndex;
 
             // Indices for all downstream nodes.
-            containers::vector<node_index, NumReservedNumOuts> outs;
+            inline_vector<node_index, NumReservedNumOuts> outs;
         };
 
         // init_counters() allocates and initializes the ctx->coutners from
@@ -118,14 +118,14 @@ namespace flare {
 
         // nodes is the full list of the nodes in the graph.
         // nodes[0] is always the root node, which has no dependencies (ins).
-        containers::vector<dag_node, NumReservedNodes> nodes;
+        inline_vector<dag_node, NumReservedNodes> nodes;
 
         // initialCounters is a list of initial counter values to be copied to
         // run_context::counters on dag_graph<>::run().
         // initialCounters is indexed by dag_node::counterIndex, and only contains counts
         // for nodes that have at least 2 dependencies (ins) - because of this the
         // number of entries in initialCounters may be fewer than nodes.
-        containers::vector<uint32_t, NumReservedNodes> initialCounters;
+        inline_vector<uint32_t, NumReservedNodes> initialCounters;
     };
 
     template<typename T>
@@ -289,7 +289,7 @@ namespace flare {
         allocator::unique_ptr<dag_graph<T>> dag;
 
         // Number of dependencies (ins) for each node in dag->nodes.
-        containers::vector<uint32_t, NumReservedNumIns> numIns;
+        inline_vector<uint32_t, NumReservedNumIns> numIns;
     };
 
     template<typename T>
