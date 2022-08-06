@@ -1,13 +1,17 @@
-//
-// Created by liyinbin on 2022/8/3.
-//
+
+/****************************************************************
+ * Copyright (c) 2022, liyinbin
+ * All rights reserved.
+ * Author by liyinbin (jeff.li) lijippy@163.com
+ *****************************************************************/
+
 
 #ifndef FLARE_SYSTEM_NUMA_NUMA_H_
 #define FLARE_SYSTEM_NUMA_NUMA_H_
 
 #include <cstdint>
 #include <cstddef>
-#include "flare/container/bitset.h"
+#include "flare/container/dynamic_bitset.h"
 
 namespace flare::system_internal {
 
@@ -25,11 +29,11 @@ namespace flare::system_internal {
 
     int32_t node_page_size();
 
-    void numa_bind(const flare::bitmap &nodes);
+    void numa_bind(const flare::dynamic_bitset<unsigned long> &nodes);
 
-    void numa_set_interleave_mask(const flare::bitmap &nodes);
+    void numa_set_interleave_mask(const flare::dynamic_bitset<unsigned long> &nodes);
 
-    void numa_get_interleave_mask(flare::bitmap &);
+    void numa_get_interleave_mask(flare::dynamic_bitset<unsigned long> &);
 
 }  // namespace flare::system_internal
 
