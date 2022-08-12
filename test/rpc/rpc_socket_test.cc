@@ -203,7 +203,7 @@ private:
             *_called = g_called_seq.fetch_add(1, std::memory_order_relaxed);
         }
         delete this;
-        return flare::result_status::ok();
+        return flare::result_status::success();
     };
     const char *_str;
     size_t _len;

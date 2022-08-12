@@ -828,7 +828,7 @@ namespace flare::rpc {
             std::unique_ptr<RtmpUnsentMessage> destroy_self(this);
             if (s == NULL) { // abandoned
                 RPC_VLOG << "Socket=NULL";
-                return flare::result_status::ok();
+                return flare::result_status::success();
             }
             RtmpContext *ctx = static_cast<RtmpContext *>(s->parsing_context());
             RtmpChunkStream *cstream = ctx->GetChunkStream(chunk_stream_id);
@@ -844,7 +844,7 @@ namespace flare::rpc {
                 ctx->_chunk_size_out = new_chunk_size;
             }
             if (!next) {
-                return flare::result_status::ok();
+                return flare::result_status::success();
             }
             RtmpUnsentMessage *p = next.release();
             destroy_self.reset();
@@ -3609,7 +3609,7 @@ namespace flare::rpc {
         RtmpCreateStreamMessage::AppendAndDestroySelf(flare::cord_buf *out, Socket *s) {
             std::unique_ptr<RtmpCreateStreamMessage> destroy_self(this);
             if (s == NULL) {  // abandoned
-                return flare::result_status::ok();
+                return flare::result_status::success();
             }
             // Serialize createStream command
             RtmpContext *ctx = static_cast<RtmpContext *>(socket->parsing_context());
@@ -3668,7 +3668,7 @@ namespace flare::rpc {
                 socket->SetFailed(EINVAL, "Fail to serialize message");
                 return flare::result_status(EINVAL, "Fail to serialize message");
             }
-            return flare::result_status::ok();
+            return flare::result_status::success();
         }
 
         void PackRtmpRequest(flare::cord_buf * /*buf*/,

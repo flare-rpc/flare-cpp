@@ -95,7 +95,7 @@ namespace flare::rpc {
         p = buf;
         policy::WriteBigEndian4Bytes(&p, 11 + msg.size());
         _buf->append(buf, p - buf);
-        return flare::result_status::ok();
+        return flare::result_status::success();
     }
 
     flare::result_status FlvWriter::Write(const RtmpAudioMessage &msg) {
@@ -126,7 +126,7 @@ namespace flare::rpc {
         p = buf;
         policy::WriteBigEndian4Bytes(&p, 11 + msg.size());
         _buf->append(buf, p - buf);
-        return flare::result_status::ok();
+        return flare::result_status::success();
     }
 
     flare::result_status FlvWriter::WriteScriptData(const flare::cord_buf &req_buf, uint32_t timestamp) {
@@ -152,7 +152,7 @@ namespace flare::rpc {
         p = buf;
         policy::WriteBigEndian4Bytes(&p, 11 + req_buf.size());
         _buf->append(buf, p - buf);
-        return flare::result_status::ok();
+        return flare::result_status::success();
     }
 
     flare::result_status FlvWriter::Write(const RtmpCuePoint &cuepoint) {
@@ -205,7 +205,7 @@ namespace flare::rpc {
             _buf->pop_front(sizeof(header_buf));
             _read_header = true;
         }
-        return flare::result_status::ok();
+        return flare::result_status::success();
     }
 
     flare::result_status FlvReader::PeekMessageType(FlvTagType *type_out) {
@@ -225,7 +225,7 @@ namespace flare::rpc {
         if (type_out) {
             *type_out = type;
         }
-        return flare::result_status::ok();
+        return flare::result_status::success();
     }
 
     flare::result_status FlvReader::Read(RtmpVideoMessage *msg) {
@@ -253,7 +253,7 @@ namespace flare::rpc {
         _buf->cutn(&msg->data, msg_size - 1);
         _buf->pop_front(4/* PreviousTagSize0 */);
 
-        return flare::result_status::ok();
+        return flare::result_status::success();
     }
 
     flare::result_status FlvReader::Read(RtmpAudioMessage *msg) {
@@ -282,7 +282,7 @@ namespace flare::rpc {
         _buf->cutn(&msg->data, msg_size - 1);
         _buf->pop_front(4/* PreviousTagSize0 */);
 
-        return flare::result_status::ok();
+        return flare::result_status::success();
     }
 
     flare::result_status FlvReader::Read(RtmpMetaData *msg, std::string *name) {
@@ -315,7 +315,7 @@ namespace flare::rpc {
             }
         }
         msg->timestamp = timestamp;
-        return flare::result_status::ok();
+        return flare::result_status::success();
     }
 
     const char *FlvVideoFrameType2Str(FlvVideoFrameType t) {
@@ -458,7 +458,7 @@ namespace flare::rpc {
         this->type = msg.type;
         this->packet_type = (FlvAACPacketType) *p;
         msg.data.append_to(&data, msg.data.size() - 1, 1);
-        return flare::result_status::ok();
+        return flare::result_status::success();
     }
 
     AudioSpecificConfig::AudioSpecificConfig()
@@ -487,7 +487,7 @@ namespace flare::rpc {
         if (aac_object == AAC_OBJECT_UNKNOWN) {
             return flare::result_status(EINVAL, "Invalid object type");
         }
-        return flare::result_status::ok();
+        return flare::result_status::success();
     }
 
     bool RtmpAudioMessage::IsAACSequenceHeader() const {
@@ -519,7 +519,7 @@ namespace flare::rpc {
         this->packet_type = (FlvAVCPacketType) *p;
         this->composition_time = policy::ReadBigEndian3Bytes(p + 1);
         msg.data.append_to(&data, msg.data.size() - 4, 4);
-        return flare::result_status::ok();
+        return flare::result_status::success();
     }
 
     bool RtmpVideoMessage::IsAVCSequenceHeader() const {
@@ -674,7 +674,7 @@ namespace flare::rpc {
             }
             buf.remove_prefix(2 + pps_length);
         }
-        return flare::result_status::ok();
+        return flare::result_status::success();
     }
 
     flare::result_status AVCDecoderConfigurationRecord::ParseSPS(
@@ -844,7 +844,7 @@ namespace flare::rpc {
         }
         width = (int) (pic_width_in_mbs_minus1 + 1) * 16;
         height = (int) (pic_height_in_map_units_minus1 + 1) * 16;
-        return flare::result_status::ok();
+        return flare::result_status::success();
     }
 
     static bool find_avc_annexb_nalu_start_code(const flare::cord_buf &buf,

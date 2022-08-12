@@ -671,7 +671,7 @@ namespace {
                     _buf.clear();
                 }
             }
-            return flare::result_status::ok();
+            return flare::result_status::success();
         }
 
         void OnEndOfMessage(const flare::result_status &st) {

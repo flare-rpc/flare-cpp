@@ -1523,7 +1523,7 @@ namespace flare::rpc {
 #endif
             RemoveRefOnQuit deref_self(this);
             if (socket == nullptr) {
-                return flare::result_status::ok();
+                return flare::result_status::success();
             }
             H2Context *ctx = static_cast<H2Context *>(socket->parsing_context());
 
@@ -1610,7 +1610,7 @@ namespace flare::rpc {
             appender.move_to(frag);
             flare::cord_buf dummy_buf;
             PackH2Message(out, frag, dummy_buf, _cntl->request_attachment(), _stream_id, ctx);
-            return flare::result_status::ok();
+            return flare::result_status::success();
         }
 
         size_t H2UnsentRequest::EstimatedByteSize() {
@@ -1709,7 +1709,7 @@ namespace flare::rpc {
 #endif
             DestroyingPtr<H2UnsentResponse> destroy_self(this);
             if (socket == nullptr) {
-                return flare::result_status::ok();
+                return flare::result_status::success();
             }
             H2Context *ctx = static_cast<H2Context *>(socket->parsing_context());
 
@@ -1725,7 +1725,7 @@ namespace flare::rpc {
                 SerializeFrameHead(rstbuf, 4, H2_FRAME_RST_STREAM, 0, _stream_id);
                 SaveUint32(rstbuf + FRAME_HEAD_SIZE, H2_FLOW_CONTROL_ERROR);
                 out->append(rstbuf, sizeof(rstbuf));
-                return flare::result_status::ok();
+                return flare::result_status::success();
             }
 
             HPacker &hpacker = ctx->hpacker();
@@ -1760,7 +1760,7 @@ namespace flare::rpc {
             }
 
             PackH2Message(out, frag, trailer_frag, _data, _stream_id, ctx);
-            return flare::result_status::ok();
+            return flare::result_status::success();
         }
 
         size_t H2UnsentResponse::EstimatedByteSize() {

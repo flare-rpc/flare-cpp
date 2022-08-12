@@ -41,7 +41,7 @@ namespace {
         oss << st2;
         ASSERT_EQ("OK", oss.str());
 
-        flare::result_status st3 = flare::result_status::ok();
+        flare::result_status st3 = flare::result_status::success();
         ASSERT_TRUE(st3.is_ok());
         ASSERT_EQ(0, st3.error_code());
         ASSERT_STREQ("OK", st3.error_cstr());

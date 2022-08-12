@@ -267,7 +267,7 @@ namespace flare::rpc {
 
         AppendHeader(*outbuf, '*', ncomponent);
         outbuf->append(nocount_buf);
-        return flare::result_status::ok();
+        return flare::result_status::success();
     }
 
     flare::result_status RedisCommandFormat(flare::cord_buf *buf, const char *fmt, ...) {
@@ -339,7 +339,7 @@ namespace flare::rpc {
 
         AppendHeader(*outbuf, '*', ncomponent);
         outbuf->append(nocount_buf);
-        return flare::result_status::ok();
+        return flare::result_status::success();
     }
 
     flare::result_status RedisCommandByComponents(flare::cord_buf *output,
@@ -354,7 +354,7 @@ namespace flare::rpc {
             output->append(components[i].data(), components[i].size());
             output->append("\r\n", 2);
         }
-        return flare::result_status::ok();
+        return flare::result_status::success();
     }
 
     RedisCommandParser::RedisCommandParser()
