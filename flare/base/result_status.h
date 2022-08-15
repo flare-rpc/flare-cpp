@@ -85,7 +85,10 @@ namespace flare {
             return _error_msg;
         }
 
-        static result_status ok() { return result_status(); }
+        static result_status success() {
+            static result_status ok;
+            return ok;
+        }
 
         static result_status from_flare_error(int err);
 

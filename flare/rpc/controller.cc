@@ -160,7 +160,7 @@ namespace flare::rpc {
     public:
         // @ProgressiveReader
         flare::result_status OnReadOnePart(const void * /*data*/, size_t /*length*/) {
-            return flare::result_status::ok();
+            return flare::result_status::success();
         }
 
         void OnEndOfMessage(const flare::result_status &) {}

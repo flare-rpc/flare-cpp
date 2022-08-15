@@ -1065,7 +1065,7 @@ namespace flare::rpc {
                 }
                 _has_aac_seq_header = true;
                 ++_discontinuity_counter;
-                return flare::result_status::ok();
+                return flare::result_status::success();
             }
             if (!_has_aac_seq_header) {
                 return flare::result_status(EINVAL, "Lack of AAC sequence header");
@@ -1199,7 +1199,7 @@ namespace flare::rpc {
     flare::result_status TsWriter::Write(const RtmpVideoMessage &msg) {
         if (msg.frame_type == FLV_VIDEO_FRAME_INFOFRAME) {
             // Ignore info frame.
-            return flare::result_status::ok();
+            return flare::result_status::success();
         }
         if (msg.codec != FLV_VIDEO_AVC) {
             return flare::result_status(EINVAL, "video_codec={} is not AVC",
@@ -1219,7 +1219,7 @@ namespace flare::rpc {
             }
             _has_avc_seq_header = true;
             ++_discontinuity_counter;
-            return flare::result_status::ok();
+            return flare::result_status::success();
         }
         if (!_has_avc_seq_header) {
             return flare::result_status(EINVAL, "Lack of AVC sequence header");
@@ -1319,7 +1319,7 @@ namespace flare::rpc {
             return flare::result_status(EINVAL, "Fail to encode PMT");
         }
         _outbuf->append(buf, TS_PACKET_SIZE);
-        return flare::result_status::ok();
+        return flare::result_status::success();
     }
 
     flare::result_status TsWriter::Encode(TsMessage *msg, TsStream stream, TsPid pid) {
@@ -1361,13 +1361,13 @@ namespace flare::rpc {
     flare::result_status TsWriter::EncodePES(TsMessage *msg, TsStream sid, TsPid pid,
                                                   bool pure_audio) {
         if (msg->payload.empty()) {
-            return flare::result_status::ok();
+            return flare::result_status::success();
         }
         if (sid != TS_STREAM_VIDEO_H264 &&
             sid != TS_STREAM_AUDIO_MP3 &&
             sid != TS_STREAM_AUDIO_AAC) {
             FLARE_LOG(WARNING) << "Ignore unknown stream_id=" << sid;
-            return flare::result_status::ok();
+            return flare::result_status::success();
         }
 
         TsChannel *channel = _tschan_group.get(pid);
@@ -1428,7 +1428,7 @@ namespace flare::rpc {
             }
             _outbuf->append(buf, TS_PACKET_SIZE);
         }
-        return flare::result_status::ok();
+        return flare::result_status::success();
     }
 
 } // namespace flare::rpc

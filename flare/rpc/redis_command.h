@@ -29,7 +29,7 @@
 namespace flare::rpc {
 
     // Format a redis command and append it to `buf'.
-    // Returns flare::result_status::ok() on success.
+    // Returns flare::result_status::success() on success.
     flare::result_status RedisCommandFormat(flare::cord_buf *buf, const char *fmt, ...);
 
     flare::result_status RedisCommandFormatV(flare::cord_buf *buf, const char *fmt, va_list args);
