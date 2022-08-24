@@ -578,6 +578,10 @@ namespace flare::rpc {
 
         int AddBuiltinService(google::protobuf::Service *service);
 
+        int AddBuiltinService(google::protobuf::Service *service,
+                       const std::string_view &restful_mappings,
+                       bool allow_default_url = false);
+
         // Remove all methods of `service' from internal structures.
         void RemoveMethodsOf(google::protobuf::Service *service);
 
