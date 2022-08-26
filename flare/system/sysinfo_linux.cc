@@ -69,8 +69,8 @@ namespace flare {
     }
 
 
-/// The content of /proc/[pid]/stat (and /proc/[pid]/task/[tid]/stat) file
-/// as described in https://man7.org/linux/man-pages/man5/proc.5.html
+    /// The content of /proc/[pid]/stat (and /proc/[pid]/task/[tid]/stat) file
+    /// as described in https://man7.org/linux/man-pages/man5/proc.5.html
     constexpr size_t stat_pid_index = 1;
     constexpr size_t stat_name_index = 2;
     constexpr size_t stat_state_index = 3;
@@ -153,7 +153,7 @@ namespace flare {
 
     class linux_info : public sysinfo {
     public:
-        linux_info();
+        linux_info() = default;
 
         ~linux_info() override = default;
 
