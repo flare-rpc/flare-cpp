@@ -2,7 +2,7 @@
 
 #include "flare/thread/thread.h"
 #include "flare/base/profile.h"
-#include "flare/base/sysinfo.h"
+#include "flare/system/sysinfo.h"
 #include "flare/log/logging.h"
 #include "flare/bootstrap/bootstrap.h"
 #include <signal.h>
@@ -184,7 +184,7 @@ namespace flare {
 
     int32_t thread::thread_index() {
         if (FLARE_UNLIKELY(local_thread_id == -1)) {
-            if (flare::base::get_tid() != flare::base::get_main_thread_pid()) {
+            if (flare::sysinfo::get_tid() != flare::sysinfo::get_main_thread_pid()) {
                 local_thread_id = g_thread_id.fetch_add(1, std::memory_order_relaxed);
             } else {
                 local_thread_id = 0;

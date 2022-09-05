@@ -18,7 +18,7 @@
 #include <inttypes.h>
 #include "flare/times/time.h"
 #include "flare/log/logging.h"
-#include "flare/base/popen.h"
+#include "flare/system/process.h"
 #include "flare/rpc/controller.h"           // Controller
 #include "flare/rpc/closure_guard.h"        // ClosureGuard
 #include "flare/rpc/builtin/threads_service.h"
@@ -40,7 +40,7 @@ namespace flare::rpc {
         flare::stop_watcher tm;
         tm.start();
         flare::cord_buf_builder pstack_output;
-        const int rc = flare::base::read_command_output(pstack_output, cmd.c_str());
+        const int rc = flare::read_command_output(pstack_output, cmd.c_str());
         if (rc < 0) {
             FLARE_LOG(ERROR) << "Fail to popen `" << cmd << "'";
             return;

@@ -24,7 +24,7 @@
 #include "flare/log/logging.h"
 #include "flare/base/fd_guard.h"                  // fd_guard
 #include "flare/hash/murmurhash3.h"
-#include "flare/base/process_util.h"              // read_command_line
+#include "flare/system/process.h"              // read_command_line
 #include "flare/rpc/server.h"
 #include "flare/rpc/builtin/common.h"
 #include "flare/strings/utility.h"
@@ -342,7 +342,7 @@ namespace flare::rpc {
     static char s_cmdline[256];
 
     static void CreateProgramName() {
-        const ssize_t nr = flare::base::read_command_line(s_cmdline, sizeof(s_cmdline) - 1, false);
+        const ssize_t nr = flare::read_command_line(s_cmdline, sizeof(s_cmdline) - 1, false);
         if (nr > 0) {
             s_cmdline[nr] = '\0';
             s_program_name = s_cmdline;

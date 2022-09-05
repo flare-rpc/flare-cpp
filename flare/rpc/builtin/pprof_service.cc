@@ -26,8 +26,7 @@
 #include "flare/strings/string_splitter.h"           // StringSplitter
 #include "flare/files/readline_file.h"         // readline_file
 #include "flare/times/time.h"
-#include "flare/base/popen.h"                    // flare::base::read_command_output
-#include "flare/base/process_util.h"             // flare::base::read_command_line
+#include "flare/system/process.h"             // flare::read_command_line
 #include "flare/rpc/log.h"
 #include "flare/rpc/controller.h"                // Controller
 #include "flare/rpc/closure_guard.h"             // ClosureGuard
@@ -298,7 +297,7 @@ namespace flare::rpc {
         std::string cmd = "nm -C -p ";
         cmd.append(lib_info.path);
         std::stringstream ss;
-        const int rc = flare::base::read_command_output(ss, cmd.c_str());
+        const int rc = flare::read_command_output(ss, cmd.c_str());
         if (rc < 0) {
             FLARE_LOG(ERROR) << "Fail to popen `" << cmd << "'";
             return -1;
@@ -560,7 +559,7 @@ namespace flare::rpc {
         Controller *cntl = static_cast<Controller *>(controller_base);
         cntl->http_response().set_content_type("text/plain" /*FIXME*/);
         char buf[1024];  // should be enough?
-        const ssize_t nr = flare::base::read_command_line(buf, sizeof(buf), true);
+        const ssize_t nr = flare::read_command_line(buf, sizeof(buf), true);
         if (nr < 0) {
             cntl->SetFailed(ENOENT, "Fail to read cmdline");
             return;

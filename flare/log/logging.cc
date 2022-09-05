@@ -35,7 +35,7 @@
 #include "flare/log/init.h"
 #include "flare/log/utility.h"
 #include "flare/thread/thread.h"
-#include "flare/base/sysinfo.h"
+#include "flare/system/sysinfo.h"
 
 #ifdef FLARE_PLATFORM_LINUX
 #include <signal.h>
@@ -445,7 +445,7 @@ namespace flare::log {
 /* static */
     const string &log_destination::hostname() {
         if (hostname_.empty()) {
-            hostname_ = flare::base::get_host_name();
+            hostname_ = flare::sysinfo::get_host_name();
             if (hostname_.empty()) {
                 hostname_ = "(unknown)";
             }
@@ -890,7 +890,7 @@ namespace flare::log {
             }
 
             if (static_cast<int>(file_length_ >> 20) >= MaxLogSize() ||
-                flare::base::pid_has_changed()) {
+                flare::sysinfo::pid_has_changed()) {
                 if (file_ != NULL) fclose(file_);
                 file_ = NULL;
                 file_length_ = bytes_since_flush_ = dropped_mem_length_ = 0;
@@ -922,7 +922,7 @@ namespace flare::log {
                                 << setw(2) << tm_time.tm_min
                                 << setw(2) << tm_time.tm_sec
                                 << '.'
-                                << flare::base::get_main_thread_pid();
+                                << flare::sysinfo::get_main_thread_pid();
                 const string &time_pid_string = time_pid_stream.str();
 
                 if (base_filename_selected_) {
@@ -946,9 +946,9 @@ namespace flare::log {
                     // "/tmp", and "."
                     string stripped_filename(
                             log_internal::program_invocation_short_name());
-                    string hostname = flare::base::get_host_name();
+                    string hostname = flare::sysinfo::get_host_name();
 
-                    string uidname = flare::base::user_name();
+                    string uidname = flare::sysinfo::user_name();
                     // We should not call FLARE_CHECK() here because this function can be
                     // called after holding on to log_mutex. We don't want to
                     // attempt to hold on to the same mutex, and get into a
@@ -1790,7 +1790,7 @@ namespace flare::log {
                << setw(2) << tm_time->tm_sec << '.'
                << setw(6) << usecs
                << ' '
-               << setfill(' ') << setw(5) << flare::base::get_tid() << setfill('0')
+               << setfill(' ') << setw(5) << flare::sysinfo::get_tid() << setfill('0')
                << ' '
                << file << ':' << line << "] ";
 

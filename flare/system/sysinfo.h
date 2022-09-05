@@ -111,6 +111,20 @@ namespace flare {
 
         static size_t get_page_size();
 
+        static double nominal_cpu_frequency();
+
+        static int num_cpus();
+
+        static const std::string &user_name();
+
+        static const std::string &get_host_name();
+
+        static pid_t get_tid();
+
+        static int32_t get_main_thread_pid();
+
+        static bool pid_has_changed();
+
     public:
         static sysinfo *get_instance();
 

@@ -17,7 +17,7 @@
 #include <sys/platform/ppc.h>
 #endif
 
-#include "flare/base/hardware.h"
+#include "flare/system/sysinfo.h"
 
 namespace flare::times_internal {
 
@@ -30,7 +30,7 @@ namespace flare::times_internal {
     }
 
     double unscaled_cycle_clock::frequency() {
-      return nominal_cpu_frequency();
+      return sysinfo::nominal_cpu_frequency();
     }
 
 #elif defined(__x86_64__)
@@ -42,7 +42,7 @@ namespace flare::times_internal {
     }
 
     double unscaled_cycle_clock::frequency() {
-        return nominal_cpu_frequency();
+        return sysinfo::nominal_cpu_frequency();
     }
 
 #elif defined(__powerpc__) || defined(__ppc__)
@@ -82,7 +82,7 @@ namespace flare::times_internal {
     }
 
     double unscaled_cycle_clock::frequency() {
-      return nominal_cpu_frequency();
+      return sysinfo::nominal_cpu_frequency();
     }
 
 #endif
