@@ -1,4 +1,10 @@
 
+/****************************************************************
+ * Copyright (c) 2022, liyinbin
+ * All rights reserved.
+ * Author by liyinbin (jeff.li) lijippy@163.com
+ *****************************************************************/
+
 #ifndef THIS_HASH_SET
 #define THIS_HASH_SET   node_hash_set
 #define THIS_TEST_NAME  NodeHashSet

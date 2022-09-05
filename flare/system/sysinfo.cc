@@ -5,7 +5,7 @@
  * Author by liyinbin (jeff.li) lijippy@163.com
  *****************************************************************/
 
-
+#include <unistd.h>
 #include "flare/system/sysinfo.h"
 #include "flare/times/time.h"
 
@@ -63,4 +63,12 @@ namespace flare {
 
         return result_status::success();
     }
+
+    size_t sysinfo::get_page_size() {
+        static const size_t page_size = [] {
+            return sysconf(_SC_PAGE_SIZE);
+        }();
+        return page_size;
+    }
+
 }  // namespace flare

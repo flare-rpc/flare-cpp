@@ -109,6 +109,8 @@ namespace flare {
 
         result_status get_proc_cpu(flare_pid_t pid, proc_cpu_info &minfo);
 
+        static size_t get_page_size();
+
     public:
         static sysinfo *get_instance();
 

@@ -1,4 +1,10 @@
 
+/****************************************************************
+ * Copyright (c) 2022, liyinbin
+ * All rights reserved.
+ * Author by liyinbin (jeff.li) lijippy@163.com
+ *****************************************************************/
+
 #define FLARE_MAP_NON_DETERMINISTIC 1
 
 #include "flare/container/flat_hash_map.h"

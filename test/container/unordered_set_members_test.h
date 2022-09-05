@@ -1,4 +1,10 @@
 
+/****************************************************************
+ * Copyright (c) 2022, liyinbin
+ * All rights reserved.
+ * Author by liyinbin (jeff.li) lijippy@163.com
+ *****************************************************************/
+
 #ifndef UNORDERED_SET_MEMBERS_TEST_H_
 #define UNORDERED_SET_MEMBERS_TEST_H_
 

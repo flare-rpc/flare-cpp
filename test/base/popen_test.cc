@@ -1,4 +1,10 @@
 
+/****************************************************************
+ * Copyright (c) 2022, liyinbin
+ * All rights reserved.
+ * Author by liyinbin (jeff.li) lijippy@163.com
+ *****************************************************************/
+
 #include "flare/base/popen.h"
 #include "flare/base/errno.h"
 #include "flare/strings/ends_with.h"

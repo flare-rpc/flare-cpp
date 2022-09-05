@@ -24,4 +24,10 @@ namespace flare {
         return result_status(ec.value(), ec.message());
     }
 
+    result_status result_status::from_last_error() {
+        std::error_code error;
+        error.assign(errno, std::system_category());
+        return from_error_code(error);
+    }
+
 }  // namespace flare
