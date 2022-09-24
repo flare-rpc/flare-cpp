@@ -81,6 +81,19 @@ namespace flare {
         return frs;
     }
 
+    void sequential_read_file::close() {
+        if (_fd > 0) {
+            ::close(_fd);
+            _fd = -1;
+        }
+    }
+
+    void sequential_read_file::reset() {
+        if (_fd > 0) {
+            ::lseek(_fd, 0, SEEK_SET);
+        }
+    }
+
     result_status sequential_read_file::skip(size_t n) {
         if (_fd > 0) {
             ::lseek(_fd, n, SEEK_CUR);

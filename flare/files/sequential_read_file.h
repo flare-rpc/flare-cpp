@@ -35,6 +35,10 @@ namespace flare {
 
         bool is_eof(result_status *frs);
 
+        void close();
+
+        void reset();
+
         size_t has_read() const {
             return _has_read;
         }

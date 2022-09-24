@@ -33,6 +33,7 @@ namespace flare {
 
         bool is_eof(off_t off, size_t has_read, result_status *frs);
 
+        void close();
 
         const flare::file_path &path() const {
             return _path;

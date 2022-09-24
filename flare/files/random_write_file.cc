@@ -112,6 +112,13 @@ namespace flare {
         return frs;
     }
 
+    void random_write_file::close() {
+        if(_fd > 0) {
+            ::close(_fd);
+            _fd = -1;
+        }
+    }
+
     void random_write_file::flush() {
 #ifdef FLARE_PLATFORM_OSX
         if(_fd > 0) {

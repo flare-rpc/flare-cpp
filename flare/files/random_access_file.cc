@@ -80,7 +80,12 @@ namespace flare {
         }
         return frs;
     }
-
+    void random_access_file::close() {
+        if(_fd > 0) {
+            ::close(_fd);
+            _fd = -1;
+        }
+    }
     bool random_access_file::is_eof(off_t off, size_t has_read, result_status *frs) {
         std::error_code ec;
         auto size = flare::file_size(_path, ec);
