@@ -37,7 +37,7 @@ namespace flare {
 
         void close();
 
-        void reset();
+        void reset(size_t n = 0);
 
         size_t has_write() const {
             return _has_write;

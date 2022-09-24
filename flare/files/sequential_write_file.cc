@@ -81,9 +81,9 @@ namespace flare {
 
         return frs;
     }
-    void sequential_write_file::reset() {
+    void sequential_write_file::reset(size_t n) {
         if(_fd > 0) {
-            ::lseek(_fd, 0 , SEEK_SET);
+            ::lseek(_fd, n , SEEK_SET);
         }
     }
     void sequential_write_file::close() {
