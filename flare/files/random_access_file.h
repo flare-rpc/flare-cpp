@@ -29,6 +29,8 @@ namespace flare {
 
         result_status read(size_t n, off_t offset, flare::cord_buf *buf);
 
+        result_status read(size_t n, off_t offset, char *buf);
+
         bool is_eof(off_t off, size_t has_read, result_status *frs);
 
 

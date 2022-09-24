@@ -65,6 +65,29 @@ namespace flare {
         return frs;
     }
 
+    result_status random_write_file::write(off_t offset, const void *content, size_t size) {
+        off_t orig_offset = offset;
+        result_status frs;
+        ssize_t left = size;
+        const char *data = (char*)content;
+        while (left > 0) {
+            ssize_t written = ::pwrite(_fd, data, left, offset);
+            if (written >= 0) {
+                offset += written;
+                left -= written;
+                data += written;
+            } else if (errno == EINTR) {
+                continue;
+            } else {
+                FLARE_LOG(WARNING) << "write falied, err: " << flare_error()
+                                   << " fd: " << _fd << " offset: " << orig_offset << " size: " << size;
+                frs.set_error(errno, "{}", flare_error());
+                return frs;
+            }
+        }
+
+        return frs;
+    }
     result_status random_write_file::write(off_t offset, const flare::cord_buf &data) {
         size_t size = data.size();
         flare::cord_buf piece_data(data);

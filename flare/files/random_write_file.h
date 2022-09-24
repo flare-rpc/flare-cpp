@@ -27,6 +27,8 @@ namespace flare {
 
         result_status write(off_t offset, std::string_view content);
 
+        result_status write(off_t offset, const void *content, size_t size);
+
         result_status write(off_t offset, const flare::cord_buf &data);
 
         void flush();

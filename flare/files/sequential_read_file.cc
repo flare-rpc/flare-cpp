@@ -38,11 +38,23 @@ namespace flare {
     result_status sequential_read_file::read(std::string *content, size_t n) {
         flare::IOPortal portal;
         auto frs = read(&portal, n);
+        size_t size = 0;
         if (frs.is_ok()) {
-            auto size = portal.size();
+            size = portal.size();
             portal.cutn(content, size);
         }
         return frs;
+    }
+
+    std::pair<result_status, size_t> sequential_read_file::read(void *buf, size_t n) {
+        flare::IOPortal portal;
+        auto frs = read(&portal, n);
+        size_t size = 0;
+        if (frs.is_ok()) {
+            size = portal.size();
+            portal.cutn(buf, size);
+        }
+        return {frs, size};
     }
 
     result_status sequential_read_file::read(flare::cord_buf *buf, size_t n) {
@@ -73,7 +85,7 @@ namespace flare {
         if (_fd > 0) {
             ::lseek(_fd, n, SEEK_CUR);
         }
-        return result_status();
+        return result_status::success();
     }
 
     bool sequential_read_file::is_eof(result_status *frs) {
