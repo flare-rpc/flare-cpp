@@ -5,8 +5,14 @@
  * Author by liyinbin (jeff.li) lijippy@163.com
  *****************************************************************/
 
-
-#include "flare/base/hardware.h"
+#include <unistd.h>
+#include <pwd.h>
+#include <sys/utsname.h>
+#include <pthread.h>
+#include <sys/syscall.h>
+#include <cstdio>
+#include "flare/system/sysinfo.h"
+#include "flare/times/time.h"
 #include <fcntl.h>
 #include <pthread.h>
 #include <sys/stat.h>
@@ -40,17 +46,177 @@ namespace flare {
 
     static int g_num_cpus = 0;
     static double g_nominal_cpu_frequency = 1.0;
+    std::string g_cache_username;
+    std::string g_cache_host_name;
 
     static void initialize_system_info();
     static double get_nominal_cpu_frequency();
     std::once_flag g_sysinfo_flag;
 
-    double nominal_cpu_frequency() {
+    static void init_user_nane();
+
+    static void init_host_name();
+
+    void sysinfo::mem_calc_ram(mem_info &mem) {
+        int64_t total = mem.total / 1024, diff;
+        uint64_t lram = (mem.total / (1024 * 1024));
+        int ram = (int) lram; /* must cast after division */
+        int remainder = ram % 8;
+
+        if (remainder > 0) {
+            ram += (8 - remainder);
+        }
+
+        mem.ram = ram;
+
+        diff = total - (mem.actual_free / 1024);
+        mem.used_percent = (double) (diff * 100) / total;
+
+        diff = total - (mem.actual_used / 1024);
+        mem.free_percent = (double) (diff * 100) / total;
+    }
+
+    result_status sysinfo::get_proc_cpu(flare_pid_t pid, proc_cpu_info &proccpu) {
+        const auto time_now = flare::time_now().to_unix_millis();
+        proc_cpu_info prev = {};
+        auto iter = process_cache.find(pid);
+        const bool found = iter != process_cache.end();
+        if (found) {
+            prev = iter->second;
+        }
+
+        auto status = get_proc_time(pid, *(proc_time_info *) &proccpu);
+        if (status != 0) {
+            if (found) {
+                process_cache.erase(iter);
+            }
+            return result_status::success();
+        }
+
+        proccpu.last_time = time_now;
+        if (!found || (prev.start_time != proccpu.start_time)) {
+            // This is a new process or a different process we have in the cache
+            process_cache[pid] = proccpu;
+            return result_status::success();
+        }
+
+        auto time_diff = time_now - prev.last_time;
+        if (!time_diff) {
+            // we don't want divide by zero
+            time_diff = 1;
+        }
+        proccpu.percent = (proccpu.total - prev.total) / (double) time_diff;
+        process_cache[pid] = proccpu;
+
+        return result_status::success();
+    }
+
+    size_t sysinfo::get_page_size() {
+        static const size_t page_size = [] {
+            return sysconf(_SC_PAGE_SIZE);
+        }();
+        return page_size;
+    }
+
+    void init_user_nane() {
+        const char *user = getenv("USER");
+        if (user != NULL) {
+            g_cache_username = user;
+        } else {
+            struct passwd pwd;
+            struct passwd *result = NULL;
+            char buffer[1024] = {'\0'};
+            uid_t uid = geteuid();
+            int pwuid_res = getpwuid_r(uid, &pwd, buffer, sizeof(buffer), &result);
+            if (pwuid_res == 0 && result) {
+                g_cache_username = pwd.pw_name;
+            } else {
+                snprintf(buffer, sizeof(buffer), "uid%d", uid);
+                g_cache_username = buffer;
+            }
+            if (g_cache_username.empty()) {
+                g_cache_username = "invalid-user";
+            }
+        }
+
+    }
+
+    const std::string &sysinfo::user_name() {
+        std::call_once(g_sysinfo_flag, initialize_system_info);
+        return g_cache_username;
+    }
+
+    const std::string &sysinfo::get_host_name() {
+        std::call_once(g_sysinfo_flag, initialize_system_info);
+        return g_cache_host_name;
+    }
+
+    void init_host_name() {
+        struct utsname buf;
+        if (0 != uname(&buf)) {
+            // ensure null termination on failure
+            *buf.nodename = '\0';
+        }
+        g_cache_host_name = buf.nodename;
+
+    }
+
+    pid_t sysinfo::get_tid() {
+        // On Linux and MacOSX, we try to use gettid().
+#if defined FLARE_PLATFORM_LINUX || defined FLARE_PLATFORM_OSX
+#ifndef __NR_gettid
+#ifdef FLARE_PLATFORM_OSX
+#define __NR_gettid SYS_gettid
+#elif !defined __i386__
+#error "Must define __NR_gettid for non-x86 platforms"
+#else
+#define __NR_gettid 224
+#endif
+#endif
+        static bool lacks_gettid = false;
+        if (!lacks_gettid) {
+            pid_t tid = syscall(__NR_gettid);
+            if (tid != -1) {
+                return tid;
+            }
+            // Technically, this variable has to be volatile, but there is a small
+            // performance penalty in accessing volatile variables and there should
+            // not be any serious adverse effect if a thread does not immediately see
+            // the value change to "true".
+            lacks_gettid = true;
+        }
+#endif  // FLARE_PLATFORM_LINUX || FLARE_PLATFORM_OSX
+
+        // If gettid() could not be used, we use one of the following.
+#if defined FLARE_PLATFORM_LINUX
+        return getpid();  // Linux:  getpid returns thread ID when gettid is absent
+#else
+        // If none of the techniques above worked, we use pthread_self().
+        return (pid_t) (uintptr_t) pthread_self();
+#endif
+    }
+
+    static int32_t g_main_thread_pid = ::getpid();
+
+    int32_t sysinfo::get_main_thread_pid() {
+        return g_main_thread_pid;
+    }
+
+    bool sysinfo::pid_has_changed() {
+        int32_t pid = ::getpid();
+        if (g_main_thread_pid == pid) {
+            return false;
+        }
+        g_main_thread_pid = pid;
+        return true;
+    }
+
+    double sysinfo::nominal_cpu_frequency() {
         std::call_once(g_sysinfo_flag, initialize_system_info);
         return g_nominal_cpu_frequency;
     }
 
-    int num_cpus() {
+    int sysinfo::num_cpus() {
         std::call_once(g_sysinfo_flag, initialize_system_info);
         return g_num_cpus;
     }
@@ -58,6 +224,8 @@ namespace flare {
     void initialize_system_info() {
         g_nominal_cpu_frequency = get_nominal_cpu_frequency();
         g_num_cpus = std::thread::hardware_concurrency();
+        init_user_nane();
+        init_host_name();
     }
 
 #if defined(CTL_HW) && defined(HW_CPU_FREQ)

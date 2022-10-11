@@ -29,9 +29,15 @@ namespace flare {
 
         result_status read(flare::cord_buf *buf, size_t n = npos);
 
+        std::pair<result_status, size_t> read(void *buf, size_t n);
+
         result_status skip(size_t n);
 
         bool is_eof(result_status *frs);
+
+        void close();
+
+        void reset();
 
         size_t has_read() const {
             return _has_read;

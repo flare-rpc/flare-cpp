@@ -246,4 +246,16 @@ inline void flare_macro_unused(T const volatile & x) { (void)x; }
 #endif
 #endif
 
+// ------------------------------------------------------------------------
+// FLARE_HIDDEN
+//
+
+#ifndef FLARE_HIDDEN
+    #if  defined(FLARE_COMPILER_GNUC) || defined(FLARE_COMPILER_CLANG)
+        #define FLARE_HIDDEN __attribute__((visibility("hidden")))
+    #else
+        #define FLARE_HIDDEN
+    #endif
+#endif  // FLARE_HIDDEN
+
 #endif // FLARE_BASE_PROFILE_ATTRIBUTE_H_

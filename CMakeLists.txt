@@ -36,7 +36,7 @@ option(BUILD_IN_CONDA "build in conda environemnt" ON)
 option(BUILD_EXAMPLES "build in conda environemnt" ON)
 
 if (BUILD_IN_CONDA)
-    set(CMAKE_PREFIX_PATH $ENV{CONDA_PREFIX})
+    list(APPEND CMAKE_PREFIX_PATH $ENV{CONDA_PREFIX})
 endif (BUILD_IN_CONDA)
 
 # Enable MACOSX_RPATH. Run "cmake --help-policy CMP0042" for policy details.
@@ -197,6 +197,8 @@ file(GLOB_RECURSE FLARE_FILES_SRC "${PROJECT_SOURCE_DIR}/flare/files/*.cc")
 file(GLOB_RECURSE FLARE_THREAD_SRC "${PROJECT_SOURCE_DIR}/flare/thread/*.cc")
 file(GLOB_RECURSE FLARE_FUTURE_SRC "${PROJECT_SOURCE_DIR}/flare/future/*.cc")
 file(GLOB_RECURSE FLARE_DAG_SRC "${PROJECT_SOURCE_DIR}/flare/dag/*.cc")
+file(GLOB_RECURSE FLARE_SYSTEM_SRC "${PROJECT_SOURCE_DIR}/flare/system/*.cc")
+file(GLOB_RECURSE FLARE_JSON_SRC "${PROJECT_SOURCE_DIR}/flare/rapidjson/*.cc")
 
 set(FLARE_SRC
         "${PROJECT_SOURCE_DIR}/flare/base/dynamic_annotations/dynamic_annotations.c"
@@ -215,6 +217,8 @@ set(FLARE_SRC
         ${FLARE_THREAD_SRC}
         ${FLARE_FUTURE_SRC}
         ${FLARE_DAG_SRC}
+        ${FLARE_SYSTEM_SRC}
+        ${FLARE_JSON_SRC}
         )
 
 file(GLOB_RECURSE METRICS_SOURCES "${PROJECT_SOURCE_DIR}/flare/metrics/*.cc")

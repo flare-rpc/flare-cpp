@@ -27,9 +27,17 @@ namespace flare {
 
         result_status write(std::string_view content);
 
+        result_status write(void *content, size_t n) {
+            return write(std::string_view((char*)content, n));
+        }
+
         result_status write(const flare::cord_buf &data);
 
         void flush();
+
+        void close();
+
+        void reset(size_t n = 0);
 
         size_t has_write() const {
             return _has_write;

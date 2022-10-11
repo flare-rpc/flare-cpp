@@ -142,4 +142,5 @@ add_subdirectory(debugging)
 add_subdirectory(times)
 add_subdirectory(thread)
 add_subdirectory(dag)
+add_subdirectory(rapidjson)
 

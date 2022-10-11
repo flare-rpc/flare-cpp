@@ -15,7 +15,7 @@
 #include "flare/log/config.h"
 #include "flare/log/logging.h"          // To pick up flag settings etc.
 #include "flare/log/raw_logging.h"
-#include "flare/base/sysinfo.h"
+#include "flare/system/sysinfo.h"
 
 #ifdef HAVE_STACKTRACE
 
@@ -74,7 +74,7 @@ namespace flare::log {
         // NOTE: this format should match the specification in base/logging.h
         DoRawLog(&buf, &size, "%c00000000 00:00:00.000000 %5u %s:%d] RAW: ",
                  log_severity_names[severity][0],
-                 static_cast<unsigned int>(flare::base::get_tid()),
+                 static_cast<unsigned int>(flare::sysinfo::get_tid()),
                  const_basename(const_cast<char *>(file)), line);
 
         // Record the position and size of the buffer after the prefix

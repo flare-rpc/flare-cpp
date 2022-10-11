@@ -81,7 +81,17 @@ namespace flare {
 
         return frs;
     }
-
+    void sequential_write_file::reset(size_t n) {
+        if(_fd > 0) {
+            ::lseek(_fd, n , SEEK_SET);
+        }
+    }
+    void sequential_write_file::close() {
+        if(_fd > 0) {
+            ::close(_fd);
+            _fd = -1;
+        }
+    }
     void sequential_write_file::flush() {
 #ifdef FLARE_PLATFORM_OSX
         if(_fd > 0) {

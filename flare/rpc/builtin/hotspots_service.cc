@@ -20,7 +20,7 @@
 #include <thread>
 #include <gflags/gflags.h>
 #include "flare/files/filesystem.h"
-#include "flare/base/popen.h"                         // flare::base::read_command_output
+#include "flare/system/process.h"                         // flare::read_command_output
 #include "flare/base/fd_guard.h"                      // flare::base::fd_guard
 #include "flare/rpc/log.h"
 #include "flare/rpc/controller.h"
@@ -532,7 +532,7 @@ namespace flare::rpc {
             // we see non-zero errno, it's real error.
             flare::cord_buf_builder pprof_output;
             RPC_VLOG << "Running cmd=" << cmd;
-            const int rc = flare::base::read_command_output(pprof_output, cmd.c_str());
+            const int rc = flare::read_command_output(pprof_output, cmd.c_str());
             if (rc != 0) {
                 if (!flare::exists(pprof_tool)) {
                     // Write the script again.

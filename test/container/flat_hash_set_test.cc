@@ -1,4 +1,12 @@
 
+
+/****************************************************************
+ * Copyright (c) 2022, liyinbin
+ * All rights reserved.
+ * Author by liyinbin (jeff.li) lijippy@163.com
+ *****************************************************************/
+
+
 #ifndef THIS_HASH_SET
 #define THIS_HASH_SET   flat_hash_set
 #define THIS_TEST_NAME  FlatHashSet

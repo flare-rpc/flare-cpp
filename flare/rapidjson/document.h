@@ -24,6 +24,7 @@
 #include <flare/rapidjson/encodedstream.h>
 #include <new>      // placement new
 #include <limits>
+#include <string_view>
 
 RAPIDJSON_DIAG_PUSH
 #ifdef _MSC_VER
@@ -412,6 +413,10 @@ RAPIDJSON_NAMESPACE_BEGIN
     template<typename CharType>
     inline GenericStringRef<CharType> StringRef(const CharType *str, size_t length) {
         return GenericStringRef<CharType>(str, SizeType(length));
+    }
+
+    inline GenericStringRef<char> StringRef(const std::string_view& view) {
+        return StringRef(view.data(), view.length());
     }
 
 #if RAPIDJSON_HAS_STDSTRING

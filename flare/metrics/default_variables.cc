@@ -18,8 +18,7 @@
 #include "flare/base/singleton_on_pthread_once.h"
 #include "flare/base/scoped_lock.h"
 #include "flare/files/sequential_read_file.h"
-#include "flare/base/process_util.h"            // read_command_line
-#include "flare/base/popen.h"                   // read_command_output
+#include "flare/system/process.h"
 #include "flare/metrics/gauge.h"
 #include "flare/base/static_atomic.h"
 
@@ -94,7 +93,7 @@ namespace flare {
         snprintf(cmdbuf, sizeof(cmdbuf),
                  "ps -p %ld -o pid,ppid,pgid,sess"
                  ",tpgid,flags,pri,nice | tail -n1", (long) pid);
-        if (flare::base::read_command_output(oss, cmdbuf) != 0) {
+        if (flare::read_command_output(oss, cmdbuf) != 0) {
             FLARE_LOG(ERROR) << "Fail to read stat";
             return -1;
         }
@@ -222,7 +221,7 @@ namespace flare {
         std::ostringstream oss;
         char cmdbuf[128];
         snprintf(cmdbuf, sizeof(cmdbuf), "ps -p %ld -o rss=,vsz=", (long) pid);
-        if (flare::base::read_command_output(oss, cmdbuf) != 0) {
+        if (flare::read_command_output(oss, cmdbuf) != 0) {
             FLARE_LOG(ERROR) << "Fail to read memory state";
             return -1;
         }
@@ -288,7 +287,7 @@ namespace flare {
         return true;
 #elif defined(FLARE_PLATFORM_OSX)
         std::ostringstream oss;
-        if (flare::base::read_command_output(oss, "sysctl -n vm.loadavg") != 0) {
+        if (flare::read_command_output(oss, "sysctl -n vm.loadavg") != 0) {
             FLARE_LOG(ERROR) << "Fail to read loadavg";
             return -1;
         }
@@ -351,7 +350,7 @@ namespace flare {
         char cmdbuf[128];
         snprintf(cmdbuf, sizeof(cmdbuf),
                 "lsof -p %ld | grep -v \"txt\" | wc -l", (long)pid);
-        if (flare::base::read_command_output(oss, cmdbuf) != 0) {
+        if (flare::read_command_output(oss, cmdbuf) != 0) {
             FLARE_LOG(ERROR) << "Fail to read open files";
             return -1;
         }
@@ -606,7 +605,7 @@ namespace flare {
 
         ReadSelfCmdline() {
             char buf[1024];
-            const ssize_t nr = flare::base::read_command_line(buf, sizeof(buf), true);
+            const ssize_t nr = flare::read_command_line(buf, sizeof(buf), true);
             content.append(buf, nr);
         }
     };
@@ -620,7 +619,7 @@ namespace flare {
 
         ReadVersion() {
             std::ostringstream oss;
-            if (flare::base::read_command_output(oss, "uname -ap") != 0) {
+            if (flare::read_command_output(oss, "uname -ap") != 0) {
                 FLARE_LOG(ERROR) << "Fail to read kernel version";
                 return;
             }

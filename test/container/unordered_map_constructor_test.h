@@ -1,4 +1,10 @@
 
+/****************************************************************
+ * Copyright (c) 2022, liyinbin
+ * All rights reserved.
+ * Author by liyinbin (jeff.li) lijippy@163.com
+ *****************************************************************/
+
 #ifndef UNORDERED_MAP_CONSTRUCTOR_TEST_H_
 #define UNORDERED_MAP_CONSTRUCTOR_TEST_H_
 

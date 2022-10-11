@@ -102,6 +102,8 @@ namespace flare {
 
         static result_status from_error_code(const std::error_code &ec);
 
+        static result_status from_last_error();
+
     private:
         int _error{0};
         std::string _error_msg;

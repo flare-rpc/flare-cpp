@@ -26,7 +26,7 @@ namespace flare {
     }
 
     result_status random_access_file::open(const flare::file_path &path) noexcept {
-        FLARE_CHECK(_fd == -1)<<"do not reopen";
+        FLARE_CHECK(_fd == -1) << "do not reopen";
         result_status rs;
         _path = path;
         _fd = ::open(path.c_str(), O_RDONLY | O_CLOEXEC, 0644);
@@ -61,8 +61,8 @@ namespace flare {
             } else if (errno == EINTR) {
                 continue;
             } else {
-                FLARE_LOG(WARNING) << "read failed, errno: " <<errno<<" "<<flare_error()
-                             << " fd: " << _fd << " size: " << n;
+                FLARE_LOG(WARNING) << "read failed, errno: " << errno << " " << flare_error()
+                                   << " fd: " << _fd << " size: " << n;
                 frs.set_error(errno, "{}", flare_error());
                 return frs;
             }
@@ -71,6 +71,21 @@ namespace flare {
         return frs;
     }
 
+    result_status random_access_file::read(size_t n, off_t offset, char *buf) {
+        flare::IOPortal portal;
+        auto frs = read(n, offset, &portal);
+        if (frs.is_ok()) {
+            auto size = portal.size();
+            portal.cutn((void*)buf, size);
+        }
+        return frs;
+    }
+    void random_access_file::close() {
+        if(_fd > 0) {
+            ::close(_fd);
+            _fd = -1;
+        }
+    }
     bool random_access_file::is_eof(off_t off, size_t has_read, result_status *frs) {
         std::error_code ec;
         auto size = flare::file_size(_path, ec);
